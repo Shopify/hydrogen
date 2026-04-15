@@ -24,7 +24,7 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/lib/combined-listings.ts](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts) | The `combined-listings.ts` file contains utilities and settings for handling combined listings. |
+| [app/lib/combined-listings.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts) | The `combined-listings.ts` file contains utilities and settings for handling combined listings. |
 
 ## Steps
 
@@ -58,7 +58,7 @@ export const combinedListingsSettings = {
 
 Create a new `combined-listings.ts` file that contains utilities and settings for handling combined listings.
 
-#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
+#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
 <details>
 
@@ -108,12 +108,12 @@ export function isCombinedListing(product: unknown) {
 1. Update the `ProductForm` component to hide the **Add to cart** button for the parent products of combined listings and for variants' selected state.
 2. Update the `Link` component to not replace the current URL when the product is a combined listing parent product.
 
-#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/app/components/ProductForm.tsx)
+#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/ProductForm.tsx)
 
 <details>
 
 ~~~diff
-index 47c8f305..670d0804 100644
+index 47c8f3056..670d0804f 100644
 --- a/templates/skeleton/app/components/ProductForm.tsx
 +++ b/templates/skeleton/app/components/ProductForm.tsx
 @@ -11,9 +11,11 @@ import type {ProductFragment} from 'storefrontapi.generated';
@@ -215,10 +215,10 @@ index 47c8f305..670d0804 100644
 
 Update the `ProductImage` component to support images from both product variants and the product itself.
 
-#### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/app/components/ProductImage.tsx)
+#### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/ProductImage.tsx)
 
 ~~~diff
-index 5f3ac1cc..f1c9f2cd 100644
+index 5f3ac1cce..f1c9f2cdd 100644
 --- a/templates/skeleton/app/components/ProductImage.tsx
 +++ b/templates/skeleton/app/components/ProductImage.tsx
 @@ -1,10 +1,13 @@
@@ -243,10 +243,10 @@ index 5f3ac1cc..f1c9f2cd 100644
 
 Update `ProductItem.tsx` to show a range of prices for the combined listing parent product instead of the variant price.
 
-#### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/app/components/ProductItem.tsx)
+#### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/ProductItem.tsx)
 
 ~~~diff
-index 3b0f6913..07fc73cd 100644
+index 3b0f69133..07fc73cd2 100644
 --- a/templates/skeleton/app/components/ProductItem.tsx
 +++ b/templates/skeleton/app/components/ProductItem.tsx
 @@ -6,6 +6,7 @@ import type {
@@ -284,10 +284,10 @@ index 3b0f6913..07fc73cd 100644
 
 If you want to redirect automatically to the first variant of a combined listing when the parent handle is selected, add a redirect utility that's called whenever the parent handle is requested.
 
-#### File: [app/lib/redirect.ts](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/app/lib/redirect.ts)
+#### File: [app/lib/redirect.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/lib/redirect.ts)
 
 ~~~diff
-index f18c1d0d..cbffc8a4 100644
+index f18c1d0d6..cbffc8a44 100644
 --- a/templates/skeleton/app/lib/redirect.ts
 +++ b/templates/skeleton/app/lib/redirect.ts
 @@ -1,4 +1,6 @@
@@ -327,21 +327,13 @@ index f18c1d0d..cbffc8a4 100644
 
 Update the "all products" collection page to filter out combined listing parent products, showing only the individual variant products instead
 
-#### File: [app/routes/collections.all.tsx](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/app/routes/collections.all.tsx)
-
-<details>
+#### File: [app/routes/collections.all.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/collections.all.tsx)
 
 ~~~diff
-index f33ce797..a0fd66d7 100644
+index 5a122262f..a0fd66d73 100644
 --- a/templates/skeleton/app/routes/collections.all.tsx
 +++ b/templates/skeleton/app/routes/collections.all.tsx
-@@ -1,11 +1,13 @@
- import type {Route} from './+types/collections.all';
--import {
--  useLoaderData,
--} from 'react-router';
-+import {useLoaderData} from 'react-router';
- import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
+@@ -4,6 +4,10 @@ import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
  import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  import {ProductItem} from '~/components/ProductItem';
  import type {CollectionItemFragment} from 'storefrontapi.generated';
@@ -352,7 +344,7 @@ index f33ce797..a0fd66d7 100644
  
  export const meta: Route.MetaFunction = () => {
    return [{title: `Hydrogen | Products`}];
-@@ -33,7 +35,12 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
+@@ -31,7 +35,12 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
  
    const [{products}] = await Promise.all([
      storefront.query(CATALOG_QUERY, {
@@ -366,7 +358,7 @@ index f33ce797..a0fd66d7 100644
      }),
      // Add other queries here, so that they are loaded in parallel
    ]);
-@@ -80,6 +87,7 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
+@@ -78,6 +87,7 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
      id
      handle
      title
@@ -374,7 +366,7 @@ index f33ce797..a0fd66d7 100644
      featuredImage {
        id
        altText
-@@ -107,8 +115,9 @@ const CATALOG_QUERY = `#graphql
+@@ -105,8 +115,9 @@ const CATALOG_QUERY = `#graphql
      $last: Int
      $startCursor: String
      $endCursor: String
@@ -387,30 +379,28 @@ index f33ce797..a0fd66d7 100644
        }
 ~~~
 
-</details>
-
 ### Step 9: Filter recommended products
 
 1. Add the `tags` property to the items returned by the product query.
 2. (Optional) Add the filtering query to the product query to exclude combined listings.
 
-#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
 ~~~diff
-index 28102dbe..9bc7a79d 100644
+index 237edc911..bfde9915e 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
-@@ -11,6 +11,7 @@ import type {
-   RecommendedProductsQuery,
+@@ -8,6 +8,7 @@ import type {
  } from 'storefrontapi.generated';
  import {ProductItem} from '~/components/ProductItem';
+ import {MockShopNotice} from '~/components/MockShopNotice';
 +import {maybeFilterOutCombinedListingsQuery} from '~/lib/combined-listings';
  
  export const meta: Route.MetaFunction = () => {
    return [{title: 'Hydrogen | Home'}];
-@@ -48,7 +49,11 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
+@@ -46,7 +47,11 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
   */
  function loadDeferredData({context}: Route.LoaderArgs) {
    const recommendedProducts = context.storefront
@@ -423,7 +413,7 @@ index 28102dbe..9bc7a79d 100644
      .catch((error: Error) => {
        // Log query errors, but don't throw them so the page can still render
        console.error(error);
-@@ -104,11 +109,9 @@ function RecommendedProducts({
+@@ -110,11 +115,9 @@ function RecommendedProducts({
          <Await resolve={products}>
            {(response) => (
              <div className="recommended-products-grid">
@@ -438,7 +428,7 @@ index 28102dbe..9bc7a79d 100644
              </div>
            )}
          </Await>
-@@ -151,7 +154,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+@@ -157,7 +160,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
          amount
          currencyCode
        }
@@ -451,7 +441,7 @@ index 28102dbe..9bc7a79d 100644
      featuredImage {
        id
        url
-@@ -160,9 +168,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+@@ -166,9 +174,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
        height
      }
    }
@@ -471,12 +461,12 @@ index 28102dbe..9bc7a79d 100644
 
 Since it's not possible to directly apply query filters when retrieving collection products, you can manually filter out combined listings after they're retrieved based on their tags.
 
-#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/app/routes/collections.$handle.tsx)
+#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/collections.$handle.tsx)
 
 <details>
 
 ~~~diff
-index c416c2b3..b627a950 100644
+index c416c2b3d..b627a950d 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
 @@ -5,6 +5,10 @@ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
@@ -538,21 +528,69 @@ index c416c2b3..b627a950 100644
 
 </details>
 
+### Step 10: package.json
+
+
+
+#### File: [package.json](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/package.json)
+
+~~~diff
+index 0bb332639..651bbfffa 100644
+--- a/templates/skeleton/package.json
++++ b/templates/skeleton/package.json
+@@ -14,12 +14,12 @@
+   },
+   "prettier": "@shopify/prettier-config",
+   "dependencies": {
+-    "@shopify/hydrogen": "workspace:*",
++    "@shopify/hydrogen": "2026.4.0",
+     "graphql": "^16.10.0",
+     "graphql-tag": "^2.12.6",
+     "isbot": "^5.1.22",
+-    "react": "catalog:",
+-    "react-dom": "catalog:",
++    "react": "^18.3.1",
++    "react-dom": "^18.3.1",
+     "react-router": "7.14.0",
+     "react-router-dom": "7.14.0"
+   },
+@@ -31,14 +31,14 @@
+     "@react-router/dev": "7.14.0",
+     "@react-router/fs-routes": "7.14.0",
+     "@shopify/cli": "3.93.2",
+-    "@shopify/hydrogen-codegen": "workspace:*",
+-    "@shopify/mini-oxygen": "workspace:*",
++    "@shopify/hydrogen-codegen": "0.3.3",
++    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/oxygen-workers-types": "^4.1.6",
+-    "@shopify/prettier-config": "catalog:",
++    "@shopify/prettier-config": "^1.1.2",
+     "@total-typescript/ts-reset": "^0.6.1",
+     "@types/eslint": "^9.6.1",
+-    "@types/react": "catalog:",
+-    "@types/react-dom": "catalog:",
++    "@types/react": "^18.3.28",
++    "@types/react-dom": "^18.3.7",
+     "@typescript-eslint/eslint-plugin": "^8.21.0",
+     "@typescript-eslint/parser": "^8.21.0",
+     "eslint": "^9.18.0",
+~~~
+
 ### Step 11: Show price ranges on product pages
 
 1. Display a range of prices for combined listings instead of the variant price.
 2. Show the featured image of the combined listing parent product instead of the variant image.
 3. (Optional) Redirect to the first variant of a combined listing when the handle is requested.
 
-#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/app/routes/products.$handle.tsx)
+#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
 ~~~diff
-index 422a2eb9..f898702c 100644
+index 99730d418..bd97c83cb 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
-@@ -14,7 +14,14 @@ import {
+@@ -11,7 +11,14 @@ import {
  import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
@@ -568,7 +606,7 @@ index 422a2eb9..f898702c 100644
  
  export const meta: Route.MetaFunction = ({data}) => {
    return [
-@@ -66,6 +73,10 @@ async function loadCriticalData({
+@@ -59,6 +66,10 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
    // The API handle might be localized, so redirect to the localized handle
    redirectIfHandleIsLocalized(request, {handle, data: product});
  
@@ -579,7 +617,7 @@ index 422a2eb9..f898702c 100644
    return {
      product,
    };
-@@ -85,6 +96,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
+@@ -78,6 +89,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
  
  export default function Product() {
    const {product} = useLoaderData<typeof loader>();
@@ -587,7 +625,7 @@ index 422a2eb9..f898702c 100644
  
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
-@@ -94,7 +106,9 @@ export default function Product() {
+@@ -87,7 +99,9 @@ export default function Product() {
  
    // Sets the search param to the selected variant without navigation
    // only when no search params are set in the url
@@ -598,7 +636,7 @@ index 422a2eb9..f898702c 100644
  
    // Get the product options array
    const productOptions = getProductOptions({
-@@ -102,21 +116,41 @@ export default function Product() {
+@@ -95,21 +109,41 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
  
@@ -647,7 +685,7 @@ index 422a2eb9..f898702c 100644
          />
          <br />
          <br />
-@@ -193,6 +227,22 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -186,6 +220,22 @@ const PRODUCT_FRAGMENT = `#graphql
      description
      encodedVariantExistence
      encodedVariantAvailability
@@ -678,13 +716,13 @@ index 422a2eb9..f898702c 100644
 
 Add a class to the product item to show a range of prices for combined listings.
 
-#### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/app/styles/app.css)
+#### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/styles/app.css)
 
 ~~~diff
-index 499d1301..8a30c5ba 100644
+index 3be08d316..38e9afed1 100644
 --- a/templates/skeleton/app/styles/app.css
 +++ b/templates/skeleton/app/styles/app.css
-@@ -438,6 +438,11 @@ button.reset:hover:not(:has(> *)) {
+@@ -489,6 +489,11 @@ button.reset:hover:not(:has(> *)) {
    width: 100%;
  }
  

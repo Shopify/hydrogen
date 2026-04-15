@@ -59,7 +59,7 @@ steps:
       with Oxygen caching.
     diffs:
       - file: README.md
-        patchFile: README.md.a0354d.patch
+        patchFile: README.md.1764cd.patch
   - type: NEW_FILE
     step: "2"
     name: Create the third-party API client
@@ -76,7 +76,7 @@ steps:
       in all routes. Also update TypeScript declarations for proper type support.
     diffs:
       - file: app/lib/context.ts
-        patchFile: context.ts.e144df.patch
+        patchFile: context.ts.c15041.patch
   - type: PATCH
     step: "4"
     name: Query and display third-party data
@@ -85,7 +85,14 @@ steps:
       Shopify data. This demonstrates parallel data fetching and proper caching strategies.
     diffs:
       - file: app/routes/_index.tsx
-        patchFile: _index.tsx.be2f11.patch
+        patchFile: _index.tsx.8ba83c.patch
+  - type: PATCH
+    step: "4"
+    name: package.json
+    description: null
+    diffs:
+      - file: package.json
+        patchFile: package.json.8e0ff5.patch
 nextSteps: |
   After applying this recipe, you can:
 
@@ -133,4 +140,4 @@ nextSteps: |
 llms:
   userQueries: []
   troubleshooting: []
-commit: d27e9178195e76ed6a3ead38b87788677bb449cd
+commit: 1040066d20b52667756fd1ebffd8607602a735b4

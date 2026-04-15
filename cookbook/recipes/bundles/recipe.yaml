@@ -60,7 +60,7 @@ steps:
       Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
     diffs:
       - file: app/routes/_index.tsx
-        patchFile: _index.tsx.be2f11.patch
+        patchFile: _index.tsx.8ba83c.patch
   - type: PATCH
     step: "5"
     name: Show bundled products on the product page
@@ -70,7 +70,7 @@ steps:
       2. Pass the `isBundle` flag to the `ProductImage` component.
     diffs:
       - file: app/routes/products.$handle.tsx
-        patchFile: products.$handle.tsx.2292d3.patch
+        patchFile: products.$handle.tsx.30ba8d.patch
   - type: PATCH
     step: "6"
     name: Detect bundles in collection listings
@@ -78,7 +78,7 @@ steps:
       Like the previous step, use the `requiresComponents` field to detect if the product item is a bundle.
     diffs:
       - file: app/routes/collections.$handle.tsx
-        patchFile: collections.$handle.tsx.de57f6.patch
+        patchFile: collections.$handle.tsx.7abca5.patch
   - type: PATCH
     step: "7"
     name: Identify bundles in the cart
@@ -86,7 +86,7 @@ steps:
       Use the `requiresComponents` field to determine if a cart line item is a bundle.
     diffs:
       - file: app/lib/fragments.ts
-        patchFile: fragments.ts.2ab53e.patch
+        patchFile: fragments.ts.e564c1.patch
   - type: PATCH
     step: "8"
     name: Show bundle badges in the cart
@@ -94,7 +94,7 @@ steps:
       If a product is a bundle, show the `BundleBadge` component in the cart line item.
     diffs:
       - file: app/components/CartLineItem.tsx
-        patchFile: CartLineItem.tsx.686ddc.patch
+        patchFile: CartLineItem.tsx.c12ba7.patch
   - type: PATCH
     step: "9"
     name: Update the cart button text for bundles
@@ -102,7 +102,7 @@ steps:
       If a product is a bundle, update the text of the product button.
     diffs:
       - file: app/components/ProductForm.tsx
-        patchFile: ProductForm.tsx.dfca85.patch
+        patchFile: ProductForm.tsx.aa8a24.patch
   - type: PATCH
     step: "10"
     name: Show bundle badges on product images
@@ -110,7 +110,14 @@ steps:
       If a product is a bundle, show the `BundleBadge` component in the `ProductImage` component.
     diffs:
       - file: app/components/ProductImage.tsx
-        patchFile: ProductImage.tsx.72dc31.patch
+        patchFile: ProductImage.tsx.a62ff5.patch
+  - type: PATCH
+    step: "10"
+    name: package.json
+    description: null
+    diffs:
+      - file: package.json
+        patchFile: package.json.8e0ff5.patch
   - type: PATCH
     step: "11"
     name: Show bundle badges on product cards
@@ -118,7 +125,7 @@ steps:
       If a product is a bundle, show the `BundleBadge` component in the `ProductItem` component.
     diffs:
       - file: app/components/ProductItem.tsx
-        patchFile: ProductItem.tsx.df3d59.patch
+        patchFile: ProductItem.tsx.c6506f.patch
   - type: PATCH
     step: "12"
     name: Position bundle badges on images
@@ -126,7 +133,7 @@ steps:
       Make sure the bundle badge is positioned relative to the product image.
     diffs:
       - file: app/styles/app.css
-        patchFile: app.css.dedf0f.patch
+        patchFile: app.css.913317.patch
 nextSteps: |
   - Test your implementation by going to your store and adding a bundle to the cart. Make sure that the bundle's badge appears on the product page and in the cart.
   - (Optional) [Place a test order](https://help.shopify.com/en/manual/checkout-settings/test-orders) to see how orders for bundles appear in your Shopify admin.
@@ -148,4 +155,4 @@ llms:
       solution: Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin. Then make sure you've updated the cart
         fragment to query for bundles.
-commit: d27e9178195e76ed6a3ead38b87788677bb449cd
+commit: 1040066d20b52667756fd1ebffd8607602a735b4
