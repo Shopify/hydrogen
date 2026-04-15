@@ -12,6 +12,8 @@ import type {
 import {
   getInContextVariables,
   getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
 export type CartMetafieldsSetFunction = (
@@ -30,7 +32,7 @@ export function cartMetafieldsSetDefault(
         ownerId,
       }),
     );
-    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartMetafieldsSet, errors} = await options.storefront.mutate<{
       cartMetafieldsSet: {
         userErrors: MetafieldsSetUserError[];
@@ -52,18 +54,14 @@ export function cartMetafieldsSetDefault(
   };
 }
 
-type CartMutationOptions = {
-  includeVisitorConsent?: boolean;
-};
-
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartMetafieldsSet
 export const CART_METAFIELD_SET_MUTATION = (
-  options: CartMutationOptions = {},
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartMetafieldsSet(
     $metafields: [CartMetafieldsSetInput!]!
-    ${getInContextVariables(options.includeVisitorConsent ?? false)}
-  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartMetafieldsSet(metafields: $metafields) {
       userErrors {
         code

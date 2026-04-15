@@ -14,6 +14,8 @@ import type {
 import {
   getInContextVariables,
   getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
 export type CartDeliveryAddressesUpdateFunction = (
@@ -66,7 +68,7 @@ export function cartDeliveryAddressesUpdateDefault(
     addresses: Array<CartSelectableAddressUpdateInput>,
     optionalParams,
   ) => {
-    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartDeliveryAddressesUpdate, errors} =
       await options.storefront.mutate<{
         cartDeliveryAddressesUpdate: CartQueryData;
@@ -88,20 +90,16 @@ export function cartDeliveryAddressesUpdateDefault(
   };
 }
 
-type CartMutationBuilderOptions = {
-  includeVisitorConsent?: boolean;
-};
-
 //! @see: https://shopify.dev/docs/api/storefront/latest/mutations/cartDeliveryAddressesUpdate
 export const CART_DELIVERY_ADDRESSES_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
-  options: CartMutationBuilderOptions = {},
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartDeliveryAddressesUpdate(
     $cartId: ID!
     $addresses: [CartSelectableAddressUpdateInput!]!,
-    ${getInContextVariables(options.includeVisitorConsent ?? false)}
-  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartDeliveryAddressesUpdate(addresses: $addresses, cartId: $cartId) {
       cart {
         ...CartApiMutation

@@ -14,6 +14,8 @@ import type {
 import {
   getInContextVariables,
   getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
 export type CartDeliveryAddressesRemoveFunction = (
@@ -44,7 +46,7 @@ export function cartDeliveryAddressesRemoveDefault(
     addressIds: Array<Scalars['ID']['input']> | string[],
     optionalParams,
   ) => {
-    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartDeliveryAddressesRemove, errors} =
       await options.storefront.mutate<{
         cartDeliveryAddressesRemove: CartQueryData;
@@ -66,20 +68,16 @@ export function cartDeliveryAddressesRemoveDefault(
   };
 }
 
-type CartMutationBuilderOptions = {
-  includeVisitorConsent?: boolean;
-};
-
 //! @see: https://shopify.dev/docs/api/storefront/latest/mutations/cartDeliveryAddressesRemove
 export const CART_DELIVERY_ADDRESSES_REMOVE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
-  options: CartMutationBuilderOptions = {},
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartDeliveryAddressesRemove(
     $cartId: ID!
     $addressIds: [ID!]!,
-    ${getInContextVariables(options.includeVisitorConsent ?? false)}
-  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartDeliveryAddressesRemove(addressIds: $addressIds, cartId: $cartId) {
       cart {
         ...CartApiMutation

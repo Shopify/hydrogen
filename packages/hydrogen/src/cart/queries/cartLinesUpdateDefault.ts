@@ -15,6 +15,8 @@ import type {CartLineUpdateInput} from '@shopify/hydrogen-react/storefront-api-t
 import {
   getInContextVariables,
   getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
 export type CartLinesUpdateFunction = (
@@ -28,7 +30,7 @@ export function cartLinesUpdateDefault(
   return async (lines, optionalParams) => {
     throwIfLinesAreOptimistic('updateLines', lines);
 
-    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartLinesUpdate, errors} = await options.storefront.mutate<{
       cartLinesUpdate: CartQueryData;
       errors: StorefrontApiErrors;
@@ -46,20 +48,16 @@ export function cartLinesUpdateDefault(
   };
 }
 
-type CartMutationBuilderOptions = {
-  includeVisitorConsent?: boolean;
-};
-
 //! @see: https://shopify.dev/docs/api/storefront/latest/mutations/cartLinesUpdate
 export const CART_LINES_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
-  options: CartMutationBuilderOptions = {},
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartLinesUpdate(
     $cartId: ID!
     $lines: [CartLineUpdateInput!]!
-    ${getInContextVariables(options.includeVisitorConsent ?? false)}
-  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
         ...CartApiMutation

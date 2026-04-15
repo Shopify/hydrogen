@@ -10,6 +10,8 @@ import type {
 import {
   getInContextVariables,
   getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
 type CartGetProps = {
@@ -71,7 +73,7 @@ export function cartGetDefault({
 
     if (!cartId) return null;
 
-    const includeVisitorConsent = cartInput?.visitorConsent !== undefined;
+    const includeVisitorConsent = shouldIncludeVisitorConsent(cartInput);
     const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([
       customerAccount ? customerAccount.isLoggedIn() : false,
       storefront.query<{cart: Cart | null}>(
@@ -93,20 +95,16 @@ export function cartGetDefault({
   };
 }
 
-type CartQueryBuilderOptions = {
-  includeVisitorConsent?: boolean;
-};
-
 //! @see https://shopify.dev/docs/api/storefront/latest/queries/cart
 const CART_QUERY = (
   cartFragment = DEFAULT_CART_FRAGMENT,
-  options: CartQueryBuilderOptions = {},
+  options: CartBuilderOptions = {},
 ) => `#graphql
   query CartQuery(
     $cartId: ID!
     $numCartLines: Int = 100
-    ${getInContextVariables(options.includeVisitorConsent ?? false)}
-  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cart(id: $cartId) {
       ...CartApiQuery
     }

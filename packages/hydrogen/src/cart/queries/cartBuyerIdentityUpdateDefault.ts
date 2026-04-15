@@ -14,6 +14,8 @@ import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-ap
 import {
   getInContextVariables,
   getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
 export type CartBuyerIdentityUpdateFunction = (
@@ -35,7 +37,7 @@ export function cartBuyerIdentityUpdateDefault(
       ? await options.customerAccount.getBuyer()
       : undefined;
 
-    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartBuyerIdentityUpdate, errors} = await options.storefront.mutate<{
       cartBuyerIdentityUpdate: CartQueryData;
       errors: StorefrontApiErrors;
@@ -58,20 +60,16 @@ export function cartBuyerIdentityUpdateDefault(
   };
 }
 
-type CartMutationBuilderOptions = {
-  includeVisitorConsent?: boolean;
-};
-
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartBuyerIdentityUpdate
 export const CART_BUYER_IDENTITY_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
-  options: CartMutationBuilderOptions = {},
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartBuyerIdentityUpdate(
     $cartId: ID!
     $buyerIdentity: CartBuyerIdentityInput!
-    ${getInContextVariables(options.includeVisitorConsent ?? false)}
-  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
       cart {
         ...CartApiMutation

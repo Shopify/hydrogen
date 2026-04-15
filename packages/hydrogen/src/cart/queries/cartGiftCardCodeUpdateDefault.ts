@@ -13,6 +13,8 @@ import type {
 import {
   getInContextVariables,
   getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
 export type CartGiftCardCodesUpdateFunction = (
@@ -36,7 +38,7 @@ export function cartGiftCardCodesUpdateDefault(
   options: CartQueryOptions,
 ): CartGiftCardCodesUpdateFunction {
   return async (giftCardCodes, optionalParams) => {
-    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartGiftCardCodesUpdate, errors} = await options.storefront.mutate<{
       cartGiftCardCodesUpdate: CartQueryData;
       errors: StorefrontApiErrors;
@@ -56,20 +58,16 @@ export function cartGiftCardCodesUpdateDefault(
   };
 }
 
-type CartMutationBuilderOptions = {
-  includeVisitorConsent?: boolean;
-};
-
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartGiftCardCodesUpdate
 export const CART_GIFT_CARD_CODE_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
-  options: CartMutationBuilderOptions = {},
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartGiftCardCodesUpdate(
     $cartId: ID!
     $giftCardCodes: [String!]!
-    ${getInContextVariables(options.includeVisitorConsent ?? false)}
-  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartGiftCardCodesUpdate(cartId: $cartId, giftCardCodes: $giftCardCodes) {
       cart {
         ...CartApiMutation

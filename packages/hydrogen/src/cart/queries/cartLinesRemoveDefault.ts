@@ -14,6 +14,8 @@ import type {
 import {
   getInContextVariables,
   getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
 export type CartLinesRemoveFunction = (
@@ -27,7 +29,7 @@ export function cartLinesRemoveDefault(
   return async (lineIds, optionalParams) => {
     throwIfLinesAreOptimistic('removeLines', lineIds);
 
-    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartLinesRemove, errors} = await options.storefront.mutate<{
       cartLinesRemove: CartQueryData;
       errors: StorefrontApiErrors;
@@ -45,20 +47,16 @@ export function cartLinesRemoveDefault(
   };
 }
 
-type CartMutationBuilderOptions = {
-  includeVisitorConsent?: boolean;
-};
-
 //! @see: https://shopify.dev/docs/api/storefront/latest/mutations/cartLinesRemove
 export const CART_LINES_REMOVE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
-  options: CartMutationBuilderOptions = {},
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartLinesRemove(
     $cartId: ID!
     $lineIds: [ID!]!
-    ${getInContextVariables(options.includeVisitorConsent ?? false)}
-  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
       cart {
         ...CartApiMutation

@@ -13,6 +13,8 @@ import type {
 import {
   getInContextVariables,
   getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
 export type CartNoteUpdateFunction = (
@@ -24,7 +26,7 @@ export function cartNoteUpdateDefault(
   options: CartQueryOptions,
 ): CartNoteUpdateFunction {
   return async (note, optionalParams) => {
-    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartNoteUpdate, errors} = await options.storefront.mutate<{
       cartNoteUpdate: CartQueryData;
       errors: StorefrontApiErrors;
@@ -42,20 +44,16 @@ export function cartNoteUpdateDefault(
   };
 }
 
-type CartMutationBuilderOptions = {
-  includeVisitorConsent?: boolean;
-};
-
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartNoteUpdate
 export const CART_NOTE_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
-  options: CartMutationBuilderOptions = {},
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartNoteUpdate(
     $cartId: ID!
     $note: String!
-    ${getInContextVariables(options.includeVisitorConsent ?? false)}
-  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartNoteUpdate(cartId: $cartId, note: $note) {
       cart {
         ...CartApiMutation

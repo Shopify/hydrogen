@@ -12,6 +12,8 @@ import type {
 import {
   getInContextVariables,
   getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
 export type CartMetafieldDeleteFunction = (
@@ -24,7 +26,7 @@ export function cartMetafieldDeleteDefault(
 ): CartMetafieldDeleteFunction {
   return async (key, optionalParams) => {
     const ownerId = optionalParams?.cartId || options.getCartId();
-    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartMetafieldDelete, errors} = await options.storefront.mutate<{
       cartMetafieldDelete: {
         userErrors: MetafieldDeleteUserError[];
@@ -51,18 +53,14 @@ export function cartMetafieldDeleteDefault(
   };
 }
 
-type CartMutationOptions = {
-  includeVisitorConsent?: boolean;
-};
-
 //! @see https://shopify.dev/docs/api/storefront/2026-04/mutations/cartMetafieldDelete
 export const CART_METAFIELD_DELETE_MUTATION = (
-  options: CartMutationOptions = {},
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartMetafieldDelete(
     $input: CartMetafieldDeleteInput!
-    ${getInContextVariables(options.includeVisitorConsent ?? false)}
-  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartMetafieldDelete(input: $input) {
       userErrors {
         code

@@ -13,6 +13,8 @@ import type {
 import {
   getInContextVariables,
   getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
 export type CartDiscountCodesUpdateFunction = (
@@ -29,7 +31,7 @@ export function cartDiscountCodesUpdateDefault(
       return array.indexOf(value) === index;
     });
 
-    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartDiscountCodesUpdate, errors} = await options.storefront.mutate<{
       cartDiscountCodesUpdate: CartQueryData;
       errors: StorefrontApiErrors;
@@ -49,20 +51,16 @@ export function cartDiscountCodesUpdateDefault(
   };
 }
 
-type CartMutationBuilderOptions = {
-  includeVisitorConsent?: boolean;
-};
-
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartDiscountCodesUpdate
 export const CART_DISCOUNT_CODE_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
-  options: CartMutationBuilderOptions = {},
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartDiscountCodesUpdate(
     $cartId: ID!
     $discountCodes: [String!]!
-    ${getInContextVariables(options.includeVisitorConsent ?? false)}
-  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
       ... @defer {
         cart {
