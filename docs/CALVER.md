@@ -599,7 +599,7 @@ Potential enhancements being considered:
 
 ## Related Documentation
 
-- [Hydrogen Release Process](../CLAUDE.md#hydrogen-release-process) - Complete release workflow
+- [Hydrogen Release Process](../.claude/skills/hydrogen-release-process/SKILL.md) - Complete release workflow
 - [Major Protection Workflow](../.github/workflows/major-protection.yml) - Protection implementation
-- [Protection Utilities](../.github/scripts/changeset-protection-utils.js) - Shared utilities
+- [Protection Utilities](../.changeset/changeset-protection-utils.js) - Shared utilities
 - [.changeset/README.md](../.changeset/README.md) - Changesets documentation
