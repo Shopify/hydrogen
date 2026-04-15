@@ -182,8 +182,8 @@ export default function App() {
 
   return (
     <ShopifyProvider
-      storeDomain={data.publicStoreDomain}
-      storefrontToken={data.publicStorefrontToken}
+      storeDomain={data.publicStoreDomain || 'mock.shop'}
+      storefrontToken={data.publicStorefrontToken || 'mock'}
       storefrontApiVersion={data.storefrontApiVersion}
       countryIsoCode={data.i18n.country}
       languageIsoCode={data.i18n.language}
