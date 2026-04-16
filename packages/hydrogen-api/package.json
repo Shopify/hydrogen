@@ -36,7 +36,7 @@
     "./customer-account.schema.json": "./dist/generated/customer-account.schema.json"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "graphql-types": "graphql-codegen --config codegen.ts",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -52,7 +52,7 @@
     "@shopify/hydrogen-codegen": "workspace:*",
     "@types/node": "catalog:",
     "graphql": "^16.12.0",
-    "tsup": "^8.4.0",
+    "tsdown": "^0.12.4",
     "vitest": "^3.2.4"
   }
 }
