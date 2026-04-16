@@ -1,6 +1,6 @@
 # @shopify/hydrogen
 
-## 2026.4.0
+## 2026.1.5
 
 ### Major Changes
 
@@ -27,7 +27,7 @@
 - Widen React Router peer dependencies from exact versions to caret ranges (`^7.12.0`). This allows Hydrogen projects to use newer React Router minor versions without peer dependency conflicts, particularly with npm's strict resolver. Hydrogen only uses stable public APIs from React Router, so minor version updates are backwards-compatible. ([#3677](https://github.com/Shopify/hydrogen/pull/3677)) by [@fredericoo](https://github.com/fredericoo)
 
 - Updated dependencies [[`b0caa5c013380c7837f049f48da089a1671e2c6d`](https://github.com/Shopify/hydrogen/commit/b0caa5c013380c7837f049f48da089a1671e2c6d)]:
-  - @shopify/hydrogen-react@2026.4.0
+  - @shopify/hydrogen-react@2026.1.3
 
 ## 2026.1.4
 
