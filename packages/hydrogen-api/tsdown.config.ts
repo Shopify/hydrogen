@@ -12,12 +12,7 @@ export default defineConfig({
   fixedExtension: false,
   define: {[DEV_FLAG]: 'false'},
   copy: {
-    from: [
-      'src/storefront-api-types.d.ts',
-      'src/customer-account-api-types.d.ts',
-      'storefront.schema.json',
-      'customer-account.schema.json',
-    ],
+    from: 'src/generated/*',
     to: 'dist/generated',
   },
   // Fail the build if `define` didn't replace the dev flag — otherwise

@@ -35,7 +35,7 @@ const AUTO_GENERATED_HEADER = (api: string, version: string) => `
 const config: CodegenConfig = {
   overwrite: true,
   generates: {
-    'src/storefront-api-types.d.ts': {
+    'src/generated/storefront-api-types.d.ts': {
       schema: storefrontAPISchema,
       plugins: [
         {add: {content: AUTO_GENERATED_HEADER('Storefront', SF_API_VERSION)}},
@@ -50,11 +50,11 @@ const config: CodegenConfig = {
         },
       ],
     },
-    './storefront.schema.json': {
+    'src/generated/storefront.schema.json': {
       schema: storefrontAPISchema,
       plugins: [{introspection: {minify: true}}],
     },
-    'src/customer-account-api-types.d.ts': {
+    'src/generated/customer-account-api-types.d.ts': {
       schema: customerAccountAPISchema,
       plugins: [
         {
@@ -73,7 +73,7 @@ const config: CodegenConfig = {
         },
       ],
     },
-    './customer-account.schema.json': {
+    'src/generated/customer-account.schema.json': {
       schema: customerAccountAPISchema,
       plugins: [{introspection: {minify: true}}],
     },

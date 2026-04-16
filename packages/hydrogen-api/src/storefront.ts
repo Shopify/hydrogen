@@ -33,8 +33,8 @@ import {parseJSON} from './utils/parse-json';
 import type {
   CountryCode,
   LanguageCode as StorefrontLanguageCode,
-} from './storefront-api-types.js';
-import type {LanguageCode as CustomerLanguageCode} from './customer-account-api-types.js';
+} from './generated/storefront-api-types.js';
+import type {LanguageCode as CustomerLanguageCode} from './generated/customer-account-api-types.js';
 import type {
   ClientReturn,
   ClientVariablesInRestParams,
