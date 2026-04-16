@@ -1,4 +1,5 @@
 import {test, expect, setRecipeFixture} from '../../fixtures';
+import {KNOWN_SKELETON_PRODUCT as KNOWN_REGULAR_PRODUCT} from '../../fixtures/known-products';
 
 setRecipeFixture({
   recipeName: 'combined-listings',
@@ -19,11 +20,6 @@ const KNOWN_COMBINED_LISTING = {
   maxPrice: '$700',
   variantOptionName: 'Color',
   knownVariant: 'Ember',
-} as const;
-
-const KNOWN_REGULAR_PRODUCT = {
-  handle: 'the-ascend',
-  name: 'The Ascend',
 } as const;
 
 const KNOWN_PRODUCT_IN_COLLECTION = {
@@ -86,6 +82,10 @@ test.describe('Combined Listings Recipe', () => {
   });
 
   test.describe('Collection Page', () => {
+    // The authoritative filter mechanism is tag-based: collection page loaders
+    // pass `NOT tag:${combinedListingTag}` in the GraphQL query to exclude parent
+    // products server-side. The `isCombinedListing()` function in combined-listings.ts
+    // uses the same tag for client-side checks (e.g. hiding the Add to Cart button).
     test('parent combined listing products are filtered from collections', async ({
       page,
     }) => {

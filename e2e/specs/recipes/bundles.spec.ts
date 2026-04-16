@@ -1,5 +1,6 @@
 import {test, expect, setRecipeFixture} from '../../fixtures';
 import {CartUtil} from '../../fixtures/cart-utils';
+import {KNOWN_SKELETON_PRODUCT as KNOWN_REGULAR_PRODUCT} from '../../fixtures/known-products';
 
 setRecipeFixture({
   recipeName: 'bundles',
@@ -12,11 +13,6 @@ setRecipeFixture({
 const KNOWN_BUNDLE = {
   handle: 'free-wax-bundle',
   name: 'The Hydrogen + Free Wax Bundle',
-} as const;
-
-const KNOWN_REGULAR_PRODUCT = {
-  handle: 'the-ascend',
-  name: 'The Ascend',
 } as const;
 
 test.describe('Bundles Recipe', () => {
