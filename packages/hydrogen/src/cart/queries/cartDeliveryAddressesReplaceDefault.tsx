@@ -41,6 +41,7 @@ export type CartDeliveryAddressesReplaceFunction = (
  *    }
  *  ], { someOptionalParam: 'value' }
  * );
+ * @publicDocs
  */
 export function cartDeliveryAddressesReplaceDefault(
   options: CartQueryOptions,

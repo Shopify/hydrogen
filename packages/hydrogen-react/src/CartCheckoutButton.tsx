@@ -16,6 +16,7 @@ type CartCheckoutButtonProps = Omit<BaseButtonProps<'button'>, 'onClick'> &
 /**
  * The `CartCheckoutButton` component renders a button that redirects to the checkout URL for the cart.
  * It must be a descendent of a `CartProvider` component.
+ * @publicDocs
  */
 export function CartCheckoutButton(
   props: CartCheckoutButtonProps,
@@ -44,6 +45,7 @@ export function CartCheckoutButton(
 // This is only for documentation purposes, and it is not used in the code.
 // we ignore this issue because it makes the documentation look better than the equivalent `type` that it wants us to convert to
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+/** @publicDocs */
 export interface CartCheckoutButtonPropsForDocs<
   AsType extends React.ElementType = 'button',
 > extends Omit<CustomBaseButtonProps<AsType>, 'onClick'> {}

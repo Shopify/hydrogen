@@ -19,8 +19,8 @@ export const cachedTrackingValues: {
 } = {current: null};
 
 /**
- * Retrieves user session tracking values for analytics
- * and marketing from the browser environment.
+ * Retrieves user session tracking values for analytics and marketing from the browser environment.
+ * @publicDocs
  */
 export function getTrackingValues(): TrackingValues {
   // Overall behavior: Tracking values are returned in Server-Timing headers from

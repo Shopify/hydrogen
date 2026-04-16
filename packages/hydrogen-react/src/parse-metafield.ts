@@ -21,6 +21,7 @@ import {RootASTNode as RichTextRootASTNode} from './RichText.types.js';
  * ```
  * parseMetafield<ParsedMetafields['boolean']>({type: 'boolean', value: 'false'}
  * ```
+ * @publicDocs
  */
 export function parseMetafield<ReturnGeneric>(
   metafield: PartialDeep<MetafieldBaseType, {recurseIntoArrays: true}>,

@@ -123,6 +123,7 @@ export type UseMoneyValue = {
  * ```ts
  * money.withoutTrailingZerosAndCurrency
  * ```
+ * @publicDocs
  */
 export function useMoney(money: MoneyV2): UseMoneyValue {
   const {countryIsoCode, languageIsoCode} = useShop();

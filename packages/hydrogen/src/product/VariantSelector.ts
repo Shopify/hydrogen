@@ -68,6 +68,7 @@ type VariantSelectorProps = {
  * [getAdjacentAndFirstAvailableVariants](https://shopify.dev/docs/api/hydrogen/latest/utilities/getadjacentandfirstavailablevariants) utils instead.
  * and [useSelectedOptionInUrlParam](https://shopify.dev/docs/api/hydrogen/latest/utilities/useselectedoptioninurlparam)
  * For a full implementation see the Skeleton template [routes/product.$handle.tsx](https://github.com/Shopify/hydrogen/blob/main/templates/skeleton/app/routes/products.%24handle.tsx).
+ * @publicDocs
  */
 export function VariantSelector({
   handle,
@@ -203,7 +204,10 @@ export function VariantSelector({
   );
 }
 
-type GetSelectedProductOptions = (request: Request) => SelectedOptionInput[];
+/** @publicDocs */
+export type GetSelectedProductOptions = (
+  request: Request,
+) => SelectedOptionInput[];
 
 /**
  * Extract searchParams from a Request instance and return an array of selected options.
@@ -224,6 +228,7 @@ type GetSelectedProductOptions = (request: Request) => SelectedOptionInput[];
  * //   {name: 'size', value: 'large'}
  * // ]
  * ```
+ * @publicDocs
  **/
 export const getSelectedProductOptions: GetSelectedProductOptions = (
   request,

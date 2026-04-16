@@ -19,6 +19,7 @@ type OptimisticProductVariants =
  * @param selectedVariant The `selectedVariant` field queried with `variantBySelectedOptions`.
  * @param variants The available product variants for the product. This can be an array of variants, a promise that resolves to an array of variants, or an object with a `product` key that contains the variants.
  * @returns A new product object where the `selectedVariant` property is set to the variant that matches the current URL search params. If no variant is found, the original product object is returned. The `isOptimistic` property is set to `true` if the `selectedVariant` has been optimistically changed.
+ * @publicDocs
  */
 export function useOptimisticVariant<
   SelectedVariant = OptimisticVariantInput,

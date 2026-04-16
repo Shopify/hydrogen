@@ -26,6 +26,7 @@ type BuyNowButtonProps<AsType extends React.ElementType = 'button'> =
 /**
  * The `BuyNowButton` component renders a button that adds an item to the cart and redirects the customer to checkout.
  * Must be a child of a `CartProvider` component.
+ * @publicDocs
  */
 export function BuyNowButton<AsType extends React.ElementType = 'button'>(
   props: BuyNowButtonProps<AsType>,
@@ -77,6 +78,7 @@ export function BuyNowButton<AsType extends React.ElementType = 'button'>(
 }
 
 // This is only for documentation purposes, and it is not used in the code.
+/** @publicDocs */
 export interface BuyNowButtonPropsForDocs<
   AsType extends React.ElementType = 'button',
 >

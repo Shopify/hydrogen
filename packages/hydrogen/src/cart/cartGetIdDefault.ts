@@ -2,6 +2,7 @@
 import {parse} from 'worktop/cookie';
 import {type CrossRuntimeRequest, getHeaderValue} from '../utils/request';
 
+/** @publicDocs */
 export const cartGetIdDefault = (
   requestHeaders: CrossRuntimeRequest['headers'],
 ) => {

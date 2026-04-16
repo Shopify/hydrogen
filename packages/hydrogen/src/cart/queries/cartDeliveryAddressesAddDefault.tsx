@@ -43,6 +43,7 @@ export type CartDeliveryAddressesAddFunction = (
  *    }
  *  ], { someOptionalParam: 'value' }
  * );
+ * @publicDocs
  */
 export function cartDeliveryAddressesAddDefault(
   options: CartQueryOptions,
