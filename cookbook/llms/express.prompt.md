@@ -2546,7 +2546,11 @@ Configure Vite for Express deployment with Node.js module externalization
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */
--      include: ['set-cookie-parser', 'cookie', 'react-router'],
+-      include: [
+-        'react-router > set-cookie-parser',
+-        'react-router > cookie',
+-        'react-router',
+-      ],
 +      include: ['@react-router/node', '@react-router/express'],
      },
    },
