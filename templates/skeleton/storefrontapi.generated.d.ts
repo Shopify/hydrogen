@@ -1352,3 +1352,7 @@ declare module '@shopify/hydrogen' {
   interface StorefrontQueries extends GeneratedQueryTypes {}
   interface StorefrontMutations extends GeneratedMutationTypes {}
 }
+declare module '@shopify/hydrogen-api' {
+  interface StorefrontQueries extends GeneratedQueryTypes {}
+  interface StorefrontMutations extends GeneratedMutationTypes {}
+}
