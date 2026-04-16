@@ -444,14 +444,6 @@ export type RecommendedProductsQuery = {
   };
 };
 
-export type ShopNameQueryVariables = StorefrontAPI.Exact<{
-  [key: string]: never;
-}>;
-
-export type ShopNameQuery = {
-  shop: Pick<StorefrontAPI.Shop, 'name' | 'description'>;
-};
-
 export type ArticleQueryVariables = StorefrontAPI.Exact<{
   articleHandle: StorefrontAPI.Scalars['String']['input'];
   blogHandle: StorefrontAPI.Scalars['String']['input'];
@@ -1292,10 +1284,6 @@ interface GeneratedQueryTypes {
     return: RecommendedProductsQuery;
     variables: RecommendedProductsQueryVariables;
   };
-  '#graphql\n  query ShopName {\n    shop {\n      name\n      description\n    }\n  }\n': {
-    return: ShopNameQuery;
-    variables: ShopNameQueryVariables;
-  };
   '#graphql\n  query Article(\n    $articleHandle: String!\n    $blogHandle: String!\n    $country: CountryCode\n    $language: LanguageCode\n  ) @inContext(language: $language, country: $country) {\n    blog(handle: $blogHandle) {\n      handle\n      articleByHandle(handle: $articleHandle) {\n        handle\n        title\n        contentHtml\n        publishedAt\n        author: authorV2 {\n          name\n        }\n        image {\n          id\n          altText\n          url\n          width\n          height\n        }\n        seo {\n          description\n          title\n        }\n      }\n    }\n  }\n': {
     return: ArticleQuery;
     variables: ArticleQueryVariables;
@@ -1349,10 +1337,6 @@ interface GeneratedQueryTypes {
 interface GeneratedMutationTypes {}
 
 declare module '@shopify/hydrogen' {
-  interface StorefrontQueries extends GeneratedQueryTypes {}
-  interface StorefrontMutations extends GeneratedMutationTypes {}
-}
-declare module '@shopify/hydrogen-api' {
   interface StorefrontQueries extends GeneratedQueryTypes {}
   interface StorefrontMutations extends GeneratedMutationTypes {}
 }

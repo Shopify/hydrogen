@@ -831,9 +831,6 @@ importers:
       '@shopify/hydrogen':
         specifier: workspace:*
         version: link:../../packages/hydrogen
-      '@shopify/hydrogen-api':
-        specifier: workspace:*
-        version: link:../../packages/hydrogen-api
       graphql:
         specifier: ^16.10.0
         version: 16.12.0
