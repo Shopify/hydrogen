@@ -1,5 +1,18 @@
 # @shopify/hydrogen
 
+## 2026.4.1
+
+### Patch Changes
+
+- Fix cart operations failing on stores without `VisitorConsent` type ([#3720](https://github.com/Shopify/hydrogen/pull/3720)) by [@itsjustriley](https://github.com/itsjustriley)
+
+  Cart operations (like `cart.setMetafields()`) were unconditionally including the `visitorConsent` parameter in GraphQL operations, even when not being used. This caused failures on stores whose Storefront API schema doesn't include the `VisitorConsent` type (older API versions or certain store configurations).
+
+  The `visitorConsent` parameter is now only included in cart GraphQL operations when explicitly provided. This restores compatibility with stores that don't support the `VisitorConsent` type while preserving the feature for users who need it.
+
+- Updated dependencies [[`f84ab400c62d89827574d0fa65ba310a2e75f36f`](https://github.com/Shopify/hydrogen/commit/f84ab400c62d89827574d0fa65ba310a2e75f36f)]:
+  - @shopify/hydrogen-react@2026.4.1
+
 ## 2026.4.0
 
 ### Major Changes

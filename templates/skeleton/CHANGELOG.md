@@ -1,5 +1,14 @@
 # skeleton
 
+## 2026.4.1
+
+### Patch Changes
+
+- Fix `set-cookie-parser` and `cookie` resolution warnings during `dev` by using Vite's nested dependency syntax (`react-router > dep`). These are CJS transitive dependencies of `react-router` that weren't resolvable by bare name with strict package managers like pnpm. ([#3698](https://github.com/Shopify/hydrogen/pull/3698)) by [@fredericoo](https://github.com/fredericoo)
+
+- Updated dependencies [[`f84ab400c62d89827574d0fa65ba310a2e75f36f`](https://github.com/Shopify/hydrogen/commit/f84ab400c62d89827574d0fa65ba310a2e75f36f)]:
+  - @shopify/hydrogen@2026.4.1
+
 ## 2026.4.0
 
 ### Major Changes

@@ -1,5 +1,13 @@
 # @shopify/cli-hydrogen
 
+## 11.1.16
+
+### Patch Changes
+
+- Updated route scaffolding and JS transpilation to import from `react-router` instead of the deprecated `@shopify/remix-oxygen`. ([#3621](https://github.com/Shopify/hydrogen/pull/3621)) by [@fredericoo](https://github.com/fredericoo)
+
+- Fix `set-cookie-parser` and `cookie` resolution warnings during `dev` by using Vite's nested dependency syntax (`react-router > dep`). These are CJS transitive dependencies of `react-router` that weren't resolvable by bare name with strict package managers like pnpm. ([#3698](https://github.com/Shopify/hydrogen/pull/3698)) by [@fredericoo](https://github.com/fredericoo)
+
 ## 11.1.15
 
 ### Patch Changes
