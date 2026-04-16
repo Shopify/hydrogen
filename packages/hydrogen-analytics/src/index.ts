@@ -1,7 +1,5 @@
 export {createAnalyticsBus} from './bus';
 export {AnalyticsEvent} from './events';
-export {getShopAnalytics} from './get-shop-analytics';
-
 export type {AnalyticsEventName} from './events';
 export type {
   AnalyticsBus,
