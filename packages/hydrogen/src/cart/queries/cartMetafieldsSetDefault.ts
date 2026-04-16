@@ -9,6 +9,12 @@ import type {
   Cart,
   MetafieldsSetUserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
+} from './cart-query-helpers';
 
 export type CartMetafieldsSetFunction = (
   metafields: MetafieldWithoutOwnerId[],
@@ -26,12 +32,13 @@ export function cartMetafieldsSetDefault(
         ownerId,
       }),
     );
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartMetafieldsSet, errors} = await options.storefront.mutate<{
       cartMetafieldsSet: {
         userErrors: MetafieldsSetUserError[];
       };
       errors: StorefrontApiErrors;
-    }>(CART_METAFIELD_SET_MUTATION(), {
+    }>(CART_METAFIELD_SET_MUTATION({includeVisitorConsent}), {
       variables: {metafields: metafieldsWithOwnerId, ...optionalParams},
     });
 
@@ -48,13 +55,13 @@ export function cartMetafieldsSetDefault(
 }
 
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartMetafieldsSet
-export const CART_METAFIELD_SET_MUTATION = () => `#graphql
+export const CART_METAFIELD_SET_MUTATION = (
+  options: CartBuilderOptions = {},
+) => `#graphql
   mutation cartMetafieldsSet(
     $metafields: [CartMetafieldsSetInput!]!
-    $language: LanguageCode
-    $country: CountryCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartMetafieldsSet(metafields: $metafields) {
       userErrors {
         code

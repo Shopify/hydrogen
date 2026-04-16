@@ -693,10 +693,14 @@ index 6e54066fc..667b1dc61 100644
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */
--      include: ['set-cookie-parser', 'cookie', 'react-router'],
+-      include: [
+-        'react-router > set-cookie-parser',
+-        'react-router > cookie',
+-        'react-router',
+-      ],
 +      include: [
-+        'set-cookie-parser',
-+        'cookie',
++        'react-router > set-cookie-parser',
++        'react-router > cookie',
 +        'react-router',
 +        '@qwik.dev/partytown/react',
 +      ],

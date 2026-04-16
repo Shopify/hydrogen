@@ -10,6 +10,12 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
+} from './cart-query-helpers';
 
 export type CartGiftCardCodesRemoveFunction = (
   appliedGiftCardIds: string[],
@@ -20,16 +26,22 @@ export function cartGiftCardCodesRemoveDefault(
   options: CartQueryOptions,
 ): CartGiftCardCodesRemoveFunction {
   return async (appliedGiftCardIds, optionalParams) => {
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartGiftCardCodesRemove, errors} = await options.storefront.mutate<{
       cartGiftCardCodesRemove: CartQueryData;
       errors: StorefrontApiErrors;
-    }>(CART_GIFT_CARD_CODES_REMOVE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        appliedGiftCardIds,
-        ...optionalParams,
+    }>(
+      CART_GIFT_CARD_CODES_REMOVE_MUTATION(options.cartFragment, {
+        includeVisitorConsent,
+      }),
+      {
+        variables: {
+          cartId: options.getCartId(),
+          appliedGiftCardIds,
+          ...optionalParams,
+        },
       },
-    });
+    );
     return formatAPIResult(cartGiftCardCodesRemove, errors);
   };
 }
@@ -37,14 +49,13 @@ export function cartGiftCardCodesRemoveDefault(
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartGiftCardCodesRemove
 export const CART_GIFT_CARD_CODES_REMOVE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartGiftCardCodesRemove(
     $cartId: ID!
     $appliedGiftCardIds: [ID!]!
-    $language: LanguageCode
-    $country: CountryCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartGiftCardCodesRemove(cartId: $cartId, appliedGiftCardIds: $appliedGiftCardIds) {
       cart {
         ...CartApiMutation

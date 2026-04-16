@@ -7,6 +7,12 @@ import type {
   LanguageCode,
   VisitorConsent,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
+} from './cart-query-helpers';
 
 type CartGetProps = {
   /**
@@ -67,12 +73,16 @@ export function cartGetDefault({
 
     if (!cartId) return null;
 
+    const includeVisitorConsent = shouldIncludeVisitorConsent(cartInput);
     const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([
       customerAccount ? customerAccount.isLoggedIn() : false,
-      storefront.query<{cart: Cart | null}>(CART_QUERY(cartFragment), {
-        variables: {cartId, ...cartInput},
-        cache: storefront.CacheNone(),
-      }),
+      storefront.query<{cart: Cart | null}>(
+        CART_QUERY(cartFragment, {includeVisitorConsent}),
+        {
+          variables: {cartId, ...cartInput},
+          cache: storefront.CacheNone(),
+        },
+      ),
     ]);
 
     if (isCustomerLoggedIn && cart?.checkoutUrl) {
@@ -86,14 +96,15 @@ export function cartGetDefault({
 }
 
 //! @see https://shopify.dev/docs/api/storefront/latest/queries/cart
-const CART_QUERY = (cartFragment = DEFAULT_CART_FRAGMENT) => `#graphql
+const CART_QUERY = (
+  cartFragment = DEFAULT_CART_FRAGMENT,
+  options: CartBuilderOptions = {},
+) => `#graphql
   query CartQuery(
     $cartId: ID!
     $numCartLines: Int = 100
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cart(id: $cartId) {
       ...CartApiQuery
     }

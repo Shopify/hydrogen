@@ -9,6 +9,12 @@ import type {
   MetafieldDeleteUserError,
   Scalars,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
+} from './cart-query-helpers';
 
 export type CartMetafieldDeleteFunction = (
   key: Scalars['String']['input'],
@@ -20,12 +26,13 @@ export function cartMetafieldDeleteDefault(
 ): CartMetafieldDeleteFunction {
   return async (key, optionalParams) => {
     const ownerId = optionalParams?.cartId || options.getCartId();
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartMetafieldDelete, errors} = await options.storefront.mutate<{
       cartMetafieldDelete: {
         userErrors: MetafieldDeleteUserError[];
       };
       errors: StorefrontApiErrors;
-    }>(CART_METAFIELD_DELETE_MUTATION(), {
+    }>(CART_METAFIELD_DELETE_MUTATION({includeVisitorConsent}), {
       variables: {
         input: {
           ownerId,
@@ -47,13 +54,13 @@ export function cartMetafieldDeleteDefault(
 }
 
 //! @see https://shopify.dev/docs/api/storefront/2026-04/mutations/cartMetafieldDelete
-export const CART_METAFIELD_DELETE_MUTATION = () => `#graphql
+export const CART_METAFIELD_DELETE_MUTATION = (
+  options: CartBuilderOptions = {},
+) => `#graphql
   mutation cartMetafieldDelete(
     $input: CartMetafieldDeleteInput!
-    $language: LanguageCode
-    $country: CountryCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartMetafieldDelete(input: $input) {
       userErrors {
         code
