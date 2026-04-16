@@ -31,7 +31,9 @@ export type CartDeliveryAddressesRemoveFunction = (
  * const result = await removeDeliveryAddresses([
  *   "gid://shopify/<objectName>/10079785100"
  * ],
- * { someOptionalParam: 'value' });
+ * { someOptionalParam: 'value' }
+ * );
+ * @publicDocs
  */
 export function cartDeliveryAddressesRemoveDefault(
   options: CartQueryOptions,

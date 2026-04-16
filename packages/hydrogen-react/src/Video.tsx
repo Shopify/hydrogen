@@ -3,8 +3,9 @@ import {shopifyLoader} from './Image.js';
 import type {Video as VideoType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
+/** @publicDocs */
 export interface VideoProps {
-  /** An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2026-01/objects/video). */
+  /** An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2026-04/objects/video). */
   data: PartialDeep<VideoType, {recurseIntoArrays: true}>;
   /** An object of image size options for the video's `previewImage`. Uses `shopifyImageLoader` to generate the `poster` URL. */
   previewImageOptions?: Parameters<typeof shopifyLoader>[0];
@@ -16,6 +17,7 @@ export interface VideoProps {
 
 /**
  * The `Video` component renders a `video` for the Storefront API's [Video object](https://shopify.dev/api/storefront/reference/products/video).
+ * @publicDocs
  */
 export const Video = forwardRef<
   HTMLVideoElement,

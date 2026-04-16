@@ -209,5 +209,6 @@ function richTextToString(
 }
 
 // This is only for documentation purposes, and it is not used in the code.
+/** @publicDocs */
 export type RichTextPropsForDocs<AsType extends React.ElementType = 'div'> =
   RichTextPropsBase<AsType>;

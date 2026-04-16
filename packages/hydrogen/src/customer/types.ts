@@ -144,6 +144,7 @@ export type CustomerAccount = {
   UNSTABLE_getBuyer: () => Promise<Buyer>;
 };
 
+/** @publicDocs */
 export type CustomerAccountOptions = {
   /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: HydrogenSession;
@@ -179,8 +180,9 @@ export type CustomerAccountOptions = {
   useCustomAuthDomain?: boolean;
 };
 
-/** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
+// Below are types meant for documentation only. Ensure it stay in sync with the type above.
 
+/** @publicDocs */
 export type CustomerAccountForDocs = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action.
    * It redirects the customer to a Shopify login domain. It also defined the final path the customer

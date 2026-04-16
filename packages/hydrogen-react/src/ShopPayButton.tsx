@@ -3,7 +3,8 @@ import {useLoadScript} from './load-script.js';
 import {parseGid} from './analytics-utils.js';
 
 // By using 'never' in the "or" cases below, it makes these props "exclusive" and means that you cannot pass both of them; you must pass either one OR the other.
-type ShopPayButtonProps = ShopPayButtonStyleProps &
+/** @publicDocs */
+export type ShopPayButtonProps = ShopPayButtonStyleProps &
   ShopPayDomainProps &
   ShopPayChannelAttribution &
   (ShopPayVariantIds | ShopPayVariantAndQuantities);
@@ -68,6 +69,7 @@ function isChannel(
  * The `ShopPayButton` component renders a button that redirects to the Shop Pay checkout.
  * It renders a [`<shop-pay-button>`](https://shopify.dev/custom-storefronts/tools/web-components) custom element, for which it will lazy-load the source code automatically.
  * It relies on the `<ShopProvider>` context provider.
+ * @publicDocs
  */
 export function ShopPayButton({
   channel,

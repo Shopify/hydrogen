@@ -15,6 +15,7 @@ export type CartMetafieldDeleteFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/** @publicDocs */
 export function cartMetafieldDeleteDefault(
   options: CartQueryOptions,
 ): CartMetafieldDeleteFunction {
@@ -46,7 +47,7 @@ export function cartMetafieldDeleteDefault(
   };
 }
 
-//! @see https://shopify.dev/docs/api/storefront/2026-01/mutations/cartMetafieldDelete
+//! @see https://shopify.dev/docs/api/storefront/2026-04/mutations/cartMetafieldDelete
 export const CART_METAFIELD_DELETE_MUTATION = () => `#graphql
   mutation cartMetafieldDelete(
     $input: CartMetafieldDeleteInput!

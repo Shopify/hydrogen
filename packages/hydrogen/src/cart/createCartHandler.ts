@@ -134,6 +134,7 @@ export type HydrogenCart = {
    * );
    */
   addDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesAddDefault>;
+
   /**
    * Removes delivery addresses from the cart.
    *
@@ -148,8 +149,8 @@ export type HydrogenCart = {
    *   "gid://shopify/<objectName>/10079785100"
    * ],
    * { someOptionalParam: 'value' });
+   * @publicDocs
    */
-
   removeDeliveryAddresses: ReturnType<
     typeof cartDeliveryAddressesRemoveDefault
   >;
@@ -361,6 +362,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   }
 }
 
+/** @publicDocs */
 export type CartHandlerOptionsForDocs<
   TCustomMethods extends CustomMethodsBase,
 > = {
@@ -398,6 +400,7 @@ export type CartHandlerOptionsForDocs<
   buyerIdentity?: CartBuyerIdentityInput;
 };
 
+/** @publicDocs */
 export type HydrogenCartForDocs = {
   /**
    * Adds items to the cart.

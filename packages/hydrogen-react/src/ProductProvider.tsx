@@ -25,6 +25,7 @@ const ProductOptionsContext = createContext<ProductHookValue | null>(null);
 
 type InitialVariantId = ProductVariantType['id'] | null;
 
+/** @publicDocs */
 interface ProductProviderProps {
   /** A Storefront API [Product object](https://shopify.dev/api/storefront/reference/products/product). */
   data: PartialDeep<Product, {recurseIntoArrays: true}>;
@@ -381,6 +382,7 @@ type UseProductFunctions = {
   ) => boolean;
 };
 
+/** @publicDocs */
 type ProductHookValue = PartialDeep<
   UseProductObjects,
   {recurseIntoArrays: true}

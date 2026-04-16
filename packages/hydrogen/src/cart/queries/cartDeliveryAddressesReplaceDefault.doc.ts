@@ -7,7 +7,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Creates a function that accepts an array of [CartSelectableAddressInput](/docs/api/storefront/2026-01/input-objects/CartSelectableAddressInput) to replace all delivery addresses on a cart',
+    'Creates a function that accepts an array of [CartSelectableAddressInput](/docs/api/storefront/2026-04/input-objects/CartSelectableAddressInput) to replace all delivery addresses on a cart',
   type: 'utility',
   defaultExample: {
     description:

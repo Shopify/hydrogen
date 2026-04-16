@@ -67,6 +67,7 @@ export type Consent = Partial<
   >
 > & {language?: LanguageCode}; // the privacyBanner SDKs refers to "language" as "locale" :(
 
+/** @publicDocs */
 export type AnalyticsProviderProps = {
   /** React children to render. */
   children?: ReactNode;
@@ -281,7 +282,9 @@ function register(key: string) {
  */
 function shopifyCanTrack(): boolean {
   try {
-    return window.Shopify.customerPrivacy.analyticsProcessingAllowed();
+    return (
+      window.Shopify.customerPrivacy?.analyticsProcessingAllowed?.() ?? false
+    );
   } catch (e) {}
   return false;
 }
@@ -445,6 +448,7 @@ type ShopAnalyticsProps = {
   publicStorefrontId: string;
 };
 
+/** @publicDocs */
 export async function getShopAnalytics({
   storefront,
   publicStorefrontId = '0',
@@ -495,6 +499,7 @@ export const Analytics = {
 
 type DefaultCart = Promise<CartReturn | null> | CartReturn | null;
 
+/** @publicDocs */
 export type AnalyticsContextValueForDoc<UserCart> = {
   /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack?: () => boolean;

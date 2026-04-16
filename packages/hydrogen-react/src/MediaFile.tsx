@@ -9,6 +9,7 @@ import type {ModelViewerElement} from '@google/model-viewer/lib/model-viewer.js'
 type BaseProps = React.HTMLAttributes<
   HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | ModelViewerElement
 >;
+/** @publicDocs */
 export interface MediaFileProps extends BaseProps {
   /** An object with fields that correspond to the Storefront API's [Media object](https://shopify.dev/api/storefront/reference/products/media). */
   data: PartialDeep<MediaEdgeType['node'], {recurseIntoArrays: true}>;
@@ -34,6 +35,7 @@ type MediaOptions = {
  * The `MediaFile` component renders the media for the Storefront API's
  * [Media object](https://shopify.dev/api/storefront/reference/products/media). It renders an `Image`, a
  * `Video`, an `ExternalVideo`, or a `ModelViewer` depending on the `__typename` of the `data` prop.
+ * @publicDocs
  */
 export function MediaFile({
   data,
