@@ -1,8 +1,9 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
  * Based on Customer Account API 2026-04
- * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
- * Except custom Scalars, which are defined in the `codegen.ts` file
+ * If changes need to happen to the types defined in this file, then generally
+ * the Customer Account API needs to update. After it's updated, run `pnpm run graphql-types`.
+ * Except custom Scalars, which are defined in the `codegen.ts` file.
  */
 /* eslint-disable */
 export type Maybe<T> = T | null;
@@ -3081,7 +3082,10 @@ export type DraftOrderLineItem = Node & {
   discountInformation: DraftOrderLineItemDiscountInformation;
   /** The total price of the line item after discounts have been applied. */
   discountedTotal: MoneyV2;
-  /** The discounted total divided by the quantity, resulting in the value of the discount per unit. */
+  /**
+   * The discounted total divided by the quantity, resulting in the value of the discount per unit.
+   * @deprecated Please use `approximateDiscountedUnitPrice` instead. This field will be removed in 2026-07.
+   */
   discountedUnitPrice: MoneyV2;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];

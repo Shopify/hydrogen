@@ -39,6 +39,7 @@
   },
   "scripts": {
     "build": "tsup && cp src/storefront-api-types.d.ts dist/storefront-api-types.d.ts && cp src/customer-account-api-types.d.ts dist/customer-account-api-types.d.ts",
+    "graphql-types": "graphql-codegen --config codegen.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -46,6 +47,10 @@
     "@shopify/graphql-client": "1.4.1"
   },
   "devDependencies": {
+    "@graphql-codegen/add": "^5.0.3",
+    "@graphql-codegen/cli": "^5.0.4",
+    "@graphql-codegen/introspection": "^4.0.3",
+    "@graphql-codegen/typescript": "^4.1.3",
     "@shopify/hydrogen-codegen": "workspace:*",
     "@types/node": "catalog:",
     "graphql": "^16.12.0",

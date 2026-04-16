@@ -1,8 +1,9 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
  * Based on Storefront API 2026-04
- * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
- * Except custom Scalars, which are defined in the `codegen.ts` file
+ * If changes need to happen to the types defined in this file, then generally
+ * the Storefront API needs to update. After it's updated, run `pnpm run graphql-types`.
+ * Except custom Scalars, which are defined in the `codegen.ts` file.
  */
 /* eslint-disable */
 export type Maybe<T> = T | null;
@@ -635,7 +636,10 @@ export type Cart = HasMetafields &
      *
      */
     deliveryGroups: CartDeliveryGroupConnection;
-    /** The discounts that have been applied to the entire cart. */
+    /**
+     * The discounts that have been applied to the entire cart.
+     * @deprecated Use `cart.lines[].discountAllocations(lineLevelOnly: false)` and `cart.deliveryGroups[].discountAllocations` instead.
+     */
     discountAllocations: Array<
       | CartAutomaticDiscountAllocation
       | CartCodeDiscountAllocation
@@ -765,7 +769,10 @@ export type CartAttributesUpdatePayload = {
  */
 export type CartAutomaticDiscountAllocation = CartDiscountAllocation & {
   __typename?: 'CartAutomaticDiscountAllocation';
-  /** The discount that have been applied on the cart line. */
+  /**
+   * The discount that have been applied on the cart line.
+   * @deprecated Use `sourceDiscountApplication` instead.
+   */
   discountApplication: CartDiscountApplication;
   /** The discounted amount that has been applied to the cart line. */
   discountedAmount: MoneyV2;
@@ -896,7 +903,10 @@ export type CartCodeDiscountAllocation = CartDiscountAllocation & {
   __typename?: 'CartCodeDiscountAllocation';
   /** The code used to apply the discount. */
   code: Scalars['String']['output'];
-  /** The discount that have been applied on the cart line. */
+  /**
+   * The discount that have been applied on the cart line.
+   * @deprecated Use `sourceDiscountApplication` instead.
+   */
   discountApplication: CartDiscountApplication;
   /** The discounted amount that has been applied to the cart line. */
   discountedAmount: MoneyV2;
@@ -1020,7 +1030,10 @@ export type CartCreatePayload = {
 /** The discounts automatically applied to the cart line based on prerequisites that have been met. */
 export type CartCustomDiscountAllocation = CartDiscountAllocation & {
   __typename?: 'CartCustomDiscountAllocation';
-  /** The discount that have been applied on the cart line. */
+  /**
+   * The discount that have been applied on the cart line.
+   * @deprecated Use `sourceDiscountApplication` instead.
+   */
   discountApplication: CartDiscountApplication;
   /** The discounted amount that has been applied to the cart line. */
   discountedAmount: MoneyV2;
@@ -1391,7 +1404,10 @@ export type CartDirectPaymentMethodInput = {
  *
  */
 export type CartDiscountAllocation = {
-  /** The discount that have been applied on the cart line. */
+  /**
+   * The discount that have been applied on the cart line.
+   * @deprecated Use `sourceDiscountApplication` instead.
+   */
   discountApplication: CartDiscountApplication;
   /** The discounted amount that has been applied to the cart line. */
   discountedAmount: MoneyV2;
@@ -5533,6 +5549,8 @@ export type Metafield = Node & {
   id: Scalars['ID']['output'];
   /** The unique identifier for the metafield within its namespace. */
   key: Scalars['String']['output'];
+  /** Whether the metafield's type is a list type. Returns `true` for types like `list.color` or `list.single_line_text_field`. */
+  list: Scalars['Boolean']['output'];
   /** The container for a group of metafields that the metafield is associated with. */
   namespace: Scalars['String']['output'];
   /** The type of resource that the metafield is attached to. */
