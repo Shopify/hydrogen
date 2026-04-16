@@ -1,6 +1,6 @@
 # skeleton
 
-## 2026.4.0
+## 2026.1.5
 
 ### Major Changes
 
@@ -21,7 +21,7 @@
 ### Patch Changes
 
 - Updated dependencies [[`e7215ed0d7a74cacfa8c935f414c1cf32fc2ccd0`](https://github.com/Shopify/hydrogen/commit/e7215ed0d7a74cacfa8c935f414c1cf32fc2ccd0), [`92ab8e8b59807bbdb5dbecaa18629292d5566135`](https://github.com/Shopify/hydrogen/commit/92ab8e8b59807bbdb5dbecaa18629292d5566135), [`b0caa5c013380c7837f049f48da089a1671e2c6d`](https://github.com/Shopify/hydrogen/commit/b0caa5c013380c7837f049f48da089a1671e2c6d)]:
-  - @shopify/hydrogen@2026.4.0
+  - @shopify/hydrogen@2026.1.5
 
 ## 2026.1.4
 
