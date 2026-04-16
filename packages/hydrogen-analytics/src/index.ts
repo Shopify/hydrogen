@@ -1,26 +1,25 @@
 export {createAnalyticsBus} from './bus';
-export {AnalyticsEvent} from './events';
 export type {AnalyticsEventName} from './events';
+export {AnalyticsEvent} from './events';
 export type {
   AnalyticsBus,
   AnalyticsBusOptions,
-  AnalyticsEventMap,
-  PayloadFor,
-  ShopAnalytics,
-  ConsentConfig,
-  ConsentCollectedPayload,
   AnalyticsCart,
   AnalyticsCartLine,
-  OtherData,
-  PageViewPayload,
-  ProductViewPayload,
-  CollectionViewPayload,
-  CartViewPayload,
-  SearchViewPayload,
-  CartUpdatePayload,
+  AnalyticsEventMap,
   CartLineUpdatePayload,
+  CartUpdatePayload,
+  CartViewPayload,
+  CollectionViewPayload,
+  ConsentCollectedPayload,
+  ConsentConfig,
   CustomEventPayload,
   EventPayloads,
+  OtherData,
+  PageViewPayload,
+  PayloadFor,
   ProductPayload,
+  ProductViewPayload,
+  SearchViewPayload,
+  ShopAnalytics,
 } from './types';
-
