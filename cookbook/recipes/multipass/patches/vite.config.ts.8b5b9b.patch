@@ -1,6 +1,7 @@
 --- a/templates/skeleton/vite.config.ts
 +++ b/templates/skeleton/vite.config.ts
-@@ -28,6 +28,7 @@ export default defineConfig({
+@@ -28,7 +28,8 @@ export default defineConfig({
+       include: [
          'react-router > set-cookie-parser',
          'react-router > cookie',
          'react-router',
