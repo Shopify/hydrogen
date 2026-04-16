@@ -27,17 +27,16 @@
       "default": "./dist/index.js"
     },
     "./storefront-api-types": {
-      "types": "./dist/storefront-api-types.d.ts"
+      "types": "./dist/generated/storefront-api-types.d.ts"
     },
     "./customer-account-api-types": {
-      "types": "./dist/customer-account-api-types.d.ts"
+      "types": "./dist/generated/customer-account-api-types.d.ts"
     },
-    "./storefront.schema.json": "./dist/storefront.schema.json",
-    "./customer-account.schema.json": "./dist/customer-account.schema.json"
+    "./storefront.schema.json": "./dist/generated/storefront.schema.json",
+    "./customer-account.schema.json": "./dist/generated/customer-account.schema.json"
   },
   "scripts": {
-    "build": "tsup && pnpm run copy-assets",
-    "copy-assets": "cp src/storefront-api-types.d.ts src/customer-account-api-types.d.ts storefront.schema.json customer-account.schema.json dist/",
+    "build": "tsup",
     "graphql-types": "graphql-codegen --config codegen.ts",
     "test": "vitest run",
     "test:watch": "vitest"
