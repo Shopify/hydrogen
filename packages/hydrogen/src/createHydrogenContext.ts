@@ -142,6 +142,7 @@ export interface HydrogenContextOverloads<
   session: TSession;
 }
 
+/** @publicDocs */
 export function createHydrogenContext<
   TSession extends HydrogenSession,
   TCustomMethods extends CustomMethodsBase | undefined = {},
@@ -326,6 +327,7 @@ export function createHydrogenContext<
     TAdditionalContext;
 }
 
+/** @publicDocs */
 export type HydrogenContextOptionsForDocs<
   TSession extends HydrogenSession = HydrogenSession,
   TI18n extends I18nBase = I18nBase,

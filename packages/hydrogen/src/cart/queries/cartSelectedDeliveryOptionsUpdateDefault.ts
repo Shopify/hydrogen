@@ -23,6 +23,7 @@ export type CartSelectedDeliveryOptionsUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/** @publicDocs */
 export function cartSelectedDeliveryOptionsUpdateDefault(
   options: CartQueryOptions,
 ): CartSelectedDeliveryOptionsUpdateFunction {

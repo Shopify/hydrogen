@@ -45,6 +45,7 @@ export type Loader = (params: LoaderParams) => string;
  */
 type Crop = 'center' | 'top' | 'bottom' | 'left' | 'right';
 
+/** @publicDocs */
 export type HydrogenImageProps = React.ComponentPropsWithRef<'img'> &
   HydrogenImageBaseProps;
 
@@ -148,6 +149,7 @@ export const IMAGE_FRAGMENT = `#graphql
  * ```
  *
  * {@link https://shopify.dev/docs/api/hydrogen-react/components/image}
+ * @publicDocs
  */
 export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
   (

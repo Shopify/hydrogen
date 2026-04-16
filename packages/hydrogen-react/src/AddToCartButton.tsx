@@ -33,6 +33,7 @@ export type AddToCartButtonProps<AsType extends React.ElementType = 'button'> =
 /**
  * The `AddToCartButton` component renders a button that adds an item to the cart when pressed.
  * It must be a descendent of the `CartProvider` component.
+ * @publicDocs
  */
 export function AddToCartButton<AsType extends React.ElementType = 'button'>(
   props: AddToCartButtonProps<AsType>,
@@ -113,6 +114,7 @@ export function AddToCartButton<AsType extends React.ElementType = 'button'>(
 }
 
 // This is only for documentation purposes, and it is not used in the code.
+/** @publicDocs */
 export interface AddToCartButtonPropsForDocs<
   AsType extends React.ElementType = 'button',
 >

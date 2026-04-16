@@ -23,6 +23,7 @@ export type CartLinesAddFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/** @publicDocs */
 export function cartLinesAddDefault(
   options: CartQueryOptions,
 ): CartLinesAddFunction {

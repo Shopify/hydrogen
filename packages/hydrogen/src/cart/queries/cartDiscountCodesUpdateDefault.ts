@@ -22,6 +22,7 @@ export type CartDiscountCodesUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/** @publicDocs */
 export function cartDiscountCodesUpdateDefault(
   options: CartQueryOptions,
 ): CartDiscountCodesUpdateFunction {

@@ -45,6 +45,7 @@ interface ProductProviderProps {
  * `<ProductProvider />` is a context provider that enables use of the `useProduct()` hook.
  *
  * It helps manage selected options and variants for a product.
+ * @publicDocs
  */
 export function ProductProvider({
   children,
@@ -206,6 +207,7 @@ export function ProductProvider({
 
 /**
  * Provides access to the context value provided by `<ProductProvider />`. Must be a descendent of `<ProductProvider />`.
+ * @publicDocs
  */
 export function useProduct(): ProductHookValue {
   const context = useContext(ProductOptionsContext);
