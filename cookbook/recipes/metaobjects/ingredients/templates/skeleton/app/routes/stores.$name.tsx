@@ -25,7 +25,7 @@ export async function loader(args: Route.LoaderArgs) {
 async function loadCriticalData({context, params}: Route.LoaderArgs) {
   const {storefront} = context;
   const {name} = params;
-  
+
   // 2. Query for the route's content metaobject
   const [{route}] = await Promise.all([
     storefront.query(ROUTE_CONTENT_QUERY, {
@@ -51,6 +51,7 @@ export default function Store() {
   const {route} = useLoaderData<typeof loader>();
   return (
     <div className="store">
+      <h1>Store Details</h1>
       {/* 3. Render the route's content sections */}
       <RouteContent route={route} />
     </div>

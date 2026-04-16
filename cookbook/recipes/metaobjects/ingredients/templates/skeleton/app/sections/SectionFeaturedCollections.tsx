@@ -30,7 +30,7 @@ export function SectionFeaturedCollections(
                   aspectRatio="1/1"
                   data={collection.image as FeaturedCollectionImageFragment}
                 />
-                <h5>{collection.title}</h5>
+                <h3>{collection.title}</h3>
               </a>
             </li>
           ))}

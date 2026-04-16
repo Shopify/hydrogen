@@ -31,7 +31,7 @@ export function SectionFeaturedProducts(
                 {variant.image && (
                   <Image data={variant.image} style={{width: 'auto'}} />
                 )}
-                <h5 style={{marginBottom: '.5rem'}}>{title}</h5>
+                <h3 style={{marginBottom: '.5rem'}}>{title}</h3>
                 {withProductPrices && (
                   <small style={{display: 'flex', marginTop: '.5rem'}}>
                     <span>From</span> &nbsp;
