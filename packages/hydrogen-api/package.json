@@ -52,7 +52,7 @@
     "@shopify/hydrogen-codegen": "workspace:*",
     "@types/node": "catalog:",
     "graphql": "^16.12.0",
-    "tsdown": "^0.12.4",
+    "tsdown": "^0.21.9",
     "vitest": "^3.2.4"
   }
 }
