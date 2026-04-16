@@ -2,4 +2,4 @@
 '@shopify/hydrogen-api': patch
 ---
 
-Scaffold `@shopify/hydrogen-api` — a framework-agnostic package that exports the Storefront API client, generated types, and introspection schema. This package has zero runtime dependencies and can be used without React.
+Add `@shopify/hydrogen-api` — a framework-agnostic package that exports the full server-side Storefront API client with caching, i18n, GraphQL validation, error handling, and `@defer` streaming support. Includes generated Storefront and Customer Account API types, introspection schemas, and cache strategies. This package can be used without React or any framework.

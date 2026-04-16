@@ -13,7 +13,8 @@
   "type": "module",
   "files": [
     "dist",
-    "storefront.schema.json"
+    "storefront.schema.json",
+    "customer-account.schema.json"
   ],
   "sideEffects": false,
   "repository": {
@@ -30,18 +31,25 @@
     "./storefront-api-types": {
       "types": "./dist/storefront-api-types.d.ts"
     },
-    "./storefront.schema.json": "./storefront.schema.json"
+    "./customer-account-api-types": {
+      "types": "./dist/customer-account-api-types.d.ts"
+    },
+    "./storefront.schema.json": "./storefront.schema.json",
+    "./customer-account.schema.json": "./customer-account.schema.json"
   },
   "scripts": {
-    "build": "tsup && cp src/storefront-api-types.d.ts dist/storefront-api-types.d.ts",
+    "build": "tsup && cp src/storefront-api-types.d.ts dist/storefront-api-types.d.ts && cp src/customer-account-api-types.d.ts dist/customer-account-api-types.d.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "dependencies": {},
-  "peerDependencies": {},
+  "dependencies": {
+    "@shopify/graphql-client": "1.4.1"
+  },
   "devDependencies": {
-    "tsup": "^8.4.0",
+    "@shopify/hydrogen-codegen": "workspace:*",
     "@types/node": "catalog:",
+    "graphql": "^16.12.0",
+    "tsup": "^8.4.0",
     "vitest": "^3.2.4"
   }
 }

@@ -1,4 +1,5 @@
 import {SFAPI_VERSION} from './storefront-api-constants.js';
+import {warnOnce} from './utils/warning.js';
 
 export type StorefrontClientProps = {
   /** The host name of the domain (eg: `{shop}.myshopify.com`). */
@@ -176,14 +177,7 @@ function getPublicTokenHeadersRaw(
   };
 }
 
-const warnings = new Set<string>();
 const H2_PREFIX_ERROR = '[h2:error:createStorefrontClient] ';
-const warnOnce = (string: string, type: 'warn' | 'info' = 'warn'): void => {
-  if (!warnings.has(string)) {
-    console[type](`[h2:${type}:createStorefrontClient] ` + string);
-    warnings.add(string);
-  }
-};
 
 type OverrideTokenHeaderProps = Partial<
   Pick<StorefrontClientProps, 'contentType'>

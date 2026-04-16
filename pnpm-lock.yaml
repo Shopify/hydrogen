@@ -520,10 +520,20 @@ importers:
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(happy-dom@20.8.9)(jiti@2.6.1)(lightningcss@1.30.2)(msw@2.12.10(@types/node@22.19.15)(typescript@5.9.2))(yaml@2.8.3)
 
   packages/hydrogen-api:
+    dependencies:
+      '@shopify/graphql-client':
+        specifier: 1.4.1
+        version: 1.4.1
     devDependencies:
+      '@shopify/hydrogen-codegen':
+        specifier: workspace:*
+        version: link:../hydrogen-codegen
       '@types/node':
         specifier: 22.19.15
         version: 22.19.15
+      graphql:
+        specifier: ^16.12.0
+        version: 16.12.0
       tsup:
         specifier: ^8.4.0
         version: 8.5.1(@swc/core@1.15.11)(jiti@2.6.1)(postcss@8.5.8)(typescript@5.9.2)(yaml@2.8.3)
