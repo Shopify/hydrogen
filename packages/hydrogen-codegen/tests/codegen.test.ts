@@ -89,6 +89,10 @@ describe('Hydrogen Codegen', async () => {
         interface StorefrontQueries extends GeneratedQueryTypes {}
         interface StorefrontMutations extends GeneratedMutationTypes {}
       }
+      declare module '@shopify/hydrogen-api' {
+        interface StorefrontQueries extends GeneratedQueryTypes {}
+        interface StorefrontMutations extends GeneratedMutationTypes {}
+      }
       "
     `);
   });
@@ -209,6 +213,10 @@ describe('Hydrogen Codegen', async () => {
       }
 
       declare module '@shopify/hydrogen' {
+        interface StorefrontQueries extends GeneratedQueryTypes {}
+        interface StorefrontMutations extends GeneratedMutationTypes {}
+      }
+      declare module '@shopify/hydrogen-api' {
         interface StorefrontQueries extends GeneratedQueryTypes {}
         interface StorefrontMutations extends GeneratedMutationTypes {}
       }

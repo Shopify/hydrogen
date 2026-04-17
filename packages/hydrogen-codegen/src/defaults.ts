@@ -7,6 +7,10 @@ const sfapiDefaultInterfaceExtensionCode = `
 declare module '@shopify/hydrogen' {
   interface StorefrontQueries extends ${QUERIES_PLACEHOLDER} {}
   interface StorefrontMutations extends ${MUTATIONS_PLACEHOLDER} {}
+}
+declare module '@shopify/hydrogen-api' {
+  interface StorefrontQueries extends ${QUERIES_PLACEHOLDER} {}
+  interface StorefrontMutations extends ${MUTATIONS_PLACEHOLDER} {}
 }`;
 
 const caapiDefaultInterfaceExtensionCode = `
@@ -21,8 +25,8 @@ function replacePlaceholders(
   mutationType: string,
 ) {
   return code
-    .replace(QUERIES_PLACEHOLDER, queryType)
-    .replace(MUTATIONS_PLACEHOLDER, mutationType);
+    .replaceAll(QUERIES_PLACEHOLDER, queryType)
+    .replaceAll(MUTATIONS_PLACEHOLDER, mutationType);
 }
 
 type DefaultValues = {

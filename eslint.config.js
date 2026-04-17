@@ -94,6 +94,7 @@ const localPlugin = {
 };
 
 const lintedTSPackages = [
+  'packages/hydrogen-api',
   'packages/hydrogen-react',
   'examples/express',
   'templates/skeleton',

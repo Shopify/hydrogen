@@ -27,8 +27,9 @@ export function getSchema(api: Api, options?: Options<boolean>) {
   } catch {
     if (options?.throwIfMissing !== false) {
       throw new Error(
-        `Could not find a schema for "${api}".\nPlease make sure a recent version of \`@shopify/hydrogen\` is installed.`,
+        `Could not find a schema for "${api}".\nPlease make sure \`@shopify/hydrogen\` or \`@shopify/hydrogen-api\` is installed.`,
       );
     }
+    return undefined;
   }
 }

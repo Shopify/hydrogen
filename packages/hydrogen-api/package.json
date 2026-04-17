@@ -1,0 +1,72 @@
+{
+  "name": "@shopify/hydrogen-api",
+  "version": "0.0.0",
+  "description": "Framework-agnostic Storefront API client and types for Shopify Hydrogen",
+  "license": "MIT",
+  "main": "dist/production/index.js",
+  "module": "dist/production/index.js",
+  "types": "dist/production/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org"
+  },
+  "type": "module",
+  "files": [
+    "dist",
+    "skills"
+  ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/hydrogen",
+    "directory": "packages/hydrogen-api"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/production/index.d.ts",
+      "import": {
+        "development": "./dist/development/index.js",
+        "default": "./dist/production/index.js"
+      },
+      "default": {
+        "development": "./dist/development/index.js",
+        "default": "./dist/production/index.js"
+      }
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "import": "./dist/schema.js",
+      "default": "./dist/schema.js"
+    },
+    "./storefront-api-types": {
+      "types": "./dist/generated/storefront-api-types.d.ts"
+    },
+    "./customer-account-api-types": {
+      "types": "./dist/generated/customer-account-api-types.d.ts"
+    },
+    "./storefront.schema.json": "./dist/generated/storefront.schema.json",
+    "./customer-account.schema.json": "./dist/generated/customer-account.schema.json"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "graphql-types": "graphql-codegen --config codegen.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@shopify/graphql-client": "1.4.1",
+    "@shopify/hydrogen-core": "workspace:*",
+    "type-fest": "^4.33.0"
+  },
+  "devDependencies": {
+    "@graphql-codegen/add": "^5.0.3",
+    "@graphql-codegen/cli": "^5.0.4",
+    "@graphql-codegen/introspection": "^4.0.3",
+    "@graphql-codegen/typescript": "^4.1.3",
+    "@shopify/hydrogen-codegen": "workspace:*",
+    "@types/node": "catalog:",
+    "graphql": "^16.12.0",
+    "tsdown": "^0.21.9",
+    "vitest": "^3.2.4"
+  }
+}
