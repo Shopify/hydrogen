@@ -1,5 +1,6 @@
-import {SFAPI_VERSION} from './storefront-api-constants.js';
+import {SFAPI_VERSION} from './api-constants.js';
 import {warnOnce} from './utils/warning.js';
+import {MOCK_SHOP_DOMAIN, isMockShop} from '@shopify/hydrogen-core';
 
 export type StorefrontClientProps = {
   /** The host name of the domain (eg: `{shop}.myshopify.com`). */
@@ -8,8 +9,6 @@ export type StorefrontClientProps = {
   privateStorefrontToken?: string;
   /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */
   publicStorefrontToken?: string;
-  /** The Storefront API version. This should almost always be the same as the version this build of Hydrogen API targets. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */
-  storefrontApiVersion?: string;
   /**
    * Customizes which `"content-type"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `"json"`. When fetching with a `body` that is a plain string, use `"graphql"`. Defaults to `"json"`
    *
@@ -18,42 +17,33 @@ export type StorefrontClientProps = {
   contentType?: 'json' | 'graphql';
 };
 
-const MOCK_SHOP_DOMAIN = 'mock.shop';
-const isMockShop = (domain: string): boolean =>
-  domain.includes(MOCK_SHOP_DOMAIN);
-
 /**
  * The `createStorefrontClient()` function creates helpers that enable you to quickly query the Shopify Storefront API.
  *
  * When used on the server, it is recommended to use the `privateStorefrontToken` prop. When used on the client, it is recommended to use the `publicStorefrontToken` prop.
+ *
+ * The Storefront API version is pinned to the version this build of
+ * `@shopify/hydrogen-api` targets (`SFAPI_VERSION`) and cannot be
+ * overridden. Internally-generated queries (cart, customer, etc.) are
+ * typed against that version, so mixing versions produces responses
+ * that don't match the typed shape.
  */
 export function createStorefrontClient({
   storeDomain,
   privateStorefrontToken,
   publicStorefrontToken,
-  storefrontApiVersion = SFAPI_VERSION,
   contentType,
 }: StorefrontClientProps): StorefrontClientReturn {
   if (!storeDomain) {
     if (__HYDROGEN_DEV__) {
       storeDomain = MOCK_SHOP_DOMAIN;
-      warnOnce(
-        `storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`,
-        'info',
-      );
+      warnOnce(`storeDomain missing, defaulting to mock data`, 'info');
     } else {
       throw new Error(
         H2_PREFIX_ERROR +
           `\`storeDomain\` is required when creating a new Storefront client in production.`,
       );
     }
-  }
-
-  if (storefrontApiVersion !== SFAPI_VERSION) {
-    warnOnce(
-      `The Storefront API version that you're using is different than the version this build of Hydrogen API is targeting.` +
-        `\nYou may run into unexpected errors if these versions don't match. Received version: "${storefrontApiVersion}"; expected version "${SFAPI_VERSION}"`,
-    );
   }
 
   // only warn if not in a browser environment
@@ -90,9 +80,7 @@ export function createStorefrontClient({
       const domain = getShopifyDomain(overrideProps);
       const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');
 
-      return `${apiUrl}/${
-        overrideProps?.storefrontApiVersion ?? storefrontApiVersion
-      }/graphql.json`;
+      return `${apiUrl}/${SFAPI_VERSION}/graphql.json`;
     },
     getPrivateTokenHeaders(overrideProps): Record<string, string> {
       if (
@@ -123,7 +111,7 @@ export function createStorefrontClient({
             : 'application/json',
         'X-SDK-Variant': 'hydrogen-api',
         'X-SDK-Variant-Source': 'api',
-        'X-SDK-Version': storefrontApiVersion,
+        'X-SDK-Version': SFAPI_VERSION,
         'Shopify-Storefront-Private-Token':
           overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',
         ...(overrideProps?.buyerIp
@@ -148,7 +136,6 @@ export function createStorefrontClient({
 
       return getPublicTokenHeadersRaw(
         finalContentType,
-        storefrontApiVersion,
         overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',
       );
     },
@@ -157,7 +144,6 @@ export function createStorefrontClient({
 
 function getPublicTokenHeadersRaw(
   contentType: 'graphql' | 'json',
-  storefrontApiVersion: string,
   accessToken: string,
 ): {
   'content-type': string;
@@ -172,7 +158,7 @@ function getPublicTokenHeadersRaw(
       contentType === 'graphql' ? 'application/graphql' : 'application/json',
     'X-SDK-Variant': 'hydrogen-api',
     'X-SDK-Variant-Source': 'api',
-    'X-SDK-Version': storefrontApiVersion,
+    'X-SDK-Version': SFAPI_VERSION,
     'X-Shopify-Storefront-Access-Token': accessToken,
   };
 }
@@ -200,12 +186,9 @@ export type StorefrontClientReturn = {
    * By default, it will use the config you passed in when calling `createStorefrontClient()`. However, you can override the following settings on each invocation of `getStorefrontApiUrl({...})`:
    *
    * - `storeDomain`
-   * - `storefrontApiVersion`
    */
   getStorefrontApiUrl: (
-    props?: Partial<
-      Pick<StorefrontClientProps, 'storeDomain' | 'storefrontApiVersion'>
-    >,
+    props?: Partial<Pick<StorefrontClientProps, 'storeDomain'>>,
   ) => string;
   /**
    * Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. This method uses the private Server-to-Server token which reduces the chance of throttling but must not be exposed to clients. Server-side calls should prefer using this over `getPublicTokenHeaders()`.

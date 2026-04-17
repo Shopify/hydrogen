@@ -1,7 +1,7 @@
 import {vi, beforeEach, describe, expect, it} from 'vitest';
 
 import {createStorefrontClient} from './storefront-client.js';
-import {SFAPI_VERSION} from './storefront-api-constants.js';
+import {SFAPI_VERSION} from './api-constants.js';
 
 describe(`createStorefrontClient`, () => {
   beforeEach(() => {
@@ -82,15 +82,16 @@ describe(`createStorefrontClient`, () => {
       );
     });
 
-    it(`allows overrides`, () => {
+    it(`allows storeDomain override`, () => {
       const client = createStorefrontClient(generateConfig());
 
       expect(
         client.getStorefrontApiUrl({
           storeDomain: 'https://newdomain.myshopify.com',
-          storefrontApiVersion: '2000-01',
         }),
-      ).toBe(`https://newdomain.myshopify.com/api/2000-01/graphql.json`);
+      ).toBe(
+        `https://newdomain.myshopify.com/api/${SFAPI_VERSION}/graphql.json`,
+      );
     });
 
     it(`handles when a '/' is at the end of the url and doesn't add an extra one`, () => {

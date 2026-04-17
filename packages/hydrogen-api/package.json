@@ -12,7 +12,8 @@
   },
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "skills"
   ],
   "sideEffects": false,
   "repository": {
@@ -25,6 +26,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "import": "./dist/schema.js",
+      "default": "./dist/schema.js"
     },
     "./storefront-api-types": {
       "types": "./dist/generated/storefront-api-types.d.ts"
@@ -42,7 +48,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@shopify/graphql-client": "1.4.1"
+    "@shopify/graphql-client": "1.4.1",
+    "@shopify/hydrogen-core": "workspace:*"
   },
   "devDependencies": {
     "@graphql-codegen/add": "^5.0.3",

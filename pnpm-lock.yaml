@@ -524,6 +524,9 @@ importers:
       '@shopify/graphql-client':
         specifier: 1.4.1
         version: 1.4.1
+      '@shopify/hydrogen-core':
+        specifier: workspace:*
+        version: link:../hydrogen-core
     devDependencies:
       '@graphql-codegen/add':
         specifier: ^5.0.3

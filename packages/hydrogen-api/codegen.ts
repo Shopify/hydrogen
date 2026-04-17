@@ -3,10 +3,10 @@ import {
   storefrontApiCustomScalars,
   customerAccountApiCustomScalars,
 } from './src/codegen-helpers';
-import {SF_API_VERSION, CA_API_VERSION} from './src/api-versions';
+import {SFAPI_VERSION, CAAPI_VERSION} from './src/api-constants';
 
 const storefrontAPISchema: CodegenConfig['schema'] = {
-  [`https://hydrogen-preview.myshopify.com/api/${SF_API_VERSION}/graphql.json`]:
+  [`https://hydrogen-preview.myshopify.com/api/${SFAPI_VERSION}/graphql.json`]:
     {
       headers: {
         'X-Shopify-Storefront-Access-Token': '3b580e70970c4528da70c98e097c2fa0',
@@ -16,7 +16,7 @@ const storefrontAPISchema: CodegenConfig['schema'] = {
 };
 
 const customerAccountAPISchema: CodegenConfig['schema'] = {
-  [`https://app.myshopify.com/services/graphql/introspection/customer?api_client_api_key=159a99b8a7289a72f68603f2f4de40ac&api_version=${CA_API_VERSION}`]:
+  [`https://app.myshopify.com/services/graphql/introspection/customer?api_client_api_key=159a99b8a7289a72f68603f2f4de40ac&api_version=${CAAPI_VERSION}`]:
     {method: 'GET'},
 };
 
@@ -36,7 +36,7 @@ const config: CodegenConfig = {
     'src/generated/storefront-api-types.d.ts': {
       schema: storefrontAPISchema,
       plugins: [
-        {add: {content: AUTO_GENERATED_HEADER('Storefront', SF_API_VERSION)}},
+        {add: {content: AUTO_GENERATED_HEADER('Storefront', SFAPI_VERSION)}},
         {
           typescript: {
             useTypeImports: true,
@@ -57,7 +57,7 @@ const config: CodegenConfig = {
       plugins: [
         {
           add: {
-            content: AUTO_GENERATED_HEADER('Customer Account', CA_API_VERSION),
+            content: AUTO_GENERATED_HEADER('Customer Account', CAAPI_VERSION),
           },
         },
         {

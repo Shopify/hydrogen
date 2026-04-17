@@ -2,24 +2,24 @@ import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 import {describe, it, expect} from 'vitest';
-import {SF_API_VERSION, CA_API_VERSION} from './api-versions';
+import {SFAPI_VERSION, CAAPI_VERSION} from './api-constants';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
 // codegen.ts emits a header comment on line 3 of each generated .d.ts
 // like `* Based on Storefront API 2026-04`. If that version doesn't
-// match what api-versions.ts declares, someone bumped the constant
+// match what api-constants.ts declares, someone bumped the constant
 // without running `pnpm graphql-types`.
 const cases = [
   {
     file: 'generated/storefront-api-types.d.ts',
     apiName: 'Storefront',
-    declaredVersion: SF_API_VERSION,
+    declaredVersion: SFAPI_VERSION,
   },
   {
     file: 'generated/customer-account-api-types.d.ts',
     apiName: 'Customer Account',
-    declaredVersion: CA_API_VERSION,
+    declaredVersion: CAAPI_VERSION,
   },
 ] as const;
 
@@ -38,7 +38,7 @@ describe('checked-in generated types', () => {
       const [, generatedVersion] = match!;
       expect(
         generatedVersion,
-        `${file} is stale: generated against ${apiName} API ${generatedVersion}, but api-versions.ts declares ${declaredVersion}. Run \`pnpm graphql-types\` to regenerate.`,
+        `${file} is stale: generated against ${apiName} API ${generatedVersion}, but api-constants.ts declares ${declaredVersion}. Run \`pnpm graphql-types\` to regenerate.`,
       ).toBe(declaredVersion);
     },
   );

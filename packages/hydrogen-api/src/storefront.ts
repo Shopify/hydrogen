@@ -116,7 +116,6 @@ type AutoAddedVariableNames = 'country' | 'language';
 
 type StorefrontCommonExtraParams = {
   headers?: HeadersInit;
-  storefrontApiVersion?: string;
   displayName?: string;
 };
 
@@ -183,13 +182,10 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
    */
   isMcpUrl: (request: {url?: string}) => boolean;
   /**
-   * Forwards the request to the Storefront API.
-   * It reads the API version from the request URL.
+   * Forwards the request to the Storefront API using the version this
+   * build of `@shopify/hydrogen-api` targets.
    */
-  forward: (
-    request: Request,
-    options?: Pick<StorefrontCommonExtraParams, 'storefrontApiVersion'>,
-  ) => Promise<Response>;
+  forward: (request: Request) => Promise<Response>;
   /**
    * Forwards the request to the Storefront MCP endpoint.
    */
@@ -350,7 +346,6 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     variables,
     cache: cacheOptions,
     headers = [],
-    storefrontApiVersion,
     displayName,
     stackInfo,
   }: {variables?: GenericVariables; stackInfo?: StackInfo} & (
@@ -377,7 +372,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       }
     }
 
-    const url = getStorefrontApiUrl({storefrontApiVersion});
+    const url = getStorefrontApiUrl();
     const graphqlData = JSON.stringify({
       query: document,
       variables: queryVariables,
@@ -567,7 +562,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       /**
        * Forwards the request to the Storefront API.
        */
-      async forward(request, options) {
+      async forward(request) {
         const forwardedHeaders = new Headers([
           // Forward only a selected set of headers to the Storefront API
           // to avoid getting 403 errors due to unexpected headers.
@@ -608,18 +603,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           forwardedHeaders.set('x-forwarded-for', storefrontHeaders.buyerIp);
         }
 
-        const storefrontApiVersion =
-          options?.storefrontApiVersion ??
-          getSafePathname(request.url).match(SFAPI_RE)?.[1];
-
-        const sfapiResponse = await fetch(
-          getStorefrontApiUrl({storefrontApiVersion}),
-          {
-            method: request.method,
-            body: request.body,
-            headers: forwardedHeaders,
-          },
-        );
+        const sfapiResponse = await fetch(getStorefrontApiUrl(), {
+          method: request.method,
+          body: request.body,
+          headers: forwardedHeaders,
+        });
 
         // Create a new response to allow modifying headers
         return new Response(sfapiResponse.body, sfapiResponse);

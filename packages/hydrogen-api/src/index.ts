@@ -32,13 +32,15 @@ export {
 } from './codegen-helpers.js';
 
 // Constants
-export {SFAPI_VERSION} from './storefront-api-constants.js';
+export {CAAPI_VERSION, SFAPI_VERSION} from './api-constants.js';
+
+// Schema resolution (for graphql-codegen)
+export {getSchema, type SchemaApi} from './schema.js';
 
 // Full server-side storefront client
 export {
   createStorefrontClient,
   type CreateStorefrontClientOptions,
-  formatAPIResult,
   type I18nBase,
   type Storefront,
   type StorefrontApiErrors,
@@ -59,13 +61,9 @@ export type {StorefrontHeaders, WaitUntil} from './types.js';
 
 // GraphQL utilities
 export {
-  assertMutation,
-  assertQuery,
   type GraphQLApiResponse,
   GraphQLError,
   type GraphQLErrorOptions,
-  minifyQuery,
-  throwErrorWithGqlLink,
 } from './utils/graphql.js';
 
 // Hash utility (for building cache keys compatible with runWithCache)
@@ -74,9 +72,5 @@ export {hashKey} from './utils/hash.js';
 // Request utilities
 export {
   type CrossRuntimeRequest,
-  extractHeaders,
-  getSafePathname,
   getStorefrontHeaders,
-  MCP_RE,
-  SFAPI_RE,
 } from './utils/request.js';

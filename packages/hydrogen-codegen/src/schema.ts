@@ -25,14 +25,11 @@ export function getSchema(api: Api, options?: Options<boolean>) {
   try {
     return require.resolve(`@shopify/hydrogen/${api}.schema.json`);
   } catch {
-    try {
-      return require.resolve(`@shopify/hydrogen-api/${api}.schema.json`);
-    } catch {
-      if (options?.throwIfMissing !== false) {
-        throw new Error(
-          `Could not find a schema for "${api}".\nPlease make sure \`@shopify/hydrogen\` or \`@shopify/hydrogen-api\` is installed.`,
-        );
-      }
+    if (options?.throwIfMissing !== false) {
+      throw new Error(
+        `Could not find a schema for "${api}".\nPlease make sure \`@shopify/hydrogen\` or \`@shopify/hydrogen-api\` is installed.`,
+      );
     }
+    return undefined;
   }
 }
