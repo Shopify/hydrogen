@@ -310,7 +310,7 @@ jobs:
           node-version: 24
 
       - name: Install the packages
-        run: pnpm install --frozen-lockfile --ignore-engines
+        run: pnpm install --frozen-lockfile
 
       - name: Build the dist code
         run: pnpm run build
