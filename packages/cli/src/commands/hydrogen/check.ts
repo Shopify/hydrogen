@@ -11,7 +11,7 @@ import {
 
 import {Args} from '@oclif/core';
 
-export default class GenerateRoute extends Command {
+export default class Check extends Command {
   static descriptionWithMarkdown = `Checks whether your Hydrogen app includes a set of standard Shopify routes.`;
 
   static description =
@@ -31,7 +31,7 @@ export default class GenerateRoute extends Command {
   };
 
   async run(): Promise<void> {
-    const {flags, args} = await this.parse(GenerateRoute);
+    const {flags, args} = await this.parse(Check);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
     if (args.resource === 'routes') {
