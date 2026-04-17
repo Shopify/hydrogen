@@ -15,6 +15,7 @@
       "removeDependencies": [
         "@shopify/hydrogen"
       ],
+      "features": [],
       "fixes": [
         {
           "title": "Fix cart operations failing on stores without VisitorConsent type",
