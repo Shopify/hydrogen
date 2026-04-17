@@ -3,6 +3,46 @@
   "version": "1",
   "releases": [
     {
+      "title": "Cart compatibility fixes and @shopify/remix-oxygen deprecation",
+      "version": "2026.4.1",
+      "date": "2026-04-17",
+      "hash": "4365ba5227c3c907909ec283fb72eb8ca07b01b3",
+      "commit": "https://github.com/Shopify/hydrogen/pull/3721/commits/4365ba5227c3c907909ec283fb72eb8ca07b01b3",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3721",
+      "dependencies": {
+        "@shopify/hydrogen": "2026.4.1"
+      },
+      "removeDependencies": [
+        "@shopify/hydrogen"
+      ],
+      "fixes": [
+        {
+          "title": "Fix cart operations failing on stores without VisitorConsent type",
+          "info": "Cart operations (like cart.setMetafields()) were unconditionally including visitorConsent in GraphQL queries, breaking stores on older API versions or certain configurations that don't include the VisitorConsent type in their schema. The visitorConsent parameter is now only included when explicitly provided.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3720",
+          "id": "3720"
+        },
+        {
+          "title": "Fix set-cookie-parser and cookie resolution warnings during dev",
+          "info": "Resolves Vite warnings about unresolvable CJS transitive dependencies from react-router. Fixed by using Vite's nested dependency syntax (react-router > set-cookie-parser) so pnpm can locate these packages.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3698",
+          "id": "3698"
+        },
+        {
+          "title": "Deprecate @shopify/remix-oxygen",
+          "info": "This package is now deprecated. All types and utilities it re-exports are available directly from react-router. For createRequestHandler, use @shopify/hydrogen/oxygen instead. For getStorefrontHeaders, use @shopify/hydrogen. The package will continue to work but will not receive future updates.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3621",
+          "id": "3621"
+        },
+        {
+          "title": "Update CLI route scaffolding to use react-router instead of @shopify/remix-oxygen",
+          "info": "Generated routes and JS transpilation output now import from react-router directly rather than the deprecated @shopify/remix-oxygen package.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3621",
+          "id": "3621"
+        }
+      ]
+    },
+    {
       "title": "Update Storefront API to 2026-04 and enable backend consent mode",
       "version": "2026.4.0",
       "date": "2026-04-09",
