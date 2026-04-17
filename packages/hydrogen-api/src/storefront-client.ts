@@ -35,7 +35,7 @@ export function createStorefrontClient({
   contentType,
 }: StorefrontClientProps): StorefrontClientReturn {
   if (!storeDomain) {
-    if (__HYDROGEN_DEV__) {
+    if (process.env.NODE_ENV !== 'production') {
       storeDomain = MOCK_SHOP_DOMAIN;
       warnOnce(`storeDomain missing, defaulting to mock data`, 'info');
     } else {
@@ -48,7 +48,7 @@ export function createStorefrontClient({
 
   // only warn if not in a browser environment
   if (
-    __HYDROGEN_DEV__ &&
+    process.env.NODE_ENV !== 'production' &&
     !privateStorefrontToken &&
     !globalThis.document &&
     !isMockShop(storeDomain)
@@ -59,11 +59,19 @@ export function createStorefrontClient({
     );
   }
 
-  // only warn if in a browser environment and you're using the privateStorefrontToken
-  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {
-    warnOnce(
-      'You are attempting to use a private token in an environment where it can be easily accessed by anyone.' +
-        '\nThis is a security risk; please use the public token and the `publicStorefrontToken` prop',
+  // Hard-stop private tokens from reaching browser runtimes. The private
+  // token grants authenticated server-side access — if it lands in a
+  // client bundle, anyone who views the bundle can reuse it against the
+  // store. This fires in both development and production on purpose:
+  // a missed review in dev should not ship a leaked token in prod.
+  if (privateStorefrontToken && typeof globalThis.document !== 'undefined') {
+    throw new Error(
+      H2_PREFIX_ERROR +
+        '`privateStorefrontToken` was passed in a browser context. Private tokens grant ' +
+        'authenticated, server-side access and must never appear in a client bundle — ' +
+        'anyone who views the bundle can reuse the token. Use `publicStorefrontToken` in ' +
+        'browser code, or move this call to a server route. See ' +
+        'https://shopify.dev/docs/api/usage/authentication for details.',
     );
   }
 
@@ -94,7 +102,7 @@ export function createStorefrontClient({
         );
       }
 
-      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {
+      if (process.env.NODE_ENV !== 'production' && !overrideProps?.buyerIp) {
         warnOnce(
           'It is recommended to pass in the `buyerIp` property which improves analytics and data in the admin.',
         );

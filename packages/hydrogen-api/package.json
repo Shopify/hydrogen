@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "description": "Framework-agnostic Storefront API client and types for Shopify Hydrogen",
   "license": "MIT",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/production/index.js",
+  "module": "dist/production/index.js",
+  "types": "dist/production/index.d.ts",
   "publishConfig": {
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
@@ -23,9 +23,15 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "types": "./dist/production/index.d.ts",
+      "import": {
+        "development": "./dist/development/index.js",
+        "default": "./dist/production/index.js"
+      },
+      "default": {
+        "development": "./dist/development/index.js",
+        "default": "./dist/production/index.js"
+      }
     },
     "./schema": {
       "types": "./dist/schema.d.ts",

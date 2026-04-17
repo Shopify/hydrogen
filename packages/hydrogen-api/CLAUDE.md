@@ -34,3 +34,23 @@ Skip skill updates for pure bug fixes to undocumented behaviour, internal refact
 - `skills/hydrogen-api-setup/SKILL.md` — install, token choice, client choice, version pinning, first query.
 - `skills/hydrogen-api-codegen/SKILL.md` — `graphql-codegen` wiring, `getSchema`, custom scalars, `#graphql` convention, when to regenerate.
 - `skills/hydrogen-api-reference/SKILL.md` — grouped discovery lookup for the public API.
+
+## Divergences from `@shopify/hydrogen`
+
+When a change makes `@shopify/hydrogen-api` behave differently from the equivalent code in `@shopify/hydrogen`, record the divergence in the PR's changeset under a `### Divergences from \`@shopify/hydrogen\`` heading.
+
+The changeset is the right place because it already flows into `packages/hydrogen-api/CHANGELOG.md` at release time — so a merchant evaluating a migration from `@shopify/hydrogen` gets a release-by-release record in the same place they already look for release notes. No parallel `DIVERGENCES.md` needed.
+
+**What to record:**
+
+- Behavioural differences (e.g. throw vs. warn, removed option, removed export, different default).
+- The user-visible consequence, not just the code change. *"Now throws when X"* beats *"removed the old warn path"*.
+- A one-line rationale — usually a security, correctness, or surface-size argument.
+
+**What to skip:**
+
+- Framework-specific code that `@shopify/hydrogen-api` never shipped in the first place (React Router integration, Vite plugin, virtual routes, etc.) — that is "not included", not "diverged".
+- Parity bug fixes — if `@shopify/hydrogen` also needs the fix, it is not a divergence.
+- Internal refactors or TSDoc additions that do not change observable behaviour.
+
+**Phrasing tip:** re-use the exact heading `### Divergences from \`@shopify/hydrogen\`` so every release's divergences land under the same grep-able anchor across the changelog.

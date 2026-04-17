@@ -35,9 +35,20 @@ const {storefront} = createStorefrontClient({
 
 During development you can omit both `storeDomain` and the token — the client defaults to `mock.shop`, which accepts tokenless requests and returns realistic fixtures.
 
-**Which factory?** `createStorefrontClient` is the full server client (caching, subrequest headers, i18n, request forwarding). For edge/browser runtimes or when you want to own the fetch, use `createStorefrontUtilities` — URL and header builders only.
+**Which factory?** `createStorefrontClient` is the full server client (caching, subrequest headers, i18n, request forwarding — including the `Shopify-Storefront-Buyer-IP` header when you pass `getStorefrontHeaders(request)` in). For edge/browser runtimes or when you want to own the fetch, use `createStorefrontUtilities` — URL and header builders only, no buyer-IP forwarding.
 
-**Which token?** A **private** token (delegate access, server-only — never ship to a browser) goes on `privateStorefrontToken`. A **public** storefront token (browser-safe) goes on `publicStorefrontToken`. If both are set, the private one wins.
+**Which token?**
+
+| Token | Prop | Header sent | Where it runs |
+|---|---|---|---|
+| Public storefront access token | `publicStorefrontToken` | `X-Shopify-Storefront-Access-Token` | Browser or server |
+| Private (delegate) access token | `privateStorefrontToken` | `Shopify-Storefront-Private-Token` | Server only |
+
+If both are set, the private token wins.
+
+**Why the split matters for rate limits.** Shopify scales Storefront API capacity per *buyer IP*, not per shop. A **public** token is safe in a browser bundle because each request reaches Shopify directly from the buyer — Shopify sees a unique IP per user and scales capacity accordingly. A **private** token is sent from your server; Shopify sees *your* IP. Unless you forward the real buyer IP via the `Shopify-Storefront-Buyer-IP` header, every visitor collapses into one rate-limit bucket and Shopify's bot-protection heuristics degrade (the docs warn of throttled requests and unauthenticated flows at checkout). The full `createStorefrontClient` adds that header automatically when you pass `getStorefrontHeaders(request)` in; the low-level `createStorefrontUtilities` leaves it to you.
+
+**The client rejects private tokens in the browser.** If `privateStorefrontToken` is set in a runtime where `globalThis.document` is defined, construction throws immediately — in both development and production. A private token in a client bundle is unrecoverable: anyone who views the bundle can reuse it to query the store as an authenticated caller.
 
 ## 3. Run a query
 

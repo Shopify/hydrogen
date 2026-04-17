@@ -164,6 +164,54 @@ describe(`createStorefrontClient`, () => {
     });
   });
 
+  describe(`browser guard`, () => {
+    const GLOBAL_DOCUMENT_KEY = 'document';
+
+    function withBrowserGlobal(run: () => void) {
+      const global = globalThis as Record<string, unknown>;
+      const hadDocument = GLOBAL_DOCUMENT_KEY in global;
+      const originalDocument = global[GLOBAL_DOCUMENT_KEY];
+      global[GLOBAL_DOCUMENT_KEY] = {} as unknown;
+      try {
+        run();
+      } finally {
+        if (hadDocument) {
+          global[GLOBAL_DOCUMENT_KEY] = originalDocument;
+        } else {
+          delete global[GLOBAL_DOCUMENT_KEY];
+        }
+      }
+    }
+
+    it(`throws when a private token is used in a browser context`, () => {
+      withBrowserGlobal(() => {
+        expect(() =>
+          createStorefrontClient(
+            generateConfig({privateStorefrontToken: 'shppa_secret'}),
+          ),
+        ).toThrow(/`privateStorefrontToken` was passed in a browser context/);
+      });
+    });
+
+    it(`does not throw when only a public token is used in a browser context`, () => {
+      withBrowserGlobal(() => {
+        expect(() =>
+          createStorefrontClient(
+            generateConfig({publicStorefrontToken: 'public'}),
+          ),
+        ).not.toThrow();
+      });
+    });
+
+    it(`does not throw when a private token is used in a server context`, () => {
+      expect(() =>
+        createStorefrontClient(
+          generateConfig({privateStorefrontToken: 'shppa_secret'}),
+        ),
+      ).not.toThrow();
+    });
+  });
+
   describe(`getPublicTokenHeaders`, () => {
     it(`generates the headers`, () => {
       const client = createStorefrontClient(
