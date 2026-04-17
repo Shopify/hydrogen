@@ -35,6 +35,7 @@ import type {
   LanguageCode as StorefrontLanguageCode,
 } from './generated/storefront-api-types.js';
 import type {LanguageCode as CustomerLanguageCode} from './generated/customer-account-api-types.js';
+import type {WritableDeep} from 'type-fest';
 import type {
   ClientReturn,
   ClientVariablesInRestParams,
@@ -468,9 +469,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     const gqlErrors = errors?.map(
       ({message, ...rest}) =>
         new GraphQLError(message, {
-          // Cast through any: the graphql library types use ReadonlyArray while
-          // our GraphQLError constructor expects mutable arrays. Runtime shapes match.
-          ...(rest as any),
+          ...(rest as WritableDeep<typeof rest>),
           clientOperation: `storefront.${errorOptions.type}`,
           requestId: response.headers.get('x-request-id'),
           queryVariables,

@@ -55,7 +55,8 @@
   },
   "dependencies": {
     "@shopify/graphql-client": "1.4.1",
-    "@shopify/hydrogen-core": "workspace:*"
+    "@shopify/hydrogen-core": "workspace:*",
+    "type-fest": "^4.33.0"
   },
   "devDependencies": {
     "@graphql-codegen/add": "^5.0.3",
