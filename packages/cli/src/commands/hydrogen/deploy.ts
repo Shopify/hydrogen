@@ -92,7 +92,7 @@ export default class Deploy extends Command {
     force: Flags.boolean({
       char: 'f',
       description:
-        'Forces a deployment to proceed if there are uncommited changes in its Git repository.',
+        'Forces a deployment to proceed if there are uncommitted changes in its Git repository.',
       default: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
       required: false,
@@ -140,7 +140,7 @@ export default class Deploy extends Command {
     }),
     'metadata-description': Flags.string({
       description:
-        'Description of the changes in the deployment. Defaults to the commit message of the latest commit if there are no uncommited changes.',
+        'Description of the changes in the deployment. Defaults to the commit message of the latest commit if there are no uncommitted changes.',
       required: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION',
     }),
@@ -250,7 +250,7 @@ export async function runDeploy(
     env: envHandle,
     envBranch,
     environmentFile,
-    force: forceOnUncommitedChanges,
+    force: forceOnUncommittedChanges,
     forceClientSourcemap = false,
     noVerify,
     lockfileCheck,
@@ -272,7 +272,7 @@ export async function runDeploy(
       isCleanGit = false;
     }
 
-    if (!forceOnUncommitedChanges && !isCleanGit) {
+    if (!forceOnUncommittedChanges && !isCleanGit) {
       let errorMessage = 'Uncommitted changes detected';
       let changedFiles = undefined;
 
@@ -333,7 +333,7 @@ export async function runDeploy(
     renderWarning({
       headline: 'No deployment description provided',
       body: [
-        'Deploying uncommited changes, but no description has been provided. Use the ',
+        'Deploying uncommitted changes, but no description has been provided. Use the ',
         {command: '--metadata-description'},
         'flag to provide a description. If no description is provided, the description defaults to ',
         {userInput: '<sha> with additional changes'},
