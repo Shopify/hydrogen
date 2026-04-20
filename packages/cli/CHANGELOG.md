@@ -1,5 +1,13 @@
 # @shopify/cli-hydrogen
 
+## 11.1.17
+
+### Patch Changes
+
+- Fixed "uncommited" typo to "uncommitted" in `shopify hydrogen deploy` flag descriptions and the uncommitted-changes warning message. ([#3684](https://github.com/Shopify/hydrogen/pull/3684)) by [@J8118](https://github.com/J8118)
+
+- Show removed packages in the upgrade confirmation prompt and upgrade instructions file so that it's visible which dependencies will be cleaned up during the upgrade. ([#3630](https://github.com/Shopify/hydrogen/pull/3630)) by [@itsjustriley](https://github.com/itsjustriley)
+
 ## 11.1.16
 
 ### Patch Changes
