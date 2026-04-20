@@ -3688,24 +3688,14 @@ Configure Vite for crypto polyfills
 #### File: /vite.config.ts
 
 ~~~diff
-@@ -25,7 +25,7 @@ export default defineConfig({
-        * Include 'example-dep' in the array below.
-        * @see https://vitejs.dev/config/dep-optimization-options
-        */
--      include: [
--        'react-router > set-cookie-parser',
--        'react-router > cookie',
--        'react-router',
--      ],
-+      include: [
-+        'react-router > set-cookie-parser',
-+        'react-router > cookie',
-+        'react-router',
+@@ -29,6 +29,7 @@ export default defineConfig({
+         'react-router > set-cookie-parser',
+         'react-router > cookie',
+         'react-router',
 +        'crypto-js',
-+      ],
+       ],
      },
    },
-   server: {
 ~~~
 
 ## Deleted Files

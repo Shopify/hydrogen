@@ -3753,27 +3753,17 @@ Configure Vite for crypto polyfills
 #### File: [vite.config.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/vite.config.ts)
 
 ~~~diff
-index 6e54066fc..7a02743eb 100644
+index d19b14dc4..550d63a11 100644
 --- a/templates/skeleton/vite.config.ts
 +++ b/templates/skeleton/vite.config.ts
-@@ -25,7 +25,7 @@ export default defineConfig({
-        * Include 'example-dep' in the array below.
-        * @see https://vitejs.dev/config/dep-optimization-options
-        */
--      include: [
--        'react-router > set-cookie-parser',
--        'react-router > cookie',
--        'react-router',
--      ],
-+      include: [
-+        'react-router > set-cookie-parser',
-+        'react-router > cookie',
-+        'react-router',
+@@ -29,6 +29,7 @@ export default defineConfig({
+         'react-router > set-cookie-parser',
+         'react-router > cookie',
+         'react-router',
 +        'crypto-js',
-+      ],
+       ],
      },
    },
-   server: {
 ~~~
 
 ## Deleted Files
