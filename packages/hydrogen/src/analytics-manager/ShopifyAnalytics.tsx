@@ -398,7 +398,7 @@ function validateProducts({
     return false;
   }
 
-  products.forEach((product) => {
+  for (const product of products) {
     if (!product.id) {
       missingErrorMessage(type, 'id', false);
       return false;
@@ -423,7 +423,7 @@ function validateProducts({
       missingErrorMessage(type, 'title', true, 'variantTitle');
       return false;
     }
-  });
+  }
   return true;
 }
 
