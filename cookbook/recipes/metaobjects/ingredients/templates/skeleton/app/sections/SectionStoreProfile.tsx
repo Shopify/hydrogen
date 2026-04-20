@@ -30,17 +30,17 @@ export function SectionStoreProfile(props: SectionStoreProfileFragment) {
           />
         )}
       </div>
-      {heading && <h1>{heading.value}</h1>}
+      {heading && <h2>{heading.value}</h2>}
       {description && <p>{description.value}</p>}
       <br />
       <div>
-        <h5>Address</h5>
+        <h3>Address</h3>
         {address && <address>{address.value}</address>}
       </div>
       {hours?.parsedValue && (
         <div>
           <br />
-          <h5>Opening Hours</h5>
+          <h3>Opening Hours</h3>
           {hours.parsedValue.map((day: string) => (
             <p key={day}>{day}</p>
           ))}

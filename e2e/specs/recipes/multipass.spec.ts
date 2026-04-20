@@ -6,7 +6,7 @@ import {
 } from '../../fixtures';
 import {MultipassUtil} from '../../fixtures/multipass-utils';
 import {CartUtil} from '../../fixtures/cart-utils';
-import {KNOWN_PRODUCT} from '../../fixtures/known-products';
+import {KNOWN_SKELETON_PRODUCT as KNOWN_PRODUCT} from '../../fixtures/known-products';
 
 setRecipeFixture({
   recipeName: 'multipass',

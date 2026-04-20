@@ -2,6 +2,7 @@ import {test, expect, setRecipeFixture} from '../../fixtures';
 import assert from '../../fixtures/assertions';
 import {CartUtil} from '../../fixtures/cart-utils';
 import {CustomCartMethodUtil} from '../../fixtures/custom-cart-method-utils';
+import {KNOWN_SKELETON_PRODUCT as KNOWN_PRODUCT_WITH_VARIANTS} from '../../fixtures/known-products';
 
 setRecipeFixture({
   recipeName: 'custom-cart-method',
@@ -18,11 +19,6 @@ setRecipeFixture({
  * - Cart maintains single line item when variant changes
  * - Updates happen without page reload
  */
-
-const KNOWN_PRODUCT_WITH_VARIANTS = {
-  handle: 'the-ascend',
-  name: 'The Ascend',
-} as const;
 
 const variantSelector = new CustomCartMethodUtil();
 
@@ -83,11 +79,13 @@ test.describe('Custom Cart Method Recipe', () => {
       const {optionName, nextValue} =
         await variantSelector.selectDifferentOption(optionSelect);
 
+      await expect
+        .poll(() => productLink.getAttribute('href'))
+        .not.toBe(initialUrl);
+
       const href = await productLink.getAttribute('href');
       assert(href);
-
       const updatedProductUrl = new URL(href, page.url());
-      expect(href).not.toBe(initialUrl);
       expect(updatedProductUrl.searchParams.get(optionName)).toBe(nextValue);
     });
 
@@ -115,9 +113,9 @@ test.describe('Custom Cart Method Recipe', () => {
       await variantSelector.selectDifferentOption(optionSelect);
 
       // Wait for the cart update to complete before checking preservation
-      const href = await productLink.getAttribute('href');
-      assert(href);
-      expect(href).not.toBe(initialUrl);
+      await expect
+        .poll(() => productLink.getAttribute('href'))
+        .not.toBe(initialUrl);
 
       await expect(cart.getLineItems()).toHaveCount(1);
       await expect(firstLineItem).toContainText('Quantity: 2');
@@ -143,9 +141,9 @@ test.describe('Custom Cart Method Recipe', () => {
       await variantSelector.selectDifferentOption(optionSelect);
 
       // Verify the cart update completed without navigating away
-      const href = await productLink.getAttribute('href');
-      assert(href);
-      expect(href).not.toBe(initialProductUrl);
+      await expect
+        .poll(() => productLink.getAttribute('href'))
+        .not.toBe(initialProductUrl);
 
       expect(page.url()).toBe(initialPageUrl);
       await expect(cartDialog).toBeVisible();

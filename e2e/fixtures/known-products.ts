@@ -5,7 +5,7 @@
  * Recipe-specific products (bundles, subscriptions, combined listings) stay
  * in their own spec files since they're used by a single test suite.
  */
-export const KNOWN_PRODUCT = {
+export const KNOWN_SKELETON_PRODUCT = {
   handle: 'the-ascend',
   name: 'The Ascend',
 } as const;
