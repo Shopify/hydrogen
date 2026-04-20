@@ -371,7 +371,7 @@ importers:
     devDependencies:
       '@react-router/dev':
         specifier: 7.12.0
-        version: 7.12.0(@react-router/serve@7.13.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.2(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.3))(yaml@2.8.3)
+        version: 7.12.0(@react-router/serve@7.13.0(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.2(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.3))(yaml@2.8.3)
       '@types/diff':
         specifier: ^5.0.2
         version: 5.2.3
@@ -636,7 +636,7 @@ importers:
         version: 11.1.0(eslint@9.19.0(jiti@2.6.1))
       eslint-plugin-prettier:
         specifier: 4.2.1
-        version: 4.2.1(eslint-config-prettier@10.0.1(eslint@9.19.0(jiti@2.6.1)))(eslint@9.19.0(jiti@2.6.1))(prettier@3.8.1)
+        version: 4.2.1(eslint-config-prettier@10.0.1(eslint@9.19.0(jiti@2.6.1)))(eslint@9.19.0(jiti@2.6.1))(prettier@3.8.3)
       eslint-plugin-react:
         specifier: 7.37.4
         version: 7.37.4(eslint@9.19.0(jiti@2.6.1))
@@ -7198,6 +7198,11 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
+  prettier@3.8.3:
+    resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
+    engines: {node: '>=14'}
+    hasBin: true
+
   pretty-format@27.5.1:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
@@ -10871,56 +10876,6 @@ snapshots:
       - tsx
       - yaml
 
-  '@react-router/dev@7.12.0(@react-router/serve@7.13.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.2(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.3))(yaml@2.8.3)':
-    dependencies:
-      '@babel/core': 7.29.0
-      '@babel/generator': 7.29.1
-      '@babel/parser': 7.29.0
-      '@babel/plugin-syntax-jsx': 7.28.6(@babel/core@7.29.0)
-      '@babel/preset-typescript': 7.28.5(@babel/core@7.29.0)
-      '@babel/traverse': 7.29.0
-      '@babel/types': 7.29.0
-      '@react-router/node': 7.12.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)
-      '@remix-run/node-fetch-server': 0.9.0
-      arg: 5.0.2
-      babel-dead-code-elimination: 1.0.12
-      chokidar: 4.0.3
-      dedent: 1.7.1
-      es-module-lexer: 1.7.0
-      exit-hook: 2.2.1
-      isbot: 5.1.35
-      jsesc: 3.0.2
-      lodash: 4.17.23
-      p-map: 7.0.4
-      pathe: 1.1.2
-      picocolors: 1.1.1
-      pkg-types: 2.3.0
-      prettier: 3.8.1
-      react-refresh: 0.14.2
-      react-router: 7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      semver: 7.7.4
-      tinyglobby: 0.2.15
-      valibot: 1.2.0(typescript@5.9.2)
-      vite: 6.4.2(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.3)
-      vite-node: 3.2.4(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.3)
-    optionalDependencies:
-      '@react-router/serve': 7.13.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)
-      typescript: 5.9.2
-    transitivePeerDependencies:
-      - '@types/node'
-      - babel-plugin-macros
-      - jiti
-      - less
-      - lightningcss
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-      - tsx
-      - yaml
-
   '@react-router/dev@7.13.0(@react-router/serve@7.13.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.2(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.3))(yaml@2.8.3)':
     dependencies:
       '@babel/core': 7.29.0
@@ -11006,13 +10961,6 @@ snapshots:
     dependencies:
       '@mjackson/node-fetch-server': 0.2.0
       react-router: 7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-    optionalDependencies:
-      typescript: 5.9.2
-
-  '@react-router/node@7.12.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)':
-    dependencies:
-      '@mjackson/node-fetch-server': 0.2.0
-      react-router: 7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     optionalDependencies:
       typescript: 5.9.2
 
@@ -13482,10 +13430,10 @@ snapshots:
       resolve: 1.22.11
       semver: 6.3.1
 
-  eslint-plugin-prettier@4.2.1(eslint-config-prettier@10.0.1(eslint@9.19.0(jiti@2.6.1)))(eslint@9.19.0(jiti@2.6.1))(prettier@3.8.1):
+  eslint-plugin-prettier@4.2.1(eslint-config-prettier@10.0.1(eslint@9.19.0(jiti@2.6.1)))(eslint@9.19.0(jiti@2.6.1))(prettier@3.8.3):
     dependencies:
       eslint: 9.19.0(jiti@2.6.1)
-      prettier: 3.8.1
+      prettier: 3.8.3
       prettier-linter-helpers: 1.0.1
     optionalDependencies:
       eslint-config-prettier: 10.0.1(eslint@9.19.0(jiti@2.6.1))
@@ -16300,6 +16248,8 @@ snapshots:
   prettier@2.8.8: {}
 
   prettier@3.8.1: {}
+
+  prettier@3.8.3: {}
 
   pretty-format@27.5.1:
     dependencies:
