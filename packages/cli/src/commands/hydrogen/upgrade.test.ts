@@ -1,6 +1,6 @@
 import {createRequire} from 'node:module';
 import {tmpdir} from 'node:os';
-import {mkdtemp, rm} from 'node:fs/promises';
+import {mkdtemp, readFile, rm} from 'node:fs/promises';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {writeFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
@@ -16,6 +16,7 @@ import {exec} from '@shopify/cli-kit/node/system';
 import {
   buildUpgradeCommandArgs,
   displayConfirmation,
+  generateUpgradeInstructionsFile,
   getAbsoluteVersion,
   getAvailableUpgrades,
   getCumulativeRelease,
@@ -1168,7 +1169,17 @@ describe('upgrade', async () => {
               cumulativeRelease.removeDevDependencies,
           });
 
-          expect(renderTasks).toHaveBeenCalled();
+          expect(renderTasks).toHaveBeenCalledWith(
+            expect.arrayContaining([
+              expect.objectContaining({
+                title: 'Removing deprecated dependencies',
+              }),
+              expect.objectContaining({
+                title: 'Upgrading dependencies',
+              }),
+            ]),
+            expect.anything(),
+          );
         },
         {
           cleanGitRepo: true,
@@ -1209,11 +1220,207 @@ describe('upgrade', async () => {
               expect(info).toMatch(feat.title.slice(0, 15)),
           );
 
+          // With empty removeDependencies, the "Removed packages" section should NOT appear
+          expect(info).not.toMatch('Removed packages');
+
           expect(renderConfirmationPrompt).toHaveBeenCalledWith({
             message: `Are you sure you want to upgrade to ${selectedRelease.version}?`,
             cancellationMessage: `No, choose another version`,
             defaultValue: true,
           });
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
+    });
+    it('displays removed packages when cumulativeRelease has removals', async () => {
+      await inTemporaryHydrogenRepo(
+        async () => {
+          const {releases} = await getChangelog();
+
+          const selectedRelease = releases.find(
+            (release) => release.version === '2023.10.0',
+          ) as (typeof releases)[0];
+
+          const releaseWithRemovals = {
+            ...CUMULATIVE_RELEASE,
+            removeDependencies: ['@remix-run/react'],
+            removeDevDependencies: ['@remix-run/dev'],
+          };
+
+          await expect(
+            displayConfirmation({
+              cumulativeRelease: releaseWithRemovals,
+              selectedRelease,
+            }),
+          ).resolves.toEqual(false);
+
+          const info = outputMock.info();
+          expect(info).toMatch('Removed packages');
+          expect(info).toMatch('@remix-run/react');
+          expect(info).toMatch('@remix-run/dev');
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
+    });
+
+    it('displays removed packages when release has only removals and no features or fixes', async () => {
+      await inTemporaryHydrogenRepo(
+        async () => {
+          const {releases} = await getChangelog();
+
+          const selectedRelease = releases.find(
+            (release) => release.version === '2023.10.0',
+          ) as (typeof releases)[0];
+
+          const removalsOnlyRelease: CumulativeRelease = {
+            features: [],
+            fixes: [],
+            removeDependencies: ['@remix-run/react'],
+            removeDevDependencies: [],
+            dependencies: {},
+            devDependencies: {},
+          };
+
+          await expect(
+            displayConfirmation({
+              cumulativeRelease: removalsOnlyRelease,
+              selectedRelease,
+            }),
+          ).resolves.toEqual(false);
+
+          expect(renderInfo).toHaveBeenCalledWith(
+            expect.objectContaining({
+              headline: 'Included in this upgrade:',
+              customSections: expect.arrayContaining([
+                expect.objectContaining({title: 'Removed packages'}),
+              ]),
+            }),
+          );
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
+    });
+  });
+
+  describe('generateUpgradeInstructionsFile', () => {
+    it('includes backtick-wrapped removed packages in markdown output', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          const {releases} = await getChangelog();
+
+          const selectedRelease = releases.find(
+            (release) => release.version === '2023.10.0',
+          ) as (typeof releases)[0];
+
+          const releaseWithRemovals: CumulativeRelease = {
+            ...CUMULATIVE_RELEASE,
+            removeDependencies: ['@remix-run/react'],
+            removeDevDependencies: ['@remix-run/dev'],
+          };
+
+          const resultPath = await generateUpgradeInstructionsFile({
+            appPath,
+            cumulativeRelease: releaseWithRemovals,
+            currentVersion: '2023.1.6',
+            selectedRelease,
+          });
+
+          expect(resultPath).toBeDefined();
+
+          const mdContent = await readFile(
+            joinPath(appPath, resultPath!),
+            'utf8',
+          );
+
+          expect(mdContent).toContain('## Removed packages');
+          expect(mdContent).toContain('- `@remix-run/react`');
+          expect(mdContent).toContain('- `@remix-run/dev`');
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
+    });
+
+    it('omits Removed packages section when cumulativeRelease has no removals', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          const {releases} = await getChangelog();
+
+          const selectedRelease = releases.find(
+            (release) => release.version === '2023.10.0',
+          ) as (typeof releases)[0];
+
+          // CUMULATIVE_RELEASE has features/fixes (so a file is generated)
+          // but empty removeDependencies and removeDevDependencies
+          const resultPath = await generateUpgradeInstructionsFile({
+            appPath,
+            cumulativeRelease: CUMULATIVE_RELEASE,
+            currentVersion: '2023.1.6',
+            selectedRelease,
+          });
+
+          expect(resultPath).toBeDefined();
+
+          const mdContent = await readFile(
+            joinPath(appPath, resultPath!),
+            'utf8',
+          );
+
+          expect(mdContent).not.toContain('## Removed packages');
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
+    });
+
+    it('generates instructions file when release has only removals and no features or fixes', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          const {releases} = await getChangelog();
+
+          const selectedRelease = releases.find(
+            (release) => release.version === '2023.10.0',
+          ) as (typeof releases)[0];
+
+          const removalsOnlyRelease: CumulativeRelease = {
+            features: [],
+            fixes: [],
+            removeDependencies: ['@remix-run/react'],
+            removeDevDependencies: [],
+            dependencies: {},
+            devDependencies: {},
+          };
+
+          const resultPath = await generateUpgradeInstructionsFile({
+            appPath,
+            cumulativeRelease: removalsOnlyRelease,
+            currentVersion: '2023.1.6',
+            selectedRelease,
+          });
+
+          expect(resultPath).toBeDefined();
+
+          const mdContent = await readFile(
+            joinPath(appPath, resultPath!),
+            'utf8',
+          );
+
+          expect(mdContent).toContain('## Removed packages');
+          expect(mdContent).toContain('- `@remix-run/react`');
+          expect(mdContent).not.toContain('----\n\n----');
         },
         {
           cleanGitRepo: true,
@@ -1447,7 +1654,25 @@ describe('upgrade', async () => {
             cumulativeRemoveDevDependencies: [],
           });
 
-          expect(renderTasks).toHaveBeenCalled();
+          // With empty removal lists, only the upgrade task should be present
+          expect(renderTasks).toHaveBeenCalledWith(
+            expect.arrayContaining([
+              expect.objectContaining({
+                title: 'Upgrading dependencies',
+              }),
+            ]),
+            expect.anything(),
+          );
+
+          // The removal task should NOT be present when no deps to remove
+          expect(renderTasks).toHaveBeenCalledWith(
+            expect.not.arrayContaining([
+              expect.objectContaining({
+                title: 'Removing deprecated dependencies',
+              }),
+            ]),
+            expect.anything(),
+          );
         },
         {
           cleanGitRepo: true,

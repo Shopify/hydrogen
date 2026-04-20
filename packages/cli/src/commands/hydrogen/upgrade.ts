@@ -83,6 +83,10 @@ export type CumulativeRelease = {
   devDependencies: Record<string, string>;
 };
 
+function getAllRemovedPackages(release: CumulativeRelease): string[] {
+  return [...release.removeDependencies, ...release.removeDevDependencies];
+}
+
 const INSTRUCTIONS_FOLDER = '.hydrogen';
 
 export default class Upgrade extends Command {
@@ -722,7 +726,9 @@ export function displayConfirmation({
   targetVersion?: string;
 }) {
   const {features, fixes} = cumulativeRelease;
-  if (features.length || fixes.length) {
+  const allRemovedPackages = getAllRemovedPackages(cumulativeRelease);
+
+  if (features.length || fixes.length || allRemovedPackages.length) {
     renderInfo({
       headline: `Included in this upgrade:`,
       // @ts-expect-error - filter(Boolean) removes falsy values, leaving only objects
@@ -743,6 +749,16 @@ export function displayConfirmation({
             {
               list: {
                 items: fixes.map((item) => item.title),
+              },
+            },
+          ],
+        },
+        allRemovedPackages.length && {
+          title: 'Removed packages',
+          body: [
+            {
+              list: {
+                items: allRemovedPackages,
               },
             },
           ],
@@ -1394,7 +1410,7 @@ function generateStepMd(item: ReleaseItem) {
 /**
  * Generates a markdown file with upgrade instructions
  */
-async function generateUpgradeInstructionsFile({
+export async function generateUpgradeInstructionsFile({
   appPath,
   cumulativeRelease,
   currentVersion,
@@ -1428,7 +1444,14 @@ async function generateUpgradeInstructionsFile({
     .filter((fixes) => fixes.steps)
     .map(generateStepMd);
 
-  if (!featuresMd.length && !fixesMd.length && !breakingChangesMd.length) {
+  const allRemovedPackages = getAllRemovedPackages(cumulativeRelease);
+
+  if (
+    !featuresMd.length &&
+    !fixesMd.length &&
+    !breakingChangesMd.length &&
+    !allRemovedPackages.length
+  ) {
     renderInfo({
       headline: `No upgrade instructions generated`,
       body: `There are no additional upgrade instructions for this version.`,
@@ -1458,6 +1481,13 @@ async function generateUpgradeInstructionsFile({
     md += `\n${featuresMd.length ? '----\n\n' : ''}## Fixes\n\n${fixesMd.join(
       '\n',
     )}`;
+  }
+
+  if (allRemovedPackages.length) {
+    md += fixesMd.length ? '\n\n----\n\n' : '\n';
+    md += `## Removed packages\n\nThe following packages have been removed as part of this upgrade:\n\n`;
+    md += allRemovedPackages.map((dep) => `- \`${dep}\``).join('\n');
+    md += '\n';
   }
 
   const filePath = joinPath(instructionsFolderPath, filename);
