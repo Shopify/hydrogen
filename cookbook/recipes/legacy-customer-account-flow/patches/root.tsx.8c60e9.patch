@@ -1,14 +1,15 @@
-index df87425c..aa6f5166 100644
+index b7eb81513..7205a0143 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
-@@ -1,5 +1,6 @@
- import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
+@@ -5,6 +5,7 @@ import {
+   useNonce,
+ } from '@shopify/hydrogen';
  import {
 +  data,
    Outlet,
    useRouteError,
    isRouteErrorResponse,
-@@ -11,6 +12,7 @@ import {
+@@ -16,6 +17,7 @@ import {
    useRouteLoaderData,
  } from 'react-router';
  import type {Route} from './+types/root';
@@ -16,7 +17,7 @@ index df87425c..aa6f5166 100644
  import favicon from '~/assets/favicon.svg';
  import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
  import resetStyles from '~/styles/reset.css?url';
-@@ -65,6 +67,9 @@ export function links() {
+@@ -70,6 +72,9 @@ export function links() {
    ];
  }
  
@@ -26,7 +27,7 @@ index df87425c..aa6f5166 100644
  export async function loader(args: Route.LoaderArgs) {
    // Start fetching non-critical data without blocking time to first byte
    const deferredData = loadDeferredData(args);
-@@ -74,23 +79,38 @@ export async function loader(args: Route.LoaderArgs) {
+@@ -79,26 +84,41 @@ export async function loader(args: Route.LoaderArgs) {
  
    const {storefront, env} = args.context;
  
@@ -34,6 +35,9 @@ index df87425c..aa6f5166 100644
 -    ...deferredData,
 -    ...criticalData,
 -    publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+-    publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+-    storefrontApiVersion: storefront.apiVersion,
+-    i18n: storefront.i18n,
 -    shop: getShopAnalytics({
 -      storefront,
 -      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
@@ -61,6 +65,9 @@ index df87425c..aa6f5166 100644
 +      // @description Include isLoggedIn status for legacy authentication
 +      isLoggedIn,
 +      publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
++      publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
++      storefrontApiVersion: storefront.apiVersion,
++      i18n: storefront.i18n,
 +      shop: getShopAnalytics({
 +        storefront,
 +        publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
@@ -81,7 +88,7 @@ index df87425c..aa6f5166 100644
  }
  
  /**
-@@ -207,3 +227,39 @@ export function ErrorBoundary() {
+@@ -225,3 +245,39 @@ export function ErrorBoundary() {
      </div>
    );
  }
