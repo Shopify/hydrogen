@@ -16,19 +16,22 @@ import {startTunnelPlugin, pollTunnelURL} from './tunneling.js';
 import {getConfig} from './shopify-config.js';
 import {getGraphiQLUrl} from './graphiql-url.js';
 
+const MOCK_SHOP_DOMAIN = 'mockdotshop.myshopify.com';
+
 export function isMockShop(envVariables: Record<string, string>) {
+  const domain = envVariables.PUBLIC_STORE_DOMAIN;
   return (
-    envVariables.PUBLIC_STORE_DOMAIN === 'mock.shop' ||
-    // We fallback to mock.shop if the env var is falsy.
+    domain === MOCK_SHOP_DOMAIN ||
+    // We fallback to Mock Shop if the env var is falsy.
     // When it's undefined, it might be overwritten by remote variables.
-    envVariables.PUBLIC_STORE_DOMAIN === ''
+    domain === ''
   );
 }
 
 export function notifyIssueWithTunnelAndMockShop(cliCommand: string) {
   renderInfo({
     headline:
-      'Using mock.shop with `--customer-account-push` flag is not supported',
+      'Using Mock Shop with `--customer-account-push` flag is not supported',
     body: 'The functionalities of this flag are disabled.',
     nextSteps: [
       'You may continue knowing Customer Account API (/account) interactions will fail.',

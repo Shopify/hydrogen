@@ -8,7 +8,7 @@ export const BUYER_LOCATION_ID = 'gid://shopify/CompanyLocation/1';
 export const CART_ID = 'gid://shopify/Cart/c1-123';
 export const NEW_CART_ID = 'c1-new-cart-id';
 export const CHECKOUT_URL =
-  'https://demostore.mock.shop/cart/c/Z2NwLXVzLWNlbnRyYWwxOjAxSE5aSFBWVjhKSEc5NDA5MTlWM0ZTUVJE?key=66f3266a23df83f84f2aee087ec244b2';
+  'https://mockdotshop.myshopify.com/cart/c/Z2NwLXVzLWNlbnRyYWwxOjAxSE5aSFBWVjhKSEc5NDA5MTlWM0ZTUVJE?key=66f3266a23df83f84f2aee087ec244b2';
 
 function storefrontQuery(
   query: string,

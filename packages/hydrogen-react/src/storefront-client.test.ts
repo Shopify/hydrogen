@@ -116,13 +116,13 @@ describe(`createStorefrontClient`, () => {
       );
     });
 
-    it(`generates a URL correctly for mock.shop`, () => {
+    it(`generates a URL correctly for Mock Shop`, () => {
       const client = createStorefrontClient(
-        generateConfig({storeDomain: 'mock.shop'}),
+        generateConfig({storeDomain: 'mockdotshop.myshopify.com'}),
       );
 
       expect(client.getStorefrontApiUrl()).toBe(
-        `https://mock.shop/api/${SFAPI_VERSION}/graphql.json`,
+        `https://mockdotshop.myshopify.com/api/${SFAPI_VERSION}/graphql.json`,
       );
     });
   });
