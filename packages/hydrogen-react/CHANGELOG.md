@@ -1,5 +1,13 @@
 # @shopify/hydrogen-react
 
+## 2026.4.2
+
+### Patch Changes
+
+- Fixed the `CartProvider` example code (both TS and JS) to include the missing `return` statement in the `App` component. ([#3685](https://github.com/Shopify/hydrogen/pull/3685)) by [@J8118](https://github.com/J8118)
+
+- Fixed the `ProductProvider` example code (both TS and JS): restored the missing `return` in the `.map()` callback so option buttons render, and removed a stray semicolon that rendered as visible text. ([#3680](https://github.com/Shopify/hydrogen/pull/3680)) by [@J8118](https://github.com/J8118)
+
 ## 2026.4.1
 
 ### Patch Changes
