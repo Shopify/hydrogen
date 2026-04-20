@@ -20,10 +20,11 @@ import {
 import {getTrackingValues} from './tracking-utils.js';
 
 /**
- * Set user and session cookies and refresh the expiry time
+ * Set user and session cookies and refresh the expiry time. If `event.payload.hasUserConsent` is false, no analytics event will happen.
  * @param event - The analytics event.
  * @param shopDomain - The Online Store domain to sent Shopify analytics under the same
  *   top level domain.
+ * @publicDocs
  */
 export function sendShopifyAnalytics(
   event: ShopifyAnalytics,
@@ -135,6 +136,10 @@ function sendToShopify(
   }
 }
 
+/**
+ * If executed on server, this method will return empty string for each field.
+ * @publicDocs
+ */
 export function getClientBrowserParameters(): ClientBrowserParameters {
   if (errorIfServer('getClientBrowserParameters')) {
     return {

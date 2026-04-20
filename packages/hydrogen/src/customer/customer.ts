@@ -119,6 +119,7 @@ function defaultAuthStatusHandler(
   return redirect(redirectTo);
 }
 
+/** @publicDocs */
 export function createCustomerAccountClient({
   session,
   customerAccountId,

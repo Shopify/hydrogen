@@ -33,6 +33,7 @@ export type CartGiftCardCodesUpdateFunction = (
  * @example Replace all gift card codes
  * const updateGiftCardCodes = cartGiftCardCodesUpdateDefault({ storefront, getCartId });
  * await updateGiftCardCodes(['SUMMER2025', 'WELCOME10']);
+ * @publicDocs
  */
 export function cartGiftCardCodesUpdateDefault(
   options: CartQueryOptions,

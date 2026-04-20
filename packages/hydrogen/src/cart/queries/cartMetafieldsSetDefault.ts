@@ -21,6 +21,7 @@ export type CartMetafieldsSetFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/** @publicDocs */
 export function cartMetafieldsSetDefault(
   options: CartQueryOptions,
 ): CartMetafieldsSetFunction {

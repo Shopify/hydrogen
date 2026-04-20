@@ -5,7 +5,7 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "license": "MIT",
-  "version": "5.0.34",
+  "version": "5.0.35",
   "type": "module",
   "repository": {
     "type": "git",

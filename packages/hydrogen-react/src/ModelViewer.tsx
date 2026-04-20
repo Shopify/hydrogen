@@ -60,6 +60,7 @@ type ModelViewerBaseProps = {
  * The `model-viewer` custom element is lazily downloaded through a dynamically-injected `<script type="module">` tag when the `<ModelViewer />` component is rendered
  *
  * ModelViewer is using version `1.21.1` of the `@google/model-viewer` library.
+ * @publicDocs
  */
 export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
   const [modelViewer, setModelViewer] = useState<undefined | HTMLElement>(

@@ -23,6 +23,7 @@ export type CartBuyerIdentityUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/** @publicDocs */
 export function cartBuyerIdentityUpdateDefault(
   options: CartQueryOptions,
 ): CartBuyerIdentityUpdateFunction {

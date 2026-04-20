@@ -7,8 +7,8 @@ export async function loader({params, context}: LoaderFunctionArgs) {
     params.locale &&
     params.locale.toLowerCase() !== `${language}-${country}`.toLowerCase()
   ) {
-    // If the locale URL param is defined, yet we still are still at the default locale
-    // then the the locale param must be invalid, send to the 404 page
+    // If the locale URL param is defined, yet we are still at the default locale
+    // then the locale param must be invalid, send to the 404 page
     throw new Response(null, {status: 404});
   }
 

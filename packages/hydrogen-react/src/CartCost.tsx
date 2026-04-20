@@ -15,6 +15,7 @@ type CartCostProps = Omit<React.ComponentProps<typeof Money>, 'data'> &
  * The `CartCost` component renders a `Money` component with the cost associated with the `amountType` prop.
  * If no `amountType` prop is specified, then it defaults to `totalAmount`.
  * Depends on `useCart()` and must be a child of `<CartProvider/>`
+ * @publicDocs
  */
 export function CartCost(props: CartCostProps): JSX.Element | null {
   const {cost} = useCart();
@@ -43,5 +44,6 @@ export function CartCost(props: CartCostProps): JSX.Element | null {
 }
 
 // This is only for documentation purposes, and it is not used in the code.
+/** @publicDocs */
 export interface CartCostPropsForDocs<AsType extends React.ElementType = 'div'>
   extends Omit<MoneyPropsBase<AsType>, 'data'>, CartCostPropsBase {}

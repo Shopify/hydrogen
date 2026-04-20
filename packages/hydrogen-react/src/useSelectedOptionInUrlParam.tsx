@@ -2,6 +2,7 @@ import {useEffect} from 'react';
 import {mapSelectedProductOptionToObject} from './getProductOptions.js';
 import {SelectedOption} from './storefront-api-types.js';
 
+/** @publicDocs */
 export function useSelectedOptionInUrlParam(
   selectedOptions: Pick<SelectedOption, 'name' | 'value'>[],
 ): null {
