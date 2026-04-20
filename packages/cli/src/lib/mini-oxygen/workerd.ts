@@ -35,7 +35,7 @@ export async function startWorkerdServer({
   buildPathClient,
   env,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  type MiniOxygenType = typeof import('@shopify/mini-oxygen');
+  type MiniOxygenType = typeof import('~/mini-oxygen/worker/index.js');
   const {createMiniOxygen, Response} = await importLocal<MiniOxygenType>(
     '@shopify/mini-oxygen',
     root,

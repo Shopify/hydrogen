@@ -1,0 +1,11 @@
+index 4a0c4ce52..b47aa7338 100644
+--- a/templates/skeleton/.gitignore
++++ b/templates/skeleton/.gitignore
+@@ -4,6 +4,7 @@ node_modules
+ /build
+ /dist
+ /public/build
++/public/~partytown
+ /.mf
+ .env
+ .shopify

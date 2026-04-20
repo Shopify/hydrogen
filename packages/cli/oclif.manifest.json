@@ -353,7 +353,7 @@
         },
         "force": {
           "char": "f",
-          "description": "Forces a deployment to proceed if there are uncommited changes in its Git repository.",
+          "description": "Forces a deployment to proceed if there are uncommitted changes in its Git repository.",
           "env": "SHOPIFY_HYDROGEN_FLAG_FORCE",
           "name": "force",
           "required": false,
@@ -437,7 +437,7 @@
           "type": "option"
         },
         "metadata-description": {
-          "description": "Description of the changes in the deployment. Defaults to the commit message of the latest commit if there are no uncommited changes.",
+          "description": "Description of the changes in the deployment. Defaults to the commit message of the latest commit if there are no uncommitted changes.",
           "env": "SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION",
           "name": "metadata-description",
           "required": false,

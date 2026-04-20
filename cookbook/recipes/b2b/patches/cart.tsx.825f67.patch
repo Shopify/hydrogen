@@ -1,0 +1,26 @@
+index 983f6505d..0fdab3fb8 100644
+--- a/templates/skeleton/app/routes/cart.tsx
++++ b/templates/skeleton/app/routes/cart.tsx
+@@ -11,7 +11,8 @@ export const meta: Route.MetaFunction = () => {
+ export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
+ 
+ export async function action({request, context}: Route.ActionArgs) {
+-  const {cart} = context;
++  // @description Destructure customerAccount for B2B location session persistence
++  const {cart, customerAccount} = context;
+ 
+   const formData = await request.formData();
+ 
+@@ -64,6 +65,12 @@ export async function action({request, context}: Route.ActionArgs) {
+       break;
+     }
+     case CartForm.ACTIONS.BuyerIdentityUpdate: {
++      // @description Persist B2B company location in the customer account session
++      const companyLocationId = inputs.buyerIdentity?.companyLocationId;
++      if (companyLocationId && customerAccount) {
++        customerAccount.setBuyer({companyLocationId});
++      }
++
+       result = await cart.updateBuyerIdentity({
+         ...inputs.buyerIdentity,
+       });

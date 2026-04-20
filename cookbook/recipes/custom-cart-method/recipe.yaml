@@ -32,7 +32,7 @@ steps:
       implementation guide.
     diffs:
       - file: README.md
-        patchFile: README.md.a0354d.patch
+        patchFile: README.md.1764cd.patch
   - type: PATCH
     step: "2"
     name: Let customers change variants directly in the cart
@@ -40,7 +40,7 @@ steps:
       product options.
     diffs:
       - file: app/components/CartLineItem.tsx
-        patchFile: CartLineItem.tsx.686ddc.patch
+        patchFile: CartLineItem.tsx.c12ba7.patch
   - type: PATCH
     step: "3"
     name: Add updateLineByOptions method to cart context
@@ -48,7 +48,7 @@ steps:
       variant switching.
     diffs:
       - file: app/lib/context.ts
-        patchFile: context.ts.e144df.patch
+        patchFile: context.ts.c15041.patch
   - type: PATCH
     step: "4"
     name: Query product options for variant selection
@@ -56,7 +56,7 @@ steps:
       PRODUCT_VARIANT_QUERY for fetching variants.
     diffs:
       - file: app/lib/fragments.ts
-        patchFile: fragments.ts.2ab53e.patch
+        patchFile: fragments.ts.e564c1.patch
   - type: PATCH
     step: "5"
     name: Handle variant updates in the cart route
@@ -64,9 +64,16 @@ steps:
       processing variant changes in cart.
     diffs:
       - file: app/routes/cart.tsx
-        patchFile: cart.tsx.55837b.patch
+        patchFile: cart.tsx.825f67.patch
+  - type: PATCH
+    step: "6"
+    name: package.json
+    description: null
+    diffs:
+      - file: package.json
+        patchFile: package.json.8e0ff5.patch
 nextSteps: null
 llms:
   userQueries: []
   troubleshooting: []
-commit: d27e9178195e76ed6a3ead38b87788677bb449cd
+commit: 1040066d20b52667756fd1ebffd8607602a735b4

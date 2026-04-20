@@ -51,7 +51,7 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/lib/createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts) | A GraphQL client factory for third-party APIs with Oxygen caching support |
+| [app/lib/createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts) | A GraphQL client factory for third-party APIs with Oxygen caching support |
 
 ## Steps
 
@@ -59,12 +59,12 @@ _New files added to the template by this recipe._
 
 Add documentation explaining how to integrate external GraphQL APIs with Oxygen caching.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/README.md)
 
 <details>
 
 ~~~diff
-index c584e537..4c8dcead 100644
+index c584e5370..4c8dceadf 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,6 +1,6 @@
@@ -132,7 +132,7 @@ index c584e537..4c8dcead 100644
 Create a new GraphQL client factory that integrates with Oxygen's caching system.
 This client handles query minification, error handling, and cache key generation.
 
-#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
+#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
 
 <details>
 
@@ -208,12 +208,12 @@ function minifyQuery<T extends string>(string: T) {
 Import the Rick and Morty client and add it to the Hydrogen context so it's available
 in all routes. Also update TypeScript declarations for proper type support.
 
-#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/lib/context.ts)
+#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/lib/context.ts)
 
 <details>
 
 ~~~diff
-index 692d5ae1..0635384a 100644
+index 692d5ae17..0635384ad 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
 @@ -1,25 +1,10 @@
@@ -287,21 +287,16 @@ index 692d5ae1..0635384a 100644
 Update the homepage to fetch data from the third-party API and display it alongside
 Shopify data. This demonstrates parallel data fetching and proper caching strategies.
 
-#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
 ~~~diff
-index 28102dbe..618b99a0 100644
+index 237edc911..d65e12537 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
-@@ -1,11 +1,7 @@
--import {
--  Await,
--  useLoaderData,
--  Link,
--} from 'react-router';
-+import {Await, useLoaderData, Link} from 'react-router';
+@@ -1,7 +1,7 @@
+ import {Await, useLoaderData, Link} from 'react-router';
  import type {Route} from './+types/_index';
  import {Suspense} from 'react';
 -import {Image} from '@shopify/hydrogen';
@@ -309,7 +304,7 @@ index 28102dbe..618b99a0 100644
  import type {
    FeaturedCollectionFragment,
    RecommendedProductsQuery,
-@@ -31,13 +27,19 @@ export async function loader(args: Route.LoaderArgs) {
+@@ -28,14 +28,20 @@ export async function loader(args: Route.LoaderArgs) {
   * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
   */
  async function loadCriticalData({context}: Route.LoaderArgs) {
@@ -325,16 +320,17 @@ index 28102dbe..618b99a0 100644
    ]);
  
    return {
+     isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
      featuredCollection: collections.nodes[0],
 +    // @description Return Rick & Morty characters data
 +    characters,
    };
  }
  
-@@ -64,12 +66,50 @@ export default function Homepage() {
-   const data = useLoaderData<typeof loader>();
+@@ -63,12 +69,50 @@ export default function Homepage() {
    return (
      <div className="home">
+       {data.isShopLinked ? null : <MockShopNotice />}
 +      {/* @description Display Rick & Morty characters from third-party API */}
 +      <ThirdPartyApiExample characters={data.characters} />
        <FeaturedCollection collection={data.featuredCollection} />
@@ -382,7 +378,7 @@ index 28102dbe..618b99a0 100644
  function FeaturedCollection({
    collection,
  }: {
-@@ -141,6 +181,18 @@ const FEATURED_COLLECTION_QUERY = `#graphql
+@@ -147,6 +191,18 @@ const FEATURED_COLLECTION_QUERY = `#graphql
    }
  ` as const;
  
@@ -404,6 +400,54 @@ index 28102dbe..618b99a0 100644
 ~~~
 
 </details>
+
+### Step 4: package.json
+
+
+
+#### File: [package.json](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/package.json)
+
+~~~diff
+index 0bb332639..651bbfffa 100644
+--- a/templates/skeleton/package.json
++++ b/templates/skeleton/package.json
+@@ -14,12 +14,12 @@
+   },
+   "prettier": "@shopify/prettier-config",
+   "dependencies": {
+-    "@shopify/hydrogen": "workspace:*",
++    "@shopify/hydrogen": "2026.4.0",
+     "graphql": "^16.10.0",
+     "graphql-tag": "^2.12.6",
+     "isbot": "^5.1.22",
+-    "react": "catalog:",
+-    "react-dom": "catalog:",
++    "react": "^18.3.1",
++    "react-dom": "^18.3.1",
+     "react-router": "7.14.0",
+     "react-router-dom": "7.14.0"
+   },
+@@ -31,14 +31,14 @@
+     "@react-router/dev": "7.14.0",
+     "@react-router/fs-routes": "7.14.0",
+     "@shopify/cli": "3.93.2",
+-    "@shopify/hydrogen-codegen": "workspace:*",
+-    "@shopify/mini-oxygen": "workspace:*",
++    "@shopify/hydrogen-codegen": "0.3.3",
++    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/oxygen-workers-types": "^4.1.6",
+-    "@shopify/prettier-config": "catalog:",
++    "@shopify/prettier-config": "^1.1.2",
+     "@total-typescript/ts-reset": "^0.6.1",
+     "@types/eslint": "^9.6.1",
+-    "@types/react": "catalog:",
+-    "@types/react-dom": "catalog:",
++    "@types/react": "^18.3.28",
++    "@types/react-dom": "^18.3.7",
+     "@typescript-eslint/eslint-plugin": "^8.21.0",
+     "@typescript-eslint/parser": "^8.21.0",
+     "eslint": "^9.18.0",
+~~~
 
 ## Next steps
 

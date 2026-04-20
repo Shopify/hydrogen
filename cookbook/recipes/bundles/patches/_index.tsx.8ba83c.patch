@@ -1,0 +1,14 @@
+index 237edc911..ebb71b7e2 100644
+--- a/templates/skeleton/app/routes/_index.tsx
++++ b/templates/skeleton/app/routes/_index.tsx
+@@ -157,6 +157,10 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+         amount
+         currencyCode
+       }
++      maxVariantPrice {
++        amount
++        currencyCode
++      }
+     }
+     featuredImage {
+       id

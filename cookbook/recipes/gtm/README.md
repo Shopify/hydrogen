@@ -41,7 +41,7 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx) | Analytics component that subscribes to Hydrogen events and pushes them to GTM's dataLayer |
+| [app/components/GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx) | Analytics component that subscribes to Hydrogen events and pushes them to GTM's dataLayer |
 
 ## Steps
 
@@ -49,12 +49,12 @@ _New files added to the template by this recipe._
 
 Update the README file with GTM-specific documentation and setup instructions.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/README.md)
 
 <details>
 
 ~~~diff
-index c584e537..a31bfebf 100644
+index c584e5370..a31bfebf0 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,6 +1,6 @@
@@ -150,10 +150,10 @@ index c584e537..a31bfebf 100644
 
 Configure CSP headers to allow Google Tag Manager and Analytics scripts.
 
-#### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/entry.server.tsx)
+#### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/entry.server.tsx)
 
 ~~~diff
-index 6f5c4abf..b8eb74f4 100644
+index 6f5c4abfc..b8eb74f4b 100644
 --- a/templates/skeleton/app/entry.server.tsx
 +++ b/templates/skeleton/app/entry.server.tsx
 @@ -15,6 +15,24 @@ export default async function handleRequest(
@@ -187,7 +187,7 @@ index 6f5c4abf..b8eb74f4 100644
 
 Build a component that subscribes to Hydrogen analytics events and pushes them to GTM's dataLayer.
 
-#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
+#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
 
 <details>
 
@@ -224,12 +224,12 @@ export function GoogleTagManager() {
 
 Insert Google Tag Manager tracking code in the head and body sections.
 
-#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/root.tsx)
+#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/root.tsx)
 
 <details>
 
 ~~~diff
-index df87425c..aa25c6d7 100644
+index df87425c5..aa25c6d7c 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -1,4 +1,4 @@
@@ -291,6 +291,54 @@ index df87425c..aa25c6d7 100644
 ~~~
 
 </details>
+
+### Step 4: package.json
+
+
+
+#### File: [package.json](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/package.json)
+
+~~~diff
+index 0bb332639..651bbfffa 100644
+--- a/templates/skeleton/package.json
++++ b/templates/skeleton/package.json
+@@ -14,12 +14,12 @@
+   },
+   "prettier": "@shopify/prettier-config",
+   "dependencies": {
+-    "@shopify/hydrogen": "workspace:*",
++    "@shopify/hydrogen": "2026.4.0",
+     "graphql": "^16.10.0",
+     "graphql-tag": "^2.12.6",
+     "isbot": "^5.1.22",
+-    "react": "catalog:",
+-    "react-dom": "catalog:",
++    "react": "^18.3.1",
++    "react-dom": "^18.3.1",
+     "react-router": "7.14.0",
+     "react-router-dom": "7.14.0"
+   },
+@@ -31,14 +31,14 @@
+     "@react-router/dev": "7.14.0",
+     "@react-router/fs-routes": "7.14.0",
+     "@shopify/cli": "3.93.2",
+-    "@shopify/hydrogen-codegen": "workspace:*",
+-    "@shopify/mini-oxygen": "workspace:*",
++    "@shopify/hydrogen-codegen": "0.3.3",
++    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/oxygen-workers-types": "^4.1.6",
+-    "@shopify/prettier-config": "catalog:",
++    "@shopify/prettier-config": "^1.1.2",
+     "@total-typescript/ts-reset": "^0.6.1",
+     "@types/eslint": "^9.6.1",
+-    "@types/react": "catalog:",
+-    "@types/react-dom": "catalog:",
++    "@types/react": "^18.3.28",
++    "@types/react-dom": "^18.3.7",
+     "@typescript-eslint/eslint-plugin": "^8.21.0",
+     "@typescript-eslint/parser": "^8.21.0",
+     "eslint": "^9.18.0",
+~~~
 
 ## Next steps
 
