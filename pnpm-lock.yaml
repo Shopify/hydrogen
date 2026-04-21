@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@shopify/generate-docs':
+      specifier: 1.1.4
+      version: 1.1.4
     '@shopify/prettier-config':
       specifier: ^1.1.2
       version: 1.1.4
@@ -468,8 +471,8 @@ importers:
         specifier: 7.12.0
         version: 7.12.0(@react-router/serve@7.13.0(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.2(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.3))(yaml@2.8.3)
       '@shopify/generate-docs':
-        specifier: 1.1.2
-        version: 1.1.2
+        specifier: 'catalog:'
+        version: 1.1.4
       '@shopify/hydrogen-codegen':
         specifier: workspace:*
         version: link:../hydrogen-codegen
@@ -584,8 +587,8 @@ importers:
         specifier: ^5.0.1
         version: 5.1.1(@types/node@22.19.15)(@types/react@18.3.28)(jiti@2.6.1)(lightningcss@1.30.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.2)(yaml@2.8.3)
       '@shopify/generate-docs':
-        specifier: 1.1.1
-        version: 1.1.1
+        specifier: 'catalog:'
+        version: 1.1.4
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -2964,12 +2967,8 @@ packages:
     os: [darwin, linux, win32]
     hasBin: true
 
-  '@shopify/generate-docs@1.1.1':
-    resolution: {integrity: sha512-HbvKMoN7Yr8MAbmJEhBlL6G8rqACVhz7MW1H/GeG7aS9rlcaf4NqDF1SVj8RIq76R7dkQEneajKdo5wMfV0oKg==, tarball: https://registry.npmjs.org/@shopify/generate-docs/-/generate-docs-1.1.1.tgz}
-    hasBin: true
-
-  '@shopify/generate-docs@1.1.2':
-    resolution: {integrity: sha512-IEorNlulHXpY1qIuE4/QiT+3L3zzM57fz4GFcD5rBETwirMXMz2jzQL5XA1MKk1LY09u0udkDOHOypainmhHwA==, tarball: https://registry.npmjs.org/@shopify/generate-docs/-/generate-docs-1.1.2.tgz}
+  '@shopify/generate-docs@1.1.4':
+    resolution: {integrity: sha512-jilhGsPLbtl/PRu3WOuuJ2OCGaO/6Fz+dxa0jxwWHTfBTdoX3GIek2NtSRZWfUSuVGyybKyh6q3uyZdS5hlK5Q==, tarball: https://registry.npmjs.org/@shopify/generate-docs/-/generate-docs-1.1.4.tgz}
     hasBin: true
 
   '@shopify/graphql-client@1.4.1':
@@ -11233,13 +11232,7 @@ snapshots:
       esbuild: 0.27.4
       global-agent: 3.0.0
 
-  '@shopify/generate-docs@1.1.1':
-    dependencies:
-      '@types/react': 18.3.28
-      globby: 11.1.0
-      typescript: 5.9.2
-
-  '@shopify/generate-docs@1.1.2':
+  '@shopify/generate-docs@1.1.4':
     dependencies:
       '@types/react': 18.3.28
       globby: 11.1.0
