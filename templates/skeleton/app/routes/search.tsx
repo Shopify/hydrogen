@@ -12,6 +12,10 @@ import type {
   RegularSearchQuery,
   PredictiveSearchQuery,
 } from 'storefrontapi.generated';
+import {parseFiltersFromParams} from '~/lib/product-filters';
+import {parseSortParam, SEARCH_SORT_OPTIONS} from '~/lib/product-sort';
+import {ProductFilters} from '~/components/ProductFilters';
+import {ProductSort} from '~/components/ProductSort';
 
 export const meta: Route.MetaFunction = () => {
   return [{title: `Hydrogen | Search`}];
@@ -59,6 +63,16 @@ export default function SearchPage() {
         )}
       </SearchForm>
       {error && <p style={{color: 'red'}}>{error}</p>}
+      {term && result?.total ? (
+        <>
+          <div className="product-controls">
+            <ProductSort sortOptions={SEARCH_SORT_OPTIONS} />
+          </div>
+          {result?.productFilters && result.productFilters.length > 0 && (
+            <ProductFilters filters={result.productFilters} />
+          )}
+        </>
+      ) : null}
       {!term || !result?.total ? (
         <SearchResults.Empty />
       ) : (
@@ -139,6 +153,9 @@ const SEARCH_ARTICLE_FRAGMENT = `#graphql
     id
     title
     trackingParameters
+    blog {
+      handle
+    }
   }
 ` as const;
 
@@ -161,6 +178,9 @@ export const SEARCH_QUERY = `#graphql
     $last: Int
     $term: String!
     $startCursor: String
+    $productFilters: [ProductFilter!]
+    $sortKey: SearchSortKeys
+    $reverse: Boolean
   ) @inContext(country: $country, language: $language) {
     articles: search(
       query: $term,
@@ -190,13 +210,34 @@ export const SEARCH_QUERY = `#graphql
       first: $first,
       last: $last,
       query: $term,
-      sortKey: RELEVANCE,
+      productFilters: $productFilters,
+      sortKey: $sortKey,
+      reverse: $reverse,
       types: [PRODUCT],
       unavailableProducts: HIDE,
     ) {
       nodes {
         ...on Product {
           ...SearchProduct
+        }
+      }
+      productFilters {
+        id
+        label
+        type
+        values {
+          id
+          label
+          count
+          input
+          swatch {
+            color
+            image {
+              previewImage {
+                url
+              }
+            }
+          }
         }
       }
       pageInfo {
@@ -225,13 +266,25 @@ async function regularSearch({
   const variables = getPaginationVariables(request, {pageBy: 8});
   const term = String(url.searchParams.get('q') || '');
 
+  // Parse filters and sort from URL search params
+  const filters = parseFiltersFromParams(url.searchParams);
+  const sortOption = parseSortParam(url.searchParams, true);
+
   // Search articles, pages, and products for the `q` term
   const {
     errors,
     ...items
   }: {errors?: Array<{message: string}>} & RegularSearchQuery =
     await storefront.query(SEARCH_QUERY, {
-      variables: {...variables, term},
+      variables: {
+        ...variables,
+        term,
+        productFilters: filters.length > 0 ? filters : undefined,
+        ...(sortOption && {
+          sortKey: sortOption.sortKey,
+          reverse: sortOption.reverse,
+        }),
+      },
     });
 
   if (!items) {
@@ -247,7 +300,14 @@ async function regularSearch({
     ? errors.map(({message}: {message: string}) => message).join(', ')
     : undefined;
 
-  return {type: 'regular', term, error, result: {total, items}};
+  const productFilters = items.products?.productFilters ?? [];
+
+  return {
+    type: 'regular',
+    term,
+    error,
+    result: {total, items, productFilters},
+  };
 }
 
 /**

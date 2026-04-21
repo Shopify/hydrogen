@@ -3,11 +3,15 @@ import type {
   RegularSearchQuery,
 } from 'storefrontapi.generated';
 
+/** The productFilters shape returned by the RegularSearch query. */
+export type SearchProductFilters =
+  RegularSearchQuery['products']['productFilters'];
+
 type ResultWithItems<Type extends 'predictive' | 'regular', Items> = {
   type: Type;
   term: string;
   error?: string;
-  result: {total: number; items: Items};
+  result: {total: number; items: Items; productFilters?: SearchProductFilters};
 };
 
 export type RegularSearchReturn = ResultWithItems<
