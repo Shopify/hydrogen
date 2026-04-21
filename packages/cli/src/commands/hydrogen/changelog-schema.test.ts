@@ -112,7 +112,6 @@ describe('Changelog validation', () => {
       expect(release.hash).toBeDefined();
       expect(release.commit).toBeDefined();
       expect(release.dependencies).toBeDefined();
-      // devDependencies is optional per PR #3700 — runtime handles undefined via ?? {}
       expect(release.features).toBeDefined();
       expect(release.fixes).toBeDefined();
 
