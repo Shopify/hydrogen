@@ -295,6 +295,20 @@ type Project = {
 };
 
 /**
+ * Removes all entries from a directory except the .git directory/file.
+ * This preserves version history when scaffolding into an existing repo.
+ */
+async function clearDirectoryPreservingGit(directory: string): Promise<void> {
+  const entries = await readdir(directory);
+
+  for (const entry of entries) {
+    if (entry !== '.git') {
+      await rmdir(joinPath(directory, entry), {force: true});
+    }
+  }
+}
+
+/**
  * Prompts the user to select a project directory location.
  * @returns Project information, or undefined if the user chose not to force project creation.
  */
@@ -341,7 +355,7 @@ export async function handleProjectLocation({
       const deleteFiles = await renderConfirmationPrompt({
         message: `The directory ${colors.cyan(
           location,
-        )} is not empty. Do you want to delete the existing files and continue?`,
+        )} is not empty. Continuing will delete its contents (your ${colors.cyan('.git')} directory is kept). Continue?`,
         defaultValue: false,
         abortSignal: controller.signal,
       });
@@ -350,14 +364,16 @@ export async function handleProjectLocation({
         renderInfo({
           body: `Destination path ${colors.cyan(
             location,
-          )} already exists and is not an empty directory. You may use \`--force\` or \`-f\` to override it.`,
+          )} already exists and is not an empty directory. You may use \`--force\` or \`-f\` to delete its contents (${colors.cyan(
+            '.git',
+          )} is always preserved).`,
         });
 
         return;
       }
     }
 
-    await rmdir(directory, {force: true});
+    await clearDirectoryPreservingGit(directory);
   }
 
   return {
