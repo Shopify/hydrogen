@@ -1,7 +1,7 @@
-index df87425c..1ba9888f 100644
+index b7eb81513..859bccb7e 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
-@@ -11,46 +11,20 @@ import {
+@@ -16,46 +16,20 @@ import {
    useRouteLoaderData,
  } from 'react-router';
  import type {Route} from './+types/root';
@@ -49,7 +49,7 @@ index df87425c..1ba9888f 100644
  export function links() {
    return [
      {
-@@ -61,18 +35,19 @@ export function links() {
+@@ -66,18 +40,19 @@ export function links() {
        rel: 'preconnect',
        href: 'https://shop.app',
      },
@@ -76,7 +76,7 @@ index df87425c..1ba9888f 100644
  
    return {
      ...deferredData,
-@@ -86,59 +61,29 @@ export async function loader(args: Route.LoaderArgs) {
+@@ -94,59 +69,29 @@ export async function loader(args: Route.LoaderArgs) {
        checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
        withPrivacyBanner: false,
@@ -149,7 +149,7 @@ index df87425c..1ba9888f 100644
  }
  
  export function Layout({children}: {children?: React.ReactNode}) {
-@@ -149,8 +94,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -159,8 +104,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
        <head>
          <meta charSet="utf-8" />
          <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -159,21 +159,21 @@ index df87425c..1ba9888f 100644
          <Meta />
          <Links />
        </head>
-@@ -176,9 +120,11 @@ export default function App() {
-       shop={data.shop}
-       consent={data.consent}
-     >
--      <PageLayout {...data}>
-+      <div className="PageLayout">
-+        <h1>{data.layout?.shop?.name} (Express example)</h1>
-+        <h2>{data.layout?.shop?.description}</h2>
-         <Outlet />
--      </PageLayout>
-+      </div>
-     </Analytics.Provider>
+@@ -193,9 +137,11 @@ export default function App() {
+         shop={data.shop}
+         consent={data.consent}
+       >
+-        <PageLayout {...data}>
++        <div className="PageLayout">
++          <h1>{data.layout?.shop?.name} (Express example)</h1>
++          <h2>{data.layout?.shop?.description}</h2>
+           <Outlet />
+-        </PageLayout>
++        </div>
+       </Analytics.Provider>
+     </ShopifyProvider>
    );
- }
-@@ -207,3 +153,19 @@ export function ErrorBoundary() {
+@@ -225,3 +171,19 @@ export function ErrorBoundary() {
      </div>
    );
  }

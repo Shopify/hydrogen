@@ -7,6 +7,7 @@ import {
   SHOPIFY_VISIT_TOKEN_HEADER,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
+import {SFAPI_VERSION} from '@shopify/hydrogen-react/storefront-api-constants';
 import type {WritableDeep} from 'type-fest';
 import {fetchWithServerCache} from './cache/server-fetch';
 import {
@@ -173,6 +174,8 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
   i18n: TI18n;
+  /** The resolved Storefront API version used by this client. */
+  readonly apiVersion: string;
   getHeaders: () => Record<string, string>;
   /**
    * Checks if the request URL matches the Storefront API GraphQL endpoint.
@@ -556,6 +559,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       getShopifyDomain,
       getApiUrl: getStorefrontApiUrl,
       i18n: (i18n ?? defaultI18n) as TI18n,
+      apiVersion: clientOptions.storefrontApiVersion ?? SFAPI_VERSION,
 
       /**
        * Checks if the request is targeting the Storefront API endpoint.
@@ -827,6 +831,8 @@ export type StorefrontForDoc<TI18n extends I18nBase = I18nBase> = {
   >['getStorefrontApiUrl'];
   /** The `i18n` object passed in from the `createStorefrontClient` argument. */
   i18n?: TI18n;
+  /** The resolved Storefront API version used by this client. */
+  readonly apiVersion?: string;
 };
 
 export type StorefrontQueryOptionsForDocs = {

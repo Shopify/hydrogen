@@ -1,13 +1,15 @@
-index df87425c..aa25c6d7 100644
+index b7eb81513..65cf4e992 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
-@@ -1,4 +1,4 @@
--import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
-+import {Analytics, getShopAnalytics, useNonce, Script} from '@shopify/hydrogen';
+@@ -3,6 +3,7 @@ import {
+   getShopAnalytics,
+   ShopifyProvider,
+   useNonce,
++  Script,
+ } from '@shopify/hydrogen';
  import {
    Outlet,
-   useRouteError,
-@@ -16,6 +16,7 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+@@ -21,6 +22,7 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
  import resetStyles from '~/styles/reset.css?url';
  import appStyles from '~/styles/app.css?url';
  import {PageLayout} from './components/PageLayout';
@@ -15,7 +17,7 @@ index df87425c..aa25c6d7 100644
  
  export type RootLoader = typeof loader;
  
-@@ -153,8 +154,32 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -163,8 +165,32 @@ export function Layout({children}: {children?: React.ReactNode}) {
          <link rel="stylesheet" href={appStyles}></link>
          <Meta />
          <Links />
@@ -48,12 +50,12 @@ index df87425c..aa25c6d7 100644
          {children}
          <ScrollRestoration nonce={nonce} />
          <Scripts nonce={nonce} />
-@@ -179,6 +204,8 @@ export default function App() {
-       <PageLayout {...data}>
-         <Outlet />
-       </PageLayout>
-+      {/* @description Initialize Google Tag Manager analytics integration */}
-+      <GoogleTagManager />
-     </Analytics.Provider>
+@@ -196,6 +222,8 @@ export default function App() {
+         <PageLayout {...data}>
+           <Outlet />
+         </PageLayout>
++        {/* @description Initialize Google Tag Manager analytics integration */}
++        <GoogleTagManager />
+       </Analytics.Provider>
+     </ShopifyProvider>
    );
- }
