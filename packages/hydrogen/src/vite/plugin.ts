@@ -89,7 +89,6 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                   'content-security-policy-builder',
                   'worktop/cookie',
                   '@shopify/hydrogen > @shopify/graphql-client',
-                  'use-resize-observer',
                 ]
               : [
                   // In production projects, optimize Hydrogen and critical deps
