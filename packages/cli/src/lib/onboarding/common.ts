@@ -295,6 +295,21 @@ type Project = {
 };
 
 /**
+ * Checks whether a .git directory or file exists in the given directory.
+ */
+async function hasGitDirectory(directory: string): Promise<boolean> {
+  return fileExists(joinPath(directory, '.git'));
+}
+
+/**
+ * Checks whether a directory contains only a .git directory/file (and nothing else).
+ */
+async function hasOnlyGitDirectory(directory: string): Promise<boolean> {
+  const entries = await readdir(directory);
+  return entries.length === 1 && entries[0] === '.git';
+}
+
+/**
  * Removes all entries from a directory except the .git directory/file.
  * This preserves version history when scaffolding into an existing repo.
  */
@@ -351,22 +366,34 @@ export async function handleProjectLocation({
       }
     }
 
+    // If directory contains only .git, treat it as effectively empty (no prompt needed)
+    const gitOnly = await hasOnlyGitDirectory(directory);
+    if (gitOnly) {
+      force = true;
+    }
+
     if (!force) {
+      const hasGit = await hasGitDirectory(directory);
+      const gitPreservationNote = hasGit
+        ? ` (your ${colors.cyan('.git')} directory is kept)`
+        : '';
+
       const deleteFiles = await renderConfirmationPrompt({
         message: `The directory ${colors.cyan(
           location,
-        )} is not empty. Continuing will delete its contents (your ${colors.cyan('.git')} directory is kept). Continue?`,
+        )} is not empty. Continuing will delete its contents${gitPreservationNote}. Continue?`,
         defaultValue: false,
         abortSignal: controller.signal,
       });
 
       if (!deleteFiles) {
+        const gitInfo = hasGit
+          ? ` (${colors.cyan('.git')} is always preserved)`
+          : '';
         renderInfo({
           body: `Destination path ${colors.cyan(
             location,
-          )} already exists and is not an empty directory. You may use \`--force\` or \`-f\` to delete its contents (${colors.cyan(
-            '.git',
-          )} is always preserved).`,
+          )} already exists and is not an empty directory. You may use \`--force\` or \`-f\` to delete its contents${gitInfo}.`,
         });
 
         return;
@@ -752,7 +779,8 @@ export function createAbortHandler(
     await Promise.resolve();
 
     if (project?.directory) {
-      await rmdir(project!.directory, {force: true}).catch(() => {});
+      // Preserve .git directory on abort to avoid destroying existing git history
+      await clearDirectoryPreservingGit(project.directory).catch(() => {});
     }
 
     renderFatalError(

@@ -10,9 +10,10 @@ import {
 import {
   renderConfirmationPrompt,
   renderTextPrompt,
+  renderFatalError,
 } from '@shopify/cli-kit/node/ui';
 import {AbortController} from '@shopify/cli-kit/node/abort';
-import {handleProjectLocation} from './common.js';
+import {handleProjectLocation, createAbortHandler} from './common.js';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {execAsync} from '../process.js';
 
@@ -163,6 +164,31 @@ describe('handleProjectLocation', () => {
       });
     });
 
+    it('does not mention .git in confirmation message when no .git exists', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        const projectDir = joinPath(tmpDir, 'test-project');
+        await mkdir(projectDir);
+
+        // Create files but NO .git
+        await writeFile(joinPath(projectDir, 'file.txt'), 'content');
+
+        vi.mocked(renderConfirmationPrompt).mockResolvedValue(true);
+
+        await handleProjectLocation({
+          path: projectDir,
+          controller,
+          force: false,
+        });
+
+        // The confirmation message should NOT mention .git
+        expect(renderConfirmationPrompt).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: expect.not.stringContaining('.git'),
+          }),
+        );
+      });
+    });
+
     it('preserves .git with --force flag (no prompt)', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const projectDir = joinPath(tmpDir, 'test-project');
@@ -197,7 +223,7 @@ describe('handleProjectLocation', () => {
       });
     });
 
-    it('continues scaffolding when directory contains only .git', async () => {
+    it('skips confirmation prompt when directory contains only .git', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const projectDir = joinPath(tmpDir, 'test-project');
         await mkdir(projectDir);
@@ -206,8 +232,6 @@ describe('handleProjectLocation', () => {
         const gitDir = joinPath(projectDir, '.git');
         await mkdir(gitDir);
         await writeFile(joinPath(gitDir, 'HEAD'), 'ref: refs/heads/main');
-
-        vi.mocked(renderConfirmationPrompt).mockResolvedValue(true);
 
         const result = await handleProjectLocation({
           path: projectDir,
@@ -223,6 +247,9 @@ describe('handleProjectLocation', () => {
         // Directory should only contain .git
         const entries = await readdir(projectDir);
         expect(entries).toEqual(['.git']);
+
+        // Should NOT have prompted since the directory only contains .git
+        expect(renderConfirmationPrompt).not.toHaveBeenCalled();
       });
     });
 
@@ -374,3 +401,61 @@ async function readFile(path: string): Promise<string> {
   const {readFile: fsReadFile} = await import('node:fs/promises');
   return fsReadFile(path, 'utf-8');
 }
+
+describe('createAbortHandler', () => {
+  let controller: AbortController;
+  const originalProcessExit = process.exit;
+
+  beforeEach(() => {
+    controller = new AbortController();
+    vi.clearAllMocks();
+    // Mock process.exit to prevent test termination
+    process.exit = vi.fn() as any;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    process.exit = originalProcessExit;
+  });
+
+  it('preserves .git directory on abort', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      const projectDir = joinPath(tmpDir, 'test-project');
+      await mkdir(projectDir);
+
+      // Create a .git directory
+      const gitDir = joinPath(projectDir, '.git');
+      await mkdir(gitDir);
+      await writeFile(joinPath(gitDir, 'HEAD'), 'ref: refs/heads/main');
+
+      // Create scaffolded files that should be cleaned up
+      await writeFile(joinPath(projectDir, 'package.json'), '{}');
+      await mkdir(joinPath(projectDir, 'app'));
+      await writeFile(joinPath(projectDir, 'app', 'root.tsx'), '// root');
+
+      const abort = createAbortHandler(controller, {directory: projectDir});
+
+      // Simulate an abort error
+      const error = new Error('Simulated failure') as any;
+      error.tryMessage = 'Try again';
+
+      try {
+        await abort(error);
+      } catch {
+        // Expected - abort throws or exits
+      }
+
+      // .git should still exist
+      await expect(fileExists(gitDir)).resolves.toBe(true);
+      await expect(fileExists(joinPath(gitDir, 'HEAD'))).resolves.toBe(true);
+
+      // Scaffolded files should be cleaned up
+      await expect(
+        fileExists(joinPath(projectDir, 'package.json')),
+      ).resolves.toBe(false);
+      await expect(fileExists(joinPath(projectDir, 'app'))).resolves.toBe(
+        false,
+      );
+    });
+  });
+});
