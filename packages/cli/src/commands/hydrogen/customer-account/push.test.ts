@@ -248,6 +248,7 @@ describe('getStorefrontId', () => {
     vi.mocked(linkStorefront).mockResolvedValue({
       id: STOREFRONT_ID,
       title: 'Linked Store',
+      productionUrl: 'https://example.com',
     });
 
     vi.mocked(getConfig).mockResolvedValue({
