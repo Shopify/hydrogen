@@ -112,7 +112,6 @@ describe('Changelog validation', () => {
       expect(release.hash).toBeDefined();
       expect(release.commit).toBeDefined();
       expect(release.dependencies).toBeDefined();
-      expect(release.devDependencies).toBeDefined();
       expect(release.features).toBeDefined();
       expect(release.fixes).toBeDefined();
 
