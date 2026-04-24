@@ -59,8 +59,8 @@ importers:
         specifier: 7.14.0
         version: 7.14.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       uuid:
-        specifier: ^11.1.0
-        version: 11.1.0
+        specifier: ^14.0.0
+        version: 14.0.0
     devDependencies:
       '@changesets/changelog-github':
         specifier: ^0.4.8
@@ -636,7 +636,7 @@ importers:
         version: 11.1.0(eslint@9.19.0(jiti@2.6.1))
       eslint-plugin-prettier:
         specifier: 4.2.1
-        version: 4.2.1(eslint-config-prettier@10.0.1(eslint@9.19.0(jiti@2.6.1)))(eslint@9.19.0(jiti@2.6.1))(prettier@3.8.1)
+        version: 4.2.1(eslint-config-prettier@10.0.1(eslint@9.19.0(jiti@2.6.1)))(eslint@9.19.0(jiti@2.6.1))(prettier@3.8.3)
       eslint-plugin-react:
         specifier: 7.37.4
         version: 7.37.4(eslint@9.19.0(jiti@2.6.1))
@@ -6974,6 +6974,11 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
+  prettier@3.8.3:
+    resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
+    engines: {node: '>=14'}
+    hasBin: true
+
   pretty-format@27.5.1:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
@@ -8199,8 +8204,8 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
-  uuid@11.1.0:
-    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
+  uuid@14.0.0:
+    resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -12856,10 +12861,10 @@ snapshots:
       resolve: 1.22.11
       semver: 6.3.1
 
-  eslint-plugin-prettier@4.2.1(eslint-config-prettier@10.0.1(eslint@9.19.0(jiti@2.6.1)))(eslint@9.19.0(jiti@2.6.1))(prettier@3.8.1):
+  eslint-plugin-prettier@4.2.1(eslint-config-prettier@10.0.1(eslint@9.19.0(jiti@2.6.1)))(eslint@9.19.0(jiti@2.6.1))(prettier@3.8.3):
     dependencies:
       eslint: 9.19.0(jiti@2.6.1)
-      prettier: 3.8.1
+      prettier: 3.8.3
       prettier-linter-helpers: 1.0.1
     optionalDependencies:
       eslint-config-prettier: 10.0.1(eslint@9.19.0(jiti@2.6.1))
@@ -15707,6 +15712,8 @@ snapshots:
 
   prettier@3.8.1: {}
 
+  prettier@3.8.3: {}
+
   pretty-format@27.5.1:
     dependencies:
       ansi-regex: 5.0.1
@@ -17112,7 +17119,7 @@ snapshots:
 
   utils-merge@1.0.1: {}
 
-  uuid@11.1.0: {}
+  uuid@14.0.0: {}
 
   v8-compile-cache-lib@3.0.1: {}
 
