@@ -1,0 +1,62 @@
+index f6b6b2a36..a289365b3 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
+@@ -40,13 +40,19 @@ export const CART_QUERY_FRAGMENT = `#graphql
+           altText
+           width
+           height
+-
+         }
+         product {
+           handle
+           title
+           id
+           vendor
++          # @description Add product options for variant selection
++          options {
++            name
++            optionValues {
++              name
++            }
++          }
+         }
+         selectedOptions {
+           name
+@@ -102,6 +108,13 @@ export const CART_QUERY_FRAGMENT = `#graphql
+           title
+           id
+           vendor
++          # @description Add product options for variant selection
++          options {
++            name
++            optionValues {
++              name
++            }
++          }
+         }
+         selectedOptions {
+           name
+@@ -240,3 +253,23 @@ export const FOOTER_QUERY = `#graphql
+   }
+   ${MENU_FRAGMENT}
+ ` as const;
++
++// @description Query to fetch product variant by selected options
++export const PRODUCT_VARIANT_QUERY = `#graphql
++  query ProductVariant(
++    $productId: ID!
++    $selectedOptions: [SelectedOptionInput!]!
++    $country: CountryCode
++    $language: LanguageCode
++  ) @inContext(country: $country, language: $language) {
++    product(id: $productId) {
++        selectedVariant: variantBySelectedOptions(
++        selectedOptions: $selectedOptions
++        ignoreUnknownOptions: true
++        caseInsensitiveMatch: true
++      ) {
++        id
++      }
++    }
++  }
++`;

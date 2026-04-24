@@ -176,6 +176,7 @@ export function findHydrogenPlugin<Config extends MinimalViteConfig>(
 ) {
   return findPlugin<HydrogenPlugin>(config, 'hydrogen:main');
 }
+
 export function findOxygenPlugin<Config extends MinimalViteConfig>(
   config: Config,
 ) {

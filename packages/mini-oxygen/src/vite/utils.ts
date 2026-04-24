@@ -2,8 +2,6 @@ import type {ServerResponse, IncomingMessage} from 'node:http';
 import path from 'node:path';
 import {Readable} from 'node:stream';
 import {sendResponse} from '@mjackson/node-fetch-server';
-import {Request, type Response} from '../worker/index.js';
-import type {ViteDevServer} from 'vite';
 
 /**
  * Creates a fully qualified URL from a Node request or a string.
@@ -31,10 +29,12 @@ export function toWeb(req: IncomingMessage, headers?: Record<string, string>) {
   return new Request(toURL(req), {
     method: req.method,
     headers: {...headers, ...(req.headers as object)},
-    body: req.headers['content-length'] ? Readable.toWeb(req) : undefined,
+    body: req.headers['content-length']
+      ? (Readable.toWeb(req) as unknown as BodyInit)
+      : undefined,
     duplex: 'half', // This is required when sending a ReadableStream as body
     redirect: 'manual', // Avoid consuming 300 responses here, return to browser
-  });
+  } as RequestInit & {duplex: 'half'});
 }
 
 /**
@@ -43,6 +43,6 @@ export function toWeb(req: IncomingMessage, headers?: Record<string, string>) {
  */
 export function pipeFromWeb(webResponse: Response, res: ServerResponse) {
   // The sendResponse function from @mjackson/node-fetch-server properly handles
-  // streaming responses, including turbo-stream responses from React Router
-  return sendResponse(res, webResponse as unknown as globalThis.Response);
+  // streaming responses, including turbo-stream responses from React Router.
+  return sendResponse(res, webResponse);
 }

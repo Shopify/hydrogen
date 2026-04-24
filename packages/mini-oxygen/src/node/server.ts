@@ -253,9 +253,10 @@ function sendProxyRequest(
 ) {
   const proxyRequest = new Promise(function (_resolve, reject) {
     const url = urlFromRequest(req);
+    const [host = proxyServer, port = '80'] = proxyServer.split(':');
     const options = {
-      host: proxyServer.split(':')[0],
-      port: parseInt(proxyServer.split(':')[1], 10),
+      host,
+      port: parseInt(port, 10),
       path: `${url.protocol}//${url.host}${url.pathname}`,
       headers: {
         ...req.headers,

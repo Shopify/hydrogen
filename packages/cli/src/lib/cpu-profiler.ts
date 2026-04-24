@@ -5,7 +5,7 @@ import {handleMiniOxygenImportFail} from './mini-oxygen/common.js';
 import {importLocal} from './import-utils.js';
 
 export async function createCpuStartupProfiler(root: string) {
-  type MiniOxygenType = typeof import('@shopify/mini-oxygen/node');
+  type MiniOxygenType = typeof import('~/mini-oxygen/node/index.js');
   const {createMiniOxygen} = await importLocal<MiniOxygenType>(
     '@shopify/mini-oxygen/node',
     root,

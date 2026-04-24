@@ -210,7 +210,8 @@ export function createInspectorProxy(
    * for the first time or when the inspector is reconnected. That happens
    * when the source code is reloaded in h2:preview, h2:debug:cpu.
    * However, it no longer happens in h2:dev with Vite because the worker
-   * instance is not reloaded after source code changes, only patched with HMR.
+   * stays alive and server updates are picked up on the next request instead
+   * of reconnecting the inspector after each source change.
    */
   function onInspectorConnection() {
     inspector.ws.addEventListener('message', sendMessageToDebugger);
@@ -219,8 +220,8 @@ export function createInspectorProxy(
     // message to the console to inform about reconnection.
     // VSCode can reconnect automatically with `restart: true`.
     //  > TODO: it would be good to send this message also in h2:dev with Vite.
-    //  > However, that requires a completely different type of wiring:
-    //  > Getting Vite's HMR notifications from this part of the code somehow.
+    //  > However, that would require wiring Vite invalidation events into this
+    //  > inspector proxy instead of relying on worker reload/reconnect events.
     debuggerWs?.send(
       JSON.stringify({
         method: 'Runtime.consoleAPICalled',

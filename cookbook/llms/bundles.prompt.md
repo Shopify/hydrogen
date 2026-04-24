@@ -81,7 +81,7 @@ In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/sho
 
 Create a new BundleBadge component to be displayed on bundle product listings.
 
-#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/d46c8864aea059cac7dda4871a565f76a04b1495/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
+#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 
 ~~~tsx
 export function BundleBadge() {
@@ -108,7 +108,7 @@ export function BundleBadge() {
 
 Create a new `BundledVariants` component that wraps the variants of a bundle product in a single product listing.
 
-#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/d46c8864aea059cac7dda4871a565f76a04b1495/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
+#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
 
 ~~~tsx
 import {Link} from 'react-router';
@@ -184,7 +184,7 @@ Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
 #### File: /app/routes/_index.tsx
 
 ~~~diff
-@@ -151,6 +151,10 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+@@ -157,6 +157,10 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
          amount
          currencyCode
        }
@@ -206,7 +206,7 @@ used to identify bundled products.
 #### File: /app/routes/products.$handle.tsx
 
 ~~~diff
-@@ -15,6 +15,8 @@ import {ProductPrice} from '~/components/ProductPrice';
+@@ -12,6 +12,8 @@ import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
@@ -215,7 +215,7 @@ used to identify bundled products.
  
  export const meta: Route.MetaFunction = ({data}) => {
    return [
-@@ -104,9 +106,12 @@ export default function Product() {
+@@ -97,9 +99,12 @@ export default function Product() {
  
    const {title, descriptionHtml} = product;
  
@@ -229,7 +229,7 @@ used to identify bundled products.
        <div className="product-main">
          <h1>{title}</h1>
          <ProductPrice
-@@ -117,6 +122,7 @@ export default function Product() {
+@@ -110,6 +115,7 @@ export default function Product() {
          <ProductForm
            productOptions={productOptions}
            selectedVariant={selectedVariant}
@@ -237,7 +237,7 @@ used to identify bundled products.
          />
          <br />
          <br />
-@@ -126,6 +132,14 @@ export default function Product() {
+@@ -119,6 +125,14 @@ export default function Product() {
          <br />
          <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
          <br />
@@ -252,7 +252,7 @@ used to identify bundled products.
        </div>
        <Analytics.ProductView
          data={{
-@@ -180,6 +194,28 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+@@ -173,6 +187,28 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
        amount
        currencyCode
      }
@@ -281,7 +281,7 @@ used to identify bundled products.
    }
  ` as const;
  
-@@ -216,6 +252,25 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -209,6 +245,25 @@ const PRODUCT_FRAGMENT = `#graphql
      adjacentVariants (selectedOptions: $selectedOptions) {
        ...ProductVariant
      }
@@ -507,6 +507,51 @@ If a product is a bundle, show the `BundleBadge` component in the `ProductImage`
  }
 ~~~
 
+### Step 10: package.json
+
+
+
+#### File: /package.json
+
+~~~diff
+@@ -14,12 +14,12 @@
+   },
+   "prettier": "@shopify/prettier-config",
+   "dependencies": {
+-    "@shopify/hydrogen": "workspace:*",
++    "@shopify/hydrogen": "2026.4.0",
+     "graphql": "^16.10.0",
+     "graphql-tag": "^2.12.6",
+     "isbot": "^5.1.22",
+-    "react": "catalog:",
+-    "react-dom": "catalog:",
++    "react": "^18.3.1",
++    "react-dom": "^18.3.1",
+     "react-router": "7.14.0",
+     "react-router-dom": "7.14.0"
+   },
+@@ -31,14 +31,14 @@
+     "@react-router/dev": "7.14.0",
+     "@react-router/fs-routes": "7.14.0",
+     "@shopify/cli": "3.93.2",
+-    "@shopify/hydrogen-codegen": "workspace:*",
+-    "@shopify/mini-oxygen": "workspace:*",
++    "@shopify/hydrogen-codegen": "0.3.3",
++    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/oxygen-workers-types": "^4.1.6",
+-    "@shopify/prettier-config": "catalog:",
++    "@shopify/prettier-config": "^1.1.2",
+     "@total-typescript/ts-reset": "^0.6.1",
+     "@types/eslint": "^9.6.1",
+-    "@types/react": "catalog:",
+-    "@types/react-dom": "catalog:",
++    "@types/react": "^18.3.28",
++    "@types/react-dom": "^18.3.7",
+     "@typescript-eslint/eslint-plugin": "^8.21.0",
+     "@typescript-eslint/parser": "^8.21.0",
+     "eslint": "^9.18.0",
+~~~
+
 ### Step 11: Show bundle badges on product cards
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductItem` component.
@@ -589,7 +634,7 @@ Make sure the bundle badge is positioned relative to the product image.
 #### File: /app/styles/app.css
 
 ~~~diff
-@@ -455,6 +455,10 @@ button.reset:hover:not(:has(> *)) {
+@@ -506,6 +506,10 @@ button.reset:hover:not(:has(> *)) {
    margin-top: 0;
  }
  

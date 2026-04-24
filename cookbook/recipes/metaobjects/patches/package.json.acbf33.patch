@@ -4,9 +4,9 @@ index e971ba7e..f2c3af10 100644
 @@ -21,7 +21,9 @@
      "react": "catalog:",
      "react-dom": "catalog:",
-     "react-router": "7.12.0",
--    "react-router-dom": "7.12.0"
-+    "react-router-dom": "7.12.0",
+     "react-router": "7.14.0",
+-    "react-router-dom": "7.14.0"
++    "react-router-dom": "7.14.0",
 +    "slate": "^0.101.4",
 +    "slate-react": "^0.101.3"
    },

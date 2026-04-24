@@ -86,7 +86,7 @@ Add `public/~partytown` to ignore Partytown library files.
 
 Add a GTM component that loads scripts in a web worker.
 
-#### File: [PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx)
+#### File: [PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx)
 
 ~~~tsx
 import {useEffect, useRef} from 'react';
@@ -262,7 +262,7 @@ Document Partytown setup and configuration instructions.
 
 Reverse the proxy route for third-party scripts requiring CORS headers.
 
-#### File: [reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts)
+#### File: [reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts)
 
 ~~~ts
 // Reverse proxies partytown libs that require CORS. Used by Partytown resolveUrl
@@ -504,7 +504,7 @@ Configure the CSP headers for GTM and Google Analytics domains.
 
 Add a URL resolver to control which scripts should be reverse-proxied.
 
-#### File: [maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts)
+#### File: [maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts)
 
 ~~~ts
 /**
@@ -631,7 +631,7 @@ Initialize Partytown and GTM in the root layout.
 
 Add a helper utility to enable Partytown atomic mode for better performance.
 
-#### File: [partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts)
+#### File: [partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts)
 
 ~~~ts
 /*
@@ -667,7 +667,7 @@ Add a Partytown dependency and npm script for copying library files.
    "prettier": "@shopify/prettier-config",
    "dependencies": {
 +    "@qwik.dev/partytown": "^0.11.2",
-     "@shopify/hydrogen": "2026.1.0",
+     "@shopify/hydrogen": "workspace:*",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
 ~~~
@@ -679,24 +679,14 @@ Configure Vite to exclude Partytown library from build optimization.
 #### File: /vite.config.ts
 
 ~~~diff
-@@ -23,7 +23,12 @@ export default defineConfig({
-        * Include 'example-dep' in the array below.
-        * @see https://vitejs.dev/config/dep-optimization-options
-        */
--      include: [
--        'react-router > set-cookie-parser',
--        'react-router > cookie',
--        'react-router',
--      ],
-+      include: [
-+        'react-router > set-cookie-parser',
-+        'react-router > cookie',
-+        'react-router',
+@@ -29,6 +29,7 @@ export default defineConfig({
+         'react-router > set-cookie-parser',
+         'react-router > cookie',
+         'react-router',
 +        '@qwik.dev/partytown/react',
-+      ],
+       ],
      },
    },
-   server: {
 ~~~
 
 </recipe_implementation>

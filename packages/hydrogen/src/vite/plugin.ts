@@ -59,9 +59,6 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           build: {
             outDir: 'dist',
           },
-          server: {
-            watch: null,
-          },
           ssr: {
             optimizeDeps: {
               // Add CJS dependencies that break code in workerd

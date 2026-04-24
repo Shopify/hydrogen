@@ -292,7 +292,6 @@ export async function runDev({
     );
   }
 
-  const h2PluginOptions = h2Plugin.api?.getPluginOptions?.();
   const remixConfig = (await getViteConfig(root)).remixConfig;
 
   let codegenProcess: ReturnType<typeof spawnCodegenProcess> | undefined;

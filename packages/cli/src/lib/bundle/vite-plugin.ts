@@ -19,6 +19,12 @@ type BundleAnalyzerOptions = {
   minify?: (code: string, filepath: string) => Promise<string>;
 };
 
+type BundleModuleInfo = {
+  code?: string;
+  renderedLength?: number;
+  originalLength?: number;
+};
+
 export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
   let config: ResolvedConfig;
 
@@ -86,9 +92,13 @@ export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
       const resultError = await Promise.all(
         modsToAnalyze.map(async (mod) => {
           const relativeModId = relativePath(root, mod.id);
-          const modBundleInfo = workerFile.modules[mod.id];
+          const modBundleInfo = workerFile.modules[mod.id] as
+            | BundleModuleInfo
+            | undefined;
           const originalCodeBytes =
-            modBundleInfo?.originalLength ?? mod.code?.length ?? 0;
+            typeof modBundleInfo?.originalLength === 'number'
+              ? modBundleInfo.originalLength
+              : (mod.code?.length ?? 0);
 
           let resultingCodeBytes = modBundleInfo?.renderedLength ?? 0;
 
@@ -185,34 +195,20 @@ export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
         },
       };
 
-      bundle[BUNDLE_ANALYZER_JSON_FILE] = {
+      this.emitFile({
         type: 'asset',
         fileName: BUNDLE_ANALYZER_JSON_FILE,
-        needsCodeReference: false,
         source: JSON.stringify(metafile, null, 2),
-        names: [BUNDLE_ANALYZER_JSON_FILE],
-        originalFileNames: [BUNDLE_ANALYZER_JSON_FILE],
-        // name and originalFileName should be deprecated .. but
-        // for some reason, removing them breaks typescript check
-        name: BUNDLE_ANALYZER_JSON_FILE,
-        originalFileName: BUNDLE_ANALYZER_JSON_FILE,
-      };
+      });
 
-      bundle[BUNDLE_ANALYZER_HTML_FILE] = {
+      this.emitFile({
         type: 'asset',
         fileName: BUNDLE_ANALYZER_HTML_FILE,
-        needsCodeReference: false,
         source: injectAnalyzerTemplateData(
           analysisTemplate,
           JSON.stringify(metafile),
         ),
-        names: [BUNDLE_ANALYZER_HTML_FILE],
-        originalFileNames: [BUNDLE_ANALYZER_HTML_FILE],
-        // name and originalFileName should be deprecated .. but
-        // for some reason, removing them breaks typescript check
-        name: BUNDLE_ANALYZER_HTML_FILE,
-        originalFileName: BUNDLE_ANALYZER_HTML_FILE,
-      };
+      });
     },
   } satisfies Plugin;
 }

@@ -27,6 +27,7 @@ export function createMockNavigation(
     hash: '',
     state: null,
     key: 'default',
+    unstable_mask: undefined,
   };
 
   if (state === 'loading') {

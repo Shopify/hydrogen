@@ -8,28 +8,27 @@
     "start": "react-router-serve build/server/index.js"
   },
   "dependencies": {
-    "@react-router/node": "^7.13.0",
-    "@react-router/serve": "^7.13.0",
-    "react-router": "^7.13.0",
-    "react-router-dom": "^7.13.0",
+    "@react-router/node": "^7.14.0",
+    "@react-router/serve": "^7.14.0",
     "he": "^1.2.0",
     "isbot": "^5.1.21",
     "marked": "^9.1.0",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "react-router": "^7.14.0",
+    "react-router-dom": "^7.14.0",
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
-    "@react-router/dev": "^7.13.0",
-    "@react-router/fs-routes": "^7.13.0",
+    "@react-router/dev": "^7.14.0",
+    "@react-router/fs-routes": "^7.14.0",
     "@tailwindcss/vite": "^4.0.14",
     "@types/he": "^1.2.1",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/react-syntax-highlighter": "^15.5.7",
     "typescript": "^5.2.2",
-    "vite": "^6.4.2",
-    "vite-tsconfig-paths": "^4.3.1"
+    "vite": "^8.0.1"
   },
   "engines": {
     "node": "^22 || ^24"

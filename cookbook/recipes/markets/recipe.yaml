@@ -153,7 +153,7 @@ steps:
     description: Update cart line items to use the unified Link component for product links.
     diffs:
       - file: app/components/CartLineItem.tsx
-        patchFile: CartLineItem.tsx.18f1fd.patch
+        patchFile: CartLineItem.tsx.c12ba7.patch
   - type: PATCH
     step: "1.2"
     name: Update AddToCartButton to use locale-aware cart route
@@ -162,7 +162,7 @@ steps:
       correct market context and currency.
     diffs:
       - file: app/components/AddToCartButton.tsx
-        patchFile: AddToCartButton.tsx.c70860.patch
+        patchFile: AddToCartButton.tsx.9bc3f0.patch
   - type: NEW_FILE
     step: "1.3"
     name: Create a CountrySelector component with accessibility labels
@@ -206,7 +206,7 @@ steps:
       This ensures all product links automatically include the correct locale prefix.
     diffs:
       - file: app/components/ProductItem.tsx
-        patchFile: ProductItem.tsx.8e65ba.patch
+        patchFile: ProductItem.tsx.c6506f.patch
   - type: PATCH
     step: "1.7"
     name: Add the selected locale to the context
@@ -214,7 +214,7 @@ steps:
       Detect the locale from the URL path, and add it to the HydrogenContext.
     diffs:
       - file: app/lib/context.ts
-        patchFile: context.ts.4b0079.patch
+        patchFile: context.ts.c15041.patch
   - type: PATCH
     step: "1.8"
     name: Update Header with CountrySelector and locale-aware Links
@@ -225,7 +225,7 @@ steps:
       Menu URLs are automatically cleaned of invalid locale prefixes.
     diffs:
       - file: app/components/Header.tsx
-        patchFile: Header.tsx.26d4bb.patch
+        patchFile: Header.tsx.00776f.patch
   - type: PATCH
     step: "1.9"
     name: Add the selected locale to the root route
@@ -236,7 +236,7 @@ steps:
       when the locale changes.
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.9594cb.patch
+        patchFile: root.tsx.8f1e92.patch
   - type: INFO
     step: "2"
     name: Localizing the individual routes
@@ -249,7 +249,7 @@ steps:
       component for consistent navigation.
     diffs:
       - file: app/components/CartMain.tsx
-        patchFile: CartMain.tsx.3524c1.patch
+        patchFile: CartMain.tsx.6ef433.patch
   - type: INFO
     step: "2.2"
     name: Add language dynamic segment to the desired routes
@@ -418,6 +418,13 @@ steps:
       predictive search.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).search.tsx
+  - type: PATCH
+    step: "8"
+    name: package.json
+    description: null
+    diffs:
+      - file: package.json
+        patchFile: package.json.8e0ff5.patch
 nextSteps: |
   - Test your implementation by going to your store and selecting a different
   market from the country selector.
@@ -441,4 +448,4 @@ llms:
       solution: Make sure you update *all* routes that need localization (not only the
         routes for the home page, the cart page, and the product page). See step
         2.1 for details.
-commit: f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2
+commit: 1040066d20b52667756fd1ebffd8607602a735b4
