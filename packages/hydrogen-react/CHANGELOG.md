@@ -1,5 +1,21 @@
 # @shopify/hydrogen-react
 
+## 2026.4.2
+
+### Minor Changes
+
+- Add support for Vite 7 and Vite 8. Hydrogen remains backwards-compatible with Vite 5+. ([#3617](https://github.com/Shopify/hydrogen/pull/3617)) by [@frandiox](https://github.com/frandiox)
+
+  Mini Oxygen's dev server has been refactored to use the [Vite Environment API](https://vite.dev/guide/api-environment), which is the standard way to run non-browser runtimes in Vite. This replaces the previous custom middleware approach with a first-class `FetchableDevEnvironment`, improving compatibility with Vite's built-in HMR and module invalidation.
+
+  New Hydrogen projects created with `npm create @shopify/hydrogen` will default to Vite 8. The `vite-tsconfig-paths` plugin is no longer needed in the skeleton template since Vite 8 supports `resolve.tsconfigPaths` natively.
+
+### Patch Changes
+
+- Fixed the `CartProvider` example code (both TS and JS) to include the missing `return` statement in the `App` component. ([#3685](https://github.com/Shopify/hydrogen/pull/3685)) by [@J8118](https://github.com/J8118)
+
+- Fixed the `ProductProvider` example code (both TS and JS): restored the missing `return` in the `.map()` callback so option buttons render, and removed a stray semicolon that rendered as visible text. ([#3680](https://github.com/Shopify/hydrogen/pull/3680)) by [@J8118](https://github.com/J8118)
+
 ## 2026.4.1
 
 ### Patch Changes
