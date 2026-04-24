@@ -11,10 +11,7 @@ import {
   renderInfo,
 } from '@shopify/cli-kit/node/ui';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
-import {
-  type PackageJson,
-  getPackageManager,
-} from '@shopify/cli-kit/node/node-package-manager';
+import {type PackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {exec} from '@shopify/cli-kit/node/system';
 import {
   buildUpgradeCommandArgs,
