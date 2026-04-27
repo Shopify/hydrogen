@@ -260,7 +260,7 @@ export async function runUpgrade({
   // Generate a markdown file with upgrade instructions.
   // `--version=next` is treated as implicitly non-interactive to stay
   // consistent with how `displayConfirmation` handles it.
-  const instrunctionsFilePathPromise = generateUpgradeInstructionsFile({
+  const instructionsFilePathPromise = generateUpgradeInstructionsFile({
     appPath,
     cumulativeRelease,
     currentVersion,
@@ -284,13 +284,13 @@ export async function runUpgrade({
     targetVersion,
   });
 
-  const instrunctionsFilePath = await instrunctionsFilePathPromise;
+  const instructionsFilePath = await instructionsFilePathPromise;
 
   // Display a summary of the upgrade and next steps
   await displayUpgradeSummary({
     appPath,
     currentVersion,
-    instrunctionsFilePath,
+    instructionsFilePath,
     selectedRelease,
   });
 }
@@ -1306,12 +1306,12 @@ async function displayUpgradeSummary({
   appPath,
   currentVersion,
   selectedRelease,
-  instrunctionsFilePath,
+  instructionsFilePath,
 }: {
   appPath: string;
   currentVersion: string;
   selectedRelease: Release;
-  instrunctionsFilePath?: string;
+  instructionsFilePath?: string;
 }) {
   const updatedDependenciesList = [
     ...Object.entries(selectedRelease.dependencies || {}).map(
@@ -1324,8 +1324,8 @@ async function displayUpgradeSummary({
 
   let nextSteps = [];
 
-  if (typeof instrunctionsFilePath === 'string') {
-    let instructions = `Upgrade instructions created at:\nfile://${instrunctionsFilePath}`;
+  if (typeof instructionsFilePath === 'string') {
+    let instructions = `Upgrade instructions created at:\nfile://${instructionsFilePath}`;
     nextSteps.push(instructions);
   }
 
