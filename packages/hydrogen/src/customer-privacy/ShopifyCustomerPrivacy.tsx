@@ -205,15 +205,13 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
         : checkoutDomain;
 
     const config: CustomerPrivacyConsentConfig = {
-      // This domain is used to send requests to SFAPI for setting and getting consent.
       checkoutRootDomain: sfapiDomain,
-      // Prefix with a dot to ensure this domain is different from checkoutRootDomain.
-      // This will ensure old cookies are set for a cross-subdomain checkout setup
-      // so that we keep backward compatibility until new cookies are rolled out.
-      // Once consent-tracking-api is updated to not rely on cookies anymore, we can remove this.
-      storefrontRootDomain: commonAncestorDomain
-        ? '.' + commonAncestorDomain
-        : undefined,
+      // Bare fetch hostname per https://shopify.dev/docs/api/consent-tracking.
+      // Omit when the SFAPI proxy is enabled so consent-tracking-api falls
+      // back to window.location.host and routes through the proxy.
+      storefrontRootDomain: hasSfapiProxy
+        ? undefined
+        : commonAncestorDomain || undefined,
       storefrontAccessToken,
       country,
       locale,
@@ -226,6 +224,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     storefrontAccessToken,
     country,
     locale,
+    hasSfapiProxy,
   ]);
 
   // settings event listeners for visitorConsentCollected
