@@ -33,6 +33,7 @@ const SHOPIFY_CONFIG = {
 };
 
 const DEV_ORIGIN = 'https://abc123.tryhydrogen.dev';
+const ESCAPED_DEV_ORIGIN = 'https://abc123\\.tryhydrogen\\.dev';
 
 beforeEach(() => {
   vi.mocked(login).mockResolvedValue({
@@ -132,9 +133,9 @@ describe('runCustomerAccountPush', () => {
       ADMIN_SESSION,
       STOREFRONT_ID,
       {
-        redirectUri: {removeRegex: `${DEV_ORIGIN}/account/authorize`},
-        javascriptOrigin: {removeRegex: DEV_ORIGIN},
-        logoutUris: {removeRegex: DEV_ORIGIN},
+        redirectUri: {removeRegex: `${ESCAPED_DEV_ORIGIN}/account/authorize`},
+        javascriptOrigin: {removeRegex: ESCAPED_DEV_ORIGIN},
+        logoutUris: {removeRegex: ESCAPED_DEV_ORIGIN},
       },
     );
   });
@@ -185,12 +186,22 @@ describe('runCustomerAccountPush', () => {
       ],
     });
 
-    await expect(
-      runCustomerAccountPush({
+    try {
+      await runCustomerAccountPush({
         devOrigin: DEV_ORIGIN,
         storefrontId: STOREFRONT_ID,
-      }),
-    ).rejects.toThrow(AbortError);
+      });
+      expect.fail('Expected AbortError');
+    } catch (error) {
+      expect(error).toBeInstanceOf(AbortError);
+      expect((error as AbortError).nextSteps).toContainEqual(
+        expect.objectContaining({
+          link: expect.objectContaining({
+            label: 'Enable Public access for Hydrogen',
+          }),
+        }),
+      );
+    }
   });
 
   it('throws AbortError when no storefrontId is available', async () => {

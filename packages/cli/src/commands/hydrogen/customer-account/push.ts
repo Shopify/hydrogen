@@ -187,14 +187,22 @@ async function cleanupCustomerApplicationUrls(
   );
 
   await replaceCustomerApplicationUrls(session, storefrontId, {
-    redirectUri: {removeRegex: customerAccountConfig?.redirectUri},
-    javascriptOrigin: {removeRegex: customerAccountConfig?.javascriptOrigin},
-    logoutUris: {removeRegex: customerAccountConfig?.logoutUri},
+    redirectUri: {
+      removeRegex: escapeRegex(customerAccountConfig?.redirectUri),
+    },
+    javascriptOrigin: {
+      removeRegex: escapeRegex(customerAccountConfig?.javascriptOrigin),
+    },
+    logoutUris: {removeRegex: escapeRegex(customerAccountConfig?.logoutUri)},
   }).catch((error) => {
     outputDebug(
       `Failed to clean up Customer Application url "${customerAccountConfig.redirectUri}":\n${error?.message}`,
     );
   });
+}
+
+function escapeRegex(value?: string) {
+  return value?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export async function getStorefrontId(
