@@ -134,7 +134,11 @@ describe('auth', () => {
         activeShops: [],
       });
 
-      await expect(login(ROOT)).rejects.toThrow(AbortError);
+      await expect(login(ROOT)).rejects.toThrow(/No active shops found/);
+      await expect(login(ROOT, SHOP_DOMAIN)).rejects.toThrow(
+        /No active shops found/,
+      );
+      await expect(login(ROOT, true)).rejects.toThrow(/No active shops found/);
       expect(renderSelectPrompt).not.toHaveBeenCalled();
     });
 
