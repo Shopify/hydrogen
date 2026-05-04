@@ -1,5 +1,24 @@
 # @shopify/cli-hydrogen
 
+## 12.0.0
+
+### Minor Changes
+
+- Add support for Vite 7 and Vite 8. Hydrogen remains backwards-compatible with Vite 5+. ([#3617](https://github.com/Shopify/hydrogen/pull/3617)) by [@frandiox](https://github.com/frandiox)
+
+  Mini Oxygen's dev server has been refactored to use the [Vite Environment API](https://vite.dev/guide/api-environment), which is the standard way to run non-browser runtimes in Vite. This replaces the previous custom middleware approach with a first-class `FetchableDevEnvironment`, improving compatibility with Vite's built-in HMR and module invalidation.
+
+  New Hydrogen projects created with `npm create @shopify/hydrogen` will default to Vite 8. The `vite-tsconfig-paths` plugin is no longer needed in the skeleton template since Vite 8 supports `resolve.tsconfigPaths` natively.
+
+### Patch Changes
+
+- Fixed "uncommited" typo to "uncommitted" in `shopify hydrogen deploy` flag descriptions and the uncommitted-changes warning message. ([#3684](https://github.com/Shopify/hydrogen/pull/3684)) by [@J8118](https://github.com/J8118)
+
+- Show removed packages in the upgrade confirmation prompt and upgrade instructions file so that it's visible which dependencies will be cleaned up during the upgrade. ([#3630](https://github.com/Shopify/hydrogen/pull/3630)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated dependencies [[`51f1e77fe63be5e5ded4ef0c91942bc304f1abc4`](https://github.com/Shopify/hydrogen/commit/51f1e77fe63be5e5ded4ef0c91942bc304f1abc4)]:
+  - @shopify/mini-oxygen@4.1.0
+
 ## 11.1.16
 
 ### Patch Changes

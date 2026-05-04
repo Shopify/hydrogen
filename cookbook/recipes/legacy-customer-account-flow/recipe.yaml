@@ -51,14 +51,14 @@ steps:
     description: Update the README file to document the legacy customer account flow.
     diffs:
       - file: README.md
-        patchFile: README.md.a0354d.patch
+        patchFile: README.md.1764cd.patch
   - type: PATCH
     step: "2"
     name: Add account link to header navigation
     description: Add an account link to the header navigation.
     diffs:
       - file: app/components/Header.tsx
-        patchFile: Header.tsx.994c25.patch
+        patchFile: Header.tsx.00776f.patch
   - type: NEW_FILE
     step: "3"
     name: Create account activation flow
@@ -71,7 +71,7 @@ steps:
     description: Update PageLayout to handle account routes.
     diffs:
       - file: app/components/PageLayout.tsx
-        patchFile: PageLayout.tsx.145dab.patch
+        patchFile: PageLayout.tsx.e72b8d.patch
   - type: NEW_FILE
     step: "5"
     name: Build password recovery flow
@@ -84,7 +84,7 @@ steps:
     description: Add customer access token validation to the root loader.
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.8c60e9.patch
+        patchFile: root.tsx.8f1e92.patch
   - type: NEW_FILE
     step: "7"
     name: Create customer registration flow
@@ -97,7 +97,7 @@ steps:
     description: Convert the catch-all route to use Storefront API authentication.
     diffs:
       - file: app/routes/account.$.tsx
-        patchFile: account.$.tsx.5ed838.patch
+        patchFile: account.$.tsx.8a1da5.patch
   - type: NEW_FILE
     step: "9"
     name: Build password reset flow
@@ -110,49 +110,56 @@ steps:
     description: Convert address management to use Storefront API mutations.
     diffs:
       - file: app/routes/account.addresses.tsx
-        patchFile: account.addresses.tsx.f3bb60.patch
+        patchFile: account.addresses.tsx.ab9d7b.patch
   - type: PATCH
     step: "11"
     name: Show order details
     description: Convert the order details page to use Storefront API queries.
     diffs:
       - file: app/routes/account.orders.$id.tsx
-        patchFile: account.orders.$id.tsx.56d9c4.patch
+        patchFile: account.orders.$id.tsx.767824.patch
   - type: PATCH
     step: "12"
     name: Display order history
     description: Convert the orders list to use the Storefront API with pagination.
     diffs:
       - file: app/routes/account.orders._index.tsx
-        patchFile: account.orders._index.tsx.8942cc.patch
+        patchFile: account.orders._index.tsx.8d7c8a.patch
   - type: PATCH
     step: "13"
     name: Build customer profile page
     description: Convert the customer profile page to use Storefront API queries.
     diffs:
       - file: app/routes/account.profile.tsx
-        patchFile: account.profile.tsx.8e4050.patch
+        patchFile: account.profile.tsx.0d4ef1.patch
+  - type: PATCH
+    step: "13"
+    name: package.json
+    description: null
+    diffs:
+      - file: package.json
+        patchFile: package.json.8e0ff5.patch
   - type: PATCH
     step: "14"
     name: Update account layout for session auth
     description: Convert the account layout to use session-based authentication.
     diffs:
       - file: app/routes/account.tsx
-        patchFile: account.tsx.30f6e3.patch
+        patchFile: account.tsx.d6599a.patch
   - type: PATCH
     step: "15"
     name: Create login page
     description: Replace the Customer Account API login with the Storefront API form.
     diffs:
       - file: app/routes/account_.login.tsx
-        patchFile: account_.login.tsx.d75928.patch
+        patchFile: account_.login.tsx.a8f71d.patch
   - type: PATCH
     step: "16"
     name: Handle logout and session cleanup
     description: Replace the Customer Account API logout with a session cleanup.
     diffs:
       - file: app/routes/account_.logout.tsx
-        patchFile: account_.logout.tsx.eec6ad.patch
+        patchFile: account_.logout.tsx.2930de.patch
 nextSteps: |
   After applying this recipe:
 
@@ -195,4 +202,4 @@ llms:
     - issue: TypeScript errors about missing types
       solution: Run `npm run codegen` to generate the Storefront API types after
         applying all patches.
-commit: d27e9178195e76ed6a3ead38b87788677bb449cd
+commit: 1040066d20b52667756fd1ebffd8607602a735b4

@@ -1,15 +1,19 @@
-import {fetchModule, type ViteDevServer} from 'vite';
+import {
+  isFetchableDevEnvironment,
+  type HotPayload,
+  type ViteDevServer,
+} from 'vite';
 import {fileURLToPath} from 'node:url';
 import {
   createMiniOxygen,
-  Request,
-  Response,
+  Request as MiniOxygenRequest,
+  Response as MiniOxygenResponse,
   type RequestHook,
   defaultLogRequestLine,
 } from '../worker/index.js';
 import {Request as MiniflareRequest} from 'miniflare';
 import type {OnlyBindings, OnlyServices} from '../worker/utils.js';
-import {pipeFromWeb, toURL, toWeb} from './utils.js';
+import {pipeFromWeb, toWeb} from './utils.js';
 import {
   isEntrypointError,
   handleEntrypointError,
@@ -20,8 +24,7 @@ import type {ViteEnv} from './worker-entry.js';
 import type {RequestHookInfo} from '../worker/handler.js';
 const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 
-const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
-const WARMUP_PATHNAME = '/__vite_warmup';
+export const WARMUP_PATHNAME = '/__vite_warmup';
 
 export type InternalMiniOxygenOptions = {
   /**
@@ -73,9 +76,9 @@ export type MiniOxygenViteOptions = InternalMiniOxygenOptions & {
   logRequestLine?: null | RequestHook;
 };
 
-type MiniOxygen = ReturnType<typeof startMiniOxygenRuntime>;
+export type MiniOxygen = ReturnType<typeof createMiniOxygen>;
 
-function startMiniOxygenRuntime({
+export function startMiniOxygenRuntime({
   viteDevServer,
   env,
   debug = false,
@@ -85,17 +88,19 @@ function startMiniOxygenRuntime({
   requestHook,
   logRequestLine = defaultLogRequestLine,
   compatibilityDate,
-}: MiniOxygenViteOptions) {
+}: MiniOxygenViteOptions): MiniOxygen {
   const wrappedHook =
     requestHook || logRequestLine
-      ? async (request: Request) => {
+      ? async (request: MiniOxygenRequest) => {
           const info = (await request.json()) as RequestHookInfo;
 
           await Promise.all([requestHook?.(info), logRequestLine?.(info)]);
 
-          return new Response('ok');
+          return new MiniOxygenResponse('ok');
         }
       : null;
+  const wrappedViteInvoke = async (request: MiniOxygenRequest) =>
+    handleViteInvokeRequest(viteDevServer, request);
 
   const miniOxygen = createMiniOxygen({
     debug,
@@ -107,13 +112,12 @@ function startMiniOxygenRuntime({
         modulesRoot: '/',
         modules: [{type: 'ESModule', path: scriptPath}],
         serviceBindings: {
+          __VITE_INVOKE_MODULE: wrappedViteInvoke,
           ...(wrappedHook && {__VITE_REQUEST_HOOK: wrappedHook}),
         } satisfies OnlyServices<ViteEnv>,
         bindings: {
           ...env,
-          __VITE_ROOT: viteDevServer.config.root,
           __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
-          __VITE_FETCH_MODULE_PATHNAME: FETCH_MODULE_PATHNAME,
           __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME,
         } satisfies OnlyBindings<ViteEnv>,
         unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
@@ -126,15 +130,20 @@ function startMiniOxygenRuntime({
         serviceBindings: crossBoundarySetup?.reduce(
           (acc, {binding}, index) => {
             if (binding) {
-              acc[`wrapped_service_${index}`] = async (request: Request) => {
+              acc[`wrapped_service_${index}`] = async (
+                request: MiniOxygenRequest,
+              ) => {
                 const payload = (await request.json()) as unknown[];
                 const result = await binding(...payload);
-                return new Response(JSON.stringify(result ?? ''));
+                return new MiniOxygenResponse(JSON.stringify(result ?? ''));
               };
             }
             return acc;
           },
-          {} as Record<string, (request: Request) => Promise<Response>>,
+          {} as Record<
+            string,
+            (request: MiniOxygenRequest) => Promise<MiniOxygenResponse>
+          >,
         ),
         script: `
           const setupScripts = [${
@@ -165,107 +174,48 @@ function startMiniOxygenRuntime({
     ],
   });
 
-  // Ensure MiniOxygen is disposed when Vite is closed
-  const viteClose = viteDevServer.close;
-  viteDevServer.close = async () => {
-    await Promise.allSettled([viteClose(), miniOxygen.dispose()]);
-  };
-
   return miniOxygen;
 }
 
 export function setupOxygenMiddleware(
   viteDevServer: ViteDevServer,
-  getMiniOxygenOptions: () => Promise<MiniOxygenViteOptions>,
+  getEntryPointErrorHandler?: () => CustomEntryPointErrorHandler | undefined,
 ) {
-  viteDevServer.middlewares.use(
-    FETCH_MODULE_PATHNAME,
-    function o2HandleModuleFetch(req, res) {
-      // This request comes from workerd. It is asking for the contents
-      // of backend files. We need to fetch the file through Vite,
-      // which transpiles/prepares the source code into valid JS, and
-      // send it back so that workerd can evaluate/run it.
-
-      const url = toURL(req);
-      const id = url.searchParams.get('id');
-      const importer = url.searchParams.get('importer') ?? undefined;
-
-      if (id) {
-        res.setHeader('Cache-Control', 'no-store');
-        res.setHeader('Content-Type', 'application/json');
-
-        // `fetchModule` is similar to `viteDevServer.ssrFetchModule`,
-        // but it treats source maps differently (avoids adding empty lines).
-        fetchModule(viteDevServer.environments['ssr'], id, importer)
-          .then((ssrModule) => res.end(JSON.stringify(ssrModule)))
-          .catch((error) => {
-            console.error('Error during module fetch:', error);
-            res.writeHead(500, {'Content-Type': 'text/plain'});
-            res.end('Internal server error');
-          });
-      } else {
-        res.writeHead(400, {'Content-Type': 'text/plain'});
-        res.end('Invalid request');
-      }
-    },
-  );
-
-  let miniOxygen: MiniOxygen;
-  let miniOxygenOptions: MiniOxygenViteOptions;
-
-  viteDevServer.middlewares.use(function o2HandleWorkerRequest(req, res) {
+  viteDevServer.middlewares.use(function o2HandleWorkerRequest(req, res, next) {
     // This request comes from the browser. At this point, Vite
     // tried to serve the request as a static file, but it didn't
     // find it in the project. Therefore, we assume this is a
     // request for a backend route, and we forward it to workerd.
 
-    const ready =
-      miniOxygen && !miniOxygen.isDisposed
-        ? Promise.resolve()
-        : getMiniOxygenOptions().then((options) => {
-            miniOxygenOptions = options;
-            miniOxygen = startMiniOxygenRuntime(options);
-          });
-
-    ready.then(() =>
-      miniOxygen
-        .dispatchFetch(toMiniflareRequest(toWeb(req)))
-        .then(async (webResponse) => {
-          if (isEntrypointError(webResponse)) {
-            await handleEntrypointError(
-              viteDevServer,
-              webResponse,
-              res,
-              miniOxygenOptions.entryPointErrorHandler,
-            );
-          } else {
-            await pipeFromWeb(webResponse, res);
-          }
-        })
-        .catch((error) => {
-          console.error('MiniOxygen: Error during evaluation:', error);
-          res.writeHead(500);
-          res.end();
-        }),
-    );
-  });
-
-  const warmupWorkerdCache = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    const viteUrl = getViteUrl(viteDevServer);
-
-    if (viteUrl) {
-      fetch(new URL(WARMUP_PATHNAME, viteUrl)).catch(() => {});
+    const environment = viteDevServer.environments['ssr'];
+    if (!isFetchableDevEnvironment(environment)) {
+      next();
+      return;
     }
-  };
 
-  viteDevServer.httpServer?.listening
-    ? warmupWorkerdCache()
-    : viteDevServer.httpServer?.once('listening', warmupWorkerdCache);
+    environment
+      .dispatchFetch(toWeb(req))
+      .then(async (webResponse) => {
+        if (isEntrypointError(webResponse)) {
+          await handleEntrypointError(
+            viteDevServer,
+            webResponse,
+            res,
+            getEntryPointErrorHandler?.(),
+          );
+        } else {
+          await pipeFromWeb(webResponse, res);
+        }
+      })
+      .catch((error) => {
+        console.error('MiniOxygen: Error during evaluation:', error);
+        res.writeHead(500);
+        res.end();
+      });
+  });
 }
 
-function getViteUrl(viteDevServer: ViteDevServer) {
+export function getViteUrl(viteDevServer: ViteDevServer) {
   let viteUrl =
     viteDevServer.resolvedUrls?.local[0] ??
     viteDevServer.resolvedUrls?.network[0];
@@ -281,7 +231,7 @@ function getViteUrl(viteDevServer: ViteDevServer) {
   return viteUrl;
 }
 
-function toMiniflareRequest(request: Request): MiniflareRequest {
+export function toMiniflareRequest(request: Request): MiniflareRequest {
   // Set the X-Forwarded-Host header to the original host as the `Host` header inside a Worker will contain the workerd host
   const host = request.headers.get('Host');
   if (host) {
@@ -290,7 +240,56 @@ function toMiniflareRequest(request: Request): MiniflareRequest {
   return new MiniflareRequest(request.url, {
     method: request.method,
     headers: [['accept-encoding', 'identity'], ...request.headers],
-    body: request.body,
+    body: request.body as any,
     duplex: 'half',
   });
+}
+
+async function handleViteInvokeRequest(
+  viteDevServer: ViteDevServer,
+  request: MiniOxygenRequest,
+): Promise<MiniOxygenResponse> {
+  try {
+    const payload = (await request.json()) as HotPayload;
+    const result =
+      await viteDevServer.environments['ssr'].hot.handleInvoke(payload);
+
+    return new MiniOxygenResponse(JSON.stringify(result), {
+      headers: {
+        'Cache-Control': 'no-store',
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (error) {
+    console.error('Error during Vite runner invoke:', error);
+
+    return new MiniOxygenResponse(
+      JSON.stringify({error: serializeInvokeError(error)}),
+      {
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store',
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+  }
+}
+
+function serializeInvokeError(error: unknown) {
+  if (error instanceof Error) {
+    const errorWithCode = error as Error & {code?: unknown};
+
+    return {
+      message: error.message,
+      stack: error.stack,
+      ...(error.cause ? {cause: error.cause} : {}),
+      ...(errorWithCode.code ? {code: errorWithCode.code} : {}),
+    };
+  }
+
+  return {
+    message:
+      typeof error === 'string' ? error : 'Unknown Vite runner invoke error',
+  };
 }

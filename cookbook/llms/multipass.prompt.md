@@ -235,7 +235,7 @@ Update README with multipass authentication documentation
 
 Add checkout button component that generates multipass tokens
 
-#### File: [MultipassCheckoutButton.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/components/MultipassCheckoutButton.tsx)
+#### File: [MultipassCheckoutButton.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/components/MultipassCheckoutButton.tsx)
 
 ~~~tsx
 import React, {useCallback} from 'react';
@@ -286,7 +286,7 @@ Add multipass checkout button to cart summary
 
 ~~~diff
 @@ -4,6 +4,9 @@ import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
- import {useEffect, useRef} from 'react';
+ import {useEffect, useId, useRef, useState} from 'react';
  import {useFetcher} from 'react-router';
  
 +// @description Import MultipassCheckoutButton for Shopify Plus multipass checkout
@@ -295,7 +295,7 @@ Add multipass checkout button to cart summary
  type CartSummaryProps = {
    cart: OptimisticCart<CartApiQueryFragment | null>;
    layout: CartLayout;
-@@ -38,9 +41,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
+@@ -51,9 +54,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
  
    return (
      <div>
@@ -314,7 +314,7 @@ Add multipass checkout button to cart summary
 
 Core multipass encryption and token generation utilities
 
-#### File: [multipass.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipass.ts)
+#### File: [multipass.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipass.ts)
 
 ~~~ts
 import type {
@@ -464,7 +464,7 @@ Add session validation and token refresh logic
 
 Server-side multipass token generation with ESM-compatible snake_case
 
-#### File: [multipassify.server.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipassify.server.ts)
+#### File: [multipassify.server.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipassify.server.ts)
 
 ~~~ts
 import CryptoJS from 'crypto-js';
@@ -657,7 +657,7 @@ Convert catch-all account route to use Storefront API
  
 -// fallback wild card for all unauthenticated routes in account section
  export async function loader({context}: Route.LoaderArgs) {
--  context.customerAccount.handleAuthStatus();
+-  await context.customerAccount.handleAuthStatus();
 -
 -  return redirect('/account');
 +  if (await context.session.get('customerAccessToken')) {
@@ -671,7 +671,7 @@ Convert catch-all account route to use Storefront API
 
 TypeScript types for multipass functionality
 
-#### File: [types.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/types.ts)
+#### File: [types.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/types.ts)
 
 ~~~ts
 /*
@@ -749,7 +749,7 @@ export interface MultipassTokenResponseType {
 
 Add customer account activation route
 
-#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
+#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
 
 ~~~tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -944,7 +944,7 @@ Convert addresses management to use Storefront API
  };
  
  export async function loader({context}: Route.LoaderArgs) {
--  context.customerAccount.handleAuthStatus();
+-  await context.customerAccount.handleAuthStatus();
 -
 +  const {session} = context;
 +  const customerAccessToken = await session.get('customerAccessToken');
@@ -1311,7 +1311,7 @@ Convert addresses management to use Storefront API
 -        <label htmlFor="territoryCode">Country Code*</label>
 +        <label htmlFor="country">Country*</label>
          <input
--          aria-label="territoryCode"
+-          aria-label="Country code"
 -          autoComplete="country"
 -          defaultValue={address?.territoryCode ?? ''}
 -          id="territoryCode"
@@ -1440,14 +1440,13 @@ Convert addresses management to use Storefront API
 +    }
 +  }
 +` as const;
-\ No newline at end of file
 ~~~
 
 ### Step 11: app/routes/account_.login.multipass.tsx
 
 Add multipass login handler route
 
-#### File: [account_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx)
+#### File: [account_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx)
 
 ~~~tsx
 import {data as remixData, redirect} from 'react-router';
@@ -2118,7 +2117,7 @@ Convert order details to use Storefront API
 
 Add password recovery route
 
-#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
+#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
 
 ~~~tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -2607,7 +2606,7 @@ Convert orders list to use Storefront API
 
 Add customer registration route
 
-#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx)
+#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx)
 
 ~~~tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -2843,7 +2842,7 @@ Convert customer profile management from Customer Account API to Storefront API
  };
  
  export async function loader({context}: Route.LoaderArgs) {
--  context.customerAccount.handleAuthStatus();
+-  await context.customerAccount.handleAuthStatus();
 -
 +  const customerAccessToken = await context.session.get('customerAccessToken');
 +  if (!customerAccessToken) {
@@ -3066,14 +3065,13 @@ Convert customer profile management from Customer Account API to Storefront API
 +    }
 +  }
 +` as const;
-\ No newline at end of file
 ~~~
 
 ### Step 17: app/routes/account_.reset.$id.$resetToken.tsx
 
 Add password reset confirmation route
 
-#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
+#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
 
 ~~~tsx
 import {data, Form, redirect, useActionData} from 'react-router';
@@ -3217,7 +3215,7 @@ Convert account layout to use Storefront API customer data
 #### File: /app/routes/account.tsx
 
 ~~~diff
-@@ -1,45 +1,105 @@
+@@ -1,42 +1,106 @@
  import {
 -  data as remixData,
    Form,
@@ -3237,15 +3235,13 @@ Convert account layout to use Storefront API customer data
  
 -export async function loader({context}: Route.LoaderArgs) {
 -  const {customerAccount} = context;
--  const {data, errors} = await customerAccount.query(
--    CUSTOMER_DETAILS_QUERY,
--    {
--      variables: {
--        language: customerAccount.i18n.language,
--      },
+-  const {data, errors} = await customerAccount.query(CUSTOMER_DETAILS_QUERY, {
+-    variables: {
+-      language: customerAccount.i18n.language,
 -    },
--  );
-+export const headers: Route.HeadersFunction = ({loaderHeaders}) => loaderHeaders;
+-  });
++export const headers: Route.HeadersFunction = ({loaderHeaders}) =>
++  loaderHeaders;
  
 -  if (errors?.length || !data?.customer) {
 -    throw new Error('Customer not found');
@@ -3346,7 +3342,7 @@ Convert account layout to use Storefront API customer data
    const heading = customer
      ? customer.firstName
        ? `Welcome, ${customer.firstName}`
-@@ -51,9 +111,7 @@ export default function AccountLayout() {
+@@ -48,9 +112,7 @@ export default function AccountLayout() {
        <h1>{heading}</h1>
        <br />
        <AccountMenu />
@@ -3357,7 +3353,7 @@ Convert account layout to use Storefront API customer data
      </div>
    );
  }
-@@ -98,3 +156,50 @@ function Logout() {
+@@ -95,3 +157,50 @@ function Logout() {
      </Form>
    );
  }
@@ -3407,6 +3403,162 @@ Convert account layout to use Storefront API customer data
 +    }
 +  }
 +  ${CUSTOMER_FRAGMENT}
++` as const;
+~~~
+
+### Step 19: app/routes/account_.login.tsx
+
+Replace Customer Account API login with form-based Storefront API login
+
+#### File: /app/routes/account_.login.tsx
+
+~~~diff
+@@ -1,17 +1,133 @@
++import {Form, Link, useActionData, data, redirect} from 'react-router';
+ import type {Route} from './+types/account_.login';
+ 
+-export async function loader({request, context}: Route.LoaderArgs) {
+-  const url = new URL(request.url);
+-  const acrValues = url.searchParams.get('acr_values') || undefined;
+-  const loginHint = url.searchParams.get('login_hint') || undefined;
+-  const loginHintMode = url.searchParams.get('login_hint_mode') || undefined;
+-  const locale = url.searchParams.get('locale') || undefined;
++type ActionResponse = {
++  error: string | null;
++};
+ 
+-  return context.customerAccount.login({
+-    countryCode: context.storefront.i18n.country,
+-    acrValues,
+-    loginHint,
+-    loginHintMode,
+-    locale,
+-  });
++export const meta: Route.MetaFunction = () => {
++  return [{title: 'Login'}];
++};
++
++export async function loader({context}: Route.LoaderArgs) {
++  if (await context.session.get('customerAccessToken')) {
++    return redirect('/account');
++  }
++  return {};
+ }
++
++export async function action({request, context}: Route.ActionArgs) {
++  const {session, storefront} = context;
++
++  if (request.method !== 'POST') {
++    return data({error: 'Method not allowed'}, {status: 405});
++  }
++
++  try {
++    const form = await request.formData();
++    const email = String(form.has('email') ? form.get('email') : '');
++    const password = String(form.has('password') ? form.get('password') : '');
++    const validInputs = Boolean(email && password);
++
++    if (!validInputs) {
++      throw new Error('Please provide both an email and a password.');
++    }
++
++    const {customerAccessTokenCreate} = await storefront.mutate(
++      LOGIN_MUTATION,
++      {
++        variables: {
++          input: {email, password},
++        },
++      },
++    );
++
++    if (!customerAccessTokenCreate?.customerAccessToken?.accessToken) {
++      throw new Error(customerAccessTokenCreate?.customerUserErrors[0].message);
++    }
++
++    const {customerAccessToken} = customerAccessTokenCreate;
++    session.set('customerAccessToken', customerAccessToken);
++
++    return redirect('/account');
++  } catch (error: unknown) {
++    if (error instanceof Error) {
++      return data({error: error.message}, {status: 400});
++    }
++    return data({error}, {status: 400});
++  }
++}
++
++export default function Login() {
++  const data = useActionData<ActionResponse>();
++  const error = data?.error || null;
++
++  return (
++    <div className="login">
++      <h1>Sign in.</h1>
++      <Form method="POST">
++        <fieldset>
++          <label htmlFor="email">Email address</label>
++          <input
++            id="email"
++            name="email"
++            type="email"
++            autoComplete="email"
++            required
++            placeholder="Email address"
++            aria-label="Email address"
++            // eslint-disable-next-line jsx-a11y/no-autofocus
++            autoFocus
++          />
++          <label htmlFor="password">Password</label>
++          <input
++            id="password"
++            name="password"
++            type="password"
++            autoComplete="current-password"
++            placeholder="Password"
++            aria-label="Password"
++            minLength={8}
++            required
++          />
++        </fieldset>
++        {error ? (
++          <p>
++            <mark>
++              <small>{error}</small>
++            </mark>
++          </p>
++        ) : (
++          <br />
++        )}
++        <button type="submit">Sign in</button>
++      </Form>
++      <br />
++      <div>
++        <p>
++          <Link to="/account/recover">Forgot password →</Link>
++        </p>
++        <p>
++          <Link to="/account/register">Register →</Link>
++        </p>
++      </div>
++    </div>
++  );
++}
++
++// NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customeraccesstokencreate
++const LOGIN_MUTATION = `#graphql
++  mutation login($input: CustomerAccessTokenCreateInput!) {
++    customerAccessTokenCreate(input: $input) {
++      customerUserErrors {
++        code
++        field
++        message
++      }
++      customerAccessToken {
++        accessToken
++        expiresAt
++      }
++    }
++  }
 +` as const;
 ~~~
 
@@ -3477,7 +3629,7 @@ Add multipass URL generation for checkout
 #### File: /app/routes/cart.tsx
 
 ~~~diff
-@@ -15,9 +15,13 @@ export const meta: Route.MetaFunction = () => {
+@@ -11,9 +11,13 @@ export const meta: Route.MetaFunction = () => {
  export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
  
  export async function action({request, context}: Route.ActionArgs) {
@@ -3493,7 +3645,7 @@ Add multipass URL generation for checkout
  
    const {action, inputs} = CartForm.getFormInput(formData);
  
-@@ -70,6 +74,8 @@ export async function action({request, context}: Route.ActionArgs) {
+@@ -66,6 +70,8 @@ export async function action({request, context}: Route.ActionArgs) {
      case CartForm.ACTIONS.BuyerIdentityUpdate: {
        result = await cart.updateBuyerIdentity({
          ...inputs.buyerIdentity,
@@ -3514,19 +3666,19 @@ Add crypto dependencies for multipass token generation
 @@ -15,6 +15,7 @@
    "prettier": "@shopify/prettier-config",
    "dependencies": {
-     "@shopify/hydrogen": "2026.1.0",
+     "@shopify/hydrogen": "workspace:*",
 +    "crypto-js": "^4.2.0",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
      "isbot": "^5.1.22",
 @@ -36,6 +37,7 @@
      "@shopify/oxygen-workers-types": "^4.1.6",
-     "@shopify/prettier-config": "^1.1.2",
+     "@shopify/prettier-config": "catalog:",
      "@total-typescript/ts-reset": "^0.6.1",
 +    "@types/crypto-js": "^4.2.2",
      "@types/eslint": "^9.6.1",
-     "@types/react": "^18.2.22",
-     "@types/react-dom": "^18.2.7",
+     "@types/react": "catalog:",
+     "@types/react-dom": "catalog:",
 ~~~
 
 ### Step 24: vite.config.ts
@@ -3536,24 +3688,14 @@ Configure Vite for crypto polyfills
 #### File: /vite.config.ts
 
 ~~~diff
-@@ -23,7 +23,7 @@ export default defineConfig({
-        * Include 'example-dep' in the array below.
-        * @see https://vitejs.dev/config/dep-optimization-options
-        */
--      include: [
--        'react-router > set-cookie-parser',
--        'react-router > cookie',
--        'react-router',
--      ],
-+      include: [
-+        'react-router > set-cookie-parser',
-+        'react-router > cookie',
-+        'react-router',
+@@ -29,6 +29,7 @@ export default defineConfig({
+         'react-router > set-cookie-parser',
+         'react-router > cookie',
+         'react-router',
 +        'crypto-js',
-+      ],
+       ],
      },
    },
-   server: {
 ~~~
 
 ## Deleted Files

@@ -1,7 +1,6 @@
 import path from 'node:path';
 import {defineConfig} from 'vite';
 import {reactRouter} from '@react-router/dev/vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
 import tailwindcss from '@tailwindcss/vite';
 
 const {INIT_CWD, GEN_DOCS_PATH} = process.env;
@@ -16,9 +15,11 @@ if (!GEN_DOCS_PATH && INIT_CWD === process.env.PWD) {
 }
 
 export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     reactRouter(),
-    tsconfigPaths(),
     tailwindcss(),
     {
       name: 'docs:preview',
