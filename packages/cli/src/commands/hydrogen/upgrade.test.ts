@@ -38,6 +38,15 @@ const TEST_VERSION_DEPENDENCY_UPGRADE = '9999.99.99';
 const TEST_VERSION_DEV_DEPENDENCY_UPGRADE = '9999.99.98';
 
 vi.mock('@shopify/cli-kit/node/session');
+vi.mock('@shopify/cli-kit/node/node-package-manager', async () => {
+  const original = await vi.importActual<
+    typeof import('@shopify/cli-kit/node/node-package-manager')
+  >('@shopify/cli-kit/node/node-package-manager');
+  return {
+    ...original,
+    getPackageManager: vi.fn(() => Promise.resolve('pnpm')),
+  };
+});
 
 vi.mock('../../lib/shell.js', () => ({getCliCommand: vi.fn(() => 'h2')}));
 
