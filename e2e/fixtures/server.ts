@@ -94,13 +94,14 @@ export class DevServer {
         args.push('--entry', this.entry);
       }
 
-      this.process = spawn('npx', args, {
+      this.process = spawn('pnpx', args, {
         cwd: this.projectPath,
         detached: true,
         env: {
           ...process.env,
           NODE_ENV: 'development',
           SHOPIFY_HYDROGEN_FLAG_PORT: allocatedPort.toString(),
+          INIT_CWD: this.projectPath,
         },
         stdio: ['pipe', 'pipe', 'pipe'],
       });
