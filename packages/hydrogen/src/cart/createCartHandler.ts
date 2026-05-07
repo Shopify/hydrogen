@@ -118,9 +118,6 @@ export type HydrogenCart = {
    * This function sends a mutation to the storefront API to add one or more delivery addresses to the cart.
    * It returns the result of the mutation, including any errors that occurred.
    *
-   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
-   * @returns {ReturnType<typeof cartDeliveryAddressesAddDefault>} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
-   *
    * @example
    * const result = await cart.addDeliveryAddresses(
    *   [
@@ -140,9 +137,6 @@ export type HydrogenCart = {
    * This function sends a mutation to the storefront API to remove one or more delivery addresses from the cart.
    * It returns the result of the mutation, including any errors that occurred.
    *
-   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
-   * @returns {CartDeliveryAddressRemoveFunction} - A function that takes an array of address IDs and optional parameters, and returns the result of the API call.
-   *
    * @example
    * const result = await cart.removeDeliveryAddresses([
    *   "gid://shopify/<objectName>/10079785100"
@@ -158,9 +152,6 @@ export type HydrogenCart = {
   *
   * This function sends a mutation to the storefront API to update one or more delivery addresses in the cart.
   * It returns the result of the mutation, including any errors that occurred.
-  *
-  * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
-  * @returns {CartDeliveryAddressUpdateFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
   *
   * const result = await cart.updateDeliveryAddresses([
       {
@@ -194,9 +185,6 @@ export type HydrogenCart = {
    *
    * This function sends a mutation to the storefront API to replace all delivery addresses on the cart
    * with the provided addresses. It returns the result of the mutation, including any errors that occurred.
-   *
-   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
-   * @returns {CartDeliveryAddressesReplaceFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
    *
    * @example
    * const result = await cart.replaceDeliveryAddresses([
