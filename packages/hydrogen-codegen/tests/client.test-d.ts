@@ -56,7 +56,7 @@ describe('Client types', async () => {
       }>();
     });
 
-    it('fallsback to any for unknown queries', () => {
+    it('falls back to any for unknown queries', () => {
       expectTypeOf(clientQuery(Queries.Unknown)).resolves.not.toEqualTypeOf<{
         test: number;
       }>();

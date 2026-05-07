@@ -80,7 +80,7 @@ describe('createStorefrontClient', () => {
       });
     });
 
-    it('fallsback to public token when private one is not provided', async () => {
+    it('falls back to public token when private one is not provided', async () => {
       const {storefront} = createStorefrontClient({
         storeDomain,
         storefrontId,

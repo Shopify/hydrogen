@@ -108,7 +108,7 @@ export interface SeoConfig {
    *       type: 'image',
    *       height: '400',
    *       width: '400',
-   *       altText: 'A custom snowboard with an alpine color pallet.',
+   *       altText: 'A custom snowboard with an alpine color palette.',
    *     }
    *   ]
    * }

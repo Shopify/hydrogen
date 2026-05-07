@@ -135,7 +135,7 @@ describe('getAllEnvironmentVariables()', () => {
     });
   });
 
-  it('doest not fail on network errors', async () => {
+  it('does not fail on network errors', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       vi.mocked(getStorefrontEnvVariables).mockRejectedValue(
         new Error('Network error'),
