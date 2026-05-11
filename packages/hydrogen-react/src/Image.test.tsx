@@ -264,6 +264,8 @@ describe('<Image />', () => {
       expect(img.srcset).toContain('400w');
       expect(img.srcset).toContain('600w');
       expect(img.srcset).not.toContain('1x');
+      expect(img.srcset).not.toContain('2x');
+      expect(img.srcset).not.toContain('3x');
     });
   });
 
