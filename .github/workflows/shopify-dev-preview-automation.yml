@@ -9,10 +9,8 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, closed]
     paths:
-      - 'packages/hydrogen/docs/generated/generated_docs_data.json'
-      - 'packages/hydrogen-react/docs/generated/generated_docs_data.json'
-      - 'packages/hydrogen/docs/generated/generated_static_pages.json'
-      - 'packages/hydrogen-react/docs/generated/generated_static_pages.json'
+      - 'packages/hydrogen/docs/generated/generated_docs_data_v2.json'
+      - 'packages/hydrogen-react/docs/generated/generated_docs_data_v2.json'
 
 concurrency:
   group: shopify-dev-docs-sync-${{ github.head_ref }}
@@ -64,10 +62,8 @@ jobs:
         run: |
           # Define the files we're monitoring
           MONITORED_FILES=(
-            "packages/hydrogen/docs/generated/generated_docs_data.json"
-            "packages/hydrogen-react/docs/generated/generated_docs_data.json"
-            "packages/hydrogen/docs/generated/generated_static_pages.json"
-            "packages/hydrogen-react/docs/generated/generated_static_pages.json"
+            "packages/hydrogen/docs/generated/generated_docs_data_v2.json"
+            "packages/hydrogen-react/docs/generated/generated_docs_data_v2.json"
           )
 
           # Get the list of changed files in this PR using explicit SHAs
