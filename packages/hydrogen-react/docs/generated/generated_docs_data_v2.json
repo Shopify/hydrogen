@@ -1939,7 +1939,7 @@
           "syntaxKind": "PropertySignature",
           "name": "aria-busy",
           "value": "Booleanish | undefined",
-          "description": "",
+          "description": "Used to represent DOM API's where users can either pass true or false as a boolean or as its equivalent strings.",
           "isOptional": true
         },
         {
@@ -2452,7 +2452,7 @@
           "syntaxKind": "PropertySignature",
           "name": "draggable",
           "value": "Booleanish | undefined",
-          "description": "",
+          "description": "Used to represent DOM API's where users can either pass true or false as a boolean or as its equivalent strings.",
           "isOptional": true
         },
         {
@@ -3934,7 +3934,7 @@
           "syntaxKind": "PropertySignature",
           "name": "spellCheck",
           "value": "Booleanish | undefined",
-          "description": "",
+          "description": "Used to represent DOM API's where users can either pass true or false as a boolean or as its equivalent strings.",
           "isOptional": true
         },
         {
@@ -4750,7 +4750,7 @@
           "filePath": "src/ProductProvider.tsx",
           "syntaxKind": "PropertySignature",
           "name": "selectedSellingPlan",
-          "value": "SellingPlanType",
+          "value": "SellingPlan",
           "description": "The selected selling plan.",
           "isOptional": true
         },
@@ -4758,7 +4758,7 @@
           "filePath": "src/ProductProvider.tsx",
           "syntaxKind": "PropertySignature",
           "name": "selectedSellingPlanAllocation",
-          "value": "SellingPlanAllocationType",
+          "value": "SellingPlanAllocation",
           "description": "The selected selling plan allocation.",
           "isOptional": true
         },
@@ -4783,7 +4783,7 @@
           "syntaxKind": "PropertySignature",
           "name": "sellingPlanGroupsConnection",
           "value": "SellingPlanGroupConnection",
-          "description": "",
+          "description": "An auto-generated type for paginating through multiple SellingPlanGroups.",
           "isOptional": true
         },
         {
@@ -4798,7 +4798,7 @@
           "syntaxKind": "PropertySignature",
           "name": "variantsConnection",
           "value": "ProductVariantConnection",
-          "description": "",
+          "description": "An auto-generated type for paginating through multiple ProductVariants.",
           "isOptional": true
         }
       ]
@@ -6937,7 +6937,7 @@
           "syntaxKind": "PropertySignature",
           "name": "variant",
           "value": "ProductVariant",
-          "description": ""
+          "description": "A specific version of a [product](https://shopify.dev/docs/api/storefront/current/objects/Product) available for sale, differentiated by options like size or color. For example, a small blue t-shirt and a large blue t-shirt are separate variants of the same product. For more information, see the docs on [Shopify's product model](https://shopify.dev/docs/apps/build/product-merchandising/products-and-collections).\n\nFor products with quantity rules, variants enforce minimum, maximum, and increment constraints on purchases.\n\nVariants also support subscriptions and pre-orders through [selling plan allocations](https://shopify.dev/docs/api/storefront/current/objects/SellingPlanAllocation) objects, bundle configurations through [product variant components](https://shopify.dev/docs/api/storefront/current/objects/ProductVariantComponent) objects, and [shop pay installments pricing](https://shopify.dev/docs/api/storefront/current/objects/ShopPayInstallmentsPricing) for flexible payment options."
         },
         {
           "filePath": "src/getProductOptions.ts",
@@ -6995,7 +6995,7 @@
           "syntaxKind": "PropertySignature",
           "name": "attributes",
           "value": "Record<string, string>",
-          "description": "",
+          "description": "Construct a type with a set of properties K of type T",
           "isOptional": true
         },
         {

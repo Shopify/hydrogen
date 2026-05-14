@@ -813,7 +813,7 @@
           "syntaxKind": "PropertySignature",
           "name": "cache",
           "value": "Cache",
-          "description": "",
+          "description": "The **`Cache`** interface provides a persistent storage mechanism for Request / Response object pairs that are cached in long lived memory. Available only in secure contexts.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache)",
           "isOptional": true
         },
         {
@@ -1499,7 +1499,7 @@
           "syntaxKind": "PropertySignature",
           "name": "cart",
           "value": "Cart",
-          "description": ""
+          "description": "A cart represents the merchandise that a buyer intends to purchase, and the estimated cost associated with the cart, throughout a customer's session.\n\nUse the [`checkoutUrl`](https://shopify.dev/docs/api/storefront/current/objects/Cart#field-checkoutUrl) field to direct buyers to Shopify's web checkout to complete their purchase.\n\nLearn more about [interacting with carts](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/cart/manage)."
         },
         {
           "filePath": "src/cart/queries/cart-types.ts",
@@ -2346,7 +2346,7 @@
           "syntaxKind": "PropertySignature",
           "name": "buyerIdentity",
           "value": "CartBuyerIdentityInput",
-          "description": "",
+          "description": "The input fields for identifying the buyer associated with a cart. Buyer identity determines [international pricing](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/markets/international-pricing) and should match the customer's shipping address.\n\nUsed by [`cartCreate`](https://shopify.dev/docs/api/storefront/current/mutations/cartCreate) and [`cartBuyerIdentityUpdate`](https://shopify.dev/docs/api/storefront/current/mutations/cartBuyerIdentityUpdate) to set contact information, location, and checkout preferences.\n\n> Note: > Preferences prefill fields at checkout but don't sync back to the cart if overwritten.",
           "isOptional": true
         },
         {
@@ -2392,7 +2392,7 @@
           "syntaxKind": "PropertySignature",
           "name": "storefront",
           "value": "Storefront",
-          "description": ""
+          "description": "Interface to interact with the Storefront API."
         }
       ]
     }
@@ -3093,7 +3093,7 @@
           "syntaxKind": "PropertySignature",
           "name": "storefront",
           "value": "Storefront<TI18n>",
-          "description": ""
+          "description": "Interface to interact with the Storefront API."
         }
       ]
     }
@@ -3111,7 +3111,7 @@
           "syntaxKind": "PropertySignature",
           "name": "country",
           "value": "CountryCode",
-          "description": ""
+          "description": "The code designating a country/region, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, then it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`."
         },
         {
           "filePath": "src/storefront.ts",
@@ -3702,7 +3702,7 @@
           "syntaxKind": "PropertySignature",
           "name": "buyerIdentity",
           "value": "CartBuyerIdentityInput",
-          "description": "",
+          "description": "The input fields for identifying the buyer associated with a cart. Buyer identity determines [international pricing](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/markets/international-pricing) and should match the customer's shipping address.\n\nUsed by [`cartCreate`](https://shopify.dev/docs/api/storefront/current/mutations/cartCreate) and [`cartBuyerIdentityUpdate`](https://shopify.dev/docs/api/storefront/current/mutations/cartBuyerIdentityUpdate) to set contact information, location, and checkout preferences.\n\n> Note: > Preferences prefill fields at checkout but don't sync back to the cart if overwritten.",
           "isOptional": true
         },
         {
@@ -4212,7 +4212,7 @@
           "syntaxKind": "PropertySignature",
           "name": "response",
           "value": "Pick<Response, 'url' | 'status' | 'statusText' | 'headers'>",
-          "description": "",
+          "description": "From T, pick a set of properties whose keys are in the union K",
           "isOptional": true
         }
       ]
@@ -4298,7 +4298,7 @@
           "syntaxKind": "PropertySignature",
           "name": "body",
           "value": "Uint8Array",
-          "description": ""
+          "description": "A typed array of 8-bit unsigned integer values. The contents are initialized to 0. If the requested number of bytes could not be allocated an exception is raised."
         },
         {
           "filePath": "src/cache/in-memory.ts",
@@ -4649,7 +4649,7 @@
           "syntaxKind": "PropertySignature",
           "name": "NonceProvider",
           "value": "ComponentType<{children: ReactNode}>",
-          "description": ""
+          "description": "Represents any user-defined component, either as a function or a class.\n\nSimilar to \n\n\n\n, but with extra properties like \n\n\n\n\n and\n\n\n\n\n\n."
         }
       ]
     }
@@ -5858,14 +5858,14 @@
         {
           "filePath": "src/seo/getSeoMeta.ts",
           "syntaxKind": "MethodSignature",
-          "name": "__@iterator@227636",
+          "name": "__@iterator@113966",
           "value": "() => ArrayIterator<MetaDescriptor>",
           "description": "Iterator"
         },
         {
           "filePath": "src/seo/getSeoMeta.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@unscopables@227761",
+          "name": "__@unscopables@114091",
           "value": "{\n        [K in keyof any[]]?: boolean;\n    }",
           "description": "Is an object whose properties have the value 'true' when they will be absent when used in a 'with' statement."
         },
@@ -6546,7 +6546,7 @@
           "syntaxKind": "PropertySignature",
           "name": "country",
           "value": "CountryCode",
-          "description": "",
+          "description": "The code designating a country/region, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, then it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.",
           "isOptional": true
         },
         {
@@ -8587,7 +8587,7 @@
           "syntaxKind": "PropertySignature",
           "name": "inputs",
           "value": "Record<string, unknown>",
-          "description": "",
+          "description": "Construct a type with a set of properties K of type T",
           "isOptional": true
         }
       ]
@@ -8722,7 +8722,7 @@
           "syntaxKind": "PropertySignature",
           "name": "aria-busy",
           "value": "Booleanish | undefined",
-          "description": "",
+          "description": "Used to represent DOM API's where users can either pass true or false as a boolean or as its equivalent strings.",
           "isOptional": true
         },
         {
@@ -9165,7 +9165,7 @@
           "syntaxKind": "PropertySignature",
           "name": "children",
           "value": "ReactNode | undefined",
-          "description": "",
+          "description": "Represents all of the things React can render.\n\nWhere \n\n\n\n only represents JSX, `ReactNode` represents everything that can be rendered.",
           "isOptional": true
         },
         {
@@ -9269,7 +9269,7 @@
           "syntaxKind": "PropertySignature",
           "name": "draggable",
           "value": "Booleanish | undefined",
-          "description": "",
+          "description": "Used to represent DOM API's where users can either pass true or false as a boolean or as its equivalent strings.",
           "isOptional": true
         },
         {
@@ -10767,7 +10767,7 @@
           "syntaxKind": "PropertySignature",
           "name": "spellCheck",
           "value": "Booleanish | undefined",
-          "description": "",
+          "description": "Used to represent DOM API's where users can either pass true or false as a boolean or as its equivalent strings.",
           "isOptional": true
         },
         {
@@ -13316,7 +13316,7 @@
           "syntaxKind": "PropertySignature",
           "name": "aria-busy",
           "value": "Booleanish | undefined",
-          "description": "",
+          "description": "Used to represent DOM API's where users can either pass true or false as a boolean or as its equivalent strings.",
           "isOptional": true
         },
         {
@@ -13734,7 +13734,7 @@
           "syntaxKind": "PropertySignature",
           "name": "children",
           "value": "ReactNode | undefined",
-          "description": "",
+          "description": "Represents all of the things React can render.\n\nWhere \n\n\n\n only represents JSX, `ReactNode` represents everything that can be rendered.",
           "isOptional": true
         },
         {
@@ -13829,7 +13829,7 @@
           "syntaxKind": "PropertySignature",
           "name": "draggable",
           "value": "Booleanish | undefined",
-          "description": "",
+          "description": "Used to represent DOM API's where users can either pass true or false as a boolean or as its equivalent strings.",
           "isOptional": true
         },
         {
@@ -15311,7 +15311,7 @@
           "syntaxKind": "PropertySignature",
           "name": "spellCheck",
           "value": "Booleanish | undefined",
-          "description": "",
+          "description": "Used to represent DOM API's where users can either pass true or false as a boolean or as its equivalent strings.",
           "isOptional": true
         },
         {
@@ -16127,7 +16127,7 @@
           "filePath": "../hydrogen-react/src/ProductProvider.tsx",
           "syntaxKind": "PropertySignature",
           "name": "selectedSellingPlan",
-          "value": "SellingPlanType",
+          "value": "SellingPlan",
           "description": "The selected selling plan.",
           "isOptional": true
         },
@@ -16135,7 +16135,7 @@
           "filePath": "../hydrogen-react/src/ProductProvider.tsx",
           "syntaxKind": "PropertySignature",
           "name": "selectedSellingPlanAllocation",
-          "value": "SellingPlanAllocationType",
+          "value": "SellingPlanAllocation",
           "description": "The selected selling plan allocation.",
           "isOptional": true
         },
@@ -16160,7 +16160,7 @@
           "syntaxKind": "PropertySignature",
           "name": "sellingPlanGroupsConnection",
           "value": "SellingPlanGroupConnection",
-          "description": "",
+          "description": "An auto-generated type for paginating through multiple SellingPlanGroups.",
           "isOptional": true
         },
         {
@@ -16175,7 +16175,7 @@
           "syntaxKind": "PropertySignature",
           "name": "variantsConnection",
           "value": "ProductVariantConnection",
-          "description": "",
+          "description": "An auto-generated type for paginating through multiple ProductVariants.",
           "isOptional": true
         }
       ]
@@ -17903,7 +17903,7 @@
           "syntaxKind": "PropertySignature",
           "name": "variant",
           "value": "ProductVariant",
-          "description": ""
+          "description": "A specific version of a [product](https://shopify.dev/docs/api/storefront/current/objects/Product) available for sale, differentiated by options like size or color. For example, a small blue t-shirt and a large blue t-shirt are separate variants of the same product. For more information, see the docs on [Shopify's product model](https://shopify.dev/docs/apps/build/product-merchandising/products-and-collections).\n\nFor products with quantity rules, variants enforce minimum, maximum, and increment constraints on purchases.\n\nVariants also support subscriptions and pre-orders through [selling plan allocations](https://shopify.dev/docs/api/storefront/current/objects/SellingPlanAllocation) objects, bundle configurations through [product variant components](https://shopify.dev/docs/api/storefront/current/objects/ProductVariantComponent) objects, and [shop pay installments pricing](https://shopify.dev/docs/api/storefront/current/objects/ShopPayInstallmentsPricing) for flexible payment options."
         },
         {
           "filePath": "../hydrogen-react/src/getProductOptions.ts",
@@ -17961,7 +17961,7 @@
           "syntaxKind": "PropertySignature",
           "name": "attributes",
           "value": "Record<string, string>",
-          "description": "",
+          "description": "Construct a type with a set of properties K of type T",
           "isOptional": true
         },
         {
