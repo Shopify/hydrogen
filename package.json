@@ -82,6 +82,7 @@
     "@shopify/cli": "3.91.1",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/eslint": "9.6.1",
+    "@types/node": "catalog:",
     "@types/semver": "^7.5.8",
     "@typescript-eslint/eslint-plugin": "8.42.0",
     "@typescript-eslint/parser": "8.42.0",
