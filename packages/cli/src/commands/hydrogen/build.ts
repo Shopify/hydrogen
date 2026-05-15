@@ -34,6 +34,20 @@ import {deferPromise, type DeferredPromise} from '../../lib/defer.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
+const USER_CODE_ERROR_PATTERNS = ['Failed to parse source for import analysis'];
+
+export function rethrowAsUserError(error: unknown): never {
+  if (
+    error instanceof Error &&
+    USER_CODE_ERROR_PATTERNS.some((pattern) => error.message.includes(pattern))
+  ) {
+    const abortError = new AbortError(error.message);
+    abortError.stack = error.stack;
+    throw abortError;
+  }
+  throw error;
+}
+
 export default class Build extends Command {
   static descriptionWithMarkdown = `Builds a Hydrogen storefront for production. The client and app worker files are compiled to a \`/dist\` folder in your Hydrogen project directory.`;
 
@@ -168,111 +182,119 @@ export async function runBuild({
   let clientBuildStatus: DeferredPromise;
 
   // Client build first
-  const clientBuild = await vite.build({
-    ...commonConfig,
-    build: {
-      emptyOutDir: true,
-      copyPublicDir: true,
-      // Disable client sourcemaps in production by default
-      sourcemap:
-        forceClientSourcemap ??
-        (process.env.NODE_ENV !== 'production' && sourcemap),
-      watch: watch ? {} : null,
-    },
-    server: {
-      watch: watch ? {} : null,
-    },
-    plugins: [
-      {
-        name: 'hydrogen:cli:client',
-        buildStart() {
-          clientBuildStatus?.resolve();
-          clientBuildStatus = deferPromise();
-        },
-        buildEnd(error) {
-          if (error) clientBuildStatus.reject(error);
-        },
-        writeBundle() {
-          clientBuildStatus.resolve();
-        },
-        closeWatcher() {
-          // End build process if watcher is closed
-          this.error(new Error('Process exited before client build finished.'));
-        },
+  const clientBuild = await vite
+    .build({
+      ...commonConfig,
+      build: {
+        emptyOutDir: true,
+        copyPublicDir: true,
+        // Disable client sourcemaps in production by default
+        sourcemap:
+          forceClientSourcemap ??
+          (process.env.NODE_ENV !== 'production' && sourcemap),
+        watch: watch ? {} : null,
       },
-    ],
-  });
+      server: {
+        watch: watch ? {} : null,
+      },
+      plugins: [
+        {
+          name: 'hydrogen:cli:client',
+          buildStart() {
+            clientBuildStatus?.resolve();
+            clientBuildStatus = deferPromise();
+          },
+          buildEnd(error) {
+            if (error) clientBuildStatus.reject(error);
+          },
+          writeBundle() {
+            clientBuildStatus.resolve();
+          },
+          closeWatcher() {
+            // End build process if watcher is closed
+            this.error(
+              new Error('Process exited before client build finished.'),
+            );
+          },
+        },
+      ],
+    })
+    .catch(rethrowAsUserError);
 
   console.log('');
 
   let serverBuildStatus: DeferredPromise;
 
   // Server/SSR build
-  const serverBuild = await vite.build({
-    ...commonConfig,
-    build: {
-      sourcemap,
-      ssr: ssrEntry ?? true,
-      emptyOutDir: false,
-      copyPublicDir: false,
-      minify: serverMinify,
-      // Ensure the server rebuild start after the client one
-      watch: watch ? {buildDelay: 100} : null,
-    },
-    server: {
-      watch: watch ? {} : null,
-    },
-    plugins: [
-      {
-        name: 'hydrogen:cli:server',
-        async buildStart() {
-          // Wait for the client build to finish in watch mode
-          // before starting the server build to access the
-          // Remix manifest from file disk.
-          await clientBuildStatus.promise;
-
-          // Keep track of server builds to wait for them to finish
-          // before cleaning up resources in watch mode. Otherwise,
-          // it might complain about missing files and loop infinitely.
-          serverBuildStatus?.resolve();
-          serverBuildStatus = deferPromise();
-          await onServerBuildStart?.();
-        },
-        async writeBundle() {
-          if (serverBuildStatus?.state !== 'rejected') {
-            await onServerBuildFinish?.();
-          }
-
-          serverBuildStatus.resolve();
-        },
-        closeWatcher() {
-          // End build process if watcher is closed
-          this.error(new Error('Process exited before server build finished.'));
-        },
+  const serverBuild = await vite
+    .build({
+      ...commonConfig,
+      build: {
+        sourcemap,
+        ssr: ssrEntry ?? true,
+        emptyOutDir: false,
+        copyPublicDir: false,
+        minify: serverMinify,
+        // Ensure the server rebuild start after the client one
+        watch: watch ? {buildDelay: 100} : null,
       },
-      ...(bundleStats
-        ? [
-            hydrogenBundleAnalyzer({
-              minify: serverMinify
-                ? (code, filepath) =>
-                    vite
-                      .transformWithEsbuild(code, filepath, {
-                        minify: true,
-                        minifyWhitespace: true,
-                        minifySyntax: true,
-                        minifyIdentifiers: true,
-                        sourcemap: false,
-                        treeShaking: false, // Tree-shaking would drop most exports in routes
-                        legalComments: 'none',
-                        target: 'esnext',
-                      })
-                      .then((result) => result.code)
-                : undefined,
-            }),
-          ]
-        : []),
-    ],
-  });
+      server: {
+        watch: watch ? {} : null,
+      },
+      plugins: [
+        {
+          name: 'hydrogen:cli:server',
+          async buildStart() {
+            // Wait for the client build to finish in watch mode
+            // before starting the server build to access the
+            // Remix manifest from file disk.
+            await clientBuildStatus.promise;
+
+            // Keep track of server builds to wait for them to finish
+            // before cleaning up resources in watch mode. Otherwise,
+            // it might complain about missing files and loop infinitely.
+            serverBuildStatus?.resolve();
+            serverBuildStatus = deferPromise();
+            await onServerBuildStart?.();
+          },
+          async writeBundle() {
+            if (serverBuildStatus?.state !== 'rejected') {
+              await onServerBuildFinish?.();
+            }
+
+            serverBuildStatus.resolve();
+          },
+          closeWatcher() {
+            // End build process if watcher is closed
+            this.error(
+              new Error('Process exited before server build finished.'),
+            );
+          },
+        },
+        ...(bundleStats
+          ? [
+              hydrogenBundleAnalyzer({
+                minify: serverMinify
+                  ? (code, filepath) =>
+                      vite
+                        .transformWithEsbuild(code, filepath, {
+                          minify: true,
+                          minifyWhitespace: true,
+                          minifySyntax: true,
+                          minifyIdentifiers: true,
+                          sourcemap: false,
+                          treeShaking: false, // Tree-shaking would drop most exports in routes
+                          legalComments: 'none',
+                          target: 'esnext',
+                        })
+                        .then((result) => result.code)
+                  : undefined,
+              }),
+            ]
+          : []),
+      ],
+    })
+    .catch(rethrowAsUserError);
 
   if (!watch) {
     await Promise.all([
