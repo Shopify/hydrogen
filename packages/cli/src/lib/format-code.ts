@@ -21,7 +21,16 @@ export async function getCodeFormatOptions(filePath = process.cwd()) {
     : Path.resolve(filePath, 'prettier.file');
   try {
     // Try to read a prettier config file from the project.
-    return (await resolveConfig(pathToUse)) || DEFAULT_PRETTIER_CONFIG;
+    const config = (await resolveConfig(pathToUse)) || DEFAULT_PRETTIER_CONFIG;
+
+    // Strip `plugins` from the resolved config. Prettier v3.1+ returns
+    // plugin strings (e.g. "prettier-plugin-tailwindcss") from resolveConfig,
+    // which format() then tries to dynamically import. This fails when the
+    // plugin can't be resolved from the CLI's module context.
+    // Codegen formatting only needs style options, not plugins.
+    // See: https://github.com/Shopify/hydrogen/issues/2994
+    const {plugins, ...safeConfig} = config;
+    return safeConfig;
   } catch {
     return DEFAULT_PRETTIER_CONFIG;
   }
