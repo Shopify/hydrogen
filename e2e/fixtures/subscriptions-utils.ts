@@ -31,10 +31,6 @@ export class SubscriptionsUtil {
     return subscriptionRow.getByRole('button', {name: 'Cancel subscription'});
   }
 
-  getCancellingButton(subscriptionRow: Locator): Locator {
-    return subscriptionRow.getByRole('button', {name: 'Canceling'});
-  }
-
   getDiscountLabels(subscriptionRow: Locator): Locator {
     return subscriptionRow.getByText(/\d+% off|\$[\d.]+ off/);
   }

@@ -52,6 +52,7 @@ export default function Stores() {
 
   return (
     <div className="stores">
+      <h1>Our Stores</h1>
       {/* 3. Render the route's content sections */}
       <RouteContent route={route} />
     </div>

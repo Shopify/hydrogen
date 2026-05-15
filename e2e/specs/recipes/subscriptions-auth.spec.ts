@@ -88,13 +88,13 @@ test.describe('Subscriptions Recipe', () => {
       const activeRow = subscriptions.getSubscriptionRows().first();
       const cancelButton = subscriptions.getCancelButton(activeRow);
 
+      await expect(cancelButton).toBeVisible();
       await cancelButton.click();
 
-      // The button text changes to 'Canceling' while the mutation is in flight,
-      // then the page re-renders after the response. We wait for either state.
-      await expect(
-        subscriptions.getCancellingButton(activeRow).or(cancelButton),
-      ).toBeVisible();
+      // After clicking, the cancel button must disappear - either because the
+      // text changed to 'Canceling' (mutation in flight) or the page re-rendered
+      // after the mutation completed. Either outcome confirms the action was processed.
+      await expect(cancelButton).not.toBeVisible();
     });
   });
 

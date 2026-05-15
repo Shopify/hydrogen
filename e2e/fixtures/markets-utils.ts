@@ -17,12 +17,6 @@ export class MarketsUtil {
     );
   }
 
-  async assertNoLocalePrefix() {
-    const pathname = new URL(this.page.url()).pathname;
-    // Checks that the path doesn't start with a locale prefix (e.g., /FR-CA/)
-    expect(pathname).not.toMatch(/^\/[A-Z]{2}-[A-Z]{2}(\/|$)/);
-  }
-
   async assertPriceFormat(priceLocator: Locator, expectedFormat: RegExp) {
     await expect(priceLocator).toBeVisible();
     await expect(priceLocator).toHaveText(expectedFormat);
@@ -111,6 +105,8 @@ export class MarketsUtil {
     }
 
     await targetButton.click();
+    // The |\/$  branch handles switching to the default locale (e.g. EN-US)
+    // where the pathPrefix is '/' — the URL will end with just a trailing slash.
     await this.page.waitForURL(/\/[A-Z]{2}-[A-Z]{2}(\/|$)|\/$/, {
       timeout: LOCALE_SWITCH_NAVIGATION_TIMEOUT_IN_MS,
     });

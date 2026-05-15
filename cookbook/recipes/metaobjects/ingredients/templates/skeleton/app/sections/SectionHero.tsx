@@ -45,7 +45,7 @@ export function SectionHero(props: SectionHeroFragment) {
           bottom: 0,
         }}
       >
-        {heading && <h1 style={{marginBottom: 0}}>{heading.parsedValue}</h1>}
+        {heading && <h2 style={{marginBottom: 0}}>{heading.parsedValue}</h2>}
         {subheading && <p>{subheading.value}</p>}
         {link?.href?.value && (
           <Link

@@ -111,7 +111,7 @@ function validateDependencyVersion(
   actualVersion: string,
   expectedVersion: string,
   depName: string,
-  depType: 'dependency' | 'devDependency',
+  depType: string,
 ): void {
   const expectedBase = stripVersionPrefix(String(expectedVersion));
   const actualBase = stripVersionPrefix(actualVersion);
@@ -359,6 +359,14 @@ describe('upgrade e2e', () => {
       }
     }
 
+    const skippedCount = matrix.length - testedCount;
+    console.log(
+      `Tested ${testedCount}/${matrix.length} upgrade paths` +
+        (skippedCount > 0
+          ? `, ${skippedCount} skipped due to missing scaffolds`
+          : ''),
+    );
+
     if (testedCount === 0 && matrix.length > 0) {
       throw new Error(
         `No upgrade paths could be tested — all ${matrix.length} matrix entries failed to ` +
@@ -514,6 +522,64 @@ async function testUpgrade(
           expect(upgradedPackageJson.dependencies?.[dep]).toBeUndefined();
           expect(upgradedPackageJson.devDependencies?.[dep]).toBeUndefined();
         }
+      }
+    }
+
+    // Verify cumulative intermediate dependencies are applied (not just toRelease).
+    // This exercises the core getCumulativeRelease logic for multi-version jumps.
+    //
+    // Multiple intermediate releases may update the same dep (e.g., release A
+    // sets foo@1.0, then release B sets foo@2.0). The production code uses
+    // last-write-wins in chronological order, so we mirror that here: build
+    // maps of the final expected version for each dep, then validate once.
+    // Note: intermediateReleases is newest-first (changelog order), so we
+    // reverse to iterate oldest-first and let the newest version win via
+    // last-write-wins.
+    const finalIntermediateDeps = new Map<string, string>();
+    const finalIntermediateDevDeps = new Map<string, string>();
+
+    for (const release of [...intermediateReleases].reverse()) {
+      for (const [dep, version] of Object.entries(release.dependencies ?? {})) {
+        finalIntermediateDeps.set(dep, version);
+      }
+      for (const [dep, version] of Object.entries(
+        release.devDependencies ?? {},
+      )) {
+        finalIntermediateDevDeps.set(dep, version);
+      }
+    }
+
+    for (const [dep, expectedVersion] of finalIntermediateDeps) {
+      if (toRelease.dependencies?.[dep]) continue;
+      if (toRelease.removeDependencies?.includes(dep)) continue;
+
+      const actualVersion = upgradedPackageJson.dependencies?.[dep];
+      // Skip deps not present in the upgraded project. An intermediate
+      // release may declare deps that don't apply to every starting version
+      // (e.g., the project never had the dep in the first place).
+      if (actualVersion) {
+        validateDependencyVersion(
+          actualVersion,
+          expectedVersion,
+          dep,
+          'cumulative dependency',
+        );
+      }
+    }
+
+    for (const [dep, expectedVersion] of finalIntermediateDevDeps) {
+      if (toRelease.devDependencies?.[dep]) continue;
+      if (toRelease.removeDevDependencies?.includes(dep)) continue;
+
+      const actualVersion = upgradedPackageJson.devDependencies?.[dep];
+      // Same rationale as above: skip deps absent from the project.
+      if (actualVersion) {
+        validateDependencyVersion(
+          actualVersion,
+          expectedVersion,
+          dep,
+          'cumulative devDependency',
+        );
       }
     }
 

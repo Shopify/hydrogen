@@ -2,7 +2,7 @@ import {test, expect, setRecipeFixture} from '../../fixtures';
 import {MarketsUtil} from '../../fixtures/markets-utils';
 import {CartUtil} from '../../fixtures/cart-utils';
 import {CURRENCY_FORMATS} from '../../fixtures/currency-formats';
-import {KNOWN_PRODUCT} from '../../fixtures/known-products';
+import {KNOWN_SKELETON_PRODUCT} from '../../fixtures/known-products';
 
 setRecipeFixture({
   recipeName: 'markets',
@@ -23,9 +23,9 @@ test.describe('Markets Recipe', () => {
       const recipe = new MarketsUtil(page);
       await page.goto('/');
 
-      await recipe.assertNoLocalePrefix();
+      expect(new URL(page.url()).pathname).toBe('/');
 
-      await page.goto(`/products/${KNOWN_PRODUCT.handle}`);
+      await page.goto(`/products/${KNOWN_SKELETON_PRODUCT.handle}`);
       const priceElement = recipe.getPriceElement();
       await recipe.assertPriceFormat(priceElement, CURRENCY_FORMATS.USD);
     });
@@ -45,7 +45,7 @@ test.describe('Markets Recipe', () => {
 
     test('product page shows CAD prices', async ({page}) => {
       const recipe = new MarketsUtil(page);
-      await page.goto(`/FR-CA/products/${KNOWN_PRODUCT.handle}`);
+      await page.goto(`/FR-CA/products/${KNOWN_SKELETON_PRODUCT.handle}`);
 
       const priceElement = recipe.getPriceElement();
       await recipe.assertPriceFormat(priceElement, CURRENCY_FORMATS.CAD);
@@ -69,9 +69,9 @@ test.describe('Markets Recipe', () => {
       const recipe = new MarketsUtil(page);
       const cart = new CartUtil(page);
 
-      await page.goto(`/FR-CA/products/${KNOWN_PRODUCT.handle}`);
+      await page.goto(`/FR-CA/products/${KNOWN_SKELETON_PRODUCT.handle}`);
 
-      await cart.addItem(KNOWN_PRODUCT.name);
+      await cart.addItem(KNOWN_SKELETON_PRODUCT.name);
 
       // CAD in the drawer proves AddToCartButton posted to /FR-CA/cart rather than /cart,
       // creating the cart with the correct market context.
