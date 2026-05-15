@@ -25,7 +25,7 @@ Hydrogen legacy v1 has been moved [to a separate repo](https://github.com/Shopif
 
 **Requirements:**
 
-- Node.js version 18.0.0 or higher
+- Node.js 22.x or 24.x
 - `npm` (or your package manager of choice, such as `yarn` or `pnpm`)
 
 1. Install the latest version of Hydrogen:
