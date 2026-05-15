@@ -449,7 +449,7 @@ export function generateSeoTags(seoInput: SeoConfig): CustomHeadTagObject[] {
         for (const media of values) {
           if (typeof media === 'string') {
             tagResults.push(
-              generateTag('meta', {name: 'og:image', content: media}),
+              generateTag('meta', {property: 'og:image', content: media}),
             );
           }
 
