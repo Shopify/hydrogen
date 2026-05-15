@@ -62,6 +62,13 @@ export async function login(root?: string, shop?: string | true) {
 
     const userAccount = await getUserAccount(token);
 
+    if (userAccount.activeShops.length === 0) {
+      throw new AbortError(
+        'No active shops found for your Shopify account.',
+        'To create a new development store, visit https://dev.shopify.com/dashboard. If you already have a store, try running `shopify hydrogen logout` and logging in with a different account.',
+      );
+    }
+
     const preselected =
       !forcePrompt &&
       shop &&
