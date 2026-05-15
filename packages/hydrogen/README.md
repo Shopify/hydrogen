@@ -18,5 +18,5 @@ npm create @shopify/hydrogen@latest
 - Interested in contributing to Hydrogen? [Read our contributing guide](../../CONTRIBUTING.md)
 - Want to learn more? [Check out the Hydrogen docs on Shopify.dev](https://shopify.dev/custom-storefronts/hydrogen)
 - Questions? Feedback? Feature requests? [Discussions](https://github.com/Shopify/hydrogen/discussions)
-- Upgrading from a previous version? [View the Changelog](./packages/hydrogen/CHANGELOG.md)
+- Upgrading from a previous version? [View the Changelog](./CHANGELOG.md)
 - Looking for Hydrogen v1? [The source code has been moved](https://github.com/Shopify/hydrogen-v1)
