@@ -396,7 +396,12 @@ const FixedWidthImage = React.forwardRef<
           ? intWidth * (parseAspectRatio(fixedAspectRatio) ?? 1)
           : undefined;
 
-      const srcSet = generateSrcSet(normalizedProps.src, sizesArray, loader);
+      const srcSet = generateSrcSet(
+        normalizedProps.src,
+        sizesArray,
+        loader,
+        'density',
+      );
       const src = loader({
         src: normalizedProps.src,
         width: intWidth,
@@ -644,12 +649,14 @@ function isFixedWidth(width: string | number): boolean {
  * @param src - The source URL of the image, e.g. https://cdn.shopify.com/static/sample-images/garnished.jpeg
  * @param sizesArray - An array of objects containing the `width`, `height`, and `crop` of the image, e.g. [\{width: 200, height: 200, crop: 'center'\}, \{width: 400, height: 400, crop: 'center'\}]
  * @param loader - A function that takes a Shopify image URL and returns a Shopify image URL with the correct query parameters
+ * @param descriptorType - Whether to use `w` (width) or `x` (density) descriptors in the srcset. Use `'density'` for fixed-width images and `'width'` (default) for fluid images.
  * @returns A srcSet for Shopify images, e.g. 'https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=200&height=200&crop=center 200w, https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=400&height=400&crop=center 400w'
  */
 export function generateSrcSet(
   src?: string,
   sizesArray?: Array<{width?: number; height?: number; crop?: Crop}>,
   loader: Loader = shopifyLoader,
+  descriptorType: 'width' | 'density' = 'width',
 ): string {
   if (!src) {
     return '';
@@ -667,7 +674,7 @@ export function generateSrcSet(
           width: size.width,
           height: size.height,
           crop: size.crop,
-        })} ${sizesArray.length === 3 ? `${i + 1}x` : `${size.width ?? 0}w`}`,
+        })} ${descriptorType === 'density' ? `${i + 1}x` : `${size.width ?? 0}w`}`,
     )
     .join(`, `);
 }
