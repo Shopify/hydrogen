@@ -2,6 +2,10 @@ import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api
 import type {I18nBase, Storefront} from '../storefront';
 import {getRedirectUrl} from '../utils/get-redirect-url';
 
+const SINGLE_FETCH_DATA_SUFFIX = '.data';
+const SINGLE_FETCH_ROOT_SEGMENT = '_root.data';
+const SINGLE_FETCH_TRAILING_SLASH_SEGMENT = '_.data';
+
 type StorefrontRedirect = {
   /** The [Storefront client](/docs/api/hydrogen/utilities/createstorefrontclient) instance */
   storefront: Storefront<I18nBase>;
@@ -36,18 +40,18 @@ export async function storefrontRedirect(
   } = options;
 
   const url = new URL(request.url);
-  const {pathname, searchParams} = url;
-  const isSoftNavigation = searchParams.has('_data');
+  const {searchParams} = url;
+  const {pathname, isSoftNavigation} = parseSingleFetchPathname(url.pathname);
 
   searchParams.delete('redirect');
   searchParams.delete('return_to');
-  searchParams.delete('_data');
+  searchParams.delete('_routes');
 
   const redirectFrom = (
-    matchQueryParams ? url.toString().replace(url.origin, '') : pathname
+    matchQueryParams ? `${pathname}${url.search}` : pathname
   ).toLowerCase();
 
-  if (url.pathname === '/admin' && !noAdminRedirect) {
+  if (pathname === '/admin' && !noAdminRedirect) {
     return createRedirectResponse(
       `${storefront.getShopifyDomain()}/admin`,
       isSoftNavigation,
@@ -108,15 +112,14 @@ function createRedirectResponse(
 
   if (!matchQueryParams) {
     for (const [key, value] of searchParams) {
-      // The redirect destination might include query params, so merge the
-      // original query params with the redirect destination query params
+      // Merge with any query params already present in the redirect target
       url.searchParams.append(key, value);
     }
   }
 
   if (isSoftNavigation) {
     return new Response(null, {
-      status: 200,
+      status: 204,
       headers: {
         'X-Remix-Redirect': url.toString().replace(TEMP_DOMAIN, ''),
         'X-Remix-Status': '301',
@@ -128,6 +131,45 @@ function createRedirectResponse(
       headers: {location: url.toString().replace(TEMP_DOMAIN, '')},
     });
   }
+}
+
+/**
+ * Strips the Single Fetch `.data` suffix from a pathname, handling all
+ * three URL patterns that React Router's `singleFetchUrl` produces:
+ * - `/some-page.data` → `/some-page` (standard)
+ * - `/_.data` or `/prefix/_.data` → `/` or `/prefix/` (trailingSlashAware)
+ * - `/_root.data` or `/prefix/_root.data` → `/` or `/prefix/` (root route)
+ */
+function parseSingleFetchPathname(rawPathname: string): {
+  pathname: string;
+  isSoftNavigation: boolean;
+} {
+  if (!rawPathname.endsWith(SINGLE_FETCH_DATA_SUFFIX)) {
+    return {pathname: rawPathname, isSoftNavigation: false};
+  }
+
+  if (rawPathname.endsWith('/' + SINGLE_FETCH_TRAILING_SLASH_SEGMENT)) {
+    return {
+      pathname: rawPathname.slice(
+        0,
+        -SINGLE_FETCH_TRAILING_SLASH_SEGMENT.length,
+      ),
+      isSoftNavigation: true,
+    };
+  }
+
+  if (
+    rawPathname === '/' + SINGLE_FETCH_ROOT_SEGMENT ||
+    rawPathname.endsWith('/' + SINGLE_FETCH_ROOT_SEGMENT)
+  ) {
+    const prefix = rawPathname.slice(0, -SINGLE_FETCH_ROOT_SEGMENT.length);
+    return {pathname: prefix || '/', isSoftNavigation: true};
+  }
+
+  return {
+    pathname: rawPathname.slice(0, -SINGLE_FETCH_DATA_SUFFIX.length),
+    isSoftNavigation: true,
+  };
 }
 
 const REDIRECT_QUERY = `#graphql

@@ -58,6 +58,7 @@ export {mockCustomerAccountOperation} from './msw/graphql';
 export {MSW_SCENARIOS} from './msw/scenarios';
 export {B2B_COMPANY_NAME} from './msw/handlers';
 export {LEGACY_CUSTOMER_MOCK} from './msw/handlers';
+export {STOREFRONT_REDIRECT_PATHS} from './msw/handlers';
 
 export const test = base.extend<
   {
