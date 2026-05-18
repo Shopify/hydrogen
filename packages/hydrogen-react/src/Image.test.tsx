@@ -197,14 +197,18 @@ describe('<Image />', () => {
       ).not.toContain('600w');
     });
 
-    it('does not create srcset with greater dimensions than source image when using width', () => {
+    it('uses x descriptors for fixed-width images and respects source dimensions', () => {
+      // width=200 (number) → fixed mode → imageWidths=[200, 400, 600]
+      // source width=400 filters out 600w → sizesArray=[200, 400]
+      // should produce 1x/2x but NOT 3x (600px would exceed source)
       const data = {height: 300, width: 400};
 
       render(<Image {...defaultProps} data={data} width={200} />);
 
-      expect(
-        screen.getByTestId<HTMLImageElement>('test-element').srcset,
-      ).not.toContain('3x');
+      const img = screen.getByTestId<HTMLImageElement>('test-element');
+      expect(img.srcset).toContain('1x');
+      expect(img.srcset).toContain('2x');
+      expect(img.srcset).not.toContain('3x');
     });
 
     it('does not create srcset with greater dimensions than source image when using aspect-ratio', () => {
@@ -239,6 +243,29 @@ describe('<Image />', () => {
       expect(
         screen.getByTestId<HTMLImageElement>('test-element').srcset,
       ).not.toContain('2x');
+    });
+
+    it('uses w descriptors for fluid images when source dimensions cap srcset to exactly 3 entries', () => {
+      // A 600px source caps the srcset ladder (200, 400, 600, 800, ...) to exactly 3 entries.
+      // Verify that fluid images always use w-descriptors regardless of how many entries
+      // survive source-dimension filtering — even when that count happens to equal 3.
+      const data = {height: 600, width: 600};
+
+      render(
+        <Image
+          {...defaultProps}
+          data={data}
+          sizes="(min-width: 45em) 40vw, 100vw"
+        />,
+      );
+
+      const img = screen.getByTestId<HTMLImageElement>('test-element');
+      expect(img.srcset).toContain('200w');
+      expect(img.srcset).toContain('400w');
+      expect(img.srcset).toContain('600w');
+      expect(img.srcset).not.toContain('1x');
+      expect(img.srcset).not.toContain('2x');
+      expect(img.srcset).not.toContain('3x');
     });
   });
 
