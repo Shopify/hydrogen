@@ -7,6 +7,7 @@ import type {
   HydrogenEnv,
   HydrogenCart,
 } from './src/index';
+import type {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 
 // Extensible interface for additional context properties (CMS clients, 3P SDKs, etc.)
 // Users can augment this interface in their own code to add custom properties
@@ -49,13 +50,21 @@ declare global {
   interface HydrogenCustomCartFragment {}
 
   /**
-   * Resolves to `HydrogenCart<HydrogenCustomCartFragment>` when the merchant
-   * has augmented `HydrogenCustomCartFragment`, otherwise falls back to the
-   * default `HydrogenCart` (typed with the base Storefront API `Cart`).
+   * The cart type used for `context.cart` in route files.
+   *
+   * Uses `HydrogenCustomCartFragment & Cart` rather than a conditional type so
+   * the intersection is computed lazily at each use site — avoiding issues where
+   * conditional types in `.d.ts` files get evaluated before `declare global`
+   * augmentations from module files are merged.
+   *
+   * - Default (no augmentation): `{} & Cart` = `Cart` — identical to before.
+   * - With augmentation: `CartApiQueryFragment & Cart` — includes all Cart
+   *   fields plus any custom fields added to the fragment.
    */
-  type HydrogenCartWithFragment = keyof HydrogenCustomCartFragment extends never
-    ? HydrogenCart & HydrogenCustomCartMethods
-    : HydrogenCart<HydrogenCustomCartFragment> & HydrogenCustomCartMethods;
+  type HydrogenCartWithFragment = HydrogenCart<
+    HydrogenCustomCartFragment & Cart
+  > &
+    HydrogenCustomCartMethods;
 }
 
 declare module 'react-router' {
