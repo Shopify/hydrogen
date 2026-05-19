@@ -4,11 +4,12 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     globals: false,
-    setupFiles: ['./vitest.setup.ts'],
-    coverage: {
-      all: true,
-      include: ['src/**'],
-      exclude: ['src/vite/virtual-routes/**'],
+    pool: 'threads',
+    include: ['src/**/*.test.{ts,tsx}'],
+    server: {
+      deps: {
+        inline: ['@shopify/hydrogen-react', '@testing-library/react'],
+      },
     },
   },
 });
