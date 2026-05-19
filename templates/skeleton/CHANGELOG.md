@@ -1,5 +1,14 @@
 # skeleton
 
+## 2026.4.3
+
+### Patch Changes
+
+- Include line item children recursively in cart. ([#3753](https://github.com/Shopify/hydrogen/pull/3753)) by [@martin-pettersson](https://github.com/martin-pettersson)
+
+- Updated dependencies [[`3ccc22e0a3407298e835104e29adfb036f261474`](https://github.com/Shopify/hydrogen/commit/3ccc22e0a3407298e835104e29adfb036f261474), [`a810db483c108ac8bbeaac45595b130ed95a2ec7`](https://github.com/Shopify/hydrogen/commit/a810db483c108ac8bbeaac45595b130ed95a2ec7), [`d17057eb4630710743e81b83573973100ec56d23`](https://github.com/Shopify/hydrogen/commit/d17057eb4630710743e81b83573973100ec56d23)]:
+  - @shopify/hydrogen@2026.4.3
+
 ## 2026.4.2
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 12.0.1
+
+### Patch Changes
+
+- Include line item children recursively in cart. ([#3753](https://github.com/Shopify/hydrogen/pull/3753)) by [@martin-pettersson](https://github.com/martin-pettersson)
+
 ## 12.0.0
 
 ### Minor Changes
