@@ -18,15 +18,17 @@ import {
   shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
-export type CartBuyerIdentityUpdateFunction = (
+export type CartBuyerIdentityUpdateFunction<
+  TCart = CartQueryDataReturn['cart'],
+> = (
   buyerIdentity: CartBuyerIdentityInput,
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
 /** @publicDocs */
-export function cartBuyerIdentityUpdateDefault(
-  options: CartQueryOptions,
-): CartBuyerIdentityUpdateFunction {
+export function cartBuyerIdentityUpdateDefault<
+  TCart = CartQueryDataReturn['cart'],
+>(options: CartQueryOptions): CartBuyerIdentityUpdateFunction<TCart> {
   return async (buyerIdentity, optionalParams) => {
     if (buyerIdentity.companyLocationId && options.customerAccount) {
       options.customerAccount.setBuyer({
@@ -40,7 +42,7 @@ export function cartBuyerIdentityUpdateDefault(
 
     const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartBuyerIdentityUpdate, errors} = await options.storefront.mutate<{
-      cartBuyerIdentityUpdate: CartQueryData;
+      cartBuyerIdentityUpdate: CartQueryData<TCart>;
       errors: StorefrontApiErrors;
     }>(
       CART_BUYER_IDENTITY_UPDATE_MUTATION(options.cartFragment, {

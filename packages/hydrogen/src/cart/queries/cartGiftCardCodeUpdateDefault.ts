@@ -17,10 +17,12 @@ import {
   shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
-export type CartGiftCardCodesUpdateFunction = (
+export type CartGiftCardCodesUpdateFunction<
+  TCart = CartQueryDataReturn['cart'],
+> = (
   giftCardCodes: string[],
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
 /**
  * Updates (replaces) gift card codes in the cart.
@@ -35,13 +37,13 @@ export type CartGiftCardCodesUpdateFunction = (
  * await updateGiftCardCodes(['SUMMER2025', 'WELCOME10']);
  * @publicDocs
  */
-export function cartGiftCardCodesUpdateDefault(
-  options: CartQueryOptions,
-): CartGiftCardCodesUpdateFunction {
+export function cartGiftCardCodesUpdateDefault<
+  TCart = CartQueryDataReturn['cart'],
+>(options: CartQueryOptions): CartGiftCardCodesUpdateFunction<TCart> {
   return async (giftCardCodes, optionalParams) => {
     const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartGiftCardCodesUpdate, errors} = await options.storefront.mutate<{
-      cartGiftCardCodesUpdate: CartQueryData;
+      cartGiftCardCodesUpdate: CartQueryData<TCart>;
       errors: StorefrontApiErrors;
     }>(
       CART_GIFT_CARD_CODE_UPDATE_MUTATION(options.cartFragment, {

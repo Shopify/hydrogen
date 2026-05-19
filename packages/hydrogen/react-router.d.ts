@@ -30,6 +30,32 @@ declare global {
     //   updateLineByOptions: (productId: string, selectedOptions: SelectedOptionInput[], line: CartLineUpdateInput) => Promise<CartQueryDataReturn>;
     // }
   }
+
+  /**
+   * Extensible interface for typing cart results with a custom cart fragment.
+   * Augment this interface with your codegen'd fragment type to get full type
+   * safety on `context.cart.get()` and all cart mutations.
+   *
+   * @example
+   * ```ts
+   * // In app/lib/context.ts
+   * import type {CartApiQueryFragment} from 'storefrontapi.generated';
+   *
+   * declare global {
+   *   interface HydrogenCustomCartFragment extends CartApiQueryFragment {}
+   * }
+   * ```
+   */
+  interface HydrogenCustomCartFragment {}
+
+  /**
+   * Resolves to `HydrogenCart<HydrogenCustomCartFragment>` when the merchant
+   * has augmented `HydrogenCustomCartFragment`, otherwise falls back to the
+   * default `HydrogenCart` (typed with the base Storefront API `Cart`).
+   */
+  type HydrogenCartWithFragment = keyof HydrogenCustomCartFragment extends never
+    ? HydrogenCart & HydrogenCustomCartMethods
+    : HydrogenCart<HydrogenCustomCartFragment> & HydrogenCustomCartMethods;
 }
 
 declare module 'react-router' {
@@ -37,7 +63,7 @@ declare module 'react-router' {
   interface RouterContextProvider extends HydrogenAdditionalContext {
     // Standard Hydrogen context properties from HydrogenRouterContextProvider
     storefront: HydrogenRouterContextProvider['storefront'];
-    cart: HydrogenCart & HydrogenCustomCartMethods;
+    cart: HydrogenCartWithFragment;
     customerAccount: HydrogenRouterContextProvider['customerAccount'];
     env: HydrogenRouterContextProvider['env'];
     session: HydrogenRouterContextProvider['session'];
@@ -48,7 +74,7 @@ declare module 'react-router' {
   interface AppLoadContext extends HydrogenAdditionalContext {
     // Standard Hydrogen context properties from HydrogenRouterContextProvider
     storefront: HydrogenRouterContextProvider['storefront'];
-    cart: HydrogenCart & HydrogenCustomCartMethods;
+    cart: HydrogenCartWithFragment;
     customerAccount: HydrogenRouterContextProvider['customerAccount'];
     env: HydrogenRouterContextProvider['env'];
     session: HydrogenRouterContextProvider['session'];

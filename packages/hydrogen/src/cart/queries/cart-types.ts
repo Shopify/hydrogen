@@ -67,12 +67,12 @@ export type CartQueryOptions = {
   customerAccount?: CustomerAccount;
 };
 
-export type CartReturn = Cart & {
+export type CartReturn<TCart = Cart> = TCart & {
   errors?: StorefrontApiErrors;
 };
 
-export type CartQueryData = {
-  cart: Cart;
+export type CartQueryData<TCart = Cart> = {
+  cart: TCart;
   userErrors?:
     | CartUserError[]
     | MetafieldsSetUserError[]
@@ -80,11 +80,11 @@ export type CartQueryData = {
   warnings?: CartWarning[];
 };
 
-export type CartQueryDataReturn = CartQueryData & {
+export type CartQueryDataReturn<TCart = Cart> = CartQueryData<TCart> & {
   errors?: StorefrontApiErrors;
 };
 
-export type CartQueryReturn<T> = (
+export type CartQueryReturn<T, TCart = Cart> = (
   requiredParams: T,
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryData>;
+) => Promise<CartQueryData<TCart>>;

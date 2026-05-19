@@ -11,10 +11,11 @@ import type {
   CartQueryOptions,
 } from './cart-types';
 
-export type CartGiftCardCodesAddFunction = (
-  giftCardCodes: string[],
-  optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+export type CartGiftCardCodesAddFunction<TCart = CartQueryDataReturn['cart']> =
+  (
+    giftCardCodes: string[],
+    optionalParams?: CartOptionalInput,
+  ) => Promise<CartQueryDataReturn<TCart>>;
 
 /**
  * Adds gift card codes to the cart without replacing existing ones.
@@ -30,12 +31,12 @@ export type CartGiftCardCodesAddFunction = (
  * await addGiftCardCodes(['SUMMER2025', 'WELCOME10']);
  * @publicDocs
  */
-export function cartGiftCardCodesAddDefault(
-  options: CartQueryOptions,
-): CartGiftCardCodesAddFunction {
+export function cartGiftCardCodesAddDefault<
+  TCart = CartQueryDataReturn['cart'],
+>(options: CartQueryOptions): CartGiftCardCodesAddFunction<TCart> {
   return async (giftCardCodes, optionalParams) => {
     const {cartGiftCardCodesAdd, errors} = await options.storefront.mutate<{
-      cartGiftCardCodesAdd: CartQueryData;
+      cartGiftCardCodesAdd: CartQueryData<TCart>;
       errors: StorefrontApiErrors;
     }>(CART_GIFT_CARD_CODES_ADD_MUTATION(options.cartFragment), {
       variables: {

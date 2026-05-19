@@ -18,10 +18,12 @@ import {
   shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
-export type CartDeliveryAddressesAddFunction = (
+export type CartDeliveryAddressesAddFunction<
+  TCart = CartQueryDataReturn['cart'],
+> = (
   addresses: Array<CartSelectableAddressInput>,
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
 /**
  * Adds delivery addresses to the cart.
@@ -45,16 +47,16 @@ export type CartDeliveryAddressesAddFunction = (
  * );
  * @publicDocs
  */
-export function cartDeliveryAddressesAddDefault(
-  options: CartQueryOptions,
-): CartDeliveryAddressesAddFunction {
+export function cartDeliveryAddressesAddDefault<
+  TCart = CartQueryDataReturn['cart'],
+>(options: CartQueryOptions): CartDeliveryAddressesAddFunction<TCart> {
   return async (
     addresses: Array<CartSelectableAddressInput>,
     optionalParams,
   ) => {
     const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartDeliveryAddressesAdd, errors} = await options.storefront.mutate<{
-      cartDeliveryAddressesAdd: CartQueryData;
+      cartDeliveryAddressesAdd: CartQueryData<TCart>;
       errors: StorefrontApiErrors;
     }>(
       CART_DELIVERY_ADDRESSES_ADD_MUTATION(options.cartFragment, {

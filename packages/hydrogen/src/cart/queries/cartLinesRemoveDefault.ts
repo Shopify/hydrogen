@@ -18,21 +18,21 @@ import {
   shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
-export type CartLinesRemoveFunction = (
+export type CartLinesRemoveFunction<TCart = CartQueryDataReturn['cart']> = (
   lineIds: string[],
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
 /** @publicDocs */
-export function cartLinesRemoveDefault(
+export function cartLinesRemoveDefault<TCart = CartQueryDataReturn['cart']>(
   options: CartQueryOptions,
-): CartLinesRemoveFunction {
+): CartLinesRemoveFunction<TCart> {
   return async (lineIds, optionalParams) => {
     throwIfLinesAreOptimistic('removeLines', lineIds);
 
     const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartLinesRemove, errors} = await options.storefront.mutate<{
-      cartLinesRemove: CartQueryData;
+      cartLinesRemove: CartQueryData<TCart>;
       errors: StorefrontApiErrors;
     }>(
       CART_LINES_REMOVE_MUTATION(options.cartFragment, {includeVisitorConsent}),

@@ -57,7 +57,11 @@ export {cartAttributesUpdateDefault} from './cart/queries/cartAttributesUpdateDe
 export {cartBuyerIdentityUpdateDefault} from './cart/queries/cartBuyerIdentityUpdateDefault';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';
 export {cartDiscountCodesUpdateDefault} from './cart/queries/cartDiscountCodesUpdateDefault';
-export {cartGetDefault} from './cart/queries/cartGetDefault';
+export {
+  cartGetDefault,
+  type CartGetFunction,
+  type CartGetProps,
+} from './cart/queries/cartGetDefault';
 export {cartGiftCardCodesAddDefault} from './cart/queries/cartGiftCardCodesAddDefault';
 export {cartGiftCardCodesRemoveDefault} from './cart/queries/cartGiftCardCodesRemoveDefault';
 export {cartGiftCardCodesUpdateDefault} from './cart/queries/cartGiftCardCodeUpdateDefault';
