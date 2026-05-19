@@ -44,7 +44,10 @@ export async function loader({
   context: AppLoadContext;
 }) {
   const layout = await storefront.query<{shop: Shop}>(LAYOUT_QUERY);
-  return {layout, isMockShop: storefront.getApiUrl().includes('mock.shop')};
+  const isMockShop = storefront
+    .getApiUrl()
+    .includes('mockdotshop.myshopify.com');
+  return {layout, isMockShop};
 }
 
 export const HYDROGEN_SHOP_ID = 'gid://shopify/Shop/55145660472';
