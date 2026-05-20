@@ -357,6 +357,8 @@ scenarios.set('b2b-logged-in', {
     mockCustomerAccountOperation(CUSTOMER_ORDERS_QUERY, () => {
       return customerOrdersMock;
     }),
+    // CustomerLocations is a recipe-specific query with no generated types,
+    // so we match by operation name instead of using mockCustomerAccountOperation.
     graphql.query('CustomerLocations', () => {
       return HttpResponse.json({data: b2bCustomerLocationsMock});
     }),
@@ -369,6 +371,10 @@ scenarios.set('b2b-logged-in', {
  * subscription contracts. The SubscriptionsContractsQuery and cancel
  * mutation are introduced by the subscriptions recipe and have no
  * generated types, so we use raw graphql handlers matched by operation name.
+ *
+ * ⚠️  Mock data drift risk: These mock response shapes are handcrafted without
+ * generated types. If the recipe's GraphQL queries change field names or
+ * structure, the mocks will silently return stale shapes.
  */
 const subscriptionsContractsMock = {
   customer: {

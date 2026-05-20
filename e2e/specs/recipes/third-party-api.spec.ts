@@ -19,7 +19,13 @@ setRecipeFixture({
 
 const RECIPE_HEADING_TEXT = 'Rick & Morty Characters (Third-Party API Example)';
 
+const EXTERNAL_API_TIMEOUT_IN_MS = 15_000;
+
 test.describe('Third-party API Recipe', () => {
+  // These tests depend on a live external API (rickandmortyapi.com).
+  // Allow a retry to handle transient external API failures.
+  test.describe.configure({retries: 1});
+
   test.beforeEach(async ({page}) => {
     await page.goto('/');
   });
@@ -52,7 +58,9 @@ test.describe('Third-party API Recipe', () => {
     const characters = characterList.getByRole('listitem');
     await expect(characters.first()).toBeVisible();
     await expect(characters.nth(1)).toBeVisible();
-    await expect.poll(() => characters.count()).toBeGreaterThan(1);
+    await expect
+      .poll(() => characters.count(), {timeout: EXTERNAL_API_TIMEOUT_IN_MS})
+      .toBeGreaterThan(1);
     await expect(characters.first()).not.toHaveText(/^\s*$/);
     await expect(characters.first()).toContainText(/[A-Za-z]/);
   });
@@ -66,6 +74,10 @@ test.describe('Third-party API Recipe', () => {
     const recommendedProductLinks =
       recommendedProductsSection.getByRole('link');
     await expect(recommendedProductLinks.first()).toBeVisible();
-    await expect.poll(() => recommendedProductLinks.count()).toBeGreaterThan(0);
+    await expect
+      .poll(() => recommendedProductLinks.count(), {
+        timeout: EXTERNAL_API_TIMEOUT_IN_MS,
+      })
+      .toBeGreaterThan(0);
   });
 });

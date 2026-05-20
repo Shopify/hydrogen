@@ -17,9 +17,14 @@ export function CountrySelector() {
 
   return (
     <details
-      role="group"
       aria-label="Country selector"
       style={{position: 'relative', cursor: 'pointer'}}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          e.currentTarget.open = false;
+          e.currentTarget.querySelector('summary')?.focus();
+        }
+      }}
     >
       <summary aria-label={`Current locale: ${label}`}>{label}</summary>
       <div
@@ -67,6 +72,8 @@ function LocaleForm({locale}: {locale: Locale}) {
 
   return (
     <Form method="POST" action={action}>
+      {/* Hidden inputs are not focusable per HTML spec (type="hidden" elements
+          are excluded from the tab order), so tabIndex={-1} is unnecessary. */}
       <input type="hidden" name="redirectTo" value={newPath} />
       <input
         type="hidden"
