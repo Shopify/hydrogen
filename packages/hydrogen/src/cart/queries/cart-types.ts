@@ -13,6 +13,29 @@ import type {
 import type {StorefrontApiErrors, Storefront} from '../../storefront';
 import {CustomerAccount} from '../../customer/types';
 
+declare global {
+  /**
+   * Extensible interface for typing cart results with a custom cart fragment.
+   * Augment this interface with your codegen'd fragment type to get full type
+   * safety on every cart operation — whether accessed via `context.cart`,
+   * `createCartHandler`, or `createHydrogenContext`.
+   *
+   * When empty (the default), `HydrogenCustomCartFragment & Cart` collapses
+   * to `Cart`, so existing behaviour is unchanged.
+   *
+   * @example
+   * ```ts
+   * // In app/lib/context.ts
+   * import type {CartApiQueryFragment} from 'storefrontapi.generated';
+   *
+   * declare global {
+   *   interface HydrogenCustomCartFragment extends CartApiQueryFragment {}
+   * }
+   * ```
+   */
+  interface HydrogenCustomCartFragment {}
+}
+
 export type CartOptionalInput = {
   /**
    * The cart id.

@@ -8,6 +8,8 @@ import type {RouterContextProvider} from 'react-router';
 import type {Storefront} from './storefront';
 import type {CustomerAccount} from './customer/types';
 import type {HydrogenCart} from './cart/createCartHandler';
+import type {CartReturn} from './cart/queries/cart-types';
+import type {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 
 describe('Type augmentations', () => {
   describe('HydrogenRouterContextProvider', () => {
@@ -146,6 +148,36 @@ describe('Type augmentations', () => {
       // Since this is a type-level test, we just verify the import compiles
       type TestImport = import('./index').HydrogenRouterContextProvider;
       expectTypeOf<TestImport>().not.toBeNever();
+    });
+  });
+
+  describe('HydrogenCustomCartFragment', () => {
+    it('should default to empty object so HydrogenCart collapses to Cart', () => {
+      // When HydrogenCustomCartFragment is not augmented (empty {}),
+      // {} & Cart collapses to Cart — the default behaviour is unchanged.
+      type DefaultCart = HydrogenCart;
+      type CartWithExplicitDefault = HydrogenCart<Cart>;
+
+      // Both should have the same cart-related methods
+      expectTypeOf<DefaultCart>().toHaveProperty('get');
+      expectTypeOf<DefaultCart>().toHaveProperty('addLines');
+      expectTypeOf<CartWithExplicitDefault>().toHaveProperty('get');
+      expectTypeOf<CartWithExplicitDefault>().toHaveProperty('addLines');
+    });
+
+    it('should allow augmentation to add custom fields to cart return types', () => {
+      // Simulates what happens when a consumer augments
+      // HydrogenCustomCartFragment with their codegen'd fragment type
+      type CustomFragment = Cart & {
+        giftMessage?: {key: string; value: string} | null;
+      };
+      type CustomCart = HydrogenCart<CustomFragment>;
+
+      // get() should return CartReturn<CustomFragment> | null
+      type GetResult = Awaited<ReturnType<CustomCart['get']>>;
+      expectTypeOf<NonNullable<GetResult>>().toHaveProperty('giftMessage');
+      expectTypeOf<NonNullable<GetResult>>().toHaveProperty('id');
+      expectTypeOf<NonNullable<GetResult>>().toHaveProperty('checkoutUrl');
     });
   });
 

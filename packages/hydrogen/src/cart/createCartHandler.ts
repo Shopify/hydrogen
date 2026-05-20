@@ -100,7 +100,10 @@ type CartHandlerOptionsWithRequiredCustom<
   customMethods: TCustomMethods;
 };
 
-export type HydrogenCart<TCart = Cart, TGetExtraVariables = {}> = {
+export type HydrogenCart<
+  TCart = HydrogenCustomCartFragment & Cart,
+  TGetExtraVariables = {},
+> = {
   get: CartGetFunction<TCart, TGetExtraVariables>;
   getCartId: () => string | undefined;
   setCartId: (cartId: string) => Headers;
@@ -219,13 +222,13 @@ export type HydrogenCart<TCart = Cart, TGetExtraVariables = {}> = {
 
 export type HydrogenCartCustom<
   TCustomMethods extends CustomMethodsBase,
-  TCart = Cart,
+  TCart = HydrogenCustomCartFragment & Cart,
   TGetExtraVariables = {},
 > = Omit<HydrogenCart<TCart, TGetExtraVariables>, keyof TCustomMethods> &
   TCustomMethods;
 export type CartHandlerReturn<
   TCustomMethods extends CustomMethodsBase,
-  TCart = Cart,
+  TCart = HydrogenCustomCartFragment & Cart,
   TGetExtraVariables = {},
 > =
   | HydrogenCartCustom<TCustomMethods, TCart, TGetExtraVariables>
