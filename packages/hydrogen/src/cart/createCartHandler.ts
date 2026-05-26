@@ -299,6 +299,7 @@ export function createCartHandler<
 
     if (
       !result?.cart ||
+      typeof result.cart !== 'object' ||
       !('id' in result.cart) ||
       typeof result.cart.id !== 'string'
     ) {
