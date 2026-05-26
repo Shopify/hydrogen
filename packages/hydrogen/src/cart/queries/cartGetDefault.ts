@@ -89,6 +89,7 @@ export function cartGetDefault<TCart = Cart, TExtraVariables = {}>({
     if (
       isCustomerLoggedIn &&
       cart &&
+      typeof cart === 'object' &&
       'checkoutUrl' in cart &&
       typeof cart.checkoutUrl === 'string'
     ) {
