@@ -77,6 +77,11 @@ import type {
   Cart,
   CartBuyerIdentityInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import type {
+  CartOptionalInput,
+  CartQueryDataReturn,
+  MetafieldWithoutOwnerId,
+} from './queries/cart-types';
 
 export type CartHandlerOptions = {
   storefront: Storefront;
@@ -119,7 +124,10 @@ export type HydrogenCart<
   updateNote: CartNoteUpdateFunction<TCart>;
   updateSelectedDeliveryOption: CartSelectedDeliveryOptionsUpdateFunction<TCart>;
   updateAttributes: CartAttributesUpdateFunction<TCart>;
-  setMetafields: ReturnType<typeof cartMetafieldsSetDefault>;
+  setMetafields: (
+    metafields: MetafieldWithoutOwnerId[],
+    optionalParams?: CartOptionalInput,
+  ) => Promise<CartQueryDataReturn | CartQueryDataReturn<TCart>>;
   deleteMetafield: ReturnType<typeof cartMetafieldDeleteDefault>;
   /**
    * Adds delivery addresses to the cart.
@@ -238,9 +246,10 @@ export type CartHandlerReturn<
 export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   options: CartHandlerOptionsWithRequiredCustom<TCustomMethods>,
 ): HydrogenCartCustom<TCustomMethods>;
-export function createCartHandler<TCart = Cart, TGetExtraVariables = {}>(
-  options: CartHandlerOptions,
-): HydrogenCart<TCart, TGetExtraVariables>;
+export function createCartHandler<
+  TCart = HydrogenCustomCartFragment & Cart,
+  TGetExtraVariables = {},
+>(options: CartHandlerOptions): HydrogenCart<TCart, TGetExtraVariables>;
 export function createCartHandler<
   TCart,
   TGetExtraVariables,
@@ -249,7 +258,7 @@ export function createCartHandler<
   options: CartHandlerOptionsWithRequiredCustom<TCustomMethods>,
 ): HydrogenCartCustom<TCustomMethods, TCart, TGetExtraVariables>;
 export function createCartHandler<
-  TCart = Cart,
+  TCart = HydrogenCustomCartFragment & Cart,
   TGetExtraVariables = {},
   TCustomMethods extends CustomMethodsBase = CustomMethodsBase,
 >(
@@ -287,7 +296,19 @@ export function createCartHandler<
     };
 
     const result = await _cartCreate(...args);
-    cartId = (result?.cart as {id?: string} | undefined)?.id;
+
+    if (
+      !result?.cart ||
+      !('id' in result.cart) ||
+      typeof result.cart.id !== 'string'
+    ) {
+      throw new Error(
+        '[h2:error:createCartHandler] Cart created but response is missing a valid `id` field. ' +
+          'Ensure your cart query fragment includes the `id` field.',
+      );
+    }
+    cartId = result.cart.id;
+
     return result;
   };
 
@@ -368,9 +389,7 @@ export function createCartHandler<
             metafields,
             optionalParams,
           )
-        : ((await cartCreate({metafields}, optionalParams)) as Awaited<
-            ReturnType<CartMetafieldsSetFunction>
-          >);
+        : await cartCreate({metafields}, optionalParams);
     },
     deleteMetafield: cartMetafieldDeleteDefault(mutateOptions),
     addDeliveryAddresses: cartDeliveryAddressesAddDefault<TCart>(mutateOptions),

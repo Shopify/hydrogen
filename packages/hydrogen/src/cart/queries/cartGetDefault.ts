@@ -86,15 +86,15 @@ export function cartGetDefault<TCart = Cart, TExtraVariables = {}>({
       ),
     ]);
 
-    const cartWithCheckoutUrl = cart as
-      | (TCart & {checkoutUrl?: string})
-      | null
-      | undefined;
-
-    if (isCustomerLoggedIn && cartWithCheckoutUrl?.checkoutUrl) {
-      const finalCheckoutUrl = new URL(cartWithCheckoutUrl.checkoutUrl);
+    if (
+      isCustomerLoggedIn &&
+      cart &&
+      'checkoutUrl' in cart &&
+      typeof cart.checkoutUrl === 'string'
+    ) {
+      const finalCheckoutUrl = new URL(cart.checkoutUrl);
       finalCheckoutUrl.searchParams.set('logged_in', 'true');
-      cartWithCheckoutUrl.checkoutUrl = finalCheckoutUrl.toString();
+      Object.assign(cart, {checkoutUrl: finalCheckoutUrl.toString()});
     }
 
     return cart || errors ? formatAPIResult(cart, errors) : null;
