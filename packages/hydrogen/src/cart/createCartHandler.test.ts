@@ -401,6 +401,45 @@ describe('createCartHandler', () => {
     expect(result.cart).toHaveProperty('id', 'c1-new-cart-id');
   });
 
+  it('function updateBuyerIdentity returns cart create errors when cart is not created', async () => {
+    const storefront = {
+      ...mockCreateStorefrontClient(),
+      mutate: vi.fn().mockResolvedValueOnce({
+        cartCreate: {
+          cart: null,
+          userErrors: [{message: 'Cannot create cart'}],
+        },
+      }),
+    } as unknown as Storefront;
+    const cart = getCartHandler({storefront});
+
+    const result = await cart.updateBuyerIdentity({
+      companyLocationId: 'gid://shopify/CompanyLocation/1',
+    });
+
+    expect(result.cart).toBeNull();
+    expect(result.userErrors?.[0]).toHaveProperty(
+      'message',
+      'Cannot create cart',
+    );
+  });
+
+  it('function create throws when a returned cart is missing id', async () => {
+    const storefront = {
+      ...mockCreateStorefrontClient(),
+      mutate: vi.fn().mockResolvedValueOnce({
+        cartCreate: {
+          cart: {totalQuantity: 0},
+        },
+      }),
+    } as unknown as Storefront;
+    const cart = getCartHandler({storefront});
+
+    await expect(cart.create({})).rejects.toThrow(
+      'Cart created but response is missing a valid `id` field.',
+    );
+  });
+
   it('function updateNote has a working default implementation', async () => {
     const cart = getCartHandler({cartId: 'c1-123'});
 

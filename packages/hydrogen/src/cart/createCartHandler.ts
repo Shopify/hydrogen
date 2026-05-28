@@ -298,17 +298,17 @@ export function createCartHandler<
     const result = await _cartCreate(...args);
 
     if (
-      !result?.cart ||
-      typeof result.cart !== 'object' ||
-      !('id' in result.cart) ||
-      typeof result.cart.id !== 'string'
+      result?.cart &&
+      (typeof result.cart !== 'object' ||
+        !('id' in result.cart) ||
+        typeof result.cart.id !== 'string')
     ) {
       throw new Error(
         '[h2:error:createCartHandler] Cart created but response is missing a valid `id` field. ' +
           'Ensure your cart query fragment includes the `id` field.',
       );
     }
-    cartId = result.cart.id;
+    cartId = result?.cart?.id;
 
     return result;
   };
