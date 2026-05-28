@@ -308,7 +308,13 @@ export function createCartHandler<
           'Ensure your cart query fragment includes the `id` field.',
       );
     }
-    cartId = result?.cart?.id;
+    cartId =
+      result?.cart &&
+      typeof result.cart === 'object' &&
+      'id' in result.cart &&
+      typeof result.cart.id === 'string'
+        ? result.cart.id
+        : undefined;
 
     return result;
   };
