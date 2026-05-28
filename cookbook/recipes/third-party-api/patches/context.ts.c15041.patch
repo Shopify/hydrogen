@@ -1,11 +1,12 @@
 index 692d5ae17..0635384ad 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
-@@ -1,25 +1,10 @@
- import {createHydrogenContext} from '@shopify/hydrogen';
+@@ -2,29 +2,10 @@
  import {AppSession} from '~/lib/session';
  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
--
+ import type {CartApiQueryFragment} from 'storefrontapi.generated';
++import {createRickAndMortyClient} from '~/lib/createRickAndMortyClient.server';
+ 
 -// Define the additional context object
 -const additionalContext = {
 -  // Additional context for custom properties, CMS clients, 3P SDKs, etc.
@@ -20,16 +21,19 @@ index 692d5ae17..0635384ad 100644
 -
 -declare global {
 -  interface HydrogenAdditionalContext extends AdditionalContextType {}
+-
+-  // Augment HydrogenCustomCartFragment with the codegen'd cart fragment type so
+-  // that context.cart.get() and all cart mutations return the extended cart type.
+-  interface HydrogenCustomCartFragment extends CartApiQueryFragment {}
 -}
-+import {createRickAndMortyClient} from '~/lib/createRickAndMortyClient.server';
- 
+-
  /**
 - * Creates Hydrogen context for React Router 7.9.x
 + * Creates Hydrogen context for React Router 7.9.x with third-party API support
   * Returns HydrogenRouterContextProvider with hybrid access patterns
   * */
  export async function createHydrogenRouterContext(
-@@ -40,6 +25,19 @@ export async function createHydrogenRouterContext(
+@@ -45,6 +26,19 @@
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
  
@@ -49,7 +53,7 @@ index 692d5ae17..0635384ad 100644
    const hydrogenContext = createHydrogenContext(
      {
        env,
-@@ -58,3 +56,12 @@ export async function createHydrogenRouterContext(
+@@ -63,3 +57,13 @@
  
    return hydrogenContext;
  }
@@ -61,5 +65,5 @@ index 692d5ae17..0635384ad 100644
 +
 +declare global {
 +  interface HydrogenAdditionalContext extends AdditionalContextType {}
++  interface HydrogenCustomCartFragment extends CartApiQueryFragment {}
 +}
-\ No newline at end of file

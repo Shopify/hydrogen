@@ -18,19 +18,19 @@ import {
   shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
-export type CartLinesAddFunction = (
+export type CartLinesAddFunction<TCart = CartQueryDataReturn['cart']> = (
   lines: Array<CartLineInput>,
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
 /** @publicDocs */
-export function cartLinesAddDefault(
+export function cartLinesAddDefault<TCart = CartQueryDataReturn['cart']>(
   options: CartQueryOptions,
-): CartLinesAddFunction {
+): CartLinesAddFunction<TCart> {
   return async (lines, optionalParams) => {
     const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartLinesAdd, errors} = await options.storefront.mutate<{
-      cartLinesAdd: CartQueryData;
+      cartLinesAdd: CartQueryData<TCart>;
       errors: StorefrontApiErrors;
     }>(CART_LINES_ADD_MUTATION(options.cartFragment, {includeVisitorConsent}), {
       variables: {

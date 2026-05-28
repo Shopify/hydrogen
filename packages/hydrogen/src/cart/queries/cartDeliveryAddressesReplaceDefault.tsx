@@ -12,10 +12,12 @@ import type {
   CartQueryOptions,
 } from './cart-types';
 
-export type CartDeliveryAddressesReplaceFunction = (
+export type CartDeliveryAddressesReplaceFunction<
+  TCart = CartQueryDataReturn['cart'],
+> = (
   addresses: Array<CartSelectableAddressInput>,
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
 /**
  * Replaces all delivery addresses on the cart.
@@ -43,16 +45,16 @@ export type CartDeliveryAddressesReplaceFunction = (
  * );
  * @publicDocs
  */
-export function cartDeliveryAddressesReplaceDefault(
-  options: CartQueryOptions,
-): CartDeliveryAddressesReplaceFunction {
+export function cartDeliveryAddressesReplaceDefault<
+  TCart = CartQueryDataReturn['cart'],
+>(options: CartQueryOptions): CartDeliveryAddressesReplaceFunction<TCart> {
   return async (
     addresses: Array<CartSelectableAddressInput>,
     optionalParams,
   ) => {
     const {cartDeliveryAddressesReplace, errors} =
       await options.storefront.mutate<{
-        cartDeliveryAddressesReplace: CartQueryData;
+        cartDeliveryAddressesReplace: CartQueryData<TCart>;
         errors: StorefrontApiErrors;
       }>(CART_DELIVERY_ADDRESSES_REPLACE_MUTATION(options.cartFragment), {
         variables: {

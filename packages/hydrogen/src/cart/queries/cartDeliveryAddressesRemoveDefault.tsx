@@ -18,10 +18,12 @@ import {
   shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
-export type CartDeliveryAddressesRemoveFunction = (
+export type CartDeliveryAddressesRemoveFunction<
+  TCart = CartQueryDataReturn['cart'],
+> = (
   addressIds: Array<Scalars['ID']['input']> | Array<string>,
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
 /**
  * Removes delivery addresses from the cart.
@@ -40,9 +42,9 @@ export type CartDeliveryAddressesRemoveFunction = (
  * { someOptionalParam: 'value' });
  * @publicDocs
  */
-export function cartDeliveryAddressesRemoveDefault(
-  options: CartQueryOptions,
-): CartDeliveryAddressesRemoveFunction {
+export function cartDeliveryAddressesRemoveDefault<
+  TCart = CartQueryDataReturn['cart'],
+>(options: CartQueryOptions): CartDeliveryAddressesRemoveFunction<TCart> {
   return async (
     addressIds: Array<Scalars['ID']['input']> | string[],
     optionalParams,
@@ -50,7 +52,7 @@ export function cartDeliveryAddressesRemoveDefault(
     const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartDeliveryAddressesRemove, errors} =
       await options.storefront.mutate<{
-        cartDeliveryAddressesRemove: CartQueryData;
+        cartDeliveryAddressesRemove: CartQueryData<TCart>;
         errors: StorefrontApiErrors;
       }>(
         CART_DELIVERY_ADDRESSES_REMOVE_MUTATION(options.cartFragment, {

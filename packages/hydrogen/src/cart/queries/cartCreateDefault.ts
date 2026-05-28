@@ -18,15 +18,15 @@ import {
   shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
-export type CartCreateFunction = (
+export type CartCreateFunction<TCart = CartQueryDataReturn['cart']> = (
   input: CartInput,
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
 /** @publicDocs */
-export function cartCreateDefault(
+export function cartCreateDefault<TCart = CartQueryDataReturn['cart']>(
   options: CartQueryOptions,
-): CartCreateFunction {
+): CartCreateFunction<TCart> {
   return async (input, optionalParams) => {
     const buyer = options.customerAccount
       ? await options.customerAccount.getBuyer()
@@ -35,7 +35,7 @@ export function cartCreateDefault(
     const {buyerIdentity, ...restOfInput} = input;
     const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartCreate, errors} = await options.storefront.mutate<{
-      cartCreate: CartQueryData;
+      cartCreate: CartQueryData<TCart>;
       errors: StorefrontApiErrors;
     }>(CART_CREATE_MUTATION(options.cartFragment, {includeVisitorConsent}), {
       variables: {

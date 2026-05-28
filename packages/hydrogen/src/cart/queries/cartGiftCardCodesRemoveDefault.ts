@@ -17,19 +17,21 @@ import {
   shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
-export type CartGiftCardCodesRemoveFunction = (
+export type CartGiftCardCodesRemoveFunction<
+  TCart = CartQueryDataReturn['cart'],
+> = (
   appliedGiftCardIds: string[],
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
 /** @publicDocs */
-export function cartGiftCardCodesRemoveDefault(
-  options: CartQueryOptions,
-): CartGiftCardCodesRemoveFunction {
+export function cartGiftCardCodesRemoveDefault<
+  TCart = CartQueryDataReturn['cart'],
+>(options: CartQueryOptions): CartGiftCardCodesRemoveFunction<TCart> {
   return async (appliedGiftCardIds, optionalParams) => {
     const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartGiftCardCodesRemove, errors} = await options.storefront.mutate<{
-      cartGiftCardCodesRemove: CartQueryData;
+      cartGiftCardCodesRemove: CartQueryData<TCart>;
       errors: StorefrontApiErrors;
     }>(
       CART_GIFT_CARD_CODES_REMOVE_MUTATION(options.cartFragment, {

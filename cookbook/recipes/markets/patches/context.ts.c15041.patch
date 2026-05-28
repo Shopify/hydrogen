@@ -1,15 +1,15 @@
 index 692d5ae17..7373ebca2 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
-@@ -1,6 +1,7 @@
- import {createHydrogenContext} from '@shopify/hydrogen';
+@@ -2,6 +2,7 @@
  import {AppSession} from '~/lib/session';
  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
+ import type {CartApiQueryFragment} from 'storefrontapi.generated';
 +import {getLocaleFromRequest} from './i18n';
  
  // Define the additional context object
  const additionalContext = {
-@@ -40,6 +41,8 @@ export async function createHydrogenRouterContext(
+@@ -45,6 +46,8 @@
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
  
@@ -18,7 +18,7 @@ index 692d5ae17..7373ebca2 100644
    const hydrogenContext = createHydrogenContext(
      {
        env,
-@@ -47,8 +50,7 @@ export async function createHydrogenRouterContext(
+@@ -52,8 +55,7 @@
        cache,
        waitUntil,
        session,
