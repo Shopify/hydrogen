@@ -1,12 +1,12 @@
 import type {Preset} from '@react-router/dev/config';
 
 /**
- * Official Hydrogen Preset for React Router 7.12.x
+ * Official Hydrogen Preset for React Router 7.15.x
  *
  * Provides optimal React Router configuration for Hydrogen applications on Oxygen.
  * Enables validated performance optimizations while ensuring CLI compatibility.
  *
- * React Router 7.12.x Feature Support Matrix for Hydrogen 2025.7.0
+ * React Router 7.15.x Feature Support Matrix for Hydrogen 2025.7.0
  *
  * +----------------------------------+----------+----------------------------------+
  * | Feature                          | Status   | Notes                            |
@@ -34,7 +34,7 @@ import type {Preset} from '@react-router/dev/config';
  * | prerender: ['/routes']           | Blocked  | Plugin incompatibility           |
  * | serverBundles: () => {}          | Blocked  | Manifest incompatibility         |
  * | buildEnd: () => {}               | Blocked  | CLI bypasses hook execution      |
- * | unstable_subResourceIntegrity    | Blocked  | CSP nonce/hash conflict          |
+ * | subResourceIntegrity             | Blocked  | CSP nonce/hash conflict          |
  * | v8_viteEnvironmentApi            | Blocked  | CLI fallback detection used      |
  * +----------------------------------+----------+----------------------------------+
  *
@@ -54,8 +54,8 @@ export function hydrogenPreset(): Preset {
         v8_splitRouteModules: true,
         v8_viteEnvironmentApi: false,
         unstable_optimizeDeps: true,
-        unstable_subResourceIntegrity: false,
       },
+      subResourceIntegrity: false,
     }),
 
     reactRouterConfigResolved: ({reactRouterConfig}) => {
@@ -91,9 +91,9 @@ export function hydrogenPreset(): Preset {
         );
       }
 
-      if (reactRouterConfig.future?.unstable_subResourceIntegrity === true) {
+      if (reactRouterConfig.subResourceIntegrity === true) {
         throw new Error(
-          '[Hydrogen Preset] unstable_subResourceIntegrity cannot be enabled.\n' +
+          '[Hydrogen Preset] subResourceIntegrity cannot be enabled.\n' +
             'Reason: Conflicts with Hydrogen CSP nonce-based authentication.\n' +
             'Impact: Would break Content Security Policy and cause script execution failures.',
         );

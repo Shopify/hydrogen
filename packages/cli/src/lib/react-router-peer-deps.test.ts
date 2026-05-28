@@ -64,7 +64,17 @@ function getPeerRange(packageJson: PackageJson, dependencyName: string) {
   return peerRange;
 }
 
-function getNextCompatibleMinorVersion(version: string) {
+function getNextCompatiblePatchVersion(version: string) {
+  const nextPatchVersion = semver.inc(version, 'patch');
+
+  if (!nextPatchVersion) {
+    throw new Error(`Expected ${version} to be a valid semver version.`);
+  }
+
+  return nextPatchVersion;
+}
+
+function getNextMinorVersion(version: string) {
   const nextMinorVersion = semver.inc(version, 'minor');
 
   if (!nextMinorVersion) {
@@ -75,7 +85,7 @@ function getNextCompatibleMinorVersion(version: string) {
 }
 
 describe('React Router peer dependency ranges', () => {
-  it('accepts the runtime-tested version and newer compatible minors', () => {
+  it('accepts the runtime-tested version and newer compatible patches', () => {
     for (const {
       packageName,
       packageJson,
@@ -87,17 +97,22 @@ describe('React Router peer dependency ranges', () => {
           reactRouterPackage,
         );
         const peerRange = getPeerRange(packageJson, reactRouterPackage);
-        const nextCompatibleMinorVersion =
-          getNextCompatibleMinorVersion(runtimeTestedVersion);
+        const nextCompatiblePatchVersion =
+          getNextCompatiblePatchVersion(runtimeTestedVersion);
+        const nextMinorVersion = getNextMinorVersion(runtimeTestedVersion);
 
         expect(
           semver.satisfies(runtimeTestedVersion, peerRange),
           `${packageName} ${reactRouterPackage} peer range should include its runtime-tested devDependency version`,
         ).toBe(true);
         expect(
-          semver.satisfies(nextCompatibleMinorVersion, peerRange),
-          `${packageName} ${reactRouterPackage} peer range should allow newer React Router 7.x minors`,
+          semver.satisfies(nextCompatiblePatchVersion, peerRange),
+          `${packageName} ${reactRouterPackage} peer range should allow newer React Router patches in the tested minor line`,
         ).toBe(true);
+        expect(
+          semver.satisfies(nextMinorVersion, peerRange),
+          `${packageName} ${reactRouterPackage} peer range should not claim support for untested React Router minors`,
+        ).toBe(false);
       }
     }
   });
