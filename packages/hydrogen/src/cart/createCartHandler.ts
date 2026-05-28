@@ -73,7 +73,15 @@ import {
   type CartDeliveryAddressesReplaceFunction,
   cartDeliveryAddressesReplaceDefault,
 } from './queries/cartDeliveryAddressesReplaceDefault';
-import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
+import type {
+  Cart,
+  CartBuyerIdentityInput,
+} from '@shopify/hydrogen-react/storefront-api-types';
+import type {
+  CartOptionalInput,
+  CartQueryDataReturn,
+  MetafieldWithoutOwnerId,
+} from './queries/cart-types';
 
 export type CartHandlerOptions = {
   storefront: Storefront;
@@ -91,26 +99,35 @@ export type CartHandlerOptionsWithCustom<
 > = CartHandlerOptions & {
   customMethods?: TCustomMethods;
 };
+type CartHandlerOptionsWithRequiredCustom<
+  TCustomMethods extends CustomMethodsBase,
+> = CartHandlerOptions & {
+  customMethods: TCustomMethods;
+};
 
-export type HydrogenCart = {
-  get: ReturnType<typeof cartGetDefault>;
+export type HydrogenCart<
+  TCart = HydrogenCustomCartFragment & Cart,
+  TGetExtraVariables = {},
+> = {
+  get: CartGetFunction<TCart, TGetExtraVariables>;
   getCartId: () => string | undefined;
   setCartId: (cartId: string) => Headers;
-  create: ReturnType<typeof cartCreateDefault>;
-  addLines: ReturnType<typeof cartLinesAddDefault>;
-  updateLines: ReturnType<typeof cartLinesUpdateDefault>;
-  removeLines: ReturnType<typeof cartLinesRemoveDefault>;
-  updateDiscountCodes: ReturnType<typeof cartDiscountCodesUpdateDefault>;
-  updateGiftCardCodes: ReturnType<typeof cartGiftCardCodesUpdateDefault>;
-  addGiftCardCodes: ReturnType<typeof cartGiftCardCodesAddDefault>;
-  removeGiftCardCodes: ReturnType<typeof cartGiftCardCodesRemoveDefault>;
-  updateBuyerIdentity: ReturnType<typeof cartBuyerIdentityUpdateDefault>;
-  updateNote: ReturnType<typeof cartNoteUpdateDefault>;
-  updateSelectedDeliveryOption: ReturnType<
-    typeof cartSelectedDeliveryOptionsUpdateDefault
-  >;
-  updateAttributes: ReturnType<typeof cartAttributesUpdateDefault>;
-  setMetafields: ReturnType<typeof cartMetafieldsSetDefault>;
+  create: CartCreateFunction<TCart>;
+  addLines: CartLinesAddFunction<TCart>;
+  updateLines: CartLinesUpdateFunction<TCart>;
+  removeLines: CartLinesRemoveFunction<TCart>;
+  updateDiscountCodes: CartDiscountCodesUpdateFunction<TCart>;
+  updateGiftCardCodes: CartGiftCardCodesUpdateFunction<TCart>;
+  addGiftCardCodes: CartGiftCardCodesAddFunction<TCart>;
+  removeGiftCardCodes: CartGiftCardCodesRemoveFunction<TCart>;
+  updateBuyerIdentity: CartBuyerIdentityUpdateFunction<TCart>;
+  updateNote: CartNoteUpdateFunction<TCart>;
+  updateSelectedDeliveryOption: CartSelectedDeliveryOptionsUpdateFunction<TCart>;
+  updateAttributes: CartAttributesUpdateFunction<TCart>;
+  setMetafields: (
+    metafields: MetafieldWithoutOwnerId[],
+    optionalParams?: CartOptionalInput,
+  ) => Promise<CartQueryDataReturn | CartQueryDataReturn<TCart>>;
   deleteMetafield: ReturnType<typeof cartMetafieldDeleteDefault>;
   /**
    * Adds delivery addresses to the cart.
@@ -133,7 +150,7 @@ export type HydrogenCart = {
    *   { someOptionalParam: 'value' }
    * );
    */
-  addDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesAddDefault>;
+  addDeliveryAddresses: CartDeliveryAddressesAddFunction<TCart>;
   /**
    * Removes delivery addresses from the cart.
    *
@@ -150,9 +167,7 @@ export type HydrogenCart = {
    * { someOptionalParam: 'value' });
    */
 
-  removeDeliveryAddresses: ReturnType<
-    typeof cartDeliveryAddressesRemoveDefault
-  >;
+  removeDeliveryAddresses: CartDeliveryAddressesRemoveFunction<TCart>;
   /**
   * Updates delivery addresses in the cart.
   *
@@ -186,9 +201,7 @@ export type HydrogenCart = {
       }
     ],{ someOptionalParam: 'value' });
   */
-  updateDeliveryAddresses: ReturnType<
-    typeof cartDeliveryAddressesUpdateDefault
-  >;
+  updateDeliveryAddresses: CartDeliveryAddressesUpdateFunction<TCart>;
   /**
    * Replaces all delivery addresses on the cart.
    *
@@ -212,26 +225,45 @@ export type HydrogenCart = {
    *   }
    * ], { someOptionalParam: 'value' });
    */
-  replaceDeliveryAddresses: ReturnType<
-    typeof cartDeliveryAddressesReplaceDefault
-  >;
+  replaceDeliveryAddresses: CartDeliveryAddressesReplaceFunction<TCart>;
 };
 
 export type HydrogenCartCustom<
-  TCustomMethods extends Partial<HydrogenCart> & CustomMethodsBase,
-> = Omit<HydrogenCart, keyof TCustomMethods> & TCustomMethods;
-export type CartHandlerReturn<TCustomMethods extends CustomMethodsBase> =
-  | HydrogenCartCustom<TCustomMethods>
-  | HydrogenCart;
+  TCustomMethods extends CustomMethodsBase,
+  TCart = HydrogenCustomCartFragment & Cart,
+  TGetExtraVariables = {},
+> = Omit<HydrogenCart<TCart, TGetExtraVariables>, keyof TCustomMethods> &
+  TCustomMethods;
+export type CartHandlerReturn<
+  TCustomMethods extends CustomMethodsBase,
+  TCart = HydrogenCustomCartFragment & Cart,
+  TGetExtraVariables = {},
+> =
+  | HydrogenCartCustom<TCustomMethods, TCart, TGetExtraVariables>
+  | HydrogenCart<TCart, TGetExtraVariables>;
 
 /** @publicDocs */
-export function createCartHandler(options: CartHandlerOptions): HydrogenCart;
 export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
-  options: CartHandlerOptionsWithCustom<TCustomMethods>,
+  options: CartHandlerOptionsWithRequiredCustom<TCustomMethods>,
 ): HydrogenCartCustom<TCustomMethods>;
-export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
+export function createCartHandler<
+  TCart = HydrogenCustomCartFragment & Cart,
+  TGetExtraVariables = {},
+>(options: CartHandlerOptions): HydrogenCart<TCart, TGetExtraVariables>;
+export function createCartHandler<
+  TCart,
+  TGetExtraVariables,
+  TCustomMethods extends CustomMethodsBase,
+>(
+  options: CartHandlerOptionsWithRequiredCustom<TCustomMethods>,
+): HydrogenCartCustom<TCustomMethods, TCart, TGetExtraVariables>;
+export function createCartHandler<
+  TCart = HydrogenCustomCartFragment & Cart,
+  TGetExtraVariables = {},
+  TCustomMethods extends CustomMethodsBase = CustomMethodsBase,
+>(
   options: CartHandlerOptions | CartHandlerOptionsWithCustom<TCustomMethods>,
-): CartHandlerReturn<TCustomMethods> {
+): CartHandlerReturn<TCustomMethods, TCart, TGetExtraVariables> {
   const {
     getCartId: _getCartId,
     setCartId,
@@ -253,9 +285,9 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     customerAccount,
   };
 
-  const _cartCreate = cartCreateDefault(mutateOptions);
+  const _cartCreate = cartCreateDefault<TCart>(mutateOptions);
 
-  const cartCreate: CartCreateFunction = async function (...args) {
+  const cartCreate: CartCreateFunction<TCart> = async function (...args) {
     // Default buyerIdentity to what is passed into the handler
     // Only override if buyerIdentity is passed directly to the method
     args[0].buyerIdentity = {
@@ -264,12 +296,31 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     };
 
     const result = await _cartCreate(...args);
-    cartId = result?.cart?.id;
+
+    if (
+      result?.cart &&
+      (typeof result.cart !== 'object' ||
+        !('id' in result.cart) ||
+        typeof result.cart.id !== 'string')
+    ) {
+      throw new Error(
+        '[h2:error:createCartHandler] Cart created but response is missing a valid `id` field. ' +
+          'Ensure your cart query fragment includes the `id` field.',
+      );
+    }
+    cartId =
+      result?.cart &&
+      typeof result.cart === 'object' &&
+      'id' in result.cart &&
+      typeof result.cart.id === 'string'
+        ? result.cart.id
+        : undefined;
+
     return result;
   };
 
-  const methods: HydrogenCart = {
-    get: cartGetDefault({
+  const methods: HydrogenCart<TCart, TGetExtraVariables> = {
+    get: cartGetDefault<TCart, TGetExtraVariables>({
       storefront,
       customerAccount,
       getCartId,
@@ -290,14 +341,14 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
       });
 
       return cartId || optionalParams?.cartId
-        ? await cartLinesAddDefault(mutateOptions)(lines, optionalParams)
+        ? await cartLinesAddDefault<TCart>(mutateOptions)(lines, optionalParams)
         : await cartCreate({lines, buyerIdentity}, optionalParams);
     },
-    updateLines: cartLinesUpdateDefault(mutateOptions),
-    removeLines: cartLinesRemoveDefault(mutateOptions),
+    updateLines: cartLinesUpdateDefault<TCart>(mutateOptions),
+    removeLines: cartLinesRemoveDefault<TCart>(mutateOptions),
     updateDiscountCodes: async (discountCodes, optionalParams) => {
       return cartId || optionalParams?.cartId
-        ? await cartDiscountCodesUpdateDefault(mutateOptions)(
+        ? await cartDiscountCodesUpdateDefault<TCart>(mutateOptions)(
             discountCodes,
             optionalParams,
           )
@@ -305,17 +356,17 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     },
     updateGiftCardCodes: async (giftCardCodes, optionalParams) => {
       return cartId || optionalParams?.cartId
-        ? await cartGiftCardCodesUpdateDefault(mutateOptions)(
+        ? await cartGiftCardCodesUpdateDefault<TCart>(mutateOptions)(
             giftCardCodes,
             optionalParams,
           )
         : await cartCreate({giftCardCodes}, optionalParams);
     },
-    addGiftCardCodes: cartGiftCardCodesAddDefault(mutateOptions),
-    removeGiftCardCodes: cartGiftCardCodesRemoveDefault(mutateOptions),
+    addGiftCardCodes: cartGiftCardCodesAddDefault<TCart>(mutateOptions),
+    removeGiftCardCodes: cartGiftCardCodesRemoveDefault<TCart>(mutateOptions),
     updateBuyerIdentity: async (buyerIdentity, optionalParams) => {
       return cartId || optionalParams?.cartId
-        ? await cartBuyerIdentityUpdateDefault(mutateOptions)(
+        ? await cartBuyerIdentityUpdateDefault<TCart>(mutateOptions)(
             buyerIdentity,
             optionalParams,
           )
@@ -323,14 +374,17 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     },
     updateNote: async (note, optionalParams) => {
       return cartId || optionalParams?.cartId
-        ? await cartNoteUpdateDefault(mutateOptions)(note, optionalParams)
+        ? await cartNoteUpdateDefault<TCart>(mutateOptions)(
+            note,
+            optionalParams,
+          )
         : await cartCreate({note}, optionalParams);
     },
     updateSelectedDeliveryOption:
-      cartSelectedDeliveryOptionsUpdateDefault(mutateOptions),
+      cartSelectedDeliveryOptionsUpdateDefault<TCart>(mutateOptions),
     updateAttributes: async (attributes, optionalParams) => {
       return cartId || optionalParams?.cartId
-        ? await cartAttributesUpdateDefault(mutateOptions)(
+        ? await cartAttributesUpdateDefault<TCart>(mutateOptions)(
             attributes,
             optionalParams,
           )
@@ -345,11 +399,13 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
         : await cartCreate({metafields}, optionalParams);
     },
     deleteMetafield: cartMetafieldDeleteDefault(mutateOptions),
-    addDeliveryAddresses: cartDeliveryAddressesAddDefault(mutateOptions),
-    removeDeliveryAddresses: cartDeliveryAddressesRemoveDefault(mutateOptions),
-    updateDeliveryAddresses: cartDeliveryAddressesUpdateDefault(mutateOptions),
+    addDeliveryAddresses: cartDeliveryAddressesAddDefault<TCart>(mutateOptions),
+    removeDeliveryAddresses:
+      cartDeliveryAddressesRemoveDefault<TCart>(mutateOptions),
+    updateDeliveryAddresses:
+      cartDeliveryAddressesUpdateDefault<TCart>(mutateOptions),
     replaceDeliveryAddresses:
-      cartDeliveryAddressesReplaceDefault(mutateOptions),
+      cartDeliveryAddressesReplaceDefault<TCart>(mutateOptions),
   };
 
   if ('customMethods' in options) {

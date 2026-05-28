@@ -18,20 +18,22 @@ import {
   shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
-export type CartSelectedDeliveryOptionsUpdateFunction = (
+export type CartSelectedDeliveryOptionsUpdateFunction<
+  TCart = CartQueryDataReturn['cart'],
+> = (
   selectedDeliveryOptions: CartSelectedDeliveryOptionInput[],
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
 /** @publicDocs */
-export function cartSelectedDeliveryOptionsUpdateDefault(
-  options: CartQueryOptions,
-): CartSelectedDeliveryOptionsUpdateFunction {
+export function cartSelectedDeliveryOptionsUpdateDefault<
+  TCart = CartQueryDataReturn['cart'],
+>(options: CartQueryOptions): CartSelectedDeliveryOptionsUpdateFunction<TCart> {
   return async (selectedDeliveryOptions, optionalParams) => {
     const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartSelectedDeliveryOptionsUpdate, errors} =
       await options.storefront.mutate<{
-        cartSelectedDeliveryOptionsUpdate: CartQueryData;
+        cartSelectedDeliveryOptionsUpdate: CartQueryData<TCart>;
         errors: StorefrontApiErrors;
       }>(
         CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION(options.cartFragment, {

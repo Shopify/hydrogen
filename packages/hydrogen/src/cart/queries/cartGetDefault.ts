@@ -14,7 +14,7 @@ import {
   shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
-type CartGetProps = {
+export type CartGetProps<TExtraVariables = {}> = {
   /**
    * The cart ID.
    * @default cart.getCartId();
@@ -49,11 +49,11 @@ type CartGetProps = {
    * When provided, consent is encoded into the cart's checkoutUrl via the _cs parameter.
    */
   visitorConsent?: VisitorConsent;
-};
+} & TExtraVariables;
 
-export type CartGetFunction = (
-  cartInput?: CartGetProps,
-) => Promise<CartReturn | null>;
+export type CartGetFunction<TCart = Cart, TExtraVariables = {}> = (
+  cartInput?: CartGetProps<TExtraVariables>,
+) => Promise<CartReturn<TCart> | null>;
 
 type CartGetOptions = CartQueryOptions & {
   /**
@@ -63,13 +63,13 @@ type CartGetOptions = CartQueryOptions & {
 };
 
 /** @publicDocs */
-export function cartGetDefault({
+export function cartGetDefault<TCart = Cart, TExtraVariables = {}>({
   storefront,
   customerAccount,
   getCartId,
   cartFragment,
-}: CartGetOptions): CartGetFunction {
-  return async (cartInput?: CartGetProps) => {
+}: CartGetOptions): CartGetFunction<TCart, TExtraVariables> {
+  return async (cartInput?: CartGetProps<TExtraVariables>) => {
     const cartId = cartInput?.cartId ?? getCartId();
 
     if (!cartId) return null;
@@ -77,7 +77,7 @@ export function cartGetDefault({
     const includeVisitorConsent = shouldIncludeVisitorConsent(cartInput);
     const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([
       customerAccount ? customerAccount.isLoggedIn() : false,
-      storefront.query<{cart: Cart | null}>(
+      storefront.query<{cart: TCart | null}>(
         CART_QUERY(cartFragment, {includeVisitorConsent}),
         {
           variables: {cartId, ...cartInput},
@@ -86,10 +86,16 @@ export function cartGetDefault({
       ),
     ]);
 
-    if (isCustomerLoggedIn && cart?.checkoutUrl) {
+    if (
+      isCustomerLoggedIn &&
+      cart &&
+      typeof cart === 'object' &&
+      'checkoutUrl' in cart &&
+      typeof cart.checkoutUrl === 'string'
+    ) {
       const finalCheckoutUrl = new URL(cart.checkoutUrl);
       finalCheckoutUrl.searchParams.set('logged_in', 'true');
-      cart.checkoutUrl = finalCheckoutUrl.toString();
+      Object.assign(cart, {checkoutUrl: finalCheckoutUrl.toString()});
     }
 
     return cart || errors ? formatAPIResult(cart, errors) : null;

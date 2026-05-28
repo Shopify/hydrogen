@@ -19,21 +19,21 @@ import {
   shouldIncludeVisitorConsent,
 } from './cart-query-helpers';
 
-export type CartLinesUpdateFunction = (
+export type CartLinesUpdateFunction<TCart = CartQueryDataReturn['cart']> = (
   lines: CartLineUpdateInput[],
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
 /** @publicDocs */
-export function cartLinesUpdateDefault(
+export function cartLinesUpdateDefault<TCart = CartQueryDataReturn['cart']>(
   options: CartQueryOptions,
-): CartLinesUpdateFunction {
+): CartLinesUpdateFunction<TCart> {
   return async (lines, optionalParams) => {
     throwIfLinesAreOptimistic('updateLines', lines);
 
     const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartLinesUpdate, errors} = await options.storefront.mutate<{
-      cartLinesUpdate: CartQueryData;
+      cartLinesUpdate: CartQueryData<TCart>;
       errors: StorefrontApiErrors;
     }>(
       CART_LINES_UPDATE_MUTATION(options.cartFragment, {includeVisitorConsent}),

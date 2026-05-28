@@ -235,7 +235,9 @@ export function createHydrogenContext<
     setCartId: cartOptions.setId || cartSetIdDefault(),
     cartQueryFragment: cartOptions.queryFragment,
     cartMutateFragment: cartOptions.mutateFragment,
-    customMethods: cartOptions.customMethods,
+    ...(cartOptions.customMethods && {
+      customMethods: cartOptions.customMethods,
+    }),
     buyerIdentity,
 
     // defaults
