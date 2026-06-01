@@ -25,7 +25,7 @@
     "@types/node": "catalog:",
     "execa": "^8.0.1",
     "tempy": "3.1.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.0"
   },
   "bin": "dist/create-app.js",
   "files": [
