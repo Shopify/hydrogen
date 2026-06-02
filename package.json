@@ -67,7 +67,7 @@
     "react-intersection-observer": "^8.32.0",
     "react-router": "7.14.0",
     "react-router-dom": "7.14.0",
-    "uuid": "^11.1.0"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.8",
