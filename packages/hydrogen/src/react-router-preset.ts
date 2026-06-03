@@ -1,12 +1,12 @@
 import type {Preset} from '@react-router/dev/config';
 
 /**
- * Official Hydrogen Preset for React Router 7.15.x
+ * Official Hydrogen Preset for React Router 7.16.x
  *
  * Provides optimal React Router configuration for Hydrogen applications on Oxygen.
  * Enables validated performance optimizations while ensuring CLI compatibility.
  *
- * React Router 7.15.x Feature Support Matrix for Hydrogen 2025.7.0
+ * React Router 7.16.x Feature Support Matrix for Hydrogen 2025.7.0
  *
  * +----------------------------------+----------+----------------------------------+
  * | Feature                          | Status   | Notes                            |
