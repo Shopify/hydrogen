@@ -57,7 +57,7 @@ export function useOptimisticVariant<
       });
   }, [JSON.stringify(variants)]);
 
-  if (navigation.state === 'loading' && navigation.location !== undefined) {
+  if (navigation.state === 'loading') {
     const queryParams = new URLSearchParams(navigation.location.search);
     let reportedError = false;
 

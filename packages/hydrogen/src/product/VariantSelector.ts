@@ -271,9 +271,7 @@ function useVariantPath(
       // By default we use the destination search params to make selecting a variant
       // instant, but `waitForNavigation` makes the UI wait to update by only using
       // the active browser search params.
-      waitForNavigation ||
-        navigation.state !== 'loading' ||
-        navigation.location === undefined
+      waitForNavigation || navigation.state !== 'loading'
         ? search
         : navigation.location.search,
     );
