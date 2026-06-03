@@ -1,4 +1,4 @@
-import type {Navigation, Location} from 'react-router';
+import {NavigationType, type Navigation, type Location} from 'react-router';
 
 /**
  * Creates a properly typed Navigation object for testing purposes.
@@ -12,6 +12,8 @@ export function createMockNavigation(
     return {
       state: 'idle',
       location: undefined,
+      matches: undefined,
+      historyAction: undefined,
       formMethod: undefined,
       formAction: undefined,
       formEncType: undefined,
@@ -27,13 +29,15 @@ export function createMockNavigation(
     hash: '',
     state: null,
     key: 'default',
-    unstable_mask: undefined,
+    mask: undefined,
   };
 
   if (state === 'loading') {
     return {
       state: 'loading',
       location,
+      matches: [],
+      historyAction: NavigationType.Push,
       formMethod: undefined,
       formAction: undefined,
       formEncType: undefined,
@@ -46,6 +50,8 @@ export function createMockNavigation(
     return {
       state: 'submitting',
       location,
+      matches: [],
+      historyAction: NavigationType.Push,
       formMethod: 'POST',
       formAction: '/',
       formEncType: 'application/x-www-form-urlencoded',
