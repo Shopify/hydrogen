@@ -1,5 +1,18 @@
 # skeleton
 
+## 2026.4.3
+
+### Patch Changes
+
+- Include line item children recursively in cart. ([#3753](https://github.com/Shopify/hydrogen/pull/3753)) by [@martin-pettersson](https://github.com/martin-pettersson)
+
+- Add generic cart result typing to `createCartHandler` so custom cart fragments can use their generated fragment types. ([#3767](https://github.com/Shopify/hydrogen/pull/3767)) by [@andguy95](https://github.com/andguy95)
+
+- Widen React Router peer dependency ranges so Hydrogen packages accept compatible React Router 7.16 patch versions without npm peer dependency conflicts. New Hydrogen projects now default to React Router 7.16.0. ([#3771](https://github.com/Shopify/hydrogen/pull/3771)) by [@fredericoo](https://github.com/fredericoo)
+
+- Updated dependencies [[`3ccc22e0a3407298e835104e29adfb036f261474`](https://github.com/Shopify/hydrogen/commit/3ccc22e0a3407298e835104e29adfb036f261474), [`a810db483c108ac8bbeaac45595b130ed95a2ec7`](https://github.com/Shopify/hydrogen/commit/a810db483c108ac8bbeaac45595b130ed95a2ec7), [`d17057eb4630710743e81b83573973100ec56d23`](https://github.com/Shopify/hydrogen/commit/d17057eb4630710743e81b83573973100ec56d23), [`995190036d99e02ba6fb559b8e3c406c90043599`](https://github.com/Shopify/hydrogen/commit/995190036d99e02ba6fb559b8e3c406c90043599), [`39f2b326e9fddda36b1d12149794bf4ffcc0d4b8`](https://github.com/Shopify/hydrogen/commit/39f2b326e9fddda36b1d12149794bf4ffcc0d4b8)]:
+  - @shopify/hydrogen@2026.4.3
+
 ## 2026.4.2
 
 ### Patch Changes
