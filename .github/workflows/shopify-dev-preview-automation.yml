@@ -21,7 +21,7 @@ concurrency:
 jobs:
   dispatch-docs-sync:
     name: Dispatch docs sync to shop/world
-    runs-on: ubuntu-latest
+    runs-on: shopify-docs-ubuntu-latest
     timeout-minutes: 10
     if: github.repository_owner == 'Shopify'
     steps:
