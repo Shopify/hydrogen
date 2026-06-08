@@ -3,6 +3,127 @@
   "version": "1",
   "releases": [
     {
+      "title": "Cart, redirect, Image, and React Router compatibility fixes",
+      "version": "2026.4.3",
+      "date": "2026-06-08",
+      "hash": "253bb275c48835a2307b13b4c64e42ff1ac22e4a",
+      "commit": "https://github.com/Shopify/hydrogen/pull/3760/commits/253bb275c48835a2307b13b4c64e42ff1ac22e4a",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3760",
+      "dependencies": {
+        "@shopify/hydrogen": "2026.4.3",
+        "react-router": "7.16.0",
+        "react-router-dom": "7.16.0"
+      },
+      "devDependencies": {},
+      "removeDependencies": [
+        "@shopify/hydrogen"
+      ],
+      "features": [
+        {
+          "title": "Add custom cart fragment result types",
+          "info": "createCartHandler now accepts generic cart result typing so custom cart fragments can use their generated fragment types.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3767",
+          "id": "3767"
+        }
+      ],
+      "fixes": [
+        {
+          "title": "Fix cart.get() to prefer the provided cartId",
+          "info": "cart.get() now uses a provided cartId before falling back to getCartId(), avoiding accidental reads from the default cart when an explicit cart is requested.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3664",
+          "id": "3664"
+        },
+        {
+          "title": "Include nested cart line children recursively in new projects",
+          "info": "The skeleton cart fragments now include line item children recursively, so nested add-ons like warranties or bundles are available in cart data by default.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3753",
+          "id": "3753"
+        },
+        {
+          "title": "Fix responsive Image srcset descriptors for small source images",
+          "info": "Fluid Image components now keep width descriptors when source dimensions cap the srcset to three entries, so browsers can honor sizes instead of choosing the smallest image on DPR-1 screens.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3756",
+          "id": "3756"
+        },
+        {
+          "title": "Fix storefrontRedirect for React Router Single Fetch navigations",
+          "info": "storefrontRedirect now detects React Router v7 .data requests, strips the suffix before matching redirects, and returns the correct 204 response for soft navigation redirects.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3762",
+          "id": "3762"
+        },
+        {
+          "title": "Widen React Router peer dependency ranges",
+          "info": "Hydrogen packages now accept compatible React Router 7.16 patch versions without npm peer dependency conflicts. New Hydrogen projects default to React Router 7.16.0.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3771",
+          "id": "3771"
+        }
+      ]
+    },
+    {
+      "title": "Vite 8 support and React Router 7.14 defaults",
+      "version": "2026.4.2",
+      "date": "2026-04-24",
+      "hash": "6fed75f8034933ee1d1a38f66ee32d186a37b074",
+      "commit": "https://github.com/Shopify/hydrogen/pull/3732/commits/6fed75f8034933ee1d1a38f66ee32d186a37b074",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3732",
+      "dependencies": {
+        "@shopify/hydrogen": "2026.4.2",
+        "react-router": "7.14.0",
+        "react-router-dom": "7.14.0"
+      },
+      "devDependencies": {
+        "@shopify/mini-oxygen": "4.1.0",
+        "vite": "^8.0.1"
+      },
+      "removeDependencies": [
+        "@shopify/hydrogen"
+      ],
+      "removeDevDependencies": [
+        "vite-tsconfig-paths"
+      ],
+      "features": [
+        {
+          "title": "Add Vite 8 support",
+          "info": "Hydrogen now supports Vite 7 and Vite 8 while remaining compatible with Vite 5+. Mini Oxygen's dev server uses Vite's Environment API for local SSR, and new Hydrogen projects default to Vite 8.",
+          "steps": [
+            {
+              "title": "Replace vite-tsconfig-paths with Vite's built-in tsconfig path resolution",
+              "info": "Vite 8 supports tsconfig path aliases natively. Remove the vite-tsconfig-paths plugin from vite.config.ts before the dependency is removed from package.json.",
+              "code": "YGBgZGlmZgovLyB2aXRlLmNvbmZpZy50cwogaW1wb3J0IHtkZWZpbmVDb25maWd9IGZyb20gJ3ZpdGUnOwogaW1wb3J0IHtoeWRyb2dlbn0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4vdml0ZSc7CiBpbXBvcnQge294eWdlbn0gZnJvbSAnQHNob3BpZnkvbWluaS1veHlnZW4vdml0ZSc7CiBpbXBvcnQge3JlYWN0Um91dGVyfSBmcm9tICdAcmVhY3Qtcm91dGVyL2Rldi92aXRlJzsKLWltcG9ydCB0c2NvbmZpZ1BhdGhzIGZyb20gJ3ZpdGUtdHNjb25maWctcGF0aHMnOwogCiBleHBvcnQgZGVmYXVsdCBkZWZpbmVDb25maWcoewotICBwbHVnaW5zOiBbaHlkcm9nZW4oKSwgb3h5Z2VuKCksIHJlYWN0Um91dGVyKCksIHRzY29uZmlnUGF0aHMoKV0sCisgIHBsdWdpbnM6IFtoeWRyb2dlbigpLCBveHlnZW4oKSwgcmVhY3RSb3V0ZXIoKV0sCisgIHJlc29sdmU6IHsKKyAgICB0c2NvbmZpZ1BhdGhzOiB0cnVlLAorICB9LAogfSk7CmBgYA=="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3617",
+          "id": "3617"
+        }
+      ],
+      "fixes": [
+        {
+          "title": "Show removed packages during upgrades",
+          "info": "The upgrade confirmation prompt and generated upgrade instructions now show packages that will be removed, making dependency cleanup visible before applying an upgrade.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3630",
+          "id": "3630"
+        },
+        {
+          "title": "Fix the uncommitted-changes deploy warning typo",
+          "info": "The shopify hydrogen deploy flag descriptions and uncommitted-changes warning now use the correct spelling of uncommitted.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3684",
+          "id": "3684"
+        },
+        {
+          "title": "Fix ProductProvider example rendering",
+          "info": "The ProductProvider examples now return option buttons from the map callback and no longer render a stray semicolon as visible text.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3680",
+          "id": "3680"
+        },
+        {
+          "title": "Fix CartProvider example rendering",
+          "info": "The CartProvider examples now include the missing return statement in the App component.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3685",
+          "id": "3685"
+        }
+      ]
+    },
+    {
       "title": "Cart compatibility fixes and @shopify/remix-oxygen deprecation",
       "version": "2026.4.1",
       "date": "2026-04-17",
