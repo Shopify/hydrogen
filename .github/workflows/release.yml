@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: release-${{ github.event_name == 'workflow_dispatch' && 'devpreview' || github.ref_name }}
+  group: release-${{ github.event_name == 'workflow_dispatch' && 'preview' || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -230,23 +230,23 @@ jobs:
           NPM_TOKEN: '' # Empty string forces OIDC authentication
 
   # ============================================
-  # DEV PREVIEW RELEASE (manual dispatch, publishes devpreview branch)
+  # PREVIEW RELEASE (manual dispatch, publishes preview branch)
   # ============================================
-  devpreview-release:
-    name: Dev Preview Release
+  preview-release:
+    name: Preview Release
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'shopify' && github.event_name == 'workflow_dispatch' && (github.ref_name == 'main' || github.ref_name == 'devpreview')
+    if: github.repository_owner == 'shopify' && github.event_name == 'workflow_dispatch' && (github.ref_name == 'main' || github.ref_name == 'preview')
     permissions:
       contents: read
       id-token: write # enable generation of an ID token for publishing
     outputs:
-      DEV_PREVIEW_VERSION: ${{ steps.version.outputs.DEV_PREVIEW_VERSION }}
+      PREVIEW_VERSION: ${{ steps.version.outputs.PREVIEW_VERSION }}
     steps:
-      - name: ⬇️ Checkout devpreview branch
+      - name: ⬇️ Checkout preview branch
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
         with:
-          ref: devpreview
+          ref: preview
           fetch-depth: 0
 
       - name: Setup pnpm
@@ -268,47 +268,47 @@ jobs:
       - name: 🕵️ Check for changes
         id: version
         run: |
-          # get latest commit sha from the checked out devpreview branch
+          # get latest commit sha from the checked out preview branch
           SHA=$(git rev-parse HEAD)
           # get first 7 characters of sha
           SHORT_SHA=${SHA::7}
           TIMESTAMP=$(date -u +%Y%m%d%H%M%S)
-          DEV_PREVIEW_VERSION=0.0.0-devpreview-${SHORT_SHA}-${TIMESTAMP}
+          PREVIEW_VERSION=0.0.0-preview-${SHORT_SHA}-${TIMESTAMP}
           # set output so it can be used in other jobs
-          echo "DEV_PREVIEW_VERSION=${DEV_PREVIEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "PREVIEW_VERSION=${PREVIEW_VERSION}" >> $GITHUB_OUTPUT
 
-      - name: ⤴️ Set devpreview version
-        if: steps.version.outputs.DEV_PREVIEW_VERSION
+      - name: ⤴️ Set preview version
+        if: steps.version.outputs.PREVIEW_VERSION
         run: |
           node <<'EOF'
           const fs = require('fs');
           const packageJsonPath = 'packages/hydrogen/package.json';
           const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-          packageJson.version = process.env.DEV_PREVIEW_VERSION;
+          packageJson.version = process.env.PREVIEW_VERSION;
           fs.writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
           console.log(`Set ${packageJson.name} to ${packageJson.version}`);
           EOF
         env:
-          DEV_PREVIEW_VERSION: ${{ steps.version.outputs.DEV_PREVIEW_VERSION }}
+          PREVIEW_VERSION: ${{ steps.version.outputs.PREVIEW_VERSION }}
 
       - name: ✅ Check
-        if: steps.version.outputs.DEV_PREVIEW_VERSION
+        if: steps.version.outputs.PREVIEW_VERSION
         run: pnpm run check
 
       - name: 🏗 Build
-        if: steps.version.outputs.DEV_PREVIEW_VERSION
+        if: steps.version.outputs.PREVIEW_VERSION
         run: pnpm run build:pkgs
 
       - name: Test OIDC Token
-        if: steps.version.outputs.DEV_PREVIEW_VERSION
+        if: steps.version.outputs.PREVIEW_VERSION
         run: |
           TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm" | jq -r '.value')
           [ -n "$TOKEN" ] && echo "✅ OIDC working" || exit 1
 
       - name: Publish to npm
-        if: steps.version.outputs.DEV_PREVIEW_VERSION
-        run: npm publish packages/hydrogen --tag devpreview --access public --provenance
+        if: steps.version.outputs.PREVIEW_VERSION
+        run: npm publish packages/hydrogen --tag preview --access public --provenance
         env:
           NPM_TOKEN: '' # Empty string forces OIDC authentication
 
