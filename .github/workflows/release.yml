@@ -10,9 +10,10 @@ on:
       # Example: If we are currently on 2025-07, add 2025-01 here to do a back-fix
       # release for the 2025-01 CalVer branch
       - 2025-01
+  workflow_dispatch:
 
 concurrency:
-  group: release-${{ github.ref_name }}
+  group: release-${{ github.event_name == 'workflow_dispatch' && 'preview' || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -27,7 +28,7 @@ jobs:
   release:
     name: Production Release
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'shopify' && github.ref_name == 'main'
+    if: github.repository_owner == 'shopify' && github.event_name == 'push' && github.ref_name == 'main'
     permissions:
       contents: write # enable pushing changes to the origin
       id-token: write # enable generation of an ID token for publishing
@@ -148,6 +149,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.repository_owner == 'shopify' &&
+      github.event_name == 'push' &&
       github.ref_name == 'main' &&
       !startsWith(github.event.head_commit.message, '[ci] release')
     permissions:
@@ -228,12 +230,91 @@ jobs:
           NPM_TOKEN: '' # Empty string forces OIDC authentication
 
   # ============================================
+  # PREVIEW RELEASE (manual dispatch, publishes preview branch)
+  # ============================================
+  preview-release:
+    name: Preview Release
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'shopify' && github.event_name == 'workflow_dispatch' && (github.ref_name == 'main' || github.ref_name == 'preview')
+    permissions:
+      contents: read
+      id-token: write # enable generation of an ID token for publishing
+    outputs:
+      PREVIEW_VERSION: ${{ steps.version.outputs.PREVIEW_VERSION }}
+    steps:
+      - name: ⬇️ Checkout preview branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
+        with:
+          ref: preview
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+          node-version: 24 # Needed for npm@11 for Trusted Publishing
+
+      - name: Install the packages
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔢 Compute preview version
+        id: version
+        run: |
+          # get latest commit sha from the checked out preview branch
+          SHA=$(git rev-parse HEAD)
+          # get first 7 characters of sha
+          SHORT_SHA=${SHA::7}
+          TIMESTAMP=$(date -u +%Y%m%d%H%M%S)
+          PREVIEW_VERSION=0.0.0-preview-${SHORT_SHA}-${TIMESTAMP}
+          # set output so it can be used in other jobs
+          echo "PREVIEW_VERSION=${PREVIEW_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: ⤴️ Set preview version
+        if: steps.version.outputs.PREVIEW_VERSION
+        run: |
+          node <<'EOF'
+          const fs = require('fs');
+          const packageJsonPath = 'packages/hydrogen/package.json';
+          const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+          packageJson.version = process.env.PREVIEW_VERSION;
+          fs.writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
+          console.log(`Set ${packageJson.name} to ${packageJson.version}`);
+          EOF
+          pnpm run version:hydrogen
+        env:
+          PREVIEW_VERSION: ${{ steps.version.outputs.PREVIEW_VERSION }}
+      - name: ✅ Check
+        if: steps.version.outputs.PREVIEW_VERSION
+        run: pnpm run check
+
+      - name: Test OIDC Token
+        if: steps.version.outputs.PREVIEW_VERSION
+        run: |
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm" | jq -r '.value')
+          [ -n "$TOKEN" ] && echo "✅ OIDC working" || exit 1
+
+      - name: Publish to npm
+        if: steps.version.outputs.PREVIEW_VERSION
+        run: npm publish packages/hydrogen --tag preview --access public --provenance
+        env:
+          NPM_TOKEN: '' # Empty string forces OIDC authentication
+
+  # ============================================
   # BACK-FIX RELEASE (push to calver branches)
   # ============================================
   backfix-release:
     name: Back-fix Release
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'shopify' && github.ref_name != 'main'
+    if: github.repository_owner == 'shopify' && github.event_name == 'push' && github.ref_name != 'main'
     permissions:
       contents: write # enable pushing changes to the origin
       id-token: write # enable generation of an ID token for publishing
