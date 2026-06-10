@@ -3,7 +3,7 @@ import {test, expect, setTestStore} from '../../fixtures';
 setTestStore('hydrogenPreviewStorefront');
 
 test.describe('Home Page', () => {
-  test('should display hero image, product grid, and no console errors', async ({
+  test('should display featured collection, product grid, and no console errors', async ({
     page,
   }) => {
     const consoleErrors: string[] = [];
@@ -15,12 +15,7 @@ test.describe('Home Page', () => {
 
     await page.goto('/');
 
-    const heroImage = page
-      .getByRole('link')
-      .filter({
-        has: page.getByRole('heading', {level: 1}),
-      })
-      .getByRole('img');
+    const featuredCollectionHeading = page.getByRole('heading', {level: 1});
 
     const productGridImage = page
       .getByRole('region', {name: 'Recommended Products'})
@@ -28,7 +23,7 @@ test.describe('Home Page', () => {
       .first()
       .getByRole('img');
 
-    await expect(heroImage).toBeVisible();
+    await expect(featuredCollectionHeading).toBeVisible();
     await expect(productGridImage).toBeVisible();
 
     expect(consoleErrors).toHaveLength(0);
