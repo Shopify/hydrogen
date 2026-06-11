@@ -18,16 +18,13 @@ jobs:
       npm_config_registry: https://registry.npmjs.org/
       TURBO_TELEMETRY_DISABLED: "1"
     steps:
-      # actions/checkout@v5
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      # pnpm/action-setup@v4
-      - uses: pnpm/action-setup@d648d501f2806383d16445a1228c559a735d827e
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
         with:
           version: 10.33.0
 
-      # actions/setup-node@v6
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0       
         with:
           node-version-file: package.json
           cache: pnpm
