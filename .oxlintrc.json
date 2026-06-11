@@ -1,0 +1,64 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "import", "unicorn", "react"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "pedantic": "off",
+    "style": "off",
+    "restriction": "off",
+    "nursery": "off"
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/build/**",
+    "**/.next/**",
+    "**/.svelte-kit/**",
+    "**/.nuxt/**",
+    "**/.output/**",
+    "**/.astro/**",
+    "**/.vinxi/**",
+    "**/.react-router/**",
+    "**/node_modules/**",
+    "patches/**",
+    "scripts/**",
+    "**/vendor/**",
+    "**/public/*",
+    "**/static/*",
+    "**/*.d.ts"
+  ],
+  "rules": {
+    "no-unused-vars": "warn",
+    "import/no-cycle": "off",
+    "unicorn/no-null": "off",
+    "react/react-in-jsx-scope": "off",
+    "no-underscore-dangle": "off",
+    "import/no-unassigned-import": "off",
+    "@typescript-eslint/no-non-null-assertion": "error",
+    "unicorn/no-array-reverse": "off"
+  },
+  "overrides": [
+    {
+      "files": ["*.test.ts", "*.test.tsx", "*.spec.ts"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    },
+    {
+      "files": ["*.type-test.ts"],
+      "rules": {
+        "no-unused-expressions": "off"
+      }
+    },
+    {
+      "files": ["examples/hydrogen/**"],
+      "rules": {
+        "no-unused-vars": "off",
+        "no-shadow": "off",
+        "no-useless-escape": "off",
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "unicorn/no-single-promise-in-promise-methods": "off"
+      }
+    }
+  ]
+}

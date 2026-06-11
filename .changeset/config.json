@@ -1,12 +1,11 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@2.2.0/schema.json",
-  "changelog": ["./hydrogen-changelog-config.js", {"repo": "shopify/hydrogen"}],
+  "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
+  "changelog": "@changesets/cli/changelog",
   "commit": false,
   "fixed": [],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["cookbook"],
-  "privatePackages": {"version": true, "tag": true}
+  "ignore": ["@shopify/hydrogen-example-*", "hydrogen"]
 }

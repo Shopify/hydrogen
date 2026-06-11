@@ -1,0 +1,22 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format
+      glob: "*.{js,jsx,ts,tsx,mjs,mts,cjs,cts,json,jsonc,css,yml,yaml}"
+      exclude:
+        - "pnpm-lock.yaml"
+        - "packages/hydrogen/vendor/**"
+        - "examples/*/public/standard-*"
+        - "examples/*/public/*"
+      run: pnpm exec oxfmt --write {staged_files}
+      stage_fixed: true
+
+    - name: lint
+      glob: "*.{js,jsx,ts,tsx,mjs,mts}"
+      exclude:
+        - "*.d.ts"
+        - "scripts/**"
+        - "packages/hydrogen/vendor/**"
+        - "examples/*/public/standard-*"
+        - "examples/*/public/*"
+      run: pnpm exec oxlint {staged_files}

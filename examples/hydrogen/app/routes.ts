@@ -1,0 +1,8 @@
+import { type RouteConfig } from "@react-router/dev/routes";
+import { flatRoutes } from "@react-router/fs-routes";
+
+export default [
+  ...(await flatRoutes()),
+  // Manual route definitions can be added to this array, in addition to or instead of using the `flatRoutes` file-based routing convention.
+  // See https://reactrouter.com/api/framework-conventions/routes.ts#routests
+] satisfies RouteConfig;
