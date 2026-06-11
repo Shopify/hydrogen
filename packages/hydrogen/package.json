@@ -1,125 +1,108 @@
 {
   "name": "@shopify/hydrogen",
-  "publishConfig": {
-    "access": "public",
-    "@shopify:registry": "https://registry.npmjs.org"
-  },
-  "type": "module",
-  "version": "2026.4.3",
+  "version": "0.0.1",
+  "description": "Framework-agnostic Shopify storefront SDK and agent skills.",
   "license": "MIT",
-  "main": "dist/index.cjs",
-  "module": "dist/production/index.js",
-  "types": "dist/production/index.d.ts",
-  "sideEffects": false,
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Shopify/hydrogen.git",
-    "directory": "packages/hydrogen"
-  },
-  "scripts": {
-    "build": "tsup --clean",
-    "dev": "tsup --watch ./src --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "prepack": "pnpm run build",
-    "test:watch": "vitest",
-    "build-docs": "sh ./docs/build-docs.sh && pnpm run format",
-    "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown",
-    "preview-docs": "pnpm --dir ../../docs/preview run dev"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/production/index.d.ts",
-      "module": {
-        "development": "./dist/development/index.js",
-        "default": "./dist/production/index.js"
-      },
-      "require": "./dist/index.cjs",
-      "import": {
-        "development": "./dist/development/index.js",
-        "default": "./dist/production/index.js"
-      },
-      "default": {
-        "development": "./dist/development/index.js",
-        "default": "./dist/production/index.js"
-      }
-    },
-    "./vite": {
-      "types": "./dist/vite/plugin.d.ts",
-      "default": "./dist/vite/plugin.js"
-    },
-    "./oxygen": {
-      "types": "./dist/oxygen/index.d.ts",
-      "default": "./dist/oxygen/index.js"
-    },
-    "./storefront-api-types": "./dist/storefront-api-types.d.ts",
-    "./storefront.schema.json": "./dist/storefront.schema.json",
-    "./customer-account-api-types": "./dist/customer-account-api-types.d.ts",
-    "./customer-account.schema.json": "./dist/customer-account.schema.json",
-    "./react-router-types": {
-      "types": "./dist/react-router.d.ts"
-    },
-    "./react-router-preset": {
-      "types": "./dist/production/react-router-preset.d.ts",
-      "import": {
-        "development": "./dist/development/react-router-preset.js",
-        "default": "./dist/production/react-router-preset.js"
-      },
-      "default": "./dist/production/react-router-preset.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "typesVersions": {
-    "*": {
-      "storefront-api-types": [
-        "./dist/storefront-api-types.d.ts"
-      ],
-      "customer-account-api-types": [
-        "./dist/customer-account-api-types.d.ts"
-      ]
-    }
+  "author": "Shopify",
+  "bin": {
+    "hydrogen": "./dist/cli/index.mjs"
   },
   "files": [
-    "dist"
+    "README.md",
+    "dist",
+    "src/graphql/generated",
+    "skills"
   ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": {
+        "development": "./dist/development.d.mts",
+        "default": "./dist/index.d.mts"
+      },
+      "import": {
+        "development": "./dist/development.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "default": {
+        "development": "./dist/development.mjs",
+        "default": "./dist/index.mjs"
+      }
+    },
+    "./storefront-api-types": "./src/graphql/generated/storefront-api-types.d.ts",
+    "./storefront.schema.json": "./src/graphql/generated/storefront.schema.json",
+    "./skills/*": "./skills/*",
+    "./react": {
+      "types": {
+        "development": "./dist/react/development.d.mts",
+        "default": "./dist/react.d.mts"
+      },
+      "import": {
+        "development": "./dist/react/development.mjs",
+        "default": "./dist/react.mjs"
+      }
+    },
+    "./cdn": {
+      "types": "./dist/cdn/bootstrap.d.mts",
+      "import": "./dist/cdn/bootstrap.mjs"
+    },
+    "./vue": {
+      "types": {
+        "development": "./dist/vue/development.d.mts",
+        "default": "./dist/vue.d.mts"
+      },
+      "import": {
+        "development": "./dist/vue/development.mjs",
+        "default": "./dist/vue.mjs"
+      }
+    }
+  },
+  "publishConfig": {
+    "@shopify:registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch ./src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:types": "vitest --typecheck --run",
+    "codegen": "graphql-codegen --config codegen.ts",
+    "postcodegen": "node scripts/postprocess-tada-env.ts"
+  },
   "dependencies": {
-    "@shopify/hydrogen-react": "workspace:*",
-    "content-security-policy-builder": "^2.2.0",
-    "flame-chart-js": "2.3.1",
-    "isbot": "^5.1.21",
-    "source-map-support": "^0.5.21",
-    "type-fest": "^4.33.0",
-    "use-resize-observer": "^9.1.0",
-    "worktop": "^0.7.3",
-    "@shopify/graphql-client": "1.4.1"
+    "gql.tada": "^1.9.2"
   },
   "devDependencies": {
-    "react-router": "7.16.0",
-    "@react-router/dev": "7.16.0",
-    "@shopify/generate-docs": "catalog:",
-    "@shopify/hydrogen-codegen": "workspace:*",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@types/node": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "@testing-library/react": "^14.0.0",
-    "@types/source-map-support": "^0.5.10",
-    "formdata-polyfill": "^4.0.10",
-    "graphql": "^16.12.0",
-    "happy-dom": "^20.8.9",
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "schema-dts": "^1.1.2",
-    "vitest": "^3.2.4"
+    "@0no-co/graphqlsp": "^1.15.4",
+    "@graphql-codegen/cli": "^7.0.0",
+    "@graphql-codegen/introspection": "^6.0.0",
+    "@graphql-codegen/typescript": "^6.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vue/test-utils": "^2.4.0",
+    "graphql": "^16.13.2",
+    "happy-dom": "^20.9.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "tsdown": "^0.21.10",
+    "typescript": "catalog:",
+    "vitest": "^3.0.0"
   },
   "peerDependencies": {
-    "react-router": "~7.16.0",
-    "@react-router/dev": "~7.16.0",
-    "react": "^18.3.1 || ~19.0.3 || ~19.1.4 || ^19.2.3",
-    "vite": "^5.1.0 || ^6.2.1 || ^7.0.0 || ^8.0.0"
+    "react": "^18.0.0 || ^19.0.0",
+    "vue": "^3.5.0"
   },
   "peerDependenciesMeta": {
-    "vite": {
+    "react": {
+      "optional": true
+    },
+    "vue": {
       "optional": true
     }
   }

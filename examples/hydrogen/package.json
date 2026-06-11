@@ -1,0 +1,48 @@
+{
+  "name": "hydrogen",
+  "version": "2026.4.2",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "build": "shopify hydrogen build --no-lockfile-check",
+    "dev": "shopify hydrogen dev",
+    "preview": "shopify hydrogen preview --build",
+    "typecheck": "react-router typegen && tsc --noEmit",
+    "e2e": "playwright test",
+    "e2e:old-cookies": "playwright test --project=old-cookies",
+    "e2e:new-cookies": "playwright test --project=new-cookies",
+    "e2e:smoke": "playwright test --project=smoke"
+  },
+  "dependencies": {
+    "@shopify/hydrogen": "workspace:*",
+    "@shopify/hydrogen-classic": "npm:@shopify/hydrogen@2026.4.2",
+    "isbot": "^5.1.36",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router": "7.15.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@react-router/dev": "7.15.1",
+    "@react-router/fs-routes": "7.15.1",
+    "@shopify/cli": "3.94.3",
+    "@shopify/mini-oxygen": "4.1.0",
+    "@shopify/oxygen-workers-types": "^4.1.6",
+    "@tailwindcss/vite": "^4.2.2",
+    "@total-typescript/ts-reset": "^0.6.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "msw": "^2.14.3",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.3",
+    "yaml": "^2.8.4"
+  },
+  "browserslist": [
+    "defaults"
+  ],
+  "engines": {
+    "node": "^22 || ^24"
+  }
+}

@@ -1,0 +1,40 @@
+diff --git a/dist/build/utils.js b/dist/build/utils.js
+index 29a2f1eeaec6685b55f5c424bf733e6463b60c6e..7ff24443b53bb47ff1e3894fecea8f587367ab5e 100644
+--- a/dist/build/utils.js
++++ b/dist/build/utils.js
+@@ -577,7 +577,14 @@ async function isPageStatic({ dir, page, distDir, configFileName, httpAgentOptio
+             hasStaticProps: false,
+             hasServerProps: false,
+             isNextImageImported: false,
+-            appConfig: {}
++            // Workaround for upstream bug where the synthetic _global-error route
++            // is treated as static, then crashes during prerender with
++            // "Cannot read properties of null (reading 'useContext')".
++            // See: https://github.com/vercel/next.js/issues/93024
++            // appConfig.revalidate = 0 keeps it out of the static prerender list.
++            appConfig: {
++                revalidate: 0
++            }
+         };
+     }
+     await (0, _createincrementalcache.createIncrementalCache)({
+diff --git a/dist/esm/build/utils.js b/dist/esm/build/utils.js
+index 460344401545235ce568091bc959ef0ef1a319a9..31338ef8c24d88233b77a9d79a816ad97b148252 100644
+--- a/dist/esm/build/utils.js
++++ b/dist/esm/build/utils.js
+@@ -388,7 +388,14 @@ export async function isPageStatic({ dir, page, distDir, configFileName, httpAge
+             hasStaticProps: false,
+             hasServerProps: false,
+             isNextImageImported: false,
+-            appConfig: {}
++            // Workaround for upstream bug where the synthetic _global-error route
++            // is treated as static, then crashes during prerender with
++            // "Cannot read properties of null (reading 'useContext')".
++            // See: https://github.com/vercel/next.js/issues/93024
++            // appConfig.revalidate = 0 keeps it out of the static prerender list.
++            appConfig: {
++                revalidate: 0
++            }
+         };
+     }
+     await createIncrementalCache({

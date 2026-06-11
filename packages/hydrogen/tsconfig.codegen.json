@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "gql.tada/ts-plugin",
+        "schema": "./src/graphql/generated/storefront.schema.graphql",
+        "tadaOutputLocation": "./src/graphql/generated/graphql-env.d.ts"
+      }
+    ]
+  }
+}

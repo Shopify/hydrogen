@@ -1,0 +1,33 @@
+import { defineConfig } from "oxfmt";
+
+export default defineConfig({
+  printWidth: 100,
+  tabWidth: 2,
+  useTabs: false,
+  semi: true,
+  singleQuote: false,
+  trailingComma: "all",
+  sortImports: true,
+  sortTailwindcss: true,
+  sortPackageJson: true,
+  ignorePatterns: [
+    "dist/**",
+    "build/**",
+    ".next/**",
+    "node_modules/**",
+    "**/vendor/**",
+    "**/public/*",
+    "**/static/*",
+    "**/playwright-report/**",
+    "**/.react-router/**",
+    "**/.last-run.json",
+    "pnpm-lock.yaml",
+    "patches/**",
+    "*.md",
+    "*.svg",
+    "*.ico",
+    "*.png",
+    "*.jpg",
+    "*.type-test.ts",
+  ],
+});
