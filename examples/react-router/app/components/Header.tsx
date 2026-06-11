@@ -1,4 +1,3 @@
-import type { HeaderCollection } from "@shared/header";
 import { useEffect, useState } from "react";
 import { Form, Link } from "react-router";
 
@@ -11,7 +10,7 @@ const openCartCommandAttributes = {
   commandfor: CART_DRAWER_ID,
 };
 
-export function Header({ collections }: { collections: HeaderCollection[] }) {
+export function Header() {
   const totalQuantity = useCart((s) => s.data.totalQuantity);
   const [hasHydrated, setHasHydrated] = useState(false);
   const cartLabel =

@@ -117,7 +117,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <CartProvider initialData={loaderData.cart}>
-      <Header collections={loaderData.headerCollections} />
+      <Header />
       <AnalyticsTracker />
       <Outlet />
       <Footer />
