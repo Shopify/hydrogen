@@ -5,11 +5,9 @@ contact_links:
     about: Having issues with Remix? Visit the Remix Docs.
   - name: Get Hydrogen help
     url: https://github.com/Shopify/hydrogen/discussions/new?category=help
-    about:
-      If you can't get something to work the way you expect, open a question in
+    about: If you can't get something to work the way you expect, open a question in
       the Hydrogen discussions.
   - name: Feature Request
     url: https://github.com/Shopify/hydrogen/discussions/new?category=ideas-feature-requests
-    about:
-      We appreciate you taking the time to improve Hydrogen with your ideas, but we
+    about: We appreciate you taking the time to improve Hydrogen with your ideas, but we
       use the Discussions for this instead of the issues tab 🙂.
