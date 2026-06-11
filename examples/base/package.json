@@ -1,0 +1,12 @@
+{
+  "name": "@shopify/hydrogen-example-base",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Canonical static design (HTML + Tailwind, no JS) that framework examples extend.",
+  "scripts": {
+    "dev": "node scripts/dev.js"
+  },
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}

@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Men — Mock.shop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+        --color-paper: #f4f4f2;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        font-family: var(--font-sans);
+      }
+    </style>
+  </head>
+  <body class="bg-white text-black">
+    <header class="border-b border-black/10">
+      <div class="mx-auto grid h-16 max-w-[1480px] grid-cols-3 items-center px-6">
+        <nav class="flex items-center gap-6 text-sm font-semibold">
+          <a href="/collections/men" class="hover:opacity-60">Men</a>
+          <a href="/collections/men" class="hover:opacity-60">Women</a>
+          <a href="/collections/men" class="hover:opacity-60">Unisex</a>
+          <a href="/collections" class="hover:opacity-60">Collections</a>
+          <a href="/blogs/news" class="hover:opacity-60">News</a>
+        </nav>
+        <a href="/" class="justify-self-center text-lg font-black tracking-tight">MOCK.SHOP</a>
+        <div class="flex items-center justify-end gap-5">
+          <button aria-label="Search" class="hover:opacity-60">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+          </button>
+          <a href="/" aria-label="Account" class="hover:opacity-60">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+            </svg>
+          </a>
+          <button type="button" data-open-cart aria-label="Cart" class="relative hover:opacity-60">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 7h14l-1.5 12a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8L5 7Z" />
+              <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+            </svg>
+            <span
+              class="absolute -top-2 -right-2 grid h-5 min-w-5 place-items-center rounded-full bg-black px-1 text-[11px] font-bold text-white"
+              >1</span
+            >
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
+      <header class="max-w-2xl">
+        <h1 class="text-6xl font-black tracking-tight md:text-8xl">Men</h1>
+        <p class="mt-6 text-base leading-relaxed text-black/70 md:text-lg">
+          High-quality men's clothing, expertly designed to marry style with comfort. From elegantly
+          tailored office wear to chic casual pieces perfect for a weekend getaway.
+        </p>
+      </header>
+
+      <section class="mt-16 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
+        <a href="/products/hoodie" class="group block">
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/GreenHoodie01.jpg?v=1739549220"
+              alt="Hoodie"
+              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div class="mt-5">
+            <h3 class="font-semibold">Hoodie</h3>
+            <p class="mt-1 text-sm font-bold">$90.00</p>
+          </div>
+        </a>
+
+        <a href="/products/hoodie" class="group block">
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/GreenTshirt01.jpg?v=1675455410"
+              alt="Men's T-shirt"
+              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div class="mt-5">
+            <h3 class="font-semibold">Men's T-shirt</h3>
+            <p class="mt-1 text-sm font-bold">$40.00</p>
+          </div>
+        </a>
+
+        <a href="/products/hoodie" class="group block">
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/GreenMenscrew01.jpg?v=1675454919"
+              alt="Men's Crewneck"
+              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div class="mt-5">
+            <h3 class="font-semibold">Men's Crewneck</h3>
+            <p class="mt-1 text-sm font-bold">$120.00</p>
+          </div>
+        </a>
+
+        <a href="/products/hoodie" class="group block">
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/GreenSweatpants01.jpg?v=1675455387"
+              alt="Sweatpants"
+              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div class="mt-5">
+            <h3 class="font-semibold">Sweatpants</h3>
+            <p class="mt-1 text-sm font-bold">$35.00</p>
+          </div>
+        </a>
+
+        <a href="/products/hoodie" class="group block">
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/GreenShorts.jpg?v=1675462426"
+              alt="Shorts"
+              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div class="mt-5">
+            <h3 class="font-semibold">Shorts</h3>
+            <p class="mt-1 text-sm font-bold">$45.00</p>
+          </div>
+        </a>
+
+        <a href="/products/hoodie" class="group block">
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/Whiteleathersneakers01.jpg?v=1675447604"
+              alt="High Top Sneakers"
+              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div class="mt-5">
+            <h3 class="font-semibold">High Top Sneakers</h3>
+            <p class="mt-1 text-sm font-bold">$180.00</p>
+          </div>
+        </a>
+
+        <a href="/products/hoodie" class="group block">
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/Differentwhiteleathersneakers01.jpg?v=1675447428"
+              alt="White Leather Sneakers"
+              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div class="mt-5">
+            <h3 class="font-semibold">White Leather Sneakers</h3>
+            <p class="mt-1 text-sm font-bold">$90.00</p>
+          </div>
+        </a>
+
+        <a href="/products/hoodie" class="group block">
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/Greyleathersneakers.jpg?v=1675447462"
+              alt="Gray Leather Sneakers"
+              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div class="mt-5">
+            <h3 class="font-semibold">Gray Leather Sneakers</h3>
+            <p class="mt-1 text-sm font-bold">$1,000.00</p>
+          </div>
+        </a>
+
+        <a href="/products/hoodie" class="group block">
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/Greyrunners.jpg?v=1675447483"
+              alt="Gray Runners"
+              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div class="mt-5">
+            <h3 class="font-semibold">Gray Runners</h3>
+            <p class="mt-1 text-sm font-bold">$30.00</p>
+          </div>
+        </a>
+
+        <a href="/products/hoodie" class="group block">
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/GreenCanvasSneaker01.jpg?v=1675454881"
+              alt="Canvas Sneakers"
+              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div class="mt-5">
+            <h3 class="font-semibold">Canvas Sneakers</h3>
+            <p class="mt-1 text-sm font-bold">$40.00</p>
+          </div>
+        </a>
+      </section>
+    </main>
+
+    <footer>
+      <section class="bg-black text-white">
+        <div class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
+          <div class="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
+            <div>
+              <h2 class="text-3xl font-black tracking-tight md:text-4xl">Stay in the Know</h2>
+              <p class="mt-2 text-white/70">
+                Get exclusive deals and early access to new products.
+              </p>
+            </div>
+            <form class="flex items-center gap-3" action="#" method="post">
+              <label class="sr-only" for="email">Email address</label>
+              <div
+                class="flex w-full items-center rounded-full border border-white/30 px-5 py-3 focus-within:border-white"
+              >
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="Email address"
+                  class="w-full bg-transparent text-sm placeholder:text-white/60 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  aria-label="Subscribe"
+                  class="ml-3 grid h-8 w-8 place-items-center rounded-full hover:bg-white/10"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="m13 5 7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </div>
+          <div
+            class="mt-12 flex flex-col items-start justify-between gap-2 border-t border-white/15 pt-6 text-xs text-white/60 md:flex-row md:items-center"
+          >
+            <p>© 2026 Mock.shop, Powered by Shopify</p>
+            <a href="/" class="hover:text-white">Terms and Policies</a>
+          </div>
+        </div>
+      </section>
+    </footer>
+
+    <script src="/cart.js" defer></script>
+  </body>
+</html>

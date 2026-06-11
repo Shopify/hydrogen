@@ -1,18 +1,25 @@
 {
-  "extends": "../../tsconfig.json",
-  "include": [
-    "src",
-    "dev-module.env.d.ts",
-    "dev-ambient.env.d.ts",
-    "vitest.setup.ts"
-  ],
   "compilerOptions": {
+    "plugins": [
+      {
+        "name": "gql.tada/ts-plugin",
+        "schema": "./src/graphql/generated/storefront.schema.graphql",
+        "trackFieldUsage": false
+      }
+    ],
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+    "declaration": true,
     "noEmit": true,
-    "jsx": "react-jsx",
-    "types": ["node", "vite/client", "vitest/globals"],
-    "paths": {
-      "@shopify/hydrogen": ["./src"],
-      "~/mini-oxygen/*": ["../mini-oxygen/src/*"]
-    }
-  }
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*", "vendor/**/*", "tsdown.config.ts"]
 }

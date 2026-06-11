@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hoodie — Mock.shop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+        --color-paper: #f4f4f2;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        font-family: var(--font-sans);
+      }
+    </style>
+  </head>
+  <body class="bg-white text-black">
+    <header class="border-b border-black/10">
+      <div class="mx-auto grid h-16 max-w-[1480px] grid-cols-3 items-center px-6">
+        <nav class="flex items-center gap-6 text-sm font-semibold">
+          <a href="/collections/men" class="hover:opacity-60">Men</a>
+          <a href="/collections/men" class="hover:opacity-60">Women</a>
+          <a href="/collections/men" class="hover:opacity-60">Unisex</a>
+          <a href="/collections" class="hover:opacity-60">Collections</a>
+          <a href="/blogs/news" class="hover:opacity-60">News</a>
+        </nav>
+        <a href="/" class="justify-self-center text-lg font-black tracking-tight">MOCK.SHOP</a>
+        <div class="flex items-center justify-end gap-5">
+          <button aria-label="Search" class="hover:opacity-60">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+          </button>
+          <a href="/" aria-label="Account" class="hover:opacity-60">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+            </svg>
+          </a>
+          <button type="button" data-open-cart aria-label="Cart" class="relative hover:opacity-60">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 7h14l-1.5 12a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8L5 7Z" />
+              <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+            </svg>
+            <span
+              class="absolute -top-2 -right-2 grid h-5 min-w-5 place-items-center rounded-full bg-black px-1 text-[11px] font-bold text-white"
+              >1</span
+            >
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section
+        class="grid grid-cols-1 gap-12 px-6 py-10 md:grid-cols-[minmax(0,1fr)_420px] md:gap-16 md:px-10 md:py-12"
+      >
+        <div class="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-2">
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/GreenHoodie01.jpg?v=1739549220"
+              alt="Hoodie — front, green"
+              class="h-full w-full object-cover"
+            />
+          </div>
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/GreenHoodie02.jpg?v=1739549220"
+              alt="Hoodie — back, green"
+              class="h-full w-full object-cover"
+            />
+          </div>
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/GreenHoodie03.jpg?v=1739549220"
+              alt="Hoodie — detail, green"
+              class="h-full w-full object-cover"
+            />
+          </div>
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/ClayHoodie01.jpg?v=1739548707"
+              alt="Hoodie — clay"
+              class="h-full w-full object-cover"
+            />
+          </div>
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/OceanHoodie01.jpg?v=1739548678"
+              alt="Hoodie — ocean"
+              class="h-full w-full object-cover"
+            />
+          </div>
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/PurpleHoodie01.jpg?v=1739548486"
+              alt="Hoodie — purple"
+              class="h-full w-full object-cover"
+            />
+          </div>
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/RedHoodie01.jpg?v=1739548873"
+              alt="Hoodie — red"
+              class="h-full w-full object-cover"
+            />
+          </div>
+          <div class="aspect-square overflow-hidden bg-neutral-100">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/1_72ff506b-b5ff-43a0-bc65-9174c99d3d31.png?v=1675117122"
+              alt="Hoodie — flat lay"
+              class="h-full w-full object-cover"
+            />
+          </div>
+        </div>
+
+        <aside class="md:sticky md:top-8 md:self-start">
+          <h1 class="text-4xl font-black tracking-tight">Hoodie</h1>
+          <p class="mt-3 text-lg font-semibold">$90.00</p>
+
+          <hr class="my-8 border-black/10" />
+
+          <div>
+            <p class="text-sm font-semibold">Size</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button
+                class="h-11 min-w-20 rounded-full bg-black px-5 text-sm font-semibold text-white"
+              >
+                Small
+              </button>
+              <button
+                class="h-11 min-w-20 rounded-full border border-black/15 px-5 text-sm font-semibold hover:border-black"
+              >
+                Medium
+              </button>
+              <button
+                class="h-11 min-w-20 rounded-full border border-black/15 px-5 text-sm font-semibold hover:border-black"
+              >
+                Large
+              </button>
+              <button
+                class="h-11 min-w-20 rounded-full border border-black/15 px-5 text-sm font-semibold hover:border-black"
+              >
+                X-Large
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-8">
+            <p class="text-sm font-semibold">
+              Color <span class="font-normal text-black/60">Green</span>
+            </p>
+            <div class="mt-3 flex items-center gap-3">
+              <button
+                aria-label="Green"
+                class="h-7 w-7 rounded-full ring-2 ring-black ring-offset-2"
+                style="background: #7ea993"
+              ></button>
+              <button
+                aria-label="Clay"
+                class="h-7 w-7 rounded-full"
+                style="background: #7d6635"
+              ></button>
+              <button
+                aria-label="Ocean"
+                class="h-7 w-7 rounded-full"
+                style="background: #5b8aa6"
+              ></button>
+              <button
+                aria-label="Purple"
+                class="h-7 w-7 rounded-full"
+                style="background: #5e4a8a"
+              ></button>
+              <button
+                aria-label="Red"
+                class="h-7 w-7 rounded-full"
+                style="background: #a26a72"
+              ></button>
+            </div>
+          </div>
+
+          <div class="mt-8 flex items-center gap-3">
+            <div class="flex h-12 items-center rounded-full border border-black/15">
+              <button
+                aria-label="Decrease quantity"
+                class="grid h-12 w-12 place-items-center text-lg"
+              >
+                –
+              </button>
+              <input
+                type="text"
+                inputmode="numeric"
+                value="1"
+                class="h-12 w-10 bg-transparent text-center text-sm font-semibold focus:outline-none"
+              />
+              <button
+                aria-label="Increase quantity"
+                class="grid h-12 w-12 place-items-center text-lg"
+              >
+                +
+              </button>
+            </div>
+            <button
+              type="button"
+              data-open-cart
+              class="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-semibold text-white hover:opacity-90"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M5 7h14l-1.5 12a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8L5 7Z" />
+                <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+              </svg>
+              Add to cart
+            </button>
+          </div>
+
+          <p class="mt-8 text-sm leading-relaxed text-black/70">
+            This hoodie is the perfect choice for comfort and warmth. Meticulously crafted from 100%
+            cotton, the hoodie features a soft, plush fleece interior and a unisex sizing design.
+            Soft and lightweight, it's sure to be your go-to for chilly days.
+          </p>
+        </aside>
+      </section>
+
+      <section class="border-t border-black/10 px-6 py-16 md:px-10 md:py-20">
+        <h2 class="text-2xl font-black tracking-tight">You may also like</h2>
+        <div class="mt-8 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-4">
+          <a href="/products/hoodie" class="group block">
+            <div class="aspect-square overflow-hidden bg-neutral-100">
+              <img
+                src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/GreenMenscrew01.jpg?v=1675454919"
+                alt="Men's Crewneck"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div class="mt-5">
+              <h3 class="font-semibold">Men's Crewneck</h3>
+              <p class="mt-1 text-sm font-bold">$120.00</p>
+            </div>
+          </a>
+
+          <a href="/products/hoodie" class="group block">
+            <div class="aspect-square overflow-hidden bg-neutral-100">
+              <img
+                src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/GreenSweatpants01.jpg?v=1675455387"
+                alt="Sweatpants"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div class="mt-5">
+              <h3 class="font-semibold">Sweatpants</h3>
+              <p class="mt-1 text-sm font-bold">$35.00</p>
+            </div>
+          </a>
+
+          <a href="/products/hoodie" class="group block">
+            <div class="aspect-square overflow-hidden bg-neutral-100">
+              <img
+                src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/GreenHalfzip01.jpg?v=1675455104"
+                alt="Half Zip"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div class="mt-5">
+              <h3 class="font-semibold">Half Zip</h3>
+              <p class="mt-1 text-sm font-bold">$100.00</p>
+            </div>
+          </a>
+
+          <a href="/products/hoodie" class="group block">
+            <div class="aspect-square overflow-hidden bg-neutral-100">
+              <img
+                src="https://cdn.shopify.com/s/files/1/0688/1755/1382/products/GreenTshirt01.jpg?v=1675455410"
+                alt="Men's T-shirt"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div class="mt-5">
+              <h3 class="font-semibold">Men's T-shirt</h3>
+              <p class="mt-1 text-sm font-bold">$40.00</p>
+            </div>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <section class="bg-black text-white">
+        <div class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
+          <div class="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
+            <div>
+              <h2 class="text-3xl font-black tracking-tight md:text-4xl">Stay in the Know</h2>
+              <p class="mt-2 text-white/70">
+                Get exclusive deals and early access to new products.
+              </p>
+            </div>
+            <form class="flex items-center gap-3" action="#" method="post">
+              <label class="sr-only" for="email">Email address</label>
+              <div
+                class="flex w-full items-center rounded-full border border-white/30 px-5 py-3 focus-within:border-white"
+              >
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="Email address"
+                  class="w-full bg-transparent text-sm placeholder:text-white/60 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  aria-label="Subscribe"
+                  class="ml-3 grid h-8 w-8 place-items-center rounded-full hover:bg-white/10"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="m13 5 7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </div>
+          <div
+            class="mt-12 flex flex-col items-start justify-between gap-2 border-t border-white/15 pt-6 text-xs text-white/60 md:flex-row md:items-center"
+          >
+            <p>© 2026 Mock.shop, Powered by Shopify</p>
+            <a href="/" class="hover:text-white">Terms and Policies</a>
+          </div>
+        </div>
+      </section>
+    </footer>
+
+    <script src="/cart.js" defer></script>
+  </body>
+</html>

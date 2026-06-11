@@ -1,0 +1,85 @@
+import { HEADER_COLLECTIONS_QUERY, normalizeHeaderCollections } from "@shared/header";
+import { A, createAsync, query } from "@solidjs/router";
+import { For } from "solid-js";
+
+import { getRequestStorefrontClient } from "../lib/request-storefront";
+
+const fetchHeaderCollections = query(async () => {
+  "use server";
+  const storefrontClient = getRequestStorefrontClient();
+  const { data } = await storefrontClient.graphql(HEADER_COLLECTIONS_QUERY);
+  return normalizeHeaderCollections(data?.collections?.nodes);
+}, "header-collections");
+
+export function Header() {
+  const collections = createAsync(() => fetchHeaderCollections());
+
+  return (
+    <header class="border-b border-black/10">
+      <div class="mx-auto grid h-16 max-w-[1480px] grid-cols-3 items-center px-6">
+        <nav class="flex items-center gap-6 text-sm font-semibold">
+          <For each={collections() ?? []}>
+            {(collection) => (
+              <A href={`/collections/${collection.handle}`} class="hover:opacity-60">
+                {collection.title}
+              </A>
+            )}
+          </For>
+          <A href="/collections" class="hover:opacity-60">
+            Collections
+          </A>
+          <A href="/blogs/news" class="hover:opacity-60">
+            News
+          </A>
+        </nav>
+        <A href="/" class="justify-self-center text-lg font-black tracking-tight">
+          MOCK.SHOP
+        </A>
+        <div class="flex items-center justify-end gap-5">
+          <button aria-label="Search" class="hover:opacity-60">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+          </button>
+          <A href="/" aria-label="Account" class="hover:opacity-60">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+            </svg>
+          </A>
+          <A href="/" aria-label="Cart" class="relative hover:opacity-60">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 7h14l-1.5 12a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8L5 7Z" />
+              <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+            </svg>
+            <span class="absolute -top-2 -right-2 grid h-5 min-w-5 place-items-center rounded-full bg-black px-1 text-[11px] font-bold text-white">
+              1
+            </span>
+          </A>
+        </div>
+      </div>
+    </header>
+  );
+}

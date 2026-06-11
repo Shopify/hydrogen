@@ -1,0 +1,17 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"],
+  "compilerOptions": {
+    "paths": {
+      "@shared/*": ["../shared/*"]
+    },
+    "plugins": [
+      {
+        "name": "gql.tada/ts-plugin",
+        "schema": "node_modules/@shopify/hydrogen/src/graphql/generated/storefront.schema.graphql",
+        "trackFieldUsage": false
+      }
+    ]
+  }
+}

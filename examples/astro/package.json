@@ -1,0 +1,27 @@
+{
+  "name": "@shopify/hydrogen-example-astro",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "start": "node ./dist/server/entry.mjs",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/node": "^10.0.6",
+    "@shopify/hydrogen": "workspace:*",
+    "astro": "^6.1.10"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@tailwindcss/vite": "^4.2.2",
+    "gql.tada": "^1.9.2",
+    "tailwindcss": "^4.2.2",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}
