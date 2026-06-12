@@ -24,9 +24,9 @@ const SECONDS_PER_MINUTE = 60;
 const MILLISECONDS_PER_SECOND = 1000;
 const EXPECTED_BENCHMARK_RUN_TIMEOUT_IN_MILLISECONDS =
   EXPECTED_BENCHMARK_RUN_TIMEOUT_IN_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
-const EXPECTED_TEMPLATE_PUBLIC_FILES = [
+const EXPECTED_TEMPLATE_PUBLIC_FILES = ["favicon.svg"];
+const REMOVED_TEMPLATE_VENDOR_FILES = [
   "consent-tracking-api.local.js",
-  "favicon.svg",
   "standard-actions-tools.js",
   "standard-actions.js",
   "standard-events.js",
@@ -149,10 +149,17 @@ describe("opencode docker wrapper", () => {
     for (const file of EXPECTED_TEMPLATE_PUBLIC_FILES) {
       assert.ok(existsSync(join(workspacePath, "public", file)), `${file} should be seeded`);
     }
+    for (const file of REMOVED_TEMPLATE_VENDOR_FILES) {
+      assert.equal(
+        existsSync(join(workspacePath, "public", file)),
+        false,
+        `${file} should come from the CDN, not the template`,
+      );
+    }
     const rootSource = readFileSync(join(workspacePath, "app/root.tsx"), "utf8");
-    assert.match(rootSource, /depends on sibling public vendor assets/);
-    assert.match(rootSource, /\/standard-actions\.js/);
-    assert.match(rootSource, /\/standard-actions-tools\.js/);
+    assert.match(rootSource, /https:\/\/cdn\.shopify\.com\/storefront\/standard-actions\.js/);
+    assert.doesNotMatch(rootSource, /src="\/standard-actions\.js"/);
+    assert.doesNotMatch(rootSource, /src="\/standard-actions-tools\.js"/);
     assert.doesNotMatch(
       readFileSync(join(workspacePath, "package.json"), "utf8"),
       /\/Users\/|\/workspace\/|file:\/\//,

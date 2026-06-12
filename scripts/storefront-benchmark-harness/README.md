@@ -35,7 +35,7 @@ The Docker run mounts `/workspace/node_modules` as an anonymous container volume
 The current template seeds:
 
 - A Vite + TypeScript + Tailwind + React Router framework-mode app.
-- React Router example public vendor assets for Standard Actions, Standard Events, consent tracking, and the storefront banner. `app/root.tsx` loads `/standard-actions.js` and `/standard-actions-tools.js` so `window.Shopify.actions` exists before generated Hydrogen code runs.
+- A favicon in `public/`. Shopify runtime assets such as Standard Actions and Standard Events are loaded from the Shopify CDN rather than copied into the template.
 - `AGENTS.md` with benchmark-only agent instructions.
 - `.opencode/skills/benchmark-canary/SKILL.md` to verify skill discovery/loading.
 
