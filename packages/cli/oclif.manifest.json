@@ -1655,6 +1655,17 @@
           "name": "force",
           "allowNo": false,
           "type": "boolean"
+        },
+        "non-interactive": {
+          "aliases": [
+            "yes"
+          ],
+          "char": "y",
+          "description": "Run without any interactive prompts. Requires --version. Auto-accepts the upgrade confirmation and overwrites any existing upgrade instructions file.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_NON_INTERACTIVE",
+          "name": "non-interactive",
+          "allowNo": false,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
