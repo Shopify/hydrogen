@@ -54,6 +54,8 @@ The drawer is a `<dialog>` (or primitive library equivalent) rendered once in th
 
 The full `/cart` page shares the same content components (line items, discounts, note, totals, checkout) but uses a page layout instead of the fixed header/body/footer zones.
 
+The drawer's line item forms must preserve the same progressive-enhancement contract as the `/cart` page: hidden `register("set")`, hidden/read-only `register("lineId", { value: line.id })`, and a real editable quantity input from `register("quantity", { value: line.quantity, interactive: true })`. The exact component structure will vary by framework and app, but the form contract must not.
+
 ---
 
 ## 3. Accessibility
@@ -371,6 +373,7 @@ After building the cart drawer, test:
 - [ ] Focus returns to the cart icon after close
 - [ ] Tab cycles only through elements inside the drawer while open
 - [ ] Screen reader announces "Cart" (or equivalent title) on drawer open
+- [ ] Drawer line item forms use the same `hydrogen-cart-ui` progressive form contract as the `/cart` page
 
 ---
 
@@ -389,6 +392,8 @@ After building the cart drawer, test:
 
 - **React `useCart` selectors must be stable** — don't derive arrays or objects inside a `useCart` selector. Select store references such as `state.errors` or `state.data.lines.nodes` and derive banner messages with `useMemo`, or pass an explicit equality function.
 
+- **Drawer/page form drift** — the drawer can use a different layout, but not a different cart mutation contract. Prefer shared line item form components between the drawer and `/cart` page; otherwise mirror the `hydrogen-cart-ui` line item form invariant exactly.
+
 ---
 
 ## 9. Anti-patterns
@@ -396,3 +401,5 @@ After building the cart drawer, test:
 - **Drawer as a route instead of overlay** — the drawer itself is overlay UI rendered in the root layout, not a routed page. The `/cart` route is the full cart page (the no-JS fallback), not the drawer. Don't render the drawer only on `/cart` — it must be available on every page.
 
 - **`dialog.show()` instead of `showModal()`** — `show()` does not get top-layer rendering, focus containment, `inert` on background, or `::backdrop`. Always use `showModal()`.
+
+- **Text-only drawer quantities** — rendering line quantities as text with only plus/minus controls breaks the progressive set-quantity path. Drawer line items need the same editable quantity input contract as the cart page.

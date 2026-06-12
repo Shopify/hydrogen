@@ -25,6 +25,8 @@ Use these canonical environment variable names in app code and docs:
 
 If the framework requires a prefix to expose client-side variables, preserve the canonical suffix and add only that framework prefix. For example: `NEXT_PUBLIC_STORE_DOMAIN`, `VITE_PUBLIC_STORE_DOMAIN`, or `PUBLIC_STORE_DOMAIN` depending on the framework. Never expose `PRIVATE_STOREFRONT_API_TOKEN` to the client.
 
+Environment variables are still a **server-side input boundary**. Do not read `process.env`, `import.meta.env`, or framework env modules from client components or modules imported by client components. Public-prefixed names mean a value is safe to serialize when needed; they are not permission to read env APIs in browser code. Browser UI should normally call same-origin Hydrogen endpoints/handlers. If a public value is genuinely needed in the browser, pass it from a server route/layout boundary as explicit data.
+
 ---
 
 ## Picking a client type
@@ -33,11 +35,13 @@ If the framework requires a prefix to expose client-side variables, preserve the
 
 | Type | Throttle bucket | Best for |
 |------|-----------------|----------|
-| `"public"` | Per client IP | Browser-side fetches |
+| `"public"` | Per client IP | Browser-side fetches with server-provided public config |
 | `"private"` | Per buyer IP | SSR with buyer isolation (best throughput) |
 | `"private_shared_rate_limit"` | Shared across app | Prerendering, background jobs, webhooks |
 
 ### Public client
+
+This example belongs in a server-only module unless the config values are explicitly passed into browser code by a server boundary.
 
 ```ts
 import { createStorefrontClient } from "@shopify/hydrogen";
@@ -143,6 +147,10 @@ npm install -D gql.tada
 
 The editor must be configured to use the workspace TypeScript version (not the bundled one) — the bundled TS server does not load plugins.
 
+### Headless query validation
+
+Read `references/query-validation.md` when adding or changing `gql()` documents. The editor plugin does not run during `tsc`; add and run `gql.tada check` so invalid Storefront API fields fail in CI instead of surfacing as runtime GraphQL errors.
+
 ---
 
 ## Fetching data
@@ -228,7 +236,8 @@ const client = createStorefrontClient({
 ## Gotchas
 
 - **Private tokens throw in browser** — a `typeof document !== "undefined"` guard fires at construction.
-- **Module-scope safe** — create the client once at module scope and reuse across requests.
+- **Env APIs are server-only** — examples that use `process.env` belong in server-only modules. Browser bundles may leave `process.env` undefined, inline stale build-time values, or accidentally expose config. Pass safe public values through server data when browser code needs them.
+- **Module-scope only for request-independent clients** — static public clients and `private_shared_rate_limit` clients can be module-scoped when their config does not depend on the incoming request. Private per-buyer clients and any client with `requestContext` must be created per request.
 
 ---
 

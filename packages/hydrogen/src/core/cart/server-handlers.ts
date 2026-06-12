@@ -29,7 +29,7 @@ import type { CartData } from "./state";
 export const CART_API_PATH = "/api/cart" as const;
 export const CART_GET_METHOD = "GET" as const;
 export const CART_POST_METHOD = "POST" as const;
-export const cartServerHandlersCartQuery: unique symbol = Symbol("storefront-kit.cartQuery");
+export const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
 export type CartGetData<TCart = CartData> = {
   cart: TCart;

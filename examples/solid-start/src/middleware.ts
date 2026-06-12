@@ -12,7 +12,7 @@ import { createMiddleware } from "@solidjs/start/middleware";
 
 const cartHandlers = createCartServerHandlers();
 
-// Kit-owned and registered routes run pre-routing.
+// Hydrogen-owned and registered routes run pre-routing.
 // Redirects are handled in `routes/[...404].tsx` so the SFAPI URL-redirects
 // lookup only fires when the framework router has no match — same gate the
 // other framework examples use, expressed as a route instead of a hook.

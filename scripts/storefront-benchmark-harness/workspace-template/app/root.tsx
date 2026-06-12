@@ -2,7 +2,7 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 
 import "./app.css";
 
-export const links = () => [{ rel: "icon", href: "data:image/svg+xml,<svg />" }];
+export const links = () => [{ rel: "icon", href: "/favicon.svg" }];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,6 +12,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        {/* Required for Hydrogen cart/product forms: provides window.Shopify.actions and depends on sibling public vendor assets. Do not remove until Standard Actions ships as a package. */}
+        <script src="/standard-actions.js" defer />
+        <script src="/standard-actions-tools.js" defer />
       </head>
       <body>
         {children}

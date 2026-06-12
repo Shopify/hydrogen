@@ -19,6 +19,19 @@ import {
 
 const SUCCESS_STATUS = 0;
 const FAILURE_STATUS = 1;
+const EXPECTED_BENCHMARK_RUN_TIMEOUT_IN_MINUTES = 40;
+const SECONDS_PER_MINUTE = 60;
+const MILLISECONDS_PER_SECOND = 1000;
+const EXPECTED_BENCHMARK_RUN_TIMEOUT_IN_MILLISECONDS =
+  EXPECTED_BENCHMARK_RUN_TIMEOUT_IN_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+const EXPECTED_TEMPLATE_PUBLIC_FILES = [
+  "consent-tracking-api.local.js",
+  "favicon.svg",
+  "standard-actions-tools.js",
+  "standard-actions.js",
+  "standard-events.js",
+  "storefront-banner.local.js",
+];
 
 describe("opencode docker wrapper", () => {
   it("parses wrapper flags and prompt", () => {
@@ -48,6 +61,10 @@ describe("opencode docker wrapper", () => {
     });
 
     assert.equal(observedTimeoutInMilliseconds, BENCHMARK_RUN_TIMEOUT_IN_MILLISECONDS);
+    assert.equal(
+      BENCHMARK_RUN_TIMEOUT_IN_MILLISECONDS,
+      EXPECTED_BENCHMARK_RUN_TIMEOUT_IN_MILLISECONDS,
+    );
   });
 
   it("keeps node_modules inside Docker so host dev installs stay platform-native", () => {
@@ -129,6 +146,13 @@ describe("opencode docker wrapper", () => {
     assert.ok(existsSync(join(workspacePath, "react-router.config.ts")));
     assert.ok(existsSync(join(workspacePath, "app/root.tsx")));
     assert.ok(existsSync(join(workspacePath, "app/routes/home.tsx")));
+    for (const file of EXPECTED_TEMPLATE_PUBLIC_FILES) {
+      assert.ok(existsSync(join(workspacePath, "public", file)), `${file} should be seeded`);
+    }
+    const rootSource = readFileSync(join(workspacePath, "app/root.tsx"), "utf8");
+    assert.match(rootSource, /depends on sibling public vendor assets/);
+    assert.match(rootSource, /\/standard-actions\.js/);
+    assert.match(rootSource, /\/standard-actions-tools\.js/);
     assert.doesNotMatch(
       readFileSync(join(workspacePath, "package.json"), "utf8"),
       /\/Users\/|\/workspace\/|file:\/\//,

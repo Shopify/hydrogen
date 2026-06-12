@@ -108,6 +108,7 @@ Each `CartErrorGroup` contains `{ userErrors: CartUserError[], warnings: CartWar
 ### Form structure
 
 - **Each line item is its own form.** This gives each line its own identity input and its own submit buttons. A single form containing multiple lines creates ambiguity about which line an action targets.
+- **Each line item form must preserve the progressive-enhancement shape.** The rendered structure will vary by framework and design system, but every line item quantity form needs the same Hydrogen contract: `register("set")`, `register("lineId", { value: line.id })`, and a real editable quantity input using `register("quantity", { value: line.quantity, interactive: true })`. Increase, decrease, and remove buttons are additional submit controls, not replacements for the set intent or the quantity input.
 - **Each discount "remove" button is its own form** — separate from the "apply" form. The apply form needs input validation (empty/duplicate prevention); each remove form is a single action.
 
 ### Loading
@@ -128,37 +129,39 @@ Each `CartErrorGroup` contains `{ userErrors: CartUserError[], warnings: CartWar
 4. **Rapid clicks** — Click increase five times quickly. Each click increments the displayed quantity by one. The store aborts intermediate requests. The final server-confirmed state matches the quantity the user sees.
 5. **Failure rollback** — If the server rejects a line update, the quantity reverts to the last confirmed value. An error message appears inline next to the affected line item.
 6. **Line-scoped error** — When the server returns a `userError` scoped to a specific line, the message appears adjacent to that line (not only in a banner). The relevant input is marked `aria-invalid`.
+7. **Progressive quantity set** — The line item form contains a hidden `set` submit control, hidden/read-only `lineId`, and an editable quantity input. Pressing Enter in the quantity input submits a set-quantity action.
+8. **No-JS line update** — If JavaScript fails or hydration has not run, the line item form can still submit an explicit quantity value to the cart action endpoint.
 
 ### Discount codes
 
-7. **Apply discount** — Enter a code and submit. The code appears in the list immediately in its pending visual state. When the server confirms, the pending indicator clears and the "applied" / "not applicable" status updates.
-8. **Duplicate prevention** — Submitting a code that is already present does nothing.
-9. **Empty input prevention** — Submitting with a blank input does nothing.
-10. **Remove discount** — Activate the remove control next to a code. The code disappears optimistically.
-11. **Discount-scoped error** — If the server returns an error for a specific code, the message appears next to that code in the list.
+9. **Apply discount** — Enter a code and submit. The code appears in the list immediately in its pending visual state. When the server confirms, the pending indicator clears and the "applied" / "not applicable" status updates.
+10. **Duplicate prevention** — Submitting a code that is already present does nothing.
+11. **Empty input prevention** — Submitting with a blank input does nothing.
+12. **Remove discount** — Activate the remove control next to a code. The code disappears optimistically.
+13. **Discount-scoped error** — If the server returns an error for a specific code, the message appears next to that code in the list.
 
 ### Order note
 
-12. **Save note** — Edit the text and submit. A pending indicator appears while the mutation is in-flight.
-13. **No-op save** — When the draft matches the stored note, clicking on save does nothing (but can still be clicked).
-14. **Server sync without clobber** — After save completes, the local draft updates to match the server response — but only when `pending.note` is `false`, preserving any typing the user did in the meantime.
+14. **Save note** — Edit the text and submit. A pending indicator appears while the mutation is in-flight.
+15. **No-op save** — When the draft matches the stored note, clicking on save does nothing (but can still be clicked).
+16. **Server sync without clobber** — After save completes, the local draft updates to match the server response — but only when `pending.note` is `false`, preserving any typing the user did in the meantime.
 
 ### Error banner
 
-15. **Network error** — When a mutation fails due to a transport error, a banner appears with the error message and a dismiss control.
-16. **Cart-level error** — Errors not attributable to a line, code, or note appear in the banner.
-17. **Orphaned line error** — If a line no longer exists in `state.data.lines.nodes` but `errors.lines` has an entry for its ID, that error appears in the banner.
-18. **Dismiss and re-trigger** — Dismissing the banner hides it. A subsequent error (with a newer `lastUpdatedAt`) re-shows it.
+17. **Network error** — When a mutation fails due to a transport error, a banner appears with the error message and a dismiss control.
+18. **Cart-level error** — Errors not attributable to a line, code, or note appear in the banner.
+19. **Orphaned line error** — If a line no longer exists in `state.data.lines.nodes` but `errors.lines` has an entry for its ID, that error appears in the banner.
+20. **Dismiss and re-trigger** — Dismissing the banner hides it. A subsequent error (with a newer `lastUpdatedAt`) re-shows it.
 
 ### Totals
 
-19. **Pending totals** — While any line or discount mutation is in-flight, subtotal and total appear in their pending visual state. The amounts shown are the last server-confirmed values — never client-computed.
-20. **Settled totals** — When all pending sets are empty, totals display normally with the latest server values.
+21. **Pending totals** — While any line or discount mutation is in-flight, subtotal and total appear in their pending visual state. The amounts shown are the last server-confirmed values — never client-computed.
+22. **Settled totals** — When all pending sets are empty, totals display normally with the latest server values.
 
 ### Loading
 
-21. **Initial load** — Before the cart is fetched, show skeleton placeholders.
-22. **Empty cart** — After fetch completes with zero lines, show empty state.
+23. **Initial load** — Before the cart is fetched, show skeleton placeholders.
+24. **Empty cart** — After fetch completes with zero lines, show empty state.
 
 ---
 
@@ -168,6 +171,9 @@ Each `CartErrorGroup` contains `{ userErrors: CartUserError[], warnings: CartWar
 - **Hand-rolled framework cart state.** In React and Vue apps, derive `CartProvider`, `useCart`, and `useCartForm` from `createCartComponents<typeof cartHandlers>()`. Do not duplicate cart data in component state or custom reducers.
 - **Disabling controls during pending.** The store's abort-controller pattern makes rapid interactions safe. Disabling controls makes the cart feel sluggish and punishes fast users.
 - **One form for all lines.** Each line needs its own identity — its own form. A shared form creates ambiguous intent when multiple submit buttons exist.
+- **Quantity as text only.** Rendering quantity as a `<span>` with only plus/minus buttons breaks the set-quantity path and the no-JS fallback. Use a real input wired with `register("quantity", { value, interactive: true })`.
+- **Plus/minus-only line forms.** Increase/decrease/remove buttons do not replace `register("set")` and the interactive quantity input. Omitting them breaks the form invariant even if hydrated clicks appear to work.
+- **Drawer-specific line form drift.** The cart drawer may have a different layout from the `/cart` page, but its line item forms must keep the same Hydrogen form contract. Prefer sharing line item form components between the page and drawer.
 - **Banner-only errors.** A line-level error displayed far from the line it refers to is effectively invisible. Show inline first; promote to the banner only when there's no inline target.
 - **Confirmed-looking pending values.** Showing full-opacity values for in-flight data misleads the user into thinking the data is settled. Always visually distinguish unconfirmed state.
 - **Disabling note save.** The save control is never disabled — it remains interactive even when there's nothing to save (draft matches store) or while a save is in-flight. When there's nothing to save, clicking does nothing. During flight, show a pending indicator.

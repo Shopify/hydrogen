@@ -16,7 +16,11 @@ Artifacts are written inside `.storefront-benchmark-workspace/`:
 - `benchmark-opencode-session.json` — `opencode export` session data when a session id is available.
 - `benchmark-opencode-output.json` — harness summary.
 
-By default, OpenCode runs with `--pure --format json --thinking --dangerously-skip-permissions`. The container owns the isolation boundary; OpenCode owns agent behavior.
+While the container runs, the runner writes compact `[opencode] ...` event summaries and `[workspace] ...` file-change summaries to Docker stdout/stderr so you can watch tool calls, high-level actions, and generated-file changes live. The raw JSON event stream is still written to `benchmark-opencode-events.jsonl` for later debugging.
+
+Docker runs have a configured host-side timeout. If a run stops producing live event summaries for several minutes, assume it may be wedged and inspect Docker stats/logs before waiting for the full timeout.
+
+By default, OpenCode runs with `--pure --format json --thinking --dangerously-skip-permissions`. The runner closes stdin for the child process so `opencode run` starts from the prompt argument instead of waiting for interactive input. The container owns the isolation boundary; OpenCode owns agent behavior.
 
 Before every OpenCode run, the host wrapper deletes `.storefront-benchmark-workspace/`, copies `workspace-template/` into it, builds `packages/hydrogen`, and packs the current package into `.storefront-benchmark-workspace/vendor/hydrogen.tgz`. The seeded app declares:
 
@@ -31,6 +35,7 @@ The Docker run mounts `/workspace/node_modules` as an anonymous container volume
 The current template seeds:
 
 - A Vite + TypeScript + Tailwind + React Router framework-mode app.
+- React Router example public vendor assets for Standard Actions, Standard Events, consent tracking, and the storefront banner. `app/root.tsx` loads `/standard-actions.js` and `/standard-actions-tools.js` so `window.Shopify.actions` exists before generated Hydrogen code runs.
 - `AGENTS.md` with benchmark-only agent instructions.
 - `.opencode/skills/benchmark-canary/SKILL.md` to verify skill discovery/loading.
 
@@ -43,7 +48,7 @@ Use a scoped, short-lived `LLM_API_TOKEN` when possible. OpenCode needs direct p
 
 Optional OpenCode environment variables:
 
-- `OPENCODE_MODEL` defaults to `anthropic/claude-sonnet-4-6`.
+- `OPENCODE_MODEL` defaults to `anthropic/claude-opus-4-6`.
 - `OPENCODE_VARIANT` passes through to `opencode run --variant`.
 - `BENCHMARK_DISABLE_THINKING=true` omits `--thinking`.
 - `BENCHMARK_OPENCODE_EVENTS_PATH`, `BENCHMARK_OPENCODE_SESSION_PATH`, and `BENCHMARK_OPENCODE_OUTPUT_PATH` override artifact paths.
