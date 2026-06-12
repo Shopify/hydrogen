@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 12.0.2
+
+### Patch Changes
+
+- Show a clear, actionable error when `vite` cannot be found in your project instead of crashing with an unhandled `Cannot find module 'vite'`. This typically happens when a Hydrogen command is run outside the app directory or before installing dependencies; the CLI now explains how to fix it. ([#3796](https://github.com/Shopify/hydrogen/pull/3796)) by [@lucyxiang](https://github.com/lucyxiang)
+
 ## 12.0.1
 
 ### Patch Changes
