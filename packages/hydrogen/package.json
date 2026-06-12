@@ -110,7 +110,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "schema-dts": "^1.1.2",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.6"
   },
   "peerDependencies": {
     "react-router": "~7.16.0",

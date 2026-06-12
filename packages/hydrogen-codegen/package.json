@@ -43,7 +43,7 @@
     "dts-bundle-generator": "^9.5.1",
     "tinyrainbow": "^1.2.0",
     "type-fest": "^4.33.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.6"
   },
   "dependencies": {
     "@shopify/graphql-codegen": "^0.1.0"
