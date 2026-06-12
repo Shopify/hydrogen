@@ -118,6 +118,7 @@ Pass `{ optionNames: [...] }` to filter to only known option names, avoiding unr
 
 ### Selection and navigation
 
+- **With provider bindings, put URL navigation in the provider `onSelect` callback.** Do not navigate inside each same-product option button. Let `register("optionValue", ...)` call `selectOption`; the provider receives the valid selection result and owns URL sync from there.
 - **ALWAYS use URL-based variant selection in URL-routing apps.** When the buyer selects an option, navigate to the URL representing that selection — replacing the history entry and without resetting scroll position. The URL is the durable source of truth — the data loader reads the selection from the URL, queries the Storefront API, and the response hydrates the store when a reload or revalidation happens.
 - **ALWAYS use the `selectOption` return value for navigation, not a reactive effect on state.** `selectOption` returns the result synchronously. Use the returned `selectedOptions` to construct the next URL immediately. Reacting to derived state (e.g. `selectedOptions` from the store) instead introduces an unnecessary update cycle and risks stale values. Framework bindings may wrap this as an `onSelect` callback — the principle is the same.
 - **Skip data refetch only when the resolved local state is sufficient.** When `selectOption` returns `resolved`, the selected variant is already in the local cache. It is safe to skip revalidation only if the route does not need fresh loader data for other UI. When a complete selection returns `unresolved`, fetch or otherwise resolve the exact variant before treating the selection as complete.
@@ -126,7 +127,57 @@ Pass `{ optionNames: [...] }` to filter to only known option names, avoiding unr
 ### Combined listings
 
 - **ALWAYS check `value.handle` against the current `product.handle`.** If they differ, the option value points to a different product in a combined listing. The UI must navigate to that product (full page navigation or a link component), not call `selectOption`.
+- **Use the framework's client-side link component for cross-product values when one exists.** React Router should use `<Link>`, Nuxt should use `<NuxtLink>`, and similar frameworks should use their idiomatic navigation primitive. Use a raw `<a>` only when that is the app's established routing convention.
 - **Preserve non-option query params on combined-listing links.** When constructing the URL for a combined-listing link, carry forward existing search params (e.g. `?ref=campaign`) and replace only the option params. Two-pass URL construction: delete all option params first, then set the new ones — this prevents stale params when combined-listing products have different option names.
+
+### React Router provider pattern
+
+Use the provider's `onSelect` callback for same-product URL sync:
+
+```tsx
+<ProductProvider
+  product={product}
+  onSelect={(result) => {
+    void navigate(
+      toRouterLocation(
+        variantUrl(product, result.selectedOptions, result.selectedVariant?.product?.handle),
+      ),
+      {
+        replace: true,
+        preventScrollReset: true,
+      },
+    );
+  }}
+>
+  <ProductPurchasePanel product={product} />
+</ProductProvider>
+```
+
+If a route should skip loader revalidation for locally resolved selections, use the framework's supported route-level revalidation API. Do not pass unsupported revalidation flags to `navigate()`.
+
+Same-product option values are buttons that spread the registered handlers directly:
+
+```tsx
+<button
+  type="button"
+  aria-pressed={value.selected}
+  disabled={!value.exists}
+  {...register("optionValue", { optionName: option.name, value: value.name })}
+>
+  {value.name}
+</button>
+```
+
+Cross-product option values are framework links that reuse the same URL helper:
+
+```tsx
+<Link
+  to={toRouterLocation(variantUrl(product, value.selectedOptions, value.handle))}
+  preventScrollReset
+>
+  {value.name}
+</Link>
+```
 
 ### Price display
 
@@ -223,7 +274,9 @@ Pass `{ optionNames: [...] }` to filter to only known option names, avoiding unr
 - **Client-computed prices.** Never compute prices from variant data or option combinations. Always use server-provided `price` / `compareAtPrice` / `priceRange` amounts.
 - **Recreating the store on product prop changes.** Use `hydrate()` instead. Recreating discards the decoded variant cache, the cart subscription, and any user interaction state.
 - **Using reactive effects on state to sync selection to URL.** The `selectOption` return value provides the selection result synchronously. Reacting to `state.selectedOptions` instead introduces an extra update cycle and can fire with stale values.
+- **Navigating inside same-product option buttons.** Do not destructure `onClick` / `onChange` from `register("optionValue", ...)`, call `navigate()`, and then call the registered handler manually. This bypasses the provider `onSelect` contract and can navigate from stale or invalid data.
 - **Calling `selectOption` for combined-listing values.** When `value.handle` differs from the current product's handle, the value belongs to a different product. Use a navigation element (anchor or link component) for full navigation — `selectOption` only understands the current product's matrix.
+- **Using raw anchors when the framework has a client-side link component.** Raw `<a>` tags lose client-router behavior such as scroll preservation, pending navigation state, prefetching, and route transitions. Use the app's established link component unless raw anchors are the framework convention.
 - **Checking only `selectedVariant !== null` for add-to-cart.** This misses two constraints: the variant must be `availableForSale`, and `product.requiresSellingPlan` must not be `true`. Use `canAddToCart()`.
 - **Putting variant selection inside the add-to-cart form.** Variant selection is button/link interactions that update store state. The add-to-cart form submits `merchandiseId` and `quantity` to the cart. Mixing them creates ambiguous form semantics and breaks progressive enhancement.
 - **Ignoring `errors` state after form submission.** Cart user errors, warnings, and network errors are surfaced reactively on the store state. Failing to display these leaves the buyer with no feedback when something goes wrong.

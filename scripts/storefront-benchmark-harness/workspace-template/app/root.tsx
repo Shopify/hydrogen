@@ -2,7 +2,7 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 
 import "./app.css";
 
-export const links = () => [{ rel: "icon", href: "data:image/svg+xml,<svg />" }];
+export const links = () => [{ rel: "icon", href: "/favicon.svg" }];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,6 +12,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script
+          src="https://cdn.shopify.com/storefront/standard-actions.js"
+          type="module"
+          crossOrigin="anonymous"
+        />
       </head>
       <body>
         {children}

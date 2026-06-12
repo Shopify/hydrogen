@@ -10,7 +10,7 @@ Hydrogen ships two framework-neutral request interceptors — `handleShopifyRout
 Request
   │
   ▼
-handleShopifyRoutes() ──▶ Response   (kit-owned and registered URLs)
+handleShopifyRoutes() ──▶ Response   (Hydrogen-owned and registered URLs)
   │
   │ null
   ▼
@@ -383,7 +383,7 @@ Decision order when wiring an unfamiliar framework:
 - **Next 16 rename: `middleware.ts` → `proxy.ts`.** Older docs and tutorials may still reference `middleware.ts`. On Next 16+, use `proxy.ts`.
 - **`force-dynamic` in Next's `not-found.tsx`.** Without `export const dynamic = "force-dynamic"`, Next prerenders the not-found page at build time, which crashes on `headers()` and `redirect()` calls.
 - **React Router 7's `future.v8_middleware: true`.** The middleware API is stable but still gated behind this flag in framework mode. Without it, the middleware export is silently ignored — no error, just a no-op.
-- **React Router 7 catch-all route.** Without `route("*", ...)`, RR throws "No routes matched location" before middleware fires. Middleware never sees `/admin`, redirect candidates, or kit-owned proxy URLs.
+- **React Router 7 catch-all route.** Without `route("*", ...)`, RR throws "No routes matched location" before middleware fires. Middleware never sees `/admin`, redirect candidates, or Hydrogen-owned proxy URLs.
 - **Status-code preservation.** `handleShopifyRedirects` returns `301`. Several frameworks' `redirect()` helpers default to `302` or `307`. If `301` specifically matters (SEO permanence, edge caching), either return the `Response` directly from a route handler that bypasses the framework's redirect helper, or use a framework-specific permanent-redirect API.
 - **Per-handler functions are not exported.** `handleAdminRedirect`, `handleUrlRedirects`, and `handleQueryParamRedirect` are bundled inside `handleShopifyRedirects`. If you need only some of them at a different point in the lifecycle, you cannot currently express that — the whole chain runs together.
 - **Solid Start `onBeforeResponse` does not work for redirects.** It fires before SSR (always status `200`) and returning a `Response` after streaming starts crashes. Use the catch-all route shape.
@@ -393,7 +393,7 @@ Decision order when wiring an unfamiliar framework:
 
 After wiring, hit these URLs against your dev server (and again against your production build) to confirm each path works:
 
-1. **Kit-owned route fires** — `curl -X POST http://localhost:<port>/api/unstable/graphql.json -H "content-type: application/json" -d '{"query":"{shop{name}}"}'` should return JSON, not a 404. If you get a 404, `handleShopifyRoutes` is not running pre-routing.
+1. **Hydrogen-owned route fires** — `curl -X POST http://localhost:<port>/api/unstable/graphql.json -H "content-type: application/json" -d '{"query":"{shop{name}}"}'` should return JSON, not a 404. If you get a 404, `handleShopifyRoutes` is not running pre-routing.
 2. **Cart handler fires** — `curl -i http://localhost:<port>/api/cart` should return JSON, not a 404. If you get a 404, `createCartServerHandlers()` was not passed through `handlers`.
 3. **Admin redirect fires** — `curl -i http://localhost:<port>/admin` should return a `3xx` with `Location` pointing at `/admin` on the configured Storefront client URL. If you get a 200 or 404, `handleShopifyRedirects` is not running.
 4. **Unmatched URL falls through** — `curl -i http://localhost:<port>/this-does-not-exist` should return `404` with your framework's not-found page. This proves `handleShopifyRedirects` ran, returned `null`, and fell through to the framework's 404 path correctly.

@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
-import { spawnSync, type SpawnSyncReturns } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { spawn, spawnSync } from "node:child_process";
+import { createWriteStream } from "node:fs";
+import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
+import { dirname, isAbsolute, join, relative } from "node:path";
+import { finished } from "node:stream/promises";
 
-const DEFAULT_MODEL = "anthropic/claude-sonnet-4-6";
+const DEFAULT_MODEL = "anthropic/claude-opus-4-6";
 const DEFAULT_OUTPUT_PATH = "benchmark-opencode-events.jsonl";
 const DEFAULT_SESSION_OUTPUT_PATH = "benchmark-opencode-session.json";
 const DEFAULT_SUMMARY_OUTPUT_PATH = "benchmark-opencode-output.json";
@@ -18,11 +20,29 @@ const KIBIBYTE_IN_BYTES = 1024;
 const MEBIBYTE_IN_BYTES = KIBIBYTE_IN_BYTES * KIBIBYTE_IN_BYTES;
 const OPENCODE_MAX_BUFFER_IN_MEBIBYTES = 50;
 const OPENCODE_MAX_BUFFER_IN_BYTES = OPENCODE_MAX_BUFFER_IN_MEBIBYTES * MEBIBYTE_IN_BYTES;
+const MAX_CAPTURED_STDERR_CHARACTERS = MEBIBYTE_IN_BYTES;
 const LLM_API_TOKEN_ENV_VAR = "LLM_API_TOKEN";
 const LLM_API_BASE_URL_ENV_VAR = "LLM_API_BASE_URL";
 const HTTPS_PROTOCOL = "https:";
+const DEFAULT_WORKSPACE_PATH = "/workspace";
+const DEFAULT_WORKSPACE_WATCH_INTERVAL_IN_MILLISECONDS = 2000;
+const MAX_LIVE_EVENT_LABEL_LENGTH = 140;
+const TRUNCATION_MARKER = "...";
+const CURRENT_DIRECTORY = "";
+const PARENT_DIRECTORY = "..";
+const PARENT_DIRECTORY_PREFIX = "../";
+const IGNORED_WORKSPACE_DIRECTORIES = new Set([".git", ".pnpm-store", "node_modules"]);
+const IGNORED_WORKSPACE_PATH_PREFIXES = [".opencode/node_modules", "tmp/workspace-node_modules"];
 
 type RunnerEnv = Record<string, string | undefined>;
+type LiveEventSink = (line: string) => void;
+
+interface OpenCodeProcess {
+  stdout: NodeJS.ReadableStream | null;
+  stderr: NodeJS.ReadableStream | null;
+  on(event: "close", listener: (code: number | null) => void): unknown;
+  on(event: "error", listener: (error: Error) => void): unknown;
+}
 
 interface OpenCodeRunnerConfig {
   token: string;
@@ -57,7 +77,28 @@ interface OpenCodeEventSummary {
   malformedEventCount: number;
 }
 
-type SpawnFn = typeof spawnSync;
+interface OpenCodeEventTracker {
+  pendingLine: string;
+  summary: OpenCodeEventSummary;
+}
+
+interface OpenCodeCommandResult {
+  status: number | null;
+  eventSummary: OpenCodeEventSummary;
+  stderr: string;
+}
+
+type SpawnFn = (
+  command: string,
+  args: string[],
+  options: Record<string, unknown>,
+) => OpenCodeProcess;
+type ExportResult = { status?: number | null; stdout?: string | Buffer; stderr?: string | Buffer };
+type ExportSpawnFn = (
+  command: string,
+  args: string[],
+  options: Record<string, unknown>,
+) => ExportResult;
 
 export function readOpenCodeRunnerConfig({
   env,
@@ -109,7 +150,10 @@ export function buildOpenCodeConfig(config: OpenCodeRunnerConfig) {
   };
 }
 
-export function buildOpenCodeRunArgs(config: OpenCodeRunnerConfig): string[] {
+export function buildOpenCodeRunArgs(
+  config: OpenCodeRunnerConfig,
+  workspacePath = DEFAULT_WORKSPACE_PATH,
+): string[] {
   const args = [
     "run",
     "--pure",
@@ -119,7 +163,7 @@ export function buildOpenCodeRunArgs(config: OpenCodeRunnerConfig): string[] {
     "--model",
     config.model,
     "--dir",
-    "/workspace",
+    workspacePath,
   ];
   if (config.showThinking) args.push("--thinking");
   if (config.variant) args.push("--variant", config.variant);
@@ -130,32 +174,56 @@ export function buildOpenCodeRunArgs(config: OpenCodeRunnerConfig): string[] {
 export async function runOpenCodeBenchmark({
   env,
   args,
-  spawnFn = spawnSync,
+  spawnFn = spawn as SpawnFn,
+  exportSpawnFn = spawnSync as ExportSpawnFn,
+  liveEventSink = writeLiveEventLine,
+  workspacePath = DEFAULT_WORKSPACE_PATH,
+  workspaceWatchIntervalInMilliseconds = DEFAULT_WORKSPACE_WATCH_INTERVAL_IN_MILLISECONDS,
 }: {
   env: RunnerEnv;
   args: string[];
   spawnFn?: SpawnFn;
+  exportSpawnFn?: ExportSpawnFn;
+  liveEventSink?: LiveEventSink;
+  workspacePath?: string;
+  workspaceWatchIntervalInMilliseconds?: number;
 }): Promise<OpenCodeSummary> {
   const startedAt = new Date().toISOString();
   const config = readOpenCodeRunnerConfig({ env, args });
   const childEnv = buildChildEnv(env, config);
 
   await writeOpenCodeConfig(config);
-  const result = spawnFn("opencode", buildOpenCodeRunArgs(config), {
-    cwd: "/workspace",
-    env: childEnv,
-    encoding: "utf8",
-    maxBuffer: OPENCODE_MAX_BUFFER_IN_BYTES,
-  });
-  const stdout = String(result.stdout ?? "");
-  const stderr = String(result.stderr ?? "");
-  await writeText(config.outputPath, stdout);
+  let result: OpenCodeCommandResult;
+  try {
+    result = await runStreamingOpenCodeCommand({
+      spawnFn,
+      outputPath: config.outputPath,
+      liveEventSink,
+      command: "opencode",
+      args: buildOpenCodeRunArgs(config, workspacePath),
+      options: {
+        cwd: workspacePath,
+        env: childEnv,
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+      workspacePath,
+      workspaceWatchIntervalInMilliseconds,
+      ignoredWorkspaceRelativePaths: buildIgnoredWorkspaceRelativePaths({
+        workspacePath,
+        paths: [config.outputPath, config.sessionOutputPath, config.summaryOutputPath],
+      }),
+    });
+  } catch (error) {
+    const summary = buildFailedOpenCodeSummary({ config, startedAt, error });
+    await writeJson(config.summaryOutputPath, summary);
+    throw error instanceof Error ? error : new Error(summary.error);
+  }
 
-  const eventSummary = readOpenCodeEventSummary(stdout);
+  const { eventSummary, stderr } = result;
   const { sessionId } = eventSummary;
   if (sessionId) {
-    const exportResult = spawnFn("opencode", ["export", sessionId], {
-      cwd: "/workspace",
+    const exportResult = exportSpawnFn("opencode", ["export", sessionId], {
+      cwd: workspacePath,
       env: childEnv,
       encoding: "utf8",
       maxBuffer: OPENCODE_MAX_BUFFER_IN_BYTES,
@@ -185,6 +253,343 @@ export async function runOpenCodeBenchmark({
   await writeJson(config.summaryOutputPath, summary);
   if (!ok) throw new Error(summary.error);
   return summary;
+}
+
+function buildFailedOpenCodeSummary({
+  config,
+  startedAt,
+  error,
+}: {
+  config: OpenCodeRunnerConfig;
+  startedAt: string;
+  error: unknown;
+}): OpenCodeSummary {
+  return {
+    ok: false,
+    model: config.model,
+    baseUrl: config.baseUrl,
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    eventsPath: config.outputPath,
+    sessionPath: config.sessionOutputPath,
+    exitCode: null,
+    stderr: "",
+    error: formatErrorMessage(error),
+  };
+}
+
+async function runStreamingOpenCodeCommand({
+  spawnFn,
+  command,
+  args,
+  options,
+  outputPath,
+  liveEventSink,
+  workspacePath,
+  workspaceWatchIntervalInMilliseconds,
+  ignoredWorkspaceRelativePaths,
+}: {
+  spawnFn: SpawnFn;
+  command: string;
+  args: string[];
+  options: Record<string, unknown>;
+  outputPath: string;
+  liveEventSink: LiveEventSink;
+  workspacePath: string;
+  workspaceWatchIntervalInMilliseconds: number;
+  ignoredWorkspaceRelativePaths: Set<string>;
+}): Promise<OpenCodeCommandResult> {
+  await mkdir(dirname(outputPath), { recursive: true });
+  const stopWorkspaceChangeMonitor = await startWorkspaceChangeMonitor({
+    workspacePath,
+    intervalInMilliseconds: workspaceWatchIntervalInMilliseconds,
+    liveEventSink,
+    ignoredWorkspaceRelativePaths,
+  });
+  const output = createWriteStream(outputPath, { encoding: "utf8" });
+  const eventTracker = createOpenCodeEventTracker();
+  let stderr = "";
+  let pendingStdoutLine = "";
+
+  try {
+    const child = spawnFn(command, args, options);
+
+    child.stdout?.on("data", (chunk: Buffer | string) => {
+      const text = String(chunk);
+      output.write(text);
+      readOpenCodeEventText(eventTracker, text);
+      pendingStdoutLine = emitLiveEventLines(pendingStdoutLine + text, liveEventSink);
+    });
+
+    child.stderr?.on("data", (chunk: Buffer | string) => {
+      const text = String(chunk);
+      stderr = appendBoundedText(stderr, text, MAX_CAPTURED_STDERR_CHARACTERS);
+      process.stderr.write(text);
+    });
+
+    const status = await new Promise<number | null>((resolve, reject) => {
+      child.on("error", reject);
+      child.on("close", resolve);
+    });
+
+    if (pendingStdoutLine.trim()) emitLiveEventLine(pendingStdoutLine, liveEventSink);
+    return { status, eventSummary: finishOpenCodeEventTracker(eventTracker), stderr };
+  } finally {
+    await stopWorkspaceChangeMonitor();
+    output.end();
+    await finished(output);
+  }
+}
+
+async function startWorkspaceChangeMonitor({
+  workspacePath,
+  intervalInMilliseconds,
+  liveEventSink,
+  ignoredWorkspaceRelativePaths,
+}: {
+  workspacePath: string;
+  intervalInMilliseconds: number;
+  liveEventSink: LiveEventSink;
+  ignoredWorkspaceRelativePaths: Set<string>;
+}): Promise<() => Promise<void>> {
+  try {
+    await stat(workspacePath);
+  } catch {
+    return async () => {};
+  }
+
+  const knownFiles = new Map<string, number>();
+  let scanInFlight = false;
+
+  async function scan({ emit }: { emit: boolean }): Promise<void> {
+    if (scanInFlight) return;
+
+    scanInFlight = true;
+    try {
+      await updateWorkspaceSnapshot({
+        workspacePath,
+        knownFiles,
+        emit,
+        liveEventSink,
+        ignoredWorkspaceRelativePaths,
+      });
+    } catch (error) {
+      if (emit) liveEventSink(`[workspace] watch error: ${formatErrorMessage(error)}`);
+    } finally {
+      scanInFlight = false;
+    }
+  }
+
+  await scan({ emit: false });
+  const interval = setInterval(() => void scan({ emit: true }), intervalInMilliseconds);
+
+  return async () => {
+    clearInterval(interval);
+    await scan({ emit: true });
+  };
+}
+
+async function updateWorkspaceSnapshot({
+  workspacePath,
+  knownFiles,
+  emit,
+  liveEventSink,
+  ignoredWorkspaceRelativePaths,
+}: {
+  workspacePath: string;
+  knownFiles: Map<string, number>;
+  emit: boolean;
+  liveEventSink: LiveEventSink;
+  ignoredWorkspaceRelativePaths: Set<string>;
+}): Promise<void> {
+  const files = await listWorkspaceFiles({ workspacePath, ignoredWorkspaceRelativePaths });
+  const seen = new Set<string>();
+
+  for (const file of files) {
+    seen.add(file.relativePath);
+    const previousModifiedAtInMilliseconds = knownFiles.get(file.relativePath);
+    knownFiles.set(file.relativePath, file.modifiedAtInMilliseconds);
+    if (emit) emitWorkspaceFileChange({ file, previousModifiedAtInMilliseconds, liveEventSink });
+  }
+
+  if (emit) emitDeletedWorkspaceFiles({ seen, knownFiles, liveEventSink });
+}
+
+function emitWorkspaceFileChange({
+  file,
+  previousModifiedAtInMilliseconds,
+  liveEventSink,
+}: {
+  file: { relativePath: string; modifiedAtInMilliseconds: number };
+  previousModifiedAtInMilliseconds: number | undefined;
+  liveEventSink: LiveEventSink;
+}): void {
+  if (previousModifiedAtInMilliseconds === undefined) {
+    liveEventSink(`[workspace] added: ${file.relativePath}`);
+    return;
+  }
+
+  if (previousModifiedAtInMilliseconds !== file.modifiedAtInMilliseconds) {
+    liveEventSink(`[workspace] changed: ${file.relativePath}`);
+  }
+}
+
+function emitDeletedWorkspaceFiles({
+  seen,
+  knownFiles,
+  liveEventSink,
+}: {
+  seen: Set<string>;
+  knownFiles: Map<string, number>;
+  liveEventSink: LiveEventSink;
+}): void {
+  for (const previousPath of knownFiles.keys()) {
+    if (seen.has(previousPath)) continue;
+    knownFiles.delete(previousPath);
+    liveEventSink(`[workspace] deleted: ${previousPath}`);
+  }
+}
+
+async function listWorkspaceFiles({
+  workspacePath,
+  ignoredWorkspaceRelativePaths,
+  currentPath = workspacePath,
+}: {
+  workspacePath: string;
+  ignoredWorkspaceRelativePaths: Set<string>;
+  currentPath?: string;
+}): Promise<Array<{ relativePath: string; modifiedAtInMilliseconds: number }>> {
+  const entries = await readdir(currentPath, { withFileTypes: true });
+  const files: Array<{ relativePath: string; modifiedAtInMilliseconds: number }> = [];
+
+  for (const entry of entries) {
+    const absolutePath = join(currentPath, entry.name);
+    const relativePath = toWorkspaceRelativePath(workspacePath, absolutePath);
+    if (ignoredWorkspaceRelativePaths.has(relativePath)) continue;
+
+    if (entry.isDirectory()) {
+      if (!shouldIgnoreWorkspaceDirectory(entry.name, relativePath)) {
+        files.push(
+          ...(await listWorkspaceFiles({
+            workspacePath,
+            ignoredWorkspaceRelativePaths,
+            currentPath: absolutePath,
+          })),
+        );
+      }
+      continue;
+    }
+
+    if (entry.isFile()) files.push(await readWorkspaceFileEntry(relativePath, absolutePath));
+  }
+
+  return files;
+}
+
+async function readWorkspaceFileEntry(
+  relativePath: string,
+  absolutePath: string,
+): Promise<{ relativePath: string; modifiedAtInMilliseconds: number }> {
+  const fileStat = await stat(absolutePath);
+  return { relativePath, modifiedAtInMilliseconds: fileStat.mtimeMs };
+}
+
+function shouldIgnoreWorkspaceDirectory(directoryName: string, relativePath: string): boolean {
+  if (IGNORED_WORKSPACE_DIRECTORIES.has(directoryName)) return true;
+  return IGNORED_WORKSPACE_PATH_PREFIXES.some(
+    (prefix) => relativePath === prefix || relativePath.startsWith(`${prefix}/`),
+  );
+}
+
+function toWorkspaceRelativePath(workspacePath: string, absolutePath: string): string {
+  return relative(workspacePath, absolutePath).split("\\").join("/");
+}
+
+function buildIgnoredWorkspaceRelativePaths({
+  workspacePath,
+  paths,
+}: {
+  workspacePath: string;
+  paths: string[];
+}): Set<string> {
+  const ignoredPaths = new Set<string>();
+
+  for (const path of paths) {
+    const absolutePath = isAbsolute(path) ? path : join(workspacePath, path);
+    const relativePath = toWorkspaceRelativePath(workspacePath, absolutePath);
+    if (isWorkspaceChildPath(relativePath)) ignoredPaths.add(relativePath);
+  }
+
+  return ignoredPaths;
+}
+
+function isWorkspaceChildPath(relativePath: string): boolean {
+  if (relativePath === CURRENT_DIRECTORY) return false;
+  if (relativePath === PARENT_DIRECTORY) return false;
+  return !relativePath.startsWith(PARENT_DIRECTORY_PREFIX);
+}
+
+function appendBoundedText(text: string, nextText: string, maxCharacters: number): string {
+  const combinedText = text + nextText;
+  if (combinedText.length <= maxCharacters) return combinedText;
+  const visibleTextLength = maxCharacters - TRUNCATION_MARKER.length;
+  return `${TRUNCATION_MARKER}${combinedText.slice(-visibleTextLength)}`;
+}
+
+function emitLiveEventLines(text: string, liveEventSink: LiveEventSink): string {
+  const lines = text.split("\n");
+  const pendingLine = lines.pop() ?? "";
+  for (const line of lines) emitLiveEventLine(line, liveEventSink);
+  return pendingLine;
+}
+
+function emitLiveEventLine(line: string, liveEventSink: LiveEventSink): void {
+  const formatted = formatOpenCodeLiveEventLine(line);
+  if (formatted) liveEventSink(formatted);
+}
+
+export function formatOpenCodeLiveEventLine(line: string): string | null {
+  if (!line.trim()) return null;
+
+  let event: Record<string, unknown>;
+  try {
+    event = JSON.parse(line) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+
+  const type = readFirstString(event.type, event.event, event.kind);
+  if (!type || /delta/i.test(type)) return null;
+
+  const label = readFirstString(
+    event.name,
+    event.tool,
+    event.toolName,
+    event.command,
+    event.title,
+    event.message,
+  );
+  return `[opencode] ${type}${label ? `: ${truncateLiveEventLabel(label)}` : ""}`;
+}
+
+function readFirstString(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return null;
+}
+
+function truncateLiveEventLabel(label: string): string {
+  if (label.length <= MAX_LIVE_EVENT_LABEL_LENGTH) return label;
+  return `${label.slice(0, MAX_LIVE_EVENT_LABEL_LENGTH - TRUNCATION_MARKER.length)}${TRUNCATION_MARKER}`;
+}
+
+function writeLiveEventLine(line: string): void {
+  process.stderr.write(`${line}\n`);
+}
+
+function formatErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "unknown error";
 }
 
 function readPrompt({ env, args }: { env: RunnerEnv; args: string[] }): string {
@@ -246,22 +651,36 @@ async function writeText(path: string, value: string): Promise<void> {
   await writeFile(path, value);
 }
 
-function readOpenCodeEventSummary(stdout: string): OpenCodeEventSummary {
-  let sessionId: string | undefined;
-  let malformedEventCount = NO_MALFORMED_EVENTS;
+function createOpenCodeEventTracker(): OpenCodeEventTracker {
+  return {
+    pendingLine: "",
+    summary: { malformedEventCount: NO_MALFORMED_EVENTS },
+  };
+}
 
-  for (const line of stdout.split("\n")) {
-    if (!line.trim()) continue;
-    try {
-      const event = JSON.parse(line) as Record<string, unknown>;
-      const eventSessionId = event.sessionID ?? event.sessionId ?? event.session_id;
-      if (!sessionId && typeof eventSessionId === "string") sessionId = eventSessionId;
-    } catch {
-      malformedEventCount += 1;
-    }
+function readOpenCodeEventText(tracker: OpenCodeEventTracker, text: string): void {
+  const lines = `${tracker.pendingLine}${text}`.split("\n");
+  tracker.pendingLine = lines.pop() ?? "";
+  for (const line of lines) readOpenCodeEventLine(tracker.summary, line);
+}
+
+function finishOpenCodeEventTracker(tracker: OpenCodeEventTracker): OpenCodeEventSummary {
+  if (tracker.pendingLine.trim()) readOpenCodeEventLine(tracker.summary, tracker.pendingLine);
+  tracker.pendingLine = "";
+  return tracker.summary;
+}
+
+function readOpenCodeEventLine(summary: OpenCodeEventSummary, line: string): void {
+  if (!line.trim()) return;
+
+  try {
+    const event = JSON.parse(line) as Record<string, unknown>;
+    const eventSessionId = event.sessionID ?? event.sessionId ?? event.session_id;
+    if (!summary.sessionId && typeof eventSessionId === "string")
+      summary.sessionId = eventSessionId;
+  } catch {
+    summary.malformedEventCount += 1;
   }
-
-  return { sessionId, malformedEventCount };
 }
 
 function summaryWarnings(
