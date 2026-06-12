@@ -4,6 +4,11 @@
   "description": "Framework-agnostic Shopify storefront SDK and agent skills.",
   "license": "MIT",
   "author": "Shopify",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shopify/hydrogen.git",
+    "directory": "packages/hydrogen"
+  },
   "bin": {
     "hydrogen": "./dist/cli/index.mjs"
   },
