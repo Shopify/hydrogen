@@ -308,7 +308,7 @@ jobs:
 
       - name: Publish to npm
         if: steps.version.outputs.PREVIEW_VERSION
-        run: npm publish packages/hydrogen --tag preview --access public --provenance
+        run: npm publish ./packages/hydrogen --tag preview --access public --provenance
         env:
           NPM_TOKEN: '' # Empty string forces OIDC authentication
 
