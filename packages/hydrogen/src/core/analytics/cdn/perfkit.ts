@@ -3,7 +3,7 @@ import { AnalyticsEvent } from "../events";
 import type { StorefrontAnalyticsConfig } from "../types";
 import { parseGid } from "./utils/parse-gid";
 
-const PERF_KIT_URL = "https://cdn.shopify.com/shopifycloud/perf-kit/shopify-perf-kit-spa.min.js";
+const PERF_KIT_URL = "https://cdn.shopify.com/shopifycloud/perf-kit/shopify-perf-kit-3.5.2.min.js";
 
 export function createPerfKitProcessor(getConfig: () => StorefrontAnalyticsConfig) {
   let scriptLoaded = false;
