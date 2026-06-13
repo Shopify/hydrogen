@@ -41,7 +41,7 @@ A _recipe_ is a reproducible sequence of steps meant to be applied to the [skele
 
 Each recipe is located in the [cookbook's recipes folder](/cookbook/recipes/) and is structured with a specific set of conventions. This is how a recipe folder is organized:
 
-- `recipe.yaml`: the JSON file containig the whole recipe definition, in a machine-readable format.
+- `recipe.yaml`: the YAML file containing the whole recipe definition, in a machine-readable format.
 - `ingredients/`: a folder containing _new_ files that the recipe introduces. They will be copied as-is to the skeleton template.
 - `patches/`: a folder containing patches to be applied to existing files in the skeleton template. The file ↔ patch mappings are defined in the `recipe.yaml` file under the `ingredients` key.
 - `README.md`: the human-readable Markdown render of the recipe, based off of the `recipe.yaml` file.
