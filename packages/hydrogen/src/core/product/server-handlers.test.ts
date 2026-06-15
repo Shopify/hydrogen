@@ -79,44 +79,6 @@ describe("createProductServerHandlers", () => {
     });
   });
 
-  it("uses a storefront query method when available", async () => {
-    const product = { id: "gid://shopify/Product/1", title: "Cached Snowboard" };
-    const { fetch, storefrontClient } = createTestStorefrontClient({ data: { product: null } });
-    let queryCall:
-      | {
-          queryText: string;
-          options: { variables: { handle: string; selectedOptions?: typeof selectedOptions } };
-        }
-      | undefined;
-    const query = vi.fn(
-      async (queryText: string, options: NonNullable<typeof queryCall>["options"]) => {
-        queryCall = { queryText, options };
-        return { product };
-      },
-    );
-    const cachedStorefrontClient = { ...storefrontClient, query };
-
-    const result = await productHandlers.get({
-      storefrontClient: cachedStorefrontClient,
-      handle: "snowboard",
-      selectedOptions,
-    });
-
-    expect(fetch).not.toHaveBeenCalled();
-    expect(query).toHaveBeenCalledOnce();
-    expect(queryCall?.queryText).toContain("...ProductFragment");
-    expect(queryCall?.options).toEqual({
-      variables: {
-        handle: "snowboard",
-        selectedOptions,
-      },
-    });
-    expect(result).toEqual({
-      type: "json",
-      data: { product },
-    });
-  });
-
   it("maps GraphQL errors and preserves proxy-safe headers", async () => {
     const headers = new Headers({
       "cache-control": "max-age=60",

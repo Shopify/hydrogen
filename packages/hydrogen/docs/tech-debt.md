@@ -64,6 +64,19 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 
 ---
 
+## Storefront GraphQL client has no first-class caching API
+
+**Status:** Open
+**Added:** 2026-06-15
+
+**What:** `storefrontClient.graphql()` always executes the Storefront API request directly. Framework examples that need caching currently maintain separate wrappers such as the Hydrogen example's `storefront.query()`, so newer handler APIs that depend on `graphql()` cannot share that cache path without ad hoc adapters.
+
+**Why it matters:** Product handlers and other typed server handlers should depend on one clear Storefront client API. Without first-class caching on `graphql()`, handler-based reads can bypass example/framework cache wrappers or each integration has to choose between handler typing and cached query wrappers.
+
+**Done when:** `storefrontClient.graphql()` accepts an explicit cache option/strategy that framework examples can use directly, and handler-based reads can preserve caching without detecting or adapting to framework-specific `query()` wrappers.
+
+---
+
 ## Per-query GraphQL API version override
 
 **Status:** Open — deferred, low priority
@@ -77,6 +90,6 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 
 **Possible approaches:**
 1. A `dangerously_overrideVersion` parameter on `graphql()` — makes the risk explicit in the API name.
-2. Instruct users to create a separate `createStorefrontClient({ config: { apiVersion } })` instance for unstable queries, keeping type boundaries clean.
+2. Instruct users to create a separate `createStorefrontClient({ config: { apiVersion } })` instance for unstable queries, keeping type boundaries clean. Return types of queries for overriden versions should be `unknown`.
 
 **Done when:** We decide on an approach and either implement the escape hatch or document the separate-client workaround.

@@ -25,25 +25,11 @@ export type ProductGetResult<TProduct = ProductInput> = ShopifyRouteJsonResult<
   ProductGetData<TProduct>
 >;
 
-type ProductQueryVariables = {
-  handle: string;
-  selectedOptions?: SelectedOption[];
-};
-
-export type ProductQueryClient = {
-  query: <TProductQuery extends RuntimeProductQueries["product"]>(
-    query: TProductQuery,
-    options: { variables: ProductQueryVariables },
-  ) => Promise<ProductGetData>;
-};
-
 export type ProductGetHandlerContext = {
-  storefrontClient: RequestScopedPrivateStorefrontClient | CachedProductQueryClient;
+  storefrontClient: RequestScopedPrivateStorefrontClient;
   handle: string;
   selectedOptions?: SelectedOption[];
 };
-
-type CachedProductQueryClient = RequestScopedPrivateStorefrontClient & ProductQueryClient;
 
 export type ProductGetHandler<TProduct = ProductInput> = (
   context: ProductGetHandlerContext,
@@ -129,11 +115,6 @@ async function handleGet(
   queries: RuntimeProductQueries,
 ): Promise<ProductGetResult> {
   const variables = { handle, selectedOptions };
-
-  if (hasProductQueryClient(storefrontClient)) {
-    return { type: "json", data: await storefrontClient.query(queries.product, { variables }) };
-  }
-
   const result = await storefrontClient.graphql(queries.product, {
     variables,
   });
@@ -144,12 +125,6 @@ async function handleGet(
   const headers = createProxyResponseHeaders(result.headers);
 
   return { type: "json", data, headers };
-}
-
-function hasProductQueryClient(
-  storefrontClient: ProductGetHandlerContext["storefrontClient"],
-): storefrontClient is CachedProductQueryClient {
-  return "query" in storefrontClient && typeof storefrontClient.query === "function";
 }
 
 function toErrors(errors: GraphQLFormattedError[]): Array<{ message: string }> {

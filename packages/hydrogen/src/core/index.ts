@@ -167,7 +167,6 @@ export type {
   ProductGetHandler,
   ProductGetHandlerContext,
   ProductGetResult,
-  ProductQueryClient,
   ProductQueries,
   ProductQueriesForFragment,
   ProductQueriesForOptions,
