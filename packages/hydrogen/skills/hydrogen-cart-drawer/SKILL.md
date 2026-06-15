@@ -17,7 +17,7 @@ Build an accessible cart drawer that opens from the edge of the viewport and int
 
 Before building the cart drawer, these must be in place:
 
-- **Standard Actions** — load `https://cdn.shopify.com/storefront/standard-actions.js` once in the root document. Use the framework's script primitive when available, such as Next.js `Script` with `strategy="beforeInteractive"`.
+- **Standard Actions** — load `https://cdn.shopify.com/storefront/standard-actions.js` once in the root document as `<script type="module" src="https://cdn.shopify.com/storefront/standard-actions.js" crossorigin="anonymous"></script>`. In JSX/TSX, use `crossOrigin="anonymous"`.
 - **`/cart` route** — the full cart page, used as the no-JS fallback for progressive enhancement
 
 ---
@@ -164,6 +164,8 @@ export function configureOpenCartAction() {
 configureOpenCartAction();
 ```
 
+The module-scope `configureOpenCartAction()` call is intentional. It no-ops during SSR, configures immediately when Standard Actions is already available, and retries once on `DOMContentLoaded` when the runtime loads after this module.
+
 Render the drawer once in the root layout. Use explicit JavaScript open/close helpers for app-owned controls.
 
 ```tsx
@@ -251,6 +253,8 @@ For custom logic, listen to native dialog events instead of duplicating state. U
 ## 6. CSS and animation
 
 Reference CSS for the drawer shell:
+
+In Tailwind apps, keep these dialog shell, `::backdrop`, `@starting-style`, and scroll-lock rules in global CSS or a project `@layer`; use utilities for the drawer's internal content layout.
 
 ```css
 dialog#cart-drawer {

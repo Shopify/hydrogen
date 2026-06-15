@@ -160,4 +160,21 @@ function variantUrl(
 
 Use the local `hydrogen-shop-pay` skill when adding Shop Pay. Use the local `hydrogen-money` skill for prices.
 
-Do not put option controls inside the add-to-cart form. The form contains `merchandiseId` and `quantity`; option controls are buttons/links outside it.
+Do not put option controls inside the add-to-cart form. The form contains `merchandiseId` and `quantity`; option controls are buttons/links outside it. The add-to-cart form uses `formProps` and `register` from `useProductForm()`.
+
+```tsx
+function AddToCart({ product }: { product: ProductData }) {
+  const { options, register, formProps, pending } = useProductForm();
+  const addable = canAddToCart(product, options);
+
+  return (
+    <form {...formProps({ afterSubmit: openCartDrawer })}>
+      <input type="hidden" {...register("merchandiseId", {})} />
+      <input {...register("quantity", { value: 1 })} />
+      <button type="submit" disabled={!addable || pending}>
+        Add to cart
+      </button>
+    </form>
+  );
+}
+```

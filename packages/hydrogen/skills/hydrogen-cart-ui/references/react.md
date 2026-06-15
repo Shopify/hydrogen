@@ -137,7 +137,7 @@ Use this for the navbar cart count, cart line list, totals, pending state, and s
 
 ## Mutating Cart State
 
-Use `useCartForm()` for forms. It returns `formProps()` and `register()` helpers that encode Hydrogen's cart action contract.
+Use `useCartForm()` for existing cart forms: line quantity changes, line removal, discount codes, and order notes. It returns `formProps()` and `register()` helpers that encode Hydrogen's cart action contract.
 
 Line item quantity forms must keep this shape even when the surrounding markup, styling, or component boundaries differ:
 
@@ -179,6 +179,8 @@ Important React form fields:
 - `register("note")` and `register("note-update")` create note forms.
 
 Each line item still gets its own form; the binding removes boilerplate, not the form identity requirement.
+
+For product add-to-cart forms, use `formProps()` and `register()` from `useProductForm()` in the `hydrogen-variant-form` skill. The two helpers share names but encode different form contracts.
 
 If you render the same line items in a cart drawer, share this line item form component with the `/cart` page when possible. If the drawer needs different markup, preserve the same `set` + `lineId` + interactive `quantity` contract.
 

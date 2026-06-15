@@ -42,6 +42,8 @@ Use these canonical environment variable names throughout the app:
 - `PUBLIC_STORE_DOMAIN` for the Shopify store domain.
 - `PUBLIC_STOREFRONT_API_TOKEN` for the public Storefront API token.
 - `PRIVATE_STOREFRONT_API_TOKEN` for the private Storefront API token.
+- `PUBLIC_STOREFRONT_ID` for analytics `hydrogenSubchannelId`; use `"0"` when the app does not have a storefront ID.
+- `PUBLIC_CHECKOUT_DOMAIN` for app-level checkout-domain configuration such as CSP setup. Checkout buttons should use the cart's `checkoutUrl`.
 
 If the framework requires a prefix to expose client-side variables, preserve the canonical suffix and add only the required framework prefix. For example: `NEXT_PUBLIC_STORE_DOMAIN`, `VITE_PUBLIC_STORE_DOMAIN`, or `PUBLIC_STORE_DOMAIN` depending on the framework. Never expose `PRIVATE_STOREFRONT_API_TOKEN` to the client.
 
@@ -88,7 +90,17 @@ Use the local `hydrogen-cart-ui` skill to create the cart route at the framework
 
 ## Install Standard Actions Runtime
 
-Load `https://cdn.shopify.com/storefront/standard-actions.js` once in the root document before using cart drawer Standard Actions or hydrated cart integrations. Use the framework's script primitive when it has one, such as Next.js `Script` with `strategy="beforeInteractive"`; otherwise render a module script in the root document head.
+Load `https://cdn.shopify.com/storefront/standard-actions.js` once in the root document before using cart drawer Standard Actions or hydrated cart integrations. Render it as a module script so its internal relative module imports resolve from the CDN URL:
+
+```html
+<script
+  type="module"
+  src="https://cdn.shopify.com/storefront/standard-actions.js"
+  crossorigin="anonymous"
+></script>
+```
+
+In JSX/TSX, use `crossOrigin="anonymous"`. If a framework script component cannot preserve `type="module"` for this URL, use a native `<script type="module">` in the root document head.
 
 ## Add The Cart Drawer
 

@@ -4,7 +4,7 @@ Next splits Hydrogen routing across `proxy.ts` and `app/not-found.tsx`.
 
 ## `proxy.ts`
 
-`proxy.ts` can short-circuit before routing, so put `handleShopifyRoutes` there. It cannot inspect the routed response, so forward the original URL to not-found UI.
+`proxy.ts` can short-circuit before routing, so put `handleShopifyRoutes` there. In Next 16+, the file is `proxy.ts` and the exported function is named `proxy`; older Next projects may use `middleware.ts` with an exported `middleware` function. It cannot inspect the routed response, so forward the original URL to not-found UI.
 
 Resolve `buyerIp` from the app's trusted deployment headers before creating the private client. Use the buyer-IP guidance from `hydrogen-storefront-client`.
 
@@ -51,7 +51,7 @@ export const config = {
 };
 ```
 
-Use `proxy.ts` for Next 16+. Older Next projects may still use `middleware.ts`, but do not rename a working project without checking its version and conventions.
+Use `proxy.ts` for Next 16+. Older Next projects may still use `middleware.ts`, but keep the file name and exported function name matched to the installed Next version.
 
 ## `app/not-found.tsx`
 

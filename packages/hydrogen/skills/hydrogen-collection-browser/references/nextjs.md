@@ -54,6 +54,8 @@ export function CollectionBrowser(props: Props) {
 
   return (
     <CollectionProvider
+      // dataSearch is the server-committed search string for the loaded products.
+      // urlSearch is the live browser URL and can be ahead during transitions.
       data={{ handle: props.handle, dataSearch: props.dataSearch }}
       urlSearch={urlSearch}
       onChange={(search) => {
@@ -70,6 +72,26 @@ export function CollectionBrowser(props: Props) {
 ```
 
 `router.refresh()` is important when the client URL changes before the React Server Component payload catches up.
+
+Build the actual `BrowserContent` controls from the React reference patterns: sort option values come from `getSortByValue(...)`, filter checkbox names/values come from parsing `FilterValue.input` and passing that exact parsed filter through `serializeCollectionParams(...)`, and uncontrolled checkbox reset keys belong on the filter subtree when external navigation can clear filters.
+
+```tsx
+function filterValueInputParamEntries(input: string): Array<{ name: string; value: string }> {
+  let filter: ProductFilter;
+  try {
+    filter = JSON.parse(input) as ProductFilter;
+  } catch {
+    return [];
+  }
+
+  return Array.from(
+    serializeCollectionParams({ filters: [filter], sortKey: undefined, reverse: false }),
+    ([name, value]) => ({ name, value }),
+  );
+}
+```
+
+This helper is only an adapter from Storefront API `FilterValue.input` to Hydrogen's serializer. Do not replace it with an app-owned filter mapping table.
 
 ## Search Pages
 

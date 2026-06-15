@@ -22,6 +22,8 @@ Use these canonical environment variable names in app code and docs:
 - `PUBLIC_STORE_DOMAIN` for the Shopify store domain.
 - `PUBLIC_STOREFRONT_API_TOKEN` for the public Storefront API token.
 - `PRIVATE_STOREFRONT_API_TOKEN` for the private Storefront API token.
+- `PUBLIC_STOREFRONT_ID` for analytics `hydrogenSubchannelId`; use `"0"` when the app does not have a storefront ID.
+- `PUBLIC_CHECKOUT_DOMAIN` for app-level checkout-domain configuration such as CSP setup. Checkout links should come from cart data, usually `cart.checkoutUrl`.
 
 If the framework requires a prefix to expose client-side variables, preserve the canonical suffix and add only that framework prefix. For example: `NEXT_PUBLIC_STORE_DOMAIN`, `VITE_PUBLIC_STORE_DOMAIN`, or `PUBLIC_STORE_DOMAIN` depending on the framework. Never expose `PRIVATE_STOREFRONT_API_TOKEN` to the client.
 

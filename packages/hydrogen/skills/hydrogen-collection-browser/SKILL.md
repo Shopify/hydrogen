@@ -50,6 +50,8 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 - Show stale products with a pending visual state while `state.status === "loading"`; do not replace the grid with a skeleton.
 - Serialize active filter chips from `serializeCollectionParams(state)` and remove filters with `getFilterRemovalUrl(...)`.
 - Use `isFilterInputActive(state.filters, value.input)` to mark checked filter inputs.
+- Treat each Storefront API `FilterValue.input` JSON string as the authoritative filter identity. To render one checkbox, parse that JSON into a `ProductFilter`, wrap it as `{ filters: [filter], sortKey: undefined, reverse: false }`, and pass it to `serializeCollectionParams(...)` for the field name/value. Do not derive filter shapes or param names from filter IDs, labels, or types.
+- Build sort option values with `getSortByValue(...)`; it emits the Liquid-compatible `sort_by` strings that `parseCollectionParams()` understands.
 - Treat availability and other single-choice filters as mutually exclusive when the Storefront filter input serializes to the same param name.
 
 ## Search Rules
@@ -64,6 +66,8 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 
 - Do not use router query objects when filter param names contain dots, unless the framework preserves dotted keys literally.
 - Do not compute filter URLs manually when Hydrogen helpers can serialize/remove filters.
+- Do not write a custom mapping table from `ProductFilter` shapes to URL params. `serializeCollectionParams(...)` already maps supported shapes such as `available`, `productType`, `productVendor`, `tag`, `variantOption`, product metafields, variant metafields, and price into Liquid-compatible params.
+- Do not synthesize Storefront API `ProductFilter` objects from display metadata. `value.input` already contains the supported filter shape.
 - Do not store products in the collection store; products come from the framework data response.
 - Do not clear non-filter params such as `q`, campaign params, or variant params unless the route explicitly owns them.
 

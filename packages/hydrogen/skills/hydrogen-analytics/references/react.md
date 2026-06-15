@@ -57,6 +57,55 @@ Add `"use client"` only when this component lives in a Next.js App Router client
 
 For real route tracking, include the framework location in the effect dependency. In React Router, read `useLocation()` and key the effect by `location.pathname + location.search`. In Next App Router, read `usePathname()` and `useSearchParams()` in a client component wrapped in `Suspense`, then key the effect by both values. Do not leave the root tracker keyed only by `shop`, or client-side navigations will miss page views.
 
+```tsx
+// app/layout.tsx
+import { Suspense } from "react";
+import { AnalyticsTracker } from "./components/AnalyticsTracker";
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const shop = await getAnalyticsShop();
+
+  return (
+    <html lang="en">
+      <body>
+        <Suspense fallback={null}>
+          <AnalyticsTracker shop={shop} />
+        </Suspense>
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+```tsx
+// app/components/AnalyticsTracker.tsx
+"use client";
+
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import type { ShopAnalytics } from "@shopify/hydrogen";
+import { AnalyticsEvent, configureAnalytics, getAnalytics } from "../lib/analytics";
+
+export function AnalyticsTracker({ shop }: { shop: ShopAnalytics }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const pageKey = `${pathname}?${searchParams?.toString() ?? ""}`;
+
+  useEffect(() => {
+    configureAnalytics(shop);
+    const analytics = getAnalytics();
+    if (!analytics) return;
+    analytics.publish(AnalyticsEvent.PAGE_VIEWED, {
+      url: window.location.href,
+      shop,
+    });
+  }, [pageKey, shop]);
+
+  return null;
+}
+```
+
 ## Product Viewed
 
 Publish after product route data is available:

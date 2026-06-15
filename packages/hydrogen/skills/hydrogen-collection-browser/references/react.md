@@ -17,6 +17,27 @@ import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/h
 import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
 ```
 
+Use `getSortByValue(...)` for option values so the `sort_by` query param round-trips through `parseCollectionParams()`:
+
+```ts
+const COLLECTION_SORT_OPTIONS = [
+  { label: "Featured", value: getSortByValue("COLLECTION_DEFAULT", false) },
+  { label: "Best selling", value: getSortByValue("BEST_SELLING", false) },
+  { label: "Alphabetically, A-Z", value: getSortByValue("TITLE", false) },
+  { label: "Alphabetically, Z-A", value: getSortByValue("TITLE", true) },
+  { label: "Price, low to high", value: getSortByValue("PRICE", false) },
+  { label: "Price, high to low", value: getSortByValue("PRICE", true) },
+  { label: "Date, old to new", value: getSortByValue("CREATED", false) },
+  { label: "Date, new to old", value: getSortByValue("CREATED", true) },
+];
+
+const SEARCH_SORT_OPTIONS = [
+  { label: "Relevance", value: getSortByValue("RELEVANCE", false) },
+  { label: "Price, low to high", value: getSortByValue("PRICE", false) },
+  { label: "Price, high to low", value: getSortByValue("PRICE", true) },
+];
+```
+
 ## Loader
 
 In a route loader, parse the current URL and query the Storefront API with the parsed browse state:
@@ -98,7 +119,11 @@ function CollectionPage({ availableFilters, products }: Props) {
         disabled={isLoading}
       />
       <select name="sort_by" defaultValue={currentSortValue(state)} onChange={requestFormSubmit}>
-        {/* options */}
+        {COLLECTION_SORT_OPTIONS.map((option) => (
+          <option key={option.label} value={option.value}>
+            {option.label}
+          </option>
+        ))}
       </select>
       <ProductGrid products={products} pending={isLoading} />
     </form>
@@ -110,14 +135,14 @@ function requestFormSubmit(event: React.ChangeEvent<HTMLInputElement | HTMLSelec
 }
 ```
 
-Use uncontrolled form controls plus a `key={serializeCollectionParams(state).toString()}` when a route needs to remount checkboxes after external navigation.
+Use uncontrolled form controls. When a route needs to remount checkboxes after external navigation, put `key={serializeCollectionParams(state).toString()}` on the filter subtree (for search, include the term in the key). This resets checkbox DOM state without coupling active filter chips to the form remount.
 
 ## Filters
 
-For each Storefront `FilterValue`, parse `value.input` only enough to build form field names and values. Use Hydrogen helpers for active checks:
+For each Storefront `FilterValue`, treat `value.input` as the canonical JSON-encoded `ProductFilter`. Convert it to checkbox params by parsing the JSON, wrapping it in the minimal collection state shape, and calling `serializeCollectionParams(...)`. Use Hydrogen helpers for active checks:
 
 ```tsx
-function filterInputParamEntries(input: string): Array<{ name: string; value: string }> {
+function filterValueInputParamEntries(input: string): Array<{ name: string; value: string }> {
   let filter: ProductFilter;
   try {
     filter = JSON.parse(input) as ProductFilter;
@@ -132,7 +157,7 @@ function filterInputParamEntries(input: string): Array<{ name: string; value: st
 }
 
 function FilterValueInput({ activeFilters, filter, value }: Props) {
-  const entries = filterInputParamEntries(value.input);
+  const entries = filterValueInputParamEntries(value.input);
   if (entries.length !== 1) return null;
 
   const [{ name, value: paramValue }] = entries;
@@ -153,6 +178,8 @@ function FilterValueInput({ activeFilters, filter, value }: Props) {
   );
 }
 ```
+
+`filterValueInputParamEntries` is app glue code, not a Hydrogen export. Its body should stay this thin: `JSON.parse(value.input)` plus `serializeCollectionParams(...)`. Do not replace it with a custom mapping table for availability, product type, vendor, tags, options, metafields, or price. The app should not create its own `ProductFilter` from `filter.id`, `filter.label`, `filter.type`, `value.id`, or display labels; those are UI metadata, not the Storefront API filter contract.
 
 For active chips, use parsed active `ProductFilter` values from collection state:
 
