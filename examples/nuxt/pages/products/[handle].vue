@@ -4,108 +4,11 @@ import { gql } from "@shopify/hydrogen";
 
 import type { ProductCardData } from "~/components/ProductCard.vue";
 import { ProductProvider, type ProductData, type ProductVariantData } from "~/storefront/product";
+import { productHandlers } from "~/storefront/product-handlers";
 
-const PRODUCT_VARIANT_FRAGMENT = gql(`
-  fragment NuxtProductVariantFragment on ProductVariant {
-    id
-    title
-    availableForSale
-    selectedOptions {
-      name
-      value
-    }
-    price {
-      amount
-      currencyCode
-    }
-    compareAtPrice {
-      amount
-      currencyCode
-    }
-    image {
-      id
-      url
-      altText
-      width
-      height
-    }
-    product {
-      title
-      handle
-    }
-    sku
-  }
-`);
-
-const PRODUCT_FRAGMENT = gql(
-  `
-  fragment NuxtProductFragment on Product {
-    id
-    handle
-    title
-    vendor
-    requiresSellingPlan
-    encodedVariantExistence
-    encodedVariantAvailability
-    priceRange {
-      minVariantPrice {
-        amount
-        currencyCode
-      }
-      maxVariantPrice {
-        amount
-        currencyCode
-      }
-    }
-    options {
-      name
-      optionValues {
-        name
-        firstSelectableVariant {
-          ...NuxtProductVariantFragment
-        }
-        swatch {
-          color
-          image {
-            previewImage {
-              url
-            }
-          }
-        }
-      }
-    }
-    selectedOrFirstAvailableVariant(
-      selectedOptions: $selectedOptions
-      ignoreUnknownOptions: true
-      caseInsensitiveMatch: true
-    ) {
-      ...NuxtProductVariantFragment
-    }
-    adjacentVariants(
-      selectedOptions: $selectedOptions
-      ignoreUnknownOptions: true
-      caseInsensitiveMatch: true
-    ) {
-      ...NuxtProductVariantFragment
-    }
-  }
-`,
-  [PRODUCT_VARIANT_FRAGMENT],
-);
-
-const PRODUCT_QUERY = gql(
-  `
-  query NuxtProduct($handle: String!, $selectedOptions: [SelectedOptionInput!]!) {
-    product(handle: $handle) {
-      ...NuxtProductFragment
-      description
-      images(first: 10) {
-        nodes {
-          url
-          altText
-        }
-      }
-    }
+const RELATED_PRODUCTS_QUERY = gql(`
+  query NuxtRelatedProducts($country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
     products(first: 4) {
       nodes {
         handle
@@ -123,17 +26,10 @@ const PRODUCT_QUERY = gql(
       }
     }
   }
-`,
-  [PRODUCT_FRAGMENT],
-);
+`);
 
 type QueryResult = {
-  product:
-    | (ProductData & {
-        description: string;
-        images: { nodes: { url: string; altText: string | null }[] };
-      })
-    | null;
+  product: ProductData | null;
   products: { nodes: ProductCardData[] };
 };
 
@@ -149,13 +45,19 @@ const selectedOptions = computed(() =>
 const { data } = await useAsyncData(
   computed(() => `product-${handle.value}`),
   async () => {
-    const response = await $storefrontClient.graphql(PRODUCT_QUERY, {
-      variables: {
+    const [productResult, relatedResult] = await Promise.all([
+      productHandlers.get({
+        storefrontClient: $storefrontClient,
         handle: handle.value,
         selectedOptions: selectedOptions.value,
-      },
-    });
-    return response.data as QueryResult | null;
+      }),
+      $storefrontClient.graphql(RELATED_PRODUCTS_QUERY),
+    ]);
+
+    return {
+      product: productResult.data.product,
+      products: relatedResult.data?.products ?? { nodes: [] },
+    } satisfies QueryResult;
   },
   { watch: [handle, selectedOptions] },
 );

@@ -8,16 +8,17 @@ import { useState } from "react";
 
 import { openCartDrawer } from "../lib/cart-drawer";
 import { formatMoney } from "../lib/money";
-import type { PRODUCT_QUERY } from "../products/[handle]/page";
+import type { productHandlers } from "../lib/product-handlers";
+import type { RELATED_PRODUCTS_QUERY } from "../products/[handle]/page";
 import { ProductCard } from "./ProductCard";
 import { ProductViewedTracker } from "./ProductViewedTracker";
 
-type ProductQuery = StorefrontApi.ResultOf<typeof PRODUCT_QUERY>;
-type ProductData = NonNullable<ProductQuery["product"]>;
-type RelatedProduct = NonNullable<ProductQuery["products"]>["nodes"][number];
+type ProductData = NonNullable<Awaited<ReturnType<typeof productHandlers.get>>["data"]["product"]>;
+type RelatedProductsQuery = StorefrontApi.ResultOf<typeof RELATED_PRODUCTS_QUERY>;
+type RelatedProduct = NonNullable<RelatedProductsQuery["products"]>["nodes"][number];
 type ReadonlyURLSearchParams = ReturnType<typeof useSearchParams>;
 
-const { ProductProvider, useProductForm } = createProductComponents<ProductData>();
+const { ProductProvider, useProductForm } = createProductComponents<typeof productHandlers>();
 
 const SWATCHES: Record<string, string> = {
   Green: "#7ea993",

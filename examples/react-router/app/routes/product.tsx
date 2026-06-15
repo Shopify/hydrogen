@@ -14,110 +14,13 @@ import {
   type ProductData,
   type ProductVariantData,
 } from "../lib/product";
+import { productHandlers } from "../lib/product-handlers";
 import { storefrontClientContext } from "../lib/storefront";
 import type { Route } from "./+types/product";
 
-const PRODUCT_VARIANT_FRAGMENT = gql(`
-  fragment ProductVariantFragment on ProductVariant {
-    id
-    title
-    availableForSale
-    selectedOptions {
-      name
-      value
-    }
-    price {
-      amount
-      currencyCode
-    }
-    compareAtPrice {
-      amount
-      currencyCode
-    }
-    image {
-      id
-      url
-      altText
-      width
-      height
-    }
-    product {
-      title
-      handle
-    }
-    sku
-  }
-`);
-
-const PRODUCT_FRAGMENT = gql(
-  `
-  fragment ProductFragment on Product {
-    id
-    handle
-    title
-    vendor
-    priceRange {
-      minVariantPrice {
-        amount
-        currencyCode
-      }
-      maxVariantPrice {
-        amount
-        currencyCode
-      }
-    }
-    requiresSellingPlan
-    encodedVariantExistence
-    encodedVariantAvailability
-    options {
-      name
-      optionValues {
-        name
-        firstSelectableVariant {
-          ...ProductVariantFragment
-        }
-        swatch {
-          color
-          image {
-            previewImage {
-              url
-            }
-          }
-        }
-      }
-    }
-    selectedOrFirstAvailableVariant(
-      selectedOptions: $selectedOptions
-      ignoreUnknownOptions: true
-      caseInsensitiveMatch: true
-    ) {
-      ...ProductVariantFragment
-    }
-    adjacentVariants(
-      selectedOptions: $selectedOptions
-      ignoreUnknownOptions: true
-      caseInsensitiveMatch: true
-    ) {
-      ...ProductVariantFragment
-    }
-  }
-`,
-  [PRODUCT_VARIANT_FRAGMENT],
-);
-
-const PRODUCT_QUERY = gql(
-  `
-  query Product($handle: String!, $selectedOptions: [SelectedOptionInput!]!) {
-    product(handle: $handle) {
-      ...ProductFragment
-      description
-      images(first: 10) {
-        nodes {
-          url
-          altText
-        }
-      }
-    }
+const RELATED_PRODUCTS_QUERY = gql(`
+  query RelatedProducts($country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
     products(first: 4) {
       nodes {
         handle
@@ -135,9 +38,7 @@ const PRODUCT_QUERY = gql(
       }
     }
   }
-`,
-  [PRODUCT_FRAGMENT],
-);
+`);
 
 const SWATCHES: Record<string, string> = {
   Green: "#7ea993",
@@ -155,17 +56,20 @@ export function meta({ data }: Route.MetaArgs) {
 
 export async function loader({ context, params, request }: Route.LoaderArgs) {
   const storefrontClient = context.get(storefrontClientContext);
-  const { data } = await storefrontClient.graphql(PRODUCT_QUERY, {
-    variables: {
+  const [productResult, relatedResult] = await Promise.all([
+    productHandlers.get({
+      storefrontClient,
       handle: params.handle,
       selectedOptions: getSelectedProductOptions(request),
-    },
-  });
-  if (!data?.product) {
+    }),
+    storefrontClient.graphql(RELATED_PRODUCTS_QUERY),
+  ]);
+
+  if (!productResult.data.product) {
     throw new Response("Product not found", { status: 404 });
   }
-  const related = data?.products?.nodes ?? [];
-  return { product: data.product, related };
+  const related = relatedResult.data?.products?.nodes ?? [];
+  return { product: productResult.data.product, related };
 }
 
 export default function Product({ loaderData }: Route.ComponentProps) {
