@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2026.4.4
+
+### Patch Changes
+
+- Reduce PerfKit resource timing sampling rate from 100 to 10. ([#3790](https://github.com/Shopify/hydrogen/pull/3790)) by [@andguy95](https://github.com/andguy95)
+
 ## 2026.4.3
 
 ### Patch Changes
