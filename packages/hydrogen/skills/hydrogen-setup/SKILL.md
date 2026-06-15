@@ -51,11 +51,24 @@ Never read `process.env`, `import.meta.env`, or framework environment modules fr
 
 Client code should use same-origin Hydrogen endpoints/handlers for Shopify work. If client UI genuinely needs a public value, pass that value through server-rendered props or loader data. Private tokens and server-only config must never cross that boundary.
 
+## Use Storefront Route Conventions
+
+Preserve the app's existing route shape when present. When there is no established convention, use the same storefront paths as the examples:
+
+- `/` for the home page.
+- `/collections` for collection listing.
+- `/collections/{handle}` for collection detail.
+- `/search` for search results, with the term in `q`.
+- `/products/{handle}` for product detail. Use plural `products`, not `/product`.
+- `/cart` for the full cart page and no-JS cart fallback.
+
+Hydrogen-owned handlers are not page routes: `/api/cart`, `/api/{api-version}/graphql.json`, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/agent/*`, `/graphiql` in development, `/admin` redirects, and Storefront URL redirects belong in the `hydrogen-request-handlers` wiring.
+
 ## Set Up The Storefront API Client
 
 Use the local `hydrogen-storefront-client` skill to wire the Storefront API client or client factory for the detected framework.
 
-When setup adds or changes Storefront API `gql()` documents, use the `hydrogen-storefront-client` query validation reference to add and run a headless GraphQL validation check.
+When setup adds or changes Storefront API `gql()` documents, use the `hydrogen-storefront-client` GraphQL type setup and query validation guidance: install `gql.tada`, add the `gql.tada/ts-plugin` to the app `tsconfig.json`, and add/run `gql.tada check`. Framework typecheck commands do not validate `gql()` documents unless this check is chained in.
 
 ## Install API Route Handlers
 
@@ -92,6 +105,16 @@ Read `references/product-page.md`, then use the local `hydrogen-variant-form` sk
 ## Install Storefront Analytics
 
 Use the local `hydrogen-analytics` skill after the request handlers are in place. Read `references/analytics.md` for the full consent and setup details when needed.
+
+## App-Owned Concerns (Out Of Hydrogen Scope)
+
+`@shopify/hydrogen` does not ship helpers for customer accounts/login, image optimization, or SEO. Do not invent `@shopify/hydrogen` exports for these. Build them with the framework's own primitives and Storefront API data:
+
+- **Customer accounts / login / order history** — use the app's auth and the Customer Account API; Hydrogen covers the storefront, not authenticated account flows.
+- **Image optimization** — use the framework's image component (or `<img srcset>`) with Shopify CDN URL transforms; do not expect a Hydrogen `Image` component.
+- **SEO** — render meta/Open Graph tags and JSON-LD `Product`/`BreadcrumbList` structured data with the framework's head/metadata API using Storefront API data.
+
+Mention these to the user when they are relevant to the storefront being built rather than skipping them silently.
 
 ## Verification
 

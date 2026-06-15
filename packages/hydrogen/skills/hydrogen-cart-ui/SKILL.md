@@ -15,6 +15,14 @@ For React apps, **use the bindings from `@shopify/hydrogen/react` first**. Read 
 
 For Vue or Nuxt apps, **use the bindings from `@shopify/hydrogen/vue` first**. Read `references/vue.md` for provider setup, refs, and `v-bind` form helpers before building Vue cart UI.
 
+For frameworks without a packaged binding (SvelteKit, SolidStart, vanilla JS, etc.), there is no `@shopify/hydrogen/<framework>` export. Use the framework-neutral `createCartStore` and `createCartFormRegister` from `@shopify/hydrogen` directly, subscribe to store changes with the framework's reactivity primitive, and apply every rule in this skill yourself. The React/Vue bindings are thin wrappers over these same core APIs — match their behavior, do not invent a new contract.
+
+In Astro, use the binding for whatever UI framework powers the island: React or Vue islands use the bindings above; Svelte, Solid, or vanilla islands use the core store directly.
+
+## Route Placement
+
+When creating a full cart page, use the app's existing route convention when present; otherwise create `/cart`. This page is separate from Hydrogen's `/api/cart` server handler, which is registered with `createCartServerHandlers()` through `handleShopifyRoutes`.
+
 ## How the store works
 
 The store holds a `CartState` and notifies subscribers on change. Mutations flow through Shopify Standard Actions — the store listens for `shopify:cart:lines-update`, `shopify:cart:discount-update`, and `shopify:cart:note-update` DOM events. Each event carries a `promise` that resolves with the server response.

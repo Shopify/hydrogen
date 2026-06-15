@@ -6,6 +6,8 @@ Next splits Hydrogen routing across `proxy.ts` and `app/not-found.tsx`.
 
 `proxy.ts` can short-circuit before routing, so put `handleShopifyRoutes` there. It cannot inspect the routed response, so forward the original URL to not-found UI.
 
+Resolve `buyerIp` from the app's trusted deployment headers before creating the private client. Use the buyer-IP guidance from `hydrogen-storefront-client`.
+
 ```ts
 import {
   createCartServerHandlers,
@@ -19,12 +21,13 @@ const cartHandlers = createCartServerHandlers();
 
 export async function proxy(request: NextRequest) {
   const requestContext = createStorefrontRequestContext(request);
+  const buyerIp = getBuyerIp(request.headers);
   const storefrontClient = createStorefrontClient({
     type: "private",
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
       privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-      buyerIp: getBuyerIp(request.headers),
+      buyerIp,
       requestContext,
       i18n: { country: "US", language: "EN" },
     },

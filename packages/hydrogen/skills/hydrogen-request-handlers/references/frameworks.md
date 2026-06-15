@@ -6,9 +6,13 @@ This reference covers React Router, SvelteKit, Astro, SolidStart, and unknown se
 
 Use this when one server hook can both return a `Response` before routing and inspect the resolved response status after routing. SvelteKit and Astro fit this shape.
 
+Resolve `buyerIp` with the app's trusted deployment header before creating the private client. Use the buyer-IP guidance from `hydrogen-storefront-client`.
+
 ```ts
 import {
   createCartServerHandlers,
+  createStorefrontClient,
+  createStorefrontRequestContext,
   handleShopifyRedirects,
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
@@ -16,7 +20,19 @@ import {
 const cartHandlers = createCartServerHandlers();
 
 export async function handleRequest(request: Request, next: () => Promise<Response>) {
-  const storefrontClient = createRequestScopedPrivateStorefrontClient(request);
+  const requestContext = createStorefrontRequestContext(request);
+  const buyerIp = getBuyerIp(request.headers);
+  const storefrontClient = createStorefrontClient({
+    type: "private",
+    config: {
+      storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
+      privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
+      buyerIp,
+      requestContext,
+      i18n: { country: "US", language: "EN" },
+    },
+  });
+
   const shopifyRoute = await handleShopifyRoutes({
     request,
     storefrontClient,
@@ -27,15 +43,16 @@ export async function handleRequest(request: Request, next: () => Promise<Respon
   const response = await next();
   if (response.status === 404) {
     const redirect = await handleShopifyRedirects({ request, storefrontClient });
-    if (redirect) return redirect;
+    if (redirect) {
+      storefrontClient.requestContext.applyResponseHeaders(redirect.headers);
+      return redirect;
+    }
   }
 
   storefrontClient.requestContext.applyResponseHeaders(response.headers);
   return response;
 }
 ```
-
-If `response.headers` is immutable, clone the response before applying headers.
 
 ## React Router 7
 
@@ -44,11 +61,31 @@ React Router framework mode needs:
 - `future.v8_middleware: true` in `react-router.config.ts`.
 - A final splat route such as `route("*", "routes/catchall.tsx")`.
 - Root-route middleware that creates the Storefront client, runs Hydrogen routes, stores the client in context, and applies response headers after `next()`.
+- Trusted buyer-IP resolution before `createStorefrontClient`; use the buyer-IP guidance from `hydrogen-storefront-client`.
 
 ```tsx
+import {
+  createStorefrontClient,
+  createStorefrontRequestContext,
+  handleShopifyRedirects,
+  handleShopifyRoutes,
+} from "@shopify/hydrogen";
+
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ context, request }, next) => {
-    const storefrontClient = createRequestStorefrontClient(request);
+    const requestContext = createStorefrontRequestContext(request);
+    const buyerIp = getBuyerIp(request.headers);
+    const storefrontClient = createStorefrontClient({
+      type: "private",
+      config: {
+        storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
+        privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
+        buyerIp,
+        requestContext,
+        i18n: { country: "US", language: "EN" },
+      },
+    });
+
     const shopifyRoute = await handleShopifyRoutes({
       request,
       storefrontClient,
@@ -61,14 +98,16 @@ export const middleware: Route.MiddlewareFunction[] = [
     const response = await next();
     if (response.status === 404) {
       const redirect = await handleShopifyRedirects({ request, storefrontClient });
-      if (redirect) return applyStorefrontResponseHeaders(storefrontClient.requestContext, redirect);
+      if (redirect) {
+        storefrontClient.requestContext.applyResponseHeaders(redirect.headers);
+        return redirect;
+      }
     }
-    return applyStorefrontResponseHeaders(storefrontClient.requestContext, response);
+    storefrontClient.requestContext.applyResponseHeaders(response.headers);
+    return response;
   },
 ];
 ```
-
-Use a helper that catches immutable-header `TypeError` and returns `new Response(response.body, response)` with applied headers.
 
 ## SolidStart
 

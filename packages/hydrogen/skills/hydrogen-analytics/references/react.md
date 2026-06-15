@@ -17,8 +17,6 @@ const analyticsShop = {
 ```
 
 ```tsx
-"use client";
-
 import { useEffect } from "react";
 import type { ShopAnalytics } from "@shopify/hydrogen";
 import {
@@ -42,6 +40,8 @@ export function AnalyticsTracker({ shop }: { shop: ShopAnalytics }) {
   return null;
 }
 ```
+
+Add `"use client"` only when this component lives in a Next.js App Router client component file.
 
 For real route tracking, include the framework location in the effect dependency. In React Router, read `useLocation()` and key the effect by `location.pathname + location.search`. In Next App Router, read `usePathname()` and `useSearchParams()` in a client component wrapped in `Suspense`, then key the effect by both values. Do not leave the root tracker keyed only by `shop`, or client-side navigations will miss page views.
 

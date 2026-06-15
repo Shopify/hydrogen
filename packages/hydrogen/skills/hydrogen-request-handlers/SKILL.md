@@ -3,9 +3,10 @@ name: hydrogen-request-handlers
 description: >
   Guide for wiring Hydrogen request interceptors in server frameworks. Use when
   adding, modifying, or reviewing handleShopifyRoutes, handleShopifyRedirects,
-  SFAPI proxy routes, cart server handlers, /admin redirects, Storefront URL
-  redirects, requestContext response-header propagation, or framework
-  middleware/not-found/catch-all integration.
+  SFAPI proxy routes, cart server handlers, checkout redirects, cart permalinks,
+  AJAX cart proxy routes, /admin redirects, Storefront URL redirects,
+  requestContext response-header propagation, or framework middleware,
+  not-found, and catch-all integration.
 ---
 
 # Hydrogen Request Handlers
@@ -28,18 +29,18 @@ Request
   -> framework 404 page
 ```
 
-`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, `/api/mcp`, GraphiQL in development, and app-registered handlers such as `createCartServerHandlers()`.
+`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/agent/*`, `/graphiql` in development, and app-registered handlers such as `createCartServerHandlers()`.
 
 `handleShopifyRedirects` is a post-routing 404 check for `/admin`, Storefront URL redirects, and same-origin query-param redirects. Do not run it on every request.
 
 ## Rules
 
 - Create one request-scoped private Storefront client per request.
-- Resolve trusted `buyerIp` before creating the private client.
+- Resolve trusted `buyerIp` before creating the private client; use the `hydrogen-storefront-client` buyer-IP guidance for the app's deployment.
 - Create `requestContext` with `createStorefrontRequestContext(request)` where the framework exposes a real `Request`; use `{ headers }` only when no `Request` exists.
 - Pass the same `storefrontClient` into `handleShopifyRoutes`, `handleShopifyRedirects`, `cartHandlers`, and server data loaders.
 - Pass cart handlers explicitly: `handlers: [cartHandlers]`.
-- Propagate `requestContext` response headers to the final framework response so SFAPI cookies and server timing survive.
+- Call `requestContext.applyResponseHeaders(response.headers)` before returning the final framework response so SFAPI cookies, `Server-Timing`, and tracking fallback headers survive.
 - Wire this in production runtime code, not dev-only hooks. Only GraphiQL is dev-only.
 
 ## Imports
@@ -55,8 +56,6 @@ import {
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
 ```
-
-Do not import from non-exported subpaths such as `@shopify/hydrogen/cart`.
 
 ## Verify
 

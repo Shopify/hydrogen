@@ -1,7 +1,10 @@
 ---
 name: hydrogen-cart-drawer
 description: >
-  Guide for building an accessible cart drawer using @shopify/hydrogen. Use this skill whenever creating a cart drawer in your storefront.
+  Guide for building an accessible cart drawer using @shopify/hydrogen. Use when
+  creating or reviewing a cart drawer, mini cart, or slide-out cart, including
+  native <dialog>/showModal, closedby light dismiss, command/commandfor triggers,
+  body scroll lock, exit animations, and wiring window.Shopify.actions.openCart().
 ---
 
 # Cart Drawer

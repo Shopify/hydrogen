@@ -19,11 +19,12 @@ Use:
 
 ## Rules
 
-- Render Shop Pay only when there is a resolved ProductVariant ID.
+- For product buy buttons, render Shop Pay only when there is a resolved ProductVariant ID.
 - Pass ProductVariant GIDs or bare numeric ProductVariant IDs. Product IDs are invalid.
 - Use quantity objects when quantity is known: `{ id: selectedVariant.id, quantity }`.
+- For cart checkout buttons, omit `variants`; checkout mode uses the current cart.
 - Disable Shop Pay whenever the add-to-cart button is disabled or a product/cart mutation is pending.
-- Use `channel="headless"` for Hydrogen headless storefronts unless the app has a reason to use a different channel.
+- Use `channel="hydrogen"` for Hydrogen headless storefronts unless the app has a reason to use a different channel.
 - Do not hardcode checkout domains in React/Vue bindings; they derive checkout URL from `window.location.origin`.
 - Keep Shop Pay near the primary purchase action, and keep its disabled state aligned with `canAddToCart(...)`.
 
@@ -33,7 +34,7 @@ Use:
 {selectedVariant ? (
   <ShopPayButton
     variants={[{ id: selectedVariant.id, quantity }]}
-    channel="headless"
+    channel="hydrogen"
     disabled={!addable || pending}
     width="100%"
     height="48px"
@@ -46,7 +47,19 @@ Use:
 
 ## Cart Pattern
 
-For a full-cart checkout shortcut, pass all cart lines with merchandise IDs and quantities. Hide or disable Shop Pay if any line cannot be purchased.
+For a full-cart checkout shortcut, render Shop Pay without `variants` and hide or disable it when the cart is empty or a cart mutation is pending.
+
+```tsx
+{cart.lines.nodes.length > 0 ? (
+  <ShopPayButton
+    channel="hydrogen"
+    disabled={cartPending}
+    width="100%"
+    height="48px"
+    borderRadius="4px"
+  />
+) : null}
+```
 
 ## Gotchas
 

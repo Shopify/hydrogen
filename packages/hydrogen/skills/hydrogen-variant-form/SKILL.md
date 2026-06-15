@@ -90,11 +90,17 @@ Requires `{ optionName, value }`. Returns `{ name, value, onChange, onClick }` �
 
 `handleFormSubmit(event)` delegates to the underlying `CartStore`'s form submission. The store does not own submission logic — it passes the `SubmitEvent` through to the cart layer, plus selected-product event detail when a variant is resolved. Cart errors from the submission are surfaced reactively via the `errors` state.
 
+## Route Placement
+
+When creating a product detail page, use the app's existing route convention when present; otherwise create `/products/{handle}`. Keep variant selection in query params on that product route.
+
 ## Framework References
 
 - React Router: use the provider pattern below.
 - Next.js App Router: read `references/nextjs.md`.
 - Nuxt: read `references/nuxt.md`.
+- No packaged binding (SvelteKit, SolidStart, vanilla JS, etc.): use `createProductFormStore` from `@shopify/hydrogen` directly, subscribe with the framework's reactivity primitive, and own hydration, URL sync, and `destroy()` yourself. The React/Vue bindings are thin wrappers over this same store — apply every rule and anti-pattern below; do not invent a different contract.
+- Astro: use the binding for the island's UI framework — React or Vue islands use the references above; Svelte/Solid/vanilla islands use the core store directly.
 
 ## Hydration
 

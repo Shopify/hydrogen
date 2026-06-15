@@ -72,7 +72,7 @@ Required product analytics fields include Shopify Product GID, ProductVariant GI
 ## Rules
 
 - Leave default `canTrack` in production. Do not ship `canTrack: () => true`.
-- Initialize one bus per page lifetime. Multiple instances race over `window.Shopify.customerPrivacy.config`.
+- Initialize one single bus per page lifetime.
 - Raw subscribers can observe events before consent; destinations receive only consent-allowed replay.
 - Configure analytics before route components publish events.
 - Do not dispatch server-side analytics through this browser bus.

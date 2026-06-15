@@ -13,8 +13,10 @@ Use Hydrogen's `formatMoney()` for Storefront API `MoneyV2` values. Never build 
 ```ts
 import { formatMoney, type MoneyV2 } from "@shopify/hydrogen";
 
-export function formatPrice(money: MoneyV2): string {
-  return formatMoney(money, { locale: "en-US" }).toString();
+// `locale` should come from the resolved market. Default only in
+// single-market storefronts; market-aware stores must pass the active locale.
+export function formatPrice(money: MoneyV2, locale = "en-US"): string {
+  return formatMoney(money, { locale }).toString();
 }
 ```
 
@@ -27,10 +29,27 @@ export function formatPrice(money: MoneyV2): string {
 - Use `withoutTrailingZeros` only for presentation choices, never by editing amount strings manually.
 - For price ranges, pass a readonly array of `MoneyV2` values to `formatMoney([...])`.
 
+## Structured Output
+
+`formatMoney()` returns an object that stringifies to the localized price. Use
+`toString()` or template literals for normal UI. Call `formatMoney()` directly
+or add an object-returning wrapper when the design needs split markup:
+
+- `localizedString` - full display string, same as `toString()`.
+- `amount` - localized numeric portion without currency.
+- `numericAmount` - parsed number; do not use for cart totals or currency math.
+- `currencySymbol`, `currencyNarrowSymbol`, `currencyName` - currency display variants.
+- `parts` - `Intl.NumberFormatPart[]` for custom markup.
+- `withoutTrailingZeros`, `withoutTrailingZerosAndCurrency` - presentation-only variants.
+
+For ranges, `formatMoney([min, max], options)` returns an object that stringifies
+to the localized range and exposes `min`, `max`, and `currencyCode`. Range
+inputs must share one currency.
+
 ## Examples
 
 ```tsx
-<p>{formatPrice(selectedVariant?.price ?? product.priceRange.minVariantPrice)}</p>
+<p>{formatPrice(selectedVariant?.price ?? product.priceRange.minVariantPrice, locale)}</p>
 ```
 
 ```ts

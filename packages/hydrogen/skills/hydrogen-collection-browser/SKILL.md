@@ -26,6 +26,8 @@ Read the reference that matches the app:
 - React Router or generic React route loaders: `references/react.md`.
 - Next.js App Router: `references/nextjs.md`.
 - Nuxt or Vue route pages: `references/nuxt.md`.
+- No packaged binding (SvelteKit, SolidStart, vanilla JS, etc.): use `createCollectionStore` plus the `parseCollectionParams`/`serializeCollectionParams`/`getFilterRemovalUrl`/`isFilterInputActive` helpers from `@shopify/hydrogen` directly, and apply the UI and search rules below with the framework's own form and reactivity primitives.
+- Astro: use the binding for the island's UI framework — React or Vue islands use the references above; Svelte/Solid/vanilla islands use the core store directly.
 
 ## Data Contract
 

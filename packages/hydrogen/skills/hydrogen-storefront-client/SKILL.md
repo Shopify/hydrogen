@@ -63,8 +63,8 @@ Requires `buyerIp` to forward buyer identity for per-buyer throttle isolation. R
 ```ts
 import { createStorefrontClient, createStorefrontRequestContext } from "@shopify/hydrogen";
 
-function getBuyerIp(request: Request) {
-  const buyerIp = request.headers.get("oxygen-buyer-ip");
+function getBuyerIp(headers: Headers) {
+  const buyerIp = headers.get("oxygen-buyer-ip");
   if (!buyerIp) throw new Error("oxygen-buyer-ip is required for private SFAPI clients");
   return buyerIp;
 }
@@ -74,7 +74,7 @@ const client = createStorefrontClient({
   config: {
     storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
     privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-    buyerIp: getBuyerIp(request),
+    buyerIp: getBuyerIp(request.headers),
     i18n: getLocaleFromRequest(request),
     requestContext: createStorefrontRequestContext(request),
   },
@@ -122,9 +122,9 @@ const PRODUCT_FIELDS = gql(`fragment ProductFields on Product { title handle }`)
 const QUERY = gql(`query { products(first: 10) { nodes { ...ProductFields } } }`, [PRODUCT_FIELDS]);
 ```
 
-### Editor autocompletion
+### GraphQL type setup
 
-For inline GraphQL autocompletion, validation, and hover docs inside `gql()` calls, add the `gql.tada/ts-plugin` to the user's `tsconfig.json` and install `gql.tada` as a devDependency:
+When adding Storefront API `gql()` documents to a TypeScript app, install `gql.tada` as a devDependency and add the `gql.tada/ts-plugin` to the app's `tsconfig.json`:
 
 ```bash
 npm install -D gql.tada
@@ -145,7 +145,9 @@ npm install -D gql.tada
 }
 ```
 
-The editor must be configured to use the workspace TypeScript version (not the bundled one) — the bundled TS server does not load plugins.
+If the app already has TypeScript plugins, append this plugin without removing framework plugins such as Next.js `name: "next"`. If the app's `tsconfig.json` extends a generated config, such as Nuxt's `.nuxt/tsconfig.json`, add `compilerOptions.plugins` in the extending `tsconfig.json`.
+
+This plugin provides inline GraphQL autocompletion, validation, and hover docs inside `gql()` calls. The editor must be configured to use the workspace TypeScript version (not the bundled one) — the bundled TS server does not load plugins.
 
 ### Headless query validation
 

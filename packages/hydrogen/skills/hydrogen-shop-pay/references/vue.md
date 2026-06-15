@@ -19,7 +19,7 @@ Render only when a variant is resolved:
 <ShopPayButton
   v-if="form.selectedVariant"
   :variants="[{ id: form.selectedVariant.id, quantity }]"
-  channel="headless"
+  channel="hydrogen"
   :disabled="!addable || form.pending.value"
   width="100%"
   height="48px"

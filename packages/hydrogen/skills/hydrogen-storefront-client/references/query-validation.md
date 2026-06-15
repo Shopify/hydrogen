@@ -33,6 +33,8 @@ The CLI reads the same `tsconfig.json` plugin block used by the editor:
 }
 ```
 
+If the app already has TypeScript plugins, append the `gql.tada/ts-plugin` entry without removing framework plugins such as Next.js `name: "next"`. If the app's `tsconfig.json` extends a generated config, such as Nuxt's `.nuxt/tsconfig.json`, put `compilerOptions.plugins` in the extending `tsconfig.json`.
+
 The editor must use the workspace TypeScript version for inline feedback. The CLI works independently of the editor setting.
 
 ## Add A CI Check
@@ -69,6 +71,8 @@ For apps without route type generation, use the same ordering without that first
   }
 }
 ```
+
+For framework typecheck commands, append the GraphQL check after the framework check, for example `nuxt typecheck && gql.tada check`.
 
 Run `gql.tada check` directly before finishing any setup that added or changed Storefront API queries, even if the app does not already have CI configured.
 

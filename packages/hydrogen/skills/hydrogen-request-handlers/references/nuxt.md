@@ -10,6 +10,8 @@ Nuxt needs three pieces:
 
 Create `server/middleware/shopify.ts`:
 
+Resolve `buyerIp` from the app's trusted deployment headers before creating the private client. Use the buyer-IP guidance from `hydrogen-storefront-client`.
+
 ```ts
 import {
   createCartServerHandlers,
@@ -38,12 +40,13 @@ export default defineEventHandler(async (event) => {
 });
 
 function createPrivateStorefrontClient(request: Request, requestContext: StorefrontRequestContext) {
+  const buyerIp = getBuyerIp(request.headers);
   return createStorefrontClient({
     type: "private",
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
       privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-      buyerIp: getBuyerIp(request.headers),
+      buyerIp,
       requestContext,
       i18n: { country: "US", language: "EN" },
     },
@@ -51,7 +54,7 @@ function createPrivateStorefrontClient(request: Request, requestContext: Storefr
 }
 ```
 
-Use project-owned helpers for `getBuyerIp` and env access. Do not expose the private token to client plugins.
+Use project-owned helpers for env access. Do not expose the private token to client plugins.
 
 ## Server Plugin Injection
 
