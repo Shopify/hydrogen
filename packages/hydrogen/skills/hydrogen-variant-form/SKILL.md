@@ -9,7 +9,7 @@ description: >
 
 # Product Form Primitive
 
-The product form primitive is a client-side store that computes per-option-value existence, availability, and selection state from Shopify's encoded variant fields. Variant selection performs no network requests; it is derived from product data provided by the Storefront API, combined with live cart state for error surfacing and line-item matching. Form submission is delegated to the cart store. Framework-specific bindings (e.g. React's `useProductForm`, Vue composables) are thin wrappers over the core `createProductFormStore`.
+The product form primitive is a client-side store that computes per-option-value existence, availability, and selection state from Shopify's encoded variant fields. Variant selection performs no network requests; it is derived from product data provided by the Storefront API, combined with live cart state for error surfacing and line-item matching. Form submission is delegated to the cart store. Public framework bindings come from `createProductComponents<typeof productHandlers>()` and wrap the core `createProductFormStore`.
 
 ## How the store works
 
@@ -94,7 +94,7 @@ Requires `{ optionName, value }`. Returns `{ name, value, onChange, onClick }` �
 
 When the product data changes (e.g. after a URL navigation triggers a data refetch), the store must be hydrated with the new product — not recreated. `hydrate(product, opts?)` replaces the product data, clears the decoded variant cache, and recomputes state. The new product's `selectedOrFirstAvailableVariant` takes priority; if absent, falls back to explicitly provided `opts.selectedOptions`, then to the selection that was active before hydration.
 
-Provider bindings should hydrate automatically when the product's semantic identity changes (`product.id` + `selectedOrFirstAvailableVariant.id`). They should skip hydration on mount to avoid double-initialization, and skip hydration when the product identity is unchanged — preserving user selections through unrelated re-renders. Standalone `useProductForm(store)` users manage hydration themselves.
+Provider bindings should hydrate automatically when the product's semantic identity changes (`product.id` + `selectedOrFirstAvailableVariant.id`). They should skip hydration on mount to avoid double-initialization, and skip hydration when the product identity is unchanged — preserving user selections through unrelated re-renders. Lower-level `createProductFormStore` users manage hydration themselves.
 
 ## Reset
 
@@ -144,7 +144,7 @@ Pass `{ optionNames: [...] }` to filter to only known option names, avoiding unr
 ### Store lifecycle
 
 - **Create the store once per component mount.** Do not recreate the store when the product prop changes — use `hydrate()` instead. Recreating the store discards the decoded variant cache and any user interaction state.
-- **Always call `destroy()` on unmount.** This unsubscribes from the `CartStore` and releases internal caches (the decoded variant field cache). Provider bindings handle this automatically; standalone store users must do it themselves.
+- **Always call `destroy()` on unmount.** This unsubscribes from the `CartStore` and releases internal caches (the decoded variant field cache). Provider bindings handle this automatically; lower-level store users must do it themselves.
 - **Do not read stale state after hydration.** Hydration triggers a synchronous state update. Any code that caches the previous state reference before hydration holds a stale reference.
 
 ### Accessibility

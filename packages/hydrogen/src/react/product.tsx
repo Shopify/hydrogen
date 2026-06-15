@@ -38,12 +38,12 @@ export type ValidProductSelectionResult<TProduct extends ProductInput> = Exclude
   { status: "invalid" }
 >;
 
-/** Options for {@link useProductForm}. */
+/** Options for the product form hook returned by {@link createProductComponents}. */
 export interface UseProductFormOptions<TProduct extends ProductInput> {
   onSelect?: (result: ValidProductSelectionResult<TProduct>) => void;
 }
 
-/** Return value of {@link useProductForm}. */
+/** Return value of the product form hook from {@link createProductComponents}. */
 export interface UseProductFormResult<TProduct extends ProductInput> {
   options: VariantOptionState<ProductVariantFrom<TProduct>>[];
   selectedVariant: ProductVariantFrom<TProduct> | null;
@@ -100,9 +100,8 @@ type ProductComponentData<TSource> = TSource extends ProductInput
  * Subscribes to a {@link ProductFormStore} and returns form-ready state.
  *
  * This is a pure subscription hook — it does **not** manage store lifecycle.
- * Create the store with `createProductFormStore` and manage its lifecycle
- * (hydration, destruction) yourself, or use `createProductComponents` for a
- * provider-based approach.
+ * Public React product bindings should use `createProductComponents` so product
+ * data stays aligned with the server handlers that fetched it.
  */
 export function useProductForm<TProduct extends ProductInput>(
   store: ProductFormStore<TProduct>,
@@ -224,8 +223,7 @@ export function createProductComponents<TSource = ProductInput>(): {
     if (!ctx) {
       throw new Error(
         `${hookName} must be used inside a <ProductProvider>. ` +
-          "Wrap your component tree with the ProductProvider from createProductComponents(), " +
-          "or use the standalone useProductForm(store) hook instead.",
+          "Wrap your component tree with the ProductProvider from createProductComponents().",
       );
     }
     return ctx;

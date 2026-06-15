@@ -11,3 +11,4 @@ Quick lookup: "I changed X, what docs do I update?"
 - `packages/hydrogen/src/vue/product.ts` - `createProductComponents` JSDoc and examples
 - `packages/hydrogen/skills/hydrogen-cart-ui/references/react.md` - custom cart/product field typing examples
 - `packages/hydrogen/skills/hydrogen-cart-ui/references/vue.md` - custom cart/product field typing examples
+- `packages/hydrogen/skills/hydrogen-variant-form/SKILL.md` - product form public API guidance

@@ -6,11 +6,10 @@ export {
   useCollectionForm,
 } from "./collection";
 export type { CollectionActions, CollectionData } from "./collection";
-export { createProductComponents, useProductForm } from "./product";
+export { createProductComponents } from "./product";
 export { ShopPayButton } from "./shop-pay";
 export type { ShopPayButtonProps } from "./shop-pay";
 export type {
-  UseProductFormOptions,
   UseProductFormResult,
   UseProductResult,
   ValidProductSelectionResult,

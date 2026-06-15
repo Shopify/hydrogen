@@ -784,7 +784,7 @@ describe("createProductComponents", () => {
       }).toThrow(/ProductProvider/);
     });
 
-    it("returns the same shape as standalone useProductForm", () => {
+    it("returns the same shape as the internal store-backed form hook", () => {
       const { result } = renderHook(() => useFactoryProductForm(), {
         wrapper: makeFactoryWrapper(),
       });

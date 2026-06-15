@@ -16,8 +16,8 @@ export type DecodedVariantCache = Map<string, Set<string>>;
  * Each query parameter is treated as an option name/value pair
  * (e.g. `?Color=Red&Size=M` → `[{name:"Color",value:"Red"},{name:"Size",value:"M"}]`).
  *
- * Pass the result to `createProductFormStore` or `useProductForm` to pre-select
- * the variant that matches the current URL.
+ * Pass the result to `productHandlers.get()` or `createProductFormStore()` to
+ * pre-select the variant that matches the current URL.
  *
  * @param input - A `Request`, `URL`, `URLSearchParams`, or URL string.
  * @param options.optionNames - When provided, only parameters whose names are

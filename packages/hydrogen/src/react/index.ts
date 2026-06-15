@@ -7,10 +7,9 @@ export {
   useCollectionForm,
 } from "./collection";
 export type { CollectionActions, CollectionProviderProps, CollectionData } from "./collection";
-export { createProductComponents, useProductForm } from "./product";
+export { createProductComponents } from "./product";
 export type {
   ProductProviderProps,
-  UseProductFormOptions,
   UseProductFormResult,
   UseProductResult,
   ValidProductSelectionResult,

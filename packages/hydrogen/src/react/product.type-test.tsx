@@ -2,15 +2,15 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes } from "react";
 import { describe, expectTypeOf, it } from "vitest";
 
 import { createCartServerHandlers } from "../core/cart";
-import type { ProductFormStore, ProductInput, ProductVariantInput } from "../core/product";
+import type { ProductInput, ProductVariantInput } from "../core/product";
 import { createProductServerHandlers } from "../core/product";
 import { gql } from "../graphql";
-import { createProductComponents, useProductForm } from "./product";
+import { createProductComponents } from "./product";
 
-declare const store: ProductFormStore<ProductInput<ProductVariantInput>>;
+const defaultProduct = createProductComponents<ProductInput<ProductVariantInput>>();
 
 export function productFormTypes() {
-  const result = useProductForm(store);
+  const result = defaultProduct.useProductForm();
   const { register } = result;
 
   expectTypeOf(result.selectedVariant).toEqualTypeOf<ProductVariantInput | null>();

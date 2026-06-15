@@ -806,7 +806,7 @@ describe("createProductComponents", () => {
       }).toThrow(/ProductProvider/);
     });
 
-    it("returns the same shape as standalone useProductForm", () => {
+    it("returns the same shape as the internal store-backed form composable", () => {
       const result = mountFactoryConsumer(() => {
         const r = useFactoryProductForm();
         return { exposed: r, render: () => null };
