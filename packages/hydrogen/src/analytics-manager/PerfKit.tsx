@@ -32,7 +32,7 @@ export function PerfKit({shop}: {shop: ShopAnalytics}) {
       'data-storefront-id': shop.hydrogenSubchannelId,
       'data-monorail-region': 'global',
       'data-spa-mode': 'true',
-      'data-resource-timing-sampling-rate': '100',
+      'data-resource-timing-sampling-rate': '10',
     }),
     [shop.shopId, shop.hydrogenSubchannelId],
   );
