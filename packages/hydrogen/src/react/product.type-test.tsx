@@ -1,8 +1,11 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes } from "react";
-import { expectTypeOf } from "vitest";
+import { describe, expectTypeOf, it } from "vitest";
 
+import { createCartServerHandlers } from "../core/cart";
 import type { ProductFormStore, ProductInput, ProductVariantInput } from "../core/product";
-import { useProductForm } from "./product";
+import { createProductServerHandlers } from "../core/product";
+import { gql } from "../graphql";
+import { createProductComponents, useProductForm } from "./product";
 
 declare const store: ProductFormStore<ProductInput<ProductVariantInput>>;
 
@@ -56,3 +59,66 @@ export function productFormTypes() {
   // @ts-expect-error optionValue requires optionName
   register("optionValue", { value: "Red" });
 }
+
+const cartFragment = gql(`
+  fragment CartFragment on Cart {
+    lines(first: 250) {
+      nodes {
+        merchandise {
+          ... on ProductVariant {
+            currentlyNotInStock
+          }
+        }
+      }
+    }
+  }
+`);
+
+const cartHandlers = createCartServerHandlers({ fragment: cartFragment });
+
+const productFragment = gql(`
+  fragment ProductFragment on Product {
+    description
+    options {
+      optionValues {
+        firstSelectableVariant {
+          currentlyNotInStock
+        }
+      }
+    }
+    selectedOrFirstAvailableVariant(
+      selectedOptions: $selectedOptions
+      ignoreUnknownOptions: true
+      caseInsensitiveMatch: true
+    ) {
+      currentlyNotInStock
+    }
+    adjacentVariants(
+      selectedOptions: $selectedOptions
+      ignoreUnknownOptions: true
+      caseInsensitiveMatch: true
+    ) {
+      currentlyNotInStock
+    }
+  }
+`);
+
+const productHandlers = createProductServerHandlers({
+  cartHandlers,
+  fragment: productFragment,
+});
+
+const typedProduct = createProductComponents<typeof productHandlers>();
+
+describe("createProductComponents", () => {
+  it("derives React product props and hooks from product server handlers", () => {
+    type ProductProviderProps = Parameters<typeof typedProduct.ProductProvider>[0];
+    type ProductData = ProductProviderProps["product"];
+    type SelectedVariant = NonNullable<
+      ReturnType<typeof typedProduct.useProduct>["selectedVariant"]
+    >;
+
+    expectTypeOf<ProductData>().toHaveProperty("description").toEqualTypeOf<string>();
+    expectTypeOf<SelectedVariant>().toHaveProperty("currentlyNotInStock").toEqualTypeOf<boolean>();
+  });
+});

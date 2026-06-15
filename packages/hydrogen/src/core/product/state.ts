@@ -50,8 +50,27 @@ export interface ProductInput<TVariant extends ProductVariantInput = ProductVari
   adjacentVariants: TVariant[];
 }
 
+type ProductVariantCandidates<TProduct extends ProductInput> =
+  | (TProduct extends { selectedOrFirstAvailableVariant: (infer TVariant) | null }
+      ? NonNullable<TVariant>
+      : never)
+  | (TProduct extends { adjacentVariants: ReadonlyArray<infer TVariant> } ? TVariant : never)
+  | (TProduct extends {
+      options: ReadonlyArray<{
+        optionValues: ReadonlyArray<{ firstSelectableVariant?: (infer TVariant) | null }>;
+      }>;
+    }
+      ? NonNullable<TVariant>
+      : never);
+
 export type ProductVariantFrom<TProduct extends ProductInput> =
-  TProduct extends ProductInput<infer TVariant> ? TVariant : ProductVariantInput;
+  ProductVariantCandidates<TProduct> extends infer TVariant
+    ? [TVariant] extends [never]
+      ? ProductVariantInput
+      : TVariant extends ProductVariantInput
+        ? TVariant
+        : ProductVariantInput
+    : ProductVariantInput;
 
 export interface VariantOptionValueState<
   TVariant extends ProductVariantInput = ProductVariantInput,

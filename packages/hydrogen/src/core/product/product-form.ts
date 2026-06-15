@@ -308,17 +308,7 @@ function buildAddToCartDetail<TProduct extends ProductInput>(
   const { selectedVariant } = context.observable.state;
   if (!selectedVariant) return undefined;
 
-  return {
-    products: [
-      {
-        id: selectedVariant.id,
-        title: selectedVariant.title,
-        product: selectedVariant.product ? { title: selectedVariant.product.title } : undefined,
-        image: selectedVariant.image,
-        price: selectedVariant.price,
-      },
-    ],
-  };
+  return { products: [selectedVariant] };
 }
 
 async function handleFormSubmit<TProduct extends ProductInput>(

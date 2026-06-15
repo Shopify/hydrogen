@@ -7,7 +7,6 @@ import {
   shallowRef,
   watch,
   type InjectionKey,
-  type PropType,
   type ShallowRef,
 } from "vue";
 
@@ -23,6 +22,7 @@ import {
   type VariantOptionState,
   type VariantSelectionResult,
 } from "../core/product";
+import type { ProductDataFromHandlers } from "../core/product";
 import { getCartEndpoint, useCartStore } from "./cart";
 
 // ---------------------------------------------------------------------------
@@ -65,6 +65,19 @@ export interface UseProductResult<TProduct extends ProductInput> {
   errors: ProductFormErrors;
   matchedLineItem: CartLine | null;
 }
+
+type ProductComponentData<TSource> = TSource extends ProductInput
+  ? TSource
+  : [ProductDataFromHandlers<TSource>] extends [never]
+    ? ProductInput
+    : ProductDataFromHandlers<TSource> extends ProductInput
+      ? ProductDataFromHandlers<TSource>
+      : ProductInput;
+
+type VueProductProviderProps<TProduct extends ProductInput> = {
+  product: TProduct;
+  onSelect?: (result: ValidProductSelectionResult<TProduct>) => void;
+};
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -178,20 +191,35 @@ export function useProductForm<TProduct extends ProductInput>(
 // ---------------------------------------------------------------------------
 
 /**
- * Creates a typed set of product components bound to a specific product type.
+ * Creates a typed set of product components bound to product data.
  *
  * Returns `{ ProductProvider, useProduct, useProductForm }` where:
  * - `ProductProvider` manages store lifecycle (creation, hydration, cleanup)
  * - `useProduct` provides read-only state and variant selection
  * - `useProductForm` provides form-binding utilities (register, formProps, pending)
  *
+ * Pass a product type directly, or pass `typeof productHandlers` from
+ * `createProductServerHandlers({ cartHandlers, fragment })` so the components
+ * use the same product fragment as the server query. Product handlers accept the
+ * cart handler value because TypeScript cannot infer later generic parameters
+ * after an explicit first generic; server modules usually import both handlers
+ * already, so this does not change the practical server bundle shape.
+ *
  * Requires a `<CartProvider>` ancestor.
+ *
+ * @example
+ * ```ts
+ * const productHandlers = createProductServerHandlers({
+ *   cartHandlers,
+ *   fragment: productFragment,
+ * });
+ *
+ * const { ProductProvider, useProduct, useProductForm } =
+ *   createProductComponents<typeof productHandlers>();
+ * ```
  */
-export function createProductComponents<TProduct extends ProductInput>(): {
-  ProductProvider: ReturnType<typeof defineComponent>;
-  useProduct: () => UseProductResult<TProduct>;
-  useProductForm: () => UseProductFormResult<TProduct>;
-} {
+export function createProductComponents<TSource = ProductInput>() {
+  type TProduct = ProductComponentData<TSource>;
   const ProductStoreKey: InjectionKey<ProductContextValue<TProduct>> = Symbol("ProductFormStore");
 
   function useProductContext(composableName: string): ProductContextValue<TProduct> {
@@ -206,19 +234,8 @@ export function createProductComponents<TProduct extends ProductInput>(): {
     return ctx;
   }
 
-  const ProductProvider = defineComponent({
-    name: "ProductProvider",
-    props: {
-      product: {
-        type: Object as PropType<TProduct>,
-        required: true,
-      },
-      onSelect: {
-        type: Function as PropType<(result: ValidProductSelectionResult<TProduct>) => void>,
-        default: undefined,
-      },
-    },
-    setup(props, { slots }) {
+  const ProductProvider = defineComponent(
+    (props: VueProductProviderProps<TProduct>, { slots }) => {
       const product = props.product as TProduct;
       const cartStore = useCartStore();
       const store = createProductFormStore<TProduct>(product, cartStore);
@@ -249,7 +266,11 @@ export function createProductComponents<TProduct extends ProductInput>(): {
 
       return () => slots.default?.();
     },
-  });
+    {
+      name: "ProductProvider",
+      props: ["product", "onSelect"],
+    },
+  );
 
   function useProduct(): UseProductResult<TProduct> {
     const ctx = useProductContext("useProduct");

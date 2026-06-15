@@ -12,7 +12,7 @@ Wrap the app in `<CartProvider>`. Keep cart server handlers in a server-only mod
 
 ```tsx
 // app/lib/cart-handlers.ts
-import { createCartServerHandlers } from "@shopify/hydrogen/cart";
+import { createCartServerHandlers } from "@shopify/hydrogen";
 
 export const cartHandlers = createCartServerHandlers();
 ```
@@ -56,7 +56,7 @@ If the cart needs extra fields, pass `fragment` with a fragment named `CartFragm
 ```tsx
 // app/lib/cart-handlers.ts
 import { gql } from "@shopify/hydrogen";
-import { createCartServerHandlers } from "@shopify/hydrogen/cart";
+import { createCartServerHandlers } from "@shopify/hydrogen";
 
 const cartFragment = gql(`
   fragment CartFragment on Cart {
@@ -64,7 +64,7 @@ const cartFragment = gql(`
       nodes {
         merchandise {
           ... on ProductVariant {
-            availableForSale
+            currentlyNotInStock
           }
         }
       }
@@ -94,13 +94,76 @@ function CartLines() {
       {lines.map((line) => (
         <li key={line.id}>
           <span>{line.merchandise?.product.title}</span>
-          {line.merchandise?.availableForSale === false ? <span>Unavailable</span> : null}
+          {line.merchandise?.currentlyNotInStock ? <span>Backordered</span> : null}
         </li>
       ))}
     </ul>
   );
 }
 ```
+
+## Product Fields That Fit Cart Lines
+
+Product handlers should use the same cart handler value that defines cart line merchandise. This lets TypeScript reject product fragments whose selected variant cannot be used as optimistic cart line merchandise, while preserving extra product fields for product components.
+
+```tsx
+// app/lib/product-handlers.ts
+import { gql, createProductServerHandlers } from "@shopify/hydrogen";
+
+import { cartHandlers } from "./cart-handlers";
+
+const productFragment = gql(`
+  fragment ProductFragment on Product {
+    description
+    options {
+      optionValues {
+        firstSelectableVariant {
+          currentlyNotInStock
+        }
+      }
+    }
+    selectedOrFirstAvailableVariant(
+      selectedOptions: $selectedOptions
+      ignoreUnknownOptions: true
+      caseInsensitiveMatch: true
+    ) {
+      currentlyNotInStock
+    }
+    adjacentVariants(
+      selectedOptions: $selectedOptions
+      ignoreUnknownOptions: true
+      caseInsensitiveMatch: true
+    ) {
+      currentlyNotInStock
+    }
+  }
+`);
+
+export const productHandlers = createProductServerHandlers({
+  cartHandlers,
+  fragment: productFragment,
+});
+```
+
+```tsx
+// app/lib/product.ts
+import { createProductComponents } from "@shopify/hydrogen/react";
+
+import type { productHandlers } from "./product-handlers";
+
+export const { ProductProvider, useProduct, useProductForm } =
+  createProductComponents<typeof productHandlers>();
+
+function ProductDescription() {
+  const { selectedVariant } = useProduct();
+
+  return selectedVariant?.currentlyNotInStock ? <p>Backordered</p> : null;
+}
+```
+
+If a cart fragment adds a custom merchandise field that product forms need for optimistic lines, select that field in every product variant source: `selectedOrFirstAvailableVariant`, `adjacentVariants`, and `options.optionValues.firstSelectableVariant`.
+
+`createProductServerHandlers` takes the `cartHandlers` runtime value rather than `typeof cartHandlers` because TypeScript does not support partial inference after one explicit generic parameter. Product and cart handlers live in server modules that typically import both values anyway, so this keeps inference precise without changing the practical server bundle shape.
 
 ## Reading Cart State
 

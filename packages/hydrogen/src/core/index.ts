@@ -146,14 +146,31 @@ export {
 export {
   canAddToCart,
   createProductFormStore,
+  createProductServerHandlers,
   findCartLineByMerchandiseId,
+  makeProductQueries,
+  productQueries,
   getSelectedVariant,
 } from "./product";
 export type {
   CreateProductFormStoreOptions,
+  CreateProductQueriesOptions,
+  CreateProductServerHandlersOptions,
+  ProductDataForOptions,
+  ProductDataFromHandlers,
+  ProductDataFromQuery,
+  ProductFragmentResult,
   ProductFormErrors,
   ProductFormStore,
   ProductFormStoreState,
+  ProductGetData,
+  ProductGetHandler,
+  ProductGetHandlerContext,
+  ProductGetResult,
+  ProductQueries,
+  ProductQueriesForFragment,
+  ProductQueriesForOptions,
+  ProductServerHandlers,
   VariantSelectionResult,
 } from "./product";
 export { getSelectedProductOptions } from "./product";

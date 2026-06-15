@@ -919,15 +919,7 @@ describe("createProductFormStore", () => {
       await store.handleFormSubmit(event);
 
       expect(cartStore.handleFormSubmit).toHaveBeenCalledWith(event, {
-        products: [
-          {
-            id: "v-red",
-            title: "Red",
-            product: { title: undefined },
-            image: undefined,
-            price: { amount: "10.00", currencyCode: "USD" },
-          },
-        ],
+        products: [RED],
       });
     });
 
@@ -956,15 +948,7 @@ describe("createProductFormStore", () => {
       await store.handleFormSubmit(event);
 
       expect(cartStore.handleFormSubmit).toHaveBeenCalledWith(event, {
-        products: [
-          {
-            id: "v-red",
-            title: "Red",
-            product: { title: "Cozy Shirt" },
-            image: { url: "https://cdn.example.com/shirt.jpg", altText: "Red shirt" },
-            price: { amount: "10.00", currencyCode: "USD" },
-          },
-        ],
+        products: [redWithImage],
       });
     });
 
