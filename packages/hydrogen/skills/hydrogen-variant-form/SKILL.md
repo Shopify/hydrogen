@@ -90,6 +90,12 @@ Requires `{ optionName, value }`. Returns `{ name, value, onChange, onClick }` �
 
 `handleFormSubmit(event)` delegates to the underlying `CartStore`'s form submission. The store does not own submission logic — it passes the `SubmitEvent` through to the cart layer, plus selected-product event detail when a variant is resolved. Cart errors from the submission are surfaced reactively via the `errors` state.
 
+## Framework References
+
+- React Router: use the provider pattern below.
+- Next.js App Router: read `references/nextjs.md`.
+- Nuxt: read `references/nuxt.md`.
+
 ## Hydration
 
 When the product data changes (e.g. after a URL navigation triggers a data refetch), the store must be hydrated with the new product — not recreated. `hydrate(product, opts?)` replaces the product data, clears the decoded variant cache, and recomputes state. The new product's `selectedOrFirstAvailableVariant` takes priority; if absent, falls back to explicitly provided `opts.selectedOptions`, then to the selection that was active before hydration.
@@ -182,13 +188,14 @@ Cross-product option values are framework links that reuse the same URL helper:
 ### Price display
 
 - **ALWAYS display server-provided prices.** Use `selectedVariant.price` when a variant is resolved. Fall back to `product.priceRange.minVariantPrice` when no variant is selected. Never compute prices client-side.
-- **Format with `Intl.NumberFormat`**, not string concatenation. The variant provides `amount` (string) and `currencyCode` (string).
+- **Format with Hydrogen money helpers**, not string concatenation. Use the local `hydrogen-money` skill for app wrappers around `formatMoney()`.
 
 ### Add-to-cart
 
 - **ALWAYS use `canAddToCart(product, options)` to determine if the add-to-cart button should be enabled.** This checks three conditions: a variant is selected, it is available for sale, and the product does not require a selling plan. Checking only `selectedVariant !== null` misses the selling-plan and availability constraints.
 - **The add-to-cart form is separate from the variant selector.** Variant selection uses buttons and links — not form submissions. The add-to-cart form contains `merchandiseId` (the selected variant ID) and `quantity`. Do not put variant selection controls inside the cart form.
 - **Use `register` to bind form fields.** `register("merchandiseId", {})` returns the hidden input props with the current variant ID. `register("quantity", { value: 1 })` returns the quantity input props. These stay synchronized with store state automatically.
+- **Use the local `hydrogen-shop-pay` skill** when adding accelerated checkout near the add-to-cart form.
 - **Show contextual CTA text.** When `canAddToCart` is `true`: "Add to cart". When no variant is selected (`selectedVariant === null`): "Select options" unless a navigation or submission is actually pending. When a variant is selected but unavailable: "Unavailable" or "Sold out".
 - **Surface cart errors from `errors` state.** After form submission, user errors, warnings, and network errors relevant to the current product form are available on `state.errors`. Display these to the buyer.
 

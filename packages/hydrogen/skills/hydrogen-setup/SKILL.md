@@ -4,9 +4,9 @@ description: >
   End-to-end Hydrogen storefront setup orchestrator. Use after the
   deterministic Hydrogen setup command has installed @shopify/hydrogen
   and copied skills into an existing app: detect the server framework, wire the
-  Storefront API client, request interceptors, home page, cart route, cart
-  drawer, navbar, product detail page with variant form, analytics, and run
-  verification.
+  Storefront API client, request handlers, home page, collection/search browsing,
+  cart route, cart drawer, navbar, product detail page with variant form, analytics,
+  and run verification.
 ---
 
 # Setting Up Hydrogen
@@ -59,15 +59,23 @@ When setup adds or changes Storefront API `gql()` documents, use the `hydrogen-s
 
 ## Install API Route Handlers
 
-Read `references/request-handlers.md`, then wire `handleShopifyRoutes` before routing and `handleShopifyRedirects` after a 404 or in the framework's catch-all route.
+Use the local `hydrogen-request-handlers` skill to wire `handleShopifyRoutes` before routing, `handleShopifyRedirects` after a 404 or in the framework's catch-all route, and request-context response-header propagation.
 
 ## Build The Home Page
 
 Read `references/home-page.md`, then create a server-rendered home page that lists collections and products.
 
+## Build Collection And Search Browsing
+
+Use the local `hydrogen-collection-browser` skill when adding collection routes, search routes, filter sidebars, sort controls, active filter chips, or URL-synced product grids.
+
 ## Add The Cart Route
 
 Use the local `hydrogen-cart-ui` skill to create the cart route at the framework's idiomatic `/cart` path.
+
+## Install Standard Actions Runtime
+
+Load `https://cdn.shopify.com/storefront/standard-actions.js` once in the root document before using cart drawer Standard Actions or hydrated cart integrations. Use the framework's script primitive when it has one, such as Next.js `Script` with `strategy="beforeInteractive"`; otherwise render a module script in the root document head.
 
 ## Add The Cart Drawer
 
@@ -83,7 +91,7 @@ Read `references/product-page.md`, then use the local `hydrogen-variant-form` sk
 
 ## Install Storefront Analytics
 
-Read `references/analytics.md`, then install analytics after the request interceptors are in place.
+Use the local `hydrogen-analytics` skill after the request handlers are in place. Read `references/analytics.md` for the full consent and setup details when needed.
 
 ## Verification
 
@@ -95,7 +103,7 @@ Inspect `package.json` scripts and run the applicable commands in this order:
 4. Tests when present: `test`.
 5. Formatting check when present and distinct from `format`: `format:check`.
 
-If Playwright is present, run it headless. If any command fails, fix the app and rerun the failed command.
+If Playwright is present, run it headless. Use the local `hydrogen-smoke-test` skill for runtime verification of request handlers, cart, product, collection/search, analytics, markets, money, and production-mode behavior. Run the request-handler curl checks against both dev and production builds when the framework supports both. If any command fails, fix the app and rerun the failed command.
 
 ## Stop Conditions
 

@@ -19,11 +19,10 @@ import {
 import { storefrontContext } from "./storefront.context";
 import type { Route } from "./+types/root";
 
-export const storefrontMiddleware: Route.MiddlewareFunction = async ({
-  request,
-  context,
+export const storefrontMiddleware: Route.MiddlewareFunction = async (
+  { request, context },
   next,
-}) => {
+) => {
   const buyerIp = request.headers.get("cf-connecting-ip");
   if (!buyerIp) throw new Error("cf-connecting-ip is required for private SFAPI clients");
   const requestContext = createStorefrontRequestContext(request);
@@ -42,17 +41,34 @@ export const storefrontMiddleware: Route.MiddlewareFunction = async ({
   context.set(storefrontContext, client);
 
   const response = await next();
-  requestContext.applyResponseHeaders(response.headers);
-  return response;
+  return applyStorefrontResponseHeaders(requestContext, response);
 };
+
+function applyStorefrontResponseHeaders(
+  requestContext: { applyResponseHeaders(headers: Headers): void },
+  response: Response,
+): Response {
+  try {
+    requestContext.applyResponseHeaders(response.headers);
+    return response;
+  } catch (error) {
+    if (!(error instanceof TypeError)) throw error;
+    const mutableResponse = new Response(response.body, response);
+    requestContext.applyResponseHeaders(mutableResponse.headers);
+    return mutableResponse;
+  }
+}
 ```
 
 ```ts
 // app/root.tsx — wire up middleware
 import { storefrontMiddleware } from "./storefront.middleware";
+import type { Route } from "./+types/root";
 
-export const unstable_middleware = [storefrontMiddleware];
+export const middleware: Route.MiddlewareFunction[] = [storefrontMiddleware];
 ```
+
+Enable React Router framework middleware with `future.v8_middleware: true` in `react-router.config.ts`. If the app also needs Hydrogen route handlers and Shopify redirects, use the `hydrogen-request-handlers` React Router shape so this client creation, `handleShopifyRoutes()`, context setup, `handleShopifyRedirects()`, and response-header propagation all live in one root middleware chain.
 
 ```ts
 // app/routes/product.tsx — loader reads client from context

@@ -14,7 +14,7 @@ Build an accessible cart drawer that opens from the edge of the viewport and int
 
 Before building the cart drawer, these must be in place:
 
-- **Standard Actions** — the Shopify script that provides `window.Shopify.actions.openCart`
+- **Standard Actions** — load `https://cdn.shopify.com/storefront/standard-actions.js` once in the root document. Use the framework's script primitive when available, such as Next.js `Script` with `strategy="beforeInteractive"`.
 - **`/cart` route** — the full cart page, used as the no-JS fallback for progressive enhancement
 
 ---

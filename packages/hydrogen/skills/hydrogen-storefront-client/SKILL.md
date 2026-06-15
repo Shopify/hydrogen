@@ -250,3 +250,4 @@ Read the recipe for your framework when wiring up the client in an app:
 - **Astro** — `references/astro.md` — Middleware sets client on `Astro.locals`, static pages use module-scoped client with `export const prerender = true`. Key footgun: `Astro.clientAddress` throws on prerendered pages.
 - **SvelteKit** — `references/sveltekit.md` — Handle hook sets client on `event.locals`, load functions destructure it. Key footgun: `getClientAddress()` returns the proxy IP without `ADDRESS_HEADER` + `XFF_DEPTH` config.
 - **SolidStart** — `references/solidstart.md` — Middleware sets client on `event.locals`, server functions retrieve it via `getRequestEvent()`. Key footgun: `getRequestEvent()` only works inside `"use server"` boundaries.
+- **Nuxt** — `references/nuxt.md` — Nitro middleware creates the request-scoped private client, a server plugin injects it, and a browser public client rewrites Storefront API fetches through the same-origin Hydrogen proxy.

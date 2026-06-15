@@ -82,7 +82,7 @@ Each `CartErrorGroup` contains `{ userErrors: CartUserError[], warnings: CartWar
 ### Money
 
 - **NEVER calculate currency amounts on the client.** Display server-provided amounts (`line.cost.totalAmount`, `state.data.cost.subtotalAmount`, etc.) directly. Client-side arithmetic drifts from the truth when discounts, taxes, duties, or rounding apply. If a value is stale because a mutation is in-flight, show it with pending UI — not a client-computed estimate.
-- **Format with `Intl.NumberFormat`**, not string concatenation. The store provides `amount` (string) and `currencyCode` (string).
+- **Format with Hydrogen money helpers**, not string concatenation. Use the local `hydrogen-money` skill for an app wrapper around `formatMoney()`. The store provides `amount` (string) and `currencyCode` (string).
 
 ### Optimistic interactions
 

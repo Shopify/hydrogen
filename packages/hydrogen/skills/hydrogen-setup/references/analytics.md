@@ -2,7 +2,7 @@
 
 **Prerequisites:**
 
-- A storefront built on `@shopify/hydrogen` with the request interceptors already wired (`handleShopifyRoutes` and `handleShopifyRedirects`). The analytics bus depends on the SFAPI proxy so the browser can observe same-origin Storefront API responses for session cookies. Without the proxy, analytics falls back to deprecated JavaScript-visible cookies and should be treated as incomplete. If you have not installed the interceptors yet, install them first — see `references/request-handlers.md`.
+- A storefront built on `@shopify/hydrogen` with the request interceptors already wired (`handleShopifyRoutes` and `handleShopifyRedirects`). The analytics bus depends on the SFAPI proxy so the browser can observe same-origin Storefront API responses for session cookies. Without the proxy, analytics falls back to deprecated JavaScript-visible cookies and should be treated as incomplete. If you have not installed the interceptors yet, install them first with the local `hydrogen-request-handlers` skill.
 - A client-side lifecycle hook in your framework (route-change effect, navigation event, `<script>` tag, etc.) so view events can fire on the right URL transitions.
 
 `createStorefrontAnalytics()` is a zero-dependency event bus that owns Shopify consent setup, Monorail dispatch, cart change detection, deprecated-cookie compatibility, and PerfKit wiring. Framework adapters stay thin — they translate framework lifecycle events into bus calls.

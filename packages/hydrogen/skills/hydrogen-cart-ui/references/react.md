@@ -12,7 +12,7 @@ Wrap the app in `<CartProvider>`. Keep cart server handlers in a server-only mod
 
 ```tsx
 // app/lib/cart-handlers.ts
-import { createCartServerHandlers } from "@shopify/hydrogen/cart";
+import { createCartServerHandlers } from "@shopify/hydrogen";
 
 export const cartHandlers = createCartServerHandlers();
 ```
@@ -55,8 +55,7 @@ If the cart needs extra fields, pass `fragment` with a fragment named `CartFragm
 
 ```tsx
 // app/lib/cart-handlers.ts
-import { gql } from "@shopify/hydrogen";
-import { createCartServerHandlers } from "@shopify/hydrogen/cart";
+import { createCartServerHandlers, gql } from "@shopify/hydrogen";
 
 const cartFragment = gql(`
   fragment CartFragment on Cart {
