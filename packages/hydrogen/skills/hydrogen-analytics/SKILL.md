@@ -56,6 +56,8 @@ export function getAnalytics(): StorefrontAnalytics | null {
 
 Read `ShopAnalytics` values on the server and pass them to client code. Do not read env APIs in browser modules.
 
+`ShopAnalytics.shopId` must be the Shopify Shop GID. Fetch `shop { id }` from the Storefront API or read it from existing server-side app config that already stores that GID; do not invent a client env variable for it.
+
 ## Publish Events
 
 Publish these from route/page boundaries:

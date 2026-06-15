@@ -10,6 +10,8 @@ import type { RequestScopedPrivateStorefrontClient } from "@shopify/hydrogen";
 export const storefrontContext = createContext<RequestScopedPrivateStorefrontClient>();
 ```
 
+This `createContext` is React Router's request context for passing values from middleware to loaders; it is not React's component `createContext`.
+
 ```ts
 // app/storefront.middleware.ts
 import {
@@ -54,7 +56,7 @@ import type { Route } from "./+types/root";
 export const middleware: Route.MiddlewareFunction[] = [storefrontMiddleware];
 ```
 
-Enable React Router framework middleware with `future.v8_middleware: true` in `react-router.config.ts`. If the app also needs Hydrogen route handlers and Shopify redirects, use the `hydrogen-request-handlers` React Router shape so this client creation, `handleShopifyRoutes()`, context setup, `handleShopifyRedirects()`, and response-header propagation all live in one root middleware chain.
+Verify React Router framework middleware is enabled with `future.v8_middleware: true` in `react-router.config.ts`. If the app also needs Hydrogen route handlers and Shopify redirects, use the `hydrogen-request-handlers` React Router shape so this client creation, `handleShopifyRoutes()`, context setup, `handleShopifyRedirects()`, and response-header propagation all live in one root middleware chain.
 
 ```ts
 // app/routes/product.tsx — loader reads client from context

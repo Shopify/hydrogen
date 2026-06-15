@@ -144,6 +144,16 @@ Pass `{ optionNames: [...] }` to filter to only known option names, avoiding unr
 
 ### React Router provider pattern
 
+Create typed React product bindings once from `@shopify/hydrogen/react`, usually in a shared product module:
+
+```ts
+import { createProductComponents } from "@shopify/hydrogen/react";
+import type { ProductData } from "./types";
+
+export const { ProductProvider, useProductForm } =
+  createProductComponents<ProductData>();
+```
+
 Use the provider's `onSelect` callback for same-product URL sync:
 
 ```tsx

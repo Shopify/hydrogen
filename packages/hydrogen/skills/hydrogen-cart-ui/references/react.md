@@ -90,16 +90,37 @@ function CartLines() {
 
   return (
     <ul>
-      {lines.map((line) => (
-        <li key={line.id}>
-          <span>{line.merchandise?.product.title}</span>
-          {line.merchandise?.availableForSale === false ? <span>Unavailable</span> : null}
-        </li>
-      ))}
+      {lines.map((line) => {
+        const merchandise = line.merchandise;
+        const selectedOptions = merchandise?.selectedOptions ?? [];
+
+        return (
+          <li key={line.id}>
+            {merchandise?.image ? (
+              <img src={merchandise.image.url} alt={merchandise.image.altText ?? ""} />
+            ) : null}
+            {merchandise?.product.handle ? (
+              <a href={`/products/${merchandise.product.handle}`}>
+                {merchandise.product.title}
+              </a>
+            ) : (
+              <span>{merchandise?.product.title ?? merchandise?.title ?? "Product"}</span>
+            )}
+            {selectedOptions.map((option) => (
+              <span key={option.name}>
+                {option.name}: {option.value}
+              </span>
+            ))}
+            {merchandise?.availableForSale === false ? <span>Unavailable</span> : null}
+          </li>
+        );
+      })}
     </ul>
   );
 }
 ```
+
+Cart line merchandise fields are intentionally tolerant because optimistic lines and custom fragments can differ from a complete Storefront API cart response. Treat `line.merchandise`, `merchandise.selectedOptions`, `merchandise.title`, `merchandise.product.handle`, and `merchandise.image` as optional unless the app's custom cart fragment and types prove otherwise.
 
 ## Reading Cart State
 
@@ -154,9 +175,11 @@ Important React form fields:
 - `register("lineId", { value })` scopes the form to one line.
 - `register("quantity", { value, interactive: true })` wires an editable quantity input for both hydrated and no-JS submissions. Do not replace it with a text-only `<span>`.
 - `register("increase")`, `register("decrease")`, and `register("remove")` create line item controls.
-- `register("discountCode")`, `register("discount-apply")`, and `register("discount-remove")` create discount forms.
+- `register("discountCode", { defaultValue: "" })`, `register("discountCode", { value: code })`, `register("discount-apply")`, and `register("discount-remove")` create discount forms.
 - `register("note")` and `register("note-update")` create note forms.
 
 Each line item still gets its own form; the binding removes boilerplate, not the form identity requirement.
 
 If you render the same line items in a cart drawer, share this line item form component with the `/cart` page when possible. If the drawer needs different markup, preserve the same `set` + `lineId` + interactive `quantity` contract.
+
+When wiring less common cart forms, prefer the exact package types over memory. In an installed app, inspect `node_modules/@shopify/hydrogen/dist/index.d.mts` or use editor hover on `CartFormRegister` to confirm which `register(...)` calls require `{ value }` versus `{ defaultValue }`.

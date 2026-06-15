@@ -14,6 +14,7 @@ import {
   type ProductFilter,
 } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
+import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
 ```
 
 ## Loader
@@ -30,7 +31,8 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     variables: {
       handle: params.handle,
       first: 24,
-      filters: browse.filters.length > 0 ? browse.filters : undefined,
+      filters:
+        browse.filters.length > 0 ? (browse.filters as StorefrontApiProductFilter[]) : undefined,
       sortKey: browse.sortKey,
       reverse: browse.reverse || undefined,
     },
@@ -41,7 +43,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   return {
     collection: data.collection,
     products: data.collection.products.nodes,
-    availableFilters: normalizeAvailableFilters(data.collection.products.filters),
+    availableFilters: data.collection.products.filters,
     dataSearch: url.searchParams.toString(),
   };
 }
@@ -115,27 +117,71 @@ Use uncontrolled form controls plus a `key={serializeCollectionParams(state).toS
 For each Storefront `FilterValue`, parse `value.input` only enough to build form field names and values. Use Hydrogen helpers for active checks:
 
 ```tsx
-<input
-  type="checkbox"
-  name={filterInputToParamEntries(value.input)[0]?.name}
-  value={filterInputToParamEntries(value.input)[0]?.value}
-  defaultChecked={isFilterInputActive(activeFilters, value.input)}
-  onChange={(event) => {
-    if (isMutuallyExclusive(filter) && event.currentTarget.checked) {
-      uncheckSiblings(event.currentTarget);
-    }
-    requestFormSubmit(event);
-  }}
-/>
+function filterInputParamEntries(input: string): Array<{ name: string; value: string }> {
+  let filter: ProductFilter;
+  try {
+    filter = JSON.parse(input) as ProductFilter;
+  } catch {
+    return [];
+  }
+
+  return Array.from(
+    serializeCollectionParams({ filters: [filter], sortKey: undefined, reverse: false }),
+    ([name, value]) => ({ name, value }),
+  );
+}
+
+function FilterValueInput({ activeFilters, filter, value }: Props) {
+  const entries = filterInputParamEntries(value.input);
+  if (entries.length !== 1) return null;
+
+  const [{ name, value: paramValue }] = entries;
+
+  return (
+    <input
+      type="checkbox"
+      name={name}
+      value={paramValue}
+      defaultChecked={isFilterInputActive(activeFilters, value.input)}
+      onChange={(event) => {
+        if (isMutuallyExclusive(filter) && event.currentTarget.checked) {
+          uncheckSiblings(event.currentTarget);
+        }
+        requestFormSubmit(event);
+      }}
+    />
+  );
+}
 ```
 
-For active chips:
+For active chips, use parsed active `ProductFilter` values from collection state:
 
 ```tsx
-const currentParams = serializeCollectionParams(state);
-const removal = getFilterRemovalUrl(currentParams, filter);
-const href = removal === "?" ? collectionPath : `${collectionPath}${removal}`;
+function ActiveFilterChip({ collectionPath, filter, state }: Props) {
+  const currentParams = serializeCollectionParams(state);
+  const removal = getFilterRemovalUrl(currentParams, filter);
+  const href = removal === "?" ? collectionPath : `${collectionPath}${removal}`;
+
+  return (
+    <a href={href}>
+      {describeFilter(filter)}
+    </a>
+  );
+}
 ```
+
+When passing `browse.filters` into a `gql()` query variable typed from Storefront API introspection, match the app's established pattern. The Hydrogen examples cast the parsed filters to the generated Storefront API `ProductFilter` type at the query variable boundary:
+
+```ts
+import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
+
+variables: {
+  filters:
+    browse.filters.length > 0 ? (browse.filters as StorefrontApiProductFilter[]) : undefined,
+}
+```
+
+Keep this as a generated-type cast scoped to the query variable boundary.
 
 ## Search Pages
 

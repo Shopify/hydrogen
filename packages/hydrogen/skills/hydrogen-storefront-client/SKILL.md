@@ -147,6 +147,8 @@ npm install -D gql.tada
 
 If the app already has TypeScript plugins, append this plugin without removing framework plugins such as Next.js `name: "next"`. If the app's `tsconfig.json` extends a generated config, such as Nuxt's `.nuxt/tsconfig.json`, add `compilerOptions.plugins` in the extending `tsconfig.json`.
 
+The schema path above is shipped by the `@shopify/hydrogen` package.
+
 This plugin provides inline GraphQL autocompletion, validation, and hover docs inside `gql()` calls. The editor must be configured to use the workspace TypeScript version (not the bundled one) — the bundled TS server does not load plugins.
 
 ### Headless query validation

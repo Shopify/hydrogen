@@ -58,7 +58,7 @@ export async function handleRequest(request: Request, next: () => Promise<Respon
 
 React Router framework mode needs:
 
-- `future.v8_middleware: true` in `react-router.config.ts`.
+- Verify `future.v8_middleware: true` is set in `react-router.config.ts`.
 - A final splat route such as `route("*", "routes/catchall.tsx")`.
 - Root-route middleware that creates the Storefront client, runs Hydrogen routes, stores the client in context, and applies response headers after `next()`.
 - Trusted buyer-IP resolution before `createStorefrontClient`; use the buyer-IP guidance from `hydrogen-storefront-client`.

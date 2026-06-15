@@ -4,17 +4,29 @@ Use a client-side tracker component and a shared singleton module.
 
 ## Root Tracker
 
-Server root/layout reads safe `ShopAnalytics` data and passes it to a client tracker:
+Server root/layout resolves safe `ShopAnalytics` data and passes it to a client tracker. `shopId` is the Shopify Shop GID; fetch `shop { id }` from the Storefront API or read it from existing server-side app config that already stores that GID. Use the app's resolved market/i18n data for `acceptedLanguage` and `currency`.
 
 ```tsx
 // React Router loader or Next server layout
+import { gql } from "@shopify/hydrogen";
+
+const SHOP_ANALYTICS_QUERY = gql(`
+  query ShopAnalytics {
+    shop { id }
+  }
+`);
+
+const { data } = await storefrontClient.graphql(SHOP_ANALYTICS_QUERY);
+
 const analyticsShop = {
-  shopId: process.env.PUBLIC_SHOP_ID!,
-  acceptedLanguage: "EN",
-  currency: "USD",
+  shopId: data.shop.id,
+  acceptedLanguage: market.language,
+  currency: market.currencyCode,
   hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
 };
 ```
+
+Do not query `localization.language` just to echo the language already passed to `@inContext`. If the app only knows country/language and does not have a market currency code, add `currencyCode` to the app's market config or query `localization { country { currency { isoCode } } }` as a fallback.
 
 ```tsx
 import { useEffect } from "react";
@@ -117,3 +129,16 @@ if (term) {
 ## Cart Updates
 
 Subscribe to cart store changes and call `analytics.updateCart(cart)` when server-confirmed cart data changes. Do not manually publish `product_added_to_cart`; the bus derives it from cart deltas.
+
+Publish `CART_VIEWED` when the cart page or drawer is viewed. The cart payload is `AnalyticsCart | null`: when a compatible cart is available, include `id`, `updatedAt`, and connection-shaped `lines`; otherwise pass `cart: null` instead of a partial cart.
+
+```tsx
+analytics.publish(AnalyticsEvent.CART_VIEWED, {
+  cart: analyticsCart ?? null,
+  prevCart: null,
+  url: window.location.href,
+  shop,
+});
+```
+
+If the app uses Hydrogen's cart store type directly, convert it at the app boundary before publishing analytics. Only pass settled cart lines that include product IDs, vendor, and variant price fields.

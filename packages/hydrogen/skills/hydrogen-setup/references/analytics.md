@@ -136,7 +136,7 @@ Only affects deprecated JS-visible cookies (`_shopify_y`, `_shopify_s`) — pres
 
 ## The shared singleton pattern
 
-Across all frameworks the right shape is **one bus per page lifetime**, lazily created on the client. Read environment variables on the server, then pass the safe `ShopAnalytics` values into the client analytics module from a root layout/loader boundary. A module-level singleton with `configureAnalytics()` and `getAnalytics()` works everywhere — React, Solid, Svelte, vanilla JS — and is what every framework example should use:
+Across all frameworks the right shape is **one bus per page lifetime**, lazily created on the client. Resolve `ShopAnalytics` on the server, then pass those safe values into the client analytics module from a root layout/loader boundary. `shopId` is the Shopify Shop GID, so fetch `shop { id }` from the Storefront API or read it from existing server-side app config that already stores that GID. Use the app's resolved market/i18n data for `acceptedLanguage` and `currency`. A module-level singleton with `configureAnalytics()` and `getAnalytics()` works everywhere — React, Solid, Svelte, vanilla JS — and is what every framework example should use:
 
 ```ts
 // app/lib/analytics.ts (or your framework's idiomatic shared-lib path)
@@ -177,8 +177,8 @@ export function getAnalytics(): StorefrontAnalytics | null {
 
 Non-optional constraints:
 
-- **No client env reads.** `shopId`, `acceptedLanguage`, `currency`, and `hydrogenSubchannelId` are safe to serialize, but they should still be read from env on the server and passed into `configureAnalytics()`. Do not read `process.env` or `import.meta.env` inside this browser-lazy module.
-- **Root configuration before publishing.** The root route/layout should read env on the server, serialize the safe `ShopAnalytics` object, and call `configureAnalytics(shop)` during client hydration before route components publish analytics events.
+- **No client env reads.** `shopId`, `acceptedLanguage`, `currency`, and `hydrogenSubchannelId` are safe to serialize, but they should still be resolved on the server and passed into `configureAnalytics()`. Do not read `process.env` or `import.meta.env` inside this browser-lazy module.
+- **Root configuration before publishing.** The root route/layout should resolve the safe `ShopAnalytics` object on the server and call `configureAnalytics(shop)` during client hydration before route components publish analytics events.
 - **Browser-only initialization.** `typeof window === 'undefined'` guard (or your framework's equivalent — SvelteKit's `$app/environment.browser`, Next.js implicit on `"use client"`) prevents construction on the server. SSR rendering must not call `createStorefrontAnalytics`.
 - **One instance per page.** The singleton means every route, every effect, every script tag shares the same bus. Multiple instances on the same page overwrite `window.Shopify.customerPrivacy.config`; the latest initialized config wins. Multi-store on one page is not supported.
 - **Lazy.** Construction happens on first `getAnalytics()` call. This avoids running consent scripts during initial paint when the page may not need analytics yet (e.g. a redirect target).
@@ -209,20 +209,38 @@ Subscribers run in insertion order. Subscriber errors are caught; one bad subscr
 
 Each framework should derive `ShopAnalytics` on the server and configure the client singleton before publishing. The exact env API varies by framework; these examples show the data flow, not a requirement to use these file names.
 
+Example Storefront API query for frameworks that do not already have the Shop GID in app config:
+
+```ts
+import { gql } from "@shopify/hydrogen";
+
+const SHOP_ANALYTICS_QUERY = gql(`
+  query ShopAnalytics {
+    shop { id }
+  }
+`);
+```
+
+Do not query `localization.language` just to echo the language already passed to `@inContext`. If the app only knows country/language and does not have a market currency code, add `currencyCode` to the app's market config or query `localization { country { currency { isoCode } } }` as a fallback.
+
 SvelteKit server load:
 
 ```ts
 // src/routes/+layout.server.ts
 import type { LayoutServerLoad } from "./$types";
 
-export const load: LayoutServerLoad = () => ({
-  analyticsShop: {
-    shopId: process.env.PUBLIC_SHOP_ID!,
-    acceptedLanguage: "EN",
-    currency: "USD",
-    hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
-  },
-});
+export const load: LayoutServerLoad = async ({ locals }) => {
+  const { data } = await locals.storefront.graphql(SHOP_ANALYTICS_QUERY);
+
+  return {
+    analyticsShop: {
+      shopId: data.shop.id,
+      acceptedLanguage: locals.market.language,
+      currency: locals.market.currencyCode,
+      hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
+    },
+  };
+};
 ```
 
 SvelteKit root layout:
@@ -246,14 +264,20 @@ Next.js App Router server layout:
 import { Suspense } from "react";
 import { AnalyticsTracker } from "./components/AnalyticsTracker";
 
-const analyticsShop = {
-  shopId: process.env.PUBLIC_SHOP_ID!,
-  acceptedLanguage: "EN",
-  currency: "USD",
-  hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
-};
+async function getAnalyticsShop() {
+  const { data } = await storefrontClient.graphql(SHOP_ANALYTICS_QUERY);
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return {
+    shopId: data.shop.id,
+    acceptedLanguage: market.language,
+    currency: market.currencyCode,
+    hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
+  };
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const analyticsShop = await getAnalyticsShop();
+
   return (
     <html lang="en">
       <body>
@@ -296,10 +320,11 @@ Astro root layout:
 ```astro
 ---
 // src/layouts/BaseLayout.astro
+const { data } = await storefrontClient.graphql(SHOP_ANALYTICS_QUERY);
 const analyticsShop = {
-  shopId: process.env.PUBLIC_SHOP_ID!,
-  acceptedLanguage: "EN",
-  currency: "USD",
+  shopId: data.shop.id,
+  acceptedLanguage: market.language,
+  currency: market.currencyCode,
   hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
 };
 ---
@@ -350,6 +375,8 @@ Whenever cart state resolves (any source — fetch, mutation, SPA nav):
 ```
 
 Required product fields for `product_viewed` and `product_added_to_cart` Monorail dispatch: `id`, `title`, `price`, `vendor`, `variantId`, `variantTitle`. `id` must be the Shopify Product GID and `variantId` must be the Shopify ProductVariant GID when one is available; handles are routing/display data, not analytics IDs. Missing fields cause the Shopify analytics subscriber to skip the Monorail event and log a field-specific error — the bus event still fires for your subscribers, only the Monorail leg drops.
+
+`CART_VIEWED` requires `{ cart, prevCart, url, shop }`. `cart` and `prevCart` are `AnalyticsCart | null`; when a compatible cart is available, include `id`, `updatedAt`, and connection-shaped `lines`, otherwise pass `cart: null` rather than a partial object.
 
 ## Framework-specific shapes
 
@@ -453,14 +480,20 @@ Wrap the tracker in `<Suspense>` in the root layout. `useSearchParams()` opts th
 import { Suspense } from "react";
 import { AnalyticsTracker } from "./components/AnalyticsTracker";
 
-const analyticsShop = {
-  shopId: process.env.PUBLIC_SHOP_ID!,
-  acceptedLanguage: "EN",
-  currency: "USD",
-  hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
-};
+async function getAnalyticsShop() {
+  const { data } = await storefrontClient.graphql(SHOP_ANALYTICS_QUERY);
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return {
+    shopId: data.shop.id,
+    acceptedLanguage: market.language,
+    currency: market.currencyCode,
+    hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
+  };
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const analyticsShop = await getAnalyticsShop();
+
   return (
     <html lang="en">
       <body>
@@ -534,12 +567,7 @@ Render it from the (server) page component:
 export default async function ProductPage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
   const product = await fetchProduct(handle);
-  const analyticsShop = {
-    shopId: process.env.PUBLIC_SHOP_ID!,
-    acceptedLanguage: "EN",
-    currency: "USD",
-    hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
-  };
+  const analyticsShop = await getAnalyticsShop();
   return (
     <main>
       <ProductViewedTracker product={product} shop={analyticsShop} />
@@ -557,10 +585,11 @@ Astro is MPA-by-default. Each navigation is a full page load, so there is no cli
 ---
 // src/layouts/BaseLayout.astro
 const { title } = Astro.props;
+const { data } = await storefrontClient.graphql(SHOP_ANALYTICS_QUERY);
 const analyticsShop = {
-  shopId: process.env.PUBLIC_SHOP_ID!,
-  acceptedLanguage: "EN",
-  currency: "USD",
+  shopId: data.shop.id,
+  acceptedLanguage: market.language,
+  currency: market.currencyCode,
   hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
 };
 ---

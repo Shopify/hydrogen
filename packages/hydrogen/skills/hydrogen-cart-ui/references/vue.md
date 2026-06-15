@@ -84,12 +84,28 @@ const lines = useCart((state) => state.data.lines.nodes);
 <template>
   <ul>
     <li v-for="line in lines" :key="line.id">
-      <span>{{ line.merchandise?.product.title }}</span>
+      <img
+        v-if="line.merchandise?.image"
+        :src="line.merchandise.image.url"
+        :alt="line.merchandise.image.altText ?? ''"
+      />
+      <NuxtLink
+        v-if="line.merchandise?.product.handle"
+        :to="`/products/${line.merchandise.product.handle}`"
+      >
+        {{ line.merchandise.product.title }}
+      </NuxtLink>
+      <span v-else>{{ line.merchandise?.product.title ?? line.merchandise?.title ?? "Product" }}</span>
+      <span v-for="option in line.merchandise?.selectedOptions ?? []" :key="option.name">
+        {{ option.name }}: {{ option.value }}
+      </span>
       <span v-if="line.merchandise?.availableForSale === false">Unavailable</span>
     </li>
   </ul>
 </template>
 ```
+
+Cart line merchandise fields are intentionally tolerant because optimistic lines and custom fragments can differ from a complete Storefront API cart response. Treat `line.merchandise`, `merchandise.selectedOptions`, `merchandise.title`, `merchandise.product.handle`, and `merchandise.image` as optional unless the app's custom cart fragment and types prove otherwise.
 
 ## Reading Cart State
 
@@ -153,12 +169,14 @@ Important Vue form fields:
 - `register("lineId", { value })` scopes the form to one line.
 - `register("quantity", { value, interactive: true })` wires an editable quantity input for both hydrated and no-JS submissions. Do not replace it with text-only output.
 - `register("increase")`, `register("decrease")`, and `register("remove")` create line item controls.
-- `register("discountCode")`, `register("discount-apply")`, and `register("discount-remove")` create discount forms.
+- `register("discountCode", { defaultValue: "" })`, `register("discountCode", { value: code })`, `register("discount-apply")`, and `register("discount-remove")` create discount forms.
 - `register("note")` and `register("note-update")` create note forms.
 
 Each line item still gets its own form; the binding removes boilerplate, not the form identity requirement.
 
 If you render the same line items in a cart drawer, share this line item form component with the `/cart` page when possible. If the drawer needs different markup, preserve the same `set` + `lineId` + interactive `quantity` contract.
+
+When wiring less common cart forms, prefer the exact package types over memory. In an installed app, inspect `node_modules/@shopify/hydrogen/dist/index.d.mts` or use editor hover on `CartFormRegister` to confirm which `register(...)` calls require `{ value }` versus `{ defaultValue }`.
 
 ## Pending Helpers
 
