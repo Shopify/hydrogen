@@ -1,5 +1,15 @@
 # @shopify/create-hydrogen
 
+## 5.0.37
+
+### Patch Changes
+
+- Include line item children recursively in cart. ([#3753](https://github.com/Shopify/hydrogen/pull/3753)) by [@martin-pettersson](https://github.com/martin-pettersson)
+
+- Add generic cart result typing to `createCartHandler` so custom cart fragments can use their generated fragment types. ([#3767](https://github.com/Shopify/hydrogen/pull/3767)) by [@andguy95](https://github.com/andguy95)
+
+- Widen React Router peer dependency ranges so Hydrogen packages accept compatible React Router 7.16 patch versions without npm peer dependency conflicts. New Hydrogen projects now default to React Router 7.16.0. ([#3771](https://github.com/Shopify/hydrogen/pull/3771)) by [@fredericoo](https://github.com/fredericoo)
+
 ## 5.0.36
 
 ### Patch Changes
