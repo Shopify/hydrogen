@@ -30,6 +30,7 @@ export type {
   ProductGetHandler,
   ProductGetHandlerContext,
   ProductGetResult,
+  ProductQueryClient,
   ProductServerHandlers,
 } from "./server-handlers";
 export { createProductFormRegister } from "./form";

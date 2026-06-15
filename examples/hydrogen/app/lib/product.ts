@@ -1,8 +1,10 @@
 import { createProductComponents } from "@shopify/hydrogen/react";
 
-import type { loader } from "~/routes/($locale).products.$handle";
+import type { productHandlers } from "~/lib/product-handlers";
 
-export type ProductData = Awaited<ReturnType<typeof loader>>["product"];
+export type ProductData = NonNullable<
+  Awaited<ReturnType<typeof productHandlers.get>>["data"]["product"]
+>;
 
 export const { ProductProvider, useProduct, useProductForm } =
-  createProductComponents<ProductData>();
+  createProductComponents<typeof productHandlers>();

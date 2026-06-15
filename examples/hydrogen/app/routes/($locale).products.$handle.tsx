@@ -1,5 +1,4 @@
 import { getSelectedProductOptions } from "@shopify/hydrogen";
-import { gql } from "@shopify/hydrogen";
 import { redirect, useLoaderData, useLocation, useNavigate } from "react-router";
 
 import { ProductForm } from "~/components/ProductForm";
@@ -7,6 +6,7 @@ import { ProductImage } from "~/components/ProductImage";
 import { ProductPrice } from "~/components/ProductPrice";
 import { ProductView } from "~/lib/analytics";
 import { ProductProvider, useProductForm } from "~/lib/product";
+import { productHandlers } from "~/lib/product-handlers";
 import { redirectIfHandleIsLocalized } from "~/lib/redirect";
 import { getVariantUrl } from "~/lib/variants";
 
@@ -46,12 +46,15 @@ async function loadCriticalData({ context, params, request }: Route.LoaderArgs) 
     throw new Error("Expected product handle to be defined");
   }
 
-  const [{ product }] = await Promise.all([
-    storefront.query(PRODUCT_QUERY, {
-      variables: { handle, selectedOptions: getSelectedProductOptions(request) },
+  const [{ data }] = await Promise.all([
+    productHandlers.get({
+      storefrontClient: storefront,
+      handle,
+      selectedOptions: getSelectedProductOptions(request),
     }),
     // Add other queries here, so that they are loaded in parallel
   ]);
+  const { product } = data;
 
   if (!product?.id) {
     throw new Response(null, { status: 404 });
@@ -153,100 +156,3 @@ function ProductDetails() {
     </div>
   );
 }
-
-const PRODUCT_VARIANT_FRAGMENT = gql(`
-  fragment ProductVariant on ProductVariant {
-    availableForSale
-    compareAtPrice {
-      amount
-      currencyCode
-    }
-    id
-    image {
-      __typename
-      id
-      url
-      altText
-      width
-      height
-    }
-    price {
-      amount
-      currencyCode
-    }
-    product {
-      title
-      handle
-    }
-    selectedOptions {
-      name
-      value
-    }
-    sku
-    title
-    unitPrice {
-      amount
-      currencyCode
-    }
-  }
-`);
-
-const PRODUCT_FRAGMENT = gql(
-  `
-  fragment Product on Product {
-    id
-    title
-    vendor
-    handle
-    descriptionHtml
-    description
-    requiresSellingPlan
-    encodedVariantExistence
-    encodedVariantAvailability
-    options {
-      name
-      optionValues {
-        name
-        firstSelectableVariant {
-          ...ProductVariant
-        }
-        swatch {
-          color
-          image {
-            previewImage {
-              url
-            }
-          }
-        }
-      }
-    }
-    selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
-      ...ProductVariant
-    }
-    adjacentVariants (selectedOptions: $selectedOptions) {
-      ...ProductVariant
-    }
-    seo {
-      description
-      title
-    }
-  }
-`,
-  [PRODUCT_VARIANT_FRAGMENT],
-);
-
-const PRODUCT_QUERY = gql(
-  `
-  query Product(
-    $country: CountryCode
-    $handle: String!
-    $language: LanguageCode
-    $selectedOptions: [SelectedOptionInput!]!
-  ) @inContext(country: $country, language: $language) {
-    product(handle: $handle) {
-      ...Product
-    }
-  }
-`,
-  [PRODUCT_FRAGMENT],
-);
