@@ -271,7 +271,7 @@ describe("setupHydrogen", () => {
       recursive: true,
     });
     writeFileSync(
-      join(appRoot, ".agents/skills/hydrogen-cart-ui/references/vue.md"),
+      join(appRoot, ".agents/skills/hydrogen-cart-ui/references/react.md"),
       "partial copy",
     );
     writeJson(join(appRoot, "package.json"), {
