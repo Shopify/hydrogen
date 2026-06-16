@@ -30,20 +30,9 @@ export const handle: Handle = async ({ event, resolve }) => {
   event.locals.storefront = client;
 
   const response = await resolve(event);
-  return applyStorefrontResponseHeaders(requestContext, response);
+  requestContext.applyResponseHeaders(response.headers);
+  return response;
 };
-
-function applyStorefrontResponseHeaders(requestContext, response) {
-  try {
-    requestContext.applyResponseHeaders(response.headers);
-    return response;
-  } catch (error) {
-    if (!(error instanceof TypeError)) throw error;
-    const mutableResponse = new Response(response.body, response);
-    requestContext.applyResponseHeaders(mutableResponse.headers);
-    return mutableResponse;
-  }
-}
 ```
 
 ```ts
@@ -108,20 +97,9 @@ export const handle: Handle = async ({ event, resolve }) => {
   event.locals.storefront = client;
 
   const response = await resolve(event);
-  return applyStorefrontResponseHeaders(requestContext, response);
+  requestContext.applyResponseHeaders(response.headers);
+  return response;
 };
-
-function applyStorefrontResponseHeaders(requestContext, response) {
-  try {
-    requestContext.applyResponseHeaders(response.headers);
-    return response;
-  } catch (error) {
-    if (!(error instanceof TypeError)) throw error;
-    const mutableResponse = new Response(response.body, response);
-    requestContext.applyResponseHeaders(mutableResponse.headers);
-    return mutableResponse;
-  }
-}
 ```
 
 ## Static pages (no buyer IP)
@@ -172,5 +150,4 @@ export const load: PageServerLoad = async ({ params }) => {
 ## Footguns
 
 - **`event.getClientAddress()` needs proxy config** — behind a reverse proxy, the raw address is the proxy's IP, not the buyer's. Set the `ADDRESS_HEADER` env var (e.g. `ADDRESS_HEADER=X-Forwarded-For`) and `XFF_DEPTH` to the number of trusted proxies so SvelteKit reads the correct IP from the right end of the header.
-- **Immutable response headers** — `Response.redirect()` and similar produce responses with frozen headers. Apply captured headers to mutable framework responses; if a framework returns immutable responses from its hook, clone before applying headers.
 - **`filterSerializedResponseHeaders` is unrelated** — this option on `resolve()` controls which headers from SvelteKit's internal `fetch()` calls are serialized into the HTML for client-side hydration. It does not affect the actual HTTP response headers. Don't confuse it with forwarding SFAPI headers.

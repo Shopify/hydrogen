@@ -18,7 +18,7 @@ Do not fetch cart data for the home page. Cart belongs to the cart route and nav
 - Render collections and products as separate sections.
 - Link collection cards using the app's existing collection route convention when present; otherwise use `/collections/{handle}`.
 - Link product cards using the app's existing product route convention when present; otherwise use `/products/{handle}`.
-- Format money with `formatMoney` from `@shopify/hydrogen`; never do client-side currency arithmetic.
+- Format money with the local `hydrogen-money` skill; never do client-side currency arithmetic.
 - Use empty states when collections or products are missing.
 - Keep styles local to the app's existing styling approach. If there is no styling system, use minimal semantic HTML.
 

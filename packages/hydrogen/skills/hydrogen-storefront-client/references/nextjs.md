@@ -15,7 +15,7 @@ import {
 
 const FIRST_FORWARDED_FOR_VALUE_INDEX = 0;
 
-export const createStorefront = cache(async () => {
+export const getStorefrontClient = cache(async () => {
   const requestHeaders = await headers();
   const requestContext = createStorefrontRequestContext({ headers: requestHeaders });
   const forwardedForValues = requestHeaders.get("x-forwarded-for")?.split(",");
@@ -37,7 +37,7 @@ export const createStorefront = cache(async () => {
 
 ```ts
 // app/products/[handle]/page.tsx
-import { createStorefront } from "@/lib/storefront";
+import { getStorefrontClient } from "@/lib/storefront";
 import { gql } from "@shopify/hydrogen";
 
 const PRODUCT_QUERY = gql(`
@@ -48,7 +48,7 @@ const PRODUCT_QUERY = gql(`
 
 export default async function ProductPage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
-  const storefront = await createStorefront();
+  const storefront = await getStorefrontClient();
   const { data } = await storefront.graphql(PRODUCT_QUERY, {
     variables: { handle },
   });
@@ -105,4 +105,4 @@ export default async function CollectionPage({ params }: { params: Promise<{ han
 }
 ```
 
-This component never touches request-time APIs (`headers()`, `cookies()`, `searchParams`), so Next.js can prerender it at build time or cache it with ISR (`export const revalidate = 3600`). All requests share one throttle bucket — fine for pages that serve the same data to every visitor. Use a per-request `private` client from `createStorefront()` when you need per-buyer isolation or personalized data.
+This component never touches request-time APIs (`headers()`, `cookies()`, `searchParams`), so Next.js can prerender it at build time or cache it with ISR (`export const revalidate = 3600`). All requests share one throttle bucket — fine for pages that serve the same data to every visitor. Use a per-request `private` client from `getStorefrontClient()` when you need per-buyer isolation or personalized data.

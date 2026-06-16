@@ -22,6 +22,8 @@ Use these canonical environment variable names in app code and docs:
 - `PUBLIC_STORE_DOMAIN` for the Shopify store domain.
 - `PUBLIC_STOREFRONT_API_TOKEN` for the public Storefront API token.
 - `PRIVATE_STOREFRONT_API_TOKEN` for the private Storefront API token.
+- `PUBLIC_STOREFRONT_ID` for analytics `hydrogenSubchannelId`; use `"0"` when the app does not have a storefront ID.
+- `PUBLIC_CHECKOUT_DOMAIN` for app-level checkout-domain configuration such as CSP setup. Checkout links should come from cart data, usually `cart.checkoutUrl`.
 
 If the framework requires a prefix to expose client-side variables, preserve the canonical suffix and add only that framework prefix. For example: `NEXT_PUBLIC_STORE_DOMAIN`, `VITE_PUBLIC_STORE_DOMAIN`, or `PUBLIC_STORE_DOMAIN` depending on the framework. Never expose `PRIVATE_STOREFRONT_API_TOKEN` to the client.
 
@@ -63,8 +65,8 @@ Requires `buyerIp` to forward buyer identity for per-buyer throttle isolation. R
 ```ts
 import { createStorefrontClient, createStorefrontRequestContext } from "@shopify/hydrogen";
 
-function getBuyerIp(request: Request) {
-  const buyerIp = request.headers.get("oxygen-buyer-ip");
+function getBuyerIp(headers: Headers) {
+  const buyerIp = headers.get("oxygen-buyer-ip");
   if (!buyerIp) throw new Error("oxygen-buyer-ip is required for private SFAPI clients");
   return buyerIp;
 }
@@ -74,7 +76,7 @@ const client = createStorefrontClient({
   config: {
     storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
     privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-    buyerIp: getBuyerIp(request),
+    buyerIp: getBuyerIp(request.headers),
     i18n: getLocaleFromRequest(request),
     requestContext: createStorefrontRequestContext(request),
   },
@@ -122,9 +124,9 @@ const PRODUCT_FIELDS = gql(`fragment ProductFields on Product { title handle }`)
 const QUERY = gql(`query { products(first: 10) { nodes { ...ProductFields } } }`, [PRODUCT_FIELDS]);
 ```
 
-### Editor autocompletion
+### GraphQL type setup
 
-For inline GraphQL autocompletion, validation, and hover docs inside `gql()` calls, add the `gql.tada/ts-plugin` to the user's `tsconfig.json` and install `gql.tada` as a devDependency:
+When adding Storefront API `gql()` documents to a TypeScript app, install `gql.tada` as a devDependency and add the `gql.tada/ts-plugin` to the app's `tsconfig.json`:
 
 ```bash
 npm install -D gql.tada
@@ -145,7 +147,11 @@ npm install -D gql.tada
 }
 ```
 
-The editor must be configured to use the workspace TypeScript version (not the bundled one) — the bundled TS server does not load plugins.
+If the app already has TypeScript plugins, append this plugin without removing framework plugins such as Next.js `name: "next"`. If the app's `tsconfig.json` extends a generated config, such as Nuxt's `.nuxt/tsconfig.json`, add `compilerOptions.plugins` in the extending `tsconfig.json`.
+
+The schema path above is shipped by the `@shopify/hydrogen` package.
+
+This plugin provides inline GraphQL autocompletion, validation, and hover docs inside `gql()` calls. The editor must be configured to use the workspace TypeScript version (not the bundled one) — the bundled TS server does not load plugins.
 
 ### Headless query validation
 
@@ -250,3 +256,4 @@ Read the recipe for your framework when wiring up the client in an app:
 - **Astro** — `references/astro.md` — Middleware sets client on `Astro.locals`, static pages use module-scoped client with `export const prerender = true`. Key footgun: `Astro.clientAddress` throws on prerendered pages.
 - **SvelteKit** — `references/sveltekit.md` — Handle hook sets client on `event.locals`, load functions destructure it. Key footgun: `getClientAddress()` returns the proxy IP without `ADDRESS_HEADER` + `XFF_DEPTH` config.
 - **SolidStart** — `references/solidstart.md` — Middleware sets client on `event.locals`, server functions retrieve it via `getRequestEvent()`. Key footgun: `getRequestEvent()` only works inside `"use server"` boundaries.
+- **Nuxt** — `references/nuxt.md` — Nitro middleware creates the request-scoped private client, a server plugin injects it, and a browser public client rewrites Storefront API fetches through the same-origin Hydrogen proxy.
