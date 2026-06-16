@@ -740,6 +740,95 @@ describe('customer', () => {
       });
     });
 
+    describe('login redirectPath', () => {
+      async function expectLoginRedirectPath(
+        request: Request,
+        redirectPath: string,
+      ) {
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request,
+          waitUntil: vi.fn(),
+        });
+
+        await customer.login();
+
+        expect(session.set).toHaveBeenCalledWith(
+          CUSTOMER_ACCOUNT_SESSION_KEY,
+          expect.objectContaining({redirectPath}),
+        );
+      }
+
+      it('keeps path-only return_to redirects', async () => {
+        await expectLoginRedirectPath(
+          new Request('https://localhost?return_to=/account/orders'),
+          '/account/orders',
+        );
+      });
+
+      it('normalizes HTTPS same-origin return_to redirects to path and search', async () => {
+        const redirectPath = 'https://shop.example.com/account/orders?cursor=1';
+        const request = new Request(
+          `http://shop.example.com/account/login?return_to=${encodeURIComponent(
+            redirectPath,
+          )}`,
+        );
+
+        await expectLoginRedirectPath(request, '/account/orders?cursor=1');
+      });
+
+      it.each(['return_to', 'redirect'])(
+        'falls back for HTTP same-origin %s redirects',
+        async (redirectParam) => {
+          const redirectPath = 'http://shop.example.com/account/orders';
+          const request = new Request(
+            `http://shop.example.com/account/login?${redirectParam}=${encodeURIComponent(
+              redirectPath,
+            )}`,
+          );
+
+          await expectLoginRedirectPath(request, '/account');
+        },
+      );
+
+      it('falls back for cross-origin HTTPS return_to redirects', async () => {
+        const redirectPath = 'https://evil.example.com/account/orders';
+        const request = new Request(
+          `https://shop.example.com/account/login?return_to=${encodeURIComponent(
+            redirectPath,
+          )}`,
+        );
+
+        await expectLoginRedirectPath(request, '/account');
+      });
+
+      it('normalizes HTTPS same-origin Referer redirects to path and search', async () => {
+        const request = new Request('https://shop.example.com/account/login');
+        request.headers.set(
+          'Referer',
+          'https://shop.example.com/account/profile?editing=true',
+        );
+
+        await expectLoginRedirectPath(request, '/account/profile?editing=true');
+      });
+
+      it.each([
+        'http://shop.example.com/account/profile',
+        'https://evil.example.com/account/profile',
+        '//evil.example.com/account/profile',
+        'javascript:alert(1)',
+        'data:text/html,hello',
+        'http://%',
+      ])('falls back for unsafe Referer redirects: %s', async (referer) => {
+        const request = new Request('https://shop.example.com/account/login');
+        request.headers.set('Referer', referer);
+
+        await expectLoginRedirectPath(request, '/account');
+      });
+    });
+
     describe('logout', () => {
       describe('using new auth url when shopId is present in env', () => {
         it('Redirects to the customer account api logout url', async () => {
@@ -1170,6 +1259,20 @@ describe('customer', () => {
 
   describe('authorize', () => {
     describe('using new auth url when shopId is present in env', () => {
+      function mockSuccessfulTokenExchange() {
+        fetch.mockResolvedValue(
+          createFetchResponse(
+            {
+              access_token: 'shcat_access_token',
+              expires_in: '',
+              id_token: `${btoa('{}')}.${btoa('{"nonce": "nonce"}')}.signature`,
+              refresh_token: 'shcrt_refresh_token',
+            },
+            {ok: true},
+          ),
+        );
+      }
+
       it('Throws unauthorized if no code or state params are passed', async () => {
         const customer = createCustomerAccountClient({
           session,
@@ -1249,17 +1352,7 @@ describe('customer', () => {
           waitUntil: vi.fn(),
         });
 
-        fetch.mockResolvedValue(
-          createFetchResponse(
-            {
-              access_token: 'shcat_access_token',
-              expires_in: '',
-              id_token: `${btoa('{}')}.${btoa('{"nonce": "nonce"}')}.signature`,
-              refresh_token: 'shcrt_refresh_token',
-            },
-            {ok: true},
-          ),
-        );
+        mockSuccessfulTokenExchange();
 
         const response = await customer.authorize();
 
@@ -1323,6 +1416,98 @@ describe('customer', () => {
             refreshToken: 'shcrt_refresh_token',
           }),
         );
+      });
+
+      it('normalizes stored HTTPS same-origin redirectPath before redirecting', async () => {
+        session = {
+          commit: vi.fn(() => Promise.resolve('cookie')),
+          get: vi.fn(() => {
+            return {
+              ...mockCustomerAccountSession,
+              redirectPath: 'https://localhost/account/orders?cursor=1',
+            };
+          }) as HydrogenSession['get'],
+          set: vi.fn(),
+          unset: vi.fn(),
+          destroy: vi.fn(() => Promise.resolve('logout cookie')),
+        };
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://localhost?state=state&code=code'),
+          waitUntil: vi.fn(),
+        });
+
+        mockSuccessfulTokenExchange();
+
+        const response = await customer.authorize();
+
+        expect(response.status).toBe(302);
+        expect(response.headers.get('location')).toBe(
+          '/account/orders?cursor=1',
+        );
+      });
+
+      it('falls back when stored redirectPath is unsafe', async () => {
+        session = {
+          commit: vi.fn(() => Promise.resolve('cookie')),
+          get: vi.fn(() => {
+            return {
+              ...mockCustomerAccountSession,
+              redirectPath: 'http://localhost/account/orders',
+            };
+          }) as HydrogenSession['get'],
+          set: vi.fn(),
+          unset: vi.fn(),
+          destroy: vi.fn(() => Promise.resolve('logout cookie')),
+        };
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://localhost?state=state&code=code'),
+          waitUntil: vi.fn(),
+        });
+
+        mockSuccessfulTokenExchange();
+
+        const response = await customer.authorize();
+
+        expect(response.status).toBe(302);
+        expect(response.headers.get('location')).toBe('/account');
+      });
+
+      it('falls back when stored redirectPath is cross-origin HTTPS', async () => {
+        session = {
+          commit: vi.fn(() => Promise.resolve('cookie')),
+          get: vi.fn(() => {
+            return {
+              ...mockCustomerAccountSession,
+              redirectPath: 'https://evil.example.com/account/orders',
+            };
+          }) as HydrogenSession['get'],
+          set: vi.fn(),
+          unset: vi.fn(),
+          destroy: vi.fn(() => Promise.resolve('logout cookie')),
+        };
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://localhost?state=state&code=code'),
+          waitUntil: vi.fn(),
+        });
+
+        mockSuccessfulTokenExchange();
+
+        const response = await customer.authorize();
+
+        expect(response.status).toBe(302);
+        expect(response.headers.get('location')).toBe('/account');
       });
 
       it('Warns with useCustomAuthDomain when calling authorize in development', async () => {

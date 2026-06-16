@@ -36,10 +36,7 @@ import {
   getDebugHeaders,
 } from '../utils/request';
 import {getCallerStackLine, withSyncStack} from '../utils/callsites';
-import {
-  getRedirectUrl,
-  ensureLocalRedirectUrl,
-} from '../utils/get-redirect-url';
+import {ensureLocalRedirectUrl} from '../utils/get-redirect-url';
 import type {
   CustomerAccountOptions,
   CustomerAccount,
@@ -117,6 +114,53 @@ function defaultAuthStatusHandler(
     `?${new URLSearchParams({return_to: cleanedPathname}).toString()}`;
 
   return redirect(redirectTo);
+}
+
+function getRedirectPathFromSearchParams({
+  requestUrl,
+  httpsOrigin,
+}: {
+  requestUrl: URL;
+  httpsOrigin: string;
+}) {
+  return getSafeCustomerAccountRedirectPath({
+    redirectUrl:
+      requestUrl.searchParams.get('return_to') ||
+      requestUrl.searchParams.get('redirect'),
+    httpsOrigin,
+  });
+}
+
+function getSafeCustomerAccountRedirectPath({
+  redirectUrl,
+  httpsOrigin,
+}: {
+  redirectUrl?: string | null;
+  httpsOrigin: string;
+}) {
+  if (!redirectUrl) return;
+
+  try {
+    const url = new URL(redirectUrl, httpsOrigin);
+    if (url.protocol !== 'https:' || url.origin !== httpsOrigin) {
+      warnRedirectUrlRejected(redirectUrl, httpsOrigin);
+      return;
+    }
+
+    return url.pathname + url.search + url.hash;
+  } catch {
+    warnRedirectUrlRejected(redirectUrl, httpsOrigin);
+    return;
+  }
+}
+
+function warnRedirectUrlRejected(redirectUrl: string, httpsOrigin: string) {
+  if (process.env.NODE_ENV !== 'development') return;
+  console.warn(
+    `[h2:warn:customerAccount] Rejected redirect URL "${redirectUrl}" because it ` +
+      `does not use HTTPS or does not match the store origin (${httpsOrigin}). ` +
+      `Falling back to the default redirect path.`,
+  );
 }
 
 /** @publicDocs */
@@ -438,15 +482,20 @@ export function createCustomerAccountClient({
       const verifier = generateCodeVerifier();
       const challenge = await generateCodeChallenge(verifier);
 
+      const redirectPath =
+        getRedirectPathFromSearchParams({requestUrl, httpsOrigin}) ||
+        getSafeCustomerAccountRedirectPath({
+          redirectUrl: getHeader(request, 'Referer'),
+          httpsOrigin,
+        }) ||
+        defaultRedirectPath;
+
       session.set(CUSTOMER_ACCOUNT_SESSION_KEY, {
         ...session.get(CUSTOMER_ACCOUNT_SESSION_KEY),
         codeVerifier: verifier,
         state,
         nonce,
-        redirectPath:
-          getRedirectUrl(request.url) ||
-          getHeader(request, 'Referer') ||
-          defaultRedirectPath,
+        redirectPath,
       });
 
       loginUrl.searchParams.append('code_challenge', challenge);
@@ -615,9 +664,10 @@ export function createCustomerAccountClient({
         );
       }
 
-      const redirectPath = session.get(
-        CUSTOMER_ACCOUNT_SESSION_KEY,
-      )?.redirectPath;
+      const redirectPath = getSafeCustomerAccountRedirectPath({
+        redirectUrl: session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.redirectPath,
+        httpsOrigin,
+      });
 
       session.set(CUSTOMER_ACCOUNT_SESSION_KEY, {
         accessToken: customerAccessToken,
