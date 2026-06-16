@@ -29,7 +29,6 @@ Known server-capable examples include:
 - `@sveltejs/kit` → SvelteKit.
 - `astro` → Astro; verify `astro.config.*` uses `output: "server"` or `output: "hybrid"` with a server adapter before installing server routes.
 - `@solidjs/start` → SolidStart.
-- `nuxt` → Nuxt.
 - Remix / React Router v3-style server frameworks → inspect the app's current server entry, route modules, and request lifecycle before choosing the closest setup shape.
 
 Do not hard block just because the framework is not in this list. For unfamiliar frameworks, continue when the app has a real server request lifecycle where Hydrogen can run before routing and handle 404 redirects after routing. Stop only when the app is clearly browser-only, static-only, or has no way to run server code.
