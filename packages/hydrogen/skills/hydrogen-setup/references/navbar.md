@@ -18,7 +18,6 @@ Create or update the shared site navigation after the home page and cart route p
 - SvelteKit: update `src/routes/+layout.svelte` or the existing header component.
 - Astro: update the shared layout under `src/layouts/` or existing header component.
 - SolidStart: update the root route/layout or existing navigation component.
-- Nuxt: update `app.vue`, the default layout, or existing navigation component.
 
 ## Verify
 
