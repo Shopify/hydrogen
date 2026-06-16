@@ -53,16 +53,6 @@
     "./cdn": {
       "types": "./dist/cdn/bootstrap.d.mts",
       "import": "./dist/cdn/bootstrap.mjs"
-    },
-    "./vue": {
-      "types": {
-        "development": "./dist/vue/development.d.mts",
-        "default": "./dist/vue.d.mts"
-      },
-      "import": {
-        "development": "./dist/vue/development.mjs",
-        "default": "./dist/vue.mjs"
-      }
     }
   },
   "publishConfig": {
@@ -76,8 +66,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:types": "vitest --typecheck --run",
-    "codegen": "graphql-codegen --config codegen.ts",
-    "postcodegen": "node scripts/postprocess-tada-env.ts"
+    "codegen": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
     "gql.tada": "^1.9.2"
@@ -90,7 +79,6 @@
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vue/test-utils": "^2.4.0",
     "graphql": "^16.13.2",
     "happy-dom": "^20.9.0",
     "react": "^19.2.5",
@@ -100,14 +88,10 @@
     "vitest": "^3.0.0"
   },
   "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0",
-    "vue": "^3.5.0"
+    "react": "^18.0.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "react": {
-      "optional": true
-    },
-    "vue": {
       "optional": true
     }
   }

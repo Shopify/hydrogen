@@ -1,6 +1,6 @@
 # Next.js (App Router) example
 
-Port of the canonical `examples/base/` design to [Next.js](https://nextjs.org/) using the App Router (server components by default).
+Next.js storefront example using the App Router with server components by default.
 
 ## What this demonstrates
 
@@ -20,14 +20,14 @@ The scaffold ships an `AGENTS.md` (and `CLAUDE.md` pointer to it) that tells cod
 
 ## Pages
 
-| Route | Source | Status |
-|---|---|---|
-| `/` | `examples/base/index.html` | Live: hero is static; featured products grid pulls from `products(first: 3)` |
-| `/collections` | (new — sibling to base design) | Live: lists `collections(first: 12)` |
-| `/collections/[handle]` | `examples/base/collections/men/index.html` | Live: queries `collection(handle:)` with up to 24 products |
-| `/products/[handle]` | `examples/base/products/hoodie/index.html` | Live: gallery, options (Size + Color swatches), add-to-cart UI; "You may also like" from `products(first: 4)` |
-| `/blogs/news` | (new) | Live: queries `blog(handle:"news").articles(first: 10)` |
-| `/blogs/news/[handle]` | (new) | Live: queries `blog(handle:"news").articleByHandle` |
+| Route | Status |
+|---|---|
+| `/` | Live: hero is static; featured products grid pulls from `products(first: 3)` |
+| `/collections` | Live: lists `collections(first: 12)` |
+| `/collections/[handle]` | Live: queries `collection(handle:)` with up to 24 products |
+| `/products/[handle]` | Live: gallery, options (Size + Color swatches), add-to-cart UI; "You may also like" from `products(first: 4)` |
+| `/blogs/news` | Live: queries `blog(handle:"news").articles(first: 10)` |
+| `/blogs/news/[handle]` | Live: queries `blog(handle:"news").articleByHandle` |
 
 ## Stubbed vs. live
 

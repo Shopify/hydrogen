@@ -1,12 +1,11 @@
 # Hydrogen
 
-Framework-agnostic Shopify storefront SDK, framework examples, and supporting tooling.
+Shopify storefront SDK, React examples, and supporting tooling.
 
 ## Repository Layout
 
 - `packages/` — publishable packages.
-- `examples/` — framework examples and shared example helpers.
-- `scripts/` — repository automation, example secret helpers, generated type updates, and benchmark tooling.
+- `examples/` — React examples and shared example helpers.
 - `patches/` — pnpm patches required by the workspace.
 
 ## Common Commands
@@ -25,4 +24,4 @@ The main package currently lives at `packages/hydrogen` and publishes as `@shopi
 
 ## Examples
 
-See `examples/README.md` for the framework examples and how to run them.
+See `examples/README.md` for the React examples and how to run them.

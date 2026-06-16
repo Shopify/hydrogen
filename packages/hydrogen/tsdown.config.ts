@@ -59,36 +59,6 @@ export default defineConfig([
       __DEV__: "true",
     },
   },
-  {
-    entry: { vue: "src/vue/index.ts" },
-    format: "esm",
-    dts: true,
-    hash: false,
-    minify: false,
-    sourcemap: true,
-    deps: {
-      neverBundle: ["vue"],
-    },
-    define: {
-      __HYDROGEN_VERSION__: JSON.stringify(pkg.version),
-      __DEV__: "false",
-    },
-  },
-  {
-    entry: { "vue/development": "src/vue/index.ts" },
-    format: "esm",
-    dts: true,
-    hash: false,
-    minify: false,
-    sourcemap: true,
-    deps: {
-      neverBundle: ["vue"],
-    },
-    define: {
-      __HYDROGEN_VERSION__: JSON.stringify(pkg.version),
-      __DEV__: "true",
-    },
-  },
   // CLI binary — referenced via the `bin` field in package.json, not in `exports`.
   {
     entry: { "cli/index": "src/cli/index.ts" },
