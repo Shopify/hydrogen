@@ -26,7 +26,7 @@ export type CollectionReconciler = {
  * Creates a framework-agnostic reconciler that manages the state machine for
  * keeping the URL, server data, and store in sync during browse-change chains.
  *
- * Both the React and Vue adapters delegate to this so the reconciliation logic
+ * Framework adapters delegate to this so the reconciliation logic
  * lives in one place.
  */
 export function createCollectionReconciler(
