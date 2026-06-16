@@ -52,7 +52,7 @@ const cartFragment = gql(`
       nodes {
         merchandise {
           ... on ProductVariant {
-            currentlyNotInStock
+            availableForSale
           }
         }
       }
@@ -86,15 +86,40 @@ const lines = useCart((state) => state.data.lines.nodes);
   <ul>
     <li v-for="line in lines" :key="line.id">
       <span>{{ line.merchandise?.product.title }}</span>
-      <span v-if="line.merchandise?.currentlyNotInStock">Backordered</span>
+      <span v-if="line.merchandise?.availableForSale === false">Unavailable</span>
     </li>
   </ul>
 </template>
 ```
 
+This is the standard availability field. Product handlers already include `availableForSale` in their built-in product variant payload, so product fragments do not need extra fields just to support this cart line example.
+
 ## Product Fields That Fit Cart Lines
 
 Product handlers should use the same cart handler value that defines cart line merchandise. This lets TypeScript reject product fragments whose selected variant cannot be used as optimistic cart line merchandise, while preserving extra product fields for product components.
+
+The next example intentionally uses `currentlyNotInStock` as a custom cart line field for teaching purposes. It is not a replacement for `availableForSale`: `currentlyNotInStock` means the variant is out of stock but still purchasable as a backorder. Because it is not part of the built-in product variant payload, product handlers require the field on every product variant source used for optimistic cart lines.
+
+```ts
+// app/lib/cart-handlers.ts
+import { gql, createCartServerHandlers } from "@shopify/hydrogen";
+
+export const cartHandlers = createCartServerHandlers({
+  fragment: gql(`
+    fragment CartFragment on Cart {
+      lines(first: 250) {
+        nodes {
+          merchandise {
+            ... on ProductVariant {
+              currentlyNotInStock
+            }
+          }
+        }
+      }
+    }
+  `),
+});
+```
 
 ```ts
 // app/lib/product-handlers.ts

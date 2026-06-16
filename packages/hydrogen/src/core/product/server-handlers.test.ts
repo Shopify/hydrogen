@@ -4,7 +4,7 @@ import { createStorefrontClient } from "../../client";
 import { gql } from "../../graphql";
 import { createCartServerHandlers } from "../cart";
 import { createStorefrontRequestContext } from "../headers";
-import { createProductServerHandlers } from "./server-handlers";
+import { createProductServerHandlers, productServerHandlersProductQuery } from "./server-handlers";
 
 const i18n = { country: "CA", language: "FR" } as const;
 const selectedOptions = [{ name: "Color", value: "Red" }];
@@ -50,6 +50,20 @@ function createTestStorefrontClient(response: unknown, headers = new Headers()) 
 }
 
 describe("createProductServerHandlers", () => {
+  it("keeps the product query metadata hidden and readonly", () => {
+    const productQueryDescriptor = Object.getOwnPropertyDescriptor(
+      productHandlers,
+      productServerHandlersProductQuery,
+    );
+
+    expect(typeof productQueryDescriptor?.value).toBe("string");
+    expect(productQueryDescriptor).toMatchObject({
+      configurable: false,
+      enumerable: false,
+      writable: false,
+    });
+  });
+
   it("fetches products with handle and selected options", async () => {
     const product = { id: "gid://shopify/Product/1", title: "Snowboard" };
     const { fetch, getRequestBody, storefrontClient } = createTestStorefrontClient({

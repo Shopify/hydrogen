@@ -97,14 +97,22 @@ export function createProductServerHandlers<
 >;
 export function createProductServerHandlers(
   options: CreateProductServerHandlersOptions,
-): ProductServerHandlers {
+): ProductServerHandlers<AnyStorefrontQueryString, ProductInput> {
   const queries = makeProductQueries({ fragment: options.fragment });
-  const runtimeQueries = queries as typeof productQueries;
-  const handlers = {
+  // The public overload preserves fragment-specific result types; this runtime
+  // path only needs the shared product-query shape for executing the request.
+  const runtimeQueries = queries as RuntimeProductQueries;
+  const handlers: ProductServerHandlers<AnyStorefrontQueryString, ProductInput> = {
+    [productServerHandlersProductQuery]: undefined,
     get: (context: ProductGetHandlerContext) => handleGet(context, runtimeQueries),
-  } as ProductServerHandlers;
+  };
 
-  Object.defineProperty(handlers, productServerHandlersProductQuery, { value: queries.product });
+  Object.defineProperty(handlers, productServerHandlersProductQuery, {
+    value: queries.product,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
   return handlers;
 }
 
