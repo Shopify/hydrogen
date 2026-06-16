@@ -1256,7 +1256,7 @@ async function promptUpgradeOptions(
 /**
  * Displays a summary of the upgrade and next steps
  */
-async function displayUpgradeSummary({
+export async function displayUpgradeSummary({
   appPath,
   currentVersion,
   selectedRelease,
