@@ -7,13 +7,11 @@ description: >
 
 # Cart Primitive
 
-The cart primitive is a client-side store that syncs with Shopify via Standard Actions events. It provides optimistic updates, scoped error handling, and a form-based mutation API. The store is framework-neutral; framework-specific bindings (React, etc.) are thin wrappers over the core store.
+The cart primitive is a client-side store that syncs with Shopify via Standard Actions events. It provides optimistic updates, scoped error handling, and a form-based mutation API. The store is framework-neutral; the React bindings are a thin wrapper over the core store.
 
 ## Framework Bindings
 
 For React apps, **use the bindings from `@shopify/hydrogen/react` first**. Read `references/react.md` for root setup, state selectors, and mutation form helpers before building React cart UI.
-
-For Vue or Nuxt apps, **use the bindings from `@shopify/hydrogen/vue` first**. Read `references/vue.md` for provider setup, refs, and `v-bind` form helpers before building Vue cart UI.
 
 ## How the store works
 

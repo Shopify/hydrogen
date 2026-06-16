@@ -7,10 +7,6 @@
 - `react-router/` — React Router v7 port with server loaders
 - `nextjs/` — Next.js 16 (App Router) port with server components
 - `hydrogen/` — Hydrogen port with React Router server loaders and Oxygen-style request context
-- `sveltekit/` — SvelteKit 2 + Svelte 5 (runes) port with server `load`
-- `astro/` — Astro 6 port with `@astrojs/node` SSR and frontmatter data fetching
-- `solid-start/` — SolidStart v1 port with `query` + `createAsync` and signal-driven product page state
-- `nuxt/` — Nuxt 4 port with server middleware and Vue pages
 
 These examples are internal proof-of-concepts and testbeds for Hydrogen APIs as they evolve.
 
@@ -26,7 +22,6 @@ They exist to help us answer questions like:
 From the repo root:
 
 - `pnpm dev` — every example's dev server in parallel (ports auto-allocated, logs interleaved in the terminal).
-- `pnpm dev:hub` — same, plus a browser UI (auto-opened) with status dots, scaled iframe thumbnails (click to pop out), and collapsible per-server log streams. Implemented in [`scripts/examples-dev.ts`](../scripts/examples-dev.ts).
 - `pnpm --filter @shopify/hydrogen-example-<name> dev` — a single example.
 
 ## What examples are
