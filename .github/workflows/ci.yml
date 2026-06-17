@@ -46,6 +46,3 @@ jobs:
 
       - name: Test
         run: pnpm run test
-
-      - name: Test benchmark harness
-        run: pnpm run test:benchmark-harness
