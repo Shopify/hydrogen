@@ -30,11 +30,11 @@ cart.subscribe((state) => {
 
 ## Why Hydrogen changed
 
-Headless has always been about freedom — build your storefront your way. But the original Hydrogen asked you to adopt one framework (React Router) on one runtime (Oxygen). It was opinionated by design, built in an era before coding agents, and the most common question we heard was the one we couldn't answer well: *how do I use this with Next.js? With Nuxt? With the stack I already have?*
+Headless commerce has always been about choice — build your storefront your way. The original Hydrogen was a full‑stack framework built hand‑in‑hand with React Router. We designed it to give developers flexibility and control without making them rethink the fundamentals — but that still meant one framework, on one runtime (Oxygen). The most common question we heard was the one it couldn't answer well: *how do I use this with Next.js? With Nuxt? With the stack I already have?*
 
-So we went back to the start. We pulled the commerce logic out of the framework and rewrote it as plain JavaScript — no framework, no runtime lock‑in. Everything that made Hydrogen good is still here; it just no longer dictates how you build.
+Then agents changed how stores get built. It's never been easier to stand up a headless storefront — but agents still get the commerce details wrong, and reinventing those from scratch wastes tokens and puts your conversion rate at risk. The cart, money formatting, analytics, the events apps depend on — you don't want a fresh guess at those on every build.
 
-What changed in the meantime: agents. You're not going to hand‑write a cart drawer or a variant selector — your coding agent is. So Hydrogen ships the skills that teach it how, behind an API small enough to fit in a prompt.
+So we went back to the start and rebuilt Hydrogen as a lightweight, framework‑agnostic toolkit of commerce primitives that deploys to any JavaScript runtime. Everything that made Hydrogen good is still here; it just no longer dictates how you build. And you're not going to hand‑write a cart drawer or a variant selector — your agent is, so Hydrogen ships the skills that teach it how, behind an API small enough to fit in a prompt.
 
 ## How it's built
 
@@ -114,7 +114,9 @@ const { data } = await storefront.graphql(
 );
 ```
 
-Queries written with `gql()` are type‑checked against the Storefront API schema — `data` is inferred, with no codegen step to babysit.
+The private Storefront API token is server‑only — it lives in this server code and must never reach the browser. (Browser‑safe reads use a public token.)
+
+Queries written with `gql()` are checked against the Storefront API schema — your editor infers `data` and flags a bad field inline. That check runs in the editor, not in `tsc`, so the skills also wire up a `gql.tada check` step to catch a renamed field in CI before it ships as an empty result. No codegen to babysit.
 
 **The same cart, in React** — read one slice, re‑render only when it changes:
 
@@ -145,7 +147,7 @@ Hydrogen emits Shopify's [standard storefront events and actions](https://shopif
 - **Money formatting** — locale‑ and currency‑correct, never computed on the client
 - **First‑party analytics** — Shopify storefront events with consent handling built in
 - **Shop Pay** — accelerated checkout buttons
-- **Request handlers** — proxy the Storefront API, cart, redirects, and standard storefront events & actions
+- **Request handlers** — proxy the Storefront API, cart, checkout, redirects, and the MCP & agent endpoints your store exposes
 
 > **Coming soon:** customer accounts, predictive search, and packaged bindings for Vue, Svelte, and Remix 3.
 
@@ -172,7 +174,7 @@ Browse them in [`packages/hydrogen/skills`](./packages/hydrogen/skills).
 
 ## Frameworks & runtimes
 
-React and vanilla JavaScript ship with packaged bindings today. Every other framework uses the same core primitives directly — and because the core only needs `fetch`, it deploys to any JavaScript runtime: Oxygen, Node, Vercel, Cloudflare Workers, or Deno.
+React and vanilla JavaScript ship with packaged bindings today. Every other framework uses the same core primitives directly — and because the core only needs `fetch`, it runs on any JavaScript runtime: Oxygen, Node, Vercel, Cloudflare Workers, or Deno. (One preview caveat: deploying to Oxygen through the Shopify CLI isn't wired up yet.)
 
 The [`examples/`](./examples) directory ports the same storefront across frameworks, so you can see how the primitives fit:
 
@@ -193,7 +195,6 @@ Run them all from the repo root:
 ```bash
 pnpm install
 pnpm dev        # every example in parallel
-pnpm dev:hub    # …plus a browser dashboard with live thumbnails
 ```
 
 ## Repository layout
