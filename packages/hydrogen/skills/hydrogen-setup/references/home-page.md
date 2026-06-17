@@ -18,7 +18,7 @@ Do not fetch cart data for the home page. Cart belongs to the cart route and nav
 - Render collections and products as separate sections.
 - Link collection cards using the app's existing collection route convention when present; otherwise use `/collections/{handle}`.
 - Link product cards using the app's existing product route convention when present; otherwise use `/products/{handle}`.
-- Format money with `formatMoney` from `@shopify/hydrogen`; never do client-side currency arithmetic.
+- Format money with the local `hydrogen-money` skill; never do client-side currency arithmetic.
 - Use empty states when collections or products are missing.
 - Keep styles local to the app's existing styling approach. If there is no styling system, use minimal semantic HTML.
 
@@ -29,7 +29,6 @@ Do not fetch cart data for the home page. Cart belongs to the cart route and nav
 - SvelteKit: fetch in `+page.server.ts` and render in `+page.svelte`.
 - Astro: fetch in `src/pages/index.astro` frontmatter.
 - SolidStart: fetch through a server query or route data API used by `src/routes/index.tsx`.
-- Nuxt: fetch in the page's server-aware data primitive or route-level server API, preserving Nuxt conventions already present in the app.
 
 ## Verify
 

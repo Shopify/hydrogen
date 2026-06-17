@@ -1,7 +1,10 @@
 ---
 name: hydrogen-cart-drawer
 description: >
-  Guide for building an accessible cart drawer using @shopify/hydrogen. Use this skill whenever creating a cart drawer in your storefront.
+  Guide for building an accessible cart drawer using @shopify/hydrogen. Use when
+  creating or reviewing a cart drawer, mini cart, or slide-out cart, including
+  native <dialog>/showModal, closedby light dismiss, body scroll lock, exit
+  animations, and wiring window.Shopify.actions.openCart().
 ---
 
 # Cart Drawer
@@ -14,7 +17,7 @@ Build an accessible cart drawer that opens from the edge of the viewport and int
 
 Before building the cart drawer, these must be in place:
 
-- **Standard Actions** — the Shopify script that provides `window.Shopify.actions.openCart`
+- **Standard Actions** — load `https://cdn.shopify.com/storefront/standard-actions.js` once in the root document as `<script type="module" src="https://cdn.shopify.com/storefront/standard-actions.js" crossorigin="anonymous"></script>`. In JSX/TSX, use `crossOrigin="anonymous"`.
 - **`/cart` route** — the full cart page, used as the no-JS fallback for progressive enhancement
 
 ---
@@ -53,6 +56,8 @@ The drawer has three layout zones:
 The drawer is a `<dialog>` (or primitive library equivalent) rendered once in the root layout. The storefront must also have a `/cart` route that renders a full cart page — this is the no-JS fallback. The drawer is the progressively-enhanced experience that layers on top after hydration.
 
 The full `/cart` page shares the same content components (line items, discounts, note, totals, checkout) but uses a page layout instead of the fixed header/body/footer zones.
+
+The drawer's line item forms must preserve the same progressive-enhancement contract as the `/cart` page: hidden `register("set")`, hidden/read-only `register("lineId", { value: line.id })`, and a real editable quantity input from `register("quantity", { value: line.quantity, interactive: true })`. The exact component structure will vary by framework and app, but the form contract must not.
 
 ---
 
@@ -101,9 +106,9 @@ Use a primitive library only when the app already depends on one for dialog-like
 
 ### Opening the drawer
 
-The cart trigger in the navbar should render as an `<a href="/cart">` before hydration, then enhance to a `<button>` that opens the drawer after hydration. This keeps the no-JS path simple: buyers navigate to the full `/cart` route, which must server-render cart items.
+The cart trigger in the navbar should render as an `<a href="/cart">` before hydration, then enhance to a `<button>` that calls `openCartDrawer()` after hydration. This keeps the no-JS path simple: buyers navigate to the full `/cart` route, which must server-render cart items.
 
-Avoid relying on `command="show-modal"` for no-JS drawer opening. That can open the drawer without JavaScript, but it also means the drawer content must always be server-rendered in the root layout. Prefer `/cart` as the no-JS fallback and keep the drawer as hydrated progressive enhancement.
+Keep the drawer as hydrated progressive enhancement. Do not make the drawer itself the no-JS cart surface; the `/cart` page is that fallback.
 
 ```tsx
 export const CART_DRAWER_ID = "cart-drawer";
@@ -122,22 +127,11 @@ function getCartDrawer() {
 export function openCartDrawer() {
   const drawer = getCartDrawer();
   if (!drawer || drawer.open) return;
-
-  try {
-    drawer.showModal();
-  } catch {
-    // Opening the drawer is progressive enhancement; cart mutations must still proceed.
-  }
+  drawer.showModal();
 }
 
 export function closeCartDrawer() {
   getCartDrawer()?.close();
-}
-
-export function supportsDialogCommands() {
-  if (typeof HTMLButtonElement === "undefined") return false;
-
-  return "command" in HTMLButtonElement.prototype && "commandForElement" in HTMLButtonElement.prototype;
 }
 
 function configureOpenCartActionNow() {
@@ -170,20 +164,12 @@ export function configureOpenCartAction() {
 configureOpenCartAction();
 ```
 
-Render the drawer once in the root layout. Prefer declarative `command` / `commandfor` controls for app-owned open/close buttons when your browser targets support them.
+The module-scope `configureOpenCartAction()` call is intentional. It no-ops during SSR, configures immediately when Standard Actions is already available, and retries once on `DOMContentLoaded` when the runtime loads after this module.
+
+Render the drawer once in the root layout. Use explicit JavaScript open/close helpers for app-owned controls.
 
 ```tsx
-import {
-  CART_DRAWER_ID,
-  closeCartDrawer,
-  openCartDrawer,
-  supportsDialogCommands,
-} from "~/lib/cart-drawer";
-
-const closeCartCommandAttributes = {
-  command: "close",
-  commandfor: CART_DRAWER_ID,
-};
+import { CART_DRAWER_ID, closeCartDrawer } from "~/lib/cart-drawer";
 
 function CartDrawer() {
   return (
@@ -191,11 +177,8 @@ function CartDrawer() {
       <h2 id="cart-drawer-title">Cart</h2>
       <button
         type="button"
-        {...closeCartCommandAttributes}
         aria-label="Close cart"
-        onClick={() => {
-          if (!supportsDialogCommands()) closeCartDrawer();
-        }}
+        onClick={closeCartDrawer}
       >
         Close
       </button>
@@ -209,7 +192,7 @@ function CartDrawer() {
 
 Three trigger paths (post-hydration):
 
-1. **Cart trigger** — render `<a href="/cart">` before hydration, then render a button after hydration. Prefer `command="show-modal"` and `commandfor="cart-drawer"` for the hydrated button when browser targets match support.
+1. **Cart trigger** — render `<a href="/cart">` before hydration, then render a button after hydration that calls `openCartDrawer()`.
 
    ```tsx
    const [hasHydrated, setHasHydrated] = useState(false);
@@ -220,11 +203,7 @@ Three trigger paths (post-hydration):
        type="button"
        aria-controls={CART_DRAWER_ID}
        aria-haspopup="dialog"
-       command="show-modal"
-       commandfor={CART_DRAWER_ID}
-       onClick={() => {
-         if (!supportsDialogCommands()) openCartDrawer();
-       }}
+       onClick={openCartDrawer}
      >
        Cart
      </button>
@@ -241,7 +220,7 @@ Three trigger paths (post-hydration):
 
    `.configure()` is a one-time registration with no undo API. Keep the handler stable and independent of framework refs by looking up `dialog#cart-drawer` by ID.
 
-   Use `window.Shopify.actions.openCart()` for external integrations that only need to open the cart. Keep the local JavaScript helper for programmatic opens; `command` only handles user-activated buttons.
+   Use `window.Shopify.actions.openCart()` for external integrations that only need to open the cart. Keep the local JavaScript helper for all programmatic opens.
 
 3. **After add-to-cart submit succeeds** — if the product UX should open the drawer after a successful add, pass the same local helper to the product form's submit hooks.
 
@@ -252,23 +231,6 @@ Three trigger paths (post-hydration):
    ```
 
    This opens the drawer only after the mutation succeeds. Keep validation and cancellation in `beforeSubmit`; for example, call `event.preventDefault()` there if the quantity is invalid and the drawer should not open. Do not push this policy into core cart mutations; some storefronts want a toast, a cart page navigation, or no automatic UI change.
-
-### Native command attributes
-
-Modern browsers support declarative dialog triggers. Prefer this over `onClick={() => dialog.showModal()}` for app-owned open/close buttons when your browser targets match support on [Can I use](https://caniuse.com/?search=command):
-
-```html
-<button command="show-modal" commandfor="cart-drawer">Open cart</button>
-<dialog id="cart-drawer">
-  <button command="close" commandfor="cart-drawer">Close</button>
-</dialog>
-```
-
-You still need JavaScript for add-to-cart opening and for wiring `window.Shopify.actions.openCart()`. Keep one local drawer helper for those programmatic trigger paths, and use command attributes for direct buyer controls.
-
-If your browser targets do not fully support Invoker Commands, keep the `command` / `commandfor` attributes and add a feature-detected click fallback that calls the same local helper only when `supportsDialogCommands()` is false. This keeps modern browsers on the platform path without breaking older Safari/iOS Safari.
-
-React type packages lag the platform here. React support is tracked in [facebook/react#32478](https://github.com/facebook/react/issues/32478), and the DefinitelyTyped change is blocked on React support landing. If TypeScript rejects `command` or `commandfor`, spread a small command-attribute object into the button until the React types include them; avoid global React type augmentations unless the app already has a convention for platform type patches.
 
 ### Closing the drawer
 
@@ -291,6 +253,8 @@ For custom logic, listen to native dialog events instead of duplicating state. U
 ## 6. CSS and animation
 
 Reference CSS for the drawer shell:
+
+In Tailwind apps, keep these dialog shell, `::backdrop`, `@starting-style`, and scroll-lock rules in global CSS or a project `@layer`; use utilities for the drawer's internal content layout.
 
 ```css
 dialog#cart-drawer {
@@ -371,6 +335,7 @@ After building the cart drawer, test:
 - [ ] Focus returns to the cart icon after close
 - [ ] Tab cycles only through elements inside the drawer while open
 - [ ] Screen reader announces "Cart" (or equivalent title) on drawer open
+- [ ] Drawer line item forms use the same `hydrogen-cart-ui` progressive form contract as the `/cart` page
 
 ---
 
@@ -386,8 +351,9 @@ After building the cart drawer, test:
 
 - **Astro view transitions** — if the drawer is vanilla JS (like the base example), it must be re-initialized after view transition navigations. Listen for `astro:after-swap`.
 
+- **Cart selectors must be stable** — don't derive arrays or objects inside a cart selector unless the binding accepts an equality function. Select store references such as `state.errors` or `state.data.lines.nodes` and derive banner messages outside the selector with the framework's memoization primitive.
 
-- **React `useCart` selectors must be stable** — don't derive arrays or objects inside a `useCart` selector. Select store references such as `state.errors` or `state.data.lines.nodes` and derive banner messages with `useMemo`, or pass an explicit equality function.
+- **Drawer/page form drift** — the drawer can use a different layout, but not a different cart mutation contract. Prefer shared line item form components between the drawer and `/cart` page; otherwise mirror the `hydrogen-cart-ui` line item form invariant exactly.
 
 ---
 
@@ -396,3 +362,5 @@ After building the cart drawer, test:
 - **Drawer as a route instead of overlay** — the drawer itself is overlay UI rendered in the root layout, not a routed page. The `/cart` route is the full cart page (the no-JS fallback), not the drawer. Don't render the drawer only on `/cart` — it must be available on every page.
 
 - **`dialog.show()` instead of `showModal()`** — `show()` does not get top-layer rendering, focus containment, `inert` on background, or `::backdrop`. Always use `showModal()`.
+
+- **Text-only drawer quantities** — rendering line quantities as text with only plus/minus controls breaks the progressive set-quantity path. Drawer line items need the same editable quantity input contract as the cart page.

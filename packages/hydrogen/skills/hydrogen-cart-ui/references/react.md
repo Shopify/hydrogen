@@ -12,7 +12,7 @@ Wrap the app in `<CartProvider>`. Keep cart server handlers in a server-only mod
 
 ```tsx
 // app/lib/cart-handlers.ts
-import { createCartServerHandlers } from "@shopify/hydrogen/cart";
+import { createCartServerHandlers } from "@shopify/hydrogen";
 
 export const cartHandlers = createCartServerHandlers();
 ```
@@ -55,8 +55,7 @@ If the cart needs extra fields, pass `fragment` with a fragment named `CartFragm
 
 ```tsx
 // app/lib/cart-handlers.ts
-import { gql } from "@shopify/hydrogen";
-import { createCartServerHandlers } from "@shopify/hydrogen/cart";
+import { createCartServerHandlers, gql } from "@shopify/hydrogen";
 
 const cartFragment = gql(`
   fragment CartFragment on Cart {
@@ -91,16 +90,37 @@ function CartLines() {
 
   return (
     <ul>
-      {lines.map((line) => (
-        <li key={line.id}>
-          <span>{line.merchandise?.product.title}</span>
-          {line.merchandise?.availableForSale === false ? <span>Unavailable</span> : null}
-        </li>
-      ))}
+      {lines.map((line) => {
+        const merchandise = line.merchandise;
+        const selectedOptions = merchandise?.selectedOptions ?? [];
+
+        return (
+          <li key={line.id}>
+            {merchandise?.image ? (
+              <img src={merchandise.image.url} alt={merchandise.image.altText ?? ""} />
+            ) : null}
+            {merchandise?.product.handle ? (
+              <a href={`/products/${merchandise.product.handle}`}>
+                {merchandise.product.title}
+              </a>
+            ) : (
+              <span>{merchandise?.product.title ?? merchandise?.title ?? "Product"}</span>
+            )}
+            {selectedOptions.map((option) => (
+              <span key={option.name}>
+                {option.name}: {option.value}
+              </span>
+            ))}
+            {merchandise?.availableForSale === false ? <span>Unavailable</span> : null}
+          </li>
+        );
+      })}
     </ul>
   );
 }
 ```
+
+Cart line merchandise fields are intentionally tolerant because optimistic lines and custom fragments can differ from a complete Storefront API cart response. Treat `line.merchandise`, `merchandise.selectedOptions`, `merchandise.title`, `merchandise.product.handle`, and `merchandise.image` as optional unless the app's custom cart fragment and types prove otherwise.
 
 ## Reading Cart State
 
@@ -117,7 +137,9 @@ Use this for the navbar cart count, cart line list, totals, pending state, and s
 
 ## Mutating Cart State
 
-Use `useCartForm()` for forms. It returns `formProps()` and `register()` helpers that encode Hydrogen's cart action contract:
+Use `useCartForm()` for existing cart forms: line quantity changes, line removal, discount codes, and order notes. It returns `formProps()` and `register()` helpers that encode Hydrogen's cart action contract.
+
+Line item quantity forms must keep this shape even when the surrounding markup, styling, or component boundaries differ:
 
 ```tsx
 function LineItemQuantity({ line }: { line: { id: string; quantity: number } }) {
@@ -149,11 +171,17 @@ function LineItemQuantity({ line }: { line: { id: string; quantity: number } }) 
 Important React form fields:
 
 - `formProps()` wires `method`, `action`, and submit handling to the cart store.
-- `register("set")` identifies line quantity updates.
+- `register("set")` renders the hidden default submit control for explicit line quantity updates. Keep it in every line item quantity form so pressing Enter in the quantity input submits the set action.
 - `register("lineId", { value })` scopes the form to one line.
-- `register("quantity", { value, interactive: true })` wires quantity input behavior.
+- `register("quantity", { value, interactive: true })` wires an editable quantity input for both hydrated and no-JS submissions. Do not replace it with a text-only `<span>`.
 - `register("increase")`, `register("decrease")`, and `register("remove")` create line item controls.
-- `register("discountCode")`, `register("discount-apply")`, and `register("discount-remove")` create discount forms.
+- `register("discountCode", { defaultValue: "" })`, `register("discountCode", { value: code })`, `register("discount-apply")`, and `register("discount-remove")` create discount forms.
 - `register("note")` and `register("note-update")` create note forms.
 
 Each line item still gets its own form; the binding removes boilerplate, not the form identity requirement.
+
+For product add-to-cart forms, use `formProps()` and `register()` from `useProductForm()` in the `hydrogen-variant-form` skill. The two helpers share names but encode different form contracts.
+
+If you render the same line items in a cart drawer, share this line item form component with the `/cart` page when possible. If the drawer needs different markup, preserve the same `set` + `lineId` + interactive `quantity` contract.
+
+When wiring less common cart forms, prefer the exact package types over memory. In an installed app, inspect `node_modules/@shopify/hydrogen/dist/index.d.mts` or use editor hover on `CartFormRegister` to confirm which `register(...)` calls require `{ value }` versus `{ defaultValue }`.

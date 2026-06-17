@@ -186,7 +186,7 @@ Read the relevant reference before applying the generic `Request` examples in fr
 - **Resolve the market on the server from a standard `Request`.** `new URL(request.url)` is enough for host and path strategies.
 - **Use `i18n` as the Storefront API boundary.** It is required by the current client API. Always provide a default market rather than letting it be undefined.
 - **Use market-contextualized queries.** The Storefront client injects `country` and `language` variable values when the document declares `$country` and `$language`; it does not rewrite query text. Market-sensitive queries still need `@inContext(country: $country, language: $language)` or equivalent Storefront API context in the document.
-- **Do not calculate currency locally.** Render `amount` and `currencyCode` returned by Shopify and format them with Hydrogen's `formatMoney()` utility or an app wrapper around it.
+- **Do not calculate currency locally.** Render `amount` and `currencyCode` returned by Shopify and format them with the local `hydrogen-money` skill's `formatMoney()` guidance.
 - **Keep analytics consent in the same market.** When the app configures Hydrogen analytics, pass the resolved `country` and `language` into the consent config too. Shopify's consent bootstrap uses those values alongside Storefront API context.
 - **Keep translations separate.** Shopify Markets context localizes Shopify data. Application UI strings still need the app's translation system.
 - **Treat geolocation as a hint, not truth.** Buyers travel, use VPNs, and intentionally choose markets. Persist explicit choices when the app supports switching.

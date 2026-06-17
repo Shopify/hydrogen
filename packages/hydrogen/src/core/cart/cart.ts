@@ -9,6 +9,7 @@ import type {
   CartLinesUpdateEvent,
   CartDiscountUpdateEvent,
   CartNoteUpdateEvent,
+  CartLinesUpdateResult,
   CartDiscountUpdateResult,
   CartNoteUpdateResult,
 } from "../../../vendor/standard-events";
@@ -47,15 +48,15 @@ function setLines<TData extends CartData>(cart: TData, lines: CartLine[]): TData
   return { ...cart, lines: { ...cart.lines, nodes: lines } };
 }
 
+type StandardEventCart = NonNullable<
+  (CartLinesUpdateResult | CartDiscountUpdateResult | CartNoteUpdateResult)["cart"]
+>;
+
 /**
- * Hydrogen's `/api/cart` route returns SFAPI-shaped carts with `lines.nodes`.
- * Real Shopify Standard Actions responses use a flat `lines` array, so normalize
- * those browser-only responses before storing them in Hydrogen cart state.
+ * Standard Events flatten cart lines. Unflatten them here.
  */
-function normalizeStandardActionsCart(input: unknown): CartResponse {
-  const cart = input as CartResponse & { lines?: unknown };
-  if (!Array.isArray(cart.lines)) return cart;
-  return { ...cart, lines: { nodes: cart.lines as CartLine[] } };
+function cartResponseFromStandardEvent(cart: StandardEventCart): CartResponse {
+  return { ...(cart as unknown as CartResponse), lines: { nodes: cart.lines as CartLine[] } };
 }
 
 export class CartNetworkError extends Error {
@@ -395,9 +396,9 @@ async function fetchCart(cartId?: string | null): Promise<{ cart: CartResponse |
 
   const result = (await getCart(cartId ? { cartId } : undefined, {
     signal: AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS),
-  })) as { cart: unknown };
+  })) as { cart: CartResponse | null };
 
-  return { cart: result.cart ? normalizeStandardActionsCart(result.cart) : null };
+  return { cart: result.cart };
 }
 
 /**
@@ -736,7 +737,7 @@ function handleCartLinesAdd(store: CartStoreContext, event: CartLinesUpdateEvent
       const superseded = addMerchIds.some((id) => merchandiseControllers.get(id) !== addController);
       if (superseded) return;
 
-      const cart = normalizeStandardActionsCart(result.cart);
+      const cart = cartResponseFromStandardEvent(result.cart);
       const affectedIds = new Set(allAffectedIds);
 
       resolveCartLines(cartObservable, cart, affectedIds, result, matchedIds);
@@ -883,7 +884,7 @@ function handleCartLinesUpdate(store: CartStoreContext, event: CartLinesUpdateEv
         rollbackUpdate(result);
         return;
       }
-      const cart = normalizeStandardActionsCart(result.cart);
+      const cart = cartResponseFromStandardEvent(result.cart);
       const affectedIds = new Set(lineIds);
 
       resolveCartLines(cartObservable, cart, affectedIds, result, lineIds);
@@ -979,7 +980,7 @@ function handleCartDiscountUpdate(store: CartStoreContext, event: CartDiscountUp
         rollbackDiscount(result);
         return;
       }
-      const cart = normalizeStandardActionsCart(result.cart);
+      const cart = cartResponseFromStandardEvent(result.cart);
 
       store.discountBaseline = null;
       const now = Date.now();
@@ -1066,7 +1067,7 @@ function handleCartNoteUpdate(store: CartStoreContext, event: CartNoteUpdateEven
         rollbackNote(result);
         return;
       }
-      const cart = normalizeStandardActionsCart(result.cart);
+      const cart = cartResponseFromStandardEvent(result.cart);
 
       store.noteBaseline = undefined;
       const now = Date.now();

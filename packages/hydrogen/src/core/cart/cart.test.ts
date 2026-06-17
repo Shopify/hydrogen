@@ -1805,7 +1805,7 @@ describe("CartStore.fetch", () => {
       id: "gid://shopify/Cart/abc",
       totalQuantity: 2,
       cost: { totalAmount: { amount: "50.00", currencyCode: "USD" } },
-      lines: [makeLine({ id: "line-1", quantity: 2 })],
+      lines: { nodes: [makeLine({ id: "line-1", quantity: 2 })] },
       discountCodes: [],
     };
     mockGetCart.mockResolvedValue({ cart });
@@ -1837,7 +1837,7 @@ describe("CartStore.fetch", () => {
       id: "gid://shopify/Cart/abc",
       totalQuantity: 1,
       cost: { totalAmount: { amount: "10.00", currencyCode: "USD" } },
-      lines: [makeLine({ id: "line-1" })],
+      lines: { nodes: [makeLine({ id: "line-1" })] },
       discountCodes: [],
     };
     store.hydrate(makeCartState({ id: "gid://shopify/Cart/abc", totalQuantity: 5 }));
@@ -1864,7 +1864,7 @@ describe("CartStore.fetch", () => {
         note: "revalidated note",
         totalQuantity: 1,
         cost: { totalAmount: { amount: "10.00", currencyCode: "USD" } },
-        lines: [makeLine({ id: "line-1" })],
+        lines: { nodes: [makeLine({ id: "line-1" })] },
         discountCodes: [],
       },
     });
@@ -1904,7 +1904,7 @@ describe("CartStore.fetch", () => {
             checkoutUrl: `https://example.com/checkouts/${payload?.cartId?.split("/").pop()}-new`,
             totalQuantity: 1,
             cost: { totalAmount: { amount: "10.00", currencyCode: "USD" } },
-            lines: [makeLine({ id: "line-1" })],
+            lines: { nodes: [makeLine({ id: "line-1" })] },
             discountCodes: [],
           },
         }),
