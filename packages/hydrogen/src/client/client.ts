@@ -25,7 +25,7 @@ import type {
   StorefrontGraphqlResult,
 } from "./types";
 
-type DocLike = TadaDocumentNode<any, any> | AnyStorefrontQueryString;
+type DocLike = TadaDocumentNode<unknown, unknown> | AnyStorefrontQueryString;
 type ConfigWithRequestContext<Config> = Config & { requestContext: StorefrontRequestContext };
 
 const SDK_VARIANT_HEADER = "X-SDK-Variant";
@@ -159,7 +159,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
   async function graphql(
     doc: DocLike | string,
     ...rest: [options?: Record<string, unknown>]
-  ): Promise<StorefrontGraphqlResult<any>> {
+  ): Promise<StorefrontGraphqlResult<DocLike>> {
     const opts = (rest[0] ?? {}) as {
       variables?: Record<string, unknown>;
       signal?: AbortSignal;
@@ -261,13 +261,13 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
     // narrowing on `errors` get a non-null `data` only when no errors are present.
     if (body.errors) {
       return {
-        data: (body.data ?? null) as any,
+        data: body.data ?? null,
         errors: body.errors,
         headers: responseHeaders,
       };
     }
     return {
-      data: (body.data ?? null) as any,
+      data: body.data,
       headers: responseHeaders,
     };
   }

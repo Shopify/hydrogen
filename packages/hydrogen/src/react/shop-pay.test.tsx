@@ -4,11 +4,12 @@ import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type * as ShopPayModule from "../core/shop-pay";
 import { loadShopJs, SHOP_PAY_BUTTON_TAG_NAME } from "../core/shop-pay";
 import { ShopPayButton } from "./shop-pay";
 
 vi.mock("../core/shop-pay", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../core/shop-pay")>();
+  const actual = await importOriginal<typeof ShopPayModule>();
 
   return {
     ...actual,

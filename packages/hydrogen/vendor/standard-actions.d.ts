@@ -1,4 +1,4 @@
-// version: 948d7e184fee6871cd19ed1aaf82584a483aa44c
+// version: ea315691e9819723879605d727a20fde6bdda314
 export interface Price {
 	amount: string;
 	currencyCode: string;
@@ -14,14 +14,6 @@ export interface CartLine {
 	id: string;
 	quantity: number;
 	cost: CartCost;
-}
-/** Shared non-null cart shape used by mutations and internal action state. */
-export interface CartSummary {
-	id: string;
-	totalQuantity: number;
-	cost: CartCost;
-	lines: CartLine[];
-	discountCodes: CartDiscountCode[];
 }
 export interface CartMutationUserError {
 	code?: string;
@@ -74,6 +66,16 @@ export interface ActionFunction<P, R, Meta extends object = {}, O = void> {
 }
 export type UpdateCartUserError = CartMutationUserError;
 export type UpdateCartWarning = CartMutationWarning;
+export interface StorefrontCartLinesConnection {
+	nodes: CartLine[];
+}
+export interface StorefrontCartSummary {
+	id: string;
+	totalQuantity: number;
+	cost: CartCost;
+	lines: StorefrontCartLinesConnection;
+	discountCodes: CartDiscountCode[];
+}
 export type UpdateCartEventTargetMeta = {
 	type: "shopify:cart:lines-update";
 	action: CartUpdateAction;
@@ -108,14 +110,14 @@ export interface CartLineInput {
 	sellingPlanId?: string;
 }
 export interface UpdateCartPayload {
-	/** Cart GID or raw cart token. If omitted, discovered from cookie or AJAX API. */
+	/** Cart GID or raw cart token. If omitted, discovered from the cart cookie. */
 	cartId?: string;
 	lines?: CartLineInput[];
 	note?: string;
 	discountCodes?: string[];
 }
 export interface UpdateCartResult {
-	cart: CartSummary | null;
+	cart: StorefrontCartSummary;
 	userErrors?: UpdateCartUserError[];
 	warnings?: UpdateCartWarning[];
 	detail?: Record<string, any>;
@@ -132,7 +134,7 @@ export interface GetCartPayload {
 	cartId?: string;
 }
 export interface GetCartResult {
-	cart: CartSummary | null;
+	cart: StorefrontCartSummary | null;
 	detail?: Record<string, any>;
 }
 export interface GetCartOptions {

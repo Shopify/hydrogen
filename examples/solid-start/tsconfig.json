@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "gql.tada/ts-plugin",
+        "schema": "node_modules/@shopify/hydrogen/src/graphql/generated/storefront.schema.graphql",
+        "trackFieldUsage": false
+      }
+    ],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "allowJs": true,
+    "strict": true,
+    "noEmit": true,
+    "types": ["vinxi/types/client"],
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@shared/*": ["../shared/*"],
+      "~/*": ["./src/*"]
+    }
+  }
+}

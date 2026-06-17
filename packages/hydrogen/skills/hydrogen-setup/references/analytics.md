@@ -2,7 +2,7 @@
 
 **Prerequisites:**
 
-- A storefront built on `@shopify/hydrogen` with the request interceptors already wired (`handleShopifyRoutes` and `handleShopifyRedirects`). The analytics bus depends on the SFAPI proxy so the browser can observe same-origin Storefront API responses for session cookies. Without the proxy, analytics falls back to deprecated JavaScript-visible cookies and should be treated as incomplete. If you have not installed the interceptors yet, install them first — see `references/request-handlers.md`.
+- A storefront built on `@shopify/hydrogen` with the request interceptors already wired (`handleShopifyRoutes` and `handleShopifyRedirects`). The analytics bus depends on the SFAPI proxy so the browser can observe same-origin Storefront API responses for session cookies. Without the proxy, analytics falls back to deprecated JavaScript-visible cookies and should be treated as incomplete. If you have not installed the interceptors yet, install them first with the local `hydrogen-request-handlers` skill.
 - A client-side lifecycle hook in your framework (route-change effect, navigation event, `<script>` tag, etc.) so view events can fire on the right URL transitions.
 
 `createStorefrontAnalytics()` is a zero-dependency event bus that owns Shopify consent setup, Monorail dispatch, cart change detection, deprecated-cookie compatibility, and PerfKit wiring. Framework adapters stay thin — they translate framework lifecycle events into bus calls.
@@ -136,7 +136,7 @@ Only affects deprecated JS-visible cookies (`_shopify_y`, `_shopify_s`) — pres
 
 ## The shared singleton pattern
 
-Across all frameworks the right shape is **one bus per page lifetime**, lazily created on the client. A module-level singleton with a `getAnalytics()` getter works everywhere — React, Solid, Svelte, vanilla JS — and is what every framework example does:
+Across all frameworks the right shape is **one bus per page lifetime**, lazily created on the client. Resolve `ShopAnalytics` on the server, then pass those safe values into the client analytics module from a root layout/loader boundary. `shopId` is the Shopify Shop GID, so fetch `shop { id }` from the Storefront API or read it from existing server-side app config that already stores that GID. Use the app's resolved market/i18n data for `acceptedLanguage` and `currency`. A module-level singleton with `configureAnalytics()` and `getAnalytics()` works everywhere — React, Solid, Svelte, vanilla JS — and is what every framework example should use:
 
 ```ts
 // app/lib/analytics.ts (or your framework's idiomatic shared-lib path)
@@ -149,17 +149,20 @@ import {
 
 export { AnalyticsEvent };
 
-export const analyticsShop: ShopAnalytics = {
-  shopId: process.env.PUBLIC_SHOP_ID!,
-  acceptedLanguage: "EN",
-  currency: "USD",
-  hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
-};
-
 let bus: StorefrontAnalytics | null = null;
+let analyticsShop: ShopAnalytics | null = null;
+
+export function configureAnalytics(shop: ShopAnalytics) {
+  analyticsShop = shop;
+}
+
+export function getAnalyticsShop(): ShopAnalytics | null {
+  return analyticsShop;
+}
 
 export function getAnalytics(): StorefrontAnalytics | null {
   if (typeof window === "undefined") return null; // SSR no-op
+  if (!analyticsShop) return null;
   if (bus) return bus;
   bus = createStorefrontAnalytics({
     shop: analyticsShop,
@@ -172,8 +175,10 @@ export function getAnalytics(): StorefrontAnalytics | null {
 }
 ```
 
-Three things this pattern does that are not optional:
+Non-optional constraints:
 
+- **No client env reads.** `shopId`, `acceptedLanguage`, `currency`, and `hydrogenSubchannelId` are safe to serialize, but they should still be resolved on the server and passed into `configureAnalytics()`. Do not read `process.env` or `import.meta.env` inside this browser-lazy module.
+- **Root configuration before publishing.** The root route/layout should resolve the safe `ShopAnalytics` object on the server and call `configureAnalytics(shop)` during client hydration before route components publish analytics events.
 - **Browser-only initialization.** `typeof window === 'undefined'` guard (or your framework's equivalent — SvelteKit's `$app/environment.browser`, Next.js implicit on `"use client"`) prevents construction on the server. SSR rendering must not call `createStorefrontAnalytics`.
 - **One instance per page.** The singleton means every route, every effect, every script tag shares the same bus. Multiple instances on the same page overwrite `window.Shopify.customerPrivacy.config`; the latest initialized config wins. Multi-store on one page is not supported.
 - **Lazy.** Construction happens on first `getAnalytics()` call. This avoids running consent scripts during initial paint when the page may not need analytics yet (e.g. a redirect target).
@@ -197,6 +202,149 @@ for (const event of [
 ```
 
 Subscribers run in insertion order. Subscriber errors are caught; one bad subscriber will not break others.
+
+---
+
+## Root configuration examples
+
+Each framework should derive `ShopAnalytics` on the server and configure the client singleton before publishing. The exact env API varies by framework; these examples show the data flow, not a requirement to use these file names.
+
+Example Storefront API query for frameworks that do not already have the Shop GID in app config:
+
+```ts
+import { gql } from "@shopify/hydrogen";
+
+const SHOP_ANALYTICS_QUERY = gql(`
+  query ShopAnalytics {
+    shop { id }
+  }
+`);
+```
+
+Do not query `localization.language` just to echo the language already passed to `@inContext`. If the app only knows country/language and does not have a market currency code, add `currencyCode` to the app's market config or query `localization { country { currency { isoCode } } }` as a fallback.
+
+SvelteKit server load:
+
+```ts
+// src/routes/+layout.server.ts
+import type { LayoutServerLoad } from "./$types";
+
+export const load: LayoutServerLoad = async ({ locals }) => {
+  const { data } = await locals.storefront.graphql(SHOP_ANALYTICS_QUERY);
+
+  return {
+    analyticsShop: {
+      shopId: data.shop.id,
+      acceptedLanguage: locals.market.language,
+      currency: locals.market.currencyCode,
+      hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
+    },
+  };
+};
+```
+
+SvelteKit root layout:
+
+```svelte
+<!-- src/routes/+layout.svelte -->
+<script lang="ts">
+  import { configureAnalytics } from '$lib/analytics';
+
+  let { data, children } = $props();
+  configureAnalytics(data.analyticsShop);
+</script>
+
+{@render children()}
+```
+
+Next.js App Router server layout:
+
+```tsx
+// app/layout.tsx
+import { Suspense } from "react";
+import { AnalyticsTracker } from "./components/AnalyticsTracker";
+
+async function getAnalyticsShop() {
+  const { data } = await storefrontClient.graphql(SHOP_ANALYTICS_QUERY);
+
+  return {
+    shopId: data.shop.id,
+    acceptedLanguage: market.language,
+    currency: market.currencyCode,
+    hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
+  };
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const analyticsShop = await getAnalyticsShop();
+
+  return (
+    <html lang="en">
+      <body>
+        <Suspense fallback={null}>
+          <AnalyticsTracker shop={analyticsShop} />
+        </Suspense>
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+Next.js client tracker configuration:
+
+```tsx
+// app/components/AnalyticsTracker.tsx
+"use client";
+import { useEffect } from "react";
+import type { ShopAnalytics } from "@shopify/hydrogen";
+import { configureAnalytics, getAnalytics, AnalyticsEvent } from "../lib/analytics";
+
+export function AnalyticsTracker({ shop }: { shop: ShopAnalytics }) {
+  useEffect(() => {
+    configureAnalytics(shop);
+    const bus = getAnalytics();
+    if (!bus) return;
+    bus.publish(AnalyticsEvent.PAGE_VIEWED, {
+      url: window.location.href,
+      shop,
+    });
+  }, [shop]);
+
+  return null;
+}
+```
+
+Astro root layout:
+
+```astro
+---
+// src/layouts/BaseLayout.astro
+const { data } = await storefrontClient.graphql(SHOP_ANALYTICS_QUERY);
+const analyticsShop = {
+  shopId: data.shop.id,
+  acceptedLanguage: market.language,
+  currency: market.currencyCode,
+  hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
+};
+---
+
+<html lang="en">
+  <body>
+    <slot />
+    <div id="analytics-shop" data-shop={JSON.stringify(analyticsShop)} hidden></div>
+    <script>
+      import { configureAnalytics } from "../lib/analytics";
+      const el = document.getElementById("analytics-shop");
+      if (el instanceof HTMLElement && el.dataset.shop) {
+        configureAnalytics(JSON.parse(el.dataset.shop));
+      }
+    </script>
+  </body>
+</html>
+```
+
+Per-page trackers can then call `getAnalytics()` / `getAnalyticsShop()` as shown below. If a page tracker may mount without the root tracker, pass the same `shop` object into that tracker and call `configureAnalytics(shop)` in the tracker before publishing.
 
 ---
 
@@ -228,6 +376,8 @@ Whenever cart state resolves (any source — fetch, mutation, SPA nav):
 
 Required product fields for `product_viewed` and `product_added_to_cart` Monorail dispatch: `id`, `title`, `price`, `vendor`, `variantId`, `variantTitle`. `id` must be the Shopify Product GID and `variantId` must be the Shopify ProductVariant GID when one is available; handles are routing/display data, not analytics IDs. Missing fields cause the Shopify analytics subscriber to skip the Monorail event and log a field-specific error — the bus event still fires for your subscribers, only the Monorail leg drops.
 
+`CART_VIEWED` requires `{ cart, prevCart, url, shop }`. `cart` and `prevCart` are `AnalyticsCart | null`; when a compatible cart is available, include `id`, `updatedAt`, and connection-shaped `lines`, otherwise pass `cart: null` rather than a partial object.
+
 ## Framework-specific shapes
 
 The patterns below cover the main shapes a framework will land in. They are illustrative — the universal singleton above is the load-bearing piece. For frameworks not listed, see "Adapting to a new framework" below.
@@ -240,16 +390,18 @@ SvelteKit's `afterNavigate` hook fires on every client-side navigation. Combined
 <!-- src/routes/+layout.svelte -->
 <script lang="ts">
   import { afterNavigate } from '$app/navigation';
-  import { getAnalytics, AnalyticsEvent, analyticsShop } from '$lib/analytics';
+  import { configureAnalytics, getAnalytics, getAnalyticsShop, AnalyticsEvent } from '$lib/analytics';
 
-  let { children } = $props();
+  let { data, children } = $props();
+  configureAnalytics(data.analyticsShop);
 
   afterNavigate(() => {
     const analytics = getAnalytics();
-    if (!analytics) return;
+    const shop = getAnalyticsShop();
+    if (!analytics || !shop) return;
     analytics.publish(AnalyticsEvent.PAGE_VIEWED, {
       url: window.location.href,
-      shop: analyticsShop,
+      shop,
     });
   });
 </script>
@@ -262,14 +414,15 @@ Per-page view events go in the route's `$effect`. The route loader must include 
 ```svelte
 <!-- src/routes/products/[handle]/+page.svelte -->
 <script lang="ts">
-  import { getAnalytics, AnalyticsEvent, analyticsShop } from '$lib/analytics';
+  import { getAnalytics, getAnalyticsShop, AnalyticsEvent } from '$lib/analytics';
   let { data } = $props();
 
   $effect(() => {
     const handle = data.product.handle;
     const variant = data.product.selectedOrFirstAvailableVariant;
     const analytics = getAnalytics();
-    if (!analytics) return;
+    const shop = getAnalyticsShop();
+    if (!analytics || !shop) return;
     analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
       products: [{
         id: data.product.id,
@@ -282,7 +435,7 @@ Per-page view events go in the route's `$effect`. The route loader must include 
         sku: variant?.sku,
       }],
       url: window.location.href,
-      shop: analyticsShop,
+      shop,
     });
     void handle;
   });
@@ -297,22 +450,24 @@ Next App Router pages are async server components. Effects must live in client c
 // app/components/AnalyticsTracker.tsx
 "use client";
 import { useEffect } from "react";
+import type { ShopAnalytics } from "@shopify/hydrogen";
 import { usePathname, useSearchParams } from "next/navigation";
-import { getAnalytics, analyticsShop, AnalyticsEvent } from "../lib/analytics";
+import { configureAnalytics, getAnalytics, AnalyticsEvent } from "../lib/analytics";
 
-export function AnalyticsTracker() {
+export function AnalyticsTracker({ shop }: { shop: ShopAnalytics }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const key = `${pathname}?${searchParams?.toString() ?? ""}`;
 
   useEffect(() => {
+    configureAnalytics(shop);
     const bus = getAnalytics();
     if (!bus) return;
     bus.publish(AnalyticsEvent.PAGE_VIEWED, {
       url: window.location.href,
-      shop: analyticsShop,
+      shop,
     });
-  }, [key]);
+  }, [key, shop]);
 
   return null;
 }
@@ -325,12 +480,25 @@ Wrap the tracker in `<Suspense>` in the root layout. `useSearchParams()` opts th
 import { Suspense } from "react";
 import { AnalyticsTracker } from "./components/AnalyticsTracker";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+async function getAnalyticsShop() {
+  const { data } = await storefrontClient.graphql(SHOP_ANALYTICS_QUERY);
+
+  return {
+    shopId: data.shop.id,
+    acceptedLanguage: market.language,
+    currency: market.currencyCode,
+    hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
+  };
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const analyticsShop = await getAnalyticsShop();
+
   return (
     <html lang="en">
       <body>
         <Suspense fallback={null}>
-          <AnalyticsTracker />
+          <AnalyticsTracker shop={analyticsShop} />
         </Suspense>
         {children}
       </body>
@@ -345,9 +513,11 @@ Per-page trackers are thin client components that take server-resolved data and 
 // app/components/ProductViewedTracker.tsx
 "use client";
 import { useEffect } from "react";
-import { getAnalytics, analyticsShop, AnalyticsEvent } from "../lib/analytics";
+import type { ShopAnalytics } from "@shopify/hydrogen";
+import { configureAnalytics, getAnalytics, AnalyticsEvent } from "../lib/analytics";
 
 type Props = {
+  shop: ShopAnalytics;
   product: {
     id: string;
     handle: string;
@@ -363,8 +533,9 @@ type Props = {
   };
 };
 
-export function ProductViewedTracker({ product }: Props) {
+export function ProductViewedTracker({ product, shop }: Props) {
   useEffect(() => {
+    configureAnalytics(shop);
     const bus = getAnalytics();
     if (!bus) return;
     bus.publish(AnalyticsEvent.PRODUCT_VIEWED, {
@@ -382,9 +553,9 @@ export function ProductViewedTracker({ product }: Props) {
         sku: product.selectedOrFirstAvailableVariant?.sku,
       }],
       url: window.location.href,
-      shop: analyticsShop,
+      shop,
     });
-  }, [product.handle]);
+  }, [product.handle, shop]);
   return null;
 }
 ```
@@ -396,9 +567,10 @@ Render it from the (server) page component:
 export default async function ProductPage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
   const product = await fetchProduct(handle);
+  const analyticsShop = await getAnalyticsShop();
   return (
     <main>
-      <ProductViewedTracker product={product} />
+      <ProductViewedTracker product={product} shop={analyticsShop} />
       {/* …rest of UI… */}
     </main>
   );
@@ -413,17 +585,30 @@ Astro is MPA-by-default. Each navigation is a full page load, so there is no cli
 ---
 // src/layouts/BaseLayout.astro
 const { title } = Astro.props;
+const { data } = await storefrontClient.graphql(SHOP_ANALYTICS_QUERY);
+const analyticsShop = {
+  shopId: data.shop.id,
+  acceptedLanguage: market.language,
+  currency: market.currencyCode,
+  hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
+};
 ---
 <html lang="en">
   <head><title>{title}</title></head>
   <body>
     <slot />
+    <div id="analytics-shop" data-shop={JSON.stringify(analyticsShop)} hidden></div>
     <script>
-      import { getAnalytics, AnalyticsEvent, analyticsShop } from "../lib/analytics";
+      import { configureAnalytics, getAnalytics, getAnalyticsShop, AnalyticsEvent } from "../lib/analytics";
+      const shopConfig = document.getElementById("analytics-shop");
+      if (shopConfig instanceof HTMLElement && shopConfig.dataset.shop) {
+        configureAnalytics(JSON.parse(shopConfig.dataset.shop));
+      }
       const analytics = getAnalytics();
-      analytics?.publish(AnalyticsEvent.PAGE_VIEWED, {
+      const shop = getAnalyticsShop();
+      if (analytics && shop) analytics.publish(AnalyticsEvent.PAGE_VIEWED, {
         url: window.location.href,
-        shop: analyticsShop,
+        shop,
       });
     </script>
   </body>
@@ -453,10 +638,12 @@ const product = await fetchProduct(Astro.params.handle);
   ></div>
 
   <script>
-    import { getAnalytics, AnalyticsEvent, analyticsShop } from "../../lib/analytics";
+    import { getAnalytics, getAnalyticsShop, AnalyticsEvent } from "../../lib/analytics";
     const el = document.getElementById("product-analytics");
-    if (el) {
-      getAnalytics()?.publish(AnalyticsEvent.PRODUCT_VIEWED, {
+    const analytics = getAnalytics();
+    const shop = getAnalyticsShop();
+    if (el && analytics && shop) {
+      analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
         products: [{
           id: el.dataset.id ?? "",
           title: el.dataset.title ?? "",
@@ -468,7 +655,7 @@ const product = await fetchProduct(Astro.params.handle);
           sku: el.dataset.sku || undefined,
         }],
         url: window.location.href,
-        shop: analyticsShop,
+        shop,
       });
     }
   </script>
@@ -483,9 +670,9 @@ If you adopt Astro's View Transitions, swap the inline page-view script for a li
 
 Three questions, in order, decide where things go:
 
-1. **Is there a route-change hook on the client?** (SvelteKit `afterNavigate`, Solid `useLocation` reactive read, React Router `useLocation`, Vue Router `afterEach`, etc.) That is where `page_viewed` goes. If the framework is MPA-only and has no SPA navigation, fall back to a script in the root document layout — the page-view fires on every full load.
+1. **Is there a route-change hook on the client?** (SvelteKit `afterNavigate`, Solid `useLocation` reactive read, React Router `useLocation`, etc.) That is where `page_viewed` goes. If the framework is MPA-only and has no SPA navigation, fall back to a script in the root document layout — the page-view fires on every full load.
 
-2. **Where does per-page server-resolved data become available on the client?** That is where each view event (`product_viewed`, `collection_viewed`, etc.) goes. In React, that is a `useEffect` keyed on the resolved data. In Solid, a `createEffect` reading the async value. In Svelte 5, an `$effect`. In Astro, an inline script that reads from a data-attribute bridge. In Vue, an `onMounted` or `watchEffect`.
+2. **Where does per-page server-resolved data become available on the client?** That is where each view event (`product_viewed`, `collection_viewed`, etc.) goes. In React, that is a `useEffect` keyed on the resolved data. In Solid, a `createEffect` reading the async value. In Svelte 5, an `$effect`. In Astro, an inline script that reads from a data-attribute bridge.
 
 3. **Where is cart state resolved?** That is where you call `analytics.updateCart(cart)` — see Cart Tracking below. This must fire on every cart change from any source (initial fetch, mutation result, SPA navigation re-fetch, optimistic update settled). The cart tracker dedupes — extra calls are cheap, missed calls are silent data loss.
 
@@ -566,7 +753,7 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Astro page-view fires only on full loads.** Astro is MPA-by-default. If you adopt View Transitions, listen for `astro:after-swap` instead of relying on the inline-script-runs-on-load behavior — otherwise SPA-nav transitions skip `page_viewed`.
 - **Required product fields silently drop the Monorail leg.** Missing `id`/`title`/`vendor`/`variantId`/`variantTitle`/`price` causes the Shopify analytics subscriber to skip Monorail dispatch and log a field-specific error. The bus event still fires for your subscribers — the loss is only in Shopify analytics. Watch the console.
 - **`updatedAt` missing from cart query drops cart tracking.** The cart tracker keys dedupe on `updatedAt`. Without it, every `updateCart()` call is silently ignored.
-- **`destroy()` is not called by any of the framework adapter sketches.** During HMR or React Strict Mode double-mount, this means duplicate event subscribers and possibly duplicate Monorail events in dev. For production this is rarely visible (one bus per page lifetime). If duplicate dev events bother you, wire `analytics.destroy()` into your framework's teardown (React effect cleanup, Svelte `onDestroy`, Solid `onCleanup`, Vue `onUnmounted`).
+- **`destroy()` is not called by any of the framework adapter sketches.** During HMR or React Strict Mode double-mount, this means duplicate event subscribers and possibly duplicate Monorail events in dev. For production this is rarely visible (one bus per page lifetime). If duplicate dev events bother you, wire `analytics.destroy()` into your framework's teardown (React effect cleanup, Svelte `onDestroy`, Solid `onCleanup`, or equivalent).
 - **Lighthouse skip is silent.** Monorail dispatch is skipped for Chrome Lighthouse user-agents. If your synthetic monitoring runs Lighthouse, you will see no Monorail requests in those runs — this is intentional.
 
 ---
