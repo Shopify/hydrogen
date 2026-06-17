@@ -11,5 +11,7 @@ export function Providers({
   cart?: CartProviderProps["initialData"];
   children: React.ReactNode;
 }) {
+  // TODO: allow cart provider to accept a promise from the server, then consume it with React.use()
+  // This allows the layout to be non-blocking
   return <CartProvider initialData={cart}>{children}</CartProvider>;
 }
