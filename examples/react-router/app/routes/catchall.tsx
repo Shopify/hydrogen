@@ -1,5 +1,5 @@
 // Splat route. Only reached when root middleware doesn't short-circuit the
-// request for a kit-owned route, registered route, or configured redirect.
+// request for a Hydrogen-owned route, registered route, or configured redirect.
 
 import { handleShopifyRedirects } from "@shopify/hydrogen";
 import type { LoaderFunctionArgs } from "react-router";

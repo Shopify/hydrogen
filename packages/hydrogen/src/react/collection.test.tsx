@@ -3,9 +3,11 @@ import { act, renderHook } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+import type * as CollectionModule from "../core/collection";
 import type { CollectionStore } from "../core/collection";
 import { createCollectionStore } from "../core/collection";
 import type { CollectionState } from "../core/collection/state";
+import type * as CollectionUrlModule from "../core/collection/url";
 import { mergeCollectionParams } from "../core/collection/url";
 import {
   CollectionProvider,
@@ -15,7 +17,7 @@ import {
 } from "./collection";
 
 vi.mock("../core/collection", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../core/collection")>();
+  const actual = await importOriginal<typeof CollectionModule>();
   return {
     ...actual,
     createCollectionStore: vi.fn(),
@@ -23,7 +25,7 @@ vi.mock("../core/collection", async (importOriginal) => {
 });
 
 vi.mock("../core/collection/url", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../core/collection/url")>();
+  const actual = await importOriginal<typeof CollectionUrlModule>();
   return {
     ...actual,
     mergeCollectionParams: vi.fn(() => new URLSearchParams()),
@@ -264,7 +266,7 @@ describe("CollectionProvider", () => {
 
   it("settles after link navigation when loader data already matches URL", async () => {
     const { createCollectionStore: realCreateCollectionStore } =
-      await vi.importActual<typeof import("../core/collection")>("../core/collection");
+      await vi.importActual<typeof CollectionModule>("../core/collection");
     vi.mocked(createCollectionStore).mockImplementation(realCreateCollectionStore);
 
     let urlSearch = "filter.p.tag=sale";

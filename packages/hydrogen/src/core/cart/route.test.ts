@@ -340,6 +340,7 @@ describe("createCartServerHandlers", () => {
       expect(result.headers.get("set-cookie")).toContain("cart=");
 
       const body = await result.json();
+      expect(body.cart).toEqual(MOCK_CART);
       expect(body.userErrors).toEqual([]);
     });
 
@@ -385,6 +386,9 @@ describe("createCartServerHandlers", () => {
       assert(result, "expected a response");
       expect(result.status).toBe(200);
 
+      const body = await result.json();
+      expect(body.cart).toEqual(MOCK_CART);
+
       const [, init] = mockFetch.mock.calls[0];
       const gqlBody = JSON.parse(init.body);
       expect(gqlBody.variables.cartId).toBe("gid://shopify/Cart/123");
@@ -428,6 +432,7 @@ describe("createCartServerHandlers", () => {
 
       assert(result, "expected a response");
       const body = await result.json();
+      expect(body.cart).toEqual(MOCK_CART);
       expect(body.userErrors).toEqual([]);
     });
 

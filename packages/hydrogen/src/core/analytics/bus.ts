@@ -8,10 +8,15 @@ import type {
   StorefrontAnalytics,
   StorefrontAnalyticsConfig,
   StorefrontAnalyticsOptions,
+  PayloadFor,
 } from "./types";
 
+type AnalyticsCallback = (payload: unknown) => void;
+type ShopifyWindow = Window & { Shopify?: Shopify };
+
 function getHeadlessShopify() {
-  const shopify = ((window as any).Shopify ??= {});
+  const shopifyWindow = window as ShopifyWindow;
+  const shopify = (shopifyWindow.Shopify ??= {});
   return ((shopify as Shopify).headless ??= {});
 }
 
@@ -38,7 +43,7 @@ export function createStorefrontAnalytics(
   const { shop } = options;
   let destroyed = false;
 
-  const subscribers = new Map<string, Map<string, (payload: any) => void>>();
+  const subscribers = new Map<string, Map<string, AnalyticsCallback>>();
   let nextSubscriberId = 0;
   let deprecatedCookiesReady = false;
 
@@ -61,7 +66,7 @@ export function createStorefrontAnalytics(
     return options.shopifyAnalytics !== false;
   }
 
-  function publish(event: string, payload: any): void {
+  function publish<E extends string>(event: E, payload: PayloadFor<E>): void {
     if (destroyed) return;
 
     const eventSubscribers = subscribers.get(event) ?? new Map();
@@ -85,14 +90,17 @@ export function createStorefrontAnalytics(
     destinationManager.onPublish(event, payload);
   }
 
-  function subscribe(event: string, callback: (payload: any) => void): () => void {
+  function subscribe<E extends string>(
+    event: E,
+    callback: (payload: PayloadFor<E>) => void,
+  ): () => void {
     let eventSubscribers = subscribers.get(event);
     if (!eventSubscribers) {
       eventSubscribers = new Map();
       subscribers.set(event, eventSubscribers);
     }
     const id = String(nextSubscriberId++);
-    eventSubscribers.set(id, callback);
+    eventSubscribers.set(id, callback as AnalyticsCallback);
     return () => {
       subscribers.get(event)?.delete(id);
     };

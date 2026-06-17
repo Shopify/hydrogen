@@ -1,0 +1,28 @@
+{
+  "name": "@shopify/hydrogen-example-sveltekit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "node build",
+    "prepare": "svelte-kit sync || echo ''",
+    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "@shopify/hydrogen": "workspace:*"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-node": "^5.3.3",
+    "@sveltejs/kit": "^2.57.0",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "@tailwindcss/vite": "^4.2.2",
+    "gql.tada": "^1.9.2",
+    "svelte": "^5.55.2",
+    "svelte-check": "^4.4.6",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.7"
+  }
+}

@@ -23,13 +23,12 @@ import {
   type CartDataForOptions,
   type CreateCartQueriesOptions,
 } from "./queries";
-import { toStandardActionsCart } from "./standard-actions-adapter";
 import type { CartData } from "./state";
 
 export const CART_API_PATH = "/api/cart" as const;
 export const CART_GET_METHOD = "GET" as const;
 export const CART_POST_METHOD = "POST" as const;
-export const cartServerHandlersCartQuery: unique symbol = Symbol("storefront-kit.cartQuery");
+export const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
 export type CartGetData<TCart = CartData> = {
   cart: TCart;
@@ -237,11 +236,11 @@ function createMutationResult(
   warnings: unknown,
   headers: Headers,
 ): MutationResult {
-  const standardActionsCart = toStandardActionsCart(cart as Record<string, unknown> | null);
+  const storefrontCart = (cart ?? null) as Record<string, unknown> | null;
 
   return {
-    data: { cart: standardActionsCart, userErrors, warnings },
-    cartId: typeof standardActionsCart?.id === "string" ? standardActionsCart.id : null,
+    data: { cart: storefrontCart, userErrors, warnings },
+    cartId: typeof storefrontCart?.id === "string" ? storefrontCart.id : null,
     headers,
   };
 }
