@@ -45,15 +45,21 @@ export function createObservable<T>(initialState: T): InternalObservable<T> {
     }
   }
 
-  function subscribe(
-    fn: (value: any) => void,
-    selector?: (state: T) => any,
-    isEqual?: (a: any, b: any) => boolean,
+  function subscribe(fn: (state: T) => void): () => void;
+  function subscribe<S>(
+    fn: (slice: S) => void,
+    selector: (state: T) => S,
+    isEqual?: (a: S, b: S) => boolean,
+  ): () => void;
+  function subscribe<S>(
+    fn: (value: T | S) => void,
+    selector?: (state: T) => S,
+    isEqual?: (a: S, b: S) => boolean,
   ): () => void {
     const listener: Listener<T> = {
-      fn,
+      fn: fn as (value: unknown) => void,
       selector,
-      isEqual: isEqual ?? Object.is,
+      isEqual: (isEqual as ((a: unknown, b: unknown) => boolean) | undefined) ?? Object.is,
       prev: selector ? selector(currentState) : undefined,
     };
 

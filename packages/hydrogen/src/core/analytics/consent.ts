@@ -13,21 +13,30 @@ type ConsentDeps = {
   onReady: () => void;
   onConsentCollected: (payload: { shouldRevalidate: boolean }) => void;
 };
+type ConfigurableCustomerPrivacy = Partial<CustomerPrivacyApi> & {
+  config?: Partial<CustomerPrivacyConfig>;
+};
+type ConfigurableShopify = Omit<Shopify, "customerPrivacy"> & {
+  customerPrivacy?: ConfigurableCustomerPrivacy;
+};
+type ShopifyWindow = { Shopify?: ConfigurableShopify };
 
 function setCustomerPrivacyConfig(config: Partial<CustomerPrivacyConfig>) {
-  const shopify = ((window as any).Shopify ??= {});
+  const shopifyWindow = window as unknown as ShopifyWindow;
+  const shopify = (shopifyWindow.Shopify ??= {});
   const customerPrivacy =
     typeof shopify.customerPrivacy === "object" && shopify.customerPrivacy !== null
       ? shopify.customerPrivacy
       : {};
 
-  shopify.customerPrivacy = {
+  const nextCustomerPrivacy: ConfigurableCustomerPrivacy = {
     ...customerPrivacy,
     config: {
       ...customerPrivacy.config,
       ...config,
     },
   };
+  shopify.customerPrivacy = nextCustomerPrivacy;
 }
 
 function shouldWaitForBannerInteraction() {
@@ -77,11 +86,13 @@ export function initConsent(deps: ConsentDeps): () => void {
   setCustomerPrivacyConfig(customerPrivacyConfig);
 
   if (language) {
-    ((window as any).Shopify ??= {}).locale = language;
+    const shopifyWindow = window as unknown as ShopifyWindow;
+    (shopifyWindow.Shopify ??= {}).locale = language;
   }
 
   if (consent.country) {
-    ((window as any).Shopify ??= {}).country = consent.country;
+    const shopifyWindow = window as unknown as ShopifyWindow;
+    (shopifyWindow.Shopify ??= {}).country = consent.country;
   }
 
   const cookiesReady = ensureTrackingValues(sfapiHost, publicStorefrontAccessToken);

@@ -1,17 +1,21 @@
-import type { StorefrontAnalyticsConfig, StorefrontAnalyticsDestination } from "./types";
+import type {
+  PayloadFor,
+  StorefrontAnalyticsConfig,
+  StorefrontAnalyticsDestination,
+} from "./types";
 
 const MAX_REPLAY_BUFFER_SIZE = 500;
 
 type ReplayEntry = {
   sequence: number;
   event: string;
-  payload: any;
+  payload: unknown;
 };
 
 type DestinationRecord = {
   name: string;
   cleanup?: () => void;
-  subscriptions: Map<string, Set<(payload: any) => void>>;
+  subscriptions: Map<string, Set<(payload: unknown) => void>>;
   nextReplaySequence: number;
 };
 
@@ -104,7 +108,10 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
     let removed = false;
 
     /** Subscribe callback passed to destination setup. No-op after removal. */
-    const destinationSubscribe = <E extends string>(event: E, callback: (payload: any) => void) => {
+    const destinationSubscribe = <E extends string>(
+      event: E,
+      callback: (payload: PayloadFor<E>) => void,
+    ) => {
       if (removed) {
         return () => {};
       }
@@ -115,10 +122,10 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
         destinationRecord.subscriptions.set(event, eventSubscriptions);
       }
 
-      eventSubscriptions.add(callback);
+      eventSubscriptions.add(callback as (payload: unknown) => void);
       return () => {
         const subscriptionsForEvent = destinationRecord.subscriptions.get(event);
-        subscriptionsForEvent?.delete(callback);
+        subscriptionsForEvent?.delete(callback as (payload: unknown) => void);
         if (subscriptionsForEvent?.size === 0) {
           destinationRecord.subscriptions.delete(event);
         }
@@ -178,7 +185,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
    * Records a published event in the replay buffer and delivers it to
    * destinations when tracking is allowed.
    */
-  function onPublish(event: string, payload: any): void {
+  function onPublish(event: string, payload: unknown): void {
     const replayEntry = {
       sequence: nextReplaySequence++,
       event,

@@ -1,0 +1,56 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+
+	import { cartState } from '$lib/cart';
+	import {
+		CART_DRAWER_ID,
+		closeCartDrawer,
+		configureOpenCartAction,
+		supportsDialogCommands
+	} from '$lib/cart-drawer';
+	import CartDiscountCodes from './CartDiscountCodes.svelte';
+	import CartErrorBanner from './CartErrorBanner.svelte';
+	import CartLineItems from './CartLineItems.svelte';
+	import CartNote from './CartNote.svelte';
+	import CartTotals from './CartTotals.svelte';
+
+	const hasItems = cartState((s) => s.data.lines.nodes.length > 0);
+
+	onMount(() => configureOpenCartAction());
+</script>
+
+<dialog id={CART_DRAWER_ID} aria-labelledby="cart-drawer-title" closedby="any">
+	<div class="flex h-full flex-col">
+		<div class="shrink-0 border-b border-black/10">
+			<div class="flex items-center justify-between px-6 py-4">
+				<h2 id="cart-drawer-title" class="text-lg font-bold">Cart</h2>
+				<button
+					type="button"
+					command="close"
+					commandfor={CART_DRAWER_ID}
+					aria-label="Close cart"
+					class="grid h-10 w-10 place-items-center hover:opacity-60"
+					onclick={() => !supportsDialogCommands() && closeCartDrawer()}
+				>
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<path d="M18 6 6 18" />
+						<path d="m6 6 12 12" />
+					</svg>
+				</button>
+			</div>
+		</div>
+
+		<div class="flex-1 overflow-y-auto px-6 py-4">
+			<CartErrorBanner />
+			<CartLineItems emptyHeadingLevel="h3" errorIdPrefix="cart-drawer-line-error" />
+		</div>
+
+		{#if $hasItems}
+			<footer class="shrink-0 space-y-3 border-t border-black/10 px-6 py-3">
+				<CartDiscountCodes />
+				<CartNote />
+				<CartTotals />
+			</footer>
+		{/if}
+	</div>
+</dialog>

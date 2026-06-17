@@ -10,12 +10,12 @@
  * GraphQL queries (e.g., in Next.js) may use the `edges` pattern instead.
  */
 
-type Connection = {
-  nodes?: Array<any>;
-  edges?: Array<{ node: any }>;
+type Connection<T> = {
+  nodes?: T[];
+  edges?: Array<{ node: T }>;
 };
 
-export function flattenConnection<T>(connection?: Connection): T[] {
+export function flattenConnection<T>(connection?: Connection<T> | null): T[] {
   if (!connection) {
     if (connection === null) {
       console.warn(
@@ -26,11 +26,11 @@ export function flattenConnection<T>(connection?: Connection): T[] {
   }
 
   if ("nodes" in connection && connection.nodes) {
-    return connection.nodes as T[];
+    return connection.nodes;
   }
 
   if ("edges" in connection && Array.isArray(connection.edges)) {
-    return connection.edges.map((edge) => edge.node) as T[];
+    return connection.edges.map((edge) => edge.node);
   }
 
   return [];

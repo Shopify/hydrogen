@@ -1,0 +1,88 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import { gql } from "@shopify/hydrogen";
+
+const COLLECTION_QUERY = gql(`
+  query Collection($handle: String!) {
+    collection(handle: $handle) {
+      id
+      handle
+      title
+      description
+      products(first: 24) {
+        nodes {
+          handle
+          title
+          featuredImage {
+            url
+            altText
+          }
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+        }
+      }
+    }
+  }
+`);
+
+const { handle } = Astro.params;
+if (!handle) {
+  return new Response("Not found", { status: 404 });
+}
+const { data } = await Astro.locals.storefrontClient.graphql(COLLECTION_QUERY, {
+  variables: { handle },
+});
+const collection = data?.collection;
+
+if (!collection) {
+  return new Response("Collection not found", { status: 404 });
+}
+---
+
+<BaseLayout title={`${collection.title} — Mock.shop`}>
+  <main class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
+    <header class="max-w-2xl">
+      <h1 class="text-6xl font-black tracking-tight md:text-8xl">
+        {collection.title}
+      </h1>
+      {
+        collection.description && (
+          <p class="mt-6 text-base leading-relaxed text-black/70 md:text-lg">
+            {collection.description}
+          </p>
+        )
+      }
+    </header>
+
+    <section class="mt-16 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
+      {collection.products.nodes.map((product) => <ProductCard product={product} />)}
+    </section>
+  </main>
+
+  <div
+    id="collection-analytics"
+    data-id={collection.id}
+    data-handle={collection.handle}
+    hidden
+  ></div>
+
+  <script>
+    import { getAnalytics, AnalyticsEvent, analyticsShop } from "../../lib/analytics";
+    const el = document.getElementById("collection-analytics");
+    if (el) {
+      const id = el.dataset.id ?? "";
+      const handle = el.dataset.handle ?? "";
+      const analytics = getAnalytics();
+      analytics?.publish(AnalyticsEvent.COLLECTION_VIEWED, {
+        collection: { id, handle },
+        url: window.location.href,
+        shop: analyticsShop,
+      });
+    }
+  </script>
+</BaseLayout>

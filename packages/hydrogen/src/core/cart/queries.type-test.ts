@@ -3,8 +3,8 @@ import type { ResultOf, VariablesOf } from "gql.tada";
 
 import type { StorefrontGraphqlResult } from "../../client";
 import { gql } from "../../graphql";
-import type { CartDataForOptions } from "./queries";
-import { cartQueries, makeCartQueries } from "./queries";
+import type { CartDataForOptions, cartQueries } from "./queries";
+import { makeCartQueries } from "./queries";
 
 const customCartFragment = gql(`
   fragment CartFragment on Cart {

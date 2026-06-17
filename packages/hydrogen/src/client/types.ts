@@ -24,6 +24,8 @@ type VariablesOfDoc<Doc> =
     : Doc extends TadaDocumentNode<any, any>
       ? TadaVariablesOf<Doc>
       : never;
+type StorefrontApiResultOf<Doc extends DocLike> = TadaResultOf<Doc>;
+type StorefrontApiVariablesOf<Doc extends DocLike> = TadaVariablesOf<Doc>;
 
 // Minimal shape matching the GraphQL spec's error format.
 // Defined locally to avoid a runtime dependency on the `graphql` package.
@@ -198,7 +200,7 @@ export type GenericStorefrontClient = {
 };
 
 export namespace StorefrontApi {
-  export type ResultOf<Doc extends DocLike> = import("gql.tada").ResultOf<Doc>;
-  export type VariablesOf<Doc extends DocLike> = import("gql.tada").VariablesOf<Doc>;
+  export type ResultOf<Doc extends DocLike> = StorefrontApiResultOf<Doc>;
+  export type VariablesOf<Doc extends DocLike> = StorefrontApiVariablesOf<Doc>;
   export type DocumentNode = DocLike;
 }

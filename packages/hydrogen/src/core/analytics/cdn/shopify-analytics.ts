@@ -5,6 +5,8 @@ import type {
   CollectionViewPayload,
   SearchViewPayload,
   CartLineUpdatePayload,
+  ProductPayload,
+  OtherData,
 } from "../types";
 import { getClientBrowserParameters } from "./utils/browser-params";
 import {
@@ -82,7 +84,7 @@ function prepareBasePageViewPayload(payload: {
 }
 
 function prepareBaseCartPayload(payload: {
-  shop?: any;
+  shop?: PageViewPayload["shop"];
   cart?: { id: string } | null;
 }): MonorailAddToCartPayload | undefined {
   if (!payload.cart) return;
@@ -151,7 +153,7 @@ function validateProducts({
   return true;
 }
 
-function formatProduct(products: Array<Record<string, any>>): ShopifyAnalyticsProduct[] {
+function formatProduct(products: Array<ProductPayload & OtherData>): ShopifyAnalyticsProduct[] {
   return products.map((product) => ({
     productGid: product.id,
     variantGid: product.variantId,
@@ -274,12 +276,14 @@ export function createShopifyAnalyticsProcessor() {
   }
 
   // Dispatch table mapping bus event names to their Monorail send handlers.
-  const handlers: Record<string, (payload: any) => void> = {
-    [AnalyticsEvent.PAGE_VIEWED]: handlePageView,
-    [AnalyticsEvent.PRODUCT_VIEWED]: handleProductView,
-    [AnalyticsEvent.COLLECTION_VIEWED]: handleCollectionView,
-    [AnalyticsEvent.SEARCH_VIEWED]: handleSearchView,
-    [AnalyticsEvent.PRODUCT_ADD_TO_CART]: handleProductAddedToCart,
+  const handlers: Record<string, (payload: unknown) => void> = {
+    [AnalyticsEvent.PAGE_VIEWED]: (payload) => handlePageView(payload as PageViewPayload),
+    [AnalyticsEvent.PRODUCT_VIEWED]: (payload) => handleProductView(payload as ProductViewPayload),
+    [AnalyticsEvent.COLLECTION_VIEWED]: (payload) =>
+      handleCollectionView(payload as CollectionViewPayload),
+    [AnalyticsEvent.SEARCH_VIEWED]: (payload) => handleSearchView(payload as SearchViewPayload),
+    [AnalyticsEvent.PRODUCT_ADD_TO_CART]: (payload) =>
+      handleProductAddedToCart(payload as CartLineUpdatePayload),
   };
 
   return {

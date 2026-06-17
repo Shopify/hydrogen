@@ -1,6 +1,6 @@
 # React Router 7 example
 
-React Router v7 storefront example using framework mode with SSR enabled by default.
+Port of the canonical `examples/base/` design to [React Router v7](https://reactrouter.com/) (framework mode, SSR enabled by default).
 
 ## What this demonstrates
 
@@ -12,11 +12,11 @@ React Router v7 storefront example using framework mode with SSR enabled by defa
 
 ## Pages
 
-| Route | Status |
-|---|---|
-| `/` | Live: hero is static; featured products grid pulls from `products(first: 3)` |
-| `/collections/:handle` | Live: queries `collection(handle:)` with up to 24 products |
-| `/products/:handle` | Live: gallery, options (Size + Color swatches), add-to-cart UI; "You may also like" pulls from `products(first: 4)` |
+| Route | Source | Status |
+|---|---|---|
+| `/` | `examples/base/index.html` | Live: hero is static; featured products grid pulls from `products(first: 3)` |
+| `/collections/:handle` | `examples/base/collections/men/index.html` | Live: queries `collection(handle:)` with up to 24 products |
+| `/products/:handle` | `examples/base/products/hoodie/index.html` | Live: gallery, options (Size + Color swatches), add-to-cart UI; "You may also like" pulls from `products(first: 4)` |
 
 ## Stubbed vs. live
 
@@ -31,7 +31,7 @@ pnpm install
 pnpm --filter @shopify/hydrogen-example-react-router dev
 ```
 
-Then open http://localhost:5173.
+Then open http://localhost:5173 (Vite will fall back to 5174 if the base example is also running).
 
 ## Notes for the core SDK
 

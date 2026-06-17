@@ -4,10 +4,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AnalyticsEvent } from "../events";
 import type { ShopAnalytics } from "../types";
 import { createShopifyAnalyticsProcessor } from "./shopify-analytics";
+import type * as MonorailModule from "./utils/monorail";
 import { sendShopifyAnalytics, MonorailEventName } from "./utils/monorail";
 
 vi.mock("./utils/monorail", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("./utils/monorail")>();
+  const actual = await importOriginal<typeof MonorailModule>();
   return {
     ...actual,
     sendShopifyAnalytics: vi.fn(),

@@ -1,12 +1,13 @@
 # Navbar
 
-Create or update the shared site navigation after the home page and cart route paths are known.
+Create or update the shared site navigation after the home page, cart route, and cart drawer shape are known.
 
 ## Requirements
 
 - Preserve the app's existing layout component and styling conventions.
 - Add a home link to `/`.
-- Add a cart link to `/cart`.
+- Add a cart link to `/cart` as the server-rendered and no-JS fallback.
+- When the cart drawer is configured, follow the local `hydrogen-cart-drawer` skill's trigger pattern so the fallback link hydrates to a drawer-opening button.
 - Use the framework's native link component when one is already used in the app.
 - Keep the navbar server-renderable unless the app already uses a client-only navigation shell.
 - Do not fetch cart contents just to render the navbar. A static cart link is enough for setup.
@@ -22,6 +23,7 @@ Create or update the shared site navigation after the home page and cart route p
 ## Verify
 
 - The home link navigates to `/`.
-- The cart link navigates to `/cart`.
+- The cart link navigates to `/cart` before hydration or without JavaScript.
+- When the cart drawer is configured, the hydrated cart trigger opens the drawer.
 - The navbar appears on the home and cart routes.
 - Existing navigation items and styling are not removed unless they directly conflict with the setup.

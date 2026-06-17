@@ -10,6 +10,8 @@ import type { RequestScopedPrivateStorefrontClient } from "@shopify/hydrogen";
 export const storefrontContext = createContext<RequestScopedPrivateStorefrontClient>();
 ```
 
+This `createContext` is React Router's request context for passing values from middleware to loaders; it is not React's component `createContext`.
+
 ```ts
 // app/storefront.middleware.ts
 import {
@@ -19,11 +21,10 @@ import {
 import { storefrontContext } from "./storefront.context";
 import type { Route } from "./+types/root";
 
-export const storefrontMiddleware: Route.MiddlewareFunction = async ({
-  request,
-  context,
+export const storefrontMiddleware: Route.MiddlewareFunction = async (
+  { request, context },
   next,
-}) => {
+) => {
   const buyerIp = request.headers.get("cf-connecting-ip");
   if (!buyerIp) throw new Error("cf-connecting-ip is required for private SFAPI clients");
   const requestContext = createStorefrontRequestContext(request);
@@ -50,9 +51,12 @@ export const storefrontMiddleware: Route.MiddlewareFunction = async ({
 ```ts
 // app/root.tsx — wire up middleware
 import { storefrontMiddleware } from "./storefront.middleware";
+import type { Route } from "./+types/root";
 
-export const unstable_middleware = [storefrontMiddleware];
+export const middleware: Route.MiddlewareFunction[] = [storefrontMiddleware];
 ```
+
+Verify React Router framework middleware is enabled with `future.v8_middleware: true` in `react-router.config.ts`. If the app also needs Hydrogen route handlers and Shopify redirects, use the `hydrogen-request-handlers` React Router shape so this client creation, `handleShopifyRoutes()`, context setup, `handleShopifyRedirects()`, and response-header propagation all live in one root middleware chain.
 
 ```ts
 // app/routes/product.tsx — loader reads client from context

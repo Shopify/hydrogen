@@ -47,6 +47,7 @@ export {
 export type {
   CartError,
   CartErrorCode,
+  CartDataFromHandlers,
   CartGetData,
   CartGetHandler,
   CartGetResult,

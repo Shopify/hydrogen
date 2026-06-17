@@ -84,6 +84,7 @@ export { getCartId, getCart, createCartServerHandlers } from "./cart";
 export type {
   CartError,
   CartErrorCode,
+  CartDataFromHandlers,
   CartGetData,
   CartGetHandler,
   CartGetResult,
@@ -117,11 +118,13 @@ export {
 } from "./cart";
 export { sanitizeQuantity, DEFAULT_MINIMUM_QUANTITY, NO_QUANTITY_LIMIT } from "./cart";
 
-export { createCollectionStore } from "./collection";
+export { createCollectionReconciler, createCollectionStore } from "./collection";
 export type {
+  CollectionReconciler,
   CollectionData,
   CollectionStore,
   CreateCollectionStoreOptions,
+  ReconcilerCallbacks,
   AvailableFilter,
   AvailableFilterValue,
   CollectionState,
@@ -145,6 +148,7 @@ export {
 
 export {
   canAddToCart,
+  createProductFormRegister,
   createProductFormStore,
   findCartLineByMerchandiseId,
   getSelectedVariant,
@@ -159,8 +163,13 @@ export type {
 export { getSelectedProductOptions } from "./product";
 export type {
   ProductInput,
+  ProductFormRegister,
   ProductVariantFrom,
   ProductVariantInput,
+  ProductMerchandiseIdProps,
+  ProductOptionValueProps,
+  ProductQuantityDefaultProps,
+  ProductQuantityProps,
   SelectedOption,
   VariantOptionState,
   VariantOptionValueState,

@@ -1,4 +1,4 @@
-// version: 948d7e184fee6871cd19ed1aaf82584a483aa44c
+// version: ea315691e9819723879605d727a20fde6bdda314
 export interface CartDiscountUpdatePayloadDetail {
 	[k: string]: unknown;
 }
