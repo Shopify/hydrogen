@@ -1,8 +1,8 @@
 import { gql } from "@shopify/hydrogen";
 import Link from "next/link";
 
-import { ProductCard } from "./components/ProductCard";
-import { getStorefrontClient } from "./lib/storefront";
+import { ProductCard } from "@/components/ProductCard";
+import { getStorefrontClient } from "@/lib/storefront";
 
 const HOME_QUERY = gql(`
   query Home {

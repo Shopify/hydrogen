@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { getAnalytics, analyticsShop, AnalyticsEvent } from "../lib/analytics";
+import { getAnalytics, analyticsShop, AnalyticsEvent } from "@/lib/analytics";
 
 type Props = {
   collection: { id: string; handle: string };

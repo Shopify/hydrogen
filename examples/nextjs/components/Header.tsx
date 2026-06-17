@@ -4,8 +4,8 @@ import type { HeaderCollection } from "@shared/header";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { useCart } from "../lib/cart";
-import { CART_DRAWER_ID, openCartDrawer, supportsDialogCommands } from "../lib/cart-drawer";
+import { useCart } from "@/lib/cart";
+import { CART_DRAWER_ID, openCartDrawer, supportsDialogCommands } from "@/lib/cart-drawer";
 
 // React types do not include Invoker Commands yet: https://github.com/facebook/react/issues/32478
 const openCartCommandAttributes = {

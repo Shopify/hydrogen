@@ -1,6 +1,6 @@
 "use client";
 
-import { CartProvider } from "../lib/cart";
+import { CartProvider } from "@/lib/cart";
 
 type CartProviderProps = Parameters<typeof CartProvider>[0];
 

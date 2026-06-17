@@ -6,13 +6,13 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import { Suspense } from "react";
 
-import { AnalyticsTracker } from "./components/AnalyticsTracker";
-import { CartDrawer } from "./components/CartDrawer";
-import { Footer } from "./components/Footer";
-import { Header } from "./components/Header";
-import { Providers } from "./components/Providers";
-import { cartHandlers } from "./lib/cart-handlers";
-import { getStorefrontClient } from "./lib/storefront";
+import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { CartDrawer } from "@/components/CartDrawer";
+import { Footer } from "@/components/Footer";
+import { Header } from "@/components/Header";
+import { Providers } from "@/components/Providers";
+import { cartHandlers } from "@/lib/cart-handlers";
+import { getStorefrontClient } from "@/lib/storefront";
 
 const inter = Inter({
   subsets: ["latin"],

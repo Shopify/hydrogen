@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { getStorefrontClient } from "./lib/storefront";
+import { getStorefrontClient } from "@/lib/storefront";
 
 // Reading headers() and possibly redirecting must happen per-request.
 export const dynamic = "force-dynamic";

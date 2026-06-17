@@ -6,9 +6,10 @@ import { createProductComponents, ShopPayButton } from "@shopify/hydrogen/react"
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-import { openCartDrawer } from "../lib/cart-drawer";
-import { formatMoney } from "../lib/money";
-import type { PRODUCT_QUERY } from "../products/[handle]/page";
+import type { PRODUCT_QUERY } from "@/app/products/[handle]/page";
+import { openCartDrawer } from "@/lib/cart-drawer";
+import { formatMoney } from "@/lib/money";
+
 import { ProductCard } from "./ProductCard";
 import { ProductViewedTracker } from "./ProductViewedTracker";
 

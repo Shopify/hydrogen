@@ -6,7 +6,7 @@ import {
 import { gql, type StorefrontClient } from "@shopify/hydrogen";
 import type { ProductFilter as SfapiProductFilter } from "@shopify/hydrogen/storefront-api-types";
 
-import type { ProductCardData } from "../components/ProductCard";
+import type { ProductCardData } from "@/components/ProductCard";
 
 const PRODUCTS_PER_PAGE = 24;
 

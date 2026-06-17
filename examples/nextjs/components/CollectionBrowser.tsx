@@ -12,8 +12,9 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
-import { AnalyticsEvent, analyticsShop, getAnalytics } from "../lib/analytics";
-import { formatMoney } from "../lib/money";
+import { AnalyticsEvent, analyticsShop, getAnalytics } from "@/lib/analytics";
+import { formatMoney } from "@/lib/money";
+
 import { ProductCard, type ProductCardData } from "./ProductCard";
 
 const COLLECTION_SORT_OPTIONS = [
