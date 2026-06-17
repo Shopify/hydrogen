@@ -3,5 +3,3 @@ packages:
   - examples/*
 catalog:
   typescript: ^5.9.3
-patchedDependencies:
-  next@16.2.4: patches/next@16.2.4.patch
