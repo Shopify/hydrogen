@@ -13,7 +13,7 @@
 - `nuxt/` — Nuxt 4 port with server middleware and Vue pages
 - `nuxt-binding/` — Nuxt 4 port using Hydrogen's Vue binding layer
 
-These examples are internal proof-of-concepts and testbeds for Hydrogen APIs as they evolve.
+These examples are proof-of-concepts for how Hydrogen can adapt to any framework; official bindings for libraries outside of React are coming soon.
 
 They exist to help us answer questions like:
 
@@ -21,6 +21,8 @@ They exist to help us answer questions like:
 - Where does the framework integration get awkward?
 - What do agents need from the SDK, docs, and skills to generate a storefront reliably?
 - Which patterns should be promoted into documentation or agent skills?
+
+As the Hydrogen Developer Preview evolves, expect a lot of change and refinement to these examples, as we try and make each framework feel at home with Hydrogen. If you have ideas or feedback on how we can improve any of the integrations, let us know in the [discussions](https://github.com/Shopify/hydrogen/discussions)!
 
 ## Running them
 
@@ -45,12 +47,3 @@ From the repo root:
 - They are not a promise of the recommended app structure.
 
 The expected creation path for real storefronts is: agent skills + docs generate a storefront tailored to the merchant, framework, and requirements.
-
-## Guidelines for adding examples
-
-- Optimize for learning, not polish.
-- Keep each example focused on one API question or integration scenario.
-- Prefer small, complete slices over broad demo apps.
-- Make assumptions explicit in the example or its README.
-- If an example reveals a durable pattern, promote that pattern into docs or skills instead of treating the example as the product.
-- If an example stops teaching us something, delete or rewrite it.
