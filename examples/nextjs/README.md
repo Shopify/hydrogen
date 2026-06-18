@@ -50,7 +50,7 @@ Note: Next.js 16 does **not** cache `fetch` by default — every request to a se
 
 Same shape as the React Router example — every framework port re-invents the same three pieces, so this is the feedback loop into the Hydrogen package in `packages/hydrogen`:
 
-- `storefrontClient.graphql()` in `app/lib/storefront.ts` — now uses `createStorefrontClient` from `@shopify/hydrogen` with `gql.tada` for zero-config type inference. Error normalization and request-id propagation are handled by the core client.
+- `storefrontClient.graphql()` in `app/lib/storefront.ts` (server clients) and `app/lib/public-storefront.ts` (browser-safe public client) — now uses `createStorefrontClient` from `@shopify/hydrogen` with `gql.tada` for zero-config type inference. Error normalization and request-id propagation are handled by the core client.
 - `formatMoney()` in `app/lib/money.ts` — every example needs money formatting from a `MoneyV2`-shaped object.
 - `ProductCard` reads a narrow product shape (`handle`, `title`, `featuredImage`, `priceRange.minVariantPrice`). A core fragment + type for "product card" would let routes share GraphQL fragments instead of re-listing fields.
 - Color swatch mapping (`SWATCHES` in `app/components/ProductDetails.tsx`) is hand-rolled — option-value → swatch metadata is a real merchant problem; the SDK should have an opinion on how to expose it.
