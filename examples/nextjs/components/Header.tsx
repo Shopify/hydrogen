@@ -2,6 +2,7 @@ import { HEADER_COLLECTIONS_QUERY, normalizeHeaderCollections } from "@shared/he
 import Link from "next/link";
 
 import { getStorefrontClient } from "@/lib/storefront";
+
 import { CartButton } from "./CartButton";
 
 async function getHeaderCollections() {

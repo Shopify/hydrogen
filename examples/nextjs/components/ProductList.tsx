@@ -2,6 +2,7 @@ import { gql } from "@shopify/hydrogen";
 import { Suspense } from "react";
 
 import { getStorefrontClient } from "@/lib/storefront";
+
 import { ProductCard } from "./ProductCard";
 
 const HOME_QUERY = gql(`
