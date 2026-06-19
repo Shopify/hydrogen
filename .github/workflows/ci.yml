@@ -331,6 +331,28 @@ jobs:
             --styling none
         shell: bash
 
+      - name: 📦 Use local Hydrogen CLI package
+        run: |
+          package_dir="${{ runner.temp }}/h2-local-packages"
+          mkdir -p "$package_dir"
+
+          cli_tarball="$(pnpm --dir packages/cli pack --pack-destination "$package_dir" --json | node -e "let input = ''; process.stdin.on('data', (chunk) => input += chunk); process.stdin.on('end', () => { const result = JSON.parse(input); console.log((Array.isArray(result) ? result[0] : result).filename); });")"
+
+          cd "${{ runner.temp }}/h2-test-${{ matrix.pm }}"
+
+          case "${{ matrix.pm }}" in
+            npm)
+              npm install --save-dev "$cli_tarball"
+              ;;
+            pnpm)
+              pnpm add --save-dev "$cli_tarball"
+              ;;
+            yarn)
+              yarn add --dev "$cli_tarball"
+              ;;
+          esac
+        shell: bash
+
       - name: ✅ Verify lockfile
         run: |
           if [ ! -f "${{ runner.temp }}/h2-test-${{ matrix.pm }}/${{ matrix.lockfile }}" ]; then
