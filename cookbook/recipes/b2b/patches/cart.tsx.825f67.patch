@@ -1,17 +1,17 @@
 index 983f6505d..0fdab3fb8 100644
 --- a/templates/skeleton/app/routes/cart.tsx
 +++ b/templates/skeleton/app/routes/cart.tsx
-@@ -11,7 +11,8 @@ export const meta: Route.MetaFunction = () => {
+@@ -14,7 +14,9 @@ export const meta: Route.MetaFunction = () => {
  export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
  
  export async function action({request, context}: Route.ActionArgs) {
--  const {cart} = context;
-+  // @description Destructure customerAccount for B2B location session persistence
-+  const {cart, customerAccount} = context;
+   const cart = context.get(hydrogenContext.cart);
++  // @description Access customerAccount for B2B location session persistence
++  const customerAccount = context.get(hydrogenContext.customerAccount);
  
    const formData = await request.formData();
  
-@@ -64,6 +65,12 @@ export async function action({request, context}: Route.ActionArgs) {
+@@ -69,6 +71,12 @@ export async function action({request, context}: Route.ActionArgs) {
        break;
      }
      case CartForm.ACTIONS.BuyerIdentityUpdate: {

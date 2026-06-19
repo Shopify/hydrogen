@@ -348,16 +348,13 @@ jobs:
 
           case "${{ matrix.pm }}" in
             npm)
-              npm install "$hydrogen_react_tarball" "$hydrogen_tarball"
-              npm install --save-dev "$cli_tarball"
+              npm install "$hydrogen_react_tarball" "$hydrogen_tarball" "$cli_tarball"
               ;;
             pnpm)
-              pnpm add "$hydrogen_react_tarball" "$hydrogen_tarball"
-              pnpm add --save-dev "$cli_tarball"
+              pnpm add "$hydrogen_react_tarball" "$hydrogen_tarball" "$cli_tarball"
               ;;
             yarn)
-              yarn add "$hydrogen_react_tarball" "$hydrogen_tarball"
-              yarn add --dev "$cli_tarball"
+              yarn add "$hydrogen_react_tarball" "$hydrogen_tarball" "$cli_tarball"
               ;;
           esac
         shell: bash

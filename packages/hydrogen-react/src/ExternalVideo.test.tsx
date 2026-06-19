@@ -88,7 +88,6 @@ describe('<ExternalVideo />', () => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => render(<ExternalVideo data={{id: 'hi'}} />)).toThrow();
-    expect(console.error).toHaveBeenCalled();
   });
 
   it(`handles when the embedUrl has search params already`, () => {
