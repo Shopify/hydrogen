@@ -62,11 +62,10 @@
   "dependencies": {
     "@shopify/cli-hydrogen": "workspace:*",
     "nested-error-stacks": "^2.1.1",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "react-intersection-observer": "^8.32.0",
-    "react-router": "7.16.0",
-    "react-router-dom": "7.16.0",
+    "react-router": "8.0.1",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
@@ -77,8 +76,8 @@
     "@eslint/js": "9.19.0",
     "@playwright/test": "^1.57.0",
     "@qwik.dev/partytown": "^0.11.2",
-    "@react-router/dev": "7.16.0",
-    "@react-router/fs-routes": "7.16.0",
+    "@react-router/dev": "8.0.1",
+    "@react-router/fs-routes": "8.0.1",
     "@shopify/cli": "3.91.1",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/eslint": "9.6.1",
@@ -113,7 +112,7 @@
     "@shopify/prettier-config": "catalog:"
   },
   "engines": {
-    "node": "^22 || ^24",
+    "node": "^22.22.0 || ^24",
     "pnpm": ">=10.16.1"
   },
   "lint-staged": {

@@ -49,9 +49,13 @@ export function Seo({debug}: SeoProps) {
       matches
         .flatMap((match) => {
           const {handle, ...routeMatch} = match;
-          const routeData = {...routeMatch, ...location};
+          const routeData = {
+            ...routeMatch,
+            ...location,
+            data: routeMatch.loaderData,
+          };
           const handleSeo = (handle as SeoWrapper)?.seo;
-          const loaderSeo = (routeMatch?.data as SeoWrapper)?.seo;
+          const loaderSeo = (routeMatch?.loaderData as SeoWrapper)?.seo;
 
           if (!handleSeo && !loaderSeo) {
             return [];

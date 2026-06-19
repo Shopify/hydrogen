@@ -34,11 +34,12 @@ Here's the partytown recipe for the base Hydrogen skeleton template:
 
 ## Description
 
-This recipe integrates Partytown with your Hydrogen storefront to run Google Tag Manager 
-and other third-party scripts in a web worker, keeping the main thread free for critical 
+This recipe integrates Partytown with your Hydrogen storefront to run Google Tag Manager
+and other third-party scripts in a web worker, keeping the main thread free for critical
 rendering tasks.
 
 Key features:
+
 - Moves GTM and analytics scripts off the main thread
 - Improves Core Web Vitals scores
 - Maintains full GTM functionality
@@ -54,7 +55,7 @@ Key features:
 
 - Google Tag Manager container ID (remember to set your `GTM_CONTAINER_ID` or `GTM_ID` environment variable)
 - Basic understanding of web workers and CSP
-- Node.js 18.0.0 or higher
+- Node.js 22.22.0 or higher
 
 ## New files added to the template by this recipe
 
@@ -71,7 +72,7 @@ Add `public/~partytown` to ignore Partytown library files.
 
 #### File: /.gitignore
 
-~~~diff
+```diff
 @@ -4,6 +4,7 @@ node_modules
  /build
  /dist
@@ -80,7 +81,7 @@ Add `public/~partytown` to ignore Partytown library files.
  /.mf
  .env
  .shopify
-~~~
+```
 
 ### Step 2: Create GTM web worker component
 
@@ -88,7 +89,7 @@ Add a GTM component that loads scripts in a web worker.
 
 #### File: [PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx)
 
-~~~tsx
+```tsx
 import {useEffect, useRef} from 'react';
 
 /**
@@ -158,7 +159,7 @@ export function PartytownGoogleTagManager(props: {
     </noscript>
   );
 }
-~~~
+```
 
 ### Step 3: Document Partytown setup
 
@@ -166,36 +167,36 @@ Document Partytown setup and configuration instructions.
 
 #### File: /README.md
 
-~~~diff
+````diff
 @@ -1,6 +1,6 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Skeleton + Partytown + Google Tag Manager
- 
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify's full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with [Partytown](https://partytown.builder.io/) for performance-oriented lazy-loading of [Google Tag Manager](https://support.google.com/tagmanager).
- 
+
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with [Partytown](https://partytown.builder.io/) for performance-oriented lazy-loading of [Google Tag Manager](https://support.google.com/tagmanager).
+
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
+ [Get familiar with React Router](https://reactrouter.com/)
 @@ -17,12 +17,15 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
  - GraphQL generator
  - TypeScript and JavaScript flavors
  - Minimal setup of components and routes
 +- **Partytown** - Relocates resource intensive scripts off the main thread into a web worker
 +- **Google Tag Manager** - Integration with CSP support
- 
+
  ## Getting started
- 
+
  **Requirements:**
- 
- - Node.js version 18.0.0 or higher
+
+ - Node.js version 22.22.0 or higher
 +- [Google Tag Manager ID](https://support.google.com/tagmanager/answer/6103696?hl=en) (optional)
- 
+
  ```bash
  npm create @shopify/hydrogen@latest
 @@ -40,6 +43,62 @@ npm run build
  npm run dev
  ```
- 
+
 +## Partytown + Google Tag Manager Setup
 +
 +### Key files
@@ -246,7 +247,7 @@ Document Partytown setup and configuration instructions.
 +- Improved user experience
 +
  ## Setup for using Customer Account API (`/account` section)
- 
+
  Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +
 +## Resources
@@ -256,7 +257,7 @@ Document Partytown setup and configuration instructions.
 +- [Google Tag Manager setup](https://support.google.com/tagmanager/answer/6103696)
 +- [Introducing Partytown](https://dev.to/adamdbradley/introducing-partytown-run-third-party-scripts-from-a-web-worker-2cnp)
 \ No newline at end of file
-~~~
+````
 
 ### Step 4: Add CORS reverse proxy
 
@@ -264,7 +265,7 @@ Reverse the proxy route for third-party scripts requiring CORS headers.
 
 #### File: [reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts)
 
-~~~ts
+```ts
 // Reverse proxies partytown libs that require CORS. Used by Partytown resolveUrl
 //@see: https://developers.cloudflare.com/workers/examples/cors-header-proxy/
 
@@ -469,7 +470,7 @@ async function handleRequest(request: Route.LoaderArgs['request']) {
     }
   }
 }
-~~~
+```
 
 ### Step 5: Configure CSP headers
 
@@ -477,7 +478,7 @@ Configure the CSP headers for GTM and Google Analytics domains.
 
 #### File: /app/entry.server.tsx
 
-~~~diff
+```diff
 @@ -19,6 +19,19 @@ export default async function handleRequest(
        checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
        storeDomain: context.env.PUBLIC_STORE_DOMAIN,
@@ -496,9 +497,9 @@ Configure the CSP headers for GTM and Google Analytics domains.
 +      'www.google-analytics.com',
 +    ],
    });
- 
+
    const body = await renderToReadableStream(
-~~~
+```
 
 ### Step 6: Add URL resolver for proxying
 
@@ -506,7 +507,7 @@ Add a URL resolver to control which scripts should be reverse-proxied.
 
 #### File: [maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts)
 
-~~~ts
+```ts
 /**
  * Partytown will call this function to resolve any URLs
  * Many third-party scripts already provide the correct CORS headers, but not all do. For services that do not add the correct headers, then a reverse proxy to another domain must be used in order to provide the CORS headers.
@@ -541,7 +542,7 @@ export function maybeProxyRequest(url: URL, location: Location, type: string) {
 
   return proxyUrl;
 }
-~~~
+```
 
 ### Step 7: Initialize Partytown and GTM
 
@@ -549,7 +550,7 @@ Initialize Partytown and GTM in the root layout.
 
 #### File: /app/root.tsx
 
-~~~diff
+```diff
 @@ -1,4 +1,4 @@
 -import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
 +import {Analytics, getShopAnalytics, useNonce, Script} from '@shopify/hydrogen';
@@ -564,9 +565,9 @@ Initialize Partytown and GTM in the root layout.
 +import {PartytownGoogleTagManager} from '~/components/PartytownGoogleTagManager';
 +import {Partytown} from '@qwik.dev/partytown/react';
 +import {maybeProxyRequest} from '~/utils/partytown/maybeProxyRequest';
- 
+
  export type RootLoader = typeof loader;
- 
+
 @@ -90,6 +94,10 @@ export async function loader(args: Route.LoaderArgs) {
        country: args.context.storefront.i18n.country,
        language: args.context.storefront.i18n.language,
@@ -577,11 +578,11 @@ Initialize Partytown and GTM in the root layout.
 +      args.context.env.GTM_ID || args.context.env.GTM_CONTAINER_ID,
    };
  }
- 
+
 @@ -163,6 +171,38 @@ export function Layout({children}: {children?: React.ReactNode}) {
    );
  }
- 
+
 +function PartyTownScripts({gtmContainerId}: {gtmContainerId: string}) {
 +  const nonce = useNonce();
 +  return (
@@ -616,7 +617,7 @@ Initialize Partytown and GTM in the root layout.
 +
  export default function App() {
    const data = useRouteLoaderData<RootLoader>('root');
- 
+
 @@ -177,6 +217,7 @@ export default function App() {
        consent={data.consent}
      >
@@ -625,7 +626,7 @@ Initialize Partytown and GTM in the root layout.
          <Outlet />
        </PageLayout>
      </Analytics.Provider>
-~~~
+```
 
 ### Step 8: Enable atomic mode
 
@@ -633,7 +634,7 @@ Add a helper utility to enable Partytown atomic mode for better performance.
 
 #### File: [partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts)
 
-~~~ts
+```ts
 /*
  * Helper utility to enable PartyTown atomic mode
  * @see: https://partytown.builder.io/atomics
@@ -644,7 +645,7 @@ export function partytownAtomicHeaders() {
     'Cross-Origin-Opener-Policy': 'same-origin',
   };
 }
-~~~
+```
 
 ### Step 9: Install Partytown
 
@@ -652,7 +653,7 @@ Add a Partytown dependency and npm script for copying library files.
 
 #### File: /package.json
 
-~~~diff
+```diff
 @@ -8,12 +8,14 @@
      "build": "shopify hydrogen build --codegen",
      "dev": "shopify hydrogen dev --codegen",
@@ -670,7 +671,7 @@ Add a Partytown dependency and npm script for copying library files.
      "@shopify/hydrogen": "workspace:*",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
-~~~
+```
 
 ### Step 10: Configure Vite for Partytown
 
@@ -678,7 +679,7 @@ Configure Vite to exclude Partytown library from build optimization.
 
 #### File: /vite.config.ts
 
-~~~diff
+```diff
 @@ -29,6 +29,7 @@ export default defineConfig({
          'react-router > set-cookie-parser',
          'react-router > cookie',
@@ -687,6 +688,6 @@ Configure Vite to exclude Partytown library from build optimization.
        ],
      },
    },
-~~~
+```
 
 </recipe_implementation>

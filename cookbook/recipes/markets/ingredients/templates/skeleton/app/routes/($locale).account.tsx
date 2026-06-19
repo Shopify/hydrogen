@@ -1,12 +1,8 @@
-import {
-  data as remixData,
-  Form,
-  Outlet,
-  useLoaderData,
-} from 'react-router';
+import {data as remixData, Form, Outlet, useLoaderData} from 'react-router';
 import {Link} from '~/components/Link';
 import type {Route} from './+types/($locale).account';
 import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
+import {hydrogenContext} from '@shopify/hydrogen';
 
 export function shouldRevalidate() {
   return true;
@@ -14,14 +10,11 @@ export function shouldRevalidate() {
 
 export async function loader({context}: Route.LoaderArgs) {
   const {customerAccount} = context;
-  const {data, errors} = await customerAccount.query(
-    CUSTOMER_DETAILS_QUERY,
-    {
-      variables: {
-        language: context.customerAccount.i18n.language,
-      },
+  const {data, errors} = await customerAccount.query(CUSTOMER_DETAILS_QUERY, {
+    variables: {
+      language: context.get(hydrogenContext.customerAccount).i18n.language,
     },
-  );
+  });
 
   if (errors?.length || !data?.customer) {
     throw new Error('Customer not found');

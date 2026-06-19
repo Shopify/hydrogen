@@ -9,6 +9,7 @@ import {
   useOutletContext,
 } from 'react-router';
 import type {Route} from './+types/($locale).account.profile';
+import {hydrogenContext} from '@shopify/hydrogen';
 
 export type ActionResponse = {
   error: string | null;
@@ -20,7 +21,7 @@ export const meta: Route.MetaFunction = () => {
 };
 
 export async function loader({context}: Route.LoaderArgs) {
-  context.customerAccount.handleAuthStatus();
+  context.get(hydrogenContext.customerAccount).handleAuthStatus();
 
   return {};
 }

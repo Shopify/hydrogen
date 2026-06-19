@@ -1,14 +1,14 @@
 # Hydrogen Skeleton Template Guidelines
 
-This initial document provides guidelines and opinionated best practices for developing in Remix and Hydrogen with the goal of building consistent and well structured code. This may evolve into more official recommendations, such as ESLint presets and other tooling to guide users to the outcomes defined below.
+This initial document provides guidelines and opinionated best practices for developing in React Router and Hydrogen with the goal of building consistent and well structured code. This may evolve into more official recommendations, such as ESLint presets and other tooling to guide users to the outcomes defined below.
 
 Topics covered:
 
 - [Error Handling](#error-handling)
 - [Template Dependencies](#template-dependencies)
-- [Remix Route APIs](#remix-route-apis)
+- [React Router Route APIs](#react-router-route-apis)
 - [TypeScript](#typescript)
-- [Remix Loader Return Values](#remix-loader-return-values)
+- [React Router Loader Return Values](#react-router-loader-return-values)
 - [GraphQL Query Definitions](#graphql-query-definitions)
 - [Comment Styles](#comment-styles)
 
@@ -79,7 +79,7 @@ Minimalize dependencies and shared code between templates; template files are me
 ### Don't
 
 - Share code between templates in a separate file. There is no guarantee that any given project will need both those templates, and we also want to avoid issues associated with generating multiple files (such as file organization).
-- Use `npm` packages or dependencies in templates that aren't directly associated with Hydrogen or Remix. A package like `tiny-invariant` could be 1) confusing to developers unfamiliar with it, 2) abstract away things that we want to teach, such as correct error handling, and 3) require us to figure out how to correctly give direction on installation and updating the `package.json` upon template creation.
+- Use `npm` packages or dependencies in templates that aren't directly associated with Hydrogen or React Router. A package like `tiny-invariant` could be 1) confusing to developers unfamiliar with it, 2) abstract away things that we want to teach, such as correct error handling, and 3) require us to figure out how to correctly give direction on installation and updating the `package.json` upon template creation.
 
 <!-- ## Code Organization
 
@@ -107,9 +107,9 @@ import { myFunction } from "./myFunction";
 import type { Shop } from "@shopify/hydrogen-react/storefront-api-types";
 ``` -->
 
-## Remix Route APIs
+## React Router Route APIs
 
-Remix-specific route API functions should be ordered and consistent in style, to help developers quickly scan and find what they're looking for.
+React Router route API functions should be ordered and consistent in style, to help developers quickly scan and find what they're looking for.
 
 ### Do
 
@@ -120,7 +120,7 @@ Remix-specific route API functions should be ordered and consistent in style, to
   1. Error handling (`ErrorBoundary`)
   1. Storefront API GraphQL query strings
 - Use function declarations when possible
-- Use the most specific type available for Remix Route APIs.
+- Use the most specific type available for React Router Route APIs.
 
 ### Example
 
@@ -169,7 +169,7 @@ import type {Product} from '@shopify/hydrogen/storefront-api-types';
 type MyCustomProduct = Pick<Product, 'name' | 'description'>;
 ```
 
-## Remix Loader Return Values
+## React Router Loader Return Values
 
 Use the correct return type in `loader()`, `action()`, etc.
 
@@ -218,7 +218,7 @@ Be consistent in the query's variable name, in addition to the query's name in t
 
 - Declare query and mutation constant names in SCREAMING_SNAKE_CASE
 - Ensure that the query name itself is a (globally-unique) name based on the filename and the query contents
-- Place the query at the bottom of the route template. See the [Remix Route APIs](#remix-route-apis) for more details
+- Place the query at the bottom of the route template. See the [React Router Route APIs](#react-router-route-apis) for more details
 
 ### Example
 

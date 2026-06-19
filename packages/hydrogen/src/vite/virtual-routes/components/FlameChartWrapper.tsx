@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef} from 'react';
+import {useCallback, useEffect, useRef, type RefObject} from 'react';
 import type {
   FlameChartNodes,
   FlameChartSettings,
@@ -58,7 +58,7 @@ export const FlameChartWrapper = (props: FlameChartProps) => {
   const flameChart = useRef<null | FlameChart>(null);
 
   useResizeObserver({
-    ref: boxRef,
+    ref: boxRef as RefObject<HTMLDivElement>,
     onResize: ({width = 0, height = 0}) => {
       if (props.onResize) {
         props.onResize(flameChart.current, width, height);

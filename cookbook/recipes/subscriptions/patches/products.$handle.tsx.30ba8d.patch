@@ -18,12 +18,12 @@ index 99730d418..e98f27938 100644
 +  {rel: 'stylesheet', href: sellingPlanStyle},
 +];
 +
- export const meta: Route.MetaFunction = ({data}) => {
+ export const meta: Route.MetaFunction = ({loaderData}) => {
    return [
-     {title: `Hydrogen | ${data?.product.title ?? ''}`},
-@@ -59,8 +66,34 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+     {title: `Hydrogen | ${loaderData?.product.title ?? ''}`},
+@@ -59,8 +66,34 @@ async function loadCriticalData({context, params, request, url}: Route.LoaderArgs) {
    // The API handle might be localized, so redirect to the localized handle
-   redirectIfHandleIsLocalized(request, {handle, data: product});
+   redirectIfHandleIsLocalized(url, {handle, data: product});
  
 +  // Initialize the selectedSellingPlan to null
 +  let selectedSellingPlan = null;

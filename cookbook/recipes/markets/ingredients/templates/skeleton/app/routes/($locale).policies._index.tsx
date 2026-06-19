@@ -2,10 +2,13 @@ import {useLoaderData} from 'react-router';
 import {Link} from '~/components/Link';
 import type {Route} from './+types/($locale).policies._index';
 import type {PoliciesQuery, PolicyItemFragment} from 'storefrontapi.generated';
+import {hydrogenContext} from '@shopify/hydrogen';
 
 export async function loader({context}: Route.LoaderArgs) {
-  const data: PoliciesQuery = await context.storefront.query(POLICIES_QUERY);
-  
+  const data: PoliciesQuery = await context
+    .get(hydrogenContext.storefront)
+    .query(POLICIES_QUERY);
+
   const shopPolicies = data.shop;
   const policies: PolicyItemFragment[] = [
     shopPolicies?.privacyPolicy,

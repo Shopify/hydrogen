@@ -20,7 +20,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   };
 }
 
-export const meta: MetaFunction<typeof loader> = ({data, matches}) => {
+export const meta: MetaFunction<typeof loader> = ({loaderData, matches}) => {
   // Pass one or more arguments, preserving properties from parent routes
-  return getSeoMeta((matches as any)[0].data.seo, data!.seo);
+  return getSeoMeta((matches as any)[0].loaderData.seo, loaderData?.seo);
 };

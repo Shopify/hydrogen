@@ -18,12 +18,12 @@ index 99730d41..061b059c 100644
 -import {ProductForm} from '~/components/ProductForm';
 -import {redirectIfHandleIsLocalized} from '~/lib/redirect';
  
--export const meta: Route.MetaFunction = ({data}) => {
+-export const meta: Route.MetaFunction = ({loaderData}) => {
 -  return [
--    {title: `Hydrogen | ${data?.product.title ?? ''}`},
+-    {title: `Hydrogen | ${loaderData?.product.title ?? ''}`},
 -    {
 -      rel: 'canonical',
--      href: `/products/${data?.product.handle}`,
+-      href: `/products/${loaderData?.product.handle}`,
 -    },
 -  ];
 -};
@@ -42,12 +42,12 @@ index 99730d41..061b059c 100644
 - * Load data necessary for rendering content above the fold. This is the critical data
 - * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
 - */
--async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+-async function loadCriticalData({context, params, request, url}: Route.LoaderArgs) {
 +export async function loader({params, context}: Route.LoaderArgs) {
    const {handle} = params;
    const {storefront} = context;
  
-@@ -45,188 +9,42 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+@@ -45,188 +9,42 @@ async function loadCriticalData({context, params, request, url}: Route.LoaderArgs) {
      throw new Error('Expected product handle to be defined');
    }
  
@@ -66,7 +66,7 @@ index 99730d41..061b059c 100644
    }
  
 -  // The API handle might be localized, so redirect to the localized handle
--  redirectIfHandleIsLocalized(request, {handle, data: product});
+-  redirectIfHandleIsLocalized(url, {handle, data: product});
 -
 -  return {
 -    product,

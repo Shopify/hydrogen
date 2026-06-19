@@ -15,11 +15,11 @@ index 99730d418..bd97c83cb 100644
 +  combinedListingsSettings,
 +} from '../lib/combined-listings';
  
- export const meta: Route.MetaFunction = ({data}) => {
+ export const meta: Route.MetaFunction = ({loaderData}) => {
    return [
-@@ -59,6 +66,10 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+@@ -59,6 +66,10 @@ async function loadCriticalData({context, params, request, url}: Route.LoaderArgs) {
    // The API handle might be localized, so redirect to the localized handle
-   redirectIfHandleIsLocalized(request, {handle, data: product});
+   redirectIfHandleIsLocalized(url, {handle, data: product});
  
 +  if (combinedListingsSettings.redirectToFirstVariant) {
 +    redirectIfCombinedListing(request, product);

@@ -1,13 +1,19 @@
 import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/collections.$handle';
-import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
+import {
+  getPaginationVariables,
+  Analytics,
+  hydrogenContext,
+} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {ProductItem} from '~/components/ProductItem';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 
-export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+export const meta: Route.MetaFunction = ({loaderData}) => {
+  return [
+    {title: `Hydrogen | ${loaderData?.collection.title ?? ''} Collection`},
+  ];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -24,9 +30,14 @@ export async function loader(args: Route.LoaderArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+async function loadCriticalData({
+  context,
+  params,
+  request,
+  url,
+}: Route.LoaderArgs) {
   const {handle} = params;
-  const {storefront} = context;
+  const storefront = context.get(hydrogenContext.storefront);
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 8,
   });
@@ -49,7 +60,7 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   }
 
   // The API handle might be localized, so redirect to the localized handle
-  redirectIfHandleIsLocalized(request, {handle, data: collection});
+  redirectIfHandleIsLocalized(url, {handle, data: collection});
 
   return {
     collection,

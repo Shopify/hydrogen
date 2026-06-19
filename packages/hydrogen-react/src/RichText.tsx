@@ -4,6 +4,7 @@ import {
   type CustomComponents,
   RichTextComponents,
 } from './RichText.components.js';
+import type {JSX} from 'react';
 
 export interface RichTextPropsBase<ComponentGeneric extends React.ElementType> {
   /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */

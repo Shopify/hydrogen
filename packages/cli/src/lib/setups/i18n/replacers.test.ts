@@ -62,7 +62,6 @@ describe('i18n replacers', () => {
         import type { CartApiQueryFragment } from "storefrontapi.generated";
         import { getLocaleFromRequest } from "~/lib/i18n";
 
-        // Define the additional context object
         const additionalContext = {
           // Additional context for custom properties, CMS clients, 3P SDKs, etc.
           // These will be available as both context.propertyName and context.get(propertyContext)
@@ -71,21 +70,19 @@ describe('i18n replacers', () => {
           // reviews: await createReviewsClient(env),
         } as const;
 
-        // Automatically augment HydrogenAdditionalContext with the additional context type
         type AdditionalContextType = typeof additionalContext;
 
         declare global {
           interface HydrogenAdditionalContext extends AdditionalContextType {}
 
           // Augment HydrogenCustomCartFragment with the codegen'd cart fragment type so
-          // that context.cart.get() and all cart mutations return the extended cart type.
+          // that cart APIs return the extended cart type.
           interface HydrogenCustomCartFragment extends CartApiQueryFragment {}
         }
 
         /**
-         * Creates Hydrogen context for React Router 7.9.x
-         * Returns HydrogenRouterContextProvider with hybrid access patterns
-         * */
+         * Creates the Hydrogen context used by React Router loaders and actions.
+         */
         export async function createHydrogenRouterContext(
           request: Request,
           env: Env,

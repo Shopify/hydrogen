@@ -5,6 +5,7 @@ This recipe integrates Google Tag Manager (GTM) into your Hydrogen storefront, e
 Hydrogen includes built-in support for the Customer Privacy API, a browser-based JavaScript API that you can use to display cookie-consent banners and verify data processing permissions.
 
 Key features:
+
 - GTM script integration with proper CSP nonce support
 - Content Security Policy configuration for GTM domains
 - Analytics integration for product views via dataLayer
@@ -14,6 +15,7 @@ Key features:
 - Support for various analytics events by subscribing to event types using the GoogleTagManager component
 
 The recipe includes:
+
 1. Content Security Policy updates in entry.server.tsx for GTM domains
 2. GTM script tags in the head and body sections
 3. GoogleTagManager component that subscribes to analytics events
@@ -25,12 +27,14 @@ The recipe includes:
 ## Requirements
 
 Prerequisites:
+
 - A Google Tag Manager account and container ID
 - Customer privacy settings configured in your Shopify admin (for cookie consent)
 - Basic understanding of GTM and dataLayer events
 - Knowledge of Shopify's analytics events
 
 To enable cookie consent:
+
 1. In your Shopify admin, go to **Settings** → **Customer Privacy** → **Cookie Banner**.
 2. Configure region visibility for the cookie banner.
 3. Customize the banner's appearance and position as needed.
@@ -39,8 +43,8 @@ To enable cookie consent:
 
 _New files added to the template by this recipe._
 
-| File | Description |
-| --- | --- |
+| File                                                                                                                                                                                                             | Description                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | [app/components/GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx) | Analytics component that subscribes to Hydrogen events and pushes them to GTM's dataLayer |
 
 ## Steps
@@ -53,19 +57,19 @@ Update the README file with GTM-specific documentation and setup instructions.
 
 <details>
 
-~~~diff
+````diff
 index c584e5370..a31bfebf0 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,6 +1,6 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Google Tag Manager (GTM)
- 
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
+
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
 +This Hydrogen template demonstrates how to implement Google Tag Manager with analytics integration. Hydrogen supports both Shopify analytics and third-party services with built-in support for the [Customer Privacy API](https://shopify.dev/docs/api/customer-privacy).
- 
+
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
+ [Get familiar with React Router](https://reactrouter.com/)
 @@ -16,18 +16,67 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
  - Prettier
  - GraphQL generator
@@ -74,18 +78,18 @@ index c584e5370..a31bfebf0 100644
 +- **Google Tag Manager integration**
 +- **Analytics.Provider setup**
 +- **Customer Privacy API support**
- 
+
  ## Getting started
- 
+
  **Requirements:**
- 
- - Node.js version 18.0.0 or higher
+
+ - Node.js version 22.22.0 or higher
 +- Google Tag Manager account with container ID
- 
+
  ```bash
  npm create @shopify/hydrogen@latest
  ```
- 
+
 +## Google Tag Manager Setup
 +
 +### 1. Enable Customer Privacy / Cookie Consent Banner
@@ -133,16 +137,16 @@ index c584e5370..a31bfebf0 100644
 +```
 +
  ## Building for production
- 
+
  ```bash
 @@ -42,4 +91,4 @@ npm run dev
- 
+
  ## Setup for using Customer Account API (`/account` section)
- 
+
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 \ No newline at end of file
-~~~
+````
 
 </details>
 
@@ -152,7 +156,7 @@ Configure CSP headers to allow Google Tag Manager and Analytics scripts.
 
 #### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/entry.server.tsx)
 
-~~~diff
+```diff
 index 6f5c4abfc..b8eb74f4b 100644
 --- a/templates/skeleton/app/entry.server.tsx
 +++ b/templates/skeleton/app/entry.server.tsx
@@ -181,7 +185,7 @@ index 6f5c4abfc..b8eb74f4b 100644
      shop: {
        checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
        storeDomain: context.env.PUBLIC_STORE_DOMAIN,
-~~~
+```
 
 ### Step 3: Create the analytics component
 
@@ -191,7 +195,7 @@ Build a component that subscribes to Hydrogen analytics events and pushes them t
 
 <details>
 
-~~~tsx
+```tsx
 import {useAnalytics} from '@shopify/hydrogen';
 import {useEffect} from 'react';
 
@@ -208,7 +212,7 @@ export function GoogleTagManager() {
   useEffect(() => {
     subscribe('product_viewed', () => {
       // Triggering a custom event in GTM when a product is viewed
-      window.dataLayer.push({'event': 'viewed-product'});
+      window.dataLayer.push({event: 'viewed-product'});
     });
 
     ready();
@@ -216,7 +220,7 @@ export function GoogleTagManager() {
 
   return null;
 }
-~~~
+```
 
 </details>
 
@@ -228,7 +232,7 @@ Insert Google Tag Manager tracking code in the head and body sections.
 
 <details>
 
-~~~diff
+```diff
 index df87425c5..aa25c6d7c 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
@@ -243,9 +247,9 @@ index df87425c5..aa25c6d7c 100644
  import appStyles from '~/styles/app.css?url';
  import {PageLayout} from './components/PageLayout';
 +import {GoogleTagManager} from '~/components/GoogleTagManager';
- 
+
  export type RootLoader = typeof loader;
- 
+
 @@ -153,8 +154,32 @@ export function Layout({children}: {children?: React.ReactNode}) {
          <link rel="stylesheet" href={appStyles}></link>
          <Meta />
@@ -288,57 +292,9 @@ index df87425c5..aa25c6d7c 100644
      </Analytics.Provider>
    );
  }
-~~~
+```
 
 </details>
-
-### Step 4: package.json
-
-
-
-#### File: [package.json](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/package.json)
-
-~~~diff
-index 0bb332639..651bbfffa 100644
---- a/templates/skeleton/package.json
-+++ b/templates/skeleton/package.json
-@@ -14,12 +14,12 @@
-   },
-   "prettier": "@shopify/prettier-config",
-   "dependencies": {
--    "@shopify/hydrogen": "workspace:*",
-+    "@shopify/hydrogen": "2026.4.0",
-     "graphql": "^16.10.0",
-     "graphql-tag": "^2.12.6",
-     "isbot": "^5.1.22",
--    "react": "catalog:",
--    "react-dom": "catalog:",
-+    "react": "^18.3.1",
-+    "react-dom": "^18.3.1",
-     "react-router": "7.14.0",
-     "react-router-dom": "7.14.0"
-   },
-@@ -31,14 +31,14 @@
-     "@react-router/dev": "7.14.0",
-     "@react-router/fs-routes": "7.14.0",
-     "@shopify/cli": "3.93.2",
--    "@shopify/hydrogen-codegen": "workspace:*",
--    "@shopify/mini-oxygen": "workspace:*",
-+    "@shopify/hydrogen-codegen": "0.3.3",
-+    "@shopify/mini-oxygen": "4.0.2",
-     "@shopify/oxygen-workers-types": "^4.1.6",
--    "@shopify/prettier-config": "catalog:",
-+    "@shopify/prettier-config": "^1.1.2",
-     "@total-typescript/ts-reset": "^0.6.1",
-     "@types/eslint": "^9.6.1",
--    "@types/react": "catalog:",
--    "@types/react-dom": "catalog:",
-+    "@types/react": "^18.3.28",
-+    "@types/react-dom": "^18.3.7",
-     "@typescript-eslint/eslint-plugin": "^8.21.0",
-     "@typescript-eslint/parser": "^8.21.0",
-     "eslint": "^9.18.0",
-~~~
 
 ## Next steps
 

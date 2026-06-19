@@ -19,9 +19,9 @@ index 99730d418..fe1d09ab6 100644
 +    }
 +  | {};
  
- export const meta: Route.MetaFunction = ({data}) => {
+ export const meta: Route.MetaFunction = ({loaderData}) => {
    return [
-@@ -24,11 +37,24 @@ export const meta: Route.MetaFunction = ({data}) => {
+@@ -24,11 +37,24 @@ export const meta: Route.MetaFunction = ({loaderData}) => {
  };
  
  export async function loader(args: Route.LoaderArgs) {
@@ -52,17 +52,18 @@ index 99730d418..fe1d09ab6 100644
   * Load data necessary for rendering content above the fold. This is the critical data
   * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
   */
--async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+-async function loadCriticalData({context, params, request, url}: Route.LoaderArgs) {
 +async function loadCriticalData({
 +  context,
 +  params,
 +  request,
++  url,
 +  buyerVariables,
 +}: Route.LoaderArgs & {buyerVariables: BuyerVariables}) {
    const {handle} = params;
    const {storefront} = context;
  
-@@ -47,7 +78,11 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+@@ -47,7 +78,11 @@ async function loadCriticalData({context, params, request, url}: Route.LoaderArgs) {
  
    const [{product}] = await Promise.all([
      storefront.query(PRODUCT_QUERY, {
@@ -75,7 +76,7 @@ index 99730d418..fe1d09ab6 100644
      }),
      // Add other queries here, so that they are loaded in parallel
    ]);
-@@ -69,7 +104,11 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+@@ -69,7 +104,11 @@ async function loadCriticalData({context, params, request, url}: Route.LoaderArgs) {
   * fetched after the initial page load. If it's unavailable, the page should still 200.
   * Make sure to not throw any errors here, as it will cause the page to 500.
   */

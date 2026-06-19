@@ -1,8 +1,4 @@
-import {
-  useLoaderData,
-  useNavigation,
-  useSearchParams,
-} from 'react-router';
+import {useLoaderData, useNavigation, useSearchParams} from 'react-router';
 import {useRef} from 'react';
 import {Link} from '~/components/Link';
 import type {Route} from './+types/($locale).account.orders._index';

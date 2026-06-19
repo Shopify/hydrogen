@@ -9,6 +9,7 @@ import {
   useOutletContext,
 } from 'react-router';
 import type {Route} from './+types/account.profile';
+import {hydrogenContext} from '@shopify/hydrogen';
 
 export type ActionResponse = {
   error: string | null;
@@ -20,13 +21,13 @@ export const meta: Route.MetaFunction = () => {
 };
 
 export async function loader({context}: Route.LoaderArgs) {
-  await context.customerAccount.handleAuthStatus();
+  await context.get(hydrogenContext.customerAccount).handleAuthStatus();
 
   return {};
 }
 
 export async function action({request, context}: Route.ActionArgs) {
-  const {customerAccount} = context;
+  const customerAccount = context.get(hydrogenContext.customerAccount);
 
   if (request.method !== 'PUT') {
     return data({error: 'Method not allowed'}, {status: 405});

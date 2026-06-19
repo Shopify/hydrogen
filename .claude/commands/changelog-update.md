@@ -286,7 +286,7 @@ For packages that need to be removed during migration (like Remix → React Rout
 #### Framework Package Types (include only if changed in skeleton)
 
 - `@shopify/hydrogen` (usually changes with every major release)
-- React Router packages (`react-router`, `react-router-dom`, `@react-router/*`)
+- React Router packages (`react-router`, `@react-router/*`)
 - `@shopify/cli` (when CLI is updated)
 - `@shopify/mini-oxygen` (when dev server is updated)
 - `@shopify/hydrogen-codegen`, `@shopify/oxygen-workers-types`
@@ -297,6 +297,8 @@ For packages that need to be removed during migration (like Remix → React Rout
 - `react`, `react-dom`, `graphql`, `graphql-tag`, `isbot` - User application dependencies
 - Most eslint, typescript, prettier packages - User tooling preferences
 - Application-specific dependencies
+
+**Exception**: Include `react`, `react-dom`, and React type packages when a framework dependency raises its minimum React baseline. For example, React Router 8 requires React 19.2.7+, so the changelog entry for that migration must update React packages or merchant upgrades can leave an unsupported React 18 install behind.
 
 #### Comprehensive Dependency Analysis Example
 
@@ -309,23 +311,25 @@ git diff PREVIOUS_RELEASE_HASH:templates/skeleton/package.json CURRENT_RELEASE_H
 
 # Step 3: Analyze the diff output
 Example diff showing:
-+ "@shopify/cli": "~3.80.4"           # CLI version bump - INCLUDE
-- "@shopify/cli": "~3.79.2"
-+ "react-router": "7.6.0"             # New React Router - INCLUDE
-+ "react-router-dom": "7.6.0"         # New React Router DOM - INCLUDE
++ "@shopify/cli": "~3.94.0"           # CLI version bump - INCLUDE
+- "@shopify/cli": "~3.93.2"
++ "react-router": "8.0.1"             # React Router baseline - INCLUDE
++ "react": "19.2.7"                   # Required by framework baseline - INCLUDE
++ "react-dom": "19.2.7"               # Required by framework baseline - INCLUDE
+- "react-router-dom": "7.16.0"        # Removed by React Router 8 - REMOVE
 - "@remix-run/react": "^2.16.1"       # Removed Remix - REMOVE from changelog
 - "@remix-run/server-runtime": "^2.16.1" # Removed Remix - REMOVE from changelog
-  "react": "^18.2.0"                  # Unchanged - EXCLUDE (user dependency)
   "graphql": "^16.10.0"               # Unchanged - EXCLUDE (user dependency)
 
 # Step 4: Final inclusion decision
 INCLUDE in changelog:
-- "@shopify/cli": "~3.80.4"           # Framework tool, version changed
-- "react-router": "7.6.0"             # Framework package, newly added
-- "react-router-dom": "7.6.0"         # Framework package, newly added
+- "@shopify/cli": "~3.94.0"           # Framework tool, version changed
+- "react-router": "8.0.1"             # Framework package, version changed
+- "react", "react-dom"                # Required by framework baseline
+- "react-router-dom"                  # Remove (no longer published for React Router 8)
 
 EXCLUDE from changelog:
-- "react", "graphql", etc.             # User application dependencies
+- "graphql", etc.                      # User application dependencies
 - "@remix-run/react"                   # Remove (no longer in skeleton)
 ```
 
@@ -445,8 +449,10 @@ git diff PREV:templates/skeleton/package.json CURR:templates/skeleton/package.js
 // CORRECT - Only changed framework dependencies
 {
   "dependencies": {
-    "@shopify/hydrogen": "2025.5.0",    // Framework - changed
-    "react-router": "7.6.0"             // Framework - newly added
+    "@shopify/hydrogen": "2026.5.0",    // Framework - changed
+    "react-router": "8.0.1",            // Framework - changed
+    "react": "19.2.7",                  // Required by React Router 8
+    "react-dom": "19.2.7"               // Required by React Router 8
   }
 }
 ```

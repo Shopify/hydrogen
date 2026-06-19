@@ -20,16 +20,15 @@
     "isbot": "^5.1.22",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-router": "7.16.0",
-    "react-router-dom": "7.16.0"
+    "react-router": "8.0.1"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@graphql-codegen/cli": "5.0.2",
-    "@react-router/dev": "7.16.0",
-    "@react-router/fs-routes": "7.16.0",
+    "@react-router/dev": "8.0.1",
+    "@react-router/fs-routes": "8.0.1",
     "@shopify/cli": "3.93.2",
     "@shopify/hydrogen-codegen": "workspace:*",
     "@shopify/mini-oxygen": "workspace:*",
@@ -57,6 +56,6 @@
     "vite": "^8.0.1"
   },
   "engines": {
-    "node": "^22 || ^24"
+    "node": "^22.22.0 || ^24"
   }
 }

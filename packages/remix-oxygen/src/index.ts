@@ -13,8 +13,6 @@ export type {ActionFunction} from 'react-router';
 /** @deprecated Import from `react-router` instead. */
 export type {ActionFunctionArgs} from 'react-router';
 /** @deprecated Import from `react-router` instead. */
-export type {AppLoadContext} from 'react-router';
-/** @deprecated Import from `react-router` instead. */
 export type {Cookie} from 'react-router';
 /** @deprecated Import from `react-router` instead. */
 export type {CookieOptions} from 'react-router';

@@ -1,7 +1,7 @@
 import {Await, useLoaderData, Link} from 'react-router';
 import type {Route} from './+types/_index';
 import {Suspense} from 'react';
-import {Image} from '@shopify/hydrogen';
+import {hydrogenContext, Image} from '@shopify/hydrogen';
 import type {
   FeaturedCollectionFragment,
   RecommendedProductsQuery,
@@ -29,12 +29,12 @@ export async function loader(args: Route.LoaderArgs) {
  */
 async function loadCriticalData({context}: Route.LoaderArgs) {
   const [{collections}] = await Promise.all([
-    context.storefront.query(FEATURED_COLLECTION_QUERY),
+    context.get(hydrogenContext.storefront).query(FEATURED_COLLECTION_QUERY),
     // Add other queries here, so that they are loaded in parallel
   ]);
 
   return {
-    isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
+    isShopLinked: Boolean(context.get(hydrogenContext.env).PUBLIC_STORE_DOMAIN),
     featuredCollection: collections.nodes[0],
   };
 }
@@ -45,7 +45,8 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
 function loadDeferredData({context}: Route.LoaderArgs) {
-  const recommendedProducts = context.storefront
+  const recommendedProducts = context
+    .get(hydrogenContext.storefront)
     .query(RECOMMENDED_PRODUCTS_QUERY)
     .catch((error: Error) => {
       // Log query errors, but don't throw them so the page can still render

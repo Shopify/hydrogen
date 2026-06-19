@@ -1,4 +1,10 @@
-import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
+import {
+  Analytics,
+  getShopAnalytics,
+  useNonce,
+  hydrogenContext,
+} from '@shopify/hydrogen';
+import type {ComponentProps} from 'react';
 import {
   Outlet,
   useRouteError,
@@ -18,6 +24,7 @@ import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
 
 export type RootLoader = typeof loader;
+type AnalyticsProviderCart = ComponentProps<typeof Analytics.Provider>['cart'];
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -72,7 +79,8 @@ export async function loader(args: Route.LoaderArgs) {
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  const {storefront, env} = args.context;
+  const storefront = args.context.get(hydrogenContext.storefront);
+  const env = args.context.get(hydrogenContext.env);
 
   return {
     ...deferredData,
@@ -87,8 +95,8 @@ export async function loader(args: Route.LoaderArgs) {
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
       withPrivacyBanner: false,
       // localize the privacy banner
-      country: args.context.storefront.i18n.country,
-      language: args.context.storefront.i18n.language,
+      country: args.context.get(hydrogenContext.storefront).i18n.country,
+      language: args.context.get(hydrogenContext.storefront).i18n.language,
     },
   };
 }
@@ -98,7 +106,7 @@ export async function loader(args: Route.LoaderArgs) {
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
 async function loadCriticalData({context}: Route.LoaderArgs) {
-  const {storefront} = context;
+  const storefront = context.get(hydrogenContext.storefront);
 
   const [header] = await Promise.all([
     storefront.query(HEADER_QUERY, {
@@ -119,7 +127,9 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
 function loadDeferredData({context}: Route.LoaderArgs) {
-  const {storefront, customerAccount, cart} = context;
+  const storefront = context.get(hydrogenContext.storefront);
+  const customerAccount = context.get(hydrogenContext.customerAccount);
+  const cart = context.get(hydrogenContext.cart);
 
   // defer the footer query (below the fold)
   const footer = storefront
@@ -172,7 +182,7 @@ export default function App() {
 
   return (
     <Analytics.Provider
-      cart={data.cart}
+      cart={data.cart as AnalyticsProviderCart}
       shop={data.shop}
       consent={data.consent}
     >

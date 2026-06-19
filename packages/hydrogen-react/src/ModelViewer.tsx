@@ -1,25 +1,32 @@
-import {useState, useEffect, useCallback} from 'react';
+import {useState, useEffect, useCallback, type Ref} from 'react';
 import {useLoadScript} from './load-script.js';
 import type {Model3d} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 import type {ModelViewerElement} from '@google/model-viewer/lib/model-viewer.js';
+import type {JSX} from 'react';
 
-declare global {
+type ModelViewerIntrinsicElement = PartialDeep<
+  ModelViewerElement,
+  {recurseIntoArrays: true}
+> & {
+  class?: string;
+  ref?: Ref<HTMLElement>;
+  bounds?: string;
+  interactionPolicy?: string;
+  rotationPerSecond?: string;
+  'rotation-per-second'?: string;
+};
+
+declare module 'react' {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface IntrinsicElements {
-      'model-viewer': PartialDeep<
-        ModelViewerElement,
-        {recurseIntoArrays: true}
-      >;
+      'model-viewer': ModelViewerIntrinsicElement;
     }
   }
 }
 
-type ModelViewerProps = Omit<
-  PartialDeep<JSX.IntrinsicElements['model-viewer'], {recurseIntoArrays: true}>,
-  'src'
-> &
+type ModelViewerProps = Omit<ModelViewerIntrinsicElement, 'src'> &
   ModelViewerBaseProps;
 
 type ModelViewerBaseProps = {
@@ -160,7 +167,6 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
     <model-viewer
       ref={callbackRef}
       {...passthroughProps}
-      // @ts-expect-error src should exist
       // @eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       class={className}
       id={passthroughProps.id ?? data.id}
@@ -182,7 +188,6 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
       orbit-sensitivity={passthroughProps.orbitSensitivity}
       auto-rotate={passthroughProps.autoRotate}
       auto-rotate-delay={passthroughProps.autoRotateDelay}
-      // @ts-expect-error rotationPerSecond should exist as a type, not sure why it doesn't. https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-attributes-rotationPerSecond
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       rotation-per-second={passthroughProps.rotationPerSecond}
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

@@ -32,6 +32,7 @@ import {CART_ID_STORAGE_KEY} from './cart-constants.js';
 import {PartialDeep} from 'type-fest';
 import {defaultCartFragment} from './cart-queries.js';
 import {useShop} from './ShopifyProvider.js';
+import type {JSX} from 'react';
 
 export const CartContext = createContext<CartWithActions | null>(null);
 

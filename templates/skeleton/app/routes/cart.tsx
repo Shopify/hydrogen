@@ -1,8 +1,11 @@
 import {useLoaderData, data, type HeadersFunction} from 'react-router';
 import type {Route} from './+types/cart';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
-import {CartForm} from '@shopify/hydrogen';
+import {CartForm, hydrogenContext} from '@shopify/hydrogen';
+import type {ComponentProps} from 'react';
 import {CartMain} from '~/components/CartMain';
+
+type CartMainCart = ComponentProps<typeof CartMain>['cart'];
 
 export const meta: Route.MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];
@@ -11,7 +14,7 @@ export const meta: Route.MetaFunction = () => {
 export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
 
 export async function action({request, context}: Route.ActionArgs) {
-  const {cart} = context;
+  const cart = context.get(hydrogenContext.cart);
 
   const formData = await request.formData();
 
@@ -96,9 +99,11 @@ export async function action({request, context}: Route.ActionArgs) {
   );
 }
 
-export async function loader({context}: Route.LoaderArgs) {
-  const {cart} = context;
-  return await cart.get();
+export async function loader({
+  context,
+}: Route.LoaderArgs): Promise<CartMainCart> {
+  const cart = context.get(hydrogenContext.cart);
+  return (await cart.get()) as CartMainCart;
 }
 
 export default function Cart() {

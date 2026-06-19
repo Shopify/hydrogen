@@ -17,6 +17,7 @@ import {
   DELETE_ADDRESS_MUTATION,
   CREATE_ADDRESS_MUTATION,
 } from '~/graphql/customer-account/CustomerAddressMutations';
+import {hydrogenContext} from '@shopify/hydrogen';
 
 export type ActionResponse = {
   addressId?: string | null;
@@ -32,13 +33,13 @@ export const meta: Route.MetaFunction = () => {
 };
 
 export async function loader({context}: Route.LoaderArgs) {
-  await context.customerAccount.handleAuthStatus();
+  await context.get(hydrogenContext.customerAccount).handleAuthStatus();
 
   return {};
 }
 
 export async function action({request, context}: Route.ActionArgs) {
-  const {customerAccount} = context;
+  const customerAccount = context.get(hydrogenContext.customerAccount);
 
   try {
     const form = await request.formData();

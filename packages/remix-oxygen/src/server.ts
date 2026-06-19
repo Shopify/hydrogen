@@ -1,7 +1,7 @@
 /// <reference types="@shopify/hydrogen" />
 import {
   createRequestHandler as createReactRouterRequestHandler,
-  type AppLoadContext,
+  type RouterContextProvider,
   type ServerBuild,
 } from 'react-router';
 import {createEventLogger} from './event-logger';
@@ -12,7 +12,9 @@ Error.prototype.toString = function () {
 };
 
 /** @deprecated Use `createRequestHandler` from `@shopify/hydrogen/oxygen` instead. */
-export function createRequestHandler<Context = unknown>({
+export function createRequestHandler<
+  Context extends RouterContextProvider = RouterContextProvider,
+>({
   build,
   mode,
   poweredByHeader = true,
@@ -45,15 +47,15 @@ export function createRequestHandler<Context = unknown>({
       });
     }
 
-    const context = getLoadContext
-      ? ((await getLoadContext(request)) as AppLoadContext)
-      : undefined;
+    const context = getLoadContext ? await getLoadContext(request) : undefined;
 
     if (process.env.NODE_ENV === 'development' && context) {
       // Store logger in globalThis so it can be accessed from the worker.
       // The global property must be different from the binding name,
       // otherwise Miniflare throws an error when accessing it.
-      globalThis.__H2O_LOG_EVENT ??= createEventLogger(context);
+      globalThis.__H2O_LOG_EVENT ??= createEventLogger(
+        context as unknown as Record<string, unknown>,
+      );
     }
 
     const startTime = Date.now();

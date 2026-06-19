@@ -17,10 +17,11 @@ Add subscription-based products to your Hydrogen storefront.
 # User Intent Recognition
 
 <user_queries>
+
 - How do I add subscriptions to my Hydrogen storefront?
 - How do I add selling plans to my Hydrogen storefront?
 - How do I display subscription details on applicable line items in the cart?
-</user_queries>
+  </user_queries>
 
 # Troubleshooting
 
@@ -71,7 +72,7 @@ To implement subscriptions in your own store, you need to install a subscription
 1. Install the [Shopify Subscriptions app](https://apps.shopify.com/shopify-subscriptions).
 2. In your Shopify admin, [use the Subscriptions app](https://admin.shopify.com/apps/subscriptions-remix/app) to create one or more subscription plans.
 3. On the [Products](https://admin.shopify.com/products) page, open any products that will be sold as subscriptions and add the relevant subscription plans in the **Purchase options** section.
-The Hydrogen demo storefront comes pre-configured with an example subscription product with the handle `shopify-wax`.
+   The Hydrogen demo storefront comes pre-configured with an example subscription product with the handle `shopify-wax`.
 
 ### Step 2: Update CartLineItem to display subscription details
 
@@ -81,7 +82,7 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
 
 #### File: /app/components/CartLineItem.tsx
 
-~~~diff
+```diff
 @@ -27,7 +27,8 @@ export function CartLineItem({
    line: CartLine;
    childrenMap: LineItemChildrenMap;
@@ -105,11 +106,11 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
              {selectedOptions.map((option) => (
                <li key={option.name}>
                  <small>
-~~~
+```
 
 ### Step 3: Show subscription options on product pages
 
-In this step we'll implement the ability to display subscription options on  product pages, alongside the existing one-off purchase options.
+In this step we'll implement the ability to display subscription options on product pages, alongside the existing one-off purchase options.
 
 #### Step 3.1: Create a SellingPlanSelector component
 
@@ -117,7 +118,7 @@ Create a new `SellingPlanSelector` component that displays the available subscri
 
 ##### File: [SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
 
-~~~tsx
+````tsx
 import type {
   ProductFragment,
   SellingPlanGroupFragment,
@@ -223,8 +224,7 @@ export function SellingPlanSelector({
     ],
   );
 }
-
-~~~
+````
 
 #### Step 3.2: Add styles for the SellingPlanSelector component
 
@@ -232,7 +232,7 @@ Add styles for the `SellingPlanSelector` component.
 
 ##### File: [selling-plan.css](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
 
-~~~css
+```css
 .selling-plan-group {
   margin-bottom: 1rem;
 }
@@ -266,8 +266,7 @@ Add styles for the `SellingPlanSelector` component.
 .selling-plan.unselected {
   border-color: #fafafa; /* Equivalent to 'border-neutral-50' */
 }
-
-~~~
+```
 
 #### Step 3.3: Update ProductForm to support subscriptions
 
@@ -277,7 +276,7 @@ Add styles for the `SellingPlanSelector` component.
 
 ##### File: /app/components/ProductForm.tsx
 
-~~~diff
+```diff
 @@ -6,14 +6,25 @@ import type {
  } from '@shopify/hydrogen/storefront-api-types';
  import {AddToCartButton} from './AddToCartButton';
@@ -291,7 +290,7 @@ Add styles for the `SellingPlanSelector` component.
 +  SellingPlanSelector,
 +  type SellingPlanGroup,
 +} from '~/components/SellingPlanSelector';
- 
+
  export function ProductForm({
    productOptions,
    selectedVariant,
@@ -392,7 +391,7 @@ Add styles for the `SellingPlanSelector` component.
 +    </div>
 +  );
 +}
-~~~
+```
 
 #### Step 3.4: Update ProductPrice to display subscription pricing
 
@@ -401,7 +400,7 @@ Add styles for the `SellingPlanSelector` component.
 
 ##### File: /app/components/ProductPrice.tsx
 
-~~~diff
+```diff
 @@ -1,13 +1,31 @@
 +import type {CurrencyCode} from '@shopify/hydrogen/customer-account-api-types';
 +import type {
@@ -410,7 +409,7 @@ Add styles for the `SellingPlanSelector` component.
 +} from 'storefrontapi.generated';
  import {Money} from '@shopify/hydrogen';
  import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
- 
+
  export function ProductPrice({
    price,
    compareAtPrice,
@@ -509,7 +508,7 @@ Add styles for the `SellingPlanSelector` component.
 +    </div>
 +  );
 +}
-~~~
+```
 
 #### Step 3.5: Update the product page to display subscription options
 
@@ -519,7 +518,7 @@ Add styles for the `SellingPlanSelector` component.
 
 ##### File: /app/routes/products.$handle.tsx
 
-~~~diff
+```diff
 @@ -1,5 +1,6 @@
  import {redirect, useLoaderData} from 'react-router';
  import type {Route} from './+types/products.$handle';
@@ -530,20 +529,20 @@ Add styles for the `SellingPlanSelector` component.
 @@ -13,6 +14,12 @@ import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
- 
+
 +import sellingPlanStyle from '~/styles/selling-plan.css?url';
 +
 +export const links: Route.LinksFunction = () => [
 +  {rel: 'stylesheet', href: sellingPlanStyle},
 +];
 +
- export const meta: Route.MetaFunction = ({data}) => {
+ export const meta: Route.MetaFunction = ({loaderData}) => {
    return [
-     {title: `Hydrogen | ${data?.product.title ?? ''}`},
-@@ -59,8 +66,34 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+     {title: `Hydrogen | ${loaderData?.product.title ?? ''}`},
+@@ -59,8 +66,34 @@ async function loadCriticalData({context, params, request, url}: Route.LoaderArgs) {
    // The API handle might be localized, so redirect to the localized handle
-   redirectIfHandleIsLocalized(request, {handle, data: product});
- 
+   redirectIfHandleIsLocalized(url, {handle, data: product});
+
 +  // Initialize the selectedSellingPlan to null
 +  let selectedSellingPlan = null;
 +
@@ -574,23 +573,23 @@ Add styles for the `SellingPlanSelector` component.
 +    selectedSellingPlan,
    };
  }
- 
+
 @@ -77,7 +110,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
  }
- 
+
  export default function Product() {
 -  const {product} = useLoaderData<typeof loader>();
 +  const {product, selectedSellingPlan} = useLoaderData<typeof loader>();
- 
+
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
 @@ -95,7 +128,7 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
- 
+
 -  const {title, descriptionHtml} = product;
 +  const {title, descriptionHtml, sellingPlanGroups} = product;
- 
+
    return (
      <div className="product">
 @@ -105,11 +138,15 @@ export default function Product() {
@@ -622,7 +621,7 @@ Add styles for the `SellingPlanSelector` component.
 +    }
    }
  ` as const;
- 
+
 +const SELLING_PLAN_FRAGMENT = `#graphql
 +  fragment SellingPlanMoney on MoneyV2 {
 +    amount
@@ -712,7 +711,7 @@ Add styles for the `SellingPlanSelector` component.
 +  ${SELLING_PLAN_GROUP_FRAGMENT}
    ${PRODUCT_VARIANT_FRAGMENT}
  ` as const;
-~~~
+```
 
 ### Step 4: Show subscription details in the cart
 
@@ -724,7 +723,7 @@ Add `sellingPlanAllocation` field with the plan name to both the standard cart l
 
 ##### File: /app/lib/fragments.ts
 
-~~~diff
+```diff
 @@ -59,6 +59,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
          id
        }
@@ -749,7 +748,7 @@ Add `sellingPlanAllocation` field with the plan name to both the standard cart l
    }
    fragment CartApiQuery on Cart {
      updatedAt
-~~~
+```
 
 ### Step 5: Add subscription management to the account page
 
@@ -761,7 +760,7 @@ Create GraphQL queries that retrieve the subscription info from the customer acc
 
 ##### File: [CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
 
-~~~ts
+```ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
 
 const SUBSCRIPTION_CONTRACT_FRAGMENT = `#graphql
@@ -821,8 +820,7 @@ export const SUBSCRIPTIONS_CONTRACTS_QUERY = `#graphql
   }
   ${SUBSCRIPTION_CONTRACT_FRAGMENT}
 ` as const;
-
-~~~
+```
 
 #### Step 5.2: Add mutations to cancel customer subscriptions
 
@@ -830,7 +828,7 @@ Create a GraqhQL mutation to cancel an existing subscription.
 
 ##### File: [CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
 
-~~~ts
+```ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
 
 export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
@@ -846,16 +844,15 @@ export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
     }
   }
 ` as const;
-
-~~~
+```
 
 #### Step 5.3: Add an account subscriptions page
 
-Create a new account subpage that lets customers manage their existing  subscriptions based on the new GraphQL queries and mutations.
+Create a new account subpage that lets customers manage their existing subscriptions based on the new GraphQL queries and mutations.
 
 ##### File: [account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
 
-~~~tsx
+```tsx
 import type {
   SubscriptionBillingPolicyFragment,
   SubscriptionDiscountFragmentFragment,
@@ -1052,8 +1049,7 @@ function formatDiscountValue(
 
   return 'Discount applied';
 }
-
-~~~
+```
 
 #### Step 5.4: Add a link to the Subscriptions page in the account menu
 
@@ -1061,7 +1057,7 @@ Add a `Subscriptions` link to the account menu so customers can easily access th
 
 ##### File: /app/routes/account.tsx
 
-~~~diff
+```diff
 @@ -83,6 +83,9 @@ function AccountMenu() {
          &nbsp; Addresses &nbsp;
        </NavLink>
@@ -1072,7 +1068,7 @@ Add a `Subscriptions` link to the account menu so customers can easily access th
        <Logout />
      </nav>
    );
-~~~
+```
 
 #### Step 5.5: Add styles for the Subscriptions page
 
@@ -1080,7 +1076,7 @@ Add styles for the Subscriptions page.
 
 ##### File: [account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
 
-~~~css
+```css
 .account-subscriptions {
   display: flex;
   flex-direction: column;
@@ -1131,52 +1127,6 @@ Add styles for the Subscriptions page.
   font-size: 0.875rem;
   margin-right: 0.5rem;
 }
-
-~~~
-
-### Step 7: package.json
-
-
-
-#### File: /package.json
-
-~~~diff
-@@ -14,12 +14,12 @@
-   },
-   "prettier": "@shopify/prettier-config",
-   "dependencies": {
--    "@shopify/hydrogen": "workspace:*",
-+    "@shopify/hydrogen": "2026.4.0",
-     "graphql": "^16.10.0",
-     "graphql-tag": "^2.12.6",
-     "isbot": "^5.1.22",
--    "react": "catalog:",
--    "react-dom": "catalog:",
-+    "react": "^18.3.1",
-+    "react-dom": "^18.3.1",
-     "react-router": "7.14.0",
-     "react-router-dom": "7.14.0"
-   },
-@@ -31,14 +31,14 @@
-     "@react-router/dev": "7.14.0",
-     "@react-router/fs-routes": "7.14.0",
-     "@shopify/cli": "3.93.2",
--    "@shopify/hydrogen-codegen": "workspace:*",
--    "@shopify/mini-oxygen": "workspace:*",
-+    "@shopify/hydrogen-codegen": "0.3.3",
-+    "@shopify/mini-oxygen": "4.0.2",
-     "@shopify/oxygen-workers-types": "^4.1.6",
--    "@shopify/prettier-config": "catalog:",
-+    "@shopify/prettier-config": "^1.1.2",
-     "@total-typescript/ts-reset": "^0.6.1",
-     "@types/eslint": "^9.6.1",
--    "@types/react": "catalog:",
--    "@types/react-dom": "catalog:",
-+    "@types/react": "^18.3.28",
-+    "@types/react-dom": "^18.3.7",
-     "@typescript-eslint/eslint-plugin": "^8.21.0",
-     "@typescript-eslint/parser": "^8.21.0",
-     "eslint": "^9.18.0",
-~~~
+```
 
 </recipe_implementation>

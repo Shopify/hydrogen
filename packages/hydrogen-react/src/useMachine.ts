@@ -30,8 +30,8 @@ const useIsomorphicLayoutEffect =
   typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 function useConstant<T>(fn: () => T): T {
-  const ref = useRef<{v: T}>();
-  if (!ref.current) {
+  const ref = useRef<{v: T} | null>(null);
+  if (ref.current === null) {
     ref.current = {v: fn()};
   }
   return ref.current.v;
@@ -59,7 +59,9 @@ export function useMachine<
   StateMachine.Service<TC, TE, TS>['send'],
   StateMachine.Service<TC, TE, TS>,
 ] {
-  const persistedStateRef = useRef<StateMachine.State<TC, TE, TS>>();
+  const persistedStateRef = useRef<StateMachine.State<TC, TE, TS> | undefined>(
+    undefined,
+  );
 
   const [service, queue] = useConstant(() => {
     const eventQueue: Array<TE | TE['type']> = [];

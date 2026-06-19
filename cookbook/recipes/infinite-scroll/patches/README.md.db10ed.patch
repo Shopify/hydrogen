@@ -5,13 +5,13 @@ index c584e537..6eacfd82 100644
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Infinite Scroll
  
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+This Hydrogen template demonstrates infinite scroll pagination for collection pages. Hydrogen is Shopify's stack for headless commerce, designed to work with [Remix](https://remix.run/), Shopify's full stack web framework.
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++This Hydrogen template demonstrates infinite scroll pagination for collection pages. Hydrogen is Shopify's stack for headless commerce, designed to work with [React Router](https://reactrouter.com/), the full stack web framework.
 +
 +This template shows how to implement a seamless browsing experience where products automatically load as users scroll down, replacing traditional pagination with continuous content loading.
  
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
+ [Get familiar with React Router](https://reactrouter.com/)
 @@ -16,7 +18,28 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
  - Prettier
  - GraphQL generator
@@ -51,7 +51,7 @@ index c584e537..6eacfd82 100644
 +The infinite scroll implementation uses:
 +- React's `useEffect` hook for scroll detection
 +- Intersection Observer API for viewport detection
-+- Remix's navigation for URL updates
++- React Router's navigation for URL updates
 +- Shopify's Pagination component as the base
 +
 +### Key Components

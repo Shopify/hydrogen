@@ -6,6 +6,7 @@ import type {
 } from './storefront-api-types.js';
 import type {MoneyV2 as CustomerAccountApiMoneyV2} from './customer-account-api-types.js';
 import type {PartialDeep} from 'type-fest';
+import type {JSX} from 'react';
 
 /**
  * Supports MoneyV2 from both Storefront API and Customer Account API.

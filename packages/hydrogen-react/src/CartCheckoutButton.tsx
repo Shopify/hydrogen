@@ -5,6 +5,7 @@ import {
   type BaseButtonProps,
   type CustomBaseButtonProps,
 } from './BaseButton.js';
+import type {JSX} from 'react';
 
 type ChildrenProps = {
   /** A `ReactNode` element. */

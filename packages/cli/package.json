@@ -21,7 +21,7 @@
     "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 LANG=en-US.UTF-8 vitest --test-timeout=60000"
   },
   "devDependencies": {
-    "@react-router/dev": "7.16.0",
+    "@react-router/dev": "8.0.1",
     "@types/diff": "^5.0.2",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/node": "catalog:",
@@ -63,11 +63,11 @@
   },
   "peerDependencies": {
     "@graphql-codegen/cli": "^5.0.2",
-    "@react-router/dev": "~7.16.0",
+    "@react-router/dev": "~8.0.1",
     "@shopify/hydrogen-codegen": "workspace:*",
     "@shopify/mini-oxygen": "workspace:*",
     "graphql-config": "^5.0.3",
-    "vite": "^5.1.0 || ^6.2.0 || ^7.0.0 || ^8.0.0"
+    "vite": "^7.0.0 || ^8.0.0"
   },
   "peerDependenciesMeta": {
     "@graphql-codegen/cli": {
@@ -106,7 +106,7 @@
     "oclif.manifest.json"
   ],
   "engines": {
-    "node": "^20 || ^22 || ^24"
+    "node": "^22.22.0 || ^24"
   },
   "oclif": {
     "commands": "dist/commands",

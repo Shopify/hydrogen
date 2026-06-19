@@ -11,6 +11,7 @@ import {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {ReactNode, useEffect} from 'react';
 import {CartReturn} from '../cart/queries/cart-types';
+import type {JSX} from 'react';
 
 const SHOP_DATA = {
   shopId: 'gid://shopify/Shop/1',

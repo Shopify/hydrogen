@@ -1,4 +1,8 @@
-import {type LoaderFunctionArgs, useLoaderData, type MetaFunction} from 'react-router';
+import {
+  type LoaderFunctionArgs,
+  useLoaderData,
+  type MetaFunction,
+} from 'react-router';
 import {
   getSelectedProductOptions,
   // [START import]
@@ -13,8 +17,8 @@ import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 
-export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
+export const meta: MetaFunction<typeof loader> = ({loaderData}) => {
+  return [{title: `Hydrogen | ${loaderData?.product.title ?? ''}`}];
 };
 
 export async function loader(args: LoaderFunctionArgs) {

@@ -11,7 +11,7 @@ export function PaginatedResourceSection<NodesType>({
   resourcesClassName,
 }: {
   connection: React.ComponentProps<typeof Pagination<NodesType>>['connection'];
-  children: React.FunctionComponent<{node: NodesType; index: number}>;
+  children: (args: {node: NodesType; index: number}) => React.ReactElement;
   ariaLabel?: string;
   resourcesClassName?: string;
 }) {

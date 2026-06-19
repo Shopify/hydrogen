@@ -1,5 +1,4 @@
-// React Router 7 type augmentation for Hydrogen
-// Eliminates the need for AppLoadContext - routes get HydrogenRouterContextProvider directly
+// React Router type augmentation for Hydrogen.
 
 import type {
   HydrogenRouterContextProvider,
@@ -45,17 +44,6 @@ declare global {
 declare module 'react-router' {
   // Merge Hydrogen properties into React Router's context provider
   interface RouterContextProvider extends HydrogenAdditionalContext {
-    // Standard Hydrogen context properties from HydrogenRouterContextProvider
-    storefront: HydrogenRouterContextProvider['storefront'];
-    cart: HydrogenCartWithFragment;
-    customerAccount: HydrogenRouterContextProvider['customerAccount'];
-    env: HydrogenRouterContextProvider['env'];
-    session: HydrogenRouterContextProvider['session'];
-    waitUntil: HydrogenRouterContextProvider['waitUntil'];
-  }
-
-  // Also augment AppLoadContext for React Router 7.9.x type generation
-  interface AppLoadContext extends HydrogenAdditionalContext {
     // Standard Hydrogen context properties from HydrogenRouterContextProvider
     storefront: HydrogenRouterContextProvider['storefront'];
     cart: HydrogenCartWithFragment;

@@ -1,6 +1,10 @@
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/search';
-import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
+import {
+  getPaginationVariables,
+  Analytics,
+  hydrogenContext,
+} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';
 import {
@@ -220,7 +224,7 @@ async function regularSearch({
   Route.LoaderArgs,
   'request' | 'context'
 >): Promise<RegularSearchReturn> {
-  const {storefront} = context;
+  const storefront = context.get(hydrogenContext.storefront);
   const url = new URL(request.url);
   const variables = getPaginationVariables(request, {pageBy: 8});
   const term = String(url.searchParams.get('q') || '');
@@ -385,7 +389,7 @@ async function predictiveSearch({
   Route.ActionArgs,
   'request' | 'context'
 >): Promise<PredictiveSearchReturn> {
-  const {storefront} = context;
+  const storefront = context.get(hydrogenContext.storefront);
   const url = new URL(request.url);
   const term = String(url.searchParams.get('q') || '').trim();
   const limit = Number(url.searchParams.get('limit') || 10);

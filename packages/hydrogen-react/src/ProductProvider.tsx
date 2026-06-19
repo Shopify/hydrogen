@@ -20,6 +20,7 @@ import type {
 } from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 import {flattenConnection} from './flatten-connection.js';
+import type {JSX} from 'react';
 
 const ProductOptionsContext = createContext<ProductHookValue | null>(null);
 
