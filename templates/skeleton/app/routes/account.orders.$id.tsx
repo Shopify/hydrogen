@@ -1,18 +1,18 @@
 import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/account.orders.$id';
-import {Money, Image} from '@shopify/hydrogen';
+import {Money, Image, hydrogenContext} from '@shopify/hydrogen';
 import type {
   OrderLineItemFullFragment,
   OrderQuery,
 } from 'customer-accountapi.generated';
 import {CUSTOMER_ORDER_QUERY} from '~/graphql/customer-account/CustomerOrderQuery';
 
-export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Order ${data?.order?.name}`}];
+export const meta: Route.MetaFunction = ({loaderData}) => {
+  return [{title: `Order ${loaderData?.order?.name}`}];
 };
 
 export async function loader({params, context}: Route.LoaderArgs) {
-  const {customerAccount} = context;
+  const customerAccount = context.get(hydrogenContext.customerAccount);
   if (!params.id) {
     return redirect('/account/orders');
   }
@@ -32,19 +32,10 @@ export async function loader({params, context}: Route.LoaderArgs) {
 
   const {order} = data;
 
-  // Extract line items directly from nodes array
   const lineItems = order.lineItems.nodes;
-
-  // Extract discount applications directly from nodes array
   const discountApplications = order.discountApplications.nodes;
-
-  // Get fulfillment status from first fulfillment node
   const fulfillmentStatus = order.fulfillments.nodes[0]?.status ?? 'N/A';
-
-  // Get first discount value with proper type checking
   const firstDiscount = discountApplications[0]?.value;
-
-  // Type guard for MoneyV2 discount
   const discountValue =
     firstDiscount?.__typename === 'MoneyV2'
       ? (firstDiscount as Extract<
@@ -53,7 +44,6 @@ export async function loader({params, context}: Route.LoaderArgs) {
         >)
       : null;
 
-  // Type guard for percentage discount
   const discountPercentage =
     firstDiscount?.__typename === 'PricingPercentageValue'
       ? (

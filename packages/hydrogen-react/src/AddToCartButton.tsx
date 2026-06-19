@@ -8,6 +8,7 @@ import {
 } from './BaseButton.js';
 import * as React from 'react';
 import {CartLineParentInput} from './storefront-api-types.js';
+import type {JSX} from 'react';
 
 export interface AddToCartButtonPropsBase {
   /** An array of cart line attributes that belong to the item being added to the cart. */

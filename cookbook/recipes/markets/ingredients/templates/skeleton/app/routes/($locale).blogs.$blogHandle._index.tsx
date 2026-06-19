@@ -1,15 +1,17 @@
-import {
-  useLoaderData,
-} from 'react-router';
+import {useLoaderData} from 'react-router';
 import {Link} from '~/components/Link';
 import type {Route} from './+types/($locale).blogs.$blogHandle._index';
-import {Image, getPaginationVariables} from '@shopify/hydrogen';
+import {
+  Image,
+  getPaginationVariables,
+  hydrogenContext,
+} from '@shopify/hydrogen';
 import type {ArticleItemFragment} from 'storefrontapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
-export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.blog.title ?? ''} blog`}];
+export const meta: Route.MetaFunction = ({loaderData}) => {
+  return [{title: `Hydrogen | ${loaderData?.blog.title ?? ''} blog`}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -29,6 +31,7 @@ export async function loader(args: Route.LoaderArgs) {
 async function loadCriticalData({
   context,
   request,
+  url,
   params,
 }: Route.LoaderArgs) {
   const paginationVariables = getPaginationVariables(request, {
@@ -40,7 +43,7 @@ async function loadCriticalData({
   }
 
   const [{blog}] = await Promise.all([
-    context.storefront.query(BLOGS_QUERY, {
+    context.get(hydrogenContext.storefront).query(BLOGS_QUERY, {
       variables: {
         blogHandle: params.blogHandle,
         ...paginationVariables,
@@ -53,7 +56,7 @@ async function loadCriticalData({
     throw new Response('Not found', {status: 404});
   }
 
-  redirectIfHandleIsLocalized(request, {handle: params.blogHandle, data: blog});
+  redirectIfHandleIsLocalized(url, {handle: params.blogHandle, data: blog});
 
   return {blog};
 }

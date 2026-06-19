@@ -5,6 +5,7 @@ It lets you create and manage dynamic content sections through your Shopify admi
 providing a flexible way to build pages with reusable components.
 
 Key features:
+
 - Dynamic route-based content rendering
 - Modular section components (Hero, Featured Products, Featured Collections, Stores)
 - Content editing capabilities with direct links to Shopify admin
@@ -28,30 +29,30 @@ to match your specific content needs. See the included `guides/metaobjects/READM
 
 _New files added to the template by this recipe._
 
-| File | Description |
-| --- | --- |
-| [app/components/EditRoute.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/components/EditRoute.tsx) | Component that provides an edit link for managing metaobject-based content in development mode |
-| [app/routes/stores.$name.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores.$name.tsx) | Dynamic route for displaying individual store profiles with metaobject content |
-| [app/routes/stores._index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores._index.tsx) | Index route that displays a grid of all stores from metaobjects |
-| [app/sections/RouteContent.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/RouteContent.tsx) | Main component for fetching and rendering metaobject-based route content |
-| [app/sections/SectionFeaturedCollections.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedCollections.tsx) | Section component for displaying featured product collections from metaobjects |
-| [app/sections/SectionFeaturedProducts.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedProducts.tsx) | Section component for showcasing featured products with customizable layout |
-| [app/sections/SectionHero.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionHero.tsx) | Hero banner component with image, heading, and call-to-action from metaobjects |
-| [app/sections/SectionStoreProfile.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStoreProfile.tsx) | Section component that displays store details, hours, and contact information |
-| [app/sections/SectionStores.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStores.tsx) | Grid layout component for displaying multiple store locations |
-| [app/sections/Sections.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/Sections.tsx) | Dynamic section renderer that maps metaobject types to React components |
-| [app/utils/parseSection.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/utils/parseSection.ts) | Utility function for parsing and transforming metaobject field data |
-| [guides/metaobjects/README.md](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/README.md) | Comprehensive setup guide for creating metaobject definitions in Shopify admin |
-| [guides/metaobjects/images/definition_link.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_link.png) | Screenshot showing Link metaobject field configuration |
-| [guides/metaobjects/images/definition_section_featured_collections.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png) | Screenshot of Featured Collections section metaobject definition |
-| [guides/metaobjects/images/definition_section_featured_products.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png) | Screenshot of Featured Products section metaobject definition |
-| [guides/metaobjects/images/definition_section_hero.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_hero.png) | Screenshot of Hero section metaobject definition with image and text fields |
-| [guides/metaobjects/images/definition_section_rich_text.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png) | Screenshot of Rich Text section metaobject definition |
-| [guides/metaobjects/images/definition_section_store_profile.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png) | Screenshot of Store Profile section metaobject definition |
-| [guides/metaobjects/images/definition_section_stores_grid.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png) | Screenshot of Stores Grid section metaobject definition |
-| [guides/metaobjects/images/definition_store.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_store.png) | Screenshot of Store metaobject definition with location and contact fields |
-| [guides/metaobjects/images/definitions_list.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definitions_list.png) | Screenshot showing list of all metaobject definitions in Shopify admin |
-| [guides/metaobjects/images/definiton_route.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definiton_route.png) | Screenshot of Route metaobject definition with Sections reference field |
+| File                                                                                                                                                                                                                                                                                         | Description                                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| [app/components/EditRoute.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/components/EditRoute.tsx)                                                                                   | Component that provides an edit link for managing metaobject-based content in development mode |
+| [app/routes/stores.$name.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores.$name.tsx)                                                                                     | Dynamic route for displaying individual store profiles with metaobject content                 |
+| [app/routes/stores.\_index.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores._index.tsx)                                                                                  | Index route that displays a grid of all stores from metaobjects                                |
+| [app/sections/RouteContent.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/RouteContent.tsx)                                                                                 | Main component for fetching and rendering metaobject-based route content                       |
+| [app/sections/SectionFeaturedCollections.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedCollections.tsx)                                                     | Section component for displaying featured product collections from metaobjects                 |
+| [app/sections/SectionFeaturedProducts.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedProducts.tsx)                                                           | Section component for showcasing featured products with customizable layout                    |
+| [app/sections/SectionHero.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionHero.tsx)                                                                                   | Hero banner component with image, heading, and call-to-action from metaobjects                 |
+| [app/sections/SectionStoreProfile.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStoreProfile.tsx)                                                                   | Section component that displays store details, hours, and contact information                  |
+| [app/sections/SectionStores.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStores.tsx)                                                                               | Grid layout component for displaying multiple store locations                                  |
+| [app/sections/Sections.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/Sections.tsx)                                                                                         | Dynamic section renderer that maps metaobject types to React components                        |
+| [app/utils/parseSection.ts](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/utils/parseSection.ts)                                                                                         | Utility function for parsing and transforming metaobject field data                            |
+| [guides/metaobjects/README.md](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/README.md)                                                                                   | Comprehensive setup guide for creating metaobject definitions in Shopify admin                 |
+| [guides/metaobjects/images/definition_link.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_link.png)                                                 | Screenshot showing Link metaobject field configuration                                         |
+| [guides/metaobjects/images/definition_section_featured_collections.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png) | Screenshot of Featured Collections section metaobject definition                               |
+| [guides/metaobjects/images/definition_section_featured_products.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png)       | Screenshot of Featured Products section metaobject definition                                  |
+| [guides/metaobjects/images/definition_section_hero.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_hero.png)                                 | Screenshot of Hero section metaobject definition with image and text fields                    |
+| [guides/metaobjects/images/definition_section_rich_text.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png)                       | Screenshot of Rich Text section metaobject definition                                          |
+| [guides/metaobjects/images/definition_section_store_profile.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png)               | Screenshot of Store Profile section metaobject definition                                      |
+| [guides/metaobjects/images/definition_section_stores_grid.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png)                   | Screenshot of Stores Grid section metaobject definition                                        |
+| [guides/metaobjects/images/definition_store.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_store.png)                                               | Screenshot of Store metaobject definition with location and contact fields                     |
+| [guides/metaobjects/images/definitions_list.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definitions_list.png)                                               | Screenshot showing list of all metaobject definitions in Shopify admin                         |
+| [guides/metaobjects/images/definiton_route.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definiton_route.png)                                                 | Screenshot of Route metaobject definition with Sections reference field                        |
 
 ## Steps
 
@@ -59,25 +60,25 @@ _New files added to the template by this recipe._
 
 Update the README file with metaobjects CMS documentation and an architecture overview.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/templates/skeleton/README.md)
 
 <details>
 
-~~~diff
+````diff
 index c584e537..927d99f1 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,6 +1,8 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Metaobjects as CMS
- 
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+This Hydrogen template demonstrates how to use Shopify Metaobjects as a content management system (CMS). Hydrogen is Shopify's stack for headless commerce, designed to work with [Remix](https://remix.run/), Shopify's full stack web framework.
+
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++This Hydrogen template demonstrates how to use Shopify Metaobjects as a content management system (CMS). Hydrogen is Shopify's stack for headless commerce, designed to work with [React Router](https://reactrouter.com/), the full stack web framework.
 +
 +This template shows how to create a flexible, section-based content architecture using Shopify's native Metaobjects, allowing merchants to manage content directly from the Shopify admin without external CMS dependencies.
- 
+
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
+ [Get familiar with React Router](https://reactrouter.com/)
 @@ -16,18 +18,60 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
  - Prettier
  - GraphQL generator
@@ -108,19 +109,19 @@ index c584e537..927d99f1 100644
 +- **Type-safe**: Full TypeScript support with generated types
 +- **Merchant-friendly**: Content managed directly in Shopify admin
 +- **Extensible**: Easy to add new section types
- 
+
  ## Getting started
- 
+
  **Requirements:**
- 
- - Node.js version 18.0.0 or higher
+
+ - Node.js version 22.22.0 or higher
 +- Shopify store with Metaobjects enabled
 +- Metaobject definitions created in Shopify admin
- 
+
  ```bash
  npm create @shopify/hydrogen@latest
  ```
- 
+
 +## Setting up Metaobjects
 +
 +1. **Create Metaobject definitions** in your Shopify admin:
@@ -138,12 +139,12 @@ index c584e537..927d99f1 100644
 +   - Sections component handles dynamic rendering based on type
 +
  ## Building for production
- 
+
  ```bash
 @@ -40,6 +84,21 @@ npm run build
  npm run dev
  ```
- 
+
 +## Creating New Sections
 +
 +1. Define the Metaobject in Shopify admin
@@ -160,11 +161,11 @@ index c584e537..927d99f1 100644
 +```
 +
  ## Setup for using Customer Account API (`/account` section)
- 
+
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 \ No newline at end of file
-~~~
+````
 
 </details>
 
@@ -172,13 +173,13 @@ index c584e537..927d99f1 100644
 
 Add RECOMMENDED_PRODUCT_FRAGMENT for displaying product collections in metaobject sections.
 
-#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/lib/fragments.ts)
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/templates/skeleton/app/lib/fragments.ts)
 
-~~~diff
-index cf35c25e..99874574 100644
+```diff
+index f6b6b2a3..490f8daf 100644
 --- a/templates/skeleton/app/lib/fragments.ts
 +++ b/templates/skeleton/app/lib/fragments.ts
-@@ -232,3 +232,25 @@ export const FOOTER_QUERY = `#graphql
+@@ -240,3 +240,25 @@ export const FOOTER_QUERY = `#graphql
    }
    ${MENU_FRAGMENT}
  ` as const;
@@ -204,17 +205,17 @@ index cf35c25e..99874574 100644
 +    }
 +  }
 +` as const;
-~~~
+```
 
 ### Step 3: Create edit route component
 
 Add the edit route component for managing metaobject-based content in development.
 
-#### File: [EditRoute.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/components/EditRoute.tsx)
+#### File: [EditRoute.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/components/EditRoute.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import {useState, useEffect} from 'react';
 import {Link, useMatches} from 'react-router';
 
@@ -263,8 +264,7 @@ export function EditRoute({routeId}: {routeId: string}) {
     </Link>
   );
 }
-
-~~~
+```
 
 </details>
 
@@ -272,9 +272,9 @@ export function EditRoute({routeId}: {routeId: string}) {
 
 Expose the public store subdomain for metaobject queries and content management.
 
-#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/root.tsx)
+#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/templates/skeleton/app/root.tsx)
 
-~~~diff
+```diff
 index df87425c..12434050 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
@@ -283,20 +283,20 @@ index df87425c..12434050 100644
        language: args.context.storefront.i18n.language,
      },
 +    // @description Add public store subdomain for metaobjects
-+    publictoreSubdomain: args.context.env.PUBLIC_STORE_DOMAIN,
++    publicStoreSubdomain: args.context.env.PUBLIC_STORE_DOMAIN,
    };
  }
-~~~
+```
 
 ### Step 5: Build store profile route
 
 Add a dynamic store profile route for displaying store-specific metaobject content.
 
-#### File: [stores.$name.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores.$name.tsx)
+#### File: [stores.$name.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores.$name.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/stores.$name';
 
@@ -324,7 +324,7 @@ export async function loader(args: Route.LoaderArgs) {
 async function loadCriticalData({context, params}: Route.LoaderArgs) {
   const {storefront} = context;
   const {name} = params;
-  
+
   // 2. Query for the route's content metaobject
   const [{route}] = await Promise.all([
     storefront.query(ROUTE_CONTENT_QUERY, {
@@ -355,8 +355,7 @@ export default function Store() {
     </div>
   );
 }
-
-~~~
+```
 
 </details>
 
@@ -364,20 +363,16 @@ export default function Store() {
 
 Integrate the `RouteContent` component to render metaobject sections on the homepage.
 
-#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/\_index.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
-~~~diff
-index 28102dbe..27dbb95c 100644
+```diff
+index 237edc91..4502e979 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
-@@ -1,19 +1,11 @@
--import {
--  Await,
--  useLoaderData,
--  Link,
--} from 'react-router';
+@@ -1,16 +1,11 @@
+-import {Await, useLoaderData, Link} from 'react-router';
 +import {useLoaderData} from 'react-router';
  import type {Route} from './+types/_index';
 -import {Suspense} from 'react';
@@ -387,17 +382,18 @@ index 28102dbe..27dbb95c 100644
 -  RecommendedProductsQuery,
 -} from 'storefrontapi.generated';
 -import {ProductItem} from '~/components/ProductItem';
+-import {MockShopNotice} from '~/components/MockShopNotice';
 +
 +// @description Add metaobject content imports
 +import {ROUTE_CONTENT_QUERY, RouteContent} from '~/sections/RouteContent';
- 
+
  export const meta: Route.MetaFunction = () => {
 -  return [{title: 'Hydrogen | Home'}];
 +  return [{title: 'Hydrogen Metaobject | Home'}];
  };
- 
+
  export async function loader(args: Route.LoaderArgs) {
-@@ -31,14 +23,18 @@ export async function loader(args: Route.LoaderArgs) {
+@@ -28,150 +23,37 @@ export async function loader(args: Route.LoaderArgs) {
   * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
   */
  async function loadCriticalData({context}: Route.LoaderArgs) {
@@ -413,15 +409,18 @@ index 28102dbe..27dbb95c 100644
 +    }),
      // Add other queries here, so that they are loaded in parallel
    ]);
- 
+
 -  return {
+-    isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
 -    featuredCollection: collections.nodes[0],
 -  };
 +  return {route};
  }
- 
+
  /**
-@@ -47,125 +43,17 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
+  * Load data for rendering content below the fold. This data is deferred and will be
+- * fetched after the initial page load. If it's unavailable, the page should still 200.
++ * fetched after the initial page load. If it's unavailable, the page should still render
   * Make sure to not throw any errors here, as it will cause the page to 500.
   */
  function loadDeferredData({context}: Route.LoaderArgs) {
@@ -439,13 +438,14 @@ index 28102dbe..27dbb95c 100644
 +  // No deferred data for this route
 +  return {};
  }
- 
+
  export default function Homepage() {
 -  const data = useLoaderData<typeof loader>();
 +  const {route} = useLoaderData<typeof loader>();
 +
    return (
      <div className="home">
+-      {data.isShopLinked ? null : <MockShopNotice />}
 -      <FeaturedCollection collection={data.featuredCollection} />
 -      <RecommendedProducts products={data.recommendedProducts} />
 +      {/* @description Render the route's content sections */}
@@ -468,7 +468,11 @@ index 28102dbe..27dbb95c 100644
 -    >
 -      {image && (
 -        <div className="featured-collection-image">
--          <Image data={image} sizes="100vw" />
+-          <Image
+-            data={image}
+-            sizes="100vw"
+-            alt={image.altText || collection.title}
+-          />
 -        </div>
 -      )}
 -      <h1>{collection.title}</h1>
@@ -482,8 +486,11 @@ index 28102dbe..27dbb95c 100644
 -  products: Promise<RecommendedProductsQuery | null>;
 -}) {
 -  return (
--    <div className="recommended-products">
--      <h2>Recommended Products</h2>
+-    <section
+-      className="recommended-products"
+-      aria-labelledby="recommended-products"
+-    >
+-      <h2 id="recommended-products">Recommended Products</h2>
 -      <Suspense fallback={<div>Loading...</div>}>
 -        <Await resolve={products}>
 -          {(response) => (
@@ -498,7 +505,7 @@ index 28102dbe..27dbb95c 100644
 -        </Await>
 -      </Suspense>
 -      <br />
--    </div>
+-    </section>
 -  );
 -}
 -
@@ -553,7 +560,7 @@ index 28102dbe..27dbb95c 100644
 -    }
 -  }
 -` as const;
-~~~
+```
 
 </details>
 
@@ -561,11 +568,11 @@ index 28102dbe..27dbb95c 100644
 
 Add a store listing page that shows all stores from metaobjects with a grid layout.
 
-#### File: [stores._index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores._index.tsx)
+#### File: [stores.\_index.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores._index.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/stores._index';
 
@@ -625,8 +632,7 @@ export default function Stores() {
     </div>
   );
 }
-
-~~~
+```
 
 </details>
 
@@ -634,34 +640,30 @@ export default function Stores() {
 
 Add Slate dependencies for rich text editing in metaobject sections.
 
-#### File: [package.json](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/package.json)
+#### File: [package.json](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/templates/skeleton/package.json)
 
-~~~diff
-index e9ebd1d3..1731cce2 100644
+```diff
+index e971ba7e..f2c3af10 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
-@@ -21,7 +21,9 @@
-     "react": "18.3.1",
-     "react-dom": "18.3.1",
-     "react-router": "7.9.2",
--    "react-router-dom": "7.9.2"
-+    "react-router-dom": "7.9.2",
+@@ -21,3 +21,5 @@
+     "react": "catalog:",
+     "react-dom": "catalog:",
+-    "react-router": "8.0.1"
++    "react-router": "8.0.1",
 +    "slate": "^0.101.4",
 +    "slate-react": "^0.101.3"
-   },
-   "devDependencies": {
-     "@eslint/compat": "^1.2.5",
-~~~
+```
 
 ### Step 9: Create route content component
 
 Add the main component for fetching and rendering metaobject-based route content.
 
-#### File: [RouteContent.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/RouteContent.tsx)
+#### File: [RouteContent.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/RouteContent.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import {SECTIONS_FRAGMENT, Sections} from '~/sections/Sections';
 import {EditRoute} from '~/components/EditRoute';
 
@@ -696,8 +698,7 @@ export const ROUTE_CONTENT_QUERY = `#graphql
   }
   ${SECTIONS_FRAGMENT}
 `;
-
-~~~
+```
 
 </details>
 
@@ -705,11 +706,11 @@ export const ROUTE_CONTENT_QUERY = `#graphql
 
 Add a section component for displaying featured product collections from metaobjects.
 
-#### File: [SectionFeaturedCollections.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedCollections.tsx)
+#### File: [SectionFeaturedCollections.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedCollections.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import type {
   SectionFeaturedCollectionsFragment,
   FeaturedCollectionImageFragment,
@@ -797,8 +798,7 @@ export const SECTION_FEATURED_COLLECTIONS_FRAGMENT = `#graphql
   }
   ${FEATURED_COLLECTION_FRAGMENT}
 `;
-
-~~~
+```
 
 </details>
 
@@ -806,11 +806,11 @@ export const SECTION_FEATURED_COLLECTIONS_FRAGMENT = `#graphql
 
 Add a section component for showcasing featured products with a customizable layout.
 
-#### File: [SectionFeaturedProducts.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedProducts.tsx)
+#### File: [SectionFeaturedProducts.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedProducts.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import {Money, Image} from '@shopify/hydrogen';
 import {Link} from 'react-router';
 import type {SectionFeaturedProductsFragment} from 'storefrontapi.generated';
@@ -914,8 +914,7 @@ export const SECTION_FEATURED_PRODUCTS_FRAGMENT = `#graphql
   }
   ${FEATURED_PRODUCT_FRAGMENT}
 `;
-
-~~~
+```
 
 </details>
 
@@ -923,11 +922,11 @@ export const SECTION_FEATURED_PRODUCTS_FRAGMENT = `#graphql
 
 Add a hero banner section with an image, heading, and call-to-action from metaobjects.
 
-#### File: [SectionHero.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionHero.tsx)
+#### File: [SectionHero.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionHero.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import type {ParsedMetafields} from '@shopify/hydrogen';
 import {parseSection} from '~/utils/parseSection';
 import {Link} from 'react-router';
@@ -951,6 +950,7 @@ export function SectionHero(props: SectionHeroFragment) {
   return (
     <section
       className="section-hero"
+      aria-label="Hero"
       style={{
         backgroundImage,
         height: '50%',
@@ -1052,8 +1052,7 @@ export const SECTION_HERO_FRAGMENT = `#graphql
   ${LINK_FRAGMENT}
   ${MEDIA_IMAGE_FRAGMENT}
 `;
-
-~~~
+```
 
 </details>
 
@@ -1061,11 +1060,11 @@ export const SECTION_HERO_FRAGMENT = `#graphql
 
 Add a store profile section that displays store details, hours, and contact information.
 
-#### File: [SectionStoreProfile.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStoreProfile.tsx)
+#### File: [SectionStoreProfile.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStoreProfile.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import type {ParsedMetafields} from '@shopify/hydrogen';
 import {parseSection} from '~/utils/parseSection';
 import {Link} from 'react-router';
@@ -1086,7 +1085,7 @@ export function SectionStoreProfile(props: SectionStoreProfileFragment) {
   const {image, heading, description, hours, address} = section.store;
 
   return (
-    <section id={props.id} className="store">
+    <section id={props.id} className="store" aria-label="Store Profile">
       <Link to={`/stores`}>Back to Stores</Link>
       <div>
         <br />
@@ -1176,8 +1175,7 @@ export const SECTION_STORE_PROFILE_FRAGMENT = `#graphql
   }
   ${STORE_PROFILE_FRAGMENT}
 `;
-
-~~~
+```
 
 </details>
 
@@ -1185,11 +1183,11 @@ export const SECTION_STORE_PROFILE_FRAGMENT = `#graphql
 
 Add a grid layout section for displaying multiple store locations from metaobjects.
 
-#### File: [SectionStores.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStores.tsx)
+#### File: [SectionStores.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStores.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import type {ParsedMetafields} from '@shopify/hydrogen';
 import {parseSection} from '~/utils/parseSection';
 import {Link} from 'react-router';
@@ -1207,7 +1205,7 @@ export function SectionStores(props: SectionStoresFragment) {
   const {heading, stores} = section;
 
   return (
-    <section className="section-stores">
+    <section className="section-stores" aria-label="Stores">
       {heading?.value && <h1>{heading.value}</h1>}
       <div
         className="stores"
@@ -1297,8 +1295,7 @@ export const SECTION_STORES_FRAGMENT = `#graphql
     }
   }
   ${STORE_ITEM_FRAGMENT} `;
-
-~~~
+```
 
 </details>
 
@@ -1306,11 +1303,11 @@ export const SECTION_STORES_FRAGMENT = `#graphql
 
 Add a dynamic section renderer that maps metaobject types to React components.
 
-#### File: [Sections.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/Sections.tsx)
+#### File: [Sections.tsx](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/Sections.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import {SECTION_HERO_FRAGMENT, SectionHero} from '~/sections/SectionHero';
 import {
   SECTION_FEATURED_PRODUCTS_FRAGMENT,
@@ -1330,7 +1327,7 @@ import type {SectionsFragment} from 'storefrontapi.generated';
 
 export function Sections({sections}: {sections: SectionsFragment}) {
   return (
-    <div className="sections">
+    <div className="sections" role="region" aria-label="Route Content">
       {sections?.references?.nodes.map((section) => {
         switch (section.type) {
           case 'section_hero':
@@ -1380,8 +1377,7 @@ export const SECTIONS_FRAGMENT = `#graphql
   ${SECTION_STORES_FRAGMENT}
   ${SECTION_STORE_PROFILE_FRAGMENT}
 `;
-
-~~~
+```
 
 </details>
 
@@ -1389,11 +1385,11 @@ export const SECTIONS_FRAGMENT = `#graphql
 
 Add a utility function for parsing and transforming metaobject field data.
 
-#### File: [parseSection.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/utils/parseSection.ts)
+#### File: [parseSection.ts](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/utils/parseSection.ts)
 
 <details>
 
-~~~ts
+```ts
 import type {ParsedMetafields} from '@shopify/hydrogen';
 import {parseMetafield} from '@shopify/hydrogen';
 
@@ -1526,8 +1522,7 @@ function liftEach<Section, KeysToRemove extends ReadonlyArray<PropertyKey>>(
     return lift(result, keyToLift);
   }, obj) as LiftEach<Section, KeysToRemove>;
 }
-
-~~~
+```
 
 </details>
 
@@ -1535,11 +1530,11 @@ function liftEach<Section, KeysToRemove extends ReadonlyArray<PropertyKey>>(
 
 A comprehensive guide for setting up metaobject definitions in the Shopify admin.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/README.md)
 
 <details>
 
-~~~md
+````md
 # Metaobjects Overview
 
 This document describes the high-level content architecture and metaobject definitions
@@ -1809,8 +1804,7 @@ export const SECTIONS_FRAGMENT = `#graphql
   ${SECTION_EXAMPLE_FRAGMENT}
 `;
 ```
-
-~~~
+````
 
 </details>
 
@@ -1818,7 +1812,7 @@ export const SECTIONS_FRAGMENT = `#graphql
 
 A screenshot showing the Link metaobject field configuration.
 
-#### File: [definition_link.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_link.png)
+#### File: [definition_link.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_link.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_link.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_link.png)
 
@@ -1826,7 +1820,7 @@ A screenshot showing the Link metaobject field configuration.
 
 A screenshot of a "Featured Collections" section metaobject definition.
 
-#### File: [definition_section_featured_collections.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png)
+#### File: [definition_section_featured_collections.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png)
 
@@ -1834,7 +1828,7 @@ A screenshot of a "Featured Collections" section metaobject definition.
 
 A screenshot of a "Featured Products" section metaobject definition.
 
-#### File: [definition_section_featured_products.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png)
+#### File: [definition_section_featured_products.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png)
 
@@ -1842,7 +1836,7 @@ A screenshot of a "Featured Products" section metaobject definition.
 
 A screenshot of a Hero section metaobject definition with image and text fields.
 
-#### File: [definition_section_hero.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_hero.png)
+#### File: [definition_section_hero.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_hero.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_hero.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_hero.png)
 
@@ -1850,7 +1844,7 @@ A screenshot of a Hero section metaobject definition with image and text fields.
 
 A screenshot of a "Richtext" section metaobject definition.
 
-#### File: [definition_section_rich_text.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png)
+#### File: [definition_section_rich_text.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png)
 
@@ -1858,7 +1852,7 @@ A screenshot of a "Richtext" section metaobject definition.
 
 A screenshot of a "Store Profile" section metaobject definition.
 
-#### File: [definition_section_store_profile.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png)
+#### File: [definition_section_store_profile.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png)
 
@@ -1866,7 +1860,7 @@ A screenshot of a "Store Profile" section metaobject definition.
 
 A screenshot of a "Stores Grid" section metaobject definition.
 
-#### File: [definition_section_stores_grid.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png)
+#### File: [definition_section_stores_grid.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png)
 
@@ -1874,7 +1868,7 @@ A screenshot of a "Stores Grid" section metaobject definition.
 
 A screenshot of a "Store" metaobject definition with location and contact fields.
 
-#### File: [definition_store.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_store.png)
+#### File: [definition_store.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_store.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_store.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_store.png)
 
@@ -1882,7 +1876,7 @@ A screenshot of a "Store" metaobject definition with location and contact fields
 
 A screenshot showing a list of all metaobject definitions in the Shopify admin.
 
-#### File: [definitions_list.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definitions_list.png)
+#### File: [definitions_list.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definitions_list.png)
 
 ![templates/skeleton/guides/metaobjects/images/definitions_list.png](ingredients/templates/skeleton/guides/metaobjects/images/definitions_list.png)
 
@@ -1890,6 +1884,6 @@ A screenshot showing a list of all metaobject definitions in the Shopify admin.
 
 A screenshot of a "Route" metaobject definition with a "Sections" reference field.
 
-#### File: [definiton_route.png](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definiton_route.png)
+#### File: [definiton_route.png](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definiton_route.png)
 
 ![templates/skeleton/guides/metaobjects/images/definiton_route.png](ingredients/templates/skeleton/guides/metaobjects/images/definiton_route.png)

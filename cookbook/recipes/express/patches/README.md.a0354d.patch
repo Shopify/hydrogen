@@ -5,19 +5,19 @@ index c584e537..4cecca6d 100644
 -# Hydrogen template: Skeleton
 +# Hydrogen Express Skeleton
  
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
 +This is a Hydrogen skeleton template configured to run with NodeJS [Express](https://expressjs.com/) instead of Shopify Oxygen. 
 +
 +Hydrogen is Shopify's stack for headless commerce, designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal Express setup** with basic components and routes to get started with Hydrogen on Node.js.
  
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
--[Get familiar with Remix](https://remix.run/docs/en/v1)
+-[Get familiar with React Router](https://reactrouter.com/)
 +[Get familiar with React Router](https://reactrouter.com/en/main)
  
  ## What's included
  
--- Remix
-+- React Router 7
+-- React Router
++- React Router
  - Hydrogen
 -- Oxygen
 +- Express server
@@ -42,8 +42,8 @@ index c584e537..4cecca6d 100644
  
  **Requirements:**
  
--- Node.js version 18.0.0 or higher
-+- Node.js version 18.0.0 or higher (but less than 22.0.0)
+-- Node.js version 22.22.0 or higher
++- Node.js version 22.22.0 or higher
 +
 +### Environment Setup
 +

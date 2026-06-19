@@ -1,10 +1,7 @@
-const {createRequestHandler} = require('react-router');
-const path = require('path');
-const {installGlobals} = require('react-router');
-const express = require('express');
-const {createStorefrontClient, InMemoryCache} = require('@shopify/hydrogen');
-
-installGlobals();
+import {createRequestHandler} from 'react-router';
+import path from 'node:path';
+import express from 'express';
+import {createStorefrontClient, InMemoryCache} from '@shopify/hydrogen';
 
 const app = express();
 
@@ -31,7 +28,7 @@ app.all('*', async (req) => {
   });
 
   return createRequestHandler({
-    build: require(BUILD_DIR),
+    build: await import(BUILD_DIR),
     mode: process.env.NODE_ENV,
     getLoadContext: () => ({storefront}),
   });

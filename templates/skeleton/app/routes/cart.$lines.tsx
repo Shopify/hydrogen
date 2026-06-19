@@ -1,5 +1,6 @@
 import {redirect} from 'react-router';
 import type {Route} from './+types/cart.$lines';
+import {hydrogenContext} from '@shopify/hydrogen';
 
 /**
  * Automatically creates a new cart based on the URL and redirects straight to checkout.
@@ -20,7 +21,7 @@ import type {Route} from './+types/cart.$lines';
  * ```
  */
 export async function loader({request, context, params}: Route.LoaderArgs) {
-  const {cart} = context;
+  const cart = context.get(hydrogenContext.cart);
   const {lines} = params;
   if (!lines) return redirect('/cart');
   const linesMap = lines.split(',').map((line) => {

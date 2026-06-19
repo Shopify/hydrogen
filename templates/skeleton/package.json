@@ -5,12 +5,12 @@
   "version": "2026.4.4",
   "type": "module",
   "scripts": {
-    "build": "shopify hydrogen build --codegen",
-    "dev": "shopify hydrogen dev --codegen",
-    "preview": "shopify hydrogen preview --build",
+    "build": "shopify-hydrogen build --codegen",
+    "dev": "shopify-hydrogen dev --codegen",
+    "preview": "shopify-hydrogen preview --build",
     "lint": "eslint --no-error-on-unmatched-pattern .",
     "typecheck": "react-router typegen && tsc --noEmit",
-    "codegen": "shopify hydrogen codegen && react-router typegen"
+    "codegen": "shopify-hydrogen codegen && react-router typegen"
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
@@ -20,17 +20,17 @@
     "isbot": "^5.1.22",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-router": "7.16.0",
-    "react-router-dom": "7.16.0"
+    "react-router": "8.0.1"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@graphql-codegen/cli": "5.0.2",
-    "@react-router/dev": "7.16.0",
-    "@react-router/fs-routes": "7.16.0",
+    "@react-router/dev": "8.0.1",
+    "@react-router/fs-routes": "8.0.1",
     "@shopify/cli": "3.93.2",
+    "@shopify/cli-hydrogen": "workspace:*",
     "@shopify/hydrogen-codegen": "workspace:*",
     "@shopify/mini-oxygen": "workspace:*",
     "@shopify/oxygen-workers-types": "^4.1.6",
@@ -57,6 +57,6 @@
     "vite": "^8.0.1"
   },
   "engines": {
-    "node": "^22 || ^24"
+    "node": "^22.22.0 || ^24"
   }
 }

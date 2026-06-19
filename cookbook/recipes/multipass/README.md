@@ -6,6 +6,7 @@ state across the storefront and checkout process. This is particularly useful fo
 integrate with external authentication systems or maintain customer sessions across different platforms.
 
 Key features:
+
 - Converts all customer account routes from Customer Account API to Storefront API
 - Implements session-based authentication with customer access tokens
 - Adds Multipass checkout button for seamless checkout experience
@@ -28,23 +29,23 @@ Key features:
 
 - Shopify Plus subscription for Multipass functionality
 - PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET environment variable must be set
-- React Router 7.9.x or higher
+- React Router framework mode
 
 ## Ingredients
 
 _New files added to the template by this recipe._
 
-| File | Description |
-| --- | --- |
-| [app/components/MultipassCheckoutButton.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/components/MultipassCheckoutButton.tsx) | Checkout button that generates multipass tokens for seamless cart-to-checkout |
-| [app/lib/multipass/multipass.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipass.ts) | Core multipass encryption and token generation utilities |
-| [app/lib/multipass/multipassify.server.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipassify.server.ts) | Server-side multipass token creation with ESM-compatible snake_case |
-| [app/lib/multipass/types.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/types.ts) | TypeScript types for multipass customer data and tokens |
-| [app/routes/account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx) | Customer account activation flow with email confirmation |
-| [app/routes/account_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx) | Multipass login handler that processes encrypted tokens |
-| [app/routes/account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx) | Password recovery form for requesting reset emails |
-| [app/routes/account_.register.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx) | Customer registration form with Storefront API |
-| [app/routes/account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx) | Password reset confirmation with token validation |
+| File                                                                                                                                                                                                                                                        | Description                                                                   |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [app/components/MultipassCheckoutButton.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/components/MultipassCheckoutButton.tsx)                        | Checkout button that generates multipass tokens for seamless cart-to-checkout |
+| [app/lib/multipass/multipass.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipass.ts)                                                | Core multipass encryption and token generation utilities                      |
+| [app/lib/multipass/multipassify.server.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipassify.server.ts)                            | Server-side multipass token creation with ESM-compatible snake_case           |
+| [app/lib/multipass/types.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/types.ts)                                                        | TypeScript types for multipass customer data and tokens                       |
+| [app/routes/account\_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx) | Customer account activation flow with email confirmation                      |
+| [app/routes/account\_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx)                             | Multipass login handler that processes encrypted tokens                       |
+| [app/routes/account\_.recover.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx)                                             | Password recovery form for requesting reset emails                            |
+| [app/routes/account\_.register.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx)                                           | Customer registration form with Storefront API                                |
+| [app/routes/account\_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)                 | Password reset confirmation with token validation                             |
 
 ## Steps
 
@@ -56,24 +57,24 @@ Update README with multipass authentication documentation
 
 <details>
 
-~~~diff
+````diff
 index c584e5370..e8e03b96c 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,13 +1,15 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Skeleton with Multipass
- 
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify's full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with **Multipass authentication** for seamless checkout experiences.
- 
+
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with **Multipass authentication** for seamless checkout experiences.
+
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
+ [Get familiar with React Router](https://reactrouter.com/)
 +[Learn about Multipass](https://shopify.dev/docs/api/multipass)
- 
+
  ## What's included
- 
--- Remix
+
+-- React Router
 +### Core Hydrogen Stack
 +- React Router
  - Hydrogen
@@ -82,7 +83,7 @@ index c584e5370..e8e03b96c 100644
 @@ -18,11 +20,18 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
  - TypeScript and JavaScript flavors
  - Minimal setup of components and routes
- 
+
 +### Multipass Authentication (Shopify Plus)
 +- Customer session persistence through checkout
 +- Storefront API-based authentication (not Customer Account API)
@@ -90,21 +91,21 @@ index c584e5370..e8e03b96c 100644
 +- Automatic fallback for non-Plus stores
 +
  ## Getting started
- 
+
  **Requirements:**
- 
- - Node.js version 18.0.0 or higher
+
+ - Node.js version 22.22.0 or higher
 +- Shopify store (Shopify Plus for Multipass features)
- 
+
  ```bash
  npm create @shopify/hydrogen@latest
 @@ -40,6 +49,88 @@ npm run build
  npm run dev
  ```
- 
+
 -## Setup for using Customer Account API (`/account` section)
 +## Multipass Setup (Shopify Plus only)
- 
+
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +### Requirements
 +
@@ -145,7 +146,7 @@ index c584e5370..e8e03b96c 100644
 +
 +### Account Routes
 +- `/account/login` - Customer login
-+- `/account/register` - New customer registration  
++- `/account/register` - New customer registration
 +- `/account/logout` - Logout
 +- `/account/recover` - Password recovery
 +- `/account/reset/:id/:token` - Password reset
@@ -188,8 +189,8 @@ index c584e5370..e8e03b96c 100644
 +- [Hydrogen Documentation](https://shopify.dev/custom-storefronts/hydrogen)
 +- [Multipass Documentation](https://shopify.dev/docs/api/multipass)
 +- [Storefront API Authentication](https://shopify.dev/docs/api/storefront/authentication)
-+- [Remix Documentation](https://remix.run/docs)
-~~~
++- [React Router Documentation](https://reactrouter.com/)
+````
 
 </details>
 
@@ -201,7 +202,7 @@ Add checkout button component that generates multipass tokens
 
 <details>
 
-~~~tsx
+```tsx
 import React, {useCallback} from 'react';
 import {multipass} from '~/lib/multipass/multipass';
 
@@ -240,7 +241,7 @@ export function MultipassCheckoutButton(props: MultipassCheckoutButtonProps) {
 
   return <button onClick={(e) => void checkoutHandler(e)}>{children}</button>;
 }
-~~~
+```
 
 </details>
 
@@ -250,14 +251,14 @@ Add multipass checkout button to cart summary
 
 #### File: [app/components/CartSummary.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/CartSummary.tsx)
 
-~~~diff
+```diff
 index 15e8a3c96..7a4380dc6 100644
 --- a/templates/skeleton/app/components/CartSummary.tsx
 +++ b/templates/skeleton/app/components/CartSummary.tsx
 @@ -4,6 +4,9 @@ import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
  import {useEffect, useId, useRef, useState} from 'react';
  import {useFetcher} from 'react-router';
- 
+
 +// @description Import MultipassCheckoutButton for Shopify Plus multipass checkout
 +import {MultipassCheckoutButton} from '~/components/MultipassCheckoutButton';
 +
@@ -265,7 +266,7 @@ index 15e8a3c96..7a4380dc6 100644
    cart: OptimisticCart<CartApiQueryFragment | null>;
    layout: CartLayout;
 @@ -51,9 +54,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
- 
+
    return (
      <div>
 -      <a href={checkoutUrl} target="_self">
@@ -277,7 +278,7 @@ index 15e8a3c96..7a4380dc6 100644
        <br />
      </div>
    );
-~~~
+```
 
 ### Step 4: app/lib/multipass/multipass.ts
 
@@ -287,7 +288,7 @@ Core multipass encryption and token generation utilities
 
 <details>
 
-~~~ts
+```ts
 import type {
   MultipassResponse,
   MultipassOptions,
@@ -362,7 +363,7 @@ export async function multipass(
     return {url: null, token: null, error: message};
   }
 }
-~~~
+```
 
 </details>
 
@@ -374,7 +375,7 @@ Add session validation and token refresh logic
 
 <details>
 
-~~~diff
+```diff
 index df87425c5..a2c2acc8d 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
@@ -398,7 +399,7 @@ index df87425c5..a2c2acc8d 100644
 @@ -110,7 +121,14 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
      // Add other queries here, so that they are loaded in parallel
    ]);
- 
+
 -  return {header};
 +  // @description Validate customer authentication for multipass
 +  const customerAccessToken = await context.session.get('customerAccessToken');
@@ -409,7 +410,7 @@ index df87425c5..a2c2acc8d 100644
 +
 +  return {header, isLoggedIn: Promise.resolve(isLoggedIn)};
  }
- 
+
  /**
 @@ -207,3 +225,24 @@ export function ErrorBoundary() {
      </div>
@@ -436,7 +437,7 @@ index df87425c5..a2c2acc8d 100644
 +
 +  return true;
 +}
-~~~
+```
 
 </details>
 
@@ -448,24 +449,27 @@ Server-side multipass token generation with ESM-compatible snake_case
 
 <details>
 
-~~~ts
+```ts
 import CryptoJS from 'crypto-js';
 import type {MultipassCustomer} from './types';
 
 // Simple snake_case converter for ESM/Worker runtime
 function toSnakeCase(str: string): string {
-  return str.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+  return str
+    .replace(/([A-Z])/g, '_$1')
+    .toLowerCase()
+    .replace(/^_/, '');
 }
 
 function snakecaseKeys(obj: any): any {
   if (typeof obj !== 'object' || obj === null) {
     return obj;
   }
-  
+
   if (Array.isArray(obj)) {
     return obj.map(snakecaseKeys);
   }
-  
+
   const result: any = {};
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
@@ -624,7 +628,7 @@ export class Multipassify {
     return customer;
   }
 }
-~~~
+```
 
 </details>
 
@@ -634,14 +638,14 @@ Convert catch-all account route to use Storefront API
 
 #### File: [app/routes/account.$.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/account.$.tsx)
 
-~~~diff
+```diff
 index f718f607a..6a8a24520 100644
 --- a/templates/skeleton/app/routes/account.$.tsx
 +++ b/templates/skeleton/app/routes/account.$.tsx
 @@ -1,9 +1,9 @@
  import {redirect} from 'react-router';
  import type {Route} from './+types/account.$';
- 
+
 -// fallback wild card for all unauthenticated routes in account section
  export async function loader({context}: Route.LoaderArgs) {
 -  await context.customerAccount.handleAuthStatus();
@@ -652,7 +656,7 @@ index f718f607a..6a8a24520 100644
 +  }
 +  return redirect('/account/login');
  }
-~~~
+```
 
 ### Step 8: app/lib/multipass/types.ts
 
@@ -662,7 +666,7 @@ TypeScript types for multipass functionality
 
 <details>
 
-~~~ts
+```ts
 /*
   multipass and multipassify types
 */
@@ -732,19 +736,19 @@ export interface MultipassTokenResponseType {
   };
   error: string | null;
 }
-~~~
+```
 
 </details>
 
-### Step 9: app/routes/account_.activate.$id.$activationToken.tsx
+### Step 9: app/routes/account\_.activate.$id.$activationToken.tsx
 
 Add customer account activation route
 
-#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
+#### File: [account\_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import {Form, useActionData, data, redirect} from 'react-router';
 import type {Route} from './+types/account_.activate.$id.$activationToken';
 
@@ -897,7 +901,7 @@ const CUSTOMER_ACTIVATE_MUTATION = `#graphql
     }
   }
 ` as const;
-~~~
+```
 
 </details>
 
@@ -909,7 +913,7 @@ Convert addresses management to use Storefront API
 
 <details>
 
-~~~diff
+```diff
 index e0f97e10f..d36d1d914 100644
 --- a/templates/skeleton/app/routes/account.addresses.tsx
 +++ b/templates/skeleton/app/routes/account.addresses.tsx
@@ -937,12 +941,12 @@ index e0f97e10f..d36d1d914 100644
 -  DELETE_ADDRESS_MUTATION,
 -  CREATE_ADDRESS_MUTATION,
 -} from '~/graphql/customer-account/CustomerAddressMutations';
- 
+
  export type ActionResponse = {
    addressId?: string | null;
 @@ -32,13 +24,16 @@ export const meta: Route.MetaFunction = () => {
  };
- 
+
  export async function loader({context}: Route.LoaderArgs) {
 -  await context.customerAccount.handleAuthStatus();
 -
@@ -953,17 +957,17 @@ index e0f97e10f..d36d1d914 100644
 +  }
    return {};
  }
- 
+
  export async function action({request, context}: Route.ActionArgs) {
 -  const {customerAccount} = context;
 +  const {storefront, session} = context;
- 
+
    try {
      const form = await request.formData();
 @@ -50,31 +45,26 @@ export async function action({request, context}: Route.ActionArgs) {
        throw new Error('You must provide an address id.');
      }
- 
+
 -    // this will ensure redirecting to login never happen for mutatation
 -    const isLoggedIn = await customerAccount.isLoggedIn();
 -    if (!isLoggedIn) {
@@ -978,7 +982,7 @@ index e0f97e10f..d36d1d914 100644
 +      return data({error: {[addressId]: 'Unauthorized'}}, {status: 401});
      }
 +    const {accessToken} = customerAccessToken;
- 
+
      const defaultAddress = form.has('defaultAddress')
        ? String(form.get('defaultAddress')) === 'on'
 -      : false;
@@ -1001,7 +1005,7 @@ index e0f97e10f..d36d1d914 100644
 +      'province',
        'zip',
      ];
- 
+
 @@ -89,143 +79,119 @@ export async function action({request, context}: Route.ActionArgs) {
        case 'POST': {
          // handle new address creation
@@ -1018,14 +1022,14 @@ index e0f97e10f..d36d1d914 100644
 +              variables: {customerAccessToken: accessToken, address},
              },
            );
- 
+
 -          if (errors?.length) {
 -            throw new Error(errors[0].message);
 +          if (customerAddressCreate?.customerUserErrors?.length) {
 +            const error = customerAddressCreate.customerUserErrors[0];
 +            throw new Error(error.message);
            }
- 
+
 -          if (data?.customerAddressCreate?.userErrors?.length) {
 -            throw new Error(data?.customerAddressCreate?.userErrors[0].message);
 -          }
@@ -1085,7 +1089,7 @@ index e0f97e10f..d36d1d914 100644
 +          return data({error: {[addressId]: error}}, {status: 400});
          }
        }
- 
+
        case 'PUT': {
          // handle address updates
          try {
@@ -1103,7 +1107,7 @@ index e0f97e10f..d36d1d914 100644
                },
              },
            );
- 
+
 -          if (errors?.length) {
 -            throw new Error(errors[0].message);
 +          const updatedAddress = customerAddressUpdate?.customerAddress;
@@ -1112,7 +1116,7 @@ index e0f97e10f..d36d1d914 100644
 +            const error = customerAddressUpdate.customerUserErrors[0];
 +            throw new Error(error.message);
            }
- 
+
 -          if (data?.customerAddressUpdate?.userErrors?.length) {
 -            throw new Error(data?.customerAddressUpdate?.userErrors[0].message);
 -          }
@@ -1162,7 +1166,7 @@ index e0f97e10f..d36d1d914 100644
 +          return data({error: {[addressId]: error}}, {status: 400});
          }
        }
- 
+
        case 'DELETE': {
          // handles address deletion
          try {
@@ -1177,7 +1181,7 @@ index e0f97e10f..d36d1d914 100644
 +              variables: {customerAccessToken: accessToken, id: addressId},
              },
            );
- 
+
 -          if (errors?.length) {
 -            throw new Error(errors[0].message);
 +          if (customerAddressDelete?.customerUserErrors?.length) {
@@ -1213,7 +1217,7 @@ index e0f97e10f..d36d1d914 100644
 +          return data({error: {[addressId]: error}}, {status: 400});
          }
        }
- 
+
 @@ -291,21 +257,17 @@ function NewAddressForm() {
      address2: '',
      city: '',
@@ -1230,7 +1234,7 @@ index e0f97e10f..d36d1d914 100644
      zip: '',
 -  } as CustomerAddressInput;
 +  } as AddressFragment;
- 
+
    return (
 -    <AddressForm
 -      addressId={'NEW_ADDRESS_ID'}
@@ -1251,7 +1255,7 @@ index e0f97e10f..d36d1d914 100644
          >
 @@ -360,26 +321,26 @@ function ExistingAddresses({
  }
- 
+
  export function AddressForm({
 -  addressId,
    address,
@@ -1440,21 +1444,25 @@ index e0f97e10f..d36d1d914 100644
 +    }
 +  }
 +` as const;
-~~~
+```
 
 </details>
 
-### Step 11: app/routes/account_.login.multipass.tsx
+### Step 11: app/routes/account\_.login.multipass.tsx
 
 Add multipass login handler route
 
-#### File: [account_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx)
+#### File: [account\_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import {data as remixData, redirect} from 'react-router';
-import type {LoaderFunctionArgs, ActionFunctionArgs, HeadersFunction} from 'react-router';
+import type {
+  LoaderFunctionArgs,
+  ActionFunctionArgs,
+  HeadersFunction,
+} from 'react-router';
 import {Multipassify} from '~/lib/multipass/multipassify.server';
 import type {
   CustomerInfoType,
@@ -1462,8 +1470,7 @@ import type {
   NotLoggedInResponseType,
 } from '~/lib/multipass/types';
 
-export const headers: HeadersFunction = ({actionHeaders}) =>
-  actionHeaders;
+export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
 
 /*
   Redirect document GET requests to the login page (housekeeping)
@@ -1745,8 +1752,7 @@ const CUSTOMER_INFO_QUERY = `#graphql
     }
   }
 `;
-
-~~~
+```
 
 </details>
 
@@ -1758,7 +1764,7 @@ Convert order details to use Storefront API
 
 <details>
 
-~~~diff
+```diff
 index 3c2430385..77bd99344 100644
 --- a/templates/skeleton/app/routes/account.orders.$id.tsx
 +++ b/templates/skeleton/app/routes/account.orders.$id.tsx
@@ -1775,11 +1781,11 @@ index 3c2430385..77bd99344 100644
 -import {CUSTOMER_ORDER_QUERY} from '~/graphql/customer-account/CustomerOrderQuery';
 +  DiscountApplicationFragment,
 +} from 'storefrontapi.generated';
- 
- export const meta: Route.MetaFunction = ({data}) => {
-   return [{title: `Order ${data?.order?.name}`}];
+
+ export const meta: Route.MetaFunction = ({loaderData}) => {
+   return [{title: `Order ${loaderData?.order?.name}`}];
  };
- 
+
  export async function loader({params, context}: Route.LoaderArgs) {
 -  const {customerAccount} = context;
 +  const {session, storefront} = context;
@@ -1787,7 +1793,7 @@ index 3c2430385..77bd99344 100644
    if (!params.id) {
      return redirect('/account/orders');
    }
- 
+
    const orderId = atob(params.id);
 -  const {data, errors}: {data: OrderQuery; errors?: Array<{message: string}>} =
 -    await customerAccount.query(CUSTOMER_ORDER_QUERY, {
@@ -1797,29 +1803,29 @@ index 3c2430385..77bd99344 100644
 -      },
 -    });
 +  const customerAccessToken = await session.get('customerAccessToken');
- 
+
 -  if (errors?.length || !data?.order) {
 -    throw new Error('Order not found');
 +  if (!customerAccessToken) {
 +    return redirect('/account/login');
    }
- 
+
 -  const {order} = data;
 +  const {order} = await storefront.query(CUSTOMER_ORDER_QUERY, {
 +    variables: {orderId},
 +  });
- 
+
 -  // Extract line items directly from nodes array
 -  const lineItems = order.lineItems.nodes;
 +  if (!order || !('lineItems' in order)) {
 +    throw new Response('Order not found', {status: 404});
 +  }
- 
+
 -  // Extract discount applications directly from nodes array
 -  const discountApplications = order.discountApplications.nodes;
 +  const lineItems = flattenConnection(order.lineItems) as OrderLineItemFullFragment[];
 +  const discountApplications = flattenConnection(order.discountApplications) as DiscountApplicationFragment[];
- 
+
 -  // Get fulfillment status from first fulfillment node
 -  const fulfillmentStatus = order.fulfillments.nodes[0]?.status ?? 'N/A';
 -
@@ -1828,17 +1834,17 @@ index 3c2430385..77bd99344 100644
 -
 -  // Type guard for MoneyV2 discount
 +  const firstDiscount = discountApplications[0];
-+  
++
    const discountValue =
 -    firstDiscount?.__typename === 'MoneyV2'
 -      ? (firstDiscount as Extract<
 -          typeof firstDiscount,
 -          {__typename: 'MoneyV2'}
 -        >)
-+    firstDiscount?.value?.__typename === 'MoneyV2' 
-+      ? firstDiscount.value 
++    firstDiscount?.value?.__typename === 'MoneyV2'
++      ? firstDiscount.value
        : null;
- 
+
 -  // Type guard for percentage discount
    const discountPercentage =
 -    firstDiscount?.__typename === 'PricingPercentageValue'
@@ -1851,7 +1857,7 @@ index 3c2430385..77bd99344 100644
 +    firstDiscount?.value?.__typename === 'PricingPercentageValue'
 +      ? firstDiscount.value.percentage
        : null;
- 
+
    return {
 @@ -69,25 +52,16 @@ export async function loader({params, context}: Route.LoaderArgs) {
      lineItems,
@@ -1860,7 +1866,7 @@ index 3c2430385..77bd99344 100644
 -    fulfillmentStatus,
    };
  }
- 
+
  export default function OrderRoute() {
 -  const {
 -    order,
@@ -1968,7 +1974,7 @@ index 3c2430385..77bd99344 100644
          </a>
        </p>
 @@ -196,27 +170,144 @@ export default function OrderRoute() {
- 
+
  function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
    return (
 -    <tr key={lineItem.id}>
@@ -2122,19 +2128,19 @@ index 3c2430385..77bd99344 100644
 +  }
 +` as const;
 \ No newline at end of file
-~~~
+```
 
 </details>
 
-### Step 13: app/routes/account_.recover.tsx
+### Step 13: app/routes/account\_.recover.tsx
 
 Add password recovery route
 
-#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
+#### File: [account\_.recover.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
 import type {Route} from './+types/account_.recover';
 
@@ -2259,19 +2265,19 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
     }
   }
 ` as const;
-~~~
+```
 
 </details>
 
-### Step 14: app/routes/account.orders._index.tsx
+### Step 14: app/routes/account.orders.\_index.tsx
 
 Convert orders list to use Storefront API
 
-#### File: [app/routes/account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/account.orders._index.tsx)
+#### File: [app/routes/account.orders.\_index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/account.orders._index.tsx)
 
 <details>
 
-~~~diff
+```diff
 index a9f479ea7..d097338ef 100644
 --- a/templates/skeleton/app/routes/account.orders._index.tsx
 +++ b/templates/skeleton/app/routes/account.orders._index.tsx
@@ -2303,7 +2309,7 @@ index a9f479ea7..d097338ef 100644
 -} from 'customer-accountapi.generated';
 +} from 'storefrontapi.generated';
  import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
- 
+
 -type OrdersLoaderData = {
 -  customer: CustomerOrdersFragment;
 -  filters: OrderFilterParams;
@@ -2312,14 +2318,14 @@ index a9f479ea7..d097338ef 100644
  export const meta: Route.MetaFunction = () => {
    return [{title: 'Orders'}];
  };
- 
+
  export async function loader({request, context}: Route.LoaderArgs) {
 -  const {customerAccount} = context;
 -  const paginationVariables = getPaginationVariables(request, {
 -    pageBy: 20,
 -  });
 +  const {session, storefront} = context;
- 
+
 -  const url = new URL(request.url);
 -  const filters = parseOrderFilters(url.searchParams);
 -  const query = buildOrderSearchQuery(filters);
@@ -2338,7 +2344,7 @@ index a9f479ea7..d097338ef 100644
 +  if (!customerAccessToken?.accessToken) {
 +    return redirect('/account/login');
    }
- 
+
 -  return {customer: data.customer, filters};
 +  try {
 +    const paginationVariables = getPaginationVariables(request, {
@@ -2367,18 +2373,18 @@ index a9f479ea7..d097338ef 100644
 +    return data({error}, {status: 400});
 +  }
  }
- 
+
  export default function Orders() {
 -  const {customer, filters} = useLoaderData<OrdersLoaderData>();
 +  const data = useLoaderData<typeof loader>();
-+  
++
 +  if ('error' in data) {
 +    return <div>Error: {String(data.error)}</div>;
 +  }
-+  
++
 +  const {customer} = data;
    const {orders} = customer;
- 
+
    return (
      <div className="orders">
 -      <OrderSearchForm currentFilters={filters} />
@@ -2387,7 +2393,7 @@ index a9f479ea7..d097338ef 100644
      </div>
    );
  }
- 
+
 -function OrdersTable({
 -  orders,
 -  filters,
@@ -2412,7 +2418,7 @@ index a9f479ea7..d097338ef 100644
      </div>
    );
  }
- 
+
 -function EmptyOrders({hasFilters = false}: {hasFilters?: boolean}) {
 +function EmptyOrders() {
    return (
@@ -2442,7 +2448,7 @@ index a9f479ea7..d097338ef 100644
      </div>
    );
  }
- 
+
 -function OrderSearchForm({
 -  currentFilters,
 -}: {
@@ -2622,19 +2628,19 @@ index a9f479ea7..d097338ef 100644
 +  }
 +` as const;
 \ No newline at end of file
-~~~
+```
 
 </details>
 
-### Step 15: app/routes/account_.register.tsx
+### Step 15: app/routes/account\_.register.tsx
 
 Add customer registration route
 
-#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx)
+#### File: [account\_.register.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
 import type {Route} from './+types/account_.register';
 import type {CustomerCreateMutation} from 'storefrontapi.generated';
@@ -2646,7 +2652,8 @@ type ActionResponse = {
     | null;
 };
 
-export const headers: Route.HeadersFunction = ({actionHeaders}) => actionHeaders;
+export const headers: Route.HeadersFunction = ({actionHeaders}) =>
+  actionHeaders;
 
 export async function loader({context}: Route.LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
@@ -2838,7 +2845,7 @@ const REGISTER_LOGIN_MUTATION = `#graphql
     }
   }
 ` as const;
-~~~
+```
 
 </details>
 
@@ -2850,7 +2857,7 @@ Convert customer profile management from Customer Account API to Storefront API
 
 <details>
 
-~~~diff
+```diff
 index 6f10065fb..7b8c77d3a 100644
 --- a/templates/skeleton/app/routes/account.profile.tsx
 +++ b/templates/skeleton/app/routes/account.profile.tsx
@@ -2870,10 +2877,10 @@ index 6f10065fb..7b8c77d3a 100644
 +  redirect,
  } from 'react-router';
  import type {Route} from './+types/account.profile';
- 
+
 @@ -20,62 +20,79 @@ export const meta: Route.MetaFunction = () => {
  };
- 
+
  export async function loader({context}: Route.LoaderArgs) {
 -  await context.customerAccount.handleAuthStatus();
 -
@@ -2883,21 +2890,21 @@ index 6f10065fb..7b8c77d3a 100644
 +  }
    return {};
  }
- 
+
  export async function action({request, context}: Route.ActionArgs) {
 -  const {customerAccount} = context;
 +  const {session, storefront} = context;
- 
+
    if (request.method !== 'PUT') {
      return data({error: 'Method not allowed'}, {status: 405});
    }
- 
+
    const form = await request.formData();
 +  const customerAccessToken = await session.get('customerAccessToken');
 +  if (!customerAccessToken) {
 +    return data({error: 'Unauthorized'}, {status: 401});
 +  }
- 
+
    try {
 +    const password = getPassword(form);
      const customer: CustomerUpdateInput = {};
@@ -2920,7 +2927,7 @@ index 6f10065fb..7b8c77d3a 100644
          customer[key as (typeof validInputKeys)[number]] = value;
        }
      }
- 
+
 +    if (password) {
 +      customer.password = password;
 +    }
@@ -2940,7 +2947,7 @@ index 6f10065fb..7b8c77d3a 100644
        },
 -    );
 +    });
- 
+
 -    if (errors?.length) {
 -      throw new Error(errors[0].message);
 +    // check for mutation errors
@@ -2950,7 +2957,7 @@ index 6f10065fb..7b8c77d3a 100644
 +        {status: 400},
 +      );
      }
- 
+
 -    if (!data?.customerUpdate?.customer) {
 -      throw new Error('Customer profile update failed.');
 +    // update session with the updated access token
@@ -2960,7 +2967,7 @@ index 6f10065fb..7b8c77d3a 100644
 +        updated.customerUpdate?.customerAccessToken,
 +      );
      }
- 
+
 -    return {
 -      error: null,
 -      customer: data?.customerUpdate?.customer,
@@ -2976,7 +2983,7 @@ index 6f10065fb..7b8c77d3a 100644
 +    return data({error: error.message, customer: null}, {status: 400});
    }
  }
- 
+
 @@ -114,6 +131,64 @@ export default function AccountProfile() {
              defaultValue={customer.lastName ?? ''}
              minLength={2}
@@ -3098,19 +3105,19 @@ index 6f10065fb..7b8c77d3a 100644
 +    }
 +  }
 +` as const;
-~~~
+```
 
 </details>
 
-### Step 17: app/routes/account_.reset.$id.$resetToken.tsx
+### Step 17: app/routes/account\_.reset.$id.$resetToken.tsx
 
 Add password reset confirmation route
 
-#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
+#### File: [account\_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
 
 <details>
 
-~~~tsx
+```tsx
 import {data, Form, redirect, useActionData} from 'react-router';
 import type {Route} from './+types/account_.reset.$id.$resetToken';
 
@@ -3243,7 +3250,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
     }
   }
 ` as const;
-~~~
+```
 
 </details>
 
@@ -3255,7 +3262,7 @@ Convert account layout to use Storefront API customer data
 
 <details>
 
-~~~diff
+```diff
 index 0429e7ebe..c5e01b287 100644
 --- a/templates/skeleton/app/routes/account.tsx
 +++ b/templates/skeleton/app/routes/account.tsx
@@ -3272,11 +3279,11 @@ index 0429e7ebe..c5e01b287 100644
  import type {Route} from './+types/account';
 -import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
 +import type {CustomerFragment} from 'storefrontapi.generated';
- 
+
  export function shouldRevalidate() {
    return true;
  }
- 
+
 -export async function loader({context}: Route.LoaderArgs) {
 -  const {customerAccount} = context;
 -  const {data, errors} = await customerAccount.query(CUSTOMER_DETAILS_QUERY, {
@@ -3286,7 +3293,7 @@ index 0429e7ebe..c5e01b287 100644
 -  });
 +export const headers: Route.HeadersFunction = ({loaderHeaders}) =>
 +  loaderHeaders;
- 
+
 -  if (errors?.length || !data?.customer) {
 -    throw new Error('Customer not found');
 +export async function loader({request, context}: Route.LoaderArgs) {
@@ -3319,7 +3326,7 @@ index 0429e7ebe..c5e01b287 100644
 +      return redirect('/account/orders');
 +    }
    }
- 
+
 -  return remixData(
 -    {customer: data.customer},
 -    {
@@ -3372,7 +3379,7 @@ index 0429e7ebe..c5e01b287 100644
 +    </AccountLayout>
    );
  }
- 
+
 -export default function AccountLayout() {
 -  const {customer} = useLoaderData<typeof loader>();
 -
@@ -3448,26 +3455,26 @@ index 0429e7ebe..c5e01b287 100644
 +  }
 +  ${CUSTOMER_FRAGMENT}
 +` as const;
-~~~
+```
 
 </details>
 
-### Step 19: app/routes/account_.login.tsx
+### Step 19: app/routes/account\_.login.tsx
 
 Replace Customer Account API login with form-based Storefront API login
 
-#### File: [app/routes/account_.login.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/account_.login.tsx)
+#### File: [app/routes/account\_.login.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/account_.login.tsx)
 
 <details>
 
-~~~diff
+```diff
 index e89c8e0a2..cf1415c9d 100644
 --- a/templates/skeleton/app/routes/account_.login.tsx
 +++ b/templates/skeleton/app/routes/account_.login.tsx
 @@ -1,17 +1,133 @@
 +import {Form, Link, useActionData, data, redirect} from 'react-router';
  import type {Route} from './+types/account_.login';
- 
+
 -export async function loader({request, context}: Route.LoaderArgs) {
 -  const url = new URL(request.url);
 -  const acrValues = url.searchParams.get('acr_values') || undefined;
@@ -3477,7 +3484,7 @@ index e89c8e0a2..cf1415c9d 100644
 +type ActionResponse = {
 +  error: string | null;
 +};
- 
+
 -  return context.customerAccount.login({
 -    countryCode: context.storefront.i18n.country,
 -    acrValues,
@@ -3611,17 +3618,17 @@ index e89c8e0a2..cf1415c9d 100644
 +    }
 +  }
 +` as const;
-~~~
+```
 
 </details>
 
-### Step 20: app/routes/account_.logout.tsx
+### Step 20: app/routes/account\_.logout.tsx
 
 Implement session-based logout
 
-#### File: [app/routes/account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/account_.logout.tsx)
+#### File: [app/routes/account\_.logout.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/account_.logout.tsx)
 
-~~~diff
+```diff
 index 5e67cc857..d88e717d5 100644
 --- a/templates/skeleton/app/routes/account_.logout.tsx
 +++ b/templates/skeleton/app/routes/account_.logout.tsx
@@ -3629,7 +3636,7 @@ index 5e67cc857..d88e717d5 100644
 -import {redirect} from 'react-router';
 +import {data, redirect} from 'react-router';
  import type {Route} from './+types/account_.logout';
- 
+
 -// if we don't implement this, /account/logout will get caught by account.$.tsx to do login
 +export const meta: Route.MetaFunction = () => {
 +  return [{title: 'Logout'}];
@@ -3649,7 +3656,7 @@ index 5e67cc857..d88e717d5 100644
 +
    return redirect('/');
  }
- 
+
 -export async function action({context}: Route.ActionArgs) {
 -  return context.customerAccount.logout();
 -}
@@ -3657,7 +3664,7 @@ index 5e67cc857..d88e717d5 100644
 +  return null;
 +}
 \ No newline at end of file
-~~~
+```
 
 ### Step 21: env.d.ts
 
@@ -3665,12 +3672,12 @@ Add multipass secret environment variable type
 
 #### File: [env.d.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/env.d.ts)
 
-~~~diff
+```diff
 index 4b5e361ec..7dcc69f2e 100644
 --- a/templates/skeleton/env.d.ts
 +++ b/templates/skeleton/env.d.ts
 @@ -5,3 +5,9 @@
- 
+
  // Enhance TypeScript's built-in typings.
  import '@total-typescript/ts-reset';
 +
@@ -3679,7 +3686,7 @@ index 4b5e361ec..7dcc69f2e 100644
 +    PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET?: string;
 +  }
 +}
-~~~
+```
 
 ### Step 22: app/routes/cart.tsx
 
@@ -3687,26 +3694,26 @@ Add multipass URL generation for checkout
 
 #### File: [app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/cart.tsx)
 
-~~~diff
+```diff
 index 983f6505d..a09b66d5f 100644
 --- a/templates/skeleton/app/routes/cart.tsx
 +++ b/templates/skeleton/app/routes/cart.tsx
 @@ -11,9 +11,13 @@ export const meta: Route.MetaFunction = () => {
  export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
- 
+
  export async function action({request, context}: Route.ActionArgs) {
 -  const {cart} = context;
 +  // @description Get session for multipass customer token persistence
 +  const {session, cart} = context;
- 
+
 -  const formData = await request.formData();
 +  const [formData, customerAccessToken] = await Promise.all([
 +    request.formData(),
 +    session.get('customerAccessToken'),
 +  ]);
- 
+
    const {action, inputs} = CartForm.getFormInput(formData);
- 
+
 @@ -66,6 +70,8 @@ export async function action({request, context}: Route.ActionArgs) {
      case CartForm.ACTIONS.BuyerIdentityUpdate: {
        result = await cart.updateBuyerIdentity({
@@ -3716,7 +3723,7 @@ index 983f6505d..a09b66d5f 100644
        });
        break;
      }
-~~~
+```
 
 ### Step 23: package.json
 
@@ -3724,7 +3731,7 @@ Add crypto dependencies for multipass token generation
 
 #### File: [package.json](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/package.json)
 
-~~~diff
+```diff
 index 0bb332639..da854ab73 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
@@ -3744,7 +3751,7 @@ index 0bb332639..da854ab73 100644
      "@types/eslint": "^9.6.1",
      "@types/react": "catalog:",
      "@types/react-dom": "catalog:",
-~~~
+```
 
 ### Step 24: vite.config.ts
 
@@ -3752,7 +3759,7 @@ Configure Vite for crypto polyfills
 
 #### File: [vite.config.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/vite.config.ts)
 
-~~~diff
+```diff
 index d19b14dc4..550d63a11 100644
 --- a/templates/skeleton/vite.config.ts
 +++ b/templates/skeleton/vite.config.ts
@@ -3764,11 +3771,11 @@ index d19b14dc4..550d63a11 100644
        ],
      },
    },
-~~~
+```
 
 ## Deleted Files
 
-- [templates/skeleton/app/routes/account_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/account_.authorize.tsx)
+- [templates/skeleton/app/routes/account\_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/account_.authorize.tsx)
 
 ## Next steps
 

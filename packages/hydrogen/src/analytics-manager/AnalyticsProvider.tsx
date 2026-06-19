@@ -44,6 +44,7 @@ import {
 import type {Storefront} from '../storefront';
 import {PerfKit} from './PerfKit';
 import {errorOnce, warnOnce} from '../utils/warning';
+import type {JSX} from 'react';
 
 export type ShopAnalytics = {
   /** The shop ID. */

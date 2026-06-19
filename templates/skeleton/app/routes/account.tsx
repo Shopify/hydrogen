@@ -7,13 +7,14 @@ import {
 } from 'react-router';
 import type {Route} from './+types/account';
 import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
+import {hydrogenContext} from '@shopify/hydrogen';
 
 export function shouldRevalidate() {
   return true;
 }
 
 export async function loader({context}: Route.LoaderArgs) {
-  const {customerAccount} = context;
+  const customerAccount = context.get(hydrogenContext.customerAccount);
   const {data, errors} = await customerAccount.query(CUSTOMER_DETAILS_QUERY, {
     variables: {
       language: customerAccount.i18n.language,

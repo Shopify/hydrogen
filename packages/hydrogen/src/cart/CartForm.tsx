@@ -12,6 +12,7 @@ import type {
   CartSelectableAddressInput,
   CartSelectableAddressUpdateInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import type {JSX} from 'react';
 
 type OtherFormData = {
   [key: string]: unknown;

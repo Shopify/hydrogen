@@ -1,12 +1,16 @@
 import {Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/blogs.$blogHandle._index';
-import {Image, getPaginationVariables} from '@shopify/hydrogen';
+import {
+  hydrogenContext,
+  Image,
+  getPaginationVariables,
+} from '@shopify/hydrogen';
 import type {ArticleItemFragment} from 'storefrontapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
-export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.blog.title ?? ''} blog`}];
+export const meta: Route.MetaFunction = ({loaderData}) => {
+  return [{title: `Hydrogen | ${loaderData?.blog.title ?? ''} blog`}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -23,7 +27,12 @@ export async function loader(args: Route.LoaderArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
+async function loadCriticalData({
+  context,
+  request,
+  url,
+  params,
+}: Route.LoaderArgs) {
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 4,
   });
@@ -33,7 +42,7 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
   }
 
   const [{blog}] = await Promise.all([
-    context.storefront.query(BLOGS_QUERY, {
+    context.get(hydrogenContext.storefront).query(BLOGS_QUERY, {
       variables: {
         blogHandle: params.blogHandle,
         ...paginationVariables,
@@ -46,7 +55,7 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
     throw new Response('Not found', {status: 404});
   }
 
-  redirectIfHandleIsLocalized(request, {handle: params.blogHandle, data: blog});
+  redirectIfHandleIsLocalized(url, {handle: params.blogHandle, data: blog});
 
   return {blog};
 }

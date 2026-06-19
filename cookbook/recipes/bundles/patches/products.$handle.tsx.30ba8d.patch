@@ -8,7 +8,7 @@ index 99730d418..66298e8b9 100644
 +import type {ProductVariantComponent} from '@shopify/hydrogen/storefront-api-types';
 +import {BundledVariants} from '~/components/BundledVariants';
  
- export const meta: Route.MetaFunction = ({data}) => {
+ export const meta: Route.MetaFunction = ({loaderData}) => {
    return [
 @@ -97,9 +99,12 @@ export default function Product() {
  

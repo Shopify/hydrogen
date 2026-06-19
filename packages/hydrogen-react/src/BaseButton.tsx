@@ -1,4 +1,5 @@
 import {ReactNode, Ref, useCallback} from 'react';
+import type {JSX} from 'react';
 
 export interface CustomBaseButtonProps<AsType> {
   /** Provide a React element or component to render as the underlying button. Note: for accessibility compliance, almost always you should use a `button` element, or a component that renders an underlying button. */

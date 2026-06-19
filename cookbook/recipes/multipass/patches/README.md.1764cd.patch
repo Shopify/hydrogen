@@ -5,16 +5,16 @@ index c584e5370..e8e03b96c 100644
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Skeleton with Multipass
  
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify's full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with **Multipass authentication** for seamless checkout experiences.
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with **Multipass authentication** for seamless checkout experiences.
  
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
+ [Get familiar with React Router](https://reactrouter.com/)
 +[Learn about Multipass](https://shopify.dev/docs/api/multipass)
  
  ## What's included
  
--- Remix
+-- React Router
 +### Core Hydrogen Stack
 +- React Router
  - Hydrogen
@@ -34,7 +34,7 @@ index c584e5370..e8e03b96c 100644
  
  **Requirements:**
  
- - Node.js version 18.0.0 or higher
+ - Node.js version 22.22.0 or higher
 +- Shopify store (Shopify Plus for Multipass features)
  
  ```bash
@@ -129,4 +129,4 @@ index c584e5370..e8e03b96c 100644
 +- [Hydrogen Documentation](https://shopify.dev/custom-storefronts/hydrogen)
 +- [Multipass Documentation](https://shopify.dev/docs/api/multipass)
 +- [Storefront API Authentication](https://shopify.dev/docs/api/storefront/authentication)
-+- [Remix Documentation](https://remix.run/docs)
++- [React Router Documentation](https://reactrouter.com/)

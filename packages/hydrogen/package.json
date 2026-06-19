@@ -7,7 +7,7 @@
   "type": "module",
   "version": "2026.4.4",
   "license": "MIT",
-  "main": "dist/index.cjs",
+  "main": "dist/production/index.js",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
@@ -34,7 +34,6 @@
         "development": "./dist/development/index.js",
         "default": "./dist/production/index.js"
       },
-      "require": "./dist/index.cjs",
       "import": {
         "development": "./dist/development/index.js",
         "default": "./dist/production/index.js"
@@ -94,15 +93,16 @@
     "@shopify/graphql-client": "1.4.1"
   },
   "devDependencies": {
-    "react-router": "7.16.0",
-    "@react-router/dev": "7.16.0",
+    "react-router": "8.0.1",
+    "@react-router/dev": "8.0.1",
     "@shopify/generate-docs": "catalog:",
     "@shopify/hydrogen-codegen": "workspace:*",
     "@testing-library/jest-dom": "^6.6.3",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@testing-library/react": "^14.0.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
     "@types/source-map-support": "^0.5.10",
     "formdata-polyfill": "^4.0.10",
     "graphql": "^16.12.0",
@@ -113,10 +113,10 @@
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
-    "react-router": "~7.16.0",
-    "@react-router/dev": "~7.16.0",
-    "react": "^18.3.1 || ~19.0.3 || ~19.1.4 || ^19.2.3",
-    "vite": "^5.1.0 || ^6.2.1 || ^7.0.0 || ^8.0.0"
+    "react-router": "~8.0.1",
+    "@react-router/dev": "~8.0.1",
+    "react": "^19.2.7",
+    "vite": "^7.0.0 || ^8.0.0"
   },
   "peerDependenciesMeta": {
     "vite": {

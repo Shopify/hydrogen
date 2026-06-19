@@ -12,9 +12,9 @@ This Hydrogen project is based on React Router, not Remix. When working with doc
 
 ## Import Replacements
 
-When you see imports from Remix packages, replace them with their equivalent React Router v7 packages. Here are the common replacements:
+When you see imports from Remix packages, replace them with their equivalent React Router packages. Here are the common replacements:
 
-| Remix v2 Package | React Router v7 Package |
+| Remix v2 Package | React Router Package |
 |------------------|-------------------------|
 | `@remix-run/react` | `react-router` |
 | `@remix-run/dev` | `@react-router/dev` |

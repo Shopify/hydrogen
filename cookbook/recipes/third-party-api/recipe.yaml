@@ -53,15 +53,16 @@ ingredients:
 deletedFiles: []
 steps:
   - type: PATCH
-    step: "1"
+    step: '1'
     name: Document third-party API integration
-    description: Add documentation explaining how to integrate external GraphQL APIs
+    description:
+      Add documentation explaining how to integrate external GraphQL APIs
       with Oxygen caching.
     diffs:
       - file: README.md
         patchFile: README.md.1764cd.patch
   - type: NEW_FILE
-    step: "2"
+    step: '2'
     name: Create the third-party API client
     description: |
       Create a new GraphQL client factory that integrates with Oxygen's caching system.
@@ -69,7 +70,7 @@ steps:
     ingredients:
       - path: templates/skeleton/app/lib/createRickAndMortyClient.server.ts
   - type: PATCH
-    step: "3"
+    step: '3'
     name: Add the client to Hydrogen context
     description: |
       Import the Rick and Morty client and add it to the Hydrogen context so it's available
@@ -78,7 +79,7 @@ steps:
       - file: app/lib/context.ts
         patchFile: context.ts.c15041.patch
   - type: PATCH
-    step: "4"
+    step: '4'
     name: Query and display third-party data
     description: |
       Update the homepage to fetch data from the third-party API and display it alongside
@@ -86,13 +87,6 @@ steps:
     diffs:
       - file: app/routes/_index.tsx
         patchFile: _index.tsx.8ba83c.patch
-  - type: PATCH
-    step: "4"
-    name: package.json
-    description: null
-    diffs:
-      - file: package.json
-        patchFile: package.json.8e0ff5.patch
 nextSteps: |
   After applying this recipe, you can:
 

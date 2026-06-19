@@ -74,6 +74,20 @@ type ChangeLog = {
   version: string;
 };
 
+const reactRouterDomPackageName = 'react-router-dom';
+const reactRouterDomRemovalMajorVersion = 8;
+const reactRouterPackagesWithoutDom = [
+  'react-router',
+  '@react-router/dev',
+  '@react-router/fs-routes',
+] as const;
+const reactRouterPackagesWithDom = [
+  'react-router',
+  reactRouterDomPackageName,
+  '@react-router/dev',
+  '@react-router/fs-routes',
+] as const;
+
 export type CumulativeRelease = {
   features: Array<ReleaseItem>;
   fixes: Array<ReleaseItem>;
@@ -1172,21 +1186,22 @@ function appendReactRouterDependencies({
 }) {
   const command: string[] = [];
   const targetVersion = getAbsoluteVersion(selectedReactRouter[1]);
-
-  // Standard React Router packages that should be kept in sync
-  const reactRouterPackages = [
-    'react-router',
-    'react-router-dom',
-    '@react-router/dev',
-    '@react-router/fs-routes',
-  ];
+  const packages = shouldInstallReactRouterDom(targetVersion)
+    ? reactRouterPackagesWithDom
+    : reactRouterPackagesWithoutDom;
 
   // Always install/upgrade all React Router packages to ensure consistency
-  for (const packageName of reactRouterPackages) {
+  for (const packageName of packages) {
     command.push(`${packageName}@${targetVersion}`);
   }
 
   return command;
+}
+
+function shouldInstallReactRouterDom(targetVersion: string) {
+  if (targetVersion === 'next') return false;
+
+  return semver.major(targetVersion) < reactRouterDomRemovalMajorVersion;
 }
 
 /**

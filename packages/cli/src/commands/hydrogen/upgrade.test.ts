@@ -169,6 +169,29 @@ const REACT_ROUTER_RELEASE = {
   date: '2025-04-24',
 } satisfies Release;
 
+const REACT_ROUTER_8_RELEASE = {
+  title: 'React Router 8 support',
+  version: '2026.5.0',
+  hash: '-',
+  commit: 'https://github.com/Shopify/hydrogen/pull/0000',
+  pr: 'https://github.com/Shopify/hydrogen/pull/0000',
+  dependencies: {
+    '@shopify/hydrogen': '2026.5.0',
+    react: '19.2.7',
+    'react-dom': '19.2.7',
+    'react-router': '8.0.1',
+  },
+  devDependencies: {
+    '@react-router/dev': '8.0.1',
+    '@react-router/fs-routes': '8.0.1',
+  },
+  removeDependencies: ['react-router-dom'],
+  dependenciesMeta: {},
+  fixes: [],
+  features: [],
+  date: '2026-06-17',
+} satisfies Release;
+
 /**
  * Creates a temporary directory in OS temp (not in repo)
  */
@@ -1843,6 +1866,34 @@ describe('upgrade', async () => {
 
       // Should install ALL React Router packages, not just upgrade the existing one
       expect(args).toEqual(result);
+    });
+
+    it('does not install react-router-dom when upgrading to React Router 8', async () => {
+      const currentDependencies = {
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON_WITH_REACT_ROUTER.dependencies,
+        react: '18.3.1',
+        'react-dom': '18.3.1',
+        'react-router': '7.16.0',
+        'react-router-dom': '7.16.0',
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON_WITH_REACT_ROUTER.devDependencies,
+        '@react-router/dev': '7.16.0',
+        '@react-router/fs-routes': '7.16.0',
+      };
+
+      const args = buildUpgradeCommandArgs({
+        selectedRelease: REACT_ROUTER_8_RELEASE,
+        currentDependencies,
+      });
+
+      expect(args).toEqual([
+        '@shopify/hydrogen@2026.5.0',
+        'react@19.2.7',
+        'react-dom@19.2.7',
+        'react-router@8.0.1',
+        '@react-router/dev@8.0.1',
+        '@react-router/fs-routes@8.0.1',
+      ]);
+      expect(args).not.toContain('react-router-dom@8.0.1');
     });
 
     it('does not install an optional dependency that was not installed', async () => {

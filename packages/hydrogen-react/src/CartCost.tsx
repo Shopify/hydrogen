@@ -1,5 +1,6 @@
 import {Money, type MoneyPropsBase} from './Money.js';
 import {useCart} from './CartProvider.js';
+import type {JSX} from 'react';
 
 interface CartCostPropsBase {
   /** A string type that defines the type of cost needed. Valid values: `total`, `subtotal`, `tax`, or `duty`. */

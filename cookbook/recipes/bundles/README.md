@@ -7,12 +7,12 @@ when they're viewing product and collection pages.
 In this recipe you'll make the following changes:
 
 1. Set up the Shopify Bundles app in your Shopify admin and create a new
-product bundle.
+   product bundle.
 2. Update the GraphQL fragments to query for bundles to identify bundled
-products.
+   products.
 3. Update the product and collection templates to display badges on product
-listings, update the copy for the cart buttons, and display bundle-specific
-information on product and collection pages.
+   listings, update the copy for the cart buttons, and display bundle-specific
+   information on product and collection pages.
 4. Update the cart line item template to display the bundle badge as needed.
 
 ## Requirements
@@ -24,9 +24,9 @@ In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/sho
 
 _New files added to the template by this recipe._
 
-| File | Description |
-| --- | --- |
-| [app/components/BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx) | A badge displayed on bundle product listings. |
+| File                                                                                                                                                                                                               | Description                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| [app/components/BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)         | A badge displayed on bundle product listings.                                        |
 | [app/components/BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx) | A component that wraps the variants of a bundle product in a single product listing. |
 
 ## Steps
@@ -47,7 +47,7 @@ Create a new BundleBadge component to be displayed on bundle product listings.
 
 <details>
 
-~~~tsx
+```tsx
 export function BundleBadge() {
   return (
     <div
@@ -65,8 +65,7 @@ export function BundleBadge() {
     </div>
   );
 }
-
-~~~
+```
 
 </details>
 
@@ -78,7 +77,7 @@ Create a new `BundledVariants` component that wraps the variants of a bundle pro
 
 <details>
 
-~~~tsx
+```tsx
 import {Link} from 'react-router';
 import {Image} from '@shopify/hydrogen';
 import type {
@@ -142,8 +141,7 @@ export function BundledVariants({
     </div>
   );
 }
-
-~~~
+```
 
 </details>
 
@@ -151,9 +149,9 @@ export function BundledVariants({
 
 Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
 
-#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/\_index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/_index.tsx)
 
-~~~diff
+```diff
 index 237edc911..ebb71b7e2 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
@@ -168,19 +166,19 @@ index 237edc911..ebb71b7e2 100644
      }
      featuredImage {
        id
-~~~
+```
 
 ### Step 5: Show bundled products on the product page
 
 1. Add the `requiresComponents` field to the `Product` fragment, which is
-used to identify bundled products.
+   used to identify bundled products.
 2. Pass the `isBundle` flag to the `ProductImage` component.
 
 #### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
-~~~diff
+```diff
 index 99730d418..66298e8b9 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
@@ -190,13 +188,13 @@ index 99730d418..66298e8b9 100644
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 +import type {ProductVariantComponent} from '@shopify/hydrogen/storefront-api-types';
 +import {BundledVariants} from '~/components/BundledVariants';
- 
- export const meta: Route.MetaFunction = ({data}) => {
+
+ export const meta: Route.MetaFunction = ({loaderData}) => {
    return [
 @@ -97,9 +99,12 @@ export default function Product() {
- 
+
    const {title, descriptionHtml} = product;
- 
+
 +  const isBundle = Boolean(product.isBundle?.requiresComponents);
 +  const bundledVariants = isBundle ? product.isBundle?.components.nodes : null;
 +
@@ -258,7 +256,7 @@ index 99730d418..66298e8b9 100644
 +    }
    }
  ` as const;
- 
+
 @@ -209,6 +245,25 @@ const PRODUCT_FRAGMENT = `#graphql
      adjacentVariants (selectedOptions: $selectedOptions) {
        ...ProductVariant
@@ -285,7 +283,7 @@ index 99730d418..66298e8b9 100644
      seo {
        description
        title
-~~~
+```
 
 </details>
 
@@ -295,7 +293,7 @@ Like the previous step, use the `requiresComponents` field to detect if the prod
 
 #### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/collections.$handle.tsx)
 
-~~~diff
+```diff
 index c416c2b3d..773ba8b6c 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
@@ -311,13 +309,13 @@ index c416c2b3d..773ba8b6c 100644
 +    }
    }
  ` as const;
- 
+
 -// NOTE: https://shopify.dev/docs/api/storefront/2022-04/objects/collection
 +// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/collection
  const COLLECTION_QUERY = `#graphql
    ${PRODUCT_ITEM_FRAGMENT}
    query Collection(
-~~~
+```
 
 ### Step 7: Identify bundles in the cart
 
@@ -327,7 +325,7 @@ Use the `requiresComponents` field to determine if a cart line item is a bundle.
 
 <details>
 
-~~~diff
+```diff
 index f6b6b2a36..42534be7e 100644
 --- a/templates/skeleton/app/lib/fragments.ts
 +++ b/templates/skeleton/app/lib/fragments.ts
@@ -380,7 +378,7 @@ index f6b6b2a36..42534be7e 100644
        }
      }
      lineComponents {
-~~~
+```
 
 </details>
 
@@ -390,7 +388,7 @@ If a product is a bundle, show the `BundleBadge` component in the cart line item
 
 #### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/CartLineItem.tsx)
 
-~~~diff
+```diff
 index 63a0ecd9d..22b2d90fe 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
@@ -399,9 +397,9 @@ index 63a0ecd9d..22b2d90fe 100644
    CartLineFragment,
  } from 'storefrontapi.generated';
 +import {BundleBadge} from '~/components/BundleBadge';
- 
+
  export type CartLine = OptimisticCartLine<CartApiQueryFragment>;
- 
+
 @@ -31,6 +32,7 @@ export function CartLineItem({
    const {product, title, image, selectedOptions} = merchandise;
    const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
@@ -409,11 +407,11 @@ index 63a0ecd9d..22b2d90fe 100644
 +  const isBundle = Boolean(line.merchandise.requiresComponents);
    const lineItemChildren = childrenMap[id];
    const childrenLabelId = `cart-line-children-${id}`;
- 
+
 @@ -48,8 +50,9 @@ export function CartLineItem({
            />
          )}
- 
+
 -        <div>
 +        <div style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
            <Link
@@ -433,7 +431,7 @@ index 63a0ecd9d..22b2d90fe 100644
            </Link>
            <ProductPrice price={line?.cost?.totalAmount} />
            <ul>
-~~~
+```
 
 ### Step 9: Update the cart button text for bundles
 
@@ -441,7 +439,7 @@ If a product is a bundle, update the text of the product button.
 
 #### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/ProductForm.tsx)
 
-~~~diff
+```diff
 index 47c8f3056..b9406e814 100644
 --- a/templates/skeleton/app/components/ProductForm.tsx
 +++ b/templates/skeleton/app/components/ProductForm.tsx
@@ -470,7 +468,7 @@ index 47c8f3056..b9406e814 100644
        </AddToCartButton>
      </div>
    );
-~~~
+```
 
 ### Step 10: Show bundle badges on product images
 
@@ -478,7 +476,7 @@ If a product is a bundle, show the `BundleBadge` component in the `ProductImage`
 
 #### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/ProductImage.tsx)
 
-~~~diff
+```diff
 index 5f3ac1cce..c16b947b0 100644
 --- a/templates/skeleton/app/components/ProductImage.tsx
 +++ b/templates/skeleton/app/components/ProductImage.tsx
@@ -486,7 +484,7 @@ index 5f3ac1cce..c16b947b0 100644
  import type {ProductVariantFragment} from 'storefrontapi.generated';
  import {Image} from '@shopify/hydrogen';
 +import {BundleBadge} from './BundleBadge';
- 
+
  export function ProductImage({
    image,
 +  isBundle = false,
@@ -504,55 +502,7 @@ index 5f3ac1cce..c16b947b0 100644
      </div>
    );
  }
-~~~
-
-### Step 10: package.json
-
-
-
-#### File: [package.json](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/package.json)
-
-~~~diff
-index 0bb332639..651bbfffa 100644
---- a/templates/skeleton/package.json
-+++ b/templates/skeleton/package.json
-@@ -14,12 +14,12 @@
-   },
-   "prettier": "@shopify/prettier-config",
-   "dependencies": {
--    "@shopify/hydrogen": "workspace:*",
-+    "@shopify/hydrogen": "2026.4.0",
-     "graphql": "^16.10.0",
-     "graphql-tag": "^2.12.6",
-     "isbot": "^5.1.22",
--    "react": "catalog:",
--    "react-dom": "catalog:",
-+    "react": "^18.3.1",
-+    "react-dom": "^18.3.1",
-     "react-router": "7.14.0",
-     "react-router-dom": "7.14.0"
-   },
-@@ -31,14 +31,14 @@
-     "@react-router/dev": "7.14.0",
-     "@react-router/fs-routes": "7.14.0",
-     "@shopify/cli": "3.93.2",
--    "@shopify/hydrogen-codegen": "workspace:*",
--    "@shopify/mini-oxygen": "workspace:*",
-+    "@shopify/hydrogen-codegen": "0.3.3",
-+    "@shopify/mini-oxygen": "4.0.2",
-     "@shopify/oxygen-workers-types": "^4.1.6",
--    "@shopify/prettier-config": "catalog:",
-+    "@shopify/prettier-config": "^1.1.2",
-     "@total-typescript/ts-reset": "^0.6.1",
-     "@types/eslint": "^9.6.1",
--    "@types/react": "catalog:",
--    "@types/react-dom": "catalog:",
-+    "@types/react": "^18.3.28",
-+    "@types/react-dom": "^18.3.7",
-     "@typescript-eslint/eslint-plugin": "^8.21.0",
-     "@typescript-eslint/parser": "^8.21.0",
-     "eslint": "^9.18.0",
-~~~
+```
 
 ### Step 11: Show bundle badges on product cards
 
@@ -562,7 +512,7 @@ If a product is a bundle, show the `BundleBadge` component in the `ProductItem` 
 
 <details>
 
-~~~diff
+```diff
 index 3b0f69133..1b6cb130a 100644
 --- a/templates/skeleton/app/components/ProductItem.tsx
 +++ b/templates/skeleton/app/components/ProductItem.tsx
@@ -577,7 +527,7 @@ index 3b0f69133..1b6cb130a 100644
 +import type {ProductItemFragment} from 'storefrontapi.generated';
  import {useVariantUrl} from '~/lib/variants';
 +import {BundleBadge} from '~/components/BundleBadge';
- 
+
  export function ProductItem({
    product,
    loading,
@@ -632,7 +582,7 @@ index 3b0f69133..1b6cb130a 100644
      </Link>
    );
  }
-~~~
+```
 
 </details>
 
@@ -642,14 +592,14 @@ Make sure the bundle badge is positioned relative to the product image.
 
 #### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/styles/app.css)
 
-~~~diff
+```diff
 index 3be08d316..51b749115 100644
 --- a/templates/skeleton/app/styles/app.css
 +++ b/templates/skeleton/app/styles/app.css
 @@ -506,6 +506,10 @@ button.reset:hover:not(:has(> *)) {
    margin-top: 0;
  }
- 
+
 +.product-image {
 +  position: relative;
 +}
@@ -657,7 +607,7 @@ index 3be08d316..51b749115 100644
  .product-image img {
    height: auto;
    width: 100%;
-~~~
+```
 
 ## Next steps
 

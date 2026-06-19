@@ -1,4 +1,4 @@
-import {useState, useRef, useEffect} from 'react';
+import {useState, useRef, useEffect, type RefObject} from 'react';
 import {type ServerEvents} from '../lib/useDebugNetworkServer.js';
 import {Link} from 'react-router';
 import {IconClose} from './IconClose.jsx';
@@ -142,7 +142,7 @@ function TabButtonsBar({children}: {children: React.ReactNode}) {
   const scrollBarRef = useRef<HTMLDivElement>(null);
 
   useResizeObserver({
-    ref: scrollBarRef,
+    ref: scrollBarRef as RefObject<HTMLDivElement>,
     onResize: () => {
       if (scrollBarRef.current) {
         setFade(scrollBarRef.current);

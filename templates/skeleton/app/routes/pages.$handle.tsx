@@ -1,9 +1,10 @@
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/pages.$handle';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {hydrogenContext} from '@shopify/hydrogen';
 
-export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.page.title ?? ''}`}];
+export const meta: Route.MetaFunction = ({loaderData}) => {
+  return [{title: `Hydrogen | ${loaderData?.page.title ?? ''}`}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -20,13 +21,13 @@ export async function loader(args: Route.LoaderArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
+async function loadCriticalData({context, url, params}: Route.LoaderArgs) {
   if (!params.handle) {
     throw new Error('Missing page handle');
   }
 
   const [{page}] = await Promise.all([
-    context.storefront.query(PAGE_QUERY, {
+    context.get(hydrogenContext.storefront).query(PAGE_QUERY, {
       variables: {
         handle: params.handle,
       },
@@ -38,7 +39,7 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
     throw new Response('Not Found', {status: 404});
   }
 
-  redirectIfHandleIsLocalized(request, {handle: params.handle, data: page});
+  redirectIfHandleIsLocalized(url, {handle: params.handle, data: page});
 
   return {
     page,

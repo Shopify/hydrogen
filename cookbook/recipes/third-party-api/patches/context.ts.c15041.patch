@@ -28,8 +28,8 @@ index 692d5ae17..0635384ad 100644
 -}
 -
  /**
-- * Creates Hydrogen context for React Router 7.9.x
-+ * Creates Hydrogen context for React Router 7.9.x with third-party API support
+- * Creates the Hydrogen context used by React Router loaders and actions.
++ * Creates the Hydrogen context used by React Router loaders and actions with third-party API support.
   * Returns HydrogenRouterContextProvider with hybrid access patterns
   * */
  export async function createHydrogenRouterContext(

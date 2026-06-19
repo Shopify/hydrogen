@@ -17,12 +17,13 @@ Handle combined listings on product pages and in search results.
 # User Intent Recognition
 
 <user_queries>
+
 - How can I show combined listings on product pages and search results using Hydrogen?
 - How can I display the featured image of the combined listing parent product instead of the variant image?
 - How can I redirect to the first variant of a combined listing when the handle is requested?
 - How can I filter out combined listings from the product list when using Shopify headless?
 - How can I show the price range for combined listings instead of the variant price?
-</user_queries>
+  </user_queries>
 
 # Troubleshooting
 
@@ -52,7 +53,7 @@ In this recipe, you'll make the following changes:
 ## Notes
 
 > [!NOTE]
-> This recipe is compatible with React Router 7.9.x and uses consolidated imports from 'react-router' instead of separate '@shopify/remix-oxygen' and '@remix-run/react' packages.
+> This recipe is compatible with React Router framework mode and uses consolidated imports from 'react-router' instead of separate '@shopify/remix-oxygen' and '@remix-run/react' packages.
 
 ## Requirements
 
@@ -97,7 +98,7 @@ Create a new `combined-listings.ts` file that contains utilities and settings fo
 
 #### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
-~~~ts
+```ts
 // Edit these values to customize combined listings' behavior
 export const combinedListingsSettings = {
   // If true, loading the product page will redirect to the first variant
@@ -133,8 +134,7 @@ export function isCombinedListing(product: unknown) {
     product.tags.includes(combinedListingsSettings.combinedListingTag)
   );
 }
-
-~~~
+```
 
 ### Step 4: Hide the cart button for combined listing parent products
 
@@ -143,7 +143,7 @@ export function isCombinedListing(product: unknown) {
 
 #### File: /app/components/ProductForm.tsx
 
-~~~diff
+```diff
 @@ -11,9 +11,11 @@ import type {ProductFragment} from 'storefrontapi.generated';
  export function ProductForm({
    productOptions,
@@ -235,7 +235,7 @@ export function isCombinedListing(product: unknown) {
      </div>
    );
  }
-~~~
+```
 
 ### Step 5: Support product and variant images
 
@@ -243,7 +243,7 @@ Update the `ProductImage` component to support images from both product variants
 
 #### File: /app/components/ProductImage.tsx
 
-~~~diff
+```diff
 @@ -1,10 +1,13 @@
 -import type {ProductVariantFragment} from 'storefrontapi.generated';
 +import type {
@@ -251,7 +251,7 @@ Update the `ProductImage` component to support images from both product variants
 +  ProductFragment,
 +} from 'storefrontapi.generated';
  import {Image} from '@shopify/hydrogen';
- 
+
  export function ProductImage({
    image,
  }: {
@@ -260,7 +260,7 @@ Update the `ProductImage` component to support images from both product variants
  }) {
    if (!image) {
      return <div className="product-image" />;
-~~~
+```
 
 ### Step 6: Show a range of prices for combined listings in ProductItem
 
@@ -268,13 +268,13 @@ Update `ProductItem.tsx` to show a range of prices for the combined listing pare
 
 #### File: /app/components/ProductItem.tsx
 
-~~~diff
+```diff
 @@ -6,6 +6,7 @@ import type {
    RecommendedProductFragment,
  } from 'storefrontapi.generated';
  import {useVariantUrl} from '~/lib/variants';
 +import {isCombinedListing} from '../lib/combined-listings';
- 
+
  export function ProductItem({
    product,
 @@ -36,9 +37,17 @@ export function ProductItem({
@@ -298,7 +298,7 @@ Update `ProductItem.tsx` to show a range of prices for the combined listing pare
      </Link>
    );
  }
-~~~
+```
 
 ### Step 7: (Optional) Redirect to the first variant
 
@@ -306,12 +306,12 @@ If you want to redirect automatically to the first variant of a combined listing
 
 #### File: /app/lib/redirect.ts
 
-~~~diff
+```diff
 @@ -1,4 +1,6 @@
  import {redirect} from 'react-router';
 +import type {ProductFragment} from 'storefrontapi.generated';
 +import {isCombinedListing} from './combined-listings';
- 
+
  export function redirectIfHandleIsLocalized(
    request: Request,
 @@ -21,3 +23,23 @@ export function redirectIfHandleIsLocalized(
@@ -338,7 +338,7 @@ If you want to redirect automatically to the first variant of a combined listing
 +    throw redirect(url.toString());
 +  }
 +}
-~~~
+```
 
 ### Step 8: Filter combined listings from the all products page
 
@@ -346,7 +346,7 @@ Update the "all products" collection page to filter out combined listing parent 
 
 #### File: /app/routes/collections.all.tsx
 
-~~~diff
+```diff
 @@ -4,6 +4,10 @@ import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
  import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  import {ProductItem} from '~/components/ProductItem';
@@ -355,11 +355,11 @@ Update the "all products" collection page to filter out combined listing parent 
 +  combinedListingsSettings,
 +  maybeFilterOutCombinedListingsQuery,
 +} from '../lib/combined-listings';
- 
+
  export const meta: Route.MetaFunction = () => {
    return [{title: `Hydrogen | Products`}];
 @@ -31,7 +35,12 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
- 
+
    const [{products}] = await Promise.all([
      storefront.query(CATALOG_QUERY, {
 -      variables: {...paginationVariables},
@@ -391,22 +391,22 @@ Update the "all products" collection page to filter out combined listing parent 
        nodes {
          ...CollectionItem
        }
-~~~
+```
 
 ### Step 9: Filter recommended products
 
 1. Add the `tags` property to the items returned by the product query.
 2. (Optional) Add the filtering query to the product query to exclude combined listings.
 
-#### File: /app/routes/_index.tsx
+#### File: /app/routes/\_index.tsx
 
-~~~diff
+```diff
 @@ -8,6 +8,7 @@ import type {
  } from 'storefrontapi.generated';
  import {ProductItem} from '~/components/ProductItem';
  import {MockShopNotice} from '~/components/MockShopNotice';
 +import {maybeFilterOutCombinedListingsQuery} from '~/lib/combined-listings';
- 
+
  export const meta: Route.MetaFunction = () => {
    return [{title: 'Hydrogen | Home'}];
 @@ -46,7 +47,11 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
@@ -462,7 +462,7 @@ Update the "all products" collection page to filter out combined listing parent 
        nodes {
          ...RecommendedProduct
        }
-~~~
+```
 
 ### Step 10: (Optional) Filter out combined listings from collections pages
 
@@ -470,7 +470,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
 
 #### File: /app/routes/collections.$handle.tsx
 
-~~~diff
+```diff
 @@ -5,6 +5,10 @@ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
  import {ProductItem} from '~/components/ProductItem';
@@ -479,13 +479,13 @@ Since it's not possible to directly apply query filters when retrieving collecti
 +  combinedListingsSettings,
 +  isCombinedListing,
 +} from '~/lib/combined-listings';
- 
- export const meta: Route.MetaFunction = ({data}) => {
-   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+
+ export const meta: Route.MetaFunction = ({loaderData}) => {
+   return [{title: `Hydrogen | ${loaderData?.collection.title ?? ''} Collection`}];
 @@ -68,12 +72,25 @@ function loadDeferredData({context}: Route.LoaderArgs) {
  export default function Collection() {
    const {collection} = useLoaderData<typeof loader>();
- 
+
 +  // Manually filter out combined listings from the collection products, because filtering
 +  // would not work here.
 +  const filteredCollectionProducts = {
@@ -526,52 +526,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
        ) {
          nodes {
            ...ProductItem
-~~~
-
-### Step 10: package.json
-
-
-
-#### File: /package.json
-
-~~~diff
-@@ -14,12 +14,12 @@
-   },
-   "prettier": "@shopify/prettier-config",
-   "dependencies": {
--    "@shopify/hydrogen": "workspace:*",
-+    "@shopify/hydrogen": "2026.4.0",
-     "graphql": "^16.10.0",
-     "graphql-tag": "^2.12.6",
-     "isbot": "^5.1.22",
--    "react": "catalog:",
--    "react-dom": "catalog:",
-+    "react": "^18.3.1",
-+    "react-dom": "^18.3.1",
-     "react-router": "7.14.0",
-     "react-router-dom": "7.14.0"
-   },
-@@ -31,14 +31,14 @@
-     "@react-router/dev": "7.14.0",
-     "@react-router/fs-routes": "7.14.0",
-     "@shopify/cli": "3.93.2",
--    "@shopify/hydrogen-codegen": "workspace:*",
--    "@shopify/mini-oxygen": "workspace:*",
-+    "@shopify/hydrogen-codegen": "0.3.3",
-+    "@shopify/mini-oxygen": "4.0.2",
-     "@shopify/oxygen-workers-types": "^4.1.6",
--    "@shopify/prettier-config": "catalog:",
-+    "@shopify/prettier-config": "^1.1.2",
-     "@total-typescript/ts-reset": "^0.6.1",
-     "@types/eslint": "^9.6.1",
--    "@types/react": "catalog:",
--    "@types/react-dom": "catalog:",
-+    "@types/react": "^18.3.28",
-+    "@types/react-dom": "^18.3.7",
-     "@typescript-eslint/eslint-plugin": "^8.21.0",
-     "@typescript-eslint/parser": "^8.21.0",
-     "eslint": "^9.18.0",
-~~~
+```
 
 ### Step 11: Show price ranges on product pages
 
@@ -581,7 +536,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
 
 #### File: /app/routes/products.$handle.tsx
 
-~~~diff
+```diff
 @@ -11,7 +11,14 @@ import {
  import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
@@ -595,13 +550,13 @@ Since it's not possible to directly apply query filters when retrieving collecti
 +  isCombinedListing,
 +  combinedListingsSettings,
 +} from '../lib/combined-listings';
- 
- export const meta: Route.MetaFunction = ({data}) => {
+
+ export const meta: Route.MetaFunction = ({loaderData}) => {
    return [
-@@ -59,6 +66,10 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+@@ -59,6 +66,10 @@ async function loadCriticalData({context, params, request, url}: Route.LoaderArgs) {
    // The API handle might be localized, so redirect to the localized handle
-   redirectIfHandleIsLocalized(request, {handle, data: product});
- 
+   redirectIfHandleIsLocalized(url, {handle, data: product});
+
 +  if (combinedListingsSettings.redirectToFirstVariant) {
 +    redirectIfCombinedListing(request, product);
 +  }
@@ -610,35 +565,35 @@ Since it's not possible to directly apply query filters when retrieving collecti
      product,
    };
 @@ -78,6 +89,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
- 
+
  export default function Product() {
    const {product} = useLoaderData<typeof loader>();
 +  const combinedListing = isCombinedListing(product);
- 
+
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
 @@ -87,7 +99,9 @@ export default function Product() {
- 
+
    // Sets the search param to the selected variant without navigation
    // only when no search params are set in the url
 -  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
 +  useSelectedOptionInUrlParam(
 +    combinedListing ? [] : selectedVariant.selectedOptions,
 +  );
- 
+
    // Get the product options array
    const productOptions = getProductOptions({
 @@ -95,21 +109,41 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
- 
+
 -  const {title, descriptionHtml} = product;
 +  const {descriptionHtml, title} = product;
 +
 +  const productImage = combinedListing
 +    ? (product.featuredImage ?? selectedVariant?.image)
 +    : selectedVariant?.image;
- 
+
    return (
      <div className="product">
 -      <ProductImage image={selectedVariant?.image} />
@@ -700,7 +655,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
      options {
        name
        optionValues {
-~~~
+```
 
 ### Step 12: Style the price range display
 
@@ -708,11 +663,11 @@ Add a class to the product item to show a range of prices for combined listings.
 
 #### File: /app/styles/app.css
 
-~~~diff
+```diff
 @@ -489,6 +489,11 @@ button.reset:hover:not(:has(> *)) {
    width: 100%;
  }
- 
+
 +.product-item .combined-listing-price {
 +  display: flex;
 +  grid-gap: 0.5rem;
@@ -721,6 +676,6 @@ Add a class to the product item to show a range of prices for combined listings.
  /*
  * --------------------------------------------------
  * routes/products.$handle.tsx
-~~~
+```
 
 </recipe_implementation>

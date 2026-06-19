@@ -1,5 +1,6 @@
 import {redirect} from 'react-router';
 import type {Route} from './+types/discount.$code';
+import {hydrogenContext} from '@shopify/hydrogen';
 
 /**
  * Automatically applies a discount found on the url
@@ -13,7 +14,7 @@ import type {Route} from './+types/discount.$code';
  * ```
  */
 export async function loader({request, context, params}: Route.LoaderArgs) {
-  const {cart} = context;
+  const cart = context.get(hydrogenContext.cart);
   const {code} = params;
 
   const url = new URL(request.url);

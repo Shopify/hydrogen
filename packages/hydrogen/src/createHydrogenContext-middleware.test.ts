@@ -8,7 +8,7 @@ import {
   storefrontContext,
 } from './context-keys';
 
-describe('createHydrogenContext with v8_middleware compatibility', () => {
+describe('createHydrogenContext with React Router middleware compatibility', () => {
   const mockRequest = new Request('http://localhost');
   const mockEnv = {
     SESSION_SECRET: 'test-secret',
@@ -47,7 +47,6 @@ describe('createHydrogenContext with v8_middleware compatibility', () => {
       {},
     );
 
-    // v8_middleware expects get() method for context access
     expect(context.get).toBeDefined();
     expect(typeof context.get).toBe('function');
 
@@ -65,7 +64,7 @@ describe('createHydrogenContext with v8_middleware compatibility', () => {
     expect(context.get(envContext)).toBe(context.env);
   });
 
-  it('should work with v8_middleware context pattern', () => {
+  it('should work with the React Router middleware context pattern', () => {
     const context = createHydrogenContext(
       {
         env: mockEnv,

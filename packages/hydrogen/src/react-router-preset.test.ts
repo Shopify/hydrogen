@@ -2,10 +2,16 @@ import {describe, it, expect} from 'vitest';
 import {hydrogenPreset} from './react-router-preset';
 import type {Config as ReactRouterConfig} from '@react-router/dev/config';
 
+const removedReactRouter8FutureFlags = [
+  'v8_middleware',
+  'v8_splitRouteModules',
+  'v8_viteEnvironmentApi',
+] as const;
+
 describe('hydrogenPreset', () => {
   it('should return a preset with correct name', () => {
     const preset = hydrogenPreset();
-    expect(preset.name).toBe('hydrogen-2025.7.0');
+    expect(preset.name).toBe('hydrogen');
   });
 
   it('should configure React Router with Hydrogen defaults', () => {
@@ -18,10 +24,8 @@ describe('hydrogenPreset', () => {
       appDirectory: 'app',
       buildDirectory: 'dist',
       ssr: true,
+      splitRouteModules: true,
       future: {
-        v8_middleware: true,
-        v8_splitRouteModules: true,
-        v8_viteEnvironmentApi: false,
         unstable_optimizeDeps: true,
       },
       subResourceIntegrity: false,
@@ -41,10 +45,8 @@ describe('hydrogenPreset', () => {
           prerender: undefined,
           serverBundles: undefined,
           buildEnd: undefined,
+          splitRouteModules: true,
           future: {
-            v8_middleware: true,
-            v8_splitRouteModules: true,
-            v8_viteEnvironmentApi: false,
             unstable_optimizeDeps: true,
           },
           subResourceIntegrity: false,
@@ -58,9 +60,7 @@ describe('hydrogenPreset', () => {
     it('should throw error when basename is configured', () => {
       expect(() => {
         testResolvedConfig({basename: '/shop'});
-      }).toThrow(
-        '[Hydrogen Preset] basename is not supported in Hydrogen 2025.7.0',
-      );
+      }).toThrow('[Hydrogen Preset] basename is not supported in Hydrogen');
     });
 
     it('should not throw when basename is root', () => {
@@ -78,25 +78,21 @@ describe('hydrogenPreset', () => {
     it('should throw error when prerender is configured', () => {
       expect(() => {
         testResolvedConfig({prerender: ['/about']});
-      }).toThrow(
-        '[Hydrogen Preset] prerender is not supported in Hydrogen 2025.7.0',
-      );
+      }).toThrow('[Hydrogen Preset] prerender is not supported in Hydrogen');
     });
 
     it('should throw error when serverBundles is configured', () => {
       expect(() => {
         testResolvedConfig({serverBundles: () => 'bundle'});
       }).toThrow(
-        '[Hydrogen Preset] serverBundles is not supported in Hydrogen 2025.7.0',
+        '[Hydrogen Preset] serverBundles is not supported in Hydrogen',
       );
     });
 
     it('should throw error when buildEnd is configured', () => {
       expect(() => {
         testResolvedConfig({buildEnd: async () => {}});
-      }).toThrow(
-        '[Hydrogen Preset] buildEnd is not supported in Hydrogen 2025.7.0',
-      );
+      }).toThrow('[Hydrogen Preset] buildEnd is not supported in Hydrogen');
     });
 
     it('should throw error when subResourceIntegrity is enabled', () => {
@@ -125,10 +121,12 @@ describe('hydrogenPreset', () => {
         reactRouterUserConfig: {} as ReactRouterConfig,
       }) as ReactRouterConfig | undefined;
 
-      // Verify all performance flags are enabled
-      expect(config?.future?.v8_middleware).toBe(true);
-      expect(config?.future?.v8_splitRouteModules).toBe(true);
+      expect(config?.splitRouteModules).toBe(true);
       expect(config?.future?.unstable_optimizeDeps).toBe(true);
+
+      for (const removedFlag of removedReactRouter8FutureFlags) {
+        expect(config?.future).not.toHaveProperty(removedFlag);
+      }
     });
 
     it('should disable incompatible features', () => {
@@ -137,9 +135,11 @@ describe('hydrogenPreset', () => {
         reactRouterUserConfig: {} as ReactRouterConfig,
       }) as ReactRouterConfig | undefined;
 
-      // Verify incompatible features are disabled
       expect(config?.subResourceIntegrity).toBe(false);
-      expect(config?.future?.v8_viteEnvironmentApi).toBe(false);
+
+      for (const removedFlag of removedReactRouter8FutureFlags) {
+        expect(config?.future).not.toHaveProperty(removedFlag);
+      }
     });
 
     it('should configure SSR correctly', () => {

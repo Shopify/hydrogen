@@ -1,10 +1,10 @@
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/($locale).blogs.$blogHandle.$articleHandle';
-import {Image} from '@shopify/hydrogen';
+import {Image, hydrogenContext} from '@shopify/hydrogen';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
-export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.article.title ?? ''} article`}];
+export const meta: Route.MetaFunction = ({loaderData}) => {
+  return [{title: `Hydrogen | ${loaderData?.article.title ?? ''} article`}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -21,7 +21,7 @@ export async function loader(args: Route.LoaderArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
+async function loadCriticalData({context, url, params}: Route.LoaderArgs) {
   const {blogHandle, articleHandle} = params;
 
   if (!articleHandle || !blogHandle) {
@@ -29,7 +29,7 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
   }
 
   const [{blog}] = await Promise.all([
-    context.storefront.query(ARTICLE_QUERY, {
+    context.get(hydrogenContext.storefront).query(ARTICLE_QUERY, {
       variables: {blogHandle, articleHandle},
     }),
     // Add other queries here, so that they are loaded in parallel
@@ -40,7 +40,7 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
   }
 
   redirectIfHandleIsLocalized(
-    request,
+    url,
     {
       handle: articleHandle,
       data: blog.articleByHandle,

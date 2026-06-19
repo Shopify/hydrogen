@@ -39,46 +39,42 @@ requirements: |
   3. Customize the banner's appearance and position as needed.
 ingredients:
   - path: templates/skeleton/app/components/GoogleTagManager.tsx
-    description: Analytics component that subscribes to Hydrogen events and pushes
+    description:
+      Analytics component that subscribes to Hydrogen events and pushes
       them to GTM's dataLayer
 deletedFiles: []
 steps:
   - type: PATCH
-    step: "1"
+    step: '1'
     name: Document GTM setup in the README
-    description: Update the README file with GTM-specific documentation and setup
+    description:
+      Update the README file with GTM-specific documentation and setup
       instructions.
     diffs:
       - file: README.md
         patchFile: README.md.1764cd.patch
   - type: PATCH
-    step: "2"
+    step: '2'
     name: Add GTM domains to Content Security Policy
     description: Configure CSP headers to allow Google Tag Manager and Analytics scripts.
     diffs:
       - file: app/entry.server.tsx
         patchFile: entry.server.tsx.a8386e.patch
   - type: NEW_FILE
-    step: "3"
+    step: '3'
     name: Create the analytics component
-    description: Build a component that subscribes to Hydrogen analytics events and
+    description:
+      Build a component that subscribes to Hydrogen analytics events and
       pushes them to GTM's dataLayer.
     ingredients:
       - path: templates/skeleton/app/components/GoogleTagManager.tsx
   - type: PATCH
-    step: "4"
+    step: '4'
     name: Add GTM scripts to the app
     description: Insert Google Tag Manager tracking code in the head and body sections.
     diffs:
       - file: app/root.tsx
         patchFile: root.tsx.8f1e92.patch
-  - type: PATCH
-    step: "4"
-    name: package.json
-    description: null
-    diffs:
-      - file: package.json
-        patchFile: package.json.8e0ff5.patch
 nextSteps: |
   After applying this recipe:
 

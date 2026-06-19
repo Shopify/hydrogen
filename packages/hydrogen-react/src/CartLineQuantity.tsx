@@ -1,5 +1,6 @@
 import type {ComponentPropsWithoutRef, ElementType} from 'react';
 import {useCartLine} from './CartLineProvider.js';
+import type {JSX} from 'react';
 
 /** @publicDocs */
 interface CartLineQuantityBaseProps<

@@ -8,31 +8,33 @@ type BaseProps = {
   preservePath?: boolean;
 };
 
-type LinkVariantProps = BaseProps & LinkProps & {
-  variant?: never;
-};
+type LinkVariantProps = BaseProps &
+  LinkProps & {
+    variant?: never;
+  };
 
-type NavLinkVariantProps = BaseProps & NavLinkProps & {
-  variant: 'nav';
-};
+type NavLinkVariantProps = BaseProps &
+  NavLinkProps & {
+    variant: 'nav';
+  };
 
 export type ExtendedLinkProps = LinkVariantProps | NavLinkVariantProps;
 
 /**
  * Locale-aware Link component that handles both regular and navigation links
- * 
+ *
  * @example
  * // Regular link (auto-adds current locale)
  * <Link to="/products">Products</Link>
- * 
+ *
  * @example
  * // Navigation link with active styles
  * <Link variant="nav" to="/about" style={activeStyle}>About</Link>
- * 
+ *
  * @example
  * // Switch locale while preserving current path
  * <Link to="/" locale={frenchLocale} preservePath>Français</Link>
- * 
+ *
  * @example
  * // Link to specific locale
  * <Link to="/products" locale={canadianLocale}>Canadian Products</Link>
@@ -40,7 +42,7 @@ export type ExtendedLinkProps = LinkVariantProps | NavLinkVariantProps;
 export function Link(props: ExtendedLinkProps) {
   const {locale, preservePath = false, variant, ...restProps} = props;
   let to = restProps.to;
-  
+
   // Auto-clean menu URLs for navigation links
   if (variant === 'nav' && typeof to === 'string') {
     if (to.includes('://')) {
@@ -52,9 +54,9 @@ export function Link(props: ExtendedLinkProps) {
     }
     to = cleanPath(to);
   }
-  
+
   to = useLocalizedPath(to, locale, preservePath);
-  
+
   if (variant === 'nav') {
     return <ReactNavLink {...(restProps as NavLinkProps)} to={to} />;
   }

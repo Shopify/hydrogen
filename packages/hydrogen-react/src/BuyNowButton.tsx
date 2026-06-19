@@ -5,6 +5,7 @@ import {
   type BaseButtonProps,
   type CustomBaseButtonProps,
 } from './BaseButton.js';
+import type {JSX} from 'react';
 
 interface BuyNowButtonPropsBase {
   /** The item quantity. Defaults to 1. */

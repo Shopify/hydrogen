@@ -52,6 +52,7 @@ async function loadCriticalData({
   context,
   params,
   request,
+  url,
 }: Route.LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
@@ -77,7 +78,7 @@ async function loadCriticalData({
   }
 
   // The API handle might be localized, so redirect to the localized handle
-  redirectIfHandleIsLocalized(request, {handle, data: product});
+  redirectIfHandleIsLocalized(url, {handle, data: product});
 
   return {
     product,

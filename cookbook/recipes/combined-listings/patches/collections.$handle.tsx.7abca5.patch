@@ -10,8 +10,8 @@ index c416c2b3d..b627a950d 100644
 +  isCombinedListing,
 +} from '~/lib/combined-listings';
  
- export const meta: Route.MetaFunction = ({data}) => {
-   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+ export const meta: Route.MetaFunction = ({loaderData}) => {
+   return [{title: `Hydrogen | ${loaderData?.collection.title ?? ''} Collection`}];
 @@ -68,12 +72,25 @@ function loadDeferredData({context}: Route.LoaderArgs) {
  export default function Collection() {
    const {collection} = useLoaderData<typeof loader>();

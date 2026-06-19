@@ -1,4 +1,5 @@
 import {vi, describe, it, expect, afterEach, expectTypeOf} from 'vitest';
+import {createContext} from 'react-router';
 import {createHydrogenContext} from './createHydrogenContext';
 import {createStorefrontClient} from './storefront';
 import {createCustomerAccountClient} from './customer/customer';
@@ -518,7 +519,6 @@ describe('createHydrogenContext', () => {
     it('should support both get() and set() methods from RouterContextProvider', () => {
       const hydrogenContext = createHydrogenContext(defaultOptions);
 
-      // Check that RouterContextProvider methods exist
       expect(typeof hydrogenContext.get).toBe('function');
       expect(typeof hydrogenContext.set).toBe('function');
     });
@@ -526,15 +526,11 @@ describe('createHydrogenContext', () => {
     it('should allow setting and getting custom context values', () => {
       const hydrogenContext = createHydrogenContext(defaultOptions);
 
-      // Use React Router's createContext
-      const {createContext} = require('react-router');
       const customKey = createContext('customKey');
       const customValue = {test: 'value', data: [1, 2, 3]};
 
-      // Set custom value
       hydrogenContext.set(customKey, customValue);
 
-      // Get custom value
       const retrieved = hydrogenContext.get(customKey);
       expect(retrieved).toEqual(customValue);
     });

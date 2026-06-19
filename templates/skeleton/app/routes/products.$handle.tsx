@@ -7,18 +7,19 @@ import {
   getProductOptions,
   getAdjacentAndFirstAvailableVariants,
   useSelectedOptionInUrlParam,
+  hydrogenContext,
 } from '@shopify/hydrogen';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
-export const meta: Route.MetaFunction = ({data}) => {
+export const meta: Route.MetaFunction = ({loaderData}) => {
   return [
-    {title: `Hydrogen | ${data?.product.title ?? ''}`},
+    {title: `Hydrogen | ${loaderData?.product.title ?? ''}`},
     {
       rel: 'canonical',
-      href: `/products/${data?.product.handle}`,
+      href: `/products/${loaderData?.product.handle}`,
     },
   ];
 };
@@ -37,9 +38,14 @@ export async function loader(args: Route.LoaderArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+async function loadCriticalData({
+  context,
+  params,
+  request,
+  url,
+}: Route.LoaderArgs) {
   const {handle} = params;
-  const {storefront} = context;
+  const storefront = context.get(hydrogenContext.storefront);
 
   if (!handle) {
     throw new Error('Expected product handle to be defined');
@@ -57,7 +63,7 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   }
 
   // The API handle might be localized, so redirect to the localized handle
-  redirectIfHandleIsLocalized(request, {handle, data: product});
+  redirectIfHandleIsLocalized(url, {handle, data: product});
 
   return {
     product,

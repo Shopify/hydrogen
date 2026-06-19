@@ -1,7 +1,7 @@
 index df87425c5..5a0fef093 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
-@@ -16,9 +16,39 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+@@ -21,10 +21,40 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
  import resetStyles from '~/styles/reset.css?url';
  import appStyles from '~/styles/app.css?url';
  import {PageLayout} from './components/PageLayout';
@@ -16,6 +16,7 @@ index df87425c5..5a0fef093 100644
 +} from '@shopify/hydrogen/customer-account-api-types';
  
  export type RootLoader = typeof loader;
+ type AnalyticsProviderCart = ComponentProps<typeof Analytics.Provider>['cart'];
  
 +// @description Define B2B customer company types
 +export type CustomerCompanyLocation = Pick<CompanyLocation, 'name' | 'id'> & {
@@ -41,7 +42,7 @@ index df87425c5..5a0fef093 100644
  /**
   * This is important to avoid re-fetching root queries on sub-navigations
   */
-@@ -176,9 +206,13 @@ export default function App() {
+@@ -184,9 +214,13 @@ export default function App() {
        shop={data.shop}
        consent={data.consent}
      >

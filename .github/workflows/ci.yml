@@ -323,12 +323,40 @@ jobs:
             --path "${{ runner.temp }}/h2-test-${{ matrix.pm }}" \
             --language ts \
             --mock-shop \
-            --install-deps \
+            --no-install-deps \
             --no-git \
             --package-manager ${{ matrix.pm }} \
             --no-shortcut \
             --markets none \
             --styling none
+        shell: bash
+
+      - name: 📦 Install with local Hydrogen packages
+        run: |
+          package_dir="${{ runner.temp }}/h2-local-packages"
+          mkdir -p "$package_dir"
+
+          pack_package() {
+            npm_config_ignore_scripts=true pnpm --dir "$1" pack --pack-destination "$package_dir" --json | node -e "let input = ''; process.stdin.on('data', (chunk) => input += chunk); process.stdin.on('end', () => { const result = JSON.parse(input); console.log((Array.isArray(result) ? result[0] : result).filename); });"
+          }
+
+          hydrogen_react_tarball="$(pack_package packages/hydrogen-react)"
+          hydrogen_tarball="$(pack_package packages/hydrogen)"
+          cli_tarball="$(pack_package packages/cli)"
+
+          cd "${{ runner.temp }}/h2-test-${{ matrix.pm }}"
+
+          case "${{ matrix.pm }}" in
+            npm)
+              npm install "$hydrogen_react_tarball" "$hydrogen_tarball" "$cli_tarball"
+              ;;
+            pnpm)
+              pnpm add "$hydrogen_react_tarball" "$hydrogen_tarball" "$cli_tarball"
+              ;;
+            yarn)
+              yarn add "$hydrogen_react_tarball" "$hydrogen_tarball" "$cli_tarball"
+              ;;
+          esac
         shell: bash
 
       - name: ✅ Verify lockfile
@@ -386,7 +414,7 @@ jobs:
       - name: 🚀 Deploy skeleton to Oxygen
         id: deploy
         working-directory: templates/skeleton
-        run: pnpm exec shopify hydrogen deploy --no-lockfile-check --force --auth-bypass-token --env-file ../../e2e/envs/.env.customerAccount
+        run: pnpm exec shopify-hydrogen deploy --no-lockfile-check --force --auth-bypass-token --env-file ../../e2e/envs/.env.customerAccount
         env:
           SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000108386 }}
 

@@ -1,6 +1,6 @@
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
-import {resolvePath, joinPath} from '@shopify/cli-kit/node/path';
+import {resolvePath, joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {
   outputWarn,
   collectLog,
@@ -158,6 +158,7 @@ export async function runBuild({
   }
 
   const serverMinify = userViteConfig.build?.minify ?? true;
+  const serverBundleDir = dirname(serverOutFile);
   const commonConfig = {
     root,
     mode: process.env.NODE_ENV,
@@ -277,8 +278,8 @@ export async function runBuild({
   if (!watch) {
     await Promise.all([
       removeFile(joinPath(clientOutDir, '.vite')),
-      removeFile(joinPath(serverOutDir, '.vite')),
-      removeFile(joinPath(serverOutDir, 'assets')),
+      removeFile(joinPath(serverBundleDir, '.vite')),
+      removeFile(joinPath(serverBundleDir, 'assets')),
     ]);
   }
 
@@ -297,11 +298,11 @@ export async function runBuild({
   if (!watch && process.env.NODE_ENV !== 'development') {
     if (bundleStats) {
       const bundleAnalysisPath =
-        'file://' + joinPath(serverOutDir, BUNDLE_ANALYZER_HTML_FILE);
+        'file://' + joinPath(serverBundleDir, BUNDLE_ANALYZER_HTML_FILE);
 
       outputInfo(
         outputContent`${
-          (await getBundleAnalysisSummary(serverOutDir)) || '\n'
+          (await getBundleAnalysisSummary(serverBundleDir)) || '\n'
         }\n    │\n    └─── ${outputToken.link(
           'Complete analysis: ' + bundleAnalysisPath,
           bundleAnalysisPath,

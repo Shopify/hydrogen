@@ -3,6 +3,7 @@
 This recipe implements infinite scroll functionality on collection pages using the Intersection Observer API.
 
 Key features:
+
 - Automatic loading when "Load more" button comes into view using Intersection Observer API
 - Preserves browser history and URL state (replace mode to avoid clutter)
 - Maintains scroll position during navigation
@@ -24,21 +25,21 @@ Update the README file with infinite scroll documentation and implementation det
 
 <details>
 
-~~~diff
+````diff
 index c584e537..6eacfd82 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,6 +1,8 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Infinite Scroll
- 
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+This Hydrogen template demonstrates infinite scroll pagination for collection pages. Hydrogen is Shopify's stack for headless commerce, designed to work with [Remix](https://remix.run/), Shopify's full stack web framework.
+
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++This Hydrogen template demonstrates infinite scroll pagination for collection pages. Hydrogen is Shopify's stack for headless commerce, designed to work with [React Router](https://reactrouter.com/), the full stack web framework.
 +
 +This template shows how to implement a seamless browsing experience where products automatically load as users scroll down, replacing traditional pagination with continuous content loading.
- 
+
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
+ [Get familiar with React Router](https://reactrouter.com/)
 @@ -16,7 +18,28 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
  - Prettier
  - GraphQL generator
@@ -66,19 +67,19 @@ index c584e537..6eacfd82 100644
 +- Maintains scroll position during navigation
 +- Clean URL updates using replace mode
 +- No history cluttering from pagination
- 
+
  ## Getting started
- 
+
 @@ -28,6 +51,25 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
  npm create @shopify/hydrogen@latest
  ```
- 
+
 +## Implementation Details
 +
 +The infinite scroll implementation uses:
 +- React's `useEffect` hook for scroll detection
 +- Intersection Observer API for viewport detection
-+- Remix's navigation for URL updates
++- React Router's navigation for URL updates
 +- Shopify's Pagination component as the base
 +
 +### Key Components
@@ -93,12 +94,12 @@ index c584e537..6eacfd82 100644
 +```
 +
  ## Building for production
- 
+
  ```bash
 @@ -40,6 +82,14 @@ npm run build
  npm run dev
  ```
- 
+
 +## Customization
 +
 +You can adjust the infinite scroll behavior by:
@@ -108,11 +109,11 @@ index c584e537..6eacfd82 100644
 +- Adding scroll-to-top functionality
 +
  ## Setup for using Customer Account API (`/account` section)
- 
+
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 \ No newline at end of file
-~~~
+````
 
 </details>
 
@@ -124,7 +125,7 @@ Implement automatic loading with Intersection Observer when users scroll to the 
 
 <details>
 
-~~~diff
+```diff
 index c416c2b3..e6a35150 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
@@ -144,14 +145,14 @@ index c416c2b3..e6a35150 100644
 +import {useEffect} from 'react';
 +import {useInView} from 'react-intersection-observer';
  import type {ProductItemFragment} from 'storefrontapi.generated';
- 
- export const meta: Route.MetaFunction = ({data}) => {
+
+ export const meta: Route.MetaFunction = ({loaderData}) => {
 @@ -67,23 +72,41 @@ function loadDeferredData({context}: Route.LoaderArgs) {
- 
+
  export default function Collection() {
    const {collection} = useLoaderData<typeof loader>();
 +  const {ref, inView} = useInView();
- 
+
    return (
      <div className="collection">
        <h1>{collection.title}</h1>
@@ -202,7 +203,7 @@ index c416c2b3..e6a35150 100644
 @@ -96,6 +119,47 @@ export default function Collection() {
    );
  }
- 
+
 +// @description ProductsGrid component with infinite scroll functionality
 +function ProductsGrid({
 +  products,
@@ -230,7 +231,7 @@ index c416c2b3..e6a35150 100644
 +  }, [inView, navigate, state, nextPageUrl, hasNextPage]);
 +
 +  return (
-+    <div className="products-grid">
++    <div aria-label="Products" role="region" className="products-grid">
 +      {products.map((product, index) => {
 +        return (
 +          <ProductItem
@@ -247,7 +248,7 @@ index c416c2b3..e6a35150 100644
  const PRODUCT_ITEM_FRAGMENT = `#graphql
    fragment MoneyProductItem on MoneyV2 {
      amount
-~~~
+```
 
 </details>
 
@@ -257,16 +258,14 @@ Add the react-intersection-observer package for viewport detection.
 
 #### File: [package.json](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/package.json)
 
-~~~diff
-index e9ebd1d3..e51634ee 100644
+```diff
+index e971ba7e..98bd2d0f 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
-@@ -20,6 +20,7 @@
+@@ -20,4 +20,5 @@
      "isbot": "^5.1.22",
-     "react": "18.3.1",
-     "react-dom": "18.3.1",
+     "react": "catalog:",
+     "react-dom": "catalog:",
 +    "react-intersection-observer": "^8.34.0",
-     "react-router": "7.9.2",
-     "react-router-dom": "7.9.2"
-   },
-~~~
+     "react-router": "8.0.1"
+```

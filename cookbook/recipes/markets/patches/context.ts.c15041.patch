@@ -7,9 +7,9 @@ index 692d5ae17..7373ebca2 100644
  import type {CartApiQueryFragment} from 'storefrontapi.generated';
 +import {getLocaleFromRequest} from './i18n';
  
- // Define the additional context object
  const additionalContext = {
-@@ -45,6 +46,8 @@
+   // Additional context for custom properties, CMS clients, 3P SDKs, etc.
+@@ -42,6 +43,8 @@ export async function createHydrogenRouterContext(
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
  
@@ -18,7 +18,7 @@ index 692d5ae17..7373ebca2 100644
    const hydrogenContext = createHydrogenContext(
      {
        env,
-@@ -52,8 +55,7 @@
+@@ -49,8 +52,7 @@ export async function createHydrogenRouterContext(
        cache,
        waitUntil,
        session,

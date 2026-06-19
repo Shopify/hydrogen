@@ -13,6 +13,7 @@ vi.mock('react-router', () => ({
 describe('seo', () => {
   afterEach(() => {
     cleanup();
+    document.head.innerHTML = '';
     vi.resetAllMocks();
   });
 
@@ -44,33 +45,11 @@ describe('seo', () => {
 
     const {asFragment} = render(createElement(Seo));
 
-    expect(asFragment()).toMatchInlineSnapshot(`
-      <DocumentFragment>
-        <title>
-          Sand devil
-        </title>
-        <meta
-          content="A hydrogen storefront"
-          name="description"
-        />
-        <meta
-          content="A hydrogen storefront"
-          property="og:description"
-        />
-        <meta
-          content="Sand devil"
-          property="og:title"
-        />
-        <meta
-          content="A hydrogen storefront"
-          name="twitter:description"
-        />
-        <meta
-          content="Sand devil"
-          name="twitter:title"
-        />
-      </DocumentFragment>
-    `);
+    expect(asFragment()).toMatchInlineSnapshot('<DocumentFragment />');
+    expectSeoHead({
+      title: 'Sand devil',
+      description: 'A hydrogen storefront',
+    });
   });
 
   it('uses seo loader data to generate the meta tags', async () => {
@@ -84,33 +63,11 @@ describe('seo', () => {
 
     const {asFragment} = render(createElement(Seo));
 
-    expect(asFragment()).toMatchInlineSnapshot(`
-      <DocumentFragment>
-        <title>
-          Snow devil
-        </title>
-        <meta
-          content="A hydrogen storefront"
-          name="description"
-        />
-        <meta
-          content="A hydrogen storefront"
-          property="og:description"
-        />
-        <meta
-          content="Snow devil"
-          property="og:title"
-        />
-        <meta
-          content="A hydrogen storefront"
-          name="twitter:description"
-        />
-        <meta
-          content="Snow devil"
-          name="twitter:title"
-        />
-      </DocumentFragment>
-    `);
+    expect(asFragment()).toMatchInlineSnapshot('<DocumentFragment />');
+    expectSeoHead({
+      title: 'Snow devil',
+      description: 'A hydrogen storefront',
+    });
   });
 
   it('takes the latest route match', async () => {
@@ -129,33 +86,11 @@ describe('seo', () => {
 
     const {asFragment} = render(createElement(Seo));
 
-    expect(asFragment()).toMatchInlineSnapshot(`
-      <DocumentFragment>
-        <title>
-          Sand devil
-        </title>
-        <meta
-          content="A hydrogen storefront"
-          name="description"
-        />
-        <meta
-          content="A hydrogen storefront"
-          property="og:description"
-        />
-        <meta
-          content="Sand devil"
-          property="og:title"
-        />
-        <meta
-          content="A hydrogen storefront"
-          name="twitter:description"
-        />
-        <meta
-          content="Sand devil"
-          name="twitter:title"
-        />
-      </DocumentFragment>
-    `);
+    expect(asFragment()).toMatchInlineSnapshot('<DocumentFragment />');
+    expectSeoHead({
+      title: 'Sand devil',
+      description: 'A hydrogen storefront',
+    });
   });
 
   it('it renders a root jsonLd tag', async () => {
@@ -295,7 +230,11 @@ describe('seo', () => {
   });
 });
 
-function fillMatch(partial: Partial<UIMatch<any>> = {}) {
+function fillMatch(
+  partial: Partial<UIMatch<any>> & {data?: UIMatch<any>['loaderData']} = {},
+) {
+  const {data, loaderData, ...match} = partial;
+
   return {
     id: 'root',
     pathname: '/',
@@ -303,9 +242,8 @@ function fillMatch(partial: Partial<UIMatch<any>> = {}) {
       productHandle: 'shopify-aurora',
     },
     handle: {},
-    data: {},
-    loaderData: {},
-    ...partial,
+    loaderData: loaderData ?? data ?? {},
+    ...match,
   };
 }
 
@@ -318,4 +256,39 @@ function fillLocation(partial: Partial<Location> = {}) {
     state: null,
     ...partial,
   };
+}
+
+function expectSeoHead({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  expect(document.title).toBe(title);
+  expect(
+    document.head
+      .querySelector('meta[name="description"]')
+      ?.getAttribute('content'),
+  ).toBe(description);
+  expect(
+    document.head
+      .querySelector('meta[property="og:description"]')
+      ?.getAttribute('content'),
+  ).toBe(description);
+  expect(
+    document.head
+      .querySelector('meta[property="og:title"]')
+      ?.getAttribute('content'),
+  ).toBe(title);
+  expect(
+    document.head
+      .querySelector('meta[name="twitter:description"]')
+      ?.getAttribute('content'),
+  ).toBe(description);
+  expect(
+    document.head
+      .querySelector('meta[name="twitter:title"]')
+      ?.getAttribute('content'),
+  ).toBe(title);
 }

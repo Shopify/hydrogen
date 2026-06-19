@@ -2,7 +2,6 @@ import {NavigationType, type Navigation, type Location} from 'react-router';
 
 /**
  * Creates a properly typed Navigation object for testing purposes.
- * This helper ensures TypeScript 5.9+ compatibility with React Router 7.9.x types.
  */
 export function createMockNavigation(
   state: Navigation['state'],
@@ -45,19 +44,18 @@ export function createMockNavigation(
       json: undefined,
       text: undefined,
     };
-  } else {
-    // submitting state
-    return {
-      state: 'submitting',
-      location,
-      matches: [],
-      historyAction: NavigationType.Push,
-      formMethod: 'POST',
-      formAction: '/',
-      formEncType: 'application/x-www-form-urlencoded',
-      formData: new FormData(),
-      json: undefined,
-      text: undefined,
-    };
   }
+
+  return {
+    state: 'submitting',
+    location,
+    matches: [],
+    historyAction: NavigationType.Push,
+    formMethod: 'POST',
+    formAction: '/',
+    formEncType: 'application/x-www-form-urlencoded',
+    formData: new FormData(),
+    json: undefined,
+    text: undefined,
+  };
 }

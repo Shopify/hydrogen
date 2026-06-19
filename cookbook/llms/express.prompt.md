@@ -67,12 +67,12 @@ Technical details:
 - Environment variables are loaded from .env file using dotenv
 - Session management is handled through Express middleware with SESSION_SECRET
 - GraphQL codegen still works with Storefront API types
-- Compatible with React Router 7.8.x
+- Compatible with React Router framework mode
 - The .graphqlrc.ts file is preserved with customer account section commented out
 
 ## Requirements
 
-- Node.js 20 or higher (less than 22.0.0) for production deployment
+- Node.js 22.22.0 or higher for production deployment
 - npm or yarn package manager
 - Shopify Storefront API credentials
 
@@ -121,19 +121,19 @@ Update README with Express-specific setup and deployment instructions
 -# Hydrogen template: Skeleton
 +# Hydrogen Express Skeleton
 
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
 +This is a Hydrogen skeleton template configured to run with NodeJS [Express](https://expressjs.com/) instead of Shopify Oxygen.
 +
 +Hydrogen is Shopify's stack for headless commerce, designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal Express setup** with basic components and routes to get started with Hydrogen on Node.js.
 
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
--[Get familiar with Remix](https://remix.run/docs/en/v1)
+-[Get familiar with React Router](https://reactrouter.com/)
 +[Get familiar with React Router](https://reactrouter.com/en/main)
 
  ## What's included
 
--- Remix
-+- React Router 7
+-- React Router
++- React Router
  - Hydrogen
 -- Oxygen
 +- Express server
@@ -158,8 +158,8 @@ Update README with Express-specific setup and deployment instructions
 
  **Requirements:**
 
--- Node.js version 18.0.0 or higher
-+- Node.js version 18.0.0 or higher (but less than 22.0.0)
+-- Node.js version 22.22.0 or higher
++- Node.js version 22.22.0 or higher
 +
 +### Environment Setup
 +
@@ -229,7 +229,7 @@ Update README with Express-specific setup and deployment instructions
 
 Add environment type definitions for Hydrogen on Express
 
-#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
+#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
 
 ```ts
 // This file extends the Hydrogen types for this project
@@ -271,7 +271,7 @@ Update client entry to use React Router hydration without Oxygen-specific code
 #### File: /app/entry.client.tsx
 
 ```diff
-@@ -1,21 +1,13 @@
+@@ -1,20 +1,13 @@
  import {HydratedRouter} from 'react-router/dom';
  import {startTransition, StrictMode} from 'react';
  import {hydrateRoot} from 'react-dom/client';
@@ -280,9 +280,8 @@ Update client entry to use React Router hydration without Oxygen-specific code
  if (!window.location.origin.includes('webcache.googleusercontent.com')) {
    startTransition(() => {
 -    // Extract nonce from existing script tags
--    const existingNonce = document
--      .querySelector<HTMLScriptElement>('script[nonce]')
--      ?.nonce;
+-    const existingNonce =
+-      document.querySelector<HTMLScriptElement>('script[nonce]')?.nonce;
 -
      hydrateRoot(
        document,
@@ -300,7 +299,7 @@ Update client entry to use React Router hydration without Oxygen-specific code
 
 Add Express template favicon
 
-#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
+#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
@@ -461,7 +460,7 @@ Replace Oxygen server rendering with Express-compatible Node.js SSR using PassTh
 
 Add development server orchestration script for Vite and nodemon
 
-#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
+#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
 
 ```mjs
 #!/usr/bin/env node
@@ -772,7 +771,7 @@ Simplify root layout for Express template by removing complex components
 
 Add Express server with Hydrogen context, session management, and SSR support
 
-#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
+#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/d27e9178195e76ed6a3ead38b87788677bb449cd/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
 
 ```mjs
 import 'dotenv/config';
@@ -1074,12 +1073,8 @@ Simplify homepage route to basic Express example content
 #### File: /app/routes/\_index.tsx
 
 ```diff
-@@ -1,171 +1,28 @@
--import {
--  Await,
--  useLoaderData,
--  Link,
--} from 'react-router';
+@@ -1,177 +1,28 @@
+-import {Await, useLoaderData, Link} from 'react-router';
 -import type {Route} from './+types/_index';
 -import {Suspense} from 'react';
 -import {Image} from '@shopify/hydrogen';
@@ -1088,6 +1083,7 @@ Simplify homepage route to basic Express example content
 -  RecommendedProductsQuery,
 -} from 'storefrontapi.generated';
 -import {ProductItem} from '~/components/ProductItem';
+-import {MockShopNotice} from '~/components/MockShopNotice';
 +import {useRouteError, isRouteErrorResponse, Link} from 'react-router';
 
 -export const meta: Route.MetaFunction = () => {
@@ -1115,6 +1111,7 @@ Simplify homepage route to basic Express example content
 -  ]);
 -
 -  return {
+-    isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
 -    featuredCollection: collections.nodes[0],
 -  };
 -}
@@ -1143,6 +1140,7 @@ Simplify homepage route to basic Express example content
 +export default function Index() {
    return (
 -    <div className="home">
+-      {data.isShopLinked ? null : <MockShopNotice />}
 -      <FeaturedCollection collection={data.featuredCollection} />
 -      <RecommendedProducts products={data.recommendedProducts} />
 -    </div>
@@ -1173,7 +1171,11 @@ Simplify homepage route to basic Express example content
 -    >
 -      {image && (
 -        <div className="featured-collection-image">
--          <Image data={image} sizes="100vw" />
+-          <Image
+-            data={image}
+-            sizes="100vw"
+-            alt={image.altText || collection.title}
+-          />
 -        </div>
 -      )}
 -      <h1>{collection.title}</h1>
@@ -1197,8 +1199,11 @@ Simplify homepage route to basic Express example content
 -  products: Promise<RecommendedProductsQuery | null>;
 -}) {
 -  return (
--    <div className="recommended-products">
--      <h2>Recommended Products</h2>
+-    <section
+-      className="recommended-products"
+-      aria-labelledby="recommended-products"
+-    >
+-      <h2 id="recommended-products">Recommended Products</h2>
 -      <Suspense fallback={<div>Loading...</div>}>
 -        <Await resolve={products}>
 -          {(response) => (
@@ -1213,7 +1218,7 @@ Simplify homepage route to basic Express example content
 -        </Await>
 -      </Suspense>
 -      <br />
--    </div>
+-    </section>
 -  );
 -}
 -
@@ -1277,11 +1282,8 @@ Simplify product route to minimal implementation without cart functionality
 #### File: /app/routes/products.$handle.tsx
 
 ```diff
-@@ -1,50 +1,7 @@
--import {
--  redirect,
--  useLoaderData,
--} from 'react-router';
+@@ -1,43 +1,7 @@
+-import {redirect, useLoaderData} from 'react-router';
 +import {useLoaderData} from 'react-router';
  import type {Route} from './+types/products.$handle';
 -import {
@@ -1297,12 +1299,12 @@ Simplify product route to minimal implementation without cart functionality
 -import {ProductForm} from '~/components/ProductForm';
 -import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
--export const meta: Route.MetaFunction = ({data}) => {
+-export const meta: Route.MetaFunction = ({loaderData}) => {
 -  return [
--    {title: `Hydrogen | ${data?.product.title ?? ''}`},
+-    {title: `Hydrogen | ${loaderData?.product.title ?? ''}`},
 -    {
 -      rel: 'canonical',
--      href: `/products/${data?.product.handle}`,
+-      href: `/products/${loaderData?.product.handle}`,
 -    },
 -  ];
 -};
@@ -1321,16 +1323,12 @@ Simplify product route to minimal implementation without cart functionality
 - * Load data necessary for rendering content above the fold. This is the critical data
 - * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
 - */
--async function loadCriticalData({
--  context,
--  params,
--  request,
--}: Route.LoaderArgs) {
+-async function loadCriticalData({context, params, request, url}: Route.LoaderArgs) {
 +export async function loader({params, context}: Route.LoaderArgs) {
    const {handle} = params;
    const {storefront} = context;
 
-@@ -52,188 +9,42 @@ async function loadCriticalData({
+@@ -45,188 +9,42 @@ async function loadCriticalData({context, params, request, url}: Route.LoaderArgs) {
      throw new Error('Expected product handle to be defined');
    }
 
@@ -1349,7 +1347,7 @@ Simplify product route to minimal implementation without cart functionality
    }
 
 -  // The API handle might be localized, so redirect to the localized handle
--  redirectIfHandleIsLocalized(request, {handle, data: product});
+-  redirectIfHandleIsLocalized(url, {handle, data: product});
 -
 -  return {
 -    product,
@@ -1540,14 +1538,31 @@ Simplify product route to minimal implementation without cart functionality
  ` as const;
 ```
 
-### Step 13: Add basic styles
+### Step 13: Update TypeScript configuration
+
+Remove Oxygen Workers type definitions since Express uses standard Node.js types
+
+#### File: /tsconfig.json
+
+```diff
+@@ -26,7 +26,6 @@
+     "skipLibCheck": true,
+     "baseUrl": ".",
+     "types": [
+-      "@shopify/oxygen-workers-types",
+       "react-router",
+       "@shopify/hydrogen/react-router-types",
+       "vite/client"
+```
+
+### Step 14: Add basic styles
 
 Replace skeleton styles with minimal Express template styling
 
 #### File: /app/styles/app.css
 
 ```diff
-@@ -1,594 +1,44 @@
+@@ -1,645 +1,54 @@
 -:root {
 -  --aside-width: 400px;
 -  --cart-aside-summary-height-with-discount: 300px;
@@ -1570,6 +1585,58 @@ Replace skeleton styles with minimal Express template styling
 -.link:hover {
 -  text-decoration: underline;
 -  cursor: pointer;
+-}
+-
+-/*
+-* --------------------------------------------------
+-* components/MockShopNotice
+-* --------------------------------------------------
+-*/
+-.mock-shop-notice {
+-  background: var(--color-light);
+-  border: 1px solid var(--color-dark);
+-  border-left-width: 0.5rem;
+-  margin: 1rem 0;
++body {
+   padding: 0;
+-
+-  .inner {
+-    padding: 0.875rem 1rem;
+-  }
+-
+-  h2 {
+-    font-size: 1.6rem;
+-    font-weight: 700;
+-    line-height: 1.4;
+-  }
+-
+-  p {
+-    font-size: 1rem;
+-    line-height: 1.4;
+-    margin-bottom: 0.5rem;
+-  }
+-
+-  footer {
+-    background: rgba(0, 0, 0, 0.06);
+-    padding: 0.5rem 1rem;
+-  }
+-
+-  .small {
+-    font-size: 0.875rem;
+-    line-height: 1.4;
+-    margin-bottom: 0.5rem;
+-  }
+-
+-  code {
+-    background: rgba(0, 0, 0, 0.06);
+-    border-radius: 0.25rem;
+-    padding: 0.1em 0.3em;
+-  }
+-
+-  a {
+-    text-decoration: underline;
+-    text-underline-offset: 6px;
+-  }
 -}
 -
 -/*
@@ -1604,9 +1671,22 @@ Replace skeleton styles with minimal Express template styling
 -}
 -
 -aside header h3 {
--  margin: 0;
--}
--
+   margin: 0;
++  background: rgb(245, 245, 241);
++  font-family:
++    system-ui,
++    -apple-system,
++    BlinkMacSystemFont,
++    'Segoe UI',
++    Roboto,
++    Oxygen,
++    Ubuntu,
++    Cantarell,
++    'Open Sans',
++    'Helvetica Neue',
++    sans-serif;
+ }
+
 -aside header .close {
 -  font-weight: bold;
 -  opacity: 0.8;
@@ -1633,7 +1713,10 @@ Replace skeleton styles with minimal Express template styling
 -}
 -
 -aside p:last-child {
--  margin: 0;
++h1,
++h2,
++p {
+   margin: 0;
 -}
 -
 -aside li {
@@ -1644,15 +1727,14 @@ Replace skeleton styles with minimal Express template styling
 -  position: absolute;
 -  width: 1px;
 -  height: 1px;
-+body {
    padding: 0;
 -  margin: -1px;
 -  overflow: hidden;
 -  clip-path: inset(50%);
 -  white-space: nowrap;
 -  border-width: 0;
--}
--
+ }
+
 -.overlay {
 -  background: rgba(0, 0, 0, 0.2);
 -  bottom: 0;
@@ -1707,22 +1789,14 @@ Replace skeleton styles with minimal Express template styling
 -}
 -
 -button.reset > * {
-   margin: 0;
-+  background: rgb(245, 245, 241);
-+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-+    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
- }
-
+-  margin: 0;
+-}
+-
 -button.reset:not(:has(> *)) {
 -  height: 1.5rem;
 -  line-height: 1.5rem;
-+h1,
-+h2,
-+p {
-+  margin: 0;
-+  padding: 0;
- }
-
+-}
+-
 -button.reset:hover:not(:has(> *)) {
 -  text-decoration: underline;
 -  cursor: pointer;
@@ -2171,7 +2245,7 @@ Replace skeleton styles with minimal Express template styling
 + */
 ```
 
-### Step 14: Update ESLint configuration
+### Step 15: Update ESLint configuration
 
 Simplify ESLint configuration for Express template
 
@@ -2431,7 +2505,7 @@ Simplify ESLint configuration for Express template
 \ No newline at end of file
 ```
 
-### Step 15: Install Express dependencies
+### Step 16: Install Express dependencies
 
 Update dependencies and scripts for Express server deployment (add express, nodemon, compression, remove Oxygen packages)
 
@@ -2439,7 +2513,7 @@ Update dependencies and scripts for Express server deployment (add express, node
 
 ```diff
 @@ -5,59 +5,52 @@
-   "version": "2026.1.0",
+   "version": "2026.1.1",
    "type": "module",
    "scripts": {
 -    "build": "shopify hydrogen build --codegen",
@@ -2455,41 +2529,39 @@ Update dependencies and scripts for Express server deployment (add express, node
    },
    "prettier": "@shopify/prettier-config",
    "dependencies": {
-+    "@react-router/express": "7.12.0",
-+    "@react-router/node": "7.12.0",
-+    "@remix-run/eslint-config": "^2.16.1",
-     "@shopify/hydrogen": "2026.1.0",
++    "@react-router/express": "8.0.1",
++    "@react-router/node": "8.0.1",
+     "@shopify/hydrogen": "workspace:*",
 +    "compression": "^1.7.4",
 +    "cross-env": "^7.0.3",
-+    "express": "^4.19.2",
++    "express": "^4.22.2",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
      "isbot": "^5.1.22",
 +    "morgan": "^1.10.0",
-     "react": "18.3.1",
-     "react-dom": "18.3.1",
-     "react-router": "7.12.0",
-     "react-router-dom": "7.12.0"
+     "react": "catalog:",
+     "react-dom": "catalog:",
+     "react-router": "8.0.1"
    },
    "devDependencies": {
 -    "@eslint/compat": "^1.2.5",
 -    "@eslint/eslintrc": "^3.2.0",
      "@eslint/js": "^9.18.0",
      "@graphql-codegen/cli": "5.0.2",
-     "@react-router/dev": "7.12.0",
-     "@react-router/fs-routes": "7.12.0",
-     "@shopify/cli": "3.85.4",
-     "@shopify/hydrogen-codegen": "^0.3.3",
--    "@shopify/mini-oxygen": "^4.0.0",
+     "@react-router/dev": "8.0.1",
+     "@react-router/fs-routes": "8.0.1",
+     "@shopify/cli": "3.93.2",
+     "@shopify/hydrogen-codegen": "workspace:*",
+-    "@shopify/mini-oxygen": "workspace:*",
 -    "@shopify/oxygen-workers-types": "^4.1.6",
--    "@shopify/prettier-config": "^1.1.2",
+-    "@shopify/prettier-config": "catalog:",
 -    "@total-typescript/ts-reset": "^0.6.1",
 -    "@types/eslint": "^9.6.1",
 +    "@types/compression": "^1.7.2",
 +    "@types/express": "^4.17.17",
 +    "@types/morgan": "^1.9.4",
-     "@types/react": "^18.2.22",
-     "@types/react-dom": "^18.2.7",
+     "@types/react": "catalog:",
+     "@types/react-dom": "catalog:",
 -    "@typescript-eslint/eslint-plugin": "^8.21.0",
 -    "@typescript-eslint/parser": "^8.21.0",
 -    "eslint": "^9.18.0",
@@ -2508,24 +2580,27 @@ Update dependencies and scripts for Express server deployment (add express, node
 +    "nodemon": "^2.0.22",
 +    "npm-run-all": "^4.1.5",
      "typescript": "^5.9.2",
-     "vite": "^6.2.4",
-     "vite-tsconfig-paths": "^4.3.1"
+     "vite": "^8.0.1"
    },
    "engines": {
--    "node": ">=18.0.0"
-+    "node": ">=20.0.0 <22.0.0"
+-    "node": "^22.22.0 || ^24"
++    "node": "^22.22.0 || ^24"
    }
  }
 ```
 
-### Step 16: Configure Vite for Node.js
+### Step 17: Configure Vite for Node.js
 
 Configure Vite for Express deployment with Node.js module externalization
 
 #### File: /vite.config.ts
 
 ```diff
-@@ -5,13 +5,15 @@ import {reactRouter} from '@react-router/dev/vite';
+@@ -1,17 +1,18 @@
+ import {defineConfig} from 'vite';
+ import {hydrogen} from '@shopify/hydrogen/vite';
+-import {oxygen} from '@shopify/mini-oxygen/vite';
+ import {reactRouter} from '@react-router/dev/vite';
  import tsconfigPaths from 'vite-tsconfig-paths';
 
  export default defineConfig({
@@ -2542,7 +2617,7 @@ Configure Vite for Express deployment with Node.js module externalization
      optimizeDeps: {
        /**
         * Include dependencies here if they throw CJS<>ESM errors.
-@@ -23,10 +25,7 @@ export default defineConfig({
+@@ -23,14 +24,7 @@ export default defineConfig({
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */

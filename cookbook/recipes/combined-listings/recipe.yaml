@@ -14,7 +14,7 @@ description: |
   4. Update the `ProductImage` component to support images from product variants and the product itself.
   5. Show a range of prices for combined listings in `ProductItem`.
 notes:
-  - This recipe is compatible with React Router 7.9.x and uses consolidated
+  - This recipe is compatible with React Router framework mode and uses consolidated
     imports from 'react-router' instead of separate '@shopify/remix-oxygen' and
     '@remix-run/react' packages.
 requirements: |
@@ -22,12 +22,13 @@ requirements: |
   - Your store must have the [Combined Listings app](https://admin.shopify.com/apps/combined-listings) installed.
 ingredients:
   - path: templates/skeleton/app/lib/combined-listings.ts
-    description: The `combined-listings.ts` file contains utilities and settings for
+    description:
+      The `combined-listings.ts` file contains utilities and settings for
       handling combined listings.
 deletedFiles: []
 steps:
   - type: INFO
-    step: "1"
+    step: '1'
     name: Set up the Combined Listings app
     description: |
       1. Install the [Combined Listings app](https://admin.shopify.com/apps/combined-listings).
@@ -36,7 +37,7 @@ steps:
 
       3. Add tags to the parent products of combined listings to indicate that they're part of a combined listing (for example `combined`).
   - type: INFO
-    step: "2"
+    step: '2'
     name: Configure combined listings behavior
     description: |
       You can customize how the parent products of combined listings are retrieved and displayed.
@@ -55,14 +56,15 @@ steps:
       };
       ```
   - type: NEW_FILE
-    step: "3"
+    step: '3'
     name: Add combined listings utilities
-    description: Create a new `combined-listings.ts` file that contains utilities
+    description:
+      Create a new `combined-listings.ts` file that contains utilities
       and settings for handling combined listings.
     ingredients:
       - path: templates/skeleton/app/lib/combined-listings.ts
   - type: PATCH
-    step: "4"
+    step: '4'
     name: Hide the cart button for combined listing parent products
     description: |
       1. Update the `ProductForm` component to hide the **Add to cart** button for the parent products of combined listings and for variants' selected state.
@@ -71,7 +73,7 @@ steps:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.aa8a24.patch
   - type: PATCH
-    step: "5"
+    step: '5'
     name: Support product and variant images
     description: |
       Update the `ProductImage` component to support images from both product variants and the product itself.
@@ -79,7 +81,7 @@ steps:
       - file: app/components/ProductImage.tsx
         patchFile: ProductImage.tsx.a62ff5.patch
   - type: PATCH
-    step: "6"
+    step: '6'
     name: Show a range of prices for combined listings in ProductItem
     description: |
       Update `ProductItem.tsx` to show a range of prices for the combined listing parent product instead of the variant price.
@@ -87,7 +89,7 @@ steps:
       - file: app/components/ProductItem.tsx
         patchFile: ProductItem.tsx.c6506f.patch
   - type: PATCH
-    step: "7"
+    step: '7'
     name: (Optional) Redirect to the first variant
     description: |
       If you want to redirect automatically to the first variant of a combined listing when the parent handle is selected, add a redirect utility that's called whenever the parent handle is requested.
@@ -95,16 +97,17 @@ steps:
       - file: app/lib/redirect.ts
         patchFile: redirect.ts.c1ee52.patch
   - type: PATCH
-    step: "8"
+    step: '8'
     name: Filter combined listings from the all products page
-    description: Update the "all products" collection page to filter out combined
+    description:
+      Update the "all products" collection page to filter out combined
       listing parent products, showing only the individual variant products
       instead
     diffs:
       - file: app/routes/collections.all.tsx
         patchFile: collections.all.tsx.88626d.patch
   - type: PATCH
-    step: "9"
+    step: '9'
     name: Filter recommended products
     description: |
       1. Add the `tags` property to the items returned by the product query.
@@ -113,7 +116,7 @@ steps:
       - file: app/routes/_index.tsx
         patchFile: _index.tsx.8ba83c.patch
   - type: PATCH
-    step: "10"
+    step: '10'
     name: (Optional) Filter out combined listings from collections pages
     description: |
       Since it's not possible to directly apply query filters when retrieving collection products, you can manually filter out combined listings after they're retrieved based on their tags.
@@ -121,14 +124,7 @@ steps:
       - file: app/routes/collections.$handle.tsx
         patchFile: collections.$handle.tsx.7abca5.patch
   - type: PATCH
-    step: "10"
-    name: package.json
-    description: null
-    diffs:
-      - file: package.json
-        patchFile: package.json.8e0ff5.patch
-  - type: PATCH
-    step: "11"
+    step: '11'
     name: Show price ranges on product pages
     description: |
       1. Display a range of prices for combined listings instead of the variant price.
@@ -138,7 +134,7 @@ steps:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.30ba8d.patch
   - type: PATCH
-    step: "12"
+    step: '12'
     name: Style the price range display
     description: |
       Add a class to the product item to show a range of prices for combined listings.
@@ -162,7 +158,8 @@ llms:
       variant price?
   troubleshooting:
     - issue: Combined listings are being displayed in the product list.
-      solution: Make sure to tag combined listing parent products in the Shopify admin
+      solution:
+        Make sure to tag combined listing parent products in the Shopify admin
         and use that tag to filter out combined listings from the product list
         in the GraphQL query.
 commit: 1040066d20b52667756fd1ebffd8607602a735b4

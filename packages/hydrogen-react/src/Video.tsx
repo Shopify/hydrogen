@@ -2,6 +2,7 @@ import {forwardRef, type HTMLAttributes} from 'react';
 import {shopifyLoader} from './Image.js';
 import type {Video as VideoType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
+import type {JSX} from 'react';
 
 /** @publicDocs */
 export interface VideoProps {

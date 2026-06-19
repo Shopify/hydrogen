@@ -5,11 +5,11 @@ index c584e5370..1ac3a34cb 100644
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Skeleton + Partytown + Google Tag Manager
  
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify's full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with [Partytown](https://partytown.builder.io/) for performance-oriented lazy-loading of [Google Tag Manager](https://support.google.com/tagmanager).
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with [Partytown](https://partytown.builder.io/) for performance-oriented lazy-loading of [Google Tag Manager](https://support.google.com/tagmanager).
  
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
+ [Get familiar with React Router](https://reactrouter.com/)
 @@ -17,12 +17,15 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
  - GraphQL generator
  - TypeScript and JavaScript flavors
@@ -21,7 +21,7 @@ index c584e5370..1ac3a34cb 100644
  
  **Requirements:**
  
- - Node.js version 18.0.0 or higher
+ - Node.js version 22.22.0 or higher
 +- [Google Tag Manager ID](https://support.google.com/tagmanager/answer/6103696?hl=en) (optional)
  
  ```bash

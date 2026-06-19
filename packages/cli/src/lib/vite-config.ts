@@ -77,19 +77,31 @@ export async function getViteConfig(
   const {appDirectory, serverBuildFile, routes} =
     getReactRouterOrRemixConfigFromVite(resolvedViteConfig);
 
-  const serverOutDir = resolvedViteConfig.build.outDir;
-  const clientOutDir = serverOutDir.replace(/server$/, 'client');
+  const viteOutDir = resolvePath(
+    resolvedViteConfig.root,
+    resolvedViteConfig.build.outDir,
+  );
 
   const rollupOutput = resolvedViteConfig.build.rollupOptions.output;
   const {entryFileNames} =
     (Array.isArray(rollupOutput) ? rollupOutput[0] : rollupOutput) ?? {};
+  const defaultServerBuildFile = viteOutDir.endsWith('server')
+    ? 'index.js'
+    : joinPath('server', 'index.js');
 
-  const serverOutFile = joinPath(
-    serverOutDir,
+  const serverEntryFileName =
     typeof entryFileNames === 'string'
       ? entryFileNames
-      : (serverBuildFile ?? 'index.js'),
-  );
+      : (serverBuildFile ?? defaultServerBuildFile);
+  const serverEntryFilePath =
+    viteOutDir.endsWith('server') || serverEntryFileName.includes('/')
+      ? serverEntryFileName
+      : joinPath('server', serverEntryFileName);
+  const serverOutFile = joinPath(viteOutDir, serverEntryFilePath);
+  const serverOutDir = dirname(serverOutFile);
+  const clientOutDir = serverOutDir.endsWith('server')
+    ? serverOutDir.replace(/server$/, 'client')
+    : viteOutDir.replace(/server$/, 'client');
 
   const ssrEntry = ssrEntryFlag ?? resolvedViteConfig.build.ssr;
   const resolvedSsrEntry = resolvePath(

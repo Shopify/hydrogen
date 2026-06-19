@@ -4,6 +4,7 @@ import {
   type CartLine,
 } from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
+import type {JSX} from 'react';
 
 type CartLinePartialDeep = PartialDeep<
   CartLine | ComponentizableCartLine,

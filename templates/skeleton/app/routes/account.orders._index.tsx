@@ -10,6 +10,7 @@ import {
   Money,
   getPaginationVariables,
   flattenConnection,
+  hydrogenContext,
 } from '@shopify/hydrogen';
 import {
   buildOrderSearchQuery,
@@ -34,7 +35,7 @@ export const meta: Route.MetaFunction = () => {
 };
 
 export async function loader({request, context}: Route.LoaderArgs) {
-  const {customerAccount} = context;
+  const customerAccount = context.get(hydrogenContext.customerAccount);
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 20,
   });

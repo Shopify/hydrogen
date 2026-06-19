@@ -15,8 +15,8 @@ index 3c2430385..52280986d 100644
 +  DiscountApplicationFragment,
 +} from 'storefrontapi.generated';
  
- export const meta: Route.MetaFunction = ({data}) => {
-   return [{title: `Order ${data?.order?.name}`}];
+ export const meta: Route.MetaFunction = ({loaderData}) => {
+   return [{title: `Order ${loaderData?.order?.name}`}];
  };
  
  export async function loader({params, context}: Route.LoaderArgs) {

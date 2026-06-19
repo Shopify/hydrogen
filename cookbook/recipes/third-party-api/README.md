@@ -1,21 +1,22 @@
 # Third-party API queries and caching in Hydrogen
 
-This recipe integrates third-party GraphQL APIs into your Hydrogen storefront 
-with Oxygen's powerful sub-request caching system. Using the Rick & Morty API as an example, 
+This recipe integrates third-party GraphQL APIs into your Hydrogen storefront
+with Oxygen's powerful sub-request caching system. Using the Rick & Morty API as an example,
 you'll learn how to:
 
-1. **Create a cached GraphQL client** - Build a reusable client factory that minifies queries, 
+1. **Create a cached GraphQL client** - Build a reusable client factory that minifies queries,
    handles error handling, and integrates with Oxygen's caching infrastructure.
 
-2. **Integrate with Hydrogen's context** - Add the third-party client to the global context 
+2. **Integrate with Hydrogen's context** - Add the third-party client to the global context
    system, making it available in all routes and actions throughout your application.
 
-3. **Query external APIs efficiently** - Fetch data from third-party sources in parallel 
+3. **Query external APIs efficiently** - Fetch data from third-party sources in parallel
    with Shopify API calls, leveraging Oxygen's caching to minimize latency and API calls.
 
 ## Use cases
 
 This pattern is perfect for integrating:
+
 - **CMS platforms** (Contentful, Sanity, Strapi)
 - **Review systems** (Yotpo, Judge.me, Reviews.io)
 - **Analytics services** (custom dashboards, reporting APIs)
@@ -49,8 +50,8 @@ This pattern is perfect for integrating:
 
 _New files added to the template by this recipe._
 
-| File | Description |
-| --- | --- |
+| File                                                                                                                                                                                                                                       | Description                                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
 | [app/lib/createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts) | A GraphQL client factory for third-party APIs with Oxygen caching support |
 
 ## Steps
@@ -63,29 +64,29 @@ Add documentation explaining how to integrate external GraphQL APIs with Oxygen 
 
 <details>
 
-~~~diff
+````diff
 index c584e5370..4c8dceadf 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,6 +1,6 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Skeleton with Third-party API Integration
- 
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify's full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, plus an example of integrating third-party GraphQL APIs with Oxygen caching.
- 
+
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, plus an example of integrating third-party GraphQL APIs with Oxygen caching.
+
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
+ [Get familiar with React Router](https://reactrouter.com/)
 @@ -40,6 +40,46 @@ npm run build
  npm run dev
  ```
- 
+
 +## Third-party API Integration
 +
 +This example demonstrates how to query third-party GraphQL APIs with Oxygen's sub-request caching. The example uses the public [Rick & Morty API](https://rickandmortyapi.com/documentation/#graphql) to show how to:
 +
 +1. Create a cached GraphQL client for third-party APIs
-+2. Integrate the client into Hydrogen's context  
++2. Integrate the client into Hydrogen's context
 +3. Query and display data from external APIs alongside Shopify data
 +
 +### Key files for third-party API integration
@@ -121,9 +122,9 @@ index c584e5370..4c8dceadf 100644
 +This pattern can be adapted for any third-party API integration including CMS systems, review platforms, analytics services, or custom backend APIs.
 +
  ## Setup for using Customer Account API (`/account` section)
- 
+
  Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
-~~~
+````
 
 </details>
 
@@ -136,12 +137,14 @@ This client handles query minification, error handling, and cache key generation
 
 <details>
 
-~~~ts
+```ts
 import {
   createWithCache,
   CacheLong,
   type CachingStrategy,
 } from '@shopify/hydrogen';
+
+export const OPERATION_NAME_PATTERN = /^(query|mutation)\s\w+/;
 
 export function createRickAndMortyClient({
   cache,
@@ -177,7 +180,7 @@ export function createRickAndMortyClient({
           shouldCacheResponse: (body) => !body?.error,
           cacheKey: ['r&m', body],
           displayName:
-            'Rick & Morty - ' + query.match(/^(query|mutation)\s\w+/)?.[0],
+            'Rick & Morty - ' + query.match(OPERATION_NAME_PATTERN)?.[0],
         },
       );
 
@@ -193,13 +196,13 @@ export function createRickAndMortyClient({
   };
 }
 
-function minifyQuery<T extends string>(string: T) {
+export function minifyQuery<T extends string>(string: T) {
   return string
     .replace(/\s*#.*$/gm, '') // Remove GQL comments
     .replace(/\s+/gm, ' ') // Minify spaces
     .trim() as T;
 }
-~~~
+```
 
 </details>
 
@@ -212,15 +215,16 @@ in all routes. Also update TypeScript declarations for proper type support.
 
 <details>
 
-~~~diff
+```diff
 index 692d5ae17..0635384ad 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
-@@ -1,25 +1,10 @@
- import {createHydrogenContext} from '@shopify/hydrogen';
+@@ -2,29 +2,10 @@
  import {AppSession} from '~/lib/session';
  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
--
+ import type {CartApiQueryFragment} from 'storefrontapi.generated';
++import {createRickAndMortyClient} from '~/lib/createRickAndMortyClient.server';
+
 -// Define the additional context object
 -const additionalContext = {
 -  // Additional context for custom properties, CMS clients, 3P SDKs, etc.
@@ -235,19 +239,22 @@ index 692d5ae17..0635384ad 100644
 -
 -declare global {
 -  interface HydrogenAdditionalContext extends AdditionalContextType {}
+-
+-  // Augment HydrogenCustomCartFragment with the codegen'd cart fragment type so
+-  // that context.cart.get() and all cart mutations return the extended cart type.
+-  interface HydrogenCustomCartFragment extends CartApiQueryFragment {}
 -}
-+import {createRickAndMortyClient} from '~/lib/createRickAndMortyClient.server';
- 
+-
  /**
-- * Creates Hydrogen context for React Router 7.9.x
-+ * Creates Hydrogen context for React Router 7.9.x with third-party API support
+- * Creates the Hydrogen context used by React Router loaders and actions.
++ * Creates the Hydrogen context used by React Router loaders and actions with third-party API support.
   * Returns HydrogenRouterContextProvider with hybrid access patterns
   * */
  export async function createHydrogenRouterContext(
-@@ -40,6 +25,19 @@ export async function createHydrogenRouterContext(
+@@ -45,6 +26,19 @@
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
- 
+
 +  // @description Create a Rick and Morty client for third-party GraphQL queries with Oxygen caching
 +  const rickAndMorty = createRickAndMortyClient({
 +    cache,
@@ -264,8 +271,8 @@ index 692d5ae17..0635384ad 100644
    const hydrogenContext = createHydrogenContext(
      {
        env,
-@@ -58,3 +56,12 @@ export async function createHydrogenRouterContext(
- 
+@@ -63,3 +57,13 @@
+
    return hydrogenContext;
  }
 +
@@ -276,9 +283,9 @@ index 692d5ae17..0635384ad 100644
 +
 +declare global {
 +  interface HydrogenAdditionalContext extends AdditionalContextType {}
++  interface HydrogenCustomCartFragment extends CartApiQueryFragment {}
 +}
-\ No newline at end of file
-~~~
+```
 
 </details>
 
@@ -287,11 +294,11 @@ index 692d5ae17..0635384ad 100644
 Update the homepage to fetch data from the third-party API and display it alongside
 Shopify data. This demonstrates parallel data fetching and proper caching strategies.
 
-#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/\_index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
-~~~diff
+```diff
 index 237edc911..d65e12537 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
@@ -318,7 +325,7 @@ index 237edc911..d65e12537 100644
 +      cache: CacheShort(),
 +    }),
    ]);
- 
+
    return {
      isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
      featuredCollection: collections.nodes[0],
@@ -326,7 +333,7 @@ index 237edc911..d65e12537 100644
 +    characters,
    };
  }
- 
+
 @@ -63,12 +69,50 @@ export default function Homepage() {
    return (
      <div className="home">
@@ -338,7 +345,7 @@ index 237edc911..d65e12537 100644
      </div>
    );
  }
- 
+
 +// @description Component to display Rick & Morty characters fetched from third-party API
 +function ThirdPartyApiExample({characters}: {characters: any}) {
 +  return (
@@ -381,7 +388,7 @@ index 237edc911..d65e12537 100644
 @@ -147,6 +191,18 @@ const FEATURED_COLLECTION_QUERY = `#graphql
    }
  ` as const;
- 
+
 +// @description GraphQL query for Rick & Morty characters from third-party API
 +const CHARACTERS_QUERY = `#graphql:rickAndMorty
 +  query Characters {
@@ -397,76 +404,29 @@ index 237edc911..d65e12537 100644
  const RECOMMENDED_PRODUCTS_QUERY = `#graphql
    fragment RecommendedProduct on Product {
      id
-~~~
+```
 
 </details>
-
-### Step 4: package.json
-
-
-
-#### File: [package.json](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/package.json)
-
-~~~diff
-index 0bb332639..651bbfffa 100644
---- a/templates/skeleton/package.json
-+++ b/templates/skeleton/package.json
-@@ -14,12 +14,12 @@
-   },
-   "prettier": "@shopify/prettier-config",
-   "dependencies": {
--    "@shopify/hydrogen": "workspace:*",
-+    "@shopify/hydrogen": "2026.4.0",
-     "graphql": "^16.10.0",
-     "graphql-tag": "^2.12.6",
-     "isbot": "^5.1.22",
--    "react": "catalog:",
--    "react-dom": "catalog:",
-+    "react": "^18.3.1",
-+    "react-dom": "^18.3.1",
-     "react-router": "7.14.0",
-     "react-router-dom": "7.14.0"
-   },
-@@ -31,14 +31,14 @@
-     "@react-router/dev": "7.14.0",
-     "@react-router/fs-routes": "7.14.0",
-     "@shopify/cli": "3.93.2",
--    "@shopify/hydrogen-codegen": "workspace:*",
--    "@shopify/mini-oxygen": "workspace:*",
-+    "@shopify/hydrogen-codegen": "0.3.3",
-+    "@shopify/mini-oxygen": "4.0.2",
-     "@shopify/oxygen-workers-types": "^4.1.6",
--    "@shopify/prettier-config": "catalog:",
-+    "@shopify/prettier-config": "^1.1.2",
-     "@total-typescript/ts-reset": "^0.6.1",
-     "@types/eslint": "^9.6.1",
--    "@types/react": "catalog:",
--    "@types/react-dom": "catalog:",
-+    "@types/react": "^18.3.28",
-+    "@types/react-dom": "^18.3.7",
-     "@typescript-eslint/eslint-plugin": "^8.21.0",
-     "@typescript-eslint/parser": "^8.21.0",
-     "eslint": "^9.18.0",
-~~~
 
 ## Next steps
 
 After applying this recipe, you can:
 
 1. **Customize the caching strategy** - Adjust cache durations based on your data freshness requirements:
+
    ```ts
    // Short cache for frequently changing data
-   cache: CacheShort()
-   
+   cache: CacheShort();
+
    // Long cache for stable data
-   cache: CacheLong()
-   
+   cache: CacheLong();
+
    // Custom cache duration
    cache: CacheCustom({
      mode: 'must-revalidate',
      maxAge: 60, // 1 minute
      staleWhileRevalidate: 60 * 5, // 5 minutes
-   })
+   });
    ```
 
 2. **Add more third-party APIs** - Create additional clients following the same pattern:
@@ -475,6 +435,7 @@ After applying this recipe, you can:
    - Update TypeScript types in the global declaration
 
 3. **Implement error handling** - Add try-catch blocks and fallback UI:
+
    ```ts
    try {
      const data = await context.yourApi.query(QUERY);

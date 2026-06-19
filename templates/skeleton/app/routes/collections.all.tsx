@@ -1,6 +1,11 @@
 import type {Route} from './+types/collections.all';
 import {useLoaderData} from 'react-router';
-import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
+import {
+  getPaginationVariables,
+  Image,
+  Money,
+  hydrogenContext,
+} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {ProductItem} from '~/components/ProductItem';
 import type {CollectionItemFragment} from 'storefrontapi.generated';
@@ -24,7 +29,7 @@ export async function loader(args: Route.LoaderArgs) {
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
 async function loadCriticalData({context, request}: Route.LoaderArgs) {
-  const {storefront} = context;
+  const storefront = context.get(hydrogenContext.storefront);
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 8,
   });

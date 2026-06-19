@@ -1,6 +1,7 @@
 import {forwardRef, ScriptHTMLAttributes, HTMLAttributes} from 'react';
 import {useNonce} from './csp';
 import {useLoadScript} from '@shopify/hydrogen-react';
+import type {JSX} from 'react';
 
 /** @publicDocs */
 type ScriptProps = HydrogenScriptProps & ScriptAttributes;

@@ -11,7 +11,7 @@ In this recipe, you'll make the following changes:
 5. Show a range of prices for combined listings in `ProductItem`.
 
 > [!NOTE]
-> This recipe is compatible with React Router 7.9.x and uses consolidated imports from 'react-router' instead of separate '@shopify/remix-oxygen' and '@remix-run/react' packages.
+> This recipe is compatible with React Router framework mode and uses consolidated imports from 'react-router' instead of separate '@shopify/remix-oxygen' and '@remix-run/react' packages.
 
 ## Requirements
 
@@ -22,8 +22,8 @@ In this recipe, you'll make the following changes:
 
 _New files added to the template by this recipe._
 
-| File | Description |
-| --- | --- |
+| File                                                                                                                                                                                                             | Description                                                                                     |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | [app/lib/combined-listings.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts) | The `combined-listings.ts` file contains utilities and settings for handling combined listings. |
 
 ## Steps
@@ -62,7 +62,7 @@ Create a new `combined-listings.ts` file that contains utilities and settings fo
 
 <details>
 
-~~~ts
+```ts
 // Edit these values to customize combined listings' behavior
 export const combinedListingsSettings = {
   // If true, loading the product page will redirect to the first variant
@@ -98,8 +98,7 @@ export function isCombinedListing(product: unknown) {
     product.tags.includes(combinedListingsSettings.combinedListingTag)
   );
 }
-
-~~~
+```
 
 </details>
 
@@ -112,7 +111,7 @@ export function isCombinedListing(product: unknown) {
 
 <details>
 
-~~~diff
+```diff
 index 47c8f3056..670d0804f 100644
 --- a/templates/skeleton/app/components/ProductForm.tsx
 +++ b/templates/skeleton/app/components/ProductForm.tsx
@@ -207,7 +206,7 @@ index 47c8f3056..670d0804f 100644
      </div>
    );
  }
-~~~
+```
 
 </details>
 
@@ -217,7 +216,7 @@ Update the `ProductImage` component to support images from both product variants
 
 #### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/ProductImage.tsx)
 
-~~~diff
+```diff
 index 5f3ac1cce..f1c9f2cdd 100644
 --- a/templates/skeleton/app/components/ProductImage.tsx
 +++ b/templates/skeleton/app/components/ProductImage.tsx
@@ -228,7 +227,7 @@ index 5f3ac1cce..f1c9f2cdd 100644
 +  ProductFragment,
 +} from 'storefrontapi.generated';
  import {Image} from '@shopify/hydrogen';
- 
+
  export function ProductImage({
    image,
  }: {
@@ -237,7 +236,7 @@ index 5f3ac1cce..f1c9f2cdd 100644
  }) {
    if (!image) {
      return <div className="product-image" />;
-~~~
+```
 
 ### Step 6: Show a range of prices for combined listings in ProductItem
 
@@ -245,7 +244,7 @@ Update `ProductItem.tsx` to show a range of prices for the combined listing pare
 
 #### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/ProductItem.tsx)
 
-~~~diff
+```diff
 index 3b0f69133..07fc73cd2 100644
 --- a/templates/skeleton/app/components/ProductItem.tsx
 +++ b/templates/skeleton/app/components/ProductItem.tsx
@@ -254,7 +253,7 @@ index 3b0f69133..07fc73cd2 100644
  } from 'storefrontapi.generated';
  import {useVariantUrl} from '~/lib/variants';
 +import {isCombinedListing} from '../lib/combined-listings';
- 
+
  export function ProductItem({
    product,
 @@ -36,9 +37,17 @@ export function ProductItem({
@@ -278,7 +277,7 @@ index 3b0f69133..07fc73cd2 100644
      </Link>
    );
  }
-~~~
+```
 
 ### Step 7: (Optional) Redirect to the first variant
 
@@ -286,7 +285,7 @@ If you want to redirect automatically to the first variant of a combined listing
 
 #### File: [app/lib/redirect.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/lib/redirect.ts)
 
-~~~diff
+```diff
 index f18c1d0d6..cbffc8a44 100644
 --- a/templates/skeleton/app/lib/redirect.ts
 +++ b/templates/skeleton/app/lib/redirect.ts
@@ -294,7 +293,7 @@ index f18c1d0d6..cbffc8a44 100644
  import {redirect} from 'react-router';
 +import type {ProductFragment} from 'storefrontapi.generated';
 +import {isCombinedListing} from './combined-listings';
- 
+
  export function redirectIfHandleIsLocalized(
    request: Request,
 @@ -21,3 +23,23 @@ export function redirectIfHandleIsLocalized(
@@ -321,7 +320,7 @@ index f18c1d0d6..cbffc8a44 100644
 +    throw redirect(url.toString());
 +  }
 +}
-~~~
+```
 
 ### Step 8: Filter combined listings from the all products page
 
@@ -329,7 +328,7 @@ Update the "all products" collection page to filter out combined listing parent 
 
 #### File: [app/routes/collections.all.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/collections.all.tsx)
 
-~~~diff
+```diff
 index 5a122262f..a0fd66d73 100644
 --- a/templates/skeleton/app/routes/collections.all.tsx
 +++ b/templates/skeleton/app/routes/collections.all.tsx
@@ -341,11 +340,11 @@ index 5a122262f..a0fd66d73 100644
 +  combinedListingsSettings,
 +  maybeFilterOutCombinedListingsQuery,
 +} from '../lib/combined-listings';
- 
+
  export const meta: Route.MetaFunction = () => {
    return [{title: `Hydrogen | Products`}];
 @@ -31,7 +35,12 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
- 
+
    const [{products}] = await Promise.all([
      storefront.query(CATALOG_QUERY, {
 -      variables: {...paginationVariables},
@@ -377,18 +376,18 @@ index 5a122262f..a0fd66d73 100644
        nodes {
          ...CollectionItem
        }
-~~~
+```
 
 ### Step 9: Filter recommended products
 
 1. Add the `tags` property to the items returned by the product query.
 2. (Optional) Add the filtering query to the product query to exclude combined listings.
 
-#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/\_index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
-~~~diff
+```diff
 index 237edc911..bfde9915e 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
@@ -397,7 +396,7 @@ index 237edc911..bfde9915e 100644
  import {ProductItem} from '~/components/ProductItem';
  import {MockShopNotice} from '~/components/MockShopNotice';
 +import {maybeFilterOutCombinedListingsQuery} from '~/lib/combined-listings';
- 
+
  export const meta: Route.MetaFunction = () => {
    return [{title: 'Hydrogen | Home'}];
 @@ -46,7 +47,11 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
@@ -453,7 +452,7 @@ index 237edc911..bfde9915e 100644
        nodes {
          ...RecommendedProduct
        }
-~~~
+```
 
 </details>
 
@@ -465,7 +464,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
 
 <details>
 
-~~~diff
+```diff
 index c416c2b3d..b627a950d 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
@@ -477,13 +476,13 @@ index c416c2b3d..b627a950d 100644
 +  combinedListingsSettings,
 +  isCombinedListing,
 +} from '~/lib/combined-listings';
- 
- export const meta: Route.MetaFunction = ({data}) => {
-   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+
+ export const meta: Route.MetaFunction = ({loaderData}) => {
+   return [{title: `Hydrogen | ${loaderData?.collection.title ?? ''} Collection`}];
 @@ -68,12 +72,25 @@ function loadDeferredData({context}: Route.LoaderArgs) {
  export default function Collection() {
    const {collection} = useLoaderData<typeof loader>();
- 
+
 +  // Manually filter out combined listings from the collection products, because filtering
 +  // would not work here.
 +  const filteredCollectionProducts = {
@@ -524,57 +523,9 @@ index c416c2b3d..b627a950d 100644
        ) {
          nodes {
            ...ProductItem
-~~~
+```
 
 </details>
-
-### Step 10: package.json
-
-
-
-#### File: [package.json](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/package.json)
-
-~~~diff
-index 0bb332639..651bbfffa 100644
---- a/templates/skeleton/package.json
-+++ b/templates/skeleton/package.json
-@@ -14,12 +14,12 @@
-   },
-   "prettier": "@shopify/prettier-config",
-   "dependencies": {
--    "@shopify/hydrogen": "workspace:*",
-+    "@shopify/hydrogen": "2026.4.0",
-     "graphql": "^16.10.0",
-     "graphql-tag": "^2.12.6",
-     "isbot": "^5.1.22",
--    "react": "catalog:",
--    "react-dom": "catalog:",
-+    "react": "^18.3.1",
-+    "react-dom": "^18.3.1",
-     "react-router": "7.14.0",
-     "react-router-dom": "7.14.0"
-   },
-@@ -31,14 +31,14 @@
-     "@react-router/dev": "7.14.0",
-     "@react-router/fs-routes": "7.14.0",
-     "@shopify/cli": "3.93.2",
--    "@shopify/hydrogen-codegen": "workspace:*",
--    "@shopify/mini-oxygen": "workspace:*",
-+    "@shopify/hydrogen-codegen": "0.3.3",
-+    "@shopify/mini-oxygen": "4.0.2",
-     "@shopify/oxygen-workers-types": "^4.1.6",
--    "@shopify/prettier-config": "catalog:",
-+    "@shopify/prettier-config": "^1.1.2",
-     "@total-typescript/ts-reset": "^0.6.1",
-     "@types/eslint": "^9.6.1",
--    "@types/react": "catalog:",
--    "@types/react-dom": "catalog:",
-+    "@types/react": "^18.3.28",
-+    "@types/react-dom": "^18.3.7",
-     "@typescript-eslint/eslint-plugin": "^8.21.0",
-     "@typescript-eslint/parser": "^8.21.0",
-     "eslint": "^9.18.0",
-~~~
 
 ### Step 11: Show price ranges on product pages
 
@@ -586,7 +537,7 @@ index 0bb332639..651bbfffa 100644
 
 <details>
 
-~~~diff
+```diff
 index 99730d418..bd97c83cb 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
@@ -603,13 +554,13 @@ index 99730d418..bd97c83cb 100644
 +  isCombinedListing,
 +  combinedListingsSettings,
 +} from '../lib/combined-listings';
- 
- export const meta: Route.MetaFunction = ({data}) => {
+
+ export const meta: Route.MetaFunction = ({loaderData}) => {
    return [
-@@ -59,6 +66,10 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+@@ -59,6 +66,10 @@ async function loadCriticalData({context, params, request, url}: Route.LoaderArgs) {
    // The API handle might be localized, so redirect to the localized handle
-   redirectIfHandleIsLocalized(request, {handle, data: product});
- 
+   redirectIfHandleIsLocalized(url, {handle, data: product});
+
 +  if (combinedListingsSettings.redirectToFirstVariant) {
 +    redirectIfCombinedListing(request, product);
 +  }
@@ -618,35 +569,35 @@ index 99730d418..bd97c83cb 100644
      product,
    };
 @@ -78,6 +89,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
- 
+
  export default function Product() {
    const {product} = useLoaderData<typeof loader>();
 +  const combinedListing = isCombinedListing(product);
- 
+
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
 @@ -87,7 +99,9 @@ export default function Product() {
- 
+
    // Sets the search param to the selected variant without navigation
    // only when no search params are set in the url
 -  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
 +  useSelectedOptionInUrlParam(
 +    combinedListing ? [] : selectedVariant.selectedOptions,
 +  );
- 
+
    // Get the product options array
    const productOptions = getProductOptions({
 @@ -95,21 +109,41 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
- 
+
 -  const {title, descriptionHtml} = product;
 +  const {descriptionHtml, title} = product;
 +
 +  const productImage = combinedListing
 +    ? (product.featuredImage ?? selectedVariant?.image)
 +    : selectedVariant?.image;
- 
+
    return (
      <div className="product">
 -      <ProductImage image={selectedVariant?.image} />
@@ -708,7 +659,7 @@ index 99730d418..bd97c83cb 100644
      options {
        name
        optionValues {
-~~~
+```
 
 </details>
 
@@ -718,14 +669,14 @@ Add a class to the product item to show a range of prices for combined listings.
 
 #### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/styles/app.css)
 
-~~~diff
+```diff
 index 3be08d316..38e9afed1 100644
 --- a/templates/skeleton/app/styles/app.css
 +++ b/templates/skeleton/app/styles/app.css
 @@ -489,6 +489,11 @@ button.reset:hover:not(:has(> *)) {
    width: 100%;
  }
- 
+
 +.product-item .combined-listing-price {
 +  display: flex;
 +  grid-gap: 0.5rem;
@@ -734,7 +685,7 @@ index 3be08d316..38e9afed1 100644
  /*
  * --------------------------------------------------
  * routes/products.$handle.tsx
-~~~
+```
 
 ## Next steps
 
