@@ -44,6 +44,6 @@ jobs:
       - name: Build and Publish to Oxygen
         id: deploy
         working-directory: templates/skeleton
-        run: pnpm exec shopify hydrogen deploy --no-lockfile-check
+        run: pnpm exec shopify-hydrogen deploy --no-lockfile-check
         env:
           SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014875 }}

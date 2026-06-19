@@ -386,7 +386,7 @@ jobs:
       - name: 🚀 Deploy skeleton to Oxygen
         id: deploy
         working-directory: templates/skeleton
-        run: pnpm exec shopify hydrogen deploy --no-lockfile-check --force --auth-bypass-token --env-file ../../e2e/envs/.env.customerAccount
+        run: pnpm exec shopify-hydrogen deploy --no-lockfile-check --force --auth-bypass-token --env-file ../../e2e/envs/.env.customerAccount
         env:
           SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000108386 }}
 
