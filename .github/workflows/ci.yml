@@ -323,7 +323,7 @@ jobs:
             --path "${{ runner.temp }}/h2-test-${{ matrix.pm }}" \
             --language ts \
             --mock-shop \
-            --install-deps \
+            --no-install-deps \
             --no-git \
             --package-manager ${{ matrix.pm }} \
             --no-shortcut \
@@ -331,23 +331,32 @@ jobs:
             --styling none
         shell: bash
 
-      - name: 📦 Use local Hydrogen CLI package
+      - name: 📦 Install with local Hydrogen packages
         run: |
           package_dir="${{ runner.temp }}/h2-local-packages"
           mkdir -p "$package_dir"
 
-          cli_tarball="$(pnpm --dir packages/cli pack --pack-destination "$package_dir" --json | node -e "let input = ''; process.stdin.on('data', (chunk) => input += chunk); process.stdin.on('end', () => { const result = JSON.parse(input); console.log((Array.isArray(result) ? result[0] : result).filename); });")"
+          pack_package() {
+            npm_config_ignore_scripts=true pnpm --dir "$1" pack --pack-destination "$package_dir" --json | node -e "let input = ''; process.stdin.on('data', (chunk) => input += chunk); process.stdin.on('end', () => { const result = JSON.parse(input); console.log((Array.isArray(result) ? result[0] : result).filename); });"
+          }
+
+          hydrogen_react_tarball="$(pack_package packages/hydrogen-react)"
+          hydrogen_tarball="$(pack_package packages/hydrogen)"
+          cli_tarball="$(pack_package packages/cli)"
 
           cd "${{ runner.temp }}/h2-test-${{ matrix.pm }}"
 
           case "${{ matrix.pm }}" in
             npm)
+              npm install "$hydrogen_react_tarball" "$hydrogen_tarball"
               npm install --save-dev "$cli_tarball"
               ;;
             pnpm)
+              pnpm add "$hydrogen_react_tarball" "$hydrogen_tarball"
               pnpm add --save-dev "$cli_tarball"
               ;;
             yarn)
+              yarn add "$hydrogen_react_tarball" "$hydrogen_tarball"
               yarn add --dev "$cli_tarball"
               ;;
           esac
