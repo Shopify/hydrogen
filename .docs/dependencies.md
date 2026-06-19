@@ -9,6 +9,7 @@ Quick lookup: "I changed X, what docs do I update?"
 - `pnpm-workspace.yaml`
 - `packages/hydrogen/src/react-router-preset.ts`
 - `packages/cli/package.json`
+- `packages/cli/bin/shopify-hydrogen.js`
 - `packages/cli/src/bin.ts`
 - `packages/cli/src/commands/hydrogen/upgrade.ts`
 - `templates/skeleton/package.json`
