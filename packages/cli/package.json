@@ -89,7 +89,10 @@
       "optional": true
     }
   },
-  "bin": "dist/create-app.js",
+  "bin": {
+    "cli-hydrogen": "dist/create-app.js",
+    "shopify-hydrogen": "dist/bin.js"
+  },
   "exports": {
     "./package.json": "./package.json",
     "./commands/hydrogen/init": {

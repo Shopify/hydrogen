@@ -8,6 +8,8 @@ Quick lookup: "I changed X, what docs do I update?"
 - `package.json`
 - `pnpm-workspace.yaml`
 - `packages/hydrogen/src/react-router-preset.ts`
+- `packages/cli/package.json`
+- `packages/cli/src/bin.ts`
 - `packages/cli/src/commands/hydrogen/upgrade.ts`
 - `templates/skeleton/package.json`
 - `templates/skeleton/README.md`

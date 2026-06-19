@@ -815,6 +815,9 @@ importers:
       '@shopify/cli':
         specifier: 3.93.2
         version: 3.93.2
+      '@shopify/cli-hydrogen':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@shopify/hydrogen-codegen':
         specifier: workspace:*
         version: link:../../packages/hydrogen-codegen
