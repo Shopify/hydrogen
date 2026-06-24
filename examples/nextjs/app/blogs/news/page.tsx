@@ -2,7 +2,7 @@ import { gql } from "@shopify/hydrogen";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getStorefrontClient } from "../../lib/storefront";
+import { getStorefrontClient } from "@/lib/storefront";
 
 const NEWS_QUERY = gql(`
   query News {

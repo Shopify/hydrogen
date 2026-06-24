@@ -3,8 +3,8 @@
 import { ShopPayButton as HydrogenShopPayButton } from "@shopify/hydrogen/react";
 import { useEffect, useMemo, useState } from "react";
 
-import { useCart, useCartForm } from "../lib/cart";
-import { formatMoney } from "../lib/money";
+import { useCart, useCartForm } from "@/lib/cart";
+import { formatMoney } from "@/lib/money";
 
 function AddTestItem() {
   return (
