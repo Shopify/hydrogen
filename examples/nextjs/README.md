@@ -32,7 +32,7 @@ The scaffold ships an `AGENTS.md` (and `CLAUDE.md` pointer to it) that tells cod
 ## Stubbed vs. live
 
 - **Live**: product data, collection data, article content, prices, images, options, cart state (server-fetched via `createCartServerHandlers().get` in the root layout and hydrated into `CartProvider`), cart drawer, cart page mutations, product variant selection, add-to-cart, checkout, Shop Pay.
-- **Stubbed**: hero links, search, account, newsletter form, news index list, color swatch hex values (mapped client-side from option name → CSS color in `app/components/ProductDetails.tsx`).
+- **Stubbed**: hero links, search, account, newsletter form, news index list, color swatch hex values (mapped client-side from option name → CSS color in `components/ProductDetails.tsx`).
 
 ## Run
 
@@ -50,10 +50,10 @@ Note: Next.js 16 does **not** cache `fetch` by default — every request to a se
 
 Same shape as the React Router example — every framework port re-invents the same three pieces, so this is the feedback loop into the Hydrogen package in `packages/hydrogen`:
 
-- `storefrontClient.graphql()` in `app/lib/storefront.ts` — now uses `createStorefrontClient` from `@shopify/hydrogen` with `gql.tada` for zero-config type inference. Error normalization and request-id propagation are handled by the core client.
-- `formatMoney()` in `app/lib/money.ts` — every example needs money formatting from a `MoneyV2`-shaped object.
+- `storefrontClient.graphql()` in `lib/storefront.ts` — now uses `createStorefrontClient` from `@shopify/hydrogen` with `gql.tada` for zero-config type inference. Error normalization and request-id propagation are handled by the core client.
+- `formatMoney()` in `lib/money.ts` — every example needs money formatting from a `MoneyV2`-shaped object.
 - `ProductCard` reads a narrow product shape (`handle`, `title`, `featuredImage`, `priceRange.minVariantPrice`). A core fragment + type for "product card" would let routes share GraphQL fragments instead of re-listing fields.
-- Color swatch mapping (`SWATCHES` in `app/components/ProductDetails.tsx`) is hand-rolled — option-value → swatch metadata is a real merchant problem; the SDK should have an opinion on how to expose it.
+- Color swatch mapping (`SWATCHES` in `components/ProductDetails.tsx`) is hand-rolled — option-value → swatch metadata is a real merchant problem; the SDK should have an opinion on how to expose it.
 
 ## Open questions
 

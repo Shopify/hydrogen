@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getStorefrontClient } from "../../../lib/storefront";
+import { getStorefrontClient } from "@/lib/storefront";
 
 const ARTICLE_QUERY = gql(`
   query Article($handle: String!) {

@@ -1,7 +1,7 @@
 import { gql } from "@shopify/hydrogen";
 import Link from "next/link";
 
-import { getStorefrontClient } from "../lib/storefront";
+import { getStorefrontClient } from "@/lib/storefront";
 
 const COLLECTIONS_QUERY = gql(`
   query Collections {
