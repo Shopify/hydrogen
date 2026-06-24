@@ -10,6 +10,7 @@ import {
   setupOxygenMiddleware,
   type MiniOxygenViteOptions,
 } from './server-middleware.js';
+import {getHydrogenCompatibilityDate} from './compat-date.js';
 
 // Note: Vite resolves extensions like .js or .ts automatically.
 const DEFAULT_SSR_ENTRY = './server';
@@ -40,6 +41,7 @@ export type {MiniOxygenDevEnvironment};
 export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
   let apiOptions: OxygenApiOptions = {};
   let miniOxygenEnvironment: MiniOxygenDevEnvironment | undefined;
+  let root = process.cwd();
 
   const resolveMiniOxygenOptions = async (
     runtimeOptions: MiniOxygenRuntimeOptions,
@@ -59,7 +61,9 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         runtimeOptions.inspectorPort ?? pluginOptions.inspectorPort,
       requestHook: runtimeOptions.requestHook,
       entryPointErrorHandler: runtimeOptions.entryPointErrorHandler,
-      compatibilityDate: runtimeOptions.compatibilityDate,
+      compatibilityDate:
+        runtimeOptions.compatibilityDate ??
+        getHydrogenCompatibilityDate(viteDevServer.config.root),
       logRequestLine:
         // Give priority to the plugin option over the CLI option here,
         // since the CLI one is just a default, not a user-provided flag.
@@ -76,8 +80,26 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
     {
       name: 'oxygen:main',
       config(config, env) {
+        const build = {
+          ...(!config.build?.outDir && {outDir: 'dist'}),
+          // When building, the CLI will set the `ssr` option to `true`
+          // if no --entry flag is passed for the default SSR entry file.
+          // Replace it here with a default value.
+          ...(env.isSsrBuild &&
+            config.build?.ssr && {
+              ssr:
+                config.build?.ssr === true
+                  ? // No --entry flag passed by the user, use the
+                    // option passed to the plugin or the default value
+                    (pluginOptions.entry ?? DEFAULT_SSR_ENTRY)
+                  : // --entry flag passed by the user, keep it
+                    config.build?.ssr,
+            }),
+        };
+
         return {
           appType: 'custom',
+          ...(Object.keys(build).length > 0 && {build}),
           resolve: {
             conditions: ['worker', 'workerd', ...defaultClientConditions],
           },
@@ -88,22 +110,10 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
               conditions: ['worker', 'workerd', ...defaultClientConditions],
             },
           },
-          // When building, the CLI will set the `ssr` option to `true`
-          // if no --entry flag is passed for the default SSR entry file.
-          // Replace it here with a default value.
-          ...(env.isSsrBuild &&
-            config.build?.ssr && {
-              build: {
-                ssr:
-                  config.build?.ssr === true
-                    ? // No --entry flag passed by the user, use the
-                      // option passed to the plugin or the default value
-                      (pluginOptions.entry ?? DEFAULT_SSR_ENTRY)
-                    : // --entry flag passed by the user, keep it
-                      config.build?.ssr,
-              },
-            }),
         };
+      },
+      configResolved(resolvedConfig) {
+        root = resolvedConfig.root;
       },
       configEnvironment(name) {
         if (name !== 'ssr') return;
@@ -145,17 +155,20 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         },
       },
       generateBundle() {
-        if (apiOptions.compatibilityDate) {
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(apiOptions.compatibilityDate)) {
+        const compatibilityDate =
+          apiOptions.compatibilityDate ?? getHydrogenCompatibilityDate(root);
+
+        if (compatibilityDate) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(compatibilityDate)) {
             throw new Error(
-              `Invalid compatibility date "${apiOptions.compatibilityDate}"`,
+              `Invalid compatibility date "${compatibilityDate}"`,
             );
           }
 
           const oxygenJsonFile = 'oxygen.json';
           const oxygenJsonContent = {
             version: 1,
-            compatibility_date: apiOptions.compatibilityDate,
+            compatibility_date: compatibilityDate,
           };
 
           this.emitFile({
