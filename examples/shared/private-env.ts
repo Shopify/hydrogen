@@ -7,15 +7,16 @@ type SharedSecrets = Record<string, string>;
 export function getPrivateStorefrontToken(): string {
   const token = getSharedSecret(PRIVATE_STOREFRONT_TOKEN_KEY);
   if (!token) {
-    throw new Error(
-      `${PRIVATE_STOREFRONT_TOKEN_KEY} is required for SSR requests. ` +
-        `Run "pnpm run examples:secrets:decrypt" to create examples/shared/secrets.ts.`,
-    );
+    throw new Error(`Missing ${PRIVATE_STOREFRONT_TOKEN_KEY} is required for SSR requests.`);
   }
   return token;
 }
 
 export function getSharedSecret(key: string): string | undefined {
-  const value = (secrets as SharedSecrets)[key];
-  return typeof value === "string" && value ? value : undefined;
+  const fromSecrets = (secrets as SharedSecrets)[key];
+  if (typeof fromSecrets === "string" && fromSecrets) return fromSecrets;
+
+  if (typeof process === "undefined" || !process.env) return undefined;
+  const fromEnv = process.env[key];
+  return typeof fromEnv === "string" && fromEnv ? fromEnv : undefined;
 }

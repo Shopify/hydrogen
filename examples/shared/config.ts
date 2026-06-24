@@ -34,9 +34,16 @@ const hydrogenPreviewStore = {
   shopId: "gid://shopify/Shop/55145660472",
 } as const;
 
+function readEnv(key: string): string | undefined {
+  if (typeof process === "undefined" || !process.env) return undefined;
+  const value = process.env[key];
+  return typeof value === "string" && value ? value : undefined;
+}
+
 export const storefrontConfig = {
-  storeDomain: hydrogenPreviewStore.storeDomain,
-  publicStorefrontToken: hydrogenPreviewStore.publicStorefrontToken,
+  storeDomain: readEnv("PUBLIC_STORE_DOMAIN") ?? hydrogenPreviewStore.storeDomain,
+  publicStorefrontToken:
+    readEnv("PUBLIC_STOREFRONT_API_TOKEN") ?? hydrogenPreviewStore.publicStorefrontToken,
   i18n: { country: "US", language: "EN" },
 } satisfies StorefrontConfigShape;
 
