@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
-import { CollectionBrowser } from "../components/CollectionBrowser";
-import { querySearch } from "../lib/search";
-import { getStorefrontClient } from "../lib/storefront";
-import { pageSearchParamsToUrlSearchParams, type PageSearchParams } from "../lib/url";
+import { CollectionBrowser } from "@/components/CollectionBrowser";
+import { querySearch } from "@/lib/search";
+import { getStorefrontClient } from "@/lib/storefront";
+import { pageSearchParamsToUrlSearchParams, type PageSearchParams } from "@/lib/url";
 
 type Props = {
   searchParams: PageSearchParams;

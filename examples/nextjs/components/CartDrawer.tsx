@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo } from "react";
 
-import { useCart } from "../lib/cart";
+import { useCart } from "@/lib/cart";
 import {
   CART_DRAWER_ID,
   closeCartDrawer,
   configureOpenCartAction,
   supportsDialogCommands,
-} from "../lib/cart-drawer";
+} from "@/lib/cart-drawer";
+
 import { CartNote, CartTotals, CheckoutButton, DiscountCodes, LineItems } from "./Cart";
 
 // React types do not include Invoker Commands yet: https://github.com/facebook/react/issues/32478

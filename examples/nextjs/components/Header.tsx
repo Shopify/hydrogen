@@ -1,32 +1,18 @@
-"use client";
-
-import type { HeaderCollection } from "@shared/header";
+import { HEADER_COLLECTIONS_QUERY, normalizeHeaderCollections } from "@shared/header";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
-import { useCart } from "../lib/cart";
-import { CART_DRAWER_ID, openCartDrawer, supportsDialogCommands } from "../lib/cart-drawer";
+import { getStorefrontClient } from "@/lib/storefront";
 
-// React types do not include Invoker Commands yet: https://github.com/facebook/react/issues/32478
-const openCartCommandAttributes = {
-  command: "show-modal",
-  commandfor: CART_DRAWER_ID,
-};
+import { CartButton } from "./CartButton";
 
-export function Header({ collections }: { collections: HeaderCollection[] }) {
-  const totalQuantity = useCart((s) => s.data.totalQuantity);
-  const [hasHydrated, setHasHydrated] = useState(false);
-  const cartLabel =
-    totalQuantity === 0
-      ? "Cart, empty"
-      : `Cart, ${totalQuantity > 99 ? "99 or more" : totalQuantity} ${totalQuantity === 1 ? "item" : "items"}`;
-  const cartBadge = totalQuantity > 0 && (
-    <span className="absolute -top-2 -right-2 grid h-5 min-w-5 place-items-center rounded-full bg-black px-1 text-[11px] font-bold text-white">
-      {totalQuantity > 99 ? "99+" : totalQuantity}
-    </span>
-  );
+async function getHeaderCollections() {
+  const storefrontClient = await getStorefrontClient();
+  const { data } = await storefrontClient.graphql(HEADER_COLLECTIONS_QUERY);
+  return normalizeHeaderCollections(data?.collections?.nodes);
+}
 
-  useEffect(() => setHasHydrated(true), []);
+export async function Header() {
+  const collections = await getHeaderCollections();
 
   return (
     <header className="border-b border-black/10">
@@ -87,46 +73,9 @@ export function Header({ collections }: { collections: HeaderCollection[] }) {
               <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
             </svg>
           </Link>
-          {hasHydrated ? (
-            <button
-              type="button"
-              aria-label={cartLabel}
-              aria-controls={CART_DRAWER_ID}
-              aria-haspopup="dialog"
-              {...openCartCommandAttributes}
-              onClick={() => {
-                if (!supportsDialogCommands()) openCartDrawer();
-              }}
-              className="relative hover:opacity-60"
-            >
-              <CartIcon />
-              {cartBadge}
-            </button>
-          ) : (
-            <Link href="/cart" aria-label={cartLabel} className="relative hover:opacity-60">
-              <CartIcon />
-              {cartBadge}
-            </Link>
-          )}
+          <CartButton />
         </div>
       </div>
     </header>
-  );
-}
-
-function CartIcon() {
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden={true}
-    >
-      <path d="M5 7h14l-1.5 12a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8L5 7Z" />
-      <path d="M9 7V5a3 3 0 0 1 6 0v2" />
-    </svg>
   );
 }

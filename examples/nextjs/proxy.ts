@@ -5,7 +5,7 @@ import { handleShopifyRoutes } from "@shopify/hydrogen";
 import { createStorefrontClient, createStorefrontRequestContext } from "@shopify/hydrogen";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { cartHandlers } from "./app/lib/cart-handlers";
+import { cartHandlers } from "@/lib/cart-handlers";
 
 export async function proxy(request: NextRequest) {
   const requestContext = createStorefrontRequestContext(request);

@@ -1,35 +1,8 @@
-import { gql } from "@shopify/hydrogen";
 import Link from "next/link";
 
-import { ProductCard } from "./components/ProductCard";
-import { getStorefrontClient } from "./lib/storefront";
+import { ProductListShell } from "@/components/ProductList";
 
-const HOME_QUERY = gql(`
-  query Home {
-    products(first: 3) {
-      nodes {
-        handle
-        title
-        featuredImage {
-          url
-          altText
-        }
-        priceRange {
-          minVariantPrice {
-            amount
-            currencyCode
-          }
-        }
-      }
-    }
-  }
-`);
-
-export default async function HomePage() {
-  const storefrontClient = await getStorefrontClient();
-  const { data } = await storefrontClient.graphql(HOME_QUERY);
-  const products = data?.products?.nodes ?? [];
-
+export default function HomePage() {
   return (
     <main>
       <section className="grid grid-cols-1 md:grid-cols-2">
@@ -66,18 +39,7 @@ export default async function HomePage() {
           </div>
         </Link>
       </section>
-
-      <section className="bg-paper py-24 md:py-32">
-        <div className="mx-auto max-w-[1480px] px-6 text-center">
-          <p className="text-sm font-medium tracking-wide text-black/70">New Arrivals</p>
-          <h2 className="mt-4 text-6xl font-black tracking-tight md:text-8xl">Spring &apos;26</h2>
-          <div className="mt-16 grid grid-cols-1 gap-8 text-left md:grid-cols-3">
-            {products.map((product) => (
-              <ProductCard key={product.handle} product={product} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <ProductListShell />
     </main>
   );
 }

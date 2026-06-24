@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { formatMoney } from "../lib/money";
+import { formatMoney } from "@/lib/money";
 
 export type ProductCardData = {
   handle: string;

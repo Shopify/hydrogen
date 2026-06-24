@@ -2,8 +2,8 @@ import { getSelectedProductOptions, gql, type SelectedOption } from "@shopify/hy
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ProductDetails } from "../../components/ProductDetails";
-import { getStorefrontClient } from "../../lib/storefront";
+import { ProductDetails } from "@/components/ProductDetails";
+import { getStorefrontClient } from "@/lib/storefront";
 
 const PRODUCT_VARIANT_FRAGMENT = gql(`
   fragment ProductVariantFragment on ProductVariant {
