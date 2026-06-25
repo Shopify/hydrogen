@@ -11,6 +11,10 @@ import {
   type MiniOxygenViteOptions,
 } from './server-middleware.js';
 import {getHydrogenCompatibilityDate} from './compat-date.js';
+import {
+  setupOxygenPreviewServer,
+  type OxygenPreviewOptions,
+} from './preview.js';
 
 // Note: Vite resolves extensions like .js or .ts automatically.
 const DEFAULT_SSR_ENTRY = './server';
@@ -21,7 +25,8 @@ export type OxygenPluginOptions = Partial<
     MiniOxygenViteOptions,
     'entry' | 'env' | 'inspectorPort' | 'logRequestLine' | 'debug'
   >
->;
+> &
+  OxygenPreviewOptions;
 
 type OxygenApiOptions = MiniOxygenRuntimeOptions;
 
@@ -152,6 +157,16 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
               () => apiOptions.entryPointErrorHandler,
             );
           };
+        },
+      },
+      configurePreviewServer: {
+        order: 'pre',
+        async handler(previewServer) {
+          return setupOxygenPreviewServer(
+            previewServer,
+            pluginOptions,
+            apiOptions,
+          );
         },
       },
       generateBundle() {

@@ -1,7 +1,7 @@
 import {describe, it, expect, vi} from 'vitest';
 import {Readable, Writable} from 'node:stream';
 import {IncomingMessage, ServerResponse} from 'node:http';
-import {pipeFromWeb, toWeb, toURL} from './utils.js';
+import {pipeFromWeb, toMiniflareRequest, toWeb, toURL} from './utils.js';
 import * as nodeFetchServer from '@mjackson/node-fetch-server';
 
 // Mock the sendResponse function from @mjackson/node-fetch-server
@@ -84,6 +84,21 @@ describe('utils', () => {
 
       const webReq = toWeb(nodeReq);
       expect(webReq.body).toBeNull();
+    });
+  });
+
+  describe('toMiniflareRequest', () => {
+    it('should preserve the original host in X-Forwarded-Host', () => {
+      const request = new Request('http://localhost/test', {
+        headers: {host: 'original.example.com'},
+      });
+
+      const miniflareRequest = toMiniflareRequest(request);
+
+      expect(miniflareRequest.headers.get('x-forwarded-host')).toBe(
+        'original.example.com',
+      );
+      expect(miniflareRequest.headers.get('accept-encoding')).toBe('identity');
     });
   });
 

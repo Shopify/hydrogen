@@ -42,6 +42,9 @@ vi.mock('./server-middleware.js', () => ({
   WARMUP_PATHNAME: '/__vite_warmup',
   getViteUrl: mocks.getViteUrl,
   startMiniOxygenRuntime: mocks.startMiniOxygenRuntime,
+}));
+
+vi.mock('./utils.js', () => ({
   toMiniflareRequest: mocks.toMiniflareRequest,
 }));
 

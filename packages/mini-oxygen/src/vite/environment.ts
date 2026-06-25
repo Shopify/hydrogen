@@ -12,8 +12,8 @@ import {
   WARMUP_PATHNAME,
   getViteUrl,
   startMiniOxygenRuntime,
-  toMiniflareRequest,
 } from './server-middleware.js';
+import {toMiniflareRequest} from './utils.js';
 
 export type MiniOxygenRuntimeOptions = Partial<
   Pick<

@@ -2,7 +2,26 @@ import {mkdtempSync, mkdirSync, rmSync, writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {afterEach, describe, expect, it, vi} from 'vitest';
+
+vi.mock('../worker/index.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../worker/index.js')>();
+
+  return {
+    ...actual,
+    createMiniOxygen: vi.fn(() => ({
+      ready: Promise.resolve({workerUrl: new URL('http://localhost:3000')}),
+      dispatchFetch: vi.fn(),
+      dispose: vi.fn(),
+    })),
+  };
+});
+
+vi.mock('../common/find-port.js', () => ({
+  findPort: vi.fn(async () => 9100),
+}));
+
 import type {Plugin} from 'vite';
+import {createMiniOxygen} from '../worker/index.js';
 import {oxygen, type OxygenPluginOptions} from './plugin.js';
 
 const tempRoots: string[] = [];
@@ -39,6 +58,13 @@ function createRootWithHydrogenVersion(version: string) {
       exports: {'./package.json': './package.json'},
     }),
   );
+}
+
+function createRoot() {
+  const root = mkdtempSync(join(tmpdir(), 'mini-oxygen-'));
+  tempRoots.push(root);
+
+  return root;
 }
 
 function runConfigHook(
@@ -100,8 +126,47 @@ function runConfigEnvironmentHook(plugin: Plugin, name: string) {
   return (plugin.configEnvironment as any)(name);
 }
 
+async function runConfigurePreviewServerHook(
+  plugin: Plugin,
+  {
+    root,
+    clientOutDir = join(root, 'dist/client'),
+  }: {
+    root: string;
+    clientOutDir?: string;
+  },
+) {
+  const hook =
+    typeof plugin.configurePreviewServer === 'function'
+      ? plugin.configurePreviewServer
+      : plugin.configurePreviewServer?.handler;
+
+  if (!hook) {
+    throw new Error(
+      'Expected oxygen plugin to expose a configurePreviewServer hook.',
+    );
+  }
+
+  const previewServer = {
+    config: {
+      root,
+      build: {outDir: clientOutDir},
+      environments: {client: {build: {outDir: clientOutDir}}},
+    },
+    httpServer: {once: vi.fn()},
+    middlewares: {use: vi.fn()},
+  };
+
+  const postHook = await (hook as any)(previewServer);
+  postHook?.();
+
+  return previewServer;
+}
+
 describe('oxygen Vite plugin', () => {
   afterEach(() => {
+    vi.mocked(createMiniOxygen).mockClear();
+
     for (const root of tempRoots.splice(0)) {
       rmSync(root, {recursive: true, force: true});
     }
@@ -209,5 +274,87 @@ describe('oxygen Vite plugin', () => {
     const emitFile = runSsrBuildHooks(plugin, root);
 
     expect(emitFile).not.toHaveBeenCalled();
+  });
+
+  it('uses the server directory next to the Vite client output for preview', async () => {
+    const plugin = getOxygenPlugin();
+    const root = createRoot();
+    const clientOutDir = join(root, 'build/client');
+    const workerFile = join(root, 'build/server/index.js');
+
+    mkdirSync(clientOutDir, {recursive: true});
+    mkdirSync(join(root, 'build/server'), {recursive: true});
+    writeFileSync(workerFile, 'export default {fetch() {}};');
+
+    const previewServer = await runConfigurePreviewServerHook(plugin, {
+      root,
+      clientOutDir,
+    });
+
+    expect(createMiniOxygen).toHaveBeenCalledWith(
+      expect.objectContaining({
+        assets: expect.objectContaining({directory: clientOutDir}),
+        workers: [
+          expect.objectContaining({
+            modulesRoot: join(root, 'build/server'),
+            modules: [
+              expect.objectContaining({
+                path: workerFile,
+                contents: 'export default {fetch() {}};',
+              }),
+            ],
+          }),
+        ],
+      }),
+    );
+    expect(previewServer.middlewares.use).toHaveBeenCalledOnce();
+  });
+
+  it('uses the configured preview entry', async () => {
+    const plugin = getOxygenPlugin({previewEntry: 'custom/worker.mjs'});
+    const root = createRoot();
+    const clientOutDir = join(root, 'dist/client');
+    const workerFile = join(root, 'custom/worker.mjs');
+
+    mkdirSync(clientOutDir, {recursive: true});
+    mkdirSync(join(root, 'custom'), {recursive: true});
+    writeFileSync(workerFile, 'export default {fetch() {}};');
+
+    await runConfigurePreviewServerHook(plugin, {root, clientOutDir});
+
+    expect(createMiniOxygen).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workers: [
+          expect.objectContaining({
+            modulesRoot: join(root, 'custom'),
+            modules: [expect.objectContaining({path: workerFile})],
+          }),
+        ],
+      }),
+    );
+  });
+
+  it('falls back to the default dist server entry for preview', async () => {
+    const plugin = getOxygenPlugin();
+    const root = createRoot();
+    const clientOutDir = join(root, 'custom/client');
+    const workerFile = join(root, 'dist/server/index.mjs');
+
+    mkdirSync(clientOutDir, {recursive: true});
+    mkdirSync(join(root, 'dist/server'), {recursive: true});
+    writeFileSync(workerFile, 'export default {fetch() {}};');
+
+    await runConfigurePreviewServerHook(plugin, {root, clientOutDir});
+
+    expect(createMiniOxygen).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workers: [
+          expect.objectContaining({
+            modulesRoot: join(root, 'dist/server'),
+            modules: [expect.objectContaining({path: workerFile})],
+          }),
+        ],
+      }),
+    );
   });
 });
