@@ -43,6 +43,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
   let apiOptions: OxygenApiOptions = {};
   let miniOxygenEnvironment: MiniOxygenDevEnvironment | undefined;
   let root = process.cwd();
+  let isSsrBuild = false;
 
   const resolveMiniOxygenOptions = async (
     runtimeOptions: MiniOxygenRuntimeOptions,
@@ -81,6 +82,8 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
     {
       name: 'oxygen:main',
       config(config, env) {
+        isSsrBuild = Boolean(env.isSsrBuild);
+
         const build = {
           // When building, the CLI will set the `ssr` option to `true`
           // if no --entry flag is passed for the default SSR entry file.
@@ -152,6 +155,8 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         },
       },
       generateBundle() {
+        if (!isSsrBuild) return;
+
         const compatibilityDate =
           apiOptions.compatibilityDate ?? getHydrogenCompatibilityDate(root);
 
