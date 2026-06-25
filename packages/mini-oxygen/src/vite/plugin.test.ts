@@ -253,7 +253,7 @@ describe('oxygen Vite plugin', () => {
       type: 'asset',
       fileName: 'oxygen.json',
       source: JSON.stringify(
-        {version: 1, compatibility_date: '2025-04-01'},
+        {version: 1, compatibility_date: '2026-04-01'},
         null,
         2,
       ),
