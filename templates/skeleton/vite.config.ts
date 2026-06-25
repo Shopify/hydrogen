@@ -1,10 +1,9 @@
 import {defineConfig} from 'vite';
-import {hydrogen} from '@shopify/hydrogen/vite';
 import {oxygen} from '@shopify/mini-oxygen/vite';
 import {reactRouter} from '@react-router/dev/vite';
 
 export default defineConfig({
-  plugins: [hydrogen(), oxygen(), reactRouter()],
+  plugins: [oxygen(), reactRouter()],
   resolve: {
     tsconfigPaths: true,
   },
@@ -26,6 +25,11 @@ export default defineConfig({
        * @see https://vitejs.dev/config/dep-optimization-options
        */
       include: [
+        'react',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        'react-dom',
+        'react-dom/server',
         'react-router > set-cookie-parser',
         'react-router > cookie',
         'react-router',
