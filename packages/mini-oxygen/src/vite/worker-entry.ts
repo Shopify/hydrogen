@@ -15,6 +15,7 @@ import {
 import type {HotPayload} from 'vite';
 import type {Response} from 'miniflare';
 import {withRequestHook} from '../worker/handler.js';
+import {MISSING_SSR_ENTRY_ERROR} from './worker-entry-errors.js';
 
 export interface ViteEnv {
   __VITE_INVOKE_MODULE: {fetch: typeof fetch};
@@ -31,7 +32,6 @@ export interface ViteEnv {
 }
 
 const O2_PREFIX = '[o2:runtime]';
-export const MISSING_SSR_ENTRY_ERROR = 'No Oxygen worker entry was found.';
 
 type ViteInvokePayload = {
   name: string;

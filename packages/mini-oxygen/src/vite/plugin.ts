@@ -14,6 +14,7 @@ import {getHydrogenCompatibilityDate} from './compat-date.js';
 
 // Note: Vite resolves extensions like .js or .ts automatically.
 const DEFAULT_SSR_ENTRY = './server';
+const workerConditions = ['worker', 'workerd', ...defaultClientConditions];
 
 export type OxygenPluginOptions = Partial<
   Pick<
@@ -99,14 +100,11 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         return {
           appType: 'custom',
           ...(Object.keys(build).length > 0 && {build}),
-          resolve: {
-            conditions: ['worker', 'workerd', ...defaultClientConditions],
-          },
           ssr: {
             noExternal: true,
             target: 'webworker',
             resolve: {
-              conditions: ['worker', 'workerd', ...defaultClientConditions],
+              conditions: workerConditions,
             },
           },
         };
@@ -119,7 +117,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
 
         return {
           resolve: {
-            conditions: ['worker', 'workerd', ...defaultClientConditions],
+            conditions: workerConditions,
           },
           dev: {
             createEnvironment(name, config) {

@@ -12,10 +12,9 @@ vi.mock('vite/module-runner', () => ({
   ssrModuleExportsKey: Symbol.for('ssrModuleExportsKey'),
 }));
 
-import workerEntry, {
-  MISSING_SSR_ENTRY_ERROR,
-  type ViteEnv,
-} from './worker-entry.js';
+import * as workerEntryModule from './worker-entry.js';
+import workerEntry, {type ViteEnv} from './worker-entry.js';
+import {MISSING_SSR_ENTRY_ERROR} from './worker-entry-errors.js';
 
 function createEnv(entry: string): ViteEnv {
   return {
@@ -46,6 +45,10 @@ async function dispatchWithEntrypointError(entry: string, error: Error) {
 describe('worker entry', () => {
   beforeEach(() => {
     mocks.importModule.mockReset();
+  });
+
+  it('only exposes the worker handler at runtime', () => {
+    expect(Object.keys(workerEntryModule)).toEqual(['default']);
   });
 
   it('returns a clear Mini Oxygen error when the default entry is missing', async () => {

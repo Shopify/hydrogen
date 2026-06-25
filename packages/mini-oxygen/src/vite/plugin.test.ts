@@ -83,6 +83,16 @@ function runConfigResolvedHook(plugin: Plugin, root: string) {
   (hook as any)({root});
 }
 
+function runConfigEnvironmentHook(plugin: Plugin, name: string) {
+  if (typeof plugin.configEnvironment !== 'function') {
+    throw new Error(
+      'Expected oxygen plugin to expose a configEnvironment hook.',
+    );
+  }
+
+  return (plugin.configEnvironment as any)(name);
+}
+
 describe('oxygen Vite plugin', () => {
   afterEach(() => {
     for (const root of tempRoots.splice(0)) {
@@ -102,6 +112,28 @@ describe('oxygen Vite plugin', () => {
     expect(
       runConfigHook(plugin, {build: {outDir: 'custom-dist'}}),
     ).not.toHaveProperty('build.outDir');
+  });
+
+  it('does not add worker conditions to the top-level client resolver', () => {
+    const plugin = getOxygenPlugin();
+
+    expect(runConfigHook(plugin, {})).not.toHaveProperty('resolve.conditions');
+  });
+
+  it('adds worker conditions to SSR resolution only', () => {
+    const plugin = getOxygenPlugin();
+
+    const config = runConfigHook(plugin, {});
+    expect(config).toHaveProperty('ssr.resolve.conditions');
+    expect(config.ssr.resolve.conditions).toContain('worker');
+    expect(config.ssr.resolve.conditions).toContain('workerd');
+
+    expect(runConfigEnvironmentHook(plugin, 'client')).toBeUndefined();
+
+    const ssrEnvironmentConfig = runConfigEnvironmentHook(plugin, 'ssr');
+    expect(ssrEnvironmentConfig).toHaveProperty('resolve.conditions');
+    expect(ssrEnvironmentConfig.resolve.conditions).toContain('worker');
+    expect(ssrEnvironmentConfig.resolve.conditions).toContain('workerd');
   });
 
   it.each([
