@@ -81,7 +81,6 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
       name: 'oxygen:main',
       config(config, env) {
         const build = {
-          ...(!config.build?.outDir && {outDir: 'dist'}),
           // When building, the CLI will set the `ssr` option to `true`
           // if no --entry flag is passed for the default SSR entry file.
           // Replace it here with a default value.

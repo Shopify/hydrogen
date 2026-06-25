@@ -3,12 +3,12 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import type {Plugin} from 'vite';
-import {oxygen} from './plugin.js';
+import {oxygen, type OxygenPluginOptions} from './plugin.js';
 
 const tempRoots: string[] = [];
 
-function getOxygenPlugin() {
-  return oxygen()[0] as Plugin<{
+function getOxygenPlugin(options?: OxygenPluginOptions) {
+  return oxygen(options)[0] as Plugin<{
     registerPluginOptions(newOptions: {compatibilityDate?: string}): void;
   }>;
 }
@@ -41,7 +41,11 @@ function createRootWithHydrogenVersion(version: string) {
   );
 }
 
-function runConfigHook(plugin: Plugin, config: Record<string, any>) {
+function runConfigHook(
+  plugin: Plugin,
+  config: Record<string, any>,
+  env?: Record<string, any>,
+) {
   if (typeof plugin.config !== 'function') {
     throw new Error('Expected oxygen plugin to expose a config hook.');
   }
@@ -51,6 +55,7 @@ function runConfigHook(plugin: Plugin, config: Record<string, any>) {
     mode: 'production',
     isSsrBuild: false,
     isPreview: false,
+    ...env,
   });
 }
 
@@ -85,12 +90,10 @@ describe('oxygen Vite plugin', () => {
     }
   });
 
-  it('sets the default build output directory when the app does not', () => {
+  it('does not set a default build output directory', () => {
     const plugin = getOxygenPlugin();
 
-    expect(runConfigHook(plugin, {})).toMatchObject({
-      build: {outDir: 'dist'},
-    });
+    expect(runConfigHook(plugin, {})).not.toHaveProperty('build');
   });
 
   it('does not override a user-provided build output directory', () => {
@@ -99,6 +102,17 @@ describe('oxygen Vite plugin', () => {
     expect(
       runConfigHook(plugin, {build: {outDir: 'custom-dist'}}),
     ).not.toHaveProperty('build.outDir');
+  });
+
+  it.each([
+    'virtual:oxygen-framework-entry',
+    '@shopify/oxygen-framework/worker',
+  ])('uses configured entry "%s" for SSR build defaults', (entry) => {
+    const plugin = getOxygenPlugin({entry});
+
+    expect(
+      runConfigHook(plugin, {build: {ssr: true}}, {isSsrBuild: true}),
+    ).toHaveProperty('build.ssr', entry);
   });
 
   it('emits oxygen.json from the installed Hydrogen version', () => {
