@@ -2,7 +2,7 @@ import {createRequire} from 'node:module';
 import {resolve} from 'node:path';
 
 const HYDROGEN_PACKAGE = '@shopify/hydrogen/package.json';
-const HYDROGEN_FALLBACK_COMPATIBILITY_DATE = '2026-04-01';
+const HYDROGEN_MAX_COMPATIBILITY_DATE = '2025-04-01';
 
 type HydrogenPackageJson = {
   version?: unknown;
@@ -10,14 +10,18 @@ type HydrogenPackageJson = {
 
 export function getCompatibilityDateFromHydrogenVersion(version: string) {
   const versionMatch = /^(\d{4})\.(\d{1,2})(?:[.-]|$)/.exec(version);
-  if (!versionMatch) return HYDROGEN_FALLBACK_COMPATIBILITY_DATE;
+  if (!versionMatch) return HYDROGEN_MAX_COMPATIBILITY_DATE;
 
   const month = Number(versionMatch[2]);
   if (!Number.isInteger(month) || month < 1 || month > 12) {
-    return HYDROGEN_FALLBACK_COMPATIBILITY_DATE;
+    return HYDROGEN_MAX_COMPATIBILITY_DATE;
   }
 
-  return `${versionMatch[1]}-${String(month).padStart(2, '0')}-01`;
+  const compatibilityDate = `${versionMatch[1]}-${String(month).padStart(2, '0')}-01`;
+
+  return compatibilityDate > HYDROGEN_MAX_COMPATIBILITY_DATE
+    ? HYDROGEN_MAX_COMPATIBILITY_DATE
+    : compatibilityDate;
 }
 
 export function getHydrogenCompatibilityDate(root = process.cwd()) {

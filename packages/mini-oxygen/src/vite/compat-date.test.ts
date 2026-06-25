@@ -45,31 +45,40 @@ describe('Hydrogen compatibility dates', () => {
   });
 
   it('infers the first day of the Hydrogen version month', () => {
+    expect(getCompatibilityDateFromHydrogenVersion('2024.10.4')).toBe(
+      '2024-10-01',
+    );
+    expect(getCompatibilityDateFromHydrogenVersion('2025.4.0')).toBe(
+      '2025-04-01',
+    );
+  });
+
+  it('caps inferred compatibility dates at 2025-04-01', () => {
     expect(getCompatibilityDateFromHydrogenVersion('2026.4.4')).toBe(
-      '2026-04-01',
+      '2025-04-01',
     );
     expect(getCompatibilityDateFromHydrogenVersion('2026.10.0-next.0')).toBe(
-      '2026-10-01',
+      '2025-04-01',
     );
   });
 
   it('uses a fixed compatibility date for non-calver Hydrogen versions', () => {
     expect(getCompatibilityDateFromHydrogenVersion('0.0.0-next')).toBe(
-      '2026-04-01',
+      '2025-04-01',
     );
     expect(
       getCompatibilityDateFromHydrogenVersion('0.0.0-next-20260624000000'),
-    ).toBe('2026-04-01');
-    expect(getCompatibilityDateFromHydrogenVersion('4.1.0')).toBe('2026-04-01');
+    ).toBe('2025-04-01');
+    expect(getCompatibilityDateFromHydrogenVersion('4.1.0')).toBe('2025-04-01');
     expect(getCompatibilityDateFromHydrogenVersion('2026.13.0')).toBe(
-      '2026-04-01',
+      '2025-04-01',
     );
   });
 
   it('reads the resolved Hydrogen package version from the project root', () => {
     const root = createRootWithHydrogenVersion('2026.4.4');
 
-    expect(getHydrogenCompatibilityDate(root)).toBe('2026-04-01');
+    expect(getHydrogenCompatibilityDate(root)).toBe('2025-04-01');
   });
 
   it('returns undefined when Hydrogen package metadata cannot be read', () => {
