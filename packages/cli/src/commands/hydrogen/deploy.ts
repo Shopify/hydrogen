@@ -60,6 +60,7 @@ import {packageManagers} from '../../lib/package-managers.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 
 const DEPLOY_OUTPUT_FILE_HANDLE = 'h2_deploy_log.json';
+const DEFAULT_BUILD_COMMAND = 'node --run build';
 
 export const deploymentLogger: Logger = (
   message: string,
@@ -118,7 +119,19 @@ export default class Deploy extends Command {
     }),
     'build-command': Flags.string({
       description:
-        'Specify a build command to run before deploying. If not specified, `shopify hydrogen build` will be used.',
+        'Specify a build command to run before deploying. If not specified, the Hydrogen build pipeline will be used. When custom output directories are configured, defaults to `node --run build`.',
+      required: false,
+    }),
+    'assets-dir': Flags.string({
+      description:
+        'Directory containing the client assets to deploy, relative to the project root. Defaults to the detected Vite client output directory, then falls back to `dist/client`.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_ASSETS_DIR',
+      required: false,
+    }),
+    'worker-dir': Flags.string({
+      description:
+        'Directory containing the Oxygen worker entry point (`index.js` or `index.mjs`), relative to the project root. Defaults to the detected Vite server output directory, then falls back to `dist/server`.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_WORKER_DIR',
       required: false,
     }),
     ...commonFlags.lockfileCheck,
@@ -213,6 +226,8 @@ interface OxygenDeploymentOptions {
   metadataUser?: string;
   metadataVersion?: string;
   entry?: string;
+  assetsDir?: string;
+  workerDir?: string;
 }
 
 interface GitCommit {
@@ -257,10 +272,12 @@ export async function runDeploy(
     jsonOutput,
     path: root,
     shop,
+    assetsDir: assetsDirFlag,
     metadataUrl,
     metadataUser,
     metadataVersion,
     entry: ssrEntry,
+    workerDir: workerDirFlag,
   } = options;
   let {metadataDescription} = options;
 
@@ -465,18 +482,29 @@ export async function runDeploy(
   let workerDir = 'dist/worker';
 
   const isClassicCompiler = await isClassicProject(root);
-
-  if (!isClassicCompiler) {
-    const viteConfig = await getViteConfig(root, ssrEntry).catch(() => null);
-    if (viteConfig) {
-      assetsDir = relativePath(root, viteConfig.clientOutDir);
-      workerDir = relativePath(root, viteConfig.serverOutDir);
-    } else {
-      workerDir = 'dist/server';
-    }
-  }
-
   const metadataHydrogenVersion = await getHydrogenVersion({appPath: root});
+  const shouldUseDefaultBuildCommand =
+    !buildCommand &&
+    !isClassicCompiler &&
+    (assetsDirFlag ||
+      workerDirFlag ||
+      isHydrogenPreviewVersion(metadataHydrogenVersion));
+
+  if (isClassicCompiler) {
+    assetsDir = assetsDirFlag ?? assetsDir;
+    workerDir = workerDirFlag ?? workerDir;
+  } else {
+    const viteConfig = await getViteConfig(root, ssrEntry).catch(() => null);
+    const outputDirs = await resolveDeploymentOutputDirs({
+      root,
+      viteConfig,
+      assetsDir: assetsDirFlag,
+      workerDir: workerDirFlag,
+    });
+
+    assetsDir = outputDirs.assetsDir;
+    workerDir = outputDirs.workerDir;
+  }
 
   const config: DeploymentConfig = {
     assetsDir,
@@ -589,7 +617,7 @@ Continue?`.value,
     },
   };
 
-  if (buildCommand) {
+  if (buildCommand || shouldUseDefaultBuildCommand) {
     if (forceClientSourcemap) {
       console.log('');
       renderInfo({
@@ -598,7 +626,7 @@ Continue?`.value,
         body: 'Client sourcemaps will not be generated.',
       });
     }
-    config.buildCommand = buildCommand;
+    config.buildCommand = buildCommand ?? DEFAULT_BUILD_COMMAND;
   } else {
     hooks.buildFunction = async (
       assetPath: string | undefined,
@@ -698,6 +726,48 @@ Continue?`.value,
     });
 
   return deployPromise;
+}
+
+type DeploymentOutputResolverOptions = {
+  root: string;
+  viteConfig?: {
+    clientOutDir: string;
+    serverOutDir: string;
+  } | null;
+  assetsDir?: string;
+  workerDir?: string;
+};
+
+export async function resolveDeploymentOutputDirs({
+  root,
+  viteConfig,
+  assetsDir,
+  workerDir,
+}: DeploymentOutputResolverOptions): Promise<{
+  assetsDir: string;
+  workerDir: string;
+}> {
+  const fallbackOutputDirs = {
+    assetsDir: 'dist/client',
+    workerDir: 'dist/server',
+  };
+  const viteOutputDirs = viteConfig
+    ? {
+        assetsDir: relativePath(root, viteConfig.clientOutDir),
+        workerDir: relativePath(root, viteConfig.serverOutDir),
+      }
+    : undefined;
+
+  return {
+    assetsDir:
+      assetsDir ?? viteOutputDirs?.assetsDir ?? fallbackOutputDirs.assetsDir,
+    workerDir:
+      workerDir ?? viteOutputDirs?.workerDir ?? fallbackOutputDirs.workerDir,
+  };
+}
+
+function isHydrogenPreviewVersion(version?: string) {
+  return version?.startsWith('0.0.0-preview-') ?? false;
 }
 
 /**
