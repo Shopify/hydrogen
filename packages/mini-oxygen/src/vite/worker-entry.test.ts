@@ -15,8 +15,6 @@ vi.mock('vite/module-runner', () => ({
 import * as workerEntryModule from './worker-entry.js';
 import workerEntry, {type ViteEnv} from './worker-entry.js';
 
-const MISSING_SSR_ENTRY_ERROR = 'No Oxygen worker entry was found.';
-
 function createEnv(entry: string): ViteEnv {
   return {
     __VITE_INVOKE_MODULE: {fetch: vi.fn()},
@@ -59,7 +57,7 @@ describe('worker entry', () => {
 
     const body = await dispatchWithEntrypointError('./server', error);
 
-    expect(body).toContain(MISSING_SSR_ENTRY_ERROR);
+    expect(body).toContain('No Oxygen worker entry was found.');
     expect(body).toContain('oxygen({ entry: "./server" })');
     expect(body).toContain(viteError);
   });
@@ -71,7 +69,7 @@ describe('worker entry', () => {
 
     const body = await dispatchWithEntrypointError(entry, error);
 
-    expect(body).toContain(MISSING_SSR_ENTRY_ERROR);
+    expect(body).toContain('No Oxygen worker entry was found.');
     expect(body).toContain(
       'oxygen({ entry: "virtual:oxygen-framework-entry" })',
     );
@@ -83,7 +81,7 @@ describe('worker entry', () => {
 
     const body = await dispatchWithEntrypointError('./server', error);
 
-    expect(body).not.toContain(MISSING_SSR_ENTRY_ERROR);
+    expect(body).not.toContain('No Oxygen worker entry was found.');
     expect(body).toContain(error.message);
   });
 
@@ -96,7 +94,7 @@ describe('worker entry', () => {
 
     const body = await dispatchWithEntrypointError('./server', error);
 
-    expect(body).not.toContain(MISSING_SSR_ENTRY_ERROR);
+    expect(body).not.toContain('No Oxygen worker entry was found.');
     expect(body).toContain(error.message);
   });
 });
