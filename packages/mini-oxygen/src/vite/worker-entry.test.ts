@@ -14,7 +14,8 @@ vi.mock('vite/module-runner', () => ({
 
 import * as workerEntryModule from './worker-entry.js';
 import workerEntry, {type ViteEnv} from './worker-entry.js';
-import {MISSING_SSR_ENTRY_ERROR} from './worker-entry-errors.js';
+
+const MISSING_SSR_ENTRY_ERROR = 'No Oxygen worker entry was found.';
 
 function createEnv(entry: string): ViteEnv {
   return {
