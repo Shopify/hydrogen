@@ -25,6 +25,18 @@ export type MiniOxygenRuntimeOptions = Partial<
     envPromise?: Promise<Record<string, any>>;
   };
 
+type EnvOptions = {
+  env?: Record<string, any>;
+  envPromise?: Promise<Record<string, any>>;
+};
+
+export function hasProvidedEnvBindings(options: EnvOptions) {
+  return (
+    Object.prototype.hasOwnProperty.call(options, 'env') ||
+    Object.prototype.hasOwnProperty.call(options, 'envPromise')
+  );
+}
+
 type RuntimeOptionsResolver = (
   options: MiniOxygenRuntimeOptions,
   viteDevServer: ViteDevServer,
@@ -38,15 +50,23 @@ export function mergeMiniOxygenRuntimeOptions(
   current: MiniOxygenRuntimeOptions,
   next: MiniOxygenRuntimeOptions,
 ): MiniOxygenRuntimeOptions {
-  return {
+  const merged = {
     ...current,
     ...next,
-    env: {...current.env, ...next.env},
-    crossBoundarySetup: [
+  };
+
+  if (hasProvidedEnvBindings(current) || hasProvidedEnvBindings(next)) {
+    merged.env = {...current.env, ...next.env};
+  }
+
+  if (current.crossBoundarySetup || next.crossBoundarySetup) {
+    merged.crossBoundarySetup = [
       ...(current.crossBoundarySetup || []),
       ...(next.crossBoundarySetup || []),
-    ],
-  };
+    ];
+  }
+
+  return merged;
 }
 
 export function createMiniOxygenDevEnvironment(

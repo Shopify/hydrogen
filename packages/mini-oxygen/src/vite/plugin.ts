@@ -1,7 +1,8 @@
-import {defaultClientConditions} from 'vite';
+import {defaultClientConditions, loadEnv} from 'vite';
 import type {Plugin} from 'vite';
 import {
   createMiniOxygenDevEnvironment,
+  hasProvidedEnvBindings,
   type MiniOxygenDevEnvironment,
   type MiniOxygenRuntimeOptions,
   mergeMiniOxygenRuntimeOptions,
@@ -57,12 +58,25 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
     const entry =
       runtimeOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
     const remoteEnv = await Promise.resolve(runtimeOptions.envPromise);
+    const fallbackEnv =
+      !hasProvidedEnvBindings(pluginOptions) &&
+      !hasProvidedEnvBindings(runtimeOptions)
+        ? loadEnv(viteDevServer.config.mode, viteDevServer.config.envDir, '')
+        : undefined;
+
+    const env = Object.assign(
+      {},
+      fallbackEnv,
+      remoteEnv,
+      runtimeOptions.env,
+      pluginOptions.env,
+    );
 
     return {
       entry,
       viteDevServer,
       crossBoundarySetup: runtimeOptions.crossBoundarySetup,
-      env: {...remoteEnv, ...runtimeOptions.env, ...pluginOptions.env},
+      env,
       debug: runtimeOptions.debug ?? pluginOptions.debug ?? false,
       inspectorPort:
         runtimeOptions.inspectorPort ?? pluginOptions.inspectorPort,

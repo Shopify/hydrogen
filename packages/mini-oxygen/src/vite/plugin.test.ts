@@ -28,7 +28,11 @@ const tempRoots: string[] = [];
 
 function getOxygenPlugin(options?: OxygenPluginOptions) {
   return oxygen(options)[0] as Plugin<{
-    registerPluginOptions(newOptions: {compatibilityDate?: string}): void;
+    registerPluginOptions(newOptions: {
+      compatibilityDate?: string;
+      env?: Record<string, string>;
+      envPromise?: Promise<Record<string, string>>;
+    }): void;
   }>;
 }
 
@@ -150,6 +154,8 @@ async function runConfigurePreviewServerHook(
   const previewServer = {
     config: {
       root,
+      mode: 'development',
+      envDir: root,
       build: {outDir: clientOutDir},
       environments: {client: {build: {outDir: clientOutDir}}},
     },
@@ -163,9 +169,16 @@ async function runConfigurePreviewServerHook(
   return previewServer;
 }
 
+function getLastPreviewBindings() {
+  const options = vi.mocked(createMiniOxygen).mock.calls.at(-1)?.[0] as any;
+
+  return options?.workers?.[0]?.bindings;
+}
+
 describe('oxygen Vite plugin', () => {
   afterEach(() => {
     vi.mocked(createMiniOxygen).mockClear();
+    delete process.env.MINI_OXYGEN_PROCESS_ENV;
 
     for (const root of tempRoots.splice(0)) {
       rmSync(root, {recursive: true, force: true});
@@ -355,6 +368,123 @@ describe('oxygen Vite plugin', () => {
           }),
         ],
       }),
+    );
+  });
+
+  it('loads local Vite env as preview bindings when no env is configured', async () => {
+    const plugin = getOxygenPlugin();
+    const root = createRoot();
+    const clientOutDir = join(root, 'dist/client');
+    const workerFile = join(root, 'dist/server/index.js');
+
+    writeFileSync(join(root, '.env'), 'MINI_OXYGEN_LOCAL_ENV=local\n');
+    mkdirSync(clientOutDir, {recursive: true});
+    mkdirSync(join(root, 'dist/server'), {recursive: true});
+    writeFileSync(workerFile, 'export default {fetch() {}};');
+
+    await runConfigurePreviewServerHook(plugin, {root, clientOutDir});
+
+    expect(getLastPreviewBindings()).toHaveProperty(
+      'MINI_OXYGEN_LOCAL_ENV',
+      'local',
+    );
+  });
+
+  it('does not load Vite env when CLI envPromise is registered', async () => {
+    const plugin = getOxygenPlugin();
+    const root = createRoot();
+    const clientOutDir = join(root, 'dist/client');
+    const workerFile = join(root, 'dist/server/index.js');
+
+    process.env.MINI_OXYGEN_PROCESS_ENV = 'process';
+    writeFileSync(join(root, '.env'), 'MINI_OXYGEN_LOCAL_ENV=local\n');
+    mkdirSync(clientOutDir, {recursive: true});
+    mkdirSync(join(root, 'dist/server'), {recursive: true});
+    writeFileSync(workerFile, 'export default {fetch() {}};');
+    plugin.api?.registerPluginOptions({
+      envPromise: Promise.resolve({MINI_OXYGEN_CLI_ENV: 'cli'}),
+    });
+
+    await runConfigurePreviewServerHook(plugin, {root, clientOutDir});
+
+    expect(getLastPreviewBindings()).toHaveProperty(
+      'MINI_OXYGEN_CLI_ENV',
+      'cli',
+    );
+    expect(getLastPreviewBindings()).not.toHaveProperty(
+      'MINI_OXYGEN_LOCAL_ENV',
+    );
+    expect(getLastPreviewBindings()).not.toHaveProperty(
+      'MINI_OXYGEN_PROCESS_ENV',
+    );
+  });
+
+  it('does not load local Vite env when plugin env is configured', async () => {
+    const plugin = getOxygenPlugin({
+      env: {MINI_OXYGEN_PLUGIN_ENV: 'plugin'},
+    });
+    const root = createRoot();
+    const clientOutDir = join(root, 'dist/client');
+    const workerFile = join(root, 'dist/server/index.js');
+
+    writeFileSync(join(root, '.env'), 'MINI_OXYGEN_LOCAL_ENV=local\n');
+    mkdirSync(clientOutDir, {recursive: true});
+    mkdirSync(join(root, 'dist/server'), {recursive: true});
+    writeFileSync(workerFile, 'export default {fetch() {}};');
+
+    await runConfigurePreviewServerHook(plugin, {root, clientOutDir});
+
+    expect(getLastPreviewBindings()).toHaveProperty(
+      'MINI_OXYGEN_PLUGIN_ENV',
+      'plugin',
+    );
+    expect(getLastPreviewBindings()).not.toHaveProperty(
+      'MINI_OXYGEN_LOCAL_ENV',
+    );
+  });
+
+  it('does not load local Vite env when CLI env is registered', async () => {
+    const plugin = getOxygenPlugin();
+    const root = createRoot();
+    const clientOutDir = join(root, 'dist/client');
+    const workerFile = join(root, 'dist/server/index.js');
+
+    writeFileSync(join(root, '.env'), 'MINI_OXYGEN_LOCAL_ENV=local\n');
+    mkdirSync(clientOutDir, {recursive: true});
+    mkdirSync(join(root, 'dist/server'), {recursive: true});
+    writeFileSync(workerFile, 'export default {fetch() {}};');
+    plugin.api?.registerPluginOptions({
+      env: {MINI_OXYGEN_CLI_ENV: 'cli'},
+    });
+
+    await runConfigurePreviewServerHook(plugin, {root, clientOutDir});
+
+    expect(getLastPreviewBindings()).toHaveProperty(
+      'MINI_OXYGEN_CLI_ENV',
+      'cli',
+    );
+    expect(getLastPreviewBindings()).not.toHaveProperty(
+      'MINI_OXYGEN_LOCAL_ENV',
+    );
+  });
+
+  it('loads local Vite env when registered options do not include env', async () => {
+    const plugin = getOxygenPlugin();
+    const root = createRoot();
+    const clientOutDir = join(root, 'dist/client');
+    const workerFile = join(root, 'dist/server/index.js');
+
+    writeFileSync(join(root, '.env'), 'MINI_OXYGEN_LOCAL_ENV=local\n');
+    mkdirSync(clientOutDir, {recursive: true});
+    mkdirSync(join(root, 'dist/server'), {recursive: true});
+    writeFileSync(workerFile, 'export default {fetch() {}};');
+    plugin.api?.registerPluginOptions({compatibilityDate: '2026-04-01'});
+
+    await runConfigurePreviewServerHook(plugin, {root, clientOutDir});
+
+    expect(getLastPreviewBindings()).toHaveProperty(
+      'MINI_OXYGEN_LOCAL_ENV',
+      'local',
     );
   });
 });

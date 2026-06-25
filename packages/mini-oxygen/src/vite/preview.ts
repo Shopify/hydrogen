@@ -8,8 +8,11 @@ import {
   relative,
   resolve,
 } from 'node:path';
-import type {PreviewServer, ResolvedConfig} from 'vite';
-import type {MiniOxygenRuntimeOptions} from './environment.js';
+import {loadEnv, type PreviewServer, type ResolvedConfig} from 'vite';
+import {
+  hasProvidedEnvBindings,
+  type MiniOxygenRuntimeOptions,
+} from './environment.js';
 import {getHydrogenCompatibilityDate} from './compat-date.js';
 import {
   createMiniOxygen,
@@ -110,6 +113,19 @@ async function createOxygenPreviewRuntime(
   }
 
   const remoteEnv = await Promise.resolve(apiOptions.envPromise);
+  const fallbackEnv =
+    !hasProvidedEnvBindings(pluginOptions) &&
+    !hasProvidedEnvBindings(apiOptions)
+      ? loadEnv(previewServer.config.mode, previewServer.config.envDir, '')
+      : undefined;
+
+  const env = Object.assign(
+    {},
+    fallbackEnv,
+    remoteEnv,
+    apiOptions.env,
+    pluginOptions.env,
+  );
   const compatibilityDate =
     apiOptions.compatibilityDate ?? getHydrogenCompatibilityDate(root);
   const requestHook = getPreviewRequestHook(pluginOptions, apiOptions);
@@ -133,11 +149,7 @@ async function createOxygenPreviewRuntime(
             contents: await readFile(workerFile, 'utf8'),
           },
         ],
-        bindings: {
-          ...remoteEnv,
-          ...apiOptions.env,
-          ...pluginOptions.env,
-        },
+        bindings: env,
         ...(compatibilityDate && {compatibilityDate}),
       },
     ],
