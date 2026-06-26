@@ -1,5 +1,7 @@
 # Next.js (App Router) example
 
+<a href="https://vercel.com/new/clone?repository-url=https://github.com/Shopify/hydrogen"><img alt="Deploy with Vercel" src="https://vercel.com/button" width="129" height="40"></a>
+
 Port of the canonical `examples/base/` design to [Next.js](https://nextjs.org/) using the App Router (server components by default).
 
 ## What this demonstrates

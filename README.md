@@ -44,7 +44,23 @@ The parts of a storefront that change at runtime — cart contents, applied filt
 
 ## Get started
 
-Hydrogen adds to an existing project, so start with your framework's own CLI — here, Next.js:
+The fastest way to get started is to deploy a starter template. If you'd rather use a different framework or runtime, or add Hydrogen to an existing project, set it up in your own project instead.
+
+### Deploy a starter template
+
+Pick the template that matches your framework. Each one comes ready to deploy to a managed host.
+
+**React Router** — Hydrogen + Oxygen
+
+<a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src=".github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
+
+**Next.js** — Hydrogen + Vercel
+
+<a href="https://vercel.com/new/clone?repository-url=https://github.com/Shopify/hydrogen"><img alt="Deploy with Vercel" src="https://vercel.com/button" width="129" height="40"></a>
+
+### Set up in your own project
+
+Use this path to build with any JavaScript framework, or to add Hydrogen to an existing project. Start with your framework's own CLI — here, Next.js:
 
 ```bash
 npx create-next-app@latest
