@@ -1,0 +1,38 @@
+{
+  "name": "@shopify/hydrogen-example-react-router",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "shopify hydrogen build --no-lockfile-check",
+    "dev": "shopify hydrogen dev",
+    "postinstall": "node patch-hydrogen-exports.mjs",
+    "preview": "shopify hydrogen preview",
+    "typecheck": "react-router typegen && tsc && gql.tada check"
+  },
+  "dependencies": {
+    "@shopify/hydrogen": "preview",
+    "@shopify/hydrogen-classic": "npm:@shopify/hydrogen@2026.4.2",
+    "isbot": "^5.1.36",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router": "7.14.0"
+  },
+  "devDependencies": {
+    "@react-router/dev": "7.14.0",
+    "@shopify/cli": "3.94.3",
+    "@shopify/mini-oxygen": "4.1.0",
+    "@shopify/oxygen-workers-types": "^4.1.6",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "gql.tada": "^1.9.2",
+    "graphql": "^16.13.2",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.3"
+  },
+  "engines": {
+    "node": "^22 || ^24"
+  }
+}
