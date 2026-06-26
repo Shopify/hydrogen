@@ -101,8 +101,6 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
     {
       name: 'oxygen:main',
       config(config, env) {
-        isSsrBuild = Boolean(env.isSsrBuild);
-
         const build = {
           // When building, the CLI will set the `ssr` option to `true`
           // if no --entry flag is passed for the default SSR entry file.
@@ -133,6 +131,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
       },
       configResolved(resolvedConfig) {
         root = resolvedConfig.root;
+        isSsrBuild = Boolean(resolvedConfig.build.ssr);
       },
       configEnvironment(name) {
         if (name !== 'ssr') return;

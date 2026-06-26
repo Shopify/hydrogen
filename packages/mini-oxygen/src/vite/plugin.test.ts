@@ -102,12 +102,16 @@ function runGenerateBundle(plugin: Plugin) {
 
 function runSsrBuildHooks(plugin: Plugin, root: string) {
   runConfigHook(plugin, {}, {isSsrBuild: true});
-  runConfigResolvedHook(plugin, root);
+  runConfigResolvedHook(plugin, root, {build: {ssr: true}});
 
   return runGenerateBundle(plugin);
 }
 
-function runConfigResolvedHook(plugin: Plugin, root: string) {
+function runConfigResolvedHook(
+  plugin: Plugin,
+  root: string,
+  resolvedConfig: Record<string, any> = {},
+) {
   const hook =
     typeof plugin.configResolved === 'function'
       ? plugin.configResolved
@@ -117,7 +121,14 @@ function runConfigResolvedHook(plugin: Plugin, root: string) {
     throw new Error('Expected oxygen plugin to expose a configResolved hook.');
   }
 
-  (hook as any)({root});
+  (hook as any)({
+    root,
+    ...resolvedConfig,
+    build: {
+      ssr: false,
+      ...resolvedConfig.build,
+    },
+  });
 }
 
 function runConfigEnvironmentHook(plugin: Plugin, name: string) {
@@ -260,12 +271,31 @@ describe('oxygen Vite plugin', () => {
     });
   });
 
+  it('emits oxygen.json when the resolved config is an SSR build', () => {
+    const plugin = getOxygenPlugin();
+    const root = createRootWithHydrogenVersion('2026.4.4');
+
+    runConfigHook(plugin, {}, {isSsrBuild: false});
+    runConfigResolvedHook(plugin, root, {build: {ssr: true}});
+    const emitFile = runGenerateBundle(plugin);
+
+    expect(emitFile).toHaveBeenCalledWith({
+      type: 'asset',
+      fileName: 'oxygen.json',
+      source: JSON.stringify(
+        {version: 1, compatibility_date: '2026-04-01'},
+        null,
+        2,
+      ),
+    });
+  });
+
   it('uses explicit compatibility dates before inferred dates', () => {
     const plugin = getOxygenPlugin();
     const root = createRootWithHydrogenVersion('2026.4.4');
 
     runConfigHook(plugin, {}, {isSsrBuild: true});
-    runConfigResolvedHook(plugin, root);
+    runConfigResolvedHook(plugin, root, {build: {ssr: true}});
     plugin.api?.registerPluginOptions({compatibilityDate: '2025-04-01'});
     const emitFile = runGenerateBundle(plugin);
 
