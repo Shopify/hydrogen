@@ -87,6 +87,7 @@ export const middleware: Route.MiddlewareFunction[] = [
 ];
 
 export async function loader({ context, request }: Route.LoaderArgs) {
+  const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
   const [cartResult, navResult] = await Promise.all([
     cartHandlers.get({ storefrontClient, request }),
@@ -98,7 +99,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     navCollections: navResult.data?.collections.nodes ?? [],
     analyticsShop,
     consent: analyticsConsent,
-    forceConsentBanner: context.get(envContext).MOCK_SHOP === "1",
+    forceConsentBanner: env.MOCK_SHOP === "1",
   };
 }
 

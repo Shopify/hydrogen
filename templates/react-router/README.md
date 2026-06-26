@@ -1,10 +1,10 @@
 # React Router storefront example
 
-A React Router 8 (framework mode, SSR) storefront built on
-[`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen) and ready
-to deploy to [Shopify Oxygen](https://shopify.dev/docs/custom-storefronts/oxygen).
-It's a starting point you can clone and build your store on top of — five pages on
-a shared layout, with a real cart, analytics, and a consent banner wired up.
+A React Router 7 (framework mode, SSR) storefront built on
+[`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen) and the
+classic Hydrogen/Oxygen runtime. It's a starting point you can clone and build
+your store on top of — five pages on a shared layout, with a real cart,
+analytics, and a consent banner wired up.
 
 ## Pages
 
@@ -28,39 +28,47 @@ a shared layout, with a real cart, analytics, and a consent banner wired up.
 ## Run it
 
 ```bash
-pnpm install
+npm install
 ```
 
 **Zero-config demo** — runs against `mock.shop` (a public mock Storefront API, no
-account or token needed). `.env.example` ships with `MOCK_SHOP=1` enabled:
+account or token needed):
 
 ```bash
 cp .env.example .env
-pnpm dev
+# uncomment MOCK_SHOP=1 in .env
+npm run dev
 ```
 
-**Against a real store** — set your store domain (in `app/lib/shop.ts`) and a
-**private** Storefront API token, then run:
+**Against a real store** — set your store domain and a **private** Storefront API
+token, then run normally:
 
 ```bash
-cp .env.example .env   # comment out MOCK_SHOP, add your PRIVATE_STOREFRONT_API_TOKEN
-pnpm dev               # `shopify hydrogen dev` auto-loads .env
+cp .env.example .env   # set PUBLIC_STORE_DOMAIN + PRIVATE_STOREFRONT_API_TOKEN
+npm run dev               # the Hydrogen CLI loads .env into the worker environment
 ```
 
-The store coordinates in `app/lib/shop.ts` point at Shopify's public **Hydrogen
-Preview** store as a placeholder — **replace them with your own store**. Real
-(non-mock) mode requires a private Storefront API token for *your* store; the
-zero-config `MOCK_SHOP=1` demo above needs none. (`mock.shop` and the Hydrogen
-Preview store are different data sources.)
+Mode is **auto-detected**: when a `PRIVATE_STOREFRONT_API_TOKEN` is present the
+app talks to the real store (`PUBLIC_STORE_DOMAIN`, falling back to the default in
+`app/lib/shop.ts`); with none it falls back to the `mock.shop` demo, so a fresh
+deploy always renders. **On Oxygen, a linked storefront injects these env vars
+automatically** — the deployed site connects to your store with no extra config
+(and shows the `mock.shop` demo until it's linked). `MOCK_SHOP=1` forces mock.
+(`mock.shop` and the Hydrogen Preview store are different data sources.)
 
 ## Scripts
 
 | Script | Does |
 | --- | --- |
-| `pnpm dev` | Start the Hydrogen dev server (Vite + the Oxygen worker runtime). |
-| `pnpm build` | Production build (Oxygen worker bundle). |
-| `pnpm preview` | Build, then serve the production worker locally on the Oxygen runtime. |
-| `pnpm typecheck` | React Router typegen + `tsc` + `gql.tada check`. |
+| `npm run dev` | Start the Hydrogen/Oxygen dev server. |
+| `npm run build` | Production Oxygen build (`shopify hydrogen build`). |
+| `npm run preview` | Preview the production build locally with mini-oxygen. |
+| `npm run typecheck` | React Router typegen + `tsc` + `gql.tada check`. |
+
+> **Note:** `patch-hydrogen-exports.mjs` runs on `postinstall` as a temporary
+> shim — it adds the missing `"./package.json"` export to `@shopify/hydrogen` so
+> `shopify hydrogen deploy` builds under npm. Remove it (and the `postinstall`)
+> once `@shopify/hydrogen` ships that export.
 
 ## Where to start
 

@@ -1,22 +1,37 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Store configuration. This is the ONE place to point the example at your store.
+// Store configuration.
 //
-// The values below point at Shopify's public Hydrogen Preview store as an
-// EXAMPLE — REPLACE them with your own store, and set PRIVATE_STOREFRONT_API_TOKEN
-// in your environment (see .env.example). Real-store (non-mock) mode needs a
-// PRIVATE Storefront API token for YOUR store — it is not zero-config.
+// Mode is auto-detected per request (see `useMockShop` below):
+//   • Real store — used automatically whenever a PRIVATE Storefront API token is
+//     present. On Oxygen, a linked storefront injects PRIVATE_STOREFRONT_API_TOKEN
+//     and PUBLIC_STORE_DOMAIN; for local real-store dev set them in `.env`.
+//   • mock.shop — the tokenless fallback used when no token is present (so a
+//     fresh deploy always renders), and forced explicitly by MOCK_SHOP=1.
 //
-// The zero-config path is MOCK_SHOP=1 (`MOCK_SHOP=1 pnpm dev`): it routes to the
-// public mock.shop API, needs no token, and ignores everything here. (mock.shop
-// is a different data source than the Hydrogen Preview store.)
+// `storeDomain` below is the default used only when PUBLIC_STORE_DOMAIN is unset.
+// It points at Shopify's public Hydrogen Preview store as an EXAMPLE — replace it
+// or set PUBLIC_STORE_DOMAIN. (mock.shop is a different data source.)
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Env } from "~/lib/env";
-
 export const storefrontConfig = {
-  storeDomain: "hydrogen-preview.myshopify.com", // ← replace with your store
+  storeDomain: "hydrogen-preview.myshopify.com", // ← default; or set PUBLIC_STORE_DOMAIN
   i18n: { country: "US", language: "EN" },
 } as const;
+
+// Real store iff a private Storefront API token is available; otherwise the
+// tokenless mock.shop demo. MOCK_SHOP=1 forces mock (used by the gate + as the
+// zero-config default).
+export function useMockShop(
+  env: Pick<Env, "MOCK_SHOP" | "PRIVATE_STOREFRONT_API_TOKEN">,
+): boolean {
+  return env.MOCK_SHOP === "1" || !env.PRIVATE_STOREFRONT_API_TOKEN;
+}
+
+// Store domain for real-store mode: prefer the worker env (Oxygen injects
+// PUBLIC_STORE_DOMAIN for a linked storefront), else the configured default.
+export function getStoreDomain(env: Pick<Env, "PUBLIC_STORE_DOMAIN">): string {
+  return env.PUBLIC_STORE_DOMAIN || storefrontConfig.storeDomain;
+}
 
 // Analytics shop identity. `shopId` is a real Shopify Shop GID.
 export const analyticsShop = {
@@ -35,10 +50,10 @@ export const analyticsConsent = {
   language: "EN",
 } as const;
 
-// Private Storefront API token for SSR requests. Read from the environment so a
-// standalone clone supplies it via .env (the dev/start scripts auto-load it) or
-// the host's environment. Never commit a real token.
-export function getPrivateStorefrontToken(env: Env): string {
+// Private Storefront API token for SSR requests. Read from the worker environment
+// so a standalone clone supplies it via .env / Oxygen bindings. Never commit a
+// real token.
+export function getPrivateStorefrontToken(env: Pick<Env, "PRIVATE_STOREFRONT_API_TOKEN">): string {
   const token = env.PRIVATE_STOREFRONT_API_TOKEN;
   if (!token) {
     throw new Error(

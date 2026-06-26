@@ -6,13 +6,15 @@ import {
 } from "@shopify/hydrogen";
 import { createContext } from "react-router";
 
+import type { Env } from "~/lib/env";
 import {
   DEVELOPMENT_BUYER_IP,
   getBuyerIp,
   getPrivateStorefrontToken,
+  getStoreDomain,
   storefrontConfig,
+  useMockShop,
 } from "~/lib/shop";
-import type { Env } from "~/lib/env";
 
 function getMockBuyerIp(headers: Pick<Headers, "get">): string {
   try {
@@ -28,7 +30,7 @@ export function createRequestStorefrontClient(
 ): RequestScopedPrivateStorefrontClient {
   const requestContext = createStorefrontRequestContext(request);
 
-  if (env.MOCK_SHOP === "1") {
+  if (useMockShop(env)) {
     return createStorefrontClient({
       type: "private",
       config: {
@@ -45,7 +47,7 @@ export function createRequestStorefrontClient(
   return createStorefrontClient({
     type: "private",
     config: {
-      storeDomain: storefrontConfig.storeDomain,
+      storeDomain: getStoreDomain(env),
       i18n: storefrontConfig.i18n,
       privateStorefrontToken: getPrivateStorefrontToken(env),
       buyerIp: getBuyerIp(request.headers),
