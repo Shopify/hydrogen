@@ -21,6 +21,7 @@ import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
+import { envContext } from "~/lib/env";
 import { analyticsConsent, analyticsShop } from "~/lib/shop";
 import {
   createRequestStorefrontClient,
@@ -61,7 +62,8 @@ function withStorefrontHeaders(response: Response, requestContext: StorefrontReq
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ context, request }, next) => {
-    const storefrontClient = createRequestStorefrontClient(request);
+    const env = context.get(envContext);
+    const storefrontClient = createRequestStorefrontClient(request, env);
     const requestContext = storefrontClient.requestContext;
 
     const shopifyRoute = await handleShopifyRoutes({
@@ -96,7 +98,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     navCollections: navResult.data?.collections.nodes ?? [],
     analyticsShop,
     consent: analyticsConsent,
-    forceConsentBanner: process.env.MOCK_SHOP === "1",
+    forceConsentBanner: context.get(envContext).MOCK_SHOP === "1",
   };
 }
 

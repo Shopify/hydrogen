@@ -12,8 +12,7 @@ import {
   getPrivateStorefrontToken,
   storefrontConfig,
 } from "~/lib/shop";
-
-const USE_MOCK_SHOP = process.env.MOCK_SHOP === "1";
+import type { Env } from "~/lib/env";
 
 function getMockBuyerIp(headers: Pick<Headers, "get">): string {
   try {
@@ -25,10 +24,11 @@ function getMockBuyerIp(headers: Pick<Headers, "get">): string {
 
 export function createRequestStorefrontClient(
   request: Request,
+  env: Env,
 ): RequestScopedPrivateStorefrontClient {
   const requestContext = createStorefrontRequestContext(request);
 
-  if (USE_MOCK_SHOP) {
+  if (env.MOCK_SHOP === "1") {
     return createStorefrontClient({
       type: "private",
       config: {
@@ -47,7 +47,7 @@ export function createRequestStorefrontClient(
     config: {
       storeDomain: storefrontConfig.storeDomain,
       i18n: storefrontConfig.i18n,
-      privateStorefrontToken: getPrivateStorefrontToken(),
+      privateStorefrontToken: getPrivateStorefrontToken(env),
       buyerIp: getBuyerIp(request.headers),
       requestContext,
     },

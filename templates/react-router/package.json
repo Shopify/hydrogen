@@ -4,14 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build",
-    "dev": "node --env-file-if-exists=.env node_modules/@react-router/dev/bin.cjs dev",
-    "start": "node --env-file-if-exists=.env node_modules/@react-router/serve/bin.cjs ./build/server/index.js",
+    "build": "shopify hydrogen build",
+    "dev": "shopify hydrogen dev",
+    "preview": "shopify hydrogen preview --build",
     "typecheck": "react-router typegen && tsc && gql.tada check"
   },
   "dependencies": {
-    "@react-router/node": "8.0.1",
-    "@react-router/serve": "8.0.1",
     "@shopify/hydrogen": "preview",
     "isbot": "^5.1.36",
     "react": "^19.2.7",
@@ -20,6 +18,9 @@
   },
   "devDependencies": {
     "@react-router/dev": "8.0.1",
+    "@shopify/cli": "3.94.3",
+    "@shopify/mini-oxygen": "4.1.0",
+    "@shopify/oxygen-workers-types": "^4.1.6",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^22",
     "@types/react": "^19.2.14",
@@ -31,6 +32,6 @@
     "vite": "^8.0.3"
   },
   "engines": {
-    "node": ">=22"
+    "node": "^22 || ^24"
   }
 }
