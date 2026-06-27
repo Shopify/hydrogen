@@ -1,0 +1,22 @@
+import { subscribeCartState } from "../lib/cart.client";
+
+<let/cart=null>
+<script>
+  const unsubscribe = subscribeCartState((state) => {
+    cart = state;
+  });
+  $signal.addEventListener("abort", unsubscribe);
+</script>
+
+<const/loading=cart?.loading ?? true>
+<const/lines=cart?.data.lines.nodes ?? []>
+<const/totalQuantity=cart?.data.totalQuantity ?? 0>
+
+<return={
+  cart,
+  loading,
+  lines,
+  hasLines: lines.length > 0,
+  hasCartContent: !loading && lines.length > 0,
+  totalQuantity,
+}>

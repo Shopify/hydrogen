@@ -1,0 +1,12 @@
+<cart-state/{ hasCartContent }/>
+<const/emptyHeadingLevel=input.emptyHeadingLevel ?? "h2">
+<const/errorIdPrefix=input.errorIdPrefix ?? "cart-line-error">
+
+<cart-error-banner />
+<cart-line-items emptyHeadingLevel=emptyHeadingLevel errorIdPrefix=errorIdPrefix />
+
+<if=hasCartContent>
+  <cart-totals />
+  <cart-discount-codes />
+  <cart-note />
+</if>

@@ -10,6 +10,7 @@
 - `sveltekit/` — SvelteKit 2 + Svelte 5 (runes) port with server `load`
 - `astro/` — Astro 6 port with `@astrojs/node` SSR and frontmatter data fetching
 - `solid-start/` — SolidStart v1 port with `query` + `createAsync` and signal-driven product page state
+- `marko-run/` — Marko 6 + `@marko/run` port with route-local handlers and streamed layout data
 - `nuxt/` — Nuxt 4 port with server middleware and Vue pages
 - `nuxt-binding/` — Nuxt 4 port using Hydrogen's Vue binding layer
 

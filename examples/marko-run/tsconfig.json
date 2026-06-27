@@ -1,0 +1,30 @@
+{
+  "include": [".marko-run/routes.d.ts", "src/**/*"],
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "gql.tada/ts-plugin",
+        "schema": "node_modules/@shopify/hydrogen/src/graphql/generated/storefront.schema.graphql",
+        "trackFieldUsage": false
+      }
+    ],
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "lib": ["dom", "ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": false,
+    "outDir": "dist",
+    "paths": {
+      "@shared/*": ["../shared/*"]
+    },
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ESNext",
+    "verbatimModuleSyntax": true,
+    "types": ["vite/client"]
+  }
+}

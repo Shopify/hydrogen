@@ -1,0 +1,32 @@
+import "../app.css";
+import { AnalyticsEvent, analyticsShop, getAnalytics } from "../lib/analytics";
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <html-script
+      type="module"
+      src="https://cdn.shopify.com/storefront/standard-actions.js"
+      crossorigin="anonymous"
+    ></html-script>
+    <title>${$global.pageTitle || "Mock.shop — Hydrogen"}</title>
+  </head>
+  <body>
+    <div class="bg-white text-black">
+      <site-header />
+      <${input.content}/>
+      <site-footer />
+      <cart-drawer />
+      <script>
+        const analytics = getAnalytics();
+        analytics?.publish(AnalyticsEvent.PAGE_VIEWED, {
+          url: window.location.href,
+          shop: analyticsShop,
+        });
+      </script>
+    </div>
+  </body>
+</html>
