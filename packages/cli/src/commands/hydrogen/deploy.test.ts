@@ -36,6 +36,59 @@ import {
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
 import {runBuild} from './build.js';
 
+vi.mock('node:module', async () => {
+  const actual =
+    await vi.importActual<typeof import('node:module')>('node:module');
+  const {existsSync} =
+    await vi.importActual<typeof import('node:fs')>('node:fs');
+  const path = await vi.importActual<typeof import('node:path')>('node:path');
+
+  function resolveHydrogenPackageJson(paths: string[]) {
+    for (const startPath of paths) {
+      let currentPath = path.resolve(startPath);
+
+      while (true) {
+        const packageJsonPath = path.join(
+          currentPath,
+          'node_modules',
+          '@shopify',
+          'hydrogen',
+          'package.json',
+        );
+
+        if (existsSync(packageJsonPath)) return packageJsonPath;
+
+        const parentPath = path.dirname(currentPath);
+        if (parentPath === currentPath) break;
+
+        currentPath = parentPath;
+      }
+    }
+
+    throw new Error("Cannot find module '@shopify/hydrogen/package.json'");
+  }
+
+  return {
+    ...actual,
+    createRequire: (filename: string | URL) => {
+      const baseRequire = actual.createRequire(filename);
+      const resolve = Object.assign(
+        (id: string, options?: {paths?: string[]}) => {
+          if (id === '@shopify/hydrogen/package.json' && options?.paths) {
+            return resolveHydrogenPackageJson(options.paths);
+          }
+
+          return baseRequire.resolve(id, options);
+        },
+        {paths: baseRequire.resolve.paths},
+      );
+
+      return Object.assign((id: string) => baseRequire(id), baseRequire, {
+        resolve,
+      });
+    },
+  };
+});
 vi.mock('@shopify/oxygen-cli/deploy');
 vi.mock('@shopify/cli-kit/node/dot-env');
 vi.mock('@shopify/cli-kit/node/fs');

@@ -17,7 +17,7 @@ import {
   getLatestGitCommit,
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
-import {joinPath, relativePath, resolvePath} from '@shopify/cli-kit/node/path';
+import {relativePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {
   renderConfirmationPrompt,
   renderInfo,
@@ -780,7 +780,9 @@ export function getHydrogenVersion({appPath}: {appPath: string}) {
   try {
     const require = createRequire(import.meta.url);
     const packageJson = require(
-      resolvePath(root, 'node_modules', '@shopify', 'hydrogen', 'package.json'),
+      require.resolve('@shopify/hydrogen/package.json', {
+        paths: [root],
+      }),
     ) as PackageJson;
 
     return typeof packageJson.version === 'string'
