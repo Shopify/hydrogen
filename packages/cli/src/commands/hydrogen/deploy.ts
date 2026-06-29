@@ -8,6 +8,7 @@ import {
   Logger,
   LogLevel,
 } from '@shopify/cli-kit/node/output';
+import {type PackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {writeFile} from '@shopify/cli-kit/node/fs';
@@ -482,7 +483,7 @@ export async function runDeploy(
   let workerDir = 'dist/worker';
 
   const isClassicCompiler = await isClassicProject(root);
-  const metadataHydrogenVersion = await getHydrogenVersion({appPath: root});
+  const metadataHydrogenVersion = getHydrogenVersion({appPath: root});
   const shouldUseDefaultBuildCommand =
     !buildCommand &&
     !isClassicCompiler &&
@@ -773,15 +774,19 @@ function isHydrogenPreviewVersion(version?: string) {
 /**
  * Gets the current @shopify/hydrogen version from the package's package.json
  */
-export async function getHydrogenVersion({appPath}: {appPath: string}) {
+export function getHydrogenVersion({appPath}: {appPath: string}) {
   const {root} = getProjectPaths(appPath);
 
-  const require = createRequire(import.meta.url);
-  const {version} = require(
-    require.resolve('@shopify/hydrogen/package.json', {
-      paths: [root],
-    }),
-  );
+  try {
+    const require = createRequire(import.meta.url);
+    const packageJson = require(
+      resolvePath(root, 'node_modules', '@shopify', 'hydrogen', 'package.json'),
+    ) as PackageJson;
 
-  return version;
+    return typeof packageJson.version === 'string'
+      ? packageJson.version
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }

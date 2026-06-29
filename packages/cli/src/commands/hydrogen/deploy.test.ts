@@ -1,4 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
+import {mkdtempSync, mkdirSync, rmSync, writeFileSync} from 'node:fs';
+import {tmpdir} from 'node:os';
 import {type AdminSession, login} from '../../lib/auth.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
@@ -16,7 +18,6 @@ import {
   getLatestGitCommit,
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
-import {createRequire} from 'node:module';
 
 import {
   deploymentLogger,
@@ -27,7 +28,6 @@ import {
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {execAsync} from '../../lib/process.js';
 import {createEnvironmentCliChoiceLabel} from '../../lib/common.js';
-import {getSkeletonSourceDir} from '../../lib/build.js';
 import {
   CompletedDeployment,
   createDeploy,
@@ -35,7 +35,6 @@ import {
 } from '@shopify/oxygen-cli/deploy';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
 import {runBuild} from './build.js';
-import {PackageJson} from 'type-fest';
 
 vi.mock('@shopify/oxygen-cli/deploy');
 vi.mock('@shopify/cli-kit/node/dot-env');
@@ -69,22 +68,35 @@ vi.mock('@shopify/cli-kit/node/git', async () => {
   };
 });
 
-async function createHydrogenDependencyPackageJson(version?: string) {
-  const require = createRequire(import.meta.url);
-  const packageJson: PackageJson = require(
-    require.resolve('@shopify/hydrogen/package.json', {
-      paths: [getSkeletonSourceDir()],
+const tempRoots: string[] = [];
+
+function createAppWithHydrogenVersion(version?: string) {
+  const root = mkdtempSync(`${tmpdir()}/hydrogen-deploy-`);
+  tempRoots.push(root);
+
+  const hydrogenPackageRoot = `${root}/node_modules/@shopify/hydrogen`;
+  mkdirSync(hydrogenPackageRoot, {recursive: true});
+  writeFileSync(
+    `${root}/package.json`,
+    JSON.stringify({
+      dependencies: {
+        '@shopify/hydrogen': version ?? 'workspace:*',
+      },
+    }),
+  );
+  writeFileSync(
+    `${hydrogenPackageRoot}/package.json`,
+    JSON.stringify({
+      name: '@shopify/hydrogen',
+      version,
+      exports: {'./package.json': './package.json'},
     }),
   );
 
-  packageJson.version = version;
-
-  return packageJson;
+  return root;
 }
 
 describe('deploy', async () => {
-  await createHydrogenDependencyPackageJson('2000.1.1');
-
   const ADMIN_SESSION: AdminSession = {
     token: 'abc123',
     storeFqdn: 'my-shop.myshopify.com',
@@ -142,7 +154,6 @@ describe('deploy', async () => {
       url: deployParams.metadataUrl,
       user: deployParams.metadataUser,
       version: deployParams.metadataVersion,
-      hydrogenVersion: '2000.1.1',
     },
     skipVerification: true,
     rootPath: deployParams.path,
@@ -164,7 +175,6 @@ describe('deploy', async () => {
   };
 
   beforeEach(async () => {
-    await createHydrogenDependencyPackageJson('2000.1.1');
     process.exit = vi.fn() as any;
     vi.mocked(login).mockResolvedValue({
       session: ADMIN_SESSION,
@@ -194,6 +204,10 @@ describe('deploy', async () => {
   afterEach(() => {
     vi.resetAllMocks();
     process.exit = originalExit;
+
+    for (const tempRoot of tempRoots.splice(0)) {
+      rmSync(tempRoot, {recursive: true, force: true});
+    }
   });
 
   it('calls getOxygenDeploymentData with the correct parameters', async () => {
@@ -774,15 +788,16 @@ describe('deploy', async () => {
 
   it('uses the default build command for Hydrogen preview versions', async () => {
     const hydrogenVersion = '0.0.0-preview-20260625000000';
-    await createHydrogenDependencyPackageJson(hydrogenVersion);
+    const root = createAppWithHydrogenVersion(hydrogenVersion);
 
     const {buildFunction: _, ...hooks} = expectedHooks;
 
-    await runDeploy(deployParams);
+    await runDeploy({...deployParams, path: root});
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
       config: {
         ...expectedConfig,
+        rootPath: root,
         buildCommand: 'node --run build',
         metadata: {
           ...expectedConfig.metadata,
@@ -796,8 +811,12 @@ describe('deploy', async () => {
   });
 
   it('deploys custom app output with a custom build command and output directories', async () => {
+    const root = mkdtempSync(`${tmpdir()}/hydrogen-deploy-`);
+    tempRoots.push(root);
+
     const params = {
       ...deployParams,
+      path: root,
       buildCommand: 'custom-framework build',
       assetsDir: 'xyz/client',
       workerDir: 'xyz/server',
@@ -809,9 +828,15 @@ describe('deploy', async () => {
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
       config: {
         ...expectedConfig,
+        rootPath: root,
         assetsDir: 'xyz/client',
         workerDir: 'xyz/server',
         buildCommand: 'custom-framework build',
+        metadata: {
+          url: deployParams.metadataUrl,
+          user: deployParams.metadataUser,
+          version: deployParams.metadataVersion,
+        },
       },
       hooks,
       logger: deploymentLogger,
@@ -1135,15 +1160,24 @@ describe('deploy', async () => {
 
   describe('getHydrogenVersion', () => {
     it('returns the version', async () => {
-      const version = await getHydrogenVersion({appPath: deployParams.path});
+      const root = createAppWithHydrogenVersion('2000.1.1');
+
+      const version = getHydrogenVersion({appPath: root});
       expect(version).toBe('2000.1.1');
+    });
+
+    it('returns undefined when Hydrogen is not installed in the app', async () => {
+      const root = mkdtempSync(`${tmpdir()}/hydrogen-deploy-`);
+      tempRoots.push(root);
+
+      expect(getHydrogenVersion({appPath: root})).toBeUndefined();
     });
 
     describe('when there are no version is available', () => {
       it('returns undefined', async () => {
-        await createHydrogenDependencyPackageJson(undefined);
+        const root = createAppWithHydrogenVersion(undefined);
 
-        const version = await getHydrogenVersion({appPath: deployParams.path});
+        const version = getHydrogenVersion({appPath: root});
         expect(version).toBeUndefined();
       });
     });
