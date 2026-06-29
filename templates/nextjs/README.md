@@ -1,6 +1,6 @@
 # Next.js storefront example
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Shopify/hydrogen/tree/preview/templates/nextjs)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fpreview%2Ftemplates%2Fnextjs)
 
 A Next.js 16 App Router storefront built on [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen) for the Node.js runtime and Vercel. It's a standalone starting point you can clone and build your store on top of — five storefront pages on a shared layout, with a real cart, analytics, and a consent banner wired up.
 
@@ -55,12 +55,16 @@ Useful commands:
 
 ## Deploy to Vercel
 
-1. Push this project to a Git provider.
-2. Import it in Vercel.
-3. Keep the detected Next.js settings (`next build`; no `vercel.json` needed).
-4. Deploy.
+The fastest path is one click:
 
-A fresh Vercel deploy renders without any environment variables because the storefront data source falls back to `mock.shop`. To connect a real store, add `PUBLIC_STORE_DOMAIN` and `PRIVATE_STOREFRONT_API_TOKEN` in Vercel Project Settings and redeploy. Vercel runs this example on the Node.js runtime that Next.js auto-detects.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fpreview%2Ftemplates%2Fnextjs)
+
+1. Click **Deploy with Vercel** above. Vercel clones this template into a new repository on your own Git provider (GitHub, GitLab, or Bitbucket).
+2. Keep the auto-detected Next.js settings (`next build`; no `vercel.json` needed).
+3. Deploy. The first build renders immediately with no environment variables, because the storefront falls back to `mock.shop`.
+4. Connect your store: add `PUBLIC_STORE_DOMAIN` and `PRIVATE_STOREFRONT_API_TOKEN` under **Project Settings → Environment Variables**, then redeploy.
+
+Prefer to wire it up yourself? Push this project to a Git provider, import it in Vercel, keep the detected Next.js settings, and deploy — the same auto-detection and `mock.shop` fallback apply. Vercel runs this storefront on the Node.js runtime that Next.js auto-detects.
 
 ## Where to start
 
