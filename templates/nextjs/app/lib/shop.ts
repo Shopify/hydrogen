@@ -18,11 +18,21 @@ export const storefrontConfig = {
   i18n: { country: "US", language: "EN" },
 } as const;
 
+// Analytics shop identity. The Hydrogen sales channel populates SHOP_ID and
+// PUBLIC_STOREFRONT_ID for a linked store (e.g. via `shopify hydrogen env pull`,
+// or set them in `.env` / your host's project env). We read those and fall back
+// to the public Hydrogen Preview store so a fresh, tokenless deploy still renders.
+function toShopGid(shopId: string): string {
+  return shopId.startsWith("gid://") ? shopId : `gid://shopify/Shop/${shopId}`;
+}
+
 export const analyticsShop = {
-  shopId: "gid://shopify/Shop/55145660472",
+  shopId: process.env.SHOP_ID
+    ? toShopGid(process.env.SHOP_ID)
+    : "gid://shopify/Shop/55145660472",
   acceptedLanguage: "EN",
   currency: "USD",
-  hydrogenSubchannelId: "1000014875",
+  hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID || "1000014875",
 } as const;
 
 export const analyticsConsent = {
