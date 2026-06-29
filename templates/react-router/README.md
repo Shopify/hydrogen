@@ -1,5 +1,7 @@
 # React Router storefront example
 
+<a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src="https://raw.githubusercontent.com/Shopify/hydrogen/preview/.github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
+
 A React Router 7 (framework mode, SSR) storefront built on
 [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen) and the
 classic Hydrogen/Oxygen runtime. It's a starting point you can clone and build
