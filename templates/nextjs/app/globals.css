@@ -1,0 +1,95 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* App-only CSS the frozen core (tokens.css) does not own.
+ *
+ * The core owns the design tokens AND the drawer *box* (.drawer-right /
+ * .drawer-left: position, size, surface, backdrop color, responsive width).
+ * It does NOT own the open/close MOTION or the body scroll lock — those are
+ * app-owned and live here.
+ *
+ * Do NOT add web fonts or @theme font overrides here: the core tokens lock the
+ * example typography to system-ui.
+ */
+
+:root {
+  --chrome-top: calc(2.5rem + 4rem);
+}
+
+html {
+  scroll-padding-top: var(--chrome-top);
+}
+
+/* Drawer slide-in animation.
+ * The cart drawer uses `.drawer-right` (slides from the inline-end edge); the
+ * mobile-nav drawer uses `.drawer-left` (slides from the inline-start edge).
+ * `overlay`/`display` with `allow-discrete` keep the dialog transitionable
+ * while it leaves the top layer on close. */
+.drawer-right,
+.drawer-left {
+  transition:
+    transform 250ms cubic-bezier(0.22, 1, 0.36, 1),
+    overlay 250ms allow-discrete,
+    display 250ms allow-discrete;
+}
+
+.drawer-right {
+  transform: translateX(100%);
+}
+
+.drawer-left {
+  transform: translateX(-100%);
+}
+
+.drawer-right[open],
+.drawer-left[open] {
+  transform: translateX(0);
+}
+
+@starting-style {
+  .drawer-right[open] {
+    transform: translateX(100%);
+  }
+
+  .drawer-left[open] {
+    transform: translateX(-100%);
+  }
+}
+
+/* Backdrop fade-in. The core sets the open backdrop color; here we make it
+ * start transparent so it can transition in (and back out on close). */
+.drawer-right::backdrop,
+.drawer-left::backdrop {
+  background: rgb(0 0 0 / 0);
+  transition:
+    background-color 250ms ease-out,
+    overlay 250ms allow-discrete,
+    display 250ms allow-discrete;
+}
+
+.drawer-right[open]::backdrop,
+.drawer-left[open]::backdrop {
+  background: rgb(0 0 0 / 0.5);
+}
+
+@starting-style {
+  .drawer-right[open]::backdrop,
+  .drawer-left[open]::backdrop {
+    background: rgb(0 0 0 / 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-right,
+  .drawer-left,
+  .drawer-right::backdrop,
+  .drawer-left::backdrop {
+    transition: none;
+  }
+}
+
+/* Body scroll lock while any drawer is open — pure CSS, no JS class toggling. */
+body:has(.drawer-right[open]),
+body:has(.drawer-left[open]) {
+  overflow: hidden;
+}
