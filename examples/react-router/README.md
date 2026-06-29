@@ -1,7 +1,5 @@
 # React Router 7 example
 
-<a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src="../../.github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
-
 Port of the canonical `examples/base/` design to [React Router v7](https://reactrouter.com/) (framework mode, SSR enabled by default).
 
 ## What this demonstrates
