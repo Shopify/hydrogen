@@ -56,7 +56,7 @@ Pick the template that matches your framework. Each one comes ready to deploy to
 
 **Next.js** — Hydrogen + Vercel
 
-<a href="https://vercel.com/new/clone?repository-url=https://github.com/Shopify/hydrogen"><img alt="Deploy with Vercel" src="https://vercel.com/button" width="129" height="40"></a>
+<a href="https://vercel.com/new/clone?repository-url=https://github.com/Shopify/hydrogen/tree/preview/templates/nextjs"><img alt="Deploy with Vercel" src="https://vercel.com/button" width="129" height="40"></a>
 
 ### Set up in your own project
 
