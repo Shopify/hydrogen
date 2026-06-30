@@ -77,8 +77,12 @@ export async function getViteConfig(
   const {appDirectory, serverBuildFile, routes} =
     getReactRouterOrRemixConfigFromVite(resolvedViteConfig);
 
-  const serverOutDir = resolvedViteConfig.build.outDir;
-  const clientOutDir = serverOutDir.replace(/server$/, 'client');
+  const serverOutDir =
+    resolvedViteConfig.environments.ssr?.build.outDir ??
+    resolvedViteConfig.build.outDir;
+  const clientOutDir =
+    resolvedViteConfig.environments.client?.build.outDir ??
+    serverOutDir.replace(/server$/, 'client');
 
   const rollupOutput = resolvedViteConfig.build.rollupOptions.output;
   const {entryFileNames} =

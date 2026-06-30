@@ -2,6 +2,7 @@ import type {ServerResponse, IncomingMessage} from 'node:http';
 import path from 'node:path';
 import {Readable} from 'node:stream';
 import {sendResponse} from '@mjackson/node-fetch-server';
+import {Request as MiniflareRequest} from 'miniflare';
 
 /**
  * Creates a fully qualified URL from a Node request or a string.
@@ -45,4 +46,18 @@ export function pipeFromWeb(webResponse: Response, res: ServerResponse) {
   // The sendResponse function from @mjackson/node-fetch-server properly handles
   // streaming responses, including turbo-stream responses from React Router.
   return sendResponse(res, webResponse);
+}
+
+export function toMiniflareRequest(request: Request): MiniflareRequest {
+  // Set the X-Forwarded-Host header to the original host as the `Host` header inside a Worker will contain the workerd host
+  const host = request.headers.get('Host');
+  if (host) {
+    request.headers.set('X-Forwarded-Host', host);
+  }
+  return new MiniflareRequest(request.url, {
+    method: request.method,
+    headers: [['accept-encoding', 'identity'], ...request.headers],
+    body: request.body as any,
+    duplex: 'half',
+  });
 }

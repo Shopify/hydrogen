@@ -192,14 +192,19 @@ function fetchEntryModule(env: ViteEnv) {
       default: {fetch: ExportedHandlerFetchHandler};
     }>
   ).catch((error: Error) => {
+    let errorResponseBody = error.stack ?? error.message ?? 'Internal error';
+    const message = error.message ?? error.stack?.split('\n')[0];
+
+    if (message && message.includes(env.__VITE_RUNTIME_EXECUTE_URL)) {
+      const missingEntryMessage = `No Oxygen worker entry was found. Use \`oxygen({ entry: "${env.__VITE_RUNTIME_EXECUTE_URL}" })\` in Vite or make sure the entry module exists.`;
+      errorResponseBody = `${missingEntryMessage}\n\n${errorResponseBody}`;
+    }
+
     return {
-      errorResponse: new globalThis.Response(
-        error?.stack ?? error?.message ?? 'Internal error',
-        {
-          status: 503,
-          statusText: 'executeEntrypoint error',
-        },
-      ),
+      errorResponse: new globalThis.Response(errorResponseBody, {
+        status: 503,
+        statusText: 'executeEntrypoint error',
+      }),
     };
   });
 }

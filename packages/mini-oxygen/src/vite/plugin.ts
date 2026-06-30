@@ -1,7 +1,8 @@
-import {defaultClientConditions} from 'vite';
+import {defaultClientConditions, loadEnv} from 'vite';
 import type {Plugin} from 'vite';
 import {
   createMiniOxygenDevEnvironment,
+  hasProvidedEnvBindings,
   type MiniOxygenDevEnvironment,
   type MiniOxygenRuntimeOptions,
   mergeMiniOxygenRuntimeOptions,
@@ -10,16 +11,23 @@ import {
   setupOxygenMiddleware,
   type MiniOxygenViteOptions,
 } from './server-middleware.js';
+import {getHydrogenCompatibilityDate} from './compat-date.js';
+import {
+  setupOxygenPreviewServer,
+  type OxygenPreviewOptions,
+} from './preview.js';
 
 // Note: Vite resolves extensions like .js or .ts automatically.
 const DEFAULT_SSR_ENTRY = './server';
+const workerConditions = ['worker', 'workerd', ...defaultClientConditions];
 
 export type OxygenPluginOptions = Partial<
   Pick<
     MiniOxygenViteOptions,
     'entry' | 'env' | 'inspectorPort' | 'logRequestLine' | 'debug'
   >
->;
+> &
+  OxygenPreviewOptions;
 
 type OxygenApiOptions = MiniOxygenRuntimeOptions;
 
@@ -40,6 +48,8 @@ export type {MiniOxygenDevEnvironment};
 export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
   let apiOptions: OxygenApiOptions = {};
   let miniOxygenEnvironment: MiniOxygenDevEnvironment | undefined;
+  let root = process.cwd();
+  let isSsrBuild = false;
 
   const resolveMiniOxygenOptions = async (
     runtimeOptions: MiniOxygenRuntimeOptions,
@@ -48,18 +58,33 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
     const entry =
       runtimeOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
     const remoteEnv = await Promise.resolve(runtimeOptions.envPromise);
+    const fallbackEnv =
+      !hasProvidedEnvBindings(pluginOptions) &&
+      !hasProvidedEnvBindings(runtimeOptions)
+        ? loadEnv(viteDevServer.config.mode, viteDevServer.config.envDir, '')
+        : undefined;
+
+    const env = Object.assign(
+      {},
+      fallbackEnv,
+      remoteEnv,
+      runtimeOptions.env,
+      pluginOptions.env,
+    );
 
     return {
       entry,
       viteDevServer,
       crossBoundarySetup: runtimeOptions.crossBoundarySetup,
-      env: {...remoteEnv, ...runtimeOptions.env, ...pluginOptions.env},
+      env,
       debug: runtimeOptions.debug ?? pluginOptions.debug ?? false,
       inspectorPort:
         runtimeOptions.inspectorPort ?? pluginOptions.inspectorPort,
       requestHook: runtimeOptions.requestHook,
       entryPointErrorHandler: runtimeOptions.entryPointErrorHandler,
-      compatibilityDate: runtimeOptions.compatibilityDate,
+      compatibilityDate:
+        runtimeOptions.compatibilityDate ??
+        getHydrogenCompatibilityDate(viteDevServer.config.root),
       logRequestLine:
         // Give priority to the plugin option over the CLI option here,
         // since the CLI one is just a default, not a user-provided flag.
@@ -76,41 +101,44 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
     {
       name: 'oxygen:main',
       config(config, env) {
-        return {
-          appType: 'custom',
-          resolve: {
-            conditions: ['worker', 'workerd', ...defaultClientConditions],
-          },
-          ssr: {
-            noExternal: true,
-            target: 'webworker',
-            resolve: {
-              conditions: ['worker', 'workerd', ...defaultClientConditions],
-            },
-          },
+        const build = {
           // When building, the CLI will set the `ssr` option to `true`
           // if no --entry flag is passed for the default SSR entry file.
           // Replace it here with a default value.
           ...(env.isSsrBuild &&
             config.build?.ssr && {
-              build: {
-                ssr:
-                  config.build?.ssr === true
-                    ? // No --entry flag passed by the user, use the
-                      // option passed to the plugin or the default value
-                      (pluginOptions.entry ?? DEFAULT_SSR_ENTRY)
-                    : // --entry flag passed by the user, keep it
-                      config.build?.ssr,
-              },
+              ssr:
+                config.build?.ssr === true
+                  ? // No --entry flag passed by the user, use the
+                    // option passed to the plugin or the default value
+                    (pluginOptions.entry ?? DEFAULT_SSR_ENTRY)
+                  : // --entry flag passed by the user, keep it
+                    config.build?.ssr,
             }),
         };
+
+        return {
+          appType: 'custom',
+          ...(Object.keys(build).length > 0 && {build}),
+          ssr: {
+            noExternal: true,
+            target: 'webworker',
+            resolve: {
+              conditions: workerConditions,
+            },
+          },
+        };
+      },
+      configResolved(resolvedConfig) {
+        root = resolvedConfig.root;
+        isSsrBuild = Boolean(resolvedConfig.build.ssr);
       },
       configEnvironment(name) {
         if (name !== 'ssr') return;
 
         return {
           resolve: {
-            conditions: ['worker', 'workerd', ...defaultClientConditions],
+            conditions: workerConditions,
           },
           dev: {
             createEnvironment(name, config) {
@@ -144,18 +172,33 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           };
         },
       },
+      configurePreviewServer: {
+        order: 'pre',
+        async handler(previewServer) {
+          return setupOxygenPreviewServer(
+            previewServer,
+            pluginOptions,
+            apiOptions,
+          );
+        },
+      },
       generateBundle() {
-        if (apiOptions.compatibilityDate) {
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(apiOptions.compatibilityDate)) {
+        if (!isSsrBuild) return;
+
+        const compatibilityDate =
+          apiOptions.compatibilityDate ?? getHydrogenCompatibilityDate(root);
+
+        if (compatibilityDate) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(compatibilityDate)) {
             throw new Error(
-              `Invalid compatibility date "${apiOptions.compatibilityDate}"`,
+              `Invalid compatibility date "${compatibilityDate}"`,
             );
           }
 
           const oxygenJsonFile = 'oxygen.json';
           const oxygenJsonContent = {
             version: 1,
-            compatibility_date: apiOptions.compatibilityDate,
+            compatibility_date: compatibilityDate,
           };
 
           this.emitFile({
