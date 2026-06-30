@@ -1,7 +1,10 @@
 import { getBuyerIp } from "@shared/buyer-ip";
 import { createExampleStorefrontClient } from "@shared/storefront-client";
-import { createStorefrontClient, createStorefrontRequestContext } from "@shopify/hydrogen";
-import { handleShopifyRoutes } from "@shopify/hydrogen";
+import {
+  createStorefrontClient,
+  createStorefrontRequestContext,
+  handleShopifyRoutes,
+} from "@shopify/hydrogen";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { cartHandlers } from "@/lib/cart-handlers";
