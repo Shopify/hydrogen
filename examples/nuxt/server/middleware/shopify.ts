@@ -2,6 +2,7 @@ import { getBuyerIp } from "@shared/buyer-ip";
 import { createExampleStorefrontClient } from "@shared/storefront-client";
 import { handleShopifyRoutes } from "@shopify/hydrogen";
 import {
+  createStorefrontClient,
   createStorefrontRequestContext,
   type StorefrontRequestContext,
 } from "@shopify/hydrogen";
@@ -27,7 +28,7 @@ export default defineEventHandler(async (event) => {
 });
 
 function createPrivateStorefrontClient(request: Request, requestContext: StorefrontRequestContext) {
-  return createExampleStorefrontClient({
+  return createExampleStorefrontClient(createStorefrontClient, {
     requestContext,
     buyerIp: getBuyerIp(request.headers),
   });

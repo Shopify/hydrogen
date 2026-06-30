@@ -1,14 +1,14 @@
 import { getBuyerIp } from "@shared/buyer-ip";
 import { createExampleStorefrontClient } from "@shared/storefront-client";
+import { createStorefrontClient, createStorefrontRequestContext } from "@shopify/hydrogen";
 import { handleShopifyRoutes } from "@shopify/hydrogen";
-import { createStorefrontRequestContext } from "@shopify/hydrogen";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { cartHandlers } from "@/lib/cart-handlers";
 
 export async function proxy(request: NextRequest) {
   const requestContext = createStorefrontRequestContext(request);
-  const storefrontClient = createExampleStorefrontClient({
+  const storefrontClient = createExampleStorefrontClient(createStorefrontClient, {
     requestContext,
     buyerIp: getBuyerIp(request.headers),
   });

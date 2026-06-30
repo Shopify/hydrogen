@@ -1,9 +1,9 @@
 import { storefrontConfig } from "./config";
 import { getOptionalPrivateStorefrontToken } from "./private-env";
-import {
+import type {
   createStorefrontClient,
-  type RequestScopedPrivateStorefrontClient,
-  type StorefrontRequestContext,
+  RequestScopedPrivateStorefrontClient,
+  StorefrontRequestContext,
 } from "@shopify/hydrogen";
 
 let warnedAboutPublicFallback = false;
@@ -19,20 +19,29 @@ let warnedAboutPublicFallback = false;
  * To exercise the private path, set `PRIVATE_STOREFRONT_API_TOKEN` (and point
  * `examples/shared/config.ts` at your own store).
  *
+ * `createStorefrontClient` is injected by the caller rather than imported here:
+ * this module is pulled into each example via a path alias, so a value import of
+ * `@shopify/hydrogen` would force every example's bundler (Turbopack, Vite, …) to
+ * resolve the package from `examples/shared`, which is brittle. Importing it as a
+ * type only keeps this module free of runtime dependencies.
+ *
  * The return type is the private client every example and SDK helper (cart
  * routes, redirects) is typed against. The public fallback is structurally
  * identical — same `graphql`/`requestContext` surface, and the demo store's
  * public token is valid for these SSR reads, cart, and redirect queries — and
  * nothing branches on the client's `type` discriminant, so the cast is safe.
  */
-export function createExampleStorefrontClient(opts: {
-  requestContext: StorefrontRequestContext;
-  buyerIp: string;
-}): RequestScopedPrivateStorefrontClient {
+export function createExampleStorefrontClient(
+  create: typeof createStorefrontClient,
+  opts: {
+    requestContext: StorefrontRequestContext;
+    buyerIp: string;
+  },
+): RequestScopedPrivateStorefrontClient {
   const privateStorefrontToken = getOptionalPrivateStorefrontToken();
 
   if (privateStorefrontToken) {
-    return createStorefrontClient({
+    return create({
       type: "private",
       config: {
         storeDomain: storefrontConfig.storeDomain,
@@ -53,7 +62,7 @@ export function createExampleStorefrontClient(opts: {
     );
   }
 
-  const publicClient = createStorefrontClient({
+  const publicClient = create({
     type: "public",
     config: {
       storeDomain: storefrontConfig.storeDomain,

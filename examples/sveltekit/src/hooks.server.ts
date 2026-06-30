@@ -3,6 +3,7 @@ import { createExampleStorefrontClient } from "@shared/storefront-client";
 import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createCartServerHandlers,
+  createStorefrontClient,
   createStorefrontRequestContext,
   type StorefrontRequestContext,
 } from "@shopify/hydrogen";
@@ -55,7 +56,7 @@ function applyStorefrontResponseHeaders(
 }
 
 function createPrivateStorefrontClient(request: Request, requestContext: StorefrontRequestContext) {
-  return createExampleStorefrontClient({
+  return createExampleStorefrontClient(createStorefrontClient, {
     requestContext,
     buyerIp: getBuyerIp(request.headers),
   });

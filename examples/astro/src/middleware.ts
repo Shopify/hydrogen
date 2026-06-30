@@ -2,6 +2,7 @@ import { getBuyerIp } from "@shared/buyer-ip";
 import { createExampleStorefrontClient } from "@shared/storefront-client";
 import {
   createCartServerHandlers,
+  createStorefrontClient,
   createStorefrontRequestContext,
   handleShopifyRedirects,
   handleShopifyRoutes,
@@ -56,7 +57,7 @@ function applyStorefrontResponseHeaders(
 }
 
 function createPrivateStorefrontClient(request: Request, requestContext: StorefrontRequestContext) {
-  return createExampleStorefrontClient({
+  return createExampleStorefrontClient(createStorefrontClient, {
     requestContext,
     buyerIp: getBuyerIp(request.headers),
   });

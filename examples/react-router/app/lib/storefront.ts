@@ -2,6 +2,7 @@ import { getBuyerIp } from "@shared/buyer-ip";
 import { storefrontConfig } from "@shared/config";
 import { createExampleStorefrontClient } from "@shared/storefront-client";
 import {
+  createStorefrontClient,
   createStorefrontRequestContext,
   type RequestScopedPrivateStorefrontClient,
   type StorefrontRequestContext,
@@ -16,7 +17,7 @@ export const storefrontRequestContext = createContext<StorefrontRequestContext>(
 export function createRequestStorefrontClient(request: Request) {
   const requestContext = createStorefrontRequestContext(request);
 
-  return createExampleStorefrontClient({
+  return createExampleStorefrontClient(createStorefrontClient, {
     requestContext,
     buyerIp: getBuyerIp(request.headers),
   });
