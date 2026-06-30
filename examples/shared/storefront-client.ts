@@ -1,10 +1,11 @@
-import { storefrontConfig } from "./config";
-import { getOptionalPrivateStorefrontToken } from "./private-env";
 import type {
   createStorefrontClient,
   RequestScopedPrivateStorefrontClient,
   StorefrontRequestContext,
 } from "@shopify/hydrogen";
+
+import { storefrontConfig } from "./config";
+import { getOptionalPrivateStorefrontToken } from "./private-env";
 
 let warnedAboutPublicFallback = false;
 
