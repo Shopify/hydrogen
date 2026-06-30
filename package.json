@@ -12,6 +12,7 @@
     "dev:next": "turbo run dev --filter=@shopify/hydrogen-example-nextjs...",
     "dev:hydrogen": "pnpm --dir examples/hydrogen dev",
     "examples:secrets:encrypt": "ejson encrypt examples/shared/secrets.ejson",
+    "examples:secrets:decrypt": "ejson decrypt examples/shared/secrets.ejson",
     "typecheck": "turbo run typecheck",
     "lint": "oxlint --max-warnings=0 packages/ examples/",
     "lint:ci": "oxlint --format github --max-warnings=0 packages/ examples/",
