@@ -50,6 +50,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
   let miniOxygenEnvironment: MiniOxygenDevEnvironment | undefined;
   let root = process.cwd();
   let isSsrBuild = false;
+  let userTsconfigPaths: boolean | undefined;
 
   const resolveMiniOxygenOptions = async (
     runtimeOptions: MiniOxygenRuntimeOptions,
@@ -101,6 +102,10 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
     {
       name: 'oxygen:main',
       config(config, env) {
+        // Capture the user's tsconfigPaths setting so we can
+        // forward it to our custom SSR environment below.
+        userTsconfigPaths = config.resolve?.tsconfigPaths;
+
         const build = {
           // When building, the CLI will set the `ssr` option to `true`
           // if no --entry flag is passed for the default SSR entry file.
@@ -139,6 +144,9 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         return {
           resolve: {
             conditions: workerConditions,
+            ...(userTsconfigPaths != null && {
+              tsconfigPaths: userTsconfigPaths,
+            }),
           },
           dev: {
             createEnvironment(name, config) {
