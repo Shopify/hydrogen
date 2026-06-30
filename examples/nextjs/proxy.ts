@@ -1,23 +1,16 @@
 import { getBuyerIp } from "@shared/buyer-ip";
-import { storefrontConfig } from "@shared/config";
-import { getPrivateStorefrontToken } from "@shared/private-env";
+import { createExampleStorefrontClient } from "@shared/storefront-client";
 import { handleShopifyRoutes } from "@shopify/hydrogen";
-import { createStorefrontClient, createStorefrontRequestContext } from "@shopify/hydrogen";
+import { createStorefrontRequestContext } from "@shopify/hydrogen";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { cartHandlers } from "@/lib/cart-handlers";
 
 export async function proxy(request: NextRequest) {
   const requestContext = createStorefrontRequestContext(request);
-  const storefrontClient = createStorefrontClient({
-    type: "private",
-    config: {
-      storeDomain: storefrontConfig.storeDomain,
-      i18n: storefrontConfig.i18n,
-      privateStorefrontToken: getPrivateStorefrontToken(),
-      buyerIp: getBuyerIp(request.headers),
-      requestContext,
-    },
+  const storefrontClient = createExampleStorefrontClient({
+    requestContext,
+    buyerIp: getBuyerIp(request.headers),
   });
 
   const kitRoute = await handleShopifyRoutes({

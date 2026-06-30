@@ -257,6 +257,12 @@ importers:
         specifier: ^8.0.3
         version: 8.0.10(@types/node@22.19.17)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4)
 
+  examples/shared:
+    dependencies:
+      '@shopify/hydrogen':
+        specifier: workspace:*
+        version: link:../../packages/hydrogen
+
   examples/solid-start:
     dependencies:
       '@shopify/hydrogen':
