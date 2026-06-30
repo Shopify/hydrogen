@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "vite dev --port 3004",
     "build": "vite build",
     "start": "node build",
     "prepare": "svelte-kit sync || echo ''",
