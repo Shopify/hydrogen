@@ -1,8 +1,17 @@
-import { defineConfig } from "tsdown";
+import { defineConfig, type UserConfig } from "tsdown";
 
 import pkg from "./package.json" with { type: "json" };
 
-export default defineConfig([
+// In `--watch` mode (the `dev` script) skip tsdown's default `dist` clean.
+// turbo runs the one-shot `build` first (via `^build`), so `dist` is already
+// populated; if the watch then wipes it on startup, every example bundler
+// reading `@shopify/hydrogen` through the workspace symlink momentarily
+// resolves a missing module ("Can't resolve '@shopify/hydrogen'"). Rolldown
+// writes each output atomically, so leaving the directory in place lets readers
+// always see a complete build. Production builds (no `--watch`) still clean.
+const clean = !process.argv.includes("--watch");
+
+const configs: UserConfig[] = [
   {
     entry: ["src/core/index.ts"],
     format: "esm",
@@ -96,4 +105,6 @@ export default defineConfig([
       __DEV__: "false",
     },
   },
-]);
+];
+
+export default defineConfig(configs.map((config) => ({ clean, ...config })));
