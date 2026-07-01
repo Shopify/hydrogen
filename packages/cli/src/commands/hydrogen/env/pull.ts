@@ -1,4 +1,5 @@
 import {diffLines} from 'diff';
+import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
 import {
   renderConfirmationPrompt,
@@ -73,6 +74,10 @@ export default class EnvPull extends Command {
     ...commonFlags.envFile,
     ...commonFlags.path,
     ...commonFlags.force,
+    yes: Flags.boolean({
+      description: 'Automatically confirm changes to the local .env file.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_YES',
+    }),
   };
 
   async run(): Promise<void> {
@@ -87,6 +92,7 @@ interface EnvPullOptions {
   envFile: string;
   force?: boolean;
   path?: string;
+  yes?: boolean;
 }
 
 export async function runEnvPull({
@@ -95,6 +101,7 @@ export async function runEnvPull({
   path: root = process.cwd(),
   envFile,
   force,
+  yes = false,
 }: EnvPullOptions) {
   const [{session, config}, cliCommand] = await Promise.all([
     login(root),
@@ -160,7 +167,7 @@ export async function runEnvPull({
     fetchedEnv[key] = isSecret ? `""` : quoteEnvValue(value);
   });
 
-  if ((await fileExists(dotEnvPath)) && !force) {
+  if ((await fileExists(dotEnvPath)) && !force && !yes) {
     const existingEnv = await readFile(dotEnvPath);
     const patchedEnv = patchEnvFile(existingEnv, fetchedEnv);
 

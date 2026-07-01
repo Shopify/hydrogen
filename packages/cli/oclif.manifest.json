@@ -762,6 +762,13 @@
           "name": "force",
           "allowNo": false,
           "type": "boolean"
+        },
+        "yes": {
+          "description": "Automatically confirm changes to the local .env file.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_YES",
+          "name": "yes",
+          "allowNo": false,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,

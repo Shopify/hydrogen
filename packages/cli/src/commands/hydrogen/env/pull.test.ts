@@ -282,6 +282,19 @@ describe('pullVariables', () => {
         });
       });
     });
+
+    describe('and --yes is enabled', () => {
+      it('does not prompt the user to confirm', async () => {
+        await inTemporaryDirectory(async (tmpDir) => {
+          const filePath = joinPath(tmpDir, envFile);
+          await writeFile(filePath, 'EXISTING_TOKEN=1');
+
+          await runEnvPull({path: tmpDir, yes: true, envFile});
+
+          expect(renderConfirmationPrompt).not.toHaveBeenCalled();
+        });
+      });
+    });
   });
 
   describe('environment variable quoting', () => {
