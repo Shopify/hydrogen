@@ -805,6 +805,24 @@
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
+        },
+        "force": {
+          "char": "f",
+          "description": "Push environment variable changes without confirmation.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_FORCE",
+          "name": "force",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "dry-run": {
+          "description": "Preview environment variable changes without pushing them.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_DRY_RUN",
+          "exclusive": [
+            "force"
+          ],
+          "name": "dry-run",
+          "allowNo": false,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,

@@ -1,4 +1,5 @@
 import Command from '@shopify/cli-kit/node/base-command';
+import {Flags} from '@oclif/core';
 import {diffLines} from 'diff';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {login} from '../../../lib/auth.js';
@@ -41,6 +42,16 @@ export default class EnvPush extends Command {
     ...commonFlags.env,
     ...commonFlags.envFile,
     ...commonFlags.path,
+    force: Flags.boolean({
+      char: 'f',
+      description: 'Push environment variable changes without confirmation.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
+    }),
+    'dry-run': Flags.boolean({
+      description: 'Preview environment variable changes without pushing them.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_DRY_RUN',
+      exclusive: ['force'],
+    }),
   };
 
   async run(): Promise<void> {
@@ -50,14 +61,18 @@ export default class EnvPush extends Command {
 }
 
 interface EnvPushOptions {
+  dryRun?: boolean;
   env?: string;
   envFile: string;
+  force?: boolean;
   path?: string;
 }
 
 export async function runEnvPush({
+  dryRun = false,
   env: envHandle,
   envFile,
+  force = false,
   path = process.cwd(),
 }: EnvPushOptions) {
   let validatedEnvironment: Environment;
@@ -181,8 +196,23 @@ export async function runEnvPush({
       body: 'No changes to your environment variables.',
     });
     return;
-  } else {
-    const diff = diffLines(comparableRemoteVars, compareableLocalVars);
+  }
+
+  const diff = diffLines(comparableRemoteVars, compareableLocalVars);
+
+  if (dryRun) {
+    renderInfo({
+      body: outputContent`The following changes would be made to your environment variables for ${
+        validatedEnvironment.name
+      }:
+
+${outputToken.linesDiff(diff)}
+No changes were pushed because --dry-run was used.`.value,
+    });
+    return;
+  }
+
+  if (!force) {
     const confirmPush = await renderConfirmationPrompt({
       confirmationMessage: 'Yes, confirm changes',
       cancellationMessage: 'No, make changes later',
