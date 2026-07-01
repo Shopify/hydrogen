@@ -232,6 +232,29 @@ describe('oxygen Vite plugin', () => {
     expect(ssrEnvironmentConfig.resolve.conditions).toContain('workerd');
   });
 
+  it.each([true, false])(
+    'propagates user tsconfigPaths %s to the SSR environment',
+    (tsconfigPaths) => {
+      const plugin = getOxygenPlugin();
+
+      runConfigHook(plugin, {resolve: {tsconfigPaths}});
+
+      const ssrConfig = runConfigEnvironmentHook(plugin, 'ssr');
+      expect(ssrConfig).toMatchObject({
+        resolve: {tsconfigPaths},
+      });
+    },
+  );
+
+  it('does not force tsconfigPaths when user has not set it', () => {
+    const plugin = getOxygenPlugin();
+
+    runConfigHook(plugin, {});
+
+    const ssrConfig = runConfigEnvironmentHook(plugin, 'ssr');
+    expect(ssrConfig.resolve).not.toHaveProperty('tsconfigPaths');
+  });
+
   it.each([
     'virtual:oxygen-framework-entry',
     '@shopify/oxygen-framework/worker',
