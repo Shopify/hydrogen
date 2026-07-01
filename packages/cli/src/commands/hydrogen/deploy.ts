@@ -94,7 +94,7 @@ export default class Deploy extends Command {
     force: Flags.boolean({
       char: 'f',
       description:
-        'Forces a deployment to proceed if there are uncommitted changes in its Git repository.',
+        'Forces a deployment to proceed if there are uncommitted changes in its Git repository, and skips confirmation prompts for non-preview environments.',
       default: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
       required: false,
@@ -266,7 +266,7 @@ export async function runDeploy(
     env: envHandle,
     envBranch,
     environmentFile,
-    force: forceOnUncommittedChanges,
+    force,
     forceClientSourcemap = false,
     noVerify,
     lockfileCheck,
@@ -290,7 +290,7 @@ export async function runDeploy(
       isCleanGit = false;
     }
 
-    if (!forceOnUncommittedChanges && !isCleanGit) {
+    if (!force && !isCleanGit) {
       let errorMessage = 'Uncommitted changes detected';
       let changedFiles = undefined;
 
@@ -540,7 +540,8 @@ export async function runDeploy(
   if (
     !isCI &&
     !config.defaultEnvironment &&
-    (userProvidedEnvironmentTag || userChosenEnvironmentTag)
+    (userProvidedEnvironmentTag || userChosenEnvironmentTag) &&
+    !force
   ) {
     let chosenEnvironment = findEnvironmentByBranchOrThrow(
       deploymentData!.environments!,
