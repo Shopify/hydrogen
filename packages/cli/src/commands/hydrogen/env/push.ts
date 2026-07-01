@@ -1,4 +1,5 @@
 import Command from '@shopify/cli-kit/node/base-command';
+import {Flags} from '@oclif/core';
 import {diffLines} from 'diff';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {login} from '../../../lib/auth.js';
@@ -41,6 +42,15 @@ export default class EnvPush extends Command {
     ...commonFlags.env,
     ...commonFlags.envFile,
     ...commonFlags.path,
+    force: Flags.boolean({
+      char: 'f',
+      description: 'Push environment variable changes without confirmation.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
+    }),
+    yes: Flags.boolean({
+      description: 'Automatically confirm environment variable changes.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_YES',
+    }),
   };
 
   async run(): Promise<void> {
@@ -52,13 +62,17 @@ export default class EnvPush extends Command {
 interface EnvPushOptions {
   env?: string;
   envFile: string;
+  force?: boolean;
   path?: string;
+  yes?: boolean;
 }
 
 export async function runEnvPush({
   env: envHandle,
   envFile,
+  force = false,
   path = process.cwd(),
+  yes = false,
 }: EnvPushOptions) {
   let validatedEnvironment: Environment;
 
@@ -181,7 +195,7 @@ export async function runEnvPush({
       body: 'No changes to your environment variables.',
     });
     return;
-  } else {
+  } else if (!force && !yes) {
     const diff = diffLines(comparableRemoteVars, compareableLocalVars);
     const confirmPush = await renderConfirmationPrompt({
       confirmationMessage: 'Yes, confirm changes',

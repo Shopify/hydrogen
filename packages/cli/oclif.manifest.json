@@ -805,6 +805,21 @@
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
+        },
+        "force": {
+          "char": "f",
+          "description": "Push environment variable changes without confirmation.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_FORCE",
+          "name": "force",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "yes": {
+          "description": "Automatically confirm environment variable changes.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_YES",
+          "name": "yes",
+          "allowNo": false,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
