@@ -1,5 +1,29 @@
 # @shopify/mini-oxygen
 
+## 4.2.0
+
+### Minor Changes
+
+- - Make the Oxygen Vite plugin self-sufficient by inferring a compatibility date from the resolved Hydrogen package when one is not provided. ([#3819](https://github.com/Shopify/hydrogen/pull/3819)) by [@frandiox](https://github.com/frandiox)
+
+  - Worker-specific resolve conditions now apply only to the SSR worker environment so browser/client modules continue using Vite's normal client conditions.
+  - `oxygen.json` is now emitted only during SSR builds.
+  - The Oxygen Vite plugin now loads Vite environment variables as Mini Oxygen bindings when no env bindings are provided by plugin options or the Hydrogen CLI.
+  - `vite preview` can now run the built Oxygen worker in Mini Oxygen, with an optional `previewEntry` override for custom worker output paths.
+
+### Patch Changes
+
+- Fix `~/` path alias resolution in the MiniOxygen SSR environment ([#3823](https://github.com/Shopify/hydrogen/pull/3823)) by [@jibin7jose](https://github.com/jibin7jose)
+
+  The Oxygen Vite plugin now captures the user's `resolve.tsconfigPaths` setting
+  from the top-level Vite config and forwards it to the custom SSR environment
+  returned by `configEnvironment()`. Because Vite environments are isolated, the
+  top-level resolve config does not automatically apply to custom environments
+  created by plugins, so tsconfig path aliases (e.g. `~/assets/favicon.svg`)
+  would fail to resolve at runtime.
+
+  Fixes #3816
+
 ## 4.1.0
 
 ### Minor Changes
