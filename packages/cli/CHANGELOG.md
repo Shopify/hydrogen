@@ -1,5 +1,16 @@
 # @shopify/cli-hydrogen
 
+## 13.0.0
+
+### Patch Changes
+
+- Add deploy flags and environment variables for configuring Oxygen's client assets directory and worker directory. The worker directory must contain an `index.js` or `index.mjs` entry point. ([#3819](https://github.com/Shopify/hydrogen/pull/3819)) by [@frandiox](https://github.com/frandiox)
+
+  Deployments now resolve output directories from explicit flags, Vite output directories, then `dist/client` and `dist/server` fallbacks. Custom output deployments and `0.0.0-preview-*` Hydrogen versions default to `node --run build` instead of the Hydrogen build pipeline when no build command is provided.
+
+- Updated dependencies [[`375ed8e512b8d1f85867e8b7e52c48893cf6e4fb`](https://github.com/Shopify/hydrogen/commit/375ed8e512b8d1f85867e8b7e52c48893cf6e4fb), [`091f8ec62f9e213b02f68f540d81c65e9ee41cd2`](https://github.com/Shopify/hydrogen/commit/091f8ec62f9e213b02f68f540d81c65e9ee41cd2)]:
+  - @shopify/mini-oxygen@4.2.0
+
 ## 12.0.2
 
 ### Patch Changes
