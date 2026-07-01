@@ -99,6 +99,13 @@ export default class Deploy extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
       required: false,
     }),
+    yes: Flags.boolean({
+      description:
+        'Automatically confirm deployment to a non-preview environment.',
+      default: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_YES',
+      required: false,
+    }),
     'no-verify': Flags.boolean({
       description: 'Skip the routability verification step after deployment.',
       default: false,
@@ -216,6 +223,7 @@ interface OxygenDeploymentOptions {
   environmentFile?: string;
   force: boolean;
   forceClientSourcemap?: boolean;
+  yes?: boolean;
   noVerify: boolean;
   lockfileCheck: boolean;
   jsonOutput: boolean;
@@ -268,6 +276,7 @@ export async function runDeploy(
     environmentFile,
     force: forceOnUncommittedChanges,
     forceClientSourcemap = false,
+    yes = false,
     noVerify,
     lockfileCheck,
     jsonOutput,
@@ -540,7 +549,8 @@ export async function runDeploy(
   if (
     !isCI &&
     !config.defaultEnvironment &&
-    (userProvidedEnvironmentTag || userChosenEnvironmentTag)
+    (userProvidedEnvironmentTag || userChosenEnvironmentTag) &&
+    !yes
   ) {
     let chosenEnvironment = findEnvironmentByBranchOrThrow(
       deploymentData!.environments!,

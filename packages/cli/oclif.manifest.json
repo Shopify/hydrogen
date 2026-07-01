@@ -360,6 +360,14 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "yes": {
+          "description": "Automatically confirm deployment to a non-preview environment.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_YES",
+          "name": "yes",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
         "no-verify": {
           "description": "Skip the routability verification step after deployment.",
           "name": "no-verify",
