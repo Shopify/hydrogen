@@ -1150,10 +1150,44 @@
           "multiple": false,
           "type": "option"
         },
+        "shop": {
+          "char": "s",
+          "description": "Shop URL. It can be the shop prefix (janes-apparel) or the full myshopify.com URL (janes-apparel.myshopify.com, https://janes-apparel.myshopify.com).",
+          "env": "SHOPIFY_SHOP",
+          "name": "shop",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "storefront": {
           "description": "The name of a Hydrogen Storefront (e.g. \"Jane's Apparel\")",
           "env": "SHOPIFY_HYDROGEN_STOREFRONT",
+          "exclusive": [
+            "create-storefront",
+            "name"
+          ],
           "name": "storefront",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "create-storefront": {
+          "description": "Create a new Hydrogen storefront.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_CREATE_STOREFRONT",
+          "exclusive": [
+            "storefront"
+          ],
+          "name": "create-storefront",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "description": "The name to use when creating a new Hydrogen storefront.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_NAME",
+          "exclusive": [
+            "storefront"
+          ],
+          "name": "name",
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"

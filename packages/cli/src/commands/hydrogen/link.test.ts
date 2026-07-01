@@ -94,6 +94,12 @@ describe('link', () => {
     expect(getStorefronts).toHaveBeenCalledWith(ADMIN_SESSION);
   });
 
+  it('logs in with the provided shop when --shop is provided', async () => {
+    await runLink({path: 'my-path', shop: 'other-shop.myshopify.com'});
+
+    expect(login).toHaveBeenCalledWith('my-path', 'other-shop.myshopify.com');
+  });
+
   it('renders a list of choices and forwards the selection to setStorefront', async () => {
     vi.mocked(renderSelectPrompt).mockResolvedValue(
       FULL_SHOPIFY_CONFIG.storefront.id,
@@ -160,6 +166,53 @@ describe('link', () => {
 
       expect(outputMock.info()).toContain(
         `${expectedStorefrontName} is now linked`,
+      );
+    });
+
+    it('skips storefront selection when --create-storefront is provided', async () => {
+      await runLink({createStorefront: true});
+
+      expect(renderSelectPrompt).not.toHaveBeenCalled();
+      expect(renderTextPrompt).toHaveBeenCalledWith({
+        message: expect.stringMatching(/name/i),
+        defaultValue: expect.any(String),
+      });
+    });
+
+    it('uses --name without prompting for selection or name', async () => {
+      await runLink({name: expectedStorefrontName});
+
+      expect(renderSelectPrompt).not.toHaveBeenCalled();
+      expect(renderTextPrompt).not.toHaveBeenCalled();
+      expect(createStorefront).toHaveBeenCalledWith(
+        ADMIN_SESSION,
+        expectedStorefrontName,
+      );
+    });
+
+    it('uses a trimmed name when creating a storefront', async () => {
+      await runLink({name: ` ${expectedStorefrontName} `});
+
+      expect(renderSelectPrompt).not.toHaveBeenCalled();
+      expect(renderTextPrompt).not.toHaveBeenCalled();
+      expect(createStorefront).toHaveBeenCalledWith(
+        ADMIN_SESSION,
+        expectedStorefrontName,
+      );
+    });
+
+    it('treats a blank name as absent', async () => {
+      vi.mocked(renderTextPrompt).mockResolvedValue(expectedStorefrontName);
+
+      await runLink({createStorefront: true, name: '   '});
+
+      expect(renderTextPrompt).toHaveBeenCalledWith({
+        message: expect.stringMatching(/name/i),
+        defaultValue: expect.any(String),
+      });
+      expect(createStorefront).toHaveBeenCalledWith(
+        ADMIN_SESSION,
+        expectedStorefrontName,
       );
     });
 
@@ -234,6 +287,17 @@ describe('link', () => {
 
         expect(outputMock.warn()).toMatch(/Couldn\'t find Does not exist/g);
       });
+    });
+
+    it('rejects storefront creation flags', async () => {
+      await expect(
+        runLink({
+          storefront: 'Hydrogen',
+          name: 'New Storefront',
+        }),
+      ).rejects.toThrow('storefront');
+
+      expect(setStorefront).not.toHaveBeenCalled();
     });
   });
 });
