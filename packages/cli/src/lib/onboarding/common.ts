@@ -71,7 +71,10 @@ export type InitOptions = {
   path?: string;
   template?: string;
   language?: Language;
+  link?: boolean;
   mockShop?: boolean;
+  storefront?: string;
+  storefrontName?: string;
   styling?: StylingChoice;
   i18n?: I18nChoice;
   token?: string;
@@ -222,6 +225,13 @@ type StorefrontInfo = {
  */
 export async function handleStorefrontLink(
   controller: AbortController,
+  {
+    storefront: flagStorefront,
+    storefrontName,
+  }: {
+    storefront?: string;
+    storefrontName?: string;
+  } = {},
 ): Promise<StorefrontInfo> {
   enhanceAuthLogs(true);
   const {session, config} = await login();
@@ -229,18 +239,35 @@ export async function handleStorefrontLink(
 
   const storefronts = await getStorefronts(session);
 
-  let selectedStorefront = await handleStorefrontSelection(storefronts);
+  let selectedStorefront: HydrogenStorefront | undefined;
+
+  if (flagStorefront) {
+    selectedStorefront = storefronts.find(
+      ({title}) => title === flagStorefront,
+    );
+
+    if (!selectedStorefront) {
+      throw new AbortError(
+        `Couldn't find ${flagStorefront}`,
+        `Use \`--storefront-name\` to create a new Hydrogen storefront with that name.`,
+      );
+    }
+  } else if (!storefrontName) {
+    selectedStorefront = await handleStorefrontSelection(storefronts);
+  }
 
   let title;
 
   if (selectedStorefront) {
     title = selectedStorefront.title;
   } else {
-    title = await renderTextPrompt({
-      message: 'New storefront name',
-      defaultValue: titleize(config.shopName),
-      abortSignal: controller.signal,
-    });
+    title =
+      storefrontName ??
+      (await renderTextPrompt({
+        message: 'New storefront name',
+        defaultValue: titleize(config.shopName),
+        abortSignal: controller.signal,
+      }));
   }
 
   return {

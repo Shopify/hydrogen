@@ -82,6 +82,45 @@ describe('init', () => {
     });
   });
 
+  it('passes Shopify linking flags to setupTemplate', async () => {
+    vi.mocked(setupTemplate).mockResolvedValueOnce(undefined);
+
+    await runInit({
+      link: true,
+      path: './linked-storefront',
+      storefront: 'Hydrogen',
+    });
+
+    expect(setupTemplate).toHaveBeenCalledWith({
+      git: true,
+      link: true,
+      path: './linked-storefront',
+      storefront: 'Hydrogen',
+    });
+  });
+
+  it('rejects conflicting mock.shop and link flags', async () => {
+    await expect(
+      runInit({
+        mockShop: true,
+        storefrontName: 'New Storefront',
+      }),
+    ).rejects.toThrow('mock-shop');
+
+    expect(setupTemplate).not.toHaveBeenCalled();
+  });
+
+  it('rejects conflicting existing and new storefront flags', async () => {
+    await expect(
+      runInit({
+        storefront: 'Existing Storefront',
+        storefrontName: 'New Storefront',
+      }),
+    ).rejects.toThrow('storefront-name');
+
+    expect(setupTemplate).not.toHaveBeenCalled();
+  });
+
   describe('project validity', () => {
     let tmpDir: string;
 

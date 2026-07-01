@@ -13,6 +13,7 @@ import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 import {installNodeModules} from '@shopify/cli-kit/node/node-package-manager';
 import {execAsync} from '../process.js';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
+import {handleStorefrontLink} from './common.js';
 
 describe('local templates', () => {
   const outputMock = mockAndCaptureOutput();
@@ -96,6 +97,69 @@ describe('local templates', () => {
           message: 'Select package manager to install dependencies',
         }),
       );
+    });
+  });
+
+  it('uses the Shopify link flow when init linking flags are provided', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      vi.mocked(handleStorefrontLink).mockResolvedValueOnce({
+        id: 'gid://shopify/HydrogenStorefront/1',
+        title: 'Hydrogen',
+        shop: 'my-shop.myshopify.com',
+        shopName: 'My Shop',
+        email: 'merchant@example.com',
+        session: {
+          token: 'abc123',
+          storeFqdn: 'my-shop.myshopify.com',
+        },
+      });
+
+      await setupTemplate({
+        path: tmpDir,
+        git: false,
+        language: 'ts',
+        link: true,
+        storefront: 'Hydrogen',
+      });
+
+      expect(renderSelectPrompt).not.toHaveBeenCalledWith(
+        expect.objectContaining({message: 'Connect to Shopify'}),
+      );
+      expect(handleStorefrontLink).toHaveBeenCalledWith(expect.anything(), {
+        storefront: 'Hydrogen',
+        storefrontName: undefined,
+      });
+    });
+  });
+
+  it('uses a storefront name flag to create a linked storefront without the connect prompt', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      vi.mocked(handleStorefrontLink).mockResolvedValueOnce({
+        id: 'gid://shopify/HydrogenStorefront/2',
+        title: 'Agent Storefront',
+        shop: 'my-shop.myshopify.com',
+        shopName: 'My Shop',
+        email: 'merchant@example.com',
+        session: {
+          token: 'abc123',
+          storeFqdn: 'my-shop.myshopify.com',
+        },
+      });
+
+      await setupTemplate({
+        path: tmpDir,
+        git: false,
+        language: 'ts',
+        storefrontName: 'Agent Storefront',
+      });
+
+      expect(renderSelectPrompt).not.toHaveBeenCalledWith(
+        expect.objectContaining({message: 'Connect to Shopify'}),
+      );
+      expect(handleStorefrontLink).toHaveBeenCalledWith(expect.anything(), {
+        storefront: undefined,
+        storefrontName: 'Agent Storefront',
+      });
     });
   });
 

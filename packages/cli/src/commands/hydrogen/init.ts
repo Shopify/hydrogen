@@ -38,9 +38,25 @@ export default class Init extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
     ...commonFlags.installDeps,
+    link: Flags.boolean({
+      description:
+        'Link the storefront to a Shopify account instead of using mock.shop.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_LINK',
+      exclusive: ['mock-shop'],
+    }),
     'mock-shop': Flags.boolean({
       description: 'Use mock.shop as the data source for the storefront.',
       env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
+      exclusive: ['link'],
+    }),
+    storefront: Flags.string({
+      description: 'The name of an existing Hydrogen storefront to link.',
+      env: 'SHOPIFY_HYDROGEN_STOREFRONT',
+    }),
+    'storefront-name': Flags.string({
+      description: 'The name to use when creating a new Hydrogen storefront.',
+      env: 'SHOPIFY_HYDROGEN_STOREFRONT_NAME',
+      exclusive: ['storefront'],
     }),
     ...commonFlags.styling,
     ...commonFlags.markets,
@@ -121,6 +137,23 @@ export async function runInit(
     options.shortcut ??= true;
     // TODO: enable Tailwind once v4 is stable
     options.styling ??= 'none';
+  }
+
+  const hasLinkOption =
+    options.link || options.storefront || options.storefrontName;
+
+  if (options.mockShop && hasLinkOption) {
+    throw new AbortError(
+      '`--mock-shop` cannot be used with Shopify storefront linking flags.',
+      'Use either `--mock-shop` or one of `--link`, `--storefront`, or `--storefront-name`.',
+    );
+  }
+
+  if (options.storefront && options.storefrontName) {
+    throw new AbortError(
+      '`--storefront` cannot be used with `--storefront-name`.',
+      'Use `--storefront` to link an existing storefront or `--storefront-name` to create a new one.',
+    );
   }
 
   const showUpgrade = await checkCurrentCLIVersion();

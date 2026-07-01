@@ -45,25 +45,31 @@ export async function setupLocalStarterTemplate(
   options: InitOptions,
   controller: AbortController,
 ) {
-  const templateAction = options.mockShop
-    ? 'mock'
-    : await renderSelectPrompt<'mock' | 'link'>({
-        message: 'Connect to Shopify',
-        choices: [
-          {
-            label:
-              'Use sample data from mock.shop (You can connect a Shopify account later)',
-            value: 'mock',
-          },
-          {label: 'Link your Shopify account', value: 'link'},
-        ],
-        defaultValue: 'mock',
-        abortSignal: controller.signal,
-      });
+  const templateAction =
+    options.link || options.storefront || options.storefrontName
+      ? 'link'
+      : options.mockShop
+        ? 'mock'
+        : await renderSelectPrompt<'mock' | 'link'>({
+            message: 'Connect to Shopify',
+            choices: [
+              {
+                label:
+                  'Use sample data from mock.shop (You can connect a Shopify account later)',
+                value: 'mock',
+              },
+              {label: 'Link your Shopify account', value: 'link'},
+            ],
+            defaultValue: 'mock',
+            abortSignal: controller.signal,
+          });
 
   const storefrontInfo =
     templateAction === 'link'
-      ? await handleStorefrontLink(controller)
+      ? await handleStorefrontLink(controller, {
+          storefront: options.storefront,
+          storefrontName: options.storefrontName,
+        })
       : undefined;
 
   const project = await handleProjectLocation({
