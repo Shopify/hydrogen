@@ -131,7 +131,7 @@ type UpgradeOptions = {
 export async function runUpgrade({
   appPath,
   version: targetVersion,
-  force,
+  force = false,
 }: UpgradeOptions) {
   // --version=next is only available when running from monorepo, tests, or CI
   if (targetVersion === 'next') {
@@ -218,11 +218,13 @@ export async function runUpgrade({
       selectedRelease,
     });
 
-    confirmed = await displayConfirmation({
-      cumulativeRelease,
-      selectedRelease,
-      targetVersion,
-    });
+    confirmed =
+      force ||
+      (await displayConfirmation({
+        cumulativeRelease,
+        selectedRelease,
+        targetVersion,
+      }));
   } while (!confirmed);
 
   // Generate a markdown file with upgrade instructions
@@ -231,6 +233,7 @@ export async function runUpgrade({
     cumulativeRelease,
     currentVersion,
     selectedRelease,
+    force,
   });
 
   await upgradeNodeModules({
@@ -1415,11 +1418,13 @@ export async function generateUpgradeInstructionsFile({
   cumulativeRelease,
   currentVersion,
   selectedRelease,
+  force = false,
 }: {
   appPath: string;
   cumulativeRelease: CumulativeRelease;
   currentVersion: string;
   selectedRelease: Release;
+  force?: boolean;
 }) {
   let filename = '';
 
@@ -1501,10 +1506,12 @@ export async function generateUpgradeInstructionsFile({
   if (!(await fileExists(filePath))) {
     await touchFile(filePath);
   } else {
-    const overwriteMdFile = await renderConfirmationPrompt({
-      message: `A previous upgrade instructions file already exists for this version.\nDo you want to overwrite it?`,
-      defaultValue: false,
-    });
+    const overwriteMdFile =
+      force ||
+      (await renderConfirmationPrompt({
+        message: `A previous upgrade instructions file already exists for this version.\nDo you want to overwrite it?`,
+        defaultValue: false,
+      }));
 
     if (overwriteMdFile) {
       await removeFile(`${filePath}.old`);
