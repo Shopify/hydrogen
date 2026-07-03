@@ -65,6 +65,7 @@ automatically** — the deployed site connects to your store with no extra confi
 | `npm run dev` | Start the Vite dev server with Mini Oxygen. |
 | `npm run build` | Production React Router build for Oxygen. |
 | `npm run preview` | Build and preview locally with Vite and Mini Oxygen. |
+| `npm run deploy` | Deploy to Oxygen with the Shopify CLI. |
 | `npm run typecheck` | React Router typegen + `tsc` + `gql.tada check`. |
 
 > **Note:** `patch-hydrogen-exports.mjs` runs on `postinstall` as a temporary

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
+    "deploy": "shopify hydrogen deploy",
     "dev": "vite dev",
     "postinstall": "node patch-hydrogen-exports.mjs",
     "preview": "react-router build && vite preview",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@react-router/dev": "7.14.0",
+    "@shopify/cli": "3.94.3",
     "@shopify/mini-oxygen": "4.2.0",
     "@shopify/oxygen-workers-types": "^4.1.6",
     "@tailwindcss/vite": "^4.2.2",
