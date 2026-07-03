@@ -1,5 +1,10 @@
 import {describe, it, expect} from 'vitest';
-import {flagsToCamelObject, parseProcessFlags} from './flags.js';
+import {Flags} from '@oclif/core';
+import {
+  flagsToCamelObject,
+  parseProcessFlags,
+  requiredIfNonInteractive,
+} from './flags.js';
 
 describe('CLI flag utils', () => {
   it('turns kebab-case flags to camelCase', async () => {
@@ -41,5 +46,16 @@ describe('CLI flag utils', () => {
       installDeps: false,
       language: 'js',
     });
+  });
+
+  it('annotates flags that are required in non-interactive terminals', async () => {
+    const original = Flags.string({description: 'A value used by a prompt.'});
+    const annotated = requiredIfNonInteractive(original);
+
+    expect(annotated).toMatchObject({
+      requiredIfNonInteractive: true,
+      description: '(required if non-interactive) A value used by a prompt.',
+    });
+    expect(original.description).toBe('A value used by a prompt.');
   });
 });

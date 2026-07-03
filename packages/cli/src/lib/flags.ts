@@ -187,6 +187,18 @@ export function flagsToCamelObject<T extends Record<string, any>>(obj: T) {
   }, {} as any) as CamelCasedProperties<T>;
 }
 
+export function requiredIfNonInteractive<T extends {description?: string}>(
+  flag: T,
+) {
+  return {
+    ...flag,
+    requiredIfNonInteractive: true,
+    description: ['(required if non-interactive)', flag.description]
+      .filter(Boolean)
+      .join(' '),
+  };
+}
+
 /**
  * Parse process arguments into an object for use in the cli as flags.
  * This is used when starting the init command from create-hydrogen without Oclif.

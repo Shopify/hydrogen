@@ -5,6 +5,7 @@ import {
   commonFlags,
   parseProcessFlags,
   flagsToCamelObject,
+  requiredIfNonInteractive,
 } from '../../lib/flags.js';
 import {checkCurrentCLIVersion} from '../../lib/check-cli-version.js';
 import {
@@ -23,28 +24,37 @@ export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
   static flags = {
     ...commonFlags.force,
-    path: Flags.string({
-      description: 'The path to the directory of the new Hydrogen storefront.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_PATH',
-    }),
-    language: Flags.string({
-      description: 'Sets the template language to use. One of `js` or `ts`.',
-      choices: Object.keys(LANGUAGES),
-      env: 'SHOPIFY_HYDROGEN_FLAG_LANGUAGE',
-    }),
+    path: requiredIfNonInteractive(
+      Flags.string({
+        description:
+          'The path to the directory of the new Hydrogen storefront.',
+        env: 'SHOPIFY_HYDROGEN_FLAG_PATH',
+      }),
+    ),
+    language: requiredIfNonInteractive(
+      Flags.string({
+        description: 'Sets the template language to use. One of `js` or `ts`.',
+        choices: Object.keys(LANGUAGES),
+        env: 'SHOPIFY_HYDROGEN_FLAG_LANGUAGE',
+      }),
+    ),
     template: Flags.string({
       description:
         'Scaffolds project based on an existing template or example from the Hydrogen repository.',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
-    ...commonFlags.installDeps,
-    'mock-shop': Flags.boolean({
-      description: 'Use mock.shop as the data source for the storefront.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
-    }),
-    ...commonFlags.styling,
-    ...commonFlags.markets,
-    ...commonFlags.shortcut,
+    'install-deps': requiredIfNonInteractive(
+      commonFlags.installDeps['install-deps'],
+    ),
+    'mock-shop': requiredIfNonInteractive(
+      Flags.boolean({
+        description: 'Use mock.shop as the data source for the storefront.',
+        env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
+      }),
+    ),
+    styling: requiredIfNonInteractive(commonFlags.styling.styling),
+    markets: requiredIfNonInteractive(commonFlags.markets.markets),
+    shortcut: requiredIfNonInteractive(commonFlags.shortcut.shortcut),
     git: Flags.boolean({
       description: 'Init Git and create initial commits.',
       env: 'SHOPIFY_HYDROGEN_FLAG_GIT',

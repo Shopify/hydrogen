@@ -1005,7 +1005,7 @@
           "type": "boolean"
         },
         "path": {
-          "description": "The path to the directory of the new Hydrogen storefront.",
+          "description": "(required if non-interactive) The path to the directory of the new Hydrogen storefront.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
           "name": "path",
           "hasDynamicHelp": false,
@@ -1013,7 +1013,7 @@
           "type": "option"
         },
         "language": {
-          "description": "Sets the template language to use. One of `js` or `ts`.",
+          "description": "(required if non-interactive) Sets the template language to use. One of `js` or `ts`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_LANGUAGE",
           "name": "language",
           "hasDynamicHelp": false,
@@ -1029,21 +1029,21 @@
           "type": "option"
         },
         "install-deps": {
-          "description": "Auto installs dependencies using the active package manager.",
+          "description": "(required if non-interactive) Auto installs dependencies using the active package manager.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS",
           "name": "install-deps",
           "allowNo": true,
           "type": "boolean"
         },
         "mock-shop": {
-          "description": "Use mock.shop as the data source for the storefront.",
+          "description": "(required if non-interactive) Use mock.shop as the data source for the storefront.",
           "env": "SHOPIFY_HYDROGEN_FLAG_MOCK_DATA",
           "name": "mock-shop",
           "allowNo": false,
           "type": "boolean"
         },
         "styling": {
-          "description": "Sets the styling strategy to use. One of `tailwind`, `vanilla-extract`, `css-modules`, `postcss`, `none`.",
+          "description": "(required if non-interactive) Sets the styling strategy to use. One of `tailwind`, `vanilla-extract`, `css-modules`, `postcss`, `none`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_STYLING",
           "name": "styling",
           "hasDynamicHelp": false,
@@ -1051,7 +1051,7 @@
           "type": "option"
         },
         "markets": {
-          "description": "Sets the URL structure to support multiple markets. Must be one of: `subfolders`, `domains`, `subdomains`, `none`. Example: `--markets subfolders`.",
+          "description": "(required if non-interactive) Sets the URL structure to support multiple markets. Must be one of: `subfolders`, `domains`, `subdomains`, `none`. Example: `--markets subfolders`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_I18N",
           "name": "markets",
           "hasDynamicHelp": false,
@@ -1059,7 +1059,7 @@
           "type": "option"
         },
         "shortcut": {
-          "description": "Creates a global h2 shortcut for Shopify CLI using shell aliases. Deactivate with `--no-shortcut`.",
+          "description": "(required if non-interactive) Creates a global h2 shortcut for Shopify CLI using shell aliases. Deactivate with `--no-shortcut`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_SHORTCUT",
           "name": "shortcut",
           "allowNo": true,
