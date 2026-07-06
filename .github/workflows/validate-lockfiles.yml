@@ -1,0 +1,41 @@
+name: Validate lockfiles
+
+on:
+  push:
+    branches: [preview]
+    paths:
+      - ".github/workflows/validate-lockfiles.yml"
+      - "templates/**"
+  pull_request:
+    branches: [preview]
+    paths:
+      - ".github/workflows/validate-lockfiles.yml"
+      - "templates/**"
+
+concurrency:
+  group: validate-lockfiles-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  npm-ci:
+    name: npm ci (${{ matrix.template }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        template:
+          - react-router
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: templates/${{ matrix.template }}/package-lock.json
+
+      - name: Install template dependencies
+        working-directory: templates/${{ matrix.template }}
+        run: npm ci
