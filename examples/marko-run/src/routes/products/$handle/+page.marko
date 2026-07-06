@@ -1,0 +1,173 @@
+import { AnalyticsEvent, analyticsShop, getAnalytics } from "../../../lib/analytics";
+import { handleCartFormSubmit } from "../../../lib/cart.client";
+import { openCartDrawer } from "../../../tags/cart-drawer.marko";
+import { formatMoney } from "../../../lib/money";
+import { isColor, isSelected, swatchColor, variantSearch } from "../../../lib/product-page";
+
+<const/data=$global.data>
+<const/product=data.product>
+<const/selectedVariant=product.selectedOrFirstAvailableVariant>
+<const/selectedOptions=selectedVariant?.selectedOptions ?? []>
+<const/canAdd=Boolean(selectedVariant?.availableForSale)>
+<const/currentSearch=$global.url.search>
+<let/quantity=1>
+
+<main>
+  <section class="grid grid-cols-1 gap-12 px-6 py-10 md:grid-cols-[minmax(0,1fr)_420px] md:gap-16 md:px-10 md:py-12">
+    <div class="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-2">
+      <for|image, i| of=product.images.nodes>
+        <div class="aspect-square overflow-hidden bg-neutral-100">
+          <img
+            src=image.url
+            alt=(image.altText ?? `${product.title} — image ${i + 1}`)
+            class="h-full w-full object-cover"
+          >
+        </div>
+      </for>
+    </div>
+
+    <aside class="md:sticky md:top-8 md:self-start">
+      <h1 class="text-4xl font-black tracking-tight">${product.title}</h1>
+      <p class="mt-3 text-lg font-semibold">
+        ${formatMoney(selectedVariant?.price ?? product.priceRange.minVariantPrice)}
+      </p>
+
+      <hr class="my-8 border-black/10">
+
+      <div class="space-y-8">
+        <for|option| of=product.options>
+          <div>
+            <p class="text-sm font-semibold">
+              ${option.name}
+              <if=selectedOptions.find((value) => value.name === option.name)>
+                <span class="font-normal text-black/60">
+                  ${selectedOptions.find((value) => value.name === option.name)?.value}
+                </span>
+              </if>
+            </p>
+            <div class=(isColor(option.name) ? "mt-3 flex items-center gap-3" : "mt-3 flex flex-wrap gap-2")>
+              <for|value| of=option.optionValues>
+                <const/targetVariant=value.firstSelectableVariant>
+                <const/selected=isSelected(option.name, value.name, selectedOptions)>
+                <const/href=targetVariant ? `/products/${targetVariant.product.handle}${variantSearch(product, targetVariant.selectedOptions, currentSearch)}` : `/products/${product.handle}`>
+                <a
+                  href=href
+                  aria-label=(isColor(option.name) ? value.name : undefined)
+                  aria-current=(selected ? "true" : undefined)
+                  class=(isColor(option.name)
+                    ? selected
+                      ? "block h-7 w-7 rounded-full ring-2 ring-black ring-offset-2"
+                      : "block h-7 w-7 rounded-full"
+                    : selected
+                      ? "flex h-11 min-w-20 items-center justify-center rounded-full bg-black px-5 text-sm font-semibold text-white"
+                      : "flex h-11 min-w-20 items-center justify-center rounded-full border border-black/15 px-5 text-sm font-semibold hover:border-black")
+                  style=(isColor(option.name) ? `background: ${swatchColor(value)}` : undefined)
+                >
+                  <if=!isColor(option.name)>${value.name}</if>
+                </a>
+              </for>
+            </div>
+          </div>
+        </for>
+      </div>
+
+      <div class="mt-8 space-y-2">
+        <form
+          method="post"
+          action="/api/cart"
+          class="flex items-center gap-3"
+          onSubmit(event) {
+            void handleCartFormSubmit(event).then(openCartDrawer).catch((error) => {
+              console.error("[hydrogen] product form submission error:", error);
+            });
+          }
+        >
+          <input type="hidden" name="intent" value="add">
+          <input type="hidden" name="merchandiseId" value=(selectedVariant?.id ?? "")>
+          <div class="flex h-12 items-center rounded-full border border-black/15">
+            <button
+              type="button"
+              aria-label="Decrease quantity"
+              class="grid h-12 w-12 place-items-center text-lg"
+              onClick() {
+                quantity = Math.max(1, quantity - 1);
+              }
+            >
+              -
+            </button>
+            <input
+              type="text"
+              inputmode="numeric"
+              name="quantity"
+              value:=quantity
+              class="h-12 w-10 bg-transparent text-center text-sm font-semibold focus:outline-none"
+            >
+            <button
+              type="button"
+              aria-label="Increase quantity"
+              class="grid h-12 w-12 place-items-center text-lg"
+              onClick() {
+                quantity++;
+              }
+            >
+              +
+            </button>
+          </div>
+          <button
+            type="submit"
+            disabled=!canAdd
+            class="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-300"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 7h14l-1.5 12a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8L5 7Z" />
+              <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+            </svg>
+            ${canAdd ? "Add to cart" : selectedVariant === null ? "Select options" : "Unavailable"}
+          </button>
+        </form>
+      </div>
+
+      <if=product.description>
+        <p class="mt-8 text-sm leading-relaxed text-black/70">${product.description}</p>
+      </if>
+    </aside>
+  </section>
+
+  <section class="border-t border-black/10 px-6 py-16 md:px-10 md:py-20">
+    <h2 class="text-2xl font-black tracking-tight">You may also like</h2>
+    <div class="mt-8 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-4">
+      <for|item| of=data.related>
+        <product-card product=item />
+      </for>
+    </div>
+  </section>
+
+  <div/productAnalyticsEl
+    data-id=product.id
+    data-title=product.title
+    data-vendor=product.vendor
+    data-price=(selectedVariant?.price.amount ?? product.priceRange.minVariantPrice.amount)
+    data-variant-id=(selectedVariant?.id ?? product.id)
+    data-variant-title=(selectedVariant?.title ?? product.title)
+    data-sku=(selectedVariant?.sku ?? "")
+    hidden
+  ></div>
+  <script>
+    getAnalytics()?.publish(AnalyticsEvent.PRODUCT_VIEWED, {
+      products: [
+        {
+          id: productAnalyticsEl.dataset.id ?? "",
+          title: productAnalyticsEl.dataset.title ?? "",
+          price: productAnalyticsEl.dataset.price ?? "",
+          vendor: productAnalyticsEl.dataset.vendor ?? "",
+          variantId: productAnalyticsEl.dataset.variantId ?? "",
+          variantTitle: productAnalyticsEl.dataset.variantTitle ?? "",
+          quantity: 1,
+          sku: productAnalyticsEl.dataset.sku || undefined,
+        },
+      ],
+      url: window.location.href,
+      shop: analyticsShop,
+    });
+  </script>
+</main>

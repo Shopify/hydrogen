@@ -1,0 +1,143 @@
+import { getSortByValue, serializeCollectionParams } from "@shopify/hydrogen";
+import { AnalyticsEvent, analyticsShop, getAnalytics } from "../../../lib/analytics";
+import {
+  describeFilter,
+  filterInputToParamEntries,
+  filterRemovalHref,
+  isFilterActive,
+  SORT_OPTIONS,
+  visibleValues,
+} from "../../../lib/collection";
+
+<const/data=$global.data>
+<const/collectionPath=`/collections/${data.collection.handle}`>
+<const/products=data.collection.products.nodes>
+<const/availableFilters=data.collection.products.filters>
+<const/currentSortValue=(data.parsed.sortKey ? getSortByValue(data.parsed.sortKey, data.parsed.reverse) : getSortByValue("COLLECTION_DEFAULT", false))>
+<const/currentParams=serializeCollectionParams(data.parsed)>
+<const/hasActiveFilters=(data.parsed.filters.length > 0)>
+
+<main class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
+  <header class="max-w-2xl">
+    <h1 class="text-6xl font-black tracking-tight md:text-8xl">${data.collection.title}</h1>
+    <if=data.collection.description>
+      <p class="mt-6 text-base leading-relaxed text-black/70 md:text-lg">${data.collection.description}</p>
+    </if>
+    <p class="mt-3 text-sm text-black/50">
+      ${products.length} ${products.length === 1 ? "product" : "products"}
+    </p>
+  </header>
+
+  <form method="get" action=collectionPath class="mt-12 flex gap-12">
+    <if=(availableFilters.length > 0)>
+      <aside class="hidden w-60 shrink-0 md:block">
+        <h2 class="text-sm font-semibold tracking-wider text-black/50 uppercase">Filters</h2>
+        <div class="mt-6 space-y-8">
+          <for|filter| of=availableFilters>
+            <if=(visibleValues(filter).length > 0)>
+              <fieldset>
+                <legend class="text-sm font-semibold">${filter.label}</legend>
+                <div class="mt-3 space-y-2">
+                  <for|value| of=visibleValues(filter)>
+                    <const/entry=filterInputToParamEntries(value.input)[0]>
+                    <if=entry>
+                      <label class="flex cursor-pointer items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          name=entry.name
+                          value=entry.value
+                          checked=isFilterActive(data.parsed.filters, value.input)
+                          class="h-4 w-4 rounded border-black/20 disabled:cursor-not-allowed"
+                          onChange(event) {
+                            event.target.form?.requestSubmit();
+                          }
+                        >
+                        <span class=(isFilterActive(data.parsed.filters, value.input) ? "font-medium" : "")>
+                          ${value.label}
+                        </span>
+                        <span class="ml-auto text-xs text-black/40">(${value.count})</span>
+                      </label>
+                    </if>
+                  </for>
+                </div>
+              </fieldset>
+            </if>
+          </for>
+        </div>
+        <noscript>
+          <button type="submit" class="mt-8 w-full rounded bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/80">
+            Apply
+          </button>
+        </noscript>
+      </aside>
+    </if>
+
+    <div class="flex-1">
+      <div class="flex items-center justify-between border-b border-black/10 pb-4">
+        <div class="flex items-center gap-4">
+          <if=hasActiveFilters>
+            <a href=collectionPath class="text-sm text-black/60 underline hover:text-black">Clear all</a>
+          </if>
+        </div>
+
+        <label class="flex items-center gap-2 text-sm">
+          <span class="text-black/60">Sort by</span>
+          <select
+            name="sort_by"
+            class="rounded border border-black/15 bg-white px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+            onChange(event) {
+              event.target.form?.requestSubmit();
+            }
+          >
+            <for|option| of=SORT_OPTIONS>
+              <option value=option.value selected=(option.value === currentSortValue)>${option.label}</option>
+            </for>
+          </select>
+        </label>
+      </div>
+
+      <if=hasActiveFilters>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <for|filter| of=data.parsed.filters>
+            <a
+              href=filterRemovalHref(collectionPath, currentParams, filter)
+              class="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1 text-sm hover:bg-black/10"
+            >
+              ${describeFilter(filter)}
+              <span aria-hidden="true">x</span>
+            </a>
+          </for>
+        </div>
+      </if>
+
+      <section class="mt-8 grid grid-cols-2 gap-x-6 gap-y-12 opacity-100 transition-opacity duration-200 md:grid-cols-3">
+        <for|product| of=products>
+          <product-card product=product />
+        </for>
+      </section>
+
+      <if=products.length === 0>
+        <div class="mt-16 text-center">
+          <p class="text-lg text-black/60">No products found matching your filters.</p>
+          <if=hasActiveFilters>
+            <a href=collectionPath class="mt-4 inline-block text-sm font-semibold underline">
+              Clear all filters
+            </a>
+          </if>
+        </div>
+      </if>
+    </div>
+  </form>
+
+  <div/analyticsEl data-id=data.collection.id data-handle=data.collection.handle hidden></div>
+  <script>
+    getAnalytics()?.publish(AnalyticsEvent.COLLECTION_VIEWED, {
+      collection: {
+        id: analyticsEl.dataset.id ?? "",
+        handle: analyticsEl.dataset.handle ?? "",
+      },
+      url: window.location.href,
+      shop: analyticsShop,
+    });
+  </script>
+</main>

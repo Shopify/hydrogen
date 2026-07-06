@@ -1,0 +1,38 @@
+import { formatMoney } from "../lib/money";
+
+<cart-state/{ cart, totalQuantity }/>
+<const/checkoutUrl=cart?.data.checkoutUrl>
+<const/cost=cart?.data.cost>
+<const/isTotalsPending=((cart?.pending.lines.size ?? 0) > 0 || (cart?.pending.discountCodes.size ?? 0) > 0)>
+
+<div class=(isTotalsPending ? "mt-8 space-y-2 border-t border-black/10 pt-6 opacity-30 transition-opacity" : "mt-8 space-y-2 border-t border-black/10 pt-6 transition-opacity")>
+  <div class="flex justify-between text-sm text-black/50">
+    <span>Subtotal (${totalQuantity} items)</span>
+    <span>${cost ? formatMoney(cost.subtotalAmount) : ""}</span>
+  </div>
+
+  <div class="flex justify-between text-lg font-semibold">
+    <span>Total</span>
+    <span>${cost ? formatMoney(cost.totalAmount) : ""}</span>
+  </div>
+
+  <if=(checkoutUrl && totalQuantity > 0)>
+    <div class="mt-6 space-y-3">
+      <a
+        href=checkoutUrl
+        class="block rounded bg-black px-6 py-3 text-center text-sm font-medium text-white hover:bg-neutral-800"
+      >
+        Check out
+      </a>
+    </div>
+  </if>
+  <else>
+    <span
+      role="link"
+      aria-disabled="true"
+      class="mt-6 block cursor-not-allowed rounded bg-black/40 px-6 py-3 text-center text-sm font-medium text-white"
+    >
+      Check out
+    </span>
+  </else>
+</div>

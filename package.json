@@ -10,6 +10,7 @@
     "dev:pkgs": "turbo run dev --filter='./packages/*'",
     "dev:rr": "turbo run dev --filter=@shopify/hydrogen-example-react-router...",
     "dev:next": "turbo run dev --filter=@shopify/hydrogen-example-nextjs...",
+    "dev:marko": "turbo run dev --filter=@shopify/hydrogen-example-marko-run...",
     "dev:hydrogen": "pnpm --dir examples/hydrogen dev",
     "examples:secrets:encrypt": "ejson encrypt examples/shared/secrets.ejson",
     "typecheck": "turbo run typecheck",

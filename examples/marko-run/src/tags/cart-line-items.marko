@@ -1,0 +1,144 @@
+import { formatMoney } from "../lib/money";
+import { CART_ENDPOINT, handleCartFormSubmit } from "../lib/cart.client";
+import { closeCartDrawer } from "./cart-drawer.marko";
+
+<cart-state/{ cart, lines, loading }/>
+<const/emptyHeadingLevel=input.emptyHeadingLevel ?? "h2">
+<const/errorIdPrefix=input.errorIdPrefix ?? "cart-line-error">
+
+<if=loading>
+  <div role="status" aria-live="polite" class="mt-8 animate-pulse space-y-6">
+    <span class="sr-only">Loading cart items</span>
+    <for until=2>
+      <div class="flex items-center gap-6">
+        <div class="h-24 w-24 rounded-lg bg-black/5"></div>
+        <div class="flex-1 space-y-2">
+          <div class="h-4 w-32 rounded bg-black/5"></div>
+          <div class="h-3 w-20 rounded bg-black/5"></div>
+        </div>
+      </div>
+    </for>
+  </div>
+</if>
+<else-if=lines.length === 0>
+  <div class="py-20 text-center">
+    <if=emptyHeadingLevel === "h3">
+      <h3 class="text-2xl font-bold">Your cart is empty</h3>
+    </if>
+    <else>
+      <h2 class="text-2xl font-bold">Your cart is empty</h2>
+    </else>
+    <p class="mt-2 text-black/60">Add some items to get started.</p>
+    <a
+      href="/collections"
+      class="mt-6 inline-block rounded-full bg-black px-8 py-3 text-sm font-semibold text-white hover:opacity-90"
+      onClick() {
+        closeCartDrawer();
+      }
+    >
+      Continue shopping
+    </a>
+  </div>
+</else-if>
+<else>
+  <ul class="mt-8 divide-y divide-black/10">
+    <for|line| of=lines>
+      <const/lineError=cart?.errors.lines.get(line.id)?.userErrors[0] ?? cart?.errors.lines.get(line.id)?.warnings[0]>
+      <const/isPending=cart?.pending.lines.has(line.id) ?? false>
+      <const/errorId=`${errorIdPrefix}-${line.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`>
+      <li class="py-6">
+        <form
+          method="post"
+          action=CART_ENDPOINT
+          aria-describedby=(lineError ? errorId : undefined)
+          class="space-y-3"
+          onSubmit(event) {
+            void handleCartFormSubmit(event);
+          }
+        >
+          <div class="flex items-center gap-6">
+            <input type="hidden" name="lineId" value=line.id readonly>
+            <button name="intent" value="set" type="submit" hidden aria-hidden="true"></button>
+
+            <if=line.merchandise?.image>
+              <img
+                src=line.merchandise.image.url
+                alt=(line.merchandise.image.altText ?? line.merchandise.product.title)
+                class="h-24 w-24 rounded-lg bg-black/5 object-cover"
+              >
+            </if>
+
+            <div class="flex-1">
+              <p class="font-semibold">${line.merchandise?.product.title ?? "Unknown product"}</p>
+              <if=line.merchandise?.title>
+                <p class="text-xs text-black/40">${line.merchandise.title}</p>
+              </if>
+              <p class="text-sm text-black/50">
+                ${formatMoney(line.cost.amountPerQuantity)} each
+                <if=(line.cost.compareAtAmountPerQuantity && Number(line.cost.compareAtAmountPerQuantity.amount) > Number(line.cost.amountPerQuantity.amount))>
+                  <span class="ml-2 text-black/30 line-through">
+                    ${formatMoney(line.cost.compareAtAmountPerQuantity)}
+                  </span>
+                </if>
+              </p>
+              <p class=(isPending ? "text-sm font-medium opacity-30 transition-opacity" : "text-sm font-medium transition-opacity")>
+                ${formatMoney(line.cost.totalAmount)}
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button
+                type="submit"
+                name="intent"
+                value="decrease"
+                aria-label=`Decrease quantity for ${line.merchandise?.product.title ?? "cart item"}`
+                class="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-sm hover:border-black"
+              >
+                -
+              </button>
+
+              <input
+                name="quantity"
+                value=line.quantity
+                type="text"
+                inputmode="numeric"
+                pattern="\\d+"
+                autocomplete="off"
+                autocorrect="off"
+                aria-label=`Quantity for ${line.merchandise?.product.title ?? "cart item"}`
+                aria-invalid=Boolean(lineError)
+                class=(isPending ? "w-8 text-center tabular-nums opacity-30 transition-opacity" : "w-8 text-center tabular-nums transition-opacity")
+              >
+
+              <button
+                type="submit"
+                name="intent"
+                value="increase"
+                aria-label=`Increase quantity for ${line.merchandise?.product.title ?? "cart item"}`
+                class="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-sm hover:border-black"
+              >
+                +
+              </button>
+            </div>
+
+            <button
+              type="submit"
+              name="intent"
+              value="remove"
+              aria-label=`Remove ${line.merchandise?.product.title ?? "cart item"} from cart`
+              class="min-h-6 py-1 text-sm text-red-600 underline hover:text-red-800"
+            >
+              Remove
+            </button>
+          </div>
+
+          <if=lineError>
+            <p id=errorId role="alert" class="text-sm text-red-600">
+              ${lineError.message}
+            </p>
+          </if>
+        </form>
+      </li>
+    </for>
+  </ul>
+</else>

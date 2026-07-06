@@ -1,0 +1,17 @@
+import { formatMoney } from "../lib/money";
+
+<a href=`/products/${input.product.handle}` class="group block">
+  <div class="aspect-square overflow-hidden bg-neutral-100">
+    <if=input.product.featuredImage>
+      <img
+        src=input.product.featuredImage.url
+        alt=(input.product.featuredImage.altText ?? input.product.title)
+        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+      >
+    </if>
+  </div>
+  <div class="mt-5">
+    <h3 class="font-semibold">${input.product.title}</h3>
+    <p class="mt-1 text-sm font-bold">${formatMoney(input.product.priceRange.minVariantPrice)}</p>
+  </div>
+</a>

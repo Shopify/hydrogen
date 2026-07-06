@@ -1,0 +1,28 @@
+{
+  "name": "@shopify/hydrogen-example-marko-run",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "marko-run",
+    "build": "marko-run build",
+    "start": "node --enable-source-maps ./dist/index.mjs",
+    "preview": "marko-run preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@shopify/hydrogen": "workspace:*",
+    "marko": "^6.1.23"
+  },
+  "devDependencies": {
+    "@marko/run": "^0.11.0",
+    "@tailwindcss/vite": "^4.2.2",
+    "gql.tada": "^1.9.2",
+    "tailwindcss": "^4.2.2",
+    "typescript": "catalog:",
+    "vite": "^8.0.7"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
