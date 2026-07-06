@@ -4,8 +4,8 @@
 
 A React Router 7 (framework mode, SSR) storefront built on
 [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen) and the
-classic Hydrogen/Oxygen runtime. It's a starting point you can clone and build
-your store on top of — five pages on a shared layout, with a real cart,
+Oxygen runtime through Vite and Mini Oxygen. It's a starting point you can clone
+and build your store on top of — five pages on a shared layout, with a real cart,
 analytics, and a consent banner wired up.
 
 ## Pages
@@ -47,7 +47,7 @@ token, then run normally:
 
 ```bash
 cp .env.example .env   # set PUBLIC_STORE_DOMAIN + PRIVATE_STOREFRONT_API_TOKEN
-npm run dev               # the Hydrogen CLI loads .env into the worker environment
+npm run dev               # Vite/Mini Oxygen loads .env into the worker environment
 ```
 
 Mode is **auto-detected**: when a `PRIVATE_STOREFRONT_API_TOKEN` is present the
@@ -62,9 +62,10 @@ automatically** — the deployed site connects to your store with no extra confi
 
 | Script | Does |
 | --- | --- |
-| `npm run dev` | Start the Hydrogen/Oxygen dev server. |
-| `npm run build` | Production Oxygen build (`shopify hydrogen build`). |
-| `npm run preview` | Preview the production build locally with mini-oxygen. |
+| `npm run dev` | Start the Vite dev server with Mini Oxygen. |
+| `npm run build` | Production React Router build for Oxygen. |
+| `npm run preview` | Build and preview locally with Vite and Mini Oxygen. |
+| `npm run deploy` | Deploy to Oxygen with the Shopify CLI. |
 | `npm run typecheck` | React Router typegen + `tsc` + `gql.tada check`. |
 
 > **Note:** `patch-hydrogen-exports.mjs` runs on `postinstall` as a temporary
