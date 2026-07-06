@@ -3,9 +3,8 @@ import { handleCartFormSubmit } from "../../../lib/cart.client";
 import { openCartDrawer } from "../../../tags/cart-drawer.marko";
 import { formatMoney } from "../../../lib/money";
 import { isColor, isSelected, swatchColor, variantSearch } from "../../../lib/product-page";
-server import { getRouteData } from "../../../lib/storefront";
 
-<const/data=getRouteData($global)>
+<const/data=$global.data>
 <const/product=data.product>
 <const/selectedVariant=product.selectedOrFirstAvailableVariant>
 <const/selectedOptions=selectedVariant?.selectedOptions ?? []>

@@ -1,15 +1,12 @@
-import { setRouteData } from "../../lib/storefront";
-
-export const GET = (async (context, next) => {
-  setRouteData(context, {}, "Not found — Mock.shop");
-  const response = await next();
+export const GET = Run.GET(async (_context, next) => {
+  const response = await next({ pageTitle: "Not found — Mock.shop" });
   return new Response(response.body, {
     headers: response.headers,
     status: 404,
     statusText: "Not Found",
   });
-}) satisfies MarkoRun.GET;
+});
 
-export const POST = (() => {
+export const POST = Run.POST(() => {
   return new Response(null, { status: 404, statusText: "Not Found" });
-}) satisfies MarkoRun.POST;
+});

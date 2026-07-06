@@ -141,8 +141,8 @@ importers:
         version: 6.1.23
     devDependencies:
       '@marko/run':
-        specifier: ^0.10.0
-        version: 0.10.0(@marko/compiler@5.39.66)(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.7.0)(marko@6.1.23)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4)
+        specifier: ^0.11.0
+        version: 0.11.0(@marko/compiler@5.39.66)(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.7.0)(marko@6.1.23)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4)
       '@tailwindcss/vite':
         specifier: ^4.2.2
         version: 4.2.4(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4))
@@ -2226,13 +2226,13 @@ packages:
     resolution: {integrity: sha512-Xky1vqj1wh8o0Cps/RRgo5p4i8DL+YOSFMvViFfRCTXbMMFNMFH6gUtk1S/oA9yIouhL1iULpxp3F87oWa2ZbA==}
     engines: {node: 18 || 20 || >=22}
 
-  '@marko/run-explorer@2.0.3':
-    resolution: {integrity: sha512-7y2+yAwptzuCpjbDaexVmTLi/XulB26zmqOsHwly//asclKJUobCvO3fpFPhl+jf1+NaWD7jVPtmdCbTeaQxKQ==}
+  '@marko/run-explorer@2.0.4':
+    resolution: {integrity: sha512-E/wgGs8oo0j8XCR+wbxWuMkr1HpmAW+KydTuZXWc2haFRf+sE/7SXXQbgSCpCuRbfcGiVTTMXSfaL4lHrRLxAQ==}
     peerDependencies:
-      '@marko/run': ^0.7||^0.8||^0.9||^0.10
+      '@marko/run': ^0.7||^0.8||^0.9||^0.10||^0.11
 
-  '@marko/run@0.10.0':
-    resolution: {integrity: sha512-ehM+NBEuErVmFMJ85HpycpiWlgW49ZHdRkT3T8Dsj6tmgzGiZzMblcKBkds+ixV2M4JKvWZaM+Tu5YWMZTQOQQ==}
+  '@marko/run@0.11.0':
+    resolution: {integrity: sha512-p0tE3W5fMK2AnDGn6/Gra6YMPwGz0JQuX99O7BlUYdK2zYNV2H7F7u9fgUrUbZ+x3yCYHTI0su/nKYECxeze0Q==}
     hasBin: true
     peerDependencies:
       marko: 5 - 6
@@ -3383,6 +3383,15 @@ packages:
     hasBin: true
     peerDependencies:
       react-router: 7.15.1
+
+  '@remix-run/form-data-parser@0.17.4':
+    resolution: {integrity: sha512-mqWVpD2OaJTFEW2i+M49/iWoUp2Cai6WD606/iynZ+NIlzVdkty3bbGb8g7vTjXeV/sQRmPbg3SJypgvQitvJg==}
+
+  '@remix-run/headers@0.21.1':
+    resolution: {integrity: sha512-DRhRveigepAQDUIi0MrOFhpcl3/KTv/fkpIhulv7Asv1pUwM8RpY2ENjdI8lfii6Z3MEsWtYhGt6If8bi6bYpQ==}
+
+  '@remix-run/multipart-parser@0.16.3':
+    resolution: {integrity: sha512-XvMYPIyDTuquR7s1YF4wo4CqMPDrBkpWY0zHSa7SpX0F+t9awg7FWd5mJywc6vTn4oWeS7nQYQQarZ9CuoC/RQ==}
 
   '@remix-run/node-fetch-server@0.13.1':
     resolution: {integrity: sha512-dOL+A/C84EA47gO/ps52KGrVSiYy96512rwtbXmJfWKYFm1FbrbjA3jao1hcIfao+jwVNEaZ1kTMwFjiino+HQ==}
@@ -11745,14 +11754,16 @@ snapshots:
       self-closing-tags: 1.0.1
       source-map-support: 0.5.21
 
-  '@marko/run-explorer@2.0.3(@marko/run@0.10.0(@marko/compiler@5.39.66)(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.7.0)(marko@6.1.23)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4))':
+  '@marko/run-explorer@2.0.4(@marko/run@0.11.0(@marko/compiler@5.39.66)(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.7.0)(marko@6.1.23)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4))':
     dependencies:
-      '@marko/run': 0.10.0(@marko/compiler@5.39.66)(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.7.0)(marko@6.1.23)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4)
+      '@marko/run': 0.11.0(@marko/compiler@5.39.66)(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.7.0)(marko@6.1.23)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4)
 
-  '@marko/run@0.10.0(@marko/compiler@5.39.66)(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.7.0)(marko@6.1.23)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4)':
+  '@marko/run@0.11.0(@marko/compiler@5.39.66)(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.7.0)(marko@6.1.23)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4)':
     dependencies:
-      '@marko/run-explorer': 2.0.3(@marko/run@0.10.0(@marko/compiler@5.39.66)(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.7.0)(marko@6.1.23)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4))
+      '@marko/run-explorer': 2.0.4(@marko/run@0.11.0(@marko/compiler@5.39.66)(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.7.0)(marko@6.1.23)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4))
       '@marko/vite': 6.1.0(@marko/compiler@5.39.66)(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4))
+      '@remix-run/form-data-parser': 0.17.4
+      '@standard-schema/spec': 1.1.0
       browserslist: 4.28.2
       cli-table3: 0.6.5
       compression: 1.8.1(supports-color@10.2.2)
@@ -12865,6 +12876,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
       - typescript
+
+  '@remix-run/form-data-parser@0.17.4':
+    dependencies:
+      '@remix-run/multipart-parser': 0.16.3
+
+  '@remix-run/headers@0.21.1': {}
+
+  '@remix-run/multipart-parser@0.16.3':
+    dependencies:
+      '@remix-run/headers': 0.21.1
 
   '@remix-run/node-fetch-server@0.13.1': {}
 

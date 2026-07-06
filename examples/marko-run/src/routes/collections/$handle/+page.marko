@@ -8,9 +8,8 @@ import {
   SORT_OPTIONS,
   visibleValues,
 } from "../../../lib/collection";
-server import { getRouteData } from "../../../lib/storefront";
 
-<const/data=getRouteData($global)>
+<const/data=$global.data>
 <const/collectionPath=`/collections/${data.collection.handle}`>
 <const/products=data.collection.products.nodes>
 <const/availableFilters=data.collection.products.filters>

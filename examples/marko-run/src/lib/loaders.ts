@@ -1,3 +1,4 @@
+import type { Context } from "@marko/run";
 import { HEADER_COLLECTIONS_QUERY, normalizeHeaderCollections } from "@shared/header";
 import {
   getSelectedProductOptions,
@@ -201,6 +202,8 @@ export const ARTICLE_QUERY = gql(`
 
 const TAXONOMY_METAFIELD_KEY_SEPARATOR = ".";
 
+type HandleRouteContext = Context & { params: { handle: string } };
+
 export type ProductCardData = {
   handle: string;
   title: string;
@@ -210,22 +213,22 @@ export type ProductCardData = {
   };
 };
 
-export async function loadHeaderCollections(context: MarkoRun.Context) {
+export async function loadHeaderCollections(context: Context) {
   const { data } = await getStorefrontClient(context).graphql(HEADER_COLLECTIONS_QUERY);
   return normalizeHeaderCollections(data?.collections?.nodes);
 }
 
-export async function loadHome(context: MarkoRun.Context) {
+export async function loadHome(context: Context) {
   const { data } = await getStorefrontClient(context).graphql(HOME_QUERY);
   return { products: data?.products?.nodes ?? [] };
 }
 
-export async function loadCollections(context: MarkoRun.Context) {
+export async function loadCollections(context: Context) {
   const { data } = await getStorefrontClient(context).graphql(COLLECTIONS_QUERY);
   return { collections: data?.collections?.nodes ?? [] };
 }
 
-export async function loadCollection(context: MarkoRun.Context) {
+export async function loadCollection(context: HandleRouteContext) {
   const { handle } = context.params;
   if (!handle) throw new Response("Collection not found", { status: 404 });
 
@@ -248,7 +251,7 @@ export async function loadCollection(context: MarkoRun.Context) {
   };
 }
 
-export async function loadProduct(context: MarkoRun.Context) {
+export async function loadProduct(context: HandleRouteContext) {
   const { handle } = context.params;
   if (!handle) throw new Response("Product not found", { status: 404 });
 
@@ -269,13 +272,13 @@ export async function loadProduct(context: MarkoRun.Context) {
   };
 }
 
-export async function loadNews(context: MarkoRun.Context) {
+export async function loadNews(context: Context) {
   const { data } = await getStorefrontClient(context).graphql(NEWS_QUERY);
   if (!data?.blog) throw new Response("Blog not found", { status: 404 });
   return { articles: data.blog.articles.nodes };
 }
 
-export async function loadArticle(context: MarkoRun.Context) {
+export async function loadArticle(context: HandleRouteContext) {
   const { handle } = context.params;
   if (!handle) throw new Response("Article not found", { status: 404 });
 

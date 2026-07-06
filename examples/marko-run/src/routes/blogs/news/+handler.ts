@@ -1,7 +1,8 @@
 import { loadNews } from "../../../lib/loaders";
-import { setRouteData } from "../../../lib/storefront";
 
-export const GET = (async (context, next) => {
-  setRouteData(context, await loadNews(context), "News — Mock.shop");
-  return next();
-}) satisfies MarkoRun.GET;
+export const GET = Run.GET(async (context, next) => {
+  return next({
+    pageTitle: "News — Mock.shop",
+    ...(await loadNews(context)),
+  });
+});

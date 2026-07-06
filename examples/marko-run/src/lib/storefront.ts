@@ -1,3 +1,4 @@
+import type { Context, NextResponse } from "@marko/run";
 import { getBuyerIp } from "@shared/buyer-ip";
 import { storefrontConfig } from "@shared/config";
 import { getPrivateStorefrontToken } from "@shared/private-env";
@@ -8,11 +9,9 @@ import {
   type StorefrontRequestContext,
 } from "@shopify/hydrogen";
 
-export type StorefrontContext = MarkoRun.Context & {
+export type StorefrontData = {
   storefrontClient: RequestScopedPrivateStorefrontClient;
   storefrontRequestContext: StorefrontRequestContext;
-  routeData?: unknown;
-  pageTitle?: string;
 };
 
 export function createPrivateStorefrontContext(request: Request) {
@@ -31,10 +30,8 @@ export function createPrivateStorefrontContext(request: Request) {
   return { requestContext, storefrontClient };
 }
 
-export function getStorefrontClient(
-  context: MarkoRun.Context,
-): RequestScopedPrivateStorefrontClient {
-  const storefrontClient = (context as StorefrontContext).storefrontClient;
+export function getStorefrontClient(context: Context): RequestScopedPrivateStorefrontClient {
+  const { storefrontClient } = context.data as Partial<StorefrontData>;
   if (!storefrontClient) {
     throw new Error("Storefront client was not created for this request.");
   }
@@ -42,25 +39,10 @@ export function getStorefrontClient(
   return storefrontClient;
 }
 
-export function setRouteData<T>(context: MarkoRun.Context, data: T, pageTitle?: string): void {
-  const storefrontContext = context as StorefrontContext;
-  storefrontContext.routeData = data;
-  storefrontContext.pageTitle = pageTitle;
-}
-
-export function getRouteData<T>(context: MarkoRun.Context): T {
-  const data = (context as StorefrontContext).routeData;
-  if (data === undefined) {
-    throw new Error("Route data was not loaded for this page.");
-  }
-
-  return data as T;
-}
-
-export function applyStorefrontResponseHeaders(
+export function applyStorefrontResponseHeaders<T extends Record<string, unknown>>(
   requestContext: Pick<StorefrontRequestContext, "applyResponseHeaders">,
-  response: Response,
-): Response {
+  response: Response | NextResponse<T>,
+) {
   try {
     requestContext.applyResponseHeaders(response.headers);
     return response;

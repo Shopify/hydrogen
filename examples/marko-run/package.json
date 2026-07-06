@@ -15,7 +15,7 @@
     "marko": "^6.1.23"
   },
   "devDependencies": {
-    "@marko/run": "^0.10.0",
+    "@marko/run": "^0.11.0",
     "@tailwindcss/vite": "^4.2.2",
     "gql.tada": "^1.9.2",
     "tailwindcss": "^4.2.2",

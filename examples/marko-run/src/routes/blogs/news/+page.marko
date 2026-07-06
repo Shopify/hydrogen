@@ -1,7 +1,6 @@
 import { formatDate } from "../../../lib/date";
-server import { getRouteData } from "../../../lib/storefront";
 
-<const/data=getRouteData($global)>
+<const/data=$global.data>
 <const/featured=data.articles[0]>
 <const/rest=data.articles.slice(1)>
 
