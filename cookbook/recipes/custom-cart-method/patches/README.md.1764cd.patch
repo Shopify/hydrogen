@@ -5,14 +5,14 @@ index c584e5370..d40091392 100644
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Custom Cart Method
  
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+This Hydrogen template demonstrates how to implement custom cart methods for inline product option editing. Hydrogen is Shopify's stack for headless commerce, designed to work with [Remix](https://remix.run/), Shopify's full stack web framework.
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the modern multi-strategy router for React. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++This Hydrogen template demonstrates how to implement custom cart methods for inline product option editing. Hydrogen is Shopify's stack for headless commerce, designed to work with [React Router](https://reactrouter.com/), the modern multi-strategy router for React.
 +
 +This template shows how to enable users to change product variants (size, color, etc.) directly within the cart without removing and re-adding items, providing a smoother shopping experience.
  
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
-@@ -16,7 +18,29 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
+ [Get familiar with React Router](https://reactrouter.com/start/framework/routing)
+@@ -16,7 +18,29 @@
  - Prettier
  - GraphQL generator
  - TypeScript and JavaScript flavors
@@ -43,7 +43,7 @@ index c584e5370..d40091392 100644
  
  ## Getting started
  
-@@ -28,6 +52,25 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
+@@ -28,6 +52,25 @@
  npm create @shopify/hydrogen@latest
  ```
  
@@ -69,7 +69,7 @@ index c584e5370..d40091392 100644
  ## Building for production
  
  ```bash
-@@ -40,6 +83,21 @@ npm run build
+@@ -40,6 +83,21 @@
  npm run dev
  ```
  
@@ -90,6 +90,4 @@ index c584e5370..d40091392 100644
 +
  ## Setup for using Customer Account API (`/account` section)
  
--Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
-+Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
-\ No newline at end of file
+ Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
