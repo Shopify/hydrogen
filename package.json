@@ -79,7 +79,7 @@
     "@qwik.dev/partytown": "^0.11.2",
     "@react-router/dev": "7.16.0",
     "@react-router/fs-routes": "7.16.0",
-    "@shopify/cli": "3.91.1",
+    "@shopify/cli": "3.93.2",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/eslint": "9.6.1",
     "@types/semver": "^7.5.8",
