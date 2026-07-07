@@ -24,6 +24,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# webmcp build artifacts (symlinks into packages/webmcp/dist)
+# local CDN asset symlinks into workspace package dist folders
+/public/storefront/analytics/shopify.js
+/public/storefront/analytics/shopify.js.map
 /public/storefront/webmcp.js
 /public/storefront/webmcp.js.map

@@ -1,4 +1,4 @@
-import { existsSync, lstatSync, mkdirSync, readlinkSync, symlinkSync, unlinkSync } from "node:fs";
+import { lstatSync, mkdirSync, readlinkSync, symlinkSync, unlinkSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -53,6 +53,7 @@ type TurbopackRuleConfigCollection =
 
 type LocalCdnAssetsTurbopackOptions = {
   assets?: readonly LocalCdnAsset[];
+  createSymlinks?: boolean;
   publicDirectory?: string;
 };
 
@@ -62,7 +63,7 @@ const TURBOPACK_REWRITE_RULE_GLOBS = ["*.js", "*.mjs", "*.cjs", "*.jsx"];
 export function localCdnAssetsTurbopackRules(
   options: LocalCdnAssetsTurbopackOptions = {},
 ): Record<string, TurbopackRuleConfigCollection> {
-  if (process.env.NODE_ENV !== "production") {
+  if (options.createSymlinks) {
     ensureLocalCdnAssetSymlinks(options);
   }
 
@@ -130,20 +131,61 @@ function appendLoader(
 function ensureSymlink(sourcePath: string, destinationPath: string) {
   mkdirSync(dirname(destinationPath), { recursive: true });
 
-  if (existsSync(destinationPath)) {
-    const stats = lstatSync(destinationPath);
-    if (!stats.isSymbolicLink()) return;
+  const targetPath = relative(dirname(destinationPath), sourcePath);
+  const destinationState = getSymlinkState(sourcePath, targetPath, destinationPath);
+  if (destinationState === "matching" || destinationState === "not-symlink") return;
 
-    const currentTarget = readlinkSync(destinationPath);
-    if (
-      currentTarget === sourcePath ||
-      currentTarget === relative(dirname(destinationPath), sourcePath)
-    ) {
-      return;
-    }
-
-    unlinkSync(destinationPath);
+  if (destinationState === "different") {
+    removeStaleSymlink(destinationPath);
   }
 
-  symlinkSync(relative(dirname(destinationPath), sourcePath), destinationPath);
+  try {
+    symlinkSync(targetPath, destinationPath);
+  } catch (error) {
+    if (isNodeErrorCode(error, "EEXIST")) {
+      const nextState = getSymlinkState(sourcePath, targetPath, destinationPath);
+      if (nextState === "matching" || nextState === "not-symlink") return;
+    }
+
+    throw error;
+  }
+}
+
+function removeStaleSymlink(path: string) {
+  try {
+    unlinkSync(path);
+  } catch (error) {
+    if (!isNodeErrorCode(error, "ENOENT")) {
+      throw error;
+    }
+  }
+}
+
+function getSymlinkState(
+  sourcePath: string,
+  targetPath: string,
+  destinationPath: string,
+): "absent" | "different" | "matching" | "not-symlink" {
+  const destinationStats = tryLstat(destinationPath);
+  if (!destinationStats) return "absent";
+  if (!destinationStats.isSymbolicLink()) return "not-symlink";
+
+  const currentTarget = readlinkSync(destinationPath);
+  return currentTarget === sourcePath || currentTarget === targetPath ? "matching" : "different";
+}
+
+function tryLstat(path: string) {
+  try {
+    return lstatSync(path);
+  } catch (error) {
+    if (isNodeErrorCode(error, "ENOENT")) {
+      return undefined;
+    }
+
+    throw error;
+  }
+}
+
+function isNodeErrorCode(error: unknown, code: string) {
+  return Boolean(error && typeof error === "object" && "code" in error && error.code === code);
 }
