@@ -48,6 +48,15 @@ type ViteConfigResult = {
   remixConfig: ResolvedRRConfig;
 };
 
+type BuildConfig = {
+  appDirectory?: string;
+  buildDirectory?: string;
+  clientOutDir: string;
+  serverBuildFile?: string;
+  serverOutDir: string;
+  routes?: ResolvedRoutes;
+};
+
 export async function getViteConfig(
   root: string,
   ssrEntryFlag?: string,
@@ -74,15 +83,8 @@ export async function getViteConfig(
     mode,
   );
 
-  const {appDirectory, serverBuildFile, routes} =
-    getReactRouterOrRemixConfigFromVite(resolvedViteConfig);
-
-  const serverOutDir =
-    resolvedViteConfig.environments.ssr?.build.outDir ??
-    resolvedViteConfig.build.outDir;
-  const clientOutDir =
-    resolvedViteConfig.environments.client?.build.outDir ??
-    serverOutDir.replace(/server$/, 'client');
+  const {appDirectory, clientOutDir, serverBuildFile, serverOutDir, routes} =
+    getBuildConfigFromVite(resolvedViteConfig);
 
   const rollupOutput = resolvedViteConfig.build.rollupOptions.output;
   const {entryFileNames} =
@@ -122,46 +124,88 @@ export async function getViteConfig(
   };
 }
 
-function getReactRouterOrRemixConfigFromVite(viteConfig: any) {
-  try {
-    const reactRouterConfig = getReactRouterConfigFromVite(viteConfig);
-    return reactRouterConfig;
-  } catch (error) {
-    const remixConfig = getRemixConfigFromVite(viteConfig);
-    return remixConfig;
+type ResolveViteOutputDirsOptions = {
+  routingBuildDirectory?: string;
+  serverEnvironmentOutDir?: string;
+  clientEnvironmentOutDir?: string;
+  buildOutDir: string;
+};
+
+function resolveViteOutputDirs({
+  routingBuildDirectory,
+  serverEnvironmentOutDir,
+  clientEnvironmentOutDir,
+  buildOutDir,
+}: ResolveViteOutputDirsOptions) {
+  if (routingBuildDirectory) {
+    return {
+      clientOutDir: joinPath(routingBuildDirectory, 'client'),
+      serverOutDir: joinPath(routingBuildDirectory, 'server'),
+    };
   }
+
+  const serverOutDir = serverEnvironmentOutDir ?? buildOutDir;
+  const clientOutDir =
+    clientEnvironmentOutDir && clientEnvironmentOutDir !== serverOutDir
+      ? clientEnvironmentOutDir
+      : serverOutDir.replace(/server$/, 'client');
+
+  return {
+    clientOutDir,
+    serverOutDir,
+  };
 }
 
-function getReactRouterConfigFromVite(viteConfig: any): {
-  appDirectory: string;
-  serverBuildFile: string;
-  routes: ResolvedRoutes;
-} {
-  if (!viteConfig.__reactRouterPluginContext) {
-    throw new Error('Could not resolve React Router config');
-  }
+type PartialBuildConfig = Omit<BuildConfig, 'clientOutDir' | 'serverOutDir'>;
 
-  const {appDirectory, serverBuildFile, routes} =
+function getBuildConfigFromVite(viteConfig: any): BuildConfig {
+  const buildConfig =
+    getReactRouterConfigFromVite(viteConfig) ??
+    getRemixConfigFromVite(viteConfig);
+
+  const {clientOutDir, serverOutDir} = resolveViteOutputDirs({
+    routingBuildDirectory: buildConfig?.buildDirectory,
+    serverEnvironmentOutDir: viteConfig.environments.ssr?.build.outDir,
+    clientEnvironmentOutDir: viteConfig.environments.client?.build.outDir,
+    buildOutDir: viteConfig.build.outDir,
+  });
+
+  return {
+    ...buildConfig,
+    clientOutDir,
+    serverOutDir,
+  };
+}
+
+function getReactRouterConfigFromVite(
+  viteConfig: any,
+): PartialBuildConfig | undefined {
+  if (!viteConfig.__reactRouterPluginContext) return;
+
+  const {appDirectory, buildDirectory, serverBuildFile, routes} =
     viteConfig.__reactRouterPluginContext.reactRouterConfig;
 
   return {
     appDirectory,
+    buildDirectory,
     serverBuildFile,
     routes,
   };
 }
 
-function getRemixConfigFromVite(viteConfig: any) {
+function getRemixConfigFromVite(
+  viteConfig: any,
+): PartialBuildConfig | undefined {
   const {remixConfig} =
     findHydrogenPlugin(viteConfig)?.api?.getPluginOptions() ?? {};
 
-  return remixConfig
-    ? {
-        appDirectory: remixConfig.appDirectory,
-        serverBuildFile: remixConfig.serverBuildFile,
-        routes: remixConfig.routes satisfies ResolvedRoutes,
-      }
-    : {};
+  if (remixConfig) {
+    return {
+      appDirectory: remixConfig.appDirectory,
+      serverBuildFile: remixConfig.serverBuildFile,
+      routes: remixConfig.routes satisfies ResolvedRoutes,
+    };
+  }
 }
 
 type MinimalViteConfig = {plugins: Readonly<Array<{name: string}>>};
