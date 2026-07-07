@@ -81,20 +81,21 @@ export class DevServer {
     }
 
     return new Promise((resolve, reject) => {
-      const args = ['exec', 'shopify', 'hydrogen', 'dev'];
+      const pnpmArgs = ['exec', 'shopify', 'hydrogen', 'dev'];
       if (this.customerAccountPush) {
-        args.push('--customer-account-push');
+        pnpmArgs.push('--customer-account-push');
       }
 
       if (this.envFile) {
-        args.push('--env-file', this.envFile);
+        pnpmArgs.push('--env-file', this.envFile);
       }
 
       if (this.entry) {
-        args.push('--entry', this.entry);
+        pnpmArgs.push('--entry', this.entry);
       }
 
-      this.process = spawn('pnpm', args, {
+      const {command, args} = getPnpmCommand(pnpmArgs);
+      this.process = spawn(command, args, {
         cwd: this.projectPath,
         detached: true,
         env: {
@@ -263,6 +264,25 @@ export class DevServer {
       }
     });
   }
+}
+
+function getPnpmCommand(args: string[]) {
+  const npmExecPath = process.env.npm_execpath;
+
+  if (npmExecPath?.includes('pnpm')) {
+    return npmExecPath.match(/\.[cm]?js$/)
+      ? {command: process.execPath, args: [npmExecPath, ...args]}
+      : {command: npmExecPath, args};
+  }
+
+  const executable = process.env.PNPM_HOME
+    ? path.join(
+        process.env.PNPM_HOME,
+        process.platform === 'win32' ? 'pnpm.CMD' : 'pnpm',
+      )
+    : 'pnpm';
+
+  return {command: executable, args};
 }
 
 // Cloudflare quick-tunnels propagate across edge servers gradually. A single
