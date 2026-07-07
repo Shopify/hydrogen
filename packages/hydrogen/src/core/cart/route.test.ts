@@ -2,20 +2,21 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../handle-shopify-routes";
-import { createStorefrontRequestContext } from "../headers";
+import { createShopifyRequestContext } from "../headers";
 import { assert } from "../test-utils";
 import { createCartServerHandlers } from "./server-handlers";
-import { EMPTY_CART_DATA } from "./state";
 
 type TestStorefrontConfig = {
   storeDomain: string;
-  i18n: { country: "US" | "CA"; language: "EN" | "FR" };
+  i18n?: { country: "US" | "CA"; language: "EN" | "FR" };
 };
+
+const DEFAULT_I18N = { country: "US", language: "EN" } as const;
 
 const defaultConfig: TestStorefrontConfig = {
   storeDomain: "https://test-store.myshopify.com",
-  i18n: { country: "US", language: "EN" },
 };
+const APP_ORIGIN = "https://my-app.com";
 
 const MOCK_LINE_COST = {
   totalAmount: { amount: "20.00", currencyCode: "USD" },
@@ -77,12 +78,16 @@ function createGetRequest(cookies?: string): Request {
   });
 }
 
-function createJsonPostRequest(body: unknown, cookies?: string): Request {
+function createJsonPostRequest(
+  body: unknown,
+  cookies?: string,
+  url = "https://my-app.com/api/cart",
+): Request {
   const headers: Record<string, string> = {
     "content-type": "application/json",
   };
   if (cookies) headers.cookie = cookies;
-  return new Request("https://my-app.com/api/cart", {
+  return new Request(url, {
     method: "POST",
     headers,
     body: JSON.stringify(body),
@@ -107,26 +112,47 @@ function createFormPostRequest(
 
 function createPrivateStorefrontClient(
   request: Request,
-  config: TestStorefrontConfig = defaultConfig,
+  fixture: TestStorefrontConfig = defaultConfig,
 ) {
   return createStorefrontClient({
     type: "private",
+    requestContext: createShopifyRequestContext({
+      request,
+      i18n: fixture.i18n ?? DEFAULT_I18N,
+    }),
     config: {
-      storeDomain: config.storeDomain,
-      i18n: config.i18n,
+      storeDomain: fixture.storeDomain,
       privateStorefrontToken: "test-private-token",
       buyerIp: "127.0.0.1",
-      requestContext: createStorefrontRequestContext(request),
     },
   });
 }
 
-function handleCartRequest(request: Request, config: TestStorefrontConfig = defaultConfig) {
+function handleCartRequest(request: Request, fixture: TestStorefrontConfig = defaultConfig) {
+  const storefrontClient = createPrivateStorefrontClient(request, fixture);
   return handleShopifyRoutesImpl({
     request,
-    storefrontClient: createPrivateStorefrontClient(request, config),
+    requestContext: storefrontClient.requestContext,
+    sessionManager: createTestSessionManager(request),
+    storefrontClient,
     handlers: [createCartServerHandlers()],
   });
+}
+
+function createTestSessionManager(request: Request) {
+  const data = new Map<string, unknown>();
+  const origin = new URL(request.url).origin;
+
+  return {
+    getSessionOrigin: () => origin,
+    getSessionItem: (key: string) => data.get(key),
+    setSessionItem: (key: string, value: unknown) => {
+      data.set(key, value);
+    },
+    removeSessionItem: (key: string) => {
+      data.delete(key);
+    },
+  };
 }
 
 describe("createCartServerHandlers", () => {
@@ -294,11 +320,11 @@ describe("createCartServerHandlers", () => {
       });
     });
 
-    it("returns empty cart data without cart cookie", async () => {
+    it("returns null cart without cart cookie", async () => {
       const result = await handleCartRequest(createGetRequest(), defaultConfig);
       assert(result, "expected a response");
       const body = await result.json();
-      expect(body).toEqual({ cart: EMPTY_CART_DATA });
+      expect(body).toEqual({ cart: null });
       expect(result.headers.get("server-timing")).toBeNull();
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -311,14 +337,21 @@ describe("createCartServerHandlers", () => {
       );
     });
 
-    it("returns empty cart with GraphQL errors", async () => {
+    it("returns null cart with GraphQL errors", async () => {
       mockFetch.mockResolvedValueOnce(mockGqlErrorResponse([{ message: "Cart not found" }]));
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
-      assert(result, "expected a response");
-      const body = await result.json();
-      expect(body.cart).toEqual(EMPTY_CART_DATA);
-      expect(body.errors).toEqual([{ message: "Cart not found" }]);
+      try {
+        const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
+        assert(result, "expected a response");
+        const body = await result.json();
+        expect(body.cart).toBeNull();
+        expect(body.errors).toEqual([{ message: "Cart not found" }]);
+        expect(consoleError).toHaveBeenCalledOnce();
+        expect(consoleError).toHaveBeenCalledWith("Cart not found");
+      } finally {
+        consoleError.mockRestore();
+      }
     });
   });
 
@@ -434,6 +467,68 @@ describe("createCartServerHandlers", () => {
       const body = await result.json();
       expect(body.cart).toEqual(MOCK_CART);
       expect(body.userErrors).toEqual([]);
+    });
+
+    it("uses body cartId for update action without a cart cookie", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartLinesUpdate: { cart: MOCK_CART, userErrors: [] } }),
+      );
+
+      const result = await handleCartRequest(
+        createJsonPostRequest({
+          cartId: "gid://shopify/Cart/body-cart",
+          lines: [{ id: "gid://shopify/CartLine/1", quantity: 3 }],
+        }),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(200);
+      expect(result.headers.get("set-cookie")).toBeNull();
+
+      const [, init] = mockFetch.mock.calls[0];
+      const gqlBody = JSON.parse(init.body);
+      expect(gqlBody.variables.cartId).toBe("gid://shopify/Cart/body-cart");
+    });
+
+    it("prefers body cartId over the cart cookie for update action", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartLinesUpdate: { cart: MOCK_CART, userErrors: [] } }),
+      );
+
+      await handleCartRequest(
+        createJsonPostRequest(
+          {
+            cartId: "gid://shopify/Cart/body-cart",
+            lines: [{ id: "gid://shopify/CartLine/1", quantity: 3 }],
+          },
+          "cart=cookie-cart",
+        ),
+        defaultConfig,
+      );
+
+      const [, init] = mockFetch.mock.calls[0];
+      const gqlBody = JSON.parse(init.body);
+      expect(gqlBody.variables.cartId).toBe("gid://shopify/Cart/body-cart");
+    });
+
+    it("ignores cartId query param for POST cart identity", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartLinesUpdate: { cart: MOCK_CART, userErrors: [] } }),
+      );
+
+      await handleCartRequest(
+        createJsonPostRequest(
+          { lines: [{ id: "gid://shopify/CartLine/1", quantity: 3 }] },
+          "cart=cookie-cart",
+          "https://my-app.com/api/cart?cartId=gid%3A%2F%2Fshopify%2FCart%2Fquery-cart",
+        ),
+        defaultConfig,
+      );
+
+      const [, init] = mockFetch.mock.calls[0];
+      const gqlBody = JSON.parse(init.body);
+      expect(gqlBody.variables.cartId).toBe("gid://shopify/Cart/cookie-cart");
     });
 
     it("calls cartLinesRemove for remove action", async () => {
@@ -688,7 +783,7 @@ describe("createCartServerHandlers", () => {
 
       assert(result, "expected a response");
       expect(result.status).toBe(303);
-      expect(result.headers.get("location")).toBe("/cart");
+      expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/cart`);
       expect(mockFetch).not.toHaveBeenCalled();
     });
   });
@@ -712,7 +807,7 @@ describe("createCartServerHandlers", () => {
 
       assert(result, "expected a response");
       expect(result.status).toBe(303);
-      expect(result.headers.get("location")).toBe("/cart");
+      expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/cart`);
     });
 
     it("returns 303 redirect for remove intent", async () => {
@@ -733,7 +828,7 @@ describe("createCartServerHandlers", () => {
 
       assert(result, "expected a response");
       expect(result.status).toBe(303);
-      expect(result.headers.get("location")).toBe("/products/widget");
+      expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/products/widget`);
     });
 
     it("redirects to / when no Referer header", async () => {
@@ -751,7 +846,7 @@ describe("createCartServerHandlers", () => {
 
       assert(result, "expected a response");
       expect(result.status).toBe(303);
-      expect(result.headers.get("location")).toBe("/");
+      expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/`);
     });
 
     it("handles discount-apply from FormData", async () => {
@@ -873,7 +968,7 @@ describe("createCartServerHandlers", () => {
       assert(result, "expected a response");
       expect(result.status).toBe(303);
       expect(result.headers.get("set-cookie")).toContain("cart=");
-      expect(result.headers.get("location")).toBe("/products/widget");
+      expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/products/widget`);
     });
 
     it("FormData intent=add with existing cart cookie calls cartLinesAdd", async () => {
@@ -976,7 +1071,7 @@ describe("createCartServerHandlers", () => {
       );
 
       assert(result, "expected a response");
-      expect(result.headers.get("location")).toBe("/cart?page=2");
+      expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/cart?page=2`);
     });
 
     it("redirects to / for cross-origin Referer", async () => {
@@ -996,7 +1091,7 @@ describe("createCartServerHandlers", () => {
       );
 
       assert(result, "expected a response");
-      expect(result.headers.get("location")).toBe("/");
+      expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/`);
     });
 
     it("redirects to / for malformed Referer", async () => {
@@ -1016,7 +1111,7 @@ describe("createCartServerHandlers", () => {
       );
 
       assert(result, "expected a response");
-      expect(result.headers.get("location")).toBe("/");
+      expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/`);
     });
   });
 
@@ -1080,30 +1175,79 @@ describe("createCartServerHandlers", () => {
       expect(result.headers.get("set-cookie")).toContain("cart=456");
     });
 
-    it("does not set cookie when cart ID comes from query param", async () => {
+    it("updates cookie when body cartId matches cookie cart ID after normalization", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({
+          cartLinesAdd: {
+            cart: { ...MOCK_CART, id: "gid://shopify/Cart/456" },
+            userErrors: [],
+          },
+        }),
+      );
+
+      const result = await handleCartRequest(
+        createJsonPostRequest(
+          {
+            cartId: "123",
+            lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+          },
+          "cart=123",
+        ),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.headers.get("set-cookie")).toContain("cart=456");
+
+      const [, init] = mockFetch.mock.calls[0];
+      const gqlBody = JSON.parse(init.body);
+      expect(gqlBody.variables.cartId).toBe("gid://shopify/Cart/123");
+    });
+
+    it("does not set cookie when body cartId differs from cookie cart ID", async () => {
       mockFetch.mockResolvedValueOnce(
         mockGqlResponse({ cartLinesAdd: { cart: MOCK_CART, userErrors: [] } }),
       );
 
-      const request = new Request(
-        "https://my-app.com/api/cart?cartId=gid%3A%2F%2Fshopify%2FCart%2Fquery-cart",
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
+      const result = await handleCartRequest(
+        createJsonPostRequest(
+          {
+            cartId: "gid://shopify/Cart/body-cart",
             lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
-          }),
-        },
+          },
+          "cart=123",
+        ),
+        defaultConfig,
       );
-
-      const result = await handleCartRequest(request, defaultConfig);
 
       assert(result, "expected a response");
       expect(result.headers.get("set-cookie")).toBeNull();
+    });
+
+    it("ignores POST cartId query param and creates a cart when no body cartId or cookie exists", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartCreate: { cart: MOCK_CART, userErrors: [] } }),
+      );
+
+      const result = await handleCartRequest(
+        createJsonPostRequest(
+          {
+            lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+          },
+          undefined,
+          "https://my-app.com/api/cart?cartId=gid%3A%2F%2Fshopify%2FCart%2Fquery-cart",
+        ),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.headers.get("set-cookie")).toContain("cart=");
 
       const [, init] = mockFetch.mock.calls[0];
       const gqlBody = JSON.parse(init.body);
-      expect(gqlBody.variables.cartId).toBe("gid://shopify/Cart/query-cart");
+      expect(gqlBody.variables.input.lines).toEqual([
+        { merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 },
+      ]);
     });
   });
 });

@@ -1,6 +1,13 @@
-import type { DocumentDecoration } from "gql.tada";
+import type { DocumentDecoration, initGraphQLTada as InitGraphQLTada } from "gql.tada";
 
+import type { introspection } from "./generated/graphql-env";
+import type { StorefrontScalars } from "./scalars";
 import type { InferResult, InferVariables } from "./type-resolver";
+
+type StorefrontTadaGql = InitGraphQLTada<{
+  introspection: introspection;
+  scalars: StorefrontScalars;
+}>;
 
 type StorefrontQueryMetadata<Source extends string = string> = {
   readonly __hydrogenQueryBrand: true;
@@ -49,7 +56,7 @@ export type ComposedSource<
   Fragments extends readonly AnyStorefrontQueryString[],
 > = FragmentSources<Fragments> extends "" ? Source : `${Source}\n${FragmentSources<Fragments>}`;
 
-interface StorefrontGql {
+type StorefrontGql = {
   <const Source extends string>(
     source: Source,
   ): StorefrontQueryString<InferResult<Source>, InferVariables<Source>, Source>;
@@ -65,9 +72,10 @@ interface StorefrontGql {
     InferVariables<DocumentSource>,
     DocumentSource
   >;
-}
+} & StorefrontTadaGql;
 
-export const gql: StorefrontGql = ((source: string, fragments?: Array<string>) => {
+// oxlint-disable-next-line typescript-eslint/consistent-type-assertions -- gql.tada adds phantom helper properties to the function type that are not used at runtime.
+export const gql = ((source: string, fragments?: Array<string>) => {
   let query = source;
 
   if (fragments) {

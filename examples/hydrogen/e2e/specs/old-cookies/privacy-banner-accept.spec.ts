@@ -1,4 +1,5 @@
 import { setTestStore, test, expect } from "../../fixtures";
+import assert from "../../fixtures/assertions";
 
 setTestStore("defaultConsentDisallowed_cookiesDisabled");
 
@@ -13,16 +14,17 @@ test.describe("Privacy Banner - Accept Flow", () => {
     await storefront.goto("/");
 
     // 2. Check any initial server-timing values (_y and _s) exposed via Performance API.
-    // Hydrogen classic exposes mock values before consent; Hydrogen dev-preview may expose none before consent.
+    // Old Hydrogen exposed mock values before consent; Hydrogen dev-preview may expose none before consent.
     const initialServerTimingValues = await storefront.getServerTimingValues();
-    storefront.expectMockServerTimingValues(initialServerTimingValues);
 
     // 3. Verify no analytics requests have been made and no analytics cookies are present
     await storefront.expectNoAnalyticsCookies();
     storefront.expectNoMonorailRequests();
 
-    // 4. Verify perf-kit script is not downloaded yet
-    storefront.expectPerfKitNotLoaded();
+    // 4. Verify perf-kit is loaded eagerly but does not beacon before consent
+    await storefront.waitForPerfKit();
+    storefront.expectPerfKitLoaded();
+    storefront.expectNoPerfKitProduceRequests();
 
     // 5. Verify privacy banner appears and click accept
     await storefront.acceptPrivacyBanner();
@@ -59,19 +61,23 @@ test.describe("Privacy Banner - Accept Flow", () => {
     // 7. Verify _shopify_y and _shopify_s cookies are created with server-timing values
     // Note: Old cookie system doesn't have HTTP-only _shopify_analytics/_shopify_marketing cookies
     const { shopifyY, shopifyS } = await storefront.expectAnalyticsCookiesPresent();
+    assert(shopifyY, "_shopify_y cookie should be present after accept");
+    assert(shopifyS, "_shopify_s cookie should be present after accept");
+    assert(updatedServerTimingValues._y, "Updated _y value should be present after consent");
+    assert(updatedServerTimingValues._s, "Updated _s value should be present after consent");
 
     // The cookie values should match the LATEST server-timing values (from consent response)
     expect(
-      shopifyY!.value,
+      shopifyY.value,
       "_shopify_y cookie value should match latest server-timing _y value",
     ).toBe(updatedServerTimingValues._y);
 
     expect(
-      shopifyS!.value,
+      shopifyS.value,
       "_shopify_s cookie value should match latest server-timing _s value",
     ).toBe(updatedServerTimingValues._s);
 
-    // 8. Wait for perf-kit to download and analytics requests to fire
+    // 8. Confirm perf-kit is loaded and wait for analytics requests to fire
     await storefront.waitForPerfKit();
     storefront.expectPerfKitLoaded();
 
@@ -80,8 +86,8 @@ test.describe("Privacy Banner - Accept Flow", () => {
 
     // Verify the analytics requests contain the correct _y and _s values
     storefront.verifyMonorailRequests(
-      updatedServerTimingValues._y!,
-      updatedServerTimingValues._s!,
+      updatedServerTimingValues._y,
+      updatedServerTimingValues._s,
       "after consent",
     );
 
@@ -182,8 +188,8 @@ test.describe("Privacy Banner - Accept Flow", () => {
 
     // Verify analytics events after reload have correct values (matching session from before reload)
     storefront.verifyMonorailRequests(
-      updatedServerTimingValues._y!,
-      updatedServerTimingValues._s!,
+      updatedServerTimingValues._y,
+      updatedServerTimingValues._s,
       "after reload",
     );
   });

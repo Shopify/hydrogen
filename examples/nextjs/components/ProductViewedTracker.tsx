@@ -1,56 +1,59 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
-import { getAnalytics, analyticsShop, AnalyticsEvent } from "@/lib/analytics";
+import { AnalyticsEvent, getAnalytics } from "@/lib/analytics";
+import type { ProductData } from "@/lib/product-query";
 
-type Props = {
-  product: {
-    id: string;
-    handle: string;
-    title: string;
-    vendor: string;
-    priceRange: { minVariantPrice: { amount: string } };
-    selectedOrFirstAvailableVariant: {
-      id: string;
-      title: string;
-      price: { amount: string };
-      sku?: string | null;
-    } | null;
-  };
-  selectedVariant?: {
-    id: string;
-    title: string;
-    price: { amount: string };
-    sku?: string | null;
-  } | null;
-};
+/**
+ * Publishes `PRODUCT_VIEWED` when the product route mounts/changes
+ * (`hydrogen-analytics` / `references/react.md`). Rendered inside the
+ * `ProductProvider` so it re-runs on product identity changes.
+ */
+export function ProductViewedTracker({ product }: { product: ProductData }) {
+  const publishedProductHandleRef = useRef<string | undefined>(undefined);
+  const variant = product.selectedOrFirstAvailableVariant;
+  const productHandle = product.handle;
+  const productId = product.id;
+  const productTitle = product.title;
+  const productVendor = product.vendor;
+  const productPrice = variant?.price.amount ?? product.priceRange.minVariantPrice.amount;
+  const variantId = variant?.id ?? productId;
+  const variantTitle = variant?.title ?? productTitle;
+  const variantSku = variant?.sku ?? undefined;
 
-export function ProductViewedTracker({ product, selectedVariant }: Props) {
   useEffect(() => {
-    const bus = getAnalytics();
-    if (!bus) return;
-    bus.publish(AnalyticsEvent.PRODUCT_VIEWED, {
+    if (publishedProductHandleRef.current === productHandle) return;
+
+    const analytics = getAnalytics();
+    if (!analytics) return;
+
+    analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
       products: [
         {
-          id: product.id,
-          title: product.title,
-          price:
-            selectedVariant?.price.amount ??
-            product.selectedOrFirstAvailableVariant?.price.amount ??
-            product.priceRange.minVariantPrice.amount,
-          vendor: product.vendor,
-          variantId: selectedVariant?.id ?? product.id,
-          variantTitle: selectedVariant?.title ?? product.title,
+          id: productId,
+          title: productTitle,
+          price: productPrice,
+          vendor: productVendor,
+          variantId,
+          variantTitle,
           quantity: 1,
-          sku: selectedVariant?.sku,
+          sku: variantSku,
         },
       ],
-      url: window.location.href,
-      shop: analyticsShop,
     });
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- fire only on product navigation
-  }, [product.handle]);
+    // Track route identity separately from payload deps so exhaustive-deps stays honest without duplicate publishes.
+    publishedProductHandleRef.current = productHandle;
+  }, [
+    productHandle,
+    productId,
+    productPrice,
+    productTitle,
+    productVendor,
+    variantId,
+    variantSku,
+    variantTitle,
+  ]);
 
   return null;
 }

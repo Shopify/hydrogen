@@ -15,6 +15,8 @@ import {
 } from "./options";
 import type {
   ProductInput,
+  ProductOptionValueFrom,
+  ProductOptionValueInput,
   ProductVariantFrom,
   ProductVariantInput,
   SelectedOption,
@@ -32,13 +34,19 @@ export interface ProductFormErrors {
 }
 
 /** Live state snapshot emitted by a {@link ProductFormStore}. */
-export interface ProductFormStoreState<TVariant extends ProductVariantInput = ProductVariantInput> {
-  options: VariantOptionState<TVariant>[];
+export interface ProductFormStoreState<
+  TVariant extends ProductVariantInput = ProductVariantInput,
+  TOptionValue extends ProductOptionValueInput = ProductOptionValueInput,
+> {
+  options: VariantOptionState<TVariant, TOptionValue>[];
   selectedOptions: SelectedOption[];
   selectedVariant: TVariant | null;
   errors: ProductFormErrors;
   matchedLineItem: CartLine | null;
 }
+
+export type ProductFormOptions<TProduct extends ProductInput = ProductInput> =
+  ProductFormStoreState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>["options"];
 
 /**
  * Result returned by {@link ProductFormStore.selectOption}.
@@ -65,6 +73,12 @@ export type VariantSelectionResult<TVariant extends ProductVariantInput = Produc
       reason: string;
     };
 
+/** A selection result that is not invalid — either resolved or unresolved. */
+export type ValidProductSelectionResult<TProduct extends ProductInput = ProductInput> = Exclude<
+  VariantSelectionResult<ProductVariantFrom<TProduct>>,
+  { status: "invalid" }
+>;
+
 export type CreateProductFormStoreOptions = {
   selectedOptions?: SelectedOption[];
 };
@@ -74,8 +88,10 @@ export interface ProductFormStore<
   TProduct extends ProductInput = ProductInput,
   TVariant extends ProductVariantInput = ProductVariantFrom<TProduct>,
 > {
-  getState(): ProductFormStoreState<TVariant>;
-  subscribe(listener: (state: ProductFormStoreState<TVariant>) => void): () => void;
+  getState(): ProductFormStoreState<TVariant, ProductOptionValueFrom<TProduct>>;
+  subscribe(
+    listener: (state: ProductFormStoreState<TVariant, ProductOptionValueFrom<TProduct>>) => void,
+  ): () => void;
   selectOption(name: string, value: string): VariantSelectionResult<TVariant>;
   hydrate(product: TProduct, opts?: { selectedOptions?: SelectedOption[] }): void;
   reset(): void;
@@ -88,14 +104,14 @@ export interface ProductFormStore<
 // ---------------------------------------------------------------------------
 
 export function getSelectedVariant<TVariant extends ProductVariantInput>(
-  options: VariantOptionState<TVariant>[],
+  options: VariantOptionState<TVariant, ProductOptionValueInput>[],
 ): TVariant | null {
   return options[0]?.values.find((v) => v.selected)?.variant ?? null;
 }
 
 export function canAddToCart<TProduct extends ProductInput>(
   product: TProduct,
-  options: VariantOptionState<ProductVariantFrom<TProduct>>[],
+  options: VariantOptionState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>[],
 ): boolean {
   if (product.requiresSellingPlan) return false;
   const variant = getSelectedVariant(options);
@@ -121,7 +137,9 @@ export function findCartLineByMerchandiseId(
 
 type ProductFormStoreContext<TProduct extends ProductInput> = {
   observable: ReturnType<
-    typeof createObservable<ProductFormStoreState<ProductVariantFrom<TProduct>>>
+    typeof createObservable<
+      ProductFormStoreState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>
+    >
   >;
   cartStore: CartStore;
   currentProduct: TProduct;
@@ -178,7 +196,7 @@ export function createProductFormStore<TProduct extends ProductInput>(
 // ---------------------------------------------------------------------------
 
 type VariantOnlyState<TProduct extends ProductInput> = {
-  options: VariantOptionState<ProductVariantFrom<TProduct>>[];
+  options: VariantOptionState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>[];
   selectedOptions: SelectedOption[];
 };
 
@@ -196,7 +214,7 @@ function buildVariantState<TProduct extends ProductInput>(
 function deriveFullState<TProduct extends ProductInput>(
   variant: VariantOnlyState<TProduct>,
   cartState: CartState,
-): ProductFormStoreState<ProductVariantFrom<TProduct>> {
+): ProductFormStoreState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>> {
   const selectedVariant = getSelectedVariant(variant.options);
   const matchedLineItem = selectedVariant
     ? findCartLineByMerchandiseId(cartState.data.lines.nodes, selectedVariant.id)
@@ -343,8 +361,8 @@ function applySelection<TProduct extends ProductInput>(
 }
 
 function hasCartDerivedFieldsChanged<TVariant extends ProductVariantInput>(
-  prev: ProductFormStoreState<TVariant>,
-  next: ProductFormStoreState<TVariant>,
+  prev: ProductFormStoreState<TVariant, ProductOptionValueInput>,
+  next: ProductFormStoreState<TVariant, ProductOptionValueInput>,
 ): boolean {
   return (
     prev.matchedLineItem !== next.matchedLineItem ||

@@ -21,11 +21,25 @@ Port of the canonical `examples/base/` design to [Astro](https://astro.build/) r
 | `/products/:handle` | `examples/base/products/hoodie/index.html` | Live: gallery, options (Size + Color swatches), add-to-cart UI; "You may also like" pulls from `products(first: 4)` |
 | `/blogs/news` | `examples/base/blogs/news/index.html` | Live: first article rendered as featured, rest in a 2-col grid |
 | `/blogs/news/:handle` | `examples/base/blogs/news/liquidpeak-450/index.html` | Live: article body comes back as `contentHtml` and is rendered with `set:html` |
+| `/account` | (new) | Live: Customer Account OAuth session, basic customer name/email, logout form |
+| `/account/login` | (new) | Live: Hydrogen Customer Account handler starts OAuth and stores pending PKCE state |
+| `POST /account/logout` | (new) | Live: Hydrogen Customer Account handler clears session and redirects with `303 See Other` |
 
 ## Stubbed vs. live
 
-- **Live**: product data, collection data, prices, images, options, news articles, article body HTML.
-- **Stubbed**: hero links, cart count badge, search, account, add-to-cart button (no cart mutation), newsletter form, color swatch hex values (mapped server-side from option name → CSS color in `src/pages/products/[handle].astro`).
+- **Live**: product data, collection data, prices, images, options, news articles, article body HTML, Customer Account login/session state, basic customer identity, logout.
+- **Stubbed**: hero links, cart count badge, search, add-to-cart button (no cart mutation), newsletter form, color swatch hex values (mapped server-side from option name → CSS color in `src/pages/products/[handle].astro`).
+
+## Customer Account setup
+
+The account flow uses `createCustomerSession` and `createCustomerAccountServerHandlers` from `@shopify/hydrogen/customer-account`, Customer Account values from `examples/shared/config.ts`, and an encrypted HttpOnly `__Host-` cookie adapter from `examples/shared/customer-session.ts`.
+
+Customer Account OAuth requires a public HTTPS origin. To test locally without a tunnel, register `https://localtest.me:5173/account/authorize` as the callback URI and run:
+
+```sh
+pnpm https:setup
+pnpm --filter @shopify/hydrogen-example-astro https:dev
+```
 
 ## Run
 

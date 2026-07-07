@@ -4,8 +4,18 @@
     "plugins": [
       {
         "name": "gql.tada/ts-plugin",
-        "schema": "./src/graphql/generated/storefront.schema.graphql",
-        "tadaOutputLocation": "./src/graphql/generated/graphql-env.d.ts"
+        "schemas": [
+          {
+            "name": "storefront",
+            "schema": "./src/graphql/generated/storefront.schema.graphql",
+            "tadaOutputLocation": "./src/graphql/generated/graphql-env.d.ts"
+          },
+          {
+            "name": "customer-account",
+            "schema": "./src/graphql/generated/customer-account.schema.json",
+            "tadaOutputLocation": "./src/graphql/generated/customer-account-graphql-env.d.ts"
+          }
+        ]
       }
     ]
   }

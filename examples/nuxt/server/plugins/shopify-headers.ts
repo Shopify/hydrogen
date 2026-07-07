@@ -1,6 +1,6 @@
 export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook("beforeResponse", (event) => {
-    const requestContext = event.context.storefrontRequestContext;
+    const requestContext = event.context.shopifyRequestContext;
     if (!requestContext) return;
 
     const headers = new Headers();
@@ -10,8 +10,30 @@ export default defineNitroPlugin((nitroApp) => {
     copyHeader(event.node.res.getHeader("server-timing"), (value) => {
       headers.append("server-timing", value);
     });
+    copyHeader(event.node.res.getHeader("cache-control"), (value) => {
+      headers.set("cache-control", value);
+    });
+    for (const header of CDN_CACHE_HEADERS) {
+      copyHeader(event.node.res.getHeader(header), (value) => {
+        headers.set(header, value);
+      });
+    }
 
     requestContext.applyResponseHeaders(headers);
+
+    const copyResponseHeader = (name: string) => {
+      const value = headers.get(name);
+      if (value) {
+        event.node.res.setHeader(name, value);
+      } else {
+        event.node.res.removeHeader(name);
+      }
+    };
+
+    copyResponseHeader("cache-control");
+    for (const header of CDN_CACHE_HEADERS) {
+      copyResponseHeader(header);
+    }
 
     const serverTiming = headers.get("server-timing");
     if (serverTiming) {
@@ -27,6 +49,13 @@ export default defineNitroPlugin((nitroApp) => {
     }
   });
 });
+
+const CDN_CACHE_HEADERS = [
+  "cdn-cache-control",
+  "cloudflare-cdn-cache-control",
+  "vercel-cdn-cache-control",
+  "surrogate-control",
+] as const;
 
 function copyHeader(value: number | string | string[] | undefined, copy: (value: string) => void) {
   if (Array.isArray(value)) {

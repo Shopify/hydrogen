@@ -1,11 +1,11 @@
-import type { PrivateStorefrontClient } from "../../client";
+import type { StorefrontClient } from "../../client";
 import type { GraphiQLOptions } from "../types";
 
 const DEV_SCHEMA_FETCH_TIMEOUT_MS = 10_000;
 
 export async function handleGraphiql(
   request: Request,
-  storefrontClient: PrivateStorefrontClient,
+  storefrontClient: StorefrontClient,
   graphiqlOptions?: GraphiQLOptions,
 ): Promise<Response | null> {
   const url = new URL(request.url);

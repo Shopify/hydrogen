@@ -1,22 +1,25 @@
-import type { I18nBase } from "@shopify/hydrogen-classic";
+import type { I18nConfig } from "@shopify/hydrogen";
 
-export interface I18nLocale extends I18nBase {
+export type I18nLocale = I18nConfig & {
   pathPrefix: string;
-}
+};
+
+const LOCALES_BY_PATH_PART: Record<string, Pick<I18nLocale, "country" | "language">> = {
+  "EN-CA": { country: "CA", language: "EN" },
+  "EN-US": { country: "US", language: "EN" },
+  "FR-CA": { country: "CA", language: "FR" },
+};
 
 export function getLocaleFromRequest(request: Request): I18nLocale {
   const url = new URL(request.url);
   const firstPathPart = url.pathname.split("/")[1]?.toUpperCase() ?? "";
-
-  type I18nFromUrl = [I18nLocale["language"], I18nLocale["country"]];
-
   let pathPrefix = "";
-  let [language, country]: I18nFromUrl = ["EN", "US"];
+  let locale = LOCALES_BY_PATH_PART["EN-US"];
 
-  if (/^[A-Z]{2}-[A-Z]{2}$/i.test(firstPathPart)) {
+  if (LOCALES_BY_PATH_PART[firstPathPart]) {
     pathPrefix = "/" + firstPathPart;
-    [language, country] = firstPathPart.split("-") as I18nFromUrl;
+    locale = LOCALES_BY_PATH_PART[firstPathPart];
   }
 
-  return { language, country, pathPrefix };
+  return { ...locale, pathPrefix };
 }

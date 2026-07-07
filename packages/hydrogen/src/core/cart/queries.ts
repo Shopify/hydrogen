@@ -25,7 +25,7 @@ const HYDROGEN_CART_FRAGMENT_SPREAD = `...${HYDROGEN_CART_FRAGMENT_NAME}`;
 const CART_FRAGMENT_SPREAD = `...${CART_FRAGMENT_NAME}`;
 const CART_FRAGMENT_PATTERN = createFragmentPattern(CART_FRAGMENT_CONTRACT);
 
-const HYDROGEN_CART_FRAGMENT_SOURCE = `
+const HYDROGEN_CART_FRAGMENT_SOURCE = /* GraphQL */ `
   fragment HydrogenCartFragment on Cart {
     id
     checkoutUrl
@@ -109,7 +109,7 @@ const HYDROGEN_CART_FRAGMENT_SOURCE = `
   }
 `;
 
-const CART_QUERY_SOURCE = `
+const CART_QUERY_SOURCE = /* GraphQL */ `
   query Cart($id: ID!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cart(id: $id) {
@@ -118,7 +118,7 @@ const CART_QUERY_SOURCE = `
   }
 `;
 
-const CUSTOM_CART_QUERY_SOURCE = `
+const CUSTOM_CART_QUERY_SOURCE = /* GraphQL */ `
   query Cart($id: ID!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cart(id: $id) {
@@ -128,7 +128,7 @@ const CUSTOM_CART_QUERY_SOURCE = `
   }
 `;
 
-const CART_CREATE_MUTATION_SOURCE = `
+const CART_CREATE_MUTATION_SOURCE = /* GraphQL */ `
   mutation CartCreate($input: CartInput!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartCreate(input: $input) {
@@ -149,7 +149,7 @@ const CART_CREATE_MUTATION_SOURCE = `
   }
 `;
 
-const CUSTOM_CART_CREATE_MUTATION_SOURCE = `
+const CUSTOM_CART_CREATE_MUTATION_SOURCE = /* GraphQL */ `
   mutation CartCreate($input: CartInput!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartCreate(input: $input) {
@@ -171,7 +171,7 @@ const CUSTOM_CART_CREATE_MUTATION_SOURCE = `
   }
 `;
 
-const CART_LINES_ADD_MUTATION_SOURCE = `
+const CART_LINES_ADD_MUTATION_SOURCE = /* GraphQL */ `
   mutation CartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
@@ -192,7 +192,7 @@ const CART_LINES_ADD_MUTATION_SOURCE = `
   }
 `;
 
-const CUSTOM_CART_LINES_ADD_MUTATION_SOURCE = `
+const CUSTOM_CART_LINES_ADD_MUTATION_SOURCE = /* GraphQL */ `
   mutation CartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
@@ -214,7 +214,7 @@ const CUSTOM_CART_LINES_ADD_MUTATION_SOURCE = `
   }
 `;
 
-const CART_LINES_UPDATE_MUTATION_SOURCE = `
+const CART_LINES_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
   mutation CartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
@@ -235,7 +235,7 @@ const CART_LINES_UPDATE_MUTATION_SOURCE = `
   }
 `;
 
-const CUSTOM_CART_LINES_UPDATE_MUTATION_SOURCE = `
+const CUSTOM_CART_LINES_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
   mutation CartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
@@ -257,7 +257,7 @@ const CUSTOM_CART_LINES_UPDATE_MUTATION_SOURCE = `
   }
 `;
 
-const CART_LINES_REMOVE_MUTATION_SOURCE = `
+const CART_LINES_REMOVE_MUTATION_SOURCE = /* GraphQL */ `
   mutation CartLinesRemove($cartId: ID!, $lineIds: [ID!]!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
@@ -278,7 +278,7 @@ const CART_LINES_REMOVE_MUTATION_SOURCE = `
   }
 `;
 
-const CUSTOM_CART_LINES_REMOVE_MUTATION_SOURCE = `
+const CUSTOM_CART_LINES_REMOVE_MUTATION_SOURCE = /* GraphQL */ `
   mutation CartLinesRemove($cartId: ID!, $lineIds: [ID!]!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
@@ -300,7 +300,7 @@ const CUSTOM_CART_LINES_REMOVE_MUTATION_SOURCE = `
   }
 `;
 
-const CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE = `
+const CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
   mutation CartDiscountCodesUpdate($cartId: ID!, $discountCodes: [String!]!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
@@ -321,7 +321,7 @@ const CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE = `
   }
 `;
 
-const CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE = `
+const CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
   mutation CartDiscountCodesUpdate($cartId: ID!, $discountCodes: [String!]!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
@@ -343,7 +343,7 @@ const CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE = `
   }
 `;
 
-const CART_NOTE_UPDATE_MUTATION_SOURCE = `
+const CART_NOTE_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
   mutation CartNoteUpdate($cartId: ID!, $note: String!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartNoteUpdate(cartId: $cartId, note: $note) {
@@ -364,7 +364,7 @@ const CART_NOTE_UPDATE_MUTATION_SOURCE = `
   }
 `;
 
-const CUSTOM_CART_NOTE_UPDATE_MUTATION_SOURCE = `
+const CUSTOM_CART_NOTE_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
   mutation CartNoteUpdate($cartId: ID!, $note: String!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartNoteUpdate(cartId: $cartId, note: $note) {

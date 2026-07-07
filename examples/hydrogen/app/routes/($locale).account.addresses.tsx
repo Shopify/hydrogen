@@ -1,4 +1,5 @@
-import type { CustomerAddressInput } from "@shopify/hydrogen-classic/customer-account-api-types";
+import type * as CAAPI from "@shopify/hydrogen/customer-account";
+import type { CustomerAddressInput } from "@shopify/hydrogen/customer-account-api-types";
 import type { AddressFragment, CustomerFragment } from "customer-accountapi.generated";
 import {
   data,
@@ -14,234 +15,159 @@ import {
   DELETE_ADDRESS_MUTATION,
   CREATE_ADDRESS_MUTATION,
 } from "~/graphql/customer-account/CustomerAddressMutations";
+import {
+  getCustomerAccessToken,
+  isSameOriginRequest,
+  requireCustomerAccessToken,
+} from "~/lib/customer-account";
 
 import type { Route } from "./+types/($locale).account.addresses";
 
 export type ActionResponse = {
   addressId?: string | null;
-  createdAddress?: AddressFragment;
+  createdAddress?: { id: string };
   defaultAddress?: string | null;
   deletedAddress?: string | null;
-  error: Record<AddressFragment["id"], string> | null;
-  updatedAddress?: AddressFragment;
+  error: Record<string, string> | null;
+  updatedAddress?: CustomerAddressInput;
 };
+
+const NEW_ADDRESS_ID = "NEW_ADDRESS_ID";
+const GENERAL_ACTION_ERROR_ID = "account-addresses";
+const ADDRESS_INPUT_KEYS = [
+  "address1",
+  "address2",
+  "city",
+  "company",
+  "territoryCode",
+  "firstName",
+  "lastName",
+  "phoneNumber",
+  "zoneCode",
+  "zip",
+] as const satisfies readonly (keyof CustomerAddressInput)[];
+type CustomerAddressCreateResult = CAAPI.CustomerAccountGraphqlResult<
+  CAAPI.InferResult<CAAPI.SourceOf<typeof CREATE_ADDRESS_MUTATION>>
+>;
+type CustomerAddressUpdateResult = CAAPI.CustomerAccountGraphqlResult<
+  CAAPI.InferResult<CAAPI.SourceOf<typeof UPDATE_ADDRESS_MUTATION>>
+>;
+type CustomerAddressDeleteResult = CAAPI.CustomerAccountGraphqlResult<
+  CAAPI.InferResult<CAAPI.SourceOf<typeof DELETE_ADDRESS_MUTATION>>
+>;
 
 export const meta: Route.MetaFunction = () => {
   return [{ title: "Addresses" }];
 };
 
-export async function loader({ context }: Route.LoaderArgs) {
-  await context.customerAccount.handleAuthStatus();
+export async function loader({ request, context }: Route.LoaderArgs) {
+  await requireCustomerAccessToken(request, context.customerAccount);
 
   return {};
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
   const { customerAccount } = context;
+  let submittedAddressId = GENERAL_ACTION_ERROR_ID;
+
+  if (!(await isSameOriginRequest(request, customerAccount.sessionManager))) {
+    return addressActionError(GENERAL_ACTION_ERROR_ID, "Forbidden", 403);
+  }
+
+  const accessToken = await getCustomerAccessToken(customerAccount);
+  if (!accessToken) {
+    return addressActionError(GENERAL_ACTION_ERROR_ID, "Unauthorized", 401);
+  }
 
   try {
     const form = await request.formData();
-
     const addressId = form.has("addressId") ? String(form.get("addressId")) : null;
     if (!addressId) {
       throw new Error("You must provide an address id.");
     }
-
-    // this will ensure redirecting to login never happen for mutatation
-    const isLoggedIn = await customerAccount.isLoggedIn();
-    if (!isLoggedIn) {
-      return data(
-        { error: { [addressId]: "Unauthorized" } },
-        {
-          status: 401,
-        },
-      );
-    }
+    submittedAddressId = addressId;
 
     const defaultAddress = form.has("defaultAddress")
       ? String(form.get("defaultAddress")) === "on"
       : false;
-    const address: CustomerAddressInput = {};
-    const keys: (keyof CustomerAddressInput)[] = [
-      "address1",
-      "address2",
-      "city",
-      "company",
-      "territoryCode",
-      "firstName",
-      "lastName",
-      "phoneNumber",
-      "zoneCode",
-      "zip",
-    ];
-
-    for (const key of keys) {
-      const value = form.get(key);
-      if (typeof value === "string") {
-        address[key] = value;
-      }
-    }
+    const address = parseAddress(form);
 
     switch (request.method) {
       case "POST": {
-        // handle new address creation
-        try {
-          const { data, errors } = await customerAccount.mutate(CREATE_ADDRESS_MUTATION, {
-            variables: {
-              address,
-              defaultAddress,
-              language: customerAccount.i18n.language,
-            },
-          });
-
-          if (errors?.length) {
-            throw new Error(errors[0].message);
-          }
-
-          if (data?.customerAddressCreate?.userErrors?.length) {
-            throw new Error(data?.customerAddressCreate?.userErrors[0].message);
-          }
-
-          if (!data?.customerAddressCreate?.customerAddress) {
-            throw new Error("Customer address create failed.");
-          }
-
-          return {
-            error: null,
-            createdAddress: data?.customerAddressCreate?.customerAddress,
-            defaultAddress,
-          };
-        } catch (error: unknown) {
-          if (error instanceof Error) {
-            return data(
-              { error: { [addressId]: error.message } },
-              {
-                status: 400,
-              },
-            );
-          }
-          return data(
-            { error: { [addressId]: error } },
-            {
-              status: 400,
-            },
-          );
-        }
+        const result = await customerAccount.client.graphql(CREATE_ADDRESS_MUTATION, {
+          accessToken,
+          variables: { address, defaultAddress },
+        });
+        const customerAddress = getCustomerAddressCreateResult(result);
+        return { error: null, createdAddress: customerAddress, defaultAddress };
       }
 
       case "PUT": {
-        // handle address updates
-        try {
-          const { data, errors } = await customerAccount.mutate(UPDATE_ADDRESS_MUTATION, {
-            variables: {
-              address,
-              addressId: decodeURIComponent(addressId),
-              defaultAddress,
-              language: customerAccount.i18n.language,
-            },
-          });
-
-          if (errors?.length) {
-            throw new Error(errors[0].message);
-          }
-
-          if (data?.customerAddressUpdate?.userErrors?.length) {
-            throw new Error(data?.customerAddressUpdate?.userErrors[0].message);
-          }
-
-          if (!data?.customerAddressUpdate?.customerAddress) {
-            throw new Error("Customer address update failed.");
-          }
-
-          return {
-            error: null,
-            updatedAddress: address,
-            defaultAddress,
-          };
-        } catch (error: unknown) {
-          if (error instanceof Error) {
-            return data(
-              { error: { [addressId]: error.message } },
-              {
-                status: 400,
-              },
-            );
-          }
-          return data(
-            { error: { [addressId]: error } },
-            {
-              status: 400,
-            },
-          );
-        }
+        const result = await customerAccount.client.graphql(UPDATE_ADDRESS_MUTATION, {
+          accessToken,
+          variables: { address, addressId: decodeURIComponent(addressId), defaultAddress },
+        });
+        assertCustomerAddressUpdated(result);
+        return { error: null, updatedAddress: address, defaultAddress };
       }
 
       case "DELETE": {
-        // handles address deletion
-        try {
-          const { data, errors } = await customerAccount.mutate(DELETE_ADDRESS_MUTATION, {
-            variables: {
-              addressId: decodeURIComponent(addressId),
-              language: customerAccount.i18n.language,
-            },
-          });
-
-          if (errors?.length) {
-            throw new Error(errors[0].message);
-          }
-
-          if (data?.customerAddressDelete?.userErrors?.length) {
-            throw new Error(data?.customerAddressDelete?.userErrors[0].message);
-          }
-
-          if (!data?.customerAddressDelete?.deletedAddressId) {
-            throw new Error("Customer address delete failed.");
-          }
-
-          return { error: null, deletedAddress: addressId };
-        } catch (error: unknown) {
-          if (error instanceof Error) {
-            return data(
-              { error: { [addressId]: error.message } },
-              {
-                status: 400,
-              },
-            );
-          }
-          return data(
-            { error: { [addressId]: error } },
-            {
-              status: 400,
-            },
-          );
-        }
+        const result = await customerAccount.client.graphql(DELETE_ADDRESS_MUTATION, {
+          accessToken,
+          variables: { addressId: decodeURIComponent(addressId) },
+        });
+        assertCustomerAddressDeleted(result);
+        return { error: null, deletedAddress: addressId };
       }
 
       default: {
-        return data(
-          { error: { [addressId]: "Method not allowed" } },
-          {
-            status: 405,
-          },
-        );
+        return addressActionError(addressId, "Method not allowed", 405);
       }
     }
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      return data(
-        { error: error.message },
-        {
-          status: 400,
-        },
-      );
-    }
-    return data(
-      { error },
-      {
-        status: 400,
-      },
-    );
+    const message = error instanceof Error ? error.message : "Address action failed.";
+    return addressActionError(submittedAddressId, message, 400);
   }
+}
+
+function parseAddress(form: FormData): CustomerAddressInput {
+  const address: CustomerAddressInput = {};
+
+  for (const key of ADDRESS_INPUT_KEYS) {
+    const value = form.get(key);
+    if (typeof value === "string") address[key] = value;
+  }
+
+  return address;
+}
+
+function addressActionError(addressId: string, message: string, status: number) {
+  return data({ error: { [addressId]: message } }, { status });
+}
+
+function getCustomerAddressCreateResult(result: CustomerAddressCreateResult) {
+  if (result.errors?.length) throw new Error(result.errors[0].message);
+
+  const payload = result.data?.customerAddressCreate;
+  if (payload?.userErrors?.length) throw new Error(payload.userErrors[0].message);
+  if (!payload?.customerAddress) throw new Error("Customer address create failed.");
+  return payload.customerAddress;
+}
+
+function assertCustomerAddressUpdated(result: CustomerAddressUpdateResult) {
+  if (result.errors?.length) throw new Error(result.errors[0].message);
+
+  const payload = result.data?.customerAddressUpdate;
+  if (payload?.userErrors?.length) throw new Error(payload.userErrors[0].message);
+  if (!payload?.customerAddress) throw new Error("Customer address update failed.");
+}
+
+function assertCustomerAddressDeleted(result: CustomerAddressDeleteResult) {
+  if (result.errors?.length) throw new Error(result.errors[0].message);
+
+  const payload = result.data?.customerAddressDelete;
+  if (payload?.userErrors?.length) throw new Error(payload.userErrors[0].message);
+  if (!payload?.deletedAddressId) throw new Error("Customer address delete failed.");
 }
 
 export default function Addresses() {
@@ -286,7 +212,7 @@ function NewAddressForm() {
   } as CustomerAddressInput;
 
   return (
-    <AddressForm addressId={"NEW_ADDRESS_ID"} address={newAddress} defaultAddress={null}>
+    <AddressForm addressId={NEW_ADDRESS_ID} address={newAddress} defaultAddress={null}>
       {({ stateForMethod }) => (
         <div>
           <button disabled={stateForMethod("POST") !== "idle"} formMethod="POST" type="submit">

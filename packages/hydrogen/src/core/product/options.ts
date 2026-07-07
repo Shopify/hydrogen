@@ -1,5 +1,6 @@
 import type {
   ProductInput,
+  ProductOptionValueFrom,
   ProductVariantFrom,
   SelectedOption,
   VariantOptionState,
@@ -87,7 +88,7 @@ export function buildProductOptions<TProduct extends ProductInput>(
   product: TProduct,
   selectedOptions: SelectedOption[],
   cache?: DecodedVariantCache,
-): VariantOptionState<ProductVariantFrom<TProduct>>[] {
+): VariantOptionState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>[] {
   const selectedOptionMap = selectedOptionsToMap(selectedOptions);
   const optionIndexByName = new Map(product.options.map((option, index) => [option.name, index]));
   const optionValueIndex = buildOptionValueIndex(product);
@@ -96,7 +97,12 @@ export function buildProductOptions<TProduct extends ProductInput>(
   return product.options.map((option) => ({
     name: option.name,
     values: option.optionValues.map(
-      (value): VariantOptionValueState<ProductVariantFrom<TProduct>> => {
+      (
+        value,
+      ): VariantOptionValueState<
+        ProductVariantFrom<TProduct>,
+        ProductOptionValueFrom<TProduct>
+      > => {
         const targetOptionMap = { ...selectedOptionMap, [option.name]: value.name };
         const targetSelectedOptions = selectedOptionsFromMap(product, targetOptionMap);
         const key = selectedOptionsKey(targetSelectedOptions, product.options);
@@ -126,6 +132,7 @@ export function buildProductOptions<TProduct extends ProductInput>(
 
         return {
           name: value.name,
+          swatch: value.swatch,
           selected,
           exists,
           available,
@@ -251,7 +258,7 @@ function isOptionValueCombinationInEncodedVariant(
   return decoded.has(targetOptionValueCombination.join(OPTION_VALUE_SEPARATOR));
 }
 
-function decodeEncodedVariant(encodedVariantField: string | null | undefined): number[][] {
+export function decodeEncodedVariant(encodedVariantField: string | null | undefined): number[][] {
   if (!encodedVariantField) return [];
   if (!encodedVariantField.startsWith("v1_")) {
     if (typeof console !== "undefined") {

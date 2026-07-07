@@ -2,14 +2,14 @@
 
 import type {
   RequestScopedPrivateStorefrontClient,
-  StorefrontRequestContext,
+  ShopifyRequestContext,
 } from "@shopify/hydrogen";
 
 declare global {
   namespace App {
     interface Locals {
       storefrontClient: RequestScopedPrivateStorefrontClient;
-      storefrontRequestContext: StorefrontRequestContext;
+      shopifyRequestContext: ShopifyRequestContext;
     }
   }
 }

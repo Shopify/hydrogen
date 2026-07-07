@@ -1,13 +1,15 @@
 import { gql } from "@shopify/hydrogen";
-import { type Shop } from "@shopify/hydrogen-classic/storefront-api-types";
 import { Link, useLoaderData } from "react-router";
 
 import type { Route } from "./+types/($locale).policies.$handle";
 
-type SelectedPolicies = keyof Pick<
-  Shop,
-  "privacyPolicy" | "shippingPolicy" | "termsOfService" | "refundPolicy"
->;
+type SelectedPolicies = "privacyPolicy" | "shippingPolicy" | "termsOfService" | "refundPolicy";
+const POLICY_BY_HANDLE: Record<string, SelectedPolicies> = {
+  "privacy-policy": "privacyPolicy",
+  "refund-policy": "refundPolicy",
+  "shipping-policy": "shippingPolicy",
+  "terms-of-service": "termsOfService",
+};
 
 export const meta: Route.MetaFunction = ({ data }) => {
   return [{ title: `Hydrogen | ${data?.policy.title ?? ""}` }];
@@ -18,9 +20,11 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     throw new Response("No handle was passed in", { status: 404 });
   }
 
-  const policyName = params.handle.replace(/-([a-z])/g, (_: unknown, m1: string) =>
-    m1.toUpperCase(),
-  ) as SelectedPolicies;
+  const policyName = POLICY_BY_HANDLE[params.handle];
+
+  if (!policyName) {
+    throw new Response("Could not find the policy", { status: 404 });
+  }
 
   const data = await context.storefront.query(POLICY_CONTENT_QUERY, {
     variables: {

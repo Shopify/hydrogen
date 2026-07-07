@@ -1,16 +1,19 @@
-import { Money, getPaginationVariables, flattenConnection } from "@shopify/hydrogen-classic";
 import type { CustomerOrdersFragment, OrderItemFragment } from "customer-accountapi.generated";
 import { useRef } from "react";
 import { Link, useLoaderData, useNavigation, useSearchParams } from "react-router";
 
 import { PaginatedResourceSection } from "~/components/PaginatedResourceSection";
 import { CUSTOMER_ORDERS_QUERY } from "~/graphql/customer-account/CustomerOrdersQuery";
+import { flattenConnection } from "~/lib/connection";
+import { requireCustomerAccessToken } from "~/lib/customer-account";
+import { formatMoney } from "~/lib/money";
 import {
   buildOrderSearchQuery,
   parseOrderFilters,
   ORDER_FILTER_FIELDS,
   type OrderFilterParams,
 } from "~/lib/orderFilters";
+import { getPaginationVariables } from "~/lib/pagination";
 
 import type { Route } from "./+types/($locale).account.orders._index";
 
@@ -25,6 +28,7 @@ export const meta: Route.MetaFunction = () => {
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { customerAccount } = context;
+  const accessToken = await requireCustomerAccessToken(request, customerAccount);
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 20,
   });
@@ -33,11 +37,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const filters = parseOrderFilters(url.searchParams);
   const query = buildOrderSearchQuery(filters);
 
-  const { data, errors } = await customerAccount.query(CUSTOMER_ORDERS_QUERY, {
+  const { data, errors } = await customerAccount.client.graphql(CUSTOMER_ORDERS_QUERY, {
+    accessToken,
     variables: {
       ...paginationVariables,
       query,
-      language: customerAccount.i18n.language,
     },
   });
 
@@ -90,7 +94,7 @@ function EmptyOrders({ hasFilters = false }: { hasFilters?: boolean }) {
           <p>No orders found matching your search.</p>
           <br />
           <p>
-            <Link to="/account/orders">Clear filters →</Link>
+            <Link to=".">Clear filters →</Link>
           </p>
         </>
       ) : (
@@ -107,7 +111,7 @@ function EmptyOrders({ hasFilters = false }: { hasFilters?: boolean }) {
 }
 
 function OrderSearchForm({ currentFilters }: { currentFilters: OrderFilterParams }) {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [, setSearchParams] = useSearchParams();
   const navigation = useNavigation();
   const isSearching =
     navigation.state !== "idle" && navigation.location?.pathname?.includes("orders");
@@ -188,15 +192,15 @@ function OrderItem({ order }: { order: OrderItemFragment }) {
   return (
     <>
       <fieldset>
-        <Link to={`/account/orders/${btoa(order.id)}`}>
+        <Link to={btoa(order.id)}>
           <strong>#{order.number}</strong>
         </Link>
         <p>{new Date(order.processedAt).toDateString()}</p>
         {order.confirmationNumber && <p>Confirmation: {order.confirmationNumber}</p>}
         <p>{order.financialStatus}</p>
         {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
-        <Money data={order.totalPrice} />
-        <Link to={`/account/orders/${btoa(order.id)}`}>View Order →</Link>
+        {formatMoney(order.totalPrice)}
+        <Link to={btoa(order.id)}>View Order →</Link>
       </fieldset>
       <br />
     </>

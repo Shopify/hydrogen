@@ -27,11 +27,17 @@ export interface ProductOptionValueProps {
   onClick: () => void;
 }
 
+/** Props returned by {@link ProductFormRegister} for the add-to-cart submit button. */
+export interface ProductAddToCartProps {
+  name: "add-to-cart";
+  type: "submit";
+}
+
 /**
  * Register function returned by `useProductForm`.
  *
  * Product forms only register product-relevant fields:
- * `merchandiseId`, `quantity`, and `optionValue`.
+ * `merchandiseId`, `quantity`, `optionValue`, and `addToCart`.
  *
  * Option values return form identity and activation handlers. UI props such as
  * `type`, `checked`, `disabled`, and `aria-pressed` belong to the caller — use
@@ -42,6 +48,7 @@ export type ProductFormRegister = {
   (field: "quantity", opts: { value: number }): ProductQuantityProps;
   (field: "quantity", opts: { defaultValue: number }): ProductQuantityDefaultProps;
   (field: "optionValue", opts: { optionName: string; value: string }): ProductOptionValueProps;
+  (field: "addToCart", opts: {}): ProductAddToCartProps;
 };
 
 /**
@@ -70,6 +77,10 @@ export function createProductFormRegister(
       const value = String(opts?.value ?? "");
       const handleSelect = () => selectOption(optionName, value);
       return { name: optionName, value, onChange: handleSelect, onClick: handleSelect };
+    }
+
+    if (field === "addToCart") {
+      return { name: "add-to-cart", type: "submit" } satisfies ProductAddToCartProps;
     }
 
     throw new Error(`Unknown product form field: "${field}".`);

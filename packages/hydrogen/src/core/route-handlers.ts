@@ -1,13 +1,26 @@
-import type { RequestScopedPrivateStorefrontClient } from "../client";
+import type { StorefrontClient } from "../client";
+import type { ShopifyRequestContext } from "./headers";
 
 const HTTP_OK_STATUS = 200;
 const HTTP_SEE_OTHER_STATUS = 303;
 const HTTP_METHOD_NOT_ALLOWED_STATUS = 405;
 const HTTP_BAD_REQUEST_STATUS = 400;
 
+type Awaitable<T> = T | Promise<T>;
+
+export type ShopifyRouteSessionManager = {
+  getSessionOrigin(): Awaitable<string>;
+  getSessionItem(key: string): Awaitable<unknown>;
+  setSessionItem(key: string, value: unknown): Awaitable<void>;
+  removeSessionItem(key: string): Awaitable<void>;
+  commit?(): Awaitable<HeadersInit | void>;
+};
+
 export type ShopifyRouteHandlerContext = {
   request: Request;
-  storefrontClient: RequestScopedPrivateStorefrontClient;
+  sessionManager: ShopifyRouteSessionManager;
+  storefrontClient: StorefrontClient;
+  requestContext: ShopifyRequestContext;
 };
 
 export type ShopifyRouteJsonResult<TData = unknown> = {
@@ -30,6 +43,7 @@ export type ShopifyRouteError = {
 export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRouteError> = {
   type: "error";
   error: TError;
+  status?: number;
   headers?: HeadersInit;
 };
 
@@ -85,7 +99,9 @@ export function createCallableRouteHandler<
 
 export async function handleShopifyRouteHandlers({
   request,
+  sessionManager,
   storefrontClient,
+  requestContext,
   handlers = [],
 }: ShopifyRouteHandlerOptions): Promise<Response | null> {
   const routeHandlers = handlers.flatMap((group) => Object.values(group));
@@ -98,13 +114,19 @@ export async function handleShopifyRouteHandlers({
   const match = pathMatches.find((candidate) => candidate.method === request.method);
   if (!match) return new Response("Method Not Allowed", { status: HTTP_METHOD_NOT_ALLOWED_STATUS });
 
-  return createShopifyRouteResponse(await match({ request, storefrontClient }));
+  return createShopifyRouteResponse(
+    await match({ request, sessionManager, storefrontClient, requestContext }),
+    request,
+  );
 }
 
-export function createShopifyRouteResponse(result: ShopifyRouteHandlerResult): Response {
+export function createShopifyRouteResponse(
+  result: ShopifyRouteHandlerResult,
+  request: Request,
+): Response {
   if (result.type === "redirect") {
     const headers = new Headers(result.headers);
-    headers.set("location", result.location);
+    headers.set("location", resolveRedirectLocation(result.location, request));
     return new Response(null, {
       status: HTTP_SEE_OTHER_STATUS,
       headers,
@@ -115,7 +137,7 @@ export function createShopifyRouteResponse(result: ShopifyRouteHandlerResult): R
     const headers = new Headers(result.headers);
     headers.set("content-type", "application/json");
     return new Response(JSON.stringify({ error: result.error }), {
-      status: HTTP_BAD_REQUEST_STATUS,
+      status: result.status ?? HTTP_BAD_REQUEST_STATUS,
       headers,
     });
   }
@@ -126,4 +148,11 @@ export function createShopifyRouteResponse(result: ShopifyRouteHandlerResult): R
     status: HTTP_OK_STATUS,
     headers,
   });
+}
+
+function resolveRedirectLocation(location: string, request: Request): string {
+  // Absolute Location headers are the best common denominator: browsers accept
+  // relative redirects, but framework proxy runtimes like Next.js can require
+  // absolute URLs when returning a Response from middleware/proxy code.
+  return new URL(location, new URL(request.url).origin).toString();
 }

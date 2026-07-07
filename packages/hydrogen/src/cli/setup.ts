@@ -12,6 +12,8 @@ import {
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { isObjectRecord } from "../core/utils/record";
+
 const PACKAGE_NAME = "@shopify/hydrogen";
 const PACKAGE_INSTALL_SPEC = `${PACKAGE_NAME}@preview`;
 const PACKAGE_ROOT_FROM_CLI_MODULE = "../../";
@@ -59,12 +61,8 @@ export interface SetupHydrogenOptions {
   log?: (message: string) => void;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function getStringRecord(value: unknown): Record<string, string> | undefined {
-  if (!isRecord(value)) return undefined;
+  if (!isObjectRecord(value)) return undefined;
 
   const entries = Object.entries(value);
   if (entries.some(([, entryValue]) => typeof entryValue !== "string")) return undefined;
@@ -79,7 +77,9 @@ function readPackageJson(appRoot: string): PackageJson {
   }
 
   const parsed = JSON.parse(readFileSync(packageJsonPath, "utf8")) as unknown;
-  if (!isRecord(parsed)) throw new Error(`${PACKAGE_JSON_FILE_NAME} must contain a JSON object.`);
+  if (!isObjectRecord(parsed)) {
+    throw new Error(`${PACKAGE_JSON_FILE_NAME} must contain a JSON object.`);
+  }
 
   return {
     packageManager: typeof parsed.packageManager === "string" ? parsed.packageManager : undefined,

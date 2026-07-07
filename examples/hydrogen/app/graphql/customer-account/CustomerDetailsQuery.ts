@@ -1,5 +1,7 @@
+import * as CAAPI from "@shopify/hydrogen/customer-account";
+
 // NOTE: https://shopify.dev/docs/api/customer/latest/objects/Customer
-export const CUSTOMER_FRAGMENT = `#graphql
+export const CUSTOMER_FRAGMENT = CAAPI.gql(`
   fragment Customer on Customer {
     id
     firstName
@@ -27,14 +29,16 @@ export const CUSTOMER_FRAGMENT = `#graphql
     zip
     phoneNumber
   }
-` as const;
+`);
 
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
-export const CUSTOMER_DETAILS_QUERY = `#graphql
+export const CUSTOMER_DETAILS_QUERY = CAAPI.gql(
+  `
   query CustomerDetails($language: LanguageCode) @inContext(language: $language) {
     customer {
       ...Customer
     }
   }
-  ${CUSTOMER_FRAGMENT}
-` as const;
+`,
+  [CUSTOMER_FRAGMENT],
+);

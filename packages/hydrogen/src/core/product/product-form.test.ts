@@ -332,6 +332,33 @@ describe("createProductFormStore", () => {
       });
     });
 
+    it("passes option value swatches through normalized option state", () => {
+      const redSwatch = { color: "#ff0000" };
+      const blueSwatch = {
+        image: { previewImage: { url: "https://cdn.shopify.com/s/files/blue.png" } },
+      };
+      const product: ProductInput = {
+        ...makeSingleOptionProduct(RED),
+        options: [
+          {
+            name: "Color",
+            optionValues: [
+              { name: "Red", firstSelectableVariant: RED, swatch: redSwatch },
+              { name: "Blue", firstSelectableVariant: BLUE, swatch: blueSwatch },
+            ],
+          },
+        ],
+      };
+      const store = createStore(product);
+
+      expect(store.getState().options[0].values.find((value) => value.name === "Red")?.swatch).toBe(
+        redSwatch,
+      );
+      expect(
+        store.getState().options[0].values.find((value) => value.name === "Blue")?.swatch,
+      ).toBe(blueSwatch);
+    });
+
     it("matches a line item if pre-selected variant is in cart", () => {
       const cartLine = makeCartLine("v-red");
       const cartStore = createMockCartStore({

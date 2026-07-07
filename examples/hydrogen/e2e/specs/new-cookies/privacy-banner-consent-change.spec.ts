@@ -174,9 +174,9 @@ test.describe("Privacy Banner - Consent Change", () => {
         "after granting consent via preferences",
       );
 
-      // Note: We skip perf-kit request verification here because it captures Y/S values
-      // only when its script is first downloaded so it won't update the values after changing
-      // consent mid-session. This is a bug in perf-kit that needs to be fixed separately.
+      // Note: We skip perf-kit request verification here because it can initialize before
+      // consent and retain initial tracking values after changing consent mid-session.
+      // This is a bug in perf-kit that needs to be fixed separately.
       // The Monorail requests above already verify tracking is working correctly.
 
       // 12. Add to cart and verify checkout URLs have real tracking params

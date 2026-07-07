@@ -1,30 +1,40 @@
-import { Image, Money } from "@shopify/hydrogen-classic";
-import React, { useRef, useEffect } from "react";
-import { Link, useFetcher, type Fetcher } from "react-router";
-
 import {
-  getEmptyPredictiveSearchResult,
-  urlWithTrackingParams,
-  type PredictiveSearchReturn,
-} from "~/lib/search";
+  getPredictiveSearchItemUrl,
+  type PredictiveSearchData,
+  type PredictiveSearchResourceItem,
+  type PredictiveSearchStatus,
+} from "@shopify/hydrogen";
+import {
+  usePredictiveSearchActions,
+  usePredictiveSearch as usePredictiveSearchState,
+} from "@shopify/hydrogen/react";
+import React, { useRef, useEffect } from "react";
+import { Link } from "react-router";
+
+import { Image } from "~/components/Image";
+import { formatMoney } from "~/lib/money";
+import { routeTemplates } from "~/lib/route-templates";
 
 import { useAside } from "./Aside";
 
-type PredictiveSearchItems = PredictiveSearchReturn["result"]["items"];
+const PREDICTIVE_SEARCH_THUMBNAIL_SIZE = 50;
+
+type PredictiveSearchItems = PredictiveSearchData["items"];
 
 type UsePredictiveSearchReturn = {
   term: React.MutableRefObject<string>;
   total: number;
+  error: string | null;
   inputRef: React.MutableRefObject<HTMLInputElement | null>;
   items: PredictiveSearchItems;
-  fetcher: Fetcher<PredictiveSearchReturn>;
+  status: PredictiveSearchStatus;
 };
 
 type SearchResultsPredictiveArgs = Pick<
   UsePredictiveSearchReturn,
-  "term" | "total" | "inputRef" | "items"
+  "error" | "term" | "total" | "inputRef" | "items"
 > & {
-  state: Fetcher["state"];
+  state: PredictiveSearchStatus;
   closeSearch: () => void;
 };
 
@@ -37,16 +47,18 @@ type SearchResultsPredictiveProps = {
   children: (args: SearchResultsPredictiveArgs) => React.ReactNode;
 };
 
-/**
- * Component that renders predictive search results
- */
+function getPredictiveSearchResourceUrl(item: PredictiveSearchResourceItem, term: string): string {
+  return getPredictiveSearchItemUrl(item, {
+    routes: routeTemplates,
+    term,
+  });
+}
+
 export function SearchResultsPredictive({ children }: SearchResultsPredictiveProps) {
   const aside = useAside();
-  const { term, inputRef, fetcher, total, items } = usePredictiveSearch();
+  const { clear } = usePredictiveSearchActions();
+  const { error, term, inputRef, status, total, items } = usePredictiveSearchResults();
 
-  /*
-   * Utility that resets the search input
-   */
   function resetInput() {
     if (inputRef.current) {
       inputRef.current.blur();
@@ -54,19 +66,18 @@ export function SearchResultsPredictive({ children }: SearchResultsPredictivePro
     }
   }
 
-  /**
-   * Utility that resets the search input and closes the search aside
-   */
   function closeSearch() {
     resetInput();
+    clear();
     aside.close();
   }
 
   return children({
+    error,
     items,
     closeSearch,
     inputRef,
-    state: fetcher.state,
+    state: status,
     term,
     total,
   });
@@ -78,6 +89,30 @@ SearchResultsPredictive.Pages = SearchResultsPredictivePages;
 SearchResultsPredictive.Products = SearchResultsPredictiveProducts;
 SearchResultsPredictive.Queries = SearchResultsPredictiveQueries;
 SearchResultsPredictive.Empty = SearchResultsPredictiveEmpty;
+
+function SearchResultsPredictiveQueries({
+  queries,
+  closeSearch,
+}: PartialPredictiveSearchResult<"queries", "closeSearch">) {
+  if (!queries.length) return null;
+
+  return (
+    <div className="predictive-search-result" key="queries">
+      <h5>Suggestions</h5>
+      <ul>
+        {queries.map((query) => {
+          return (
+            <li className="predictive-search-result-item" key={query.text}>
+              <Link onClick={closeSearch} to={getPredictiveSearchItemUrl(query)}>
+                <span>{query.text}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
 
 function SearchResultsPredictiveArticles({
   term,
@@ -91,21 +126,18 @@ function SearchResultsPredictiveArticles({
       <h5>Articles</h5>
       <ul>
         {articles.map((article) => {
-          const articleUrl = urlWithTrackingParams({
-            baseUrl: `/blogs/${article.blog.handle}/${article.handle}`,
-            trackingParams: article.trackingParameters,
-            term: term.current ?? "",
-          });
-
           return (
             <li className="predictive-search-result-item" key={article.id}>
-              <Link onClick={closeSearch} to={articleUrl}>
+              <Link
+                onClick={closeSearch}
+                to={getPredictiveSearchResourceUrl(article, term.current)}
+              >
                 {article.image?.url && (
                   <Image
                     alt={article.image.altText ?? ""}
                     src={article.image.url}
-                    width={50}
-                    height={50}
+                    width={PREDICTIVE_SEARCH_THUMBNAIL_SIZE}
+                    height={PREDICTIVE_SEARCH_THUMBNAIL_SIZE}
                   />
                 )}
                 <div>
@@ -132,21 +164,18 @@ function SearchResultsPredictiveCollections({
       <h5>Collections</h5>
       <ul>
         {collections.map((collection) => {
-          const collectionUrl = urlWithTrackingParams({
-            baseUrl: `/collections/${collection.handle}`,
-            trackingParams: collection.trackingParameters,
-            term: term.current,
-          });
-
           return (
             <li className="predictive-search-result-item" key={collection.id}>
-              <Link onClick={closeSearch} to={collectionUrl}>
+              <Link
+                onClick={closeSearch}
+                to={getPredictiveSearchResourceUrl(collection, term.current)}
+              >
                 {collection.image?.url && (
                   <Image
                     alt={collection.image.altText ?? ""}
                     src={collection.image.url}
-                    width={50}
-                    height={50}
+                    width={PREDICTIVE_SEARCH_THUMBNAIL_SIZE}
+                    height={PREDICTIVE_SEARCH_THUMBNAIL_SIZE}
                   />
                 )}
                 <div>
@@ -173,15 +202,9 @@ function SearchResultsPredictivePages({
       <h5>Pages</h5>
       <ul>
         {pages.map((page) => {
-          const pageUrl = urlWithTrackingParams({
-            baseUrl: `/pages/${page.handle}`,
-            trackingParams: page.trackingParameters,
-            term: term.current,
-          });
-
           return (
             <li className="predictive-search-result-item" key={page.id}>
-              <Link onClick={closeSearch} to={pageUrl}>
+              <Link onClick={closeSearch} to={getPredictiveSearchResourceUrl(page, term.current)}>
                 <div>
                   <span>{page.title}</span>
                 </div>
@@ -206,23 +229,25 @@ function SearchResultsPredictiveProducts({
       <h5>Products</h5>
       <ul>
         {products.map((product) => {
-          const productUrl = urlWithTrackingParams({
-            baseUrl: `/products/${product.handle}`,
-            trackingParams: product.trackingParameters,
-            term: term.current,
-          });
-
-          const price = product?.selectedOrFirstAvailableVariant?.price;
-          const image = product?.selectedOrFirstAvailableVariant?.image;
+          const price = product.selectedOrFirstAvailableVariant?.price;
+          const image = product.selectedOrFirstAvailableVariant?.image;
           return (
             <li className="predictive-search-result-item" key={product.id}>
-              <Link to={productUrl} onClick={closeSearch}>
+              <Link
+                to={getPredictiveSearchResourceUrl(product, term.current)}
+                onClick={closeSearch}
+              >
                 {image && (
-                  <Image alt={image.altText ?? ""} src={image.url} width={50} height={50} />
+                  <Image
+                    alt={image.altText ?? ""}
+                    src={image.url}
+                    width={PREDICTIVE_SEARCH_THUMBNAIL_SIZE}
+                    height={PREDICTIVE_SEARCH_THUMBNAIL_SIZE}
+                  />
                 )}
                 <div>
                   <p>{product.title}</p>
-                  <small>{price && <Money data={price} />}</small>
+                  <small>{price ? formatMoney(price) : null}</small>
                 </div>
               </Link>
             </li>
@@ -230,25 +255,6 @@ function SearchResultsPredictiveProducts({
         })}
       </ul>
     </div>
-  );
-}
-
-function SearchResultsPredictiveQueries({
-  queries,
-  queriesDatalistId,
-}: PartialPredictiveSearchResult<"queries", never> & {
-  queriesDatalistId: string;
-}) {
-  if (!queries.length) return null;
-
-  return (
-    <datalist id={queriesDatalistId}>
-      {queries.map((suggestion) => {
-        if (!suggestion) return null;
-
-        return <option key={suggestion.text} value={suggestion.text} />;
-      })}
-    </datalist>
   );
 }
 
@@ -264,30 +270,20 @@ function SearchResultsPredictiveEmpty({ term }: { term: React.MutableRefObject<s
   );
 }
 
-/**
- * Hook that returns the predictive search results and fetcher and input ref.
- * @example
- * '''ts
- * const { items, total, inputRef, term, fetcher } = usePredictiveSearch();
- * '''
- **/
-function usePredictiveSearch(): UsePredictiveSearchReturn {
-  const fetcher = useFetcher<PredictiveSearchReturn>({ key: "search" });
+function usePredictiveSearchResults(): UsePredictiveSearchReturn {
+  const state = usePredictiveSearchState();
   const term = useRef<string>("");
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  if (fetcher?.state === "loading") {
-    term.current = String(fetcher.formData?.get("q") || "");
-  }
+  term.current = state.term;
 
-  // capture the search input element as a ref
   useEffect(() => {
     if (!inputRef.current) {
       inputRef.current = document.querySelector('input[type="search"]');
     }
   }, []);
 
-  const { items, total } = fetcher?.data?.result ?? getEmptyPredictiveSearchResult();
+  const { items, total } = state.result;
 
-  return { items, total, inputRef, term, fetcher };
+  return { error: state.error, items, total, inputRef, term, status: state.status };
 }

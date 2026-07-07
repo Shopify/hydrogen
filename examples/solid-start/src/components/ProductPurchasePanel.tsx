@@ -8,16 +8,21 @@ import { formatMoney } from "../lib/money";
 import type { ProductData, ProductFormState, ValidProductSelectionResult } from "../lib/product";
 import { ShopPayButton } from "./ShopPayButton";
 
-const SWATCHES: Record<string, string> = {
-  Green: "#7ea993",
-  Clay: "#7d6635",
-  Ocean: "#5b8aa6",
-  Purple: "#5e4a8a",
-  Red: "#a26a72",
-};
+type ProductOptionValueSwatch = ProductData["options"][number]["optionValues"][number]["swatch"];
 
 function isColor(name: string): boolean {
   return name.toLowerCase() === "color";
+}
+
+function getSwatchStyle(swatch: ProductOptionValueSwatch | null | undefined) {
+  const image = swatch?.image?.previewImage?.url;
+
+  return {
+    "background-color": swatch?.color ?? "#999",
+    ...(image ? { "background-image": `url(${image})` } : {}),
+    "background-position": "center",
+    "background-size": "cover",
+  };
 }
 
 export function ProductPurchasePanel(props: { product: ProductData }) {
@@ -134,11 +139,7 @@ export function ProductPurchasePanel(props: { product: ProductData }) {
                               ? "block h-7 w-7 rounded-full"
                               : "flex h-11 min-w-20 items-center justify-center rounded-full border border-black/15 px-5 text-sm font-semibold hover:border-black"
                           }
-                          style={
-                            isColor(option.name)
-                              ? { background: SWATCHES[value.name] ?? "#999" }
-                              : undefined
-                          }
+                          style={isColor(option.name) ? getSwatchStyle(value.swatch) : undefined}
                         >
                           <Show when={!isColor(option.name)}>{value.name}</Show>
                         </a>
@@ -161,11 +162,7 @@ export function ProductPurchasePanel(props: { product: ProductData }) {
                               ? "h-11 min-w-20 rounded-full bg-black px-5 text-sm font-semibold text-white disabled:opacity-30"
                               : "h-11 min-w-20 rounded-full border border-black/15 px-5 text-sm font-semibold hover:border-black disabled:opacity-30"
                         }
-                        style={
-                          isColor(option.name)
-                            ? { background: SWATCHES[value.name] ?? "#999" }
-                            : undefined
-                        }
+                        style={isColor(option.name) ? getSwatchStyle(value.swatch) : undefined}
                       >
                         <Show when={!isColor(option.name)}>
                           {value.name}
@@ -215,7 +212,7 @@ export function ProductPurchasePanel(props: { product: ProductData }) {
             </button>
           </div>
           <button
-            type="submit"
+            {...register()("addToCart", {})}
             disabled={!addable() || pending()}
             class="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-300"
           >
@@ -251,7 +248,6 @@ export function ProductPurchasePanel(props: { product: ProductData }) {
               channel="headless"
               disabled={!addable() || pending()}
               width="100%"
-              height="48px"
               borderRadius="9999px"
             />
           )}

@@ -1,412 +1,292 @@
-import type { AvailableFilter, MoneyV2, ProductFilter } from "@shopify/hydrogen";
-import {
-  getFilterRemovalUrl,
-  getSortByValue,
-  isFilterInputActive,
-  serializeCollectionParams,
-} from "@shopify/hydrogen";
+import { Cache, gql } from "@shopify/hydrogen";
+import { getSortByValue, parseCollectionParams } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
+import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
 import { useEffect } from "react";
-import { Form, useLocation, useNavigate, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
+import type { MetaFunction } from "react-router";
 
-import { ProductCard, type ProductCardData } from "../components/ProductCard";
-import { AnalyticsEvent, analyticsShop, getAnalytics } from "../lib/analytics";
-import { collectionFilterNavigateOptions } from "../lib/collection";
-import { formatMoney } from "../lib/money";
-import { querySearch } from "../lib/search";
-import { storefrontClientContext } from "../lib/storefront";
+import { Breadcrumbs } from "~/components/Breadcrumbs";
+import { ProductCard } from "~/components/ProductCard";
+import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
+import { content } from "~/lib/content";
+import { FilterGroup } from "~/lib/filters";
+import { PRODUCT_CARD_FRAGMENT } from "~/lib/fragments";
+import { canonicalUrl } from "~/lib/site";
+import { storefrontClientContext } from "~/lib/storefront-context";
+
 import type { Route } from "./+types/search";
 
-const SORT_OPTIONS = [
+const SEARCH_SORT_OPTIONS = [
   { label: "Relevance", value: getSortByValue("RELEVANCE", false) },
   { label: "Price, low to high", value: getSortByValue("PRICE", false) },
   { label: "Price, high to low", value: getSortByValue("PRICE", true) },
 ];
 
-export function meta({ data }: Route.MetaArgs) {
-  const term = data?.term;
-  return [{ title: term ? `Search results for "${term}" - Mock.shop` : "Search - Mock.shop" }];
-}
+const SEARCH_QUERY = gql(
+  `
+  query Search($query: String!, $first: Int!, $after: String, $sortKey: SearchSortKeys, $reverse: Boolean, $productFilters: [ProductFilter!], $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    search(query: $query, first: $first, after: $after, sortKey: $sortKey, reverse: $reverse, productFilters: $productFilters) {
+      productFilters {
+        id
+        label
+        type
+        values {
+          id
+          label
+          count
+          input
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      nodes {
+        __typename
+        ... on Product {
+          ...ProductCard
+        }
+      }
+    }
+  }
+`,
+  [PRODUCT_CARD_FRAGMENT],
+);
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Search — CORE" },
+    { name: "description", content: "Search products" },
+    { tagName: "link", rel: "canonical", href: canonicalUrl("/search") },
+    { property: "og:title", content: "Search — CORE" },
+    { property: "og:type", content: "website" },
+  ];
+};
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const storefrontClient = context.get(storefrontClientContext);
   const url = new URL(request.url);
-  const result = await querySearch({
-    storefrontClient,
-    searchParams: url.searchParams,
+  const term = url.searchParams.get("q")?.trim() ?? "";
+  const browse = parseCollectionParams(url.searchParams);
+
+  // Empty search term: return an empty result set without querying (notes/search.md).
+  if (!term) {
+    return {
+      term: "",
+      products: [],
+      availableFilters: [],
+      pageInfo: { hasNextPage: false, endCursor: null },
+      dataSearch: url.searchParams.toString(),
+      totalCount: 0,
+    };
+  }
+
+  // parseCollectionParams returns a ProductCollectionSortKeys; search only supports
+  // PRICE/RELEVANCE. Map unsupported sorts back to RELEVANCE (collection-browser skill).
+  const searchSortKey = browse.sortKey === "PRICE" ? "PRICE" : "RELEVANCE";
+
+  const { data, errors } = await storefrontClient.graphql(SEARCH_QUERY, {
+    variables: {
+      query: term,
+      first: 24,
+      after: url.searchParams.get("after") ?? undefined,
+      sortKey: searchSortKey,
+      reverse: browse.reverse || undefined,
+      productFilters:
+        browse.filters.length > 0
+          ? // F13: skill-sanctioned generated-type cast at the query variable boundary
+            // (hydrogen-collection-browser/references/react.md). Kept verbatim.
+            (browse.filters as StorefrontApiProductFilter[])
+          : undefined,
+    },
+    cache: Cache.short(),
   });
 
+  if (errors) {
+    console.error("[hydrogen] Search query failed", errors);
+  }
+
+  const search = data?.search;
+  const products = search?.nodes ?? [];
+  // Filter to Product nodes only (search is heterogeneous).
+  const productNodes = products.filter(
+    (node): node is (typeof products)[number] & { __typename: "Product" } =>
+      node?.__typename === "Product",
+  );
+
   return {
-    ...result,
+    term,
+    products: productNodes,
+    availableFilters: search?.productFilters ?? [],
+    pageInfo: search?.pageInfo ?? { hasNextPage: false },
     dataSearch: url.searchParams.toString(),
+    totalCount: productNodes.length,
   };
 }
 
-export default function Search({ loaderData }: Route.ComponentProps) {
+export default function SearchRoute({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const term = loaderData.term;
 
   return (
     <CollectionProvider
-      data={{
-        // Key the store on the search term so it's rebuilt with fresh
-        // filter/sort state whenever the query changes. A constant handle would
-        // carry the previous term's filters and wedge the UI in "loading".
-        handle: `search:${loaderData.term}`,
-        dataSearch: loaderData.dataSearch,
-      }}
+      data={{ handle: `search:${term}`, dataSearch: loaderData.dataSearch }}
       urlSearch={searchParams.toString()}
-      onChange={(search) => navigate({ search }, collectionFilterNavigateOptions(searchParams))}
+      onChange={(search) => navigate({ search }, { replace: searchParams.size > 0 })}
     >
-      <SearchAnalytics term={loaderData.term} totalCount={loaderData.totalCount} />
-      <SearchPage
-        term={loaderData.term}
-        products={loaderData.products}
-        availableFilters={loaderData.availableFilters}
-        totalCount={loaderData.totalCount}
-      />
+      <SearchPage loaderData={loaderData} />
     </CollectionProvider>
   );
 }
 
-function SearchAnalytics({ term, totalCount }: { term: string; totalCount: number }) {
+function SearchViewedTracker({ term, totalCount }: { term: string; totalCount: number }) {
   useEffect(() => {
     if (!term) return;
-
     const analytics = getAnalytics();
     if (!analytics) return;
-
     analytics.publish(AnalyticsEvent.SEARCH_VIEWED, {
       searchTerm: term,
       searchResults: { totalCount },
-      url: window.location.href,
-      shop: analyticsShop,
     });
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- fire only on new search term
-  }, [term]);
-
+  }, [term, totalCount]);
   return null;
 }
 
-function requestFormSubmit(event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-  event.currentTarget.form?.requestSubmit();
-}
+type SearchPageProps = {
+  loaderData: Route.ComponentProps["loaderData"];
+};
 
-function SearchPage({
-  term,
-  products,
-  availableFilters,
-  totalCount,
-}: {
-  term: string;
-  products: ProductCardData[];
-  availableFilters: AvailableFilter[];
-  totalCount: number;
-}) {
-  const { pathname } = useLocation();
+function SearchPage({ loaderData }: SearchPageProps) {
+  const { term, products, availableFilters, totalCount } = loaderData;
   const state = useCollection();
   const { formProps } = useCollectionForm();
-  const currentSortValue =
-    state.sortKey === "PRICE"
-      ? getSortByValue("PRICE", state.reverse)
-      : getSortByValue("RELEVANCE", false);
-  const hasActiveFilters = state.filters.length > 0;
   const isLoading = state.status === "loading";
-  const searchAction = buildSearchUrl(pathname, term);
 
   return (
-    <main className="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
-      <SearchHeader term={term} totalCount={totalCount} />
+    <div className="max-w-page px-margin mx-auto w-full py-8">
+      <div className="mb-6">
+        <Breadcrumbs items={[{ label: content.search.title }]} />
+      </div>
 
-      <Form method="get" action={pathname} className="mt-8 flex max-w-xl gap-3">
+      <h1 className="type-display mb-6">{content.search.title}</h1>
+
+      <SearchViewedTracker term={term} totalCount={totalCount} />
+
+      {/* Search header form — real GET /search so it works without JS (F4). */}
+      <form action="/search" method="get" role="search" className="mb-8 flex items-center gap-2">
+        <label htmlFor="search-q" className="sr-only">
+          {content.search.label}
+        </label>
         <input
+          id="search-q"
           type="search"
           name="q"
           defaultValue={term}
-          placeholder="Search products"
-          className="min-w-0 flex-1 rounded border border-black/15 px-4 py-2 text-base"
+          placeholder={content.search.placeholder}
+          className="number-reset rounded-button border-border h-11 max-w-md border px-3 text-sm"
         />
         <button
           type="submit"
-          className="rounded bg-black px-5 py-2 text-sm font-semibold text-white hover:bg-black/80"
+          className="rounded-button button-primary inline-flex h-11 items-center justify-center px-4 text-sm font-medium"
         >
-          Search
+          {content.search.submit}
         </button>
-      </Form>
+        {term ? (
+          <Link
+            to="/search"
+            className="text-on-surface-secondary hover:text-on-surface text-sm no-underline"
+          >
+            {content.search.clear}
+          </Link>
+        ) : null}
+      </form>
 
-      {!term ? (
-        <p className="mt-12 text-lg text-black/60">Enter a search term to find products.</p>
+      {!term ? null : products.length === 0 ? (
+        <div className="py-12 text-center">
+          <p className="type-body text-on-surface">
+            {content.search.noResults.replace("{{ terms }}", `“${term}”`)}
+          </p>
+          <p className="text-on-surface-secondary mt-2 text-sm">
+            {content.search.noResultsSuggestion}
+          </p>
+        </div>
       ) : (
         <form
           {...formProps()}
-          // See collection route: key remounts uncontrolled filter inputs when browse
-          // state changes; term prefix resets checkboxes on a new search query.
-          key={`${term}|${serializeCollectionParams(state).toString()}`}
           method="get"
-          // No action: a GET form submits to the current URL, so the hidden `q`
-          // input plus the checked filters rebuild the query string (no-JS path).
-          className="mt-12 flex gap-12"
+          action="/search"
+          className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
+          key={`search-${term}`}
         >
           <input type="hidden" name="q" value={term} />
 
-          {availableFilters.length > 0 ? (
-            <SearchFilters
-              availableFilters={availableFilters}
-              activeFilters={state.filters}
-              disabled={isLoading}
-            />
-          ) : null}
+          <aside className="hidden flex-col gap-6 lg:flex">
+            {availableFilters.map((filter) => (
+              <FilterGroup key={filter.id} filter={filter} activeFilters={state.filters} />
+            ))}
+          </aside>
 
-          <div className="flex-1">
-            <SearchToolbar
-              searchPath={searchAction}
-              sortValue={currentSortValue}
-              hasActiveFilters={hasActiveFilters}
-              isLoading={isLoading}
-            />
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-4">
+              <p className="type-body-sm text-on-surface-secondary" aria-live="polite">
+                {content.search.resultsFor
+                  .replace("{{ count }}", String(totalCount))
+                  .replace("{{ terms }}", `“${term}”`)}
+              </p>
+              <label className="flex items-center gap-2 text-sm">
+                <span className="text-on-surface-secondary">{content.collection.sortBy}</span>
+                <select
+                  name="sort_by"
+                  onChange={(event) => event.currentTarget.form?.requestSubmit()}
+                  aria-busy={isLoading}
+                  className="w-auto"
+                >
+                  {SEARCH_SORT_OPTIONS.map((option) => (
+                    <option key={option.label} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
 
-            {hasActiveFilters ? (
-              <ActiveFilterChips
-                searchPath={searchAction}
-                filters={state.filters}
-                currentParams={serializeCollectionParams(state)}
-              />
-            ) : null}
-
-            <section
-              className={`mt-8 grid grid-cols-2 gap-x-6 gap-y-12 transition-opacity duration-200 md:grid-cols-3 ${isLoading ? "opacity-50" : "opacity-100"}`}
+            <ul
+              role="list"
+              className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-3"
             >
-              {products.map((product) => (
-                <ProductCard key={product.handle} product={product} />
+              {products.map((product, index) => (
+                <li key={product.id} className={isLoading ? "opacity-60" : ""}>
+                  <ProductCard
+                    product={product}
+                    loading={index < 3 ? "eager" : "lazy"}
+                    fetchPriority={index === 0 ? "high" : "auto"}
+                  />
+                </li>
               ))}
-            </section>
+            </ul>
 
-            {products.length === 0 && !isLoading ? (
-              <div className="mt-16 text-center">
-                <p className="text-lg text-black/60">No products found for "{term}".</p>
-                {hasActiveFilters ? (
-                  <a
-                    href={searchAction}
-                    className="mt-4 inline-block text-sm font-semibold underline"
-                  >
-                    Clear all filters
-                  </a>
-                ) : null}
+            {loaderData.pageInfo.hasNextPage ? (
+              <div className="mt-8 text-center">
+                <Link
+                  to={`/search?q=${encodeURIComponent(term)}&after=${encodeURIComponent(loaderData.pageInfo.endCursor ?? "")}`}
+                  className="rounded-button button-outline inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline"
+                >
+                  {content.search.loadMore}
+                </Link>
               </div>
             ) : null}
+
+            <noscript>
+              <button type="submit" className="rounded-button button-primary h-11 px-4">
+                {content.collection.showResults}
+              </button>
+            </noscript>
           </div>
         </form>
       )}
-    </main>
-  );
-}
-
-function SearchHeader({ term, totalCount }: { term: string; totalCount: number }) {
-  return (
-    <header className="max-w-2xl">
-      <h1 className="text-6xl font-black tracking-tight md:text-8xl">Search</h1>
-      {term ? (
-        <p className="mt-6 text-base leading-relaxed text-black/70 md:text-lg">
-          Results for "{term}"
-        </p>
-      ) : null}
-      <p className="mt-3 text-sm text-black/50">
-        {totalCount} {totalCount === 1 ? "product" : "products"}
-      </p>
-    </header>
-  );
-}
-
-function SearchToolbar({
-  searchPath,
-  sortValue,
-  hasActiveFilters,
-  isLoading,
-}: {
-  searchPath: string;
-  sortValue: string;
-  hasActiveFilters: boolean;
-  isLoading: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between border-b border-black/10 pb-4">
-      <div className="flex items-center gap-4">
-        {hasActiveFilters ? (
-          <a href={searchPath} className="text-sm text-black/60 underline hover:text-black">
-            Clear all
-          </a>
-        ) : null}
-        <span role="status" aria-live="polite" aria-atomic={true} className="text-sm text-black/40">
-          {isLoading ? "Updating..." : ""}
-        </span>
-      </div>
-
-      <label className="flex items-center gap-2 text-sm">
-        <span className="text-black/60">Sort by</span>
-        <select
-          name="sort_by"
-          defaultValue={sortValue}
-          disabled={isLoading}
-          onChange={requestFormSubmit}
-          className="rounded border border-black/15 bg-white px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.label} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </label>
     </div>
   );
-}
-
-function ActiveFilterChips({
-  searchPath,
-  filters,
-  currentParams,
-}: {
-  searchPath: string;
-  filters: ProductFilter[];
-  currentParams: URLSearchParams;
-}) {
-  return (
-    <div className="mt-4 flex flex-wrap gap-2">
-      {filters.map((filter) => {
-        const serialized = JSON.stringify(filter);
-        const removalSearch = getFilterRemovalUrl(currentParams, filter);
-        const href = removalSearch === "?" ? searchPath : `${searchPath}&${removalSearch.slice(1)}`;
-
-        return (
-          <a
-            key={serialized}
-            href={href}
-            className="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1 text-sm hover:bg-black/10"
-          >
-            {describeFilter(filter)}
-            <span aria-hidden="true">&times;</span>
-          </a>
-        );
-      })}
-    </div>
-  );
-}
-
-function SearchFilters({
-  availableFilters,
-  activeFilters,
-  disabled,
-}: {
-  availableFilters: AvailableFilter[];
-  activeFilters: ProductFilter[];
-  disabled: boolean;
-}) {
-  return (
-    <aside className="hidden w-60 shrink-0 md:block">
-      <h2 className="text-sm font-semibold tracking-wider text-black/50 uppercase">Filters</h2>
-      <div className="mt-6 space-y-8">
-        {availableFilters.map((filter) => (
-          <FilterGroup
-            key={filter.id}
-            filter={filter}
-            activeFilters={activeFilters}
-            disabled={disabled}
-          />
-        ))}
-      </div>
-      <noscript>
-        <button
-          type="submit"
-          className="mt-8 w-full rounded bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/80"
-        >
-          Apply
-        </button>
-      </noscript>
-    </aside>
-  );
-}
-
-function FilterGroup({
-  filter,
-  activeFilters,
-  disabled,
-}: {
-  filter: AvailableFilter;
-  activeFilters: ProductFilter[];
-  disabled: boolean;
-}) {
-  const visibleValues = filter.values.filter((v) => v.count > 0);
-  if (visibleValues.length === 0) return null;
-
-  return (
-    <fieldset disabled={disabled} className={disabled ? "opacity-60" : undefined}>
-      <legend className="text-sm font-semibold">{filter.label}</legend>
-      <div className="mt-3 space-y-2">
-        {visibleValues.map((value) => {
-          const entries = filterInputParamEntries(value.input);
-          if (entries.length !== 1) return null;
-
-          const [{ name, value: paramValue }] = entries;
-          const isActive = isFilterInputActive(activeFilters, value.input);
-
-          return (
-            <label key={value.id} className="flex cursor-pointer items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                name={name}
-                value={paramValue}
-                defaultChecked={isActive}
-                onChange={requestFormSubmit}
-                className="h-4 w-4 rounded border-black/20 disabled:cursor-not-allowed"
-              />
-              <span className={isActive ? "font-medium" : ""}>{value.label}</span>
-              <span className="ml-auto text-xs text-black/40">({value.count})</span>
-            </label>
-          );
-        })}
-      </div>
-    </fieldset>
-  );
-}
-
-function filterInputParamEntries(input: string): Array<{ name: string; value: string }> {
-  let filter: ProductFilter;
-  try {
-    filter = JSON.parse(input) as ProductFilter;
-  } catch {
-    return [];
-  }
-
-  return Array.from(
-    serializeCollectionParams({ filters: [filter], sortKey: undefined, reverse: false }),
-    ([name, value]) => ({ name, value }),
-  );
-}
-
-function describeFilter(filter: ProductFilter): string {
-  if (filter.tag) return filter.tag;
-  if (filter.productType) return filter.productType;
-  if (filter.productVendor) return filter.productVendor;
-  if (filter.available != null) return filter.available ? "In stock" : "Out of stock";
-  if (filter.variantOption) return `${filter.variantOption.name}: ${filter.variantOption.value}`;
-  if (filter.price) {
-    const { min, max } = filter.price;
-    const currencyCode = analyticsShop.currency;
-    const range: MoneyV2[] = [];
-    if (min != null) range.push({ amount: String(min), currencyCode });
-    if (max != null) range.push({ amount: String(max), currencyCode });
-    if (range.length === 0) return "Filter";
-
-    const formatted = formatMoney(range);
-    if (min != null && max == null) return `${formatted}+`;
-    if (max != null && min == null) return `Up to ${formatted}`;
-    return formatted;
-  }
-  return "Filter";
-}
-
-function buildSearchUrl(pathname: string, term: string) {
-  const params = new URLSearchParams();
-  params.set("q", term);
-  return `${pathname}?${params.toString()}`;
 }

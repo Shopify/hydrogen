@@ -7,6 +7,12 @@ const SHOP_JS_URL =
 const DEFAULT_SOURCE = "hydrogen";
 const ERROR_PREFIX = "[hydrogen:error:ShopPay]";
 export const SHOP_PAY_BUTTON_TAG_NAME = "shop-pay-button";
+/**
+ * Internal estimate used by framework bindings to reserve space before the hosted
+ * Shop Pay custom element hydrates. Not a stable API; the hosted element's size
+ * may change.
+ */
+export const DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT = "43px";
 
 type ShopPayButtonBaseOptions = {
   checkoutUrl?: string;
@@ -16,7 +22,6 @@ type ShopPayButtonBaseOptions = {
   channel?: "headless" | "hydrogen";
   disabled?: boolean;
   width?: string;
-  height?: string;
   borderRadius?: string;
 };
 
@@ -121,12 +126,11 @@ export function getShopPayButtonAttributes(options: ShopPayButtonOptions): Recor
 }
 
 export function getShopPayButtonStyleProperties(
-  options: Pick<ShopPayButtonOptions, "width" | "height" | "borderRadius">,
+  options: Pick<ShopPayButtonOptions, "width" | "borderRadius">,
 ): Record<string, string> {
   const style: Record<string, string> = {};
 
   if (options.width) style["--shop-pay-button-width"] = options.width;
-  if (options.height) style["--shop-pay-button-height"] = options.height;
   if (options.borderRadius) {
     style["--shop-pay-button-border-radius"] = options.borderRadius;
   }

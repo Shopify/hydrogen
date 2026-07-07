@@ -3,15 +3,27 @@
     "plugins": [
       {
         "name": "gql.tada/ts-plugin",
-        "schema": "./src/graphql/generated/storefront.schema.graphql",
+        "schemas": [
+          {
+            "name": "storefront",
+            "schema": "./src/graphql/generated/storefront.schema.graphql",
+            "tadaOutputLocation": "./src/graphql/generated/graphql-env.d.ts"
+          },
+          {
+            "name": "customer-account",
+            "schema": "./src/graphql/generated/customer-account.schema.json",
+            "tadaOutputLocation": "./src/graphql/generated/customer-account-graphql-env.d.ts"
+          }
+        ],
         "trackFieldUsage": false
       }
     ],
-    "target": "ES2022",
+    "target": "ES2024",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "strict": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "isolatedModules": true,
@@ -21,5 +33,5 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src/**/*", "vendor/**/*", "tsdown.config.ts"]
+  "include": ["src/**/*", "vendor/**/*", "plugins/**/*", "scripts/**/*", "tsdown.config.ts"]
 }

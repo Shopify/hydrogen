@@ -1,4 +1,4 @@
-import { Image } from "@shopify/hydrogen-classic";
+import { Image } from "~/components/Image";
 
 type ProductImageData = {
   altText?: string | null;

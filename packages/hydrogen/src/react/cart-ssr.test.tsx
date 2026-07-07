@@ -62,7 +62,11 @@ const MOCK_CART: CartData = {
 describe("CartProvider SSR", () => {
   it("renders initialData in server-rendered HTML", () => {
     const html = renderToString(
-      createElement(CartProvider, { initialData: MOCK_CART }, createElement(CartTotalQuantity)),
+      createElement(
+        CartProvider,
+        { initialData: { cart: MOCK_CART } },
+        createElement(CartTotalQuantity),
+      ),
     );
 
     expect(html).toContain(">3<");
@@ -70,7 +74,11 @@ describe("CartProvider SSR", () => {
 
   it("renders line count from initialData in server-rendered HTML", () => {
     const html = renderToString(
-      createElement(CartProvider, { initialData: MOCK_CART }, createElement(CartItemCount)),
+      createElement(
+        CartProvider,
+        { initialData: { cart: MOCK_CART } },
+        createElement(CartItemCount),
+      ),
     );
 
     expect(html).toContain(">2<");
@@ -90,11 +98,11 @@ describe("CartProvider SSR", () => {
     expect(html).toContain(">true<");
   });
 
-  it("renders loading=false when initialData is empty cart (server confirmed no cart)", () => {
+  it("renders loading=false when initialData has an empty cart fixture", () => {
     const html = renderToString(
       createElement(
         CartProvider,
-        { initialData: EMPTY_CART_DATA },
+        { initialData: { cart: EMPTY_CART_DATA } },
         createElement(CartLoadingState),
       ),
     );
@@ -102,9 +110,21 @@ describe("CartProvider SSR", () => {
     expect(html).toContain(">false<");
   });
 
+  it("renders loading=false when initialData is null cart (server returned no cart)", () => {
+    const html = renderToString(
+      createElement(CartProvider, { initialData: { cart: null } }, createElement(CartLoadingState)),
+    );
+
+    expect(html).toContain(">false<");
+  });
+
   it("renders loading=false when initialData is provided", () => {
     const html = renderToString(
-      createElement(CartProvider, { initialData: MOCK_CART }, createElement(CartLoadingState)),
+      createElement(
+        CartProvider,
+        { initialData: { cart: MOCK_CART } },
+        createElement(CartLoadingState),
+      ),
     );
 
     expect(html).toContain(">false<");

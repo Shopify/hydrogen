@@ -34,20 +34,23 @@ import { cartHandlers } from "~/lib/cart-handlers";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const storefrontClient = context.get(storefrontClientContext);
-  const { data } = await cartHandlers.get({ storefrontClient });
-  return { cart: data.cart };
+  const cartData = cartHandlers.get({ storefrontClient }).then(({ data }) => data);
+
+  return { cartData };
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
-    <CartProvider initialData={loaderData.cart}>
+    <CartProvider initialData={loaderData.cartData}>
       <Outlet />
     </CartProvider>
   );
 }
 ```
 
-If there is no server cart fetch yet, still wrap with `<CartProvider>`; it will fetch `/api/cart` after hydration. Register the `cartHandlers` from the server-only module with `handleShopifyRoutes({ handlers: [cartHandlers] })` so that route exists.
+Pass the full handler data envelope (`{cart, errors?}`) to `initialData`. Do not unwrap to `data.cart`: `{cart: null}` tells the client the server already checked and found no usable cart, while omitted `initialData` tells the client to fetch `/api/cart` after hydration. The cart server handlers log returned cart errors on the server, so do not throw just to force a route error.
+
+If there is no server cart fetch yet, still wrap with `<CartProvider>`; it will fetch `/api/cart` after hydration. Register the `cartHandlers` from the server-only module in the app's central `handleShopifyRoutes` wiring; use the `hydrogen-request-handlers` skill for the full framework-specific setup.
 
 ## Custom Cart Fields
 

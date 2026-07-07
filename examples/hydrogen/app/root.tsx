@@ -1,6 +1,5 @@
-import { EMPTY_CART_DATA } from "@shopify/hydrogen";
-import type { ConsentConfig } from "@shopify/hydrogen";
-import { useNonce } from "@shopify/hydrogen-classic";
+import { Cache, type ConsentConfig, type ShopAnalytics } from "@shopify/hydrogen";
+import { ShopifyScripts } from "@shopify/hydrogen/react";
 import {
   Outlet,
   useRouteError,
@@ -10,14 +9,17 @@ import {
   Meta,
   Scripts,
   ScrollRestoration,
+  useNavigate,
   useRouteLoaderData,
 } from "react-router";
 
 import favicon from "~/assets/favicon.svg";
-import { CartAnalyticsSync, getShopAnalytics, HydrogenAnalyticsProvider } from "~/lib/analytics";
+import { CartAnalyticsSync, HydrogenAnalyticsProvider } from "~/lib/analytics";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
-import { FOOTER_QUERY, HEADER_QUERY } from "~/lib/fragments";
+import { useNonce } from "~/lib/csp";
+import { FOOTER_QUERY, HEADER_QUERY, type HeaderQuery } from "~/lib/fragments";
+import { routeTemplates } from "~/lib/route-templates";
 
 import type { Route } from "./+types/root";
 import { PageLayout } from "./components/PageLayout";
@@ -26,7 +28,7 @@ import tailwindCss from "./styles/tailwind.css?url";
 import appStyles from "~/styles/app.css?url";
 import resetStyles from "~/styles/reset.css?url";
 
-type RootCartData = Awaited<ReturnType<typeof cartHandlers.get>>["data"]["cart"];
+const FALLBACK_STOREFRONT_ID = "0";
 
 export type RootLoader = typeof loader;
 
@@ -59,42 +61,40 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({ formMethod, current
  * https://github.com/remix-run/remix/issues/9242
  */
 export function links() {
-  return [
-    {
-      rel: "preconnect",
-      href: "https://cdn.shopify.com",
-    },
-    {
-      rel: "preconnect",
-      href: "https://shop.app",
-    },
-    { rel: "icon", type: "image/svg+xml", href: favicon },
-  ];
+  return [{ rel: "icon", type: "image/svg+xml", href: favicon }];
 }
 
 export async function loader(args: Route.LoaderArgs) {
+  const { storefront, env } = args.context;
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
-
-  const { storefront, env } = args.context;
+  const analyticsShop = getAnalyticsShop({
+    header: criticalData.header,
+    publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
+  });
+  const shop = {
+    shopId: env.SHOP_ID || criticalData.header.shop.id,
+    storefrontId: env.PUBLIC_STOREFRONT_ID || FALLBACK_STOREFRONT_ID,
+  };
+  const i18n = {
+    country: storefront.i18n.country,
+    language: storefront.i18n.language,
+    pathPrefix: storefront.i18n.pathPrefix,
+  };
 
   return {
     ...deferredData,
     ...criticalData,
+    i18n,
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
-    shop: getShopAnalytics({
-      storefront,
-      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
-    }),
+    analyticsShop,
+    shop,
     consent: {
       mode: "no-banner",
       publicStorefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-      // localize the privacy banner
-      country: args.context.storefront.i18n.country,
-      language: args.context.storefront.i18n.language,
     } satisfies ConsentConfig,
   };
 }
@@ -107,23 +107,37 @@ async function loadCriticalData(args: Route.LoaderArgs) {
   const { context } = args;
   const { storefront } = context;
 
-  const [header, cart] = await Promise.all([
+  const [header, cartData] = await Promise.all([
     storefront.query(HEADER_QUERY, {
-      cache: storefront.CacheLong(),
+      cache: Cache.long(),
       variables: {
         headerMenuHandle: "main-menu", // Adjust to your header menu handle
       },
     }),
-    cartHandlers
-      .get({ storefrontClient: storefront })
-      .then(({ data }) => data.cart)
-      .catch((error: Error) => {
-        console.error(error);
-        return EMPTY_CART_DATA as RootCartData;
-      }),
+    cartHandlers.get({ storefrontClient: storefront }).then(({ data }) => data),
   ]);
 
-  return { cart, header };
+  return { cartData, header };
+}
+
+function getAnalyticsShop({
+  header,
+  publicStorefrontId,
+}: {
+  header: HeaderQuery;
+  publicStorefrontId: string;
+}): ShopAnalytics | null {
+  const currency = header.localization?.country?.currency?.isoCode;
+  const language = header.localization?.language?.isoCode;
+
+  if (!header.shop?.id || !currency || !language) return null;
+
+  return {
+    shopId: header.shop.id,
+    acceptedLanguage: language,
+    currency,
+    hydrogenSubchannelId: publicStorefrontId || FALLBACK_STOREFRONT_ID,
+  };
 }
 
 /**
@@ -137,7 +151,7 @@ function loadDeferredData({ context }: Route.LoaderArgs) {
   // defer the footer query (below the fold)
   const footer = storefront
     .query(FOOTER_QUERY, {
-      cache: storefront.CacheLong(),
+      cache: Cache.long(),
       variables: {
         footerMenuHandle: "footer", // Adjust to your footer menu handle
       },
@@ -148,16 +162,21 @@ function loadDeferredData({ context }: Route.LoaderArgs) {
       return null;
     });
   return {
-    isLoggedIn: customerAccount.isLoggedIn(),
+    isLoggedIn: customerAccount.session.isLoggedIn(
+      customerAccount.sessionManager,
+      customerAccount.requestContext,
+    ),
     footer,
   };
 }
 
 export function Layout({ children }: { children?: React.ReactNode }) {
   const nonce = useNonce();
+  const data = useRouteLoaderData<RootLoader>("root");
+  const navigate = useNavigate();
 
   return (
-    <html lang="en">
+    <html lang={toHtmlLang(data?.i18n)}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -166,10 +185,12 @@ export function Layout({ children }: { children?: React.ReactNode }) {
         <link rel="stylesheet" href={appStyles}></link>
         <Meta />
         <Links />
-        <script
-          src="https://cdn.shopify.com/storefront/standard-actions.js"
-          type="module"
-          crossOrigin="anonymous"
+        <ShopifyScripts
+          nonce={nonce}
+          i18n={data?.i18n}
+          routes={routeTemplates}
+          shop={data?.shop}
+          navigate={navigate}
         />
       </head>
       <body>
@@ -181,6 +202,13 @@ export function Layout({ children }: { children?: React.ReactNode }) {
   );
 }
 
+function toHtmlLang(i18n: { country?: string; language?: string } | null | undefined) {
+  if (!i18n?.language) return "en";
+  const language = i18n.language.toLowerCase();
+  const country = i18n.country ? `-${i18n.country.toUpperCase()}` : "";
+  return `${language}${country}`;
+}
+
 export default function App() {
   const data = useRouteLoaderData<RootLoader>("root");
 
@@ -189,8 +217,8 @@ export default function App() {
   }
 
   return (
-    <HydrogenAnalyticsProvider shop={data.shop} consent={data.consent}>
-      <CartProvider initialData={data.cart}>
+    <HydrogenAnalyticsProvider shop={data.analyticsShop} consent={data.consent}>
+      <CartProvider initialData={data.cartData}>
         <CartAnalyticsSync />
         <PageLayout {...data}>
           <Outlet />

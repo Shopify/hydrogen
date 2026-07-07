@@ -35,7 +35,6 @@ import {
   AnalyticsEvent,
   configureAnalytics,
   getAnalytics,
-  getAnalyticsShop,
 } from "../lib/analytics";
 
 export function AnalyticsTracker({ shop }: { shop: ShopAnalytics }) {
@@ -43,10 +42,7 @@ export function AnalyticsTracker({ shop }: { shop: ShopAnalytics }) {
     configureAnalytics(shop);
     const analytics = getAnalytics();
     if (!analytics) return;
-    analytics.publish(AnalyticsEvent.PAGE_VIEWED, {
-      url: window.location.href,
-      shop,
-    });
+    analytics.publish(AnalyticsEvent.PAGE_VIEWED);
   }, [shop]);
 
   return null;
@@ -55,7 +51,7 @@ export function AnalyticsTracker({ shop }: { shop: ShopAnalytics }) {
 
 Add `"use client"` only when this component lives in a Next.js App Router client component file.
 
-For real route tracking, include the framework location in the effect dependency. In React Router, read `useLocation()` and key the effect by `location.pathname + location.search`. In Next App Router, read `usePathname()` and `useSearchParams()` in a client component wrapped in `Suspense`, then key the effect by both values. Do not leave the root tracker keyed only by `shop`, or client-side navigations will miss page views.
+For real route tracking, include the framework location in the effect dependency. In React Router, read `useLocation()` and key the effect by `location.pathname + location.search`. In Next App Router, read `usePathname()` and `useSearchParams()` in a client component wrapped in `Suspense`, then key the effect by both values. Do not leave the root tracker keyed only by `shop`, or client-side navigations will miss page views. View events infer `url` from `window.location.href`; pass `url` only for an explicit override.
 
 ```tsx
 // app/layout.tsx
@@ -96,10 +92,7 @@ export function AnalyticsTracker({ shop }: { shop: ShopAnalytics }) {
     configureAnalytics(shop);
     const analytics = getAnalytics();
     if (!analytics) return;
-    analytics.publish(AnalyticsEvent.PAGE_VIEWED, {
-      url: window.location.href,
-      shop,
-    });
+    analytics.publish(AnalyticsEvent.PAGE_VIEWED);
   }, [pageKey, shop]);
 
   return null;
@@ -114,8 +107,7 @@ Publish after product route data is available:
 function ProductViewedTracker({ product, selectedVariant }: Props) {
   useEffect(() => {
     const analytics = getAnalytics();
-    const shop = getAnalyticsShop();
-    if (!analytics || !shop) return;
+    if (!analytics) return;
 
     analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
       products: [
@@ -139,8 +131,6 @@ function ProductViewedTracker({ product, selectedVariant }: Props) {
           sku: selectedVariant?.sku,
         },
       ],
-      url: window.location.href,
-      shop,
     });
   }, [product.handle]);
 
@@ -157,8 +147,6 @@ Publish collection view when collection identity changes:
 ```tsx
 analytics.publish(AnalyticsEvent.COLLECTION_VIEWED, {
   collection: { id: collection.id, handle: collection.handle },
-  url: window.location.href,
-  shop,
 });
 ```
 
@@ -169,8 +157,6 @@ if (term) {
   analytics.publish(AnalyticsEvent.SEARCH_VIEWED, {
     searchTerm: term,
     searchResults: { totalCount },
-    url: window.location.href,
-    shop,
   });
 }
 ```
@@ -185,8 +171,6 @@ Publish `CART_VIEWED` when the cart page or drawer is viewed. The cart payload i
 analytics.publish(AnalyticsEvent.CART_VIEWED, {
   cart: analyticsCart ?? null,
   prevCart: null,
-  url: window.location.href,
-  shop,
 });
 ```
 

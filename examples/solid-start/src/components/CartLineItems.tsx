@@ -1,5 +1,6 @@
 import { A } from "@solidjs/router";
 import { createEffect, createSignal, For, Show } from "solid-js";
+import { Dynamic } from "solid-js/web";
 
 import { useCart, useCartForm } from "../lib/cart";
 import { closeCartDrawer } from "../lib/cart-drawer";
@@ -82,7 +83,9 @@ export function CartLineItems(props: { emptyHeadingLevel?: "h2" | "h3"; errorIdP
         when={lines().length > 0}
         fallback={
           <div ref={setCartLinesRegion} class="py-20 text-center">
-            <Heading class="text-2xl font-bold">Your cart is empty</Heading>
+            <Dynamic component={Heading} class="text-2xl font-bold">
+              Your cart is empty
+            </Dynamic>
             <p class="mt-2 text-black/60">Add some items to get started.</p>
             <A
               href="/collections"

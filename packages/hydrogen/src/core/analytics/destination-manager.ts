@@ -1,3 +1,4 @@
+import type { AnalyticsEventName } from "./events";
 import type {
   PayloadFor,
   StorefrontAnalyticsConfig,
@@ -45,6 +46,8 @@ function deliverDestinationEvent(destination: DestinationRecord, entry: ReplayEn
 type DestinationManagerDeps = {
   canTrack: () => boolean;
   getConfig: () => StorefrontAnalyticsConfig;
+  isSupportedEvent?: (event: unknown) => boolean;
+  warnUnsupportedEvent?: (event: unknown) => void;
 };
 
 /**
@@ -108,11 +111,15 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
     let removed = false;
 
     /** Subscribe callback passed to destination setup. No-op after removal. */
-    const destinationSubscribe = <E extends string>(
+    const destinationSubscribe = <E extends AnalyticsEventName>(
       event: E,
       callback: (payload: PayloadFor<E>) => void,
     ) => {
       if (removed) {
+        return () => {};
+      }
+      if (deps.isSupportedEvent && !deps.isSupportedEvent(event)) {
+        deps.warnUnsupportedEvent?.(event);
         return () => {};
       }
 

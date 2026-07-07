@@ -1,16 +1,29 @@
-import {describe, it, expectTypeOf} from 'vitest';
-import {createStorefrontClient, createStorefrontRequestContext, gql} from './index';
+import {beforeEach, describe, it, expectTypeOf, vi} from 'vitest';
+import {
+  Cache,
+  createShopifyRequestContext,
+  createStorefrontClient,
+  gql,
+} from '../core';
 import type {
   StorefrontApi,
   StorefrontGraphqlResult,
-  GenericStorefrontClient,
   GraphQLFormattedError,
   I18nConfig,
   StorefrontQueryString,
 } from './index';
+import type {CachingStrategy} from '../core';
+import type * as StorefrontExports from './index';
 import type {ResultOf, VariablesOf} from 'gql.tada';
 
-const DEFAULT_I18N = {country: 'US', language: 'EN'} as I18nConfig;
+const DEFAULT_I18N = {country: 'US', language: 'EN', pathPrefix: ''} as const satisfies I18nConfig;
+
+const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify({data: {}}))));
+vi.stubGlobal('fetch', fetchMock);
+
+function createTestRequestContext(i18n: I18nConfig = DEFAULT_I18N) {
+  return createShopifyRequestContext({request: {headers: new Headers()}, i18n});
+}
 
 const SHOP_QUERY = gql(`query { shop { name } }`);
 const PRODUCT_QUERY = gql(
@@ -41,14 +54,44 @@ const PRODUCT_WITH_FRAGMENT_FIRST_QUERY = gql(
   `fragment ProductSummary on Product { title handle }
    query ProductWithFragmentFirst($handle: String!) { product(handle: $handle) { ...ProductSummary } }`,
 );
+const CART_CREATE_MUTATION = gql(
+  `mutation CartCreate($input: CartInput!) { cartCreate(input: $input) { cart { id } } }`,
+);
+const MULTI_OPERATION_DOCUMENT = gql(
+  `query A { shop { name } } query B { shop { description } }`,
+);
+
+const keyValueCache = {
+  get(_key: string) {
+    return undefined;
+  },
+  set(_key: string, _value: unknown, _options?: {ttl?: number}) {},
+};
+
+const customFetchWithCache = async (
+  _input: Parameters<typeof fetch>[0],
+  _init: Parameters<typeof fetch>[1],
+  _options: {key: unknown; strategy: CachingStrategy},
+) => Response.json({data: {shop: {name: 'Test Shop'}}});
 
 describe('type tests', () => {
+  beforeEach(() => {
+    fetchMock.mockClear();
+  });
+
+  it('does not expose the gql factory', () => {
+    type StorefrontModule = typeof StorefrontExports;
+    type MissingExport<Name extends string> = Name extends keyof StorefrontModule ? never : true;
+
+    expectTypeOf<MissingExport<'createStorefrontGql'>>().toEqualTypeOf<true>();
+  });
+
   const publicClient = createStorefrontClient({
     type: 'public',
+    requestContext: createTestRequestContext(),
     config: {
       storeDomain: 'test.myshopify.com',
       publicStorefrontToken: 'pub-token',
-      i18n: DEFAULT_I18N,
     },
   });
 
@@ -80,12 +123,13 @@ describe('type tests', () => {
 
   describe('variable ergonomics', () => {
     it('optional variables do not require options arg', () => {
-      publicClient.graphql(OPTIONAL_VARS_QUERY);
+      () => publicClient.graphql(OPTIONAL_VARS_QUERY);
     });
 
     it('required variables enforce options arg', () => {
-      // @ts-expect-error — missing required variables (handle)
-      publicClient.graphql(PRODUCT_QUERY);
+      () =>
+        // @ts-expect-error — missing required variables (handle)
+        publicClient.graphql(PRODUCT_QUERY);
     });
   });
 
@@ -105,9 +149,9 @@ describe('type tests', () => {
     it('public client accepts publicStorefrontToken alongside required fields', () => {
       createStorefrontClient({
         type: 'public',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
-          i18n: DEFAULT_I18N,
           publicStorefrontToken: 'pub-token',
         },
       });
@@ -116,9 +160,9 @@ describe('type tests', () => {
     it('public client accepts all optional fields from PublicClientOptions', () => {
       createStorefrontClient({
         type: 'public',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
-          i18n: DEFAULT_I18N,
           publicStorefrontToken: 'pub-token',
           fetch: globalThis.fetch,
           defaultTimeoutInMs: 5000,
@@ -129,9 +173,9 @@ describe('type tests', () => {
     it('private client accepts all optional fields from PrivateClientOptions', () => {
       createStorefrontClient({
         type: 'private',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
-          i18n: DEFAULT_I18N,
           privateStorefrontToken: 'priv-token',
           buyerIp: '1.2.3.4',
           fetch: globalThis.fetch,
@@ -140,12 +184,12 @@ describe('type tests', () => {
       });
     });
 
-    it('shared rate limit client accepts all optional fields', () => {
+    it('private no buyer context client accepts all optional fields', () => {
       createStorefrontClient({
-        type: 'private_shared_rate_limit',
+        type: 'private_no_buyer_context',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
-          i18n: DEFAULT_I18N,
           privateStorefrontToken: 'priv-token',
           fetch: globalThis.fetch,
           defaultTimeoutInMs: 5000,
@@ -160,10 +204,10 @@ describe('type tests', () => {
         // @ts-expect-error — buyerIp required with private token
         createStorefrontClient({
           type: 'private',
+          requestContext: createTestRequestContext(),
           config: {
             storeDomain: 'test.myshopify.com',
             privateStorefrontToken: 'priv-token',
-            i18n: DEFAULT_I18N,
           },
         });
     });
@@ -172,9 +216,9 @@ describe('type tests', () => {
       () => createStorefrontClient({
         // @ts-expect-error — type must be a valid client type
         type: 'invalid',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
-          i18n: DEFAULT_I18N,
         },
       });
     });
@@ -182,21 +226,21 @@ describe('type tests', () => {
     it('rejects plain requestContext objects', () => {
       createStorefrontClient({
         type: 'public',
+        // @ts-expect-error — requestContext must come from createShopifyRequestContext()
+        requestContext: {
+          requestGroupId: 'group-id',
+          i18n: DEFAULT_I18N,
+          getForwardedRequestHeaders() {
+            return new Headers();
+          },
+          getSubrequestHeaders() {
+            return new Headers();
+          },
+          captureSubrequestHeaders() {},
+          applyResponseHeaders() {},
+        },
         config: {
           storeDomain: 'test.myshopify.com',
-          i18n: DEFAULT_I18N,
-          // @ts-expect-error — requestContext must come from createStorefrontRequestContext()
-          requestContext: {
-            requestGroupId: 'group-id',
-            getForwardedRequestHeaders() {
-              return new Headers();
-            },
-            getSubrequestHeaders() {
-              return new Headers();
-            },
-            captureSubrequestHeaders() {},
-            applyResponseHeaders() {},
-          },
         },
       });
     });
@@ -204,12 +248,45 @@ describe('type tests', () => {
     it('accepts requestContext from the factory', () => {
       createStorefrontClient({
         type: 'public',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
-          i18n: DEFAULT_I18N,
-          requestContext: createStorefrontRequestContext({
-            headers: new Headers(),
-          }),
+        },
+      });
+    });
+
+    it('exposes i18n from requestContext', () => {
+      const requestContext = createShopifyRequestContext({
+        request: {
+          headers: new Headers(),
+        },
+        i18n: {
+          country: 'ES',
+          language: 'ES',
+          pathPrefix: '/es-es',
+          market: 'spain' as const,
+        },
+      });
+
+      const client = createStorefrontClient({
+        type: 'public',
+        requestContext,
+        config: {
+          storeDomain: 'test.myshopify.com',
+        },
+      });
+
+      expectTypeOf(client.requestContext).toEqualTypeOf<typeof requestContext>();
+      expectTypeOf(client.i18n.pathPrefix).toEqualTypeOf<string>();
+      expectTypeOf(client.i18n.market).toEqualTypeOf<'spain'>();
+    });
+
+    it('rejects clients without requestContext', () => {
+      // @ts-expect-error — requestContext is required
+      () => createStorefrontClient({
+        type: 'public',
+        config: {
+          storeDomain: 'test.myshopify.com',
         },
       });
     });
@@ -217,24 +294,24 @@ describe('type tests', () => {
     it('rejects buyerIp on public clients', () => {
       createStorefrontClient({
         type: 'public',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           publicStorefrontToken: 'pub-token',
-          i18n: DEFAULT_I18N,
           // @ts-expect-error — buyerIp is private-client only
           buyerIp: '1.2.3.4',
         },
       });
     });
 
-    it('rejects buyerIp on shared rate limit clients', () => {
+    it('rejects buyerIp on private no buyer context clients', () => {
       createStorefrontClient({
-        type: 'private_shared_rate_limit',
+        type: 'private_no_buyer_context',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
-          i18n: DEFAULT_I18N,
-          // @ts-expect-error — shared rate limit clients do not carry buyer identity
+          // @ts-expect-error — no-buyer-context clients do not carry buyer identity
           buyerIp: '1.2.3.4',
         },
       });
@@ -243,11 +320,11 @@ describe('type tests', () => {
     it('rejects both public and private tokens', () => {
       createStorefrontClient({
         type: 'private',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
           buyerIp: '1.2.3.4',
-          i18n: DEFAULT_I18N,
           // @ts-expect-error — choose either public or private token path
           publicStorefrontToken: 'pub-token',
         },
@@ -259,11 +336,11 @@ describe('type tests', () => {
     it('accepts a static buyer IP string', () => {
       createStorefrontClient({
         type: 'private',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
           buyerIp: '1.2.3.4',
-          i18n: DEFAULT_I18N,
         },
       });
     });
@@ -271,13 +348,13 @@ describe('type tests', () => {
     it('rejects requestGroupId next to buyerIp', () => {
       createStorefrontClient({
         type: 'private',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
           buyerIp: '1.2.3.4',
           // @ts-expect-error — requestGroupId belongs to requestContext
           requestGroupId: 'g',
-          i18n: DEFAULT_I18N,
         },
       });
     });
@@ -285,67 +362,53 @@ describe('type tests', () => {
     it('rejects buyerIp callbacks', () => {
       createStorefrontClient({
         type: 'private',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
           // @ts-expect-error — resolve request-derived buyerIp before creating the client
           buyerIp: (_request: Request) => '1.2.3.4',
-          i18n: DEFAULT_I18N,
         },
       });
     });
   });
 
   describe('requestContext at client creation', () => {
-    it('private client does not require requestContext', () => {
-      const client = createStorefrontClient({
+    it('private client requires requestContext', () => {
+      // @ts-expect-error — requestContext is required
+      () => createStorefrontClient({
         type: 'private',
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
           buyerIp: '1.2.3.4',
-          i18n: DEFAULT_I18N,
         },
       });
-      client.graphql(SHOP_QUERY);
     });
 
     it('private client accepts requestContext at client creation', () => {
       const client = createStorefrontClient({
         type: 'private',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
-          requestContext: createStorefrontRequestContext(new Request('http://localhost')),
           buyerIp: '1.2.3.4',
-          i18n: DEFAULT_I18N,
         },
       });
-      client.graphql(SHOP_QUERY);
+      () => client.graphql(SHOP_QUERY);
     });
 
     it('rejects raw request at client creation', () => {
       createStorefrontClient({
         type: 'private',
+        requestContext: createTestRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
-          // @ts-expect-error — pass createStorefrontRequestContext(request) instead
+          // @ts-expect-error — pass createShopifyRequestContext({request, i18n}) instead
           request: new Request('http://localhost'),
           buyerIp: '1.2.3.4',
-          i18n: DEFAULT_I18N,
-        },
-      });
-    });
-
-    it('rejects i18n callbacks', () => {
-      createStorefrontClient({
-        type: 'public',
-        config: {
-          storeDomain: 'test.myshopify.com',
-          publicStorefrontToken: 'pub-token',
-          // @ts-expect-error — resolve request-derived i18n before creating the client
-          i18n: (_req: Request) => DEFAULT_I18N,
         },
       });
     });
@@ -354,100 +417,175 @@ describe('type tests', () => {
 
   describe('public client graphql signature', () => {
     it('accepts no-variable query without options', () => {
-      publicClient.graphql(SHOP_QUERY);
+      () => publicClient.graphql(SHOP_QUERY);
     });
 
     it('accepts variables-only options', () => {
-      publicClient.graphql(PRODUCT_QUERY, {
-        variables: {handle: 'snowboard'},
-      });
+      () =>
+        publicClient.graphql(PRODUCT_QUERY, {
+          variables: {handle: 'snowboard'},
+        });
     });
 
     it('accepts per-call abort signal', () => {
-      publicClient.graphql(SHOP_QUERY, {
-        signal: new AbortController().signal,
-      });
-      publicClient.graphql(PRODUCT_QUERY, {
-        signal: new AbortController().signal,
-        variables: {handle: 'snowboard'},
-      });
+      () =>
+        publicClient.graphql(SHOP_QUERY, {
+          signal: new AbortController().signal,
+        });
+      () =>
+        publicClient.graphql(PRODUCT_QUERY, {
+          signal: new AbortController().signal,
+          variables: {handle: 'snowboard'},
+        });
     });
 
     it('rejects request in graphql options', () => {
-      // @ts-expect-error — request is captured by createStorefrontRequestContext()
-      publicClient.graphql(SHOP_QUERY, {request: new Request('http://localhost')});
+      () =>
+        // @ts-expect-error — request is captured by createShopifyRequestContext()
+        publicClient.graphql(SHOP_QUERY, {request: new Request('http://localhost')});
+    });
+  });
+
+  describe('cache-configured graphql signature', () => {
+    const cacheClient = createStorefrontClient({
+      type: 'public',
+      requestContext: createTestRequestContext(),
+      config: {
+        storeDomain: 'test.myshopify.com',
+        publicStorefrontToken: 'pub-token',
+        cache: keyValueCache,
+      },
+    });
+
+    it('accepts cache options for query documents', () => {
+      () =>
+        cacheClient.graphql(SHOP_QUERY, {
+          cache: Cache.long(),
+        });
+      () =>
+        cacheClient.graphql(PRODUCT_QUERY, {
+          variables: {handle: 'snowboard'},
+          cache: Cache({maxAge: 60, staleWhileRevalidate: 300}),
+        });
+      () =>
+        cacheClient.graphql(`query { shop { name } }`, {
+          cache: Cache.none(),
+        });
+    });
+
+    it('rejects cache options when no client cache is configured', () => {
+      () =>
+        // @ts-expect-error — cache is available only when the client config has cache.
+        publicClient.graphql(SHOP_QUERY, {cache: Cache.long()});
+    });
+
+    it('accepts cache options when cache is configured with a custom origin fetch', () => {
+      const customOriginClient = createStorefrontClient({
+        type: 'public',
+        requestContext: createTestRequestContext(),
+        config: {
+          storeDomain: 'test.myshopify.com',
+          publicStorefrontToken: 'pub-token',
+          cache: keyValueCache,
+          fetch: async () => Response.json({data: {shop: {name: 'Test Shop'}}}),
+        },
+      });
+
+      () =>
+        customOriginClient.graphql(SHOP_QUERY, {
+          cache: Cache.long(),
+        });
+    });
+
+    it('does not infer cache options from a custom fetch third argument anymore', () => {
+      const customFetchOnlyClient = createStorefrontClient({
+        type: 'public',
+        requestContext: createTestRequestContext(),
+        config: {
+          storeDomain: 'test.myshopify.com',
+          publicStorefrontToken: 'pub-token',
+          fetch: customFetchWithCache,
+        },
+      });
+
+      () =>
+        // @ts-expect-error — cache is enabled by client config, not fetch arity.
+        customFetchOnlyClient.graphql(SHOP_QUERY, {cache: Cache.long()});
+    });
+
+    it('rejects cache options for mutations', () => {
+      () =>
+        cacheClient.graphql(CART_CREATE_MUTATION, {
+          variables: {input: {}},
+          // @ts-expect-error — mutations are not cacheable.
+          cache: Cache.long(),
+        });
+
+      () =>
+        cacheClient.graphql(`mutation CartCreate { cartCreate(input: {}) { cart { id } } }`, {
+          // @ts-expect-error — raw mutation strings are not cacheable.
+          cache: Cache.long(),
+        });
+    });
+
+    it('rejects cache options for multi-operation documents', () => {
+      () =>
+        cacheClient.graphql(MULTI_OPERATION_DOCUMENT, {
+          // @ts-expect-error — multi-operation documents are not cacheable in v1.
+          cache: Cache.long(),
+        });
+    });
+
+    it('rejects cache options for widened strings', () => {
+      const query: string = 'query { shop { name } }';
+      () =>
+        // @ts-expect-error — operation kind is unknown for widened strings.
+        cacheClient.graphql(query, {cache: Cache.long()});
     });
   });
 
   describe('private client graphql signature', () => {
     const privateClient = createStorefrontClient({
       type: 'private',
+      requestContext: createTestRequestContext(),
       config: {
         storeDomain: 'test.myshopify.com',
         privateStorefrontToken: 'priv-token',
-        requestContext: createStorefrontRequestContext(new Request('http://localhost')),
         buyerIp: '1.2.3.4',
-        i18n: DEFAULT_I18N,
       },
     });
 
     it('accepts no-variable query without options', () => {
-      privateClient.graphql(SHOP_QUERY);
+      () => privateClient.graphql(SHOP_QUERY);
     });
 
     it('accepts variables', () => {
-      privateClient.graphql(PRODUCT_QUERY, {
-        variables: {handle: 'snowboard'},
-      });
+      () =>
+        privateClient.graphql(PRODUCT_QUERY, {
+          variables: {handle: 'snowboard'},
+        });
     });
   });
 
-  describe('shared rate limit client graphql signature', () => {
-    const sharedClient = createStorefrontClient({
-      type: 'private_shared_rate_limit',
+  describe('private no buyer context client graphql signature', () => {
+    const client = createStorefrontClient({
+      type: 'private_no_buyer_context',
+      requestContext: createTestRequestContext(),
       config: {
         storeDomain: 'test.myshopify.com',
         privateStorefrontToken: 'priv-token',
-        i18n: DEFAULT_I18N,
       },
     });
 
     it('accepts call without request', () => {
-      sharedClient.graphql(SHOP_QUERY);
+      () => client.graphql(SHOP_QUERY);
     });
 
     it('accepts call with variables and no request', () => {
-      sharedClient.graphql(PRODUCT_QUERY, {
-        variables: {handle: 'snowboard'},
-      });
-    });
-  });
-
-  describe('GenericStorefrontClient assignability', () => {
-    it('client with no request requirement is assignable to GenericStorefrontClient', () => {
-      const client = createStorefrontClient({
-        type: 'public',
-        config: {
-          storeDomain: 'test.myshopify.com',
-          publicStorefrontToken: 'pub-token',
-          i18n: DEFAULT_I18N,
-        },
-      });
-      expectTypeOf(client).toMatchTypeOf<GenericStorefrontClient>();
-    });
-
-    it('client with requestContext configured is assignable to GenericStorefrontClient', () => {
-      const client = createStorefrontClient({
-        type: 'private',
-        config: {
-          storeDomain: 'test.myshopify.com',
-          privateStorefrontToken: 'priv-token',
-          requestContext: createStorefrontRequestContext(new Request('http://localhost')),
-          buyerIp: '1.2.3.4',
-          i18n: DEFAULT_I18N,
-        },
-      });
-      expectTypeOf(client).toMatchTypeOf<GenericStorefrontClient>();
+      () =>
+        client.graphql(PRODUCT_QUERY, {
+          variables: {handle: 'snowboard'},
+        });
     });
   });
 
@@ -565,26 +703,28 @@ describe('type tests', () => {
     });
 
     it('accepts a raw string with variables and enforces them', () => {
-      publicClient.graphql(
-        `query Product($handle: String!, $country: CountryCode, $language: LanguageCode) @inContext(country: $country, language: $language) { product(handle: $handle) { title } }`,
-        {variables: {handle: 'snowboard'}},
-      );
+      () =>
+        publicClient.graphql(
+          `query Product($handle: String!, $country: CountryCode, $language: LanguageCode) @inContext(country: $country, language: $language) { product(handle: $handle) { title } }`,
+          {variables: {handle: 'snowboard'}},
+        );
     });
 
     it('rejects raw string with missing required variables', () => {
-      // @ts-expect-error — missing required variable (handle)
-      publicClient.graphql(
-        `query Product($handle: String!, $country: CountryCode, $language: LanguageCode) @inContext(country: $country, language: $language) { product(handle: $handle) { title } }`,
-      );
+      () =>
+        // @ts-expect-error — missing required variable (handle)
+        publicClient.graphql(
+          `query Product($handle: String!, $country: CountryCode, $language: LanguageCode) @inContext(country: $country, language: $language) { product(handle: $handle) { title } }`,
+        );
     });
 
     it('raw string with no variables does not require options', () => {
-      publicClient.graphql(`query { shop { name } }`);
+      () => publicClient.graphql(`query { shop { name } }`);
     });
 
     it('branded gql() query still works (overload 1 takes priority)', () => {
       const q = gql(`query { shop { name } }`);
-      publicClient.graphql(q);
+      () => publicClient.graphql(q);
     });
   });
 });

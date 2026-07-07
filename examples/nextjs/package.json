@@ -2,28 +2,28 @@
   "name": "@shopify/hydrogen-example-nextjs",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "https:dev": "next dev --experimental-https --experimental-https-cert ../../.cert/localtest.me.pem --experimental-https-key ../../.cert/localtest.me-key.pem --hostname localtest.me --port 5173",
+    "build": "next build --debug-prerender",
     "start": "next start",
-    "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc && gql.tada check --fail-on-warn"
   },
   "dependencies": {
     "@shopify/hydrogen": "workspace:*",
-    "next": "16.2.7",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "isbot": "^5",
+    "next": "16.2.9",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.7",
+    "@tailwindcss/postcss": "^4.2.4",
+    "@types/node": "^25.8.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "gql.tada": "^1.9.2",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.2.4",
     "typescript": "catalog:"
   }
 }

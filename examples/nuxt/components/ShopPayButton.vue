@@ -17,7 +17,6 @@ const props = withDefaults(
     channel?: ShopPayButtonOptions["channel"];
     disabled?: boolean;
     width?: string;
-    height?: string;
     borderRadius?: string;
     loadScript?: boolean;
   }>(),
@@ -27,6 +26,7 @@ const props = withDefaults(
   },
 );
 
+const DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT = "43px";
 const storefrontUrl = ref<string>();
 
 onMounted(() => {
@@ -52,12 +52,17 @@ const attrs = computed(() =>
 const style = computed(() =>
   getShopPayButtonStyleProperties({
     width: props.width,
-    height: props.height,
     borderRadius: props.borderRadius,
   }),
 );
+
+const wrapperStyle = computed(() => ({
+  minHeight: DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT,
+}));
 </script>
 
 <template>
-  <component :is="SHOP_PAY_BUTTON_TAG_NAME" v-bind="attrs" :style="style" />
+  <div :style="wrapperStyle">
+    <component :is="SHOP_PAY_BUTTON_TAG_NAME" v-bind="attrs" :style="style" />
+  </div>
 </template>

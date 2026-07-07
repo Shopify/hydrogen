@@ -1,17 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
-import { createStorefrontRequestContext } from "../headers";
+import { createShopifyRequestContext } from "../headers";
 import { handleCheckoutRedirect as handleCheckoutRedirectImpl } from "./checkout";
 
 type TestStorefrontConfig = {
   storeDomain: string;
-  i18n: { country: "US"; language: "EN" };
 };
+
+const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
 
 const defaultConfig: TestStorefrontConfig = {
   storeDomain: "test-store.myshopify.com",
-  i18n: { country: "US", language: "EN" },
 };
 
 const MOCK_CART = {
@@ -33,25 +33,43 @@ function mockGqlResponse(data: unknown): Response {
 
 function createPrivateStorefrontClient(
   request: Request,
-  config: TestStorefrontConfig = defaultConfig,
+  fixture: TestStorefrontConfig = defaultConfig,
 ) {
   return createStorefrontClient({
     type: "private",
+    requestContext: createShopifyRequestContext({ request, i18n: DEFAULT_I18N }),
     config: {
-      storeDomain: config.storeDomain,
-      i18n: config.i18n,
+      storeDomain: fixture.storeDomain,
       privateStorefrontToken: "test-private-token",
       buyerIp: "127.0.0.1",
-      requestContext: createStorefrontRequestContext(request),
     },
   });
 }
 
-function handleCheckoutRedirect(request: Request, config: TestStorefrontConfig = defaultConfig) {
+function handleCheckoutRedirect(request: Request, fixture: TestStorefrontConfig = defaultConfig) {
+  const storefrontClient = createPrivateStorefrontClient(request, fixture);
   return handleCheckoutRedirectImpl({
     request,
-    storefrontClient: createPrivateStorefrontClient(request, config),
+    requestContext: storefrontClient.requestContext,
+    sessionManager: createTestSessionManager(request),
+    storefrontClient,
   });
+}
+
+function createTestSessionManager(request: Request) {
+  const data = new Map<string, unknown>();
+  const origin = new URL(request.url).origin;
+
+  return {
+    getSessionOrigin: () => origin,
+    getSessionItem: (key: string) => data.get(key),
+    setSessionItem: (key: string, value: unknown) => {
+      data.set(key, value);
+    },
+    removeSessionItem: (key: string) => {
+      data.delete(key);
+    },
+  };
 }
 
 describe("handleCheckoutRedirect", () => {

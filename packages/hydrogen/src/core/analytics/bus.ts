@@ -1,23 +1,63 @@
 import { revalidateConnectedCartCheckoutUrls } from "../cart/cart";
+import { getShopifyGlobal } from "../shopify-scripts";
+import { SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT } from "../shopify-scripts/constants";
+import { loadScript } from "../utils/load-script";
+import { isObjectRecord } from "../utils/record";
 import { createCartTracker } from "./cart-tracker";
 import { initConsent } from "./consent";
 import { initDeprecatedCookies } from "./deprecated-cookies";
 import { createDestinationManager } from "./destination-manager";
-import { AnalyticsEvent } from "./events";
+import { AnalyticsEvent, type AnalyticsEventName } from "./events";
 import type {
   StorefrontAnalytics,
   StorefrontAnalyticsConfig,
   StorefrontAnalyticsOptions,
   PayloadFor,
+  PublishPayloadArgs,
 } from "./types";
 
 type AnalyticsCallback = (payload: unknown) => void;
-type ShopifyWindow = Window & { Shopify?: Shopify };
 
-function getHeadlessShopify() {
-  const shopifyWindow = window as ShopifyWindow;
-  const shopify = (shopifyWindow.Shopify ??= {});
-  return ((shopify as Shopify).headless ??= {});
+const URL_INFERRED_EVENTS = new Set<AnalyticsEventName>([
+  AnalyticsEvent.PAGE_VIEWED,
+  AnalyticsEvent.PRODUCT_VIEWED,
+  AnalyticsEvent.COLLECTION_VIEWED,
+  AnalyticsEvent.CART_VIEWED,
+  AnalyticsEvent.SEARCH_VIEWED,
+]);
+
+const SUPPORTED_ANALYTICS_EVENTS = new Set<AnalyticsEventName>(Object.values(AnalyticsEvent));
+
+function getCurrentUrl(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  return window.location.href;
+}
+
+function hasOwnProperty(object: Record<string, unknown>, property: string): boolean {
+  return Object.prototype.hasOwnProperty.call(object, property);
+}
+
+function withDefaultShop<E extends AnalyticsEventName>(
+  payload: PayloadFor<E>,
+  shop: StorefrontAnalyticsConfig["shop"],
+): PayloadFor<E> {
+  if (!isObjectRecord(payload) || hasOwnProperty(payload, "shop")) return payload;
+
+  return { ...payload, shop };
+}
+
+function withInferredUrl<E extends AnalyticsEventName>(
+  event: E,
+  payload: PayloadFor<E>,
+): PayloadFor<E> {
+  if (!URL_INFERRED_EVENTS.has(event) || !isObjectRecord(payload)) return payload;
+
+  if (typeof payload.url === "string" && payload.url.length > 0) return payload;
+
+  const url = getCurrentUrl();
+  if (!url) return payload;
+
+  return { ...payload, url };
 }
 
 function hasAnalyticsConsent(): boolean {
@@ -29,15 +69,36 @@ function hasAnalyticsConsent(): boolean {
   }
 }
 
+function isSupportedAnalyticsEvent(event: unknown): event is AnalyticsEventName {
+  return typeof event === "string" && SUPPORTED_ANALYTICS_EVENTS.has(event as AnalyticsEventName);
+}
+
+function warnUnsupportedAnalyticsEvent(event: unknown): void {
+  console.warn(`[h3:warn:Analytics] Unsupported analytics event "${String(event)}".`);
+}
+
+function getPublishPayload<E extends AnalyticsEventName>(
+  payload: PayloadFor<E> | undefined,
+): PayloadFor<E> {
+  if (payload !== undefined) return payload;
+
+  return {} as PayloadFor<E>;
+}
+
 /**
  * Creates a framework-agnostic analytics event bus.
  *
- * Each call creates an isolated pub/sub instance. Consent script loading
- * and customerPrivacy.config setup are coordinated by consent.ts.
+ * Only one instance may exist at a time. Call destroy() before re-initializing.
  */
 export function createStorefrontAnalytics(
   options: StorefrontAnalyticsOptions,
 ): StorefrontAnalytics {
+  if (typeof window !== "undefined" && window.Shopify?.analytics) {
+    throw new Error(
+      "Analytics bus already initialized. Only one createStorefrontAnalytics() instance is allowed. Call destroy() first to re-initialize.",
+    );
+  }
+
   const { consent, canTrack: customCanTrack, customData, cookieDomain } = options;
 
   const { shop } = options;
@@ -60,19 +121,29 @@ export function createStorefrontAnalytics(
 
   // Tracking integrations (Shopify analytics CDN, third-party destinations) need consent
   // gating and event replay. subscribe() stays live-only; destinations go through here.
-  const destinationManager = createDestinationManager({ canTrack, getConfig });
+  const destinationManager = createDestinationManager({
+    canTrack,
+    getConfig,
+    isSupportedEvent: isSupportedAnalyticsEvent,
+    warnUnsupportedEvent: warnUnsupportedAnalyticsEvent,
+  });
 
-  function shouldLoadShopifyAnalytics(): boolean {
-    return options.shopifyAnalytics !== false;
-  }
-
-  function publish<E extends string>(event: E, payload: PayloadFor<E>): void {
+  function publish<E extends AnalyticsEventName>(
+    event: E,
+    ...payloadArgs: PublishPayloadArgs<E>
+  ): void {
     if (destroyed) return;
+    if (!isSupportedAnalyticsEvent(event)) {
+      warnUnsupportedAnalyticsEvent(event);
+      return;
+    }
 
+    const payload = getPublishPayload(payloadArgs[0]);
+    const normalizedPayload = withInferredUrl(event, withDefaultShop(payload, shop));
     const eventSubscribers = subscribers.get(event) ?? new Map();
     eventSubscribers.forEach((callback, subscriberId) => {
       try {
-        callback(payload);
+        callback(normalizedPayload);
       } catch (error) {
         if (error instanceof Error) {
           console.error("Analytics publish error", error.message, subscriberId, error.stack);
@@ -87,13 +158,17 @@ export function createStorefrontAnalytics(
     }
 
     // Buffer the event and deliver to destinations when analytics consent allows.
-    destinationManager.onPublish(event, payload);
+    destinationManager.onPublish(event, normalizedPayload);
   }
 
-  function subscribe<E extends string>(
+  function subscribe<E extends AnalyticsEventName>(
     event: E,
     callback: (payload: PayloadFor<E>) => void,
   ): () => void {
+    if (!isSupportedAnalyticsEvent(event)) {
+      warnUnsupportedAnalyticsEvent(event);
+      return () => {};
+    }
     let eventSubscribers = subscribers.get(event);
     if (!eventSubscribers) {
       eventSubscribers = new Map();
@@ -154,18 +229,22 @@ export function createStorefrontAnalytics(
     if (typeof window === "undefined") return;
 
     const bus = busInstance;
-    getHeadlessShopify().analytics = bus;
+    const shopify = getShopifyGlobal();
+    if (!shopify) return;
+
+    shopify.analytics = bus;
   }
 
   function initShopifyAnalyticsModule() {
-    if (typeof window === "undefined" || !shouldLoadShopifyAnalytics()) return;
+    if (typeof window === "undefined" || options.shopifyAnalytics === false) return;
 
-    import("@shopify/hydrogen/cdn")
-      .then(({ bootstrapShopifyAnalytics }) => {
-        if (destroyed) return;
-        bootstrapShopifyAnalytics(busInstance);
-      })
-      .catch(() => {});
+    loadScript(SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT, {
+      attributes: { crossorigin: "anonymous" },
+    }).catch(() => {
+      console.warn(
+        "[h2:warn:Analytics] Failed to load Shopify analytics CDN script. Analytics events will not be forwarded.",
+      );
+    });
   }
 
   function destroy() {
@@ -174,8 +253,8 @@ export function createStorefrontAnalytics(
     destinationManager.destroy(); // Tear down destination subscriptions and cleanup hooks.
     cleanupConsent?.();
 
-    if (typeof window !== "undefined" && window.Shopify?.headless?.analytics === busInstance) {
-      delete window.Shopify.headless.analytics;
+    if (typeof window !== "undefined" && window.Shopify?.analytics === busInstance) {
+      delete window.Shopify.analytics;
     }
   }
 

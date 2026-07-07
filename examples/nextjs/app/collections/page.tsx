@@ -1,61 +1,81 @@
-import { gql } from "@shopify/hydrogen";
+import type { Metadata } from "next";
+import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 
-import { getStorefrontClient } from "@/lib/storefront";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { CollectionCard } from "@/components/CollectionCard";
+import { content } from "@/lib/content";
+import { COLLECTIONS_QUERY } from "@/lib/queries";
+import { canonicalUrl } from "@/lib/site";
+import { staticStorefrontClient } from "@/lib/storefront-static";
 
-const COLLECTIONS_QUERY = gql(`
-  query Collections {
-    collections(first: 12) {
-      nodes {
-        handle
-        title
-        image {
-          url
-          altText
-        }
-      }
-    }
-  }
-`);
-
-export const metadata = {
-  title: "Collections — Mock.shop",
+export const metadata: Metadata = {
+  title: "Collections",
+  description: "Browse all collections",
+  alternates: { canonical: "/collections" },
+  openGraph: {
+    title: "Collections — CORE",
+    type: "website",
+    url: canonicalUrl("/collections"),
+  },
 };
 
-export default async function CollectionsPage() {
-  const storefrontClient = await getStorefrontClient();
-  const { data } = await storefrontClient.graphql(COLLECTIONS_QUERY);
-  const collections = data?.collections?.nodes ?? [];
+async function fetchCollections(after?: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("collections");
+
+  const { data, errors } = await staticStorefrontClient.graphql(COLLECTIONS_QUERY, {
+    variables: { first: 24, after },
+  });
+  if (errors) {
+    console.error("[hydrogen] Collections query failed", errors);
+  }
+  return {
+    collections: data?.collections?.nodes ?? [],
+    pageInfo: data?.collections?.pageInfo ?? { hasNextPage: false },
+  };
+}
+
+export default async function CollectionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const after = typeof params.after === "string" ? params.after : undefined;
+  const { collections, pageInfo } = await fetchCollections(after);
 
   return (
-    <main className="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
-      <header>
-        <h1 className="text-6xl font-black tracking-tight md:text-8xl">Collections</h1>
-      </header>
+    <div className="max-w-page px-margin mx-auto w-full py-8">
+      <div className="mb-6">
+        <Breadcrumbs items={[{ label: content.collections.title }]} />
+      </div>
 
-      <section className="mt-16 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-        {collections.map((collection) => (
-          <Link
-            key={collection.handle}
-            href={`/collections/${collection.handle}`}
-            className="group block"
-          >
-            <div className="aspect-square overflow-hidden bg-neutral-100">
-              {collection.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={collection.image.url}
-                  alt={collection.image.altText ?? collection.title}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              ) : null}
-            </div>
-            <div className="mt-5">
-              <h3 className="text-base font-semibold">{collection.title}</h3>
-            </div>
-          </Link>
+      <h1 className="type-display mb-8">{content.collections.title}</h1>
+
+      <ul role="list" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {collections.map((collection, index) => (
+          <li key={collection.id}>
+            <CollectionCard
+              collection={collection}
+              loading={index < 3 ? "eager" : "lazy"}
+              fetchPriority={index === 0 ? "high" : "auto"}
+            />
+          </li>
         ))}
-      </section>
-    </main>
+      </ul>
+
+      {pageInfo.hasNextPage ? (
+        <div className="mt-12 text-center">
+          <Link
+            href={`/collections?after=${encodeURIComponent(pageInfo.endCursor ?? "")}`}
+            className="rounded-button button-outline focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            Load more
+          </Link>
+        </div>
+      ) : null}
+    </div>
   );
 }

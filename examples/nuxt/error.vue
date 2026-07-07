@@ -1,20 +1,21 @@
 <script setup lang="ts">
+import { createNuxtWebRequest } from "@shared/nuxt-event";
 import { handleShopifyRedirects } from "@shopify/hydrogen";
 
 import type { NuxtError } from "#app";
+
+import { routeTemplates } from "./utils/route-templates";
 
 const props = defineProps<{ error: NuxtError }>();
 
 if (import.meta.server && props.error.statusCode === 404) {
   const event = useRequestEvent();
   if (event) {
-    const request = toWebRequest(event);
+    const request = createNuxtWebRequest(event);
     const { storefrontClient } = event.context;
-    if (!storefrontClient) {
-      throw new Error("Storefront client was not created for this server request.");
-    }
     const redirect = await handleShopifyRedirects({
       request,
+      routeTemplates,
       storefrontClient,
     });
     if (redirect) {

@@ -1,3 +1,4 @@
+import type { ShopifyGlobal } from "../../globals";
 import { loadScript } from "../utils/load-script";
 import { ensureTrackingValues } from "./ensure-tracking-values";
 import type { ConsentConfig } from "./types";
@@ -13,15 +14,17 @@ type ConsentDeps = {
   onReady: () => void;
   onConsentCollected: (payload: { shouldRevalidate: boolean }) => void;
 };
-type ConfigurableCustomerPrivacy = Partial<CustomerPrivacyApi> & {
-  config?: Partial<CustomerPrivacyConfig>;
+type ShopifyCustomerPrivacyApi = NonNullable<ShopifyGlobal["customerPrivacy"]>;
+type ShopifyCustomerPrivacyConfig = NonNullable<ShopifyCustomerPrivacyApi["config"]>;
+type ConfigurableCustomerPrivacy = Partial<ShopifyCustomerPrivacyApi> & {
+  config?: Partial<ShopifyCustomerPrivacyConfig>;
 };
-type ConfigurableShopify = Omit<Shopify, "customerPrivacy"> & {
+type ConfigurableShopify = Partial<Omit<ShopifyGlobal, "customerPrivacy">> & {
   customerPrivacy?: ConfigurableCustomerPrivacy;
 };
 type ShopifyWindow = { Shopify?: ConfigurableShopify };
 
-function setCustomerPrivacyConfig(config: Partial<CustomerPrivacyConfig>) {
+function setCustomerPrivacyConfig(config: Partial<ShopifyCustomerPrivacyConfig>) {
   const shopifyWindow = window as unknown as ShopifyWindow;
   const shopify = (shopifyWindow.Shopify ??= {});
   const customerPrivacy =
@@ -58,7 +61,7 @@ export function initConsent(deps: ConsentDeps): () => void {
   if (typeof window === "undefined") return () => {};
 
   const { consent } = deps;
-  const { consentDomain, publicStorefrontAccessToken, mode = "no-banner", language } = consent;
+  const { consentDomain, publicStorefrontAccessToken, mode = "no-banner" } = consent;
   const usesDefaultBanner = mode === "default-banner";
   const waitsForBannerInteraction = mode === "default-banner" || mode === "custom-banner";
 
@@ -81,19 +84,9 @@ export function initConsent(deps: ConsentDeps): () => void {
     isHeadless: true,
     consentDomain: sfapiHost || window.location.host,
     ...(publicStorefrontAccessToken ? { storefrontAccessToken: publicStorefrontAccessToken } : {}),
-  } satisfies CustomerPrivacyConfig;
+  } satisfies ShopifyCustomerPrivacyConfig;
 
   setCustomerPrivacyConfig(customerPrivacyConfig);
-
-  if (language) {
-    const shopifyWindow = window as unknown as ShopifyWindow;
-    (shopifyWindow.Shopify ??= {}).locale = language;
-  }
-
-  if (consent.country) {
-    const shopifyWindow = window as unknown as ShopifyWindow;
-    (shopifyWindow.Shopify ??= {}).country = consent.country;
-  }
 
   const cookiesReady = ensureTrackingValues(sfapiHost, publicStorefrontAccessToken);
 

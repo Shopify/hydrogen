@@ -11,27 +11,16 @@ function getCartDrawer() {
   return drawer instanceof HTMLDialogElement ? drawer : null;
 }
 
+/** Open the cart drawer (`<dialog>` + `showModal()`). */
 export function openCartDrawer() {
   const drawer = getCartDrawer();
   if (!drawer || drawer.open) return;
-
-  try {
-    drawer.showModal();
-  } catch {
-    // Opening the drawer is progressive enhancement; cart mutations must still proceed.
-  }
+  drawer.showModal();
 }
 
+/** Close the cart drawer. */
 export function closeCartDrawer() {
   getCartDrawer()?.close();
-}
-
-export function supportsDialogCommands() {
-  if (typeof HTMLButtonElement === "undefined") return false;
-
-  return (
-    "command" in HTMLButtonElement.prototype && "commandForElement" in HTMLButtonElement.prototype
-  );
 }
 
 function configureOpenCartActionNow() {
@@ -45,6 +34,13 @@ function configureOpenCartActionNow() {
   return true;
 }
 
+/**
+ * Register the drawer's DOM helper as the `window.Shopify.actions.openCart()`
+ * Standard Action handler (`hydrogen-cart-drawer` skill). The module-scope call
+ * no-ops during SSR, configures immediately when Standard Actions is available,
+ * and retries once on `DOMContentLoaded` when the runtime loads after this
+ * module.
+ */
 export function configureOpenCartAction() {
   if (typeof document === "undefined" || openCartActionConfigured) return;
   if (configureOpenCartActionNow()) return;
