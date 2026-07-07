@@ -81,7 +81,7 @@ export class DevServer {
     }
 
     return new Promise((resolve, reject) => {
-      const args = ['shopify', 'hydrogen', 'dev'];
+      const args = ['exec', 'shopify', 'hydrogen', 'dev'];
       if (this.customerAccountPush) {
         args.push('--customer-account-push');
       }
@@ -94,7 +94,7 @@ export class DevServer {
         args.push('--entry', this.entry);
       }
 
-      this.process = spawn('pnpx', args, {
+      this.process = spawn('pnpm', args, {
         cwd: this.projectPath,
         detached: true,
         env: {
