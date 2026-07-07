@@ -4,12 +4,20 @@ const PRIVATE_STOREFRONT_TOKEN_KEY = "PRIVATE_STOREFRONT_API_TOKEN";
 
 type SharedSecrets = Record<string, string>;
 
+// Prefer an explicit environment variable so anyone can run the examples
+// against their own store; fall back to the shared (decrypted) secrets file.
+// Returns undefined when neither is set so callers can degrade gracefully.
+export function getOptionalPrivateStorefrontToken(): string | undefined {
+  return process.env[PRIVATE_STOREFRONT_TOKEN_KEY] || getSharedSecret(PRIVATE_STOREFRONT_TOKEN_KEY);
+}
+
 export function getPrivateStorefrontToken(): string {
-  const token = getSharedSecret(PRIVATE_STOREFRONT_TOKEN_KEY);
+  const token = getOptionalPrivateStorefrontToken();
   if (!token) {
     throw new Error(
       `${PRIVATE_STOREFRONT_TOKEN_KEY} is required for SSR requests. ` +
-        `Run "pnpm run examples:secrets:decrypt" to create examples/shared/secrets.ts.`,
+        `Set it as an environment variable, or — with the EJSON key — run ` +
+        `"pnpm run examples:secrets:decrypt" and add the token to examples/shared/secrets.ts.`,
     );
   }
   return token;

@@ -1,0 +1,9 @@
+{
+  "name": "@shopify/hydrogen-example-shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@shopify/hydrogen": "workspace:*"
+  }
+}
