@@ -165,8 +165,8 @@ function getBuildConfigFromVite(viteConfig: any): BuildConfig {
 
   const {clientOutDir, serverOutDir} = resolveViteOutputDirs({
     routingBuildDirectory: buildConfig?.buildDirectory,
-    serverEnvironmentOutDir: viteConfig.environments.ssr?.build.outDir,
-    clientEnvironmentOutDir: viteConfig.environments.client?.build.outDir,
+    serverEnvironmentOutDir: viteConfig.environments?.ssr?.build.outDir,
+    clientEnvironmentOutDir: viteConfig.environments?.client?.build.outDir,
     buildOutDir: viteConfig.build.outDir,
   });
 
