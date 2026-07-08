@@ -140,18 +140,19 @@ export function useOptionalCart<TData extends CartData = CartData, S = unknown>(
   isEqual?: (a: S, b: S) => boolean,
 ): S | undefined {
   const store = useOptionalCartStore();
-  if (!store) return undefined;
   return useCartSelector(store, selector, isEqual);
 }
 
 function useCartSelector<TData extends CartData = CartData, S = unknown>(
-  store: CartStore,
+  store: CartStore | null,
   selector: (state: CartState<TData>) => S,
   isEqual?: (a: S, b: S) => boolean,
-): S {
+): S | undefined {
   const cachedRef = useRef<{ state: unknown; selector: typeof selector; value: S } | null>(null);
 
   const getSnapshot = () => {
+    if (!store) return undefined;
+
     const state = store.getState() as CartState<TData>;
 
     if (
@@ -173,7 +174,13 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
     return next;
   };
 
-  return useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot);
+  const subscribe = store ? store.subscribe : noopSubscribe;
+
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+function noopSubscribe(): () => void {
+  return () => {};
 }
 
 export function useCartForm() {
