@@ -1,27 +1,35 @@
-import { Money, Image } from "@shopify/hydrogen-classic";
 import type { OrderLineItemFullFragment, OrderQuery } from "customer-accountapi.generated";
 import { redirect, useLoaderData } from "react-router";
 
+import { Image } from "~/components/Image";
 import { CUSTOMER_ORDER_QUERY } from "~/graphql/customer-account/CustomerOrderQuery";
+import { requireCustomerAccessToken } from "~/lib/customer-account";
+import { formatMoney } from "~/lib/money";
 
 import type { Route } from "./+types/($locale).account.orders.$id";
+
+type OrderMoney = NonNullable<OrderQuery["order"]>["subtotal"];
+type DiscountApplication = NonNullable<
+  OrderQuery["order"]
+>["discountApplications"]["nodes"][number];
 
 export const meta: Route.MetaFunction = ({ data }) => {
   return [{ title: `Order ${data?.order?.name}` }];
 };
 
-export async function loader({ params, context }: Route.LoaderArgs) {
+export async function loader({ request, params, context }: Route.LoaderArgs) {
   const { customerAccount } = context;
   if (!params.id) {
-    return redirect("/account/orders");
+    return redirect(getAccountOrdersPath(params.locale));
   }
 
+  const accessToken = await requireCustomerAccessToken(request, customerAccount);
   const orderId = atob(params.id);
-  const { data, errors }: { data: OrderQuery; errors?: Array<{ message: string }> } =
-    await customerAccount.query(CUSTOMER_ORDER_QUERY, {
+  const { data, errors }: { data: OrderQuery | null; errors?: Array<{ message: string }> } =
+    await customerAccount.client.graphql(CUSTOMER_ORDER_QUERY, {
+      accessToken,
       variables: {
         orderId,
-        language: customerAccount.i18n.language,
       },
     });
 
@@ -30,31 +38,9 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   }
 
   const { order } = data;
-
-  // Extract line items directly from nodes array
   const lineItems = order.lineItems.nodes;
-
-  // Extract discount applications directly from nodes array
-  const discountApplications = order.discountApplications.nodes;
-
-  // Get fulfillment status from first fulfillment node
   const fulfillmentStatus = order.fulfillments.nodes[0]?.status ?? "N/A";
-
-  // Get first discount value with proper type checking
-  const firstDiscount = discountApplications[0]?.value;
-
-  // Type guard for MoneyV2 discount
-  const discountValue =
-    firstDiscount?.__typename === "MoneyV2"
-      ? (firstDiscount as Extract<typeof firstDiscount, { __typename: "MoneyV2" }>)
-      : null;
-
-  // Type guard for percentage discount
-  const discountPercentage =
-    firstDiscount?.__typename === "PricingPercentageValue"
-      ? (firstDiscount as Extract<typeof firstDiscount, { __typename: "PricingPercentageValue" }>)
-          .percentage
-      : null;
+  const { discountValue, discountPercentage } = getOrderDiscount(order.discountApplications.nodes);
 
   return {
     order,
@@ -65,13 +51,33 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   };
 }
 
+function getOrderDiscount(discountApplications: DiscountApplication[]) {
+  const firstDiscount = discountApplications[0]?.value;
+
+  if (firstDiscount?.__typename === "MoneyV2") {
+    return { discountValue: firstDiscount, discountPercentage: null };
+  }
+
+  if (firstDiscount?.__typename === "PricingPercentageValue") {
+    return { discountValue: null, discountPercentage: firstDiscount.percentage };
+  }
+
+  return { discountValue: null, discountPercentage: null };
+}
+
+function getAccountOrdersPath(locale: string | undefined) {
+  return locale ? `/${locale}/account/orders` : "/account/orders";
+}
+
 export default function OrderRoute() {
   const { order, lineItems, discountValue, discountPercentage, fulfillmentStatus } =
     useLoaderData<typeof loader>();
+  const processedAt = order.processedAt ? new Date(order.processedAt).toDateString() : "N/A";
+
   return (
     <div className="account-order">
       <h2>Order {order.name}</h2>
-      <p>Placed on {new Date(order.processedAt!).toDateString()}</p>
+      <p>Placed on {processedAt}</p>
       {order.confirmationNumber && <p>Confirmation: {order.confirmationNumber}</p>}
       <br />
       <div>
@@ -96,51 +102,18 @@ export default function OrderRoute() {
                 <th scope="row" colSpan={3}>
                   <p>Discounts</p>
                 </th>
-                <th scope="row">
-                  <p>Discounts</p>
-                </th>
                 <td>
                   {discountPercentage ? (
                     <span>-{discountPercentage}% OFF</span>
                   ) : (
-                    discountValue && <Money data={discountValue!} />
+                    discountValue && formatMoney(discountValue)
                   )}
                 </td>
               </tr>
             )}
-            <tr>
-              <th scope="row" colSpan={3}>
-                <p>Subtotal</p>
-              </th>
-              <th scope="row">
-                <p>Subtotal</p>
-              </th>
-              <td>
-                <Money data={order.subtotal!} />
-              </td>
-            </tr>
-            <tr>
-              <th scope="row" colSpan={3}>
-                Tax
-              </th>
-              <th scope="row">
-                <p>Tax</p>
-              </th>
-              <td>
-                <Money data={order.totalTax!} />
-              </td>
-            </tr>
-            <tr>
-              <th scope="row" colSpan={3}>
-                Total
-              </th>
-              <th scope="row">
-                <p>Total</p>
-              </th>
-              <td>
-                <Money data={order.totalPrice!} />
-              </td>
-            </tr>
+            <OrderTotalRow label="Subtotal" money={order.subtotal} />
+            <OrderTotalRow label="Tax" money={order.totalTax} />
+            <OrderTotalRow label="Total" money={order.totalPrice} />
           </tfoot>
         </table>
         <div>
@@ -175,6 +148,9 @@ export default function OrderRoute() {
 }
 
 function OrderLineRow({ lineItem }: { lineItem: OrderLineItemFullFragment }) {
+  const price = lineItem.price ? formatMoney(lineItem.price) : "-";
+  const totalDiscount = lineItem.totalDiscount ? formatMoney(lineItem.totalDiscount) : "-";
+
   return (
     <tr key={lineItem.id}>
       <td>
@@ -190,13 +166,20 @@ function OrderLineRow({ lineItem }: { lineItem: OrderLineItemFullFragment }) {
           </div>
         </div>
       </td>
-      <td>
-        <Money data={lineItem.price!} />
-      </td>
+      <td>{price}</td>
       <td>{lineItem.quantity}</td>
-      <td>
-        <Money data={lineItem.totalDiscount!} />
-      </td>
+      <td>{totalDiscount}</td>
+    </tr>
+  );
+}
+
+function OrderTotalRow({ label, money }: { label: string; money?: OrderMoney | null }) {
+  return (
+    <tr>
+      <th scope="row" colSpan={3}>
+        <p>{label}</p>
+      </th>
+      <td>{money ? formatMoney(money) : "-"}</td>
     </tr>
   );
 }

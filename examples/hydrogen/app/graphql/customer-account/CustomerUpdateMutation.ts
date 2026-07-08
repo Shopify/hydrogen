@@ -1,5 +1,7 @@
+import * as CAAPI from "@shopify/hydrogen/customer-account";
+
 // NOTE: https://shopify.dev/docs/api/customer/latest/mutations/customerUpdate
-export const CUSTOMER_UPDATE_MUTATION = `#graphql
+export const CUSTOMER_UPDATE_MUTATION = CAAPI.gql(`
   mutation customerUpdate(
     $customer: CustomerUpdateInput!
     $language: LanguageCode
@@ -22,4 +24,4 @@ export const CUSTOMER_UPDATE_MUTATION = `#graphql
       }
     }
   }
-` as const;
+`);

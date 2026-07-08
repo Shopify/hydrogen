@@ -1,7 +1,10 @@
+node_modules/
+build/
+dist/
+.react-router/
+.turbo/
+tsconfig.tsbuildinfo
+*.log
 .DS_Store
-.env
-/node_modules/
-
-# React Router
-/.react-router/
-/build/
+storefront-graphql-env.d.ts
+customer-account-graphql-env.d.ts

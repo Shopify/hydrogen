@@ -1,0 +1,1594 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <title>Core reference · Collections list page</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!--
+      Buildless reference: the @tailwindcss/browser CDN does not fetch external
+      @import, so the core tokens are inlined below (a copy of ../tokens.css).
+      Real framework examples import ../tokens.css through their Vite build instead.
+    -->
+    <style type="text/tailwindcss">
+      /* AUTO-GENERATED: examples/core/tokens.css START */
+      /*
+        Storefront Kit examples core tokens.
+        Derived once from a Shopify reference Liquid theme (config/styles.css) for the five-page storefront
+        (product, collection, collections list, search, home), the shared chrome, and the
+        consent banner. Intentionally excludes the source-scanning directives from the
+        Shopify theme. This file is the single source of truth: it is auto-inlined into
+        each reference/*.html by scripts/inline-core-tokens.ts (run `pnpm tokens:inline`).
+      */
+
+      @theme {
+        /* Surfaces */
+        --color-surface: #ffffff;
+        --color-surface-secondary: #e3e3e3;
+        --color-on-surface: #000000;
+        --color-on-surface-secondary: #6b7280;
+        --color-border: #e5e7eb;
+
+        /* ─── Brand: the single source of truth ────────────────────────────────
+           Change THIS one value to recolor the entire storefront. Every interactive
+           surface below — buttons, the cart-icon count badge, focus rings, selected
+           filter swatches and variant option pills — is DERIVED from it with modern
+           CSS: color-mix() in perceptual oklab space for the hover/active state
+           shades, and relative-color oklch() for the softer accent tint. Nothing
+           hard-codes the brand green a second time, so the whole UI re-harmonizes from
+           this one knob. */
+        --color-primary: #1b4332;
+
+        /* Interactive — derived from --color-primary.
+           -hover and -active are the brand darkened one and two steps in oklab; this
+           is the ONLY place the pressed/hover brand shades are defined. */
+        --color-interactive: var(--color-primary);
+        --color-interactive-hover: color-mix(in oklab, var(--color-primary) 85%, black);
+        --color-interactive-active: color-mix(in oklab, var(--color-primary) 72%, black);
+        --color-interactive-text: #ffffff;
+
+        /* Accent — a lighter, desaturated tint of the brand, used for focus rings
+           and the accent badge. Relative-color oklch: lift lightness, cut chroma to
+           ~40%, ease the hue a touch. Tracks --color-primary automatically. */
+        --color-accent: oklch(from var(--color-primary) calc(l + 0.17) calc(c * 0.39) calc(h - 9));
+
+        /* Button variants — every brand button maps onto the interactive ramp, so
+           they share one hover/active definition rather than re-deriving shades. */
+        --color-button-primary: var(--color-interactive);
+        --color-button-primary-hover: var(--color-interactive-hover);
+        --color-button-primary-active: var(--color-interactive-active);
+        --color-button-primary-text: var(--color-interactive-text);
+        --color-button-secondary: var(--color-surface-secondary);
+        --color-button-secondary-text: var(--color-on-surface);
+        --color-button-outline-border: var(--color-interactive);
+        --color-button-outline-text: var(--color-interactive);
+        /* Shop Pay brand button — mirrors the fixed branding of the Shopify
+           <shop-pay-button> web component rendered in the live app, so the
+           reference shows the same purple accelerated-checkout action. */
+        --color-button-shop-pay: #5a31f4;
+        --color-button-shop-pay-text: #ffffff;
+
+        /* Commerce */
+        --color-sale: #dc2626;
+        --color-compare: var(--color-on-surface-secondary);
+
+        /* Semantic states (success/warning darkened from the theme source to meet WCAG AA 4.5:1 as text on white and as badge fills behind white text) */
+        --color-success: #047857;
+        --color-warning: #b45309;
+        --color-critical: var(--color-sale);
+        --color-info: #2563eb;
+
+        /* Overlay */
+        --color-overlay: rgb(0 0 0 / 0.95);
+        --color-overlay-strong: rgb(0 0 0 / 0.7);
+        --color-overlay-subtle: rgb(0 0 0 / 0.5);
+        /* ~25% black scrim behind the white check on a selected color swatch */
+        --color-overlay-scrim: rgb(0 0 0 / 0.25);
+
+        /* Hover */
+        --color-hover: rgb(0 0 0 / 0.03);
+
+        /* Radius */
+        --radius-sm: 0.25rem;
+        --radius: 0.5rem;
+        --radius-lg: 0.75rem;
+        --radius-button: 0.5rem;
+        --radius-card: 0;
+        --radius-input: 0.5rem;
+        --radius-badge: 9999px;
+
+        /* Typography: locked to system-ui for examples. */
+        --font-body: system-ui, -apple-system, sans-serif;
+        --font-heading: system-ui, -apple-system, sans-serif;
+
+        /* Easing */
+        --ease-ui: cubic-bezier(0.16, 1, 0.3, 1);
+        --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+        /* Layout spacing */
+        --spacing-page: 80rem;
+        --spacing-margin: 1rem;
+        --spacing-control-height: 2.125rem;
+        --spacing-touch-target: 2.75rem;
+        /* Visible facet indicator sizes. These are the painted box/chip; the 44px
+           touch target is owned by the wrapping clickable label (min-h/min-w-touch-target),
+           NOT by the indicator itself — a 44px painted checkbox reads as oversized. */
+        --spacing-filter-indicator: 1.25rem;
+        --spacing-filter-swatch: 1.75rem;
+        --spacing-dialog-max-height: 85dvh;
+        --spacing-search-modal-width: min(45rem, 90vw);
+        --spacing-search-modal-offset-block-start: 15dvh;
+        --spacing-hero: 60dvh;
+        --spacing-drawer-width: 480px;
+        --spacing-header-nav-inline: 6px;
+        --spacing-nav-dropdown-offset-inline: 13px;
+        --spacing-nav-dropdown-offset-block: 10px;
+        --spacing-nav-dropdown-enter-offset: 4px;
+        --spacing-nav-dropdown-surface-padding: 16px;
+        --spacing-nav-dropdown-column-width: 120px;
+        --spacing-nav-dropdown-gap-inline: 24px;
+        --spacing-nav-dropdown-item-padding-block: 3px;
+        --spacing-cart-count-badge: 22px;
+        --spacing-cart-line-thumbnail-width: 6rem;
+        --spacing-remove-icon-nudge-x: 0.5px;
+        --spacing-remove-icon-top-nudge-y: 2px;
+        --spacing-remove-icon-bottom-nudge-y: 0.75px;
+
+        /* Shadows */
+        --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+        /* Aspect ratios */
+        --aspect-portrait: 4/5;
+        --aspect-landscape: 16/9;
+      }
+
+      :root {
+        --type-paragraph-lg-font: var(--font-body);
+        --type-paragraph-lg-size: 18px;
+        --type-paragraph-font: var(--font-body);
+        --type-paragraph-size: 16px;
+        --type-paragraph-sm-font: var(--font-body);
+        --type-paragraph-sm-size: 14px;
+        --type-heading-2xl-font: var(--font-heading);
+        --type-heading-2xl-size: 36px;
+        --type-heading-xl-font: var(--font-heading);
+        --type-heading-xl-size: 30px;
+        --type-heading-lg-font: var(--font-heading);
+        --type-heading-lg-size: 24px;
+        --type-heading-md-font: var(--font-heading);
+        --type-heading-md-size: 20px;
+        --type-heading-sm-font: var(--font-heading);
+        --type-heading-sm-size: 18px;
+        --type-subheading-font: var(--font-body);
+        --type-subheading-size: 12px;
+        --icon-stroke-width: 1.5;
+      }
+
+      @layer base {
+        h1 {
+          line-height: 1.2;
+        }
+
+        s-dialog,
+        s-cart,
+        s-mobile-nav,
+        s-nav-dropdown,
+        s-quantity-selector,
+        s-slideshow,
+        s-variant-picker {
+          display: block;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="search"],
+        input[type="tel"],
+        input[type="url"],
+        input[type="number"],
+        input[type="date"],
+        textarea,
+        select {
+          width: 100%;
+          color: var(--color-on-surface);
+          background: var(--color-surface);
+          border-radius: var(--radius-input);
+          padding: var(--input-padding-y, 0.375rem) var(--input-padding-x, 0.75rem);
+          border: 1px solid var(--color-input-border, var(--color-border));
+          font-family: var(--font-body);
+          font-size: var(--input-font-size, 0.875rem);
+          line-height: 1.5;
+          appearance: none;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+          color: var(--color-on-surface-secondary);
+        }
+
+        input:focus-visible,
+        textarea:focus-visible,
+        select:focus-visible {
+          outline: 2px solid var(--color-interactive);
+          outline-offset: 2px;
+        }
+
+        input:disabled,
+        textarea:disabled,
+        select:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          background: var(--color-surface-secondary);
+        }
+
+        :where(
+          .button-primary,
+          .button-secondary,
+          .button-outline,
+          .button-ghost,
+          .button-surface,
+          .button-shop-pay
+        ) {
+          padding: var(--button-padding-y, 0.375rem) var(--button-padding-x, 0.75rem);
+          font-size: var(--button-font-size, 0.875rem);
+        }
+
+        :where(
+          .badge-default,
+          .badge-sale,
+          .badge-accent,
+          .badge-info,
+          .badge-success,
+          .badge-warning,
+          .badge-soldout
+        ) {
+          padding: var(--badge-padding-y, 0.125rem) var(--badge-padding-x, 0.5rem);
+          font-size: var(--badge-font-size, 0.75rem);
+        }
+
+        @media (min-width: 48rem) {
+          :root {
+            --spacing-margin: 2.5rem;
+          }
+        }
+      }
+
+      @layer components {
+        .logo-size-custom {
+          width: auto;
+        }
+
+        .overlay-dark {
+          background: linear-gradient(
+            to top,
+            rgb(0 0 0 / 0.8) 0%,
+            rgb(0 0 0 / 0.4) 60%,
+            transparent 100%
+          );
+        }
+        .overlay-medium {
+          background: linear-gradient(
+            to top,
+            rgb(0 0 0 / 0.55) 0%,
+            rgb(0 0 0 / 0.2) 60%,
+            transparent 100%
+          );
+        }
+        .overlay-light {
+          background: linear-gradient(to top, rgb(0 0 0 / 0.3) 0%, transparent 70%);
+        }
+        .overlay-white {
+          background: linear-gradient(
+            to top,
+            rgb(255 255 255 / 0.9) 0%,
+            rgb(255 255 255 / 0.4) 60%,
+            transparent 100%
+          );
+        }
+
+        .swatch-sm {
+          width: 1.5rem;
+          height: 1.5rem;
+        }
+        .swatch-md {
+          width: 2rem;
+          height: 2rem;
+        }
+        .swatch-lg {
+          width: 2.5rem;
+          height: 2.5rem;
+        }
+        .swatch-buttons {
+        }
+        /* Selected/check overlay on a color swatch: a tokenized ~25% black scrim
+           (replaces a raw bg-black/25), so the white check always reads against it. */
+        .swatch-scrim {
+          background: var(--color-overlay-scrim);
+        }
+
+        .filter-checkbox,
+        .filter-swatch {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid var(--color-border);
+          background: var(--color-surface);
+          color: var(--color-on-surface);
+          cursor: pointer;
+        }
+        .filter-checkbox {
+          block-size: var(--spacing-filter-indicator);
+          inline-size: var(--spacing-filter-indicator);
+          border-radius: var(--radius-sm);
+        }
+        .filter-swatch {
+          block-size: var(--spacing-filter-swatch);
+          inline-size: var(--spacing-filter-swatch);
+          border-radius: var(--radius-badge);
+          background: var(--filter-swatch-color, var(--swatch-color, var(--color-surface)));
+        }
+        .filter-checkbox[aria-checked="true"],
+        .filter-checkbox[aria-pressed="true"],
+        .filter-checkbox.is-selected,
+        input:checked + .filter-checkbox,
+        label:has(input:checked) .filter-checkbox {
+          background: var(--color-interactive);
+          color: var(--color-interactive-text);
+          border-color: var(--color-interactive);
+        }
+        .filter-swatch[aria-checked="true"],
+        .filter-swatch[aria-pressed="true"],
+        .filter-swatch.is-selected,
+        input:checked + .filter-swatch,
+        label:has(input:checked) .filter-swatch {
+          background:
+            linear-gradient(var(--color-overlay-scrim), var(--color-overlay-scrim)),
+            var(--filter-swatch-color, var(--swatch-color, var(--color-surface)));
+          color: var(--color-interactive-text);
+          border-color: var(--color-interactive);
+        }
+        .filter-checkbox:focus-visible,
+        .filter-swatch:focus-visible,
+        input:focus-visible + .filter-checkbox,
+        input:focus-visible + .filter-swatch,
+        label:has(input:focus-visible) .filter-checkbox,
+        label:has(input:focus-visible) .filter-swatch {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
+        }
+        .filter-checkbox[aria-disabled="true"],
+        .filter-checkbox:disabled,
+        .filter-swatch[aria-disabled="true"],
+        .filter-swatch:disabled,
+        label:has(input:disabled) .filter-checkbox,
+        label:has(input:disabled) .filter-swatch {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .filter-check-icon {
+          /* Explicit size so the check fits inside the small indicator box/chip
+             (--spacing-filter-indicator / --spacing-filter-swatch) without overflow.
+             Single source for the icon size across checkbox + swatch facets. */
+          block-size: 0.875rem;
+          inline-size: 0.875rem;
+          color: var(--color-interactive-text);
+          stroke: currentColor;
+          fill: none;
+          opacity: 0;
+          pointer-events: none;
+        }
+        .filter-checkbox[aria-checked="true"] .filter-check-icon,
+        .filter-checkbox[aria-pressed="true"] .filter-check-icon,
+        .filter-checkbox.is-selected .filter-check-icon,
+        .filter-swatch[aria-checked="true"] .filter-check-icon,
+        .filter-swatch[aria-pressed="true"] .filter-check-icon,
+        .filter-swatch.is-selected .filter-check-icon,
+        input:checked + :is(.filter-checkbox, .filter-swatch) .filter-check-icon,
+        label:has(input:checked) .filter-check-icon {
+          opacity: 1;
+        }
+
+        /* Variant-OPTION pill (e.g. size). Bundles background + foreground + border
+           for BOTH rest and selected states in one place — exactly like .button-primary
+           pairs background+color — so a component toggles ONE class/attribute and can
+           never leave a stale text color stacked underneath the selected fill. */
+        .option-pill {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-block-size: var(--spacing-touch-target);
+          min-inline-size: var(--spacing-touch-target);
+          padding-inline: 0.75rem;
+          padding-block: 0.375rem;
+          font-size: 0.875rem;
+          line-height: 1.25rem;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius);
+          background: var(--color-surface);
+          color: var(--color-on-surface);
+          cursor: pointer;
+        }
+        .option-pill[aria-pressed="true"],
+        .option-pill[aria-current="true"],
+        .option-pill.is-selected {
+          background: var(--color-interactive);
+          color: var(--color-interactive-text);
+          border-color: var(--color-interactive);
+        }
+        .option-pill:disabled,
+        .option-pill[aria-disabled="true"],
+        .option-pill.is-disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .option-pill:focus-visible {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
+        }
+        @media (hover: hover) {
+          .option-pill:not([aria-pressed="true"]):not([aria-current="true"]):not(.is-selected):not(
+              :disabled
+            ):hover {
+            background: var(--color-surface-secondary);
+          }
+        }
+
+        .chip-filled {
+          background: var(--chip-bg, var(--color-surface-secondary));
+          color: var(--color-on-surface);
+        }
+        .chip-outlined {
+          background: var(--chip-bg, transparent);
+          color: var(--color-on-surface);
+          border: 1px solid var(--color-border);
+        }
+        @media (hover: hover) {
+          .chip-filled:hover,
+          .chip-outlined:hover {
+            background: color-mix(
+              in oklab,
+              var(--chip-bg, var(--color-surface-secondary)) 90%,
+              var(--color-on-surface)
+            );
+          }
+        }
+
+        .badge-default {
+          background: var(--color-badge-default, var(--color-surface-secondary));
+          color: var(--color-badge-default-text, var(--color-on-surface));
+        }
+        .badge-sale {
+          background: var(--color-badge-sale, var(--color-sale));
+          color: var(--color-badge-sale-text, var(--color-interactive-text));
+        }
+        .badge-accent {
+          background: var(--color-badge-accent, var(--color-accent));
+          color: var(--color-badge-accent-text, var(--color-interactive-text));
+        }
+        .badge-info {
+          background: var(--color-badge-info, var(--color-info));
+          color: var(--color-badge-info-text, var(--color-interactive-text));
+        }
+        .badge-success {
+          background: var(--color-badge-success, var(--color-success));
+          color: var(--color-badge-success-text, var(--color-interactive-text));
+        }
+        .badge-warning {
+          background: var(--color-badge-warning, var(--color-warning));
+          color: var(--color-badge-warning-text, var(--color-interactive-text));
+        }
+        .badge-soldout {
+          background: var(--color-badge-soldout, var(--color-on-surface));
+          color: var(--color-badge-soldout-text, var(--color-surface));
+        }
+
+        .button-primary {
+          background: var(--color-button-primary);
+          color: var(--color-button-primary-text);
+        }
+        .button-secondary {
+          background: var(--color-button-secondary);
+          color: var(--color-button-secondary-text);
+          border: 1px solid var(--color-border);
+        }
+        .button-outline {
+          background: transparent;
+          color: var(--color-button-outline-text);
+          border: 2px solid var(--color-button-outline-border);
+        }
+        .button-shop-pay {
+          background: var(--color-button-shop-pay);
+          color: var(--color-button-shop-pay-text);
+        }
+        .button-ghost,
+        .button-icon {
+          background: transparent;
+          color: var(--color-on-surface);
+        }
+        /* Icon-only controls are always at least a 44px touch target by construction,
+           so a raw size utility (e.g. size-9) can never shrink a tap target below AA. */
+        .button-icon {
+          min-block-size: var(--spacing-touch-target);
+          min-inline-size: var(--spacing-touch-target);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .button-surface {
+          background: var(--color-surface);
+          color: var(--color-on-surface);
+        }
+        :where(.button-primary, .button-secondary, .button-outline, .button-icon):is(
+          :disabled,
+          [aria-disabled="true"]
+        ) {
+          opacity: 0.5;
+        }
+        @media (hover: hover) {
+          .button-primary:not(:disabled):not([aria-disabled="true"]):hover {
+            background: var(--color-button-primary-hover);
+          }
+          .button-secondary:not(:disabled):not([aria-disabled="true"]):hover {
+            background: color-mix(in oklab, var(--color-button-secondary) 90%, black);
+          }
+          .button-shop-pay:hover {
+            background: color-mix(in oklab, var(--color-button-shop-pay) 88%, black);
+          }
+          .button-outline:not(:disabled):not([aria-disabled="true"]):hover,
+          .button-ghost:hover {
+            background: var(--color-surface-secondary);
+          }
+          .button-surface:hover {
+            background: color-mix(in oklab, var(--color-surface) 90%, transparent);
+          }
+          .button-icon:not(:disabled):not([aria-disabled="true"]):hover {
+            opacity: 0.7;
+          }
+        }
+
+        /* Press / active color states — the brand darkened one step beyond hover.
+           Kept OUT of the (hover: hover) block so touch devices get press feedback
+           too; this complements the motion-safe active:scale transform on controls. */
+        .button-primary:not(:disabled):not([aria-disabled="true"]):active {
+          background: var(--color-button-primary-active);
+        }
+        .button-secondary:not(:disabled):not([aria-disabled="true"]):active {
+          background: color-mix(in oklab, var(--color-button-secondary) 82%, black);
+        }
+        .button-shop-pay:active {
+          background: color-mix(in oklab, var(--color-button-shop-pay) 78%, black);
+        }
+        .button-outline:not(:disabled):not([aria-disabled="true"]):active,
+        .button-ghost:active {
+          background: color-mix(in oklab, var(--color-surface-secondary) 88%, black);
+        }
+
+        .quantity-selector-outlined {
+          border: 1px solid var(--color-border);
+          background: transparent;
+        }
+        .quantity-selector-outlined:focus-within {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
+        }
+        .quantity-selector-outlined button:focus-visible {
+          outline: none;
+        }
+        .quantity-selector-filled {
+          background: var(--color-surface-secondary);
+          border: 1px solid transparent;
+        }
+
+        .type-display {
+          font-size: var(--type-heading-2xl-size);
+          font-family: var(--type-heading-2xl-font);
+          font-weight: 300;
+          line-height: 1.25;
+        }
+        .type-heading-xl {
+          font-size: var(--type-heading-xl-size);
+          font-family: var(--type-heading-xl-font);
+          font-weight: 300;
+        }
+        .type-heading-lg {
+          font-size: var(--type-heading-lg-size);
+          font-family: var(--type-heading-lg-font);
+          font-weight: 300;
+        }
+        .type-heading-md {
+          font-size: var(--type-heading-md-size);
+          font-family: var(--type-heading-md-font);
+          font-weight: 400;
+        }
+        .type-heading-sm {
+          font-size: var(--type-heading-sm-size);
+          font-family: var(--type-heading-sm-font);
+          font-weight: 400;
+        }
+        .type-body-lg {
+          font-size: var(--type-paragraph-lg-size);
+          font-family: var(--type-paragraph-lg-font);
+        }
+        .type-body {
+          font-size: var(--type-paragraph-size);
+          font-family: var(--type-paragraph-font);
+          line-height: 1.625;
+        }
+        .type-body-sm {
+          font-size: var(--type-paragraph-sm-size);
+          font-family: var(--type-paragraph-sm-font);
+        }
+        .type-overline {
+          font-size: var(--type-subheading-size);
+          font-family: var(--type-subheading-font);
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .card {
+          position: relative;
+        }
+        .card-link {
+          text-decoration: none;
+        }
+        .card-link::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+        }
+        .card-link:focus-visible {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
+        }
+
+        .cart-count-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          block-size: var(--spacing-cart-count-badge);
+          inline-size: var(--spacing-cart-count-badge);
+          border-radius: var(--radius-badge);
+          background: var(--color-surface-secondary);
+          color: var(--color-on-surface);
+          font-size: 0.75rem;
+          font-weight: 500;
+          line-height: 1;
+        }
+
+        [data-header-nav-group] {
+          padding-inline: var(--spacing-header-nav-inline);
+        }
+        @media (min-width: 48rem) {
+          [data-header-nav-group] {
+            padding-inline: var(--spacing-margin);
+          }
+        }
+
+        .nav-has-dropdown {
+          position: relative;
+        }
+        .nav-dropdown {
+          position: absolute;
+          top: 100%;
+          inset-inline-start: calc(-1 * var(--spacing-nav-dropdown-offset-inline));
+          padding-block-start: var(--spacing-nav-dropdown-offset-block);
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(calc(-1 * var(--spacing-nav-dropdown-enter-offset)));
+          transition:
+            opacity 0.15s var(--ease-ui),
+            transform 0.15s var(--ease-ui),
+            visibility 0.15s;
+          z-index: 50;
+          pointer-events: none;
+        }
+        @media (hover: hover) {
+          .nav-has-dropdown:hover .nav-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
+          }
+        }
+        .nav-has-dropdown:focus-within .nav-dropdown {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
+          pointer-events: auto;
+        }
+        .nav-dropdown-inner {
+          background: var(--color-surface);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow);
+          padding: var(--spacing-nav-dropdown-surface-padding);
+          display: grid;
+          grid-template-columns: var(--spacing-nav-dropdown-column-width);
+          grid-auto-flow: column;
+          gap: 0 var(--spacing-nav-dropdown-gap-inline);
+          min-width: var(--spacing-nav-dropdown-column-width);
+        }
+        .nav-dropdown-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 0.875rem;
+          font-weight: 500;
+          line-height: 1.75;
+          color: var(--color-on-surface);
+          text-decoration: none;
+          padding: var(--spacing-nav-dropdown-item-padding-block) 0;
+          white-space: nowrap;
+          transition: opacity 0.15s var(--ease-ui);
+        }
+        .nav-dropdown-inner:hover > .nav-dropdown-item {
+          opacity: 0.6;
+        }
+        .nav-dropdown-inner > .nav-dropdown-item:hover {
+          opacity: 1;
+        }
+        .nav-dropdown-item:focus-visible {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
+          border-radius: var(--radius-sm);
+        }
+
+        /* Privacy / cookie consent banner. A bottom-anchored surface card that
+           bundles background + foreground + border + elevation + spacing from the
+           EXISTING tokens (surface/on-surface/border + --shadow-lg + --spacing-*),
+           exactly like .nav-dropdown-inner or the drawer utilities pair their own
+           surface treatment. Reads as a centered bottom bar on desktop and stacks on
+           mobile. BEHAVIOR — show/hide, persisting choice, and wiring Shopify
+           Customer Privacy / analytics consent — is the skill's job, not core's. */
+        .consent-banner {
+          position: fixed;
+          inset-inline: 0;
+          inset-block-end: 0;
+          z-index: 60;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          width: min(calc(100% - 2 * var(--spacing-margin)), var(--spacing-page));
+          margin-inline: auto;
+          margin-block-end: var(--spacing-margin);
+          padding: 1.25rem;
+          background: var(--color-surface);
+          color: var(--color-on-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-lg);
+        }
+        .consent-banner-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+        @media (min-width: 48rem) {
+          .consent-banner {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+          }
+          .consent-banner-actions {
+            flex-direction: row;
+            flex-shrink: 0;
+            align-items: center;
+          }
+        }
+
+        .remove-icon-top,
+        .remove-icon-bottom {
+          transition: transform 125ms ease-in-out;
+        }
+        @media (hover: hover) {
+          [command="--remove"]:hover .remove-icon-top {
+            transform: translate(
+                calc(-1 * var(--spacing-remove-icon-nudge-x)),
+                calc(-1 * var(--spacing-remove-icon-top-nudge-y))
+              )
+              rotate(-15deg);
+            transform-origin: 60% 50%;
+          }
+          [command="--remove"]:hover .remove-icon-bottom {
+            transform: translateY(var(--spacing-remove-icon-bottom-nudge-y));
+          }
+        }
+      }
+
+      @layer utilities {
+        .number-reset {
+          appearance: textfield;
+        }
+        .number-reset::-webkit-outer-spin-button,
+        .number-reset::-webkit-inner-spin-button {
+          appearance: none;
+        }
+
+        input[type="search"]::-webkit-search-cancel-button,
+        input[type="search"]::-webkit-search-decoration {
+          appearance: none;
+          -webkit-appearance: none;
+          display: none;
+        }
+
+        .marker-hidden {
+          list-style: none;
+        }
+        .marker-hidden::-webkit-details-marker {
+          display: none;
+        }
+
+        .scrollbar-none {
+          scrollbar-width: none;
+        }
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
+        }
+
+        @media (min-width: 48rem) {
+          .product-grid {
+            grid-template-columns: 2fr 1fr;
+          }
+        }
+
+        .content-visibility-auto {
+          content-visibility: auto;
+          contain-intrinsic-block-size: auto var(--section-height, 500px);
+        }
+
+        .contain-paint {
+          contain: paint;
+        }
+
+        .button-primary:is(:disabled, [aria-disabled="true"]),
+        .button-secondary:is(:disabled, [aria-disabled="true"]),
+        .button-outline:is(:disabled, [aria-disabled="true"]),
+        .button-icon:is(:disabled, [aria-disabled="true"]) {
+          cursor: not-allowed;
+        }
+
+        .richtext {
+          color: var(--color-on-surface);
+          line-height: 1.625;
+        }
+        .richtext h1,
+        .richtext h2,
+        .richtext h3,
+        .richtext h4,
+        .richtext h5,
+        .richtext h6 {
+          font-family: var(--font-heading);
+          font-weight: 700;
+          color: var(--color-on-surface);
+          line-height: 1.25;
+          margin-block-start: 1.5rem;
+          margin-block-end: 0.75rem;
+        }
+        .richtext p {
+          margin-block-end: 1rem;
+        }
+        .richtext ul {
+          list-style: disc;
+          padding-inline-start: 1.5rem;
+          margin-block-end: 1rem;
+        }
+        .richtext ol {
+          list-style: decimal;
+          padding-inline-start: 1.5rem;
+          margin-block-end: 1rem;
+        }
+        .richtext a {
+          color: var(--color-accent);
+          text-decoration: underline;
+          text-underline-offset: 2px;
+        }
+        .richtext > *:first-child {
+          margin-top: 0;
+        }
+        .richtext > *:last-child {
+          margin-bottom: 0;
+        }
+
+        .dialog-center {
+          border: none;
+          padding: 0;
+          margin: 0;
+          max-width: none;
+          max-height: none;
+          overflow: hidden;
+          background: var(--color-surface);
+          color: var(--color-on-surface);
+          box-shadow: var(--shadow-xl);
+          position: fixed;
+          inset: 0;
+          width: 100vw;
+          height: 100dvh;
+        }
+        .dialog-center::backdrop {
+          background: var(--color-overlay-scrim);
+        }
+        @media (min-width: 48rem) {
+          .dialog-center {
+            inset-block-start: var(--spacing-search-modal-offset-block-start);
+            inset-block-end: auto;
+            inset-inline-start: 50%;
+            inset-inline-end: auto;
+            transform: translateX(-50%);
+            width: var(--spacing-search-modal-width);
+            height: auto;
+            max-height: var(--spacing-dialog-max-height);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+          }
+        }
+        @media (prefers-reduced-motion: no-preference) and (min-width: 48rem) {
+          .dialog-center[open] {
+            animation: dialog-center-enter 150ms var(--ease-ui);
+          }
+        }
+        @keyframes dialog-center-enter {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) scale(0.98);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+          }
+        }
+
+        .drawer-right,
+        .drawer-left {
+          border: none;
+          padding: 0;
+          margin: 0;
+          max-width: none;
+          max-height: none;
+          overflow: hidden;
+          background: var(--color-surface);
+          box-shadow: var(--shadow-xl);
+          position: fixed;
+          inset-block: 0;
+          width: 100vw;
+          height: 100%;
+        }
+        .drawer-right {
+          inset-inline-start: auto;
+          inset-inline-end: 0;
+        }
+        .drawer-left {
+          inset-inline-start: 0;
+          inset-inline-end: auto;
+        }
+        .drawer-right::backdrop,
+        .drawer-left::backdrop {
+          background: rgb(0 0 0 / 0.5);
+        }
+        @media (min-width: 480px) {
+          .drawer-right,
+          .drawer-left {
+            width: var(--spacing-drawer-width);
+          }
+        }
+      }
+
+      @utility bleed-full {
+        margin-inline: calc(
+          -1 * var(--spacing-margin) - max(0px, (100vw - var(--spacing-page)) / 2)
+        );
+        width: calc(100% + 2 * var(--spacing-margin) + max(0px, 100vw - var(--spacing-page)));
+      }
+
+      @utility gallery-bleed-start {
+        margin-inline-start: calc(
+          -1 * var(--spacing-margin) - max(0px, (100vw - var(--spacing-page)) / 2)
+        );
+        width: calc(100% + var(--spacing-margin) + max(0px, (100vw - var(--spacing-page)) / 2));
+      }
+      /* AUTO-GENERATED END */
+    </style>
+  </head>
+  <body class="bg-surface text-on-surface font-body flex min-h-svh flex-col antialiased">
+    <a
+      href="#main-content"
+      class="focus-visible:bg-interactive focus-visible:text-interactive-text sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:start-4 focus-visible:top-4 focus-visible:z-50 focus-visible:rounded focus-visible:px-4 focus-visible:py-2"
+    >
+      Skip to content
+    </a>
+
+    <div role="region" aria-label="Announcement" class="bg-on-surface px-margin py-2.5 text-center">
+      <p class="type-body-sm text-surface">Free shipping on orders over $50</p>
+    </div>
+
+    <!-- AUTO-GENERATED: reference/_partials/header.html START -->
+    <header class="border-border bg-surface sticky top-0 z-40 border-b">
+      <div
+        class="max-w-page px-margin mx-auto flex h-16 w-full items-center justify-between"
+        data-header-nav-group
+      >
+        <div class="flex items-center gap-2">
+          <div class="-ms-2 hidden max-md:block" data-hamburger-wrapper>
+            <button
+              type="button"
+              commandfor="mobile-nav-drawer"
+              command="show-modal"
+              class="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center gap-2 rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+              aria-label="Menu"
+            >
+              <img
+                src="../icons/icon-menu.svg"
+                width="20"
+                height="20"
+                alt=""
+                class="size-5"
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+
+          <a
+            href="#"
+            class="text-on-surface focus-visible:outline-accent inline-flex items-center rounded-sm text-lg font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            CORE
+          </a>
+        </div>
+
+        <nav
+          aria-label="Main navigation"
+          class="mx-8 hidden min-w-0 flex-1 items-center gap-8 md:flex"
+          data-desktop-nav
+        >
+          <s-nav-dropdown class="nav-has-dropdown">
+            <a
+              href="#"
+              aria-haspopup="true"
+              class="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
+            >
+              New arrivals
+            </a>
+            <div class="nav-dropdown">
+              <div class="nav-dropdown-inner">
+                <a
+                  href="#"
+                  class="nav-dropdown-item motion-safe:transition-transform motion-safe:active:scale-[0.97]"
+                  >Outerwear</a
+                >
+                <a
+                  href="#"
+                  class="nav-dropdown-item motion-safe:transition-transform motion-safe:active:scale-[0.97]"
+                  >Accessories</a
+                >
+                <a
+                  href="#"
+                  class="nav-dropdown-item motion-safe:transition-transform motion-safe:active:scale-[0.97]"
+                  >Objects</a
+                >
+              </div>
+            </div>
+          </s-nav-dropdown>
+          <a
+            href="#"
+            class="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
+            >Essentials</a
+          >
+          <a
+            href="#"
+            class="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
+            >Objects</a
+          >
+          <a
+            href="#"
+            class="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
+            >Journal</a
+          >
+        </nav>
+
+        <div class="flex items-center gap-0">
+          <a
+            href="/search"
+            class="button-icon focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center gap-2 rounded font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+            aria-label="Search"
+            data-testid="search-modal-trigger"
+          >
+            <img
+              src="../icons/icon-search.svg"
+              width="20"
+              height="20"
+              alt=""
+              class="size-5"
+              aria-hidden="true"
+            />
+          </a>
+          <noscript>
+            <form action="/search" method="get" role="search" class="sr-only">
+              <label for="header-search-q">Search</label>
+              <input id="header-search-q" name="q" type="search" />
+              <button type="submit">Search</button>
+            </form>
+          </noscript>
+          <a
+            href="#"
+            class="text-on-surface focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
+            aria-label="Account"
+          >
+            <img
+              src="../icons/icon-user.svg"
+              width="20"
+              height="20"
+              alt=""
+              class="size-5"
+              aria-hidden="true"
+            />
+          </a>
+          <button
+            type="button"
+            commandfor="cart-drawer"
+            command="show-modal"
+            class="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded bg-transparent p-0 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
+            aria-label="Cart (2 items)"
+          >
+            <span
+              class="relative inline-flex size-5 shrink-0 items-center justify-center"
+              aria-hidden="true"
+            >
+              <img src="../icons/icon-cart.svg" width="20" height="20" alt="" class="size-5" />
+              <span
+                class="bg-interactive text-interactive-text absolute end-0 top-0 flex h-5 w-5 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-medium"
+              >
+                2
+              </span>
+            </span>
+          </button>
+          <span aria-live="polite" aria-atomic="true" class="sr-only">2 items in cart</span>
+        </div>
+      </div>
+
+      <s-dialog close-on-navigate>
+        <dialog
+          id="mobile-nav-drawer"
+          class="drawer-left bg-surface text-on-surface"
+          aria-labelledby="mobile-nav-title"
+        >
+          <div class="flex h-full flex-col">
+            <div class="relative flex min-h-[52px] shrink-0 items-center px-4 py-1">
+              <button
+                type="button"
+                id="mobile-nav-back"
+                commandfor="mobile-nav"
+                command="--pop"
+                class="text-on-surface focus-visible:outline-accent hidden items-center gap-1 rounded-sm py-2 ps-1 pe-2 text-sm hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
+                aria-label="Back"
+              >
+                <img
+                  src="../icons/icon-chevron-left.svg"
+                  width="16"
+                  height="16"
+                  alt=""
+                  class="size-4"
+                  aria-hidden="true"
+                />
+              </button>
+              <span
+                class="text-on-surface pointer-events-none absolute left-1/2 -translate-x-1/2 text-sm font-medium"
+                id="mobile-nav-title"
+                aria-live="polite"
+                >Mobile navigation</span
+              >
+              <button
+                type="button"
+                commandfor="mobile-nav-drawer"
+                command="close"
+                class="button-icon focus-visible:outline-accent ms-auto inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+                aria-label="Close"
+              >
+                <img
+                  src="../icons/icon-x.svg"
+                  width="20"
+                  height="20"
+                  alt=""
+                  class="size-5"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+              <s-mobile-nav id="mobile-nav" class="relative block h-full overflow-hidden">
+                <div
+                  id="mobile-nav-panel-root"
+                  class="absolute inset-0 translate-x-0 overflow-y-auto"
+                >
+                  <nav aria-label="Mobile navigation">
+                    <ul role="list" class="flex flex-col">
+                      <li>
+                        <a
+                          href="#"
+                          class="text-on-surface flex items-center rounded-sm py-3 text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
+                          >New arrivals</a
+                        >
+                      </li>
+                      <li>
+                        <a
+                          href="#"
+                          class="text-on-surface flex items-center rounded-sm py-3 text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
+                          >Essentials</a
+                        >
+                      </li>
+                      <li>
+                        <a
+                          href="#"
+                          class="text-on-surface flex items-center rounded-sm py-3 text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
+                          >Objects</a
+                        >
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              </s-mobile-nav>
+            </div>
+          </div>
+        </dialog>
+      </s-dialog>
+
+      <s-dialog>
+        <dialog
+          id="cart-drawer"
+          class="drawer-right bg-surface text-on-surface"
+          aria-labelledby="cart-drawer-title"
+        >
+          <div class="flex h-full flex-col">
+            <div class="flex shrink-0 items-center py-2 ps-4">
+              <div class="flex flex-1 items-center gap-2">
+                <h2 id="cart-drawer-title" class="text-on-surface text-lg font-medium">Cart</h2>
+                <span class="cart-count-badge">2</span>
+              </div>
+              <button
+                type="button"
+                commandfor="cart-drawer"
+                command="close"
+                class="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+                aria-label="Close"
+              >
+                <img
+                  src="../icons/icon-x.svg"
+                  width="20"
+                  height="20"
+                  alt=""
+                  class="size-5"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+              <s-cart
+                class="block"
+                id="cart-drawer-items"
+                data-partials="cart-drawer,cart-count"
+                data-removed-message="Item removed from cart"
+                data-updated-message="Cart updated"
+                data-update-error="Could not update cart. Please try again."
+              >
+                <div class="divide-border -mt-4 divide-y">
+                  <div
+                    class="grid grid-cols-[var(--spacing-cart-line-thumbnail-width)_1fr_auto] items-stretch gap-3 py-4"
+                  >
+                    <div class="bg-surface-secondary h-full w-full overflow-hidden">
+                      <img
+                        src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=240&q=80"
+                        alt="Canvas Overshirt in Cocoa"
+                        class="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div class="min-w-0">
+                      <p class="type-body-sm text-on-surface font-medium">Canvas Overshirt</p>
+                      <p class="text-on-surface-secondary mt-1 text-xs">Cocoa / M</p>
+                      <p class="text-on-surface mt-2 text-sm">$128.00</p>
+                    </div>
+                    <button
+                      type="button"
+                      commandfor="cart-drawer-items"
+                      command="--remove"
+                      class="button-icon focus-visible:outline-accent self-start rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,opacity,transform] motion-safe:active:scale-[0.97]"
+                      aria-label="Remove: Canvas Overshirt"
+                    >
+                      <img
+                        src="../icons/icon-trash.svg"
+                        width="20"
+                        height="20"
+                        alt=""
+                        class="size-5"
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </div>
+                </div>
+                <span class="sr-only" aria-live="polite" aria-atomic="true" data-cart-status></span>
+              </s-cart>
+            </div>
+            <div class="border-border shrink-0 border-t p-4">
+              <div class="flex flex-col gap-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-on-surface text-sm font-medium">Estimated total</span>
+                  <span class="text-on-surface text-base font-medium">$128.00</span>
+                </div>
+                <p class="text-on-surface-secondary text-xs">
+                  Taxes and shipping calculated at checkout
+                </p>
+                <a
+                  href="#"
+                  class="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 w-full items-center justify-center gap-2 px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+                  >Checkout</a
+                >
+              </div>
+            </div>
+          </div>
+        </dialog>
+      </s-dialog>
+    </header>
+    <!-- AUTO-GENERATED: reference/_partials/header.html END -->
+
+    <main class="flex-1" id="main-content" tabindex="-1">
+      <div class="max-w-page px-margin mx-auto w-full py-8 md:py-12">
+        <!-- Breadcrumb -->
+        <nav aria-label="Breadcrumb" class="mb-6">
+          <ol class="text-on-surface-secondary flex items-center gap-1.5 text-sm">
+            <li>
+              <a
+                href="#"
+                class="hover:text-on-surface rounded-sm py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current motion-safe:transition-colors"
+                >Home</a
+              >
+            </li>
+            <li aria-hidden="true" class="text-on-surface-secondary">/</li>
+            <li>
+              <span aria-current="page" class="text-on-surface font-medium">Collections</span>
+            </li>
+          </ol>
+        </nav>
+
+        <!-- Page heading -->
+        <div class="mb-8">
+          <h1 class="type-display text-on-surface">Collections</h1>
+        </div>
+
+        <!-- Collections grid -->
+        <h2 class="sr-only">Browse collections</h2>
+        <div class="contain-paint">
+          <ul role="list" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <!-- CollectionCard: image + gradient overlay + title -->
+            <li>
+              <article class="group card rounded-card overflow-hidden">
+                <div class="bg-surface-secondary relative block aspect-square overflow-hidden">
+                  <div
+                    class="h-full w-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04]"
+                  >
+                    <img
+                      src="https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?auto=format&fit=crop&w=900&q=80"
+                      alt="Men"
+                      class="h-full w-full object-cover"
+                      loading="eager"
+                      fetchpriority="high"
+                    />
+                  </div>
+                </div>
+                <div class="overlay-dark pointer-events-none absolute inset-0"></div>
+                <div
+                  class="text-interactive-text pointer-events-none absolute inset-x-0 bottom-0 z-10 p-4 text-left"
+                >
+                  <h3 class="type-body-lg font-medium">Men</h3>
+                </div>
+                <a href="/collections/men" class="card-link" aria-label="Men"></a>
+              </article>
+            </li>
+            <!-- CollectionCard -->
+            <li>
+              <article class="group card rounded-card overflow-hidden">
+                <div class="bg-surface-secondary relative block aspect-square overflow-hidden">
+                  <div
+                    class="h-full w-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04]"
+                  >
+                    <img
+                      src="https://images.unsplash.com/photo-1653398597732-37fc919284dd?auto=format&fit=crop&w=900&q=80"
+                      alt="Women"
+                      class="h-full w-full object-cover"
+                      loading="eager"
+                    />
+                  </div>
+                </div>
+                <div class="overlay-dark pointer-events-none absolute inset-0"></div>
+                <div
+                  class="text-interactive-text pointer-events-none absolute inset-x-0 bottom-0 z-10 p-4 text-left"
+                >
+                  <h3 class="type-body-lg font-medium">Women</h3>
+                </div>
+                <a href="/collections/women" class="card-link" aria-label="Women"></a>
+              </article>
+            </li>
+            <!-- CollectionCard -->
+            <li>
+              <article class="group card rounded-card overflow-hidden">
+                <div class="bg-surface-secondary relative block aspect-square overflow-hidden">
+                  <div
+                    class="h-full w-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04]"
+                  >
+                    <img
+                      src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=900&q=80"
+                      alt="Unisex"
+                      class="h-full w-full object-cover"
+                      loading="eager"
+                    />
+                  </div>
+                </div>
+                <div class="overlay-dark pointer-events-none absolute inset-0"></div>
+                <div
+                  class="text-interactive-text pointer-events-none absolute inset-x-0 bottom-0 z-10 p-4 text-left"
+                >
+                  <h3 class="type-body-lg font-medium">Unisex</h3>
+                </div>
+                <a href="/collections/unisex" class="card-link" aria-label="Unisex"></a>
+              </article>
+            </li>
+            <!-- CollectionCard -->
+            <li>
+              <article class="group card rounded-card overflow-hidden">
+                <div class="bg-surface-secondary relative block aspect-square overflow-hidden">
+                  <div
+                    class="h-full w-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04]"
+                  >
+                    <img
+                      src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"
+                      alt="Tops"
+                      class="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+                <div class="overlay-dark pointer-events-none absolute inset-0"></div>
+                <div
+                  class="text-interactive-text pointer-events-none absolute inset-x-0 bottom-0 z-10 p-4 text-left"
+                >
+                  <h3 class="type-body-lg font-medium">Tops</h3>
+                </div>
+                <a href="/collections/tops" class="card-link" aria-label="Tops"></a>
+              </article>
+            </li>
+            <!-- CollectionCard -->
+            <li>
+              <article class="group card rounded-card overflow-hidden">
+                <div class="bg-surface-secondary relative block aspect-square overflow-hidden">
+                  <div
+                    class="h-full w-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04]"
+                  >
+                    <img
+                      src="https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=900&q=80"
+                      alt="Bottoms"
+                      class="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+                <div class="overlay-dark pointer-events-none absolute inset-0"></div>
+                <div
+                  class="text-interactive-text pointer-events-none absolute inset-x-0 bottom-0 z-10 p-4 text-left"
+                >
+                  <h3 class="type-body-lg font-medium">Bottoms</h3>
+                </div>
+                <a href="/collections/bottoms" class="card-link" aria-label="Bottoms"></a>
+              </article>
+            </li>
+            <!-- CollectionCard -->
+            <li>
+              <article class="group card rounded-card overflow-hidden">
+                <div class="bg-surface-secondary relative block aspect-square overflow-hidden">
+                  <div
+                    class="h-full w-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04]"
+                  >
+                    <img
+                      src="https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=900&q=80"
+                      alt="Accessories"
+                      class="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+                <div class="overlay-dark pointer-events-none absolute inset-0"></div>
+                <div
+                  class="text-interactive-text pointer-events-none absolute inset-x-0 bottom-0 z-10 p-4 text-left"
+                >
+                  <h3 class="type-body-lg font-medium">Accessories</h3>
+                </div>
+                <a href="/collections/accessories" class="card-link" aria-label="Accessories"></a>
+              </article>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </main>
+
+    <!-- AUTO-GENERATED: reference/_partials/footer.html START -->
+    <footer class="max-w-page px-margin mx-auto w-full">
+      <div
+        class="border-border grid grid-cols-1 gap-8 border-t py-12 text-sm md:grid-cols-2 lg:grid-cols-4"
+      >
+        <div>
+          <h2 class="type-body-sm text-on-surface mb-4 font-medium">CORE</h2>
+          <p class="text-on-surface-secondary">&copy; 2026 CORE</p>
+        </div>
+        <nav aria-labelledby="footer-quick-links-heading">
+          <h2 class="type-body-sm text-on-surface mb-4 font-medium" id="footer-quick-links-heading">
+            Quick links
+          </h2>
+          <ul role="list" class="flex flex-col gap-2">
+            <li>
+              <a
+                href="#"
+                class="min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors"
+                >New arrivals</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                class="min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors"
+                >Essentials</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                class="min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors"
+                >Objects</a
+              >
+            </li>
+          </ul>
+        </nav>
+        <nav aria-labelledby="footer-customer-care-heading">
+          <h2
+            class="type-body-sm text-on-surface mb-4 font-medium"
+            id="footer-customer-care-heading"
+          >
+            Customer care
+          </h2>
+          <ul role="list" class="flex flex-col gap-2">
+            <li>
+              <a
+                href="#"
+                class="min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors"
+                >Search</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                class="min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors"
+                >Account</a
+              >
+            </li>
+          </ul>
+        </nav>
+        <div>
+          <h2 class="type-body-sm text-on-surface mb-4 font-medium">Payment methods</h2>
+          <div class="flex flex-wrap items-center gap-2">
+            <span
+              class="border-border text-on-surface-secondary rounded-sm border px-2 py-1 text-xs"
+              >Visa</span
+            >
+            <span
+              class="border-border text-on-surface-secondary rounded-sm border px-2 py-1 text-xs"
+              >Mastercard</span
+            >
+            <span
+              class="border-border text-on-surface-secondary rounded-sm border px-2 py-1 text-xs"
+              >Shop Pay</span
+            >
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- AUTO-GENERATED: reference/_partials/footer.html END -->
+  </body>
+</html>

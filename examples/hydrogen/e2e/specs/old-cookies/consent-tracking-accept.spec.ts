@@ -39,7 +39,7 @@ test.describe("Consent Tracking - Auto-Allowed (Consent Allowed by Default)", ()
       "_shopify_s cookie value should match navigation server-timing _s value",
     ).toBe(navigationServerTiming._s);
 
-    // 5. Wait for perf-kit to download and analytics requests to fire
+    // 5. Confirm perf-kit is loaded and wait for analytics requests to fire
     await storefront.waitForPerfKit();
     storefront.expectPerfKitLoaded();
 

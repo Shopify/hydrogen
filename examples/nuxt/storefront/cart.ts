@@ -3,6 +3,7 @@ import {
   createCartFormRegister,
   createCartStore,
   type CartDataFromHandlers,
+  type CreateCartStoreOptions,
   type CartState,
   type CartStore,
 } from "@shopify/hydrogen";
@@ -24,12 +25,13 @@ const cartStoreKey = Symbol("NuxtCartStore");
 const cartEndpointState = { value: DEFAULT_CART_ENDPOINT };
 
 type NuxtCartData = CartDataFromHandlers<typeof cartHandlers>;
+type NuxtCartInitialData = CreateCartStoreOptions<NuxtCartData>["initialData"];
 
 export function getCartEndpoint(): string {
   return cartEndpointState.value;
 }
 
-export function provideCartStore(initialData?: NuxtCartData): CartStore {
+export function provideCartStore(initialData?: NuxtCartInitialData): CartStore {
   configureCartEndpoint(cartEndpointState.value);
   const store = createCartStore({ initialData });
   provide(cartStoreKey, store);

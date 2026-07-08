@@ -1,72 +1,12 @@
 <script setup lang="ts">
-import { gql } from "@shopify/hydrogen";
-import type { AvailableFilter, ProductFilter } from "@shopify/hydrogen";
-import { normalizeCollectionSearch, parseCollectionParams } from "@shopify/hydrogen";
-import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
+import { normalizeCollectionSearch } from "@shopify/hydrogen";
 
-import type { ProductCardData } from "~/components/ProductCard.vue";
+import { AnalyticsEvent, analyticsShop, getAnalytics } from "~/storefront/analytics";
 import { collectionRouteSearch } from "~/utils/collection-route-search";
-
-const COLLECTION_QUERY = gql(`
-  query Collection(
-    $handle: String!
-    $filters: [ProductFilter!]
-    $sortKey: ProductCollectionSortKeys
-    $reverse: Boolean
-  ) {
-    collection(handle: $handle) {
-      handle
-      title
-      description
-      products(first: 24, filters: $filters, sortKey: $sortKey, reverse: $reverse) {
-        nodes {
-          handle
-          title
-          featuredImage {
-            url
-            altText
-          }
-          priceRange {
-            minVariantPrice {
-              amount
-              currencyCode
-            }
-          }
-        }
-        filters {
-          id
-          label
-          type
-          presentation
-          values {
-            id
-            label
-            count
-            input
-          }
-        }
-      }
-    }
-  }
-`);
-
-const TAXONOMY_METAFIELD_KEY_SEPARATOR = ".";
-
-type CollectionQueryResult = {
-  collection: {
-    handle: string;
-    title: string;
-    description: string | null;
-    products: {
-      nodes: ProductCardData[];
-      filters: AvailableFilter[];
-    };
-  } | null;
-};
+import { toFetchQuery } from "~/utils/fetch-query";
 
 const route = useRoute();
 const handle = computed(() => route.params.handle as string);
-const { $storefrontClient } = useNuxtApp();
 
 // Browse-param changes for back/forward only — filter toggles go through handleChange.
 const collectionQueryKey = computed(() => collectionRouteSearch(route));
@@ -76,93 +16,19 @@ const collectionQueryKey = computed(() => collectionRouteSearch(route));
 // (navigateTo updates the URL bar first), so dataSearch disagrees with
 // urlSearch and the collection store stays in loading forever.
 const fetchSearchOverride = ref<string | null>(null);
+const collectionApiPath = computed(
+  () => `/api/collections/${encodeURIComponent(handle.value)}` as const,
+);
 
-type CollectionPageData = {
-  /** Params this product snapshot was fetched for (not live route.query — see collection store). */
-  dataSearch: string;
-  collection: NonNullable<CollectionQueryResult["collection"]>;
-};
-
-function toStorefrontApiFilters(
-  filters: ProductFilter[],
-): StorefrontApiProductFilter[] | undefined {
-  const storefrontFilters = filters.flatMap(toStorefrontApiFilter);
-  return storefrontFilters.length > 0 ? storefrontFilters : undefined;
-}
-
-function toStorefrontApiFilter(filter: ProductFilter): StorefrontApiProductFilter[] {
-  const storefrontFilters: StorefrontApiProductFilter[] = [];
-
-  if (filter.available != null) storefrontFilters.push({ available: filter.available });
-  if (filter.category) storefrontFilters.push({ category: filter.category });
-  if (filter.price) storefrontFilters.push({ price: filter.price });
-  if (filter.productType != null) storefrontFilters.push({ productType: filter.productType });
-  if (filter.productVendor != null) storefrontFilters.push({ productVendor: filter.productVendor });
-  if (filter.tag != null) storefrontFilters.push({ tag: filter.tag });
-  if (filter.productMetafield?.value != null) {
-    const { namespace, key, value } = filter.productMetafield;
-    storefrontFilters.push({ productMetafield: { namespace, key, value } });
-  }
-  if (filter.variantMetafield?.value != null) {
-    const { namespace, key, value } = filter.variantMetafield;
-    storefrontFilters.push({ variantMetafield: { namespace, key, value } });
-  }
-  if (filter.variantOption?.value != null) {
-    const { name, value } = filter.variantOption;
-    storefrontFilters.push({ variantOption: { name, value } });
-  }
-
-  const taxonomyMetafield = toStorefrontApiTaxonomyMetafield(filter);
-  if (taxonomyMetafield) storefrontFilters.push({ taxonomyMetafield });
-
-  return storefrontFilters;
-}
-
-function toStorefrontApiTaxonomyMetafield(filter: ProductFilter) {
-  if (!filter.taxonomyMetafield) return null;
-
-  const { key: fullKey, value } = filter.taxonomyMetafield;
-  const separatorIndex = fullKey.indexOf(TAXONOMY_METAFIELD_KEY_SEPARATOR);
-  if (separatorIndex < 0) return null;
-
-  const namespace = fullKey.slice(0, separatorIndex);
-  const key = fullKey.slice(separatorIndex + TAXONOMY_METAFIELD_KEY_SEPARATOR.length);
-  if (!namespace || !key) return null;
-
-  return { namespace, key, value };
-}
-
-const { data, refresh } = await useAsyncData(
-  computed(() => `collection-${handle.value}`),
-  async () => {
-    const search = fetchSearchOverride.value ?? collectionRouteSearch(route);
-    const params = new URLSearchParams(search);
-    const parsed = parseCollectionParams(params);
-
-    const response = await $storefrontClient.graphql(COLLECTION_QUERY, {
-      variables: {
-        handle: handle.value,
-        filters: toStorefrontApiFilters(parsed.filters),
-        sortKey: parsed.sortKey ?? undefined,
-        reverse: parsed.reverse || undefined,
-      },
-    });
-    const result = response.data as CollectionQueryResult | null;
-    if (!result?.collection) {
-      return null;
-    }
-
-    return {
-      dataSearch: search,
-      collection: result.collection,
-    } satisfies CollectionPageData;
-  },
+const { data, refresh } = await useFetch(() => collectionApiPath.value, {
+  key: computed(() => `collection-${handle.value}`),
+  query: computed(() => toFetchQuery(fetchSearchOverride.value ?? collectionRouteSearch(route))),
   // Only watch handle — filter/sort refetch via refreshCollection() from handleChange.
   // Also watching collectionQueryKey here races that explicit refresh: two concurrent
   // fetches can finish out of order and tag dataSearch with a stale route snapshot
   // while urlSearch already moved, so the collection store never settles.
-  { watch: [handle] },
-);
+  watch: [handle],
+});
 
 // handleChange already calls refreshCollection; suppress this watch during that
 // window so back/forward still refetch but in-app filter toggles don't double-fetch.
@@ -184,6 +50,25 @@ const collection = computed(() => {
   }
 
   return collectionValue;
+});
+
+function publishCollectionView() {
+  const analytics = getAnalytics();
+  if (!analytics) return;
+
+  analytics.publish(AnalyticsEvent.COLLECTION_VIEWED, {
+    collection: {
+      id: collection.value.id,
+      handle: collection.value.handle,
+    },
+    url: window.location.href,
+    shop: analyticsShop,
+  });
+}
+
+onMounted(() => {
+  publishCollectionView();
+  watch(() => collection.value.handle, publishCollectionView);
 });
 
 async function refreshCollection(search: string) {

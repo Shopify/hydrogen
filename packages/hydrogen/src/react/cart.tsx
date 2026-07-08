@@ -1,3 +1,5 @@
+"use client";
+
 import {
   createContext,
   useContext,
@@ -15,6 +17,7 @@ import { attachQuantityInput } from "../core/cart/attach-quantity-input";
 import {
   configureCartEndpoint as configureCoreCartEndpoint,
   createCartStore,
+  type CreateCartStoreOptions,
   type CartStore,
 } from "../core/cart/cart";
 import { createCartFormRegister } from "../core/cart/form";
@@ -37,9 +40,12 @@ export function getCartEndpoint(): string {
 }
 
 type TypedCartProviderProps<TData extends CartData> = {
-  initialData?: TData;
+  initialData?: CartInitialData<TData>;
   children?: ReactNode;
 };
+
+type CartInitialData<TData extends CartData = CartData> =
+  CreateCartStoreOptions<TData>["initialData"];
 
 type TypedCartComponents<TData extends CartData> = {
   CartProvider: (props: TypedCartProviderProps<TData>) => ReactNode;
@@ -58,7 +64,9 @@ export function createCartComponents<THandlers>(): TypedCartComponents<
 
   function TypedCartProvider({ initialData, children }: TypedCartProviderProps<TData>) {
     return (
-      <CartProvider initialData={initialData as CartData | undefined}>{children}</CartProvider>
+      <CartProvider initialData={initialData as CartInitialData | undefined}>
+        {children}
+      </CartProvider>
     );
   }
 
@@ -98,12 +106,11 @@ export function CartProvider({
   initialData,
   children,
 }: {
-  initialData?: CartData;
+  initialData?: CartInitialData;
   children?: ReactNode;
 }) {
   // oxlint-disable-next-line react-hooks/exhaustive-deps -- store is created once with the initial server data
   const store = useMemo(() => createCartStore({ initialData }), []);
-  const hydrated = useRef(Boolean(initialData));
 
   useEffect(() => {
     configureCoreCartEndpoint(cartEndpoint);
@@ -111,12 +118,6 @@ export function CartProvider({
     return () => {
       store.destroy();
     };
-  }, [store]);
-
-  useEffect(() => {
-    if (hydrated.current) return;
-    hydrated.current = true;
-    store.fetch().catch(() => {});
   }, [store]);
 
   return <CartContext.Provider value={store}>{children}</CartContext.Provider>;

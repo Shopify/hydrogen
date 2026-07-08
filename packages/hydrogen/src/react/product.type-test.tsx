@@ -6,11 +6,32 @@ import { useProductForm } from "./product";
 
 declare const store: ProductFormStore<ProductInput<ProductVariantInput>>;
 
+type ProductOptionValueSwatch = {
+  color: string | null;
+  image: { previewImage: { url: string } | null } | null;
+} | null;
+type ProductWithSwatches = Omit<ProductInput<ProductVariantInput>, "options"> & {
+  options: Array<{
+    name: string;
+    optionValues: Array<{
+      name: string;
+      firstSelectableVariant?: ProductVariantInput | null;
+      swatch?: ProductOptionValueSwatch;
+    }>;
+  }>;
+};
+declare const swatchStore: ProductFormStore<ProductWithSwatches>;
+
 export function productFormTypes() {
   const result = useProductForm(store);
   const { register } = result;
 
   expectTypeOf(result.selectedVariant).toEqualTypeOf<ProductVariantInput | null>();
+
+  const swatchResult = useProductForm(swatchStore);
+  expectTypeOf(swatchResult.options[0].values[0].swatch).toEqualTypeOf<
+    ProductOptionValueSwatch | undefined
+  >();
 
   const merchandiseProps: InputHTMLAttributes<HTMLInputElement> = {
     type: "hidden",
@@ -42,6 +63,14 @@ export function productFormTypes() {
   };
   expectTypeOf(buttonProps["aria-pressed"]).toEqualTypeOf<
     ButtonHTMLAttributes<HTMLButtonElement>["aria-pressed"]
+  >();
+
+  const addToCartProps: ButtonHTMLAttributes<HTMLButtonElement> = {
+    disabled: false,
+    ...register("addToCart", {}),
+  };
+  expectTypeOf(addToCartProps.type).toEqualTypeOf<
+    ButtonHTMLAttributes<HTMLButtonElement>["type"]
   >();
 
   // @ts-expect-error product register only accepts product-relevant fields

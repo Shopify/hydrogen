@@ -1,34 +1,12 @@
 <script setup lang="ts">
-import { gql } from "@shopify/hydrogen";
-
-const COLLECTIONS_QUERY = gql(`
-  query Collections {
-    collections(first: 12) {
-      nodes {
-        handle
-        title
-        image {
-          url
-          altText
-        }
-      }
-    }
-  }
-`);
-
-const { $storefrontClient } = useNuxtApp();
-
-const { data } = await useAsyncData("collections", async () => {
-  const response = await $storefrontClient.graphql(COLLECTIONS_QUERY);
-  return response.data;
-});
+const { data } = await useFetch("/api/collections", { key: "collections" });
 const collections = computed(() => data.value?.collections?.nodes ?? []);
 
 useHead({ title: "Collections — Mock.shop" });
 </script>
 
 <template>
-  <main class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
+  <main id="main-content" tabindex="-1" class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
     <header>
       <h1 class="text-6xl font-black tracking-tight md:text-8xl">Collections</h1>
     </header>

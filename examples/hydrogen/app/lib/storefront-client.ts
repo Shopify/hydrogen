@@ -1,12 +1,13 @@
 import { getBuyerIp } from "@shared/buyer-ip";
 import { getPrivateStorefrontToken } from "@shared/private-env";
-import type { StorefrontRequestContext } from "@shopify/hydrogen";
 import {
+  Cache as HydrogenCache,
   createStorefrontClient,
   type GraphQLFormattedError,
   type RequestScopedPrivateStorefrontClient,
+  type CachingStrategy,
+  type ShopifyRequestContext,
 } from "@shopify/hydrogen";
-import { CacheLong, createWithCache, type CachingStrategy } from "@shopify/hydrogen-classic";
 
 import type { I18nLocale } from "~/lib/i18n";
 
@@ -16,7 +17,7 @@ type CreateStorefrontClientOptions = {
   cache: Cache;
   waitUntil: ExecutionContext["waitUntil"];
   i18n: I18nLocale;
-  storefrontRequestContext: StorefrontRequestContext;
+  shopifyRequestContext: ShopifyRequestContext;
 };
 
 type StorefrontQueryOptions = {
@@ -32,13 +33,14 @@ type DocumentResult<Doc> = "__apiType" extends keyof Doc
     : Record<string, unknown>
   : Record<string, unknown>;
 
-type StorefrontQueryResult<Doc extends StorefrontDocument> = DocumentResult<Doc> & {
-  errors?: GraphQLFormattedError[];
-};
+type StorefrontQueryResult<Doc extends StorefrontDocument> = DocumentResult<Doc> &
+  Record<string, unknown> & {
+    errors?: GraphQLFormattedError[];
+  };
 
 type StorefrontDocumentGraphql = <Doc extends StorefrontDocument>(
   query: Doc,
-  options?: { variables?: Record<string, unknown> },
+  options?: { variables?: Record<string, unknown>; cache?: CachingStrategy },
 ) => Promise<{
   data: Partial<DocumentResult<Doc>> | null;
   errors?: GraphQLFormattedError[];
@@ -47,7 +49,6 @@ type StorefrontDocumentGraphql = <Doc extends StorefrontDocument>(
 
 export type StorefrontClient = RequestScopedPrivateStorefrontClient & {
   i18n: I18nLocale;
-  CacheLong: typeof CacheLong;
   mutate: <Doc extends StorefrontDocument>(
     query: Doc,
     options?: Omit<StorefrontQueryOptions, "cache">,
@@ -59,11 +60,10 @@ export type StorefrontClient = RequestScopedPrivateStorefrontClient & {
 };
 
 function CacheDefault(): CachingStrategy {
-  return {
-    mode: "public",
+  return HydrogenCache({
     maxAge: 1,
     staleWhileRevalidate: 86_399,
-  };
+  });
 }
 
 export function createStorefrontClientForRequest({
@@ -72,48 +72,34 @@ export function createStorefrontClientForRequest({
   cache,
   waitUntil,
   i18n,
-  storefrontRequestContext,
+  shopifyRequestContext,
 }: CreateStorefrontClientOptions): StorefrontClient {
   const client = createStorefrontClient({
     type: "private",
+    requestContext: shopifyRequestContext,
     config: {
       storeDomain: env.PUBLIC_STORE_DOMAIN,
-      privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN || getPrivateStorefrontToken(),
+      privateStorefrontToken: getPrivateStorefrontToken(env),
       buyerIp: getBuyerIp(request.headers),
-      i18n,
-      requestContext: storefrontRequestContext,
+      cache,
+      waitUntil,
     },
   });
 
-  const withCache = createWithCache({ cache, waitUntil, request });
   const graphqlDocument = client.graphql as StorefrontDocumentGraphql;
 
   async function query<Doc extends StorefrontDocument>(
     queryText: Doc,
     options?: StorefrontQueryOptions,
   ): Promise<StorefrontQueryResult<Doc>> {
-    const runQuery = async () => {
-      const result = await graphqlDocument(queryText, {
-        variables: options?.variables,
-      });
-      const data = (result.data ?? {}) as DocumentResult<Doc>;
-      return result.errors ? { ...data, errors: result.errors } : data;
-    };
-
-    return withCache.run(
-      {
-        cacheKey: [client.apiUrl, queryText, options?.variables],
-        cacheStrategy: options?.cache ?? CacheDefault(),
-        shouldCacheResult: (result) =>
-          !(
-            result &&
-            typeof result === "object" &&
-            "errors" in result &&
-            Array.isArray(result.errors)
-          ),
-      },
-      () => runQuery(),
-    );
+    const result = await graphqlDocument(queryText, {
+      variables: options?.variables,
+      cache: options?.cache ?? CacheDefault(),
+    });
+    const data = (result.data ?? {}) as DocumentResult<Doc>;
+    return (
+      result.errors ? { ...data, errors: result.errors } : data
+    ) as StorefrontQueryResult<Doc>;
   }
 
   async function mutate<Doc extends StorefrontDocument>(
@@ -131,9 +117,8 @@ export function createStorefrontClientForRequest({
     type: client.type,
     storeUrl: client.storeUrl,
     apiUrl: client.apiUrl,
-    i18n,
-    requestContext: storefrontRequestContext,
-    CacheLong,
+    i18n: shopifyRequestContext.i18n,
+    requestContext: shopifyRequestContext,
     graphql: client.graphql,
     mutate,
     query,

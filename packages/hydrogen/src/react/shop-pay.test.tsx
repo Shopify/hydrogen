@@ -53,6 +53,39 @@ describe("ShopPayButton", () => {
     expect(loadShopJs).not.toHaveBeenCalled();
   });
 
+  it("reserves the default logo button height while the custom element hydrates", () => {
+    const { container } = render(
+      createElement(ShopPayButton, {
+        loadScript: false,
+      }),
+    );
+
+    const wrapper = container.firstElementChild as HTMLElement | null;
+    const element = wrapper?.querySelector<HTMLElement>(SHOP_PAY_BUTTON_TAG_NAME);
+
+    expect(wrapper?.tagName).toBe("DIV");
+    expect(wrapper?.style.minHeight).toBe("43px");
+    expect(element).not.toBeNull();
+  });
+
+  it("reserves a custom style minHeight while the custom element hydrates", () => {
+    const { container } = render(
+      createElement(ShopPayButton, {
+        style: { minHeight: "48px" },
+        className: "shop-pay",
+        loadScript: false,
+      }),
+    );
+
+    const wrapper = container.firstElementChild as HTMLElement | null;
+    const element = wrapper?.querySelector<HTMLElement>(SHOP_PAY_BUTTON_TAG_NAME);
+
+    expect(wrapper?.tagName).toBe("DIV");
+    expect(wrapper?.style.minHeight).toBe("48px");
+    expect(element).not.toBeNull();
+    expect(element?.className).toBe("shop-pay");
+  });
+
   it("renders without variants for checkout mode", () => {
     const { container } = render(
       createElement(ShopPayButton, {

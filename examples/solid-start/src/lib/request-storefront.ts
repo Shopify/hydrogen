@@ -1,6 +1,6 @@
 import type {
   RequestScopedPrivateStorefrontClient,
-  StorefrontRequestContext,
+  ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import { getRequestEvent } from "solid-js/web";
 
@@ -17,5 +17,5 @@ export function getRequestStorefrontClient(): RequestScopedPrivateStorefrontClie
 
 export type StorefrontLocals = {
   storefrontClient: RequestScopedPrivateStorefrontClient;
-  storefrontRequestContext: StorefrontRequestContext;
+  shopifyRequestContext: ShopifyRequestContext;
 };

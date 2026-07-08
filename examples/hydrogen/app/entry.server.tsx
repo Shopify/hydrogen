@@ -1,8 +1,9 @@
-import { createContentSecurityPolicy } from "@shopify/hydrogen-classic";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
 import { ServerRouter, type RouterContextProvider } from "react-router";
 import type { EntryContext } from "react-router";
+
+import { createContentSecurityPolicy } from "~/lib/csp";
 
 export default async function handleRequest(
   request: Request,

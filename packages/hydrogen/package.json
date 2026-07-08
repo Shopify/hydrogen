@@ -15,44 +15,46 @@
   "files": [
     "README.md",
     "dist",
-    "src/graphql/generated",
     "skills"
   ],
   "type": "module",
   "sideEffects": false,
-  "main": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
+  "main": "./dist/core/index.mjs",
+  "types": "./dist/core/index.d.mts",
   "exports": {
     ".": {
       "types": {
-        "development": "./dist/development.d.mts",
-        "default": "./dist/index.d.mts"
+        "development": "./dist/development/core/development.d.mts",
+        "default": "./dist/core/index.d.mts"
       },
       "import": {
-        "development": "./dist/development.mjs",
-        "default": "./dist/index.mjs"
+        "development": "./dist/development/core/development.mjs",
+        "default": "./dist/core/index.mjs"
       },
       "default": {
-        "development": "./dist/development.mjs",
-        "default": "./dist/index.mjs"
+        "development": "./dist/development/core/development.mjs",
+        "default": "./dist/core/index.mjs"
       }
     },
-    "./storefront-api-types": "./src/graphql/generated/storefront-api-types.d.ts",
-    "./storefront.schema.json": "./src/graphql/generated/storefront.schema.json",
+    "./customer-account": {
+      "types": "./dist/customer-account/index.d.mts",
+      "import": "./dist/customer-account/index.mjs"
+    },
+    "./customer-account-api-types": "./dist/customer-account-api-types.d.ts",
+    "./customer-account.schema.json": "./dist/customer-account.schema.json",
+    "./package.json": "./package.json",
     "./skills/*": "./skills/*",
+    "./storefront-api-types": "./dist/storefront-api-types.d.ts",
+    "./storefront.schema.json": "./dist/storefront.schema.json",
     "./react": {
       "types": {
-        "development": "./dist/react/development.d.mts",
-        "default": "./dist/react.d.mts"
+        "development": "./dist/development/react/index.d.mts",
+        "default": "./dist/react/index.d.mts"
       },
       "import": {
-        "development": "./dist/react/development.mjs",
-        "default": "./dist/react.mjs"
+        "development": "./dist/development/react/index.mjs",
+        "default": "./dist/react/index.mjs"
       }
-    },
-    "./cdn": {
-      "types": "./dist/cdn/bootstrap.d.mts",
-      "import": "./dist/cdn/bootstrap.mjs"
     }
   },
   "publishConfig": {
@@ -60,14 +62,15 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown && node scripts/copy-generated-graphql-assets.ts",
     "dev": "tsdown --watch ./src",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:types": "vitest --typecheck --run",
-    "codegen": "graphql-codegen --config codegen.ts",
-    "postcodegen": "node scripts/postprocess-tada-env.ts"
+    "libcheck": "node scripts/libcheck-package.ts",
+    "test": "pnpm run build && vitest run",
+    "test:watch": "pnpm run build && vitest",
+    "test:types": "pnpm run build && vitest --typecheck --run",
+    "codegen": "graphql-codegen --config codegen.ts && gql.tada generate-output --tsconfig tsconfig.codegen.json",
+    "postcodegen": "node scripts/postprocess-tada-env.ts && oxfmt src/graphql/generated/*.d.ts src/graphql/generated/*.json"
   },
   "dependencies": {
     "gql.tada": "^1.9.2"
@@ -82,6 +85,9 @@
     "@types/react-dom": "^19.2.3",
     "graphql": "^16.13.2",
     "happy-dom": "^20.9.0",
+    "magic-string": "^0.30.21",
+    "oxc-parser": "0.135.0",
+    "oxc-walker": "^1.0.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "tsdown": "^0.21.10",

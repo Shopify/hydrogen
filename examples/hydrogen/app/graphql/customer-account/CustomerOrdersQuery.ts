@@ -1,5 +1,7 @@
+import * as CAAPI from "@shopify/hydrogen/customer-account";
+
 // NOTE: https://shopify.dev/docs/api/customer/latest/objects/Order
-export const ORDER_ITEM_FRAGMENT = `#graphql
+export const ORDER_ITEM_FRAGMENT = CAAPI.gql(`
   fragment OrderItem on Order {
     totalPrice {
       amount
@@ -17,10 +19,11 @@ export const ORDER_ITEM_FRAGMENT = `#graphql
     confirmationNumber
     processedAt
   }
-` as const;
+`);
 
 // NOTE: https://shopify.dev/docs/api/customer/latest/objects/Customer
-export const CUSTOMER_ORDERS_FRAGMENT = `#graphql
+export const CUSTOMER_ORDERS_FRAGMENT = CAAPI.gql(
+  `
   fragment CustomerOrders on Customer {
     orders(
       sortKey: PROCESSED_AT,
@@ -42,12 +45,13 @@ export const CUSTOMER_ORDERS_FRAGMENT = `#graphql
       }
     }
   }
-  ${ORDER_ITEM_FRAGMENT}
-` as const;
+`,
+  [ORDER_ITEM_FRAGMENT],
+);
 
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
-export const CUSTOMER_ORDERS_QUERY = `#graphql
-  ${CUSTOMER_ORDERS_FRAGMENT}
+export const CUSTOMER_ORDERS_QUERY = CAAPI.gql(
+  `
   query CustomerOrders(
     $endCursor: String
     $first: Int
@@ -60,4 +64,6 @@ export const CUSTOMER_ORDERS_QUERY = `#graphql
       ...CustomerOrders
     }
   }
-` as const;
+`,
+  [CUSTOMER_ORDERS_FRAGMENT],
+);

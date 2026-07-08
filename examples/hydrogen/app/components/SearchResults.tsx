@@ -1,6 +1,8 @@
-import { Image, Money, Pagination } from "@shopify/hydrogen-classic";
 import { Link } from "react-router";
 
+import { Image } from "~/components/Image";
+import { PaginatedResourceSection } from "~/components/PaginatedResourceSection";
+import { formatMoney } from "~/lib/money";
 import { urlWithTrackingParams, type RegularSearchReturn } from "~/lib/search";
 
 type SearchItems = RegularSearchReturn["result"]["items"];
@@ -96,50 +98,40 @@ function SearchResultsProducts({ term, products }: PartialSearchResult<"products
   return (
     <div className="search-result">
       <h2>Products</h2>
-      <Pagination connection={products}>
-        {({ nodes, isLoading, NextLink, PreviousLink }) => {
-          const ItemsMarkup = nodes.map((product) => {
-            const productUrl = urlWithTrackingParams({
-              baseUrl: `/products/${product.handle}`,
-              trackingParams: product.trackingParameters,
-              term,
-            });
-
-            const price = product?.selectedOrFirstAvailableVariant?.price;
-            const image = product?.selectedOrFirstAvailableVariant?.image;
-
-            return (
-              <div className="search-results-item" key={product.id}>
-                <Link prefetch="intent" to={productUrl}>
-                  {image && <Image data={image} alt={product.title} width={50} />}
-                  <div>
-                    <p>{product.title}</p>
-                    <small>{price && <Money data={price} />}</small>
-                  </div>
-                </Link>
-              </div>
-            );
-          });
-
-          return (
-            <div>
-              <div>
-                <PreviousLink>
-                  {isLoading ? "Loading..." : <span>↑ Load previous</span>}
-                </PreviousLink>
-              </div>
-              <div>
-                {ItemsMarkup}
-                <br />
-              </div>
-              <div>
-                <NextLink>{isLoading ? "Loading..." : <span>Load more ↓</span>}</NextLink>
-              </div>
-            </div>
-          );
-        }}
-      </Pagination>
+      <PaginatedResourceSection connection={products}>
+        {({ node: product }) => (
+          <SearchResultProduct key={product.id} product={product} term={term} />
+        )}
+      </PaginatedResourceSection>
       <br />
+    </div>
+  );
+}
+
+function SearchResultProduct({
+  product,
+  term,
+}: {
+  product: PartialSearchResult<"products">["products"]["nodes"][number];
+  term: string;
+}) {
+  const productUrl = urlWithTrackingParams({
+    baseUrl: `/products/${product.handle}`,
+    trackingParams: product.trackingParameters,
+    term,
+  });
+  const price = product.selectedOrFirstAvailableVariant?.price;
+  const image = product.selectedOrFirstAvailableVariant?.image;
+
+  return (
+    <div className="search-results-item">
+      <Link prefetch="intent" to={productUrl}>
+        {image && <Image data={image} alt={product.title} width={50} />}
+        <div>
+          <p>{product.title}</p>
+          <small>{price ? formatMoney(price) : null}</small>
+        </div>
+      </Link>
     </div>
   );
 }

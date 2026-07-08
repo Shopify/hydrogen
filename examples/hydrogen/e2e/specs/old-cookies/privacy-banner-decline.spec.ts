@@ -1,4 +1,4 @@
-import { setTestStore, test, expect } from "../../fixtures";
+import { setTestStore, test } from "../../fixtures";
 
 setTestStore("defaultConsentDisallowed_cookiesDisabled");
 
@@ -12,40 +12,36 @@ test.describe("Privacy Banner - Decline Flow", () => {
     // 1. Navigate to main page
     await storefront.goto("/");
 
-    // 2. Check any initial server-timing values (_y and _s) exposed via Performance API.
-    // Hydrogen classic exposes mock values before consent; Hydrogen dev-preview may expose none before consent.
-    const initialServerTimingValues = await storefront.getServerTimingValues();
-    storefront.expectMockServerTimingValues(initialServerTimingValues);
-
-    // 3. Verify no analytics cookies are set yet and no analytics requests have been made
+    // 2. Verify no analytics cookies are set yet and no analytics requests have been made
     await storefront.expectNoAnalyticsCookies();
     storefront.expectNoMonorailRequests();
 
-    // 4. Verify perf-kit script is not downloaded yet
-    storefront.expectPerfKitNotLoaded();
+    // 3. Verify perf-kit is loaded eagerly but does not beacon before consent
+    await storefront.waitForPerfKit();
+    storefront.expectPerfKitLoaded();
+    storefront.expectNoPerfKitProduceRequests();
 
-    // 5. Verify privacy banner appears and click decline
+    // 4. Verify privacy banner appears and click decline
     await storefront.declinePrivacyBanner();
 
-    // 6. Verify _shopify_essential cookie is set after declining
+    // 5. Verify _shopify_essential cookie is set after declining
     await storefront.expectEssentialCookiePresent();
 
-    // 7. Verify analytics/marketing cookies are NOT set after declining
+    // 6. Verify analytics/marketing cookies are NOT set after declining
     await storefront.expectNoAnalyticsCookies();
 
-    // 8. Verify server-timing values after decline are either absent or contain mock values
+    // 7. Verify server-timing values after decline are either absent or contain mock values
     const updatedServerTimingValues = await storefront.getServerTimingValues(true);
     storefront.expectMockServerTimingValues(updatedServerTimingValues);
 
-    // 9. Verify perf-kit is downloaded after declining
-    await storefront.waitForPerfKit();
-    storefront.expectPerfKitLoaded();
+    // 8. Verify perf-kit still does not beacon after declining
+    storefront.expectNoPerfKitProduceRequests();
 
-    // 10. Wait and verify no analytics requests are made
+    // 9. Wait and verify no analytics requests are made
     await storefront.page.waitForTimeout(1500);
     storefront.expectNoMonorailRequests();
 
-    // 11. Navigate to first product and add to cart to verify server-timing mock values
+    // 10. Navigate to first product and add to cart to verify server-timing mock values
     await storefront.navigateToInStockProduct();
 
     // Add item to cart
@@ -60,11 +56,11 @@ test.describe("Privacy Banner - Decline Flow", () => {
     // Verify still no analytics requests after cart action
     storefront.expectNoMonorailRequests();
 
-    // 12. Verify checkout URLs contain MOCK tracking params (consent declined)
+    // 11. Verify checkout URLs contain MOCK tracking params (consent declined)
     // TODO: Re-enable once Hydrogen dev-preview can strip or replace checkoutUrl tracking params from SFAPI.
     // await storefront.expectNoCheckoutUrlTrackingParams("in cart drawer after declining consent");
 
-    // 13. Reload the page to verify persistence
+    // 12. Reload the page to verify persistence
     await storefront.reload();
 
     // Verify privacy banner does NOT show up on reload (consent was saved)
@@ -76,7 +72,7 @@ test.describe("Privacy Banner - Decline Flow", () => {
     // Verify analytics cookies are still not present after reload
     await storefront.expectNoAnalyticsCookies();
 
-    // Wait for perf-kit to be downloaded after reload
+    // Confirm perf-kit is loaded after reload
     await storefront.waitForPerfKit();
 
     // Wait and verify no analytics requests after reload

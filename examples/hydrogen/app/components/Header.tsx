@@ -10,12 +10,13 @@ import type { HeaderQuery } from "~/lib/fragments";
 interface HeaderProps {
   header: HeaderQuery;
   isLoggedIn: Promise<boolean>;
+  pathPrefix: string;
   publicStoreDomain: string;
 }
 
 type Viewport = "desktop" | "mobile";
 
-export function Header({ header, isLoggedIn, publicStoreDomain }: HeaderProps) {
+export function Header({ header, isLoggedIn, pathPrefix, publicStoreDomain }: HeaderProps) {
   const { shop, menu } = header;
   return (
     <header className="header">
@@ -28,7 +29,7 @@ export function Header({ header, isLoggedIn, publicStoreDomain }: HeaderProps) {
         primaryDomainUrl={header.shop.primaryDomain.url}
         publicStoreDomain={publicStoreDomain}
       />
-      <HeaderCtas isLoggedIn={isLoggedIn} />
+      <HeaderCtas isLoggedIn={isLoggedIn} pathPrefix={pathPrefix} />
     </header>
   );
 }
@@ -82,17 +83,26 @@ export function HeaderMenu({
   );
 }
 
-function HeaderCtas({ isLoggedIn }: Pick<HeaderProps, "isLoggedIn">) {
+function HeaderCtas({ isLoggedIn, pathPrefix }: Pick<HeaderProps, "isLoggedIn" | "pathPrefix">) {
+  const accountPath = `${pathPrefix}/account`;
+  const loginPath = `/account/login?return_to=${encodeURIComponent(accountPath)}`;
+
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
-      <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        <Suspense fallback="Sign in">
-          <Await resolve={isLoggedIn} errorElement="Sign in">
-            {(isLoggedIn) => (isLoggedIn ? "Account" : "Sign in")}
-          </Await>
-        </Suspense>
-      </NavLink>
+      <Suspense fallback={<a href={loginPath}>Sign in</a>}>
+        <Await resolve={isLoggedIn} errorElement={<a href={loginPath}>Sign in</a>}>
+          {(isLoggedIn) =>
+            isLoggedIn ? (
+              <NavLink prefetch="intent" to={accountPath} style={activeLinkStyle}>
+                Account
+              </NavLink>
+            ) : (
+              <a href={loginPath}>Sign in</a>
+            )
+          }
+        </Await>
+      </Suspense>
       <SearchToggle />
       <CartToggle />
     </nav>
@@ -135,8 +145,6 @@ function CartBadge({ cart, pending }: { cart: CartData; pending: CartPending }) 
         analytics.bus.publish(AnalyticsEvent.CART_VIEWED, {
           cart: analyticsCart,
           prevCart,
-          shop: analytics.shop,
-          url: analytics.url,
         });
       }}
     >

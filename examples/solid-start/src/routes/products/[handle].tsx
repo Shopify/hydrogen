@@ -5,7 +5,7 @@ import { createEffect, For, Show } from "solid-js";
 
 import { ProductCard } from "../../components/ProductCard";
 import { ProductPurchasePanel } from "../../components/ProductPurchasePanel";
-import { AnalyticsEvent, analyticsShop, getAnalytics } from "../../lib/analytics";
+import { AnalyticsEvent, getAnalytics } from "../../lib/analytics";
 import { getRequestStorefrontClient } from "../../lib/request-storefront";
 
 const PRODUCT_VARIANT_FRAGMENT = gql(`
@@ -175,8 +175,6 @@ export default function Product() {
           sku: p.selectedOrFirstAvailableVariant?.sku,
         },
       ],
-      url: window.location.href,
-      shop: analyticsShop,
     });
   });
 
@@ -187,7 +185,7 @@ export default function Product() {
         const related = () => loaded().related;
 
         return (
-          <main>
+          <main id="main-content" tabIndex={-1}>
             <Title>{product().title} — Mock.shop</Title>
             <section class="grid grid-cols-1 gap-12 px-6 py-10 md:grid-cols-[minmax(0,1fr)_420px] md:gap-16 md:px-10 md:py-12">
               <div class="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-2">

@@ -1,56 +1,78 @@
 "use client";
 
-import type { AvailableFilter, MoneyV2, ProductFilter } from "@shopify/hydrogen";
 import {
   getFilterRemovalUrl,
   getSortByValue,
-  isFilterInputActive,
   serializeCollectionParams,
+  type AvailableFilter,
+  type ProductFilter,
 } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
-import { AnalyticsEvent, analyticsShop, getAnalytics } from "@/lib/analytics";
-import { formatMoney } from "@/lib/money";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { ProductCard, type ProductCardData } from "@/components/ProductCard";
+import { AnalyticsEvent, getAnalytics } from "@/lib/analytics";
+import { content } from "@/lib/content";
+import { FilterGroup } from "@/lib/filters";
 
-import { ProductCard, type ProductCardData } from "./ProductCard";
-
-const COLLECTION_SORT_OPTIONS = [
+/**
+ * Shared collection/search browser (`hydrogen-collection-browser` /
+ * `references/nextjs.md`). The server page fetches the product + filter
+ * snapshot via `staticStorefrontClient` inside a `use cache` cache-point and
+ * passes it here. This client component owns the `CollectionProvider`,
+ * `useCollection`/`useCollectionForm`, URL sync via `useRouter`/`useSearchParams`,
+ * and the filter/sort/grid UI.
+ *
+ * `onChange` → `router.replace(href, { scroll: false })` + `router.refresh()` so
+ * the RSC payload catches up when the client URL is ahead (skill-mandated).
+ * Browse forms carry `method="get"` + explicit `action` (feedback Round 4 #4)
+ * so they submit without JS (F4).
+ */
+export const COLLECTION_SORT_OPTIONS = [
   { label: "Featured", value: getSortByValue("COLLECTION_DEFAULT", false) },
   { label: "Best selling", value: getSortByValue("BEST_SELLING", false) },
   { label: "Alphabetically, A-Z", value: getSortByValue("TITLE", false) },
   { label: "Alphabetically, Z-A", value: getSortByValue("TITLE", true) },
   { label: "Price, low to high", value: getSortByValue("PRICE", false) },
   { label: "Price, high to low", value: getSortByValue("PRICE", true) },
-  { label: "Date, old to new", value: getSortByValue("CREATED", false) },
   { label: "Date, new to old", value: getSortByValue("CREATED", true) },
 ];
 
-const SEARCH_SORT_OPTIONS = [
+export const SEARCH_SORT_OPTIONS = [
   { label: "Relevance", value: getSortByValue("RELEVANCE", false) },
   { label: "Price, low to high", value: getSortByValue("PRICE", false) },
   { label: "Price, high to low", value: getSortByValue("PRICE", true) },
 ];
 
-type CollectionBrowserProps =
+type PageInfo = { hasNextPage: boolean; endCursor?: string | null };
+
+export type CollectionBrowserProps =
   | {
       mode: "collection";
-      title: string;
-      description: string | null;
       handle: string;
-      dataSearch: string;
+      collection: {
+        id: string;
+        handle: string;
+        title: string;
+        description?: string | null;
+        descriptionHtml?: string | null;
+      };
       products: ProductCardData[];
       availableFilters: AvailableFilter[];
+      pageInfo: PageInfo;
+      dataSearch: string;
     }
   | {
       mode: "search";
       term: string;
-      dataSearch: string;
       products: ProductCardData[];
       availableFilters: AvailableFilter[];
+      pageInfo: PageInfo;
       totalCount: number;
+      dataSearch: string;
     };
 
 export function CollectionBrowser(props: CollectionBrowserProps) {
@@ -58,301 +80,325 @@ export function CollectionBrowser(props: CollectionBrowserProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const urlSearch = searchParams.toString();
-  const handle = props.mode === "collection" ? props.handle : `search:${props.term}`;
+
+  const providerHandle = props.mode === "collection" ? props.handle : `search:${props.term}`;
 
   return (
     <CollectionProvider
-      data={{ handle, dataSearch: props.dataSearch }}
+      data={{ handle: providerHandle, dataSearch: props.dataSearch }}
       urlSearch={urlSearch}
       onChange={(search) => {
         const href = `${pathname}${search}`;
-        if (urlSearch) {
-          router.replace(href, { scroll: false });
-        } else {
-          router.push(href, { scroll: false });
-        }
-        // Ensure the RSC payload catches up when replaceState updates searchParams first.
+        if (urlSearch) router.replace(href, { scroll: false });
+        else router.push(href, { scroll: false });
         router.refresh();
       }}
     >
-      {props.mode === "search" ? (
+      {props.mode === "collection" ? (
+        <CollectionViewedTracker id={props.collection.id} handle={props.collection.handle} />
+      ) : (
         <SearchViewedTracker term={props.term} totalCount={props.totalCount} />
-      ) : null}
-      <BrowserContent {...props} />
+      )}
+      {props.mode === "collection" ? <CollectionPage {...props} /> : <SearchPage {...props} />}
     </CollectionProvider>
   );
 }
 
-function BrowserContent(props: CollectionBrowserProps) {
-  const state = useCollection();
-  const { formProps } = useCollectionForm();
-  const pathname = usePathname();
-  const currentSortValue =
-    props.mode === "search"
-      ? state.sortKey === "PRICE"
-        ? getSortByValue("PRICE", state.reverse)
-        : getSortByValue("RELEVANCE", false)
-      : state.sortKey
-        ? getSortByValue(state.sortKey, state.reverse)
-        : getSortByValue("COLLECTION_DEFAULT", false);
-  const hasActiveFilters = state.filters.length > 0;
-  const isLoading = state.status === "loading";
-  const clearPath = props.mode === "search" ? buildSearchUrl(pathname, props.term) : pathname;
-  const formKey =
-    props.mode === "search"
-      ? `${props.term}|${serializeCollectionParams(state).toString()}`
-      : serializeCollectionParams(state).toString();
-
-  return (
-    <main className="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
-      {props.mode === "search" ? (
-        <SearchHeader term={props.term} totalCount={props.totalCount} />
-      ) : (
-        <CollectionHeader
-          title={props.title}
-          description={props.description}
-          count={props.products.length}
-        />
-      )}
-
-      {props.mode === "search" ? <SearchForm term={props.term} /> : null}
-
-      {props.mode === "search" && !props.term ? (
-        <p className="mt-12 text-lg text-black/60">Enter a search term to find products.</p>
-      ) : (
-        <form
-          {...formProps()}
-          key={formKey}
-          method="get"
-          action={pathname}
-          className="mt-12 flex gap-12"
-        >
-          {props.mode === "search" ? <input type="hidden" name="q" value={props.term} /> : null}
-
-          {props.availableFilters.length > 0 ? (
-            <BrowseFilters
-              availableFilters={props.availableFilters}
-              activeFilters={state.filters}
-              disabled={isLoading}
-            />
-          ) : null}
-
-          <div className="flex-1">
-            <BrowseToolbar
-              clearPath={clearPath}
-              sortOptions={props.mode === "search" ? SEARCH_SORT_OPTIONS : COLLECTION_SORT_OPTIONS}
-              sortValue={currentSortValue}
-              hasActiveFilters={hasActiveFilters}
-              isLoading={isLoading}
-            />
-
-            {hasActiveFilters ? (
-              <ActiveFilterChips
-                clearPath={clearPath}
-                filters={state.filters}
-                currentParams={serializeCollectionParams(state)}
-              />
-            ) : null}
-
-            <section
-              className={`mt-8 grid grid-cols-2 gap-x-6 gap-y-12 transition-opacity duration-200 md:grid-cols-3 ${isLoading ? "opacity-50" : "opacity-100"}`}
-            >
-              {props.products.map((product) => (
-                <ProductCard key={product.handle} product={product} />
-              ))}
-            </section>
-
-            {props.products.length === 0 && !isLoading ? (
-              <EmptyResults
-                mode={props.mode}
-                term={props.mode === "search" ? props.term : undefined}
-                clearPath={clearPath}
-                hasActiveFilters={hasActiveFilters}
-              />
-            ) : null}
-          </div>
-        </form>
-      )}
-    </main>
-  );
+function CollectionViewedTracker({ id, handle }: { id: string; handle: string }) {
+  useEffect(() => {
+    const analytics = getAnalytics();
+    if (!analytics) return;
+    analytics.publish(AnalyticsEvent.COLLECTION_VIEWED, {
+      collection: { id, handle },
+    });
+  }, [id, handle]);
+  return null;
 }
 
 function SearchViewedTracker({ term, totalCount }: { term: string; totalCount: number }) {
   useEffect(() => {
     if (!term) return;
-
     const analytics = getAnalytics();
     if (!analytics) return;
-
     analytics.publish(AnalyticsEvent.SEARCH_VIEWED, {
       searchTerm: term,
       searchResults: { totalCount },
-      url: window.location.href,
-      shop: analyticsShop,
     });
   }, [term, totalCount]);
-
   return null;
 }
 
-function requestFormSubmit(event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-  event.currentTarget.form?.requestSubmit();
-}
+type CollectionPageProps = Extract<CollectionBrowserProps, { mode: "collection" }>;
 
-function uncheckSiblings(checkbox: HTMLInputElement) {
-  const form = checkbox.form;
-  if (!form) return;
+function CollectionPage(props: CollectionPageProps) {
+  const { collection, products, availableFilters, pageInfo } = props;
+  const state = useCollection();
+  const { formProps } = useCollectionForm();
+  const router = useRouter();
+  // Reset key for the uncontrolled filter subtree (checkboxes + price inputs).
+  // Keyed by the serialized filter state (NOT the URL) so the subtree remounts
+  // *after* the reconciler settles `state.filters` — clearing `defaultChecked` /
+  // `defaultValue` when an external navigation (chip removal, clear-all) empties
+  // the filters. Keying by the live URL is racy: the URL clears before
+  // `state.filters` settles, so the remount would bake in the stale checked
+  // state (hydrogen-collection-browser/references/nextjs.md reset-key guidance).
+  const filterSubtreeKey = serializeCollectionParams({
+    filters: state.filters,
+    sortKey: undefined,
+    reverse: false,
+  }).toString();
+  const isLoading = state.status === "loading";
+  const collectionPath = `/collections/${collection.handle}`;
+  // `<Link>` navigations (active-filter chips, clear-all, load-more) update the
+  // URL but, under Cache Components / PPR, the RSC payload doesn't re-fetch on a
+  // same-segment `searchParams` change unless we explicitly refresh. `onChange`
+  // (form-driven) already calls `router.refresh()`; this wires the same refresh
+  // to the `<Link>` clicks so the server products/filters catch up to the URL
+  // (hydrogen-collection-browser/references/nextjs.md).
+  const onNavigate = () => router.refresh();
 
-  for (const sibling of form.elements) {
-    if (
-      sibling instanceof HTMLInputElement &&
-      sibling !== checkbox &&
-      sibling.name === checkbox.name &&
-      sibling.type === "checkbox"
-    ) {
-      sibling.checked = false;
-    }
-  }
-}
-
-function SearchForm({ term }: { term: string }) {
-  const pathname = usePathname();
+  const showingCount = content.collection.showingCount
+    .replace("{{ shown }}", String(products.length))
+    .replace("{{ total }}", String(products.length));
 
   return (
-    <form method="get" action={pathname} className="mt-8 flex max-w-xl gap-3">
-      <input
-        type="search"
-        name="q"
-        defaultValue={term}
-        placeholder="Search products"
-        className="min-w-0 flex-1 rounded border border-black/15 px-4 py-2 text-base"
-      />
-      <button
-        type="submit"
-        className="rounded bg-black px-5 py-2 text-sm font-semibold text-white hover:bg-black/80"
-      >
-        Search
-      </button>
-    </form>
-  );
-}
-
-function CollectionHeader({
-  title,
-  description,
-  count,
-}: {
-  title: string;
-  description: string | null;
-  count: number;
-}) {
-  return (
-    <header className="max-w-2xl">
-      <h1 className="text-6xl font-black tracking-tight md:text-8xl">{title}</h1>
-      {description ? (
-        <p className="mt-6 text-base leading-relaxed text-black/70 md:text-lg">{description}</p>
-      ) : null}
-      <p className="mt-3 text-sm text-black/50">
-        {count} {count === 1 ? "product" : "products"}
-      </p>
-    </header>
-  );
-}
-
-function SearchHeader({ term, totalCount }: { term: string; totalCount: number }) {
-  return (
-    <header className="max-w-2xl">
-      <h1 className="text-6xl font-black tracking-tight md:text-8xl">Search</h1>
-      {term ? (
-        <p className="mt-6 text-base leading-relaxed text-black/70 md:text-lg">
-          Results for &quot;{term}&quot;
-        </p>
-      ) : null}
-      <p className="mt-3 text-sm text-black/50">
-        {totalCount} {totalCount === 1 ? "product" : "products"}
-      </p>
-    </header>
-  );
-}
-
-function BrowseToolbar({
-  clearPath,
-  sortOptions,
-  sortValue,
-  hasActiveFilters,
-  isLoading,
-}: {
-  clearPath: string;
-  sortOptions: Array<{ label: string; value: string }>;
-  sortValue: string;
-  hasActiveFilters: boolean;
-  isLoading: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between border-b border-black/10 pb-4">
-      <div className="flex items-center gap-4">
-        {hasActiveFilters ? (
-          <Link href={clearPath} className="text-sm text-black/60 underline hover:text-black">
-            Clear all
-          </Link>
-        ) : null}
-        <span role="status" aria-live="polite" aria-atomic={true} className="text-sm text-black/40">
-          {isLoading ? "Updating..." : ""}
-        </span>
+    <div className="max-w-page px-margin mx-auto w-full py-8">
+      <div className="mb-6">
+        <Breadcrumbs
+          items={[{ label: "Collections", href: "/collections" }, { label: collection.title }]}
+        />
       </div>
 
-      <label className="flex items-center gap-2 text-sm">
-        <span className="text-black/60">Sort by</span>
-        <select
-          name="sort_by"
-          defaultValue={sortValue}
+      <h1 className="type-display mb-4">{collection.title}</h1>
+      {collection.descriptionHtml ? (
+        <div
+          className="richtext type-body text-on-surface-secondary mb-6 max-w-prose"
+          dangerouslySetInnerHTML={{ __html: collection.descriptionHtml }}
+        />
+      ) : collection.description ? (
+        <p className="type-body text-on-surface-secondary mb-6 max-w-prose">
+          {collection.description}
+        </p>
+      ) : null}
+
+      <form
+        {...formProps()}
+        method="get"
+        action={collectionPath}
+        className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
+      >
+        <FilterSidebar
+          key={filterSubtreeKey}
+          availableFilters={availableFilters}
+          activeFilters={state.filters}
           disabled={isLoading}
-          onChange={requestFormSubmit}
-          className="rounded border border-black/15 bg-white px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {sortOptions.map((option) => (
-            <option key={option.label} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
+        />
+
+        <div key="results" className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <p className="type-body-sm text-on-surface-secondary" aria-live="polite">
+              {showingCount}
+            </p>
+            <SortSelect isLoading={isLoading} options={COLLECTION_SORT_OPTIONS} />
+          </div>
+
+          <ActiveFilterChips
+            activeFilters={state.filters}
+            collectionPath={collectionPath}
+            onNavigate={onNavigate}
+          />
+
+          {products.length === 0 ? (
+            <p className="text-on-surface-secondary py-12 text-center">
+              {content.collection.noProducts}
+            </p>
+          ) : (
+            <ul
+              role="list"
+              className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-3"
+            >
+              {products.map((product, index) => (
+                <li key={product.id} className={isLoading ? "opacity-60" : ""}>
+                  <ProductCard
+                    product={product}
+                    loading={index < 3 ? "eager" : "lazy"}
+                    fetchPriority={index === 0 ? "high" : "auto"}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <LoadMore pageInfo={pageInfo} collectionPath={collectionPath} onNavigate={onNavigate} />
+
+          {/* No-JS submit so the GET filter/sort form is submittable without JS (F4). */}
+          <noscript>
+            <button type="submit" className="rounded-button button-primary h-11 px-4">
+              {content.collection.showResults}
+            </button>
+          </noscript>
+        </div>
+      </form>
     </div>
   );
 }
 
-function ActiveFilterChips({
-  clearPath,
-  filters,
-  currentParams,
-}: {
-  clearPath: string;
-  filters: ProductFilter[];
-  currentParams: URLSearchParams;
-}) {
+type SearchPageProps = Extract<CollectionBrowserProps, { mode: "search" }>;
+
+function SearchPage(props: SearchPageProps) {
+  const { term, products, availableFilters, pageInfo, totalCount } = props;
+  const state = useCollection();
+  const { formProps } = useCollectionForm();
+  const router = useRouter();
+  const onNavigate = () => router.refresh();
+  // Reset key for the uncontrolled filter subtree — see CollectionPage for rationale.
+  const filterSubtreeKey = serializeCollectionParams({
+    filters: state.filters,
+    sortKey: undefined,
+    reverse: false,
+  }).toString();
+  const isLoading = state.status === "loading";
+
   return (
-    <div className="mt-4 flex flex-wrap gap-2">
-      {filters.map((filter) => {
-        const serialized = JSON.stringify(filter);
-        const removalSearch = getFilterRemovalUrl(currentParams, filter);
-        const href = removalSearch === "?" ? clearPath : `${clearPath}${removalSearch}`;
+    <div className="max-w-page px-margin mx-auto w-full py-8">
+      <div className="mb-6">
+        <Breadcrumbs items={[{ label: content.search.title }]} />
+      </div>
 
-        return (
+      <h1 className="type-display mb-6">{content.search.title}</h1>
+
+      {/* Search header form — real GET /search so it works without JS (F4). */}
+      <form action="/search" method="get" role="search" className="mb-8 flex items-center gap-2">
+        <label htmlFor="search-q" className="sr-only">
+          {content.search.label}
+        </label>
+        <input
+          id="search-q"
+          type="search"
+          name="q"
+          defaultValue={term}
+          placeholder={content.search.placeholder}
+          className="number-reset rounded-button border-border h-11 max-w-md border px-3 text-sm"
+        />
+        <button
+          type="submit"
+          className="rounded-button button-primary inline-flex h-11 items-center justify-center px-4 text-sm font-medium"
+        >
+          {content.search.submit}
+        </button>
+        {term ? (
           <Link
-            key={serialized}
-            href={href}
-            className="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1 text-sm hover:bg-black/10"
+            href="/search"
+            className="text-on-surface-secondary hover:text-on-surface text-sm no-underline"
           >
-            {describeFilter(filter)}
-            <span aria-hidden="true">&times;</span>
+            {content.search.clear}
           </Link>
-        );
-      })}
+        ) : null}
+      </form>
+
+      {!term ? null : products.length === 0 ? (
+        <div className="py-12 text-center">
+          <p className="type-body text-on-surface">
+            {content.search.noResults.replace("{{ terms }}", `\u201c${term}\u201d`)}
+          </p>
+          <p className="text-on-surface-secondary mt-2 text-sm">
+            {content.search.noResultsSuggestion}
+          </p>
+        </div>
+      ) : (
+        <form
+          {...formProps()}
+          method="get"
+          action="/search"
+          className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
+          key={`search-${term}`}
+        >
+          <input key="q" type="hidden" name="q" value={term} />
+
+          <aside key={filterSubtreeKey} className="hidden flex-col gap-6 lg:flex">
+            {availableFilters.map((filter) => (
+              <FilterGroup key={filter.id} filter={filter} activeFilters={state.filters} />
+            ))}
+          </aside>
+
+          <div key="results" className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-4">
+              <p className="type-body-sm text-on-surface-secondary" aria-live="polite">
+                {content.search.resultsFor
+                  .replace("{{ count }}", String(totalCount))
+                  .replace("{{ terms }}", `\u201c${term}\u201d`)}
+              </p>
+              <SortSelect isLoading={isLoading} options={SEARCH_SORT_OPTIONS} />
+            </div>
+
+            <ul
+              role="list"
+              className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-3"
+            >
+              {products.map((product, index) => (
+                <li key={product.id} className={isLoading ? "opacity-60" : ""}>
+                  <ProductCard
+                    product={product}
+                    loading={index < 3 ? "eager" : "lazy"}
+                    fetchPriority={index === 0 ? "high" : "auto"}
+                  />
+                </li>
+              ))}
+            </ul>
+
+            {pageInfo.hasNextPage ? (
+              <div className="mt-8 text-center">
+                <Link
+                  href={`/search?q=${encodeURIComponent(term)}&after=${encodeURIComponent(pageInfo.endCursor ?? "")}`}
+                  onClick={onNavigate}
+                  className="rounded-button button-outline inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline"
+                >
+                  {content.search.loadMore}
+                </Link>
+              </div>
+            ) : null}
+
+            <noscript>
+              <button type="submit" className="rounded-button button-primary h-11 px-4">
+                {content.collection.showResults}
+              </button>
+            </noscript>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
 
-function BrowseFilters({
+type SortOption = { label: string; value: string };
+
+function SortSelect({ isLoading, options }: { isLoading: boolean; options: SortOption[] }) {
+  const state = useCollection();
+  const currentSort = useMemo(() => {
+    return serializeCollectionParams(state).toString();
+  }, [state]);
+
+  return (
+    <label className="flex items-center gap-2 text-sm">
+      <span className="text-on-surface-secondary">{content.collection.sortBy}</span>
+      <select
+        name="sort_by"
+        defaultValue={currentSort}
+        onChange={(event) => event.currentTarget.form?.requestSubmit()}
+        aria-busy={isLoading}
+        className="w-auto"
+      >
+        {options.map((option) => (
+          <option key={option.label} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function FilterSidebar({
   availableFilters,
   activeFilters,
   disabled,
@@ -361,149 +407,112 @@ function BrowseFilters({
   activeFilters: ProductFilter[];
   disabled: boolean;
 }) {
+  if (availableFilters.length === 0) return null;
+
   return (
-    <aside className="hidden w-60 shrink-0 md:block">
-      <h2 className="text-sm font-semibold tracking-wider text-black/50 uppercase">Filters</h2>
-      <div className="mt-6 space-y-8">
-        {availableFilters.map((filter) => (
-          <FilterGroup
-            key={filter.id}
-            filter={filter}
-            activeFilters={activeFilters}
-            disabled={disabled}
-          />
-        ))}
+    <aside className="hidden flex-col gap-6 lg:flex" aria-disabled={disabled}>
+      <div className="flex items-center justify-between">
+        <h2 className="type-heading-sm text-on-surface font-medium">
+          {content.collection.filters}
+        </h2>
       </div>
-      <noscript>
-        <button
-          type="submit"
-          className="mt-8 w-full rounded bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/80"
-        >
-          Apply
-        </button>
-      </noscript>
+      {availableFilters.map((filter) => (
+        <FilterGroup key={filter.id} filter={filter} activeFilters={activeFilters} />
+      ))}
     </aside>
   );
 }
 
-function FilterGroup({
-  filter,
+function ActiveFilterChips({
   activeFilters,
-  disabled,
+  collectionPath,
+  onNavigate,
 }: {
-  filter: AvailableFilter;
   activeFilters: ProductFilter[];
-  disabled: boolean;
+  collectionPath: string;
+  onNavigate: () => void;
 }) {
-  const visibleValues = filter.values.filter((value) => value.count > 0);
-  if (visibleValues.length === 0) return null;
-
-  const availabilityParamName = "filter.v.availability";
-  const isMutuallyExclusive =
-    filter.type === "BOOLEAN" ||
-    filter.values.some((v) => {
-      const entries = filterInputParamEntries(v.input);
-      return entries.length === 1 && entries[0].name === availabilityParamName;
-    });
+  if (activeFilters.length === 0) return null;
 
   return (
-    <fieldset disabled={disabled} className={disabled ? "opacity-60" : undefined}>
-      <legend className="text-sm font-semibold">{filter.label}</legend>
-      <div className="mt-3 space-y-2">
-        {visibleValues.map((value) => {
-          const entries = filterInputParamEntries(value.input);
-          if (entries.length !== 1) return null;
-
-          const [{ name, value: paramValue }] = entries;
-          const isActive = isFilterInputActive(activeFilters, value.input);
-
-          return (
-            <label key={value.id} className="flex cursor-pointer items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                name={name}
-                value={paramValue}
-                defaultChecked={isActive}
-                onChange={(e) => {
-                  if (isMutuallyExclusive && e.currentTarget.checked) {
-                    uncheckSiblings(e.currentTarget);
-                  }
-                  requestFormSubmit(e);
-                }}
-                className="h-4 w-4 rounded border-black/20 disabled:cursor-not-allowed"
-              />
-              <span className={isActive ? "font-medium" : ""}>{value.label}</span>
-              <span className="ml-auto text-xs text-black/40">({value.count})</span>
-            </label>
-          );
-        })}
-      </div>
-    </fieldset>
-  );
-}
-
-function EmptyResults({
-  mode,
-  term,
-  clearPath,
-  hasActiveFilters,
-}: {
-  mode: "collection" | "search";
-  term?: string;
-  clearPath: string;
-  hasActiveFilters: boolean;
-}) {
-  return (
-    <div className="mt-16 text-center">
-      <p className="text-lg text-black/60">
-        {mode === "search"
-          ? `No products found for "${term ?? ""}".`
-          : "No products found matching your filters."}
-      </p>
-      {hasActiveFilters ? (
-        <Link href={clearPath} className="mt-4 inline-block text-sm font-semibold underline">
-          Clear all filters
+    <ul role="list" className="flex flex-wrap gap-2">
+      {activeFilters.map((filter, index) => {
+        const currentParams = serializeCollectionParams({
+          filters: activeFilters,
+          sortKey: undefined,
+          reverse: false,
+        });
+        const removal = getFilterRemovalUrl(currentParams, filter);
+        const href = removal === "?" ? collectionPath : `${collectionPath}${removal}`;
+        return (
+          <li key={`${filter.toString()}-${index}`}>
+            <Link
+              href={href}
+              onClick={onNavigate}
+              className="chip-filled inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm no-underline"
+            >
+              {describeFilter(filter)}
+              <span aria-hidden="true">×</span>
+            </Link>
+          </li>
+        );
+      })}
+      <li>
+        <Link
+          href={collectionPath}
+          onClick={onNavigate}
+          className="text-accent inline-flex items-center rounded-full px-3 py-1 text-sm no-underline underline"
+        >
+          {content.collection.clearAll}
         </Link>
-      ) : null}
-    </div>
-  );
-}
-
-function filterInputParamEntries(input: string): Array<{ name: string; value: string }> {
-  let filter: ProductFilter;
-  try {
-    filter = JSON.parse(input) as ProductFilter;
-  } catch {
-    return [];
-  }
-
-  return Array.from(
-    serializeCollectionParams({ filters: [filter], sortKey: undefined, reverse: false }),
-    ([name, value]) => ({ name, value }),
+      </li>
+    </ul>
   );
 }
 
 function describeFilter(filter: ProductFilter): string {
-  if (filter.tag) return filter.tag;
+  if (filter.available !== undefined) return filter.available ? "In stock" : "Out of stock";
   if (filter.productType) return filter.productType;
   if (filter.productVendor) return filter.productVendor;
-  if (filter.available != null) return filter.available ? "In stock" : "Out of stock";
-  if (filter.variantOption) return `${filter.variantOption.name}: ${filter.variantOption.value}`;
+  if (filter.tag) return filter.tag;
+  if (filter.variantOption) {
+    const option = filter.variantOption;
+    return option.value ?? option.name ?? "Variant";
+  }
   if (filter.price) {
-    const { min, max } = filter.price;
-    const currencyCode = analyticsShop.currency;
-    const minMoney: MoneyV2 | null = min != null ? { amount: String(min), currencyCode } : null;
-    const maxMoney: MoneyV2 | null = max != null ? { amount: String(max), currencyCode } : null;
-
-    if (minMoney && !maxMoney) return `${formatMoney(minMoney)}+`;
-    if (maxMoney && !minMoney) return `Up to ${formatMoney(maxMoney)}`;
-    if (minMoney && maxMoney) return `${formatMoney(minMoney)} - ${formatMoney(maxMoney)}`;
+    const price = filter.price;
+    const hasMin = price.min != null && Number(price.min) > 0;
+    const hasMax = price.max != null;
+    if (hasMin && hasMax) return `${price.min} ${content.collection.priceTo} ${price.max}`;
+    if (hasMax) return `Up to ${price.max}`;
+    if (hasMin) return `From ${price.min}`;
+    return "Price";
   }
   return "Filter";
 }
 
-function buildSearchUrl(pathname: string, term: string) {
-  const params = new URLSearchParams();
-  params.set("q", term);
-  return `${pathname}?${params.toString()}`;
+function LoadMore({
+  pageInfo,
+  collectionPath,
+  onNavigate,
+}: {
+  pageInfo: PageInfo;
+  collectionPath: string;
+  onNavigate: () => void;
+}) {
+  if (!pageInfo.hasNextPage) return null;
+  const cursor = pageInfo.endCursor ?? "";
+  const href = `${collectionPath}?after=${encodeURIComponent(cursor)}`;
+
+  return (
+    <div className="mt-8 text-center">
+      <Link
+        href={href}
+        onClick={onNavigate}
+        className="rounded-button button-outline focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+      >
+        {content.collection.loadMore}
+      </Link>
+    </div>
+  );
 }

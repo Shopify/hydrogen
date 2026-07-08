@@ -42,7 +42,7 @@ export default function ArticlePage() {
   const article = createAsync(() => fetchArticle(params.handle));
 
   return (
-    <main class="mx-auto max-w-3xl px-6 py-16 md:py-24">
+    <main id="main-content" tabIndex={-1} class="mx-auto max-w-3xl px-6 py-16 md:py-24">
       <Show when={article()}>
         {(a) => (
           <article>

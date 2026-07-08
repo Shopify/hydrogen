@@ -33,7 +33,7 @@ function multipartRequest(fields: Record<string, string>): Request {
 describe("parseCartRequest", () => {
   describe("JSON — line classification", () => {
     it("classifies lines with merchandiseId and no id as add", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         jsonRequest({
           lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 2 }],
         }),
@@ -45,7 +45,7 @@ describe("parseCartRequest", () => {
     });
 
     it("preserves optional attributes and sellingPlanId on add lines", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         jsonRequest({
           lines: [
             {
@@ -71,7 +71,7 @@ describe("parseCartRequest", () => {
     });
 
     it("classifies lines with id and quantity > 0 as update", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         jsonRequest({
           lines: [{ id: "gid://shopify/CartLine/1", quantity: 3 }],
         }),
@@ -83,7 +83,7 @@ describe("parseCartRequest", () => {
     });
 
     it("classifies lines with id and quantity === 0 as remove", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         jsonRequest({
           lines: [{ id: "gid://shopify/CartLine/1", quantity: 0 }],
         }),
@@ -95,7 +95,7 @@ describe("parseCartRequest", () => {
     });
 
     it("handles multiple remove lines", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         jsonRequest({
           lines: [
             { id: "gid://shopify/CartLine/1", quantity: 0 },
@@ -151,7 +151,7 @@ describe("parseCartRequest", () => {
 
   describe("JSON — discount and note payloads", () => {
     it("parses discountCodes array as discount-update", async () => {
-      const action = await parseCartRequest(jsonRequest({ discountCodes: ["SAVE10", "BOGO"] }));
+      const { action } = await parseCartRequest(jsonRequest({ discountCodes: ["SAVE10", "BOGO"] }));
       expect(action).toEqual({
         intent: "discount-update",
         discountCodes: ["SAVE10", "BOGO"],
@@ -159,7 +159,7 @@ describe("parseCartRequest", () => {
     });
 
     it("parses note string as note-update", async () => {
-      const action = await parseCartRequest(jsonRequest({ note: "Please gift wrap" }));
+      const { action } = await parseCartRequest(jsonRequest({ note: "Please gift wrap" }));
       expect(action).toEqual({
         intent: "note-update",
         note: "Please gift wrap",
@@ -167,8 +167,46 @@ describe("parseCartRequest", () => {
     });
 
     it("parses empty note string as note-update", async () => {
-      const action = await parseCartRequest(jsonRequest({ note: "" }));
+      const { action } = await parseCartRequest(jsonRequest({ note: "" }));
       expect(action).toEqual({ intent: "note-update", note: "" });
+    });
+  });
+
+  describe("JSON — cartId metadata", () => {
+    it("preserves full cart GID from the body", async () => {
+      const parsed = await parseCartRequest(
+        jsonRequest({
+          cartId: "gid://shopify/Cart/body-cart",
+          lines: [{ id: "gid://shopify/CartLine/1", quantity: 3 }],
+        }),
+      );
+
+      expect(parsed.cartId).toBe("gid://shopify/Cart/body-cart");
+      expect(parsed.action.intent).toBe("update");
+    });
+
+    it("normalizes raw cart token from the body", async () => {
+      const parsed = await parseCartRequest(
+        jsonRequest({
+          cartId: "body-cart",
+          discountCodes: ["SAVE10"],
+        }),
+      );
+
+      expect(parsed.cartId).toBe("gid://shopify/Cart/body-cart");
+      expect(parsed.action.intent).toBe("discount-update");
+    });
+
+    it("returns null cartId for FormData", async () => {
+      const parsed = await parseCartRequest(
+        formRequest({
+          intent: "remove",
+          lineId: "gid://shopify/CartLine/1",
+        }),
+      );
+
+      expect(parsed.cartId).toBeNull();
+      expect(parsed.action.intent).toBe("remove");
     });
   });
 
@@ -230,7 +268,7 @@ describe("parseCartRequest", () => {
 
   describe("FormData — line intents", () => {
     it("increase increments the quantity", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           intent: "increase",
           lineId: "gid://shopify/CartLine/1",
@@ -244,7 +282,7 @@ describe("parseCartRequest", () => {
     });
 
     it("decrease decrements the quantity", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           intent: "decrease",
           lineId: "gid://shopify/CartLine/1",
@@ -258,7 +296,7 @@ describe("parseCartRequest", () => {
     });
 
     it("decrease from quantity 1 becomes remove", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           intent: "decrease",
           lineId: "gid://shopify/CartLine/1",
@@ -272,7 +310,7 @@ describe("parseCartRequest", () => {
     });
 
     it("decrease from quantity 0 becomes remove", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           intent: "decrease",
           lineId: "gid://shopify/CartLine/1",
@@ -286,7 +324,7 @@ describe("parseCartRequest", () => {
     });
 
     it("remove intent produces remove action", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           intent: "remove",
           lineId: "gid://shopify/CartLine/1",
@@ -299,7 +337,7 @@ describe("parseCartRequest", () => {
     });
 
     it("set intent uses quantity as-is (no arithmetic)", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           intent: "set",
           lineId: "gid://shopify/CartLine/1",
@@ -313,7 +351,7 @@ describe("parseCartRequest", () => {
     });
 
     it("set intent with quantity 0 becomes remove", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           intent: "set",
           lineId: "gid://shopify/CartLine/1",
@@ -327,7 +365,7 @@ describe("parseCartRequest", () => {
     });
 
     it("set intent with negative quantity becomes remove", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           intent: "set",
           lineId: "gid://shopify/CartLine/1",
@@ -341,7 +379,7 @@ describe("parseCartRequest", () => {
     });
 
     it("merchandiseId without lineId infers add", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           merchandiseId: "gid://shopify/ProductVariant/42",
           quantity: "2",
@@ -354,7 +392,7 @@ describe("parseCartRequest", () => {
     });
 
     it("merchandiseId defaults quantity to 1", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           merchandiseId: "gid://shopify/ProductVariant/42",
         }),
@@ -366,7 +404,7 @@ describe("parseCartRequest", () => {
     });
 
     it("implicit add includes sellingPlanId when present", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           merchandiseId: "gid://shopify/ProductVariant/42",
           quantity: "1",
@@ -386,7 +424,7 @@ describe("parseCartRequest", () => {
     });
 
     it("implicit add without sellingPlanId does not include the key", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           merchandiseId: "gid://shopify/ProductVariant/42",
           quantity: "1",
@@ -404,7 +442,7 @@ describe("parseCartRequest", () => {
 
   describe("FormData — explicit add intent", () => {
     it("intent=add with merchandiseId produces add action", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           intent: "add",
           merchandiseId: "gid://shopify/ProductVariant/42",
@@ -418,7 +456,7 @@ describe("parseCartRequest", () => {
     });
 
     it("intent=add defaults quantity to 1", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           intent: "add",
           merchandiseId: "gid://shopify/ProductVariant/42",
@@ -437,7 +475,7 @@ describe("parseCartRequest", () => {
     });
 
     it("intent=add with sellingPlanId includes it in the line", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           intent: "add",
           merchandiseId: "gid://shopify/ProductVariant/42",
@@ -457,7 +495,7 @@ describe("parseCartRequest", () => {
     });
 
     it("intent=add with all fields composes correctly", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({
           intent: "add",
           merchandiseId: "gid://shopify/ProductVariant/42",
@@ -480,14 +518,14 @@ describe("parseCartRequest", () => {
 
   describe("FormData — discount intents", () => {
     it("discount-apply produces discount-apply action", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({ intent: "discount-apply", discountCode: "SAVE10" }),
       );
       expect(action).toEqual({ intent: "discount-apply", code: "SAVE10" });
     });
 
     it("discount-remove produces discount-remove action", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({ intent: "discount-remove", discountCode: "SAVE10" }),
       );
       expect(action).toEqual({ intent: "discount-remove", code: "SAVE10" });
@@ -496,14 +534,14 @@ describe("parseCartRequest", () => {
 
   describe("FormData — note intent", () => {
     it("note-update produces note-update action", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({ intent: "note-update", note: "Please gift wrap" }),
       );
       expect(action).toEqual({ intent: "note-update", note: "Please gift wrap" });
     });
 
     it("note-update with empty note is valid", async () => {
-      const action = await parseCartRequest(formRequest({ intent: "note-update", note: "" }));
+      const { action } = await parseCartRequest(formRequest({ intent: "note-update", note: "" }));
       expect(action).toEqual({ intent: "note-update", note: "" });
     });
 
@@ -540,19 +578,19 @@ describe("parseCartRequest", () => {
 
   describe("content-type dispatch", () => {
     it("dispatches application/json to JSON parsing", async () => {
-      const action = await parseCartRequest(jsonRequest({ note: "test" }));
+      const { action } = await parseCartRequest(jsonRequest({ note: "test" }));
       expect(action.intent).toBe("note-update");
     });
 
     it("dispatches application/x-www-form-urlencoded to FormData parsing", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         formRequest({ intent: "remove", lineId: "gid://shopify/CartLine/1" }),
       );
       expect(action.intent).toBe("remove");
     });
 
     it("dispatches multipart/form-data to FormData parsing", async () => {
-      const action = await parseCartRequest(
+      const { action } = await parseCartRequest(
         multipartRequest({ intent: "remove", lineId: "gid://shopify/CartLine/1" }),
       );
       expect(action.intent).toBe("remove");

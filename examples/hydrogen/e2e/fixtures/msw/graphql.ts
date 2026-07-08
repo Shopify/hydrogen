@@ -1,28 +1,23 @@
-import type { CustomerAccountMutations, CustomerAccountQueries } from "@shopify/hydrogen-classic";
-/// <reference path="../../../customer-accountapi.generated.d.ts" />
+import type * as CAAPI from "@shopify/hydrogen/customer-account";
 import { graphql, HttpResponse, type RequestHandler } from "msw";
-
-type CustomerAccountOperationMap = CustomerAccountQueries & CustomerAccountMutations;
-
-type CustomerAccountDocument = keyof CustomerAccountOperationMap & string;
 
 type MaybePromise<TValue> = TValue | Promise<TValue>;
 
-type CustomerAccountResolver<TDocument extends CustomerAccountDocument> = (args: {
-  variables: CustomerAccountOperationMap[TDocument]["variables"];
+type CustomerAccountResolver<TDocument extends CAAPI.AnyCustomerAccountDocument> = (args: {
+  variables: CAAPI.InferVariables<CAAPI.SourceOf<TDocument>>;
   request: Request;
-}) => MaybePromise<CustomerAccountOperationMap[TDocument]["return"]>;
+}) => MaybePromise<CAAPI.InferResult<CAAPI.SourceOf<TDocument>>>;
 
-export function mockCustomerAccountOperation<TDocument extends CustomerAccountDocument>(
+export function mockCustomerAccountOperation<TDocument extends CAAPI.AnyCustomerAccountDocument>(
   document: TDocument,
   resolver: CustomerAccountResolver<TDocument>,
 ): RequestHandler {
-  const operation = parseOperation(document);
+  const operation = parseOperation(document.source);
   const createHandler = operation.type === "query" ? graphql.query : graphql.mutation;
 
   return createHandler(operation.name, async ({ variables, request }) => {
     const data = await resolver({
-      variables: variables as CustomerAccountOperationMap[TDocument]["variables"],
+      variables: variables as CAAPI.InferVariables<CAAPI.SourceOf<TDocument>>,
       request,
     });
 

@@ -13,7 +13,7 @@
 	<title>News — Mock.shop</title>
 </svelte:head>
 
-<main class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
+<main id="main-content" tabindex="-1" class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
 	<header>
 		<h1 class="text-6xl font-black tracking-tight md:text-8xl">News</h1>
 	</header>

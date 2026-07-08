@@ -2,10 +2,10 @@ import { describe, it, expect, vi } from "vitest";
 
 import type { RequestScopedPrivateStorefrontClient } from "../../client";
 import { gql } from "../../graphql";
-import { createStorefrontRequestContext } from "../headers";
+import { createShopifyRequestContext } from "../headers";
+import { assert } from "../test-utils";
 import { getCart, getCartId } from "./get-cart";
 import { cartQueries, makeCartQueries } from "./queries";
-import { EMPTY_CART_DATA } from "./state";
 
 const MOCK_CART_LINE = {
   id: "gid://shopify/CartLine/1",
@@ -56,11 +56,13 @@ function mockStorefrontClient(
   };
   return {
     type: "private",
+    i18n: { country: "US", language: "EN", pathPrefix: "" },
     storeUrl: "https://shop.example.com",
     apiUrl: "https://shop.example.com/api/2026-01/graphql.json",
-    requestContext: createStorefrontRequestContext(
-      options.request ?? new Request("https://shop.example.com/"),
-    ),
+    requestContext: createShopifyRequestContext({
+      request: options.request ?? new Request("https://shop.example.com/"),
+      i18n: { country: "US", language: "EN" },
+    }),
     graphql: options.rejectWith
       ? vi.fn().mockRejectedValue(options.rejectWith)
       : vi.fn().mockResolvedValue(result),
@@ -68,10 +70,10 @@ function mockStorefrontClient(
 }
 
 describe("getCart", () => {
-  it("returns empty cart data when cartId is null", async () => {
+  it("returns null cart when cartId is null", async () => {
     const storefront = mockStorefrontClient({ cart: MOCK_CART });
     const result = await getCart(null, storefront);
-    expect(result.cart).toEqual(EMPTY_CART_DATA);
+    expect(result.cart).toBeNull();
     expect(result.headers).toBeInstanceOf(Headers);
     expect(storefront.graphql).not.toHaveBeenCalled();
   });
@@ -91,6 +93,7 @@ describe("getCart", () => {
 
     const result = await getCart("gid://shopify/Cart/123", storefront);
 
+    assert(result.cart, "expected cart data");
     expect(result.cart.note).toBeNull();
   });
 
@@ -103,24 +106,24 @@ describe("getCart", () => {
     expect(result.headers).toBe(headers);
   });
 
-  it("returns empty cart with errors from SFAPI GraphQL response", async () => {
+  it("returns null cart with errors from SFAPI GraphQL response", async () => {
     const storefront = mockStorefrontClient(null, { errors: [{ message: "Cart not found" }] });
     const result = await getCart("gid://shopify/Cart/123", storefront);
 
-    expect(result.cart).toEqual(EMPTY_CART_DATA);
+    expect(result.cart).toBeNull();
     expect(result.errors).toEqual([{ message: "Cart not found" }]);
   });
 
-  it("returns empty cart when SFAPI returns { data: null }", async () => {
+  it("returns null cart when SFAPI returns { data: null }", async () => {
     const storefront = mockStorefrontClient(null);
     const result = await getCart("gid://shopify/Cart/123", storefront);
-    expect(result.cart).toEqual(EMPTY_CART_DATA);
+    expect(result.cart).toBeNull();
   });
 
-  it("returns empty cart when SFAPI returns { data: { cart: null } }", async () => {
+  it("returns null cart when SFAPI returns { data: { cart: null } }", async () => {
     const storefront = mockStorefrontClient({ cart: null });
     const result = await getCart("gid://shopify/Cart/123", storefront);
-    expect(result.cart).toEqual(EMPTY_CART_DATA);
+    expect(result.cart).toBeNull();
   });
 
   it("throws on network failure", async () => {
@@ -169,17 +172,23 @@ describe("getCartId", () => {
   });
 
   it("reads cart ID from a request context URL", () => {
-    const context = createStorefrontRequestContext({
-      headers: new Headers({ cookie: "cart=cookie-cart" }),
-      url: "http://localhost/api/cart?cartId=gid%3A%2F%2Fshopify%2FCart%2Fcontext-query-cart",
+    const context = createShopifyRequestContext({
+      request: {
+        headers: new Headers({ cookie: "cart=cookie-cart" }),
+        url: "http://localhost/api/cart?cartId=gid%3A%2F%2Fshopify%2FCart%2Fcontext-query-cart",
+      },
+      i18n: { country: "US", language: "EN" },
     });
 
     expect(getCartId(context)).toBe("gid://shopify/Cart/context-query-cart");
   });
 
   it("falls back to request context cookie when URL is missing", () => {
-    const context = createStorefrontRequestContext({
-      headers: new Headers({ cookie: "cart=context-cookie-cart" }),
+    const context = createShopifyRequestContext({
+      request: {
+        headers: new Headers({ cookie: "cart=context-cookie-cart" }),
+      },
+      i18n: { country: "US", language: "EN" },
     });
 
     expect(getCartId(context)).toBe("gid://shopify/Cart/context-cookie-cart");

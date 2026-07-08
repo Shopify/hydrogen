@@ -1,11 +1,11 @@
 import { gql } from "@shopify/hydrogen";
-import { getPaginationVariables } from "@shopify/hydrogen-classic";
 import { redirect, useLoaderData } from "react-router";
 
 import { PaginatedResourceSection } from "~/components/PaginatedResourceSection";
 import { ProductItem } from "~/components/ProductItem";
 import type { ProductItemData } from "~/components/ProductItem";
 import { CollectionView } from "~/lib/analytics";
+import { getPaginationVariables } from "~/lib/pagination";
 import { redirectIfHandleIsLocalized } from "~/lib/redirect";
 
 import type { Route } from "./+types/($locale).collections.$handle";
@@ -16,7 +16,7 @@ export const meta: Route.MetaFunction = ({ data }) => {
 
 export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
+  const deferredData = loadDeferredData();
 
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
@@ -39,12 +39,9 @@ async function loadCriticalData({ context, params, request }: Route.LoaderArgs) 
     throw redirect("/collections");
   }
 
-  const [{ collection }] = await Promise.all([
-    storefront.query(COLLECTION_QUERY, {
-      variables: { handle, ...paginationVariables },
-      // Add other queries here, so that they are loaded in parallel
-    }),
-  ]);
+  const { collection } = await storefront.query(COLLECTION_QUERY, {
+    variables: { handle, ...paginationVariables },
+  });
 
   if (!collection) {
     throw new Response(`Collection ${handle} not found`, {
@@ -63,7 +60,7 @@ async function loadCriticalData({ context, params, request }: Route.LoaderArgs) 
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({ context }: Route.LoaderArgs) {
+function loadDeferredData() {
   return {};
 }
 
@@ -161,19 +158,3 @@ const COLLECTION_QUERY = gql(
 `,
   [PRODUCT_ITEM_FRAGMENT],
 );
-
-type CollectionData = {
-  id: string;
-  handle: string;
-  title: string;
-  description?: string | null;
-  products: {
-    nodes: ProductItemData[];
-    pageInfo: {
-      hasPreviousPage: boolean;
-      hasNextPage: boolean;
-      endCursor?: string | null;
-      startCursor?: string | null;
-    };
-  };
-};

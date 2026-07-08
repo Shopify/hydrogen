@@ -42,7 +42,7 @@ export default function Home() {
   const products = createAsync(() => fetchHome());
 
   return (
-    <main>
+    <main id="main-content" tabIndex={-1}>
       <Title>Mock.shop — Hydrogen</Title>
       <section class="grid grid-cols-1 md:grid-cols-2">
         <A

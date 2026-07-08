@@ -1,34 +1,6 @@
 <script setup lang="ts">
-import { gql } from "@shopify/hydrogen";
-
-import type { ProductCardData } from "~/components/ProductCard.vue";
-
-const HOME_QUERY = gql(`
-  query Home {
-    products(first: 3) {
-      nodes {
-        handle
-        title
-        featuredImage {
-          url
-          altText
-        }
-        priceRange {
-          minVariantPrice {
-            amount
-            currencyCode
-          }
-        }
-      }
-    }
-  }
-`);
-
-const { $storefrontClient } = useNuxtApp();
-
-const { data } = await useAsyncData("home", async () => {
-  const response = await $storefrontClient.graphql(HOME_QUERY);
-  return response.data as { products: { nodes: ProductCardData[] } } | null;
+const { data } = await useFetch("/api/home", {
+  key: "home",
 });
 const products = computed(() => data.value?.products.nodes ?? []);
 
@@ -36,7 +8,7 @@ useHead({ title: "Mock.shop — Hydrogen" });
 </script>
 
 <template>
-  <main>
+  <main id="main-content" tabindex="-1">
     <section class="grid grid-cols-1 md:grid-cols-2">
       <NuxtLink
         to="/collections/men"

@@ -7,6 +7,8 @@ import {
 } from "@shopify/hydrogen";
 import { createEffect, createMemo, onCleanup, onMount } from "solid-js";
 
+const DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT = "43px";
+
 export function ShopPayButton(props: ShopPayButtonOptions) {
   let container: HTMLDivElement | undefined;
   let button: HTMLElement | null = null;
@@ -36,5 +38,12 @@ export function ShopPayButton(props: ShopPayButtonOptions) {
     button?.remove();
   });
 
-  return <div ref={(element) => (container = element)} />;
+  return (
+    <div
+      ref={(element) => (container = element)}
+      style={{
+        "min-height": DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT,
+      }}
+    />
+  );
 }

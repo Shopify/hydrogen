@@ -48,7 +48,7 @@ test.describe("Consent Tracking - Auto-Allowed (Consent Allowed by Default)", ()
     expect(shopifyAnalytics!.httpOnly, "_shopify_analytics cookie should be HTTP-only").toBe(true);
     expect(shopifyMarketing!.httpOnly, "_shopify_marketing cookie should be HTTP-only").toBe(true);
 
-    // 5. Wait for perf-kit to download and analytics requests to fire
+    // 5. Confirm perf-kit is loaded and wait for analytics requests to fire
     await storefront.waitForPerfKit();
     storefront.expectPerfKitLoaded();
 

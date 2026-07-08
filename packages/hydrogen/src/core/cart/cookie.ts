@@ -4,6 +4,11 @@ const CART_GID_PREFIX = "gid://shopify/Cart/";
 
 export type CartCookieSource = Request | { cookie?: string };
 
+export function normalizeCartId(cartId: string | null | undefined): string | null {
+  if (!cartId) return null;
+  return cartId.startsWith(CART_GID_PREFIX) ? cartId : CART_GID_PREFIX + cartId;
+}
+
 export function getCartIdFromCookie(input: CartCookieSource): string | null {
   const header = input instanceof Request ? input.headers.get("cookie") : input.cookie;
   if (!header) return null;
@@ -14,7 +19,7 @@ export function getCartIdFromCookie(input: CartCookieSource): string | null {
   const token = decodeURIComponent(match[1]);
   if (!token) return null;
 
-  return CART_GID_PREFIX + token;
+  return normalizeCartId(token);
 }
 
 export function createCartCookie(cartId: string): string {

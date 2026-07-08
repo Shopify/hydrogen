@@ -1,20 +1,16 @@
-import type { StorefrontRequestContext } from "@shopify/hydrogen";
-import {
-  createCustomerAccountClient,
-  hydrogenContext,
-  type CustomerAccount,
-} from "@shopify/hydrogen-classic";
-import type { LanguageCode as CustomerAccountLanguageCode } from "@shopify/hydrogen-classic/customer-account-api-types";
+import type { ShopifyRequestContext } from "@shopify/hydrogen";
 import { RouterContextProvider } from "react-router";
 
 import { getLocaleFromRequest } from "~/lib/i18n";
 import { AppSession } from "~/lib/session";
 import { createStorefrontClientForRequest, type StorefrontClient } from "~/lib/storefront-client";
 
+import type { CustomerAccountContext } from "./customer-account";
+
 type HydrogenRouterContext = {
   storefront: StorefrontClient;
-  storefrontRequestContext: StorefrontRequestContext;
-  customerAccount: CustomerAccount;
+  shopifyRequestContext: ShopifyRequestContext;
+  customerAccount: CustomerAccountContext;
   env: Env;
   session: AppSession;
   waitUntil: ExecutionContext["waitUntil"];
@@ -24,7 +20,7 @@ type HydrogenRouterContext = {
  * Creates the React Router context for the Hydrogen example.
  *
  * This intentionally avoids `createHydrogenContext()` because cart and storefront
- * data now come from the dev-preview Hydrogen package. Calling Hydrogen classic's
+ * data now come from the dev-preview Hydrogen package. Calling the old Hydrogen
  * full context factory would still instantiate its storefront and cart handlers
  * even though routes no longer use them.
  * */
@@ -32,7 +28,8 @@ export async function createHydrogenRouterContext(
   request: Request,
   env: Env,
   executionContext: ExecutionContext,
-  storefrontRequestContext: StorefrontRequestContext,
+  shopifyRequestContext: ShopifyRequestContext,
+  customerAccount: CustomerAccountContext,
 ) {
   const waitUntil = executionContext.waitUntil.bind(executionContext);
   const [cache, session] = await Promise.all([
@@ -46,19 +43,11 @@ export async function createHydrogenRouterContext(
     cache,
     waitUntil,
     i18n,
-    storefrontRequestContext,
-  });
-  const customerAccount = createCustomerAccountClient({
-    session,
-    request,
-    waitUntil,
-    language: i18n.language as CustomerAccountLanguageCode,
-    customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
-    shopId: env.SHOP_ID,
+    shopifyRequestContext,
   });
   const contextValues: HydrogenRouterContext = {
     storefront,
-    storefrontRequestContext,
+    shopifyRequestContext,
     customerAccount,
     env,
     session,
@@ -66,11 +55,6 @@ export async function createHydrogenRouterContext(
   };
 
   const routerContext = new RouterContextProvider();
-  routerContext.set(hydrogenContext.storefront, storefront as never);
-  routerContext.set(hydrogenContext.customerAccount, customerAccount);
-  routerContext.set(hydrogenContext.env, env);
-  routerContext.set(hydrogenContext.session, session);
-  routerContext.set(hydrogenContext.waitUntil, waitUntil);
 
   return new Proxy(routerContext, {
     get(target, property, receiver) {
@@ -79,8 +63,8 @@ export async function createHydrogenRouterContext(
         return typeof value === "function" ? value.bind(target) : value;
       }
 
-      if (property in contextValues) {
-        return contextValues[property as keyof HydrogenRouterContext];
+      if (isHydrogenRouterContextKey(property)) {
+        return contextValues[property];
       }
 
       return Reflect.get(target, property, receiver);
@@ -93,14 +77,29 @@ export async function createHydrogenRouterContext(
     },
     getOwnPropertyDescriptor(target, property) {
       if (property in target) return Reflect.getOwnPropertyDescriptor(target, property);
-      if (property in contextValues) {
+      if (isHydrogenRouterContextKey(property)) {
         return {
           enumerable: true,
           configurable: true,
           writable: false,
-          value: contextValues[property as keyof HydrogenRouterContext],
+          value: contextValues[property],
         };
       }
     },
   });
 }
+
+function isHydrogenRouterContextKey(
+  property: PropertyKey,
+): property is keyof HydrogenRouterContext {
+  return typeof property === "string" && property in contextValuesForTypeCheck;
+}
+
+const contextValuesForTypeCheck: Record<keyof HydrogenRouterContext, true> = {
+  customerAccount: true,
+  env: true,
+  session: true,
+  shopifyRequestContext: true,
+  storefront: true,
+  waitUntil: true,
+};

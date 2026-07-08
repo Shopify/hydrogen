@@ -1,14 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import type { PrivateStorefrontClient } from "../../client";
+import { createShopifyRequestContext } from "../headers";
 import { assert } from "../test-utils";
 import { handleGraphiql } from "./graphiql";
 
+const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
+
 const storefrontClient = {
   type: "private",
+  i18n: DEFAULT_I18N,
   storeUrl: "https://test-store.myshopify.com",
   apiUrl: "https://test-store.myshopify.com/api/2026-04/graphql.json",
   graphql: vi.fn(),
+  requestContext: createShopifyRequestContext({
+    request: { headers: new Headers() },
+    i18n: DEFAULT_I18N,
+  }),
 } satisfies PrivateStorefrontClient;
 
 describe("handleGraphiql", () => {

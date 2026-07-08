@@ -85,7 +85,7 @@ const colorOption = product.options.find((o) => o.name === "Color");
 ---
 
 <BaseLayout title={`${product.title} — Mock.shop`}>
-  <main>
+  <main id="main-content" tabindex="-1">
     <section class="grid grid-cols-1 gap-12 px-6 py-10 md:grid-cols-[minmax(0,1fr)_420px] md:gap-16 md:px-10 md:py-12">
       <div class="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-2">
         {
@@ -211,7 +211,7 @@ const colorOption = product.options.find((o) => o.name === "Color");
   ></div>
 
   <script>
-    import { getAnalytics, AnalyticsEvent, analyticsShop } from "../../lib/analytics";
+      import { getAnalytics, AnalyticsEvent } from "../../lib/analytics";
     const el = document.getElementById("product-analytics");
     if (el) {
       const id = el.dataset.id ?? "";
@@ -233,11 +233,9 @@ const colorOption = product.options.find((o) => o.name === "Color");
             variantTitle,
             quantity: 1,
             sku,
-          },
-        ],
-        url: window.location.href,
-        shop: analyticsShop,
-      });
+        },
+      ],
+    });
     }
   </script>
 </BaseLayout>

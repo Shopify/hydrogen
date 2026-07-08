@@ -223,6 +223,16 @@ export const HEADER_QUERY = gql(
     shop {
       ...Shop
     }
+    localization {
+      country {
+        currency {
+          isoCode
+        }
+      }
+      language {
+        isoCode
+      }
+    }
     menu(handle: $headerMenuHandle) {
       ...Menu
     }
@@ -273,8 +283,14 @@ type Shop = {
   } | null;
 };
 
+type HeaderLocalization = {
+  country?: { currency?: { isoCode: string } | null } | null;
+  language?: { isoCode: string } | null;
+};
+
 export type HeaderQuery = {
   shop: Shop;
+  localization?: HeaderLocalization | null;
   menu?: Menu | null;
 };
 

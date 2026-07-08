@@ -3,9 +3,10 @@
 **Prerequisites:**
 
 - A storefront built on `@shopify/hydrogen` with the request interceptors already wired (`handleShopifyRoutes` and `handleShopifyRedirects`). The analytics bus depends on the SFAPI proxy so the browser can observe same-origin Storefront API responses for session cookies. Without the proxy, analytics falls back to deprecated JavaScript-visible cookies and should be treated as incomplete. If you have not installed the interceptors yet, install them first with the local `hydrogen-request-handlers` skill.
+- Shopify runtime scripts rendered from the root/document head. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads plus `initializeShopifyScripts({ routes: routeTemplates })` during browser hydration. Use the local `hydrogen-routing` skill for the required routing options. Pass the resolved market as `i18n`; pass `{shopId: env.SHOP_ID, storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0"}` as `shop` when loading PerfKit. Analytics consent config does not accept `country` or `language`.
 - A client-side lifecycle hook in your framework (route-change effect, navigation event, `<script>` tag, etc.) so view events can fire on the right URL transitions.
 
-`createStorefrontAnalytics()` is a zero-dependency event bus that owns Shopify consent setup, Monorail dispatch, cart change detection, deprecated-cookie compatibility, and PerfKit wiring. Framework adapters stay thin — they translate framework lifecycle events into bus calls.
+`createStorefrontAnalytics()` is a zero-dependency event bus that owns Shopify consent setup, Monorail dispatch, cart change detection, and deprecated-cookie compatibility. Framework adapters stay thin — they translate framework lifecycle events into bus calls.
 
 ## What you're installing, and what it does on its own
 
@@ -24,13 +25,12 @@ createStorefrontAnalytics(options)
   │     ├── loads Privacy Banner script in default-banner mode
   │     ├── loads Shopify analytics destination by default
   │     ├── dispatches Trekkie + customer schemas to Monorail from that destination
-  │     ├── writes deprecated _shopify_y / _shopify_s cookies
-  │     └── loads PerfKit from the Shopify analytics destination
+  │     └── writes deprecated _shopify_y / _shopify_s cookies
   │
   └── canTrack() gates destination delivery and replay
 ```
 
-The bus is **browser-only effective**. On the server it can be constructed, but browser internals (consent, Monorail, PerfKit, cookies) skip — there is no server-side dispatch.
+The bus is **browser-only effective**. On the server it can be constructed, but browser internals (consent, Monorail, cookies) skip — there is no server-side dispatch.
 
 What the bus does for you out of the box:
 
@@ -39,11 +39,12 @@ What the bus does for you out of the box:
 - Publishes `window.Shopify.customerPrivacy.config` with headless consent config before the SDK initializes.
 - Sends `page_viewed`, `product_viewed`, `collection_viewed`, `search_viewed`, and `product_added_to_cart` events to Monorail (`https://monorail-edge.shopifysvc.com/unstable/produce_batch`) using Trekkie + customer-tracking schemas.
 - Diff-detects cart changes from `updateCart()` calls and emits `cart_updated` / `product_added_to_cart` / `product_removed_from_cart` with line-level deltas.
-- Loads PerfKit from the built-in Shopify analytics destination and forwards page-type context through consent-gated destination events.
+- Exposes itself on `window.Shopify.analytics` so Shopify runtime scripts can attach browser-only integrations such as PerfKit SPA navigation.
 
 What it does **not** do:
 
 - Server-side analytics dispatch.
+- Rendering Shopify runtime script/link tags. Install ShopifyScripts separately in the app root/document head and pass its `{shopId, storefrontId}` `shop` when PerfKit should load.
 - Third-party destination integrations (GA4, Meta Pixel, Klaviyo) — wire those with `addDestination()`.
 - Cart event publishing without `updateCart()`. App code should not manually publish `cart_updated` etc.
 - DOM event ingestion or Standard Events. Explicit `publish()` is the API.
@@ -71,8 +72,6 @@ const analytics = createStorefrontAnalytics({
     publicStorefrontAccessToken: "<public 32-char token>", // optional, public token only
     consentDomain: "www.my-store.com",      // optional; defaults to window.location.host
     mode: "default-banner",                 // "default-banner" | "custom-banner" | "no-banner"
-    country: "US",                          // optional region hint
-    language: "EN",                         // optional language hint
   },
   // canTrack defaults to window.Shopify.customerPrivacy.analyticsProcessingAllowed()
   // shopifyAnalytics defaults to true; set false to disable Shopify's built-in destination
@@ -83,9 +82,9 @@ const analytics = createStorefrontAnalytics({
 
 ### `shop`
 
-Flat shop metadata. **`shopId` must be a Shopify Shop GID** (e.g. `gid://shopify/Shop/12345`); not a numeric ID and not a domain. PerfKit parses the numeric ID out of this string.
+Flat analytics metadata. **`shopId` must be a Shopify Shop GID** (e.g. `gid://shopify/Shop/12345`); not a numeric ID and not a domain.
 
-Create the bus after shop metadata is ready. Shopify analytics and PerfKit need the shop GID at dispatch time, so do not rely on patching it in later.
+Create the bus after shop metadata is ready. Shopify analytics needs the shop GID at dispatch time. `ShopifyScripts` uses a separate `shop` shape for PerfKit: `{shopId: env.SHOP_ID, storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0"}`.
 
 ### `consent`
 
@@ -93,8 +92,6 @@ This is where the location/region nuance lives. Shopify's hosted Customer Privac
 
 - **Visitors in jurisdictions with consent requirements** (EU/EEA/UK GDPR, parts of Canada, California CCPA, etc.) — analytics must wait for consent. Use `mode: "default-banner"` for Shopify's hosted privacy banner, or `mode: "custom-banner"` if your app renders its own banner and calls `window.Shopify.customerPrivacy.setTrackingConsent()`.
 - **Visitors in jurisdictions without consent requirements** — the Customer Privacy SDK auto-allows tracking and the banner does not render. The bus dispatches normally.
-
-`country` and `language` in this config are passed to the consent SDK and let merchants override or hint at region behavior. They do not bypass consent rules — they configure the SDK that enforces them.
 
 `publicStorefrontAccessToken` is optional. If provided, it must be the public token. The bus logs an error if it appears to be a `shpat_*` private token or is not 32 characters.
 
@@ -116,7 +113,9 @@ Default:
 
 This is conservative by design: if the Customer Privacy script is blocked, hasn't loaded, or is unavailable, **destination delivery is blocked**. Raw `subscribe()` listeners still see live events, but analytics destinations do not receive events until `canTrack()` returns true.
 
-Events published before consent is ready are buffered for destinations and replayed only if analytics consent is granted. Destinations only receive event names they subscribe to, including `custom_*` events. If the visitor explicitly denies analytics consent, the replay buffer is cleared.
+Events published before consent is ready are buffered for destinations and replayed only if analytics consent is granted. Destinations only receive supported event names they subscribe to. If the visitor explicitly denies analytics consent, the replay buffer is cleared.
+
+Custom event names such as `custom_*` are temporarily unsupported. Publishing or subscribing to an unsupported event name logs a small warning and the event is ignored.
 
 `canTrack: () => true` exists for **development and testing only**. Shipping it to production bypasses consent for every visitor in every jurisdiction, which is a regulatory issue. Leave the default in production.
 
@@ -305,10 +304,7 @@ export function AnalyticsTracker({ shop }: { shop: ShopAnalytics }) {
     configureAnalytics(shop);
     const bus = getAnalytics();
     if (!bus) return;
-    bus.publish(AnalyticsEvent.PAGE_VIEWED, {
-      url: window.location.href,
-      shop,
-    });
+    bus.publish(AnalyticsEvent.PAGE_VIEWED);
   }, [shop]);
 
   return null;
@@ -350,25 +346,25 @@ Per-page trackers can then call `getAnalytics()` / `getAnalyticsShop()` as shown
 
 ## Per-route view events
 
-The bus is consent- and consent-region-aware on its own. The framework adapter is responsible for **when** to publish events — namely, on every relevant page transition.
+The bus is consent- and consent-region-aware on its own. The framework adapter is responsible for **when** to publish events — namely, on every relevant page transition. View events infer `url` from `window.location.href`, and `shop` defaults from `createStorefrontAnalytics({ shop })`; pass either field only when a framework needs an explicit override.
 
 The generic shape is:
 
 ```
 On every page transition:
-  analytics.publish(AnalyticsEvent.PAGE_VIEWED, {url, shop})
+  analytics.publish(AnalyticsEvent.PAGE_VIEWED)
 
 On product page mount:
-  analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {products: [...], url, shop})
+  analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, { products: [...] })
 
 On collection page mount:
-  analytics.publish(AnalyticsEvent.COLLECTION_VIEWED, {collection, url, shop})
+  analytics.publish(AnalyticsEvent.COLLECTION_VIEWED, { collection })
 
 On search results page:
-  analytics.publish(AnalyticsEvent.SEARCH_VIEWED, {searchTerm, url, shop})
+  analytics.publish(AnalyticsEvent.SEARCH_VIEWED, { searchTerm })
 
 On cart view (page or drawer):
-  analytics.publish(AnalyticsEvent.CART_VIEWED, {cart, prevCart, url, shop})
+  analytics.publish(AnalyticsEvent.CART_VIEWED, { cart, prevCart })
 
 Whenever cart state resolves (any source — fetch, mutation, SPA nav):
   analytics.updateCart(cart) // bus emits cart_updated / product_added_to_cart / product_removed_from_cart
@@ -376,7 +372,7 @@ Whenever cart state resolves (any source — fetch, mutation, SPA nav):
 
 Required product fields for `product_viewed` and `product_added_to_cart` Monorail dispatch: `id`, `title`, `price`, `vendor`, `variantId`, `variantTitle`. `id` must be the Shopify Product GID and `variantId` must be the Shopify ProductVariant GID when one is available; handles are routing/display data, not analytics IDs. Missing fields cause the Shopify analytics subscriber to skip the Monorail event and log a field-specific error — the bus event still fires for your subscribers, only the Monorail leg drops.
 
-`CART_VIEWED` requires `{ cart, prevCart, url, shop }`. `cart` and `prevCart` are `AnalyticsCart | null`; when a compatible cart is available, include `id`, `updatedAt`, and connection-shaped `lines`, otherwise pass `cart: null` rather than a partial object.
+`CART_VIEWED` requires `{ cart, prevCart }`. `cart` and `prevCart` are `AnalyticsCart | null`; when a compatible cart is available, include `id`, `updatedAt`, and connection-shaped `lines`, otherwise pass `cart: null` rather than a partial object.
 
 ## Framework-specific shapes
 
@@ -390,19 +386,15 @@ SvelteKit's `afterNavigate` hook fires on every client-side navigation. Combined
 <!-- src/routes/+layout.svelte -->
 <script lang="ts">
   import { afterNavigate } from '$app/navigation';
-  import { configureAnalytics, getAnalytics, getAnalyticsShop, AnalyticsEvent } from '$lib/analytics';
+  import { configureAnalytics, getAnalytics, AnalyticsEvent } from '$lib/analytics';
 
   let { data, children } = $props();
   configureAnalytics(data.analyticsShop);
 
   afterNavigate(() => {
     const analytics = getAnalytics();
-    const shop = getAnalyticsShop();
-    if (!analytics || !shop) return;
-    analytics.publish(AnalyticsEvent.PAGE_VIEWED, {
-      url: window.location.href,
-      shop,
-    });
+    if (!analytics) return;
+    analytics.publish(AnalyticsEvent.PAGE_VIEWED);
   });
 </script>
 
@@ -414,15 +406,14 @@ Per-page view events go in the route's `$effect`. The route loader must include 
 ```svelte
 <!-- src/routes/products/[handle]/+page.svelte -->
 <script lang="ts">
-  import { getAnalytics, getAnalyticsShop, AnalyticsEvent } from '$lib/analytics';
+  import { getAnalytics, AnalyticsEvent } from '$lib/analytics';
   let { data } = $props();
 
   $effect(() => {
     const handle = data.product.handle;
     const variant = data.product.selectedOrFirstAvailableVariant;
     const analytics = getAnalytics();
-    const shop = getAnalyticsShop();
-    if (!analytics || !shop) return;
+    if (!analytics) return;
     analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
       products: [{
         id: data.product.id,
@@ -434,8 +425,6 @@ Per-page view events go in the route's `$effect`. The route loader must include 
         quantity: 1,
         sku: variant?.sku,
       }],
-      url: window.location.href,
-      shop,
     });
     void handle;
   });
@@ -463,10 +452,7 @@ export function AnalyticsTracker({ shop }: { shop: ShopAnalytics }) {
     configureAnalytics(shop);
     const bus = getAnalytics();
     if (!bus) return;
-    bus.publish(AnalyticsEvent.PAGE_VIEWED, {
-      url: window.location.href,
-      shop,
-    });
+    bus.publish(AnalyticsEvent.PAGE_VIEWED);
   }, [key, shop]);
 
   return null;
@@ -552,8 +538,6 @@ export function ProductViewedTracker({ product, shop }: Props) {
         quantity: 1,
         sku: product.selectedOrFirstAvailableVariant?.sku,
       }],
-      url: window.location.href,
-      shop,
     });
   }, [product.handle, shop]);
   return null;
@@ -599,17 +583,13 @@ const analyticsShop = {
     <slot />
     <div id="analytics-shop" data-shop={JSON.stringify(analyticsShop)} hidden></div>
     <script>
-      import { configureAnalytics, getAnalytics, getAnalyticsShop, AnalyticsEvent } from "../lib/analytics";
+      import { configureAnalytics, getAnalytics, AnalyticsEvent } from "../lib/analytics";
       const shopConfig = document.getElementById("analytics-shop");
       if (shopConfig instanceof HTMLElement && shopConfig.dataset.shop) {
         configureAnalytics(JSON.parse(shopConfig.dataset.shop));
       }
       const analytics = getAnalytics();
-      const shop = getAnalyticsShop();
-      if (analytics && shop) analytics.publish(AnalyticsEvent.PAGE_VIEWED, {
-        url: window.location.href,
-        shop,
-      });
+      if (analytics) analytics.publish(AnalyticsEvent.PAGE_VIEWED);
     </script>
   </body>
 </html>
@@ -638,11 +618,10 @@ const product = await fetchProduct(Astro.params.handle);
   ></div>
 
   <script>
-    import { getAnalytics, getAnalyticsShop, AnalyticsEvent } from "../../lib/analytics";
+    import { getAnalytics, AnalyticsEvent } from "../../lib/analytics";
     const el = document.getElementById("product-analytics");
     const analytics = getAnalytics();
-    const shop = getAnalyticsShop();
-    if (el && analytics && shop) {
+    if (el && analytics) {
       analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
         products: [{
           id: el.dataset.id ?? "",
@@ -654,8 +633,6 @@ const product = await fetchProduct(Astro.params.handle);
           quantity: 1,
           sku: el.dataset.sku || undefined,
         }],
-        url: window.location.href,
-        shop,
       });
     }
   </script>
@@ -715,6 +692,7 @@ analytics?.addDestination({
   name: "ga4",
   setup({ subscribe }) {
     subscribe(AnalyticsEvent.PAGE_VIEWED, (payload) => {
+      if (!payload.url) return;
       window.gtag?.("event", "page_view", { page_location: payload.url });
     });
   },
@@ -733,7 +711,7 @@ After wiring, smoke-test each event in the browser dev tools:
 2. **Monorail request fires** — Network tab, filter for `monorail-edge.shopifysvc.com`. A `produce_batch` POST should land within ~1s of consent being granted (or immediately if the visitor is in a no-consent-required region). If it never fires, either consent has not been granted, the schemas are missing required fields (check console for warnings about missing `id`/`title`/`vendor`/etc.), or `hasUserConsent` is false on the payload.
 3. **Per-route navigation fires page_viewed** — click around. Each navigation should produce a fresh `page_viewed` event. If only the initial page load fires, the route-change hook is wired wrong (e.g. effect dependency missing in React, reactive read missing in Solid).
 4. **Cart events fire** — add an item to the cart. You should see `cart_updated` followed by `product_added_to_cart`. If you see `cart_updated` repeating with the same payload, the dedupe key (`updatedAt`) is stale — confirm your cart query selects `updatedAt`.
-5. **Privacy banner renders for EU/UK visitors** — if `mode: "default-banner"`, simulate a GDPR-protected region (browser dev-tools location override, VPN, or `country: "DE"` in consent config to force test). The banner should render. If it does not, check that `cdn.shopify.com` is not blocked by your CSP.
+5. **Privacy banner renders for EU/UK visitors** — if `mode: "default-banner"`, simulate a GDPR-protected region with browser dev-tools location override or VPN. The banner should render. If it does not, check that `cdn.shopify.com` is not blocked by your CSP.
 
 For production, re-verify against the production bundle. Several gotchas only appear once the SSR/CSR boundary stabilizes.
 
@@ -742,8 +720,9 @@ For production, re-verify against the production bundle. Several gotchas only ap
 ## Common gotchas
 
 - **Replay is destination-only.** Raw `analytics.subscribe()` listeners only receive live events. `analytics.addDestination()` callbacks receive consent-gated live events plus buffered replay after analytics consent is granted. If the visitor explicitly denies analytics consent, the buffer is cleared and those pre-denial events are never replayed.
+- **Unsupported events are ignored.** The bus only accepts the exported `AnalyticsEvent` values. Custom event names such as `custom_*` are temporarily unsupported and log a warning instead of dispatching.
 - **The singleton must be lazy.** Constructing the bus at module top-level (`const bus = createStorefrontAnalytics(...)` instead of behind a getter) runs on the server during SSR and crashes on `window` access. Always wrap in a `typeof window === 'undefined'` guard.
-- **`shopId` must be a Shopify Shop GID.** A bare numeric ID or a domain string makes PerfKit's `data-shop-id` parse fail. Format is `gid://shopify/Shop/<numeric_id>`.
+- **Use the right shop shape for each API.** Analytics `shop.shopId` must be a Shopify Shop GID. `ShopifyScripts` expects a numeric `shopId` plus `storefrontId` for PerfKit.
 - **`publicStorefrontAccessToken` must be public when provided.** The bus logs an error if the token starts with `shpat_` or is not 32 characters. Private tokens stay server-side.
 - **`canTrack: () => true` is a development crutch.** It bypasses the Customer Privacy API for every visitor in every region. Never ship to production. The default — Customer Privacy API — is the only correct setting for a real merchant.
 - **Customer Privacy script blocked by CSP.** If your CSP does not allow `cdn.shopify.com`, the consent script never loads, `analyticsProcessingAllowed()` stays `false`, and every event drops. Check Network tab for blocked requests; add `cdn.shopify.com` to `script-src`.

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { createStorefrontRequestContext } from "../headers";
+import { createShopifyRequestContext } from "../headers";
 import { assert } from "../test-utils";
 import { handleSfapiProxy as handleSfapiProxyImpl } from "./sfapi-proxy";
 
@@ -18,16 +18,39 @@ function createRequest(
 }
 
 function handleSfapiProxy(request: Request, storeUrl = defaultStoreUrl) {
+  const requestContext = createShopifyRequestContext({
+    request,
+    i18n: { country: "US", language: "EN" },
+  });
   return handleSfapiProxyImpl({
     request,
+    requestContext,
+    sessionManager: createTestSessionManager(request),
     storefrontClient: {
       type: "private",
+      i18n: { country: "US", language: "EN", pathPrefix: "" },
       storeUrl,
       apiUrl: `${storeUrl}/api/2026-04/graphql.json`,
-      requestContext: createStorefrontRequestContext(request),
+      requestContext,
       graphql: vi.fn(),
     },
   });
+}
+
+function createTestSessionManager(request: Request) {
+  const data = new Map<string, unknown>();
+  const origin = new URL(request.url).origin;
+
+  return {
+    getSessionOrigin: () => origin,
+    getSessionItem: (key: string) => data.get(key),
+    setSessionItem: (key: string, value: unknown) => {
+      data.set(key, value);
+    },
+    removeSessionItem: (key: string) => {
+      data.delete(key);
+    },
+  };
 }
 
 describe("handleSfapiProxy", () => {

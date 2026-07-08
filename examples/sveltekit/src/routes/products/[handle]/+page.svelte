@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ProductCard from '$lib/components/ProductCard.svelte';
 	import ProductPurchasePanel from '$lib/components/ProductPurchasePanel.svelte';
-	import { getAnalytics, AnalyticsEvent, analyticsShop } from '$lib/analytics';
+	import { getAnalytics, AnalyticsEvent } from '$lib/analytics';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -25,9 +25,7 @@
 					quantity: 1,
 					sku: data.product.selectedOrFirstAvailableVariant?.sku
 				}
-			],
-			url: window.location.href,
-			shop: analyticsShop
+			]
 		});
 		// reference handle so $effect tracks it
 		void handle;
@@ -42,7 +40,7 @@
 	<title>{data.product.title} — Mock.shop</title>
 </svelte:head>
 
-<main>
+<main id="main-content" tabindex="-1">
 	<section
 		class="grid grid-cols-1 gap-12 px-6 py-10 md:grid-cols-[minmax(0,1fr)_420px] md:gap-16 md:px-10 md:py-12"
 	>

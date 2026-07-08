@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   configureCartEndpoint as configureCoreCartEndpoint,
   createCartStore,
+  type CreateCartStoreOptions,
   type CartStore,
 } from "../core/cart/cart";
 import type { CartData, CartState } from "../core/cart/state";
@@ -22,6 +23,9 @@ type CartDataOverrides = Omit<Partial<CartData>, "lines"> & {
   lines?: CartData["lines"]["nodes"] | CartData["lines"];
 };
 type CartStateOverrides = CartDataOverrides & Partial<Omit<CartState, "data">>;
+type CartInitialData<TData extends CartData = CartData> =
+  CreateCartStoreOptions<TData>["initialData"];
+type MockInitialData = CartData | CartInitialData;
 
 function makeCartData(overrides: CartDataOverrides = {}): CartData {
   const { lines, ...rest } = overrides;
@@ -52,9 +56,23 @@ type MockCartStore = CartStore & {
 let latestStore: MockCartStore;
 let subscribeListener: (() => void) | null = null;
 
-function createMockStore(initialData?: CartData): MockCartStore {
-  let state: CartState = initialData
-    ? makeCartState({ ...initialData, loading: false, errors: createEmptyCartErrors() })
+function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
+  return (
+    value !== null &&
+    (typeof value === "object" || typeof value === "function") &&
+    typeof (value as { then?: unknown }).then === "function"
+  );
+}
+
+function createMockStore(initialData?: MockInitialData): MockCartStore {
+  const cart =
+    initialData && !isPromiseLike(initialData)
+      ? "cart" in initialData
+        ? initialData.cart
+        : initialData
+      : null;
+  let state: CartState = cart
+    ? makeCartState({ ...cart, loading: false, errors: createEmptyCartErrors() })
     : { ...EMPTY_CART_STATE };
   const store = {
     connect: vi.fn(),
@@ -92,32 +110,52 @@ describe("CartProvider", () => {
   it("creates cart store with initialData", () => {
     const data = makeCartData({ totalQuantity: 5 });
 
-    render(createElement(CartProvider, { initialData: data }, null));
+    render(createElement(CartProvider, { initialData: { cart: data } }, null));
 
-    expect(createCartStore).toHaveBeenCalledWith({ initialData: data });
+    expect(createCartStore).toHaveBeenCalledWith({ initialData: { cart: data } });
   });
 
   it("does not recreate store on re-render", () => {
     const data = makeCartData({ totalQuantity: 5 });
 
-    const { rerender } = render(createElement(CartProvider, { initialData: data }, null));
-    rerender(createElement(CartProvider, { initialData: data }, null));
+    const { rerender } = render(createElement(CartProvider, { initialData: { cart: data } }, null));
+    rerender(createElement(CartProvider, { initialData: { cart: data } }, null));
 
     expect(createCartStore).toHaveBeenCalledTimes(1);
   });
 
-  it("does not fetch when initialData is empty cart (server confirmed no cart)", () => {
-    render(createElement(CartProvider, { initialData: EMPTY_CART_DATA }, null));
+  it("does not fetch when initialData has an empty cart fixture", () => {
+    render(createElement(CartProvider, { initialData: { cart: EMPTY_CART_DATA } }, null));
 
-    expect(createCartStore).toHaveBeenCalledWith({ initialData: EMPTY_CART_DATA });
+    expect(createCartStore).toHaveBeenCalledWith({ initialData: { cart: EMPTY_CART_DATA } });
+    expect(latestStore.connect).toHaveBeenCalledTimes(1);
     expect(latestStore.fetch).not.toHaveBeenCalled();
   });
 
-  it("fetches when initialData is omitted (no server data)", () => {
+  it("does not fetch when async initialData is provided", () => {
+    const initialData = Promise.resolve({ cart: makeCartData({ totalQuantity: 5 }) });
+
+    render(createElement(CartProvider, { initialData }, null));
+
+    expect(createCartStore).toHaveBeenCalledWith({ initialData });
+    expect(latestStore.connect).toHaveBeenCalledTimes(1);
+    expect(latestStore.fetch).not.toHaveBeenCalled();
+  });
+
+  it("does not fetch when initialData has a null cart", () => {
+    render(createElement(CartProvider, { initialData: { cart: null } }, null));
+
+    expect(createCartStore).toHaveBeenCalledWith({ initialData: { cart: null } });
+    expect(latestStore.connect).toHaveBeenCalledTimes(1);
+    expect(latestStore.fetch).not.toHaveBeenCalled();
+  });
+
+  it("delegates omitted initialData loading to connect", () => {
     render(createElement(CartProvider, null, null));
 
     expect(createCartStore).toHaveBeenCalledWith({ initialData: undefined });
-    expect(latestStore.fetch).toHaveBeenCalledTimes(1);
+    expect(latestStore.connect).toHaveBeenCalledTimes(1);
+    expect(latestStore.fetch).not.toHaveBeenCalled();
   });
 });
 

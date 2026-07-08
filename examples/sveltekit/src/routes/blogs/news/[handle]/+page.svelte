@@ -10,7 +10,7 @@
 	<title>{data.article.title} — Mock.shop</title>
 </svelte:head>
 
-<main class="mx-auto max-w-3xl px-6 py-16 md:py-24">
+<main id="main-content" tabindex="-1" class="mx-auto max-w-3xl px-6 py-16 md:py-24">
 	<article>
 		<header class="text-center">
 			<h1 class="text-5xl font-black tracking-tight md:text-7xl">{data.article.title}</h1>

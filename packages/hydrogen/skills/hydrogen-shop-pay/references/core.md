@@ -38,6 +38,8 @@ container.append(button);
 
 For server-rendered markup, render the custom element attributes from `getShopPayButtonAttributes(...)` and load Shop JS on the client.
 
+When wiring core helpers directly, put the custom element in a wrapper that reserves vertical space while Shop JS hydrates. This prevents layout shift when the button loads. The logo button currently renders at roughly 42px tall, but treat that as an estimate rather than a stable API. If you need a richer loading state, render a skeleton in the wrapper until the custom element is ready.
+
 ## Validation Rules
 
 - Variant IDs must be Shopify ProductVariant GIDs or bare numeric variant IDs.

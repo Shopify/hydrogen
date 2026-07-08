@@ -2,41 +2,45 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
 import type { RedirectOptions } from "../handle-shopify-redirects";
-import { createStorefrontRequestContext } from "../headers";
+import { createShopifyRequestContext } from "../headers";
+import { createShopifyRouteTemplates } from "../standard-routes/index";
 import { assert } from "../test-utils";
 import { handleUrlRedirects as handleUrlRedirectsImpl } from "./url-redirects";
 
 type TestStorefrontConfig = {
   storeDomain: string;
-  i18n: { country: "US"; language: "EN" };
 };
+
+const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
+const DEFAULT_ROUTE_TEMPLATES = createShopifyRouteTemplates({});
 
 const defaultConfig: TestStorefrontConfig = {
   storeDomain: "test-store.myshopify.com",
-  i18n: { country: "US", language: "EN" },
 };
 
 function createPrivateStorefrontClient(
   request: Request,
-  config: TestStorefrontConfig = defaultConfig,
+  fixture: TestStorefrontConfig = defaultConfig,
 ) {
   return createStorefrontClient({
     type: "private",
+    requestContext: createShopifyRequestContext({ request, i18n: DEFAULT_I18N }),
     config: {
-      storeDomain: config.storeDomain,
-      i18n: config.i18n,
+      storeDomain: fixture.storeDomain,
       privateStorefrontToken: "test-private-token",
       buyerIp: "127.0.0.1",
-      requestContext: createStorefrontRequestContext(request),
     },
   });
 }
 
-function handleUrlRedirects(request: Request, config: TestStorefrontConfig = defaultConfig) {
-  return handleUrlRedirectsImpl({
+function handleUrlRedirects(request: Request, fixture: TestStorefrontConfig = defaultConfig) {
+  const options = {
     request,
-    storefrontClient: createPrivateStorefrontClient(request, config),
-  } satisfies RedirectOptions);
+    routeTemplates: DEFAULT_ROUTE_TEMPLATES,
+    storefrontClient: createPrivateStorefrontClient(request, fixture),
+  } satisfies RedirectOptions;
+
+  return handleUrlRedirectsImpl(options);
 }
 
 describe("handleUrlRedirects", () => {

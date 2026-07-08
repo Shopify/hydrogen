@@ -1,3 +1,4 @@
+import { EncryptedCookieCustomerSession } from "@shared/customer-session";
 import { createCookieSessionStorage } from "react-router";
 
 import type { MswScenarioMeta } from "./handlers";
@@ -198,13 +199,19 @@ function getTunnelRequestUrl(requestUrl: string) {
   return url.toString();
 }
 
+function setPublicForwardingHeaders(headers: Headers, requestUrl: string) {
+  const url = new URL(requestUrl);
+  headers.set("x-forwarded-host", url.host);
+  headers.set("x-forwarded-proto", url.protocol.replace(/:$/, ""));
+}
+
 function withCookie(headers: Headers, cookiePair: string) {
-  // Strip any existing session cookie before appending the mock one
+  const cookieName = cookiePair.split("=", 1)[0];
   const cookiePairs = (headers.get("Cookie") ?? "")
     .split(";")
     .map((cookie) => cookie.trim())
     .filter(Boolean)
-    .filter((cookie) => !cookie.startsWith("session="));
+    .filter((cookie) => !cookie.startsWith(`${cookieName}=`));
 
   cookiePairs.push(cookiePair);
   headers.set("Cookie", cookiePairs.join("; "));
@@ -234,20 +241,25 @@ function getSessionStorage(secret: string) {
 
 type SessionLike = Awaited<ReturnType<ReturnType<typeof createCookieSessionStorage>["getSession"]>>;
 
-function injectCustomerAccountSession(session: SessionLike) {
-  const current =
-    session.get("customerAccount") ??
-    ({} as {
-      accessToken?: string;
-      refreshToken?: string;
-      expiresAt?: string;
-    });
+function injectCustomerAccountSession(session: EncryptedCookieCustomerSession) {
+  const current = session.getSessionItem("customerAccount") as
+    | {
+        tokens?: {
+          accessToken?: string;
+          refreshToken?: string;
+          expiresAt?: number;
+        };
+      }
+    | undefined;
 
-  session.set("customerAccount", {
+  session.setSessionItem("customerAccount", {
     ...current,
-    accessToken: current.accessToken ?? "e2e-customer-access-token",
-    refreshToken: current.refreshToken ?? "e2e-customer-refresh-token",
-    expiresAt: current.expiresAt ?? String(Date.now() + SESSION_TTL_IN_MS),
+    tokens: {
+      ...current?.tokens,
+      accessToken: current?.tokens?.accessToken ?? "e2e-customer-access-token",
+      refreshToken: current?.tokens?.refreshToken ?? "e2e-customer-refresh-token",
+      expiresAt: current?.tokens?.expiresAt ?? Date.now() + SESSION_TTL_IN_MS,
+    },
   });
 }
 
@@ -274,22 +286,35 @@ async function addMockCustomerSessionCookieIfNeeded(request: Request, env: Env) 
   // Clone so the original body isn't consumed — `new Request(url, init)`
   // exhausts the init request's body per the Fetch spec.
   const requestWithTunnelHostname = new Request(getTunnelRequestUrl(request.url), request.clone());
-
-  const storage = getSessionStorage(env.SESSION_SECRET);
-
-  const session = await storage.getSession(requestWithTunnelHostname.headers.get("Cookie") ?? "");
+  const tunnelHeaders = new Headers(requestWithTunnelHostname.headers);
+  setPublicForwardingHeaders(tunnelHeaders, request.url);
+  const requestWithTunnelHeaders = new Request(requestWithTunnelHostname, {
+    headers: tunnelHeaders,
+  });
 
   if (currentMswScenarioMeta?.mocksLegacyCustomerAuth) {
+    const storage = getSessionStorage(env.SESSION_SECRET);
+    const session = await storage.getSession(requestWithTunnelHeaders.headers.get("Cookie") ?? "");
     injectLegacyCustomerSession(session);
+    const sessionCookiePair = (await storage.commitSession(session)).split(";", 1)[0];
+    const headers = new Headers(requestWithTunnelHeaders.headers);
+    withCookie(headers, sessionCookiePair);
+    return new Request(requestWithTunnelHeaders, { headers });
   } else {
+    const session = await EncryptedCookieCustomerSession.init(
+      requestWithTunnelHeaders,
+      env.SESSION_SECRET,
+    );
     injectCustomerAccountSession(session);
+    const sessionHeaders = await session.commit();
+    const sessionCookie = sessionHeaders?.get("Set-Cookie");
+    if (!sessionCookie) return requestWithTunnelHeaders;
+
+    const sessionCookiePair = sessionCookie.split(";", 1)[0];
+    const headers = new Headers(requestWithTunnelHeaders.headers);
+    withCookie(headers, sessionCookiePair);
+    return new Request(requestWithTunnelHeaders, { headers });
   }
-
-  const sessionCookiePair = (await storage.commitSession(session)).split(";", 1)[0];
-  const headers = new Headers(requestWithTunnelHostname.headers);
-  withCookie(headers, sessionCookiePair);
-
-  return new Request(requestWithTunnelHostname, { headers });
 }
 
 const appWithMsw = {

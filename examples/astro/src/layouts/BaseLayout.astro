@@ -1,6 +1,8 @@
 ---
 import "../styles/global.css";
+import { defaultI18n, shop } from "@shared/config";
 import { HEADER_COLLECTIONS_QUERY, normalizeHeaderCollections } from "@shared/header";
+import { renderShopifyScriptTags } from "@shopify/hydrogen";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 
@@ -11,6 +13,10 @@ interface Props {
 const { title } = Astro.props;
 const { data: headerData } = await Astro.locals.storefrontClient.graphql(HEADER_COLLECTIONS_QUERY);
 const headerCollections = normalizeHeaderCollections(headerData?.collections?.nodes);
+const shopifyScriptTagsHtml = renderShopifyScriptTags({
+  i18n: defaultI18n,
+  shop,
+}).join("\n");
 ---
 
 <!doctype html>
@@ -25,19 +31,25 @@ const headerCollections = normalizeHeaderCollections(headerData?.collections?.no
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
     />
+    <Fragment set:html={shopifyScriptTagsHtml} />
     <title>{title}</title>
   </head>
   <body class="bg-white text-black">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-black focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white">
+      Skip to main content
+    </a>
     <Header collections={headerCollections} />
     <slot />
     <Footer />
     <script>
-      import { getAnalytics, AnalyticsEvent, analyticsShop } from "../lib/analytics";
+      import { initializeShopifyScripts } from "@shopify/hydrogen";
+      import { getAnalytics, AnalyticsEvent } from "../lib/analytics";
+      import { routeTemplates } from "../route-templates";
+
+      initializeShopifyScripts({ routes: routeTemplates });
+
       const analytics = getAnalytics();
-      analytics?.publish(AnalyticsEvent.PAGE_VIEWED, {
-        url: window.location.href,
-        shop: analyticsShop,
-      });
+      analytics?.publish(AnalyticsEvent.PAGE_VIEWED);
     </script>
   </body>
 </html>
