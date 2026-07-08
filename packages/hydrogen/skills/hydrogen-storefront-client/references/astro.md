@@ -2,7 +2,7 @@
 
 Astro pages run their frontmatter on the server, so `Astro.request` and `Astro.clientAddress` are available — but only on **server-rendered** pages. Prerendered pages have no request at all.
 
-## SSR with buyer isolation
+## SSR with trusted buyer context
 
 Use `Astro.locals` to pass the storefront client from middleware to pages. The middleware creates the client once per request with buyer IP resolved from `Astro.clientAddress`.
 
@@ -11,19 +11,21 @@ Use `Astro.locals` to pass the storefront client from middleware to pages. The m
 import { defineMiddleware } from "astro:middleware";
 import {
   createStorefrontClient,
-  createStorefrontRequestContext,
+  createShopifyRequestContext,
 } from "@shopify/hydrogen";
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  const requestContext = createStorefrontRequestContext(context.request);
+  const requestContext = createShopifyRequestContext({
+    request: context.request,
+    i18n: { country: "US", language: "EN" },
+  });
   const client = createStorefrontClient({
     type: "private",
+    requestContext,
     config: {
       storeDomain: import.meta.env.PUBLIC_STORE_DOMAIN,
       privateStorefrontToken: import.meta.env.PRIVATE_STOREFRONT_API_TOKEN,
       buyerIp: context.clientAddress,
-      requestContext,
-      i18n: { country: "US", language: "EN" },
     },
   });
 
@@ -69,18 +71,23 @@ This requires `output: "server"` in `astro.config.mjs` (all pages SSR by default
 
 ## Static pages (no buyer IP)
 
-For prerendered pages — marketing, collection listings — use a module-scoped `private_shared_rate_limit` client. No middleware needed since there's no request to read from.
+For prerendered pages — marketing, collection listings — use a module-scoped `private_no_buyer_context` client. No middleware needed since there's no request to read from.
 
 ```ts
 // src/lib/storefront-static.ts
-import { createStorefrontClient } from "@shopify/hydrogen";
+import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
+
+const requestContext = createShopifyRequestContext({
+  request: { headers: new Headers() },
+  i18n: { country: "US", language: "EN" },
+});
 
 export const staticStorefrontClient = createStorefrontClient({
-  type: "private_shared_rate_limit",
+  type: "private_no_buyer_context",
+  requestContext,
   config: {
     storeDomain: import.meta.env.PUBLIC_STORE_DOMAIN,
     privateStorefrontToken: import.meta.env.PRIVATE_STOREFRONT_API_TOKEN,
-    i18n: { country: "US", language: "EN" },
   },
 });
 ```

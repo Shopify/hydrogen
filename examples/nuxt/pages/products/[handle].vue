@@ -1,174 +1,33 @@
 <script setup lang="ts">
-import { getSelectedProductOptions } from "@shopify/hydrogen";
-import { gql } from "@shopify/hydrogen";
-
-import type { ProductCardData } from "~/components/ProductCard.vue";
-import {
-  provideProductForm,
-  type ProductData,
-  type ProductVariantData,
-} from "~/storefront/product";
-
-const PRODUCT_VARIANT_FRAGMENT = gql(`
-  fragment NuxtProductVariantFragment on ProductVariant {
-    id
-    title
-    availableForSale
-    selectedOptions {
-      name
-      value
-    }
-    price {
-      amount
-      currencyCode
-    }
-    compareAtPrice {
-      amount
-      currencyCode
-    }
-    image {
-      id
-      url
-      altText
-      width
-      height
-    }
-    product {
-      title
-      handle
-    }
-    sku
-  }
-`);
-
-const PRODUCT_FRAGMENT = gql(
-  `
-  fragment NuxtProductFragment on Product {
-    id
-    handle
-    title
-    vendor
-    requiresSellingPlan
-    encodedVariantExistence
-    encodedVariantAvailability
-    priceRange {
-      minVariantPrice {
-        amount
-        currencyCode
-      }
-      maxVariantPrice {
-        amount
-        currencyCode
-      }
-    }
-    options {
-      name
-      optionValues {
-        name
-        firstSelectableVariant {
-          ...NuxtProductVariantFragment
-        }
-        swatch {
-          color
-          image {
-            previewImage {
-              url
-            }
-          }
-        }
-      }
-    }
-    selectedOrFirstAvailableVariant(
-      selectedOptions: $selectedOptions
-      ignoreUnknownOptions: true
-      caseInsensitiveMatch: true
-    ) {
-      ...NuxtProductVariantFragment
-    }
-    adjacentVariants(
-      selectedOptions: $selectedOptions
-      ignoreUnknownOptions: true
-      caseInsensitiveMatch: true
-    ) {
-      ...NuxtProductVariantFragment
-    }
-  }
-`,
-  [PRODUCT_VARIANT_FRAGMENT],
-);
-
-const PRODUCT_QUERY = gql(
-  `
-  query NuxtProduct($handle: String!, $selectedOptions: [SelectedOptionInput!]!) {
-    product(handle: $handle) {
-      ...NuxtProductFragment
-      description
-      images(first: 10) {
-        nodes {
-          url
-          altText
-        }
-      }
-    }
-    products(first: 4) {
-      nodes {
-        handle
-        title
-        featuredImage {
-          url
-          altText
-        }
-        priceRange {
-          minVariantPrice {
-            amount
-            currencyCode
-          }
-        }
-      }
-    }
-  }
-`,
-  [PRODUCT_FRAGMENT],
-);
-
-type QueryResult = {
-  product:
-    | (ProductData & {
-        description: string;
-        images: { nodes: { url: string; altText: string | null }[] };
-      })
-    | null;
-  products: { nodes: ProductCardData[] };
-};
+import { provideProductForm, type ProductVariantData } from "~/storefront/product";
+import { toFetchQuery } from "~/utils/fetch-query";
 
 const route = useRoute();
 const router = useRouter();
 const handle = computed(() => route.params.handle as string);
-const { $storefrontClient } = useNuxtApp();
-
-const selectedOptions = computed(() =>
-  getSelectedProductOptions(new URLSearchParams(route.query as Record<string, string>)),
+const selectedOptionsKey = computed(() =>
+  new URLSearchParams(route.query as Record<string, string>).toString(),
 );
+const productApiPath = computed(() => `/api/products/${encodeURIComponent(handle.value)}` as const);
 
-const { data } = await useAsyncData(
-  computed(() => `product-${handle.value}`),
-  async () => {
-    const response = await $storefrontClient.graphql(PRODUCT_QUERY, {
-      variables: {
-        handle: handle.value,
-        selectedOptions: selectedOptions.value,
-      },
-    });
-    return response.data as QueryResult | null;
-  },
-  { watch: [handle, selectedOptions] },
-);
+const { data } = await useFetch(() => productApiPath.value, {
+  key: computed(() => `product-${handle.value}`),
+  query: computed(() => toFetchQuery(selectedOptionsKey.value)),
+  watch: [handle, selectedOptionsKey],
+});
 
 if (!data.value?.product) {
   throw createError({ statusCode: 404, statusMessage: "Product not found" });
 }
 
-const product = computed(() => data.value?.product as NonNullable<QueryResult["product"]>);
+const product = computed(() => {
+  const value = data.value?.product;
+  if (!value) {
+    throw createError({ statusCode: 404, statusMessage: "Product not found" });
+  }
+
+  return value;
+});
 const related = computed(
   () => data.value?.products.nodes.filter((p) => p.handle !== handle.value).slice(0, 4) ?? [],
 );
@@ -198,7 +57,7 @@ provideProductForm(product, { onSelect: handleSelect });
 </script>
 
 <template>
-  <main>
+  <main id="main-content" tabindex="-1">
     <section
       class="grid grid-cols-1 gap-12 px-6 py-10 md:grid-cols-[minmax(0,1fr)_420px] md:gap-16 md:px-10 md:py-12"
     >

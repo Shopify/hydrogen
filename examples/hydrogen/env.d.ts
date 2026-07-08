@@ -4,16 +4,16 @@
 
 // Enhance TypeScript's built-in typings.
 import "@total-typescript/ts-reset";
-import type { StorefrontRequestContext } from "@shopify/hydrogen";
-import type { CustomerAccount } from "@shopify/hydrogen-classic";
+import type { ShopifyRequestContext } from "@shopify/hydrogen";
 
+import type { CustomerAccountContext } from "./app/lib/customer-account";
 import type { AppSession } from "./app/lib/session";
 import type { StorefrontClient } from "./app/lib/storefront-client";
 
 type HydrogenRouterContext = {
   storefront: StorefrontClient;
-  storefrontRequestContext: StorefrontRequestContext;
-  customerAccount: CustomerAccount;
+  shopifyRequestContext: ShopifyRequestContext;
+  customerAccount: CustomerAccountContext;
   env: Env;
   session: AppSession;
   waitUntil: ExecutionContext["waitUntil"];
@@ -21,7 +21,9 @@ type HydrogenRouterContext = {
 
 declare module "react-router" {
   interface AppLoadContext extends HydrogenRouterContext {}
-  interface RouterContextProvider extends HydrogenRouterContext {}
+  interface RouterContextProvider extends HydrogenRouterContext {
+    [key: string]: unknown;
+  }
 }
 
 declare global {

@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import type { CartActionError } from "../../../vendor/standard-actions";
+import { SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT } from "../shopify-scripts";
 import { assert } from "../test-utils";
 import {
   configureCartEndpoint,
@@ -287,7 +288,7 @@ beforeEach(() => {
     writable: true,
   });
   resetStandardActionsForTests();
-  store = createCartStore();
+  store = createCartStore({ initialData: { cart: EMPTY_CART_DATA } });
   store.connect();
   store.reset();
 });
@@ -295,25 +296,203 @@ beforeEach(() => {
 afterEach(() => {
   store.destroy();
   resetStandardActionsForTests();
+  document
+    .querySelectorAll(`script[src="${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}"]`)
+    .forEach((script) => script.remove());
 });
 
 describe("createCartStore", () => {
   it("normalizes initialData as hydrated cart state", () => {
     const localStore = createCartStore({
-      initialData: makeCartState({
-        loading: true,
-        pending: makePending({ lines: new Set(["line-1"]), discountCodes: new Set(["SAVE10"]) }),
-        errors: {
-          ...createEmptyCartErrors(),
-          cart: { userErrors: [{ code: "INVALID", message: "old" }], warnings: [] },
-        },
-      }),
+      initialData: {
+        cart: makeCartState({
+          loading: true,
+          pending: makePending({ lines: new Set(["line-1"]), discountCodes: new Set(["SAVE10"]) }),
+          errors: {
+            ...createEmptyCartErrors(),
+            cart: { userErrors: [{ code: "INVALID", message: "old" }], warnings: [] },
+          },
+        }),
+      },
     });
 
     const state = localStore.getState();
     expect(state.loading).toBe(false);
     expect(state.pending).toEqual({ lines: new Set(), note: false, discountCodes: new Set() });
     expect(state.errors).toEqual(createEmptyCartErrors());
+  });
+
+  it("sets loading false when sync initialData has a null cart", () => {
+    const localStore = createCartStore({ initialData: { cart: null } });
+
+    expect(localStore.getState().loading).toBe(false);
+    expect(localStore.getState().data).toEqual(EMPTY_CART_DATA);
+
+    localStore.destroy();
+  });
+
+  it("does not start async initialData before connect", async () => {
+    const deferred = createDeferred<{ cart: CartData | null }>();
+    const localStore = createCartStore({ initialData: deferred.promise });
+
+    deferred.resolve({ cart: makeCartState({ totalQuantity: 5 }) });
+    await nextTick();
+
+    expect(localStore.getState().loading).toBe(true);
+    expect(localStore.getState().data.totalQuantity).toBe(0);
+
+    localStore.destroy();
+  });
+
+  it("hydrates when connected async initialData resolves", async () => {
+    const deferred = createDeferred<{ cart: CartData | null }>();
+    const localStore = createCartStore({ initialData: deferred.promise });
+
+    localStore.connect();
+    deferred.resolve({ cart: makeCartState({ totalQuantity: 5 }) });
+
+    await vi.waitFor(() => {
+      expect(localStore.getState().loading).toBe(false);
+    });
+    expect(localStore.getState().data.totalQuantity).toBe(5);
+
+    localStore.destroy();
+  });
+
+  it("hydrates when connected thenable initialData resolves", async () => {
+    const deferred = createDeferred<{ cart: CartData | null }>();
+    const initialData: PromiseLike<{ cart: CartData | null }> = {
+      // oxlint-disable-next-line unicorn/no-thenable -- verifies framework thenables that are not native Promise instances
+      then(onfulfilled, onrejected) {
+        return deferred.promise.then(onfulfilled, onrejected);
+      },
+    };
+    const localStore = createCartStore({ initialData });
+
+    localStore.connect();
+    deferred.resolve({ cart: makeCartState({ totalQuantity: 7 }) });
+
+    await vi.waitFor(() => {
+      expect(localStore.getState().loading).toBe(false);
+    });
+    expect(localStore.getState().data.totalQuantity).toBe(7);
+
+    localStore.destroy();
+  });
+
+  it("reuses connected async initialData for fetch while pending", async () => {
+    const deferred = createDeferred<{ cart: CartData | null }>();
+    const localStore = createCartStore({ initialData: deferred.promise });
+
+    localStore.connect();
+    const fetchPromise = localStore.fetch();
+
+    expect(mockGetCart).not.toHaveBeenCalled();
+
+    deferred.resolve({ cart: makeCartState({ totalQuantity: 5 }) });
+    await fetchPromise;
+
+    expect(localStore.getState().loading).toBe(false);
+    expect(localStore.getState().data.totalQuantity).toBe(5);
+
+    localStore.destroy();
+  });
+
+  it("sets loading to false when connected async initialData rejects", async () => {
+    const deferred = createDeferred<{ cart: CartData | null }>();
+    const localStore = createCartStore({ initialData: deferred.promise });
+    const error = new Error("initial data failed");
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    localStore.connect();
+    deferred.reject(error);
+
+    await vi.waitFor(() => {
+      expect(localStore.getState().loading).toBe(false);
+      expect(consoleSpy).toHaveBeenCalledWith("[hydrogen] cart initial load failed:", error);
+    });
+
+    consoleSpy.mockRestore();
+    localStore.destroy();
+  });
+
+  it("allows fetch after connected async initialData rejects", async () => {
+    const deferred = createDeferred<{ cart: CartData | null }>();
+    const localStore = createCartStore({ initialData: deferred.promise });
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    localStore.connect();
+    deferred.reject(new Error("initial data failed"));
+    await vi.waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalled();
+    });
+
+    mockGetCart.mockResolvedValue({
+      cart: makeCartState({ totalQuantity: 6 }),
+    });
+
+    await localStore.fetch();
+
+    expect(mockGetCart).toHaveBeenCalledTimes(1);
+    expect(localStore.getState().data.totalQuantity).toBe(6);
+
+    consoleSpy.mockRestore();
+    localStore.destroy();
+  });
+
+  it("does not apply stale async initialData after state changes", async () => {
+    const deferred = createDeferred<{ cart: CartData | null }>();
+    const localStore = createCartStore({ initialData: deferred.promise });
+
+    localStore.connect();
+    localStore.hydrate(makeCartState({ totalQuantity: 1 }));
+    deferred.resolve({ cart: makeCartState({ totalQuantity: 9 }) });
+    await nextTick();
+
+    expect(localStore.getState().data.totalQuantity).toBe(1);
+
+    localStore.destroy();
+  });
+
+  it("fetches omitted initialData on connect", async () => {
+    const localStore = createCartStore();
+    mockGetCart.mockResolvedValue({
+      cart: makeCartState({
+        id: "gid://shopify/Cart/connected",
+        totalQuantity: 4,
+      }),
+    });
+
+    localStore.connect();
+
+    await vi.waitFor(() => {
+      expect(localStore.getState().data.id).toBe("gid://shopify/Cart/connected");
+    });
+    expect(localStore.getState().data.totalQuantity).toBe(4);
+
+    localStore.destroy();
+  });
+
+  it("starts omitted initialData fetch only once across reconnects", async () => {
+    const deferred = createDeferred<{ cart: CartData }>();
+    const localStore = createCartStore();
+    mockGetCart.mockReturnValue(deferred.promise);
+
+    localStore.connect();
+    localStore.destroy();
+    localStore.connect();
+
+    await vi.waitFor(() => {
+      expect(mockGetCart).toHaveBeenCalledTimes(1);
+    });
+
+    deferred.resolve({ cart: makeCartState({ totalQuantity: 3 }) });
+    await vi.waitFor(() => {
+      expect(localStore.getState().data.totalQuantity).toBe(3);
+    });
+    expect(mockGetCart).toHaveBeenCalledTimes(1);
+
+    localStore.destroy();
   });
 
   it("dispatches standard cart events from document", () => {
@@ -434,6 +613,7 @@ describe("CartStore lifecycle", () => {
     const addSpy = vi.spyOn(document, "addEventListener");
     const removeSpy = vi.spyOn(document, "removeEventListener");
     const localStore = createCartStore();
+    mockGetCart.mockResolvedValue({ cart: null });
 
     try {
       localStore.connect();
@@ -673,6 +853,7 @@ describe("CartStore.handleFormSubmit — line mutations", () => {
   it("set: clamps to quantityAvailable when present", async () => {
     store.destroy();
     store = createCartStore();
+    mockGetCart.mockResolvedValue({ cart: null });
     store.connect();
 
     const line = {
@@ -1800,6 +1981,34 @@ describe("CartStore.handleFormSubmit — timeout", () => {
 });
 
 describe("CartStore.fetch", () => {
+  it("reuses an in-flight fetch while state is unchanged", async () => {
+    const deferred = createDeferred<{ cart: CartData }>();
+    mockGetCart.mockReturnValueOnce(deferred.promise);
+
+    const firstPromise = store.fetch();
+    const secondPromise = store.fetch();
+
+    expect(secondPromise).toBe(firstPromise);
+    await nextTick();
+    expect(mockGetCart).toHaveBeenCalledTimes(1);
+
+    deferred.resolve({ cart: makeCartState({ totalQuantity: 2 }) });
+    await firstPromise;
+
+    mockGetCart.mockResolvedValueOnce({
+      cart: makeCartState({
+        id: "gid://shopify/Cart/fresh",
+        totalQuantity: 3,
+      }),
+    });
+
+    await store.fetch();
+
+    expect(mockGetCart).toHaveBeenCalledTimes(2);
+    expect(store.getState().data.id).toBe("gid://shopify/Cart/fresh");
+    expect(store.getState().data.totalQuantity).toBe(3);
+  });
+
   it("hydrates the store from getCart result", async () => {
     const cart = {
       id: "gid://shopify/Cart/abc",
@@ -1830,6 +2039,62 @@ describe("CartStore.fetch", () => {
     expect(store.getState().loading).toBe(false);
     expect(store.getState().data.id).toBeNull();
     expect(getCartLines(store.getState().data)).toEqual([]);
+  });
+
+  it("does not apply stale fetch result after state changes", async () => {
+    const deferred = createDeferred<{ cart: CartData }>();
+    mockGetCart.mockReturnValue(deferred.promise);
+
+    const promise = store.fetch();
+    store.hydrate(makeCartState({ totalQuantity: 1 }));
+    deferred.resolve({
+      cart: makeCartState({
+        id: "gid://shopify/Cart/stale",
+        totalQuantity: 9,
+      }),
+    });
+    await promise;
+
+    expect(store.getState().data.totalQuantity).toBe(1);
+    expect(store.getState().data.id).toBe("gid://shopify/Cart/123");
+  });
+
+  it("starts a fresh fetch when the in-flight load is stale", async () => {
+    const staleDeferred = createDeferred<{ cart: CartData }>();
+    const freshDeferred = createDeferred<{ cart: CartData }>();
+    mockGetCart
+      .mockReturnValueOnce(staleDeferred.promise)
+      .mockReturnValueOnce(freshDeferred.promise);
+
+    const stalePromise = store.fetch();
+    store.hydrate(makeCartState({ totalQuantity: 1 }));
+    const freshPromise = store.fetch();
+
+    expect(freshPromise).not.toBe(stalePromise);
+    await nextTick();
+    expect(mockGetCart).toHaveBeenCalledTimes(2);
+
+    staleDeferred.resolve({
+      cart: makeCartState({
+        id: "gid://shopify/Cart/stale",
+        totalQuantity: 9,
+      }),
+    });
+    await stalePromise;
+
+    expect(store.getState().data.id).toBe("gid://shopify/Cart/123");
+    expect(store.getState().data.totalQuantity).toBe(1);
+
+    freshDeferred.resolve({
+      cart: makeCartState({
+        id: "gid://shopify/Cart/fresh",
+        totalQuantity: 4,
+      }),
+    });
+    await freshPromise;
+
+    expect(store.getState().data.id).toBe("gid://shopify/Cart/fresh");
+    expect(store.getState().data.totalQuantity).toBe(4);
   });
 
   it("respects hydrate same-ID guard", async () => {
@@ -1953,6 +2218,7 @@ describe("CartStore.fetch", () => {
     resetStandardActionsForTests();
 
     await expect(store.fetch()).rejects.toThrow("Standard Actions not available");
+    expect(store.getState().loading).toBe(false);
   });
 
   it("fetches from configured endpoint instead of getCart", async () => {
@@ -2013,6 +2279,7 @@ describe("CartStore.fetch", () => {
 
     configureCartEndpoint("/api/cart");
     await expect(store.fetch()).rejects.toThrow(CartNetworkError);
+    expect(store.getState().loading).toBe(false);
   });
 });
 
@@ -3714,6 +3981,36 @@ describe("getShopifyStandardActions", () => {
       value: "complete",
       configurable: true,
     });
+  });
+
+  it("explains how to add the Standard Actions script when the tag is missing", async () => {
+    Object.defineProperty(window, "Shopify", {
+      value: {},
+      configurable: true,
+      writable: true,
+    });
+    resetStandardActionsForTests();
+
+    await expect(getShopifyStandardActions()).rejects.toThrow(
+      `include ${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}`,
+    );
+  });
+
+  it("explains that Standard Actions has not loaded when the script tag is present", async () => {
+    Object.defineProperty(window, "Shopify", {
+      value: {},
+      configurable: true,
+      writable: true,
+    });
+    const script = document.createElement("script");
+    script.type = "application/json";
+    script.src = SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT;
+    document.head.append(script);
+    resetStandardActionsForTests();
+
+    await expect(getShopifyStandardActions()).rejects.toThrow(
+      "Ensure the Shopify script tag has loaded before calling cart actions.",
+    );
   });
 
   it("waits for DOMContentLoaded before configuring Standard Actions", async () => {

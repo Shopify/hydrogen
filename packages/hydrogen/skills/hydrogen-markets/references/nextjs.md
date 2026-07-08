@@ -16,11 +16,10 @@ This assumes the app uses the same proxy handoff as `examples/nextjs/proxy.ts`: 
 
 ```ts
 // app/lib/markets.ts
-import type { StorefrontRequestContext } from "@shopify/hydrogen";
-
 type Market = {
   country: string;
   language: string;
+  pathPrefix?: string;
 };
 
 const DEFAULT_MARKET = {
@@ -34,12 +33,11 @@ const MARKET_BY_HOST = {
   "fr.example.com": { country: "FR", language: "FR" },
 } satisfies Record<string, Market>;
 
-export function getMarketFromRequestContext(
-  requestContext: Pick<StorefrontRequestContext, "url">,
-): Market {
-  if (!requestContext.url) return DEFAULT_MARKET;
+export function getMarketFromHeaders(headers: Pick<Headers, "get">): Market {
+  const forwardedUrl = headers.get("x-storefront-url");
+  if (!forwardedUrl) return DEFAULT_MARKET;
 
-  const { hostname } = new URL(requestContext.url);
+  const { hostname } = new URL(forwardedUrl);
   const host = hostname.toLowerCase();
 
   return MARKET_BY_HOST[host] ?? DEFAULT_MARKET;
@@ -54,22 +52,27 @@ import "server-only";
 import { storefrontConfig } from "@shared/config";
 import {
   createStorefrontClient,
-  createStorefrontRequestContext,
+  createShopifyRequestContext,
 } from "@shopify/hydrogen";
 import { headers } from "next/headers";
 import { cache } from "react";
 
-import { getMarketFromRequestContext } from "./markets";
+import { getMarketFromHeaders } from "./markets";
 
 export const getStorefrontClient = cache(async () => {
-  const requestContext = createStorefrontRequestContext({ headers: await headers() });
+  const requestHeaders = await headers();
+  const request = { headers: requestHeaders };
+  const requestContext = createShopifyRequestContext({
+    request,
+    i18n: getMarketFromHeaders(requestHeaders),
+  });
 
   return createStorefrontClient({
     type: "public",
+    requestContext,
     config: {
-      ...storefrontConfig,
-      requestContext,
-      i18n: getMarketFromRequestContext(requestContext),
+      storeDomain: storefrontConfig.storeDomain,
+      publicStorefrontToken: storefrontConfig.publicStorefrontToken,
     },
   });
 });
@@ -88,6 +91,7 @@ Use this for routes like `/en-ca/products/shirt` or `/fr-fr/products/shirt`. Mod
 type Market = {
   country: string;
   language: string;
+  pathPrefix?: string;
 };
 
 const DEFAULT_MARKET = {
@@ -96,8 +100,8 @@ const DEFAULT_MARKET = {
 } satisfies Market;
 
 const MARKET_BY_PARAM = {
-  "en-ca": { country: "CA", language: "EN" },
-  "fr-fr": { country: "FR", language: "FR" },
+  "en-ca": { country: "CA", language: "EN", pathPrefix: "/en-ca" },
+  "fr-fr": { country: "FR", language: "FR", pathPrefix: "/fr-fr" },
 } satisfies Record<string, Market>;
 
 export function getMarketFromParam(marketParam: string): Market {
@@ -105,27 +109,32 @@ export function getMarketFromParam(marketParam: string): Market {
 }
 ```
 
-For static or ISR-cached pages, use a shared-rate-limit client and pass the market from route params. The page can be prerendered when the route uses `generateStaticParams` and does not call request-time APIs like `headers()` or `cookies()`.
+For static or ISR-cached pages, use a `private_no_buyer_context` client and pass the market from route params. The page can be prerendered when the route uses `generateStaticParams` and does not call request-time APIs like `headers()` or `cookies()`.
 
 ```ts
 // app/lib/static-storefront.ts
-import { createStorefrontClient } from "@shopify/hydrogen";
+import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
 
 import { getMarketFromParam } from "./path-markets";
 
 export function createStaticStorefrontClient(marketParam: string) {
+  const requestContext = createShopifyRequestContext({
+    request: { headers: new Headers() },
+    i18n: getMarketFromParam(marketParam),
+  });
+
   return createStorefrontClient({
-    type: "private_shared_rate_limit",
+    type: "private_no_buyer_context",
+    requestContext,
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
       privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-      i18n: getMarketFromParam(marketParam),
     },
   });
 }
 ```
 
-Use the query shape from `SKILL.md`: declare `$country` and `$language`, use `@inContext`, and let the client inject the market variables. Use the private per-buyer client instead when the page needs buyer-specific headers, cookies, or personalized data. That path becomes dynamic because it must read request-time data.
+Use the query shape from `SKILL.md`: declare `$country` and `$language`, use `@inContext`, and let the client inject the market variables. Use the private client with trusted buyer context instead when the page needs buyer-specific headers, cookies, or personalized data. That path becomes dynamic because it must read request-time data.
 
 ---
 
@@ -137,6 +146,6 @@ Prefer the Next.js example proxy pattern:
 
 - In `proxy.ts`, create a request context from the `NextRequest`.
 - Forward `requestContext.getForwardedRequestHeaders()` through `NextResponse.next({ request: { headers } })`.
-- In Server Components, recreate the request context with `createStorefrontRequestContext({ headers: await headers() })` and read `requestContext.url`.
+- In Server Components, recreate a request-like object with `request: { headers: await headers() }`, resolve the market from the forwarded URL header, then create the client request context with that `i18n`.
 
-`createStorefrontRequestContext` already persists the URL through `x-storefront-url`, so do not set a parallel URL header unless the app cannot use the proxy handoff.
+`createShopifyRequestContext` already persists the URL through `x-storefront-url`, so do not set a parallel URL header unless the app cannot use the proxy handoff.

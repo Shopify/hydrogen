@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
+    "https:dev": "VITE_LOCAL_HTTPS=1 vite dev",
     "build": "vite build",
-    "start": "node build",
+    "start": "node --env-file-if-exists=.env build",
     "prepare": "svelte-kit sync || echo ''",
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
   },
   "dependencies": {
-    "@shopify/hydrogen": "workspace:*"
+    "@shopify/hydrogen": "workspace:*",
+    "lru-cache": "^11.3.6"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.3.3",

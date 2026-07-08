@@ -1,42 +1,16 @@
 <script setup lang="ts">
-import { gql } from "@shopify/hydrogen";
-
-const ARTICLE_QUERY = gql(`
-  query Article($handle: String!) {
-    blog(handle: "news") {
-      articleByHandle(handle: $handle) {
-        handle
-        title
-        publishedAt
-        contentHtml
-      }
-    }
-  }
-`);
-
-type Article = {
-  handle: string;
-  title: string;
-  publishedAt: string;
-  contentHtml: string;
-};
-
 const dateFormatter = new Intl.DateTimeFormat("en-US", { dateStyle: "long" });
 
 const route = useRoute();
 const handle = computed(() => route.params.handle as string);
-const { $storefrontClient } = useNuxtApp();
-
-const { data } = await useAsyncData(
-  computed(() => `article-${handle.value}`),
-  async () => {
-    const response = await $storefrontClient.graphql(ARTICLE_QUERY, {
-      variables: { handle: handle.value },
-    });
-    return response.data as { blog: { articleByHandle: Article | null } | null } | null;
-  },
-  { watch: [handle] },
+const articleApiPath = computed(
+  () => `/api/blogs/news/${encodeURIComponent(handle.value)}` as const,
 );
+
+const { data } = await useFetch(() => articleApiPath.value, {
+  key: computed(() => `article-${handle.value}`),
+  watch: [handle],
+});
 
 const article = computed(() => data.value?.blog?.articleByHandle);
 
@@ -48,7 +22,12 @@ useHead({ title: () => `${article.value?.title ?? "Article"} — Mock.shop` });
 </script>
 
 <template>
-  <main v-if="article" class="mx-auto max-w-3xl px-6 py-16 md:py-24">
+  <main
+    id="main-content"
+    v-if="article"
+    tabindex="-1"
+    class="mx-auto max-w-3xl px-6 py-16 md:py-24"
+  >
     <article>
       <header class="text-center">
         <h1 class="text-5xl font-black tracking-tight md:text-7xl">

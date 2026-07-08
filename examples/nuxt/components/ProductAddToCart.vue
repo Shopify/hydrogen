@@ -48,7 +48,7 @@ const addable = computed(() => canAddToCart(props.product, form.options));
         </button>
       </div>
       <button
-        type="submit"
+        v-bind="form.register('addToCart', {})"
         :disabled="!addable || form.pending.value"
         class="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-300"
       >
@@ -83,7 +83,6 @@ const addable = computed(() => canAddToCart(props.product, form.options));
       channel="headless"
       :disabled="!addable || form.pending.value"
       width="100%"
-      height="48px"
       border-radius="9999px"
     />
   </div>

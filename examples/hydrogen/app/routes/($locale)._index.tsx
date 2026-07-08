@@ -1,8 +1,8 @@
 import { gql } from "@shopify/hydrogen";
-import { Image } from "@shopify/hydrogen-classic";
 import { Suspense } from "react";
 import { Await, useLoaderData, Link } from "react-router";
 
+import { Image } from "~/components/Image";
 import { MockShopNotice } from "~/components/MockShopNotice";
 import { ProductItem } from "~/components/ProductItem";
 import type { ProductItemData } from "~/components/ProductItem";
@@ -28,14 +28,16 @@ export async function loader(args: Route.LoaderArgs) {
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
 async function loadCriticalData({ context }: Route.LoaderArgs) {
-  const [{ collections }] = await Promise.all([
-    context.storefront.query(FEATURED_COLLECTION_QUERY),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
+  const { collections } = await context.storefront.query(FEATURED_COLLECTION_QUERY);
+  const featuredCollection = collections.nodes[0];
+
+  if (!featuredCollection) {
+    throw new Response("Featured collection not found", { status: 404 });
+  }
 
   return {
     isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
-    featuredCollection: collections.nodes[0] as FeaturedCollectionFragment,
+    featuredCollection,
   };
 }
 

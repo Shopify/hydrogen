@@ -45,7 +45,7 @@ if (!collection) {
 ---
 
 <BaseLayout title={`${collection.title} — Mock.shop`}>
-  <main class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
+  <main id="main-content" tabindex="-1" class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
     <header class="max-w-2xl">
       <h1 class="text-6xl font-black tracking-tight md:text-8xl">
         {collection.title}
@@ -72,7 +72,7 @@ if (!collection) {
   ></div>
 
   <script>
-    import { getAnalytics, AnalyticsEvent, analyticsShop } from "../../lib/analytics";
+      import { getAnalytics, AnalyticsEvent } from "../../lib/analytics";
     const el = document.getElementById("collection-analytics");
     if (el) {
       const id = el.dataset.id ?? "";
@@ -80,8 +80,6 @@ if (!collection) {
       const analytics = getAnalytics();
       analytics?.publish(AnalyticsEvent.COLLECTION_VIEWED, {
         collection: { id, handle },
-        url: window.location.href,
-        shop: analyticsShop,
       });
     }
   </script>

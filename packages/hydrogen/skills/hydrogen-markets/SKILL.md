@@ -11,7 +11,7 @@ description: >
 
 Markets are an application routing concern plus Storefront API context. Hydrogen does not prescribe how a storefront chooses a market. Use domains, subdomains, paths, cookies, buyer preferences, geolocation, or merchant config as needed.
 
-The Hydrogen part is the required `i18n` property on `createStorefrontClient`. Resolve the market first, then create the client with static `i18n`. When a query declares `$country` and `$language` and uses `@inContext(country: $country, language: $language)`, the client injects those values from `i18n`.
+The Hydrogen part is request-scoped `i18n` on `createShopifyRequestContext`. Resolve the market first, then create the request context with `i18n`. When a query declares `$country` and `$language` and uses `@inContext(country: $country, language: $language)`, the client injects those values from the resolved `i18n`.
 
 If the storefront uses Next.js App Router, read `references/nextjs.md` before writing code. Server Components do not receive a full `Request`, so host-based and path-prefixed markets need Next-specific wiring.
 
@@ -19,12 +19,12 @@ If the storefront uses Next.js App Router, read `references/nextjs.md` before wr
 
 ## Core Rule
 
-Add `i18n` where the app already creates its Storefront client:
+Add `i18n` where the app already creates its Shopify request context:
 
 ```diff
 import {
   createStorefrontClient,
-  createStorefrontRequestContext,
+  createShopifyRequestContext,
   gql,
 } from "@shopify/hydrogen";
 
@@ -43,16 +43,22 @@ const PRODUCTS_QUERY = gql(`
 `);
 
 export async function loadProducts(request: Request) {
-  const requestContext = createStorefrontRequestContext(request);
-+  const { country, language } = getMarketFromRequest(request);
+-  const requestContext = createShopifyRequestContext({
+-    request,
+-    i18n: DEFAULT_MARKET,
+-  });
++  const i18n = getMarketFromRequest(request);
++  const requestContext = createShopifyRequestContext({
++    request,
++    i18n,
++  });
 
   const client = createStorefrontClient({
     type: "public",
+    requestContext,
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
       publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN!,
-      requestContext,
-+      i18n: { country, language },
     },
   });
 
@@ -62,7 +68,9 @@ export async function loadProducts(request: Request) {
 }
 ```
 
-Do not pass `country` or `language` in every query call. Resolve the market once at the request boundary, set `i18n` when creating the client, and let the client inject the context variables into queries that declare them.
+Do not pass `country` or `language` in every query call. Resolve the market once at the request boundary, set `i18n` when creating the request context, and let the client inject the context variables into queries that declare them.
+
+The returned Storefront client exposes the resolved locale as `client.i18n`. Use `client.i18n.pathPrefix` when app route helpers need to prepend a market path; Hydrogen normalizes it to `""` or a leading-slash prefix with no trailing slash.
 
 ---
 
@@ -74,6 +82,7 @@ Keep the resolver small and explicit. The Storefront API expects uppercase enum 
 type Market = {
   country: string;
   language: string;
+  pathPrefix?: string;
 };
 
 const DEFAULT_MARKET = {
@@ -82,7 +91,7 @@ const DEFAULT_MARKET = {
 } satisfies Market;
 ```
 
-If the app needs labels, alternate domains, or path prefixes for navigation, keep those as application fields. Only `country` and `language` belong in `i18n`.
+If the app needs labels or alternate domains, keep those as application fields. `country` and `language` are required in `i18n`; `pathPrefix` is optional on input and is normalized on the request context to `""` or a leading-slash prefix with no trailing slash.
 
 ---
 
@@ -143,8 +152,8 @@ type PathMarket = Market & {
 const FIRST_PATH_SEGMENT_INDEX = 0;
 
 const MARKET_BY_PATH_PREFIX = {
-  "en-ca": { country: "CA", language: "EN", pathPrefix: "en-ca" },
-  "fr-fr": { country: "FR", language: "FR", pathPrefix: "fr-fr" },
+  "en-ca": { country: "CA", language: "EN", pathPrefix: "/en-ca" },
+  "fr-fr": { country: "FR", language: "FR", pathPrefix: "/fr-fr" },
 } satisfies Record<string, PathMarket>;
 
 function getFirstPathSegment(pathname: string): string | undefined {
@@ -163,12 +172,14 @@ export function getMarketFromRequest(request: Request): PathMarket | Market {
 export function localizePath(pathname: string, market: PathMarket | Market): string {
   if (!("pathPrefix" in market)) return pathname;
 
-  const normalizedPathname = pathname.startsWith("/") ? pathname : `/${pathname}`;
-  return `/${market.pathPrefix}${normalizedPathname}`;
+  const normalizedPathname = pathname.replace(/^\/+/, "");
+  return `${market.pathPrefix}/${normalizedPathname}`;
 }
 ```
 
-The router should strip or interpret the prefix before matching product and collection routes. Hydrogen only needs the resolved `country` and `language`.
+The router should strip or interpret the prefix before matching product and collection routes. Hydrogen's Storefront API variable injection uses `country` and `language`; `pathPrefix` is carried as a leading-slash app route prefix for helpers.
+
+When the app uses custom Shopify resource paths, use the local `hydrogen-routing` skill. Keep market prefixes in `i18n.pathPrefix`, not in route template values.
 
 ---
 
@@ -184,10 +195,11 @@ Read the relevant reference before applying the generic `Request` examples in fr
 
 - **Use whatever market strategy fits the store.** Hydrogen should not force domains, subdomains, pathnames, or detection policy.
 - **Resolve the market on the server from a standard `Request`.** `new URL(request.url)` is enough for host and path strategies.
-- **Use `i18n` as the Storefront API boundary.** It is required by the current client API. Always provide a default market rather than letting it be undefined.
+- **Use request-context `i18n` as the Storefront API boundary.** Prefer `createShopifyRequestContext({ request, i18n })`. Always provide a default market rather than letting it be undefined.
 - **Use market-contextualized queries.** The Storefront client injects `country` and `language` variable values when the document declares `$country` and `$language`; it does not rewrite query text. Market-sensitive queries still need `@inContext(country: $country, language: $language)` or equivalent Storefront API context in the document.
 - **Do not calculate currency locally.** Render `amount` and `currencyCode` returned by Shopify and format them with the local `hydrogen-money` skill's `formatMoney()` guidance.
-- **Keep analytics consent in the same market.** When the app configures Hydrogen analytics, pass the resolved `country` and `language` into the consent config too. Shopify's consent bootstrap uses those values alongside Storefront API context.
+- **Keep ShopifyScripts in the same market.** When the app renders Shopify browser runtime scripts, pass the resolved `country` and `language` into `ShopifyScripts` i18n so Shopify globals match Storefront API context.
+- **Keep route templates prefix-free.** When route templates are configured, pass market prefixes through `i18n.pathPrefix`; do not bake prefixes such as `/en-ca` into template values.
 - **Keep translations separate.** Shopify Markets context localizes Shopify data. Application UI strings still need the app's translation system.
 - **Treat geolocation as a hint, not truth.** Buyers travel, use VPNs, and intentionally choose markets. Persist explicit choices when the app supports switching.
 - **Ask before choosing the strategy.** If the app does not already make market selection clear, ask whether domains, subdomains, path prefixes, cookies, buyer preference, geolocation, or merchant config should own it before writing code.

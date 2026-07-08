@@ -3,7 +3,7 @@
     "plugins": [
       {
         "name": "gql.tada/ts-plugin",
-        "schema": "node_modules/@shopify/hydrogen/src/graphql/generated/storefront.schema.graphql",
+        "schema": "node_modules/@shopify/hydrogen/dist/storefront.schema.json",
         "trackFieldUsage": false
       }
     ],

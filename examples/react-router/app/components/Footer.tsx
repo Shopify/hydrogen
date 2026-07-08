@@ -1,57 +1,90 @@
 import { Link } from "react-router";
 
+import { content } from "~/lib/content";
+
+const footerLinkClass =
+  "min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors";
+
+/**
+ * Site footer — shared chrome, server-rendered. Includes the `/cart` link that
+ * is the drawer's reachable no-JS fallback on every page (engineering.md F4 +
+ * `notes/cart.md` "Without JavaScript").
+ */
 export function Footer() {
   return (
-    <footer>
-      <section className="bg-black text-white">
-        <div className="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
-          <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
-            <div>
-              <h2 className="text-3xl font-black tracking-tight md:text-4xl">Stay in the Know</h2>
-              <p className="mt-2 text-white/70">
-                Get exclusive deals and early access to new products.
-              </p>
-            </div>
-            <form className="flex items-center gap-3" action="#" method="post">
-              <label className="sr-only" htmlFor="email">
-                Email address
-              </label>
-              <div className="flex w-full items-center rounded-full border border-white/30 px-5 py-3 focus-within:border-white">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Email address"
-                  className="w-full bg-transparent text-sm placeholder:text-white/60 focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  aria-label="Subscribe"
-                  className="ml-3 grid h-8 w-8 place-items-center rounded-full hover:bg-white/10"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M5 12h14" />
-                    <path d="m13 5 7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            </form>
-          </div>
-          <div className="mt-12 flex flex-col items-start justify-between gap-2 border-t border-white/15 pt-6 text-xs text-white/60 md:flex-row md:items-center">
-            <p>© 2026 Mock.shop, Powered by Shopify</p>
-            <Link to="/" className="hover:text-white">
-              Terms and Policies
-            </Link>
+    <footer className="max-w-page px-margin mx-auto w-full">
+      <div className="border-border grid grid-cols-1 gap-8 border-t py-12 text-sm md:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <h2 className="type-body-sm text-on-surface mb-4 font-medium">CORE</h2>
+          <p className="text-on-surface-secondary">&copy; 2026 CORE</p>
+        </div>
+        <nav aria-labelledby="footer-quick-links-heading">
+          <h2
+            className="type-body-sm text-on-surface mb-4 font-medium"
+            id="footer-quick-links-heading"
+          >
+            {content.footer.quickLinks}
+          </h2>
+          <ul role="list" className="flex flex-col gap-2">
+            <li>
+              <Link to="/collections" className={footerLinkClass}>
+                Collections
+              </Link>
+            </li>
+            <li>
+              <Link to="/collections/men" className={footerLinkClass}>
+                Men
+              </Link>
+            </li>
+            <li>
+              <Link to="/collections/women" className={footerLinkClass}>
+                Women
+              </Link>
+            </li>
+            <li>
+              <Link to="/collections/accessories" className={footerLinkClass}>
+                Accessories
+              </Link>
+            </li>
+          </ul>
+        </nav>
+        <nav aria-labelledby="footer-customer-care-heading">
+          <h2
+            className="type-body-sm text-on-surface mb-4 font-medium"
+            id="footer-customer-care-heading"
+          >
+            {content.footer.customerCare}
+          </h2>
+          <ul role="list" className="flex flex-col gap-2">
+            <li>
+              <Link to="/search" className={footerLinkClass}>
+                {content.footer.search}
+              </Link>
+            </li>
+            <li>
+              <Link to="/cart" className={footerLinkClass}>
+                {content.cart.title}
+              </Link>
+            </li>
+          </ul>
+        </nav>
+        <div>
+          <h2 className="type-body-sm text-on-surface mb-4 font-medium">
+            {content.footer.paymentMethods}
+          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="border-border text-on-surface-secondary rounded-sm border px-2 py-1 text-xs">
+              Visa
+            </span>
+            <span className="border-border text-on-surface-secondary rounded-sm border px-2 py-1 text-xs">
+              Mastercard
+            </span>
+            <span className="border-border text-on-surface-secondary rounded-sm border px-2 py-1 text-xs">
+              Shop Pay
+            </span>
           </div>
         </div>
-      </section>
+      </div>
     </footer>
   );
 }

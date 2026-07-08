@@ -324,12 +324,10 @@ describe("getShopPayButtonStyleProperties", () => {
     expect(
       getShopPayButtonStyleProperties({
         width: "100%",
-        height: "48px",
         borderRadius: "6px",
       }),
     ).toEqual({
       "--shop-pay-button-width": "100%",
-      "--shop-pay-button-height": "48px",
       "--shop-pay-button-border-radius": "6px",
     });
   });

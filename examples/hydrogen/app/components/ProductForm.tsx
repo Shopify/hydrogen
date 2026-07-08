@@ -1,8 +1,4 @@
-import {
-  canAddToCart,
-  type VariantOptionState,
-  type VariantOptionValueState,
-} from "@shopify/hydrogen";
+import { canAddToCart } from "@shopify/hydrogen";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 
@@ -14,9 +10,6 @@ import { useAside } from "./Aside";
 type ProductOptionValueSwatch = NonNullable<
   ProductData["options"][number]["optionValues"][number]["swatch"]
 >;
-type ProductVariant = NonNullable<ProductData["selectedOrFirstAvailableVariant"]>;
-type ProductOption = VariantOptionState<ProductVariant>;
-type ProductOptionValue = VariantOptionValueState<ProductVariant>;
 
 export function ProductForm({ product }: { product: ProductData }) {
   const { options, selectedVariant, register, formProps, errors, pending } = useProductForm();
@@ -31,16 +24,14 @@ export function ProductForm({ product }: { product: ProductData }) {
 
   return (
     <div className="product-form">
-      {options.map((option: ProductOption) => {
+      {options.map((option) => {
         if (option.values.length === 1) return null;
 
         return (
           <div className="product-options" key={option.name}>
             <h5>{option.name}</h5>
             <div className="product-options-grid">
-              {option.values.map((value: ProductOptionValue) => {
-                const swatch = getSwatch(product, option.name, value.name);
-
+              {option.values.map((value) => {
                 if (value.handle !== product.handle) {
                   // SEO
                   // When the variant is a combined listing child product
@@ -55,9 +46,7 @@ export function ProductForm({ product }: { product: ProductData }) {
                       replace
                       to={getVariantUrl({
                         handle: value.handle,
-                        optionNames: product.options.map(
-                          (productOption: ProductData["options"][number]) => productOption.name,
-                        ),
+                        optionNames: product.options.map((productOption) => productOption.name),
                         pathname,
                         searchParams: new URLSearchParams(search),
                         selectedOptions: value.selectedOptions,
@@ -67,7 +56,7 @@ export function ProductForm({ product }: { product: ProductData }) {
                         opacity: value.available ? 1 : 0.3,
                       }}
                     >
-                      <ProductOptionSwatch swatch={swatch} name={value.name} />
+                      <ProductOptionSwatch swatch={value.swatch} name={value.name} />
                     </Link>
                   );
                 } else {
@@ -92,7 +81,7 @@ export function ProductForm({ product }: { product: ProductData }) {
                         value: value.name,
                       })}
                     >
-                      <ProductOptionSwatch swatch={swatch} name={value.name} />
+                      <ProductOptionSwatch swatch={value.swatch} name={value.name} />
                     </button>
                   );
                 }
@@ -105,21 +94,13 @@ export function ProductForm({ product }: { product: ProductData }) {
       <form {...formProps({ afterSubmit: () => open("cart") })}>
         <input type="hidden" {...register("merchandiseId", {})} />
         <input type="hidden" {...register("quantity", { value: 1 })} />
-        <button type="submit" disabled={!isHydrated || !addable || pending}>
+        <button {...register("addToCart", {})} disabled={!isHydrated || !addable || pending}>
           {pending ? "Adding..." : selectedVariant?.availableForSale ? "Add to cart" : "Sold out"}
         </button>
       </form>
       {errors.userErrors[0] ? <p>{errors.userErrors[0].message}</p> : null}
     </div>
   );
-}
-
-function getSwatch(product: ProductData, optionName: string, valueName: string) {
-  return product.options
-    .find((option: ProductData["options"][number]) => option.name === optionName)
-    ?.optionValues.find(
-      (value: ProductData["options"][number]["optionValues"][number]) => value.name === valueName,
-    )?.swatch;
 }
 
 function ProductOptionSwatch({

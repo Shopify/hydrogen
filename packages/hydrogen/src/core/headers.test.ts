@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 
 import {
-  createStorefrontRequestContext,
+  createShopifyRequestContext,
+  type I18nConfig,
   extractHeaders,
   SHOPIFY_STOREFRONT_S_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
@@ -9,6 +10,15 @@ import {
   SHOPIFY_VISIT_TOKEN_HEADER,
   REQUEST_GROUP_ID_HEADER,
 } from "./headers";
+
+const DEFAULT_I18N = { country: "US", language: "EN" } as I18nConfig;
+
+type StorefrontRequest = Pick<Request, "headers"> &
+  Partial<Pick<Request, "method" | "signal" | "url">>;
+
+function createTestRequestContext(request: StorefrontRequest, i18n: I18nConfig = DEFAULT_I18N) {
+  return createShopifyRequestContext({ request, i18n });
+}
 
 describe("extractHeaders", () => {
   it("extracts present headers and skips missing ones", () => {
@@ -40,11 +50,19 @@ describe("extractHeaders", () => {
   });
 });
 
-describe("createStorefrontRequestContext", () => {
+describe("createShopifyRequestContext", () => {
+  it("requires i18n", () => {
+    expect(() =>
+      createShopifyRequestContext({
+        request: { headers: new Headers() },
+      } as never),
+    ).toThrow("i18n with country and language is required");
+  });
+
   it("creates stable tracking tokens from a request", () => {
     const request = new Request("https://example.com/products/snowboard");
 
-    const result = createStorefrontRequestContext(request);
+    const result = createTestRequestContext(request);
 
     expect(result.url).toBe("https://example.com/products/snowboard");
     expect(result.requestGroupId).toBeTruthy();
@@ -58,7 +76,7 @@ describe("createStorefrontRequestContext", () => {
       signal: controller.signal,
     });
 
-    const result = createStorefrontRequestContext(request);
+    const result = createTestRequestContext(request);
 
     expect(result.signal).toBe(request.signal);
     controller.abort();
@@ -66,15 +84,51 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("uses the forwarded storefront URL header when input has no URL", () => {
-    const result = createStorefrontRequestContext({
+    const result = createTestRequestContext({
       headers: new Headers({ "x-storefront-url": "https://example.com/products/snowboard" }),
     });
 
     expect(result.url).toBe("https://example.com/products/snowboard");
   });
 
+  it("stores request-scoped i18n metadata", () => {
+    const result = createTestRequestContext(
+      { headers: new Headers() },
+      {
+        country: "ES",
+        language: "ES",
+        pathPrefix: "/es-es/",
+      },
+    );
+
+    expect(result.i18n).toEqual({
+      country: "ES",
+      language: "ES",
+      pathPrefix: "/es-es",
+    });
+  });
+
+  it("defaults pathPrefix to an empty string", () => {
+    const result = createTestRequestContext({ headers: new Headers() });
+
+    expect(result.i18n.pathPrefix).toBe("");
+  });
+
+  it("normalizes pathPrefix with a leading slash and no trailing slash", () => {
+    const result = createTestRequestContext(
+      { headers: new Headers() },
+      {
+        country: "ES",
+        language: "ES",
+        pathPrefix: "///es-es///",
+      },
+    );
+
+    expect(result.i18n.pathPrefix).toBe("/es-es");
+  });
+
   it("does not create fallback tokens when modern Shopify analytics cookies are present", () => {
-    const result = createStorefrontRequestContext(
+    const result = createTestRequestContext(
       new Request("https://example.com", {
         headers: { cookie: "_shopify_analytics=1; _shopify_marketing=1" },
       }),
@@ -86,7 +140,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("reuses legacy Shopify tracking cookies when present", () => {
-    const result = createStorefrontRequestContext(
+    const result = createTestRequestContext(
       new Request("https://example.com", {
         headers: { cookie: "_shopify_y=unique-token; _shopify_s=visit-token" },
       }),
@@ -98,7 +152,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("does not reuse legacy Shopify tracking cookies when modern analytics cookies are present", () => {
-    const result = createStorefrontRequestContext(
+    const result = createTestRequestContext(
       new Request("https://example.com", {
         headers: {
           cookie:
@@ -113,7 +167,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("uses x-request-id as the default request group id", () => {
-    const result = createStorefrontRequestContext(
+    const result = createTestRequestContext(
       new Request("https://example.com", {
         headers: { "x-request-id": "incoming-request-id" },
       }),
@@ -123,7 +177,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("falls back to request-id for the default request group id", () => {
-    const result = createStorefrontRequestContext(
+    const result = createTestRequestContext(
       new Request("https://example.com", {
         headers: { "request-id": "incoming-request-id" },
       }),
@@ -133,7 +187,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("reuses tracking tokens forwarded in request headers", () => {
-    const result = createStorefrontRequestContext(
+    const result = createTestRequestContext(
       new Request("https://example.com", {
         headers: {
           [SHOPIFY_UNIQUE_TOKEN_HEADER]: "forwarded-unique-token",
@@ -148,7 +202,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("gets forwarded request headers for handing off through a proxy", () => {
-    const context = createStorefrontRequestContext(
+    const context = createTestRequestContext(
       new Request("https://example.com/products/snowboard", {
         headers: {
           accept: "text/html",
@@ -172,7 +226,7 @@ describe("createStorefrontRequestContext", () => {
 
   it("does not mutate the original request headers when getting forwarded request headers", () => {
     const originalHeaders = new Headers({ accept: "text/html" });
-    const context = createStorefrontRequestContext({
+    const context = createTestRequestContext({
       headers: originalHeaders,
       url: "https://example.com",
     });
@@ -184,7 +238,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("gets subrequest headers from only storefront context", () => {
-    const context = createStorefrontRequestContext(
+    const context = createTestRequestContext(
       new Request("https://example.com/products/snowboard", {
         headers: {
           accept: "text/html",
@@ -211,7 +265,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("gets mutable subrequest headers", () => {
-    const context = createStorefrontRequestContext(new Request("https://example.com"));
+    const context = createTestRequestContext(new Request("https://example.com"));
 
     const headers = context.getSubrequestHeaders();
     headers.set("content-type", "application/json");
@@ -221,7 +275,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("applies tracking tokens as server-timing", () => {
-    const context = createStorefrontRequestContext(
+    const context = createTestRequestContext(
       new Request("https://example.com", {
         headers: {
           cookie: "_shopify_y=unique-token; _shopify_s=visit-token",
@@ -241,7 +295,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("applies generated tracking tokens as server-timing when cookies are missing", () => {
-    const context = createStorefrontRequestContext(new Request("https://example.com"));
+    const context = createTestRequestContext(new Request("https://example.com"));
     const headers = new Headers({ "content-type": "text/html" });
 
     context.applyResponseHeaders(headers);
@@ -250,7 +304,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("applies generated tracking tokens from a document request before response content-type is known", () => {
-    const context = createStorefrontRequestContext(
+    const context = createTestRequestContext(
       new Request("https://example.com", {
         headers: { "sec-fetch-dest": "document" },
       }),
@@ -263,7 +317,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("does not use accept text/html as a document signal for non-GET requests", () => {
-    const context = createStorefrontRequestContext(
+    const context = createTestRequestContext(
       new Request("https://example.com/api", {
         method: "POST",
         headers: { accept: "text/html" },
@@ -277,7 +331,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("does not apply fallback tracking tokens to non-document responses", () => {
-    const context = createStorefrontRequestContext(new Request("https://example.com/__manifest"));
+    const context = createTestRequestContext(new Request("https://example.com/__manifest"));
     const headers = new Headers();
 
     context.applyResponseHeaders(headers);
@@ -286,7 +340,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("applies captured SFAPI subrequest cookies and server-timing", () => {
-    const context = createStorefrontRequestContext(
+    const context = createTestRequestContext(
       new Request("https://example.com", {
         headers: { cookie: "_shopify_analytics=1; _shopify_marketing=1" },
       }),
@@ -309,7 +363,7 @@ describe("createStorefrontRequestContext", () => {
   });
 
   it("keeps the first captured SFAPI subrequest headers", () => {
-    const context = createStorefrontRequestContext(new Request("https://example.com"));
+    const context = createTestRequestContext(new Request("https://example.com"));
     context.captureSubrequestHeaders(
       new Headers({ "server-timing": '_y;desc="first-y", _s;desc="first-s"' }),
     );
@@ -321,5 +375,49 @@ describe("createStorefrontRequestContext", () => {
     context.applyResponseHeaders(headers);
 
     expect(headers.get("server-timing")).toBe('_y;desc="first-y", _s;desc="first-s"');
+  });
+
+  it("forces no-store cache headers for personalized responses", () => {
+    const context = createTestRequestContext(new Request("https://example.com/account"));
+    const headers = new Headers({
+      "cache-control": "public, s-maxage=600",
+      "cdn-cache-control": "public, s-maxage=600",
+      "cloudflare-cdn-cache-control": "public, s-maxage=600",
+      "netlify-cdn-cache-control": "public, s-maxage=600",
+      "surrogate-control": "max-age=600",
+    });
+
+    context.markResponseAsPersonalized("customer-account-test");
+    context.applyResponseHeaders(headers);
+
+    expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+    expect(headers.get("cdn-cache-control")).toBeNull();
+    expect(headers.get("cloudflare-cdn-cache-control")).toBeNull();
+    expect(headers.get("netlify-cdn-cache-control")).toBeNull();
+    expect(headers.get("surrogate-control")).toBeNull();
+  });
+
+  it("keeps cache headers for non-personalized responses", () => {
+    const context = createTestRequestContext(new Request("https://example.com/products"));
+    const headers = new Headers({ "cache-control": "public, s-maxage=600" });
+
+    context.applyResponseHeaders(headers);
+
+    expect(headers.get("cache-control")).toBe("public, s-maxage=600");
+  });
+
+  it("preserves set-cookie and server-timing when applying personalized cache safety", () => {
+    const context = createTestRequestContext(new Request("https://example.com/account"));
+    const subrequestHeaders = new Headers({ "server-timing": "shopify;dur=10" });
+    subrequestHeaders.append("set-cookie", "session=1; Path=/; Secure");
+    context.captureSubrequestHeaders(subrequestHeaders);
+    context.markResponseAsPersonalized("customer-account-test");
+    const headers = new Headers({ "cache-control": "public, s-maxage=600" });
+
+    context.applyResponseHeaders(headers);
+
+    expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+    expect(headers.getSetCookie()).toEqual(["session=1; Path=/; Secure"]);
+    expect(headers.get("server-timing")).toBe("shopify;dur=10");
   });
 });

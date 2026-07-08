@@ -1,61 +1,84 @@
-# Next.js (App Router) example
+# Hydrogen — Next.js (App Router) example
 
-Port of the canonical `examples/base/` design to [Next.js](https://nextjs.org/) using the App Router (server components by default).
+A brand-new Next.js 16 (App Router, Turbopack, React 19.2) storefront example,
+translating `examples/core` idiomatically into Next.js and bound to
+`@shopify/hydrogen`. Runs on Vercel. Zero secrets required (mock.shop fallback).
 
-## What this demonstrates
+## Scripts
 
-- Server components as the data path — routes fetch their GraphQL data on the server, while cart/product forms use Hydrogen client primitives for mutations.
-- Colocated GraphQL queries (the route's `page.tsx` owns its query and types).
-- File-based App Router conventions: `app/page.tsx`, `app/collections/[handle]/page.tsx`, `app/products/[handle]/page.tsx`, `app/blogs/news/[handle]/page.tsx`.
-- Async `params` (Next.js 16): `params: Promise<{ handle: string }>` — must be `await`ed before use.
-- `generateMetadata` for dynamic page titles.
-- `notFound()` from `next/navigation` to render the framework's 404 boundary.
-- Shared chrome (`Header`, `Footer`) lives at the root layout in `app/layout.tsx`, not per-route.
-- Tailwind v4 via `@tailwindcss/postcss` — the design's `@theme` tokens live in `app/globals.css`.
-- `next/font/google` self-hosting Inter, wired to Tailwind's `--font-sans` token via the `variable` option.
+- `pnpm --filter @shopify/hydrogen-example-nextjs dev` — dev server (Turbopack).
+- `pnpm --filter @shopify/hydrogen-example-nextjs build` — production build.
+- `pnpm --filter @shopify/hydrogen-example-nextjs start` — serve the build.
+- `pnpm --filter @shopify/hydrogen-example-nextjs typecheck` — `tsc` +
+  `gql.tada check --fail-on-warn`.
 
-## AGENTS.md
+## Architecture
 
-The scaffold ships an `AGENTS.md` (and `CLAUDE.md` pointer to it) that tells coding agents to read `node_modules/next/dist/docs/` before writing code, since training data lags behind the current release. Kept as-is — that's the whole point of using the latest scaffold.
+- **Request lifecycle:** `proxy.ts` (`handleShopifyRoutes` pre-routing +
+  forwarded headers + mock.shop fallback) + `app/not-found.tsx`
+  (`handleShopifyRedirects` post-404).
+- **Storefront client:** `getStorefrontClient()` (per-buyer, cart seed only) +
+  `staticStorefrontClient` (shared rate-limit, all catalog reads) — F2. A
+  browser-safe `publicStorefrontClient` (`lib/public-storefront.ts`) is provided
+  for future client-side Storefront fetches (e.g. TanStack Query); browser
+  predictive search currently goes through the same-origin
+  `/api/predictive-search` handler instead.
+- **Layout:** shared code lives at the top level — `lib/` (storefront clients,
+  queries, fragments, cart, analytics, image, money, filters, markets) and
+  `components/` (Header, ProductCard, CartDrawer, …). `app/` holds only route
+  files. Imports use the `@/` alias (`tsconfig` `"@/*": ["./*"]`).
+- **Caching:** Next-native `use cache` + `cacheLife`/`cacheTag` cache-points
+  keyed by serializable inputs (`cacheComponents: true`). No Oxygen LRU.
+- **Cart seed (F1, F4):** root layout is a static shell wrapping an async
+  `AppShell` (cart seed via `Promise.race` + analytics shop) in `<Suspense>` —
+  the Cache Components idiom (static shell prerenders, per-buyer parts stream).
+- **Markets:** `getMarketFromHeaders` reads `x-storefront-url`; the client
+  auto-injects `$country`/`$language` (never passed in query variables).
+- **No-JS (F4):** variant GET-links switch variants server-side; cart reachable
+  via footer `/cart`; filter forms `method="get"` + explicit `action`.
 
-## Pages
+## mock.shop fallback
 
-| Route | Source | Status |
-|---|---|---|
-| `/` | `examples/base/index.html` | Live: hero is static; featured products grid pulls from `products(first: 3)` |
-| `/collections` | (new — sibling to base design) | Live: lists `collections(first: 12)` |
-| `/collections/[handle]` | `examples/base/collections/men/index.html` | Live: queries `collection(handle:)` with up to 24 products |
-| `/products/[handle]` | `examples/base/products/hoodie/index.html` | Live: gallery, options (Size + Color swatches), add-to-cart UI; "You may also like" from `products(first: 4)` |
-| `/blogs/news` | (new) | Live: queries `blog(handle:"news").articles(first: 10)` |
-| `/blogs/news/[handle]` | (new) | Live: queries `blog(handle:"news").articleByHandle` |
+When no `PRIVATE_STOREFRONT_API_TOKEN` is present, the example falls back to
+`mock.shop` + `mock-private-token` so it runs with zero secrets. Decrypt
+secrets (`pnpm examples:secrets:decrypt`) to hit a real store.
 
-## Stubbed vs. live
+## Customer Accounts (local HTTPS + real store)
 
-- **Live**: product data, collection data, article content, prices, images, options, cart state (server-fetched via `createCartServerHandlers().get` in the root layout and hydrated into `CartProvider`), cart drawer, cart page mutations, product variant selection, add-to-cart, checkout, Shop Pay.
-- **Stubbed**: hero links, search, account, newsletter form, news index list, color swatch hex values (mapped client-side from option name → CSS color in `components/ProductDetails.tsx`).
+Customer Accounts require an HTTPS origin (Shopify OAuth rejects `http`) and a
+real store (mock.shop has no Customer Account API).
 
-## Run
+One-time setup:
 
-```sh
-# from the repo root
-pnpm install
-pnpm --filter @shopify/hydrogen-example-nextjs dev
+1. `pnpm https:setup` (repo root) — trusts `mkcert` and creates the
+   `.cert/localtest.me*` certificates.
+2. `pnpm examples:secrets:decrypt` — provisions `PRIVATE_STOREFRONT_API_TOKEN`
+   so the example runs against a real store instead of mock.shop.
+
+Run the HTTPS dev server and open <https://localtest.me:5173>:
+
+```
+pnpm --filter @shopify/hydrogen-example-nextjs https:dev
 ```
 
-Then open http://localhost:3000.
+The `/account` page shows your name + email. `/account/login`,
+`/account/logout`, `/account/refresh`, and `/account/authorize` are
+Hydrogen-owned routes intercepted in `proxy.ts` (no app route files exist for
+them) — Customer Account OAuth login/refresh/logout is handled there. The
+header account link is hidden on mock.shop and shown only when a real store is
+configured.
 
-Note: Next.js 16 does **not** cache `fetch` by default — every request to a server component re-runs the GraphQL call. That's fine for an example but worth knowing if you copy this into something with real traffic.
+## Build note: `--debug-prerender`
 
-## Notes for the core SDK
-
-Same shape as the React Router example — every framework port re-invents the same three pieces, so this is the feedback loop into the Hydrogen package in `packages/hydrogen`:
-
-- `storefrontClient.graphql()` in `lib/storefront.ts` — now uses `createStorefrontClient` from `@shopify/hydrogen` with `gql.tada` for zero-config type inference. Error normalization and request-id propagation are handled by the core client.
-- `formatMoney()` in `lib/money.ts` — every example needs money formatting from a `MoneyV2`-shaped object.
-- `ProductCard` reads a narrow product shape (`handle`, `title`, `featuredImage`, `priceRange.minVariantPrice`). A core fragment + type for "product card" would let routes share GraphQL fragments instead of re-listing fields.
-- Color swatch mapping (`SWATCHES` in `components/ProductDetails.tsx`) is hand-rolled — option-value → swatch metadata is a real merchant problem; the SDK should have an opinion on how to expose it.
-
-## Open questions
-
-- **Caching**: Next 16's fetch-isn't-cached default is the right safe default for fresh data, but a real storefront wants per-query cache hints. Should `storefrontClient.graphql()` accept a `revalidate` / tag config, or should that be the framework's problem?
-- **Mutations**: cart mutations run through Hydrogen's `/api/cart` route installed by `proxy.ts`, matching the React Router example's `useCartForm` and Standard Actions flow. Next.js Server Actions are still worth evaluating separately, but the example now uses the shared framework-neutral cart path.
+The `build` script uses `next build --debug-prerender`. Next.js 16 +
+React 19.2 has a confirmed framework bug
+([vercel/next.js#84994](https://github.com/vercel/next.js/issues/84994),
+[#86178](https://github.com/vercel/next.js/issues/86178),
+[#94667](https://github.com/vercel/next.js/discussions/94667)) where the
+internal `/_global-error` route fails to prerender with
+`TypeError: Cannot read properties of null (reading 'useContext')`, blocking
+`next build`. The bug reproduces with no custom error page and is independent
+of this app's code; the fix requires React 19.3.0 (unreleased). The
+`--debug-prerender` flag is the only available workaround and produces a
+complete, valid Partial-Prerender production build (`next start` serves it
+correctly). Remove the flag once React 19.3.0 ships.

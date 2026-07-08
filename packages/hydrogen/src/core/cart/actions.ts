@@ -1,3 +1,5 @@
+import { normalizeCartId } from "./cookie";
+
 export type CartLineAddInput = {
   merchandiseId: string;
   quantity: number;
@@ -21,6 +23,11 @@ export type CartAction =
   | { intent: "discount-remove"; code: string }
   | { intent: "note-update"; note: string };
 
+type ParsedCartRequest = {
+  action: CartAction;
+  cartId: string | null;
+};
+
 class CartActionError extends Error {
   constructor(message: string) {
     super(message);
@@ -28,7 +35,7 @@ class CartActionError extends Error {
   }
 }
 
-export async function parseCartRequest(request: Request): Promise<CartAction> {
+export async function parseCartRequest(request: Request): Promise<ParsedCartRequest> {
   const contentType = request.headers.get("content-type") ?? "";
 
   if (contentType.includes("application/json")) {
@@ -39,7 +46,7 @@ export async function parseCartRequest(request: Request): Promise<CartAction> {
     contentType.includes("application/x-www-form-urlencoded") ||
     contentType.includes("multipart/form-data")
   ) {
-    return parseFormData(await request.formData());
+    return { action: parseFormData(await request.formData()), cartId: null };
   }
 
   throw new CartActionError(
@@ -49,18 +56,22 @@ export async function parseCartRequest(request: Request): Promise<CartAction> {
 
 // --- JSON parsing ---
 
-function parseJsonBody(body: unknown): CartAction {
+function parseJsonBody(body: unknown): ParsedCartRequest {
   assertObject(body);
+  const cartId = typeof body.cartId === "string" ? normalizeCartId(body.cartId) : null;
 
   if ("note" in body && typeof body.note === "string") {
-    return { intent: "note-update", note: body.note };
+    return { action: { intent: "note-update", note: body.note }, cartId };
   }
 
   if ("discountCodes" in body && Array.isArray(body.discountCodes)) {
     for (const code of body.discountCodes) {
       assertString(code, "discountCodes entries");
     }
-    return { intent: "discount-update", discountCodes: body.discountCodes as string[] };
+    return {
+      action: { intent: "discount-update", discountCodes: body.discountCodes as string[] },
+      cartId,
+    };
   }
 
   if (!("lines" in body) || !Array.isArray(body.lines)) {
@@ -72,7 +83,7 @@ function parseJsonBody(body: unknown): CartAction {
     throw new CartActionError("Lines array must not be empty.");
   }
 
-  return partitionLines(lines);
+  return { action: partitionLines(lines), cartId };
 }
 
 function partitionLines(rawLines: unknown[]): CartAction {

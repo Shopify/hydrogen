@@ -1,4 +1,5 @@
-import type { CurrencyCode } from "@shopify/hydrogen-classic/storefront-api-types";
+import { getSearchResultUrl } from "@shopify/hydrogen";
+import type { CurrencyCode } from "@shopify/hydrogen/storefront-api-types";
 
 type ImageData = {
   altText?: string | null;
@@ -44,29 +45,7 @@ type SearchPage = {
   trackingParameters?: string | null;
 };
 
-type PredictiveArticle = SearchArticle & {
-  blog: { handle: string };
-  image?: ImageData | null;
-};
-
-type PredictiveCollection = {
-  handle: string;
-  id: string;
-  title: string;
-  image?: ImageData | null;
-  trackingParameters?: string | null;
-};
-
-type PredictivePage = SearchPage;
-type PredictiveProduct = SearchProduct;
-
-type PredictiveQuery = {
-  text: string;
-  styledText: string;
-  trackingParameters?: string | null;
-};
-
-type ResultWithItems<Type extends "predictive" | "regular", Items> = {
+type ResultWithItems<Type extends "regular", Items> = {
   type: Type;
   term: string;
   error?: string;
@@ -79,32 +58,7 @@ export type RegularSearchItems = {
   products: { nodes: SearchProduct[]; pageInfo: PageInfo };
 };
 
-export type PredictiveSearchItems = {
-  articles: PredictiveArticle[];
-  collections: PredictiveCollection[];
-  pages: PredictivePage[];
-  products: PredictiveProduct[];
-  queries: PredictiveQuery[];
-};
-
 export type RegularSearchReturn = ResultWithItems<"regular", RegularSearchItems>;
-export type PredictiveSearchReturn = ResultWithItems<"predictive", PredictiveSearchItems>;
-
-/**
- * Returns the empty state of a predictive search result to reset the search state.
- */
-export function getEmptyPredictiveSearchResult(): PredictiveSearchReturn["result"] {
-  return {
-    total: 0,
-    items: {
-      articles: [],
-      collections: [],
-      products: [],
-      pages: [],
-      queries: [],
-    },
-  };
-}
 
 interface UrlWithTrackingParams {
   /** The base URL to which the tracking parameters will be appended. */
@@ -137,14 +91,10 @@ export function urlWithTrackingParams({
   params: extraParams,
   term,
 }: UrlWithTrackingParams) {
-  let search = new URLSearchParams({
-    ...extraParams,
-    q: encodeURIComponent(term),
-  }).toString();
-
-  if (trackingParams) {
-    search = `${search}&${trackingParams}`;
-  }
-
-  return `${baseUrl}?${search}`;
+  return getSearchResultUrl({
+    baseUrl,
+    params: extraParams,
+    term,
+    trackingParameters: trackingParams,
+  });
 }

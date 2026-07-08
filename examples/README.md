@@ -2,7 +2,7 @@
 
 ## Examples in this repo
 
-- `base/` — canonical static design (HTML + Tailwind CDN, no JS)
+- `core/` — frozen, framework-agnostic storefront design source (five-page reference HTML + Tailwind tokens, no app JS). Framework examples are hand-built from this baseline.
 - `shared/` — common example configuration and request helpers
 - `react-router/` — React Router v7 port with server loaders
 - `nextjs/` — Next.js 16 (App Router) port with server components
@@ -13,7 +13,7 @@
 - `nuxt/` — Nuxt 4 port with server middleware and Vue pages
 - `nuxt-binding/` — Nuxt 4 port using Hydrogen's Vue binding layer
 
-These examples are proof-of-concepts for how Hydrogen can adapt to any framework; official bindings for libraries outside of React are coming soon.
+These examples are internal proof-of-concepts and testbeds for Hydrogen APIs as they evolve.
 
 They exist to help us answer questions like:
 
@@ -22,8 +22,6 @@ They exist to help us answer questions like:
 - What do agents need from the SDK, docs, and skills to generate a storefront reliably?
 - Which patterns should be promoted into documentation or agent skills?
 
-As the Hydrogen Developer Preview evolves, expect a lot of change and refinement to these examples, as we try and make each framework feel at home with Hydrogen. If you have ideas or feedback on how we can improve any of the integrations, let us know in the [discussions](https://github.com/Shopify/hydrogen/discussions)!
-
 ## Running them
 
 From the repo root:
@@ -31,6 +29,25 @@ From the repo root:
 - `pnpm dev` — every example's dev server in parallel (ports auto-allocated, logs interleaved in the terminal).
 - `pnpm dev:hub` — same, plus a browser UI (auto-opened) with status dots, scaled iframe thumbnails (click to pop out), and collapsible per-server log streams. Implemented in [`scripts/examples-dev.ts`](../scripts/examples-dev.ts).
 - `pnpm --filter @shopify/hydrogen-example-<name> dev` — a single example.
+- `pnpm https:setup` then `pnpm --filter @shopify/hydrogen-example-<name> https:dev` — run an account-enabled framework example on `https://localtest.me:5173` when that example provides an `https:dev` script. The Hydrogen example uses `--customer-account-push` instead of local certs.
+
+`pnpm https:setup` requires `mkcert` to be installed locally and trusted by your OS/browser.
+
+On macOS, install it with Homebrew:
+
+```sh
+brew install mkcert
+```
+
+Then run the repo setup command from the repository root:
+
+```sh
+pnpm https:setup
+```
+
+This installs the local certificate authority and creates trusted certificates for `localtest.me`
+under `.cert/`. The account-enabled examples use those certificates so Customer Account OAuth
+can redirect back to `https://localtest.me:5173/account/authorize`.
 
 ## What examples are
 
@@ -47,3 +64,12 @@ From the repo root:
 - They are not a promise of the recommended app structure.
 
 The expected creation path for real storefronts is: agent skills + docs generate a storefront tailored to the merchant, framework, and requirements.
+
+## Guidelines for adding examples
+
+- Optimize for learning, not polish.
+- Keep each example focused on one API question or integration scenario.
+- Prefer small, complete slices over broad demo apps.
+- Make assumptions explicit in the example or its README.
+- If an example reveals a durable pattern, promote that pattern into docs or skills instead of treating the example as the product.
+- If an example stops teaching us something, delete or rewrite it.

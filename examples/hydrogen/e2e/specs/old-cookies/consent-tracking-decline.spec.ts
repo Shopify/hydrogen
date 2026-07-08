@@ -45,7 +45,7 @@ test.describe("Consent Tracking - No Banner (Declined by Default)", () => {
     // 7. Verify no Monorail analytics requests have been made
     storefront.expectNoMonorailRequests();
 
-    // 8. Wait for perf-kit to be downloaded (it loads regardless of consent)
+    // 8. Confirm perf-kit is loaded eagerly
     await storefront.waitForPerfKit();
     storefront.expectPerfKitLoaded();
 
@@ -78,7 +78,7 @@ test.describe("Consent Tracking - No Banner (Declined by Default)", () => {
     // Verify analytics cookies are still not present after reload
     await storefront.expectNoAnalyticsCookies();
 
-    // Wait for perf-kit to be downloaded after reload
+    // Confirm perf-kit is loaded after reload
     await storefront.waitForPerfKit();
 
     // 15. Verify no Monorail analytics requests after reload

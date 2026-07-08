@@ -1,15 +1,22 @@
+import {
+  usePredictiveSearchActions,
+  usePredictiveSearchForm,
+  type PredictiveSearchFormResult,
+} from "@shopify/hydrogen/react";
 import React, { useRef, useEffect } from "react";
-import { useFetcher, useNavigate, type FormProps, type Fetcher } from "react-router";
-
-import type { PredictiveSearchReturn } from "~/lib/search";
+import { useNavigate, type FormProps } from "react-router";
 
 import { useAside } from "./Aside";
 
+type PredictiveSearchInputEvent =
+  | React.ChangeEvent<HTMLInputElement>
+  | React.FocusEvent<HTMLInputElement>;
+
 type SearchFormPredictiveChildren = (args: {
-  fetchResults: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  fetchResults: (event: PredictiveSearchInputEvent) => void;
   goToSearch: () => void;
   inputRef: React.MutableRefObject<HTMLInputElement | null>;
-  fetcher: Fetcher<PredictiveSearchReturn>;
+  register: PredictiveSearchFormResult["register"];
 }) => React.ReactNode;
 
 type SearchFormPredictiveProps = Omit<FormProps, "children"> & {
@@ -18,56 +25,58 @@ type SearchFormPredictiveProps = Omit<FormProps, "children"> & {
 
 export const SEARCH_ENDPOINT = "/search";
 
-/**
- *  Search form component that sends search requests to the `/search` route
- **/
 export function SearchFormPredictive({
   children,
   className = "predictive-search-form",
   ...props
 }: SearchFormPredictiveProps) {
-  const fetcher = useFetcher<PredictiveSearchReturn>({ key: "search" });
+  const { clear, search } = usePredictiveSearchActions();
+  const { formProps, register } = usePredictiveSearchForm();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
   const aside = useAside();
 
-  /** Reset the input value and blur the input */
-  function resetInput(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    event.stopPropagation();
-    if (inputRef?.current?.value) {
-      inputRef.current.blur();
-    }
-  }
-
-  /** Navigate to the search page with the current input value */
-  function goToSearch() {
-    const term = inputRef?.current?.value;
-    void navigate(SEARCH_ENDPOINT + (term ? `?q=${term}` : ""));
+  function goToSearch(term = inputRef.current?.value ?? "") {
+    void navigate(getSearchPageUrl(term));
+    clear();
     aside.close();
   }
 
-  /** Fetch search results based on the input value */
-  function fetchResults(event: React.ChangeEvent<HTMLInputElement>) {
-    void fetcher.submit(
-      { q: event.target.value || "", limit: 5, predictive: true },
-      { method: "GET", action: SEARCH_ENDPOINT },
-    );
+  function fetchResults(event: PredictiveSearchInputEvent) {
+    void search(event.currentTarget.value || "");
   }
 
   // ensure the passed input has a type of search, because SearchResults
   // will select the element based on the input
   useEffect(() => {
-    inputRef?.current?.setAttribute("type", "search");
+    inputRef.current?.setAttribute("type", "search");
   }, []);
 
   if (typeof children !== "function") {
     return null;
   }
 
+  const predictiveSearchFormProps = formProps({
+    ...props,
+    className,
+    onSubmit: (event, term) => {
+      event.preventDefault();
+      event.stopPropagation();
+      inputRef.current?.blur();
+      goToSearch(term);
+    },
+  });
+
   return (
-    <fetcher.Form {...props} className={className} onSubmit={resetInput}>
-      {children({ inputRef, fetcher, fetchResults, goToSearch })}
-    </fetcher.Form>
+    <form {...predictiveSearchFormProps}>
+      {children({ inputRef, register, fetchResults, goToSearch })}
+    </form>
   );
+}
+
+export function getSearchPageUrl(term: string): string {
+  if (!term) return SEARCH_ENDPOINT;
+
+  const searchParams = new URLSearchParams({ q: term });
+  return `${SEARCH_ENDPOINT}?${searchParams}`;
 }

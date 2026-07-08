@@ -471,20 +471,6 @@ export class StorefrontPage {
   }
 
   /**
-   * Check if perf-kit script has been loaded
-   */
-  isPerfKitLoaded(): boolean {
-    return this.perfKitScriptLoaded;
-  }
-
-  /**
-   * Assert that perf-kit script has not been loaded
-   */
-  expectPerfKitNotLoaded() {
-    expect(this.perfKitScriptLoaded, "Perf-kit script should not be loaded").toBe(false);
-  }
-
-  /**
    * Assert that perf-kit script has been loaded
    */
   expectPerfKitLoaded() {

@@ -3,6 +3,8 @@ import { query, redirect, type RouteDefinition } from "@solidjs/router";
 import { HttpStatusCode } from "@solidjs/start";
 import { getRequestEvent } from "solid-js/web";
 
+import { routeTemplates } from "~/lib/route-templates";
+
 // Catch-all route — the framework only renders this when nothing else matches,
 // which is the same gate the other framework examples use to call
 // `handleShopifyRedirects` (`response.status === 404`). Running the redirect lookup
@@ -18,6 +20,7 @@ const lookupRedirect = query(async () => {
   }
   const result = await handleShopifyRedirects({
     request: event.request,
+    routeTemplates,
     storefrontClient,
   });
   if (!result) return null;
@@ -34,7 +37,11 @@ export default function NotFound() {
   return (
     <>
       <HttpStatusCode code={404} />
-      <main class="flex min-h-screen items-center justify-center p-8">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        class="flex min-h-screen items-center justify-center p-8"
+      >
         <div class="text-center">
           <h1 class="text-3xl font-bold">404</h1>
           <p class="mt-2 text-gray-600">Not found.</p>

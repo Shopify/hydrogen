@@ -1,5 +1,6 @@
-import { Pagination } from "@shopify/hydrogen-classic";
-import * as React from "react";
+import type { ReactNode } from "react";
+
+import { Pagination, type PaginationConnection } from "~/components/Pagination";
 
 /**
  * <PaginatedResourceSection> encapsulates the previous and next pagination behaviors throughout your application.
@@ -10,8 +11,8 @@ export function PaginatedResourceSection<NodesType>({
   ariaLabel,
   resourcesClassName,
 }: {
-  connection: React.ComponentProps<typeof Pagination<NodesType>>["connection"];
-  children: (args: { node: NodesType; index: number }) => React.ReactNode;
+  connection: PaginationConnection<NodesType>;
+  children: (args: { node: NodesType; index: number }) => ReactNode;
   ariaLabel?: string;
   resourcesClassName?: string;
 }) {

@@ -141,7 +141,7 @@ async function createMockEnvFile(envFile: string, scenario: MswScenario) {
   const scenarioMeta = getHandlersForScenario(scenario);
   /** these variables are required by the CAAPI client */
   const caapiVars = scenarioMeta.mocksCustomerAccountApi
-    ? `SHOP_ID="mock-shop"\nPUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID="shp_mock-client-id"\n`
+    ? `SHOP_ID="55145660472"\nPUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID="shp_mock-client-id"\n`
     : "";
 
   await writeFile(

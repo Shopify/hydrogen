@@ -1,10 +1,9 @@
-import type { CartData } from "@shopify/hydrogen";
-import { Money } from "@shopify/hydrogen-classic";
-import type { MoneyV2 } from "@shopify/hydrogen-classic/storefront-api-types";
+import type { CartData, MoneyV2 } from "@shopify/hydrogen";
 import { useId } from "react";
 
 import type { CartLayout } from "~/components/CartMain";
 import { useCartForm } from "~/lib/cart";
+import { formatMoney } from "~/lib/money";
 
 type CartSummaryProps = {
   cart: CartData;
@@ -21,10 +20,12 @@ export function CartSummary({ cart, layout }: CartSummaryProps) {
   return (
     <div aria-labelledby={summaryId} className={className}>
       <h4 id={summaryId}>Totals</h4>
-      <dl role="group" className="cart-subtotal">
-        <dt>Subtotal</dt>
-        <dd>{subtotalAmount ? <Money data={subtotalAmount} /> : "-"}</dd>
-      </dl>
+      <div aria-label="Subtotal" role="group">
+        <dl className="cart-subtotal">
+          <dt>Subtotal</dt>
+          <dd>{subtotalAmount ? formatMoney(subtotalAmount) : "-"}</dd>
+        </dl>
+      </div>
       <CartDiscounts
         discountCodes={cart.discountCodes}
         discountsHeadingId={discountsHeadingId}
@@ -36,7 +37,8 @@ export function CartSummary({ cart, layout }: CartSummaryProps) {
 }
 
 function toHydrogenMoney(value: CartData["cost"]["subtotalAmount"]): MoneyV2 | null {
-  return value.amount && value.currencyCode ? (value as MoneyV2) : null;
+  if (!value.amount || !value.currencyCode) return null;
+  return { amount: value.amount, currencyCode: value.currencyCode };
 }
 
 function CartCheckoutActions({ checkoutUrl }: { checkoutUrl?: string | null }) {

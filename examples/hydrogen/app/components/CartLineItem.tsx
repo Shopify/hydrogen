@@ -1,9 +1,8 @@
 import type { CartLine } from "@shopify/hydrogen";
-import { Image } from "@shopify/hydrogen-classic";
-import type { MoneyV2 } from "@shopify/hydrogen-classic/storefront-api-types";
 import { Link } from "react-router";
 
 import type { CartLayout } from "~/components/CartMain";
+import { Image } from "~/components/Image";
 import { useCart, useCartForm } from "~/lib/cart";
 import { useVariantUrl } from "~/lib/variants";
 
@@ -57,7 +56,7 @@ export function CartLineItem({
               <strong>{product.title}</strong>
             </p>
           </Link>
-          <ProductPrice price={line.cost.totalAmount as MoneyV2} />
+          <ProductPrice price={line.cost.totalAmount} />
           <ul>
             {(selectedOptions ?? []).map((option) => (
               <li key={option.name}>

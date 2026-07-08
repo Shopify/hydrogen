@@ -1,11 +1,23 @@
 import { reactRouter } from "@react-router/dev/vite";
-import { hydrogen } from "@shopify/hydrogen-classic/vite";
 import { oxygen } from "@shopify/mini-oxygen/vite";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
+
+type HydrogenPluginOptions = {
+  disableVirtualRoutes?: boolean;
+};
+type HydrogenSharedOptions = HydrogenPluginOptions & {
+  command?: "build" | "serve";
+};
+type HydrogenPlugin = Plugin<{
+  registerPluginOptions(newOptions: HydrogenPluginOptions): void;
+  getPluginOptions(): HydrogenSharedOptions;
+}>;
+
+import { localCdnAssets } from "../shared/local-cdn-assets-plugin/vite";
 
 export default defineConfig({
-  plugins: [tailwindcss(), hydrogen(), oxygen(), reactRouter()],
+  plugins: [localCdnAssets(), tailwindcss(), hydrogen(), oxygen(), reactRouter()],
   resolve: {
     tsconfigPaths: true,
   },
@@ -30,6 +42,42 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts: [".tryhydrogen.dev"],
+    allowedHosts: [".tryhydrogen.dev", ".trycloudflare.com"],
   },
 });
+
+function hydrogen(): HydrogenPlugin {
+  const sharedOptions: HydrogenSharedOptions = {};
+
+  return {
+    name: "hydrogen:main",
+    config(_, env) {
+      sharedOptions.command = env.command;
+      return {
+        build: { outDir: "dist" },
+        ssr: {
+          optimizeDeps: {
+            include: [
+              "react",
+              "react/jsx-runtime",
+              "react/jsx-dev-runtime",
+              "react-dom",
+              "react-dom/server",
+              "react-router",
+            ],
+          },
+        },
+      };
+    },
+    api: {
+      registerPluginOptions(newOptions) {
+        if (newOptions.disableVirtualRoutes !== undefined) {
+          sharedOptions.disableVirtualRoutes = newOptions.disableVirtualRoutes;
+        }
+      },
+      getPluginOptions() {
+        return sharedOptions;
+      },
+    },
+  };
+}

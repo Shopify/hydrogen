@@ -1,3 +1,5 @@
+import type { AnalyticsEventName } from "./events";
+
 // --- Shop Analytics ---
 
 export type ShopAnalytics = {
@@ -13,8 +15,6 @@ export type ConsentConfig = {
   consentDomain?: string;
   publicStorefrontAccessToken?: string;
   mode?: "default-banner" | "custom-banner" | "no-banner";
-  country?: string;
-  language?: string;
 };
 
 // --- Cart types (lightweight, no dependency on hydrogen's CartReturn) ---
@@ -54,12 +54,12 @@ export type OtherData = {
 };
 
 type BasePayload = {
-  shop: ShopAnalytics | null;
+  shop?: ShopAnalytics | null;
   customData?: Record<string, unknown>;
 };
 
 type UrlPayload = {
-  url: string;
+  url?: string;
 };
 
 export type ProductPayload = {
@@ -106,7 +106,6 @@ export type CartViewPayload = CartPayload & UrlPayload & BasePayload;
 export type SearchViewPayload = SearchPayload & UrlPayload & BasePayload;
 export type CartUpdatePayload = CartPayload & BasePayload & OtherData;
 export type CartLineUpdatePayload = CartLinePayload & CartPayload & BasePayload & OtherData;
-export type CustomEventPayload = BasePayload & OtherData;
 
 export type EventPayloads =
   | PageViewPayload
@@ -115,8 +114,7 @@ export type EventPayloads =
   | CartViewPayload
   | SearchViewPayload
   | CartUpdatePayload
-  | CartLineUpdatePayload
-  | CustomEventPayload;
+  | CartLineUpdatePayload;
 
 // --- Type-safe event mapping ---
 
@@ -131,17 +129,11 @@ export interface AnalyticsEventMap {
   product_removed_from_cart: CartLineUpdatePayload;
 }
 
-/**
- * Resolves the payload type for a given event name.
- * Known events map to their specific payload type; custom events
- * (`custom_*`) map to CustomEventPayload; unknown events fall back
- * to Record<string, unknown>.
- */
-export type PayloadFor<E extends string> = E extends keyof AnalyticsEventMap
-  ? AnalyticsEventMap[E]
-  : E extends `custom_${string}`
-    ? CustomEventPayload
-    : Record<string, unknown>;
+/** Resolves the payload type for a supported analytics event name. */
+export type PayloadFor<E extends AnalyticsEventName> = AnalyticsEventMap[E];
+
+export type PublishPayloadArgs<E extends AnalyticsEventName> =
+  {} extends PayloadFor<E> ? [payload?: PayloadFor<E>] : [payload: PayloadFor<E>];
 
 // --- Bus Types ---
 
@@ -158,7 +150,10 @@ export type StorefrontAnalyticsOptions = StorefrontAnalyticsConfig & {
 };
 
 export type StorefrontAnalyticsDestinationSetupContext = {
-  subscribe: <E extends string>(event: E, callback: (payload: PayloadFor<E>) => void) => () => void;
+  subscribe: <E extends AnalyticsEventName>(
+    event: E,
+    callback: (payload: PayloadFor<E>) => void,
+  ) => () => void;
   getConfig: () => StorefrontAnalyticsConfig;
 };
 
@@ -170,9 +165,12 @@ export type StorefrontAnalyticsDestination = {
 };
 
 export type StorefrontAnalytics = {
-  publish: <E extends string>(event: E, payload: PayloadFor<E>) => void;
+  publish: <E extends AnalyticsEventName>(event: E, ...payload: PublishPayloadArgs<E>) => void;
   /** Listen for live analytics events. Destination integrations should use `addDestination()`. */
-  subscribe: <E extends string>(event: E, callback: (payload: PayloadFor<E>) => void) => () => void;
+  subscribe: <E extends AnalyticsEventName>(
+    event: E,
+    callback: (payload: PayloadFor<E>) => void,
+  ) => () => void;
   addDestination: (destination: StorefrontAnalyticsDestination) => () => void;
   updateCart: (cart: AnalyticsCart | null) => void;
   destroy: () => void;

@@ -63,11 +63,17 @@ type MockCartStore = CartStore & { setState(state: CartState): void };
 
 let cartSubscribeListener: (() => void) | null = null;
 
-function isCartState(value: CartData | CartState): value is CartState {
-  return "data" in value && "pending" in value && "errors" in value && "loading" in value;
+function isCartState(value: CartData | CartState | null): value is CartState {
+  return (
+    value !== null &&
+    "data" in value &&
+    "pending" in value &&
+    "errors" in value &&
+    "loading" in value
+  );
 }
 
-function createMockCartStore(initialData?: CartData | CartState): MockCartStore {
+function createMockCartStore(initialData?: CartData | CartState | null): MockCartStore {
   let state: CartState = initialData
     ? isCartState(initialData)
       ? initialData
@@ -186,7 +192,7 @@ function makeStore(
 
 function makeCartProviderWrapper() {
   return ({ children }: { children: ReactNode }) =>
-    createElement(CartProvider, { initialData: makeCartData() }, children);
+    createElement(CartProvider, { initialData: { cart: makeCartData() } }, children);
 }
 
 function makeMockEvent(): ReactSubmitEvent<HTMLFormElement> {
@@ -206,7 +212,9 @@ describe("useProductForm", () => {
     vi.clearAllMocks();
     cartSubscribeListener = null;
     vi.mocked(createCartStore).mockImplementation((options?: CreateCartStoreOptions) =>
-      createMockCartStore(options?.initialData),
+      createMockCartStore(
+        (options?.initialData as { cart?: CartData | CartState } | undefined)?.cart,
+      ),
     );
     configureCartEndpoint("/api/cart");
   });
@@ -437,6 +445,18 @@ describe("useProductForm", () => {
         expect(result.current.register("quantity", { defaultValue: 3 })).toEqual({
           name: "quantity",
           defaultValue: "3",
+        });
+      });
+    });
+
+    describe('"addToCart"', () => {
+      it("returns submit button props with a stable name", () => {
+        const { store } = makeStore();
+        const { result } = renderHook(() => useProductForm(store));
+
+        expect(result.current.register("addToCart", {})).toEqual({
+          name: "add-to-cart",
+          type: "submit",
         });
       });
     });
@@ -703,7 +723,7 @@ describe("createProductComponents", () => {
     return ({ children }: { children: ReactNode }) =>
       createElement(
         CartProvider,
-        { initialData: makeCartData() },
+        { initialData: { cart: makeCartData() } },
         createElement(ProductProvider, { product, onSelect }, children),
       );
   }
@@ -712,7 +732,9 @@ describe("createProductComponents", () => {
     vi.clearAllMocks();
     cartSubscribeListener = null;
     vi.mocked(createCartStore).mockImplementation((options?: CreateCartStoreOptions) =>
-      createMockCartStore(options?.initialData),
+      createMockCartStore(
+        (options?.initialData as { cart?: CartData | CartState } | undefined)?.cart,
+      ),
     );
     configureCartEndpoint("/api/cart");
   });

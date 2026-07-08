@@ -1,7 +1,8 @@
-import { Image, Money } from "@shopify/hydrogen-classic";
-import type { CurrencyCode } from "@shopify/hydrogen-classic/storefront-api-types";
+import type { CurrencyCode } from "@shopify/hydrogen/storefront-api-types";
 import { Link } from "react-router";
 
+import { Image } from "~/components/Image";
+import { formatMoney } from "~/lib/money";
 import { useVariantUrl } from "~/lib/variants";
 
 export type ProductItemData = {
@@ -44,9 +45,7 @@ export function ProductItem({
         />
       )}
       <h4>{product.title}</h4>
-      <small>
-        <Money data={product.priceRange.minVariantPrice} />
-      </small>
+      <small>{formatMoney(product.priceRange.minVariantPrice)}</small>
     </Link>
   );
 }

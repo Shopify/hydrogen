@@ -30,11 +30,11 @@ export interface ProductVariantData {
   price: { amount: string; currencyCode: string };
   compareAtPrice: { amount: string; currencyCode: string } | null;
   image: {
-    id: string;
+    id: string | null;
     url: string;
     altText: string | null;
-    width: number;
-    height: number;
+    width: number | null;
+    height: number | null;
   } | null;
   product: { title: string; handle: string };
   sku: string | null;
@@ -47,8 +47,8 @@ export interface ProductData {
   vendor: string;
   description: string;
   requiresSellingPlan: boolean;
-  encodedVariantExistence: string;
-  encodedVariantAvailability: string;
+  encodedVariantExistence: string | null;
+  encodedVariantAvailability: string | null;
   priceRange: {
     minVariantPrice: { amount: string; currencyCode: string };
     maxVariantPrice: { amount: string; currencyCode: string };
@@ -61,7 +61,7 @@ export interface ProductData {
       firstSelectableVariant: ProductVariantData | null;
       swatch: {
         color: string | null;
-        image: { previewImage: { url: string } } | null;
+        image: { previewImage: { url: string } | null } | null;
       } | null;
     }[];
   }[];
@@ -74,8 +74,10 @@ export type ValidProductSelectionResult = Exclude<
   { status: "invalid" }
 >;
 
+type ProductOptionValueData = ProductData["options"][number]["optionValues"][number];
+
 export type ProductForm = {
-  options: VariantOptionState<ProductVariantData>[];
+  options: VariantOptionState<ProductVariantData, ProductOptionValueData>[];
   selectedVariant: ProductVariantData | null;
   register: ProductFormRegister;
   formProps: (opts?: {

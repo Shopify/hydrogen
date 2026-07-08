@@ -160,26 +160,27 @@ export const EMPTY_CART_DATA: CartData = Object.freeze({
   discountCodes: [] as DiscountCode[],
 });
 
-export function createEmptyCartData(): CartData {
+export function createCartState<TData extends CartData>(
+  data: TData,
+  { loading = false }: { loading?: boolean } = {},
+): CartState<TData> {
   return {
-    ...EMPTY_CART_DATA,
-    lines: { nodes: [] },
-    discountCodes: [],
-  };
-}
-
-export function createEmptyCartState(): CartState {
-  return {
-    data: createEmptyCartData(),
-    loading: true,
+    data,
+    loading,
     pending: createEmptyPending(),
     errors: createEmptyCartErrors(),
   };
 }
 
-export const EMPTY_CART_STATE: CartState = {
-  data: createEmptyCartData(),
-  loading: true,
-  pending: createEmptyPending(),
-  errors: createEmptyCartErrors(),
-};
+export function createEmptyCartState({ loading = true }: { loading?: boolean } = {}): CartState {
+  return createCartState(
+    {
+      ...EMPTY_CART_DATA,
+      lines: { nodes: [] },
+      discountCodes: [],
+    },
+    { loading },
+  );
+}
+
+export const EMPTY_CART_STATE: CartState = createEmptyCartState();

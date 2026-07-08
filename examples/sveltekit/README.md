@@ -23,11 +23,25 @@ Port of the canonical `examples/base/` design to [SvelteKit 2](https://svelte.de
 | `/cart` | Hydrogen cart primitive | Live: optimistic line updates, discount codes, order note, totals, checkout, and Shop Pay |
 | `/blogs/news` | `examples/base/blogs/news/index.html` | Live: `blog(handle:"news") { articles(first: 10) }`, first article rendered as featured |
 | `/blogs/news/:handle` | `examples/base/blogs/news/liquidpeak-450/index.html` | Live: `articleByHandle`, `contentHtml` rendered with `{@html}` |
+| `/account` | (new) | Live: Customer Account OAuth session, basic customer name/email, logout form |
+| `/account/login` | (new) | Live: Hydrogen Customer Account handler starts OAuth and stores pending PKCE state |
+| `POST /account/logout` | (new) | Live: Hydrogen Customer Account handler clears session and redirects with `303 See Other` |
 
 ## Stubbed vs. live
 
-- **Live**: product data, collection data, prices, images, URL-synced options, cart mutations, collection filters/sort, checkout links, Shop Pay buttons, and blog articles.
-- **Stubbed**: hero links, search, account, newsletter form, color swatch hex values (mapped client-side from option name → CSS color in `src/lib/components/ProductPurchasePanel.svelte`).
+- **Live**: product data, collection data, prices, images, URL-synced options, cart mutations, collection filters/sort, checkout links, Shop Pay buttons, blog articles, Customer Account login/session state, basic customer identity, logout.
+- **Stubbed**: hero links, search, newsletter form.
+
+## Customer Account setup
+
+The account flow uses `createCustomerSession` and `createCustomerAccountServerHandlers` from `@shopify/hydrogen/customer-account`, Customer Account values from `examples/shared/config.ts`, and an encrypted HttpOnly `__Host-` cookie adapter from `examples/shared/customer-session.ts`.
+
+Customer Account OAuth requires a public HTTPS origin. To test locally without a tunnel, register `https://localtest.me:5173/account/authorize` as the callback URI and run:
+
+```sh
+pnpm https:setup
+pnpm --filter @shopify/hydrogen-example-sveltekit https:dev
+```
 
 ## Run
 
@@ -46,7 +60,7 @@ These are calls/patterns that would benefit from a `@shopify/hydrogen` helper as
 - `storefrontClient.graphql()` from `event.locals.storefrontClient` — now uses the request-scoped client created in `src/hooks.server.ts` with `gql.tada` for zero-config type inference. Error normalization and request-id propagation are handled by the core client.
 - `formatMoney()` in `src/lib/money.ts` — every example needs money formatting from a `MoneyV2`-shaped object.
 - `ProductCard.svelte` reads a narrow product shape (`handle`, `title`, `featuredImage`, `priceRange.minVariantPrice`). A core fragment + type for "product card" would let routes share GraphQL fragments instead of re-listing fields.
-- Color swatch mapping (`SWATCHES` in `src/lib/components/ProductPurchasePanel.svelte`) is hand-rolled — option-value → swatch metadata is a real merchant problem; how should the SDK expose it?
+- Option value swatch data is exposed through `createProductFormStore().getState().options[].values[].swatch`, so selectors can render API-backed swatches with `value.swatch`.
 
 ## Open questions
 

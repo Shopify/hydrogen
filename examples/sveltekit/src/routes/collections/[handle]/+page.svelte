@@ -1,6 +1,6 @@
 <script lang="ts">
 	import CollectionBrowser from '$lib/components/CollectionBrowser.svelte';
-	import { getAnalytics, AnalyticsEvent, analyticsShop } from '$lib/analytics';
+	import { getAnalytics, AnalyticsEvent } from '$lib/analytics';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -13,9 +13,7 @@
 			collection: {
 				id: data.collection.id,
 				handle: data.collection.handle
-			},
-			url: window.location.href,
-			shop: analyticsShop
+			}
 		});
 		void handle;
 	});

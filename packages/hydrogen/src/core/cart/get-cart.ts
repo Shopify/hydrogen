@@ -1,10 +1,9 @@
-import type { GenericStorefrontClient } from "../../client";
+import type { StorefrontClient } from "../../client";
 import type { AnyStorefrontQueryString, StorefrontQueryString } from "../../graphql";
-import type { StorefrontRequestContext } from "../headers";
+import type { ShopifyRequestContext } from "../headers";
 import { getCartIdFromCookie } from "./cookie";
 import { cartQueries } from "./queries";
 import type { CartData } from "./state";
-import { createEmptyCartData } from "./state";
 
 type MergeCartData<TCart> = Omit<CartData, keyof TCart> & TCart;
 
@@ -16,7 +15,7 @@ export type CartDataFromQuery<TQuery extends AnyStorefrontQueryString> =
     : CartData;
 
 export type CartResult<TCart extends CartData = CartData> = {
-  cart: TCart;
+  cart: TCart | null;
   errors?: Array<{ message: string }>;
   headers: Headers;
 };
@@ -27,7 +26,7 @@ type CartQueryResult = {
   headers: Headers;
 };
 
-type StorefrontCartClient = Pick<GenericStorefrontClient, "graphql">;
+type StorefrontCartClient = Pick<StorefrontClient, "graphql">;
 
 type CartQueryDocument = AnyStorefrontQueryString;
 
@@ -36,11 +35,11 @@ type CartQueryGraphql = (
   options: { variables: { id: string } },
 ) => Promise<CartQueryResult>;
 
-type CartIdSource = Request | Pick<StorefrontRequestContext, "cookie" | "url">;
+type CartIdSource = Request | Pick<ShopifyRequestContext, "cookie" | "url">;
 
 export function getCartId(input: CartIdSource): string | null {
   if (input.url) {
-    const parsedUrl = new URL(input.url, "http://shop.dev");
+    const parsedUrl = new URL(input.url, "https://hydrogen.local");
     const cartId = parsedUrl.searchParams.get("cartId");
     if (cartId) return cartId;
   }
@@ -55,7 +54,7 @@ export async function getCart<TQuery extends AnyStorefrontQueryString = typeof c
 ): Promise<CartResult<CartDataFromQuery<TQuery>>> {
   if (!cartId) {
     return {
-      cart: createEmptyCartData() as CartDataFromQuery<TQuery>,
+      cart: null,
       headers: new Headers(),
     };
   }
@@ -65,7 +64,7 @@ export async function getCart<TQuery extends AnyStorefrontQueryString = typeof c
 
   if (result.errors || !result.data?.cart) {
     return {
-      cart: createEmptyCartData() as CartDataFromQuery<TQuery>,
+      cart: null,
       errors: result.errors,
       headers: result.headers,
     };

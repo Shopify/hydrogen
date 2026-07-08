@@ -2,27 +2,18 @@
  * Type-level GraphQL result and variables resolver.
  *
  * Uses gql.tada's exported `parseDocument<T>` to parse a GraphQL query string
- * into an AST, then walks the AST against the Storefront API introspection
+ * into an AST, then walks the AST against a generated introspection
  * schema to compute Result and Variables types — without depending on any
  * gql.tada internal types.
  */
 import type { parseDocument } from "gql.tada";
 
 import type { introspection } from "./generated/graphql-env";
+import type { StorefrontScalars } from "./scalars";
 
 // ---------------------------------------------------------------------------
 // Schema preparation
 // ---------------------------------------------------------------------------
-
-type StorefrontScalars = {
-  Color: string;
-  DateTime: string;
-  Decimal: string;
-  HTML: string;
-  JSON: string;
-  URL: string;
-  UnsignedInt64: string;
-};
 
 type DefaultScalars = {
   readonly ID: string;
@@ -32,24 +23,35 @@ type DefaultScalars = {
   readonly Int: number;
 };
 
-type ScalarMap = {
-  [P in keyof StorefrontScalars | keyof DefaultScalars]: {
+type ScalarMap<CustomScalars extends Record<string, unknown>> = {
+  [P in keyof CustomScalars | keyof DefaultScalars]: {
     name: P;
-    type: P extends keyof StorefrontScalars
-      ? StorefrontScalars[P]
+    type: P extends keyof CustomScalars
+      ? CustomScalars[P]
       : P extends keyof DefaultScalars
         ? DefaultScalars[P]
         : never;
   };
 };
 
-type StorefrontSchema = {
-  name: introspection["name"];
-  query: introspection["query"];
-  mutation: introspection["mutation"];
-  subscription: introspection["subscription"];
-  types: ScalarMap & introspection["types"];
+export type GraphQLSchemaFor<
+  SchemaIntrospection extends {
+    name: any;
+    query: string;
+    mutation?: any;
+    subscription?: any;
+    types: { [name: string]: any };
+  },
+  CustomScalars extends Record<string, unknown>,
+> = {
+  name: SchemaIntrospection["name"];
+  query: SchemaIntrospection["query"];
+  mutation: SchemaIntrospection["mutation"];
+  subscription: SchemaIntrospection["subscription"];
+  types: ScalarMap<CustomScalars> & SchemaIntrospection["types"];
 };
+
+type StorefrontSchema = GraphQLSchemaFor<introspection, StorefrontScalars>;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -63,7 +65,7 @@ type ObjectLikeType = {
   fields: { [key: string]: any };
 };
 
-type SchemaLike = {
+export type SchemaLike = {
   name?: any;
   query: string;
   mutation?: any;
@@ -286,6 +288,14 @@ type FirstOperation<Defs> = Defs extends readonly [infer Def, ...infer Rest]
     : FirstOperation<Rest>
   : never;
 
+type SingleOperation<Defs, Operation = never> = Defs extends readonly [infer Def, ...infer Rest]
+  ? Def extends { kind: "OperationDefinition" }
+    ? [Operation] extends [never]
+      ? SingleOperation<Rest, Def>
+      : never
+    : SingleOperation<Rest, Operation>
+  : Operation;
+
 type FirstFragment<Defs> = Defs extends readonly [infer Def, ...infer Rest]
   ? Def extends { kind: "FragmentDefinition" }
     ? Def
@@ -316,14 +326,14 @@ type FragmentType<
     : never
   : never;
 
-type DocumentType<Doc> = Doc extends {
+type DocumentType<Doc, Schema extends SchemaLike> = Doc extends {
   kind: "Document";
   definitions: infer Defs extends readonly unknown[];
 }
   ? FirstOperation<Defs> extends infer Operation
     ? [Operation] extends [never]
-      ? FragmentType<FirstFragment<Defs>, StorefrontSchema, FragmentMap<Defs>>
-      : OperationType<Operation, StorefrontSchema, FragmentMap<Defs>>
+      ? FragmentType<FirstFragment<Defs>, Schema, FragmentMap<Defs>>
+      : OperationType<Operation, Schema, FragmentMap<Defs>>
     : never
   : never;
 
@@ -420,21 +430,51 @@ type VariablesWalker<Vars, Schema extends SchemaLike, Acc = {}> = Vars extends [
     >
   : Obj<Acc>;
 
-type VariablesType<Doc> = Doc extends {
+type VariablesType<Doc, Schema extends SchemaLike> = Doc extends {
   kind: "Document";
   definitions: infer Defs extends readonly unknown[];
 }
   ? FirstOperation<Defs> extends { variableDefinitions: any }
-    ? VariablesWalker<FirstOperation<Defs>["variableDefinitions"], StorefrontSchema>
+    ? VariablesWalker<FirstOperation<Defs>["variableDefinitions"], Schema>
     : {}
   : {};
+
+type OperationKindType<Doc> = Doc extends {
+  kind: "Document";
+  definitions: infer Defs extends readonly unknown[];
+}
+  ? [SingleOperation<Defs>] extends [never]
+    ? "unknown"
+    : SingleOperation<Defs> extends { operation: infer Operation extends string }
+      ? Operation
+      : "unknown"
+  : "unknown";
 
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
-export type InferResult<T extends string> =
-  parseDocument<T> extends infer Doc ? (Doc extends never ? never : DocumentType<Doc>) : never;
+export type InferResultForSchema<T extends string, Schema extends SchemaLike> =
+  parseDocument<T> extends infer Doc
+    ? Doc extends never
+      ? never
+      : DocumentType<Doc, Schema>
+    : never;
 
-export type InferVariables<T extends string> =
-  parseDocument<T> extends infer Doc ? (Doc extends never ? never : VariablesType<Doc>) : never;
+export type InferVariablesForSchema<T extends string, Schema extends SchemaLike> =
+  parseDocument<T> extends infer Doc
+    ? Doc extends never
+      ? never
+      : VariablesType<Doc, Schema>
+    : never;
+
+export type InferResult<T extends string> = InferResultForSchema<T, StorefrontSchema>;
+
+export type InferVariables<T extends string> = InferVariablesForSchema<T, StorefrontSchema>;
+
+export type InferOperationKind<T extends string> =
+  parseDocument<T> extends infer Doc
+    ? [Doc] extends [never]
+      ? "unknown"
+      : OperationKindType<Doc>
+    : "unknown";

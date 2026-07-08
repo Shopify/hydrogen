@@ -9,7 +9,7 @@
 	<title>Mock.shop — Hydrogen</title>
 </svelte:head>
 
-<main>
+<main id="main-content" tabindex="-1">
 	<section class="grid grid-cols-1 md:grid-cols-2">
 		<a
 			href="/collections/men"

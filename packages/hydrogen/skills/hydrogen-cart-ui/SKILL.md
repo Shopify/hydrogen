@@ -121,7 +121,7 @@ Each `CartErrorGroup` contains `{ userErrors: CartUserError[], warnings: CartWar
 
 - **While `loading` is `true`**, show skeleton placeholders — not empty state. The cart hasn't been fetched yet.
 - **When `loading` is `false` and `lines` is empty**, show empty state ("Your cart is empty" or equivalent).
-- **If `initialData` is provided** when creating the store, `loading` starts as `false` and the initial fetch is skipped. This eliminates the skeleton state entirely — the cart renders with server data on first paint.
+- **If `initialData` is provided** when creating the store, `loading` starts as `false` and the initial fetch is skipped. `initialData` is the cart handler data envelope (`{cart, errors?}`), not only the cart object. `{cart: null}` means the server already completed the bootstrap with no usable cart, so the UI should render empty state without a browser retry. `undefined` means no server bootstrap was provided, so the store fetches `/api/cart` after hydration. Cart server handlers log bootstrap errors before returning them, so app loaders should forward handler data instead of logging or throwing those errors again.
 
 ---
 

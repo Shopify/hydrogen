@@ -1,3 +1,5 @@
+"use client";
+
 import {
   createContext,
   createElement,
@@ -18,11 +20,12 @@ import {
   createProductFormRegister,
   createProductFormStore,
   type ProductFormErrors,
+  type ProductFormOptions,
   type ProductFormRegister,
   type ProductFormStore,
   type ProductInput,
   type ProductVariantFrom,
-  type VariantOptionState,
+  type ValidProductSelectionResult,
   type VariantSelectionResult,
 } from "../core/product";
 import { getCartEndpoint, useCartStore } from "./cart";
@@ -31,11 +34,7 @@ import { getCartEndpoint, useCartStore } from "./cart";
 // Shared types
 // ---------------------------------------------------------------------------
 
-/** A selection result that is not invalid — either resolved or unresolved. */
-export type ValidProductSelectionResult<TProduct extends ProductInput> = Exclude<
-  VariantSelectionResult<ProductVariantFrom<TProduct>>,
-  { status: "invalid" }
->;
+export type { ValidProductSelectionResult } from "../core/product";
 
 /** Options for {@link useProductForm}. */
 export interface UseProductFormOptions<TProduct extends ProductInput> {
@@ -44,7 +43,7 @@ export interface UseProductFormOptions<TProduct extends ProductInput> {
 
 /** Return value of {@link useProductForm}. */
 export interface UseProductFormResult<TProduct extends ProductInput> {
-  options: VariantOptionState<ProductVariantFrom<TProduct>>[];
+  options: ProductFormOptions<TProduct>;
   selectedVariant: ProductVariantFrom<TProduct> | null;
   register: ProductFormRegister;
   formProps: (opts?: {
@@ -69,7 +68,7 @@ export interface ProductProviderProps<TProduct extends ProductInput> {
 
 /** Return value of the `useProduct` hook from {@link createProductComponents}. */
 export interface UseProductResult<TProduct extends ProductInput> {
-  options: VariantOptionState<ProductVariantFrom<TProduct>>[];
+  options: ProductFormOptions<TProduct>;
   selectedVariant: ProductVariantFrom<TProduct> | null;
   selectOption: (
     name: string,

@@ -4,14 +4,29 @@ import type {
   VariablesOf as TadaVariablesOf,
 } from "gql.tada";
 
-import type { StorefrontRequestContext } from "../core/headers";
-import type { AnyStorefrontQueryString, StorefrontQueryString } from "../graphql";
+import type { CacheInstance, WaitUntil } from "../core/cache/run-with-cache";
+import type { ShopifyRequestContext } from "../core/headers";
+import type { AnyStorefrontQueryString, SourceOf, StorefrontQueryString } from "../graphql";
 import type { InferResult, InferVariables } from "../graphql";
-import type { CountryCode, LanguageCode } from "../graphql/generated/storefront-api-types";
+import type { InferOperationKind } from "../graphql/type-resolver";
+
+export type { I18nConfig } from "../core/headers";
 
 type DocLike = TadaDocumentNode<any, any> | AnyStorefrontQueryString;
-type InferredDoc<T extends string> = StorefrontQueryString<InferResult<T>, InferVariables<T>>;
+type InferredDoc<T extends string> = StorefrontQueryString<InferResult<T>, InferVariables<T>, T>;
 type ResolveDoc<D> = D extends DocLike ? D : D extends string ? InferredDoc<D> : never;
+type SourceText<Doc> = [SourceOf<Doc>] extends [never]
+  ? Doc extends string
+    ? Doc
+    : never
+  : SourceOf<Doc>;
+type OperationKindOfDoc<Doc> = [SourceText<Doc>] extends [never]
+  ? "unknown"
+  : string extends SourceText<Doc>
+    ? "unknown"
+    : InferOperationKind<SourceText<Doc>>;
+type GraphqlExtraOptionsForDoc<Doc, Extra extends Record<string, unknown>> =
+  OperationKindOfDoc<Doc> extends "query" ? Extra : Omit<Extra, "cache">;
 type ResultOfDoc<Doc> =
   Doc extends StorefrontQueryString<infer Result, infer _Variables, string>
     ? Result
@@ -36,76 +51,86 @@ export interface GraphQLFormattedError {
   readonly extensions?: Record<string, unknown>;
 }
 
-export type I18nConfig = {
-  language: LanguageCode;
-  country: CountryCode;
-};
-
 type CommonOptions = {
   storeDomain: string;
   apiVersion?: string;
-  i18n: I18nConfig;
-  requestContext?: StorefrontRequestContext;
-  fetch?: typeof globalThis.fetch;
   defaultTimeoutInMs?: number;
+  cache?: CacheInstance;
+  waitUntil?: WaitUntil;
 };
 
+type AnyFetch = typeof globalThis.fetch | ((...args: never[]) => Promise<Response>);
+
 /**
- * Public client — uses a public Storefront Access Token.
+ * Public client — uses a public Storefront Access Token, or tokenless access
+ * when `publicStorefrontToken` is omitted.
  *
- * Throttle isolation: per client IP (the shopper's browser).
- *
- * Best for: client-side (browser) requests where each shopper
- * naturally gets their own throttle bucket.
+ * Best for: browser or mobile requests where the token is safe to expose.
+ * Token-based access is required for some Storefront API fields, including
+ * product tags, metaobjects, metafields, menus, and customers.
  */
-export interface PublicClientOptions extends CommonOptions {
+export interface PublicClientOptions<
+  Fetch extends AnyFetch | undefined = typeof globalThis.fetch,
+> extends CommonOptions {
+  fetch?: Fetch;
   publicStorefrontToken?: string | undefined;
 }
 
 /**
  * Private client — uses a private Storefront Access Token.
- * Requires `buyerIp` to identify the buyer per request, which
- * gives each shopper their own throttle bucket.
- *
- * Throttle isolation: per buyer IP (forwarded via headers), per app.
- * Scales best under load because each buyer is isolated.
  *
  * `buyerIp` must be resolved before creating the client.
  *
  * Best for: SSR/server-side requests where you control the fetch
- * layer and can forward buyer identity.
+ * layer and can forward trusted buyer context.
+ * Token-based access is required for some Storefront API fields, including
+ * product tags, metaobjects, metafields, menus, and customers.
  */
-export interface PrivateClientOptions extends CommonOptions {
+export interface PrivateClientOptions<
+  Fetch extends AnyFetch | undefined = typeof globalThis.fetch,
+> extends CommonOptions {
+  fetch?: Fetch;
   privateStorefrontToken: string;
   buyerIp: string;
 }
 
 /**
- * Private client with shared throttle — uses a private Storefront
- * Access Token but does NOT forward per-buyer identity.
- *
- * Throttle isolation: single shared bucket for the entire app.
- * All requests are pooled, so this has the lowest throughput ceiling.
- *
- * No per-buyer identity is forwarded.
+ * Private client without buyer context — uses a private Storefront Access Token
+ * but does NOT forward per-buyer identity.
  *
  * Best for: background jobs, webhooks, or server contexts where no
  * shopper identity is available.
  */
-export interface SharedRateLimitClientOptions extends CommonOptions {
+export interface PrivateNoBuyerContextClientOptions<
+  Fetch extends AnyFetch | undefined = typeof globalThis.fetch,
+> extends CommonOptions {
+  fetch?: Fetch;
   privateStorefrontToken: string;
 }
 
 export type StorefrontClientOptions =
   | PublicClientOptions
   | PrivateClientOptions
-  | SharedRateLimitClientOptions;
+  | PrivateNoBuyerContextClientOptions;
 
-export type CreateStorefrontClientArgs =
-  | { type: "public"; config: PublicClientOptions }
-  | { type: "private"; config: PrivateClientOptions }
-  | { type: "private_shared_rate_limit"; config: SharedRateLimitClientOptions };
-
+export type CreateStorefrontClientArgs<
+  RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
+> =
+  | {
+      type: "public";
+      requestContext: RequestContext;
+      config: PublicClientOptions<AnyFetch | undefined>;
+    }
+  | {
+      type: "private";
+      requestContext: RequestContext;
+      config: PrivateClientOptions<AnyFetch | undefined>;
+    }
+  | {
+      type: "private_no_buyer_context";
+      requestContext: RequestContext;
+      config: PrivateNoBuyerContextClientOptions<AnyFetch | undefined>;
+    };
 type AutoAddedVariableNames = "country" | "language";
 type UserVariables<Doc> = Omit<VariablesOfDoc<Doc>, AutoAddedVariableNames>;
 
@@ -122,9 +147,9 @@ type MergedOptions<Doc extends DocLike, Extra extends Record<string, unknown>> =
     : { variables: UserVariables<Doc> });
 
 export type GqlRestParam<Doc extends DocLike, Extra extends Record<string, unknown> = {}> =
-  HasNoRequiredKeys<MergedOptions<Doc, Extra>> extends true
-    ? [options?: MergedOptions<Doc, Extra>]
-    : [options: MergedOptions<Doc, Extra>];
+  HasNoRequiredKeys<MergedOptions<Doc, GraphqlExtraOptionsForDoc<Doc, Extra>>> extends true
+    ? [options?: MergedOptions<Doc, GraphqlExtraOptionsForDoc<Doc, Extra>>]
+    : [options: MergedOptions<Doc, GraphqlExtraOptionsForDoc<Doc, Extra>>];
 
 // Discriminated on the presence of `errors`, which the SFAPI populates iff the
 // request was not a clean success. The two branches encode a guarantee the GraphQL
@@ -140,64 +165,52 @@ export type StorefrontGraphqlResult<Doc extends DocLike> =
   | { data: ResultOfDoc<Doc>; errors?: undefined; headers: Headers }
   | { data: ResultOfDoc<Doc> | null; errors: GraphQLFormattedError[]; headers: Headers };
 
-// Widest signature — accepts optional request. Used by GenericStorefrontClient.
 export type StorefrontGraphql = <const Doc extends DocLike | string>(
   doc: Doc,
   ...options: GqlRestParam<ResolveDoc<Doc>>
 ) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>;
 
 export type ClientType =
-  /** Public access token. Throttled per client IP. Best for: browser requests. */
+  /** Public access token or tokenless access. Best for: browser requests. */
   | "public"
-  /** Private token + per-buyer isolation. Best for: SSR. */
+  /** Private token with trusted buyer context. Best for: SSR. */
   | "private"
-  /** Private token, shared app-wide throttle. No buyer identity. Best for: background jobs, webhooks. */
-  | "private_shared_rate_limit";
-
-type RequestContextProperty<RequestContext extends StorefrontRequestContext | undefined> = [
-  RequestContext,
-] extends [StorefrontRequestContext]
-  ? { requestContext: RequestContext }
-  : { requestContext?: StorefrontRequestContext };
+  /** Private token without buyer context. Best for: background jobs, webhooks. */
+  | "private_no_buyer_context";
 
 export type StorefrontClient<
   Extra extends Record<string, unknown> = {},
   Type extends ClientType = ClientType,
-  RequestContext extends StorefrontRequestContext | undefined = undefined,
+  RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
 > = {
   type: Type;
+  i18n: RequestContext["i18n"];
   graphql: <const Doc extends DocLike | string>(
     doc: Doc,
     ...options: GqlRestParam<ResolveDoc<Doc>, Extra>
   ) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>;
   apiUrl: string;
   storeUrl: string;
-} & RequestContextProperty<RequestContext>;
+  requestContext: RequestContext;
+};
 
 export type PublicStorefrontClient<
   Extra extends Record<string, unknown> = {},
-  RequestContext extends StorefrontRequestContext | undefined = undefined,
+  RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
 > = StorefrontClient<Extra, "public", RequestContext>;
 
 export type PrivateStorefrontClient<
   Extra extends Record<string, unknown> = {},
-  RequestContext extends StorefrontRequestContext | undefined = undefined,
+  RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
 > = StorefrontClient<Extra, "private", RequestContext>;
 
 export type RequestScopedPrivateStorefrontClient<Extra extends Record<string, unknown> = {}> =
-  PrivateStorefrontClient<Extra, StorefrontRequestContext>;
+  PrivateStorefrontClient<Extra, ShopifyRequestContext>;
 
-export type SharedRateLimitStorefrontClient<
+export type PrivateNoBuyerContextStorefrontClient<
   Extra extends Record<string, unknown> = {},
-  RequestContext extends StorefrontRequestContext | undefined = undefined,
-> = StorefrontClient<Extra, "private_shared_rate_limit", RequestContext>;
-
-export type GenericStorefrontClient = {
-  graphql: StorefrontGraphql;
-  apiUrl: string;
-  storeUrl: string;
-  requestContext?: StorefrontRequestContext;
-};
+  RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
+> = StorefrontClient<Extra, "private_no_buyer_context", RequestContext>;
 
 export namespace StorefrontApi {
   export type ResultOf<Doc extends DocLike> = StorefrontApiResultOf<Doc>;

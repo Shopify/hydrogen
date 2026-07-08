@@ -1,6 +1,7 @@
-import { data as remixData, Form, NavLink, Outlet, useLoaderData } from "react-router";
+import { data as remixData, NavLink, Outlet } from "react-router";
 
 import { CUSTOMER_DETAILS_QUERY } from "~/graphql/customer-account/CustomerDetailsQuery";
+import { requireCustomerAccessToken } from "~/lib/customer-account";
 
 import type { Route } from "./+types/($locale).account";
 
@@ -8,12 +9,11 @@ export function shouldRevalidate() {
   return true;
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const { customerAccount } = context;
-  const { data, errors } = await customerAccount.query(CUSTOMER_DETAILS_QUERY, {
-    variables: {
-      language: customerAccount.i18n.language,
-    },
+  const accessToken = await requireCustomerAccessToken(request, customerAccount);
+  const { data, errors } = await customerAccount.client.graphql(CUSTOMER_DETAILS_QUERY, {
+    accessToken,
   });
 
   if (errors?.length || !data?.customer) {
@@ -21,7 +21,9 @@ export async function loader({ context }: Route.LoaderArgs) {
   }
 
   return remixData(
-    { customer: data.customer },
+    {
+      customer: data.customer,
+    },
     {
       headers: {
         "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -30,8 +32,9 @@ export async function loader({ context }: Route.LoaderArgs) {
   );
 }
 
-export default function AccountLayout() {
-  const { customer } = useLoaderData<typeof loader>();
+export default function AccountLayout({ loaderData, params }: Route.ComponentProps) {
+  const { customer } = loaderData;
+  const logoutPath = getLogoutPath(params.locale);
 
   const heading = customer
     ? customer.firstName
@@ -43,12 +46,17 @@ export default function AccountLayout() {
     <div className="account">
       <h1>{heading}</h1>
       <br />
-      <AccountMenu />
+      <AccountMenu logoutPath={logoutPath} />
       <br />
       <br />
       <Outlet context={{ customer }} />
     </div>
   );
+}
+
+function getLogoutPath(locale: string | undefined) {
+  const postLogoutPath = locale ? `/${locale}/` : "/";
+  return `/account/logout?return_to=${encodeURIComponent(postLogoutPath)}`;
 }
 
 function isActiveStyle({ isActive, isPending }: { isActive: boolean; isPending: boolean }) {
@@ -58,30 +66,30 @@ function isActiveStyle({ isActive, isPending }: { isActive: boolean; isPending: 
   };
 }
 
-function AccountMenu() {
+function AccountMenu({ logoutPath }: { logoutPath: string }) {
   return (
     <nav role="navigation">
-      <NavLink to="/account/orders" style={isActiveStyle}>
+      <NavLink to="orders" style={isActiveStyle}>
         Orders &nbsp;
       </NavLink>
       &nbsp;|&nbsp;
-      <NavLink to="/account/profile" style={isActiveStyle}>
+      <NavLink to="profile" style={isActiveStyle}>
         &nbsp; Profile &nbsp;
       </NavLink>
       &nbsp;|&nbsp;
-      <NavLink to="/account/addresses" style={isActiveStyle}>
+      <NavLink to="addresses" style={isActiveStyle}>
         &nbsp; Addresses &nbsp;
       </NavLink>
       &nbsp;|&nbsp;
-      <Logout />
+      <Logout logoutPath={logoutPath} />
     </nav>
   );
 }
 
-function Logout() {
+function Logout({ logoutPath }: { logoutPath: string }) {
   return (
-    <Form className="account-logout" method="POST" action="/account/logout">
+    <form className="account-logout" method="POST" action={logoutPath}>
       &nbsp;<button type="submit">Sign out</button>
-    </Form>
+    </form>
   );
 }

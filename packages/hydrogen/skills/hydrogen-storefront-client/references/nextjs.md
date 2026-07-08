@@ -1,6 +1,6 @@
 # Next.js App Router
 
-## Dynamic pages (per-buyer isolation)
+## Dynamic pages (trusted buyer context)
 
 Next.js server components don't receive a `Request` object, but private clients need a request-derived buyer IP. The pattern: a server-only cached factory that reads `headers()`, creates a request context from those headers, resolves buyer IP from trusted request data, and creates a private client for that RSC request.
 
@@ -10,26 +10,28 @@ import { headers } from "next/headers";
 import { cache } from "react";
 import {
   createStorefrontClient,
-  createStorefrontRequestContext,
+  createShopifyRequestContext,
 } from "@shopify/hydrogen";
 
 const FIRST_FORWARDED_FOR_VALUE_INDEX = 0;
 
 export const getStorefrontClient = cache(async () => {
   const requestHeaders = await headers();
-  const requestContext = createStorefrontRequestContext({ headers: requestHeaders });
+  const requestContext = createShopifyRequestContext({
+    request: { headers: requestHeaders },
+    i18n: { country: "US", language: "EN" },
+  });
   const forwardedForValues = requestHeaders.get("x-forwarded-for")?.split(",");
   const buyerIp = forwardedForValues?.[FIRST_FORWARDED_FOR_VALUE_INDEX]?.trim();
   if (!buyerIp) throw new Error("buyer IP is required for private SFAPI clients");
 
   return createStorefrontClient({
     type: "private",
+    requestContext,
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
       privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
       buyerIp,
-      requestContext,
-      i18n: { country: "US", language: "EN" },
     },
   });
 });
@@ -56,22 +58,27 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
 }
 ```
 
-The private client is created inside the request path because `buyerIp` and `requestContext` are static on the client. Calling `headers()` makes this page dynamic. Route handlers and proxy files receive the actual `Request`; pass that request to `createStorefrontRequestContext(request)` there so the request URL and `request.signal` are preserved.
+The private client is created inside the request path because `buyerIp` and `requestContext` are static on the client. Calling `headers()` makes this page dynamic. Route handlers and proxy files receive the actual `Request`; pass that request to `createShopifyRequestContext({ request, i18n })` there so the request URL and `request.signal` are preserved.
 
 ## Static pages (no buyer IP)
 
-Pages that don't need per-buyer isolation — product listings, collection grids, marketing pages — can use `private_shared_rate_limit` with static `i18n`. Because the component never calls `headers()`, `cookies()`, or reads `searchParams`, Next.js treats it as statically renderable and caches it at build time or via ISR.
+Pages that don't need buyer context — product listings, collection grids, marketing pages — can use `private_no_buyer_context` with a static request context. Because the component never calls `headers()`, `cookies()`, or reads `searchParams`, Next.js treats it as statically renderable and caches it at build time or via ISR.
 
 ```ts
-// app/lib/storefront-static.ts — shared-rate-limit client, no buyer IP
-import { createStorefrontClient } from "@shopify/hydrogen";
+// app/lib/storefront-static.ts — private client, no buyer context
+import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
+
+const requestContext = createShopifyRequestContext({
+  request: { headers: new Headers() },
+  i18n: { country: "US", language: "EN" },
+});
 
 export const staticStorefrontClient = createStorefrontClient({
-  type: "private_shared_rate_limit",
+  type: "private_no_buyer_context",
+  requestContext,
   config: {
     storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
     privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-    i18n: { country: "US", language: "EN" },
   },
 });
 ```
@@ -105,4 +112,4 @@ export default async function CollectionPage({ params }: { params: Promise<{ han
 }
 ```
 
-This component never touches request-time APIs (`headers()`, `cookies()`, `searchParams`), so Next.js can prerender it at build time or cache it with ISR (`export const revalidate = 3600`). All requests share one throttle bucket — fine for pages that serve the same data to every visitor. Use a per-request `private` client from `getStorefrontClient()` when you need per-buyer isolation or personalized data.
+This component never touches request-time APIs (`headers()`, `cookies()`, `searchParams`), so Next.js can prerender it at build time or cache it with ISR (`export const revalidate = 3600`). Use a per-request `private` client from `getStorefrontClient()` when you need buyer context or personalized data.

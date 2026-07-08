@@ -5,18 +5,23 @@ import { useProductForm } from "~/storefront/product";
 const props = defineProps<{ product: ProductData }>();
 const route = useRoute();
 
-const SWATCHES: Record<string, string> = {
-  Green: "#7ea993",
-  Clay: "#7d6635",
-  Ocean: "#5b8aa6",
-  Purple: "#5e4a8a",
-  Red: "#a26a72",
-};
+type ProductOptionValueSwatch = ProductData["options"][number]["optionValues"][number]["swatch"];
 
 const form = useProductForm();
 
 function isColor(name: string): boolean {
   return name.toLowerCase() === "color";
+}
+
+function getSwatchStyle(swatch: ProductOptionValueSwatch | null | undefined) {
+  const image = swatch?.image?.previewImage?.url;
+
+  return {
+    backgroundColor: swatch?.color ?? "#999",
+    backgroundImage: image ? `url(${image})` : undefined,
+    backgroundPosition: "center",
+    backgroundSize: "cover",
+  };
 }
 
 function variantRoute(selectedOptions: { name: string; value: string }[], handle?: string) {
@@ -55,9 +60,7 @@ function variantQuery(selectedOptions: { name: string; value: string }[]) {
                 ? 'block h-7 w-7 rounded-full'
                 : 'flex h-11 min-w-20 items-center justify-center rounded-full border border-black/15 px-5 text-sm font-semibold hover:border-black'
             "
-            :style="
-              isColor(option.name) ? { background: SWATCHES[value.name] ?? '#999' } : undefined
-            "
+            :style="isColor(option.name) ? getSwatchStyle(value.swatch) : undefined"
           >
             <template v-if="!isColor(option.name)">{{ value.name }}</template>
           </NuxtLink>
@@ -83,9 +86,7 @@ function variantQuery(selectedOptions: { name: string; value: string }[]) {
                   ? 'h-11 min-w-20 rounded-full bg-black px-5 text-sm font-semibold text-white disabled:opacity-30'
                   : 'h-11 min-w-20 rounded-full border border-black/15 px-5 text-sm font-semibold hover:border-black disabled:opacity-30'
             "
-            :style="
-              isColor(option.name) ? { background: SWATCHES[value.name] ?? '#999' } : undefined
-            "
+            :style="isColor(option.name) ? getSwatchStyle(value.swatch) : undefined"
           >
             <template v-if="!isColor(option.name)">
               {{ value.name }}
