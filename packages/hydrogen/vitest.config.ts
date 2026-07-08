@@ -7,8 +7,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@shopify/hydrogen/cdn": new URL("./src/core/analytics/cdn/bootstrap.ts", import.meta.url)
-        .pathname,
+      "@shopify/hydrogen/cdn/analytics": new URL(
+        "./src/core/analytics/cdn/bootstrap.ts",
+        import.meta.url,
+      ).pathname,
     },
   },
   test: {
@@ -18,6 +20,11 @@ export default defineConfig({
       enabled: true,
       include: ["src/**/*.type-test.ts"],
     },
-    include: ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.type-test.ts"],
+    include: [
+      "plugins/**/*.test.ts",
+      "src/**/*.test.ts",
+      "src/**/*.test.tsx",
+      "src/**/*.type-test.ts",
+    ],
   },
 });

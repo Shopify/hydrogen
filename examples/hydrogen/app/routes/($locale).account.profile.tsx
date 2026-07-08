@@ -1,8 +1,13 @@
-import type { CustomerUpdateInput } from "@shopify/hydrogen-classic/customer-account-api-types";
+import type { CustomerUpdateInput } from "@shopify/hydrogen/customer-account-api-types";
 import type { CustomerFragment } from "customer-accountapi.generated";
 import { data, Form, useActionData, useNavigation, useOutletContext } from "react-router";
 
 import { CUSTOMER_UPDATE_MUTATION } from "~/graphql/customer-account/CustomerUpdateMutation";
+import {
+  getCustomerAccessToken,
+  isSameOriginRequest,
+  requireCustomerAccessToken,
+} from "~/lib/customer-account";
 
 import type { Route } from "./+types/($locale).account.profile";
 
@@ -15,8 +20,8 @@ export const meta: Route.MetaFunction = () => {
   return [{ title: "Profile" }];
 };
 
-export async function loader({ context }: Route.LoaderArgs) {
-  await context.customerAccount.handleAuthStatus();
+export async function loader({ request, context }: Route.LoaderArgs) {
+  await requireCustomerAccessToken(request, context.customerAccount);
 
   return {};
 }
@@ -25,7 +30,16 @@ export async function action({ request, context }: Route.ActionArgs) {
   const { customerAccount } = context;
 
   if (request.method !== "PUT") {
-    return data({ error: "Method not allowed" }, { status: 405 });
+    return data({ error: "Method not allowed", customer: null }, { status: 405 });
+  }
+
+  if (!(await isSameOriginRequest(request, customerAccount.sessionManager))) {
+    return data({ error: "Forbidden", customer: null }, { status: 403 });
+  }
+
+  const accessToken = await getCustomerAccessToken(customerAccount);
+  if (!accessToken) {
+    return data({ error: "Unauthorized", customer: null }, { status: 401 });
   }
 
   const form = await request.formData();
@@ -34,19 +48,15 @@ export async function action({ request, context }: Route.ActionArgs) {
     const customer: CustomerUpdateInput = {};
     const validInputKeys = ["firstName", "lastName"] as const;
     for (const [key, value] of form.entries()) {
-      if (!validInputKeys.includes(key as any)) {
-        continue;
-      }
-      if (typeof value === "string" && value.length) {
-        customer[key as (typeof validInputKeys)[number]] = value;
+      if (isCustomerUpdateInputKey(key, validInputKeys) && typeof value === "string" && value) {
+        customer[key] = value;
       }
     }
 
-    // update customer and possibly password
-    const { data, errors } = await customerAccount.mutate(CUSTOMER_UPDATE_MUTATION, {
+    const { data, errors } = await customerAccount.client.graphql(CUSTOMER_UPDATE_MUTATION, {
+      accessToken,
       variables: {
         customer,
-        language: customerAccount.i18n.language,
       },
     });
 
@@ -62,14 +72,22 @@ export async function action({ request, context }: Route.ActionArgs) {
       error: null,
       customer: data?.customerUpdate?.customer,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Customer profile update failed.";
     return data(
-      { error: error.message, customer: null },
+      { error: message, customer: null },
       {
         status: 400,
       },
     );
   }
+}
+
+function isCustomerUpdateInputKey<T extends readonly string[]>(
+  key: string,
+  validInputKeys: T,
+): key is T[number] {
+  return validInputKeys.includes(key);
 }
 
 export default function AccountProfile() {

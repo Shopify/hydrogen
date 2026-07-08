@@ -1,0 +1,234 @@
+{
+  "announcement": {
+    "label": "Announcement",
+    "text": "Free shipping on orders over $50"
+  },
+  "general": {
+    "skipToContent": "Skip to content",
+    "search": "Search",
+    "account": "Account",
+    "back": "Back",
+    "close": "Close",
+    "drawer": "Drawer",
+    "dismiss": "Dismiss"
+  },
+  "header": {
+    "menu": "Menu",
+    "navigation": "Main navigation",
+    "mobileNavigation": "Mobile navigation",
+    "navItems": ["Collections", "Men", "Women", "Accessories"]
+  },
+  "footer": {
+    "quickLinks": "Quick links",
+    "customerCare": "Customer care",
+    "search": "Search",
+    "account": "Account",
+    "paymentMethods": "Payment methods"
+  },
+  "cart": {
+    "title": "Cart",
+    "checkout": "Checkout",
+    "empty": "Your cart is empty.",
+    "emptyDescription": "Looks like you haven't added anything to your cart yet.",
+    "totalLabel": "Estimated total",
+    "taxesAndShippingAtCheckout": "Taxes and shipping calculated at checkout",
+    "itemRemoved": "Item removed from cart",
+    "updated": "Cart updated",
+    "updateError": "Could not update cart. Please try again.",
+    "iconLabel": {
+      "one": "Cart (1 item)",
+      "other": "Cart ({{ count }} items)"
+    },
+    "itemCount": {
+      "one": "1 item in cart",
+      "other": "{{ count }} items in cart"
+    }
+  },
+  "product": {
+    "details": "Product details",
+    "quantity": "Quantity",
+    "addToCart": "Add to cart",
+    "addedToCart": "Added to cart",
+    "soldOut": "Out of stock",
+    "description": "Description",
+    "relatedProducts": "You may also like",
+    "badge": {
+      "soldOut": "Sold out",
+      "sale": "Sale"
+    },
+    "inventory": {
+      "inStock": "In stock",
+      "lowStock": "Low stock",
+      "lowStockCount": "Only {{ count }} left in stock",
+      "outOfStock": "Out of stock"
+    }
+  },
+  "collection": {
+    "title": "Outerwear",
+    "description": "Layering pieces built for shifting weather — midweight overshirts, field jackets, and knitwear cut from durable natural fibers.",
+    "productsCount": {
+      "one": "1 product",
+      "other": "{{ count }} products"
+    },
+    "sortBy": "Sort by",
+    "filters": "Filters",
+    "filter": "Filter",
+    "showResults": "Show results",
+    "clearAll": "Clear all",
+    "activeFilters": "Active filters",
+    "removeFilter": "Remove {{ filter }} filter",
+    "priceMin": "Min",
+    "priceMax": "Max",
+    "priceTo": "to",
+    "loadMore": "Load more",
+    "showingCount": "Showing {{ shown }} of {{ total }} products",
+    "noProducts": "No products found.",
+    "sortOptions": [
+      { "value": "manual", "label": "Featured" },
+      { "value": "best-selling", "label": "Best selling" },
+      { "value": "title-ascending", "label": "Alphabetically, A–Z" },
+      { "value": "title-descending", "label": "Alphabetically, Z–A" },
+      { "value": "price-ascending", "label": "Price, low to high" },
+      { "value": "price-descending", "label": "Price, high to low" },
+      { "value": "created-descending", "label": "Date, new to old" }
+    ],
+    "facets": [
+      {
+        "id": "filter.v.availability",
+        "label": "Availability",
+        "type": "LIST",
+        "values": [
+          { "id": "filter.v.availability.1", "label": "In stock", "count": 8, "active": true },
+          { "id": "filter.v.availability.0", "label": "Out of stock", "count": 2, "active": false }
+        ]
+      },
+      {
+        "id": "filter.v.price",
+        "label": "Price",
+        "type": "PRICE_RANGE",
+        "rangeMin": 0,
+        "rangeMax": 300
+      },
+      {
+        "id": "filter.p.product_type",
+        "label": "Product type",
+        "type": "LIST",
+        "values": [
+          { "id": "filter.p.product_type.jackets", "label": "Jackets", "count": 4, "active": true },
+          {
+            "id": "filter.p.product_type.knitwear",
+            "label": "Knitwear",
+            "count": 3,
+            "active": false
+          },
+          {
+            "id": "filter.p.product_type.accessories",
+            "label": "Accessories",
+            "count": 3,
+            "active": false
+          }
+        ]
+      },
+      {
+        "id": "filter.v.option.color",
+        "label": "Color",
+        "type": "LIST",
+        "presentation": "swatch",
+        "values": [
+          {
+            "id": "filter.v.option.color.cocoa",
+            "label": "Cocoa",
+            "count": 5,
+            "swatch": { "color": "#755353" }
+          },
+          {
+            "id": "filter.v.option.color.stone",
+            "label": "Stone",
+            "count": 4,
+            "swatch": { "color": "#cfc7ba" }
+          },
+          {
+            "id": "filter.v.option.color.black",
+            "label": "Black",
+            "count": 6,
+            "swatch": { "color": "#111111" }
+          },
+          {
+            "id": "filter.v.option.color.forest",
+            "label": "Forest",
+            "count": 2,
+            "swatch": { "color": "#2f4031" }
+          }
+        ]
+      }
+    ]
+  },
+  "collections": {
+    "title": "Collections",
+    "allCollections": "All collections",
+    "productCount": {
+      "one": "1 product",
+      "other": "{{ count }} products"
+    },
+    "viewCollection": "View {{ title }}"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search",
+    "label": "Search",
+    "submit": "Search",
+    "clear": "Clear search",
+    "resultsFor": "{{ count }} results found for {{ terms }}",
+    "showingCount": "Showing {{ shown }} of {{ total }} results",
+    "loadMore": "Load more",
+    "noResults": "No results found for {{ terms }}",
+    "noResultsSuggestion": "Check your spelling or try a more general term.",
+    "noResultsAnnouncement": "No results found for {{ terms }}",
+    "sortOptions": [
+      { "value": "relevance", "label": "Relevance" },
+      { "value": "price-ascending", "label": "Price, low to high" },
+      { "value": "price-descending", "label": "Price, high to low" }
+    ]
+  },
+  "home": {
+    "hero": {
+      "heading": "Discover our latest collection",
+      "subtitle": "Layering pieces built for shifting weather.",
+      "primaryCta": "Shop now",
+      "secondaryCta": "Learn more"
+    },
+    "bestSellers": "Best sellers",
+    "shopByCategory": "Shop by category",
+    "viewAll": "View all"
+  },
+  "consent": {
+    "label": "Cookie consent",
+    "message": "We use cookies to improve your experience, analyze traffic, and personalize content.",
+    "privacyPolicy": "Privacy Policy",
+    "acceptAll": "Accept all",
+    "decline": "Decline",
+    "managePreferences": "Manage preferences"
+  },
+  "products": {
+    "price": {
+      "price": "Price",
+      "regularPrice": "Regular price",
+      "salePrice": "Sale price",
+      "priceRange": "{{ min }} – {{ max }}",
+      "priceRangeLabel": "Price range",
+      "savings": "Save {{ amount }}"
+    },
+    "quantity": {
+      "decrease": "Decrease quantity",
+      "increase": "Increase quantity",
+      "inputLabel": "Quantity"
+    }
+  },
+  "slideshow": {
+    "pagination": "Slideshow pagination",
+    "goToSlide": "Go to slide {{ index }} of {{ total }}",
+    "slideOf": "Slide {{ current }} of {{ total }}",
+    "paused": "Slideshow paused, slide {{ current }} of {{ total }}",
+    "playing": "Slideshow playing"
+  }
+}

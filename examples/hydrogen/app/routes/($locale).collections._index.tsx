@@ -1,14 +1,15 @@
 import { gql } from "@shopify/hydrogen";
-import { getPaginationVariables, Image } from "@shopify/hydrogen-classic";
 import { useLoaderData, Link } from "react-router";
 
+import { Image } from "~/components/Image";
 import { PaginatedResourceSection } from "~/components/PaginatedResourceSection";
+import { getPaginationVariables } from "~/lib/pagination";
 
 import type { Route } from "./+types/($locale).collections._index";
 
 export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
+  const deferredData = loadDeferredData();
 
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
@@ -25,14 +26,12 @@ async function loadCriticalData({ context, request }: Route.LoaderArgs) {
     pageBy: 4,
   });
 
-  const [{ collections }] = await Promise.all([
-    context.storefront.query(COLLECTIONS_QUERY, {
-      variables: paginationVariables,
-    }),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
+  const { collections } = await context.storefront.query(COLLECTIONS_QUERY, {
+    variables: paginationVariables,
+  });
+  const collectionConnection: CollectionConnection = collections;
 
-  return { collections: collections as CollectionConnection };
+  return { collections: collectionConnection };
 }
 
 /**
@@ -40,7 +39,7 @@ async function loadCriticalData({ context, request }: Route.LoaderArgs) {
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({ context }: Route.LoaderArgs) {
+function loadDeferredData() {
   return {};
 }
 

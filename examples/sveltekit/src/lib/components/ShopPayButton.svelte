@@ -14,15 +14,15 @@
 		channel = 'headless',
 		disabled = false,
 		width,
-		height,
 		borderRadius
 	}: ShopPayButtonOptions = $props();
 
 	let container: HTMLDivElement | null = null;
 	let button: HTMLElement | null = null;
+	const DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT = '43px';
 
 	function options(): ShopPayButtonOptions {
-		return { variants, checkoutUrl, channel, disabled, width, height, borderRadius };
+		return { variants, checkoutUrl, channel, disabled, width, borderRadius };
 	}
 
 	async function renderButton(currentOptions: ShopPayButtonOptions) {
@@ -52,4 +52,7 @@
 	});
 </script>
 
-<div bind:this={container}></div>
+<div
+	bind:this={container}
+	style:min-height={DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT}
+></div>

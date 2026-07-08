@@ -9,20 +9,20 @@ import type {
   PageViewPayload,
 } from "./types";
 
-vi.mock("@shopify/hydrogen/cdn", () => ({
-  bootstrapShopifyAnalytics: vi.fn(),
+vi.mock("../utils/load-script", () => ({
+  loadScript: vi.fn(() => Promise.resolve(true)),
 }));
 
 vi.mock("./consent", () => ({
   initConsent: vi.fn(() => vi.fn()),
 }));
 
-import { bootstrapShopifyAnalytics } from "@shopify/hydrogen/cdn";
-
+import { SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT } from "../shopify-scripts/constants";
+import { loadScript } from "../utils/load-script";
 import { initConsent } from "./consent";
 import { getTrackingValues } from "./utils/tracking-values";
 
-const bootstrapMock = vi.mocked(bootstrapShopifyAnalytics);
+const loadScriptMock = vi.mocked(loadScript);
 const initConsentMock = vi.mocked(initConsent);
 
 vi.mock("./utils/tracking-values", () => ({
@@ -138,8 +138,10 @@ describe("createStorefrontAnalytics", () => {
       visitToken: "def-visit-token",
       consent: "",
     });
-    bootstrapMock.mockClear();
+    loadScriptMock.mockClear();
     initConsentMock.mockClear();
+    window.history.replaceState({}, "", "/");
+    delete (window as any).PerfKit;
     delete (window as any).Shopify;
   });
 
@@ -158,6 +160,62 @@ describe("createStorefrontAnalytics", () => {
 
       expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveBeenCalledWith(expect.objectContaining({ url: "/test" }));
+    });
+
+    it("defaults the payload shop from the bus config when omitted", () => {
+      const bus = createTestBus();
+      const callback = vi.fn();
+
+      bus.subscribe("page_viewed", callback);
+
+      bus.publish("page_viewed", { url: "/test" });
+
+      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledWith(expect.objectContaining({ shop: SHOP_DATA }));
+    });
+
+    it("publishes page views without an explicit payload", () => {
+      const bus = createTestBus();
+      const callback = vi.fn();
+      window.history.pushState({}, "", "/optional-payload");
+
+      bus.subscribe("page_viewed", callback);
+      bus.publish("page_viewed");
+
+      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledWith(
+        expect.objectContaining({ shop: SHOP_DATA, url: window.location.href }),
+      );
+    });
+
+    it("preserves an explicit payload shop override", () => {
+      const explicitShop = {
+        ...SHOP_DATA,
+        shopId: "gid://shopify/Shop/2",
+      };
+      const bus = createTestBus();
+      const callback = vi.fn();
+
+      bus.subscribe("page_viewed", callback);
+
+      bus.publish("page_viewed", { url: "/test", shop: explicitShop });
+
+      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledWith(expect.objectContaining({ shop: explicitShop }));
+    });
+
+    it("infers the current browser URL for view events when omitted", () => {
+      const bus = createTestBus();
+      const callback = vi.fn();
+      window.history.pushState({}, "", "/collections/all?sort=title#grid");
+
+      bus.subscribe("collection_viewed", callback);
+      bus.publish("collection_viewed", {
+        collection: { id: "gid://shopify/Collection/1", handle: "all" },
+      });
+
+      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledWith(expect.objectContaining({ url: window.location.href }));
     });
 
     it("delivers events regardless of consent state (consent-agnostic bus)", () => {
@@ -229,6 +287,36 @@ describe("createStorefrontAnalytics", () => {
       expect(errorSpy).toHaveBeenCalled();
       errorSpy.mockRestore();
     });
+
+    it("warns and drops unsupported publish events", () => {
+      const bus = createTestBus();
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const callback = vi.fn();
+
+      bus.subscribe("page_viewed", callback);
+      bus.publish("custom_my_event" as never, { shop: SHOP_DATA } as never);
+
+      expect(callback).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[h3:warn:Analytics] Unsupported analytics event "custom_my_event".',
+      );
+      warnSpy.mockRestore();
+    });
+
+    it("warns and ignores unsupported subscriptions", () => {
+      const bus = createTestBus();
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const callback = vi.fn();
+
+      const unsubscribe = bus.subscribe("custom_my_event" as never, callback as never);
+      unsubscribe();
+
+      expect(callback).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[h3:warn:Analytics] Unsupported analytics event "custom_my_event".',
+      );
+      warnSpy.mockRestore();
+    });
   });
 
   describe("destinations", () => {
@@ -277,6 +365,33 @@ describe("createStorefrontAnalytics", () => {
 
       expect(destination).toHaveBeenCalledOnce();
       expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: "/buffered" }));
+    });
+
+    it("snapshots inferred URLs before destination replay", () => {
+      (window as any).Shopify = {
+        customerPrivacy: { analyticsProcessingAllowed: () => false },
+      };
+
+      const bus = createTestBus();
+      const destination = vi.fn();
+      window.history.pushState({}, "", "/before-consent");
+      const publishedUrl = window.location.href;
+
+      bus.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", destination);
+        },
+      });
+      bus.publish("page_viewed", {});
+      window.history.pushState({}, "", "/after-consent");
+
+      (window as any).Shopify.customerPrivacy.analyticsProcessingAllowed = () => true;
+      const { onConsentCollected } = initConsentMock.mock.calls[0][0];
+      onConsentCollected({ shouldRevalidate: false });
+
+      expect(destination).toHaveBeenCalledOnce();
+      expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: publishedUrl }));
     });
 
     it("replays buffered events to destinations added after consent is granted", () => {
@@ -328,24 +443,52 @@ describe("createStorefrontAnalytics", () => {
       expect(destination).not.toHaveBeenCalled();
     });
 
-    it("replays custom events to destinations", () => {
+    it("does not replay unsupported events to destinations", () => {
       (window as any).Shopify = {
         customerPrivacy: { analyticsProcessingAllowed: () => true },
       };
 
       const bus = createTestBus();
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       const destination = vi.fn();
 
-      bus.publish("custom_my_event" as `custom_${string}`, { shop: SHOP_DATA });
+      bus.publish("custom_my_event" as never, { shop: SHOP_DATA } as never);
       bus.addDestination({
         name: "late-destination",
         setup({ subscribe }) {
-          subscribe("custom_my_event" as `custom_${string}`, destination);
+          subscribe("page_viewed", destination);
         },
       });
 
-      expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith(expect.objectContaining({ shop: SHOP_DATA }));
+      expect(destination).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[h3:warn:Analytics] Unsupported analytics event "custom_my_event".',
+      );
+      warnSpy.mockRestore();
+    });
+
+    it("warns and ignores unsupported destination subscriptions", () => {
+      (window as any).Shopify = {
+        customerPrivacy: { analyticsProcessingAllowed: () => true },
+      };
+
+      const bus = createTestBus();
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const destination = vi.fn();
+
+      bus.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("custom_my_event" as never, destination as never);
+        },
+      });
+      bus.publish("page_viewed", { url: "/live", shop: SHOP_DATA });
+
+      expect(destination).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[h3:warn:Analytics] Unsupported analytics event "custom_my_event".',
+      );
+      warnSpy.mockRestore();
     });
 
     it("replays each buffered event to a destination only once", () => {
@@ -510,9 +653,10 @@ describe("createStorefrontAnalytics", () => {
   });
 
   describe("CDN discovery (browser environment)", () => {
-    it("assigns bus to window.Shopify.headless.analytics", () => {
+    it("assigns bus to window.Shopify.analytics", () => {
       const bus = createTestBus();
-      expect(window.Shopify?.headless?.analytics).toBe(bus);
+      expect(window.Shopify?.analytics).toBe(bus);
+      expect((window.Shopify as any)?.["headless"]).toBeUndefined();
       expect((window as any).headlessAnalytics).toBeUndefined();
       bus.destroy();
     });
@@ -521,92 +665,98 @@ describe("createStorefrontAnalytics", () => {
       const customerPrivacy = { analyticsProcessingAllowed: () => true };
       (window as any).Shopify = {
         customerPrivacy,
-        headless: { existing: "value" },
+        existing: "value",
       };
 
       const bus = createTestBus();
 
       expect(window.Shopify?.customerPrivacy).toBe(customerPrivacy);
-      expect((window.Shopify?.headless as any)?.existing).toBe("value");
-      expect(window.Shopify?.headless?.analytics).toBe(bus);
+      expect((window.Shopify as any)?.existing).toBe("value");
+      expect(window.Shopify?.analytics).toBe(bus);
 
       bus.destroy();
     });
 
-    it("exposes the bus but does not load Shopify analytics when shopifyAnalytics: false", async () => {
+    it("exposes the bus but does not load Shopify analytics when shopifyAnalytics: false", () => {
       const bus = createTestBus({ shopifyAnalytics: false });
 
-      expect(window.Shopify?.headless?.analytics).toBe(bus);
+      expect(window.Shopify?.analytics).toBe(bus);
       expect((window as any).headlessAnalytics).toBeUndefined();
-      await vi.dynamicImportSettled();
-      expect(bootstrapMock).not.toHaveBeenCalled();
+      expect(loadScriptMock).not.toHaveBeenCalled();
 
       bus.destroy();
     });
 
-    it("cleans up window.Shopify.headless.analytics on destroy", () => {
+    it("loads Shopify analytics CDN script by default", () => {
       const bus = createTestBus();
-      expect(window.Shopify?.headless?.analytics).toBe(bus);
 
-      bus.destroy();
-      expect(window.Shopify?.headless?.analytics).toBeUndefined();
-    });
+      expect(loadScriptMock).toHaveBeenCalledWith(SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT, {
+        attributes: { crossorigin: "anonymous" },
+      });
 
-    it("does not clear another analytics bus on destroy", () => {
-      const bus = createTestBus();
-      const otherBus = createTestBus();
-      const headless = window.Shopify?.headless;
-      if (!headless) throw new Error("Expected Shopify headless namespace");
-      headless.analytics = otherBus;
-
-      bus.destroy();
-
-      expect(window.Shopify?.headless?.analytics).toBe(otherBus);
-      otherBus.destroy();
-    });
-
-    it("dynamically imports and bootstraps Shopify analytics", async () => {
-      const bus = createTestBus();
-      await vi.dynamicImportSettled();
-      expect(bootstrapMock).toHaveBeenCalledWith(bus);
       bus.destroy();
     });
 
-    it("does not call bootstrap after destroy", async () => {
+    it("does not initialize CDN internals from the Hydrogen bus", async () => {
+      const createShopifyAnalyticsHandler = vi.fn(() => ({
+        handleEvent: vi.fn(),
+      }));
+      (window as any).Shopify = {
+        customerPrivacy: { analyticsProcessingAllowed: () => true },
+        storefrontAnalytics: { createShopifyAnalyticsHandler },
+      };
+
+      const bus = createTestBus();
+      await Promise.resolve();
+
+      expect(createShopifyAnalyticsHandler).not.toHaveBeenCalled();
+
+      bus.destroy();
+    });
+
+    it("cleans up window.Shopify.analytics on destroy", () => {
+      const bus = createTestBus();
+      expect(window.Shopify?.analytics).toBe(bus);
+
+      bus.destroy();
+      expect(window.Shopify?.analytics).toBeUndefined();
+    });
+
+    it("throws when a bus is already initialized", () => {
+      const bus = createTestBus();
+
+      expect(() => createTestBus()).toThrow("Analytics bus already initialized");
+
+      bus.destroy();
+    });
+
+    it("allows re-initialization after destroy", () => {
       const bus = createTestBus();
       bus.destroy();
-      await vi.dynamicImportSettled();
-      expect(bootstrapMock).not.toHaveBeenCalled();
+
+      const newBus = createTestBus();
+
+      expect(window.Shopify?.analytics).toBe(newBus);
+      expect(loadScriptMock).toHaveBeenCalledTimes(2);
+
+      newBus.destroy();
     });
   });
 
   describe("instance isolation", () => {
-    it("creates independent bus instances with no shared state", () => {
+    it("re-created bus after destroy has independent state", () => {
       const busA = createTestBus();
-      const busB = createTestBus();
-
       const callbackA = vi.fn();
-      const callbackB = vi.fn();
-
       busA.subscribe("page_viewed", callbackA);
-      busB.subscribe("page_viewed", callbackB);
-
-      busA.publish("page_viewed", { url: "/a", shop: SHOP_DATA });
-
-      expect(callbackA).toHaveBeenCalledOnce();
-      expect(callbackB).not.toHaveBeenCalled();
-    });
-
-    it("destroying one bus does not affect another", () => {
-      const busA = createTestBus();
-      const busB = createTestBus();
-
-      const callbackB = vi.fn();
-      busB.subscribe("page_viewed", callbackB);
-
       busA.destroy();
 
+      const busB = createTestBus();
+      const callbackB = vi.fn();
+      busB.subscribe("page_viewed", callbackB);
+
       busB.publish("page_viewed", { url: "/b", shop: SHOP_DATA });
+
+      expect(callbackA).not.toHaveBeenCalled();
       expect(callbackB).toHaveBeenCalledOnce();
 
       busB.destroy();
@@ -730,12 +880,16 @@ describe("createStorefrontAnalytics", () => {
       bus.updateCart(CART_DATA);
       expect(cartUpdatedEvent).toHaveBeenCalledOnce();
 
+      bus.destroy();
+
       const bus2 = createTestBus();
       const cartUpdatedEvent2 = vi.fn();
       bus2.subscribe("cart_updated", cartUpdatedEvent2);
 
       bus2.updateCart(CART_DATA);
       expect(cartUpdatedEvent2).not.toHaveBeenCalled();
+
+      bus2.destroy();
     });
   });
 });

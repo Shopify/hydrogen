@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import { HEADER_COLLECTIONS_QUERY, normalizeHeaderCollections } from "@shared/header";
-
 import { useCart } from "~/storefront/cart";
 import { CART_DRAWER_ID, openCartDrawer, supportsDialogCommands } from "~/storefront/cart-drawer";
 
-const { $storefrontClient } = useNuxtApp();
-const { data: headerCollections } = await useAsyncData("header-collections", async () => {
-  const response = await $storefrontClient.graphql(HEADER_COLLECTIONS_QUERY);
-  return normalizeHeaderCollections(response.data?.collections?.nodes);
+const { data: headerCollections } = await useFetch("/api/header-collections", {
+  key: "header-collections",
 });
 const collections = computed(() => headerCollections.value ?? []);
 
@@ -47,28 +43,11 @@ onMounted(() => {
         MOCK.SHOP
       </NuxtLink>
       <div class="flex items-center justify-end gap-5">
-        <button
-          type="button"
-          aria-label="Search"
-          class="grid h-10 w-10 place-items-center hover:opacity-60"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
-        </button>
+        <PredictiveSearch />
         <NuxtLink
-          to="/"
+          to="/account"
           aria-label="Account"
-          class="grid h-10 w-10 place-items-center hover:opacity-60"
+          class="grid h-11 w-11 place-items-center rounded-full hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
         >
           <svg
             width="20"
@@ -88,7 +67,7 @@ onMounted(() => {
           to="/cart"
           :aria-label="cartLabel"
           :aria-current="rendersCartPage ? 'page' : undefined"
-          class="relative grid h-10 w-10 place-items-center hover:opacity-60"
+          class="relative grid h-11 w-11 place-items-center rounded-full hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
         >
           <svg
             width="22"
@@ -117,7 +96,7 @@ onMounted(() => {
           aria-haspopup="dialog"
           command="show-modal"
           :commandfor="CART_DRAWER_ID"
-          class="relative grid h-10 w-10 place-items-center hover:opacity-60"
+          class="relative grid h-11 w-11 place-items-center rounded-full hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
           @click="!supportsDialogCommands() && openCartDrawer()"
         >
           <svg

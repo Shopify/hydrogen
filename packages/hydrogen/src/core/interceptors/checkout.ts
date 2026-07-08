@@ -1,4 +1,4 @@
-import type { PrivateStorefrontClient } from "../../client";
+import type { StorefrontClient } from "../../client";
 import { getCart, getCartId } from "../cart/get-cart";
 import type { HydrogenRoutesOptions } from "../handle-shopify-routes";
 import { CART_PERMALINK_RE, CHECKOUT_RE } from "../url";
@@ -41,18 +41,18 @@ export async function handleCheckoutRedirect({
 
 async function getCheckoutRedirectUrl(
   request: Request,
-  storefrontClient: PrivateStorefrontClient,
+  storefrontClient: StorefrontClient,
 ): Promise<URL> {
   const cartId = getCartId(request);
   if (!cartId) return new URL("/", request.url);
 
   const result = await getCart(cartId, storefrontClient);
-  return result.cart.checkoutUrl ? new URL(result.cart.checkoutUrl) : new URL("/", request.url);
+  return result.cart?.checkoutUrl ? new URL(result.cart.checkoutUrl) : new URL("/", request.url);
 }
 
 async function getCartRedirectUrl(
   request: Request,
-  storefrontClient: PrivateStorefrontClient,
+  storefrontClient: StorefrontClient,
 ): Promise<URL> {
   const sourceUrl = new URL(request.url);
   const redirectUrl = new URL(sourceUrl.pathname, storefrontClient.storeUrl);
@@ -62,7 +62,7 @@ async function getCartRedirectUrl(
 
   try {
     const result = await getCart(cartId, storefrontClient);
-    if (result.cart.checkoutUrl) {
+    if (result.cart?.checkoutUrl) {
       mergeSearchParams(redirectUrl, new URL(result.cart.checkoutUrl).searchParams);
     }
   } catch (error) {

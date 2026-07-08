@@ -1,98 +1,74 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-
 import { useCart } from "@/lib/cart";
-import {
-  CART_DRAWER_ID,
-  closeCartDrawer,
-  configureOpenCartAction,
-  supportsDialogCommands,
-} from "@/lib/cart-drawer";
+import { CART_DRAWER_ID, closeCartDrawer, configureOpenCartAction } from "@/lib/cart-drawer";
+import { content } from "@/lib/content";
 
-import { CartNote, CartTotals, CheckoutButton, DiscountCodes, LineItems } from "./Cart";
+import { CartContent } from "./CartContent";
 
-// React types do not include Invoker Commands yet: https://github.com/facebook/react/issues/32478
-const closeCartCommandAttributes = {
-  command: "close",
-  commandfor: CART_DRAWER_ID,
-};
-
+/**
+ * Cart drawer — a native `<dialog>` + `showModal()` rendered once in the root
+ * layout (`hydrogen-cart-drawer` skill). Opens via `openCartDrawer()`,
+ * `window.Shopify.actions.openCart()`, or after a successful add-to-cart. The
+ * `/cart` route is the no-JS fallback (F4). Uses fixed header/body/footer
+ * zones; the body scrolls, the footer is hidden when the cart is empty.
+ */
 export function CartDrawer() {
-  const hasItems = useCart((s) => s.data.lines.nodes.length > 0);
-  const lines = useCart((s) => s.data.lines.nodes);
-  const errors = useCart((s) => s.errors);
-  const errorMessages = useMemo(() => {
-    const visibleLineIds = new Set(lines.map((line) => line.id));
-    const orphanedLineErrors = [...errors.lines.entries()]
-      .filter(([lineId]) => !visibleLineIds.has(lineId))
-      .flatMap(([, group]) => [...group.userErrors, ...group.warnings]);
+  // Ensure the Standard Actions `openCart` handler is registered on the client.
+  configureOpenCartAction();
 
-    return [
-      ...new Set([
-        ...errors.network.map((error) => error.message),
-        ...errors.cart.userErrors.map((error) => error.message),
-        ...errors.cart.warnings.map((warning) => warning.message),
-        ...errors.note.userErrors.map((error) => error.message),
-        ...orphanedLineErrors.map((error) => error.message),
-      ]),
-    ];
-  }, [errors, lines]);
-
-  useEffect(() => configureOpenCartAction(), []);
+  const totalQuantity = useCart((state) => state.data.totalQuantity);
+  const isEmpty = totalQuantity === 0;
+  const checkoutUrl = useCart((state) => state.data.checkoutUrl);
 
   return (
-    <dialog id={CART_DRAWER_ID} aria-labelledby="cart-drawer-title" closedby="any">
+    <dialog
+      id={CART_DRAWER_ID}
+      className="drawer-right bg-surface text-on-surface"
+      aria-labelledby="cart-drawer-title"
+      closedby="any"
+    >
       <div className="flex h-full flex-col">
-        <header className="shrink-0 border-b border-black/10">
-          <div className="flex items-center justify-between px-6 py-4">
-            <h2 id="cart-drawer-title" className="text-lg font-bold">
-              Cart
+        <div className="flex shrink-0 items-center py-2 ps-4 pe-2">
+          <div className="flex flex-1 items-center gap-2">
+            <h2 id="cart-drawer-title" className="text-on-surface text-lg font-medium">
+              {content.cart.title}
             </h2>
-            <button
-              type="button"
-              {...closeCartCommandAttributes}
-              onClick={() => {
-                if (!supportsDialogCommands()) closeCartDrawer();
-              }}
-              aria-label="Close cart"
-              className="hover:opacity-60"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden={true}
-              >
-                <path d="M18 6 6 18" />
-                <path d="m6 6 12 12" />
-              </svg>
-            </button>
+            <span className="cart-count-badge" aria-hidden="true">
+              {totalQuantity}
+            </span>
           </div>
-          {errorMessages.length > 0 && (
-            <div role="alert" className="bg-red-50 px-6 py-3 text-sm text-red-700">
-              {errorMessages.map((message, i) => (
-                <p key={i}>{message}</p>
-              ))}
-            </div>
-          )}
-        </header>
-
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-          <LineItems />
+          <button
+            type="button"
+            onClick={closeCartDrawer}
+            className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            aria-label={content.general.close}
+          >
+            <img
+              src="/icons/icon-x.svg"
+              width="20"
+              height="20"
+              alt=""
+              className="size-5"
+              aria-hidden="true"
+            />
+          </button>
         </div>
 
-        {hasItems && (
-          <footer className="shrink-0 space-y-3 border-t border-black/10 px-6 py-3">
-            <DiscountCodes />
-            <CartNote />
-            <CartTotals />
-            <CheckoutButton />
-          </footer>
-        )}
+        <div className="min-h-0 flex-1 p-4">
+          <CartContent />
+        </div>
+
+        {!isEmpty ? (
+          <div className="border-border shrink-0 border-t p-4">
+            <a
+              href={checkoutUrl ?? "#"}
+              className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 w-full items-center justify-center gap-2 px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              {content.cart.checkout}
+            </a>
+          </div>
+        ) : null}
       </div>
     </dialog>
   );

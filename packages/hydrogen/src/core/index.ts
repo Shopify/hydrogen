@@ -1,4 +1,6 @@
 export type { RedirectOptions } from "./handle-shopify-redirects";
+export { createShopifyRouteTemplates } from "./standard-routes/index";
+export type { ShopifyRouteTemplates } from "./standard-routes/index";
 export { handleShopifyRedirects } from "./handle-shopify-redirects";
 export { handleShopifyRoutes } from "./handle-shopify-routes";
 export { createShopifyRouteHandler } from "./route-handlers";
@@ -14,26 +16,26 @@ export type {
   ShopifyRouteRedirectResult,
 } from "./route-handlers";
 export { createStorefrontClient } from "../client/client";
-export { createStorefrontRequestContext } from "./headers";
+export { createShopifyRequestContext } from "./headers";
+export { Cache, createFetchWithCache, createRunWithCache } from "./cache";
+export type { CacheInstance, CacheOptions, CachingStrategy } from "./cache";
 export { StorefrontApiError, StorefrontTimeoutError } from "../client/errors";
 export { gql } from "../graphql";
-export type { StorefrontRequestContext } from "./headers";
+export type { I18nConfig, ShopifyRequestContext } from "./headers";
 export type { AnyStorefrontQueryString, StorefrontQueryString } from "../graphql";
 export type { InferResult, InferVariables } from "../graphql";
 export type {
   ClientType,
   CreateStorefrontClientArgs,
-  GenericStorefrontClient,
   GqlRestParam,
   GraphQLFormattedError,
-  I18nConfig,
   PrivateClientOptions,
   PrivateStorefrontClient,
   PublicClientOptions,
   PublicStorefrontClient,
   RequestScopedPrivateStorefrontClient,
-  SharedRateLimitClientOptions,
-  SharedRateLimitStorefrontClient,
+  PrivateNoBuyerContextClientOptions,
+  PrivateNoBuyerContextStorefrontClient,
   StorefrontApi,
   StorefrontClient,
   StorefrontClientOptions,
@@ -52,7 +54,6 @@ export type {
   CartViewPayload,
   CollectionViewPayload,
   ConsentConfig,
-  CustomEventPayload,
   EventPayloads,
   OtherData,
   PageViewPayload,
@@ -117,6 +118,21 @@ export {
   createEmptyErrorGroup,
 } from "./cart";
 export { sanitizeQuantity, DEFAULT_MINIMUM_QUANTITY, NO_QUANTITY_LIMIT } from "./cart";
+export type { ShopifyGlobal } from "../globals";
+export {
+  getShopifyScriptTags,
+  initializeShopifyScripts,
+  renderShopifyScriptTags,
+} from "./shopify-scripts/index";
+export type {
+  InitializeShopifyScriptsOptions,
+  ShopifyScriptTagDescriptor,
+  ShopifyScriptTagDescriptors,
+  ShopifyScriptsOptions,
+  ShopifyScriptsShop,
+  ShopifyScriptTagsOptions,
+  ShopifyScriptsI18n,
+} from "./shopify-scripts/index";
 
 export { createCollectionReconciler, createCollectionStore } from "./collection";
 export type {
@@ -156,14 +172,19 @@ export {
 export type {
   CreateProductFormStoreOptions,
   ProductFormErrors,
+  ProductFormOptions,
   ProductFormStore,
   ProductFormStoreState,
+  ValidProductSelectionResult,
   VariantSelectionResult,
 } from "./product";
 export { getSelectedProductOptions } from "./product";
 export type {
   ProductInput,
+  ProductAddToCartProps,
   ProductFormRegister,
+  ProductOptionInput,
+  ProductOptionValueInput,
   ProductVariantFrom,
   ProductVariantInput,
   ProductMerchandiseIdProps,
@@ -184,5 +205,41 @@ export {
 } from "./shop-pay";
 export type { ShopPayButtonOptions } from "./shop-pay";
 
+export {
+  createPredictiveSearchFormRegister,
+  createPredictiveSearchServerHandlers,
+  createPredictiveSearchStore,
+  getPredictiveSearchFormAttributes,
+  getPredictiveSearchItemUrl,
+  getSearchResultUrl,
+  makePredictiveSearchQueries,
+  queryPredictiveSearch,
+  readPredictiveSearchFormTerm,
+} from "./predictive-search";
+export type {
+  CreatePredictiveSearchQueriesOptions,
+  CreatePredictiveSearchServerHandlersOptions,
+  CreatePredictiveSearchStoreOptions,
+  PredictiveSearchData,
+  PredictiveSearchArticleItem,
+  PredictiveSearchCollectionItem,
+  PredictiveSearchFormAttributes,
+  PredictiveSearchFormRegister,
+  PredictiveSearchFragments,
+  PredictiveSearchItem,
+  PredictiveSearchItemUrlOptions,
+  PredictiveSearchPageItem,
+  PredictiveSearchProductItem,
+  PredictiveSearchQueryInputAttributes,
+  PredictiveSearchQueryItem,
+  PredictiveSearchQueryItemUrlOptions,
+  PredictiveSearchResourceItem,
+  PredictiveSearchState,
+  PredictiveSearchStatus,
+  PredictiveSearchStore,
+  QueryPredictiveSearchOptions,
+} from "./predictive-search";
+
 export { formatMoney } from "./money";
+export { flattenConnection } from "./analytics/utils/flatten-connection";
 export type { FormatMoneyOptions, FormattedMoney, FormattedMoneyRange, MoneyV2 } from "./money";

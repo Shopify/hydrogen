@@ -11,38 +11,45 @@ Resolve `buyerIp` with the app's trusted deployment header before creating the p
 ```ts
 import {
   createCartServerHandlers,
+  createPredictiveSearchServerHandlers,
   createStorefrontClient,
-  createStorefrontRequestContext,
+  createShopifyRequestContext,
   handleShopifyRedirects,
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
 
 const cartHandlers = createCartServerHandlers();
+const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
 
 export async function handleRequest(request: Request, next: () => Promise<Response>) {
-  const requestContext = createStorefrontRequestContext(request);
+  const requestContext = createShopifyRequestContext({
+    request,
+    i18n: { country: "US", language: "EN" },
+  });
   const buyerIp = getBuyerIp(request.headers);
+  const sessionManager = await createSessionManager(request);
   const storefrontClient = createStorefrontClient({
     type: "private",
+    requestContext,
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
       privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
       buyerIp,
-      requestContext,
-      i18n: { country: "US", language: "EN" },
     },
   });
 
   const shopifyRoute = await handleShopifyRoutes({
     request,
+    requestContext,
+    sessionManager,
     storefrontClient,
-    handlers: [cartHandlers],
+    handlers: [cartHandlers, predictiveSearchHandlers],
   });
   if (shopifyRoute) return shopifyRoute;
 
   const response = await next();
   if (response.status === 404) {
-    const redirect = await handleShopifyRedirects({ request, storefrontClient });
+    const redirect = await handleShopifyRedirects({ request, routeTemplates, storefrontClient });
     if (redirect) {
       storefrontClient.requestContext.applyResponseHeaders(redirect.headers);
       return redirect;
@@ -65,31 +72,41 @@ React Router framework mode needs:
 
 ```tsx
 import {
+  createCartServerHandlers,
+  createPredictiveSearchServerHandlers,
   createStorefrontClient,
-  createStorefrontRequestContext,
+  createShopifyRequestContext,
   handleShopifyRedirects,
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
 
+const cartHandlers = createCartServerHandlers();
+const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
+
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ context, request }, next) => {
-    const requestContext = createStorefrontRequestContext(request);
+    const requestContext = createShopifyRequestContext({
+      request,
+      i18n: { country: "US", language: "EN" },
+    });
     const buyerIp = getBuyerIp(request.headers);
+    const sessionManager = await createSessionManager(request);
     const storefrontClient = createStorefrontClient({
       type: "private",
+      requestContext,
       config: {
         storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
         privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
         buyerIp,
-        requestContext,
-        i18n: { country: "US", language: "EN" },
       },
     });
 
     const shopifyRoute = await handleShopifyRoutes({
       request,
+      requestContext,
+      sessionManager,
       storefrontClient,
-      handlers: [cartHandlers],
+      handlers: [cartHandlers, predictiveSearchHandlers],
     });
     if (shopifyRoute) return shopifyRoute;
 
@@ -97,7 +114,7 @@ export const middleware: Route.MiddlewareFunction[] = [
 
     const response = await next();
     if (response.status === 404) {
-      const redirect = await handleShopifyRedirects({ request, storefrontClient });
+      const redirect = await handleShopifyRedirects({ request, routeTemplates, storefrontClient });
       if (redirect) {
         storefrontClient.requestContext.applyResponseHeaders(redirect.headers);
         return redirect;
@@ -113,13 +130,15 @@ export const middleware: Route.MiddlewareFunction[] = [
 
 SolidStart middleware can short-circuit before routing, but cannot reliably observe the final 404 after SSR streaming starts. Put `handleShopifyRoutes` in middleware and `handleShopifyRedirects` in a last-priority catch-all route.
 
-In middleware:
+In middleware, create an app-owned request-scoped `sessionManager` before calling `handleShopifyRoutes`:
 
 ```ts
 const shopifyRoute = await handleShopifyRoutes({
   request: event.request,
+  requestContext,
+  sessionManager,
   storefrontClient,
-  handlers: [cartHandlers],
+  handlers: [cartHandlers, predictiveSearchHandlers],
 });
 if (shopifyRoute) return shopifyRoute;
 ```

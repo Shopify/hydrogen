@@ -1,4 +1,4 @@
-import { AnalyticsEvent } from "./events";
+import { AnalyticsEvent, type AnalyticsEventName } from "./events";
 import type {
   AnalyticsCart,
   AnalyticsCartLine,
@@ -8,7 +8,7 @@ import type {
 } from "./types";
 import { flattenConnection } from "./utils/flatten-connection";
 
-type PublishFn = (event: string, payload: PayloadFor<string>) => void;
+type PublishFn = <E extends AnalyticsEventName>(event: E, payload: PayloadFor<E>) => void;
 
 type CartTrackerDeps = {
   publish: PublishFn;

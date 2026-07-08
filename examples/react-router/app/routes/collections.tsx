@@ -1,66 +1,97 @@
-import { gql } from "@shopify/hydrogen";
-import { Link } from "react-router";
+import { Cache, gql } from "@shopify/hydrogen";
+import type { MetaFunction } from "react-router";
 
-import { storefrontClientContext } from "../lib/storefront";
+import { Breadcrumbs } from "~/components/Breadcrumbs";
+import { CollectionCard } from "~/components/CollectionCard";
+import { content } from "~/lib/content";
+import { COLLECTION_CARD_FRAGMENT } from "~/lib/fragments";
+import { canonicalUrl } from "~/lib/site";
+import { storefrontClientContext } from "~/lib/storefront-context";
+
 import type { Route } from "./+types/collections";
 
-const COLLECTIONS_QUERY = gql(`
-  query Collections {
-    collections(first: 12) {
+const COLLECTIONS_QUERY = gql(
+  `
+  query CollectionsList($first: Int!, $after: String, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    collections(first: $first, after: $after) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
-        handle
-        title
-        image {
-          url
-          altText
-        }
+        ...CollectionCard
       }
     }
   }
-`);
+`,
+  [COLLECTION_CARD_FRAGMENT],
+);
 
-export function meta() {
-  return [{ title: "Collections — Mock.shop" }];
-}
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Collections — CORE" },
+    { name: "description", content: "Browse all collections" },
+    { tagName: "link", rel: "canonical", href: canonicalUrl("/collections") },
+    { property: "og:title", content: "Collections — CORE" },
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: canonicalUrl("/collections") },
+  ];
+};
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ context, request }: Route.LoaderArgs) {
   const storefrontClient = context.get(storefrontClientContext);
-  const { data } = await storefrontClient.graphql(COLLECTIONS_QUERY);
-  const collections = data?.collections?.nodes ?? [];
-  return { collections };
+  const url = new URL(request.url);
+  const after = url.searchParams.get("after") ?? undefined;
+
+  const { data, errors } = await storefrontClient.graphql(COLLECTIONS_QUERY, {
+    variables: { first: 24, after },
+    cache: Cache.long(),
+  });
+
+  if (errors) {
+    console.error("[hydrogen] Collections query failed", errors);
+  }
+
+  return {
+    collections: data?.collections?.nodes ?? [],
+    pageInfo: data?.collections?.pageInfo ?? { hasNextPage: false },
+  };
 }
 
 export default function Collections({ loaderData }: Route.ComponentProps) {
-  const { collections } = loaderData;
+  const { collections, pageInfo } = loaderData;
 
   return (
-    <main className="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
-      <header>
-        <h1 className="text-6xl font-black tracking-tight md:text-8xl">Collections</h1>
-      </header>
+    <div className="max-w-page px-margin mx-auto w-full py-8">
+      <div className="mb-6">
+        <Breadcrumbs items={[{ label: content.collections.title }]} />
+      </div>
 
-      <section className="mt-16 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-        {collections.map((collection) => (
-          <Link
-            key={collection.handle}
-            to={`/collections/${collection.handle}`}
-            className="group block"
-          >
-            <div className="aspect-square overflow-hidden bg-neutral-100">
-              {collection.image ? (
-                <img
-                  src={collection.image.url}
-                  alt={collection.image.altText ?? collection.title}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              ) : null}
-            </div>
-            <div className="mt-5">
-              <h3 className="text-base font-semibold">{collection.title}</h3>
-            </div>
-          </Link>
+      <h1 className="type-display mb-8">{content.collections.title}</h1>
+
+      <ul role="list" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {collections.map((collection, index) => (
+          <li key={collection.id}>
+            <CollectionCard
+              collection={collection}
+              loading={index < 3 ? "eager" : "lazy"}
+              fetchPriority={index === 0 ? "high" : "auto"}
+            />
+          </li>
         ))}
-      </section>
-    </main>
+      </ul>
+
+      {pageInfo.hasNextPage ? (
+        <div className="mt-12 text-center">
+          <a
+            href={`/collections?after=${encodeURIComponent(pageInfo.endCursor ?? "")}`}
+            className="rounded-button button-outline focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            Load more
+          </a>
+        </div>
+      ) : null}
+    </div>
   );
 }

@@ -25,6 +25,7 @@ Before writing UI, check whether this skill has a reference file for the app's f
 - Use `channel="hydrogen"` for Hydrogen headless storefronts unless the app has a reason to use a different channel.
 - Do not hardcode checkout domains in framework bindings; they derive checkout URL from `window.location.origin`.
 - Keep Shop Pay near the primary purchase action, and keep its disabled state aligned with `canAddToCart(...)`.
+- Do not pass `height`; the Shop Pay custom element does not honor it. Hydrogen reserves space by default while the element hydrates. Use wrapper styles only when the wrapper needs a different reservation.
 
 ## Product Page Pattern
 
@@ -35,7 +36,6 @@ Before writing UI, check whether this skill has a reference file for the app's f
     channel="hydrogen"
     disabled={!addable || pending}
     width="100%"
-    height="48px"
     borderRadius="9999px"
   />
 ) : null}
@@ -53,7 +53,6 @@ For a full-cart checkout shortcut, render Shop Pay without `variants` and hide o
     channel="hydrogen"
     disabled={cartPending}
     width="100%"
-    height="48px"
     borderRadius="4px"
   />
 ) : null}

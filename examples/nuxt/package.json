@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
+    "https:dev": "VITE_LOCAL_HTTPS=1 nuxt dev",
     "build": "nuxt build",
     "start": "node .output/server/index.mjs",
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
     "@shopify/hydrogen": "workspace:*",
+    "lru-cache": "^11.3.6",
     "nuxt": "^3.17.0",
     "vue": "^3.5.0",
     "vue-router": "^4.5.0"

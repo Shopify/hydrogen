@@ -1,5 +1,13 @@
 // @refresh reload
+import { defaultI18n, shop } from "@shared/config";
+import { getShopifyScriptTags } from "@shopify/hydrogen";
 import { createHandler, StartServer } from "@solidjs/start/server";
+import { For } from "solid-js";
+
+const shopifyScriptTags = getShopifyScriptTags({
+  i18n: defaultI18n,
+  shop,
+});
 
 export default createHandler(() => (
   <StartServer
@@ -15,11 +23,15 @@ export default createHandler(() => (
             href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
             rel="stylesheet"
           />
-          <script
-            type="module"
-            src="https://cdn.shopify.com/storefront/standard-actions.js"
-            crossorigin="anonymous"
-          />
+          <For each={shopifyScriptTags.tags}>
+            {({ tagName, attributes, innerHTML }) =>
+              tagName === "link" ? (
+                <link {...attributes} />
+              ) : (
+                <script {...attributes} innerHTML={innerHTML} />
+              )
+            }
+          </For>
           {assets}
         </head>
         <body class="bg-white text-black">

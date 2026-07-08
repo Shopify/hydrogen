@@ -40,7 +40,7 @@ export default function News() {
   const articles = createAsync(() => fetchNews());
 
   return (
-    <main class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
+    <main id="main-content" tabIndex={-1} class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
       <Title>News — Mock.shop</Title>
       <header>
         <h1 class="text-6xl font-black tracking-tight md:text-8xl">News</h1>

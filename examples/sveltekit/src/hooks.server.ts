@@ -1,29 +1,46 @@
+import { env } from "$env/dynamic/private";
+import { createCustomerSessionManager, customerSessionHandlers } from "$lib/customer-account";
+import { routeTemplates } from "$lib/route-templates";
 import { getBuyerIp } from "@shared/buyer-ip";
-import { storefrontConfig } from "@shared/config";
+import { defaultI18n, storefrontConfig } from "@shared/config";
 import { getPrivateStorefrontToken } from "@shared/private-env";
+import {
+  STOREFRONT_CACHE_MAX_ENTRIES,
+  createStorefrontCacheAdapter,
+} from "@shared/storefront-cache";
 import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createCartServerHandlers,
   createStorefrontClient,
-  createStorefrontRequestContext,
-  type StorefrontRequestContext,
+  createShopifyRequestContext,
+  type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import type { Handle } from "@sveltejs/kit";
+import { LRUCache } from "lru-cache";
 
 export const cartHandlers = createCartServerHandlers();
+const storefrontCache = createStorefrontCacheAdapter(
+  new LRUCache<string, object>({ max: STOREFRONT_CACHE_MAX_ENTRIES }),
+);
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const requestContext = createStorefrontRequestContext(event.request);
+  const requestContext = createShopifyRequestContext({
+    request: event.request,
+    i18n: defaultI18n,
+  });
   const storefrontClient = createPrivateStorefrontClient(event.request, requestContext);
+  const sessionManager = await createCustomerSessionManager(event.request);
 
   const kitRoute = await handleShopifyRoutes({
     request: event.request,
+    requestContext,
+    sessionManager,
     storefrontClient,
-    handlers: [cartHandlers],
+    handlers: [cartHandlers, customerSessionHandlers],
   });
   if (kitRoute) return kitRoute;
 
-  event.locals.storefrontRequestContext = requestContext;
+  event.locals.shopifyRequestContext = requestContext;
   event.locals.storefrontClient = storefrontClient;
 
   const response = await resolve(event);
@@ -31,6 +48,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   if (response.status === 404) {
     const redirect = await handleShopifyRedirects({
       request: event.request,
+      routeTemplates,
       storefrontClient,
     });
     if (redirect) {
@@ -42,7 +60,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 };
 
 function applyStorefrontResponseHeaders(
-  requestContext: Pick<StorefrontRequestContext, "applyResponseHeaders">,
+  requestContext: Pick<ShopifyRequestContext, "applyResponseHeaders">,
   response: Response,
 ): Response {
   try {
@@ -56,15 +74,15 @@ function applyStorefrontResponseHeaders(
   }
 }
 
-function createPrivateStorefrontClient(request: Request, requestContext: StorefrontRequestContext) {
+function createPrivateStorefrontClient(request: Request, requestContext: ShopifyRequestContext) {
   return createStorefrontClient({
     type: "private",
+    requestContext,
     config: {
       storeDomain: storefrontConfig.storeDomain,
-      i18n: storefrontConfig.i18n,
-      privateStorefrontToken: getPrivateStorefrontToken(),
+      privateStorefrontToken: getPrivateStorefrontToken(env),
       buyerIp: getBuyerIp(request.headers),
-      requestContext,
+      cache: storefrontCache,
     },
   });
 }

@@ -10,7 +10,7 @@ import { SHOPIFY_UNIQUE_TOKEN_HEADER, SHOPIFY_VISIT_TOKEN_HEADER } from "../head
 import { getTrackingValues } from "./utils/tracking-values";
 
 /** This query is only available on 'unstable', it is not part of the general schema */
-const CONSENT_MANAGEMENT_QUERY = `
+const CONSENT_MANAGEMENT_QUERY = /* GraphQL */ `
   query ensureCookies {
     consentManagement {
       cookies(visitorConsent: {}) {

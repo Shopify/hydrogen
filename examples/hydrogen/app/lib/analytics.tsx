@@ -12,7 +12,6 @@ import {
   type ShopAnalytics,
   type StorefrontAnalytics,
 } from "@shopify/hydrogen";
-import { gql } from "@shopify/hydrogen";
 import {
   createContext,
   useContext,
@@ -26,7 +25,6 @@ import {
 import { useLocation } from "react-router";
 
 import { useCart } from "~/lib/cart";
-import type { StorefrontClient } from "~/lib/storefront-client";
 
 declare global {
   interface Window {
@@ -45,8 +43,7 @@ type AnalyticsContextValue = {
 
 type PublishableAnalytics = {
   bus: StorefrontAnalytics;
-  shop: ShopAnalytics;
-  url: string;
+  locationKey: string;
 };
 
 type AnalyticsCarts = {
@@ -63,46 +60,6 @@ const AnalyticsContext = createContext<AnalyticsContextValue>({
   setCarts: () => {},
 });
 
-const SHOP_ANALYTICS_QUERY = gql(`
-  query ShopAnalytics($country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
-    shop {
-      id
-    }
-    localization {
-      country {
-        currency {
-          isoCode
-        }
-      }
-      language {
-        isoCode
-      }
-    }
-  }
-`);
-
-export async function getShopAnalytics({
-  storefront,
-  publicStorefrontId,
-}: {
-  storefront: StorefrontClient;
-  publicStorefrontId: string;
-}): Promise<ShopAnalytics | null> {
-  const { shop, localization } = await storefront.query(SHOP_ANALYTICS_QUERY, {
-    cache: storefront.CacheLong(),
-  });
-
-  if (!shop || !localization.country.currency || !localization.language) return null;
-
-  return {
-    shopId: shop.id,
-    acceptedLanguage: localization.language.isoCode,
-    currency: localization.country.currency.isoCode,
-    hydrogenSubchannelId: publicStorefrontId || "0",
-  };
-}
-
 export function HydrogenAnalyticsProvider({
   children,
   consent,
@@ -117,18 +74,16 @@ export function HydrogenAnalyticsProvider({
     shop: null,
   });
   const [carts, setCarts] = useState<AnalyticsCarts>(EMPTY_CARTS);
-  const { consentDomain, country, language, mode, publicStorefrontAccessToken } = consent;
+  const { consentDomain, mode, publicStorefrontAccessToken } = consent;
   const e2eConsentMode =
     typeof window === "undefined" ? undefined : window.__HYDROGEN_E2E_CONSENT_MODE__;
   const consentConfig = useMemo(
     () => ({
       consentDomain,
-      country,
-      language,
       mode: e2eConsentMode ?? mode,
       publicStorefrontAccessToken,
     }),
-    [consentDomain, country, e2eConsentMode, language, mode, publicStorefrontAccessToken],
+    [consentDomain, e2eConsentMode, mode, publicStorefrontAccessToken],
   );
 
   useEffect(() => {
@@ -170,11 +125,12 @@ export function HydrogenAnalyticsProvider({
 export function useAnalytics(): PublishableAnalytics | null {
   const { bus, shop } = useContext(AnalyticsContext);
   const { hash, pathname, search } = useLocation();
+  const locationKey = `${pathname}${search}${hash}`;
 
   return useMemo(() => {
     if (!bus || !shop) return null;
-    return { bus, shop, url: `${window.location.origin}${pathname}${search}${hash}` };
-  }, [bus, hash, pathname, search, shop]);
+    return { bus, locationKey };
+  }, [bus, locationKey, shop]);
 }
 
 export function useAnalyticsCarts(): AnalyticsCarts {
@@ -187,10 +143,7 @@ function PageAnalyticsSync() {
   useEffect(() => {
     if (!analytics) return;
 
-    analytics.bus.publish(AnalyticsEvent.PAGE_VIEWED, {
-      shop: analytics.shop,
-      url: analytics.url,
-    });
+    analytics.bus.publish(AnalyticsEvent.PAGE_VIEWED);
   }, [analytics]);
 
   return null;
@@ -226,8 +179,6 @@ export function ProductView({ products }: Pick<ProductViewPayload, "products">) 
 
     analytics.bus.publish(AnalyticsEvent.PRODUCT_VIEWED, {
       products,
-      shop: analytics.shop,
-      url: analytics.url,
     });
   }, [analytics, products]);
 
@@ -242,8 +193,6 @@ export function CollectionView({ collection }: Pick<CollectionViewPayload, "coll
 
     analytics.bus.publish(AnalyticsEvent.COLLECTION_VIEWED, {
       collection,
-      shop: analytics.shop,
-      url: analytics.url,
     });
   }, [analytics, collection]);
 
@@ -259,8 +208,6 @@ export function SearchView({ searchResults, searchTerm }: Omit<SearchViewPayload
     analytics.bus.publish(AnalyticsEvent.SEARCH_VIEWED, {
       searchResults,
       searchTerm,
-      shop: analytics.shop,
-      url: analytics.url,
     });
   }, [analytics, searchResults, searchTerm]);
 

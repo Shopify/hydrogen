@@ -2,48 +2,84 @@ import { describe, it } from "vitest";
 
 import { createStorefrontClient } from "../../client";
 import { handleShopifyRoutes } from "../handle-shopify-routes";
-import { createStorefrontRequestContext } from "../headers";
+import { createShopifyRequestContext } from "../headers";
 import { createCartServerHandlers } from "./server-handlers";
 
 const i18n = { country: "US", language: "EN" } as const;
-const requestContext = createStorefrontRequestContext(new Request("https://shop.example.com"));
+const requestContext = createShopifyRequestContext({
+  request: new Request("https://shop.example.com"),
+  i18n,
+});
+const sessionManager = {
+  getSessionOrigin: () => "https://shop.example.com",
+  getSessionItem: (_key: string) => undefined,
+  setSessionItem(_key: string, _value: unknown) {},
+  removeSessionItem(_key: string) {},
+};
 
 describe("createCartServerHandlers type tests", () => {
   it("accepts private storefront clients", () => {
     const cartHandlers = createCartServerHandlers();
     const storefront = createStorefrontClient({
       type: "private",
+      requestContext,
       config: {
         storeDomain: "shop.example.com",
         privateStorefrontToken: "private-token",
         buyerIp: "203.0.113.10",
-        i18n,
-        requestContext,
       },
     });
 
     cartHandlers.get({ storefrontClient: storefront });
     handleShopifyRoutes({
       request: new Request("https://shop.example.com/api/cart"),
+      requestContext,
+      sessionManager,
       storefrontClient: storefront,
       handlers: [cartHandlers],
     });
   });
 
-  it("rejects public storefront clients", () => {
+  it("accepts public storefront clients", () => {
     const cartHandlers = createCartServerHandlers();
     const storefront = createStorefrontClient({
       type: "public",
+      requestContext,
       config: {
         storeDomain: "shop.example.com",
         publicStorefrontToken: "public-token",
-        i18n,
-        requestContext,
       },
     });
 
-    // @ts-expect-error — cart bootstrap must use a private client so buyer IP is forwarded.
     cartHandlers.get({ storefrontClient: storefront });
+    handleShopifyRoutes({
+      request: new Request("https://shop.example.com/api/cart"),
+      requestContext,
+      sessionManager,
+      storefrontClient: storefront,
+      handlers: [cartHandlers],
+    });
+  });
+
+  it("accepts private clients without buyer context", () => {
+    const cartHandlers = createCartServerHandlers();
+    const storefront = createStorefrontClient({
+      type: "private_no_buyer_context",
+      requestContext,
+      config: {
+        storeDomain: "shop.example.com",
+        privateStorefrontToken: "private-token",
+      },
+    });
+
+    cartHandlers.get({ storefrontClient: storefront });
+    handleShopifyRoutes({
+      request: new Request("https://shop.example.com/api/cart"),
+      requestContext,
+      sessionManager,
+      storefrontClient: storefront,
+      handlers: [cartHandlers],
+    });
   });
 
   it("preserves literal path and method metadata", () => {

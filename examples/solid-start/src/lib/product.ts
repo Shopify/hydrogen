@@ -56,4 +56,6 @@ export type ValidProductSelectionResult = Exclude<
   { status: "invalid" }
 >;
 
-export type ProductFormState = ProductFormStoreState<ProductVariantData>;
+type ProductOptionValueData = ProductData["options"][number]["optionValues"][number];
+
+export type ProductFormState = ProductFormStoreState<ProductVariantData, ProductOptionValueData>;

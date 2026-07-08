@@ -3,11 +3,8 @@
  *
  * Shopify's Storefront API returns list fields (like cart `lines`) in a
  * "connection" wrapper — either `{ nodes: [...] }` or `{ edges: [{ node: ... }] }`.
- * The cart diffing logic in cart-tracker.ts needs a flat array to compare line items,
- * so this utility handles both formats.
- *
- * Why both? Hydrogen queries typically use `nodes`, but merchants writing their own
- * GraphQL queries (e.g., in Next.js) may use the `edges` pattern instead.
+ * Hydrogen queries typically use `nodes`, but queries written with the `edges`
+ * pattern are supported too.
  */
 
 type Connection<T> = {

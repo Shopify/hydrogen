@@ -1,39 +1,44 @@
-import { analyticsConsent, analyticsShop } from "@shared/config";
 import {
   createStorefrontAnalytics,
   AnalyticsEvent,
+  type ConsentConfig,
+  type ShopAnalytics,
   type StorefrontAnalytics,
 } from "@shopify/hydrogen";
 
 export { AnalyticsEvent };
 
-export { analyticsShop };
-
+/**
+ * Analytics singleton (`hydrogen-analytics` skill). One bus per page lifetime,
+ * lazily created on the client. SSR no-ops via the `typeof window` guard.
+ *
+ * `shop` and `consent` are resolved on the server root from `@shared/config`
+ * and passed into `configureAnalytics()` before any route publishes a view
+ * event (F9: no polling, no init race). The whole `analyticsConsent` object
+ * (incl. `publicStorefrontAccessToken`) is threaded so the banner/consent mode
+ * matches `examples/shared/config.ts`.
+ */
 let bus: StorefrontAnalytics | null = null;
+let analyticsShop: ShopAnalytics | null = null;
+let analyticsConsent: ConsentConfig | null = null;
+
+export function configureAnalytics(shop: ShopAnalytics, consent: ConsentConfig) {
+  analyticsShop = shop;
+  analyticsConsent = consent;
+}
+
+export function getAnalyticsShop(): ShopAnalytics | null {
+  return analyticsShop;
+}
 
 export function getAnalytics(): StorefrontAnalytics | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined") return null; // SSR no-op
+  if (!analyticsShop || !analyticsConsent) return null;
   if (bus) return bus;
-
   bus = createStorefrontAnalytics({
     shop: analyticsShop,
     consent: analyticsConsent,
+    // canTrack: leave the default (Customer Privacy API) in production.
   });
-
-  const events = [
-    AnalyticsEvent.PAGE_VIEWED,
-    AnalyticsEvent.PRODUCT_VIEWED,
-    AnalyticsEvent.COLLECTION_VIEWED,
-    AnalyticsEvent.CART_VIEWED,
-    AnalyticsEvent.SEARCH_VIEWED,
-  ] as const;
-
-  for (const name of events) {
-    bus.subscribe(name, (payload) => {
-      // eslint-disable-next-line no-console
-      console.log(`[analytics] ${name}`, payload);
-    });
-  }
-
   return bus;
 }

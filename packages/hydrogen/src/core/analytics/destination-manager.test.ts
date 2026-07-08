@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { createDestinationManager } from "./destination-manager";
-import type { ShopAnalytics, StorefrontAnalyticsConfig } from "./types";
+import type {
+  ShopAnalytics,
+  StorefrontAnalyticsConfig,
+  StorefrontAnalyticsDestinationSetupContext,
+} from "./types";
 
 const SHOP_DATA: ShopAnalytics = {
   shopId: "gid://shopify/Shop/1",
@@ -131,20 +135,20 @@ describe("createDestinationManager", () => {
       expect(destination).not.toHaveBeenCalled();
     });
 
-    it("replays custom events to destinations", () => {
+    it("replays supported non-page events to destinations", () => {
       const { manager } = createTestManager(() => true);
       const destination = vi.fn();
 
-      manager.onPublish("custom_my_event", { shop: SHOP_DATA });
+      manager.onPublish("search_viewed", { shop: SHOP_DATA, searchTerm: "snowboard" });
       manager.addDestination({
         name: "late-destination",
         setup({ subscribe }) {
-          subscribe("custom_my_event", destination);
+          subscribe("search_viewed", destination);
         },
       });
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith({ shop: SHOP_DATA });
+      expect(destination).toHaveBeenCalledWith({ shop: SHOP_DATA, searchTerm: "snowboard" });
     });
 
     it("replays each buffered event to a destination only once", () => {
@@ -198,11 +202,9 @@ describe("createDestinationManager", () => {
     it("rejects duplicate destination names without running setup", () => {
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const { manager } = createTestManager(() => true);
-      const firstSetup = vi.fn(
-        ({ subscribe }: { subscribe: (event: string, cb: () => void) => void }) => {
-          subscribe("page_viewed", () => {});
-        },
-      );
+      const firstSetup = vi.fn(({ subscribe }: StorefrontAnalyticsDestinationSetupContext) => {
+        subscribe("page_viewed", () => {});
+      });
       const duplicateSetup = vi.fn();
 
       manager.addDestination({

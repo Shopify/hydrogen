@@ -41,7 +41,7 @@ Use the Storefront API version configured by the app when it differs from `2026-
 curl -i http://localhost:<port>/api/cart
 ```
 
-Expected: cart JSON, not 404.
+Expected: cart handler JSON, not 404. With no cart cookie, the body should be `{cart: null}`.
 
 ```bash
 curl -i http://localhost:<port>/admin

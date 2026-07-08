@@ -1,8 +1,4 @@
-import type {
-  GraphQLFormattedError,
-  GenericStorefrontClient,
-  RequestScopedPrivateStorefrontClient,
-} from "../../client";
+import type { GraphQLFormattedError, StorefrontClient } from "../../client";
 import type { AnyStorefrontQueryString } from "../../graphql";
 import { createProxyResponseHeaders } from "../interceptors/proxy";
 import type {
@@ -31,7 +27,7 @@ export const CART_POST_METHOD = "POST" as const;
 export const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
 export type CartGetData<TCart = CartData> = {
-  cart: TCart;
+  cart: TCart | null;
   errors?: Array<{ message: string }>;
 };
 
@@ -46,13 +42,13 @@ export type CartPostResult =
   | ShopifyRouteErrorResult<CartError>;
 
 type CartGetHandlerContext = {
-  storefrontClient: RequestScopedPrivateStorefrontClient;
+  storefrontClient: StorefrontClient;
   request?: Request;
 };
 
 type CartPostHandlerContext = {
   request: Request;
-  storefrontClient: RequestScopedPrivateStorefrontClient;
+  storefrontClient: StorefrontClient;
 };
 
 export type CartGetHandler<TCart = CartData> = CallableRouteHandler<
@@ -90,8 +86,10 @@ type CartGetHandlerResult<THandlers> = THandlers extends { get: infer THandler }
 
 type CartDataFromHandlerResult<TResult> = [TResult] extends [never]
   ? never
-  : TResult extends { data: { cart: infer TCart extends CartData } }
-    ? TCart
+  : TResult extends { data: { cart: infer TCart } }
+    ? NonNullable<TCart> extends CartData
+      ? NonNullable<TCart>
+      : CartData
     : CartData;
 
 export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
@@ -139,6 +137,7 @@ async function handleGet(
 ): Promise<CartGetResult> {
   const cartIdSource = request ?? storefrontClient.requestContext;
   const result = await getCart(getCartId(cartIdSource), storefrontClient, queries.cart);
+  logCartErrors(result.errors);
   const data = { cart: result.cart, ...(result.errors && { errors: result.errors }) };
   const headers = createProxyResponseHeaders(result.headers);
 
@@ -147,6 +146,11 @@ async function handleGet(
     data,
     headers,
   };
+}
+
+function logCartErrors(errors: CartGetData["errors"]): void {
+  if (!errors?.length) return;
+  console.error(errors.map(({ message }) => message).join("\n"));
 }
 
 async function handlePost(
@@ -158,14 +162,16 @@ async function handlePost(
   const redirectTarget = safeRedirectTarget(request);
 
   let action: CartAction;
+  let bodyCartId: string | null;
   try {
-    action = await parseCartRequest(request);
+    ({ action, cartId: bodyCartId } = await parseCartRequest(request));
   } catch (error) {
     if (isFormRequest) return redirectResult(redirectTarget);
     return errorResult("invalid_cart_request", getErrorMessage(error, "Bad Request"));
   }
 
-  const cartId = getCartId(request);
+  const cookieCartId = getCartIdFromCookie(request);
+  const cartId = bodyCartId ?? cookieCartId;
 
   if (action.intent !== "add" && !cartId) {
     if (isFormRequest) return redirectResult(redirectTarget);
@@ -173,10 +179,9 @@ async function handlePost(
   }
 
   const result = await executeMutation(action, cartId, storefrontClient, queries);
-  const cookieCartId = getCartIdFromCookie(request);
   const headers = createProxyResponseHeaders(result.headers);
 
-  // Only persist carts the browser already owns; explicit cartId query params are not adopted.
+  // Only persist carts the browser already owns, including newly-created carts.
   if (cartId === cookieCartId && result.cartId !== null && result.cartId !== cookieCartId) {
     headers.append("set-cookie", createCartCookie(result.cartId));
   }
@@ -245,7 +250,7 @@ function createMutationResult(
   };
 }
 
-type CartMutationClient = Pick<GenericStorefrontClient, "graphql">;
+type CartMutationClient = Pick<StorefrontClient, "graphql">;
 
 async function executeMutation(
   action: CartAction,

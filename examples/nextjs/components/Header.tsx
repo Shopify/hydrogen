@@ -1,79 +1,79 @@
-import { HEADER_COLLECTIONS_QUERY, normalizeHeaderCollections } from "@shared/header";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
-import { getStorefrontClient } from "@/lib/storefront";
+import { content } from "@/lib/content";
 
-import { CartButton } from "./CartButton";
+import { CartTrigger } from "./CartTrigger";
+import { MobileNavDialog } from "./MobileNavDialog";
+import { PredictiveSearchTrigger } from "./PredictiveSearchTrigger";
 
-async function getHeaderCollections() {
-  const storefrontClient = await getStorefrontClient();
-  const { data } = await storefrontClient.graphql(HEADER_COLLECTIONS_QUERY);
-  return normalizeHeaderCollections(data?.collections?.nodes);
-}
+/** Maps a header nav item to its route. "Collections" -> the collections
+ * index; the category items -> their collection PLP. */
+const navItemHref: Record<(typeof content.header.navItems)[number], string> = {
+  Collections: "/collections",
+  Men: "/collections/men",
+  Women: "/collections/women",
+  Accessories: "/collections/accessories",
+};
 
-export async function Header() {
-  const collections = await getHeaderCollections();
-
+/**
+ * Site header — server shell + small client islands (engineering.md F7;
+ * `hydrogen-setup` / `references/navbar.md`). Server-rendered: logo `<Link>`,
+ * desktop nav `<Link>`s, and a real `<Link href="/search">` search trigger
+ * (server-rendered, F4 — reachable without JS). Client islands: `CartTrigger`
+ * (`showModal()` button, cart count), `PredictiveSearchTrigger` (hydrates
+ * the `/search` link into the modal trigger), `MobileNavDialog` (`<dialog>` with
+ * an always-rendered fallback link list).
+ *
+ * The cart trigger opens the `<dialog>` drawer via `showModal()`
+ * (hydrogen-cart-drawer) — NO `hasHydrated` anchor/button swap (feedback
+ * Round 4 #3). The footer `/cart` link is the no-JS cart fallback.
+ */
+export function Header({ accountLink }: { accountLink?: ReactNode }) {
   return (
-    <header className="border-b border-black/10">
-      <div className="mx-auto grid h-16 max-w-[1480px] grid-cols-3 items-center px-6">
-        <nav className="flex items-center gap-6 text-sm font-semibold">
-          {collections.map((collection) => (
+    <header className="border-border bg-surface sticky top-0 z-40 border-b">
+      <div
+        className="max-w-page px-margin mx-auto flex h-16 w-full items-center justify-between"
+        data-header-nav-group
+      >
+        <div className="flex items-center gap-2">
+          <MobileNavDialog />
+          <Link
+            href="/"
+            className="text-on-surface focus-visible:outline-accent inline-flex items-center rounded-sm text-lg font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            CORE
+          </Link>
+        </div>
+
+        <nav
+          aria-label={content.header.navigation}
+          className="mx-8 hidden min-w-0 flex-1 items-center gap-8 md:flex"
+        >
+          {content.header.navItems.map((item) => (
             <Link
-              key={collection.handle}
-              href={`/collections/${collection.handle}`}
-              className="hover:opacity-60"
+              key={item}
+              href={navItemHref[item]}
+              className="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
             >
-              {collection.title}
+              {item}
             </Link>
           ))}
-          <Link href="/collections" className="hover:opacity-60">
-            Collections
-          </Link>
-          <Link href="/blogs/news" className="hover:opacity-60">
-            News
-          </Link>
         </nav>
-        <Link href="/" className="justify-self-center text-lg font-black tracking-tight">
-          MOCK.SHOP
-        </Link>
-        <div className="flex items-center justify-end gap-5">
-          <form method="get" action="/search" role="search" className="flex items-center gap-1">
-            <input
-              type="search"
-              name="q"
-              aria-label="Search products"
-              placeholder="Search"
-              className="w-28 rounded border border-black/15 px-2 py-1 text-sm transition-[width] focus:w-44 focus:outline-none"
-            />
-            <button type="submit" aria-label="Search" className="hover:opacity-60">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="m20 20-3.5-3.5" />
-              </svg>
-            </button>
-          </form>
-          <Link href="/" aria-label="Account" className="hover:opacity-60">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
-            </svg>
-          </Link>
-          <CartButton />
+
+        <div className="flex items-center gap-0">
+          <PredictiveSearchTrigger />
+          <noscript>
+            <form action="/search" method="get" role="search" className="sr-only">
+              <label htmlFor="header-search-q">{content.general.search}</label>
+              <input id="header-search-q" name="q" type="search" />
+              <button type="submit">{content.search.submit}</button>
+            </form>
+          </noscript>
+
+          {accountLink}
+
+          <CartTrigger />
         </div>
       </div>
     </header>

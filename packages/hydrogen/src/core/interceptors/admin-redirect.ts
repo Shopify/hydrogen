@@ -1,9 +1,11 @@
 import type { RedirectOptions } from "../handle-shopify-redirects";
 
+type AdminRedirectOptions = Pick<RedirectOptions, "request" | "storefrontClient">;
+
 export async function handleAdminRedirect({
   request,
   storefrontClient,
-}: RedirectOptions): Promise<Response | null> {
+}: AdminRedirectOptions): Promise<Response | null> {
   const url = new URL(request.url);
   if (url.pathname !== "/admin") return null;
 

@@ -11,7 +11,6 @@ export type {
   CartViewPayload,
   CollectionViewPayload,
   ConsentConfig,
-  CustomEventPayload,
   EventPayloads,
   OtherData,
   PageViewPayload,

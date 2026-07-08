@@ -1,4 +1,4 @@
-import { AnalyticsEvent, analyticsShop, getAnalytics } from "~/storefront/analytics";
+import { AnalyticsEvent, getAnalytics } from "~/storefront/analytics";
 
 export default defineNuxtPlugin(() => {
   const router = useRouter();
@@ -7,10 +7,7 @@ export default defineNuxtPlugin(() => {
     const analytics = getAnalytics();
     if (!analytics) return;
 
-    analytics.publish(AnalyticsEvent.PAGE_VIEWED, {
-      url: window.location.href,
-      shop: analyticsShop,
-    });
+    analytics.publish(AnalyticsEvent.PAGE_VIEWED);
   }
 
   onNuxtReady(publishPageView);

@@ -1,4 +1,4 @@
-import type { HydrogenSession } from "@shopify/hydrogen-classic";
+import type { WritableCustomerSessionManager } from "@shopify/hydrogen/customer-account";
 import { createCookieSessionStorage, type SessionStorage, type Session } from "react-router";
 
 /**
@@ -6,15 +6,17 @@ import { createCookieSessionStorage, type SessionStorage, type Session } from "r
  * Feel free to customize it to your needs, add helper methods, or
  * swap out the cookie-based implementation with something else!
  */
-export class AppSession implements HydrogenSession {
+export class AppSession implements WritableCustomerSessionManager {
   public isPending = false;
 
   #sessionStorage;
   #session;
+  #origin;
 
-  constructor(sessionStorage: SessionStorage, session: Session) {
+  constructor(sessionStorage: SessionStorage, session: Session, origin: string) {
     this.#sessionStorage = sessionStorage;
     this.#session = session;
+    this.#origin = origin;
   }
 
   static async init(request: Request, secrets: string[]) {
@@ -32,7 +34,25 @@ export class AppSession implements HydrogenSession {
       .getSession(request.headers.get("Cookie"))
       .catch(() => storage.getSession());
 
-    return new this(storage, session);
+    return new this(storage, session, new URL(request.url).origin);
+  }
+
+  getSessionOrigin() {
+    return this.#origin;
+  }
+
+  getSessionItem(key: string) {
+    return this.#session.get(key);
+  }
+
+  setSessionItem(key: string, value: unknown) {
+    this.isPending = true;
+    this.#session.set(key, value);
+  }
+
+  removeSessionItem(key: string) {
+    this.isPending = true;
+    this.#session.unset(key);
   }
 
   get has() {
@@ -61,8 +81,10 @@ export class AppSession implements HydrogenSession {
     return this.#sessionStorage.destroySession(this.#session);
   }
 
-  commit() {
+  async commit() {
     this.isPending = false;
-    return this.#sessionStorage.commitSession(this.#session);
+    const headers = new Headers();
+    headers.append("Set-Cookie", await this.#sessionStorage.commitSession(this.#session));
+    return headers;
   }
 }

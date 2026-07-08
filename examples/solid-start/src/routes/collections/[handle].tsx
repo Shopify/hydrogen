@@ -6,7 +6,7 @@ import { createAsync, query, useLocation, useParams, type RouteDefinition } from
 import { createEffect, Show } from "solid-js";
 
 import { CollectionBrowser } from "../../components/CollectionBrowser";
-import { AnalyticsEvent, analyticsShop, getAnalytics } from "../../lib/analytics";
+import { AnalyticsEvent, getAnalytics } from "../../lib/analytics";
 import { getRequestStorefrontClient } from "../../lib/request-storefront";
 
 const COLLECTION_QUERY = gql(`
@@ -139,8 +139,6 @@ export default function Collection() {
     if (!collection) return;
     getAnalytics()?.publish(AnalyticsEvent.COLLECTION_VIEWED, {
       collection: { id: collection.id, handle: collection.handle },
-      url: window.location.href,
-      shop: analyticsShop,
     });
   });
 

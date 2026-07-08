@@ -4,7 +4,18 @@
     "plugins": [
       {
         "name": "gql.tada/ts-plugin",
-        "schema": "node_modules/@shopify/hydrogen/src/graphql/generated/storefront.schema.graphql",
+        "schemas": [
+          {
+            "name": "storefront",
+            "schema": "node_modules/@shopify/hydrogen/dist/storefront.schema.json",
+            "tadaOutputLocation": "./app/storefront-graphql-env.d.ts"
+          },
+          {
+            "name": "customer-account",
+            "schema": "node_modules/@shopify/hydrogen/dist/customer-account.schema.json",
+            "tadaOutputLocation": "./app/customer-account-graphql-env.d.ts"
+          }
+        ],
         "trackFieldUsage": false
       }
     ],

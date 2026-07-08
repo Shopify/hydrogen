@@ -1,8 +1,9 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
+
 import type {
   RequestScopedPrivateStorefrontClient,
-  StorefrontRequestContext,
+  ShopifyRequestContext,
 } from "@shopify/hydrogen";
 
 declare global {
@@ -10,7 +11,7 @@ declare global {
     // interface Error {}
     interface Locals {
       storefrontClient: RequestScopedPrivateStorefrontClient;
-      storefrontRequestContext: StorefrontRequestContext;
+      shopifyRequestContext: ShopifyRequestContext;
     }
     // interface PageData {}
     // interface PageState {}

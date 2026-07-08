@@ -1,4 +1,13 @@
-import { createElement, useEffect, useState, type CSSProperties, type MouseEvent } from "react";
+"use client";
+
+import {
+  createElement,
+  useEffect,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+  type ReactElement,
+} from "react";
 
 import {
   getShopPayButtonAttributes,
@@ -8,15 +17,22 @@ import {
   SHOP_PAY_BUTTON_TAG_NAME,
   type ShopPayButtonOptions,
 } from "../core/shop-pay";
+import { DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT } from "../core/shop-pay/shop-pay";
 
 export type ShopPayButtonProps = Omit<ShopPayButtonOptions, "checkoutUrl"> & {
   className?: string;
   loadScript?: boolean;
+  style?: CSSProperties;
 };
 
 type ShopPayButtonStyle = CSSProperties & Record<string, string>;
 
-export function ShopPayButton({ className, loadScript = true, ...options }: ShopPayButtonProps) {
+export function ShopPayButton({
+  className,
+  loadScript = true,
+  style: wrapperStyle,
+  ...options
+}: ShopPayButtonProps): ReactElement {
   const storefrontUrl = useStorefrontUrl();
 
   useEffect(() => {
@@ -43,8 +59,13 @@ export function ShopPayButton({ className, loadScript = true, ...options }: Shop
       : {}),
     ...(Object.keys(style).length > 0 ? { style } : {}),
   };
+  const element = createElement(SHOP_PAY_BUTTON_TAG_NAME, props);
+  const wrapperStyles = {
+    ...wrapperStyle,
+    minHeight: wrapperStyle?.minHeight ?? DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT,
+  };
 
-  return createElement(SHOP_PAY_BUTTON_TAG_NAME, props);
+  return createElement("div", { style: wrapperStyles }, element);
 }
 
 function useStorefrontUrl(): string | undefined {

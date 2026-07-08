@@ -1,7 +1,7 @@
 import { gql } from "@shopify/hydrogen";
-import { Image } from "@shopify/hydrogen-classic";
 import { useLoaderData } from "react-router";
 
+import { Image } from "~/components/Image";
 import { redirectIfHandleIsLocalized } from "~/lib/redirect";
 
 import type { Route } from "./+types/($locale).blogs.$blogHandle.$articleHandle";
@@ -12,7 +12,7 @@ export const meta: Route.MetaFunction = ({ data }) => {
 
 export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
+  const deferredData = loadDeferredData();
 
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
@@ -31,12 +31,9 @@ async function loadCriticalData({ context, request, params }: Route.LoaderArgs) 
     throw new Response("Not found", { status: 404 });
   }
 
-  const [{ blog }] = await Promise.all([
-    context.storefront.query(ARTICLE_QUERY, {
-      variables: { blogHandle, articleHandle },
-    }),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
+  const { blog } = await context.storefront.query(ARTICLE_QUERY, {
+    variables: { blogHandle, articleHandle },
+  });
 
   if (!blog?.articleByHandle) {
     throw new Response(null, { status: 404 });
@@ -64,7 +61,7 @@ async function loadCriticalData({ context, request, params }: Route.LoaderArgs) 
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({ context }: Route.LoaderArgs) {
+function loadDeferredData() {
   return {};
 }
 

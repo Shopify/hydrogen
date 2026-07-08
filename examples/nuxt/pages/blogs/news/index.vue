@@ -1,35 +1,7 @@
 <script setup lang="ts">
-import { gql } from "@shopify/hydrogen";
-
-const NEWS_QUERY = gql(`
-  query News {
-    blog(handle: "news") {
-      articles(first: 10) {
-        nodes {
-          handle
-          title
-          publishedAt
-          excerpt
-        }
-      }
-    }
-  }
-`);
-
-type Article = {
-  handle: string;
-  title: string;
-  publishedAt: string;
-  excerpt: string;
-};
-
 const dateFormatter = new Intl.DateTimeFormat("en-US", { dateStyle: "long" });
-const { $storefrontClient } = useNuxtApp();
 
-const { data } = await useAsyncData("news", async () => {
-  const response = await $storefrontClient.graphql(NEWS_QUERY);
-  return response.data as { blog: { articles: { nodes: Article[] } } | null } | null;
-});
+const { data } = await useFetch("/api/blogs/news", { key: "news" });
 
 if (!data.value?.blog) {
   throw createError({ statusCode: 404, statusMessage: "Blog not found" });
@@ -42,7 +14,7 @@ useHead({ title: "News — Mock.shop" });
 </script>
 
 <template>
-  <main class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
+  <main id="main-content" tabindex="-1" class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
     <header>
       <h1 class="text-6xl font-black tracking-tight md:text-8xl">News</h1>
     </header>

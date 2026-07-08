@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
+    "https:dev": "VITE_LOCAL_HTTPS=1 astro dev",
     "build": "astro build",
     "start": "node ./dist/server/entry.mjs",
     "typecheck": "astro check"
@@ -12,7 +13,8 @@
   "dependencies": {
     "@astrojs/node": "^10.0.6",
     "@shopify/hydrogen": "workspace:*",
-    "astro": "^6.1.10"
+    "astro": "^6.1.10",
+    "lru-cache": "^11.3.6"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",

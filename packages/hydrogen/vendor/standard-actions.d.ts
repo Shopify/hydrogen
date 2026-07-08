@@ -158,17 +158,5 @@ declare const actions: Readonly<{
 	openCart: ActionFunction<void, void, {}, void>;
 }>;
 export type ShopifyStandardActions = typeof actions;
-declare global {
-	interface Shopify {
-		actions?: typeof actions;
-		country?: string;
-		locale?: string;
-	}
-	interface Window {
-		Shopify?: Shopify & {
-			[key: string]: unknown;
-		};
-	}
-}
 
 export {};

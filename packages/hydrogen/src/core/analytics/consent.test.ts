@@ -154,21 +154,6 @@ describe("consent library integration", () => {
     });
   });
 
-  it("sets Shopify locale and country for privacy-banner localization", () => {
-    const { deps } = createMockDeps({
-      consent: {
-        ...CONSENT_CONFIG,
-        country: "CA",
-        language: "en",
-      },
-    });
-
-    initConsent(deps);
-
-    expect((window as any).Shopify.locale).toBe("en");
-    expect((window as any).Shopify.country).toBe("CA");
-  });
-
   it("does not wrap setTrackingConsent after the consent API loads", () => {
     const callback = vi.fn();
     const { deps } = createMockDeps();

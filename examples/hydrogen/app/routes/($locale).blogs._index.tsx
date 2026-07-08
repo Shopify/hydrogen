@@ -1,8 +1,8 @@
 import { gql, type StorefrontApi } from "@shopify/hydrogen";
-import { getPaginationVariables } from "@shopify/hydrogen-classic";
 import { Link, useLoaderData } from "react-router";
 
 import { PaginatedResourceSection } from "~/components/PaginatedResourceSection";
+import { getPaginationVariables } from "~/lib/pagination";
 
 import type { Route } from "./+types/($locale).blogs._index";
 
@@ -14,7 +14,7 @@ export const meta: Route.MetaFunction = () => {
 
 export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
+  const deferredData = loadDeferredData();
 
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
@@ -31,14 +31,11 @@ async function loadCriticalData({ context, request }: Route.LoaderArgs) {
     pageBy: 10,
   });
 
-  const [{ blogs }] = await Promise.all([
-    context.storefront.query(BLOGS_QUERY, {
-      variables: {
-        ...paginationVariables,
-      },
-    }),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
+  const { blogs } = await context.storefront.query(BLOGS_QUERY, {
+    variables: {
+      ...paginationVariables,
+    },
+  });
 
   return { blogs };
 }
@@ -48,7 +45,7 @@ async function loadCriticalData({ context, request }: Route.LoaderArgs) {
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({ context }: Route.LoaderArgs) {
+function loadDeferredData() {
   return {};
 }
 

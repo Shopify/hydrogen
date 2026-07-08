@@ -29,11 +29,13 @@ export interface ProductVariantInput {
 
 export interface ProductOptionInput<TVariant extends ProductVariantInput = ProductVariantInput> {
   name: string;
-  optionValues: Array<{
-    name: string;
-    firstSelectableVariant?: TVariant | null;
-    swatch?: unknown;
-  }>;
+  optionValues: Array<ProductOptionValueInput & { firstSelectableVariant?: TVariant | null }>;
+}
+
+export interface ProductOptionValueInput {
+  name: string;
+  firstSelectableVariant?: ProductVariantInput | null;
+  swatch?: unknown;
 }
 
 export interface ProductInput<TVariant extends ProductVariantInput = ProductVariantInput> {
@@ -53,10 +55,15 @@ export interface ProductInput<TVariant extends ProductVariantInput = ProductVari
 export type ProductVariantFrom<TProduct extends ProductInput> =
   TProduct extends ProductInput<infer TVariant> ? TVariant : ProductVariantInput;
 
+export type ProductOptionValueFrom<TProduct extends ProductInput> =
+  TProduct["options"][number]["optionValues"][number];
+
 export interface VariantOptionValueState<
   TVariant extends ProductVariantInput = ProductVariantInput,
+  TOptionValue extends ProductOptionValueInput = ProductOptionValueInput,
 > {
   name: string;
+  swatch?: TOptionValue["swatch"];
   selected: boolean;
   exists: boolean;
   available: boolean;
@@ -65,7 +72,10 @@ export interface VariantOptionValueState<
   handle: string;
 }
 
-export interface VariantOptionState<TVariant extends ProductVariantInput = ProductVariantInput> {
+export interface VariantOptionState<
+  TVariant extends ProductVariantInput = ProductVariantInput,
+  TOptionValue extends ProductOptionValueInput = ProductOptionValueInput,
+> {
   name: string;
-  values: VariantOptionValueState<TVariant>[];
+  values: VariantOptionValueState<TVariant, TOptionValue>[];
 }

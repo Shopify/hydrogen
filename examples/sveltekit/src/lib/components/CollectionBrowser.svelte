@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { AvailableFilter, ProductFilter } from '@shopify/hydrogen';
+	import { untrack } from 'svelte';
 	import {
 		getFilterRemovalUrl,
 		getSortByValue,
@@ -48,8 +49,8 @@
 	const urlSearch = $derived(urlSearchOverride ?? page.url.search);
 	const collectionPath = $derived(page.url.pathname);
 	const controller = createCollectionStoreController({
-		data: { handle, dataSearch },
-		urlSearch,
+		data: untrack(() => ({ handle, dataSearch })),
+		urlSearch: untrack(() => urlSearch),
 		onChange: handleBrowseChange
 	});
 	const browseState = collectionState(controller);
@@ -60,6 +61,20 @@
 	const hasActiveFilters = $derived($browseState.filters.length > 0);
 	const isLoading = $derived($browseState.status === 'loading');
 	const currentParams = $derived(serializeCollectionParams($browseState));
+	let hasInitialisedController = false;
+
+	$effect(() => {
+		const data = { handle, dataSearch };
+		if (!hasInitialisedController) {
+			hasInitialisedController = true;
+			return;
+		}
+		controller.reset({
+			data,
+			urlSearch: untrack(() => urlSearch),
+			onChange: handleBrowseChange
+		});
+	});
 
 	$effect(() => {
 		const normalizedUrlSearch = normalizeCollectionSearch(urlSearch);

@@ -2,17 +2,27 @@ import { describe, it, expect, vi } from "vitest";
 
 import type { PrivateStorefrontClient } from "../../client";
 import type { RedirectOptions } from "../handle-shopify-redirects";
+import { createShopifyRequestContext } from "../headers";
+import { createShopifyRouteTemplates } from "../standard-routes/index";
 import { assert } from "../test-utils";
 import { handleAdminRedirect } from "./admin-redirect";
+
+const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
+const DEFAULT_ROUTE_TEMPLATES = createShopifyRouteTemplates({});
 
 function mockStorefrontClient(
   storeUrl = "https://test-store.myshopify.com",
 ): PrivateStorefrontClient {
   return {
     type: "private",
+    i18n: DEFAULT_I18N,
     storeUrl,
     apiUrl: "https://test-store.myshopify.com/api/2026-04/graphql.json",
     graphql: vi.fn().mockRejectedValue(new Error("/admin redirect should not query SFAPI")),
+    requestContext: createShopifyRequestContext({
+      request: { headers: new Headers() },
+      i18n: DEFAULT_I18N,
+    }),
   } satisfies PrivateStorefrontClient;
 }
 
@@ -20,7 +30,7 @@ function redirectOptions(
   request: Request,
   storefrontClient = mockStorefrontClient(),
 ): RedirectOptions {
-  return { request, storefrontClient };
+  return { request, routeTemplates: DEFAULT_ROUTE_TEMPLATES, storefrontClient };
 }
 
 describe("handleAdminRedirect", () => {

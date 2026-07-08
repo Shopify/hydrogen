@@ -60,12 +60,14 @@ export type ValidProductSelectionResult = Exclude<
   { status: "invalid" }
 >;
 
+type ProductOptionValueData = ProductData["options"][number]["optionValues"][number];
+
 export type ProductFormView = {
-  options: VariantOptionState<ProductVariantData>[];
+  options: VariantOptionState<ProductVariantData, ProductOptionValueData>[];
   selectedVariant: ProductVariantData | null;
   register: ProductFormRegister;
   errors: ProductFormErrors;
   matchedLineItem: CartLine | null;
 };
 
-export type ProductFormState = ProductFormStoreState<ProductVariantData>;
+export type ProductFormState = ProductFormStoreState<ProductVariantData, ProductOptionValueData>;

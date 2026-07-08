@@ -57,7 +57,7 @@ const typedCart = createCartComponents<typeof cartHandlers>();
 describe("createCartComponents", () => {
   it("carries the custom cart query type on server handlers", () => {
     type HandlerResult = Awaited<ReturnType<typeof cartHandlers.get>>;
-    type HandlerData = HandlerResult["data"]["cart"];
+    type HandlerData = NonNullable<HandlerResult["data"]["cart"]>;
 
     type Merchandise = NonNullable<HandlerData["lines"]["nodes"][number]["merchandise"]>;
 
@@ -91,8 +91,9 @@ describe("createCartComponents", () => {
 
   it("types CartProvider initialData from custom cart server handlers", () => {
     type Props = Parameters<typeof typedCart.CartProvider>[0];
-    type InitialData = NonNullable<Props["initialData"]>;
-    type Merchandise = NonNullable<InitialData["lines"]["nodes"][number]["merchandise"]>;
+    type InitialData = NonNullable<Awaited<NonNullable<Props["initialData"]>>>;
+    type InitialCart = NonNullable<InitialData["cart"]>;
+    type Merchandise = NonNullable<InitialCart["lines"]["nodes"][number]["merchandise"]>;
 
     expectTypeOf<Merchandise>().toHaveProperty("availableForSale");
   });

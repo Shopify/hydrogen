@@ -6,14 +6,16 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
+    "https:dev": "VITE_LOCAL_HTTPS=1 react-router dev",
     "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc"
+    "typecheck": "react-router typegen && tsc && gql.tada check --fail-on-warn"
   },
   "dependencies": {
     "@react-router/node": "7.15.1",
     "@react-router/serve": "7.15.1",
     "@shopify/hydrogen": "workspace:*",
-    "isbot": "^5.1.36",
+    "isbot": "^5",
+    "lru-cache": "^11.3.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router": "7.15.1"

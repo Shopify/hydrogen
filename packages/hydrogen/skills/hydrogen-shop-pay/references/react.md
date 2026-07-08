@@ -19,7 +19,7 @@ function AddToCart({ product }: { product: ProductData }) {
       <form {...formProps({ afterSubmit: openCartDrawer })}>
         <input type="hidden" {...register("merchandiseId", {})} />
         <input {...register("quantity", { value: quantity })} />
-        <button type="submit" disabled={!addable || pending}>Add to cart</button>
+        <button {...register("addToCart", {})} disabled={!addable || pending}>Add to cart</button>
       </form>
 
       {selectedVariant ? (
@@ -28,7 +28,6 @@ function AddToCart({ product }: { product: ProductData }) {
           channel="hydrogen"
           disabled={!addable || pending}
           width="100%"
-          height="48px"
           borderRadius="9999px"
         />
       ) : null}
@@ -38,5 +37,7 @@ function AddToCart({ product }: { product: ProductData }) {
 ```
 
 `ShopPayButton` is a client-only component because it reads `window.location.origin` after mount and loads Shop JS. In Next.js, put it in a `"use client"` component.
+
+Hydrogen reserves space around the custom element while it hydrates. Use wrapper `style` only when it needs a different reservation; do not pass `height`.
 
 Use `loadScript={false}` only when the app already loads the Shop Pay loader globally.

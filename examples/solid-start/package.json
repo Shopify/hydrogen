@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "HOST=localhost vinxi dev",
+    "https:dev": "VITE_LOCAL_HTTPS=1 HOST=localtest.me vinxi dev --port 5173",
     "build": "vinxi build",
     "start": "HOST=localhost vinxi start",
     "typecheck": "tsc"
@@ -14,6 +15,7 @@
     "@solidjs/meta": "^0.29.4",
     "@solidjs/router": "^0.15.0",
     "@solidjs/start": "1.3.2",
+    "lru-cache": "^11.3.6",
     "solid-js": "^1.9.5",
     "vinxi": "^0.5.7"
   },

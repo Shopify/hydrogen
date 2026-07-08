@@ -47,7 +47,6 @@ export function CartTotals() {
             checkoutUrl={checkoutUrl() ?? undefined}
             channel="headless"
             width="100%"
-            height="48px"
             borderRadius="4px"
           />
           <a

@@ -1,10 +1,10 @@
 import { gql } from "@shopify/hydrogen";
-import { getPaginationVariables, Image, Money } from "@shopify/hydrogen-classic";
 import { useLoaderData } from "react-router";
 
 import { PaginatedResourceSection } from "~/components/PaginatedResourceSection";
 import { ProductItem } from "~/components/ProductItem";
 import type { ProductItemData } from "~/components/ProductItem";
+import { getPaginationVariables } from "~/lib/pagination";
 
 import type { Route } from "./+types/($locale).collections.all";
 
@@ -14,7 +14,7 @@ export const meta: Route.MetaFunction = () => {
 
 export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
+  const deferredData = loadDeferredData();
 
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
@@ -32,12 +32,9 @@ async function loadCriticalData({ context, request }: Route.LoaderArgs) {
     pageBy: 8,
   });
 
-  const [{ products }] = await Promise.all([
-    storefront.query(CATALOG_QUERY, {
-      variables: { ...paginationVariables },
-    }),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
+  const { products } = await storefront.query(CATALOG_QUERY, {
+    variables: { ...paginationVariables },
+  });
   return { products };
 }
 
@@ -46,7 +43,7 @@ async function loadCriticalData({ context, request }: Route.LoaderArgs) {
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({ context }: Route.LoaderArgs) {
+function loadDeferredData() {
   return {};
 }
 
@@ -125,13 +122,3 @@ const CATALOG_QUERY = gql(
 `,
   [COLLECTION_ITEM_FRAGMENT],
 );
-
-type ProductConnection = {
-  nodes: ProductItemData[];
-  pageInfo: {
-    hasPreviousPage: boolean;
-    hasNextPage: boolean;
-    startCursor?: string | null;
-    endCursor?: string | null;
-  };
-};

@@ -7,6 +7,7 @@
   "scripts": {
     "build": "shopify hydrogen build --no-lockfile-check",
     "dev": "shopify hydrogen dev",
+    "https:dev": "shopify hydrogen dev --customer-account-push",
     "preview": "shopify hydrogen preview --build",
     "typecheck": "react-router typegen && tsc --noEmit",
     "e2e": "playwright test",
@@ -16,7 +17,8 @@
   },
   "dependencies": {
     "@shopify/hydrogen": "workspace:*",
-    "@shopify/hydrogen-classic": "npm:@shopify/hydrogen@2026.4.2",
+    "@shopify/hydrogen-react": "^2026.4.3",
+    "content-security-policy-builder": "^2.2.0",
     "isbot": "^5.1.36",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

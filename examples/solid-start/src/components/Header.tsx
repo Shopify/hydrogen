@@ -50,7 +50,10 @@ export function Header() {
           MOCK.SHOP
         </A>
         <div class="flex items-center justify-end gap-5">
-          <button aria-label="Search" class="hover:opacity-60">
+          <button
+            aria-label="Search"
+            class="grid h-11 w-11 place-items-center rounded-full hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+          >
             <svg
               width="20"
               height="20"
@@ -58,12 +61,17 @@ export function Header() {
               fill="none"
               stroke="currentColor"
               stroke-width="2"
+              aria-hidden="true"
             >
               <circle cx="11" cy="11" r="7" />
               <path d="m20 20-3.5-3.5" />
             </svg>
           </button>
-          <A href="/" aria-label="Account" class="hover:opacity-60">
+          <A
+            href="/account"
+            aria-label="Account"
+            class="grid h-11 w-11 place-items-center rounded-full hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+          >
             <svg
               width="20"
               height="20"
@@ -71,6 +79,7 @@ export function Header() {
               fill="none"
               stroke="currentColor"
               stroke-width="2"
+              aria-hidden="true"
             >
               <circle cx="12" cy="8" r="4" />
               <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
@@ -83,7 +92,7 @@ export function Header() {
                 href="/cart"
                 aria-label={cartLabel()}
                 aria-current={rendersCartPage() ? "page" : undefined}
-                class="relative grid h-10 w-10 place-items-center hover:opacity-60"
+                class="relative grid h-11 w-11 place-items-center rounded-full hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
               >
                 <svg
                   width="22"
@@ -111,7 +120,7 @@ export function Header() {
               aria-haspopup="dialog"
               command="show-modal"
               commandfor={CART_DRAWER_ID}
-              class="relative grid h-10 w-10 place-items-center hover:opacity-60"
+              class="relative grid h-11 w-11 place-items-center rounded-full hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
               onClick={() => !supportsDialogCommands() && openCartDrawer()}
             >
               <svg
