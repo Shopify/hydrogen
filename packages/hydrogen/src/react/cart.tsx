@@ -174,13 +174,7 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
     return next;
   };
 
-  const subscribe = store ? store.subscribe : noopSubscribe;
-
-  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-}
-
-function noopSubscribe(): () => void {
-  return () => {};
+  return useSyncExternalStore(store?.subscribe ?? (() => () => {}), getSnapshot, getSnapshot);
 }
 
 export function useCartForm() {
