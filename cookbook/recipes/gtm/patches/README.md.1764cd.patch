@@ -5,12 +5,12 @@ index c584e5370..a31bfebf0 100644
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Google Tag Manager (GTM)
  
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the modern multi-strategy router for React. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
 +This Hydrogen template demonstrates how to implement Google Tag Manager with analytics integration. Hydrogen supports both Shopify analytics and third-party services with built-in support for the [Customer Privacy API](https://shopify.dev/docs/api/customer-privacy).
  
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
-@@ -16,18 +16,67 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
+ [Get familiar with React Router](https://reactrouter.com/start/framework/routing)
+@@ -16,18 +16,66 @@
  - Prettier
  - GraphQL generator
  - TypeScript and JavaScript flavors
@@ -23,7 +23,7 @@ index c584e5370..a31bfebf0 100644
  
  **Requirements:**
  
- - Node.js version 18.0.0 or higher
+-- Node.js version 22.x or 24.x
 +- Google Tag Manager account with container ID
  
  ```bash
@@ -79,10 +79,3 @@ index c584e5370..a31bfebf0 100644
  ## Building for production
  
  ```bash
-@@ -42,4 +91,4 @@ npm run dev
- 
- ## Setup for using Customer Account API (`/account` section)
- 
--Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
-+Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
-\ No newline at end of file

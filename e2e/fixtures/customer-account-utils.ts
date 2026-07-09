@@ -77,16 +77,19 @@ export class CustomerAccountUtil {
       await submitButton.first().click();
     }
 
-    // Detect OTP errors before waiting for redirect — if the bypass isn't
-    // configured correctly, the page shows an error and the redirect never comes.
-    // Shopify's login page always renders an empty [role="alert"] live region,
-    // so we filter to only match elements that actually contain error text.
+    // Detect OTP errors before waiting for redirect. Shopify's login page can
+    // render an empty alert live region while placing the visible error text
+    // next to the code input, so check both surfaces.
     const otpError = this.page
       .locator('[role="alert"]')
-      .filter({hasText: /.+/});
-    if (await otpError.isVisible({timeout: 3000}).catch(() => false)) {
+      .filter({hasText: /.+/})
+      .or(this.page.getByText(/enter the correct 6-digit code/i));
+    if (await otpError.first().isVisible({timeout: 3000}).catch(() => false)) {
+      const errorText = (await otpError.first().textContent())?.trim();
       throw new Error(
-        'OTP submission failed — check if bypass is configured correctly',
+        `OTP submission failed${
+          errorText ? `: ${errorText}` : ''
+        } — check if bypass is configured correctly`,
       );
     }
 

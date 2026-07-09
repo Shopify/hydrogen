@@ -5,12 +5,12 @@ index c584e5370..1ac3a34cb 100644
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Skeleton + Partytown + Google Tag Manager
  
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify's full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with [Partytown](https://partytown.builder.io/) for performance-oriented lazy-loading of [Google Tag Manager](https://support.google.com/tagmanager).
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the modern multi-strategy router for React. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the modern multi-strategy router for React. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with [Partytown](https://partytown.builder.io/) for performance-oriented lazy-loading of [Google Tag Manager](https://support.google.com/tagmanager).
  
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
-@@ -17,12 +17,15 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
+ [Get familiar with React Router](https://reactrouter.com/start/framework/routing)
+@@ -17,12 +17,14 @@
  - GraphQL generator
  - TypeScript and JavaScript flavors
  - Minimal setup of components and routes
@@ -21,12 +21,12 @@ index c584e5370..1ac3a34cb 100644
  
  **Requirements:**
  
- - Node.js version 18.0.0 or higher
+-- Node.js version 22.x or 24.x
 +- [Google Tag Manager ID](https://support.google.com/tagmanager/answer/6103696?hl=en) (optional)
  
  ```bash
  npm create @shopify/hydrogen@latest
-@@ -40,6 +43,62 @@ npm run build
+@@ -40,6 +42,62 @@
  npm run dev
  ```
  
@@ -89,4 +89,3 @@ index c584e5370..1ac3a34cb 100644
 +- [Partytown documentation](https://partytown.builder.io/)
 +- [Google Tag Manager setup](https://support.google.com/tagmanager/answer/6103696)
 +- [Introducing Partytown](https://dev.to/adamdbradley/introducing-partytown-run-third-party-scripts-from-a-web-worker-2cnp)
-\ No newline at end of file

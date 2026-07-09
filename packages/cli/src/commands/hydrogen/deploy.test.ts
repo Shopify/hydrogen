@@ -308,64 +308,64 @@ describe('deploy', async () => {
   describe('resolveDeploymentOutputDirs', () => {
     const root = '/project';
 
-    it('uses Vite output dirs when available', async () => {
-      await expect(
+    it('uses Vite output dirs when available', () => {
+      expect(
         resolveDeploymentOutputDirs({
           root,
-          viteConfig: {
+          viteOutputDirs: {
             clientOutDir: '/project/vite/client',
             serverOutDir: '/project/vite/server',
           },
         }),
-      ).resolves.toEqual({
+      ).toEqual({
         assetsDir: 'vite/client',
         workerDir: 'vite/server',
       });
     });
 
-    it('uses configured output paths before Vite output dirs', async () => {
-      await expect(
+    it('uses configured output paths before Vite output dirs', () => {
+      expect(
         resolveDeploymentOutputDirs({
           root,
-          viteConfig: {
+          viteOutputDirs: {
             clientOutDir: '/project/vite/client',
             serverOutDir: '/project/vite/server',
           },
-          assetsDir: 'custom/client',
-          workerDir: 'custom/server',
+          assetsDirFlag: 'custom/client',
+          workerDirFlag: 'custom/server',
         }),
-      ).resolves.toEqual({
+      ).toEqual({
         assetsDir: 'custom/client',
         workerDir: 'custom/server',
       });
     });
 
-    it('uses configured output paths before fallback output', async () => {
-      await expect(
+    it('uses configured output paths before fallback output', () => {
+      expect(
         resolveDeploymentOutputDirs({
           root,
-          assetsDir: 'custom/client',
+          assetsDirFlag: 'custom/client',
         }),
-      ).resolves.toEqual({
+      ).toEqual({
         assetsDir: 'custom/client',
         workerDir: 'dist/server',
       });
     });
 
-    it('falls back to dist output when Vite output is unavailable', async () => {
-      await expect(resolveDeploymentOutputDirs({root})).resolves.toEqual({
+    it('falls back to dist output when Vite output is unavailable', () => {
+      expect(resolveDeploymentOutputDirs({root})).toEqual({
         assetsDir: 'dist/client',
         workerDir: 'dist/server',
       });
     });
 
-    it('uses configured worker dirs as directories', async () => {
-      await expect(
+    it('uses configured worker dirs as directories', () => {
+      expect(
         resolveDeploymentOutputDirs({
           root,
-          workerDir: 'custom/server',
+          workerDirFlag: 'custom/server',
         }),
-      ).resolves.toEqual({
+      ).toEqual({
         assetsDir: 'dist/client',
         workerDir: 'custom/server',
       });

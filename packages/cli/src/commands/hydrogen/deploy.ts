@@ -496,11 +496,11 @@ export async function runDeploy(
     workerDir = workerDirFlag ?? workerDir;
   } else {
     const viteConfig = await getViteConfig(root, ssrEntry).catch(() => null);
-    const outputDirs = await resolveDeploymentOutputDirs({
+    const outputDirs = resolveDeploymentOutputDirs({
       root,
-      viteConfig,
-      assetsDir: assetsDirFlag,
-      workerDir: workerDirFlag,
+      viteOutputDirs: viteConfig,
+      assetsDirFlag,
+      workerDirFlag,
     });
 
     assetsDir = outputDirs.assetsDir;
@@ -731,39 +731,31 @@ Continue?`.value,
 
 type DeploymentOutputResolverOptions = {
   root: string;
-  viteConfig?: {
+  viteOutputDirs?: {
     clientOutDir: string;
     serverOutDir: string;
   } | null;
-  assetsDir?: string;
-  workerDir?: string;
+  assetsDirFlag?: string;
+  workerDirFlag?: string;
 };
 
-export async function resolveDeploymentOutputDirs({
+export function resolveDeploymentOutputDirs({
   root,
-  viteConfig,
-  assetsDir,
-  workerDir,
-}: DeploymentOutputResolverOptions): Promise<{
+  viteOutputDirs,
+  assetsDirFlag,
+  workerDirFlag,
+}: DeploymentOutputResolverOptions): {
   assetsDir: string;
   workerDir: string;
-}> {
-  const fallbackOutputDirs = {
-    assetsDir: 'dist/client',
-    workerDir: 'dist/server',
-  };
-  const viteOutputDirs = viteConfig
-    ? {
-        assetsDir: relativePath(root, viteConfig.clientOutDir),
-        workerDir: relativePath(root, viteConfig.serverOutDir),
-      }
-    : undefined;
+} {
+  const viteAssetsDir =
+    viteOutputDirs && relativePath(root, viteOutputDirs.clientOutDir);
+  const viteWorkerDir =
+    viteOutputDirs && relativePath(root, viteOutputDirs.serverOutDir);
 
   return {
-    assetsDir:
-      assetsDir ?? viteOutputDirs?.assetsDir ?? fallbackOutputDirs.assetsDir,
-    workerDir:
-      workerDir ?? viteOutputDirs?.workerDir ?? fallbackOutputDirs.workerDir,
+    assetsDir: assetsDirFlag ?? viteAssetsDir ?? 'dist/client',
+    workerDir: workerDirFlag ?? viteWorkerDir ?? 'dist/server',
   };
 }
 
