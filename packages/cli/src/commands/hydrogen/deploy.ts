@@ -653,12 +653,7 @@ Continue?`.value,
           entry: ssrEntry,
         });
       } catch (error) {
-        // `@shopify/oxygen-cli` wraps any error thrown by `buildFunction` into a
-        // generic Error ("Build function failed with error: ..."). That drops the
-        // original error's actionable next steps and, because it's no longer an
-        // AbortError, cli-kit reports it as an uncaught crash. Capture the original
-        // here so it can be surfaced instead of the wrapped error (see the reject
-        // below).
+        // Capture the original error so it can be surfaced later, before oxygen-cli wraps it.
         buildError = error as Error;
         throw error;
       }
