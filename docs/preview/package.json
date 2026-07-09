@@ -28,7 +28,7 @@
     "@types/react-dom": "catalog:",
     "@types/react-syntax-highlighter": "^15.5.7",
     "typescript": "^5.2.2",
-    "vite": "^8.0.1"
+    "vite": "^8.0.16"
   },
   "engines": {
     "node": "^22 || ^24"
