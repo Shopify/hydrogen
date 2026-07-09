@@ -201,13 +201,16 @@ describe('deploy', async () => {
     defaultEnvironment: false,
     deploymentUrl: 'https://oxygen.shopifyapps.com',
     deploymentToken: mockToken,
+    environmentTag: undefined,
     generateAuthBypassToken: true,
+    authBypassTokenDuration: undefined,
     verificationMaxDuration: 180,
     metadata: {
       url: deployParams.metadataUrl,
       user: deployParams.metadataUser,
       version: deployParams.metadataVersion,
     },
+    overriddenEnvironmentVariables: undefined,
     skipVerification: true,
     rootPath: deployParams.path,
     skipBuild: false,
@@ -226,6 +229,16 @@ describe('deploy', async () => {
     onUploadFilesComplete: expect.any(Function),
     onUploadFilesError: expect.any(Function),
   };
+
+  function expectDeployConfig({
+    metadata,
+    ...rest
+  }: Record<string, unknown> & {metadata?: Record<string, unknown>}) {
+    return expect.objectContaining({
+      ...rest,
+      ...(metadata ? {metadata: expect.objectContaining(metadata)} : {}),
+    });
+  }
 
   beforeEach(async () => {
     process.exit = vi.fn() as any;
@@ -276,7 +289,7 @@ describe('deploy', async () => {
     await runDeploy(deployParams);
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: expectedConfig,
+      config: expectDeployConfig(expectedConfig),
       hooks: expectedHooks,
       logger: deploymentLogger,
     });
@@ -293,12 +306,12 @@ describe('deploy', async () => {
     });
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
+      config: expectDeployConfig({
         ...expectedConfig,
         assetsDir: 'custom/client',
         workerDir: 'custom/server',
         buildCommand: 'node --run build',
-      },
+      }),
       hooks,
       logger: deploymentLogger,
     });
@@ -386,7 +399,7 @@ describe('deploy', async () => {
     });
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
+      config: expectDeployConfig({
         ...expectedConfig,
         overriddenEnvironmentVariables: [
           {
@@ -395,7 +408,7 @@ describe('deploy', async () => {
             isSecret: true,
           },
         ],
-      },
+      }),
       hooks: expectedHooks,
       logger: deploymentLogger,
     });
@@ -442,10 +455,10 @@ describe('deploy', async () => {
     });
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
+      config: expectDeployConfig({
         ...expectedConfig,
         environmentTag: 'stage-1',
-      },
+      }),
       hooks: expectedHooks,
       logger: deploymentLogger,
     });
@@ -473,10 +486,10 @@ describe('deploy', async () => {
     });
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
+      config: expectDeployConfig({
         ...expectedConfig,
         environmentTag: 'stage-1',
-      },
+      }),
       hooks: expectedHooks,
       logger: deploymentLogger,
     });
@@ -497,10 +510,10 @@ describe('deploy', async () => {
     });
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
+      config: expectDeployConfig({
         ...expectedConfig,
         environmentTag: 'stage-1',
-      },
+      }),
       hooks: expectedHooks,
       logger: deploymentLogger,
     });
@@ -610,14 +623,14 @@ describe('deploy', async () => {
           body: expect.anything(),
         });
         expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-          config: {
+          config: expectDeployConfig({
             ...expectedConfig,
             environmentTag: 'main',
             metadata: {
               ...expectedConfig.metadata,
               description: '123 with additional changes',
             },
-          },
+          }),
           hooks: expectedHooks,
           logger: deploymentLogger,
         });
@@ -646,14 +659,14 @@ describe('deploy', async () => {
 
           expect(vi.mocked(renderWarning)).not.toHaveBeenCalled;
           expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-            config: {
+            config: expectDeployConfig({
               ...expectedConfig,
               environmentTag: 'main',
               metadata: {
                 ...expectedConfig.metadata,
                 description: 'cool new stuff',
               },
-            },
+            }),
             hooks: expectedHooks,
             logger: deploymentLogger,
           });
@@ -676,7 +689,7 @@ describe('deploy', async () => {
     await runDeploy(deployParams);
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {...expectedConfig, environmentTag: 'main'},
+      config: expectDeployConfig({...expectedConfig, environmentTag: 'main'}),
       hooks: expectedHooks,
       logger: deploymentLogger,
     });
@@ -758,11 +771,11 @@ describe('deploy', async () => {
       await runDeploy(deployParams);
 
       expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-        config: {
+        config: expectDeployConfig({
           ...expectedConfig,
           defaultEnvironment: true,
           environmentTag: undefined,
-        },
+        }),
         hooks: expectedHooks,
         logger: deploymentLogger,
       });
@@ -830,10 +843,10 @@ describe('deploy', async () => {
     await runDeploy(params);
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
+      config: expectDeployConfig({
         ...expectedConfig,
         buildCommand: 'hocus pocus',
-      },
+      }),
       hooks,
       logger: deploymentLogger,
     });
@@ -848,7 +861,7 @@ describe('deploy', async () => {
     await runDeploy({...deployParams, path: root});
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
+      config: expectDeployConfig({
         ...expectedConfig,
         rootPath: root,
         buildCommand: 'node --run build',
@@ -856,7 +869,7 @@ describe('deploy', async () => {
           ...expectedConfig.metadata,
           hydrogenVersion,
         },
-      },
+      }),
       hooks,
       logger: deploymentLogger,
     });
@@ -879,7 +892,7 @@ describe('deploy', async () => {
     await runDeploy(params);
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
+      config: expectDeployConfig({
         ...expectedConfig,
         rootPath: root,
         assetsDir: 'xyz/client',
@@ -890,7 +903,7 @@ describe('deploy', async () => {
           user: deployParams.metadataUser,
           version: deployParams.metadataVersion,
         },
-      },
+      }),
       hooks,
       logger: deploymentLogger,
     });
@@ -1074,6 +1087,20 @@ describe('deploy', async () => {
         });
 
         expect(renderConfirmationPrompt).toHaveBeenCalledWith({
+          confirmationMessage: 'Yes, confirm deploy',
+          cancellationMessage: 'No, cancel deploy',
+          message: expect.any(String),
+        });
+      });
+
+      it("doesn't render a user confirmation on deploy when the force flag is provided", async () => {
+        await runDeploy({
+          ...deployParams,
+          env: 'production',
+          force: true,
+        });
+
+        expect(renderConfirmationPrompt).not.toHaveBeenCalledWith({
           confirmationMessage: 'Yes, confirm deploy',
           cancellationMessage: 'No, cancel deploy',
           message: expect.any(String),

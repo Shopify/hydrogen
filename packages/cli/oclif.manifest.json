@@ -353,7 +353,7 @@
         },
         "force": {
           "char": "f",
-          "description": "Forces a deployment to proceed if there are uncommitted changes in its Git repository.",
+          "description": "Forces a deployment to proceed if there are uncommitted changes in its Git repository, and skips confirmation prompts for non-preview environments.",
           "env": "SHOPIFY_HYDROGEN_FLAG_FORCE",
           "name": "force",
           "required": false,
