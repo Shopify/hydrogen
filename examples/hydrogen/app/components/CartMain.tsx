@@ -17,7 +17,12 @@ export type CartMainProps = {
  * It is used by both the /cart route and the cart aside dialog.
  */
 export function CartMain({ layout }: CartMainProps) {
-  const cart = useCart((cart) => cart.data);
+  const cartState = useCart((cart) => cart);
+  const cart = cartState.data;
+  const totalsPending =
+    cartState.pending.lines.size > 0 ||
+    cartState.pending.discountCodes.size > 0 ||
+    cartState.revalidating === true;
   const cartLines = cart.lines.nodes;
 
   const linesCount = Boolean(cartLines.length);
@@ -34,7 +39,23 @@ export function CartMain({ layout }: CartMainProps) {
 
   return (
     <section className={className} aria-label={layout === "page" ? "Cart page" : "Cart drawer"}>
-      <CartEmpty hidden={linesCount} layout={layout} />
+      <span role="status" className="sr-only">
+        {totalsPending
+          ? "Updating cart totals"
+          : cartState.errors.network.length === 0
+            ? "Cart totals updated"
+            : ""}
+      </span>
+      {cartState.errors.network.length > 0 ? (
+        <div role="alert" aria-atomic="true">
+          {cartState.errors.network.map((error, index) => (
+            <p key={`${error.message}-${index}`}>{error.message}</p>
+          ))}
+        </div>
+      ) : null}
+      <div aria-busy={cartState.revalidating === true}>
+        <CartEmpty hidden={linesCount} layout={layout} />
+      </div>
       <div className="cart-details">
         <p id="cart-lines" className="sr-only">
           Line items
@@ -53,7 +74,7 @@ export function CartMain({ layout }: CartMainProps) {
             })}
           </ul>
         </div>
-        {cartHasItems && <CartSummary cart={cart} layout={layout} />}
+        {cartHasItems && <CartSummary cart={cart} layout={layout} totalsPending={totalsPending} />}
       </div>
     </section>
   );

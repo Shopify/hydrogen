@@ -43,6 +43,7 @@ onMounted(() => configureOpenCartAction());
       </div>
 
       <div class="flex-1 overflow-y-auto px-6 py-4">
+        <CartRevalidationStatus />
         <CartErrorBanner />
         <CartLineItems empty-heading-level="h3" error-id-prefix="cart-drawer-line-error" />
       </div>

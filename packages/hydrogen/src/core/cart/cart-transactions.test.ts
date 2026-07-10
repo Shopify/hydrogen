@@ -138,7 +138,7 @@ describe("transaction cart store", () => {
       vi.fn(
         (
           payload: { lines?: Array<{ id?: string; quantity: number }> },
-          options?: { signal?: AbortSignal },
+          options?: { signal?: AbortSignal; event?: { detail?: Record<string, unknown> } },
         ) => {
           const deferred = createDeferred<unknown>();
           transportDeferreds.push(deferred);
@@ -154,6 +154,7 @@ describe("transaction cart store", () => {
                 action: "update" as const,
                 context: "standard-action" as const,
                 lines: payload.lines,
+                detail: options?.event?.detail,
                 promise: dispatchEventsSynchronously
                   ? deferred.promise
                   : deferred.promise.then((result) => result),

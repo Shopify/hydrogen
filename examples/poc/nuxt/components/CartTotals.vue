@@ -6,23 +6,31 @@ const totalQuantity = useCart((s) => s.data.totalQuantity);
 const checkoutUrl = useCart((s) => s.data.checkoutUrl);
 const cost = useCart((s) => s.data.cost);
 const isTotalsPending = useCart(
-  (s) => s.pending.lines.size > 0 || s.pending.discountCodes.size > 0,
+  (s) => s.pending.lines.size > 0 || s.pending.discountCodes.size > 0 || s.revalidating === true,
 );
 </script>
 
 <template>
-  <div
-    class="mt-8 space-y-2 border-t border-black/10 pt-6 transition-opacity"
-    :class="isTotalsPending ? 'opacity-30' : ''"
-  >
-    <div class="flex justify-between text-sm text-black/50">
-      <span>Subtotal ({{ totalQuantity }} items)</span>
-      <span>{{ formatMoney(cost.subtotalAmount) }}</span>
-    </div>
+  <div class="mt-8 border-t border-black/10 pt-6">
+    <div class="space-y-2" :aria-busy="isTotalsPending">
+      <div
+        class="flex justify-between text-sm"
+        :class="isTotalsPending ? 'text-black/60' : 'text-black/70'"
+      >
+        <span>
+          Subtotal ({{ totalQuantity }} items)
+          <span v-if="isTotalsPending" aria-hidden="true"> (updating)</span>
+        </span>
+        <span>{{ formatMoney(cost.subtotalAmount) }}</span>
+      </div>
 
-    <div class="flex justify-between text-lg font-semibold">
-      <span>Total</span>
-      <span>{{ formatMoney(cost.totalAmount) }}</span>
+      <div
+        class="flex justify-between text-lg font-semibold"
+        :class="isTotalsPending ? 'text-black/60' : ''"
+      >
+        <span>Total</span>
+        <span>{{ formatMoney(cost.totalAmount) }}</span>
+      </div>
     </div>
 
     <div v-if="checkoutUrl && totalQuantity > 0" class="mt-6 space-y-3">

@@ -7,23 +7,30 @@
 	const checkoutUrl = cartState((s) => s.data.checkoutUrl);
 	const cost = cartState((s) => s.data.cost);
 	const isTotalsPending = cartState(
-		(s) => s.pending.lines.size > 0 || s.pending.discountCodes.size > 0
+		(s) => s.pending.lines.size > 0 || s.pending.discountCodes.size > 0 || s.revalidating === true
 	);
 </script>
 
 <div
-	class={$isTotalsPending
-		? 'mt-8 space-y-2 border-t border-black/10 pt-6 opacity-30 transition-opacity'
-		: 'mt-8 space-y-2 border-t border-black/10 pt-6 transition-opacity'}
+	class="mt-8 border-t border-black/10 pt-6"
 >
-	<div class="flex justify-between text-sm text-black/50">
-		<span>Subtotal ({$totalQuantity} items)</span>
-		<span>{formatMoney($cost.subtotalAmount)}</span>
-	</div>
+	<div class="space-y-2" aria-busy={$isTotalsPending}>
+		<div
+			class="flex justify-between text-sm {$isTotalsPending ? 'text-black/60' : 'text-black/70'}"
+		>
+			<span>
+				Subtotal ({$totalQuantity} items)
+				{#if $isTotalsPending}<span aria-hidden="true"> (updating)</span>{/if}
+			</span>
+			<span>{formatMoney($cost.subtotalAmount)}</span>
+		</div>
 
-	<div class="flex justify-between text-lg font-semibold">
-		<span>Total</span>
-		<span>{formatMoney($cost.totalAmount)}</span>
+		<div
+			class="flex justify-between text-lg font-semibold {$isTotalsPending ? 'text-black/60' : ''}"
+		>
+			<span>Total</span>
+			<span>{formatMoney($cost.totalAmount)}</span>
+		</div>
 	</div>
 
 	{#if $checkoutUrl && $totalQuantity > 0}
