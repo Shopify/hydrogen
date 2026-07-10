@@ -5,6 +5,7 @@ import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {writeFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {
+  isTTY,
   renderSelectPrompt,
   renderConfirmationPrompt,
   renderTasks,
@@ -57,6 +58,7 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
 
   return {
     ...original,
+    isTTY: vi.fn(() => true),
     renderTasks: vi.fn(() => Promise.resolve()),
     renderSelectPrompt: vi.fn(() => Promise.resolve()),
     renderConfirmationPrompt: vi.fn(() => Promise.resolve(false)),
@@ -2008,6 +2010,174 @@ describe('upgrade', async () => {
       });
 
       expect(args).toEqual(result);
+    });
+  });
+
+  describe('non-interactive mode', () => {
+    it('throws when --non-interactive is set without --version', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          await expect(
+            runUpgrade({appPath, nonInteractive: true}),
+          ).rejects.toThrowError('--non-interactive flag requires --version');
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
+    });
+
+    it('throws with a hint pointing at --non-interactive when stdin is not a TTY', async () => {
+      vi.mocked(isTTY).mockReturnValueOnce(false);
+
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          await expect(runUpgrade({appPath})).rejects.toThrowError(
+            /requires an interactive terminal/,
+          );
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
+    });
+
+    it('bypasses the TTY check when --non-interactive is set', async () => {
+      vi.mocked(isTTY).mockReturnValue(false);
+
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          // Without --version this should fail for the preconditions reason,
+          // not for the TTY reason — proving the TTY gate didn't trigger.
+          await expect(
+            runUpgrade({appPath, nonInteractive: true}),
+          ).rejects.toThrowError('--non-interactive flag requires --version');
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
+    });
+
+    it('throws from getSelectedRelease when --version is not a known upgrade target', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          const {releases} = await getChangelog();
+          const current = await getHydrogenVersion({appPath});
+          const {availableUpgrades} = getAvailableUpgrades({
+            ...current,
+            releases,
+          });
+
+          await expect(
+            getSelectedRelease({
+              availableUpgrades,
+              currentVersion: current.currentVersion,
+              currentDependencies: current.currentDependencies,
+              targetVersion: '9999.99.99',
+              nonInteractive: true,
+            }),
+          ).rejects.toThrowError(
+            /9999\.99\.99 is not an available Hydrogen upgrade target/,
+          );
+
+          expect(renderSelectPrompt).not.toHaveBeenCalled();
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
+    });
+
+    it('auto-confirms displayConfirmation when nonInteractive is set', async () => {
+      const selectedRelease = {
+        title: 'Test release',
+        version: '2025.7.0',
+      } as Release;
+
+      const result = await displayConfirmation({
+        cumulativeRelease: CUMULATIVE_RELEASE,
+        selectedRelease,
+        nonInteractive: true,
+      });
+
+      expect(result).toEqual(true);
+      expect(renderConfirmationPrompt).not.toHaveBeenCalled();
+    });
+
+    it('bypasses the TTY check when --version=next is passed', async () => {
+      vi.mocked(isTTY).mockReturnValue(false);
+
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          await expect(
+            runUpgrade({appPath, version: 'next', force: false}),
+          ).resolves.toBeUndefined();
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: {
+            dependencies: {
+              '@shopify/hydrogen': '2025.4.0',
+            },
+          },
+        },
+      );
+    });
+
+    it('overwrites an existing upgrade instructions file without prompting', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          const {releases} = await getChangelog();
+
+          const selectedRelease = releases.find(
+            (release) => release.version === '2023.10.0',
+          ) as (typeof releases)[0];
+
+          const releaseWithRemovals: CumulativeRelease = {
+            ...CUMULATIVE_RELEASE,
+            removeDependencies: ['@remix-run/react'],
+            removeDevDependencies: ['@remix-run/dev'],
+          };
+
+          // First run creates the instructions file.
+          const firstPath = await generateUpgradeInstructionsFile({
+            appPath,
+            cumulativeRelease: releaseWithRemovals,
+            currentVersion: '2023.1.6',
+            selectedRelease,
+          });
+
+          expect(firstPath).toBeDefined();
+
+          // Second run, non-interactive, should overwrite without prompting.
+          const secondPath = await generateUpgradeInstructionsFile({
+            appPath,
+            cumulativeRelease: releaseWithRemovals,
+            currentVersion: '2023.1.6',
+            selectedRelease,
+            nonInteractive: true,
+          });
+
+          expect(secondPath).toBe(firstPath);
+          expect(renderConfirmationPrompt).not.toHaveBeenCalled();
+
+          const mdContent = await readFile(
+            joinPath(appPath, secondPath!),
+            'utf8',
+          );
+
+          expect(mdContent).toContain('## Removed packages');
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
     });
   });
 });

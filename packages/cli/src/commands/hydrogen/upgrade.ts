@@ -5,6 +5,7 @@ import {Flags} from '@oclif/core';
 import {isClean, ensureInsideGitDirectory} from '@shopify/cli-kit/node/git';
 import Command from '@shopify/cli-kit/node/base-command';
 import {
+  isTTY,
   renderConfirmationPrompt,
   renderInfo,
   renderSelectPrompt,
@@ -108,6 +109,13 @@ export default class Upgrade extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
       char: 'f',
     }),
+    'non-interactive': Flags.boolean({
+      description:
+        'Run without any interactive prompts. Requires --version. Auto-accepts the upgrade confirmation and overwrites any existing upgrade instructions file.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_NON_INTERACTIVE',
+      char: 'y',
+      aliases: ['yes'],
+    }),
   };
 
   async run(): Promise<void> {
@@ -126,13 +134,35 @@ type UpgradeOptions = {
   appPath: string;
   version?: string;
   force?: boolean;
+  nonInteractive?: boolean;
 };
 
 export async function runUpgrade({
   appPath,
   version: targetVersion,
   force,
+  nonInteractive,
 }: UpgradeOptions) {
+  if (nonInteractive && !targetVersion) {
+    throw new AbortError(
+      'The --non-interactive flag requires --version to be set.',
+      'Re-run with `shopify hydrogen upgrade --version <version> --non-interactive`.',
+    );
+  }
+
+  // Fail fast when there's no TTY and the caller hasn't opted into a
+  // non-interactive mode. Uses the same helper cli-kit gates its prompts on,
+  // so we short-circuit before any git/changelog/network work and point the
+  // user at the flag instead of the generic "Failed to prompt" error.
+  // `--version=next` is an internal CI-oriented path that already auto-skips
+  // the main confirmation prompt, so treat it as implicitly non-interactive.
+  if (!nonInteractive && targetVersion !== 'next' && !isTTY()) {
+    throw new AbortError(
+      'The `hydrogen upgrade` command requires an interactive terminal.',
+      'Re-run with `--version <version> --non-interactive` (or set `SHOPIFY_HYDROGEN_FLAG_NON_INTERACTIVE=1`) to skip prompts, or run the command in a TTY.',
+    );
+  }
+
   // --version=next is only available when running from monorepo, tests, or CI
   if (targetVersion === 'next') {
     const isInTests = process.env.SHOPIFY_UNIT_TEST === '1';
@@ -208,6 +238,7 @@ export async function runUpgrade({
       targetVersion,
       availableUpgrades,
       currentDependencies,
+      nonInteractive,
     });
 
     // Get an aggregate list of features and fixes included in the upgrade versions range
@@ -222,15 +253,19 @@ export async function runUpgrade({
       cumulativeRelease,
       selectedRelease,
       targetVersion,
+      nonInteractive,
     });
   } while (!confirmed);
 
-  // Generate a markdown file with upgrade instructions
-  const instrunctionsFilePathPromise = generateUpgradeInstructionsFile({
+  // Generate a markdown file with upgrade instructions.
+  // `--version=next` is treated as implicitly non-interactive to stay
+  // consistent with how `displayConfirmation` handles it.
+  const instructionsFilePathPromise = generateUpgradeInstructionsFile({
     appPath,
     cumulativeRelease,
     currentVersion,
     selectedRelease,
+    nonInteractive: nonInteractive || targetVersion === 'next',
   });
 
   await upgradeNodeModules({
@@ -249,13 +284,13 @@ export async function runUpgrade({
     targetVersion,
   });
 
-  const instrunctionsFilePath = await instrunctionsFilePathPromise;
+  const instructionsFilePath = await instructionsFilePathPromise;
 
   // Display a summary of the upgrade and next steps
   await displayUpgradeSummary({
     appPath,
     currentVersion,
-    instrunctionsFilePath,
+    instructionsFilePath,
     selectedRelease,
   });
 }
@@ -542,11 +577,13 @@ export async function getSelectedRelease({
   availableUpgrades,
   currentVersion,
   currentDependencies,
+  nonInteractive,
 }: {
   targetVersion?: string;
   availableUpgrades: Array<Release>;
   currentVersion: string;
   currentDependencies: Record<string, string>;
+  nonInteractive?: boolean;
 }) {
   const targetRelease = targetVersion
     ? targetVersion === 'next'
@@ -557,6 +594,13 @@ export async function getSelectedRelease({
             getAbsoluteVersion(targetVersion),
         )
     : undefined;
+
+  if (!targetRelease && nonInteractive) {
+    throw new AbortError(
+      `Version ${targetVersion} is not an available Hydrogen upgrade target.`,
+      'Pick one of the versions listed at https://hydrogen.shopify.dev/releases or run without --non-interactive to choose from a prompt.',
+    );
+  }
 
   return (
     targetRelease ?? promptUpgradeOptions(currentVersion, availableUpgrades)
@@ -720,10 +764,12 @@ export function displayConfirmation({
   cumulativeRelease,
   selectedRelease,
   targetVersion,
+  nonInteractive,
 }: {
   cumulativeRelease: CumulativeRelease;
   selectedRelease: Release;
   targetVersion?: string;
+  nonInteractive?: boolean;
 }) {
   const {features, fixes} = cumulativeRelease;
   const allRemovedPackages = getAllRemovedPackages(cumulativeRelease);
@@ -767,8 +813,8 @@ export function displayConfirmation({
     });
   }
 
-  // Skip confirmation for next version upgrades
-  if (targetVersion === 'next') {
+  // Skip confirmation for next version upgrades or when running non-interactively
+  if (targetVersion === 'next' || nonInteractive) {
     return true;
   }
 
@@ -1260,12 +1306,12 @@ async function displayUpgradeSummary({
   appPath,
   currentVersion,
   selectedRelease,
-  instrunctionsFilePath,
+  instructionsFilePath,
 }: {
   appPath: string;
   currentVersion: string;
   selectedRelease: Release;
-  instrunctionsFilePath?: string;
+  instructionsFilePath?: string;
 }) {
   const updatedDependenciesList = [
     ...Object.entries(selectedRelease.dependencies || {}).map(
@@ -1278,8 +1324,8 @@ async function displayUpgradeSummary({
 
   let nextSteps = [];
 
-  if (typeof instrunctionsFilePath === 'string') {
-    let instructions = `Upgrade instructions created at:\nfile://${instrunctionsFilePath}`;
+  if (typeof instructionsFilePath === 'string') {
+    let instructions = `Upgrade instructions created at:\nfile://${instructionsFilePath}`;
     nextSteps.push(instructions);
   }
 
@@ -1415,11 +1461,13 @@ export async function generateUpgradeInstructionsFile({
   cumulativeRelease,
   currentVersion,
   selectedRelease,
+  nonInteractive,
 }: {
   appPath: string;
   cumulativeRelease: CumulativeRelease;
   currentVersion: string;
   selectedRelease: Release;
+  nonInteractive?: boolean;
 }) {
   let filename = '';
 
@@ -1501,10 +1549,12 @@ export async function generateUpgradeInstructionsFile({
   if (!(await fileExists(filePath))) {
     await touchFile(filePath);
   } else {
-    const overwriteMdFile = await renderConfirmationPrompt({
-      message: `A previous upgrade instructions file already exists for this version.\nDo you want to overwrite it?`,
-      defaultValue: false,
-    });
+    const overwriteMdFile = nonInteractive
+      ? true
+      : await renderConfirmationPrompt({
+          message: `A previous upgrade instructions file already exists for this version.\nDo you want to overwrite it?`,
+          defaultValue: false,
+        });
 
     if (overwriteMdFile) {
       await removeFile(`${filePath}.old`);

@@ -15,7 +15,7 @@
  *   UPGRADE_TEST_TO=<version>     - Test to specific version (default: latest)
  *   UPGRADE_TEST_LAST_N=<number>  - Test last N versions
  *   FORCE_CHANGELOG_SOURCE=local  - Read changelog from local file (set by tests)
- *   SHOPIFY_HYDROGEN_FLAG_FORCE=1 - Skip interactive prompts (set by tests)
+ *   SHOPIFY_HYDROGEN_FLAG_FORCE=1 - Skip dirty git branch check (set by tests)
  *   CI=1                          - Enable CI mode (set by tests)
  *
  * Key design decisions:
@@ -72,6 +72,7 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
 
   return {
     ...original,
+    isTTY: vi.fn(() => true),
     renderTasks: vi.fn(async (tasks) => {
       for (const task of tasks) {
         if (task.task && typeof task.task === 'function') {
