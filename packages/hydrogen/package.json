@@ -101,5 +101,26 @@
     "react": {
       "optional": true
     }
+  },
+  "shopify": {
+    "cli": {
+      "disabledCommands": [
+        "hydrogen:build",
+        "hydrogen:check",
+        "hydrogen:codegen",
+        "hydrogen:debug:cpu",
+        "hydrogen:dev",
+        "hydrogen:g",
+        "hydrogen:generate:route",
+        "hydrogen:generate:routes",
+        "hydrogen:preview",
+        "hydrogen:setup",
+        "hydrogen:setup:css",
+        "hydrogen:setup:markets",
+        "hydrogen:setup:vite",
+        "hydrogen:shortcut",
+        "hydrogen:upgrade"
+      ]
+    }
   }
 }
