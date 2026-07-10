@@ -1,15 +1,13 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { createContractError } from "../../src/contract";
-import { test, type CartTestProduct, type StockLimitCartTestProduct } from "./config";
+import { test, type CartTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
 const ADD_TO_CART_NAME = /add to cart/i;
 const REMOVE_CONTROL_NAME = /remove/i;
 const INCREASE_CONTROL_NAME = /increase|^\+$/i;
 const DECREASE_CONTROL_NAME = /decrease|^[-−]$/i;
-const CART_COOKIE_NAME = "cart";
-const CART_GID_PREFIX = "gid://shopify/Cart/";
 const CART_ENDPOINT_PATTERN = "**/api/cart";
 
 type CartExpectation = {
@@ -48,8 +46,18 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
     return;
   }
 
-  await seedCartCookie(page, product);
-  await page.reload();
+  const expectation = await tryAddProductToCart(page, product, data.paths.cart);
+  if (!expectation) {
+    throw createContractError({
+      capability: "product-cart",
+      routePath: product.path,
+      expectation: "The discovered stock-limit product exposes an enabled Add to cart button.",
+      likelyFix: "Keep the discovered in-stock variant available on its product page.",
+      docsAnchor: "#cart-line-items",
+    });
+  }
+  await setCartLineQuantity(page, expectation, product.maxQuantity);
+  await page.goto(product.path);
 
   let releaseRequest!: () => void;
   const requestGate = new Promise<void>((resolve) => {
@@ -110,20 +118,6 @@ async function addProductToCart(
   });
 }
 
-async function seedCartCookie(page: Page, product: StockLimitCartTestProduct): Promise<void> {
-  await page.goto(product.path);
-  const token = product.cartId.startsWith(CART_GID_PREFIX)
-    ? product.cartId.slice(CART_GID_PREFIX.length)
-    : product.cartId;
-  await page.context().addCookies([
-    {
-      name: CART_COOKIE_NAME,
-      value: encodeURIComponent(token),
-      url: new URL(page.url()).origin,
-    },
-  ]);
-}
-
 async function tryAddProductToCart(
   page: Page,
   product: CartTestProduct,
@@ -159,6 +153,28 @@ async function tryAddProductToCart(
   await expectCartLine(page, expectation);
 
   return expectation;
+}
+
+async function setCartLineQuantity(
+  page: Page,
+  expectation: CartExpectation,
+  quantity: number,
+): Promise<void> {
+  const line = await expectCartLine(page, expectation);
+  const quantityInput = await quantityInputFor(line, expectation.cartPath);
+  const cartResponse = page.waitForResponse(
+    (response) => response.url().includes("/api/cart") && response.request().method() === "POST",
+    { timeout: CART_SETTLE_TIMEOUT_MS },
+  );
+
+  await quantityInput.fill(String(quantity));
+  await quantityInput.press("Tab");
+  await (await cartResponse).finished();
+  await expect
+    .poll(() => numericInputValue(quantityInput), {
+      message: `Expected cart line quantity to settle at the discovered stock limit of ${quantity}.`,
+    })
+    .toBe(quantity);
 }
 
 async function expectCartLine(page: Page, expectation: CartExpectation): Promise<Locator> {

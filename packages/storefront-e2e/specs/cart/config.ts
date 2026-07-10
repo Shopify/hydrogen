@@ -45,7 +45,6 @@ const CREATE_STOCK_LIMIT_CART_MUTATION = gql(`
       input: { lines: [{ merchandiseId: $merchandiseId, quantity: $quantity }] }
     ) {
       cart {
-        id
         lines(first: 1) {
           nodes {
             quantity
@@ -90,7 +89,6 @@ export type CartTestProduct = {
 };
 
 export type StockLimitCartTestProduct = CartTestProduct & {
-  readonly cartId: string;
   readonly maxQuantity: number;
 };
 
@@ -197,7 +195,6 @@ async function discoverStockLimitProduct(
     if (!createdCart || !seededLine || seededLine.quantity >= STOCK_LIMIT_CART_QUANTITY) continue;
 
     return {
-      cartId: createdCart.id,
       maxQuantity: seededLine.quantity,
       path: productPath(product.handle, variant.selectedOptions),
       productTitle: product.title,
