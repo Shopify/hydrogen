@@ -1,13 +1,16 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { createContractError } from "../../src/contract";
-import { test, type CartTestProduct } from "./config";
+import { test, type CartTestProduct, type StockLimitCartTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
 const ADD_TO_CART_NAME = /add to cart/i;
 const REMOVE_CONTROL_NAME = /remove/i;
 const INCREASE_CONTROL_NAME = /increase|^\+$/i;
 const DECREASE_CONTROL_NAME = /decrease|^[-−]$/i;
+const CART_COOKIE_NAME = "cart";
+const CART_GID_PREFIX = "gid://shopify/Cart/";
+const CART_ENDPOINT_PATTERN = "**/api/cart";
 
 type CartExpectation = {
   readonly cartPath: string;
@@ -38,6 +41,55 @@ test("cart removes product", async ({ data, page }) => {
   await removeCartLine(page, expectation);
 });
 
+test("cart rolls back an optimistic add beyond available stock", async ({ data, page }) => {
+  const product = data.stockLimitProduct;
+  if (!product) {
+    test.skip(true, "No finite-stock product could be seeded to its maximum quantity");
+    return;
+  }
+
+  await seedCartCookie(page, product);
+  await page.reload();
+
+  let releaseRequest!: () => void;
+  const requestGate = new Promise<void>((resolve) => {
+    releaseRequest = resolve;
+  });
+  await page.route(CART_ENDPOINT_PATTERN, async (route) => {
+    await requestGate;
+    await route.continue();
+  });
+
+  const addToCart = page.getByRole("button", { name: ADD_TO_CART_NAME }).first();
+  const cartResponse = page.waitForResponse(
+    (response) => response.url().includes("/api/cart") && response.request().method() === "POST",
+    { timeout: CART_SETTLE_TIMEOUT_MS },
+  );
+
+  try {
+    await addToCart.click();
+    const line = cartOverlayLineFor(page, product.productTitle);
+    await expect(line).toBeVisible({ timeout: CART_SETTLE_TIMEOUT_MS });
+    const quantityInput = await quantityInputFor(line, product.path);
+    await expect
+      .poll(() => numericInputValue(quantityInput), {
+        message: `Expected cart line quantity to optimistically increase from ${product.maxQuantity} to ${product.maxQuantity + 1}.`,
+      })
+      .toBe(product.maxQuantity + 1);
+
+    releaseRequest();
+    await (await cartResponse).finished();
+    await expect
+      .poll(() => numericInputValue(quantityInput), {
+        message: `Expected cart line quantity to roll back to the stock limit of ${product.maxQuantity}.`,
+      })
+      .toBe(product.maxQuantity);
+  } finally {
+    releaseRequest();
+    await page.unroute(CART_ENDPOINT_PATTERN);
+  }
+});
+
 async function addProductToCart(
   page: Page,
   products: readonly CartTestProduct[],
@@ -56,6 +108,20 @@ async function addProductToCart(
       "Ensure the test store has an in-stock product variant with an enabled Add to cart button.",
     docsAnchor: "#cart-line-items",
   });
+}
+
+async function seedCartCookie(page: Page, product: StockLimitCartTestProduct): Promise<void> {
+  await page.goto(product.path);
+  const token = product.cartId.startsWith(CART_GID_PREFIX)
+    ? product.cartId.slice(CART_GID_PREFIX.length)
+    : product.cartId;
+  await page.context().addCookies([
+    {
+      name: CART_COOKIE_NAME,
+      value: encodeURIComponent(token),
+      url: new URL(page.url()).origin,
+    },
+  ]);
 }
 
 async function tryAddProductToCart(
