@@ -1,6 +1,6 @@
 import { describe, expectTypeOf, it } from "vitest";
 
-import { CART_TRANSACTION_TYPES } from "./transaction-cart-store";
+import { CART_TRANSACTION_TYPES } from "./cart";
 
 describe("cart transaction payloads", () => {
   it("keeps batch cardinality in the transaction registry", () => {

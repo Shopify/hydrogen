@@ -36,7 +36,7 @@ export function CartLineItem({ line }: { line: CartLine }) {
 
   return (
     <div
-      className="grid grid-cols-[var(--spacing-cart-line-thumbnail-width)_1fr_auto] items-stretch gap-3 py-4"
+      className={`grid grid-cols-[var(--spacing-cart-line-thumbnail-width)_1fr_auto] items-stretch gap-3 py-4`}
       {...(isPending ? { "aria-busy": "true" } : {})}
     >
       <div className="bg-surface-secondary h-full w-full overflow-hidden">
@@ -63,7 +63,9 @@ export function CartLineItem({ line }: { line: CartLine }) {
         {variantSubtitle ? (
           <p className="text-on-surface-secondary mt-1 text-xs">{variantSubtitle}</p>
         ) : null}
-        <p className="text-on-surface mt-2 text-sm">
+        <p
+          className={`text-on-surface mt-2 text-sm transition-opacity ${isPending ? "opacity-30" : ""}`}
+        >
           {onSale ? (
             <span className="text-sale font-medium">{formatPrice(totalAmount)}</span>
           ) : (

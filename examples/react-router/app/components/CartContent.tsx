@@ -18,6 +18,8 @@ import { CartLineItem } from "./CartLineItem";
 export function CartContent() {
   const cart = useCart((state) => state.data);
   const loading = useCart((state) => state.loading);
+  const pending = useCart((state) => state.pending);
+  const isPending = pending.lines.size > 0 || pending.discountCodes.size > 0;
   const lines = cart.lines.nodes;
   const totalQuantity = cart.totalQuantity;
   const subtotal = cart.cost.subtotalAmount;
@@ -111,7 +113,11 @@ export function CartContent() {
           {/* Estimated total */}
           <div className="flex items-center justify-between">
             <span className="text-on-surface text-sm font-medium">{content.cart.totalLabel}</span>
-            <span className="text-on-surface text-base font-medium">{formatPrice(subtotal)}</span>
+            <span
+              className={`text-on-surface text-base font-medium transition-opacity ${isPending ? "opacity-30" : ""}`}
+            >
+              {formatPrice(subtotal)}
+            </span>
           </div>
           <p className="text-on-surface-secondary text-xs">
             {content.cart.taxesAndShippingAtCheckout}

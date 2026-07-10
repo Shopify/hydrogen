@@ -64,7 +64,11 @@ export function CartLineItem({ line }: { line: CartLineView }) {
   const errorId = `cart-line-error-${line.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
   return (
-    <li className="flex gap-3 py-4" data-testid="cart-line">
+    <li
+      className={`flex gap-3 py-4 transition-opacity ${pending ? "opacity-60" : ""}`}
+      data-testid="cart-line"
+      {...(pending ? { "aria-busy": "true" } : {})}
+    >
       <div className="bg-surface-secondary size-20 shrink-0 overflow-hidden">
         {merchandise?.image ? (
           <img

@@ -1,13 +1,14 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { CartData, CartLine } from "./state";
-import { EMPTY_CART_DATA } from "./state";
 import {
-  createTransactionCartStore,
+  configureCartEndpoint,
+  createCartStore,
   resetStandardActionsForTests,
   type CartStore,
-} from "./transaction-cart-store";
+} from "./cart";
+import type { CartData, CartLine } from "./state";
+import { EMPTY_CART_DATA } from "./state";
 
 type Deferred<T> = {
   promise: Promise<T>;
@@ -127,10 +128,12 @@ describe("transaction cart store", () => {
   let store: CartStore;
   let transportDeferreds: Array<Deferred<unknown>>;
   let transportSignals: AbortSignal[];
+  let dispatchEventsSynchronously: boolean;
 
   beforeEach(() => {
     transportDeferreds = [];
     transportSignals = [];
+    dispatchEventsSynchronously = true;
     const updateCart = Object.assign(
       vi.fn(
         (
@@ -146,13 +149,19 @@ describe("transaction cart store", () => {
             });
           }
           if (payload.lines) {
-            const event = Object.assign(new Event("shopify:cart:lines-update"), {
-              action: "update" as const,
-              context: "standard-action" as const,
-              lines: payload.lines,
-              promise: deferred.promise,
-            });
-            document.dispatchEvent(event);
+            const dispatchEvent = () => {
+              const event = Object.assign(new Event("shopify:cart:lines-update"), {
+                action: "update" as const,
+                context: "standard-action" as const,
+                lines: payload.lines,
+                promise: dispatchEventsSynchronously
+                  ? deferred.promise
+                  : deferred.promise.then((result) => result),
+              });
+              document.dispatchEvent(event);
+            };
+            if (dispatchEventsSynchronously) dispatchEvent();
+            if (!dispatchEventsSynchronously) queueMicrotask(dispatchEvent);
           }
           return deferred.promise;
         },
@@ -165,7 +174,7 @@ describe("transaction cart store", () => {
       writable: true,
     });
     resetStandardActionsForTests();
-    store = createTransactionCartStore({ initialData: { cart: EMPTY_CART_DATA } });
+    store = createCartStore({ initialData: { cart: EMPTY_CART_DATA } });
     store.connect();
   });
 
@@ -218,6 +227,22 @@ describe("transaction cart store", () => {
     expect(store.getState().data.lines.nodes.map((line) => line.id)).toEqual(["line-a"]);
   });
 
+  it("settles endpoint results that already contain a lines connection", async () => {
+    const addition = createDeferred<unknown>();
+    dispatchAdd([{ merchandiseId: "variant-a", quantity: 1 }], [product("variant-a")], addition);
+    addition.resolve({
+      cart: {
+        ...makeCart([makeLine("line-a", 1, "variant-a")]),
+        lines: { nodes: [makeLine("line-a", 1, "variant-a")] },
+      },
+    });
+    await Promise.resolve();
+
+    expect(store.getState().data.lines.nodes).toHaveLength(1);
+    expect(store.getState().data.lines.nodes[0].id).toBe("line-a");
+    expect(store.getState().pending.lines).toEqual(new Set());
+  });
+
   it("does not let one keyed line abort an unrelated line", async () => {
     store.hydrate(makeCart([makeLine("line-a", 1), makeLine("line-b", 1)]));
     const firstA = store.handleFormSubmit(submitLine("line-a"));
@@ -232,6 +257,22 @@ describe("transaction cart store", () => {
     expect(transportSignals[2].aborted).toBe(false);
     store.destroy();
     await Promise.all([firstA, lineB, secondA]);
+  });
+
+  it("keeps the transport signal when its Standard Event is asynchronous", async () => {
+    dispatchEventsSynchronously = false;
+    store.hydrate(makeCart([makeLine("line-a", 1)]));
+    const submission = store.handleFormSubmit(submitLine("line-a"));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(transportSignals[0].aborted).toBe(false);
+    expect(store.getState().data.lines.nodes[0].quantity).toBe(2);
+    expect(store.getState().pending.lines).toEqual(new Set(["line-a"]));
+
+    transportDeferreds[0].resolve(serverResult([makeLine("line-a", 2)]));
+    await submission;
+    expect(store.getState().pending.lines).toEqual(new Set());
   });
 
   it("retains references outside a transaction's scope", () => {
@@ -323,5 +364,30 @@ describe("transaction cart store", () => {
     dispatchAdd([{ merchandiseId: "variant-a", quantity: 1 }], [product("variant-a")], retry);
     expect(store.getState().errors.network).toEqual([]);
     expect(store.getState().data.lines.nodes[0].quantity).toBe(1);
+  });
+
+  it("syncs an existing quantity input when add-to-cart changes its line", async () => {
+    configureCartEndpoint("/api/cart");
+    store.hydrate(makeCart([makeLine("line-a", 1, "variant-a")]));
+    const form = document.createElement("form");
+    form.setAttribute("action", "/api/cart");
+    const lineId = document.createElement("input");
+    lineId.type = "hidden";
+    lineId.name = "lineId";
+    lineId.setAttribute("value", "line-a");
+    const quantity = document.createElement("input");
+    quantity.name = "quantity";
+    quantity.value = "1";
+    form.append(lineId, quantity);
+    document.body.append(form);
+
+    const addition = createDeferred<unknown>();
+    dispatchAdd([{ merchandiseId: "variant-a", quantity: 1 }], [], addition);
+    expect(quantity.value).toBe("2");
+
+    addition.reject(new Error("add failed"));
+    await Promise.resolve();
+    expect(quantity.value).toBe("1");
+    form.remove();
   });
 });

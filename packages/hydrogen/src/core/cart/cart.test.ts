@@ -3636,7 +3636,7 @@ describe("add-to-cart concurrency", () => {
     expect(store.getState().pending.lines).toEqual(new Set());
   });
 
-  it("superseded add rejection skips optimistic rollback", async () => {
+  it("rejected relative add rolls back only its own optimistic payload", async () => {
     store.hydrate(makeCartState({ lines: [], totalQuantity: 0 }));
 
     const optimisticId = `optimistic:${VARIANT_123}`;
@@ -3660,7 +3660,7 @@ describe("add-to-cart concurrency", () => {
     await p1.catch(() => {});
 
     expect(getCartLines(store.getState().data)).toHaveLength(1);
-    expect(getCartLines(store.getState().data)[0].quantity).toBe(2);
+    expect(getCartLines(store.getState().data)[0].quantity).toBe(1);
 
     resolveUpdate(1, serverCart(2, [{ id: "line-real", quantity: 2 }]));
     await p2;
@@ -3787,7 +3787,7 @@ describe("add-to-cart concurrency", () => {
     });
   });
 
-  it("rapid add via configured cart endpoint: abort signal fires on supersession", async () => {
+  it("rapid relative adds do not abort earlier endpoint requests", async () => {
     const mockFetch = vi.fn();
     vi.stubGlobal("fetch", mockFetch);
     configureCartEndpoint("/api/cart");
@@ -3821,7 +3821,7 @@ describe("add-to-cart concurrency", () => {
     handler(vi.fn(), addPayload, { signal: new AbortController().signal });
 
     const [, init1] = mockFetch.mock.calls[0];
-    expect(init1.signal.aborted).toBe(true);
+    expect(init1.signal.aborted).toBe(false);
 
     const [, init2] = mockFetch.mock.calls[1];
     expect(init2.signal.aborted).toBe(false);
@@ -3936,12 +3936,9 @@ describe("cart: null resolution", () => {
     });
   });
 
-  it("lines add: untracked bump does not subtract quantity already owned by a superseding add", async () => {
-    // Rapid adds for the same merchandiseId, both without detail.products:
-    //   1) request A bumps totalQuantity by 2
-    //   2) request B (newer) supersedes A and bumps totalQuantity by 1
-    //   3) A resolves cart: null → must NOT subtract A's 2 from the bumped total
-    //      because A no longer owns the merchandiseId.
+  it("lines add: failed unkeyed add removes only its quantity bump", async () => {
+    // Relative adds remain independent while pending. If A fails, its quantity
+    // is removed while B's still-pending quantity remains projected.
     store.hydrate(makeCartState({ lines: [], totalQuantity: 0 }));
 
     const promiseA = mockUpdateCart({
@@ -3966,7 +3963,7 @@ describe("cart: null resolution", () => {
     });
     await promiseA;
 
-    expect(store.getState().data.totalQuantity).toBe(3);
+    expect(store.getState().data.totalQuantity).toBe(1);
 
     resolveUpdate(
       1,
@@ -3986,7 +3983,7 @@ describe("cart: null resolution", () => {
     expect(store.getState().data.totalQuantity).toBe(1);
   });
 
-  it("lines add: mixed tracked and untracked rollback preserves superseded untracked quantity", async () => {
+  it("lines add: mixed rollback preserves the other relative transaction", async () => {
     store.hydrate(
       makeCartState({
         lines: [lineWithMerchandise("line-1", 2, VARIANT_123)],
@@ -4027,7 +4024,7 @@ describe("cart: null resolution", () => {
     await promiseA;
 
     expect(getCartLines(store.getState().data)[0].quantity).toBe(2);
-    expect(store.getState().data.totalQuantity).toBe(5);
+    expect(store.getState().data.totalQuantity).toBe(3);
     expect(store.getState().errors.lines.get("line-1")?.userErrors).toHaveLength(1);
     expect(store.getState().errors.cart.userErrors).toHaveLength(1);
 
