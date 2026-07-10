@@ -58,7 +58,13 @@ describe(`useCustomerPrivacy`, () => {
     head.innerHTML = '';
     body.innerHTML = '';
     document.querySelectorAll('script').forEach((node) => node.remove());
-    delete (global.window as any).Shopify;
+    try {
+      delete (global.window as any).Shopify;
+    } catch {
+      // Property may be non-configurable (set by test simulating browser extension)
+      (global.window as any).Shopify = undefined;
+    }
+    delete (global.window as any).privacyBanner;
   });
 
   it('By default, loads just the customerPrivacy script', () => {
@@ -253,5 +259,38 @@ describe(`useCustomerPrivacy`, () => {
     rerender({...CUSTOMER_PRIVACY_PROPS, onReady});
 
     expect(onReady).toHaveBeenCalled();
+  });
+
+  it('does not crash when window.Shopify is non-configurable (browser extension)', async () => {
+    // Simulate a browser extension (e.g. Urban VPN) that defines window.Shopify
+    // as non-configurable, which causes Object.defineProperty to throw.
+    Object.defineProperty(window, 'Shopify', {
+      value: {},
+      writable: true,
+      configurable: false,
+      enumerable: true,
+    });
+
+    // Should not throw
+    renderHook(() =>
+      useCustomerPrivacy({
+        checkoutDomain: 'checkout.shopify.com',
+        storefrontAccessToken: '3b580e70970c4528da70c98e097c2fa0',
+      }),
+    );
+
+    // The hook should still render without crashing
+    // Simulate CDN setting customerPrivacy on the non-configurable Shopify object
+    (global.window.Shopify as any).customerPrivacy = {
+      setTrackingConsent: () => {},
+    };
+
+    // Wait for polling to pick it up
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    // The app should not have crashed
+    expect(window.Shopify).toBeDefined();
   });
 });

@@ -346,63 +346,129 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     let customShopify: {customerPrivacy: CustomerPrivacy} | undefined | object =
       window.Shopify || undefined;
 
-    // monitor for when window.Shopify = {} is first set
-    Object.defineProperty(window, 'Shopify', {
-      configurable: true,
-      get() {
-        return customShopify;
-      },
-      set(value: unknown) {
-        // monitor for when window.Shopify = {} is first set
+    // Override the customerPrivacy API on the Shopify global object.
+    // This intercepts assignments so we can wrap setTrackingConsent with config.
+    function overrideCustomerPrivacy(shopifyObj: object) {
+      try {
+        Object.defineProperty(shopifyObj, 'customerPrivacy', {
+          configurable: true,
+          get() {
+            return fullCustomerPrivacy ?? backendConsentStub;
+          },
+          set(value: unknown) {
+            if (
+              typeof value === 'object' &&
+              value !== null &&
+              'setTrackingConsent' in value
+            ) {
+              const customerPrivacy = value as CustomerPrivacy;
+
+              // overwrite the tracking consent method
+              fullCustomerPrivacy = {
+                ...customerPrivacy,
+                // Note: this method is not used by the privacy-banner,
+                // it bundles its own setTrackingConsent.
+                setTrackingConsent: overrideCustomerPrivacySetTrackingConsent({
+                  customerPrivacy,
+                  config,
+                }),
+              };
+
+              customShopify = {
+                ...customShopify,
+                customerPrivacy: fullCustomerPrivacy,
+              };
+
+              setLoaded.customerPrivacy();
+            }
+          },
+        });
+      } catch {
+        // window.Shopify was made non-configurable by a browser extension
+        // (e.g. Urban VPN). Fall back to polling for customerPrivacy.
+      }
+    }
+
+    // Monitor for when window.Shopify = {} is first set.
+    // Some browser extensions (e.g. Urban VPN) define window.Shopify as
+    // non-configurable, which causes Object.defineProperty to throw.
+    // In that case we fall back to polling.
+    try {
+      Object.defineProperty(window, 'Shopify', {
+        configurable: true,
+        get() {
+          return customShopify;
+        },
+        set(value: unknown) {
+          // monitor for when window.Shopify = {} is first set
+          if (
+            typeof value === 'object' &&
+            value !== null &&
+            Object.keys(value).length === 0
+          ) {
+            customShopify = value as object;
+
+            // Keep backendConsentEnabled readable between CDN's window.Shopify = {}
+            // reset and its window.Shopify.customerPrivacy = <full API> assignment.
+            // The CDN reads this flag before assigning the full API, so the stub
+            // must be present when the CDN executes.
+            backendConsentStub = {backendConsentEnabled: true};
+
+            overrideCustomerPrivacy(window.Shopify);
+          }
+        },
+      });
+    } catch {
+      // window.Shopify was made non-configurable by a browser extension
+      // (e.g. Urban VPN). Fall back to polling for customerPrivacy.
+      const pollInterval = setInterval(() => {
+        const shopify = window.Shopify as any;
         if (
-          typeof value === 'object' &&
-          value !== null &&
-          Object.keys(value).length === 0
+          shopify &&
+          typeof shopify === 'object' &&
+          !shopify.__hydrogenPrivacyMonitored
         ) {
-          customShopify = value as object;
+          // Mark as monitored so we don't re-apply the override
+          try {
+            Object.defineProperty(shopify, '__hydrogenPrivacyMonitored', {
+              value: true,
+              writable: false,
+              enumerable: false,
+              configurable: false,
+            });
+          } catch {
+            // Can't define property — extension locked it down completely
+          }
 
-          // Keep backendConsentEnabled readable between CDN's window.Shopify = {}
-          // reset and its window.Shopify.customerPrivacy = <full API> assignment.
-          // The CDN reads this flag before assigning the full API, so the stub
-          // must be present when the CDN executes.
-          backendConsentStub = {backendConsentEnabled: true};
-
-          // monitor for when window.Shopify.customerPrivacy is set
-          Object.defineProperty(window.Shopify, 'customerPrivacy', {
-            configurable: true,
-            get() {
-              return fullCustomerPrivacy ?? backendConsentStub;
-            },
-            set(value: unknown) {
-              if (
-                typeof value === 'object' &&
-                value !== null &&
-                'setTrackingConsent' in value
-              ) {
-                const customerPrivacy = value as CustomerPrivacy;
-
-                // overwrite the tracking consent method
-                fullCustomerPrivacy = {
-                  ...customerPrivacy,
-                  // Note: this method is not used by the privacy-banner,
-                  // it bundles its own setTrackingConsent.
-                  setTrackingConsent: overrideCustomerPrivacySetTrackingConsent(
-                    {customerPrivacy, config},
-                  ),
-                };
-
-                customShopify = {
-                  ...customShopify,
-                  customerPrivacy: fullCustomerPrivacy,
-                };
-
-                setLoaded.customerPrivacy();
-              }
-            },
-          });
+          // If customerPrivacy is already set, process it
+          if (
+            shopify.customerPrivacy &&
+            typeof shopify.customerPrivacy === 'object' &&
+            'setTrackingConsent' in shopify.customerPrivacy
+          ) {
+            const customerPrivacy = shopify.customerPrivacy as CustomerPrivacy;
+            fullCustomerPrivacy = {
+              ...customerPrivacy,
+              setTrackingConsent: overrideCustomerPrivacySetTrackingConsent({
+                customerPrivacy,
+                config,
+              }),
+            };
+            customShopify = {
+              ...shopify,
+              customerPrivacy: fullCustomerPrivacy,
+            };
+            setLoaded.customerPrivacy();
+          } else {
+            // Try to install the getter/setter on the existing Shopify object
+            overrideCustomerPrivacy(shopify);
+          }
         }
-      },
-    });
+      }, 50);
+
+      // Clean up polling after 30 seconds to avoid indefinite polling
+      setTimeout(() => clearInterval(pollInterval), 30000);
+    }
   }, [
     config,
     overrideCustomerPrivacySetTrackingConsent,
