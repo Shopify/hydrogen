@@ -117,6 +117,7 @@
         "packages/hydrogen/src/core/predictive-search/server-handlers.ts",
         "packages/hydrogen/src/core/predictive-search/store.ts",
         "packages/hydrogen/src/core/cart/standard-actions-adapter.ts",
+        "packages/hydrogen/src/core/cart/transaction-cart-store.ts",
         "packages/hydrogen/src/core/cart/state.ts",
         "packages/hydrogen/src/core/collection/collection.ts",
         "packages/hydrogen/src/core/interceptors/graphiql.ts",
