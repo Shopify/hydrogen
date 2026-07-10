@@ -393,6 +393,8 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     // Some browser extensions (e.g. Urban VPN) define window.Shopify as
     // non-configurable, which causes Object.defineProperty to throw.
     // In that case we fall back to polling.
+    let cleanupPolling: (() => void) | undefined;
+
     try {
       Object.defineProperty(window, 'Shopify', {
         configurable: true,
@@ -467,8 +469,15 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       }, 50);
 
       // Clean up polling after 30 seconds to avoid indefinite polling
-      setTimeout(() => clearInterval(pollInterval), 30000);
+      const pollTimeout = setTimeout(() => clearInterval(pollInterval), 30000);
+
+      cleanupPolling = () => {
+        clearInterval(pollInterval);
+        clearTimeout(pollTimeout);
+      };
     }
+
+    return cleanupPolling;
   }, [
     config,
     overrideCustomerPrivacySetTrackingConsent,
