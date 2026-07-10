@@ -55,6 +55,7 @@ The selected variant must be represented in the URL and must render as visible t
 Cart lines must be visible list items containing the product title.
 
 After Add to cart, the storefront must show a cart drawer dialog containing the added line before the suite navigates to the cart page.
+The drawer must also have a visible button whose accessible name begins with Cart, Open cart, or View cart so the suite can inspect optimistic state while an update is pending.
 
 Each line must expose:
 

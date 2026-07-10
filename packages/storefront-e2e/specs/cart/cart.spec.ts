@@ -5,6 +5,7 @@ import { test, type CartTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
 const ADD_TO_CART_NAME = /add to cart/i;
+const CART_CONTROL_NAME = /^(?:open |view )?cart\b/i;
 const REMOVE_CONTROL_NAME = /remove/i;
 const INCREASE_CONTROL_NAME = /increase|^\+$/i;
 const DECREASE_CONTROL_NAME = /decrease|^[-−]$/i;
@@ -69,14 +70,10 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
   });
 
   const addToCart = page.getByRole("button", { name: ADD_TO_CART_NAME }).first();
-  const cartResponse = page.waitForResponse(
-    (response) => response.url().includes("/api/cart") && response.request().method() === "POST",
-    { timeout: CART_SETTLE_TIMEOUT_MS },
-  );
 
   try {
     await addToCart.click();
-    const line = cartOverlayLineFor(page, product.productTitle);
+    const line = await openCartOverlayFor(page, product.productTitle);
     await expect(line).toBeVisible({ timeout: CART_SETTLE_TIMEOUT_MS });
     const quantityInput = await quantityInputFor(line, product.path);
     await expect
@@ -86,12 +83,12 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
       .toBe(product.maxQuantity + 1);
 
     releaseRequest();
-    await (await cartResponse).finished();
     await expect
       .poll(() => numericInputValue(quantityInput), {
         message: `Expected cart line quantity to roll back to the stock limit of ${product.maxQuantity}.`,
       })
       .toBe(product.maxQuantity);
+    await expectCartLineSettled(line);
   } finally {
     releaseRequest();
     await page.unroute(CART_ENDPOINT_PATTERN);
@@ -131,24 +128,19 @@ async function tryAddProductToCart(
     variantLabel: product.variantLabel,
   };
   const addToCart = page.getByRole("button", { name: ADD_TO_CART_NAME }).first();
-  const isCartEnabled =
-    (await addToCart.isVisible().catch(() => false)) &&
-    (await addToCart.isEnabled().catch(() => false));
+  const isCartVisible = await addToCart
+    .waitFor({ state: "visible", timeout: CART_SETTLE_TIMEOUT_MS })
+    .then(() => true)
+    .catch(() => false);
+  const isCartEnabled = isCartVisible && (await addToCart.isEnabled().catch(() => false));
   if (!isCartEnabled) return null;
 
-  const [cartResponse] = await Promise.all([
-    page
-      .waitForResponse((r) => r.url().includes("/api/cart") && r.request().method() === "POST", {
-        timeout: CART_SETTLE_TIMEOUT_MS,
-      })
-      .catch(() => null),
-    addToCart.click(),
-  ]);
-  await cartResponse?.finished().catch(() => null);
-
-  await expect(cartOverlayLineFor(page, expectation.productTitle)).toBeVisible({
+  await addToCart.click();
+  const line = cartOverlayLineFor(page, expectation.productTitle);
+  await expect(line).toBeVisible({
     timeout: CART_SETTLE_TIMEOUT_MS,
   });
+  await expectCartLineSettled(line);
   await page.goto(cartPath);
   await expectCartLine(page, expectation);
 
@@ -162,19 +154,15 @@ async function setCartLineQuantity(
 ): Promise<void> {
   const line = await expectCartLine(page, expectation);
   const quantityInput = await quantityInputFor(line, expectation.cartPath);
-  const cartResponse = page.waitForResponse(
-    (response) => response.url().includes("/api/cart") && response.request().method() === "POST",
-    { timeout: CART_SETTLE_TIMEOUT_MS },
-  );
 
   await quantityInput.fill(String(quantity));
   await quantityInput.press("Tab");
-  await (await cartResponse).finished();
   await expect
     .poll(() => numericInputValue(quantityInput), {
       message: `Expected cart line quantity to settle at the discovered stock limit of ${quantity}.`,
     })
     .toBe(quantity);
+  await expectCartLineSettled(line);
 }
 
 async function expectCartLine(page: Page, expectation: CartExpectation): Promise<Locator> {
@@ -241,6 +229,20 @@ async function removeCartLine(page: Page, expectation: CartExpectation): Promise
 
 function cartOverlayLineFor(page: Page, productTitle: string): Locator {
   return page.getByRole("dialog").getByRole("listitem").filter({ hasText: productTitle }).first();
+}
+
+async function openCartOverlayFor(page: Page, productTitle: string): Promise<Locator> {
+  const line = cartOverlayLineFor(page, productTitle);
+  if (await line.isVisible().catch(() => false)) return line;
+
+  await page.getByRole("button", { name: CART_CONTROL_NAME }).first().click();
+  return line;
+}
+
+async function expectCartLineSettled(line: Locator): Promise<void> {
+  await expect(line.locator('[aria-busy="true"]')).toHaveCount(0, {
+    timeout: CART_SETTLE_TIMEOUT_MS,
+  });
 }
 
 function cartLineFor(page: Page, productTitle: string): Locator {
