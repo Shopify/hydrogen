@@ -584,6 +584,7 @@ Continue?`.value,
   );
 
   let deployError: AbortError | null = null;
+  let buildError: Error | null = null;
   let resolveDeploy: () => void;
   let rejectDeploy: (reason?: AbortError) => void;
   const deployPromise = new Promise<void>((resolve, reject) => {
@@ -633,23 +634,29 @@ Continue?`.value,
     hooks.buildFunction = async (
       assetPath: string | undefined,
     ): Promise<void> => {
-      outputInfo(
-        outputContent`${colors.whiteBright('Building project...')}`.value,
-      );
+      try {
+        outputInfo(
+          outputContent`${colors.whiteBright('Building project...')}`.value,
+        );
 
-      if (isClassicCompiler) {
-        throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
+        if (isClassicCompiler) {
+          throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
+        }
+
+        await runBuild({
+          directory: root,
+          assetPath,
+          lockfileCheck,
+          sourcemap: true,
+          forceClientSourcemap,
+          useCodegen: false,
+          entry: ssrEntry,
+        });
+      } catch (error) {
+        // Capture the original error so it can be surfaced later, before oxygen-cli wraps it.
+        buildError = error as Error;
+        throw error;
       }
-
-      await runBuild({
-        directory: root,
-        assetPath,
-        lockfileCheck,
-        sourcemap: true,
-        forceClientSourcemap,
-        useCodegen: false,
-        entry: ssrEntry,
-      });
     };
   }
 
@@ -724,7 +731,7 @@ Continue?`.value,
       resolveDeploy();
     })
     .catch((error) => {
-      rejectDeploy(deployError || error);
+      rejectDeploy(deployError || buildError || error);
     });
 
   return deployPromise;

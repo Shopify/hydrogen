@@ -833,6 +833,37 @@ describe('deploy', async () => {
     });
   });
 
+  it('surfaces the original build error instead of the wrapped deploy error', async () => {
+    // The kind of actionable error `runBuild` throws when the project is
+    // missing its `vite` dependency (via `importVite`).
+    const buildError = new AbortError(
+      "Could not find the 'vite' package in your project.",
+      'Hydrogen uses Vite to run this command.',
+      [
+        'Install your project dependencies (for example, by running `npm install`) and try again.',
+      ],
+    );
+    vi.mocked(runBuild).mockRejectedValueOnce(buildError);
+
+    // Simulate how `@shopify/oxygen-cli` wraps a failing `buildFunction` into a
+    // generic, non-AbortError error before rejecting the deploy promise.
+    vi.mocked(createDeploy).mockImplementationOnce(async (options) => {
+      try {
+        await options.hooks?.buildFunction?.('some-cool-asset-path');
+      } catch (error) {
+        throw new Error(
+          `Build function failed with error: ${(error as Error).message}`,
+        );
+      }
+
+      return {url: 'https://a-lovely-deployment.com'};
+    });
+
+    // The original AbortError (with its next steps) is surfaced, not the
+    // wrapped generic error that would be reported as an uncaught crash.
+    await expect(runDeploy(deployParams)).rejects.toBe(buildError);
+  });
+
   it('passes a build command to createDeploy when the build-command flag is used', async () => {
     const params = {
       ...deployParams,
