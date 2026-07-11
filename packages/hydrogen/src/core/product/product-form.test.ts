@@ -923,12 +923,24 @@ describe("createProductFormStore", () => {
           {
             id: "v-red",
             title: "Red",
+            selectedOptions: [{ name: "Color", value: "Red" }],
             product: { title: undefined },
             image: undefined,
             price: { amount: "10.00", currencyCode: "USD" },
           },
         ],
       });
+    });
+
+    it("includes the variant's selectedOptions so the optimistic line can render option names", async () => {
+      const cartStore = createMockCartStore();
+      const store = createStore(makeSingleOptionProduct(RED), cartStore);
+      const event = new Event("submit") as SubmitEvent;
+
+      await store.handleFormSubmit(event);
+
+      const [, detail] = (cartStore.handleFormSubmit as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(detail.products[0].selectedOptions).toEqual([{ name: "Color", value: "Red" }]);
     });
 
     it("passes undefined eventDetail when no variant is selected", async () => {
@@ -960,6 +972,7 @@ describe("createProductFormStore", () => {
           {
             id: "v-red",
             title: "Red",
+            selectedOptions: [{ name: "Color", value: "Red" }],
             product: { title: "Cozy Shirt" },
             image: { url: "https://cdn.example.com/shirt.jpg", altText: "Red shirt" },
             price: { amount: "10.00", currencyCode: "USD" },
