@@ -1,5 +1,23 @@
 # @shopify/cli-hydrogen
 
+## 13.0.1
+
+### Patch Changes
+
+- Read disabled command metadata from @shopify/hydrogen and stop those commands with an actionable error. ([#3846](https://github.com/Shopify/hydrogen/pull/3846)) by [@graygilmore](https://github.com/graygilmore)
+
+- Preserve actionable build errors during `h2 deploy`. When the build step fails (for example, when the `vite` package is missing from the project), the original error and its guidance are now surfaced instead of being wrapped into a generic "Build function failed with error" message and reported as an uncaught crash. ([#3848](https://github.com/Shopify/hydrogen/pull/3848)) by [@bashu-shopify](https://github.com/bashu-shopify)
+
+- Add an explicit `~` app alias to new Hydrogen projects. ([#3852](https://github.com/Shopify/hydrogen/pull/3852)) by [@andguy95](https://github.com/andguy95)
+
+  JavaScript projects use `jsconfig.json`, which is not reliably covered by Vite's native `resolve.tsconfigPaths` behavior. New projects now define Hydrogen's `~/` import convention directly in the Vite config so imports like `~/assets/favicon.svg` work in both TypeScript and JavaScript projects.
+
+- Skip confirmation before deploying to non-preview environments with `--force`. ([#3832](https://github.com/Shopify/hydrogen/pull/3832)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Add `--force` and `--dry-run` flags to `hydrogen env push`. ([#3831](https://github.com/Shopify/hydrogen/pull/3831)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Fix Hydrogen deploy asset directory resolution when Vite reports the client output directory as the SSR server output directory. ([#3842](https://github.com/Shopify/hydrogen/pull/3842)) by [@frandiox](https://github.com/frandiox)
+
 ## 13.0.0
 
 ### Patch Changes
