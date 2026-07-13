@@ -679,7 +679,7 @@ Configure Vite to exclude Partytown library from build optimization.
 #### File: /vite.config.ts
 
 ~~~diff
-@@ -29,6 +29,7 @@ export default defineConfig({
+@@ -35,6 +35,7 @@ export default defineConfig({
          'react-router > set-cookie-parser',
          'react-router > cookie',
          'react-router',

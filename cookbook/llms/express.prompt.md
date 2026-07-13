@@ -2525,13 +2525,20 @@ Configure Vite for Express deployment with Node.js module externalization
 #### File: /vite.config.ts
 
 ```diff
-@@ -5,13 +5,15 @@ import {reactRouter} from '@react-router/dev/vite';
- import tsconfigPaths from 'vite-tsconfig-paths';
-
+@@ -1,11 +1,10 @@
+ import {fileURLToPath} from 'node:url';
+ import {defineConfig} from 'vite';
+ import {hydrogen} from '@shopify/hydrogen/vite';
+-import {oxygen} from '@shopify/mini-oxygen/vite';
+ import {reactRouter} from '@react-router/dev/vite';
+ 
  export default defineConfig({
--  plugins: [hydrogen(), oxygen(), reactRouter(), tsconfigPaths()],
-+  plugins: [hydrogen(), reactRouter(), tsconfigPaths()],
-   build: {
+-  plugins: [hydrogen(), oxygen(), reactRouter()],
++  plugins: [hydrogen(), reactRouter()],
+   resolve: {
+     alias: {
+       // Vite's native tsconfig path resolver does not cover JavaScript
+@@ -18,8 +17,10 @@ export default defineConfig({
      // Allow a strict Content-Security-Policy
      // without inlining assets as base64:
      assetsInlineLimit: 0,
@@ -2542,7 +2549,7 @@ Configure Vite for Express deployment with Node.js module externalization
      optimizeDeps: {
        /**
         * Include dependencies here if they throw CJS<>ESM errors.
-@@ -23,10 +25,7 @@ export default defineConfig({
+@@ -31,14 +32,7 @@ export default defineConfig({
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */
