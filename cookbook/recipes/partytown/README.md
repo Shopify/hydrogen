@@ -686,10 +686,10 @@ Configure Vite to exclude Partytown library from build optimization.
 #### File: [vite.config.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/vite.config.ts)
 
 ~~~diff
-index d19b14dc4..38670eb6a 100644
+index 2c36cdf92..0c6f115c 100644
 --- a/templates/skeleton/vite.config.ts
 +++ b/templates/skeleton/vite.config.ts
-@@ -29,6 +29,7 @@ export default defineConfig({
+@@ -35,6 +35,7 @@ export default defineConfig({
          'react-router > set-cookie-parser',
          'react-router > cookie',
          'react-router',
