@@ -79,6 +79,7 @@ describe('customer', () => {
 
   afterEach(() => {
     process.env.NODE_ENV = originalNodeEnv;
+    vi.restoreAllMocks();
     vi.clearAllMocks();
   });
 
@@ -1170,7 +1171,7 @@ describe('customer', () => {
 
   describe('authorize', () => {
     describe('using new auth url when shopId is present in env', () => {
-      it('Throws unauthorized if no code or state params are passed', async () => {
+      it('Rejects missing callback params without clearing the session', async () => {
         const customer = createCustomerAccountClient({
           session,
           customerAccountId: 'customerAccountId',
@@ -1182,19 +1183,177 @@ describe('customer', () => {
         await expect(customer.authorize()).rejects.toThrowError(
           'Unauthorized No code or state parameter found in the redirect URL.',
         );
+        expect(fetch).not.toHaveBeenCalled();
+        expect(session.unset).not.toHaveBeenCalled();
       });
 
-      it("Throws unauthorized if state doesn't match session value", async () => {
+      it('Restarts login if the browser does not have the original session state', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        session.get = vi.fn(() => undefined) as HydrogenSession['get'];
         const customer = createCustomerAccountClient({
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
-          request: new Request('https://localhost?state=nomatch&code=code'),
+          request: new Request(
+            'https://localhost/account/authorize?state=state&code=code',
+          ),
           waitUntil: vi.fn(),
         });
 
-        await expect(customer.authorize()).rejects.toThrowError(
-          'Unauthorized The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
+        const response = await customer.authorize();
+
+        expect(response.status).toBe(302);
+        expect(response.headers.get('location')).toBe(
+          '/account/login?return_to=%2Faccount&oauth_recovery=true',
+        );
+        expect(fetch).not.toHaveBeenCalled();
+        expect(session.unset).not.toHaveBeenCalled();
+        expect(warnSpy).toHaveBeenCalledWith(
+          '[h2:warn:customerAccount] OAuth callback state mismatch. Restarting customer login once.',
+        );
+      });
+
+      it('Restarts login if another tab replaced the original session state', async () => {
+        session.get = vi.fn(() => ({
+          ...mockCustomerAccountSession,
+          state: 'newer-state',
+          redirectPath: '/account/orders',
+        })) as HydrogenSession['get'];
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(
+            'https://localhost/account/authorize?state=older-state&code=code',
+          ),
+          waitUntil: vi.fn(),
+        });
+
+        const response = await customer.authorize();
+
+        expect(response.status).toBe(302);
+        expect(response.headers.get('location')).toBe(
+          '/account/login?return_to=%2Faccount%2Forders&oauth_recovery=true',
+        );
+        expect(fetch).not.toHaveBeenCalled();
+        expect(session.unset).not.toHaveBeenCalled();
+      });
+
+      it('Stops after one recovery attempt if the browser still has no session state', async () => {
+        session.get = vi.fn(() => undefined) as HydrogenSession['get'];
+        const firstAuthorize = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(
+            'https://localhost/account/authorize?state=state&code=code',
+          ),
+          waitUntil: vi.fn(),
+        });
+        const firstAuthorizeResponse = await firstAuthorize.authorize();
+        const recoveryLoginLocation =
+          firstAuthorizeResponse.headers.get('location') ?? '';
+        const recoveryLogin = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(
+            new URL(recoveryLoginLocation, 'https://localhost'),
+          ),
+          waitUntil: vi.fn(),
+        });
+        const recoveryLoginResponse = await recoveryLogin.login();
+        const recoveryState =
+          new URL(
+            recoveryLoginResponse.headers.get('location') ?? '',
+          ).searchParams.get('state') ?? '';
+        const secondAuthorize = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(
+            `https://localhost/account/authorize?${new URLSearchParams({
+              state: recoveryState,
+              code: 'code',
+            })}`,
+          ),
+          waitUntil: vi.fn(),
+        });
+
+        expect(recoveryState).not.toBe('');
+        await expect(secondAuthorize.authorize()).rejects.toThrowError(
+          'Unable to complete sign in. Please try again. The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
+        );
+        expect(fetch).not.toHaveBeenCalled();
+      });
+
+      it('Completes authorization after restarting login with a fresh session state', async () => {
+        session.get = vi.fn(() => undefined) as HydrogenSession['get'];
+        const firstAuthorize = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(
+            'https://localhost/account/authorize?state=state&code=code',
+          ),
+          waitUntil: vi.fn(),
+        });
+        const firstAuthorizeResponse = await firstAuthorize.authorize();
+        const recoveryLogin = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(
+            new URL(
+              firstAuthorizeResponse.headers.get('location') ?? '',
+              'https://localhost',
+            ),
+          ),
+          waitUntil: vi.fn(),
+        });
+        const recoveryLoginResponse = await recoveryLogin.login();
+        const recoverySession = (session.set as any).mock.calls.at(-1)?.[1];
+
+        if (!recoverySession) {
+          throw new Error('Expected recovery login to persist its session');
+        }
+
+        session.get = vi.fn(() => recoverySession) as HydrogenSession['get'];
+        fetch.mockResolvedValue(
+          createFetchResponse(
+            {
+              access_token: 'shcat_access_token',
+              expires_in: '',
+              id_token: `${btoa('{}')}.${btoa(
+                JSON.stringify({nonce: recoverySession.nonce}),
+              )}.signature`,
+              refresh_token: 'shcrt_refresh_token',
+            },
+            {ok: true},
+          ),
+        );
+        const recoveryState =
+          new URL(
+            recoveryLoginResponse.headers.get('location') ?? '',
+          ).searchParams.get('state') ?? '';
+        const secondAuthorize = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(
+            `https://localhost/account/authorize?${new URLSearchParams({
+              state: recoveryState,
+              code: 'code',
+            })}`,
+          ),
+          waitUntil: vi.fn(),
+        });
+
+        const secondAuthorizeResponse = await secondAuthorize.authorize();
+
+        expect(secondAuthorizeResponse.status).toBe(302);
+        expect(secondAuthorizeResponse.headers.get('location')).toBe(
+          '/account',
         );
       });
 
