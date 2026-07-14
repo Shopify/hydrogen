@@ -23,6 +23,13 @@ export function ShopifyScripts(options: ShopifyScriptsProps) {
     getShopifyScriptTags(scriptOptions).tags.map(({ tagName, attributes, innerHTML }, index) =>
       createElement(tagName, {
         key: index,
+        // When a CSP nonce is supplied, the browser hides the parsed script's
+        // nonce content attribute (exposing `nonce=""` while retaining the real
+        // value on the `.nonce` property), which React reports as a hydration
+        // attribute mismatch. Suppress that known, benign diff. Inline scripts
+        // are already covered below via their `innerHTML` branch; this handles
+        // the external (src) generated script.
+        ...(scriptOptions.nonce !== undefined ? { suppressHydrationWarning: true } : {}),
         ...getReactAttributes(attributes),
         ...(innerHTML
           ? {
