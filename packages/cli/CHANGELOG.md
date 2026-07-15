@@ -1,5 +1,13 @@
 # @shopify/cli-hydrogen
 
+## 13.0.2
+
+### Patch Changes
+
+- Add noninteractive shop and storefront creation flags to `hydrogen link`. ([#3834](https://github.com/Shopify/hydrogen/pull/3834)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Use `--force` to bypass confirmation prompts in `hydrogen upgrade`. ([#3835](https://github.com/Shopify/hydrogen/pull/3835)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
 ## 13.0.1
 
 ### Patch Changes
