@@ -1437,6 +1437,50 @@ describe('upgrade', async () => {
         },
       );
     });
+
+    it('overwrites an existing instructions file without prompting when force is enabled', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          const {releases} = await getChangelog();
+
+          const selectedRelease = releases.find(
+            (release) => release.version === '2023.10.0',
+          ) as (typeof releases)[0];
+
+          const resultPath = await generateUpgradeInstructionsFile({
+            appPath,
+            cumulativeRelease: CUMULATIVE_RELEASE,
+            currentVersion: '2023.1.6',
+            selectedRelease,
+          });
+
+          expect(resultPath).toBeDefined();
+
+          const filePath = joinPath(appPath, resultPath!);
+          await writeFile(filePath, 'old instructions');
+          vi.mocked(renderConfirmationPrompt).mockClear();
+
+          await expect(
+            generateUpgradeInstructionsFile({
+              appPath,
+              cumulativeRelease: CUMULATIVE_RELEASE,
+              currentVersion: '2023.1.6',
+              selectedRelease,
+              force: true,
+            }),
+          ).resolves.toEqual(resultPath);
+
+          expect(renderConfirmationPrompt).not.toHaveBeenCalled();
+          await expect(readFile(filePath, 'utf8')).resolves.not.toEqual(
+            'old instructions',
+          );
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
+    });
   });
 
   describe('displayDevUpgradeNotice', () => {
