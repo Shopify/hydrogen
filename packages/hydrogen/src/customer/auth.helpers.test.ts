@@ -1,7 +1,14 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import type {HydrogenSession} from '../types';
 import {CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
-import {checkExpires, clearSession, refreshToken} from './auth.helpers';
+import {
+  checkExpires,
+  clearSession,
+  generateState,
+  refreshToken,
+} from './auth.helpers';
+
+const OAUTH_STATE_BYTE_LENGTH = 32;
 
 vi.mock('./BadRequest', () => {
   return {
@@ -37,6 +44,32 @@ function createFetchResponse<T>(data: T, options: {ok: boolean}) {
 let session: HydrogenSession;
 
 describe('auth.helpers', () => {
+  describe('generateState', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('Generates a 256-bit base64url value', () => {
+      const randomBytes = Uint8Array.from(
+        {length: OAUTH_STATE_BYTE_LENGTH},
+        (_, index) => index,
+      );
+      const getRandomValuesSpy = vi
+        .spyOn(globalThis.crypto, 'getRandomValues')
+        .mockImplementation((array: any) => {
+          array.set(randomBytes);
+          return array;
+        });
+      const state = generateState();
+      const decodedState = Buffer.from(state, 'base64url');
+
+      expect(state).toBe(Buffer.from(randomBytes).toString('base64url'));
+      expect(state).toMatch(/^[A-Za-z0-9_-]+$/);
+      expect(decodedState).toHaveLength(OAUTH_STATE_BYTE_LENGTH);
+      expect(getRandomValuesSpy).toHaveBeenCalledOnce();
+    });
+  });
+
   describe('refreshToken', () => {
     beforeEach(() => {
       session = {
