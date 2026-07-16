@@ -1093,6 +1093,7 @@ function addSnapshotFields(state: CartState, result: CartMutationResult): CartSt
       ...state.data,
       id: cart.id,
       checkoutUrl: cart.checkoutUrl ?? state.data.checkoutUrl,
+      updatedAt: cart.updatedAt ?? state.data.updatedAt,
       totalQuantity: cart.totalQuantity,
       cost: cart.cost,
     },
