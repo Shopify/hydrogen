@@ -1,7 +1,7 @@
 import {createRequire} from 'node:module';
 import {tmpdir} from 'node:os';
-import {mkdtemp, readFile, rm} from 'node:fs/promises';
-import {describe, it, expect, vi, beforeEach} from 'vitest';
+import {mkdir, mkdtemp, readFile, rm} from 'node:fs/promises';
+import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {writeFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {
@@ -13,9 +13,11 @@ import {
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {type PackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {exec} from '@shopify/cli-kit/node/system';
+import * as system from '@shopify/cli-kit/node/system';
 import {
   buildUpgradeCommandArgs,
   displayConfirmation,
+  displayUpgradeSummary,
   generateUpgradeInstructionsFile,
   getAbsoluteVersion,
   getAvailableUpgrades,
@@ -31,6 +33,7 @@ import {
   getChangelog,
   displayDevUpgradeNotice,
 } from './upgrade.js';
+import * as packageManagers from '../../lib/package-managers.js';
 import {getSkeletonSourceDir} from '../../lib/build.js';
 
 // Test version numbers used to avoid conflicts with duplicate changelog versions
@@ -38,13 +41,26 @@ const TEST_VERSION_DEPENDENCY_UPGRADE = '9999.99.99';
 const TEST_VERSION_DEV_DEPENDENCY_UPGRADE = '9999.99.98';
 
 vi.mock('@shopify/cli-kit/node/session');
-vi.mock('@shopify/cli-kit/node/node-package-manager', async () => {
+vi.mock('../../lib/package-managers.js', async () => {
   const original = await vi.importActual<
-    typeof import('@shopify/cli-kit/node/node-package-manager')
-  >('@shopify/cli-kit/node/node-package-manager');
+    typeof import('../../lib/package-managers.js')
+  >('../../lib/package-managers.js');
   return {
     ...original,
-    getPackageManager: vi.fn(() => Promise.resolve('pnpm')),
+    findPackageManagerByLockfile: vi.fn(() => Promise.resolve('pnpm')),
+  };
+});
+
+vi.mock('@shopify/cli-kit/node/system', async () => {
+  const original = await vi.importActual<
+    typeof import('@shopify/cli-kit/node/system')
+  >('@shopify/cli-kit/node/system');
+
+  return {
+    ...original,
+    // Delegates to the real exec by default so helpers that drive git keep
+    // working; individual tests override it to capture command invocations.
+    exec: vi.fn(original.exec),
   };
 });
 
@@ -2052,6 +2068,130 @@ describe('upgrade', async () => {
       });
 
       expect(args).toEqual(result);
+    });
+  });
+
+  // Regression coverage for monorepo workspaces, where the lockfile lives at
+  // the workspace root rather than in the app directory. These tests use the
+  // real findPackageManagerByLockfile (not the suite-wide 'pnpm' stub) and
+  // execute the command's task/summary paths end-to-end, so they fail if the
+  // upgrade command stops feeding ancestor-lockfile detection into the
+  // install/remove tasks or the undo instructions.
+  describe('monorepo package manager detection', () => {
+    afterEach(async () => {
+      // Restore the suite-wide stubs for the rest of the file, since the
+      // module-level mock implementations persist across tests.
+      vi.mocked(
+        packageManagers.findPackageManagerByLockfile,
+      ).mockImplementation(() => Promise.resolve('pnpm'));
+      const actualSystem = await vi.importActual<
+        typeof import('@shopify/cli-kit/node/system')
+      >('@shopify/cli-kit/node/system');
+      vi.mocked(system.exec).mockImplementation(actualSystem.exec);
+    });
+
+    async function useRealLockfileDetection() {
+      const {findPackageManagerByLockfile} = await vi.importActual<
+        typeof import('../../lib/package-managers.js')
+      >('../../lib/package-managers.js');
+      vi.mocked(
+        packageManagers.findPackageManagerByLockfile,
+      ).mockImplementation(findPackageManagerByLockfile);
+    }
+
+    it('runs the install and remove tasks with the workspace package manager from an ancestor lockfile', async () => {
+      await useRealLockfileDetection();
+
+      const {releases} = await getChangelog();
+      const selectedRelease = releases.find(
+        (release) => release.version === '2023.10.0',
+      ) as (typeof releases)[0];
+
+      const currentDependencies = {
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
+      };
+
+      await inTemporaryDirectory(async (workspaceRoot) => {
+        // Monorepo shape: the only lockfile is at the workspace root and the
+        // Hydrogen app lives in a nested directory with no lockfile of its own.
+        await writeFile(joinPath(workspaceRoot, 'pnpm-lock.yaml'), '');
+        const appPath = joinPath(workspaceRoot, 'apps', 'storefront');
+        await mkdir(appPath, {recursive: true});
+
+        // Capture the package-manager invocation without running a real install.
+        const execSpy = vi
+          .mocked(system.exec)
+          .mockResolvedValue(undefined as never);
+
+        await upgradeNodeModules({
+          appPath,
+          selectedRelease,
+          currentDependencies,
+          // present in currentDependencies, so the removal task is created
+          cumulativeRemoveDependencies: ['@remix-run/react'],
+          cumulativeRemoveDevDependencies: [],
+        });
+
+        // renderTasks is stubbed to a no-op, so run the task callbacks directly.
+        const tasks = vi.mocked(renderTasks).mock.calls.at(-1)?.[0] as Array<{
+          title: string;
+          task: () => Promise<void>;
+        }>;
+
+        const removalTask = tasks.find(
+          (task) => task.title === 'Removing deprecated dependencies',
+        );
+        const upgradeTask = tasks.find(
+          (task) => task.title === 'Upgrading dependencies',
+        );
+
+        await removalTask?.task();
+        await upgradeTask?.task();
+
+        expect(execSpy).toHaveBeenCalledWith(
+          'pnpm',
+          expect.arrayContaining(['remove', '@remix-run/react']),
+          expect.objectContaining({cwd: appPath}),
+        );
+        expect(execSpy).toHaveBeenCalledWith(
+          'pnpm',
+          expect.arrayContaining(['add']),
+          expect.objectContaining({cwd: appPath}),
+        );
+        // Never falls back to npm + --legacy-peer-deps for a pnpm workspace.
+        expect(execSpy).not.toHaveBeenCalledWith(
+          'npm',
+          expect.anything(),
+          expect.anything(),
+        );
+      });
+    });
+
+    it('renders the workspace package manager in the undo instructions for an ancestor lockfile', async () => {
+      await useRealLockfileDetection();
+
+      const {releases} = await getChangelog();
+      const selectedRelease = releases.find(
+        (release) => release.version === '2023.10.0',
+      ) as (typeof releases)[0];
+
+      await inTemporaryDirectory(async (workspaceRoot) => {
+        await writeFile(joinPath(workspaceRoot, 'pnpm-lock.yaml'), '');
+        const appPath = joinPath(workspaceRoot, 'apps', 'storefront');
+        await mkdir(appPath, {recursive: true});
+
+        await displayUpgradeSummary({
+          appPath,
+          currentVersion: '2023.1.6',
+          selectedRelease,
+        });
+
+        const output = outputMock.info();
+        expect(output).toContain('Undo these upgrades?');
+        expect(output).toContain('&& pnpm i`');
+        expect(output).not.toContain('&& npm i`');
+      });
     });
   });
 });
