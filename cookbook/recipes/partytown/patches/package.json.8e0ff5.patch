@@ -1,7 +1,7 @@
-index 0bb332639..529084e73 100644
+index a9c5da64b..e7736315a 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
-@@ -8,12 +8,14 @@
+@@ -8,9 +8,10 @@
      "build": "shopify hydrogen build --codegen",
      "dev": "shopify hydrogen dev --codegen",
      "preview": "shopify hydrogen preview --build",
@@ -14,7 +14,7 @@ index 0bb332639..529084e73 100644
    },
    "prettier": "@shopify/prettier-config",
    "dependencies": {
+@@ -18,2 +19,3 @@
 +    "@qwik.dev/partytown": "^0.11.2",
-     "@shopify/hydrogen": "workspace:*",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
