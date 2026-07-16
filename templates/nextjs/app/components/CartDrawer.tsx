@@ -60,7 +60,6 @@ export function CartDrawer() {
         </div>
         <div className="flex-1 overflow-y-auto p-4">
           <CartContents compact />
-          <span className="sr-only" aria-live="polite" aria-atomic="true" />
         </div>
         {totalQuantity > 0 ? (
           <div className="border-border shrink-0 border-t p-4">

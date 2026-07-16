@@ -7,6 +7,7 @@ export const CONTRACT_CAPABILITIES = [
   "product-cart",
   "cart-route",
   "cart-line",
+  "cart-status",
   "checkout-handoff",
   "search-route",
 ] as const;

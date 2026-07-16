@@ -39,6 +39,30 @@ function CartErrorBanner() {
   );
 }
 
+function hasPendingCost(pending: {
+  cost?: boolean;
+  discountCodes: Set<string>;
+  lines: Set<string>;
+}): boolean {
+  return pending.cost ?? (pending.lines.size > 0 || pending.discountCodes.size > 0);
+}
+
+function useCartStatusMessage(): string {
+  const pending = useCart((state) => state.pending);
+  const revalidating = useCart((state) => "revalidating" in state && state.revalidating === true);
+  const networkErrors = useCart((state) => state.errors.network);
+  const isPending = hasPendingCost(pending) || revalidating;
+  const [sawPending, setSawPending] = useState(false);
+
+  useEffect(() => {
+    if (isPending) setSawPending(true);
+  }, [isPending]);
+
+  if (isPending) return "Updating cart totals";
+  if (sawPending && networkErrors.length === 0) return "Cart totals updated";
+  return "";
+}
+
 type CartLineView = {
   id: string;
   quantity: number;
@@ -170,16 +194,24 @@ function CartLines() {
 
 function CartFooter() {
   const cart = useCart((state) => state.data);
+  const pending = useCart((state) => state.pending);
+  const revalidating = useCart((state) => "revalidating" in state && state.revalidating === true);
   const hasLines = cart.lines.nodes.length > 0;
+  const isPending = hasPendingCost(pending) || revalidating;
 
   if (!hasLines) return null;
 
   return (
     <div className="border-border shrink-0 border-t p-4">
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <span className="text-on-surface text-sm font-medium">Estimated total</span>
-          <span className="text-on-surface text-base font-medium">
+        <div className="flex items-center justify-between" aria-busy={isPending}>
+          <span className="text-on-surface text-sm font-medium">
+            Estimated total
+            {isPending ? <span aria-hidden="true"> (updating)</span> : null}
+          </span>
+          <span
+            className={`text-on-surface text-base font-medium ${isPending ? "text-on-surface-secondary" : ""}`}
+          >
             {formatPrice(cart.cost.totalAmount)}
           </span>
         </div>
@@ -202,6 +234,7 @@ function CartFooter() {
 export function CartDrawer() {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
   const cart = useCart((state) => state.data);
+  const statusMessage = useCartStatusMessage();
 
   useEffect(() => {
     configureOpenCartAction();
@@ -244,7 +277,9 @@ export function CartDrawer() {
         <CartErrorBanner />
         <div className="flex-1 overflow-y-auto p-4">
           <CartLines />
-          <span className="sr-only" aria-live="polite" aria-atomic="true" data-cart-status />
+          <span className="sr-only" aria-live="polite" aria-atomic="true" data-cart-status>
+            {statusMessage}
+          </span>
         </div>
         <CartFooter />
       </div>

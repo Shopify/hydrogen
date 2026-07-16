@@ -196,8 +196,8 @@ export function toAnalyticsCart(cart: AnalyticsCartInput): AnalyticsCart | null 
 
 function hasPendingCartWork(cart: AnalyticsCartInput) {
   if (cart.revalidating === true) return true;
-  return Boolean(
-    cart.pending &&
-    (cart.pending.lines.size > 0 || cart.pending.note || cart.pending.discountCodes.size > 0),
-  );
+  if (!cart.pending) return false;
+  const hasPendingCost =
+    cart.pending.cost ?? (cart.pending.lines.size > 0 || cart.pending.discountCodes.size > 0);
+  return hasPendingCost || cart.pending.note;
 }

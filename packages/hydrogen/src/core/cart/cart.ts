@@ -55,6 +55,7 @@ type VendorWarning = NonNullable<CartActionFailure["warnings"]>[number];
 type KeyResult = string | string[] | undefined;
 type ErrorProjector = (state: CartState, timestampMs: number) => CartState;
 type AddError = (project: ErrorProjector) => void;
+type TransactionSettlementOptions = { mergeServerCart: boolean };
 type UpdateCartTransport = (
   payload: UpdateCartPayload,
   options?: UpdateCartOptions,
@@ -144,6 +145,7 @@ type TransactionDefinition<TPayload> = {
     result: CartMutationResult,
     payload: TPayload,
     addError: AddError,
+    options: TransactionSettlementOptions,
   ): CartState;
   getSignalKeys?(state: CartState, payload: TPayload): KeyResult;
   getPendingKeys?(state: CartState, payload: TPayload): KeyResult;
@@ -383,6 +385,7 @@ function reuseVisibleReferences(previous: CartState, next: CartState): CartState
     lines: pendingLines,
     note: next.pending.note,
     discountCodes: pendingDiscountCodes,
+    cost: next.pending.cost,
   };
 
   if (
@@ -392,7 +395,8 @@ function reuseVisibleReferences(previous: CartState, next: CartState): CartState
     previous.errors === next.errors &&
     previous.pending.lines === pending.lines &&
     previous.pending.note === pending.note &&
-    previous.pending.discountCodes === pending.discountCodes
+    previous.pending.discountCodes === pending.discountCodes &&
+    previous.pending.cost === pending.cost
   ) {
     return previous;
   }
@@ -404,22 +408,28 @@ function derivePending(state: CartState, transactions: PendingTransaction[]): Ca
   const lines = new Set<string>();
   const discountCodes = new Set<string>();
   let note = false;
+  let cost = false;
 
   for (const transaction of transactions) {
     for (const key of transaction.pendingKeys) {
       if (key === NOTE_KEY) note = true;
-      if (key.startsWith(LINE_KEY_PREFIX)) lines.add(key.slice(LINE_KEY_PREFIX.length));
+      if (key.startsWith(LINE_KEY_PREFIX)) {
+        lines.add(key.slice(LINE_KEY_PREFIX.length));
+        cost = true;
+      }
       if (key.startsWith(DISCOUNT_KEY_PREFIX)) {
         discountCodes.add(key.slice(DISCOUNT_KEY_PREFIX.length));
+        cost = true;
       }
       if (!key.startsWith(MERCHANDISE_KEY_PREFIX)) continue;
       const identity = key.slice(MERCHANDISE_KEY_PREFIX.length).split(":")[0];
       const line = getLines(state.data).find((candidate) => candidate.merchandise?.id === identity);
       if (line) lines.add(line.id);
+      cost = true;
     }
   }
 
-  return { lines, note, discountCodes };
+  return { lines, note, discountCodes, cost };
 }
 
 function projectVisibleState(store: CartStoreContext): CartState {
@@ -893,7 +903,7 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       });
       return { ...state, data: { ...state.data, discountCodes } };
     },
-    projectPromise: (state, result, payload, addError) => {
+    projectPromise: (state, result, payload, addError, options) => {
       const resolvedCodes = result.cart
         ? cartResponseFromStandardEvent(result.cart).discountCodes
         : undefined;
@@ -904,6 +914,9 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       }
       if (!result.cart) return state;
       const cart = cartResponseFromStandardEvent(result.cart);
+      if (options.mergeServerCart) {
+        return { ...state, data: mergeAuthoritativeCartData(state.data, cart) };
+      }
       return { ...state, data: { ...state.data, discountCodes: cart.discountCodes } };
     },
     getSignalKeys: () => DISCOUNT_CODES_KEY,
@@ -1029,7 +1042,9 @@ function createPendingTransaction<TType extends TransactionType>(
     promise,
     projectPayload: (current) => definition.projectPayload(current, payload),
     projectPromise: (current, result, addError) =>
-      definition.projectPromise(current, result, payload, addError),
+      definition.projectPromise(current, result, payload, addError, {
+        mergeServerCart: !transaction.requiresRevalidation,
+      }),
     trimAfter: (successful) =>
       trimPendingTransaction(
         store,
@@ -1345,6 +1360,8 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   store.reservation = reservation;
   const signal = createTransactionSignal(store, reservation);
   const eventToken = createTransactionEventToken();
+  // Standard Events can arrive asynchronously, so the reservation keeps signal ownership alive
+  // until the correlated event consumes it.
   const correlatedUpdateCart = withTransactionEventToken(updateCart, eventToken);
   let promise: Promise<UpdateCartResult>;
 
@@ -1619,7 +1636,10 @@ function createCartObservable(initialState: CartState, onReadyPromiseRemoved: ()
       observable.setState((prev) => {
         const nextState = typeof next === "function" ? next(prev) : next;
         if (Object.is(nextState, prev)) return prev;
-        if (prev.readyPromise) onReadyPromiseRemoved();
+        if (prev.readyPromise) {
+          onReadyPromiseRemoved();
+          return withoutReadyPromise({ ...nextState, loading: false });
+        }
         return withoutReadyPromise(nextState);
       });
     },
@@ -1646,6 +1666,14 @@ function invalidateActiveCartLoad(store: CartStoreContext): void {
   activeCartLoad.resolveReadyPromise();
 }
 
+function hasLocalCartData(state: CartState): boolean {
+  return (
+    state.data.id !== null ||
+    state.data.totalQuantity > EMPTY_QUANTITY ||
+    getLines(state.data).length > 0
+  );
+}
+
 function hydrateCartInStore(store: CartStoreContext, data: CartData): void {
   const current = store.observable.state;
   invalidateActiveCartLoad(store);
@@ -1664,13 +1692,21 @@ function hydrateCartInStore(store: CartStoreContext, data: CartData): void {
 }
 
 function resetCartStore(store: CartStoreContext): void {
+  const hadActiveCartLoad = store.activeCartLoad !== null;
+  const hadActiveRevalidation = store.revalidation.active !== null;
+  const shouldReloadAfterReset =
+    store.cartSyncAttached &&
+    !hadActiveRevalidation &&
+    (hadActiveCartLoad || hasLocalCartData(store.observable.state));
+
   clearPendingTransactions(store);
   invalidateActiveCartLoad(store);
+  cancelCartRevalidation(store);
   store.lastSnapshotSequence = 0;
   store.settled = createEmptyCartState();
   publishVisibleState(store);
 
-  if (store.cartSyncAttached) {
+  if (shouldReloadAfterReset) {
     loadCartInStore(store).catch((error: unknown) =>
       log.error("cart reset load failed", { error }),
     );
@@ -1766,17 +1802,23 @@ export function createCartStore<TData extends CartData = CartData>(
       handleDiscountEvent(store, event as CartDiscountUpdateEvent)) as EventListener,
     note: ((event: Event) => handleNoteEvent(store, event as CartNoteUpdateEvent)) as EventListener,
   };
-  let initialCartLoadStarted = syncInitialData;
+  if (asyncInitialData) {
+    loadCartInStore(
+      store,
+      Promise.resolve(initialData).then((data) => data.cart),
+    ).catch((error: unknown) => log.error("cart initial load failed", { error }));
+  }
+
+  let initialCartLoadStarted = syncInitialData || asyncInitialData;
 
   return {
     connect: () => {
       const connected = connectCartStore(store, handlers);
       if (!connected || initialCartLoadStarted) return;
       initialCartLoadStarted = true;
-      loadCartInStore(
-        store,
-        asyncInitialData ? Promise.resolve(initialData).then((data) => data.cart) : undefined,
-      ).catch((error: unknown) => log.error("cart initial load failed", { error }));
+      loadCartInStore(store).catch((error: unknown) =>
+        log.error("cart initial load failed", { error }),
+      );
     },
     destroy: () => destroyCartStore(store, handlers),
     hydrate: (data) => hydrateCartInStore(store, data),

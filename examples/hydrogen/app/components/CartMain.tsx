@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
 import { useAside } from "~/components/Aside";
@@ -19,10 +20,8 @@ export type CartMainProps = {
 export function CartMain({ layout }: CartMainProps) {
   const cartState = useCart((cart) => cart);
   const cart = cartState.data;
-  const totalsPending =
-    cartState.pending.lines.size > 0 ||
-    cartState.pending.discountCodes.size > 0 ||
-    cartState.revalidating === true;
+  const totalsPending = cartState.pending.cost === true || cartState.revalidating === true;
+  const statusMessage = useCartStatusMessage(totalsPending, cartState.errors.network.length > 0);
   const cartLines = cart.lines.nodes;
 
   const linesCount = Boolean(cartLines.length);
@@ -40,11 +39,7 @@ export function CartMain({ layout }: CartMainProps) {
   return (
     <section className={className} aria-label={layout === "page" ? "Cart page" : "Cart drawer"}>
       <span role="status" className="sr-only">
-        {totalsPending
-          ? "Updating cart totals"
-          : cartState.errors.network.length === 0
-            ? "Cart totals updated"
-            : ""}
+        {statusMessage}
       </span>
       {cartState.errors.network.length > 0 ? (
         <div role="alert" aria-atomic="true">
@@ -78,6 +73,18 @@ export function CartMain({ layout }: CartMainProps) {
       </div>
     </section>
   );
+}
+
+function useCartStatusMessage(isPending: boolean, hasNetworkErrors: boolean): string {
+  const [sawPending, setSawPending] = useState(false);
+
+  useEffect(() => {
+    if (isPending) setSawPending(true);
+  }, [isPending]);
+
+  if (isPending) return "Updating cart totals";
+  if (sawPending && !hasNetworkErrors) return "Cart totals updated";
+  return "";
 }
 
 function getParentLineId(line: object): string | undefined {

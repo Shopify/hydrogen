@@ -6,9 +6,7 @@
 	const totalQuantity = cartState((s) => s.data.totalQuantity);
 	const checkoutUrl = cartState((s) => s.data.checkoutUrl);
 	const cost = cartState((s) => s.data.cost);
-	const isTotalsPending = cartState(
-		(s) => s.pending.lines.size > 0 || s.pending.discountCodes.size > 0 || s.revalidating === true
-	);
+	const isTotalsPending = cartState((s) => s.pending.cost === true || s.revalidating === true);
 </script>
 
 <div

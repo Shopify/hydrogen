@@ -64,6 +64,8 @@ Each line must expose:
 - A visible decrease control named Decrease or -
 - A visible remove control named Remove
 
+Cart totals must expose a `role="status"` region that says `Updating cart totals` while cart totals are stale, then `Cart totals updated` after mutation settlement. Do not announce `Cart totals updated` on initial idle render before a mutation cycle. The region may be visually hidden if it remains available to assistive technology.
+
 Accessible labels are preferred. Broad data-testid attributes should only be used when a semantic role or label cannot express the user-facing concept.
 
 ## Checkout Handoff

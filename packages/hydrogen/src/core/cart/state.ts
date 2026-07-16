@@ -88,6 +88,7 @@ export interface CartPending {
   lines: Set<string>;
   note: boolean;
   discountCodes: Set<string>;
+  cost?: boolean;
 }
 
 export interface CartErrorState {
@@ -126,7 +127,7 @@ export interface CartState<TData extends CartData = CartData> {
 }
 
 export function createEmptyPending(): CartPending {
-  return { lines: new Set(), note: false, discountCodes: new Set() };
+  return { lines: new Set(), note: false, discountCodes: new Set(), cost: false };
 }
 
 export function createEmptyErrorGroup(): CartErrorGroup {

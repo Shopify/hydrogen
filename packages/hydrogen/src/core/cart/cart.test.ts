@@ -339,7 +339,12 @@ describe("createCartStore", () => {
 
     const state = localStore.getState();
     expect(state.loading).toBe(false);
-    expect(state.pending).toEqual({ lines: new Set(), note: false, discountCodes: new Set() });
+    expect(state.pending).toEqual({
+      lines: new Set(),
+      note: false,
+      discountCodes: new Set(),
+      cost: false,
+    });
     expect(state.errors).toEqual(createEmptyCartErrors());
   });
 
@@ -1274,6 +1279,83 @@ describe("CartStore.handleFormSubmit — discount mutations", () => {
     expect(store.getState().pending.discountCodes.size).toBe(0);
   });
 
+  it("discount-apply tracks pending.cost", async () => {
+    const event = submitForm({ discountCode: "NEW10" }, "intent", "discount-apply");
+    const promise = store.handleFormSubmit(event);
+    await nextTick();
+
+    expect(store.getState().pending.cost).toBe(true);
+
+    resolveUpdate(0, {
+      cart: {
+        id: "gid://shopify/Cart/123",
+        totalQuantity: 0,
+        cost: { totalAmount: { amount: "0", currencyCode: "USD" } },
+        lines: [],
+        discountCodes: [
+          { code: "EXISTING", applicable: true },
+          { code: "NEW10", applicable: true },
+        ],
+      },
+    });
+    await promise;
+
+    expect(store.getState().pending.cost).toBe(false);
+  });
+
+  it("discount-apply settles line prices from the server cart", async () => {
+    const originalAmount = "20";
+    const discountedAmount = "15";
+    const line = makeLine({
+      id: "line-1",
+      quantity: 1,
+      cost: {
+        totalAmount: { amount: originalAmount, currencyCode: "USD" },
+        subtotalAmount: { amount: originalAmount, currencyCode: "USD" },
+        amountPerQuantity: { amount: originalAmount, currencyCode: "USD" },
+        compareAtAmountPerQuantity: null,
+      },
+    });
+    store.hydrate(makeCartState({ lines: [line], totalQuantity: 1 }));
+
+    const event = submitForm({ discountCode: "NEW10" }, "intent", "discount-apply");
+    const promise = store.handleFormSubmit(event);
+    await nextTick();
+
+    resolveUpdate(0, {
+      cart: {
+        ...makeCartState({
+          lines: [
+            makeLine({
+              id: "line-1",
+              quantity: 1,
+              cost: {
+                totalAmount: { amount: discountedAmount, currencyCode: "USD" },
+                subtotalAmount: { amount: discountedAmount, currencyCode: "USD" },
+                amountPerQuantity: { amount: discountedAmount, currencyCode: "USD" },
+                compareAtAmountPerQuantity: null,
+              },
+            }),
+          ],
+          cost: {
+            ...EMPTY_CART_DATA.cost,
+            subtotalAmount: { amount: discountedAmount, currencyCode: "USD" },
+          },
+          discountCodes: [
+            { code: "EXISTING", applicable: true },
+            { code: "NEW10", applicable: true },
+          ],
+        }),
+      },
+    });
+    await promise;
+
+    const [settledLine] = getCartLines(store.getState().data);
+    assert(settledLine, "expected discount response to settle a cart line");
+    expect(settledLine.cost.totalAmount.amount).toBe(discountedAmount);
+    expect(store.getState().data.cost.subtotalAmount.amount).toBe(discountedAmount);
+  });
+
   it("discount-apply preserves applicable status for existing codes during optimistic phase", async () => {
     const event = submitForm({ discountCode: "NEW10" }, "intent", "discount-apply");
     store.handleFormSubmit(event);
@@ -1623,6 +1705,51 @@ describe("CartStore.handleFormSubmit — concurrency", () => {
 
     expect(getCartLines(store.getState().data)[0].quantity).toBe(updatedQuantity);
     expect(store.getState().data.totalQuantity).toBe(updatedQuantity);
+  });
+
+  it("stale overlapping discount snapshots do not remove a settled line", async () => {
+    const cartId = "gid://shopify/Cart/discount-overlap";
+    const variantId = "gid://shopify/ProductVariant/discounted";
+    const discountCode = "SAVE10";
+    const lineQuantity = 1;
+    const revalidation = createDeferred<{ cart: CartData }>();
+    mockGetCart.mockReturnValueOnce(revalidation.promise);
+    store.hydrate(makeCartState({ id: cartId, lines: [], totalQuantity: 0 }));
+
+    const addPromise = store.handleFormSubmit(
+      submitForm({ merchandiseId: variantId, quantity: String(lineQuantity) }, "intent", "add"),
+      { products: [productDetail(variantId)] },
+    );
+    await nextTick();
+
+    const discountPromise = store.handleFormSubmit(
+      submitForm({ discountCode }, "intent", "discount-apply"),
+    );
+    await nextTick();
+
+    const settledLine = lineWithMerchandise("line-a", lineQuantity, variantId);
+    resolveUpdate(0, {
+      cart: makeCartState({ id: cartId, lines: [settledLine], totalQuantity: lineQuantity }),
+    });
+    await addPromise;
+
+    resolveUpdate(1, {
+      cart: makeCartState({
+        id: cartId,
+        lines: [],
+        totalQuantity: 0,
+        discountCodes: [{ code: discountCode, applicable: true }],
+      }),
+    });
+    await discountPromise;
+
+    expect(getCartLines(store.getState().data).map((line) => line.id)).toEqual([settledLine.id]);
+    expect(store.getState().revalidating).toBe(true);
+
+    revalidation.resolve({
+      cart: makeCartState({ id: cartId, lines: [settledLine], totalQuantity: lineQuantity }),
+    });
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeUndefined());
   });
 
   it("a mutation during revalidation discards stale data and triggers one trailing fetch", async () => {

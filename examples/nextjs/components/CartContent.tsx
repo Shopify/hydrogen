@@ -1,4 +1,7 @@
 "use client";
+
+import { useEffect, useState } from "react";
+
 import { useCart, useCartForm } from "@/lib/cart";
 import { content } from "@/lib/content";
 import { formatPrice } from "@/lib/money";
@@ -11,8 +14,7 @@ export function CartContent() {
   const pending = useCart((state) => state.pending);
   const revalidating = useCart((state) => state.revalidating);
   const networkErrors = useCart((state) => state.errors.network);
-  const isPending =
-    pending.lines.size > 0 || pending.discountCodes.size > 0 || revalidating === true;
+  const isPending = pending.cost === true || revalidating === true;
   const lines = cart.lines.nodes;
   const totalQuantity = cart.totalQuantity;
   const subtotal = cart.cost.subtotalAmount;
@@ -133,11 +135,7 @@ function CartStatus({
   isPending: boolean;
   networkErrors: readonly { message: string }[];
 }) {
-  const message = isPending
-    ? "Updating cart totals"
-    : networkErrors.length === 0
-      ? "Cart totals updated"
-      : "";
+  const message = useCartStatusMessage(isPending, networkErrors.length > 0);
   return (
     <>
       <span role="status" className="sr-only">
@@ -152,4 +150,16 @@ function CartStatus({
       ) : null}
     </>
   );
+}
+
+function useCartStatusMessage(isPending: boolean, hasNetworkErrors: boolean): string {
+  const [sawPending, setSawPending] = useState(false);
+
+  useEffect(() => {
+    if (isPending) setSawPending(true);
+  }, [isPending]);
+
+  if (isPending) return "Updating cart totals";
+  if (sawPending && !hasNetworkErrors) return "Cart totals updated";
+  return "";
 }

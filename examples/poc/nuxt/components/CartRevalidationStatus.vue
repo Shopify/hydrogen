@@ -1,13 +1,20 @@
 <script setup lang="ts">
+import { computed, ref, watchEffect } from "vue";
+
 import { useCart } from "~/storefront/cart";
 
-const message = useCart((state) => {
-  const pending =
-    state.pending.lines.size > 0 ||
-    state.pending.discountCodes.size > 0 ||
-    state.revalidating === true;
-  if (pending) return "Updating cart totals";
-  return state.errors.network.length === 0 ? "Cart totals updated" : "";
+const isPending = useCart((state) => state.pending.cost === true || state.revalidating === true);
+const hasNetworkErrors = useCart((state) => state.errors.network.length > 0);
+const sawPending = ref(false);
+
+watchEffect(() => {
+  if (isPending.value) sawPending.value = true;
+});
+
+const message = computed(() => {
+  if (isPending.value) return "Updating cart totals";
+  if (sawPending.value && !hasNetworkErrors.value) return "Cart totals updated";
+  return "";
 });
 </script>
 

@@ -5,9 +5,7 @@ import { formatMoney } from "~/storefront/money";
 const totalQuantity = useCart((s) => s.data.totalQuantity);
 const checkoutUrl = useCart((s) => s.data.checkoutUrl);
 const cost = useCart((s) => s.data.cost);
-const isTotalsPending = useCart(
-  (s) => s.pending.lines.size > 0 || s.pending.discountCodes.size > 0 || s.revalidating === true,
-);
+const isTotalsPending = useCart((s) => s.pending.cost === true || s.revalidating === true);
 </script>
 
 <template>

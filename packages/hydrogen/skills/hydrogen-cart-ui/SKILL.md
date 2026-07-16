@@ -72,6 +72,7 @@ const messages = deriveFromErrors(errors, () => {
 
 - `pending.lines` — `Set<string>` of line IDs with mutations in flight.
 - `pending.discountCodes` — `Set<string>` of discount codes being applied or removed.
+- `pending.cost` — `true` when pending line or discount mutations can leave totals stale.
 - `pending.note` — `boolean` indicating whether a note save is in flight.
 
 Any value whose entity is in a pending set is **optimistic and unconfirmed**. The UI must treat it differently from confirmed values.
