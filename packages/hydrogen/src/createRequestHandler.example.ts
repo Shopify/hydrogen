@@ -57,12 +57,15 @@ class AppSession implements HydrogenSession {
   ) {}
 
   static async init(request: Request, secrets: string[]) {
+    const isProduction = process.env.NODE_ENV === 'production';
+
     const storage = createCookieSessionStorage({
       cookie: {
         name: 'session',
         httpOnly: true,
         path: '/',
         sameSite: 'lax',
+        secure: isProduction,
         secrets,
       },
     });
