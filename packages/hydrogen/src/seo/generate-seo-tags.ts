@@ -33,7 +33,7 @@ export const schema = {
         );
       }
 
-      if (typeof value === 'string' && value.length > 155) {
+      if (typeof value === 'string' && value.length > 160) {
         throw new Error(
           ERROR_PREFIX.concat(
             '`description` should not be longer than 160 characters',
