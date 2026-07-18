@@ -1,0 +1,38 @@
+{
+  "name": "@shopify/hydrogen-example-tanstack-start",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite dev",
+    "https:dev": "VITE_LOCAL_HTTPS=1 vite dev",
+    "start": "node .output/server/index.mjs",
+    "typecheck": "tsr generate && tsc && gql.tada check --fail-on-warn"
+  },
+  "dependencies": {
+    "@shopify/hydrogen": "workspace:*",
+    "@tanstack/react-router": "1.170.18",
+    "@tanstack/react-start": "1.168.28",
+    "lru-cache": "^11.3.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "@tanstack/router-cli": "1.167.19",
+    "@tanstack/virtual-file-routes": "1.162.0",
+    "@types/node": "^22",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "6.0.3",
+    "gql.tada": "^1.9.2",
+    "nitro": "3.0.260610-beta",
+    "tailwindcss": "^4.2.2",
+    "typescript": "catalog:",
+    "vite": "^8.0.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

@@ -198,6 +198,7 @@ The [`examples/`](./examples) directory ports the same storefront across framewo
 | --- | --- |
 | `nextjs/` | Next.js 16 (App Router) |
 | `react-router/` | React Router v7, server loaders |
+| `tanstack-start/` | TanStack Start, server functions |
 | `sveltekit/` | SvelteKit 2 + Svelte 5 (runes) |
 | `astro/` | Astro 6 SSR |
 | `solid-start/` | SolidStart v1 |
