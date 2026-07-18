@@ -73,7 +73,9 @@ export function ShopifyAnalytics({
   useCustomerPrivacy({
     ...consent,
     locale: language,
-    checkoutDomain: !checkoutDomain ? 'mock.shop' : checkoutDomain,
+    checkoutDomain: !checkoutDomain
+      ? 'mockdotshop.myshopify.com'
+      : checkoutDomain,
     storefrontAccessToken: !storefrontAccessToken
       ? 'abcdefghijklmnopqrstuvwxyz123456'
       : storefrontAccessToken,
