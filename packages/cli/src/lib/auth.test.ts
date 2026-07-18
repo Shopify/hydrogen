@@ -128,6 +128,20 @@ describe('auth', () => {
       expect(result).toStrictEqual(EXPECTED_LOGIN_RESULT);
     });
 
+    it('throws an error when account has no active shops', async () => {
+      vi.mocked(getUserAccount).mockResolvedValue({
+        email: EMAIL,
+        activeShops: [],
+      });
+
+      await expect(login(ROOT)).rejects.toThrow(/No active shops found/);
+      await expect(login(ROOT, SHOP_DOMAIN)).rejects.toThrow(
+        /No active shops found/,
+      );
+      await expect(login(ROOT, true)).rejects.toThrow(/No active shops found/);
+      expect(renderSelectPrompt).not.toHaveBeenCalled();
+    });
+
     it('prompts for shop is not found in arguments and local config', async () => {
       const result = await login(ROOT);
 
