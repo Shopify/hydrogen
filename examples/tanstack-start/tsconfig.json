@@ -1,0 +1,40 @@
+{
+  "include": ["app/**/*.ts", "app/**/*.tsx", "vite.config.ts"],
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "gql.tada/ts-plugin",
+        "schemas": [
+          {
+            "name": "storefront",
+            "schema": "node_modules/@shopify/hydrogen/dist/storefront.schema.json",
+            "tadaOutputLocation": "./app/storefront-graphql-env.d.ts"
+          },
+          {
+            "name": "customer-account",
+            "schema": "node_modules/@shopify/hydrogen/dist/customer-account.schema.json",
+            "tadaOutputLocation": "./app/customer-account-graphql-env.d.ts"
+          }
+        ],
+        "trackFieldUsage": false
+      }
+    ],
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["node", "vite/client"],
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "paths": {
+      "@shared/*": ["../shared/*"],
+      "~/*": ["./app/*"]
+    },
+    "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true
+  }
+}

@@ -23,6 +23,8 @@ export default defineConfig({
     "**/public/*",
     "**/static/*",
     "**/playwright-report/**",
+    "**/.tanstack/**",
+    "examples/tanstack-start/app/routeTree.gen.ts",
     "**/.react-router/**",
     "**/.last-run.json",
     "pnpm-lock.yaml",

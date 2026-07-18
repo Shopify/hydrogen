@@ -5,6 +5,7 @@
 - `core/` — frozen, framework-agnostic storefront design source (five-page reference HTML + Tailwind tokens, no app JS). Framework examples are hand-built from this baseline.
 - `shared/` — common example configuration and request helpers
 - `react-router/` — React Router v7 port with server loaders
+- `tanstack-start/` — TanStack Start port with server functions and a request-scoped Hydrogen context
 - `nextjs/` — Next.js 16 (App Router) port with server components
 - `hydrogen/` — Hydrogen port with React Router server loaders and Oxygen-style request context
 - `sveltekit/` — SvelteKit 2 + Svelte 5 (runes) port with server `load`

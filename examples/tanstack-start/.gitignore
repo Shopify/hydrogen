@@ -1,0 +1,12 @@
+node_modules/
+.output/
+.tanstack/
+.nitro/
+.vinxi/
+dist/
+.turbo/
+tsconfig.tsbuildinfo
+*.log
+.DS_Store
+storefront-graphql-env.d.ts
+customer-account-graphql-env.d.ts

@@ -18,6 +18,7 @@
     "**/.output/**",
     "**/.astro/**",
     "**/.vinxi/**",
+    "**/.tanstack/**",
     "**/.react-router/**",
     "**/node_modules/**",
     "patches/**",
