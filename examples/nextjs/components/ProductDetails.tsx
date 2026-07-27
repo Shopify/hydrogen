@@ -4,6 +4,7 @@ import { canAddToCart, type SelectedOption } from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useRef } from "react";
 
 import { ProductViewedTracker } from "@/components/ProductViewedTracker";
 import { QuantityStepper } from "@/components/QuantityStepper";
@@ -51,6 +52,10 @@ function ProductPage({ product }: { product: ProductData }) {
   const searchParams = useSearchParams();
   const addable = canAddToCart(product, options);
   const addToCartProps = register("addToCart", {});
+  const firstOptionRef = useRef<HTMLFieldSetElement>(null);
+  // Hide the variant picker when there are no real options to choose (e.g. a
+  // single-variant product whose only option is "Title" / "Default Title").
+  const hasRealOptions = options.some((option) => option.values.length > 1);
 
   const price = selectedVariant?.price ?? product.priceRange.minVariantPrice;
   const compareAt = selectedVariant?.compareAtPrice ?? null;
@@ -144,76 +149,93 @@ function ProductPage({ product }: { product: ProductData }) {
             <p className="text-on-surface-secondary text-sm">{content.product.soldOut}</p>
           ) : null}
 
-          {/* Variant options */}
-          <div className="flex flex-col gap-4">
-            {options.map((option) => (
-              <fieldset key={option.name} className="flex flex-col gap-2">
-                <legend className="type-body-sm text-on-surface font-medium">{option.name}</legend>
-                <div className="flex flex-wrap gap-2">
-                  {option.values.map((value) =>
-                    value.handle && value.handle !== product.handle ? (
-                      // Cross-product value — navigates to the other product
-                      // (hydrogen-variant-form combined-listings rule). Uses the
-                      // live `useSearchParams` base so unrelated params survive.
-                      <Link
-                        key={value.name}
-                        href={variantUrl(
-                          product,
-                          value.selectedOptions,
-                          value.handle,
-                          searchParams,
-                        )}
-                        scroll={false}
-                        className="option-pill no-underline"
-                      >
-                        {value.name}
-                      </Link>
-                    ) : value.exists ? (
-                      // Same-product value — a real GET `<Link>` to the option
-                      // URL so selection works without JS (the server page
-                      // resolves the variant). Hydration enhances the same
-                      // element via `register("optionValue", ...)`; the
-                      // provider `onSelect` syncs the URL client-side.
-                      // `aria-current` marks the selected link (`aria-pressed`
-                      // is invalid on a link).
-                      <Link
-                        key={value.name}
-                        href={variantUrl(
-                          product,
-                          value.selectedOptions,
-                          value.handle,
-                          searchParams,
-                        )}
-                        replace
-                        scroll={false}
-                        aria-current={value.selected ? "true" : undefined}
-                        className="option-pill no-underline"
-                        {...register("optionValue", {
-                          optionName: option.name,
-                          value: value.name,
-                        })}
-                      >
-                        {value.name}
-                      </Link>
-                    ) : (
-                      // Non-existent combination — no valid option URL to
-                      // degrade to, so render a disabled `<button>` with
-                      // `aria-pressed` (hydrogen-variant-form).
-                      <button
-                        key={value.name}
-                        type="button"
-                        aria-pressed={value.selected}
-                        disabled
-                        className="option-pill"
-                      >
-                        {value.name}
-                      </button>
-                    ),
-                  )}
-                </div>
-              </fieldset>
-            ))}
-          </div>
+          {/* Variant options — hidden when the product has no real options
+              (e.g. a single-variant product). */}
+          {hasRealOptions ? (
+            <div className="flex flex-col gap-4">
+              {options.map((option) => (
+                <fieldset
+                  key={option.name}
+                  className="flex flex-col gap-2"
+                  ref={option === options[0] ? firstOptionRef : undefined}
+                >
+                  <legend className="type-body-sm text-on-surface font-medium">
+                    {option.name}
+                  </legend>
+                  <div className="flex flex-wrap gap-2">
+                    {option.values.map((value) =>
+                      value.handle && value.handle !== product.handle ? (
+                        // Cross-product value — navigates to the other product
+                        // (hydrogen-variant-form combined-listings rule). Uses the
+                        // live `useSearchParams` base so unrelated params survive.
+                        <Link
+                          key={value.name}
+                          href={variantUrl(
+                            product,
+                            value.selectedOptions,
+                            value.handle,
+                            searchParams,
+                          )}
+                          scroll={false}
+                          data-available={value.available ? "true" : "false"}
+                          className="option-pill no-underline"
+                        >
+                          {value.name}
+                          {!value.available ? (
+                            <span className="sr-only"> ({content.product.badge.soldOut})</span>
+                          ) : null}
+                        </Link>
+                      ) : value.exists ? (
+                        // Same-product value — a real GET `<Link>` to the option
+                        // URL so selection works without JS (the server page
+                        // resolves the variant). Hydration enhances the same
+                        // element via `register("optionValue", ...)`; the
+                        // provider `onSelect` syncs the URL client-side.
+                        // `aria-current` marks the selected link (`aria-pressed`
+                        // is invalid on a link).
+                        <Link
+                          key={value.name}
+                          href={variantUrl(
+                            product,
+                            value.selectedOptions,
+                            value.handle,
+                            searchParams,
+                          )}
+                          replace
+                          scroll={false}
+                          aria-current={value.selected ? "true" : undefined}
+                          data-available={value.available ? "true" : "false"}
+                          className="option-pill no-underline"
+                          {...register("optionValue", {
+                            optionName: option.name,
+                            value: value.name,
+                          })}
+                        >
+                          {value.name}
+                          {!value.available ? (
+                            <span className="sr-only"> ({content.product.badge.soldOut})</span>
+                          ) : null}
+                        </Link>
+                      ) : (
+                        // Non-existent combination — no valid option URL to
+                        // degrade to, so render a disabled `<button>` with
+                        // `aria-pressed` (hydrogen-variant-form).
+                        <button
+                          key={value.name}
+                          type="button"
+                          aria-pressed={value.selected}
+                          disabled
+                          className="option-pill"
+                        >
+                          {value.name}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </fieldset>
+              ))}
+            </div>
+          ) : null}
 
           {/* Add to cart form — separate from variant selection (variant-form skill).
               `formProps({ afterSubmit: openCartDrawer })` opens the drawer once
@@ -231,8 +253,14 @@ function ProductPage({ product }: { product: ProductData }) {
             </div>
             <button
               {...addToCartProps}
-              disabled={!addable}
-              className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 items-center justify-center px-4 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
+              aria-disabled={!addable}
+              onClick={(event) => {
+                if (!addable) {
+                  event.preventDefault();
+                  firstOptionRef.current?.focus();
+                }
+              }}
+              className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 items-center justify-center px-4 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition"
             >
               {addable
                 ? content.product.addToCart
@@ -253,11 +281,17 @@ function ProductPage({ product }: { product: ProductData }) {
           ) : null}
 
           {errors.userErrors.length > 0 ? (
-            <ul role="alert" className="text-sale text-sm">
-              {errors.userErrors.map((error, index) => (
-                <li key={index}>{error.message}</li>
-              ))}
-            </ul>
+            <div role="alert" className="text-sale text-sm">
+              <ul>
+                {errors.userErrors.map((error, index) => (
+                  <li key={index} role="status">
+                    {typeof error.message === "string"
+                      ? error.message
+                      : "Something went wrong. Please try again."}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : null}
 
           {product.descriptionHtml ? (

@@ -48,7 +48,12 @@ async function loadCriticalData({ context, params, request }: Route.LoaderArgs) 
 
   const [{ product }] = await Promise.all([
     storefront.query(PRODUCT_QUERY, {
-      variables: { handle, selectedOptions: getSelectedProductOptions(request) },
+      variables: {
+        handle,
+        selectedOptions: getSelectedProductOptions({
+          searchParams: new URL(request.url).searchParams,
+        }),
+      },
     }),
     // Add other queries here, so that they are loaded in parallel
   ]);

@@ -22,10 +22,15 @@ export default function Error({
     console.error("[hydrogen-example-nextjs] Route error:", error);
   }, [error]);
 
+  const message =
+    typeof error?.message === "string" && error.message
+      ? error.message
+      : "Something went wrong. Please try again.";
+
   return (
     <div className="max-w-page px-margin mx-auto py-16">
       <h1 className="type-heading-xl mb-4">Something went wrong</h1>
-      <p className="type-body text-on-surface-secondary mb-2">{error.message}</p>
+      <p className="type-body text-on-surface-secondary mb-2">{message}</p>
       {error.digest ? (
         <p className="text-on-surface-secondary mb-8 text-sm">Error digest: {error.digest}</p>
       ) : null}
@@ -34,7 +39,7 @@ export default function Error({
         onClick={reset}
         className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
       >
-        {content.general.back}
+        {content.general.tryAgain}
       </button>
     </div>
   );

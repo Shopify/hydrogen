@@ -58,6 +58,8 @@ export type CreatePredictiveSearchStoreOptions = {
 
 /** Framework-neutral predictive search store used by UI bindings. */
 export type PredictiveSearchStore<TData extends PredictiveSearchData = PredictiveSearchData> = {
+  /** Reactivates store updates after destroy(). */
+  connect(): void;
   /** Returns the current predictive search state snapshot. */
   getState(): PredictiveSearchState<TData>;
   /** Subscribes to state changes and returns an unsubscribe callback. */
@@ -66,7 +68,7 @@ export type PredictiveSearchStore<TData extends PredictiveSearchData = Predictiv
   search(term: string): Promise<void>;
   /** Cancels pending work and resets the store to an empty state. */
   clear(): void;
-  /** Cancels pending work and prevents future store updates. */
+  /** Cancels pending work and pauses store updates until reconnect. */
   destroy(): void;
 };
 
@@ -130,12 +132,19 @@ export function createPredictiveSearchStore<
   };
 
   return {
+    connect: () => connect(context),
     getState: () => context.observable.state,
     subscribe: (listener) => context.observable.subscribe(listener),
     search: (term) => search(context, term),
     clear: () => clear(context),
     destroy: () => destroy(context),
   };
+}
+
+function connect<TData extends PredictiveSearchData>(
+  context: PredictiveSearchStoreContext<TData>,
+): void {
+  context.destroyed = false;
 }
 
 function resolveGlobalFetch(): typeof globalThis.fetch | undefined {

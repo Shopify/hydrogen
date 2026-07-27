@@ -1,3 +1,4 @@
+import { initializeDeprecatedCookies } from "./deprecated-cookies";
 import { configureShopifyRouting } from "./global";
 import type { InitializeShopifyScriptsOptions } from "./types";
 import { loadShopifyWebMcpTools } from "./webmcp";
@@ -12,9 +13,19 @@ import { loadShopifyWebMcpTools } from "./webmcp";
 export function initializeShopifyScripts({
   navigate,
   routes,
+  inbox = false,
   webMcp = true,
 }: InitializeShopifyScriptsOptions): Promise<boolean | void> {
   configureShopifyRouting({ navigate, routes });
+  initializeDeprecatedCookies();
+
+  if (
+    inbox === true &&
+    typeof document !== "undefined" &&
+    !document.querySelector("shopify-chat, shopify-agent")
+  ) {
+    document.body.appendChild(document.createElement("shopify-chat"));
+  }
 
   if (!webMcp) return Promise.resolve();
 

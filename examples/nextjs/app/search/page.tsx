@@ -1,11 +1,10 @@
 import { parseCollectionParams, type StorefrontApi } from "@shopify/hydrogen";
-import type { AvailableFilter } from "@shopify/hydrogen";
 import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 
 import { CollectionBrowser } from "@/components/CollectionBrowser";
-import { SEARCH_QUERY } from "@/lib/queries";
+import { SEARCH_QUERY, type SearchAvailableFilter } from "@/lib/queries";
 import { canonicalUrl } from "@/lib/site";
 import { staticStorefrontClient } from "@/lib/storefront-static";
 import { toURLSearchParams } from "@/lib/url-params";
@@ -15,7 +14,7 @@ export const metadata: Metadata = {
   description: "Search products",
   alternates: { canonical: "/search" },
   openGraph: {
-    title: "Search — CORE",
+    title: "Search",
     type: "website",
     url: canonicalUrl("/search"),
   },
@@ -24,7 +23,7 @@ export const metadata: Metadata = {
 type SearchResult = {
   term: string;
   products: SearchProductNode[];
-  availableFilters: AvailableFilter[];
+  availableFilters: SearchAvailableFilter[];
   pageInfo: { hasNextPage: boolean; endCursor?: string | null };
   totalCount: number;
 };
@@ -93,7 +92,7 @@ async function fetchSearch(term: string, searchString: string): Promise<SearchRe
     products: productNodes,
     availableFilters: search?.productFilters ?? [],
     pageInfo: search?.pageInfo ?? { hasNextPage: false },
-    totalCount: productNodes.length,
+    totalCount: search?.totalCount ?? productNodes.length,
   };
 }
 

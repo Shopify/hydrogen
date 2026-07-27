@@ -13,7 +13,7 @@ export function App() {
   return (
     <html>
       <head>
-        <ShopifyScripts navigate={navigate} />
+        <ShopifyScripts shop={shop} navigate={navigate} />
       </head>
       <body>{/* app layout */}</body>
     </html>

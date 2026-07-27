@@ -10,10 +10,11 @@
     "directory": "packages/hydrogen"
   },
   "bin": {
-    "hydrogen": "./dist/cli/index.mjs"
+    "hydrogen": "./bin/hydrogen.mjs"
   },
   "files": [
     "README.md",
+    "bin",
     "dist",
     "skills"
   ],
@@ -46,6 +47,11 @@
     "./skills/*": "./skills/*",
     "./storefront-api-types": "./dist/storefront-api-types.d.ts",
     "./storefront.schema.json": "./dist/storefront.schema.json",
+    "./ts-plugin": {
+      "types": "./dist/ts-plugin/index.d.cts",
+      "require": "./dist/ts-plugin/index.cjs",
+      "default": "./dist/ts-plugin/index.cjs"
+    },
     "./react": {
       "types": {
         "development": "./dist/development/react/index.d.mts",
@@ -73,7 +79,7 @@
     "postcodegen": "node scripts/postprocess-tada-env.ts && oxfmt src/graphql/generated/*.d.ts src/graphql/generated/*.json"
   },
   "dependencies": {
-    "gql.tada": "^1.9.2"
+    "gql.tada": "1.9.2"
   },
   "devDependencies": {
     "@0no-co/graphqlsp": "^1.15.4",

@@ -3,7 +3,7 @@ name: hydrogen-cart-drawer
 description: >
   Guide for building an accessible cart drawer using @shopify/hydrogen. Use when
   creating or reviewing a cart drawer, mini cart, or slide-out cart, including
-  native <dialog>/showModal, closedby light dismiss, body scroll lock, exit
+  native dialog element (showModal), closedby light dismiss, body scroll lock, exit
   animations, and wiring window.Shopify.actions.openCart().
 ---
 
@@ -18,34 +18,13 @@ Build an accessible cart drawer that opens from the edge of the viewport and int
 Before building the cart drawer, these must be in place:
 
 - **Shopify runtime scripts** — render `ShopifyScripts` once in the root document, or use `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in framework-agnostic heads plus `initializeShopifyScripts({ routes: routeTemplates })` during browser hydration. Use the local `hydrogen-routing` skill for the required routing options. The drawer uses `window.Shopify.actions.openCart()` from that runtime.
-- **`/cart` route** — the full cart page, used as the no-JS fallback for progressive enhancement
+- **`/cart` route** — the full cart page, used as the fallback route when the drawer is unavailable. For strict no-JS live cart HTML, the cart route must receive resolved cart `initialData`.
 
 ---
 
 ## 2. What you're building
 
-```
-┌─────────────────────────────────┐
-│ HEADER (fixed)                  │
-│  "Cart" (h2)                [X] │
-│  [error banner, if any]         │
-├─────────────────────────────────┤
-│                                 │
-│ BODY (scrollable)               │
-│  Line item 1                    │
-│  Line item 2                    │
-│  ...                            │
-│                                 │
-├─────────────────────────────────┤
-│ FOOTER (fixed)                  │
-│  Discount code input            │
-│  Order note                     │
-│  Subtotal / Total               │
-│  [Checkout]                     │
-└─────────────────────────────────┘
-```
-
-The drawer has three layout zones:
+The drawer has three layout zones (header / body / footer):
 
 1. **Header** — title, close button, and error banner (if any cart errors exist). Always visible, never scrolls.
 2. **Body** — line items only. This is the only zone that scrolls when content overflows.
@@ -53,11 +32,11 @@ The drawer has three layout zones:
 
 **Empty state**: When the cart has no items, the body shows an empty message ("Your cart is empty") and the footer is hidden entirely — no totals, no discounts, no notes, no checkout button.
 
-The drawer is a `<dialog>` (or primitive library equivalent) rendered once in the root layout. The storefront must also have a `/cart` route that renders a full cart page — this is the no-JS fallback. The drawer is the progressively-enhanced experience that layers on top after hydration.
+The drawer is a `<dialog>` (or primitive library equivalent) rendered once in the root layout. The storefront must also have a `/cart` route that renders a full cart page — this is the fallback route when the drawer is unavailable. The drawer is the progressively-enhanced experience that layers on top after hydration.
 
 The full `/cart` page shares the same content components (line items, discounts, note, totals, checkout) but uses a page layout instead of the fixed header/body/footer zones.
 
-The drawer's line item forms must preserve the same progressive-enhancement contract as the `/cart` page: hidden `register("set")`, hidden/read-only `register("lineId", { value: line.id })`, and a real editable quantity input from `register("quantity", { value: line.quantity, interactive: true })`. The exact component structure will vary by framework and app, but the form contract must not.
+The drawer's line item forms must use the same Hydrogen line-item form contract as the `/cart` page — see `hydrogen-cart-ui` ("Form structure"). The layout may differ by framework and design system; the form contract must not.
 
 ---
 
@@ -67,19 +46,15 @@ See `references/accessibility.md` for the full dialog accessibility spec grounde
 
 ### Must implement (not provided by `<dialog>`)
 
-1. **Body scroll lock** — `body:has(dialog#cart-drawer[open]) { overflow: hidden; }` — pure CSS, no JS class toggling needed
-2. **Backdrop click dismissal** — prefer native light dismiss with `<dialog closedby="any">`
-3. **Exit animation** — CSS `@starting-style` or JS-deferred close (dialog leaves top-layer immediately on `close()`)
+At-a-glance index — full treatment lives where each concern is implemented:
+
+1. **Body scroll lock** — pure CSS, no JS class toggling (see §6)
+2. **Backdrop click dismissal** — native light dismiss via `<dialog closedby="any">` (see §5)
+3. **Exit animation** — `@starting-style` / discrete transitions (see §6)
 
 ### Provided by `<dialog>` + `showModal()`
 
-These are free — do not reimplement them:
-
-- Focus containment (background becomes `inert`)
-- Focus restoration to trigger element on `close()`
-- Escape key dismissal
-- `::backdrop` overlay
-- Implicit `aria-modal="true"`
+These are free — **do not reimplement them**: focus containment (background `inert`), focus restoration to the trigger on `close()`, Escape dismissal, `::backdrop` overlay, and implicit `aria-modal="true"`. See `references/accessibility.md` for the full table and how each works.
 
 ### Required markup
 
@@ -106,9 +81,9 @@ Use a primitive library only when the app already depends on one for dialog-like
 
 ### Opening the drawer
 
-The cart trigger in the navbar should render as an `<a href="/cart">` before hydration, then enhance to a `<button>` that calls `openCartDrawer()` after hydration. This keeps the no-JS path simple: buyers navigate to the full `/cart` route, which must server-render cart items.
+The cart trigger renders in SSR as `<a href="/cart">Cart</a>` so it works before hydration and without JavaScript (the anchor navigates to the full `/cart` page). After hydration, an `onClick` calls `e.preventDefault()` then `openCartDrawer()` (which calls `showModal()`), so the click opens the drawer instead of navigating; no `hasHydrated` swap is needed — the anchor is the no-JS baseline and the `onClick` is the enhancement.
 
-Keep the drawer as hydrated progressive enhancement. Do not make the drawer itself the no-JS cart surface; the `/cart` page is that fallback.
+Keep the drawer as hydrated progressive enhancement. Do not make the drawer itself the fallback route; the `/cart` page is that full-page fallback.
 
 ```tsx
 export const CART_DRAWER_ID = "cart-drawer";
@@ -188,57 +163,39 @@ function CartDrawer() {
 }
 ```
 
-**Badge count**: The cart icon typically shows a quantity badge. Cap the displayed count at **99** — show the number for 1–99, show "99+" for 100 or more. This keeps the badge visually compact (two digits max) and avoids layout shift from large numbers.
+The drawer opens from three surfaces. The cart trigger is the canonical one; the other two reuse the same helper.
 
-Three trigger paths (post-hydration):
+**1. The cart trigger.** A `/cart` anchor with an `onClick` that opens the drawer after hydration. It carries the accessibility attributes `aria-controls` and `aria-haspopup="dialog"`:
 
-1. **Cart trigger** — render `<a href="/cart">` before hydration, then render a button after hydration that calls `openCartDrawer()`.
+```tsx
+return (
+  <a href="/cart" onClick={(e) => { e.preventDefault(); openCartDrawer(); }} aria-controls={CART_DRAWER_ID} aria-haspopup="dialog">
+    Cart
+  </a>
+);
+```
 
-   ```tsx
-   const [hasHydrated, setHasHydrated] = useState(false);
-   useEffect(() => setHasHydrated(true), []);
+**2. `window.Shopify.actions.openCart()`** — the Standard Action for programmatic opening, so external code (Standard Actions tools, agents, third-party components) can open the drawer. Register the same stable DOM helper as the `openCart` handler (see §8 for the handler-permanence caveat).
 
-   return hasHydrated ? (
-     <button
-       type="button"
-       aria-controls={CART_DRAWER_ID}
-       aria-haspopup="dialog"
-       onClick={openCartDrawer}
-     >
-       Cart
-     </button>
-   ) : (
-     <a href="/cart">Cart</a>
-   );
-   ```
+```js
+window.Shopify.actions.openCart();
+```
 
-2. **`window.Shopify.actions.openCart()`** — the Standard Action for programmatic cart opening. The drawer must register the same DOM helper as the `openCart` handler so that external code (Standard Actions tools, agents, third-party components) can open it.
+**3. After a successful add-to-cart** — if the product UX should open the drawer on add, pass the same helper to the product form's submit hooks.
 
-   ```js
-   window.Shopify.actions.openCart();
-   ```
+```tsx
+<form {...formProps({ afterSubmit: openCartDrawer })}>
+  {/* add-to-cart controls */}
+</form>
+```
 
-   `.configure()` is a one-time registration with no undo API. Keep the handler stable and independent of framework refs by looking up `dialog#cart-drawer` by ID.
-
-   Use `window.Shopify.actions.openCart()` for external integrations that only need to open the cart. Keep the local JavaScript helper for all programmatic opens.
-
-3. **After add-to-cart submit succeeds** — if the product UX should open the drawer after a successful add, pass the same local helper to the product form's submit hooks.
-
-   ```tsx
-   <form {...formProps({ afterSubmit: openCartDrawer })}>
-     {/* add-to-cart controls */}
-   </form>
-   ```
-
-   This opens the drawer only after the mutation succeeds. Keep validation and cancellation in `beforeSubmit`; for example, call `event.preventDefault()` there if the quantity is invalid and the drawer should not open. Do not push this policy into core cart mutations; some storefronts want a toast, a cart page navigation, or no automatic UI change.
+This opens the drawer only after the mutation succeeds. Keep validation and cancellation in `beforeSubmit` — for example, call `event.preventDefault()` there if the quantity is invalid and the drawer should not open. Do not push this policy into core cart mutations; some storefronts want a toast, a cart page navigation, or no automatic UI change.
 
 ### Closing the drawer
 
-- **Escape key** — native with `<dialog>` (fires `cancel` then `close` events)
-- **Backdrop click** — native light dismiss with `<dialog closedby="any">`
-- **Close button** — explicit `<button>` in the drawer header with `aria-label="Close cart"`
+Native: Escape and the back gesture (fires `cancel` then `close`). App-provided: the explicit close `<button>` in the header (`aria-label="Close cart"`). Backdrop (light dismiss) requires `<dialog closedby="any">`.
 
-`closedby="any"` is the least compatible part of this pattern today. Older browsers and Safari versions that have not shipped `closedby` will ignore the attribute, so the drawer will still close from Escape and the explicit close button, but backdrop click will not close it. Do not provide a polyfill for `closedby` unless the app explicitly requires backdrop click support in those browsers.
+`closedby="any"` is the least compatible part of this pattern. Older browsers and Safari versions that have not shipped `closedby` will ignore the attribute, so the drawer will still close from Escape and the explicit close button, but backdrop click will not close it. Do not provide a polyfill for `closedby` unless the app explicitly requires backdrop click support in those browsers.
 
 If an app does require that polyfill, use a pointerdown-plus-click guard on the `<dialog>` itself: record whether `pointerdown` started on the dialog backdrop, then close only when the following `click` also targets the dialog. Do not close on a plain `click.self` alone, because a drag that starts inside the drawer and ends on the backdrop can produce an accidental close.
 
@@ -252,73 +209,7 @@ For custom logic, listen to native dialog events instead of duplicating state. U
 
 ## 6. CSS and animation
 
-Reference CSS for the drawer shell:
-
-In Tailwind apps, keep these dialog shell, `::backdrop`, `@starting-style`, and scroll-lock rules in global CSS or a project `@layer`; use utilities for the drawer's internal content layout.
-
-```css
-dialog#cart-drawer {
-  position: fixed;
-  inset-block: 0;
-  right: 0;
-  left: auto;
-  margin: 0;
-  width: 100%;
-  max-width: 28rem;
-  height: 100dvh;
-  max-height: none;
-  border: 0;
-  padding: 0;
-}
-```
-
-**Entry and exit animation**: slide in from the edge and let the dialog remain transitionable while closing.
-```css
-dialog#cart-drawer {
-  transform: translateX(100%);
-  transition:
-    transform 250ms cubic-bezier(0.22, 1, 0.36, 1),
-    overlay 250ms allow-discrete,
-    display 250ms allow-discrete;
-}
-
-dialog#cart-drawer[open] {
-  transform: translateX(0);
-}
-
-@starting-style {
-  dialog#cart-drawer[open] {
-    transform: translateX(100%);
-  }
-}
-```
-
-**Backdrop**: fade in.
-```css
-dialog#cart-drawer::backdrop {
-  background: rgb(0 0 0 / 0);
-  transition:
-    background-color 250ms ease-out,
-    overlay 250ms allow-discrete,
-    display 250ms allow-discrete;
-}
-dialog#cart-drawer[open]::backdrop {
-  background: rgb(0 0 0 / 0.3);
-}
-
-@starting-style {
-  dialog#cart-drawer[open]::backdrop {
-    background: rgb(0 0 0 / 0);
-  }
-}
-```
-
-**Scroll lock**:
-```css
-body:has(dialog#cart-drawer[open]) { overflow: hidden; }
-```
-
-Exact measurements and colors are not prescribed — the above matches the base example for reference. Adapt to the project's design system.
+See `references/css.md` for the reference drawer shell, entry/exit animation, backdrop, and scroll-lock CSS. In Tailwind apps, keep the dialog shell, `::backdrop`, `@starting-style`, and scroll-lock rules in global CSS or a project `@layer`; use utilities for the drawer's internal content layout.
 
 ---
 
@@ -326,15 +217,14 @@ Exact measurements and colors are not prescribed — the above matches the base 
 
 After building the cart drawer, test:
 
-- [ ] Cart trigger opens drawer after hydration
+- [ ] Cart trigger is a `/cart` anchor pre-hydration; after hydration its `onClick` opens the drawer via `showModal()`
 - [ ] If a no-JS fallback is required, it navigates to `/cart` without JavaScript
 - [ ] `window.Shopify.actions.openCart()` opens drawer (test from browser console)
-- [ ] Escape closes drawer
-- [ ] Backdrop click closes drawer
-- [ ] Close button closes drawer
+- [ ] Drawer closes via Escape, backdrop click (with `closedby="any"`), and the close button
 - [ ] Focus returns to the cart icon after close
 - [ ] Tab cycles only through elements inside the drawer while open
 - [ ] Screen reader announces "Cart" (or equivalent title) on drawer open
+- [ ] While cart data loads, the title and close button remain available and the loading status is announced
 - [ ] Drawer line item forms use the same `hydrogen-cart-ui` progressive form contract as the `/cart` page
 
 ---
@@ -343,24 +233,16 @@ After building the cart drawer, test:
 
 - **`openCart` handler is permanent** — `openCart.configure({ handler })` has no corresponding `unconfigure()`. Once registered, the handler persists for the page lifetime. This is fine when the drawer lives in the root layout. Avoid handlers that close over component refs that can go stale during HMR; prefer a small stable helper that looks up `dialog#cart-drawer` and calls `showModal()`.
 
-- **Backdrop click requires `closedby="any"`** — `<dialog>` opened with `showModal()` defaults to `closedby="closerequest"`, which handles Escape/back gestures but not light dismiss. Add `closedby="any"` when backdrop click should close the drawer, but remember that unsupported browsers ignore it. Older browsers and Safari still have the close button; they just do not get backdrop-click dismissal.
-
-- **Closing animations need discrete transitions** — calling `dialog.close()` removes the dialog from the top layer immediately unless CSS uses `overlay` and `display` with `allow-discrete` (or you defer `close()` in JavaScript until the animation ends).
-
-- **Open-on-add is a product UX decision** — prefer opening the drawer in `afterSubmit` so `beforeSubmit` can validate and cancel the submission with `event.preventDefault()`. Keeping this in the app makes the policy explicit.
-
 - **Astro view transitions** — if the drawer is vanilla JS (like the base example), it must be re-initialized after view transition navigations. Listen for `astro:after-swap`.
 
 - **Cart selectors must be stable** — don't derive arrays or objects inside a cart selector unless the binding accepts an equality function. Select store references such as `state.errors` or `state.data.lines.nodes` and derive banner messages outside the selector with the framework's memoization primitive.
-
-- **Drawer/page form drift** — the drawer can use a different layout, but not a different cart mutation contract. Prefer shared line item form components between the drawer and `/cart` page; otherwise mirror the `hydrogen-cart-ui` line item form invariant exactly.
 
 ---
 
 ## 9. Anti-patterns
 
-- **Drawer as a route instead of overlay** — the drawer itself is overlay UI rendered in the root layout, not a routed page. The `/cart` route is the full cart page (the no-JS fallback), not the drawer. Don't render the drawer only on `/cart` — it must be available on every page.
+- **Drawer as a route instead of overlay** — the drawer is overlay UI in the root layout and must be available on every page; the `/cart` route is the full cart page, not the drawer (see §2).
 
 - **`dialog.show()` instead of `showModal()`** — `show()` does not get top-layer rendering, focus containment, `inert` on background, or `::backdrop`. Always use `showModal()`.
 
-- **Text-only drawer quantities** — rendering line quantities as text with only plus/minus controls breaks the progressive set-quantity path. Drawer line items need the same editable quantity input contract as the cart page.
+- **Text-only drawer quantities** — rendering line quantities as text with only plus/minus controls breaks the progressive set-quantity path; use the same editable quantity input contract as the `/cart` page (see `hydrogen-cart-ui`).

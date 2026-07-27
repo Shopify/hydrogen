@@ -1,7 +1,7 @@
 "use client";
 
 export type { ShopifyStandardActions } from "../../vendor/standard-actions";
-export { CartProvider, createCartComponents, useCart, useCartForm } from "./cart";
+export { CartProvider, createCartComponents, useCart, useCartAnalytics, useCartForm } from "./cart";
 export type { ShopifyGlobal } from "../globals";
 export type { QuantityInputAttributes, SetButtonAttributes } from "../core/cart/form";
 export {

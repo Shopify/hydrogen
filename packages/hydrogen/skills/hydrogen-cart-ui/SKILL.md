@@ -1,8 +1,10 @@
 ---
 name: hydrogen-cart-ui
 description: >
-  Behavioral guide for building cart UI with @shopify/hydrogen. Use this
-  skill whenever writing, modifying, or reviewing cart components. Framework agnostic.
+  Behavioral guide for building cart UI with @shopify/hydrogen: line items,
+  quantity and remove controls, optimistic updates, discount and note inputs,
+  and the full-page /cart fallback. Use when writing, modifying, or reviewing cart
+  line-item UI, quantity/remove controls, or cart mutation forms. Framework agnostic.
 ---
 
 # Cart Primitive
@@ -21,9 +23,13 @@ In island-based frameworks, use the binding for the island's UI framework when a
 
 When creating a full cart page, use the app's existing route convention when present; otherwise create `/cart`. This page is separate from Hydrogen's `/api/cart` server handler, which is registered with `createCartServerHandlers()` through `handleShopifyRoutes`.
 
+**The `/cart` page must render from the server data path.** It is the fallback route for the cart drawer (reachable as a real `/cart` link in the footer), so its line items and totals must not depend only on an ad hoc client store read. Seed `CartProvider` with `initialData` from the server data path (React Router loader, Next.js server layout/page). When the framework can preserve streamed promises, pass the unresolved cart promise as `initialData` instead of awaiting it; the Next.js reference is the best current non-blocking pattern. If strict no-JS HTML must include the real cart today, pass the resolved handler envelope instead. A `/cart` page whose only data source is a client `useCart` read renders "Your cart is empty" without JS even when the shopper has items. See the framework reference for the exact wiring.
+
+**The native no-JS add-to-cart POST must set the cart cookie server-side.** With scripting off, the add-to-cart `<form method="post">` submits natively and the cart server handler must respond with the cart cookie so the next `/cart` request server-renders the seeded cart — not only service the hydrated `fetch`. See the `hydrogen-request-handlers` skill for the endpoint contract.
+
 ## How the store works
 
-The store holds a `CartState` and notifies subscribers on change. Mutations flow through Shopify Standard Actions — the store listens for `shopify:cart:lines-update`, `shopify:cart:discount-update`, and `shopify:cart:note-update` DOM events. Each event carries a `promise` that resolves with the server response.
+The store holds a `CartState` and notifies subscribers when it changes. `state.readyPromise` is present while an applicable full-cart load is pending and resolves after the resulting state is published. Mutations flow through Shopify Standard Actions — the store listens for `shopify:cart:lines-update`, `shopify:cart:discount-update`, and `shopify:cart:note-update` DOM events. Each event carries a `promise` that resolves with the server response.
 
 On mutation:
 1. The store applies an **optimistic update** — the UI-visible state changes immediately.
@@ -92,7 +98,8 @@ Each `CartErrorGroup` contains `{ userErrors: CartUserError[], warnings: CartWar
 
 ### Optimistic interactions
 
-- **NEVER disable interactive controls during pending state.** Increase, decrease, remove, apply, and remove-discount controls must always be interactive. The store's abort-controller pattern makes concurrent mutations safe — a new click supersedes the in-flight request.
+- **NEVER disable interactive controls during pending state.** Increase, decrease, remove, apply, and remove-discount controls must always be interactive. The store's abort-controller pattern makes concurrent mutations safe — a new click supersedes the in-flight request. Disabling for a non-pending reason is fine — for example, the decrease control may be disabled when the quantity is already `<= 1`.
+- **Inventory-aware set-quantity clamping is opt-in.** The default cart query does not request `ProductVariant.quantityAvailable` because that field requires the `unauthenticated_read_product_inventory` Storefront API scope. If a cart UI needs the entered quantity to clamp to sellable inventory before submission, add `quantityAvailable` to the app's custom cart fragment and enable the Hydrogen channel's product inventory permission (`unauthenticated_read_product_inventory`). Without that field, let Shopify validate inventory and surface the returned line error.
 - **NEVER show a spinner or skeleton where a stale value would do.** The user already sees a quantity and a price. Replacing confirmed-looking content with a loading state is a regression. Show the previous value with a visual indicator that it's unconfirmed.
 - **ALWAYS visually indicate unconfirmed data.** Any value whose entity is in a `pending` set must look visually distinct from confirmed values. Reduced opacity is the reference pattern — the stale text acts as a spatial placeholder (like a skeleton), not as readable content. Rules of contrast can be disregarded because the pending value is a signal, not content the user needs to read.
 - **NEVER block navigation during pending.** Cart mutations are fire-and-forget from the user's perspective. No confirmation dialogs on route change.
@@ -115,13 +122,14 @@ Each `CartErrorGroup` contains `{ userErrors: CartUserError[], warnings: CartWar
 
 - **Each line item is its own form.** This gives each line its own identity input and its own submit buttons. A single form containing multiple lines creates ambiguity about which line an action targets.
 - **Each line item form must preserve the progressive-enhancement shape.** The rendered structure will vary by framework and design system, but every line item quantity form needs the same Hydrogen contract: `register("set")`, `register("lineId", { value: line.id })`, and a real editable quantity input using `register("quantity", { value: line.quantity, interactive: true })`. Increase, decrease, and remove buttons are additional submit controls, not replacements for the set intent or the quantity input.
+- **The `set` control is a hidden submit button, not a hidden input.** `register("set")` already returns `{ type: "submit", hidden: true }`; render it on a `<button>`. Do not swap it for `<input type="hidden">` — that removes the submit button, so pressing Enter in the quantity input no longer submits the set action.
 - **Each discount "remove" button is its own form** — separate from the "apply" form. The apply form needs input validation (empty/duplicate prevention); each remove form is a single action.
 
 ### Loading
 
 - **While `loading` is `true`**, show skeleton placeholders — not empty state. The cart hasn't been fetched yet.
 - **When `loading` is `false` and `lines` is empty**, show empty state ("Your cart is empty" or equivalent).
-- **If `initialData` is provided** when creating the store, `loading` starts as `false` and the initial fetch is skipped. `initialData` is the cart handler data envelope (`{cart, errors?}`), not only the cart object. `{cart: null}` means the server already completed the bootstrap with no usable cart, so the UI should render empty state without a browser retry. `undefined` means no server bootstrap was provided, so the store fetches `/api/cart` after hydration. Cart server handlers log bootstrap errors before returning them, so app loaders should forward handler data instead of logging or throwing those errors again.
+- **If resolved `initialData` is provided** when creating the store, `loading` starts as `false` and the initial fetch is skipped. `initialData` is the cart handler data envelope (`{cart, errors?}`), not only the cart object. Use resolved data when the response should include full cart HTML. **If promise `initialData` is provided**, `loading` starts as `true`, `state.readyPromise` tracks readiness, and `useSuspenseCart` can suspend cart content while the app shell stays non-blocking. Use promises when the backend can stream them into the HTML response. `{cart: null}` means the server already completed the bootstrap with no usable cart, so the UI should render empty state without a browser retry. `undefined` means no server bootstrap was provided, so the store fetches `/api/cart` after hydration; use this only when a client-side fetch is acceptable, such as an SPA. Cart server handlers log bootstrap errors before returning them, so app loaders should forward handler data instead of logging or throwing those errors again.
 
 ---
 
@@ -175,6 +183,7 @@ Each `CartErrorGroup` contains `{ userErrors: CartUserError[], warnings: CartWar
 
 - **Client-computed totals.** Multiplying quantity by unit price drifts from the true total when discounts, taxes, or rounding apply. Always use server-provided amounts.
 - **Hand-rolled framework cart state.** If the skill has a matching framework reference, use its provider/hooks/helpers. Otherwise, use the core store directly instead of duplicating cart data in component state or custom reducers.
+- **Client-seeded `/cart` page.** Mounting `CartProvider` with no `initialData` (or reading the cart only through a `"use client"` `useCart` hook) leaves the SSR HTML empty, so the `/cart` page cannot render the server cart. Read the cart in the server data path and pass `initialData`. Use resolved `initialData` when strict no-JS live cart HTML is required; use promise `initialData` when the framework can stream and hydrated cart content is wrapped in Suspense.
 - **Disabling controls during pending.** The store's abort-controller pattern makes rapid interactions safe. Disabling controls makes the cart feel sluggish and punishes fast users.
 - **One form for all lines.** Each line needs its own identity — its own form. A shared form creates ambiguous intent when multiple submit buttons exist.
 - **Quantity as text only.** Rendering quantity as a `<span>` with only plus/minus buttons breaks the set-quantity path and the no-JS fallback. Use a real input wired with `register("quantity", { value, interactive: true })`.

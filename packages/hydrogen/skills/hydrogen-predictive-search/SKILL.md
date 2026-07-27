@@ -3,7 +3,7 @@ name: hydrogen-predictive-search
 description: >
   Guide for building predictive search with @shopify/hydrogen. Use when adding,
   modifying, or reviewing autocomplete/search-as-you-type UI, predictive search
-  route handlers, tracking URLs, custom predictive search fragments, or React
+  route handlers, tracking URLs, custom predictive search fragments, or framework
   predictive search bindings.
 ---
 
@@ -14,7 +14,7 @@ Hydrogen predictive search has four layers:
 1. Storefront API query helper in `@shopify/hydrogen`.
 2. Same-origin route handler at `/api/predictive-search`.
 3. Framework-neutral client store.
-4. React provider/hooks in `@shopify/hydrogen/react`.
+4. Framework provider/hooks or composables.
 
 Keep rendering app-owned. Hydrogen provides data, state, request lifecycle, and URL helpers — not a dropdown template.
 
@@ -34,7 +34,7 @@ The default browser predictive search endpoint is `GET /api/predictive-search`. 
 
 ## Framework UI
 
-Read the relevant framework reference before implementing predictive search UI. For React provider and hook usage, see `references/react.md`.
+When building with a UI framework, check this skill's `references/` directory for framework-specific instructions. Framework bindings share the same route, store, and URL contracts.
 
 ## Tracking URLs
 
@@ -95,6 +95,7 @@ Use the route-handler form for browser-backed autocomplete. Use `makePredictiveS
 ## Rules
 
 - Use the packaged route handler as the default browser transport.
+- **Degrade to a normal search without JavaScript.** The search entry point must be a real `/search` link or a `role="search"` GET form, and the predictive modal's form must submit `GET /search` natively (`formProps()` defaults to this). Predictive autocomplete is an enhancement layered on top — never the only way to reach search results. With JS off, the trigger navigates to `/search` (or submits the term to it) and the full search page renders results server-side.
 - Keep UI rendering and layout app-owned.
 - Preserve `trackingParameters` on every predictive result link.
 - Use `q` for the search term so predictive and full search URLs align.
@@ -103,12 +104,25 @@ Use the route-handler form for browser-backed autocomplete. Use `makePredictiveS
 - Keep debounce in the client store; do not add ad-hoc debounce in components unless there is a separate UX reason.
 - Prefer additive fragments over full query overrides.
 - Return empty UI for blank terms rather than querying Storefront API.
+- The modal is a native `<dialog>` opened with `showModal()`. For backdrop-dismiss and `closedby`, follow `hydrogen-cart-drawer`'s `references/accessibility.md` — do not reimplement (use the pointerdown guard from that reference, not a bare click handler).
+
+## Verify
+
+Done when:
+
+- [ ] Search works without JavaScript: a real `/search` link or `role="search"` GET form reaches server-rendered results, and the predictive modal's form submits `GET /search` natively.
+- [ ] Browser autocomplete goes through the same-origin `/api/predictive-search` route.
+- [ ] Every predictive result link preserves `trackingParameters` (built with `getPredictiveSearchItemUrl()`).
+- [ ] Blank terms render empty UI without querying the Storefront API.
+- [ ] Store errors surface near the search UI.
+- [ ] The search term uses `q` so predictive and full search URLs align.
 
 ## Anti-patterns
 
+- Gating search behind JavaScript — a search trigger that only opens a JS autocomplete overlay, with no `/search` link or native GET form underneath, leaves no-JS shoppers with no way to search. The predictive layer must enhance a working `/search` path, not replace it.
 - Calling Storefront API directly from browser UI when a same-origin route can proxy the request.
 - Reusing `/search?predictive=true` as the autocomplete API when `/api/predictive-search` is available.
 - Dropping or manually concatenating tracking parameters.
 - Hard-coding predictive result links separately from the app's routing primitive.
-- Duplicating predictive search state in React component state when the Hydrogen store already owns request lifecycle, debounce, aborts, and stale response handling.
+- Duplicating predictive search state in framework component state when the Hydrogen store already owns request lifecycle, debounce, aborts, and stale response handling.
 - Shipping a visual autocomplete component as the primary abstraction.

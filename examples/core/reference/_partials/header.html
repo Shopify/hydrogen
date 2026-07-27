@@ -11,6 +11,9 @@
           command="show-modal"
           class="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center gap-2 rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
           aria-label="Menu"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          aria-controls="mobile-nav-drawer"
         >
           <img
             src="../icons/icon-menu.svg"
@@ -102,6 +105,9 @@
         command="show-modal"
         class="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded bg-transparent p-0 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
         aria-label="Cart (2 items)"
+        aria-haspopup="dialog"
+        aria-expanded="false"
+        aria-controls="cart-drawer"
       >
         <span
           class="relative inline-flex size-5 shrink-0 items-center justify-center"
@@ -147,7 +153,6 @@
           <span
             class="text-on-surface pointer-events-none absolute left-1/2 -translate-x-1/2 text-sm font-medium"
             id="mobile-nav-title"
-            aria-live="polite"
             >Mobile navigation</span
           >
           <button
@@ -218,8 +223,9 @@
       <div class="flex h-full flex-col">
         <div class="flex shrink-0 items-center py-2 ps-4">
           <div class="flex flex-1 items-center gap-2">
-            <h2 id="cart-drawer-title" class="text-on-surface text-lg font-medium">Cart</h2>
-            <span class="cart-count-badge">2</span>
+            <h2 id="cart-drawer-title" class="text-on-surface text-lg font-medium">
+              Cart <span class="text-on-surface-secondary text-sm font-normal">2 items</span>
+            </h2>
           </div>
           <button
             type="button"

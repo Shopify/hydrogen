@@ -30,6 +30,7 @@ export const storefrontMiddleware: Route.MiddlewareFunction = async (
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
+    buyerIp,
   });
 
   const client = createStorefrontClient({

@@ -1,11 +1,11 @@
 // @vitest-environment node
-import { createElement } from "react";
+import { createElement, Suspense } from "react";
 import { renderToString } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 
 import type { CartData } from "../core/cart/state";
 import { EMPTY_CART_DATA } from "../core/cart/state";
-import { CartProvider, useCart } from "./cart";
+import { CartProvider, createCartComponents, useCart } from "./cart";
 
 function CartTotalQuantity() {
   const qty = useCart((s) => s.data.totalQuantity);
@@ -20,6 +20,15 @@ function CartItemCount() {
 function CartLoadingState() {
   const loading = useCart((s) => s.loading);
   return createElement("span", { "data-testid": "loading" }, String(loading));
+}
+
+const typedCart = createCartComponents<{
+  get: () => Promise<{ data: { cart: CartData } }>;
+}>();
+
+function SuspenseCartTotalQuantity() {
+  const qty = typedCart.useSuspenseCart((s) => s.data.totalQuantity);
+  return createElement("span", { "data-testid": "qty" }, qty);
 }
 
 const MOCK_CART: CartData = {
@@ -128,5 +137,20 @@ describe("CartProvider SSR", () => {
     );
 
     expect(html).toContain(">false<");
+  });
+
+  it("suspends on async initialData during server rendering", () => {
+    const initialData = new Promise<{ cart: CartData }>(() => {});
+    const fallback = createElement("span", { "data-testid": "fallback" }, "Loading cart");
+    const cartContent = createElement(
+      Suspense,
+      { fallback },
+      createElement(SuspenseCartTotalQuantity),
+    );
+    const tree = createElement(typedCart.CartProvider, { initialData }, cartContent);
+    const html = renderToString(tree);
+
+    expect(html).toContain("Loading cart");
+    expect(html).not.toContain(">0<");
   });
 });

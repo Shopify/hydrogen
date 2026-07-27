@@ -9,8 +9,7 @@ export type FilterPresentation = "IMAGE" | "SWATCH" | "TEXT";
 /** The input mechanism a filter uses — boolean toggle, multi-select list, or price slider. */
 export type FilterType = "BOOLEAN" | "LIST" | "PRICE_RANGE" | (string & {});
 
-/** A single selectable value within an {@link AvailableFilter}. */
-export interface AvailableFilterValue {
+interface BaseAvailableFilterValue {
   /** Unique identifier for this filter value. */
   id: string;
   /** Human-readable label (e.g. "Red", "Nike", "$50–$100"). */
@@ -21,16 +20,32 @@ export interface AvailableFilterValue {
   input: string;
 }
 
+type PickIfPresent<TValue, TKey extends PropertyKey> = TKey extends keyof TValue
+  ? Pick<TValue, TKey>
+  : {};
+
+/**
+ * A single selectable value within an {@link AvailableFilter}.
+ *
+ * Pass your Storefront API query value type as `TValue` to expose query-selected
+ * visual fields such as `swatch`.
+ */
+export type AvailableFilterValue<
+  TValue extends BaseAvailableFilterValue = BaseAvailableFilterValue,
+> = BaseAvailableFilterValue & PickIfPresent<TValue, "swatch">;
+
 /**
  * A filter facet available for the current collection, returned by the
  * Storefront API. Used to render filter UI (checkboxes, swatches, sliders).
  */
-export interface AvailableFilter {
+export interface AvailableFilter<
+  TValue extends BaseAvailableFilterValue = BaseAvailableFilterValue,
+> {
   id: string;
   label: string;
   type: FilterType;
   presentation?: FilterPresentation | null;
-  values: AvailableFilterValue[];
+  values: AvailableFilterValue<TValue>[];
 }
 
 /**

@@ -1,0 +1,115 @@
+import type { ShopifyGlobal } from "../../globals";
+import type { ConsentConfig } from "../analytics/types";
+
+type RuntimeCustomerPrivacy = Partial<NonNullable<ShopifyGlobal["customerPrivacy"]>>;
+type RuntimeShopifyGlobal = Partial<Omit<ShopifyGlobal, "customerPrivacy">> & {
+  customerPrivacy?: RuntimeCustomerPrivacy;
+};
+type VisitorConsentEventDetail = {
+  source?: "initial" | "interaction";
+};
+
+export type ShopifyConsentTrackingConfig = {
+  eventName: string;
+  mode: NonNullable<ConsentConfig["mode"]>;
+  scriptId: string;
+};
+
+function isVisitorConsentEventDetail(value: unknown): value is VisitorConsentEventDetail {
+  return typeof value === "object" && value !== null;
+}
+
+export default function initializeShopifyConsentTracking(config: ShopifyConsentTrackingConfig) {
+  const shopifyWindow: Window & { Shopify?: RuntimeShopifyGlobal } = window;
+  const usesDefaultBanner = config.mode === "default-banner";
+
+  // The consent event and the script element load event can arrive in either
+  // order. Remote script code runs before its script element dispatches "load",
+  // so privacy-banner can emit visitorConsentCollected while load is still pending.
+  let consentScriptReady = false;
+  let consentGateReady = false;
+  let nextConsentEventSource: "initial" | "interaction" = "initial";
+
+  const getCustomerPrivacy = () => shopifyWindow.Shopify?.customerPrivacy;
+
+  const markConsentStatusLoaded = () => {
+    const privacy = getCustomerPrivacy();
+    if (privacy) privacy.consentStatus = "loaded";
+  };
+
+  const markConsentReady = () => {
+    consentGateReady = true;
+    if (consentScriptReady) markConsentStatusLoaded();
+  };
+
+  const requestInitialConsent = () => {
+    const errorMessage = "[hydrogen:error:Consent] Unable to request initial consent.";
+    const setTrackingConsent = getCustomerPrivacy()?.setTrackingConsent;
+    if (typeof setTrackingConsent !== "function") {
+      console.error(errorMessage);
+      return markConsentReady();
+    }
+
+    setTrackingConsent({ headlessStorefront: true }, (result) => {
+      if (result?.error) {
+        console.error(errorMessage, result.error);
+        return;
+      }
+
+      markConsentReady();
+    });
+  };
+
+  const isConsentApiReady = () => {
+    const privacy = getCustomerPrivacy();
+
+    return (
+      typeof privacy?.setTrackingConsent === "function" ||
+      typeof privacy?.shouldShowBanner === "function" ||
+      typeof window.privacyBanner === "object"
+    );
+  };
+
+  const handleConsentScriptReady = () => {
+    if (consentScriptReady) return;
+    consentScriptReady = true;
+
+    if (!usesDefaultBanner) {
+      requestInitialConsent();
+    } else if (consentGateReady) {
+      // In default-banner mode, privacy-banner owns the initial consent request.
+      // If it emitted the consent event during script execution, finish marking
+      // consent loaded now that the script element load event has fired.
+      markConsentReady();
+    }
+  };
+
+  // Annotate the event so that other scripts can know if the consent was collected
+  // from the initial page load or from a user interaction.
+  // This will be done in consent-tracking-api library eventually.
+  document.addEventListener(
+    config.eventName,
+    (event) => {
+      const detail = "detail" in event ? event.detail : undefined;
+      if (isVisitorConsentEventDetail(detail)) {
+        detail.source ??= nextConsentEventSource;
+      }
+
+      nextConsentEventSource = "interaction";
+    },
+    { capture: true },
+  );
+
+  // consentStatus only means the initial consent state is available. Analytics
+  // replay still decides separately whether an initial banner event is actionable.
+  document.addEventListener(config.eventName, markConsentReady, { capture: true });
+
+  const consentScript = document.getElementById(config.scriptId);
+  if (isConsentApiReady()) {
+    handleConsentScriptReady();
+  } else {
+    // ShopifyScripts renders this inline bootstrap immediately after the async
+    // consent script tag, so the tag is already in the DOM and can be observed.
+    consentScript?.addEventListener("load", handleConsentScriptReady, { once: true });
+  }
+}

@@ -1,13 +1,18 @@
 import { defineConfig } from "tsdown";
 
 import pkg from "./package.json" with { type: "json" };
+import { inlineScriptImports } from "./plugins/inline-shopify-analytics-bus.ts";
 import { minifyGraphQLLiterals } from "./plugins/minify-graphql-literals.ts";
 
-const plugins = [minifyGraphQLLiterals()];
+const plugins = [minifyGraphQLLiterals(), inlineScriptImports({ version: pkg.version })];
 
 export default defineConfig([
   {
-    entry: ["src/core/index.ts", "src/customer-account/index.ts", "src/react/index.ts"],
+    entry: [
+      "src/core/index.ts",
+      "src/customer-account/index.ts",
+      "src/react/index.ts",
+    ],
     format: "esm",
     dts: true,
     hash: false,
@@ -48,5 +53,15 @@ export default defineConfig([
     minify: false,
     sourcemap: false,
     plugins,
+  },
+  {
+    entry: { "ts-plugin/index": "src/ts-plugin/index.ts" },
+    format: "cjs",
+    dts: false,
+    hash: false,
+    minify: false,
+    sourcemap: true,
+    cjsDefault: true,
+    deps: { neverBundle: [/^gql\.tada(?:\/.*)?$/] },
   },
 ]);

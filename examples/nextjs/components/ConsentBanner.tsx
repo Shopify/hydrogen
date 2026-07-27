@@ -48,9 +48,7 @@ export function ConsentBanner() {
     <div className="consent-banner" role="region" aria-label={content.consent.label}>
       <p className="type-body text-on-surface">
         {content.consent.message}{" "}
-        <a href="#" className="text-accent underline">
-          {content.consent.privacyPolicy}
-        </a>
+        <span className="text-link underline">{content.consent.privacyPolicy} (coming soon)</span>
       </p>
       <div className="consent-banner-actions">
         <button

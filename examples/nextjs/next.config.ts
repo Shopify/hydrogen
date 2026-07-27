@@ -13,7 +13,7 @@ import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
  * No `next/image` remote patterns — we use plain `<img>` + the `hydrogen-image`
  * helper (F12; Hydrogen ships no Image component and we size CDN URLs ourselves).
  */
-const EMPTY_TURBOPACK_RULES = {};
+const EMPTY_TURBOPACK_RULES = {} satisfies ReturnType<typeof localCdnAssetsTurbopackRules>;
 
 export default function nextConfig(phase: string): NextConfig {
   const isDevelopmentServer = phase === PHASE_DEVELOPMENT_SERVER;

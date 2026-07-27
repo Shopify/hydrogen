@@ -1,5 +1,4 @@
 import "server-only";
-import { analyticsConsent as analyticsConsentConfig } from "@shared/config";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
@@ -8,8 +7,7 @@ import { ConsentBanner } from "@/components/ConsentBanner";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { HeaderAccountLink, HeaderAccountLinkFallback } from "@/components/HeaderAccountLink";
-import { ShopifyScriptsClient } from "@/components/ShopifyScriptsClient";
-import { getAnalyticsShop, getScriptsShop } from "@/lib/analytics-shop";
+import { getAnalyticsShop } from "@/lib/analytics-shop";
 import { cartHandlers } from "@/lib/cart-handlers";
 import { getStorefrontClient } from "@/lib/storefront";
 
@@ -29,35 +27,14 @@ import { Providers } from "./providers";
 export async function AppShell({ children }: { children: React.ReactNode }) {
   await connection();
 
-  // Cart seed: per-buyer `getStorefrontClient()` (skill-mandated; the cart is
-  // personalized). Non-blocking via `Promise.race` (F1). On success pass the
-  // full `{cart, errors?}` envelope; on timeout/error pass `undefined` so the
-  // client fetches `/api/cart` after hydration (NOT `{cart:null}` — that would
-  // suppress the retry).
-  const storefrontClient = await getStorefrontClient();
-  let cartData: Awaited<ReturnType<typeof cartHandlers.get>>["data"] | undefined;
-  try {
-    const result = await Promise.race([
-      cartHandlers.get({ storefrontClient }),
-      timeoutReject(2000),
-    ]);
-    cartData = result.data;
-  } catch (error) {
-    console.error("[hydrogen] Cart seed failed or timed out", error);
-    cartData = undefined;
-  }
-
-  // Analytics shop GID: best-effort, non-blocking (F1). Merged with
-  // `@shared/config` metadata (acceptedLanguage/currency/hydrogenSubchannelId).
+  // Cart seed: per-buyer and non-blocking so the shell can stream.
+  const cartData = getStorefrontClient().then((storefrontClient) =>
+    cartHandlers.get({ storefrontClient }).then((r) => r.data),
+  );
   const analyticsShop = await getAnalyticsShop();
-  const scriptsShop = getScriptsShop();
 
   return (
-    <Providers
-      cartData={cartData}
-      analyticsShop={analyticsShop}
-      analyticsConsent={analyticsConsentConfig}
-    >
+    <Providers cartData={cartData}>
       <a
         href="#main-content"
         className="focus-visible:bg-interactive focus-visible:text-interactive-text sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:start-4 focus-visible:top-4 focus-visible:z-50 focus-visible:rounded focus-visible:px-4 focus-visible:py-2"
@@ -71,24 +48,17 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             <HeaderAccountLink />
           </Suspense>
         }
+        shopName={analyticsShop.shopName}
       />
 
       <main className="flex-1" id="main-content" tabIndex={-1}>
         {children}
       </main>
 
-      <Footer />
+      <Footer shopName={analyticsShop.shopName} />
 
       <CartDrawer />
       <ConsentBanner />
-
-      <ShopifyScriptsClient shop={scriptsShop} />
     </Providers>
   );
-}
-
-function timeoutReject(ms: number): Promise<never> {
-  return new Promise((_, reject) => {
-    setTimeout(() => reject(new Error(`cart seed timed out after ${ms}ms`)), ms);
-  });
 }

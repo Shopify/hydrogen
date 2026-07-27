@@ -1,24 +1,19 @@
-import { revalidateConnectedCartCheckoutUrls } from "../cart/cart";
-import { getShopifyGlobal } from "../shopify-scripts";
-import { SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT } from "../shopify-scripts/constants";
-import { loadScript } from "../utils/load-script";
+import { VISITOR_CONSENT_COLLECTED_EVENT } from "../shopify-scripts/constants";
+import { getShopifyGlobal } from "../shopify-scripts/global";
 import { isObjectRecord } from "../utils/record";
-import { createCartTracker } from "./cart-tracker";
-import { initConsent } from "./consent";
-import { initDeprecatedCookies } from "./deprecated-cookies";
 import { createDestinationManager } from "./destination-manager";
 import { AnalyticsEvent, type AnalyticsEventName } from "./events";
 import type {
   StorefrontAnalytics,
   StorefrontAnalyticsConfig,
-  StorefrontAnalyticsOptions,
   PayloadFor,
   PublishPayloadArgs,
 } from "./types";
+import { normalizeShopAnalytics } from "./utils/shop";
 
 type AnalyticsCallback = (payload: unknown) => void;
 
-const URL_INFERRED_EVENTS = new Set<AnalyticsEventName>([
+const URL_INFERRED_EVENTS = new Set<string>([
   AnalyticsEvent.PAGE_VIEWED,
   AnalyticsEvent.PRODUCT_VIEWED,
   AnalyticsEvent.COLLECTION_VIEWED,
@@ -41,7 +36,14 @@ function withDefaultShop<E extends AnalyticsEventName>(
   payload: PayloadFor<E>,
   shop: StorefrontAnalyticsConfig["shop"],
 ): PayloadFor<E> {
-  if (!isObjectRecord(payload) || hasOwnProperty(payload, "shop")) return payload;
+  if (!isObjectRecord(payload)) return payload;
+
+  if (hasOwnProperty(payload, "shop")) {
+    return {
+      ...payload,
+      shop: normalizeShopAnalytics((payload as { shop?: StorefrontAnalyticsConfig["shop"] }).shop),
+    };
+  }
 
   return { ...payload, shop };
 }
@@ -63,6 +65,13 @@ function withInferredUrl<E extends AnalyticsEventName>(
 function hasAnalyticsConsent(): boolean {
   try {
     const privacy = window.Shopify?.customerPrivacy;
+    if (privacy?.consentStatus !== "loaded") return false;
+
+    const currentVisitorConsent = privacy.currentVisitorConsent?.();
+    if (isObjectRecord(currentVisitorConsent) && currentVisitorConsent.analytics === "no") {
+      return false;
+    }
+
     return privacy?.analyticsProcessingAllowed?.() ?? false;
   } catch {
     return false;
@@ -77,6 +86,36 @@ function warnUnsupportedAnalyticsEvent(event: unknown): void {
   console.warn(`[h3:warn:Analytics] Unsupported analytics event "${String(event)}".`);
 }
 
+function hasNoConsentInteraction(currentVisitorConsent: unknown): boolean {
+  // Mirrors the privacy-banner GDPR requirement: the initial event is only
+  // pre-interaction while all purpose values are still unset.
+  return (
+    !isObjectRecord(currentVisitorConsent) ||
+    (currentVisitorConsent.analytics === "" &&
+      currentVisitorConsent.marketing === "" &&
+      currentVisitorConsent.preferences === "")
+  );
+}
+
+// Only Shopify's privacy-banner has a known pre-interaction initial event:
+// it may call setTrackingConsent once to hydrate consent state, then again
+// after the shopper accepts or declines. Custom banners also may call
+// setTrackingConsent later, but Hydrogen does not own or observe their UI
+// lifecycle, so their initial event must be treated as actionable consent.
+function shouldWaitForDefaultBannerInteraction(): boolean {
+  try {
+    if (!isObjectRecord(window.privacyBanner)) return false;
+
+    const privacy = window.Shopify?.customerPrivacy;
+    const shouldShowBanner = privacy?.shouldShowBanner;
+    if (typeof shouldShowBanner !== "function") return true;
+
+    return shouldShowBanner() && hasNoConsentInteraction(privacy?.currentVisitorConsent?.());
+  } catch {
+    return true;
+  }
+}
+
 function getPublishPayload<E extends AnalyticsEventName>(
   payload: PayloadFor<E> | undefined,
 ): PayloadFor<E> {
@@ -86,43 +125,40 @@ function getPublishPayload<E extends AnalyticsEventName>(
 }
 
 /**
- * Creates a framework-agnostic analytics event bus.
+ * Sets up a framework-agnostic analytics event bus.
  *
- * Only one instance may exist at a time. Call destroy() before re-initializing.
+ * Only one instance may exist at a time — the CDN analytics script binds to
+ * the global bus reference on first load and won't re-bind to a replacement.
+ * Call destroy() before re-initializing.
  */
-export function createStorefrontAnalytics(
-  options: StorefrontAnalyticsOptions,
-): StorefrontAnalytics {
+export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): StorefrontAnalytics {
   if (typeof window !== "undefined" && window.Shopify?.analytics) {
     throw new Error(
-      "Analytics bus already initialized. Only one createStorefrontAnalytics() instance is allowed. Call destroy() first to re-initialize.",
+      "Analytics bus already initialized. Only one setupStorefrontAnalytics() instance is allowed. Call destroy() first to re-initialize.",
     );
   }
 
-  const { consent, canTrack: customCanTrack, customData, cookieDomain } = options;
+  const { consent, customData } = options;
 
-  const { shop } = options;
+  const shop = normalizeShopAnalytics(options.shop);
   let destroyed = false;
+  let waitingForDefaultBannerInteraction = false;
 
   const subscribers = new Map<string, Map<string, AnalyticsCallback>>();
   let nextSubscriberId = 0;
-  let deprecatedCookiesReady = false;
-
-  const canTrack = customCanTrack ?? hasAnalyticsConsent;
 
   function getConfig() {
     return {
       shop,
       consent,
       customData,
-      cookieDomain,
     } satisfies StorefrontAnalyticsConfig;
   }
 
   // Tracking integrations (Shopify analytics CDN, third-party destinations) need consent
   // gating and event replay. subscribe() stays live-only; destinations go through here.
   const destinationManager = createDestinationManager({
-    canTrack,
+    canTrack: () => !waitingForDefaultBannerInteraction && hasAnalyticsConsent(),
     getConfig,
     isSupportedEvent: isSupportedAnalyticsEvent,
     warnUnsupportedEvent: warnUnsupportedAnalyticsEvent,
@@ -153,10 +189,6 @@ export function createStorefrontAnalytics(
       }
     });
 
-    if (event === AnalyticsEvent.PAGE_VIEWED && deprecatedCookiesReady) {
-      deprecatedCookies.syncPageView();
-    }
-
     // Buffer the event and deliver to destinations when analytics consent allows.
     destinationManager.onPublish(event, normalizedPayload);
   }
@@ -181,49 +213,48 @@ export function createStorefrontAnalytics(
     };
   }
 
-  const cartTracker = createCartTracker({
-    publish,
-    getShop: () => shop,
-    getCustomData: () => customData,
-  });
-
   const MOCK_SHOP_ID_SUFFIX = "/68817551382";
 
-  let cleanupConsent: (() => void) | undefined;
+  let cleanupConsentReplay: (() => void) | undefined;
 
-  function initConsentModule() {
-    if (typeof window === "undefined") return;
+  function initConsentReplay() {
+    if (typeof document === "undefined") return;
 
-    cleanupConsent = initConsent({
-      consent,
-      onReady: () => {
-        if (destroyed) return;
-        deprecatedCookies.sync();
-        deprecatedCookiesReady = true;
-        // Consent is ready — flush any events destinations missed while blocked.
-        destinationManager.replay();
-      },
-      onConsentCollected: ({ shouldRevalidate }) => {
-        if (destroyed) return;
-        deprecatedCookies.sync();
-        deprecatedCookiesReady = true;
-        if (shouldRevalidate) {
-          revalidateConnectedCartCheckoutUrls();
-        }
-        // Replay on grant, or discard the buffer if analytics was explicitly denied.
-        destinationManager.replay(true);
-      },
-    });
+    const replay = (event: Event) => {
+      if (destroyed) return;
+
+      const detail = (event as CustomEvent<{ source?: string }>).detail;
+      const source = detail?.source;
+      // The consent bootstrap temporarily annotates source until consent-tracking-api
+      // owns it. If privacy-banner is present and visible, the initial event only
+      // hydrates consent state; replay waits for the later interaction event.
+      const shouldWaitForBannerInteraction =
+        source === "initial" && shouldWaitForDefaultBannerInteraction();
+
+      waitingForDefaultBannerInteraction = shouldWaitForBannerInteraction;
+
+      if (shouldWaitForBannerInteraction) {
+        return;
+      }
+
+      const clearWhenBlocked = source !== "initial";
+
+      /**
+       * Replay behavior depends on the consent event phase and the current
+       * tracking permission:
+       * - default-banner initial + banner required: keep waiting for the user's interaction.
+       * - initial + allowed: replay buffered events.
+       * - interaction + allowed: replay buffered events.
+       * - interaction + denied: drop the buffer and stop recording until allowed.
+       */
+      destinationManager.replay(clearWhenBlocked);
+    };
+
+    document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, replay);
+    cleanupConsentReplay = () => {
+      document.removeEventListener(VISITOR_CONSENT_COLLECTED_EVENT, replay);
+    };
   }
-
-  const deprecatedCookies =
-    typeof window !== "undefined"
-      ? initDeprecatedCookies({
-          canTrack,
-          consentDomain: consent.consentDomain,
-          cookieDomain,
-        })
-      : { sync: () => {}, syncPageView: () => {} };
 
   function initBrowserDiscovery() {
     if (typeof window === "undefined") return;
@@ -235,23 +266,11 @@ export function createStorefrontAnalytics(
     shopify.analytics = bus;
   }
 
-  function initShopifyAnalyticsModule() {
-    if (typeof window === "undefined" || options.shopifyAnalytics === false) return;
-
-    loadScript(SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT, {
-      attributes: { crossorigin: "anonymous" },
-    }).catch(() => {
-      console.warn(
-        "[h2:warn:Analytics] Failed to load Shopify analytics CDN script. Analytics events will not be forwarded.",
-      );
-    });
-  }
-
   function destroy() {
     destroyed = true;
     subscribers.clear();
     destinationManager.destroy(); // Tear down destination subscriptions and cleanup hooks.
-    cleanupConsent?.();
+    cleanupConsentReplay?.();
 
     if (typeof window !== "undefined" && window.Shopify?.analytics === busInstance) {
       delete window.Shopify.analytics;
@@ -262,18 +281,16 @@ export function createStorefrontAnalytics(
     publish,
     subscribe,
     addDestination: destinationManager.addDestination, // Public API for consent-gated trackers.
-    updateCart: cartTracker.updateCart,
     destroy,
     getConfig,
   };
 
-  if (shop?.shopId?.endsWith(MOCK_SHOP_ID_SUFFIX)) {
+  if (shop?.shopId && String(shop.shopId).endsWith(MOCK_SHOP_ID_SUFFIX)) {
     console.warn("[h2:warn:Analytics] Mock shop detected. Analytics will not work properly.");
   }
 
-  initConsentModule();
+  initConsentReplay();
   initBrowserDiscovery();
-  initShopifyAnalyticsModule();
 
   return busInstance;
 }

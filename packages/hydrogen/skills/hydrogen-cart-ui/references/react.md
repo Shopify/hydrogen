@@ -1,5 +1,12 @@
 # React Cart Bindings
 
+## Contents
+
+- Root Setup
+- Custom Cart Fields
+- Reading Cart State
+- Mutating Cart State
+
 For React apps, derive cart bindings once from the cart server handlers. Do not hand-roll `useState` cart state, custom mutation fetchers, or bespoke optimistic reducers unless the app is not using React.
 
 ```tsx
@@ -8,7 +15,7 @@ import { createCartComponents } from "@shopify/hydrogen/react";
 
 ## Root Setup
 
-Wrap the app in `<CartProvider>`. Keep cart server handlers in a server-only module, separate from React bindings. If the framework can fetch the cart on the server, pass `initialData` so the cart renders correctly on first paint. Use the request-scoped private `storefrontClient` created by the request setup. In React Router, the usual shape is:
+Wrap the app in `<CartProvider>`. Keep cart server handlers in a server-only module, separate from React bindings. If the framework can fetch the cart on the server, pass `initialData` so the cart does not depend on a separate client bootstrap. When the framework can preserve streamed promises, pass the unresolved cart promise instead of awaiting it; this keeps the shell non-blocking while `useSuspenseCart()` suspends hydrated cart content. Use the request-scoped private `storefrontClient` created by the request setup. In React Router, the usual shape is:
 
 ```tsx
 // app/lib/cart-handlers.ts
@@ -23,7 +30,8 @@ import { createCartComponents } from "@shopify/hydrogen/react";
 
 import type { cartHandlers } from "./cart-handlers";
 
-export const { CartProvider, useCart, useCartForm } = createCartComponents<typeof cartHandlers>();
+export const { CartProvider, useCart, useSuspenseCart, useCartForm } =
+  createCartComponents<typeof cartHandlers>();
 ```
 
 ```tsx
@@ -51,6 +59,12 @@ export default function App({ loaderData }: Route.ComponentProps) {
 Pass the full handler data envelope (`{cart, errors?}`) to `initialData`. Do not unwrap to `data.cart`: `{cart: null}` tells the client the server already checked and found no usable cart, while omitted `initialData` tells the client to fetch `/api/cart` after hydration. The cart server handlers log returned cart errors on the server, so do not throw just to force a route error.
 
 If there is no server cart fetch yet, still wrap with `<CartProvider>`; it will fetch `/api/cart` after hydration. Register the `cartHandlers` from the server-only module in the app's central `handleShopifyRoutes` wiring; use the `hydrogen-request-handlers` skill for the full framework-specific setup.
+
+> Next.js App Router has its own cart binding shape — see `references/nextjs.md`.
+
+Seed `initialData` from the server data path on every framework that can (React Router loader, Next.js server layout/page). Prefer promise `initialData` where the framework supports it and the cart UI is wrapped in local Suspense; the Next.js reference is the main template for that pattern. Reserve the no-`initialData`, fetch-after-hydration path for runtimes with no server cart read.
+
+Under `cacheComponents: true`, route segment configs (`export const dynamic`/`revalidate`) are replaced by `use cache`/`cacheLife` (remove them), and `headers()`/`cookies()`/`connection()` outside `<Suspense>` are rejected as runtime/uncached data, so the root layout must be a **static shell wrapping an async cart-seeding child in `<Suspense>`** (use `await connection()` from `next/server` to opt into dynamic rendering inside that child).
 
 ## Custom Cart Fields
 
@@ -85,7 +99,7 @@ import { createCartComponents } from "@shopify/hydrogen/react";
 
 import type { cartHandlers } from "./cart-handlers";
 
-export const { CartProvider, useCart, useCartForm } =
+export const { CartProvider, useCart, useSuspenseCart, useCartForm } =
   createCartComponents<typeof cartHandlers>();
 
 function CartLines() {
@@ -138,6 +152,25 @@ const lineErrors = useCart((state) => state.errors.lines);
 
 Use this for the navbar cart count, cart line list, totals, pending state, and scoped errors. Do not mirror selected cart state into React state; the store already publishes updates.
 
+Use `useSuspenseCart(selector)` inside a local `<Suspense>` boundary when a cart view should suspend while full-cart data is loading:
+
+```tsx
+function CartContent() {
+  return (
+    <Suspense fallback={<p role="status">Loading cart…</p>}>
+      <CartContentBody />
+    </Suspense>
+  );
+}
+
+function CartContentBody() {
+  const cart = useSuspenseCart((state) => state.data);
+  return <CartLines cart={cart} />;
+}
+```
+
+Keep using `useCart(selector)` for non-blocking UI such as cart counts, pending states, and optimistic controls.
+
 ## Mutating Cart State
 
 Use `useCartForm()` for existing cart forms: line quantity changes, line removal, discount codes, and order notes. It returns `formProps()` and `register()` helpers that encode Hydrogen's cart action contract.
@@ -151,7 +184,7 @@ function LineItemQuantity({ line }: { line: { id: string; quantity: number } }) 
 
   return (
     <form {...formProps()}>
-      <button {...register("set")} />
+      <button type="submit" {...register("set")} hidden />
       <input type="hidden" {...register("lineId", { value: line.id })} />
       <button type="submit" {...register("decrease")}>
         -
@@ -174,7 +207,7 @@ function LineItemQuantity({ line }: { line: { id: string; quantity: number } }) 
 Important React form fields:
 
 - `formProps()` wires `method`, `action`, and submit handling to the cart store.
-- `register("set")` renders the hidden default submit control for explicit line quantity updates. Keep it in every line item quantity form so pressing Enter in the quantity input submits the set action.
+- `register("set")` is the default submit control for explicit line quantity updates; it already returns `{ type: "submit", hidden: true }`. Render it on a `<button>` as shown (see the `set` control rule in the skill's Form structure).
 - `register("lineId", { value })` scopes the form to one line.
 - `register("quantity", { value, interactive: true })` wires an editable quantity input for both hydrated and no-JS submissions. Do not replace it with a text-only `<span>`.
 - `register("increase")`, `register("decrease")`, and `register("remove")` create line item controls.

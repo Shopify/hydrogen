@@ -14,7 +14,7 @@
   --color-surface: #ffffff;
   --color-surface-secondary: #e3e3e3;
   --color-on-surface: #000000;
-  --color-on-surface-secondary: #6b7280;
+  --color-on-surface-secondary: #4b5563;
   --color-border: #e5e7eb;
 
   /* ─── Brand: the single source of truth ──────────────────────────────── */
@@ -25,6 +25,13 @@
   --color-interactive-hover: color-mix(in oklab, var(--color-primary) 85%, black);
   --color-interactive-active: color-mix(in oklab, var(--color-primary) 72%, black);
   --color-interactive-text: #ffffff;
+
+  /* Link text — derived from --color-interactive. Link text has a 4.5:1
+     contrast threshold (text), whereas --color-accent is the decorative
+     focus-ring/badge tint (3:1). Routing link TEXT to --color-link keeps
+     accent rings/badges from being over-darkened to satisfy text contrast. */
+  --color-link: var(--color-interactive);
+  --color-link-hover: var(--color-interactive-hover);
 
   /* Accent — a lighter, desaturated tint of the brand. */
   --color-accent: oklch(from var(--color-primary) calc(l + 0.17) calc(c * 0.39) calc(h - 9));
@@ -171,6 +178,20 @@
   select:focus-visible {
     outline: 2px solid var(--color-interactive);
     outline-offset: 2px;
+  }
+
+  /* Visible keyboard focus for plain links (additive over inline utilities). */
+  a:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Pressed state for plain links; .button-* excluded so button :active wins. */
+  a:not(.button-primary):not(.button-secondary):not(.button-outline):not(.button-icon):not(
+      .button-ghost
+    ):not(.button-surface):not(.button-shop-pay):active {
+    opacity: 0.7;
   }
 
   input:disabled,
@@ -364,6 +385,10 @@
     color: var(--color-interactive-text);
     border-color: var(--color-interactive);
   }
+  .option-pill[data-available="false"] {
+    opacity: 0.5;
+    text-decoration: line-through;
+  }
   .option-pill:disabled,
   .option-pill[aria-disabled="true"],
   .option-pill.is-disabled {
@@ -373,6 +398,17 @@
   .option-pill:focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
+  }
+  /* Pressed feedback — matches the branded-button press ramp: an unselected
+     pill darkens to the secondary surface; a selected (filled) pill darkens to
+     the interactive-active shade. Guarded so disabled pills don't react. */
+  .option-pill:not(:disabled):not([aria-disabled="true"]):active {
+    background: var(--color-surface-secondary);
+  }
+  .option-pill[aria-pressed="true"]:not(:disabled):not([aria-disabled="true"]):active,
+  .option-pill[aria-current="true"]:not(:disabled):not([aria-disabled="true"]):active,
+  .option-pill.is-selected:not(:disabled):not([aria-disabled="true"]):active {
+    background: var(--color-interactive-active);
   }
   @media (hover: hover) {
     .option-pill:not([aria-pressed="true"]):not([aria-current="true"]):not(.is-selected):not(
@@ -503,8 +539,29 @@
     background: color-mix(in oklab, var(--color-button-shop-pay) 78%, black);
   }
   .button-outline:not(:disabled):not([aria-disabled="true"]):active,
-  .button-ghost:active {
+  .button-ghost:not(:disabled):not([aria-disabled="true"]):active {
     background: color-mix(in oklab, var(--color-surface-secondary) 88%, black);
+  }
+  .button-icon:not(:disabled):not([aria-disabled="true"]):active {
+    opacity: 0.55;
+  }
+  .button-surface:not(:disabled):not([aria-disabled="true"]):active {
+    background: color-mix(in oklab, var(--color-surface) 90%, transparent);
+  }
+
+  /* Visible keyboard focus for every .button-* class (additive over inline
+     utilities). */
+  :where(
+    .button-primary,
+    .button-secondary,
+    .button-outline,
+    .button-icon,
+    .button-ghost,
+    .button-surface,
+    .button-shop-pay
+  ):focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   .quantity-selector-outlined {
@@ -514,9 +571,6 @@
   .quantity-selector-outlined:focus-within {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
-  }
-  .quantity-selector-outlined button:focus-visible {
-    outline: none;
   }
   .quantity-selector-filled {
     background: var(--color-surface-secondary);
@@ -803,9 +857,12 @@
     margin-block-end: 1rem;
   }
   .richtext a {
-    color: var(--color-accent);
+    color: var(--color-link);
     text-decoration: underline;
     text-underline-offset: 2px;
+  }
+  .richtext a:hover {
+    color: var(--color-link-hover);
   }
   .richtext > *:first-child {
     margin-top: 0;
