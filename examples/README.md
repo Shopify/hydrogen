@@ -13,18 +13,17 @@ Shared infrastructure:
 - `core/` — frozen, framework-agnostic storefront design source (five-page reference HTML + Tailwind tokens, no app JS). Framework examples are hand-built from this baseline.
 - `shared/` — common example configuration and request helpers used by every framework port.
 
-Proof-of-concept framework ports (experimental) — see [`poc/README.md`](poc/README.md):
+Proof-of-concept framework ports (experimental):
 
-- `poc/sveltekit/` — SvelteKit 2 + Svelte 5 (runes) port with server `load`
-- `poc/astro/` — Astro 6 port with `@astrojs/node` SSR and frontmatter data fetching
-- `poc/solid-start/` — SolidStart v1 port with `query` + `createAsync` and signal-driven product page state
-- `poc/nuxt/` — Nuxt 4 port with server middleware and Vue pages
-- `poc/nuxt-binding/` — Nuxt 4 port using Hydrogen's Vue binding layer
+- `sveltekit/` — SvelteKit 2 + Svelte 5 (runes) port with server `load`
+- `astro/` — Astro 6 port with `@astrojs/node` SSR and frontmatter data fetching
+- `solid-start/` — SolidStart v1 port with `query` + `createAsync` and signal-driven product page state
+- `nuxt/` — Nuxt 4 port with server middleware and Vue pages
 
 The framework examples exist to showcase and validate Hydrogen APIs in real
 storefront slices.
 
-The proof-of-concept ports in `poc/` are internal experiments and testbeds
+The proof-of-concept ports are internal experiments and testbeds
 for Hydrogen APIs as they evolve.
 
 They exist to help us answer questions like:
@@ -70,7 +69,7 @@ can redirect back to `https://localtest.me:5173/account/authorize`.
 
 ## What examples are not
 
-- The proof-of-concept ports in `poc/` are not the canonical path for users
+- The proof-of-concept ports are not the canonical path for users
   or agents creating new storefronts, not starter kits, and not templates we intend to
   maintain, version, and distribute.
 - They are not a promise of the recommended app structure.
