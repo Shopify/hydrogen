@@ -402,9 +402,12 @@ function connectToInspector({inspectorUrl, sourceMapPath}: InspectorOptions) {
       if (!isClosed()) {
         try {
           ws.removeAllListeners();
+          // Closing while the connection is still being established emits an
+          // asynchronous error, so keep a listener around to consume it.
+          ws.once('error', () => {});
           ws.close();
-        } catch (err) {
-          // Closing before the websocket is ready will throw an error.
+        } catch {
+          // Ignore synchronous close errors from a connection state race.
         }
       }
 
