@@ -1,8 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
 import { createShopifyRequestContext } from "../headers";
+import { configureLogging, resetLoggingForTests } from "../logging";
 import { assert } from "../test-utils";
 import { handleMcpProxy as handleMcpProxyImpl } from "./mcp-proxy";
+
+function createTestLogger() {
+  return {
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    fatal: vi.fn(),
+  };
+}
 
 const defaultStoreUrl = "https://test-store.myshopify.com";
 
@@ -55,6 +67,9 @@ function createTestSessionManager(request: Request) {
 
 describe("handleMcpProxy", () => {
   let mockFetch: ReturnType<typeof vi.fn>;
+  afterEach(() => {
+    resetLoggingForTests();
+  });
 
   beforeEach(() => {
     mockFetch = vi.fn().mockResolvedValue(
@@ -181,8 +196,10 @@ describe("handleMcpProxy", () => {
   });
 
   it("returns JSON-RPC error on fetch failure and logs the error", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockFetch.mockRejectedValueOnce(new Error("Connection refused"));
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const error = new Error("Connection refused");
+    mockFetch.mockRejectedValueOnce(error);
 
     const result = await handleMcpProxy(createRequest("/api/mcp"), defaultStoreUrl);
 
@@ -196,15 +213,12 @@ describe("handleMcpProxy", () => {
       error: { code: -32603, message: "Connection refused" },
       id: null,
     });
-    expect(consoleSpy).toHaveBeenCalledWith(
-      "[hydrogen:error:mcp-proxy] request failed",
-      expect.any(Error),
-    );
-    consoleSpy.mockRestore();
+    expect(logger.error).toHaveBeenCalledWith("request failed", { scope: "mcp-proxy", error });
   });
 
   it("returns generic error message for non-Error throws", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    const logger = createTestLogger();
+    configureLogging({ logger });
     mockFetch.mockRejectedValueOnce("string error");
 
     const result = await handleMcpProxy(createRequest("/api/mcp"), defaultStoreUrl);

@@ -92,6 +92,6 @@ Inline/CDN scripts that Hydrogen serializes into HTML (analytics bus, consent bo
 
 ## Test expectations
 
-- Failure paths assert logger output via `console` spies on the default sink or injected `HydrogenLogger` spies.
-- Assertions check the new format: `"[hydrogen:<level>:<scope>] <message>"` prefix plus the separate `error` argument.
+- Failure paths inject a test logger instead of mocking `console`: `configureLogging({ logger })` with six `vi.fn()` methods, `resetLoggingForTests()` in `afterEach`. Assert `(message, { scope, ...context })` — no prefix strings.
+- Exceptions that still spy `console`: serialized inline-script code (analytics bus, consent) writes through `consoleLogger` directly, and `logging.test.ts` verifies the sink's own `[hydrogen:<level>:<scope>]` formatting.
 - The `no-console` lint rule enforces the policy: the only sanctioned `console` call site is `src/core/logging/logging.ts`, which carries an inline `oxlint-disable-next-line no-console`. CLI and test files are exempt.

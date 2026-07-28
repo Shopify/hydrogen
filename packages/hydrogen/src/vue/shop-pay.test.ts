@@ -1,9 +1,10 @@
 // @vitest-environment happy-dom
 import { mount } from "@vue/test-utils";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { h, nextTick } from "vue";
 import { renderToString } from "vue/server-renderer";
 
+import { configureLogging, resetLoggingForTests } from "../core/logging";
 import type * as ShopPayModule from "../core/shop-pay";
 import { loadShopJs, SHOP_PAY_BUTTON_TAG_NAME } from "../core/shop-pay";
 import { ShopPayButton } from "./shop-pay";
@@ -16,9 +17,22 @@ vi.mock("../core/shop-pay", async (importOriginal) => {
     loadShopJs: vi.fn(() => Promise.resolve()),
   };
 });
+function createTestLogger() {
+  return {
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    fatal: vi.fn(),
+  };
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
+});
+afterEach(() => {
+  resetLoggingForTests();
 });
 
 describe("ShopPayButton", () => {
@@ -150,7 +164,8 @@ describe("ShopPayButton", () => {
 
   it("logs when shop-js fails to load", async () => {
     const error = new Error("network unavailable");
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const logger = createTestLogger();
+    configureLogging({ logger });
     vi.mocked(loadShopJs).mockRejectedValueOnce(error);
 
     mount(ShopPayButton, {
@@ -160,13 +175,11 @@ describe("ShopPayButton", () => {
     });
 
     await vi.waitFor(() =>
-      expect(consoleError).toHaveBeenCalledWith(
-        "[hydrogen:error:shop-pay] shop-js failed to load",
+      expect(logger.error).toHaveBeenCalledWith("shop-js failed to load", {
+        scope: "shop-pay",
         error,
-      ),
+      }),
     );
-
-    consoleError.mockRestore();
   });
 
   it("renders the element during SSR", async () => {

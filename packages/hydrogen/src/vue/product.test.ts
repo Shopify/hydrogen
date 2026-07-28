@@ -1,11 +1,12 @@
 // @vitest-environment happy-dom
 import { mount } from "@vue/test-utils";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { defineComponent, h, nextTick } from "vue";
 
 import { createCartStore, type CartStore, type CreateCartStoreOptions } from "../core/cart/cart";
 import type { CartData, CartLine, CartState } from "../core/cart/state";
 import { EMPTY_CART_DATA, EMPTY_CART_STATE, createEmptyCartErrors } from "../core/cart/state";
+import { configureLogging, resetLoggingForTests } from "../core/logging";
 import { createProductFormStore } from "../core/product/product-form";
 import type { ProductInput, ProductVariantInput } from "../core/product/state";
 import { CartProvider, configureCartEndpoint } from "./cart";
@@ -15,6 +16,16 @@ vi.mock("../core/cart/cart", () => ({
   configureCartEndpoint: vi.fn(),
   createCartStore: vi.fn(),
 }));
+function createTestLogger() {
+  return {
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    fatal: vi.fn(),
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -222,6 +233,9 @@ describe("useProductForm", () => {
       ),
     );
     configureCartEndpoint("/api/cart");
+  });
+  afterEach(() => {
+    resetLoggingForTests();
   });
 
   describe("initial state", () => {
@@ -520,7 +534,8 @@ describe("useProductForm", () => {
       const { store, cartStore } = makeStore();
       vi.mocked(cartStore.handleFormSubmit).mockRejectedValueOnce(new Error("fail"));
       const afterSubmit = vi.fn();
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const logger = createTestLogger();
+      configureLogging({ logger });
 
       const formProps = mountStandaloneConsumer(() => {
         const r = useProductForm(store);
@@ -537,11 +552,10 @@ describe("useProductForm", () => {
       await nextTick();
 
       expect(afterSubmit).not.toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "[hydrogen:error:product] form submission error",
-        expect.any(Error),
-      );
-      consoleSpy.mockRestore();
+      expect(logger.error).toHaveBeenCalledWith("form submission error", {
+        scope: "product",
+        error: expect.any(Error),
+      });
     });
 
     it("does not submit if beforeSubmit prevents default", () => {
@@ -615,7 +629,8 @@ describe("useProductForm", () => {
             rejectSubmit = rej;
           }),
       );
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const logger = createTestLogger();
+      configureLogging({ logger });
 
       const result = mountStandaloneConsumer(() => {
         const r = useProductForm(store);
@@ -634,7 +649,6 @@ describe("useProductForm", () => {
 
       rejectSubmit(new Error("network error"));
       await vi.waitFor(() => expect(result.pending.value).toBe(false));
-      consoleSpy.mockRestore();
     });
   });
 

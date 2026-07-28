@@ -1,11 +1,23 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { createStorefrontClient } from "../client/client";
 import type { I18nConfig } from "../client/types";
 import { handleShopifyRedirects } from "./handle-shopify-redirects";
 import { createShopifyRequestContext } from "./headers";
+import { configureLogging, resetLoggingForTests } from "./logging";
 import { createShopifyRouteTemplates } from "./standard-routes/index";
 import { assert } from "./test-utils";
+
+function createTestLogger() {
+  return {
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    fatal: vi.fn(),
+  };
+}
 
 const defaultConfig = {
   storeDomain: "test-store.myshopify.com",
@@ -46,6 +58,10 @@ describe("handleShopifyRedirects", () => {
       .fn()
       .mockResolvedValue(new Response(JSON.stringify({ data: { urlRedirects: { edges: [] } } })));
     vi.stubGlobal("fetch", mockFetch);
+  });
+
+  afterEach(() => {
+    resetLoggingForTests();
   });
 
   it("redirects /admin to Shopify admin", async () => {
@@ -261,17 +277,21 @@ describe("handleShopifyRedirects", () => {
   });
 
   it("logs error and falls through when Storefront API fails", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockFetch.mockRejectedValueOnce(new Error("Network error"));
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const networkError = new Error("Network error");
+    mockFetch.mockRejectedValueOnce(networkError);
 
     const request = new Request("https://my-app.com/old-page");
     const result = await handleShopifyRedirects(redirectOptions(request));
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining("failed to resolve Shopify redirects"),
-      expect.any(Error),
+    expect(logger.error).toHaveBeenCalledWith(
+      "failed to resolve Shopify redirects for route /old-page",
+      {
+        scope: "redirects",
+        error: expect.objectContaining({ message: "SFAPI request failed", cause: networkError }),
+      },
     );
     expect(result).toBeNull();
-    consoleSpy.mockRestore();
   });
 });

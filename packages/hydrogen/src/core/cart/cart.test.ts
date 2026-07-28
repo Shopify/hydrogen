@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import type { CartActionError } from "../../../vendor/standard-actions";
+import { configureLogging, resetLoggingForTests } from "../logging";
 import {
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
@@ -24,6 +25,17 @@ import {
   createEmptyPending,
   createEmptyCartErrors,
 } from "./state";
+
+function createTestLogger() {
+  return {
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    fatal: vi.fn(),
+  };
+}
 
 function makeLine(overrides: Partial<CartLine> & { id: string }): CartLine {
   return {
@@ -297,6 +309,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  resetLoggingForTests();
   store.destroy();
   resetStandardActionsForTests();
   document
@@ -432,35 +445,38 @@ describe("createCartStore", () => {
   });
 
   it("sets loading to false when connected async initialData rejects", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
     const deferred = createDeferred<{ cart: CartData | null }>();
     const localStore = createCartStore({ initialData: deferred.promise });
     const error = new Error("initial data failed");
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     localStore.connect();
     deferred.reject(error);
 
     await vi.waitFor(() => {
       expect(localStore.getState().loading).toBe(false);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "[hydrogen:error:cart] cart initial load failed",
+      expect(logger.error).toHaveBeenCalledWith("cart initial load failed", {
+        scope: "cart",
         error,
-      );
+      });
     });
 
-    consoleSpy.mockRestore();
     localStore.destroy();
   });
 
   it("allows fetch after connected async initialData rejects", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
     const deferred = createDeferred<{ cart: CartData | null }>();
     const localStore = createCartStore({ initialData: deferred.promise });
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     localStore.connect();
     deferred.reject(new Error("initial data failed"));
     await vi.waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalled();
     });
 
     mockGetCart.mockResolvedValue({
@@ -472,7 +488,6 @@ describe("createCartStore", () => {
     expect(mockGetCart).toHaveBeenCalledTimes(1);
     expect(localStore.getState().data.totalQuantity).toBe(6);
 
-    consoleSpy.mockRestore();
     localStore.destroy();
   });
 
@@ -4584,24 +4599,25 @@ describe("configureCartEndpoint", () => {
   });
 
   it("same endpoint is a no-op", () => {
-    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const logger = createTestLogger();
+    configureLogging({ logger });
     configureCartEndpoint("/api/cart");
     configureCartEndpoint("/api/cart");
-    expect(consoleSpy).not.toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it("different endpoint warns and replaces handler", async () => {
-    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const logger = createTestLogger();
+    configureLogging({ logger });
     configureCartEndpoint("/api/cart");
     configureCartEndpoint("/custom/cart");
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("/custom/cart"));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("/custom/cart"), {
+      scope: "cart",
+    });
 
     const handler = extractConfiguredHandler();
     mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ cart: null }), { status: 200 }));
     await handler(vi.fn(), { lines: [{ id: "x", quantity: 1 }] });
     expect(mockFetch).toHaveBeenCalledWith("/custom/cart", expect.anything());
-
-    consoleSpy.mockRestore();
   });
 });
