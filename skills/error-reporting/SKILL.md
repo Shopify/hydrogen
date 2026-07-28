@@ -1,8 +1,18 @@
+---
+name: error-reporting
+description: >
+  Error handling and logging policy for @shopify/hydrogen: when to throw, when to log through the
+  logging contract, when to expose reactive state, and how tests assert failures. Always use when
+  developing or reviewing runtime logic for the @shopify/hydrogen library.
+---
+
 # Error Reporting Policy
 
-`@shopify/hydrogen` runtime failure handling: when to throw, when to log, when to expose reactive state, and how logs are formatted and configured.
+How `@shopify/hydrogen` handles runtime failures: when to throw, when to log, when to expose reactive state, and how logs are formatted, configured, and tested. Apply this policy to any new or changed runtime logic in `packages/hydrogen/src`.
 
 ## Taxonomy
+
+Pick the mechanism from the failure class. Never double-report (throw AND log the same failure).
 
 | Failure class | Mechanism | Examples |
 | --- | --- | --- |
@@ -15,7 +25,7 @@
 
 ## Logger contract
 
-### Internal call convention (contributors)
+### Internal call convention
 
 `getLogger` is internal — not part of the public package API.
 
@@ -25,9 +35,10 @@ const log = getLogger("cart");
 log.error("cart initial load failed", { error });
 ```
 
-- `getLogger(scope)` returns a lazily-resolved scoped logger. Declare one module-level `const log` per file. Fixed scope names: `cart`, `cart-api`, `analytics`, `consent`, `webmcp`, `checkout`, `redirects`, `product`, `shop-pay`, and per-proxy scopes (`sfapi-proxy`, `mcp-proxy`, `ajax-api`, `agent-proxy`).
-- Messages are unprefixed and without trailing colons; the sink owns formatting.
+- `getLogger(scope)` returns a lazily-resolved scoped logger. Declare one module-level `const log` per file. Fixed scope names: `cart`, `cart-api`, `analytics`, `consent`, `webmcp`, `checkout`, `redirects`, `product`, `shop-pay`, and per-proxy scopes (`sfapi-proxy`, `mcp-proxy`, `ajax-api`, `agent-proxy`). Adding a subsystem? Add one scope name and keep it stable.
+- Messages are unprefixed, lowercase-leaning, and without trailing colons; the sink owns formatting.
 - `context.error` becomes a separate console argument; other context keys become a trailing object.
+- Never call `console.*` directly in `packages/hydrogen/src` — the `no-console` lint rule enforces this. Sanctioned exceptions: the built-in sink in `src/core/logging/logging.ts` and the CLI.
 
 ### `HydrogenLogger`
 
@@ -58,6 +69,15 @@ configureLogging({ logger?, level? });
 - `level` — minimum severity forwarded; defaults to `"info"`.
 - Last-call-wins: reconfiguring warns and applies the new options.
 
+### Why a global instead of per-factory options
+
+A single global configurator was a deliberate decision (over `logger` options on `createStorefrontClient`, `createCartStore`, components, etc.):
+
+- One injection point covers every surface — including module-level functions imported directly (form helpers, `configureCartEndpoint`, interceptors) that have no factory or props seam to thread a logger through.
+- Zero interface changes: no `logger`/`logLevel` noise duplicated across every public factory and component.
+- It is safe in both environments because the sink is per-JavaScript-context configuration, not request state: browsers call it once in the app entry; servers (Node or workerd/Oxygen isolates) call it at module init, before any request runs.
+- Resolution is lazy, so loggers obtained before `configureLogging` still route to the configured sink.
+
 ### Default console sink
 
 Formats entries as `[hydrogen:<level>:<scope>] <message>`, followed by `context.error` (if present) and a trailing object of remaining context fields.
@@ -84,7 +104,7 @@ configureLogging({
 
 ## Serialized inline scripts — documented exception
 
-Inline/CDN scripts that Hydrogen serializes into HTML (analytics bus, consent bootstrap) are compiled to strings via `import … with { type: "script" }` chains. They never see the app bundle's global state, so `configureLogging` cannot reach them. These scripts always write to `console` with the standard `[hydrogen:<level>:<scope>]` prefix via the `consoleLogger` sink.
+Inline/CDN scripts that Hydrogen serializes into HTML (analytics bus, consent bootstrap) are compiled to strings via `import … with { type: "script" }` chains. They never see the app bundle's global state, so `configureLogging` cannot reach them. These scripts always write to `console` with the standard `[hydrogen:<level>:<scope>]` prefix via the `consoleLogger` sink — when writing code in a serialized-script import chain, use `consoleLogger` directly with an explicit `{ scope }` instead of `getLogger`.
 
 ## Non-goals
 
