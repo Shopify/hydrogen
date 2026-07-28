@@ -60,7 +60,7 @@ export interface ErrorProperties {
  *    the main Node.js process, so that we can display them in the terminal.
  *
  * @param options - Options for the inspector.
- * @returns A function to reconnect to the inspector.
+ * @returns A connector for reconnecting to and closing the inspector.
  */
 export function createInspectorConnector(options: {
   privateInspectorPort: number;
@@ -72,44 +72,44 @@ export function createInspectorConnector(options: {
   let inspectorConnection: InspectorConnection | undefined;
   let inspectorProxy: InspectorProxy | undefined;
 
-  const reconnect = async (onBeforeConnect?: () => void | Promise<void>) => {
-    inspectorConnection?.close();
-
-    inspectorUrl ??= await findInspectorUrl(
-      options.privateInspectorPort,
-      options.workerName,
-    );
-
-    await onBeforeConnect?.();
-
-    inspectorConnection = connectToInspector({
-      inspectorUrl,
-      sourceMapPath: options.sourceMapPath,
-    });
-
-    addInspectorConsoleLogger(inspectorConnection);
-
-    if (options.publicInspectorPort) {
-      if (inspectorProxy) {
-        inspectorProxy.updateInspectorConnection(inspectorConnection);
-      } else {
-        inspectorProxy = createInspectorProxy(
-          options.publicInspectorPort,
-          inspectorConnection,
-        );
-        await inspectorProxy.ready;
-      }
-    }
-  };
-
-  return Object.assign(reconnect, {
+  return {
     async close() {
       inspectorConnection?.close();
       await inspectorProxy?.close();
       inspectorConnection = undefined;
       inspectorProxy = undefined;
     },
-  });
+
+    async reconnect(onBeforeConnect?: () => void | Promise<void>) {
+      inspectorConnection?.close();
+
+      inspectorUrl ??= await findInspectorUrl(
+        options.privateInspectorPort,
+        options.workerName,
+      );
+
+      await onBeforeConnect?.();
+
+      inspectorConnection = connectToInspector({
+        inspectorUrl,
+        sourceMapPath: options.sourceMapPath,
+      });
+
+      addInspectorConsoleLogger(inspectorConnection);
+
+      if (options.publicInspectorPort) {
+        if (inspectorProxy) {
+          inspectorProxy.updateInspectorConnection(inspectorConnection);
+        } else {
+          inspectorProxy = createInspectorProxy(
+            options.publicInspectorPort,
+            inspectorConnection,
+          );
+          await inspectorProxy.ready;
+        }
+      }
+    },
+  };
 }
 
 /**
