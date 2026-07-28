@@ -5,7 +5,8 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from 'node:http';
-import {WebSocketServer, type WebSocket, type MessageEvent} from 'ws';
+import type {AddressInfo} from 'node:net';
+import {WebSocket, WebSocketServer, type MessageEvent} from 'ws';
 import type {Protocol} from 'devtools-protocol';
 import {request} from 'undici';
 import type {
@@ -17,6 +18,16 @@ import type {
 const CFW_DEVTOOLS = 'https://devtools.devprod.cloudflare.dev';
 const FAVICON_URL =
   'https://cdn.shopify.com/s/files/1/0598/4822/8886/files/favicon.svg';
+const INSPECTOR_HOST = '127.0.0.1';
+const ALLOWED_INSPECTOR_HOSTNAMES = new Set([
+  INSPECTOR_HOST,
+  '[::1]',
+  'localhost',
+]);
+const ALLOWED_INSPECTOR_ORIGINS = new Set([
+  CFW_DEVTOOLS,
+  'devtools://devtools',
+]);
 
 export type InspectorProxy = ReturnType<typeof createInspectorProxy>;
 
@@ -51,10 +62,16 @@ export function createInspectorProxy(
 
   const sourceMapPath = newInspectorConnection.sourceMapPath;
   const sourceMapPathname = '/__index.js.map';
-  const sourceMapURL = `http://localhost:${port}${sourceMapPathname}`;
+  const sourceMapURL = `http://${INSPECTOR_HOST}:${port}${sourceMapPathname}`;
 
   // Create the proxy server used when running with `--debug` flag:
   const server = createServer((req: IncomingMessage, res: ServerResponse) => {
+    if (!isAllowedInspectorHost(req.headers.host)) {
+      res.statusCode = 403;
+      res.end('Forbidden');
+      return;
+    }
+
     // Remove query params. E.g. `/json/list?for_tab`
     const [url = '/', queryString = ''] = req.url?.split('?') || [];
 
@@ -72,7 +89,7 @@ export function createInspectorProxy(
       case '/json/list':
         {
           res.setHeader('Content-Type', 'application/json');
-          const localHost = `localhost:${port}/ws`;
+          const localHost = `${INSPECTOR_HOST}:${port}/ws`;
           const devtoolsFrontendUrl = `devtools://devtools/bundled/js_app.html?experiments=true&v8only=true&ws=${localHost}`;
           const devtoolsFrontendUrlCompat = `devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=${localHost}`;
 
@@ -97,12 +114,19 @@ export function createInspectorProxy(
         // Handle proxied sourcemaps. This is only used when serving
         // a built application in h2:preview or classic project dev.
         // h2:dev with Vite uses inlined sourcemaps instead.
+        if (!isAllowedInspectorOrigin(req.headers.origin)) {
+          res.statusCode = 403;
+          res.end('Forbidden');
+          return;
+        }
+
         res.setHeader('Content-Type', 'text/plain');
         res.setHeader('Cache-Control', 'no-store');
         res.setHeader(
           'Access-Control-Allow-Origin',
           req.headers.origin ?? 'devtools://devtools',
         );
+        res.setHeader('Vary', 'Origin');
 
         if (sourceMapPath) {
           res.end(readFileSync(sourceMapPath, 'utf-8'));
@@ -121,7 +145,7 @@ export function createInspectorProxy(
           res.statusCode = 302;
           res.setHeader(
             'Location',
-            `/?experiments=true&v8only=true&debugger=true&ws=localhost:${port}/ws`,
+            `/?experiments=true&v8only=true&debugger=true&ws=${INSPECTOR_HOST}:${port}/ws`,
           );
           res.end();
         } else {
@@ -160,8 +184,25 @@ export function createInspectorProxy(
     }
   });
 
-  const wsServer = new WebSocketServer({server, clientTracking: true});
-  server.listen(port);
+  const wsServer = new WebSocketServer({
+    server,
+    clientTracking: true,
+    verifyClient: ({req}: {req: IncomingMessage}) =>
+      isAllowedInspectorHost(req.headers.host) &&
+      isAllowedInspectorWebSocketOrigin(
+        req.headers.origin,
+        req.headers['user-agent'],
+      ),
+  });
+  const ready = new Promise<AddressInfo>((resolve, reject) => {
+    const onError = (error: Error) => reject(error);
+
+    server.once('error', onError);
+    server.listen(port, INSPECTOR_HOST, () => {
+      server.off('error', onError);
+      resolve(server.address() as AddressInfo);
+    });
+  });
 
   /**
    * Buffer inspector messages when there is no debugger connected.
@@ -179,21 +220,43 @@ export function createInspectorProxy(
 
       ws.close(1013, 'Too many clients; only one can be connected at a time');
     } else {
-      // Ensure debugger is restarted in workerd before connecting
-      // a new client to receive `Debugger.scriptParsed` events.
-      inspector.ws.send(
-        JSON.stringify({id: 100_000_000, method: 'Debugger.disable'}),
-      );
-
       debuggerWs?.removeEventListener('message', sendMessageToInspector);
       debuggerWs = ws;
+
+      const inspectorWs = inspector.ws;
+      const pendingDebuggerMessages: MessageEvent[] = [];
+      const bufferDebuggerMessage = (event: MessageEvent) =>
+        pendingDebuggerMessages.push(event);
+      const startForwardingToInspector = () => {
+        if (debuggerWs !== ws || ws.readyState !== WebSocket.OPEN) return;
+
+        // Ensure debugger is restarted in workerd before connecting
+        // a new client to receive `Debugger.scriptParsed` events.
+        inspectorWs.send(
+          JSON.stringify({id: 100_000_000, method: 'Debugger.disable'}),
+        );
+
+        debuggerWs.removeEventListener('message', bufferDebuggerMessage);
+        debuggerWs.addEventListener('message', sendMessageToInspector);
+        pendingDebuggerMessages.forEach(sendMessageToInspector);
+      };
+
+      if (inspectorWs.readyState === WebSocket.OPEN) {
+        startForwardingToInspector();
+      } else {
+        debuggerWs.addEventListener('message', bufferDebuggerMessage);
+        inspectorWs.addEventListener('open', startForwardingToInspector, {
+          once: true,
+        });
+      }
 
       // This user-agent is, so far, unique to DevTools in the browser.
       isDevToolsInBrowser = /mozilla/i.test(req.headers['user-agent'] ?? '');
 
-      debuggerWs.addEventListener('message', sendMessageToInspector);
       debuggerWs.addEventListener('close', () => {
         debuggerWs?.removeEventListener('message', sendMessageToInspector);
+        debuggerWs?.removeEventListener('message', bufferDebuggerMessage);
+        inspectorWs.removeEventListener('open', startForwardingToInspector);
         debuggerWs = undefined;
       });
 
@@ -260,6 +323,18 @@ export function createInspectorProxy(
   }
 
   return {
+    ready,
+
+    async close() {
+      await ready;
+      wsServer.clients.forEach((client) => client.terminate());
+
+      await new Promise<void>((resolve) => wsServer.close(() => resolve()));
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
+    },
+
     // Every time workerd is restarted (e.g. env var change, etc.),
     // the inspector connection needs to be re-established.
     updateInspectorConnection(newConnection: InspectorConnection) {
@@ -267,6 +342,44 @@ export function createInspectorProxy(
       onInspectorConnection();
     },
   };
+}
+
+function isAllowedInspectorHost(hostHeader: string | undefined) {
+  if (!hostHeader) return false;
+
+  try {
+    const hostname = new URL(`http://${hostHeader}`).hostname.toLowerCase();
+    return ALLOWED_INSPECTOR_HOSTNAMES.has(hostname);
+  } catch {
+    return false;
+  }
+}
+
+function isAllowedInspectorOrigin(originHeader: string | undefined) {
+  if (!originHeader) return true;
+  if (ALLOWED_INSPECTOR_ORIGINS.has(originHeader)) return true;
+
+  try {
+    const origin = new URL(originHeader);
+
+    return (
+      (origin.protocol === 'http:' || origin.protocol === 'https:') &&
+      ALLOWED_INSPECTOR_HOSTNAMES.has(origin.hostname.toLowerCase())
+    );
+  } catch {
+    return false;
+  }
+}
+
+function isAllowedInspectorWebSocketOrigin(
+  originHeader: string | undefined,
+  userAgentHeader: string | undefined,
+) {
+  // VSCode's debugger sends neither header. Browser connections always send a
+  // User-Agent, so only non-browser clients may omit Origin.
+  if (!originHeader) return !userAgentHeader;
+
+  return isAllowedInspectorOrigin(originHeader);
 }
 
 function enhanceDevToolsEvent(event: MessageEvent, sourceMapUrl: string) {

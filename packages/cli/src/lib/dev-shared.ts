@@ -117,7 +117,7 @@ export function getDebugBannerLine(publicInspectorPort: number) {
   )}.\nAttach a ${outputToken.link(
     colors.yellow(isVSCode ? 'VSCode debugger' : 'debugger'),
     debuggingDocsLink,
-  )} or open DevTools in http://localhost:${String(publicInspectorPort)}.`
+  )} or open DevTools in http://127.0.0.1:${String(publicInspectorPort)}.`
     .value;
 }
 
