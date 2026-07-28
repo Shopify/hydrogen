@@ -173,9 +173,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
-      gql.tada:
-        specifier: ^1.9.2
-        version: 1.9.2(graphql@16.13.2)(typescript@5.9.3)
       tailwindcss:
         specifier: ^4.2.4
         version: 4.2.4
@@ -259,9 +256,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
-      gql.tada:
-        specifier: ^1.9.2
-        version: 1.9.2(graphql@16.13.2)(typescript@5.9.3)
       tailwindcss:
         specifier: ^4.2.2
         version: 4.2.4
@@ -352,7 +346,7 @@ importers:
   packages/hydrogen:
     dependencies:
       gql.tada:
-        specifier: ^1.9.2
+        specifier: 1.9.2
         version: 1.9.2(graphql@16.13.2)(typescript@5.9.3)
     devDependencies:
       '@0no-co/graphqlsp':
