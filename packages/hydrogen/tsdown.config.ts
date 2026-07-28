@@ -8,11 +8,7 @@ const plugins = [minifyGraphQLLiterals(), inlineScriptImports({ version: pkg.ver
 
 export default defineConfig([
   {
-    entry: [
-      "src/core/index.ts",
-      "src/customer-account/index.ts",
-      "src/react/index.ts",
-    ],
+    entry: ["src/core/index.ts", "src/customer-account/index.ts", "src/react/index.ts"],
     format: "esm",
     dts: true,
     hash: false,
