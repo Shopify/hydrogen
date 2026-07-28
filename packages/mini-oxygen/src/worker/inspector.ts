@@ -72,7 +72,7 @@ export function createInspectorConnector(options: {
   let inspectorConnection: InspectorConnection | undefined;
   let inspectorProxy: InspectorProxy | undefined;
 
-  return async (onBeforeConnect?: () => void | Promise<void>) => {
+  const reconnect = async (onBeforeConnect?: () => void | Promise<void>) => {
     inspectorConnection?.close();
 
     inspectorUrl ??= await findInspectorUrl(
@@ -97,9 +97,19 @@ export function createInspectorConnector(options: {
           options.publicInspectorPort,
           inspectorConnection,
         );
+        await inspectorProxy.ready;
       }
     }
   };
+
+  return Object.assign(reconnect, {
+    async close() {
+      inspectorConnection?.close();
+      await inspectorProxy?.close();
+      inspectorConnection = undefined;
+      inspectorProxy = undefined;
+    },
+  });
 }
 
 /**

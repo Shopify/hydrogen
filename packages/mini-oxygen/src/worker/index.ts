@@ -139,7 +139,7 @@ export function createMiniOxygen({
     }
   }
 
-  let reconnect: ReturnType<typeof createInspectorConnector>;
+  let reconnect: ReturnType<typeof createInspectorConnector> | undefined;
 
   const ready = mf.ready.then(async (workerUrl) => {
     const [privateInspectorUrl, publicInspectorPort] = await Promise.all([
@@ -198,7 +198,7 @@ export function createMiniOxygen({
         workers: miniflareOptions.workers,
       });
 
-      await reconnect(() =>
+      await reconnect?.(() =>
         mf.setOptions(
           buildMiniflareOptions(
             {...miniflareOptions, ...newOptions},
@@ -211,6 +211,7 @@ export function createMiniOxygen({
     async dispose() {
       assetsServer?.closeAllConnections();
       assetsServer?.close();
+      await reconnect?.close();
       await mf.dispose();
       isDisposed = true;
     },
