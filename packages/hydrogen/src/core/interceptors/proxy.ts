@@ -1,5 +1,6 @@
 import type { HydrogenRoutesOptions } from "../handle-shopify-routes";
 import { extractHeaders, REQUEST_GROUP_ID_HEADER } from "../headers";
+import { getLogger } from "../logging";
 
 const PROXY_TIMEOUT_MS = 30_000;
 
@@ -7,12 +8,13 @@ type ProxyDescriptor = {
   match: RegExp;
   allowlist: readonly string[];
   formatError: (message: string) => unknown;
-  logPrefix: string;
+  scope: string;
   timeoutMs?: number;
   prepareHeaders?: (headers: Headers, options: HydrogenRoutesOptions) => void;
 };
 
 export function createProxyInterceptor(descriptor: ProxyDescriptor) {
+  const log = getLogger(descriptor.scope);
   return async (options: HydrogenRoutesOptions): Promise<Response | null> => {
     const { request, storefrontClient } = options;
     const url = new URL(request.url);
@@ -52,7 +54,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor) {
         headers: createProxyResponseHeaders(upstreamResponse.headers),
       });
     } catch (error) {
-      console.error(`${descriptor.logPrefix} request failed:`, error);
+      log.error("request failed", { error });
       const message = error instanceof Error ? error.message : "Internal proxy error";
 
       return new Response(JSON.stringify(descriptor.formatError(message)), {

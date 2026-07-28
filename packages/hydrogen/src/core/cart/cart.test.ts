@@ -442,7 +442,10 @@ describe("createCartStore", () => {
 
     await vi.waitFor(() => {
       expect(localStore.getState().loading).toBe(false);
-      expect(consoleSpy).toHaveBeenCalledWith("[hydrogen] cart initial load failed:", error);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[hydrogen:error:cart] cart initial load failed",
+        error,
+      );
     });
 
     consoleSpy.mockRestore();

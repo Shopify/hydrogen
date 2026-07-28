@@ -1,7 +1,10 @@
 import type { StorefrontClient } from "../../client";
 import { getCart, getCartId } from "../cart/get-cart";
 import type { HydrogenRoutesOptions } from "../handle-shopify-routes";
+import { getLogger } from "../logging";
 import { CART_PERMALINK_RE, CHECKOUT_RE } from "../url";
+
+const log = getLogger("checkout");
 
 export async function handleCheckoutRedirect({
   request,
@@ -22,7 +25,7 @@ export async function handleCheckoutRedirect({
       ? await getCheckoutRedirectUrl(request, storefrontClient)
       : await getCartRedirectUrl(request, storefrontClient);
   } catch (error) {
-    console.error("Checkout redirect request failed:", error);
+    log.error("checkout redirect request failed", { error });
     const message = error instanceof Error ? error.message : "Internal redirect error";
 
     return new Response(JSON.stringify({ error: message }), {
@@ -66,7 +69,7 @@ async function getCartRedirectUrl(
       mergeSearchParams(redirectUrl, new URL(result.cart.checkoutUrl).searchParams);
     }
   } catch (error) {
-    console.warn("Checkout redirect could not load cart permalink tracking params:", error);
+    log.warn("checkout redirect could not load cart permalink tracking params", { error });
   }
 
   return redirectUrl;

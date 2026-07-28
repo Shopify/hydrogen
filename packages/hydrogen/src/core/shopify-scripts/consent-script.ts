@@ -1,5 +1,6 @@
 import type { ShopifyGlobal } from "../../globals";
 import type { ConsentConfig } from "../analytics/types";
+import { consoleLogger } from "../logging";
 
 type RuntimeCustomerPrivacy = Partial<NonNullable<ShopifyGlobal["customerPrivacy"]>>;
 type RuntimeShopifyGlobal = Partial<Omit<ShopifyGlobal, "customerPrivacy">> & {
@@ -43,16 +44,18 @@ export default function initializeShopifyConsentTracking(config: ShopifyConsentT
   };
 
   const requestInitialConsent = () => {
-    const errorMessage = "[hydrogen:error:Consent] Unable to request initial consent.";
     const setTrackingConsent = getCustomerPrivacy()?.setTrackingConsent;
     if (typeof setTrackingConsent !== "function") {
-      console.error(errorMessage);
+      consoleLogger.error("unable to request initial consent", { scope: "consent" });
       return markConsentReady();
     }
 
     setTrackingConsent({ headlessStorefront: true }, (result) => {
       if (result?.error) {
-        console.error(errorMessage, result.error);
+        consoleLogger.error("unable to request initial consent", {
+          scope: "consent",
+          error: result.error,
+        });
         return;
       }
 

@@ -196,7 +196,10 @@ describe("handleMcpProxy", () => {
       error: { code: -32603, message: "Connection refused" },
       id: null,
     });
-    expect(consoleSpy).toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "[hydrogen:error:mcp-proxy] request failed",
+      expect.any(Error),
+    );
     consoleSpy.mockRestore();
   });
 

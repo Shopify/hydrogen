@@ -16,6 +16,7 @@ import {
 } from "react";
 
 import type { CartLine } from "../core/cart/state";
+import { getLogger } from "../core/logging";
 import {
   createProductFormRegister,
   createProductFormStore,
@@ -29,6 +30,8 @@ import {
   type VariantSelectionResult,
 } from "../core/product";
 import { getCartEndpoint, useCartStore } from "./cart";
+
+const log = getLogger("product");
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -139,7 +142,7 @@ export function useProductForm<TProduct extends ProductInput>(
               // Cart user/network errors are surfaced via the reactive `errors`
               // state. Thrown exceptions (missing Shopify script, invalid form
               // target) are programming errors — log them for dev visibility.
-              console.error("[hydrogen] form submission error:", error);
+              log.error("form submission error", { error });
             },
           )
           .finally(() => setPending(false));

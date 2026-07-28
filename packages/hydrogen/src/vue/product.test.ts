@@ -538,7 +538,7 @@ describe("useProductForm", () => {
 
       expect(afterSubmit).not.toHaveBeenCalled();
       expect(consoleSpy).toHaveBeenCalledWith(
-        "[hydrogen] form submission error:",
+        "[hydrogen:error:product] form submission error",
         expect.any(Error),
       );
       consoleSpy.mockRestore();

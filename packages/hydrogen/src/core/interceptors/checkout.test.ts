@@ -159,6 +159,10 @@ describe("handleCheckoutRedirect", () => {
 
     expect(result?.status).toBe(502);
     expect(await result?.json()).toEqual({ error: "SFAPI request failed" });
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "[hydrogen:error:checkout] checkout redirect request failed",
+      expect.any(Error),
+    );
     consoleSpy.mockRestore();
   });
 

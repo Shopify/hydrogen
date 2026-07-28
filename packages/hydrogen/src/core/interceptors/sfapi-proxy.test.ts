@@ -446,7 +446,10 @@ describe("handleSfapiProxy", () => {
 
     const body = await result.json();
     expect(body).toEqual({ error: "Connection refused" });
-    expect(consoleSpy).toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "[hydrogen:error:sfapi-proxy] request failed",
+      expect.any(Error),
+    );
     consoleSpy.mockRestore();
   });
 

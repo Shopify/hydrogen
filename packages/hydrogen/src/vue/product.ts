@@ -12,6 +12,7 @@ import {
 } from "vue";
 
 import type { CartLine } from "../core/cart/state";
+import { getLogger } from "../core/logging";
 import {
   createProductFormRegister,
   createProductFormStore,
@@ -25,6 +26,8 @@ import {
   type VariantSelectionResult,
 } from "../core/product";
 import { getCartEndpoint, useCartStore } from "./cart";
+
+const log = getLogger("product");
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -117,7 +120,7 @@ function useProductFormImpl<TProduct extends ProductInput>(
           .then(
             () => opts?.afterSubmit?.(e),
             (error: unknown) => {
-              console.error("[hydrogen] form submission error:", error);
+              log.error("form submission error", { error });
             },
           )
           .finally(() => {

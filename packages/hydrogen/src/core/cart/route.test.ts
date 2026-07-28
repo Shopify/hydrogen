@@ -348,7 +348,7 @@ describe("createCartServerHandlers", () => {
         expect(body.cart).toBeNull();
         expect(body.errors).toEqual([{ message: "Cart not found" }]);
         expect(consoleError).toHaveBeenCalledOnce();
-        expect(consoleError).toHaveBeenCalledWith("Cart not found");
+        expect(consoleError).toHaveBeenCalledWith("[hydrogen:error:cart-api] Cart not found");
       } finally {
         consoleError.mockRestore();
       }

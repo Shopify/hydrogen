@@ -1,0 +1,97 @@
+# Error Reporting Policy
+
+`@shopify/hydrogen` runtime failure handling: when to throw, when to log, when to expose reactive state, and how logs are formatted and configured.
+
+## Taxonomy
+
+| Failure class | Mechanism | Examples |
+| --- | --- | --- |
+| Programming errors | Throw a typed error synchronously. | Bad arguments, invariant violations. |
+| Request-scoped failures with a caller | Throw a typed error; the caller decides retry/render. | `StorefrontApiError`, `CustomerAccountApiError`, `CartActionError`, `CartNetworkError`. |
+| Server handlers (cart, predictive-search, etc.) | Catch failures, log via the scoped logger, return a structured error `Response`. | Cart server handler catches a network failure and returns `500` with a JSON error body. |
+| Background browser failures | Scoped logger at `error` level. | Script loads (Shop Pay), background cart loads, analytics publish failures. |
+| Misuse / degradation | Scoped logger at `warn` level. | Mock shop detected, analytics destination misconfigured, deprecated option passed. |
+| Buyer-visible user errors | Reactive state only — never logged. | Cart `userErrors` surfaced to the UI; the user corrects and retries. |
+
+## Logger contract
+
+### Internal call convention (contributors)
+
+`getLogger` is internal — not part of the public package API.
+
+```ts
+import { getLogger } from "../logging"; // relative import within src/
+const log = getLogger("cart");
+log.error("cart initial load failed", { error });
+```
+
+- `getLogger(scope)` returns a lazily-resolved scoped logger. Declare one module-level `const log` per file. Fixed scope names: `cart`, `cart-api`, `analytics`, `consent`, `webmcp`, `checkout`, `redirects`, `product`, `shop-pay`, and per-proxy scopes (`sfapi-proxy`, `mcp-proxy`, `ajax-api`, `agent-proxy`).
+- Messages are unprefixed and without trailing colons; the sink owns formatting.
+- `context.error` becomes a separate console argument; other context keys become a trailing object.
+
+### `HydrogenLogger`
+
+A pino-compatible structural interface with six level methods:
+
+```ts
+interface HydrogenLogger {
+  trace: (message: string, context?: LogContext) => void;
+  debug: (message: string, context?: LogContext) => void;
+  info:  (message: string, context?: LogContext) => void;
+  warn:  (message: string, context?: LogContext) => void;
+  error: (message: string, context?: LogContext) => void;
+  fatal: (message: string, context?: LogContext) => void;
+}
+```
+
+`LogContext` is `{ scope?: string; error?: unknown; [key: string]: unknown }`.
+
+### `configureLogging`
+
+```ts
+import { configureLogging } from "@shopify/hydrogen";
+configureLogging({ logger?, level? });
+```
+
+- Global, called once at startup (app entry on the browser, module init on the server).
+- `logger` — any `HydrogenLogger`; defaults to the built-in console sink.
+- `level` — minimum severity forwarded; defaults to `"info"`.
+- Last-call-wins: reconfiguring warns and applies the new options.
+
+### Default console sink
+
+Formats entries as `[hydrogen:<level>:<scope>] <message>`, followed by `context.error` (if present) and a trailing object of remaining context fields.
+
+### Pino adapter
+
+A pino instance is directly assignable to `HydrogenLogger` — extra args are `util.format`-ed. For fully-structured output, wrap it so context is passed first:
+
+```ts
+import pino from "pino";
+const pinoInstance = pino();
+
+configureLogging({
+  logger: {
+    error: (msg, ctx) => pinoInstance.error(ctx, msg),
+    warn:  (msg, ctx) => pinoInstance.warn(ctx, msg),
+    info:  (msg, ctx) => pinoInstance.info(ctx, msg),
+    debug: (msg, ctx) => pinoInstance.debug(ctx, msg),
+    trace: (msg, ctx) => pinoInstance.trace(ctx, msg),
+    fatal: (msg, ctx) => pinoInstance.fatal(ctx, msg),
+  },
+});
+```
+
+## Serialized inline scripts — documented exception
+
+Inline/CDN scripts that Hydrogen serializes into HTML (analytics bus, consent bootstrap) are compiled to strings via `import … with { type: "script" }` chains. They never see the app bundle's global state, so `configureLogging` cannot reach them. These scripts always write to `console` with the standard `[hydrogen:<level>:<scope>]` prefix via the `consoleLogger` sink.
+
+## Non-goals
+
+- Per-request child loggers / request correlation. Scopes are per-subsystem, not per-request.
+
+## Test expectations
+
+- Failure paths assert logger output via `console` spies on the default sink or injected `HydrogenLogger` spies.
+- Assertions check the new format: `"[hydrogen:<level>:<scope>] <message>"` prefix plus the separate `error` argument.
+- The `no-console` lint rule enforces the policy: the only sanctioned `console` call site is `src/core/logging/logging.ts`, which carries an inline `oxlint-disable-next-line no-console`. CLI and test files are exempt.

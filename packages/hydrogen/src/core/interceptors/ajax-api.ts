@@ -6,5 +6,5 @@ export const handleAjaxApi = createProxyInterceptor({
   match: AJAX_CART_RE,
   allowlist: AJAX_API_REQUEST_HEADER_ALLOWLIST,
   formatError: (message) => ({ error: message }),
-  logPrefix: "AJAX API proxy",
+  scope: "ajax-api",
 });

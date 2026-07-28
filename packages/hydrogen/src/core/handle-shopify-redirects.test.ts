@@ -268,7 +268,7 @@ describe("handleShopifyRedirects", () => {
     const result = await handleShopifyRedirects(redirectOptions(request));
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Failed to resolve Shopify redirects"),
+      expect.stringContaining("failed to resolve Shopify redirects"),
       expect.any(Error),
     );
     expect(result).toBeNull();

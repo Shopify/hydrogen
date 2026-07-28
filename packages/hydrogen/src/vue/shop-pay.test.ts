@@ -161,7 +161,7 @@ describe("ShopPayButton", () => {
 
     await vi.waitFor(() =>
       expect(consoleError).toHaveBeenCalledWith(
-        "[hydrogen:error:ShopPay] shop-js failed to load:",
+        "[hydrogen:error:shop-pay] shop-js failed to load",
         error,
       ),
     );
