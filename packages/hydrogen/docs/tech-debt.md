@@ -34,7 +34,7 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 
 ## Hydrogen error logging policy
 
-**Status:** Open
+**Status:** Resolved (2026-07-28)
 **Added:** 2026-05-25
 
 **What:** Runtime helpers currently log errors ad hoc. Shop Pay script loading logs a console error on failure, but there is no package-level policy for when to log, throw, expose reactive error state, or invoke a user-supplied reporter.
@@ -42,6 +42,8 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 **Why it matters:** Silent runtime failures are difficult to debug, but unstructured console logging can be noisy and inconsistent across framework adapters.
 
 **Done when:** Hydrogen has a documented error reporting contract for browser runtime failures, including adapter behavior, optional user hooks, and test expectations.
+
+**Resolution:** The logging contract is implemented in `src/core/logging/` and documented in [docs/error-reporting.md](./error-reporting.md). Runtime helpers obtain a scoped logger via `getLogger(scope)`; callers configure the global sink and level through `configureLogging({ logger?, level? })`. The `no-console` lint rule enforces that the only sanctioned `console` call site is the built-in sink in `src/core/logging/logging.ts`. Serialized inline scripts (analytics bus, consent bootstrap) are a documented exception — they always write to `console` with the standard `[hydrogen:<level>:<scope>]` prefix.
 
 ---
 
@@ -66,7 +68,7 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 
 ## Per-query GraphQL API version override
 
-**Status:** Open — deferred, low priority
+**Status:** Closed — documented workaround (2026-07-28)
 **Added:** 2026-05-07
 
 **What:** The Storefront API version is currently set once at client creation time (`STOREFRONT_API_VERSION`). There is no mechanism to override the version for an individual query.
@@ -80,3 +82,5 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 2. Instruct users to create a separate `createStorefrontClient({ config: { apiVersion } })` instance for unstable queries, keeping type boundaries clean.
 
 **Done when:** We decide on an approach and either implement the escape hatch or document the separate-client workaround.
+
+**Resolution:** Approach #2 was chosen: create a separate `createStorefrontClient` instance with a different `apiVersion` for queries that need a different Storefront API version (e.g. `unstable`). This is already supported via the client config and keeps `gql.tada` type boundaries clean — each client infers types from its configured version's schema. The escape-hatch parameter (approach #1) was rejected as a type-safety footgun: a query running against a different version would have types that don't match the actual response shape, with no compiler warning. The workaround is documented in the JSDoc on the `apiVersion` field of `CommonOptions` in `src/client/types.ts`.

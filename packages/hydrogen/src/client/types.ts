@@ -53,6 +53,14 @@ export interface GraphQLFormattedError {
 
 type CommonOptions = {
   storeDomain: string;
+  /**
+   * Storefront API version used in the GraphQL endpoint path (`/api/<version>/graphql.json`).
+   * Defaults to the version baked into the package. To run individual queries against a different
+   * version (e.g. `unstable`), create a second `createStorefrontClient` instance with that
+   * `apiVersion` so gql.tada type boundaries stay clean — each client infers types from its
+   * configured version's schema, so mixing versions on one client would produce types that
+   * don't match the actual response shape with no compiler warning.
+   */
   apiVersion?: string;
   defaultTimeoutInMs?: number;
   cache?: CacheInstance;
