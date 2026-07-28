@@ -69,15 +69,6 @@ configureLogging({ logger?, level? });
 - `level` — minimum severity forwarded; defaults to `"info"`.
 - Last-call-wins: reconfiguring warns and applies the new options.
 
-### Why a global instead of per-factory options
-
-A single global configurator was a deliberate decision (over `logger` options on `createStorefrontClient`, `createCartStore`, components, etc.):
-
-- One injection point covers every surface — including module-level functions imported directly (form helpers, `configureCartEndpoint`, interceptors) that have no factory or props seam to thread a logger through.
-- Zero interface changes: no `logger`/`logLevel` noise duplicated across every public factory and component.
-- It is safe in both environments because the sink is per-JavaScript-context configuration, not request state: browsers call it once in the app entry; servers (Node or workerd/Oxygen isolates) call it at module init, before any request runs.
-- Resolution is lazy, so loggers obtained before `configureLogging` still route to the configured sink.
-
 ### Default console sink
 
 Formats entries as `[hydrogen:<level>:<scope>] <message>`, followed by `context.error` (if present) and a trailing object of remaining context fields.
