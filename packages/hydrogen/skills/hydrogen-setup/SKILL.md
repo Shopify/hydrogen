@@ -55,9 +55,9 @@ Do not hard block just because no reference file exists. Continue when the app h
 
 Use canonical environment variable names throughout the app. For Storefront API variables, see `hydrogen-storefront-client` for the canonical list.
 
-Customer Account API variables (documented here only):
+Also documented here:
 
-- `SHOP_ID` for the numeric Shopify shop ID string used by Customer Account API.
+- `SHOP_ID` for the numeric Shopify shop ID string. Required by Shopify runtime scripts (`ShopifyScripts`) for every storefront, and by Customer Account API.
 - `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID` for Customer Account OAuth.
 - `CUSTOMER_ACCOUNT_SESSION_SECRET` for encrypted cookie examples. Prefer opaque server-side sessions in production apps.
 

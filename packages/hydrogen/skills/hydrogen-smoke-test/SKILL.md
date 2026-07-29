@@ -25,7 +25,7 @@ Static checks:
 - [ ] Formatting check, if distinct from the fixer
 
 Request handlers:
-- [ ] POST /api/<api-version>/graphql.json returns Storefront API JSON, not the framework 404
+- [ ] POST /api/{api-version}/graphql.json returns Storefront API JSON, not the framework 404
 - [ ] GET /api/cart returns cart handler JSON (no cart cookie -> {cart: null})
 - [ ] GET /admin redirects to the configured shop/admin domain
 - [ ] Unknown path returns framework 404 unless a Shopify URL redirect matches
@@ -89,10 +89,10 @@ Run the app's available scripts:
 
 ## Request Handlers
 
-Replace `<port>` with the running app port:
+Replace `<port>` with the running app port, and `{api-version}` with the Storefront API version configured by the app:
 
 ```bash
-curl -i -X POST http://localhost:<port>/api/<api-version>/graphql.json \
+curl -i -X POST http://localhost:<port>/api/{api-version}/graphql.json \
   -H "content-type: application/json" \
   -H "X-Shopify-Storefront-Access-Token: <public-token>" \
   -d '{"query":"{ shop { name } }"}'
@@ -100,7 +100,7 @@ curl -i -X POST http://localhost:<port>/api/<api-version>/graphql.json \
 
 Expected: Storefront API JSON, not the framework 404.
 
-Use the Storefront API version configured by the app. The SFAPI proxy forwards the incoming public token header; it does not inject a token from server config.
+The SFAPI proxy forwards the incoming public token header; it does not inject a token from server config.
 
 ```bash
 curl -i http://localhost:<port>/api/cart
