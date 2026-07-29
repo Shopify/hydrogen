@@ -1,5 +1,14 @@
 packages:
   - packages/*
   - examples/*
+  - examples/poc/*
+allowBuilds:
+  "@parcel/watcher": false
+  esbuild: false
+  lefthook: true
+  msw: false
+  sharp: false
+  unrs-resolver: false
+  workerd: false
 catalog:
   typescript: ^5.9.3

@@ -371,6 +371,15 @@ export function createCustomerSession({
   };
 }
 
+/**
+ * Creates Customer Account server handlers (`/account/login`, `/account/authorize`,
+ * `/account/refresh`, `/account/logout`) for `handleShopifyRoutes`. The handlers
+ * return redirect results: `login` redirects to Shopify's OAuth, `logout` redirects
+ * to Shopify's logout endpoint when an `id_token` exists, and `authorize`/`refresh`
+ * redirect back to the app (same-origin `return_to`). Invoke these paths via
+ * full-page navigation (plain `<a>`/`<form>`), not a framework client-side
+ * navigation component — client-nav cannot follow these raw redirects.
+ */
 export function createCustomerAccountServerHandlers(
   options: CreateCustomerAccountServerHandlersOptions,
 ): CustomerAccountServerHandlers {

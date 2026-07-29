@@ -12,6 +12,7 @@ export const content = {
     search: "Search",
     account: "Account",
     back: "Back",
+    tryAgain: "Try again",
     close: "Close",
     drawer: "Drawer",
     dismiss: "Dismiss",
@@ -88,6 +89,7 @@ export const content = {
     priceTo: "to",
     loadMore: "Load more",
     showingCount: "Showing {{ shown }} of {{ total }} products",
+    showingCountPartial: "Showing {{ shown }} products",
     noProducts: "No products found.",
   },
   collections: {

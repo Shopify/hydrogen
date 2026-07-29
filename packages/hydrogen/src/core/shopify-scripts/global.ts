@@ -5,17 +5,33 @@ import {
   resolveStandardRouteUrl,
   type ShopifyRouteTemplates,
 } from "../standard-routes/index";
+import initializeShopifyGlobal from "./global-script" with { type: "script" };
 import type { ShopifyScriptsI18n } from "./types";
+import type { ShopifyScriptsShop } from "./types";
+import { asInlineScript } from "./utils/inline-script";
 
-type ShopifyGlobalConfig = {
+export type ShopifyGlobalConfig = {
   country: I18nConfig["country"];
+  currency?: NonNullable<ShopifyGlobal["currency"]>;
   locale: Lowercase<I18nConfig["language"]>;
+  customerPrivacy: {
+    config: NonNullable<ShopifyGlobal["customerPrivacy"]["config"]>;
+    consentStatus: NonNullable<ShopifyGlobal["customerPrivacy"]["consentStatus"]>;
+  };
   routes: {
     root: string;
   };
+  shop: string;
 };
 
-type IncompleteShopifyGlobal = Partial<Omit<ShopifyGlobal, "routes">> & {
+export type IncompleteCustomerPrivacy = Partial<
+  Omit<ShopifyGlobal["customerPrivacy"], "config">
+> & {
+  config?: Partial<NonNullable<ShopifyGlobal["customerPrivacy"]["config"]>>;
+};
+
+export type IncompleteShopifyGlobal = Partial<Omit<ShopifyGlobal, "customerPrivacy" | "routes">> & {
+  customerPrivacy?: IncompleteCustomerPrivacy;
   routes?: Partial<ShopifyGlobal["routes"]> & Record<string, unknown>;
   [key: string]: unknown;
 };
@@ -46,21 +62,23 @@ export function configureShopifyRouting({
   routes,
 }: {
   navigate?: ShopifyGlobal["navigate"];
-  routes: ShopifyRouteTemplates;
+  routes?: ShopifyRouteTemplates;
 }) {
   const shopify = getShopifyGlobal();
   if (!shopify) return;
 
-  const getRouteOptions = (url: string) => ({
-    baseUrl: window.location.href,
-    pathPrefix: shopify.routes?.root,
-    routeTemplates: routes,
-    url,
-  });
+  if (routes) {
+    const getRouteOptions = (url: string) => ({
+      baseUrl: window.location.href,
+      pathPrefix: shopify.routes?.root,
+      routeTemplates: routes,
+      url,
+    });
 
-  shopify.routes ??= {};
-  shopify.routes.match = (url) => matchStandardRouteUrl(getRouteOptions(url));
-  shopify.routes.resolve = (url) => resolveStandardRouteUrl(getRouteOptions(url));
+    shopify.routes ??= {};
+    shopify.routes.match = (url) => matchStandardRouteUrl(getRouteOptions(url));
+    shopify.routes.resolve = (url) => resolveStandardRouteUrl(getRouteOptions(url));
+  }
 
   shopify.navigate = navigate
     ? (url: string) => navigate(shopify.routes?.resolve?.(url) ?? url)
@@ -73,16 +91,26 @@ function getShopifyRoutesRoot(pathPrefix: I18nConfig["pathPrefix"]): string {
   return normalizedPathPrefix ? `/${normalizedPathPrefix}/` : DEFAULT_ROUTES_ROOT;
 }
 
+function normalizeMyshopifyDomain(domain: string): string {
+  return domain
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/+$/, "");
+}
+
 /**
  * Builds the inline bootstrap script that initializes `window.Shopify` for storefront scripts.
  */
 export function getShopifyGlobalBootstrapScript({
   i18n,
+  shop,
 }: {
   i18n?: ShopifyScriptsI18n;
-} = {}): string {
+  shop: ShopifyScriptsShop;
+}): string {
   const config: ShopifyGlobalConfig = {
     country: i18n?.country ?? DEFAULT_COUNTRY,
+    ...(i18n?.currency !== undefined ? { currency: { active: i18n.currency.toUpperCase() } } : {}),
     // oxlint-disable-next-line typescript/consistent-type-assertions
     locale: (i18n?.language ?? DEFAULT_LOCALE).toLowerCase() as Lowercase<
       ShopifyGlobalConfig["locale"]
@@ -90,31 +118,14 @@ export function getShopifyGlobalBootstrapScript({
     routes: {
       root: getShopifyRoutesRoot(i18n?.pathPrefix),
     },
+    shop: normalizeMyshopifyDomain(shop.myshopifyDomain),
+    customerPrivacy: {
+      config: {
+        isHeadless: true,
+      },
+      consentStatus: "pending",
+    },
   };
 
-  return `(${initializeShopifyGlobal.toString()})(${serializeScriptData(config)});`;
-}
-
-/**
- * Initializes `window.Shopify` in the browser.
- *
- * This function is serialized with `.toString()` and inlined into SSR HTML, so its runtime body
- * must stay self-contained. Do not reference module variables or imported values from here.
- */
-function initializeShopifyGlobal(config: ShopifyGlobalConfig) {
-  const shopifyWindow: { Shopify?: IncompleteShopifyGlobal } = window;
-  const shopify = (shopifyWindow.Shopify ??= {});
-
-  shopify.routes ??= {};
-
-  shopify.country = config.country;
-  shopify.locale = config.locale;
-  shopify.routes.root = config.routes.root;
-}
-
-function serializeScriptData(value: ShopifyGlobalConfig): string {
-  return JSON.stringify(value)
-    .replace(/</g, "\\u003c")
-    .replace(/\u2028/g, "\\u2028")
-    .replace(/\u2029/g, "\\u2029");
+  return asInlineScript(initializeShopifyGlobal)(config);
 }

@@ -114,7 +114,10 @@ export function PredictiveSearchProvider({
     ],
   );
 
-  useEffect(() => () => store.destroy(), [store]);
+  useEffect(() => {
+    store.connect();
+    return () => store.destroy();
+  }, [store]);
 
   const contextValue = useMemo(() => ({ store, searchAction }), [store, searchAction]);
 

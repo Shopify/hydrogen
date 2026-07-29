@@ -1,5 +1,7 @@
 # Hydrogen template: Skeleton
 
+This example is a mirror of the Hydrogen **Skeleton** template, kept in this repo for parity with Hydrogen classic (upstream `Shopify/hydrogen`). It's the source that `pnpm copy:hydrogen-preview` syncs into the upstream Hydrogen monorepo's `preview` branch, and it carries the skeleton's e2e/parity suite. It's not a from-scratch framework port like `react-router/` or `nextjs/` — it tracks the upstream skeleton.
+
 Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the modern multi-strategy router for React. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
 
 [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)

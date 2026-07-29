@@ -1,4 +1,4 @@
-import { Cache, type ConsentConfig, type ShopAnalytics } from "@shopify/hydrogen";
+import { Cache, type ConsentConfig } from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import {
   Outlet,
@@ -71,18 +71,17 @@ export async function loader(args: Route.LoaderArgs) {
 
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
-  const analyticsShop = getAnalyticsShop({
-    header: criticalData.header,
-    publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
-  });
+  const analyticsCurrency = getAnalyticsCurrency(criticalData.header);
   const shop = {
     shopId: env.SHOP_ID || criticalData.header.shop.id,
     storefrontId: env.PUBLIC_STOREFRONT_ID || FALLBACK_STOREFRONT_ID,
+    myshopifyDomain: env.PUBLIC_STORE_DOMAIN,
   };
   const i18n = {
     country: storefront.i18n.country,
     language: storefront.i18n.language,
     pathPrefix: storefront.i18n.pathPrefix,
+    ...(analyticsCurrency ? { currency: analyticsCurrency } : {}),
   };
 
   return {
@@ -90,11 +89,9 @@ export async function loader(args: Route.LoaderArgs) {
     ...criticalData,
     i18n,
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
-    analyticsShop,
     shop,
     consent: {
       mode: "no-banner",
-      publicStorefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
     } satisfies ConsentConfig,
   };
 }
@@ -120,24 +117,8 @@ async function loadCriticalData(args: Route.LoaderArgs) {
   return { cartData, header };
 }
 
-function getAnalyticsShop({
-  header,
-  publicStorefrontId,
-}: {
-  header: HeaderQuery;
-  publicStorefrontId: string;
-}): ShopAnalytics | null {
-  const currency = header.localization?.country?.currency?.isoCode;
-  const language = header.localization?.language?.isoCode;
-
-  if (!header.shop?.id || !currency || !language) return null;
-
-  return {
-    shopId: header.shop.id,
-    acceptedLanguage: language,
-    currency,
-    hydrogenSubchannelId: publicStorefrontId || FALLBACK_STOREFRONT_ID,
-  };
+function getAnalyticsCurrency(header: HeaderQuery): string | null {
+  return header.localization?.country?.currency?.isoCode ?? null;
 }
 
 /**
@@ -185,13 +166,16 @@ export function Layout({ children }: { children?: React.ReactNode }) {
         <link rel="stylesheet" href={appStyles}></link>
         <Meta />
         <Links />
-        <ShopifyScripts
-          nonce={nonce}
-          i18n={data?.i18n}
-          routes={routeTemplates}
-          shop={data?.shop}
-          navigate={navigate}
-        />
+        {data ? (
+          <ShopifyScripts
+            nonce={nonce}
+            i18n={data.i18n}
+            routes={routeTemplates}
+            shop={data.shop}
+            consent={data.consent}
+            navigate={navigate}
+          />
+        ) : null}
       </head>
       <body>
         {children}
@@ -217,7 +201,7 @@ export default function App() {
   }
 
   return (
-    <HydrogenAnalyticsProvider shop={data.analyticsShop} consent={data.consent}>
+    <HydrogenAnalyticsProvider>
       <CartProvider initialData={data.cartData}>
         <CartAnalyticsSync />
         <PageLayout {...data}>

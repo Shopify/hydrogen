@@ -2,7 +2,7 @@
 name: hydrogen-variant-form
 description: >
   Behavioral guide for building product variant selection UI with
-  @shopify/hydrogen. Use this skill whenever writing, modifying, or
+  @shopify/hydrogen. Use when writing, modifying, or
   reviewing product option selectors, variant pickers, or add-to-cart forms.
   Framework agnostic.
 ---
@@ -16,7 +16,7 @@ The product form primitive is a client-side store that computes per-option-value
 The store holds a `ProductFormStoreState` and notifies subscribers on change. It is initialized with a product object and a `CartStore` instance. The product includes `encodedVariantExistence`, `encodedVariantAvailability`, product options (each with `firstSelectableVariant` per option value), a sparse variant cache (`adjacentVariants`), and a nullable `selectedOrFirstAvailableVariant`.
 
 On initialization:
-1. The store uses the encoded fields, when present, to determine which option-value combinations **exist** and which are **available** (in stock).
+1. The store uses the encoded fields, when present, to determine which option-value combinations **exist** and which are **available** (in stock). Matching is symmetric: every option value is evaluated against all selected options that belong to the current product option matrix, regardless of option order.
 2. It stitches together the sparse variant cache (`adjacentVariants` + `firstSelectableVariant` per option value + `selectedOrFirstAvailableVariant`) to resolve a concrete `variant` object per option value where possible.
 3. It sets the initial selection from `selectedOrFirstAvailableVariant` (server-resolved), falling back to explicitly provided `selectedOptions`, falling back to empty selection.
 4. It subscribes to the `CartStore` to derive `matchedLineItem` and `errors` reactively.
@@ -45,8 +45,8 @@ interface ProductFormStoreState<TVariant> {
 
 - `value.name` — the option value label (e.g. "Red", "Small").
 - `value.selected` — whether this value is part of the current selection.
-- `value.exists` — resolved from `encodedVariantExistence` when present. `false` means no variant exists for this combination — the control should be disabled and visually de-emphasized.
-- `value.available` — resolved from `encodedVariantAvailability` when present. `false` means no available variant was found for this combination.
+- `value.exists` — resolved from `encodedVariantExistence` when present. `false` means no variant exists for the current symmetric selection constraints — the control should be disabled and visually de-emphasized.
+- `value.available` — resolved from `encodedVariantAvailability` when present. `false` means no available variant was found for the current symmetric selection constraints.
 - `value.variant` — the resolved variant object, or `null` if the combination is not in the local cache.
 - `value.selectedOptions` — the full option tuple that would result from selecting this value. Used for URL construction.
 - `value.handle` — the product handle for this variant. Differs from the current product's handle in combined listings.
@@ -116,24 +116,28 @@ Provider bindings should hydrate automatically when the product's semantic ident
 
 ## Extracting selected options from the URL
 
-`getSelectedProductOptions(input, opts?)` extracts selected options from a `Request`, `URL`, `URLSearchParams`, or URL string. Each query parameter is treated as an option name/value pair (e.g. `?Color=Red&Size=M` produces `[{name:"Color",value:"Red"},{name:"Size",value:"M"}]`).
+`getSelectedProductOptions({ searchParams, allowedOptionNames })` extracts selected options from `URLSearchParams`. Each query parameter is treated as an option name/value pair (e.g. `?Color=Red&Size=M` produces `[{name:"Color",value:"Red"},{name:"Size",value:"M"}]`).
 
-Pass `{ optionNames: [...] }` to filter to only known option names, avoiding unrelated query parameters.
+Pass `allowedOptionNames` to filter search params to only known product option names, avoiding unrelated query parameters. Passing an empty array filters out every option.
 
 ---
 
 ## Rules
 
+- **Hide the entire variant picker when no option has more than one value** (`options.every((o) => o.values.length <= 1)`). A single-variant product has nothing to choose — rendering its one option/one value is noise. This is distinct from the value-hiding rule below: it hides the *whole picker* when there's nothing to choose, not individual values based on selection.
+
 ### Existence and availability
 
+- **Availability and existence are symmetric.** Selecting a later option can make earlier option values unavailable or non-existent. For example, if `Medium / Olive` is sold out, selecting `Color=Olive` should mark `Size=Medium` as unavailable even though `Medium / Green` is available.
 - **ALWAYS disable and visually de-emphasize option values where `exists` is `false`.** These represent combinations that do not exist in the product's variant matrix. A non-existent combination cannot be selected — showing it as interactive is misleading.
-- **NEVER disable option values where `exists` is `true` but `available` is `false`.** These are sold-out variants. The control must remain interactive so the buyer can see what the variant would be. Show a "Sold out" indicator instead.
+- **NEVER disable option values where `exists` is `true` but `available` is `false`.** These are sold-out variants. The control must remain interactive so the buyer can see what the variant would be. Show a "Sold out" indicator instead, such as opacity plus line-through styling.
 - **NEVER hide option values based on the current selection.** All values for an option must always be visible. Hiding values based on what's currently selected creates a confusing, collapsing UI that prevents buyers from exploring the full product matrix.
 
 ### Selection and navigation
 
 - **With provider bindings, put URL navigation in the provider `onSelect` callback.** Do not navigate inside each same-product option button. Let `register("optionValue", ...)` call `selectOption`; the provider receives the valid selection result and owns URL sync from there.
 - **ALWAYS use URL-based variant selection in URL-routing apps.** When the buyer selects an option, navigate to the URL representing that selection — replacing the history entry and without resetting scroll position. The URL is the durable source of truth — the data loader reads the selection from the URL, queries the Storefront API, and the response hydrates the store when a reload or revalidation happens.
+- **Same-product option values must degrade to GET links (no JS).** In URL-routing apps, render each same-product option value as a real link (the framework's link component or `<a href>`) whose `href` is the option URL for that value, built from `value.selectedOptions` — not a bare `<button onClick>`. The `href` is the no-JS path: with scripting off, activating it issues a GET to the option URL, the loader reads the params, queries the Storefront API, and the server renders the newly selected variant. Hydration enhances the same element — the registered `register("optionValue", ...)` handler calls `selectOption` and the provider's `onSelect` replaces the URL client-side (no full reload). Because the `href` and the client navigation resolve to the same option URL, behavior is identical with or without JS. On a hydrated click the element both runs the registered handler (which calls `selectOption`) and performs its own link navigation to that same URL, so keep the provider `onSelect` idempotent — the redundant navigation is a harmless no-op. An option control that is button-/`onClick`-only renders nothing a no-JS shopper can act on, stranding them on the default variant. Non-existent combinations (`exists: false`) have no valid option URL to degrade to; render those as a disabled `<button>`, not a link. (Cross-product values are already links; this brings same-product values to parity.)
 - **ALWAYS use the `selectOption` return value for navigation, not a reactive effect on state.** `selectOption` returns the result synchronously. Use the returned `selectedOptions` to construct the next URL immediately. Reacting to derived state (e.g. `selectedOptions` from the store) instead introduces an unnecessary update cycle and risks stale values. Framework bindings may wrap this as an `onSelect` callback — the principle is the same.
 - **Skip data refetch only when the resolved local state is sufficient.** When `selectOption` returns `resolved`, the selected variant is already in the local cache. It is safe to skip revalidation only if the route does not need fresh loader data for other UI. When a complete selection returns `unresolved`, fetch or otherwise resolve the exact variant before treating the selection as complete.
 - **NEVER call `selectOption` for combined-listing cross-product values.** When `value.handle !== product.handle`, the value belongs to a different product. Render it as a navigation element (anchor or link component) that navigates to the other product's URL — not a button that calls `selectOption`. The store only knows about the current product's variant matrix.
@@ -143,6 +147,7 @@ Pass `{ optionNames: [...] }` to filter to only known option names, avoiding unr
 - **ALWAYS check `value.handle` against the current `product.handle`.** If they differ, the option value points to a different product in a combined listing. The UI must navigate to that product (full page navigation or a link component), not call `selectOption`.
 - **Use the framework's client-side link component for cross-product values when one exists.** Use the app's idiomatic navigation primitive. Use a raw `<a>` only when that is the app's established routing convention.
 - **Preserve non-option query params on combined-listing links.** When constructing the URL for a combined-listing link, carry forward existing search params (e.g. `?ref=campaign`) and replace only the option params. Two-pass URL construction: delete all option params first, then set the new ones — this prevents stale params when combined-listing products have different option names.
+- **Ignore selected options that are not in the current product option matrix.** Divergent combined-listing child products can have different option names. A stale `Color=Black` param must not constrain a child product whose options are `Size` and `Mount`.
 
 ### Price display
 
@@ -166,7 +171,7 @@ Pass `{ optionNames: [...] }` to filter to only known option names, avoiding unr
 
 ### Accessibility
 
-- **Use `aria-pressed` on option value buttons** to communicate the selected state to assistive technology. Derive it from the matching option value's `selected` state, for example `aria-pressed={value.selected}`.
+- **Communicate selected state with the attribute that fits the element.** Same-product and cross-product option values render as links (per the GET-links and combined-listing rules), so mark the selected one with `aria-current` — `aria-pressed` is not a valid state on a link. Reserve `aria-pressed={value.selected}` for values rendered as a `<button>`, chiefly the disabled non-existent (`exists: false`) case. Derive either from the matching option value's `selected` state.
 - **Use `aria-label` on visual-only controls** (e.g. color swatches without visible text).
 - **Disabled controls (`exists: false`) must use the native `disabled` attribute** — not `aria-disabled` with prevented clicks. Non-existent combinations are truly non-interactive.
 
@@ -184,53 +189,54 @@ Pass `{ optionNames: [...] }` to filter to only known option names, avoiding unr
 
 4. **Select a value** — Click an option value button. The value becomes selected (visually indicated). If the selection resolves to a variant, the price and variant details update immediately. `selectedVariant` updates on the state. In URL-routing apps, the URL updates to reflect the new selection without a scroll reset.
 5. **Multi-option selection** — On a product with Size and Color options, select Size=Large then Color=Blue. Both selections are reflected in the state. The resolved variant matches Large/Blue.
-6. **Switch within an option** — With Color=Red selected, click Color=Blue. The selection switches; Red is deselected, Blue is selected. Only one value per option is selected at a time.
-7. **Invalid selection ignored** — Calling `selectOption` with an unknown option name or value returns `invalid` with a `reason` string and does not change state. No navigation occurs.
-8. **Non-existent combination** — An option value where `exists: false` is disabled. Clicking it does nothing.
-9. **Sold-out variant** — An option value where `exists: true` and `available: false` is interactive but shows a "Sold out" indicator. Selecting it updates the state and shows the variant as unavailable.
+6. **Symmetric availability** — On a product where Medium/Olive is unavailable but Medium/Green is available, selecting Color=Olive marks Size=Medium as `available: false`; selecting Color=Green marks Size=Medium as `available: true`.
+7. **Switch within an option** — With Color=Red selected, click Color=Blue. The selection switches; Red is deselected, Blue is selected. Only one value per option is selected at a time.
+8. **Invalid selection ignored** — Calling `selectOption` with an unknown option name or value returns `invalid` with a `reason` string and does not change state. No navigation occurs.
+9. **Non-existent combination** — An option value where `exists: false` is disabled. Clicking it does nothing.
+10. **Sold-out variant** — An option value where `exists: true` and `available: false` is interactive but shows a "Sold out" indicator. Selecting it updates the state and shows the variant as unavailable.
 
 ### Combined listings
 
-10. **Cross-product value** — An option value where `value.handle !== product.handle` renders as a navigation element (anchor or link component), not a button. Clicking it navigates to the other product's page with the appropriate option params.
-11. **Same-product value** — An option value where `value.handle === product.handle` renders as a button that calls `selectOption`.
-12. **Preserved params** — When navigating via a combined-listing link, non-option query params from the current URL are preserved in the destination URL.
+11. **Cross-product value** — An option value where `value.handle !== product.handle` renders as a navigation element (anchor or link component), not a button. Clicking it navigates to the other product's page with the appropriate option params.
+12. **Same-product value** — An option value where `value.handle === product.handle` renders as a GET link to its option URL and spreads `register("optionValue", ...)`. With JavaScript disabled the link navigates and the server resolves the variant; hydrated, the registered handler calls `selectOption` and the provider syncs the URL client-side.
+13. **Preserved params** — When navigating via a combined-listing link, non-option query params from the current URL are preserved in the destination URL.
 
 ### Hydration
 
-13. **Product navigation** — Navigating from Product A to Product B (different `product.id`) hydrates the store with Product B's data. The selection reflects Product B's `selectedOrFirstAvailableVariant`.
-14. **Same product, different variant** — Navigating to the same product with a different URL-encoded selection (e.g. `?Color=Blue` instead of `?Color=Red`) hydrates with the new pre-selected variant without recreating the store.
-15. **Unrelated re-render** — A re-render that passes the same product identity does not hydrate. User selections made since the last hydration are preserved.
-16. **No double-init on mount** — On initial mount, the store initializes from the constructor — hydration does not fire. A user selection made immediately after mount survives a subsequent re-render with the same product.
+14. **Product navigation** — Navigating from Product A to Product B (different `product.id`) hydrates the store with Product B's data. The selection reflects Product B's `selectedOrFirstAvailableVariant`.
+15. **Same product, different variant** — Navigating to the same product with a different URL-encoded selection (e.g. `?Color=Blue` instead of `?Color=Red`) hydrates with the new pre-selected variant without recreating the store.
+16. **Unrelated re-render** — A re-render that passes the same product identity does not hydrate. User selections made since the last hydration are preserved.
+17. **No double-init on mount** — On initial mount, the store initializes from the constructor — hydration does not fire. A user selection made immediately after mount survives a subsequent re-render with the same product.
 
 ### Cart integration
 
-17. **Matched line item** — When the selected variant's ID matches a cart line's `merchandise.id`, `matchedLineItem` is non-null and contains the cart line data.
-18. **Cart error surfacing** — After a failed add-to-cart submission, `errors.userErrors` contains the relevant user errors, `errors.warnings` contains warnings, and `errors.networkErrors` contains any network failures.
-19. **Reactive cart sync** — When the cart updates externally (e.g. quantity change from a cart drawer), the `matchedLineItem` and `errors` update without any manual intervention.
+18. **Matched line item** — When the selected variant's ID matches a cart line's `merchandise.id`, `matchedLineItem` is non-null and contains the cart line data.
+19. **Cart error surfacing** — After a failed add-to-cart submission, `errors.userErrors` contains the relevant user errors, `errors.warnings` contains warnings, and `errors.networkErrors` contains any network failures.
+20. **Reactive cart sync** — When the cart updates externally (e.g. quantity change from a cart drawer), the `matchedLineItem` and `errors` update without any manual intervention.
 
 ### Add-to-cart
 
-20. **Enabled state** — When `canAddToCart` returns `true` (variant selected, available, no selling plan required), the add-to-cart button is enabled and shows "Add to cart".
-21. **Disabled — no variant** — When no variant is selected, the button is disabled with "Select options" text unless navigation or submission is actually pending.
-22. **Disabled — sold out** — When the selected variant is not available for sale, the button is disabled with "Unavailable" or "Sold out" text.
-23. **Disabled — selling plan required** — When `product.requiresSellingPlan` is `true`, the button is disabled regardless of variant selection.
-24. **Variant ID in form** — `register("merchandiseId", {})` returns `{ name: "merchandiseId", value: selectedVariantId }`. When no variant is selected, `value` is an empty string.
-25. **Form submission** — `handleFormSubmit(event)` delegates to the cart store with the submit event and selected-product detail when a variant is resolved. Cart errors surface reactively via the `errors` state.
+21. **Enabled state** — When `canAddToCart` returns `true` (variant selected, available, no selling plan required), the add-to-cart button is enabled and shows "Add to cart".
+22. **Disabled — no variant** — When no variant is selected, the button is disabled with "Select options" text unless navigation or submission is actually pending.
+23. **Disabled — sold out** — When the selected variant is not available for sale, the button is disabled with "Unavailable" or "Sold out" text.
+24. **Disabled — selling plan required** — When `product.requiresSellingPlan` is `true`, the button is disabled regardless of variant selection.
+25. **Variant ID in form** — `register("merchandiseId", {})` returns `{ name: "merchandiseId", value: selectedVariantId }`. When no variant is selected, `value` is an empty string.
+26. **Form submission** — `handleFormSubmit(event)` delegates to the cart store with the submit event and selected-product detail when a variant is resolved. Cart errors surface reactively via the `errors` state.
 
 ### Register API
 
-26. **Option value registration** — `register("optionValue", { optionName: "Color", value: "Red" })` returns `{ name, value, onChange, onClick }`. Calling `onChange` or `onClick` triggers `selectOption`.
-27. **Caller-owned option attributes** — `register("optionValue", { optionName: "Color", value: "Red" })` returns only `{ name, value, onChange, onClick }`. Derive `disabled`, `aria-pressed`, and visual state from the matching `options` value.
-28. **Quantity registration** — `register("quantity", { value: 1 })` returns `{ name: "quantity", value: "1" }`. `register("quantity", { defaultValue: 1 })` returns `{ name: "quantity", defaultValue: "1" }`.
-29. **Add-to-cart registration** — `register("addToCart", {})` returns `{ name: "add-to-cart", type: "submit" }`.
+27. **Option value registration** — `register("optionValue", { optionName: "Color", value: "Red" })` returns `{ name, value, onChange, onClick }`. Calling `onChange` or `onClick` triggers `selectOption`.
+28. **Caller-owned option attributes** — `register("optionValue", { optionName: "Color", value: "Red" })` returns only `{ name, value, onChange, onClick }`. Derive `disabled`, `aria-pressed`, and visual state from the matching `options` value.
+29. **Quantity registration** — `register("quantity", { value: 1 })` returns `{ name: "quantity", value: "1" }`. `register("quantity", { defaultValue: 1 })` returns `{ name: "quantity", defaultValue: "1" }`.
+30. **Add-to-cart registration** — `register("addToCart", {})` returns `{ name: "add-to-cart", type: "submit" }`.
 
 ### Unresolved selection
 
-30. **Transient unresolved** — In URL-routing apps, when a complete selection returns `unresolved` because the exact variant is absent from the local cache, the app navigates to the new URL and re-fetches product data. The subsequent hydration resolves the variant. Incomplete selections should remain in selection UI until the buyer chooses the remaining options.
+31. **Transient unresolved** — In URL-routing apps, when a complete selection returns `unresolved` because the exact variant is absent from the local cache, the app navigates to the new URL and re-fetches product data. The subsequent hydration resolves the variant. Incomplete selections should remain in selection UI until the buyer chooses the remaining options.
 
 ### Reset
 
-31. **Reset to initial state** — Calling `reset()` restores the store to the product and selected options it was created with. All user selections are discarded.
+32. **Reset to initial state** — Calling `reset()` restores the store to the product and selected options it was created with. All user selections are discarded.
 
 ---
 
@@ -242,6 +248,7 @@ Pass `{ optionNames: [...] }` to filter to only known option names, avoiding unr
 - **Recreating the store on product prop changes.** Use `hydrate()` instead. Recreating discards the decoded variant cache, the cart subscription, and any user interaction state.
 - **Using reactive effects on state to sync selection to URL.** The `selectOption` return value provides the selection result synchronously. Reacting to `state.selectedOptions` instead introduces an extra update cycle and can fire with stale values.
 - **Navigating inside same-product option buttons.** Do not destructure `onClick` / `onChange` from `register("optionValue", ...)`, call `navigate()`, and then call the registered handler manually. This bypasses the provider `onSelect` contract and can navigate from stale or invalid data.
+- **Button-/onClick-only same-product option values.** A same-product option value rendered as `<button onClick={selectOption}>` with no `href` is dead without JavaScript — a no-JS shopper cannot switch variants and is stuck on the default. Render it as a GET link to the option URL and let the registered handler enhance it; the `href` is the progressive-enhancement fallback.
 - **Calling `selectOption` for combined-listing values.** When `value.handle` differs from the current product's handle, the value belongs to a different product. Use a navigation element (anchor or link component) for full navigation — `selectOption` only understands the current product's matrix.
 - **Using raw anchors when the framework has a client-side link component.** Raw `<a>` tags lose client-router behavior such as scroll preservation, pending navigation state, prefetching, and route transitions. Use the app's established link component unless raw anchors are the framework convention.
 - **Checking only `selectedVariant !== null` for add-to-cart.** This misses two constraints: the variant must be `availableForSale`, and `product.requiresSellingPlan` must not be `true`. Use `canAddToCart()`.

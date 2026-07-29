@@ -5,6 +5,7 @@ import { CollectionCard } from "~/components/CollectionCard";
 import { ProductCard } from "~/components/ProductCard";
 import { content } from "~/lib/content";
 import { PRODUCT_CARD_FRAGMENT, COLLECTION_CARD_FRAGMENT } from "~/lib/fragments";
+import { shopNameFromMatches, shopTitle } from "~/lib/meta";
 import { canonicalUrl } from "~/lib/site";
 import { storefrontClientContext } from "~/lib/storefront-context";
 
@@ -29,12 +30,14 @@ const HOME_QUERY = gql(
   [PRODUCT_CARD_FRAGMENT, COLLECTION_CARD_FRAGMENT],
 );
 
-export const meta: MetaFunction = () => {
+export const meta: MetaFunction = ({ matches }) => {
+  const shopName = shopNameFromMatches(matches);
+  const title = shopTitle(content.home.hero.heading, shopName);
   return [
-    { title: "CORE — Discover our latest collection" },
+    { title },
     { name: "description", content: content.home.hero.subtitle },
     { tagName: "link", rel: "canonical", href: canonicalUrl("/") },
-    { property: "og:title", content: "CORE — Discover our latest collection" },
+    { property: "og:title", content: title },
     { property: "og:description", content: content.home.hero.subtitle },
     { property: "og:type", content: "website" },
     { property: "og:url", content: canonicalUrl("/") },

@@ -3,7 +3,9 @@ dist/
 .venv/
 .env
 .env.*
+!.env.example
 !examples/hydrogen/e2e/envs/.env.*
+.cert/
 *.log
 .DS_Store
 Thumbs.db
@@ -11,4 +13,11 @@ e2e-run-results/
 e2e-run-logs
 .turbo
 .storefront-benchmark-workspace/
+# Local working notes (issue/feedback tracking logs, not committed).
+notes/
 tsconfig.tsbuildinfo
+examples/**/customer-account-graphql-env.d.ts
+examples/**/storefront-graphql-env.d.ts
+packages/*/playwright-report/
+packages/*/test-results/
+examples/hydrogen/.tmp/

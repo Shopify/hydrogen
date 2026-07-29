@@ -13,6 +13,7 @@ import {
   type SubmitEvent,
 } from "react";
 
+import { trackCartAnalytics } from "../core/analytics/cart-tracker";
 import { attachQuantityInput } from "../core/cart/attach-quantity-input";
 import {
   configureCartEndpoint as configureCoreCartEndpoint,
@@ -22,7 +23,7 @@ import {
 } from "../core/cart/cart";
 import { createCartFormRegister } from "../core/cart/form";
 import type { CartDataFromHandlers } from "../core/cart/server-handlers";
-import type { CartData, CartState } from "../core/cart/state";
+import { type CartData, type CartState } from "../core/cart/state";
 
 const DEFAULT_CART_ENDPOINT = "/api/cart";
 
@@ -50,6 +51,10 @@ type CartInitialData<TData extends CartData = CartData> =
 type TypedCartComponents<TData extends CartData> = {
   CartProvider: (props: TypedCartProviderProps<TData>) => ReactNode;
   useCart: <S>(selector: (state: CartState<TData>) => S, isEqual?: (a: S, b: S) => boolean) => S;
+  useSuspenseCart: <S>(
+    selector: (state: CartState<TData>) => S,
+    isEqual?: (a: S, b: S) => boolean,
+  ) => S;
   useOptionalCart: <S>(
     selector: (state: CartState<TData>) => S,
     isEqual?: (a: S, b: S) => boolean,
@@ -84,9 +89,19 @@ export function createCartComponents<THandlers>(): TypedCartComponents<
     return useOptionalCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);
   }
 
+  function useSuspenseCart<S>(
+    selector: (state: CartState<TData>) => S,
+    isEqual?: (a: S, b: S) => boolean,
+  ): S {
+    const readyPromise = useCart((state) => state.readyPromise);
+    if (readyPromise) throw readyPromise;
+    return useCart(selector, isEqual);
+  }
+
   return {
     CartProvider: TypedCartProvider,
     useCart: useTypedCart,
+    useSuspenseCart,
     useOptionalCart: useTypedOptionalCart,
     useCartForm,
   } as const;
@@ -129,6 +144,12 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 ): S {
   const store = useCartStore();
   return useCartSelector(store, selector, isEqual) as S;
+}
+
+export function useCartAnalytics(): void {
+  const store = useCartStore();
+
+  useEffect(() => trackCartAnalytics(store), [store]);
 }
 
 /**

@@ -43,7 +43,7 @@ export type {
   StorefrontGraphqlOptions,
   StorefrontGraphqlResult,
 } from "../client/types";
-export { AnalyticsEvent, createStorefrontAnalytics } from "./analytics";
+export { AnalyticsEvent, trackCartAnalytics } from "./analytics";
 export type {
   AnalyticsCart,
   AnalyticsCartLine,
@@ -66,7 +66,6 @@ export type {
   StorefrontAnalyticsConfig,
   StorefrontAnalyticsDestination,
   StorefrontAnalyticsDestinationSetupContext,
-  StorefrontAnalyticsOptions,
 } from "./analytics";
 export {
   configureCartEndpoint,
@@ -125,7 +124,8 @@ export {
   renderShopifyScriptTags,
 } from "./shopify-scripts/index";
 export type {
-  InitializeShopifyScriptsOptions,
+  ShopifyRoutesOptions,
+  ShopifyScriptsAnalyticsConfig,
   ShopifyScriptTagDescriptor,
   ShopifyScriptTagDescriptors,
   ShopifyScriptsOptions,

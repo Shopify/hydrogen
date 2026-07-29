@@ -15,7 +15,10 @@ import type {
 } from "../../../vendor/standard-events";
 import type { CartErrorCode, CartWarningCode } from "../../graphql/generated/storefront-api-types";
 import { createObservable } from "../observable";
-import { SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT } from "../shopify-scripts/index";
+import {
+  SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
+  VISITOR_CONSENT_COLLECTED_EVENT,
+} from "../shopify-scripts";
 import { sanitizeQuantity, DEFAULT_MINIMUM_QUANTITY } from "./quantity";
 import type {
   CartData,
@@ -66,6 +69,7 @@ export class CartNetworkError extends Error {
 
 export const STANDARD_ACTION_TIMEOUT_IN_MS = 30_000;
 const OPTIMISTIC_LINE_ID_PREFIX = "optimistic:";
+const NOOP = () => {};
 
 export type CartStore = {
   connect(): void;
@@ -74,12 +78,13 @@ export type CartStore = {
   getState(): CartState;
   subscribe(listener: (state: CartState) => void): () => void;
   fetch(): Promise<void>;
+  /** Clears local cart state. Connected stores also start a fresh full-cart load. */
   reset(): void;
   handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;
 };
 
 type CartStoreContext = {
-  observable: ReturnType<typeof createObservable<CartState>>;
+  observable: ReturnType<typeof createCartObservable>;
   activeCartLoad: ActiveCartLoad | null;
   lineControllers: Map<string, AbortController>;
   discountController: AbortController | null;
@@ -108,6 +113,7 @@ type ActiveCartLoad = {
    */
   state: CartState;
   promise: Promise<void>;
+  resolveReadyPromise: () => void;
 };
 
 type CartInitialData<TData extends CartData = CartData> = {
@@ -125,23 +131,30 @@ type CartEventHandlers = {
   note: EventListener;
 };
 
+type InitialDataState<TData extends CartData> =
+  | { type: "async"; data: PromiseLike<CartInitialData<TData>> }
+  | { type: "sync"; data: TData }
+  | { type: "null" }
+  | { type: "omitted" };
+
 export function createCartStore<TData extends CartData = CartData>(
   options: CreateCartStoreOptions<TData> = {},
 ): CartStore {
   const initialData = options.initialData;
-  const isAsyncInitialData = isPromiseLike<CartInitialData<TData>>(initialData);
-  const isSyncInitialData = initialData !== undefined && !isAsyncInitialData;
-  const initialCart = isSyncInitialData ? initialData.cart : null;
-  const isHydratedInitialCart = initialCart != null;
+  const initialDataState = getInitialDataState(initialData);
+  const initialState =
+    initialDataState.type === "async" || initialDataState.type === "omitted"
+      ? createEmptyCartState({ loading: true })
+      : initialDataState.type === "sync"
+        ? createCartState(initialDataState.data)
+        : createEmptyCartState({ loading: false });
 
-  const context: CartStoreContext = {
-    observable: createObservable<CartState>(
-      isHydratedInitialCart
-        ? createCartState(initialCart)
-        : isSyncInitialData
-          ? createEmptyCartState({ loading: false })
-          : createEmptyCartState(),
-    ),
+  let context: CartStoreContext | undefined;
+  const observable = createCartObservable(initialState, () => {
+    if (context) invalidateActiveCartLoad(context);
+  });
+  context = {
+    observable,
     activeCartLoad: null,
     lineControllers: new Map<string, AbortController>(),
     discountController: null,
@@ -162,24 +175,23 @@ export function createCartStore<TData extends CartData = CartData>(
       handleCartNoteUpdate(context, event as CartNoteUpdateEvent)) as EventListener,
   };
 
-  /**
-   * Initial cart loading is deferred until `connect()` so SSR stays side-effect
-   * free. The flag also makes reconnects, including React StrictMode
-   * mount/unmount cycles, reuse the first initial load instead of starting
-   * another browser fetch. Sync initial data includes `{cart: null}`, which
-   * means the server already settled the bootstrap with no cart.
-   */
-  let initialCartLoadStarted = isSyncInitialData;
+  if (initialDataState.type === "async") {
+    const initialCartPromise = Promise.resolve(initialDataState.data).then(({ cart }) => cart);
+    loadCartInStore(context, initialCartPromise).catch((error: unknown) =>
+      console.error("[hydrogen] cart initial load failed:", error),
+    );
+  }
+
+  let initialCartLoadStarted = initialDataState.type !== "omitted";
 
   return {
     connect: () => {
       const connected = connectCartStore(context, eventHandlers);
       if (connected && !initialCartLoadStarted) {
         initialCartLoadStarted = true;
-        loadCartInStore(
-          context,
-          isAsyncInitialData ? Promise.resolve(initialData).then((data) => data.cart) : undefined,
-        ).catch((error: unknown) => console.error("[hydrogen] cart initial load failed:", error));
+        loadCartInStore(context).catch((error: unknown) =>
+          console.error("[hydrogen] cart initial load failed:", error),
+        );
       }
     },
     destroy: () => destroyCartStore(context, eventHandlers),
@@ -368,18 +380,59 @@ function destroyCartStore(store: CartStoreContext, eventHandlers: CartEventHandl
   }
 
   connectedCartStores.delete(store);
+  detachCartConsentListenerIfIdle();
   store.cartSyncAttached = false;
+}
+
+function createCartObservable(initialState: CartState, onReadyPromiseRemoved: () => void) {
+  const observable = createObservable(initialState);
+
+  return {
+    get state() {
+      return observable.state;
+    },
+    subscribe: observable.subscribe,
+    setState(next: CartState | ((prev: CartState) => CartState)): void {
+      observable.setState((prev) => {
+        const nextState = typeof next === "function" ? next(prev) : next;
+        if (Object.is(nextState, prev)) return prev;
+        if (prev.readyPromise) onReadyPromiseRemoved();
+        return withoutReadyPromise(nextState);
+      });
+    },
+    setReadyState(next: CartState): void {
+      observable.setState(next);
+    },
+    clearReadyState(): void {
+      observable.setState(withoutReadyPromise(observable.state));
+    },
+  };
+}
+
+function withoutReadyPromise(state: CartState): CartState {
+  if (!state.readyPromise) return state;
+  const nextState = { ...state, loading: false };
+  delete nextState.readyPromise;
+  return nextState;
+}
+
+function invalidateActiveCartLoad(store: CartStoreContext): void {
+  const activeCartLoad = store.activeCartLoad;
+  if (!activeCartLoad) return;
+  store.activeCartLoad = null;
+  activeCartLoad.resolveReadyPromise();
 }
 
 /**
  * Run a full-cart load through the shared stale-result guard and dedupe slot.
  *
- * This is used by the first client connect load and by explicit revalidation
- * from `store.fetch()`. Callers may provide an existing promise-like source,
- * such as async initial data; otherwise this function creates the browser fetch
- * after checking whether the current state already has an active load. Once the
- * load settles, the slot is cleared; if state changes first, the stale result is
- * ignored and a later `store.fetch()` can start a fresh load.
+ * This is used by full-cart loads such as the first client connect load,
+ * explicit revalidation from `store.fetch()`, and connected `store.reset()`.
+ * Callers may provide an existing promise-like source, such as async initial
+ * data; otherwise this function creates the browser fetch after checking
+ * whether the current state already has an active load. Once the load settles,
+ * the slot is cleared; if state changes first, the stale result is ignored and a
+ * later full-cart load can start fresh.
  */
 function loadCartInStore(
   store: CartStoreContext,
@@ -390,8 +443,14 @@ function loadCartInStore(
     return existingRequest.promise;
   }
 
+  invalidateActiveCartLoad(store);
+
+  let resolveReadyPromise = NOOP;
+  const readyPromise = new Promise<void>((resolve) => {
+    resolveReadyPromise = resolve;
+  });
   let request: ActiveCartLoad;
-  const state = store.observable.state;
+  const state = { ...store.observable.state, readyPromise };
   const promise = Promise.resolve(cartPromise ?? fetchCartData(state.data.id))
     .then((data) => {
       if (!isCurrentCartLoad(store, request)) return;
@@ -413,10 +472,12 @@ function loadCartInStore(
       if (store.activeCartLoad === request) {
         store.activeCartLoad = null;
       }
+      request.resolveReadyPromise();
     });
 
-  request = { state, promise };
+  request = { state, promise, resolveReadyPromise };
   store.activeCartLoad = request;
+  store.observable.setReadyState(state);
   return promise;
 }
 
@@ -438,15 +499,32 @@ function isPromiseLike<T>(value: unknown): value is PromiseLike<T> {
   );
 }
 
+function getInitialDataState<TData extends CartData>(
+  initialData: CreateCartStoreOptions<TData>["initialData"],
+): InitialDataState<TData> {
+  if (isPromiseLike<CartInitialData<TData>>(initialData))
+    return { type: "async", data: initialData };
+  if (initialData === undefined) return { type: "omitted" };
+  if (initialData.cart === null) return { type: "null" };
+  return { type: "sync", data: initialData.cart };
+}
+
 function hydrateCartInStore(store: CartStoreContext, data: CartData): void {
   const current = store.observable.state;
-  if (current.data.id !== null && current.data.id === data.id) return;
+  invalidateActiveCartLoad(store);
+
+  if (current.data.id !== null && current.data.id === data.id) {
+    store.observable.clearReadyState();
+    return;
+  }
   if (
     current.pending.lines.size > 0 ||
     current.pending.note ||
     current.pending.discountCodes.size > 0
-  )
+  ) {
+    store.observable.clearReadyState();
     return;
+  }
 
   store.observable.setState(createCartState(data));
 }
@@ -532,8 +610,15 @@ export function revalidateConnectedCartCheckoutUrls(): void {
 
 function resetCartStore(store: CartStoreContext): void {
   clearPendingWork(store);
-  store.activeCartLoad = null;
+  invalidateActiveCartLoad(store);
   store.observable.setState(createEmptyCartState());
+
+  if (store.cartSyncAttached) {
+    const cartLoadPromise = loadCartInStore(store);
+    cartLoadPromise.catch((error: unknown) =>
+      console.error("[hydrogen] cart reset load failed:", error),
+    );
+  }
 }
 
 function reconcileLines(
@@ -1221,6 +1306,7 @@ let configuredCartEndpoint: string | null = null;
 let hasConfiguredUpdateCart = false;
 let standardActionsPromise: Promise<ShopifyStandardActions> | null = null;
 const connectedCartStores = new Set<CartStoreContext>();
+let cartConsentListenerAttached = false;
 
 /** @internal */
 export function resetStandardActionsForTests(): void {
@@ -1267,6 +1353,7 @@ function connectCartStore(store: CartStoreContext, eventHandlers: CartEventHandl
   if (!store.cartSyncAttached) {
     store.cartSyncAttached = true;
     connectedCartStores.add(store);
+    attachCartConsentListener();
 
     document.addEventListener("shopify:cart:lines-update", eventHandlers.lines);
     document.addEventListener("shopify:cart:discount-update", eventHandlers.discount);
@@ -1275,6 +1362,24 @@ function connectCartStore(store: CartStoreContext, eventHandlers: CartEventHandl
 
   void getShopifyStandardActions().catch(() => {});
   return true;
+}
+
+function handleVisitorConsentCollected(): void {
+  revalidateConnectedCartCheckoutUrls();
+}
+
+function attachCartConsentListener(): void {
+  if (cartConsentListenerAttached) return;
+
+  document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, handleVisitorConsentCollected);
+  cartConsentListenerAttached = true;
+}
+
+function detachCartConsentListenerIfIdle(): void {
+  if (!cartConsentListenerAttached || connectedCartStores.size > 0) return;
+
+  document.removeEventListener(VISITOR_CONSENT_COLLECTED_EVENT, handleVisitorConsentCollected);
+  cartConsentListenerAttached = false;
 }
 
 function collectMerchandiseSignals(payload: UpdateCartPayload | undefined): AbortSignal[] {

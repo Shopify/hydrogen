@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { createShopifyRequestContext } from "../headers";
+import {
+  createShopifyRequestContext,
+  SHOPIFY_CLIENT_IP_HEADER,
+  STOREFRONT_BUYER_IP_HEADER,
+  STOREFRONT_PRIVATE_TOKEN_HEADER,
+} from "../headers";
 import { assert } from "../test-utils";
 import { handleSfapiProxy as handleSfapiProxyImpl } from "./sfapi-proxy";
 
 const defaultStoreUrl = "https://test-store.myshopify.com";
+const defaultBuyerIp = "127.0.0.1";
 
 function createRequest(
   path: string,
@@ -17,7 +23,58 @@ function createRequest(
   });
 }
 
-function handleSfapiProxy(request: Request, storeUrl = defaultStoreUrl) {
+function handleSfapiProxy(request: Request, storeUrl = defaultStoreUrl, buyerIp = defaultBuyerIp) {
+  const requestContext = createShopifyRequestContext({
+    request,
+    i18n: { country: "US", language: "EN" },
+    buyerIp,
+  });
+  return handleSfapiProxyImpl({
+    request,
+    requestContext,
+    sessionManager: createTestSessionManager(request),
+    storefrontClient: {
+      type: "private",
+      i18n: { country: "US", language: "EN", pathPrefix: "" },
+      storeUrl,
+      apiUrl: `${storeUrl}/api/2026-04/graphql.json`,
+      requestContext,
+      graphql: vi.fn(),
+    },
+  });
+}
+
+function handleSfapiProxyWithClientType(
+  request: Request,
+  type: "public" | "private_no_buyer_context",
+  storeUrl = defaultStoreUrl,
+  buyerIp?: string,
+) {
+  const requestContext = createShopifyRequestContext({
+    request,
+    i18n: { country: "US", language: "EN" },
+    buyerIp,
+  });
+  const clientBase = {
+    i18n: { country: "US", language: "EN", pathPrefix: "" } as const,
+    storeUrl,
+    apiUrl: `${storeUrl}/api/2026-04/graphql.json`,
+    requestContext,
+    graphql: vi.fn(),
+  };
+  const storefrontClient =
+    type === "public"
+      ? { ...clientBase, type: "public" as const }
+      : { ...clientBase, type: "private_no_buyer_context" as const };
+  return handleSfapiProxyImpl({
+    request,
+    requestContext,
+    sessionManager: createTestSessionManager(request),
+    storefrontClient,
+  });
+}
+
+function handlePrivateSfapiProxyWithoutBuyerContext(request: Request, storeUrl = defaultStoreUrl) {
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
@@ -188,10 +245,15 @@ describe("handleSfapiProxy", () => {
     expect(headers.get("X-Shopify-Storefront-Access-Token")).toBe("browser-token");
   });
 
-  it("does not infer buyer IP headers from the request", async () => {
+  it("forwards the incoming private Storefront API token header", async () => {
+    const privateToken = "private-token";
+
     await handleSfapiProxy(
       createRequest("/api/2025-01/graphql.json", {
-        headers: { "oxygen-buyer-ip": "1.2.3.4" },
+        headers: {
+          "content-type": "application/json",
+          [STOREFRONT_PRIVATE_TOKEN_HEADER]: privateToken,
+        },
       }),
       defaultStoreUrl,
     );
@@ -200,8 +262,79 @@ describe("handleSfapiProxy", () => {
     assert(call, "expected fetch to be called");
     const [, init] = call;
     const headers = new Headers(init.headers);
-    expect(headers.get("X-Shopify-Client-IP")).toBeNull();
+    expect(headers.get(STOREFRONT_PRIVATE_TOKEN_HEADER)).toBe(privateToken);
+  });
+
+  it("uses the request context buyer IP instead of browser-supplied buyer IP", async () => {
+    const trustedBuyerIp = "1.2.3.4";
+    const browserBuyerIp = "5.6.7.8";
+
+    await handleSfapiProxy(
+      createRequest("/api/2025-01/graphql.json", {
+        headers: { [STOREFRONT_BUYER_IP_HEADER]: browserBuyerIp },
+      }),
+      defaultStoreUrl,
+      trustedBuyerIp,
+    );
+
+    const call = mockFetch.mock.calls[0];
+    assert(call, "expected fetch to be called");
+    const [, init] = call;
+    const headers = new Headers(init.headers);
+    expect(headers.get(STOREFRONT_BUYER_IP_HEADER)).toBe(trustedBuyerIp);
+    expect(headers.get(SHOPIFY_CLIENT_IP_HEADER)).toBe(trustedBuyerIp);
     expect(headers.get("x-forwarded-for")).toBeNull();
+  });
+
+  it.each(["public", "private_no_buyer_context"] as const)(
+    "adds request context buyer IP headers for %s clients",
+    async (clientType) => {
+      const trustedBuyerIp = "1.2.3.4";
+      const browserBuyerIp = "5.6.7.8";
+
+      await handleSfapiProxyWithClientType(
+        createRequest("/api/2025-01/graphql.json", {
+          headers: { [STOREFRONT_BUYER_IP_HEADER]: browserBuyerIp },
+        }),
+        clientType,
+        defaultStoreUrl,
+        trustedBuyerIp,
+      );
+
+      const call = mockFetch.mock.calls[0];
+      assert(call, "expected fetch to be called");
+      const [, init] = call;
+      const headers = new Headers(init.headers);
+      expect(headers.get(STOREFRONT_BUYER_IP_HEADER)).toBe(trustedBuyerIp);
+      expect(headers.get(SHOPIFY_CLIENT_IP_HEADER)).toBe(trustedBuyerIp);
+    },
+  );
+
+  it("does not add buyer IP headers without request context buyer IP", async () => {
+    const browserBuyerIp = "5.6.7.8";
+
+    await handleSfapiProxyWithClientType(
+      createRequest("/api/2025-01/graphql.json", {
+        headers: { [STOREFRONT_BUYER_IP_HEADER]: browserBuyerIp },
+      }),
+      "public",
+    );
+
+    const call = mockFetch.mock.calls[0];
+    assert(call, "expected fetch to be called");
+    const [, init] = call;
+    const headers = new Headers(init.headers);
+    expect(headers.get(STOREFRONT_BUYER_IP_HEADER)).toBeNull();
+    expect(headers.get(SHOPIFY_CLIENT_IP_HEADER)).toBeNull();
+  });
+
+  it("requires request context buyer IP for private client proxy requests", async () => {
+    await expect(
+      handlePrivateSfapiProxyWithoutBuyerContext(createRequest("/api/2025-01/graphql.json")),
+    ).rejects.toThrow(
+      "requestContext.buyerIp is required for private Storefront API proxy requests",
+    );
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("sets Custom-Storefront-Request-Group-ID as a UUID", async () => {

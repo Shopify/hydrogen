@@ -1,13 +1,15 @@
-import { data, Link } from "react-router";
+import { data } from "react-router";
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
 
+import { NotFound } from "~/components/NotFound";
+import { shopNameFromMatches, shopTitle } from "~/lib/meta";
 import { canonicalUrl } from "~/lib/site";
 
 import type { Route } from "./+types/catchall";
 
-export const meta: MetaFunction = () => {
+export const meta: MetaFunction = ({ matches }) => {
   return [
-    { title: "Page not found — CORE" },
+    { title: shopTitle("Page not found", shopNameFromMatches(matches)) },
     { tagName: "link", rel: "canonical", href: canonicalUrl("/404") },
   ];
 };
@@ -24,18 +26,5 @@ export function loader(_args: LoaderFunctionArgs) {
 }
 
 export default function Catchall(_: Route.ComponentProps) {
-  return (
-    <div className="max-w-page px-margin mx-auto w-full py-16 text-center">
-      <h1 className="type-display mb-4">Page not found</h1>
-      <p className="type-body text-on-surface-secondary mb-8">
-        The page you’re looking for doesn’t exist.
-      </p>
-      <Link
-        to="/"
-        className="rounded-button button-primary inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline"
-      >
-        Back to home
-      </Link>
-    </div>
-  );
+  return <NotFound />;
 }

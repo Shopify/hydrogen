@@ -4,7 +4,6 @@ import {
   getFilterRemovalUrl,
   getSortByValue,
   serializeCollectionParams,
-  type AvailableFilter,
   type ProductFilter,
 } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
@@ -17,6 +16,8 @@ import { ProductCard, type ProductCardData } from "@/components/ProductCard";
 import { AnalyticsEvent, getAnalytics } from "@/lib/analytics";
 import { content } from "@/lib/content";
 import { FilterGroup } from "@/lib/filters";
+import { formatPrice } from "@/lib/money";
+import type { CollectionAvailableFilter, SearchAvailableFilter } from "@/lib/queries";
 
 /**
  * Shared collection/search browser (`hydrogen-collection-browser` /
@@ -48,6 +49,7 @@ export const SEARCH_SORT_OPTIONS = [
 ];
 
 type PageInfo = { hasNextPage: boolean; endCursor?: string | null };
+type BrowserAvailableFilter = CollectionAvailableFilter | SearchAvailableFilter;
 
 export type CollectionBrowserProps =
   | {
@@ -61,7 +63,7 @@ export type CollectionBrowserProps =
         descriptionHtml?: string | null;
       };
       products: ProductCardData[];
-      availableFilters: AvailableFilter[];
+      availableFilters: CollectionAvailableFilter[];
       pageInfo: PageInfo;
       dataSearch: string;
     }
@@ -69,7 +71,7 @@ export type CollectionBrowserProps =
       mode: "search";
       term: string;
       products: ProductCardData[];
-      availableFilters: AvailableFilter[];
+      availableFilters: SearchAvailableFilter[];
       pageInfo: PageInfo;
       totalCount: number;
       dataSearch: string;
@@ -157,9 +159,11 @@ function CollectionPage(props: CollectionPageProps) {
   // (hydrogen-collection-browser/references/nextjs.md).
   const onNavigate = () => router.refresh();
 
-  const showingCount = content.collection.showingCount
-    .replace("{{ shown }}", String(products.length))
-    .replace("{{ total }}", String(products.length));
+  const showingCount = content.collection.showingCountPartial.replace(
+    "{{ shown }}",
+    String(products.length),
+  );
+  const currencyCode = products[0]?.priceRange.minVariantPrice.currencyCode ?? "USD";
 
   return (
     <div className="max-w-page px-margin mx-auto w-full py-8">
@@ -192,6 +196,7 @@ function CollectionPage(props: CollectionPageProps) {
           availableFilters={availableFilters}
           activeFilters={state.filters}
           disabled={isLoading}
+          currencyCode={currencyCode}
         />
 
         <div key="results" className="flex flex-col gap-4">
@@ -206,6 +211,7 @@ function CollectionPage(props: CollectionPageProps) {
             activeFilters={state.filters}
             collectionPath={collectionPath}
             onNavigate={onNavigate}
+            currencyCode={currencyCode}
           />
 
           {products.length === 0 ? (
@@ -258,6 +264,7 @@ function SearchPage(props: SearchPageProps) {
     reverse: false,
   }).toString();
   const isLoading = state.status === "loading";
+  const currencyCode = products[0]?.priceRange.minVariantPrice.currencyCode ?? "USD";
 
   return (
     <div className="max-w-page px-margin mx-auto w-full py-8">
@@ -277,8 +284,10 @@ function SearchPage(props: SearchPageProps) {
           type="search"
           name="q"
           defaultValue={term}
+          key={term}
           placeholder={content.search.placeholder}
           className="number-reset rounded-button border-border h-11 max-w-md border px-3 text-sm"
+          autoComplete="off"
         />
         <button
           type="submit"
@@ -315,11 +324,37 @@ function SearchPage(props: SearchPageProps) {
         >
           <input key="q" type="hidden" name="q" value={term} />
 
-          <aside key={filterSubtreeKey} className="hidden flex-col gap-6 lg:flex">
-            {availableFilters.map((filter) => (
-              <FilterGroup key={filter.id} filter={filter} activeFilters={state.filters} />
-            ))}
-          </aside>
+          {/* A SINGLE filter subtree (one set of inputs) so filter params are
+              never duplicated. Desktop: `<summary>` hidden, `<details open>`
+              shows groups as a static sidebar. Mobile: collapsible disclosure,
+              reachable without JS (F4). */}
+          <details
+            key={filterSubtreeKey}
+            open
+            className="lg:flex lg:flex-col lg:gap-6"
+            aria-labelledby="search-filters-heading"
+          >
+            <summary className="marker-hidden rounded-button button-outline focus-visible:outline-accent min-h-touch-target mb-4 inline-flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 lg:hidden">
+              {content.collection.filters}
+            </summary>
+            <div className="flex flex-col gap-6 lg:mb-0">
+              <h2
+                id="search-filters-heading"
+                className="type-heading-sm text-on-surface font-medium"
+              >
+                {content.collection.filters}
+              </h2>
+              {availableFilters.map((filter) => (
+                <FilterGroup
+                  key={filter.id}
+                  filter={filter}
+                  activeFilters={state.filters}
+                  disabled={isLoading}
+                  currencyCode={currencyCode}
+                />
+              ))}
+            </div>
+          </details>
 
           <div key="results" className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-4">
@@ -402,24 +437,47 @@ function FilterSidebar({
   availableFilters,
   activeFilters,
   disabled,
+  currencyCode,
 }: {
-  availableFilters: AvailableFilter[];
+  availableFilters: BrowserAvailableFilter[];
   activeFilters: ProductFilter[];
   disabled: boolean;
+  currencyCode: string;
 }) {
   if (availableFilters.length === 0) return null;
 
+  const filterGroups = availableFilters.map((filter) => (
+    <FilterGroup
+      key={filter.id}
+      filter={filter}
+      activeFilters={activeFilters}
+      disabled={disabled}
+      currencyCode={currencyCode}
+    />
+  ));
+
   return (
-    <aside className="hidden flex-col gap-6 lg:flex" aria-disabled={disabled}>
-      <div className="flex items-center justify-between">
-        <h2 className="type-heading-sm text-on-surface font-medium">
+    /* A SINGLE filter subtree rendered once inside the `method="get"` form so
+       each filter input exists exactly once (no duplicate query params). On
+       desktop (lg+) the `<summary>` is hidden and `<details open>` shows the
+       groups as a static sidebar; on mobile the `<summary>` is visible and the
+       disclosure is collapsible — reachable WITHOUT JS (F4). */
+    <details
+      open
+      className="lg:flex lg:flex-col lg:gap-6"
+      aria-labelledby="collection-filters-heading"
+    >
+      <summary className="marker-hidden rounded-button button-outline focus-visible:outline-accent min-h-touch-target mb-4 inline-flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 lg:hidden">
+        <span aria-hidden="true"> {/* filter icon placeholder */} </span>
+        {content.collection.filters}
+      </summary>
+      <div className="flex flex-col gap-6 lg:mb-0">
+        <h2 id="collection-filters-heading" className="type-heading-sm text-on-surface font-medium">
           {content.collection.filters}
         </h2>
+        {filterGroups}
       </div>
-      {availableFilters.map((filter) => (
-        <FilterGroup key={filter.id} filter={filter} activeFilters={activeFilters} />
-      ))}
-    </aside>
+    </details>
   );
 }
 
@@ -427,41 +485,45 @@ function ActiveFilterChips({
   activeFilters,
   collectionPath,
   onNavigate,
+  currencyCode,
 }: {
   activeFilters: ProductFilter[];
   collectionPath: string;
   onNavigate: () => void;
+  currencyCode: string;
 }) {
   if (activeFilters.length === 0) return null;
 
   return (
     <ul role="list" className="flex flex-wrap gap-2">
-      {activeFilters.map((filter, index) => {
-        const currentParams = serializeCollectionParams({
-          filters: activeFilters,
-          sortKey: undefined,
-          reverse: false,
-        });
-        const removal = getFilterRemovalUrl(currentParams, filter);
-        const href = removal === "?" ? collectionPath : `${collectionPath}${removal}`;
-        return (
-          <li key={`${filter.toString()}-${index}`}>
-            <Link
-              href={href}
-              onClick={onNavigate}
-              className="chip-filled inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm no-underline"
-            >
-              {describeFilter(filter)}
-              <span aria-hidden="true">×</span>
-            </Link>
-          </li>
-        );
-      })}
+      {activeFilters
+        .filter((filter) => describeFilter(filter, currencyCode) !== "")
+        .map((filter, index) => {
+          const currentParams = serializeCollectionParams({
+            filters: activeFilters,
+            sortKey: undefined,
+            reverse: false,
+          });
+          const removal = getFilterRemovalUrl(currentParams, filter);
+          const href = removal === "?" ? collectionPath : `${collectionPath}${removal}`;
+          return (
+            <li key={`${filter.toString()}-${index}`}>
+              <Link
+                href={href}
+                onClick={onNavigate}
+                className="chip-filled inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm no-underline"
+              >
+                {describeFilter(filter, currencyCode)}
+                <span aria-hidden="true">×</span>
+              </Link>
+            </li>
+          );
+        })}
       <li>
         <Link
           href={collectionPath}
           onClick={onNavigate}
-          className="text-accent inline-flex items-center rounded-full px-3 py-1 text-sm no-underline underline"
+          className="text-link inline-flex items-center rounded-full px-3 py-1 text-sm no-underline underline"
         >
           {content.collection.clearAll}
         </Link>
@@ -470,25 +532,30 @@ function ActiveFilterChips({
   );
 }
 
-function describeFilter(filter: ProductFilter): string {
+function describeFilter(filter: ProductFilter, currencyCode = "USD"): string {
   if (filter.available !== undefined) return filter.available ? "In stock" : "Out of stock";
   if (filter.productType) return filter.productType;
   if (filter.productVendor) return filter.productVendor;
   if (filter.tag) return filter.tag;
   if (filter.variantOption) {
     const option = filter.variantOption;
-    return option.value ?? option.name ?? "Variant";
+    const value = option.value ?? option.name ?? "";
+    return option.name && option.value ? `${option.name}: ${option.value}` : value;
   }
   if (filter.price) {
     const price = filter.price;
-    const hasMin = price.min != null && Number(price.min) > 0;
-    const hasMax = price.max != null;
-    if (hasMin && hasMax) return `${price.min} ${content.collection.priceTo} ${price.max}`;
-    if (hasMax) return `Up to ${price.max}`;
-    if (hasMin) return `From ${price.min}`;
+    const min = price.min;
+    const max = price.max;
+    const hasMin = min != null && Number(min) > 0;
+    const hasMax = max != null;
+    const format = (value: string | number) => formatPrice({ amount: String(value), currencyCode });
+    if (hasMin && hasMax && min != null && max != null)
+      return `${format(min)} ${content.collection.priceTo} ${format(max)}`;
+    if (hasMax && max != null) return `Up to ${format(max)}`;
+    if (hasMin && min != null) return `From ${format(min)}`;
     return "Price";
   }
-  return "Filter";
+  return "";
 }
 
 function LoadMore({

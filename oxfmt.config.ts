@@ -11,15 +11,12 @@ export default defineConfig({
   sortTailwindcss: true,
   sortPackageJson: true,
   ignorePatterns: [
-    // Standalone, generated template artifacts (own lockfile/.npmrc, pinned
-    // @shopify/hydrogen) that are copy-pasted into new repos by the build
-    // pipeline. Not workspace members; not hand-formatted here.
-    "templates/**",
     "dist/**",
     "build/**",
     ".next/**",
     "node_modules/**",
     "**/vendor/**",
+    "**/generated/**",
     "**/public/*",
     "**/static/*",
     "**/playwright-report/**",

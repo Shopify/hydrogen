@@ -1,5 +1,13 @@
 # React And React Router
 
+## Contents
+
+- Loader
+- Provider
+- Browse Form
+- Filters
+- Search Pages
+
 Use the React binding:
 
 ```tsx
@@ -112,7 +120,7 @@ function CollectionPage({ availableFilters, products }: Props) {
   const isLoading = state.status === "loading";
 
   return (
-    <form {...formProps()} method="get" className="browse">
+    <form {...formProps()} method="get" action={collectionPath} className="browse">
       <FilterSidebar
         availableFilters={availableFilters}
         activeFilters={state.filters}
@@ -135,7 +143,9 @@ function requestFormSubmit(event: React.ChangeEvent<HTMLInputElement | HTMLSelec
 }
 ```
 
-Use uncontrolled form controls. When a route needs to remount checkboxes after external navigation, put `key={serializeCollectionParams(state).toString()}` on the filter subtree (for search, include the term in the key). This resets checkbox DOM state without coupling active filter chips to the form remount.
+Pass `method="get"` and an explicit `action={collectionPath}` (the current `/collections/:handle` or `/search` route URL) literally — `formProps()` only wires the submit handler (see the SKILL.md UI rule).
+
+Use uncontrolled form controls. When a route needs to remount checkboxes after external navigation, put `key={serializeCollectionParams({ filters: state.filters, sortKey: undefined, reverse: false }).toString()}` on the filter subtree (for search, include the term in the key) — keyed by serialized **filter state**, not the live URL. The URL clears before the `CollectionProvider` reconciler settles `state.filters`, so a URL-keyed remount bakes in stale `defaultChecked`. This resets checkbox DOM state without coupling active filter chips to the form remount.
 
 ## Filters
 

@@ -1,5 +1,11 @@
 # Next.js App Router
 
+## Contents
+
+- Host-Based Markets
+- Path-Prefix Markets
+- Raw URL Fallback
+
 Next.js App Router Server Components do not receive a standard `Request` object or direct access to the current URL. Use the source that matches the market strategy:
 
 - Host or subdomain markets: read the URL from Hydrogen's request context when the app proxy forwards it.

@@ -1,23 +1,15 @@
-import { localCdnAssetsTurbopackRules } from "@shared/local-cdn-assets-plugin/turbopack";
 import type { NextConfig } from "next";
-import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
 /**
  * Next.js 16 config for the Hydrogen example.
  *
  * `cacheComponents: true` enables Cache Components / `use cache` (engineering.md
- * F2 native Next caching instead of the Oxygen sub-request LRU). Turbopack
- * rules wire `localCdnAssetsTurbopackRules()` so Shopify WebMCP scripts resolve
- * locally in dev (parity with the react-router `localCdnAssets()` vite plugin).
+ * F2 native Next caching instead of the Oxygen sub-request LRU).
  *
  * No `next/image` remote patterns — we use plain `<img>` + the `hydrogen-image`
  * helper (F12; Hydrogen ships no Image component and we size CDN URLs ourselves).
  */
-const EMPTY_TURBOPACK_RULES = {};
-
-export default function nextConfig(phase: string): NextConfig {
-  const isDevelopmentServer = phase === PHASE_DEVELOPMENT_SERVER;
-
+export default function nextConfig(): NextConfig {
   return {
     cacheComponents: true,
     // React Strict Mode is disabled because `@shopify/hydrogen/react`'s
@@ -29,10 +21,5 @@ export default function nextConfig(phase: string): NextConfig {
     // is unaffected (it recreates its store). Re-enable once the provider is
     // Strict-Mode-safe upstream.
     reactStrictMode: false,
-    turbopack: {
-      rules: isDevelopmentServer
-        ? localCdnAssetsTurbopackRules({ createSymlinks: true })
-        : EMPTY_TURBOPACK_RULES,
-    },
   };
 }

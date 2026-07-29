@@ -1,10 +1,9 @@
 "use client";
 
-import type { ConsentConfig, ShopAnalytics } from "@shopify/hydrogen";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
-import { AnalyticsEvent, configureAnalytics, getAnalytics } from "@/lib/analytics";
+import { addAnalyticsConsoleDestination, AnalyticsEvent, getAnalytics } from "@/lib/analytics";
 
 /**
  * Root analytics tracker (`hydrogen-analytics` / `references/react.md` Next.js
@@ -13,23 +12,23 @@ import { AnalyticsEvent, configureAnalytics, getAnalytics } from "@/lib/analytic
  * `<Suspense>` in `Providers` so the `useSearchParams()` CSR bailout is scoped
  * to the tracker, not the whole layout.
  */
-export function AnalyticsTracker({
-  shop,
-  consent,
-}: {
-  shop: ShopAnalytics;
-  consent: ConsentConfig;
-}) {
+export function AnalyticsTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const pageKey = `${pathname}?${searchParams?.toString() ?? ""}`;
 
   useEffect(() => {
-    configureAnalytics(shop, consent);
+    const cleanup = addAnalyticsConsoleDestination();
+    return () => {
+      cleanup?.();
+    };
+  }, []);
+
+  useEffect(() => {
     const analytics = getAnalytics();
     if (!analytics) return;
     analytics.publish(AnalyticsEvent.PAGE_VIEWED);
-  }, [pageKey, shop, consent]);
+  }, [pageKey]);
 
   return null;
 }

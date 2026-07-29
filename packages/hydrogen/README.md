@@ -12,6 +12,22 @@ npx @shopify/hydrogen setup
 
 The setup command installs `@shopify/hydrogen` into the local project using the detected package manager, then copies the packaged skills into local agent skill directories.
 
+## GraphQL Tooling
+
+Enable Storefront and Customer Account API editor diagnostics with Hydrogen's packed TypeScript plugin:
+
+```json
+{
+  "compilerOptions": {
+    "plugins": [{"name": "@shopify/hydrogen/ts-plugin"}]
+  }
+}
+```
+
+Run the same GraphQL validation headlessly with `npx @shopify/hydrogen gql check --fail-on-warn`, or use `hydrogen gql check --fail-on-warn` in a package script. Both commands use the Shopify schemas packaged with Hydrogen.
+
+The editor plugin generates `storefront-graphql-env.d.ts` and `customer-account-graphql-env.d.ts` at the project root. Add both files to `.gitignore`.
+
 ## Customer Account API
 
 Use `@shopify/hydrogen/customer-account` for type-safe Customer Account API requests from server code:

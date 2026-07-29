@@ -1,18 +1,13 @@
 import { defineConfig } from "vitest/config";
 
+import { inlineScriptImports } from "./plugins/inline-shopify-analytics-bus.ts";
+
 export default defineConfig({
   define: {
     __DEV__: "true",
     __HYDROGEN_VERSION__: JSON.stringify("0.0.0-test"),
   },
-  resolve: {
-    alias: {
-      "@shopify/hydrogen/cdn/analytics": new URL(
-        "./src/core/analytics/cdn/bootstrap.ts",
-        import.meta.url,
-      ).pathname,
-    },
-  },
+  plugins: [inlineScriptImports({ version: "0.0.0-test" })],
   test: {
     globals: true,
     environment: "node",

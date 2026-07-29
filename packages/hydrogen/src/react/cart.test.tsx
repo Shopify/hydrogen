@@ -1,5 +1,5 @@
 import { render, screen, act } from "@testing-library/react";
-import { createElement } from "react";
+import { createElement, Suspense } from "react";
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -12,7 +12,14 @@ import {
 import type { CartData, CartState } from "../core/cart/state";
 import { EMPTY_CART_DATA, EMPTY_CART_STATE, createEmptyCartErrors } from "../core/cart/state";
 import { assert } from "../core/test-utils";
-import { CartProvider, configureCartEndpoint, useCart, useCartForm, useOptionalCart } from "./cart";
+import {
+  CartProvider,
+  configureCartEndpoint,
+  createCartComponents,
+  useCart,
+  useCartForm,
+  useOptionalCart,
+} from "./cart";
 
 vi.mock("../core/cart/cart", () => ({
   configureCartEndpoint: vi.fn(),
@@ -39,22 +46,50 @@ function makeCartData(overrides: CartDataOverrides = {}): CartData {
 }
 
 function makeCartState(overrides: CartStateOverrides = {}): CartState {
-  const { loading, pending, errors, ...dataOverrides } = overrides;
+  const { loading, readyPromise, pending, errors, ...dataOverrides } = overrides;
 
   return {
     data: makeCartData(dataOverrides),
     loading: loading ?? EMPTY_CART_STATE.loading,
+    ...(readyPromise && { readyPromise }),
     pending: pending ?? EMPTY_CART_STATE.pending,
     errors: errors ?? EMPTY_CART_STATE.errors,
   };
 }
 
 type MockCartStore = CartStore & {
+  setReadyPromise(readyPromise: Promise<void> | undefined): void;
   setState(state: CartState): void;
 };
 
 let latestStore: MockCartStore;
 let subscribeListener: (() => void) | null = null;
+
+interface Deferred<T = unknown> {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason?: unknown) => void;
+}
+
+function createDeferred<T = unknown>(): Deferred<T> {
+  let resolvePromise: ((value: T) => void) | undefined;
+  let rejectPromise: ((reason?: unknown) => void) | undefined;
+  const promise = new Promise<T>((res, rej) => {
+    resolvePromise = res;
+    rejectPromise = rej;
+  });
+  return {
+    promise,
+    resolve(value) {
+      assert(resolvePromise, "Expected deferred resolve to be assigned");
+      resolvePromise(value);
+    },
+    reject(reason) {
+      assert(rejectPromise, "Expected deferred reject to be assigned");
+      rejectPromise(reason);
+    },
+  };
+}
 
 function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
   return (
@@ -90,6 +125,10 @@ function createMockStore(initialData?: MockInitialData): MockCartStore {
     fetch: vi.fn(() => Promise.resolve()),
     reset: vi.fn(),
     handleFormSubmit: vi.fn(() => Promise.resolve()),
+    setReadyPromise(readyPromise: Promise<void> | undefined) {
+      state = { ...state, readyPromise };
+      subscribeListener?.();
+    },
     setState(next: CartState) {
       state = next;
       subscribeListener?.();
@@ -339,6 +378,56 @@ describe("useCart", () => {
     } finally {
       errorSpy.mockRestore();
     }
+  });
+});
+
+describe("useSuspenseCart", () => {
+  it("suspends while cart readyPromise is visible", async () => {
+    const deferred = createDeferred<void>();
+    const typedCart = createCartComponents<{
+      get: () => Promise<{ data: { cart: CartData } }>;
+    }>();
+    const mockStore = createMockStore(makeCartData({ totalQuantity: 7 }));
+    mockStore.setReadyPromise(deferred.promise);
+    vi.mocked(createCartStore).mockImplementation(() => mockStore);
+
+    function Consumer() {
+      const qty = typedCart.useSuspenseCart((s) => s.data.totalQuantity);
+      return createElement("span", { "data-testid": "qty" }, qty);
+    }
+
+    await act(async () => {
+      render(
+        createElement(
+          CartProvider,
+          null,
+          createElement(
+            Suspense,
+            { fallback: createElement("span", { "data-testid": "fallback" }, "Loading") },
+            createElement(Consumer),
+          ),
+        ),
+      );
+    });
+
+    expect(screen.getByTestId("fallback").textContent).toBe("Loading");
+  });
+
+  it("returns selected cart state when no readyPromise is visible", () => {
+    const typedCart = createCartComponents<{
+      get: () => Promise<{ data: { cart: CartData } }>;
+    }>();
+    const mockStore = createMockStore(makeCartData({ totalQuantity: 7 }));
+    vi.mocked(createCartStore).mockImplementation(() => mockStore);
+
+    function Consumer() {
+      const qty = typedCart.useSuspenseCart((s) => s.data.totalQuantity);
+      return createElement("span", { "data-testid": "qty" }, qty);
+    }
+
+    render(createElement(CartProvider, null, createElement(Consumer)));
+
+    expect(screen.getByTestId("qty").textContent).toBe("7");
   });
 });
 

@@ -19,6 +19,11 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const message =
+    typeof error?.message === "string" && error.message
+      ? error.message
+      : "Something went wrong. Please try again.";
+
   return (
     <html lang="en">
       <body style={{ margin: 0, padding: "2rem", fontFamily: "system-ui, sans-serif" }}>
@@ -26,9 +31,9 @@ export default function GlobalError({
           <h1 style={{ fontSize: "1.875rem", fontWeight: 300, marginBottom: "1rem" }}>
             Something went wrong
           </h1>
-          <p style={{ color: "#6b7280", marginBottom: "0.5rem" }}>{error.message}</p>
+          <p style={{ color: "#4b5563", marginBottom: "0.5rem" }}>{message}</p>
           {error.digest ? (
-            <p style={{ color: "#6b7280", fontSize: "0.875rem", marginBottom: "2rem" }}>
+            <p style={{ color: "#4b5563", fontSize: "0.875rem", marginBottom: "2rem" }}>
               Error digest: {error.digest}
             </p>
           ) : null}

@@ -5,20 +5,23 @@ import {
   getSortByValue,
   parseCollectionParams,
   serializeCollectionParams,
-  type AvailableFilter,
   type ProductFilter,
+  type StorefrontApi,
 } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
 import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
 import { useEffect, useMemo } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, isRouteErrorResponse, useNavigate, useSearchParams } from "react-router";
 
 import { Breadcrumbs } from "~/components/Breadcrumbs";
+import { NotFound } from "~/components/NotFound";
 import { ProductCard } from "~/components/ProductCard";
 import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
 import { content } from "~/lib/content";
 import { FilterGroup } from "~/lib/filters";
 import { PRODUCT_CARD_FRAGMENT } from "~/lib/fragments";
+import { shopNameFromMatches, shopTitle } from "~/lib/meta";
+import { formatPrice } from "~/lib/money";
 import { canonicalUrl } from "~/lib/site";
 import { storefrontClientContext } from "~/lib/storefront-context";
 
@@ -55,11 +58,23 @@ const COLLECTION_QUERY = gql(
           id
           label
           type
+          presentation
           values {
             id
             label
             count
             input
+            swatch {
+              color
+              image {
+                previewImage {
+                  url
+                  altText
+                  width
+                  height
+                }
+              }
+            }
           }
         }
         pageInfo {
@@ -76,18 +91,23 @@ const COLLECTION_QUERY = gql(
   [PRODUCT_CARD_FRAGMENT],
 );
 
-export const meta = ({ data, params }: Route.MetaArgs) => {
-  const title = data?.collection?.title ?? "Collection";
+type CollectionQuery = StorefrontApi.ResultOf<typeof COLLECTION_QUERY>;
+type CollectionProducts = NonNullable<CollectionQuery["collection"]>["products"];
+type CollectionAvailableFilter = CollectionProducts["filters"][number];
+
+export const meta: Route.MetaFunction = ({ data, params, matches }: Route.MetaArgs) => {
+  const pageTitle = data?.collection?.title ?? "Collection";
   const description = data?.collection?.description ?? "";
+  const title = shopTitle(pageTitle, shopNameFromMatches(matches));
   return [
-    { title: `${title} — CORE` },
+    { title },
     { name: "description", content: description },
     {
       tagName: "link",
       rel: "canonical",
       href: canonicalUrl(`/collections/${params.handle ?? ""}`),
     },
-    { property: "og:title", content: `${title} — CORE` },
+    { property: "og:title", content: title },
     { property: "og:description", content: description },
     { property: "og:type", content: "website" },
   ];
@@ -169,7 +189,7 @@ export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
 type CollectionPageProps = {
   collection: Route.ComponentProps["loaderData"]["collection"];
   products: Route.ComponentProps["loaderData"]["products"];
-  availableFilters: AvailableFilter[];
+  availableFilters: CollectionAvailableFilter[];
   pageInfo: { hasNextPage: boolean; endCursor?: string | null };
   collectionPath: string;
 };
@@ -184,10 +204,12 @@ function CollectionPage({
   const state = useCollection();
   const { formProps } = useCollectionForm();
   const isLoading = state.status === "loading";
+  const currencyCode = products[0]?.priceRange.minVariantPrice.currencyCode ?? "USD";
 
-  const showingCount = content.collection.showingCount
-    .replace("{{ shown }}", String(products.length))
-    .replace("{{ total }}", String(products.length));
+  const showingCount = content.collection.showingCountPartial.replace(
+    "{{ shown }}",
+    String(products.length),
+  );
 
   return (
     <div className="max-w-page px-margin mx-auto w-full py-8">
@@ -218,7 +240,9 @@ function CollectionPage({
         <FilterSidebar
           availableFilters={availableFilters}
           activeFilters={state.filters}
+          collectionPath={collectionPath}
           disabled={isLoading}
+          currencyCode={currencyCode}
         />
 
         <div className="flex flex-col gap-4">
@@ -229,7 +253,11 @@ function CollectionPage({
             <SortSelect isLoading={isLoading} />
           </div>
 
-          <ActiveFilterChips activeFilters={state.filters} collectionPath={collectionPath} />
+          <ActiveFilterChips
+            activeFilters={state.filters}
+            collectionPath={collectionPath}
+            currencyCode={currencyCode}
+          />
 
           {products.length === 0 ? (
             <p className="text-on-surface-secondary py-12 text-center">
@@ -275,9 +303,10 @@ function CollectionViewedTracker({
     const analytics = getAnalytics();
     if (!analytics) return;
     analytics.publish(AnalyticsEvent.COLLECTION_VIEWED, {
-      collection: { id: collection.id, handle: collection.handle },
+      collection,
+      url: window.location.href,
     });
-  }, [collection.handle, collection.id]);
+  }, [collection.id]);
   return null;
 }
 
@@ -295,6 +324,7 @@ function SortSelect({ isLoading }: { isLoading: boolean }) {
         defaultValue={currentSort}
         onChange={(event) => event.currentTarget.form?.requestSubmit()}
         aria-busy={isLoading}
+        disabled={isLoading}
         className="w-auto"
       >
         {COLLECTION_SORT_OPTIONS.map((option) => (
@@ -308,63 +338,95 @@ function SortSelect({ isLoading }: { isLoading: boolean }) {
 }
 
 type FilterSidebarProps = {
-  availableFilters: AvailableFilter[];
+  availableFilters: CollectionAvailableFilter[];
   activeFilters: ProductFilter[];
+  collectionPath: string;
   disabled: boolean;
+  currencyCode: string;
 };
 
-function FilterSidebar({ availableFilters, activeFilters, disabled }: FilterSidebarProps) {
+function FilterSidebar({
+  availableFilters,
+  activeFilters,
+  collectionPath: _collectionPath,
+  disabled,
+  currencyCode,
+}: FilterSidebarProps) {
   if (availableFilters.length === 0) return null;
 
+  const filterGroups = availableFilters.map((filter) => (
+    <FilterGroup
+      key={filter.id}
+      filter={filter}
+      activeFilters={activeFilters}
+      disabled={disabled}
+      currencyCode={currencyCode}
+    />
+  ));
+
   return (
-    <aside className="hidden flex-col gap-6 lg:flex" aria-disabled={disabled}>
-      <div className="flex items-center justify-between">
-        <h2 className="type-heading-sm text-on-surface font-medium">
+    /* A SINGLE filter subtree rendered once inside the `method="get"` form so
+       each filter input exists exactly once (no duplicate query params).
+       Desktop (lg+): `<summary>` hidden, `<details open>` shows the groups as a
+       static sidebar. Mobile: `<summary>` visible, collapsible disclosure —
+       reachable WITHOUT JS (F4). */
+    <details
+      open
+      className="lg:flex lg:flex-col lg:gap-6"
+      aria-labelledby="collection-filters-heading"
+    >
+      <summary className="marker-hidden rounded-button button-outline focus-visible:outline-accent min-h-touch-target mb-4 inline-flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 lg:hidden">
+        {content.collection.filters}
+      </summary>
+      <div className="flex flex-col gap-6 lg:mb-0">
+        <h2 id="collection-filters-heading" className="type-heading-sm text-on-surface font-medium">
           {content.collection.filters}
         </h2>
+        {filterGroups}
       </div>
-      {availableFilters.map((filter) => (
-        <FilterGroup key={filter.id} filter={filter} activeFilters={activeFilters} />
-      ))}
-    </aside>
+    </details>
   );
 }
 
 function ActiveFilterChips({
   activeFilters,
   collectionPath,
+  currencyCode,
 }: {
   activeFilters: ProductFilter[];
   collectionPath: string;
+  currencyCode: string;
 }) {
   if (activeFilters.length === 0) return null;
 
   return (
     <ul role="list" className="flex flex-wrap gap-2">
-      {activeFilters.map((filter, index) => {
-        const currentParams = serializeCollectionParams({
-          filters: activeFilters,
-          sortKey: undefined,
-          reverse: false,
-        });
-        const removal = getFilterRemovalUrl(currentParams, filter);
-        const href = removal === "?" ? collectionPath : `${collectionPath}${removal}`;
-        return (
-          <li key={`${filter.toString()}-${index}`}>
-            <a
-              href={href}
-              className="chip-filled inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm no-underline"
-            >
-              {describeFilter(filter)}
-              <span aria-hidden="true">×</span>
-            </a>
-          </li>
-        );
-      })}
+      {activeFilters
+        .filter((filter) => describeFilter(filter, currencyCode) !== "")
+        .map((filter, index) => {
+          const currentParams = serializeCollectionParams({
+            filters: activeFilters,
+            sortKey: undefined,
+            reverse: false,
+          });
+          const removal = getFilterRemovalUrl(currentParams, filter);
+          const href = removal === "?" ? collectionPath : `${collectionPath}${removal}`;
+          return (
+            <li key={`${filter.toString()}-${index}`}>
+              <a
+                href={href}
+                className="chip-filled inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm no-underline"
+              >
+                {describeFilter(filter, currencyCode)}
+                <span aria-hidden="true">×</span>
+              </a>
+            </li>
+          );
+        })}
       <li>
         <a
           href={collectionPath}
-          className="text-accent inline-flex items-center rounded-full px-3 py-1 text-sm no-underline underline"
+          className="text-link inline-flex items-center rounded-full px-3 py-1 text-sm no-underline underline"
         >
           {content.collection.clearAll}
         </a>
@@ -373,25 +435,30 @@ function ActiveFilterChips({
   );
 }
 
-function describeFilter(filter: ProductFilter): string {
+function describeFilter(filter: ProductFilter, currencyCode = "USD"): string {
   if (filter.available !== undefined) return filter.available ? "In stock" : "Out of stock";
   if (filter.productType) return filter.productType;
   if (filter.productVendor) return filter.productVendor;
   if (filter.tag) return filter.tag;
   if (filter.variantOption) {
     const option = filter.variantOption;
-    return option.value ?? option.name ?? "Variant";
+    const value = option.value ?? option.name ?? "";
+    return option.name && option.value ? `${option.name}: ${option.value}` : value;
   }
   if (filter.price) {
     const price = filter.price;
-    const hasMin = price.min != null && Number(price.min) > 0;
-    const hasMax = price.max != null;
-    if (hasMin && hasMax) return `${price.min} ${content.collection.priceTo} ${price.max}`;
-    if (hasMax) return `Up to ${price.max}`;
-    if (hasMin) return `From ${price.min}`;
+    const min = price.min;
+    const max = price.max;
+    const hasMin = min != null && Number(min) > 0;
+    const hasMax = max != null;
+    const format = (value: string | number) => formatPrice({ amount: String(value), currencyCode });
+    if (hasMin && hasMax && min != null && max != null)
+      return `${format(min)} ${content.collection.priceTo} ${format(max)}`;
+    if (hasMax && max != null) return `Up to ${format(max)}`;
+    if (hasMin && min != null) return `From ${format(min)}`;
     return "Price";
   }
-  return "Filter";
+  return "";
 }
 
 function LoadMore({
@@ -413,6 +480,35 @@ function LoadMore({
       >
         {content.collection.loadMore}
       </Link>
+    </div>
+  );
+}
+
+/** Per-route error boundary (R1). A 404 from the loader renders the shared
+ *  themed catch-all UI; other statuses render status + data; non-route errors
+ *  fall back to a safe message. */
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  if (isRouteErrorResponse(error)) {
+    if (error.status === 404) return <NotFound />;
+    return (
+      <div className="max-w-page px-margin mx-auto py-16">
+        <h1 className="type-heading-xl mb-4">{error.status} — Something went wrong</h1>
+        <p className="type-body text-on-surface-secondary">
+          {typeof error.data === "string" && error.data
+            ? error.data
+            : "Something went wrong. Please try again."}
+        </p>
+      </div>
+    );
+  }
+  const message =
+    error instanceof Error && error.message
+      ? error.message
+      : "Something went wrong. Please try again.";
+  return (
+    <div className="max-w-page px-margin mx-auto py-16">
+      <h1 className="type-heading-xl mb-4">Something went wrong</h1>
+      <p className="type-body text-on-surface-secondary">{message}</p>
     </div>
   );
 }
