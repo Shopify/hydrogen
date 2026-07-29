@@ -72,7 +72,7 @@ function ProductGallery({
     <div data-testid="product-gallery">
       <div
         data-product-gallery-track
-        className="flex snap-x snap-mandatory scrollbar-none overflow-x-auto md:grid md:grid-cols-2 md:overflow-visible"
+        className="scrollbar-none flex snap-x snap-mandatory overflow-x-auto md:grid md:grid-cols-2 md:overflow-visible"
         tabIndex={0}
         aria-label={`${product.title} gallery images`}
       >

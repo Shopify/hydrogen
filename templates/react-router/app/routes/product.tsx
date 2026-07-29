@@ -290,7 +290,7 @@ function ProductGallery({
       >
         <div
           data-product-gallery-track
-          className="flex snap-x snap-mandatory scrollbar-none overflow-x-auto md:grid md:grid-cols-2 md:overflow-visible"
+          className="scrollbar-none flex snap-x snap-mandatory overflow-x-auto md:grid md:grid-cols-2 md:overflow-visible"
           tabIndex={0}
           onScroll={(event) => {
             const track = event.currentTarget;
