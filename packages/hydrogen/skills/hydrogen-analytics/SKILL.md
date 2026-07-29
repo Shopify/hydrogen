@@ -15,7 +15,7 @@ Hydrogen's analytics bus owns the event API, event normalization, and consent-ga
 
 Before wiring route events, check whether this skill has a reference file for the app's framework in `references/`. If one exists, read it and use that framework's route-change and lifecycle primitives. If there is no matching reference, keep the core singleton below and adapt page-view, product-view, collection-view, search-view, and cart tracking to the app's own route lifecycle.
 
-Key consent setup: Shopify Customer Privacy controls destination delivery in production. Raw subscribers can observe events before consent; destinations receive only consent-allowed replay. Do not override `canTrack` to always `true` in production.
+Prerequisite: analytics depends on the same-origin SFAPI proxy (see `hydrogen-request-handlers`) so the browser can observe tracking values from Storefront API responses. Without it, analytics falls back to deprecated JavaScript-visible cookies and session continuity into checkout breaks — treat it as incomplete until the proxy is wired. Key consent setup: Shopify Customer Privacy controls destination delivery in production. Raw subscribers can observe events before consent; destinations receive only consent-allowed replay. Do not override `canTrack` to always `true` in production.
 
 ## Core Pattern
 
