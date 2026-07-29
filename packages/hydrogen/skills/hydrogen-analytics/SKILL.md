@@ -15,7 +15,7 @@ Hydrogen's analytics bus owns the event API, event normalization, and consent-ga
 
 Before wiring route events, check whether this skill has a reference file for the app's framework in `references/`. If one exists, read it and use that framework's route-change and lifecycle primitives. If there is no matching reference, keep the core singleton below and adapt page-view, product-view, collection-view, search-view, and cart tracking to the app's own route lifecycle.
 
-For full setup details and consent nuance, also read `../hydrogen-setup/references/analytics.md`.
+Key consent setup: Shopify Customer Privacy controls destination delivery in production. Raw subscribers can observe events before consent; destinations receive only consent-allowed replay. Do not override `canTrack` to always `true` in production.
 
 ## Core Pattern
 

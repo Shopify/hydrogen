@@ -181,15 +181,9 @@ Each `CartErrorGroup` contains `{ userErrors: CartUserError[], warnings: CartWar
 
 ## Anti-patterns
 
-- **Client-computed totals.** Multiplying quantity by unit price drifts from the true total when discounts, taxes, or rounding apply. Always use server-provided amounts.
 - **Hand-rolled framework cart state.** If the skill has a matching framework reference, use its provider/hooks/helpers. Otherwise, use the core store directly instead of duplicating cart data in component state or custom reducers.
 - **Client-seeded `/cart` page.** Mounting `CartProvider` with no `initialData` (or reading the cart only through a `"use client"` `useCart` hook) leaves the SSR HTML empty, so the `/cart` page cannot render the server cart. Read the cart in the server data path and pass `initialData`. Use resolved `initialData` when strict no-JS live cart HTML is required; use promise `initialData` when the framework can stream and hydrated cart content is wrapped in Suspense.
-- **Disabling controls during pending.** The store's abort-controller pattern makes rapid interactions safe. Disabling controls makes the cart feel sluggish and punishes fast users.
-- **One form for all lines.** Each line needs its own identity — its own form. A shared form creates ambiguous intent when multiple submit buttons exist.
 - **Quantity as text only.** Rendering quantity as a `<span>` with only plus/minus buttons breaks the set-quantity path and the no-JS fallback. Use a real input wired with `register("quantity", { value, interactive: true })`.
 - **Plus/minus-only line forms.** Increase/decrease/remove buttons do not replace `register("set")` and the interactive quantity input. Omitting them breaks the form invariant even if hydrated clicks appear to work.
 - **Drawer-specific line form drift.** The cart drawer may have a different layout from the `/cart` page, but its line item forms must keep the same Hydrogen form contract. Prefer sharing line item form components between the page and drawer.
 - **Banner-only errors.** A line-level error displayed far from the line it refers to is effectively invisible. Show inline first; promote to the banner only when there's no inline target.
-- **Confirmed-looking pending values.** Showing full-opacity values for in-flight data misleads the user into thinking the data is settled. Always visually distinguish unconfirmed state.
-- **Disabling note save.** The save control is never disabled — it remains interactive even when there's nothing to save (draft matches store) or while a save is in-flight. When there's nothing to save, clicking does nothing. During flight, show a pending indicator.
-- **Blocking navigation during pending.** Cart mutations resolve in the background. Confirmation dialogs on route change frustrate users.
