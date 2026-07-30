@@ -40,6 +40,9 @@ jobs:
         # release job publishes a plain version to the latest dist-tag
         run: jq -e '.mode == "pre" and .tag == "preview"' .changeset/pre.json
 
+      - name: Changesets check
+        run: node scripts/assert-no-major-changesets.ts
+
       - name: Lint
         run: pnpm run lint:ci
 

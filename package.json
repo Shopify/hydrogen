@@ -42,6 +42,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.3",
     "@changesets/cli": "3.0.0-next.8",
+    "@changesets/parse": "1.0.0-next.7",
     "@types/node": "^25.8.0",
     "lefthook": "^2.1.6",
     "oxfmt": "^0.47.0",

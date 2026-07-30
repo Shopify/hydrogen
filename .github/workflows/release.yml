@@ -51,6 +51,11 @@ jobs:
         # releases published from main
         run: jq -e '.mode == "pre" and .tag == "preview"' .changeset/pre.json
 
+      - name: Ensure no major changesets
+        # Preview releases move only the -preview.<n> suffix; a major
+        # changeset would move the base version off 2026.10.0
+        run: node scripts/assert-no-major-changesets.ts
+
       - name: Build packages
         run: pnpm run build:pkgs
 
