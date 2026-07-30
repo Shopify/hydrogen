@@ -54,7 +54,7 @@ const redirect = await handleShopifyRedirects({
 - Pass registered handler groups explicitly, for example `handlers: [cartHandlers, customerAccountHandlers]`.
 - `handleShopifyRoutes` applies request-context response headers before returning matched Hydrogen route responses.
 - Link and submit to Customer Account routes (`/account/login`, `/account/authorize`, `/account/refresh`, `/account/logout`) with plain HTML `<a>`/`<form>`, never the framework's client-side navigation component (`<Form>`/`<Link>` in React Router, `next/link` in Next.js, `NuxtLink` in Nuxt). The login and logout handlers return raw HTTP redirects to external Shopify URLs, which client-nav cannot process.
-- Apps authoring Customer Account API documents use the same packed Hydrogen TypeScript plugin as Storefront API documents. See `hydrogen-storefront-client/references/query-validation.md` for the exact config. Applies to every framework.
+- Apps authoring Customer Account API documents use the same packed Hydrogen TypeScript plugin as Storefront API documents. Add `@shopify/hydrogen/ts-plugin` to `tsconfig.json` `compilerOptions.plugins` and chain `hydrogen gql check` into a package script. Applies to every framework.
 - For framework-routed responses, commit session headers once at the final response boundary, append those headers, then call `requestContext.applyResponseHeaders(response.headers)` so SFAPI cookies, `Server-Timing`, tracking fallback headers, and personalized-response cache safety survive.
 - Wire this in production runtime code, not dev-only hooks. Only GraphiQL is dev-only.
 

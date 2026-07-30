@@ -244,7 +244,7 @@ const { data } = await client.graphql(PRODUCTS, {
 
 User-provided values take precedence over auto-injected ones.
 
-### Where does request state go?
+### Request state storage
 
 `requestContext` is passed at client creation so request-scoped cookies, request-group IDs, response-header capture, personalized-response cache safety, and request aborts are centralized. Use one Shopify request context for Storefront and Customer Account clients in the same request. Per-call `signal` is optional when you need additional cancellation:
 
@@ -261,7 +261,7 @@ Read `references/caching.md` to cache catalog reads across sub-requests on Oxyge
 
 ## Error handling
 
-**Transport errors throw. GraphQL errors are returned.** This is the key mental model:
+**Transport errors throw. GraphQL errors are returned.**
 
 ```ts
 import { StorefrontApiError, StorefrontTimeoutError } from "@shopify/hydrogen";

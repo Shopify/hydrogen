@@ -22,7 +22,7 @@ Before building the cart drawer, these must be in place:
 
 ---
 
-## 2. What you're building
+## 2. Drawer structure
 
 The drawer has three layout zones (header / body / footer):
 
@@ -195,7 +195,7 @@ This opens the drawer only after the mutation succeeds. Keep validation and canc
 
 Native: Escape and the back gesture (fires `cancel` then `close`). App-provided: the explicit close `<button>` in the header (`aria-label="Close cart"`). Backdrop (light dismiss) requires `<dialog closedby="any">`.
 
-`closedby="any"` is the least compatible part of this pattern. Older browsers and Safari versions that have not shipped `closedby` will ignore the attribute, so the drawer will still close from Escape and the explicit close button, but backdrop click will not close it. Do not provide a polyfill for `closedby` unless the app explicitly requires backdrop click support in those browsers.
+`closedby="any"` is the least compatible part of this pattern. Browsers without `closedby` support will ignore the attribute, so the drawer will still close from Escape and the explicit close button, but backdrop click will not close it. Do not provide a polyfill for `closedby` unless the app explicitly requires backdrop click support in those browsers.
 
 If an app does require that polyfill, use a pointerdown-plus-click guard on the `<dialog>` itself: record whether `pointerdown` started on the dialog backdrop, then close only when the following `click` also targets the dialog. Do not close on a plain `click.self` alone, because a drag that starts inside the drawer and ends on the backdrop can produce an accidental close.
 
