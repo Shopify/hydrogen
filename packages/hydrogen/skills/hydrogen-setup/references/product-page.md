@@ -12,7 +12,7 @@ The product form bindings depend on a cart store. Finish the setup skill's cart 
 
 - Use the app's existing product route convention when present; otherwise create `/products/{handle}`.
 - Fetch the product by handle in the framework's server data-loading boundary.
-- Derive URL-selected options with `getSelectedProductOptions(requestOrUrl)` and pass them to the Storefront API query.
+- Derive URL-selected options with `getSelectedProductOptions({searchParams})` and pass them to the Storefront API query.
 - Include product `id`, `handle`, `title`, description fields used by the UI, `requiresSellingPlan`, `priceRange`, image fields used by the UI, and the variant-form fields below.
 - Define one reusable `VariantFields` fragment and use it for `firstSelectableVariant`, `selectedOrFirstAvailableVariant`, and `adjacentVariants`. Do not inline different variant shapes; after option selection, `selectedVariant` can come from any of those caches and must still contain the fields the UI needs.
 - Include `encodedVariantExistence` and `encodedVariantAvailability`.
@@ -48,7 +48,7 @@ if (!data?.product) {
 ## Framework Gotchas
 
 - Next.js App Router: render the interactive product form in a client component; the server page owns product data and selected options from `searchParams`.
-- React Router framework mode: put variant URL navigation in the product provider `onSelect` callback, not in individual option buttons. Same-product option buttons spread `register("optionValue", ...)` directly. Cross-product option values use React Router `<Link>` with `preventScrollReset`, not raw `<a>` tags. Skip revalidation only when a `resolved` selection already has enough local data for the route.
+- React Router framework mode: put variant URL navigation in the product provider `onSelect` callback, not in individual option controls. Same-product option values render as GET links (the framework `<Link>`/`<a href>` to the option URL) that spread `register("optionValue", ...)` directly — the `href` is the no-JS fallback and the registered handler enhances it (do not render them as button-/onClick-only controls, which are dead without JS; see the `hydrogen-variant-form` skill). Cross-product option values use React Router `<Link>` with `preventScrollReset`, not raw `<a>` tags. Skip revalidation only when a `resolved` selection already has enough local data for the route.
 - SvelteKit: if using the core store directly, create it once, hydrate on product identity changes, and destroy it on unmount.
 - Astro: only build this route when the app has server output or a server adapter. Put the interactive product form in a hydrated island or client script that owns the store lifecycle.
 - SolidStart: manage the core store lifecycle inside the client component unless a local binding already exists.
@@ -59,7 +59,7 @@ if (!data?.product) {
 - An invalid or failing product query logs the GraphQL error server-side and returns 500, not 404.
 - A valid query for a missing product returns 404.
 - URL query params select the expected variant on initial server render.
-- Clicking a same-product option changes selected styling and updates the URL through the provider `onSelect` flow.
+- A same-product option value is a GET link to its option URL: activating it without JavaScript navigates and the server resolves the variant; hydrated, it changes selected styling and updates the URL through the provider `onSelect` flow.
 - Switching options removes stale option params before setting the new selected option params.
 - Cross-product option values use the framework's client-side link component when the app has one.
 - After selecting an option, `selectedVariant` still has the fields used by the UI, such as `image`, `price`, `compareAtPrice`, and `sku`.

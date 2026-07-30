@@ -1,6 +1,7 @@
 import type { StorefrontApi } from "@shopify/hydrogen";
 import { Link } from "react-router";
 
+import { content } from "~/lib/content";
 import { PRODUCT_CARD_QUERY } from "~/lib/fragments";
 import { shopifyImageUrl, srcSetFor } from "~/lib/image";
 import { formatPrice } from "~/lib/money";
@@ -69,12 +70,12 @@ export function ProductCard({
         ) : null}
         {onSale ? (
           <span className="badge-sale absolute start-2 top-2 inline-flex items-center rounded-full font-medium">
-            Sale
+            {content.product.badge.sale}
           </span>
         ) : null}
         {soldOut ? (
           <span className="badge-soldout absolute start-2 top-2 inline-flex items-center rounded-full font-medium">
-            Sold out
+            {content.product.badge.soldOut}
           </span>
         ) : null}
       </div>

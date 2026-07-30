@@ -1,11 +1,15 @@
 import { spawn } from "node:child_process";
+import { readFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const STARTUP_TIMEOUT_IN_MS = 120_000;
 const SIGKILL_GRACE_PERIOD_IN_MS = 5_000;
-const TUNNEL_URL_PATTERN = /(https:\/\/[\w-]+\.tryhydrogen\.dev)\b/;
+// Accept both tunnel hostnames: cloudflared quick-tunnels expose a
+// *.trycloudflare.com URL, while the Shopify CLI `--customer-account-push`
+// flag produced *.tryhydrogen.dev URLs via a Shopify-managed tunnel.
+const TUNNEL_URL_PATTERN = /(https:\/\/[\w-]+\.(?:trycloudflare\.com|tryhydrogen\.dev))\b/;
 const TUNNEL_POLL_INTERVAL_IN_MS = 1_000;
 export const TUNNEL_READY_TIMEOUT_IN_MS = 90_000;
 const TUNNEL_FETCH_TIMEOUT_IN_MS = 10_000;
@@ -35,6 +39,7 @@ type DevServerOptions = {
 
 export class DevServer {
   process: ReturnType<typeof spawn> | undefined;
+  tunnelProcess: ReturnType<typeof spawn> | undefined;
   port: number | undefined;
   projectPath: string;
   customerAccountPush: boolean;
@@ -79,136 +84,166 @@ export class DevServer {
       console.log(`[test-server] Pre-allocated port ${allocatedPort} for tunnel test`);
     }
 
-    return new Promise((resolve, reject) => {
-      const args = ["shopify", "hydrogen", "dev"];
+    // Parse the env file (replaces the CLI's --env-file flag): vite.config.ts
+    // reads HYDROGEN_E2E_ENV_VARS and passes it to oxygen({ env }), so only the
+    // env-file vars reach the worker, not the whole process.env (CI secrets).
+    const envFileVars = this.envFile ? await parseEnvFile(this.envFile) : {};
+
+    const { promise, resolve, reject } = Promise.withResolvers<void>();
+
+    // Use react-router's own dev script (the Shopify CLI 4.x dropped
+    // `shopify hydrogen dev`). NO_COLOR keeps Vite's readiness banner plain so
+    // the port regex matches — CI enables colour, which bolds the port.
+    const args = ["exec", "react-router", "dev", "--port", String(allocatedPort)];
+    if (this.customerAccountPush) {
+      args.push("--strictPort");
+    }
+
+    this.process = spawn("pnpm", args, {
+      cwd: this.projectPath,
+      detached: true,
+      env: {
+        ...process.env,
+        NODE_ENV: "development",
+        NO_COLOR: "1",
+        INIT_CWD: this.projectPath,
+        ...(this.entry ? { HYDROGEN_E2E_ENTRY: this.entry } : {}),
+        ...(this.envFile ? { HYDROGEN_E2E_ENV_VARS: JSON.stringify(envFileVars) } : {}),
+      },
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+
+    let started = false;
+    const timeout = setTimeout(() => {
+      if (!started) {
+        this.stop();
+        reject(
+          new Error(
+            `Server ${this.id} failed to start within ${STARTUP_TIMEOUT_IN_MS / 1000}s timeout`,
+          ),
+        );
+      }
+    }, STARTUP_TIMEOUT_IN_MS);
+
+    // Vite prints "➜  Local:   http://localhost:PORT/" once ready. Take the
+    // first non-zero port: port 0 is the OS_ASSIGNED_PORT echoed back before an
+    // ephemeral one is bound, and it can share a chunk with the real URL.
+    const handleOutput = (output: string) => {
+      if (started) return;
+      let match: RegExpMatchArray | undefined;
+      for (const candidate of output.matchAll(/http:\/\/localhost:(\d+)/g)) {
+        if (candidate[1] !== String(OS_ASSIGNED_PORT)) {
+          match = candidate;
+          break;
+        }
+      }
+      if (!match) return;
+
+      started = true;
+      clearTimeout(timeout);
+      const localUrl = match[0];
+      const port = parseInt(match[1], 10);
+      this.port = port;
+      if (!this.id) {
+        this.id = port || parseInt((Math.random() * 1000).toFixed(0), 10);
+      }
+
       if (this.customerAccountPush) {
-        args.push("--customer-account-push");
+        // Spawn a cloudflared quick-tunnel (replaces --customer-account-push).
+        this.startTunnel(port).then(
+          (tunnelUrl) => {
+            this.capturedUrl = tunnelUrl;
+            console.log(`[test-server ${this.id}] Tunnel started: ${tunnelUrl} [${this.storeKey}]`);
+            waitForTunnelReady(tunnelUrl).then(resolve, reject);
+          },
+          (error) => {
+            this.stop();
+            reject(error);
+          },
+        );
+        return;
       }
 
-      if (this.envFile) {
-        args.push("--env-file", this.envFile);
-      }
+      this.capturedUrl = localUrl;
+      console.log(`[test-server ${this.id}] Server started on ${localUrl} [${this.storeKey}]`);
+      resolve(undefined);
+    };
 
-      if (this.entry) {
-        args.push("--entry", this.entry);
-      }
+    this.process.stdout?.on("data", (data) => handleOutput(data.toString()));
+    this.process.stderr?.on("data", (data) => handleOutput(data.toString()));
 
-      this.process = spawn("pnpx", args, {
+    this.process.on("error", (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+
+    this.process.on("exit", (code) => {
+      if (!started) {
+        clearTimeout(timeout);
+        reject(new Error(`Server ${this.id} exited with code ${code}`));
+      }
+    });
+
+    return promise;
+  }
+
+  /**
+   * Spawns a cloudflared quick-tunnel exposing the local dev server. Resolves
+   * with the tunnel URL once cloudflared prints it. Replaces the
+   * `--customer-account-push` tunnel that the Shopify Hydrogen CLI used to run.
+   */
+  private startTunnel(localPort: number): Promise<string> {
+    const { promise, resolve, reject } = Promise.withResolvers<string>();
+
+    this.tunnelProcess = spawn(
+      "cloudflared",
+      ["tunnel", "--url", `http://localhost:${localPort}`],
+      {
         cwd: this.projectPath,
         detached: true,
-        env: {
-          ...process.env,
-          NODE_ENV: "development",
-          SHOPIFY_HYDROGEN_FLAG_PORT: allocatedPort.toString(),
-          INIT_CWD: this.projectPath,
-        },
+        env: { ...process.env, NO_COLOR: "1" },
         stdio: ["pipe", "pipe", "pipe"],
-      });
+      },
+    );
 
-      let started = false;
-      const timeout = setTimeout(() => {
-        if (!started) {
-          this.stop();
-          reject(
-            new Error(
-              `Server ${this.id} failed to start within ${STARTUP_TIMEOUT_IN_MS / 1000}s timeout`,
-            ),
-          );
-        }
-      }, STARTUP_TIMEOUT_IN_MS);
+    const tunnelTimeout = setTimeout(() => {
+      this.stopTunnel();
+      reject(new Error(`Tunnel failed to start within ${TUNNEL_READY_TIMEOUT_IN_MS / 1000}s`));
+    }, TUNNEL_READY_TIMEOUT_IN_MS);
 
-      let localUrl: string | undefined;
-      let tunnelUrl: string | undefined;
-
-      const handleOutput = (output: string) => {
-        if (!localUrl) {
-          const match = output.match(/(http:\/\/localhost:(\d+))/);
-          // Reject port 0 — it means the server echoed back the requested
-          // OS_ASSIGNED_PORT before actually binding to an ephemeral one.
-          if (match && match[2] !== String(OS_ASSIGNED_PORT)) {
-            localUrl = match[1];
-          }
-        }
-        if (this.customerAccountPush && !tunnelUrl) {
-          const match = output.match(TUNNEL_URL_PATTERN);
-          if (match) {
-            tunnelUrl = match[1];
-            console.log(`[test-server] Captured tunnel URL: ${tunnelUrl}`);
-          }
-        }
-
-        if (!started && output.includes("View") && output.includes("app:")) {
-          started = true;
-          clearTimeout(timeout);
-          this.capturedUrl = tunnelUrl || localUrl;
-          const port = this.capturedUrl?.match(/:(\d+)/)?.[1];
-          if (port) {
-            this.port = parseInt(port, 10);
-          }
-          if (!this.id) {
-            this.id = this.port || parseInt((Math.random() * 1000).toFixed(0), 10);
-          }
-          console.log(
-            `[test-server ${this.id}] Server started on ${this.capturedUrl} [${this.storeKey}]`,
-          );
-          if (tunnelUrl) {
-            waitForTunnelReady(tunnelUrl).then(resolve, reject);
-          } else {
-            resolve(undefined);
-          }
-        }
-
-        if (output.includes("log in to Shopify") || output.includes("User verification code:")) {
-          clearTimeout(timeout);
-          this.stop();
-          reject(
-            new Error(
-              "Not logged in to Shopify CLI. Run: cd examples/hydrogen && pnpm exec shopify auth login",
-            ),
-          );
-        } else if (
-          output.includes("Failed to prompt") ||
-          output.includes("Select a shop to log in")
-        ) {
-          clearTimeout(timeout);
-          this.stop();
-          reject(
-            new Error(
-              "Storefront not linked. Run: cd examples/hydrogen && pnpm exec shopify hydrogen link",
-            ),
-          );
-        }
-      };
-
-      if (this.process.stdout) {
-        this.process.stdout.on("data", (data) => {
-          const output = data.toString();
-          handleOutput(output);
-        });
+    const handleTunnelOutput = (output: string) => {
+      const match = output.match(TUNNEL_URL_PATTERN);
+      if (match) {
+        clearTimeout(tunnelTimeout);
+        resolve(match[1]);
       }
+    };
 
-      if (this.process.stderr) {
-        this.process.stderr.on("data", (data) => {
-          const output = data.toString();
-          handleOutput(output);
-        });
-      }
-
-      this.process.on("error", (error) => {
-        clearTimeout(timeout);
-        reject(error);
-      });
-
-      this.process.on("exit", (code) => {
-        if (!started) {
-          clearTimeout(timeout);
-          reject(new Error(`Server ${this.id} exited with code ${code}`));
-        }
-      });
+    this.tunnelProcess.stdout?.on("data", (data) => handleTunnelOutput(data.toString()));
+    this.tunnelProcess.stderr?.on("data", (data) => handleTunnelOutput(data.toString()));
+    this.tunnelProcess.on("error", (error) => {
+      clearTimeout(tunnelTimeout);
+      reject(error);
     });
+
+    return promise;
+  }
+
+  private stopTunnel() {
+    if (!this.tunnelProcess?.pid) {
+      this.tunnelProcess = undefined;
+      return;
+    }
+    try {
+      process.kill(-this.tunnelProcess.pid, "SIGTERM");
+    } catch {
+      // Process already dead
+    }
+    this.tunnelProcess = undefined;
   }
 
   stop() {
+    this.stopTunnel();
     return new Promise((resolve) => {
       if (!this.process?.pid) {
         this.process = undefined;
@@ -258,6 +293,33 @@ export class DevServer {
       }
     });
   }
+}
+
+/**
+ * Parses a KEY="value" env file into a record. Replaces the `--env-file` flag
+ * the Shopify Hydrogen CLI used to accept. The result is JSON-encoded into
+ * HYDROGEN_E2E_ENV_VARS, which vite.config.ts passes to oxygen({ env }).
+ */
+async function parseEnvFile(filePath: string): Promise<Record<string, string>> {
+  const content = await readFile(filePath, "utf8");
+  const vars: Record<string, string> = {};
+  for (const line of content.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eqIndex = trimmed.indexOf("=");
+    if (eqIndex === -1) continue;
+    const key = trimmed.slice(0, eqIndex).trim();
+    let value = trimmed.slice(eqIndex + 1).trim();
+    // Strip a single layer of matching surrounding quotes
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (key) vars[key] = value;
+  }
+  return vars;
 }
 
 // Cloudflare quick-tunnels propagate across edge servers gradually. A single

@@ -18,8 +18,8 @@
         Derived once from a Shopify reference Liquid theme (config/styles.css) for the five-page storefront
         (product, collection, collections list, search, home), the shared chrome, and the
         consent banner. Intentionally excludes the source-scanning directives from the
-        Shopify theme. This file is the single source of truth: it is auto-inlined into
-        each reference/*.html by scripts/inline-core-tokens.ts (run `pnpm tokens:inline`).
+        Shopify theme. This file is the single source of truth: it is inlined into each
+        reference/*.html between AUTO-GENERATED markers (no auto-sync script in-tree — mirror changes by hand into both example CSS files and the reference blocks).
       */
 
       @theme {
@@ -27,7 +27,7 @@
         --color-surface: #ffffff;
         --color-surface-secondary: #e3e3e3;
         --color-on-surface: #000000;
-        --color-on-surface-secondary: #6b7280;
+        --color-on-surface-secondary: #4b5563;
         --color-border: #e5e7eb;
 
         /* ─── Brand: the single source of truth ────────────────────────────────
@@ -47,6 +47,14 @@
         --color-interactive-hover: color-mix(in oklab, var(--color-primary) 85%, black);
         --color-interactive-active: color-mix(in oklab, var(--color-primary) 72%, black);
         --color-interactive-text: #ffffff;
+
+        /* Link text — derived from --color-interactive. Link text has a 4.5:1
+           contrast threshold (text), whereas --color-accent is the decorative
+           focus-ring/badge tint (3:1). Routing link TEXT to --color-link keeps
+           accent rings/badges from being over-darkened to satisfy text contrast.
+           #1b4332 on white is ~9:1, well clear of AA/AAA. */
+        --color-link: var(--color-interactive);
+        --color-link-hover: var(--color-interactive-hover);
 
         /* Accent — a lighter, desaturated tint of the brand, used for focus rings
            and the accent badge. Relative-color oklch: lift lightness, cut chroma to
@@ -215,6 +223,25 @@
         select:focus-visible {
           outline: 2px solid var(--color-interactive);
           outline-offset: 2px;
+        }
+
+        /* Visible keyboard focus for plain links that don't use a .button-*,
+           .card-link, or .nav-dropdown-item class (breadcrumbs, mobile-nav links,
+           predictive-search results, "Clear search"/"Load more", active-filter
+           chips, "Clear all", cart line-item links, footer links). Additive — does
+           not remove any existing inline focus-visible:outline-* utilities. */
+        a:focus-visible {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
+          border-radius: var(--radius-sm);
+        }
+
+        /* Pressed state for plain links. The .button-* classes are excluded so the
+           button-specific :active rules in the components layer win for buttons. */
+        a:not(.button-primary):not(.button-secondary):not(.button-outline):not(.button-icon):not(
+            .button-ghost
+          ):not(.button-surface):not(.button-shop-pay):active {
+          opacity: 0.7;
         }
 
         input:disabled,
@@ -429,6 +456,17 @@
           outline: 2px solid var(--color-accent);
           outline-offset: 2px;
         }
+        /* Pressed feedback - matches the branded-button press ramp: an unselected
+           pill darkens to the secondary surface; a selected (filled) pill darkens to
+           the interactive-active shade. Guarded so disabled pills don't react. */
+        .option-pill:not(:disabled):not([aria-disabled="true"]):active {
+          background: var(--color-surface-secondary);
+        }
+        .option-pill[aria-pressed="true"]:not(:disabled):not([aria-disabled="true"]):active,
+        .option-pill[aria-current="true"]:not(:disabled):not([aria-disabled="true"]):active,
+        .option-pill.is-selected:not(:disabled):not([aria-disabled="true"]):active {
+          background: var(--color-interactive-active);
+        }
         @media (hover: hover) {
           .option-pill:not([aria-pressed="true"]):not([aria-current="true"]):not(.is-selected):not(
               :disabled
@@ -563,20 +601,41 @@
           background: color-mix(in oklab, var(--color-button-shop-pay) 78%, black);
         }
         .button-outline:not(:disabled):not([aria-disabled="true"]):active,
-        .button-ghost:active {
+        .button-ghost:not(:disabled):not([aria-disabled="true"]):active {
           background: color-mix(in oklab, var(--color-surface-secondary) 88%, black);
+        }
+        .button-icon:not(:disabled):not([aria-disabled="true"]):active {
+          opacity: 0.55;
+        }
+        .button-surface:not(:disabled):not([aria-disabled="true"]):active {
+          background: color-mix(in oklab, var(--color-surface) 90%, transparent);
+        }
+
+        /* Visible keyboard focus for every .button-* class — the default so
+           individual buttons no longer have to opt in via inline Tailwind
+           focus-visible:outline-* utilities. Uses --color-accent to match the
+           focus-ring token used by .card-link, .option-pill, .nav-dropdown-item,
+           and .filter-*. Additive over any inline utilities. */
+        :where(
+          .button-primary,
+          .button-secondary,
+          .button-outline,
+          .button-icon,
+          .button-ghost,
+          .button-surface,
+          .button-shop-pay
+        ):focus-visible {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
         }
 
         .quantity-selector-outlined {
-          border: 1px solid var(--color-border);
+          border: none;
           background: transparent;
         }
         .quantity-selector-outlined:focus-within {
           outline: 2px solid var(--color-accent);
           outline-offset: 2px;
-        }
-        .quantity-selector-outlined button:focus-visible {
-          outline: none;
         }
         .quantity-selector-filled {
           background: var(--color-surface-secondary);
@@ -882,9 +941,12 @@
           margin-block-end: 1rem;
         }
         .richtext a {
-          color: var(--color-accent);
+          color: var(--color-link);
           text-decoration: underline;
           text-underline-offset: 2px;
+        }
+        .richtext a:hover {
+          color: var(--color-link-hover);
         }
         .richtext > *:first-child {
           margin-top: 0;
@@ -1018,6 +1080,9 @@
               command="show-modal"
               class="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center gap-2 rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
               aria-label="Menu"
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-controls="mobile-nav-drawer"
             >
               <img
                 src="../icons/icon-menu.svg"
@@ -1043,48 +1108,26 @@
           class="mx-8 hidden min-w-0 flex-1 items-center gap-8 md:flex"
           data-desktop-nav
         >
-          <s-nav-dropdown class="nav-has-dropdown">
-            <a
-              href="#"
-              aria-haspopup="true"
-              class="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
-            >
-              New arrivals
-            </a>
-            <div class="nav-dropdown">
-              <div class="nav-dropdown-inner">
-                <a
-                  href="#"
-                  class="nav-dropdown-item motion-safe:transition-transform motion-safe:active:scale-[0.97]"
-                  >Outerwear</a
-                >
-                <a
-                  href="#"
-                  class="nav-dropdown-item motion-safe:transition-transform motion-safe:active:scale-[0.97]"
-                  >Accessories</a
-                >
-                <a
-                  href="#"
-                  class="nav-dropdown-item motion-safe:transition-transform motion-safe:active:scale-[0.97]"
-                  >Objects</a
-                >
-              </div>
-            </div>
-          </s-nav-dropdown>
           <a
-            href="#"
+            href="/collections"
             class="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
-            >Essentials</a
+          >
+            Collections
+          </a>
+          <a
+            href="/collections/men"
+            class="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
+            >Men</a
           >
           <a
-            href="#"
+            href="/collections/women"
             class="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
-            >Objects</a
+            >Women</a
           >
           <a
-            href="#"
+            href="/collections/accessories"
             class="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
-            >Journal</a
+            >Accessories</a
           >
         </nav>
 
@@ -1131,6 +1174,9 @@
             command="show-modal"
             class="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded bg-transparent p-0 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
             aria-label="Cart (2 items)"
+            aria-haspopup="dialog"
+            aria-expanded="false"
+            aria-controls="cart-drawer"
           >
             <span
               class="relative inline-flex size-5 shrink-0 items-center justify-center"
@@ -1176,7 +1222,6 @@
               <span
                 class="text-on-surface pointer-events-none absolute left-1/2 -translate-x-1/2 text-sm font-medium"
                 id="mobile-nav-title"
-                aria-live="polite"
                 >Mobile navigation</span
               >
               <button
@@ -1206,23 +1251,30 @@
                     <ul role="list" class="flex flex-col">
                       <li>
                         <a
-                          href="#"
+                          href="/collections"
                           class="text-on-surface flex items-center rounded-sm py-3 text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
-                          >New arrivals</a
+                          >Collections</a
                         >
                       </li>
                       <li>
                         <a
-                          href="#"
+                          href="/collections/men"
                           class="text-on-surface flex items-center rounded-sm py-3 text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
-                          >Essentials</a
+                          >Men</a
                         >
                       </li>
                       <li>
                         <a
-                          href="#"
+                          href="/collections/women"
                           class="text-on-surface flex items-center rounded-sm py-3 text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
-                          >Objects</a
+                          >Women</a
+                        >
+                      </li>
+                      <li>
+                        <a
+                          href="/collections/accessories"
+                          class="text-on-surface flex items-center rounded-sm py-3 text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
+                          >Accessories</a
                         >
                       </li>
                     </ul>
@@ -1243,8 +1295,9 @@
           <div class="flex h-full flex-col">
             <div class="flex shrink-0 items-center py-2 ps-4">
               <div class="flex flex-1 items-center gap-2">
-                <h2 id="cart-drawer-title" class="text-on-surface text-lg font-medium">Cart</h2>
-                <span class="cart-count-badge">2</span>
+                <h2 id="cart-drawer-title" class="text-on-surface text-lg font-medium">
+                  Cart <span class="text-on-surface-secondary text-sm font-normal">2 items</span>
+                </h2>
               </div>
               <button
                 type="button"

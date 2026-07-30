@@ -1,4 +1,4 @@
-export { createStorefrontAnalytics } from "./bus";
+export { trackCartAnalytics } from "./cart-tracker";
 export type { AnalyticsEventName } from "./events";
 export { AnalyticsEvent } from "./events";
 export type {
@@ -22,5 +22,4 @@ export type {
   StorefrontAnalyticsConfig,
   StorefrontAnalyticsDestination,
   StorefrontAnalyticsDestinationSetupContext,
-  StorefrontAnalyticsOptions,
 } from "./types";

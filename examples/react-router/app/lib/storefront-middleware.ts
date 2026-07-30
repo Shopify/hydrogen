@@ -65,12 +65,13 @@ export const storefrontMiddleware: MiddlewareFunction<Response> = async (
   { request, context },
   next,
 ) => {
+  const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
     i18n: defaultI18n,
+    buyerIp,
   });
 
-  const buyerIp = getBuyerIp(request.headers);
   const sessionManager = await createCustomerSessionManager(request);
 
   // A module-level LRU cache for non-personalized catalog reads

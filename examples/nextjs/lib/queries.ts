@@ -1,4 +1,4 @@
-import { gql } from "@shopify/hydrogen";
+import { gql, type StorefrontApi } from "@shopify/hydrogen";
 
 import { COLLECTION_CARD_FRAGMENT, PRODUCT_CARD_FRAGMENT } from "./fragments";
 
@@ -70,11 +70,23 @@ export const COLLECTION_QUERY = gql(
           id
           label
           type
+          presentation
           values {
             id
             label
             count
             input
+            swatch {
+              color
+              image {
+                previewImage {
+                  url
+                  altText
+                  width
+                  height
+                }
+              }
+            }
           }
         }
         pageInfo {
@@ -91,6 +103,10 @@ export const COLLECTION_QUERY = gql(
   [PRODUCT_CARD_FRAGMENT],
 );
 
+type CollectionQuery = StorefrontApi.ResultOf<typeof COLLECTION_QUERY>;
+type CollectionProducts = NonNullable<CollectionQuery["collection"]>["products"];
+export type CollectionAvailableFilter = CollectionProducts["filters"][number];
+
 /**
  * Search query. **`__typename` on `search.nodes` is required** — `search` is a
  * heterogeneous union and without `__typename` gql.tada infers `never` for the
@@ -101,15 +117,28 @@ export const SEARCH_QUERY = gql(
   query Search($query: String!, $first: Int!, $after: String, $sortKey: SearchSortKeys, $reverse: Boolean, $productFilters: [ProductFilter!], $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     search(query: $query, first: $first, after: $after, sortKey: $sortKey, reverse: $reverse, productFilters: $productFilters) {
+      totalCount
       productFilters {
         id
         label
         type
+        presentation
         values {
           id
           label
           count
           input
+          swatch {
+            color
+            image {
+              previewImage {
+                url
+                altText
+                width
+                height
+              }
+            }
+          }
         }
       }
       pageInfo {
@@ -127,6 +156,9 @@ export const SEARCH_QUERY = gql(
 `,
   [PRODUCT_CARD_FRAGMENT],
 );
+
+type SearchQuery = StorefrontApi.ResultOf<typeof SEARCH_QUERY>;
+export type SearchAvailableFilter = NonNullable<SearchQuery["search"]>["productFilters"][number];
 
 /** Shop analytics GID query (root layout, best-effort + non-blocking, F1). */
 export const SHOP_ANALYTICS_QUERY = gql(`

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Await, NavLink } from "react-router";
 
 import { useAside } from "~/components/Aside";
-import { toAnalyticsCart, useAnalytics, useAnalyticsCarts } from "~/lib/analytics";
+import { toAnalyticsCart, useAnalytics } from "~/lib/analytics";
 import { useCart } from "~/lib/cart";
 import type { HeaderQuery } from "~/lib/fragments";
 
@@ -130,7 +130,6 @@ function SearchToggle() {
 function CartBadge({ cart, pending }: { cart: CartData; pending: CartPending }) {
   const { open } = useAside();
   const analytics = useAnalytics();
-  const { prevCart } = useAnalyticsCarts();
 
   return (
     <a
@@ -144,7 +143,6 @@ function CartBadge({ cart, pending }: { cart: CartData; pending: CartPending }) 
 
         analytics.bus.publish(AnalyticsEvent.CART_VIEWED, {
           cart: analyticsCart,
-          prevCart,
         });
       }}
     >

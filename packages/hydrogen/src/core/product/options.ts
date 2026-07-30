@@ -2,48 +2,60 @@ import type {
   ProductInput,
   ProductOptionValueFrom,
   ProductVariantFrom,
+  ProductVariantInput,
   SelectedOption,
   VariantOptionState,
   VariantOptionValueState,
 } from "./state";
 
-const OPTION_VALUE_SEPARATOR = ",";
+const INCLUSIVE_RANGE_END_OFFSET = 1;
 
-export type DecodedVariantCache = Map<string, Set<string>>;
+export type DecodedVariantCache = Map<string, number[][]>;
+
+type EncodedVariantConstraint = {
+  optionIndex: number;
+  valueIndex: number;
+};
 
 /**
- * Extracts selected product options from a URL or search params.
+ * Extracts selected product options from search params.
  *
  * Each query parameter is treated as an option name/value pair
  * (e.g. `?Color=Red&Size=M` → `[{name:"Color",value:"Red"},{name:"Size",value:"M"}]`).
  *
+ * When `allowedOptionNames` is provided, the search params are filtered to only
+ * entries whose decoded param name exactly matches a product option name.
+ * Passing an empty array filters out every option.
+ *
  * Pass the result to `createProductFormStore` or `useProductForm` to pre-select
  * the variant that matches the current URL.
- *
- * @param input - A `Request`, `URL`, `URLSearchParams`, or URL string.
- * @param options.optionNames - When provided, only parameters whose names are
- *   in this list are included. Useful to avoid picking up unrelated query params.
  *
  * @example
  * ```ts
  * // Loader (React Router / Remix)
- * const selectedOptions = getSelectedProductOptions(request);
+ * const selectedOptions = getSelectedProductOptions({
+ *   searchParams: new URL(request.url).searchParams,
+ * });
  *
- * // Non-framework / plain JS
- * const params = new URL(window.location.href).searchParams;
- * const selectedOptions = getSelectedProductOptions(params);
+ * // Filter to known product option names when product data is available
+ * const selectedOptions = getSelectedProductOptions({
+ *   searchParams,
+ *   allowedOptionNames: product.options.map((option) => option.name),
+ * });
  * ```
  */
-export function getSelectedProductOptions(
-  input: Request | URL | URLSearchParams | string,
-  options: { optionNames?: string[] } = {},
-): SelectedOption[] {
-  const params = toSearchParams(input);
-  const optionNames = options.optionNames ? new Set(options.optionNames) : null;
+export function getSelectedProductOptions({
+  searchParams,
+  allowedOptionNames,
+}: {
+  searchParams: URLSearchParams;
+  allowedOptionNames?: readonly string[];
+}): SelectedOption[] {
+  const allowedOptionNameSet = allowedOptionNames ? new Set(allowedOptionNames) : null;
   const selectedOptions: SelectedOption[] = [];
 
-  for (const [name, value] of params.entries()) {
-    if (optionNames && !optionNames.has(name)) continue;
+  for (const [name, value] of searchParams.entries()) {
+    if (allowedOptionNameSet && !allowedOptionNameSet.has(name)) continue;
     selectedOptions.push({ name, value });
   }
 
@@ -58,27 +70,18 @@ export function getAdjacentAndFirstSelectableVariants<TProduct extends ProductIn
 
   for (const option of product.options) {
     for (const value of option.optionValues) {
-      if (value.firstSelectableVariant) {
-        variants.set(
-          selectedOptionsKey(value.firstSelectableVariant.selectedOptions, product.options),
-          value.firstSelectableVariant as ProductVariantFrom<TProduct>,
-        );
+      if (isConcreteProductVariant<TProduct>(value.firstSelectableVariant)) {
+        addVariant(variants, value.firstSelectableVariant, product.options);
       }
     }
   }
 
   for (const variant of product.adjacentVariants) {
-    variants.set(
-      selectedOptionsKey(variant.selectedOptions, product.options),
-      variant as ProductVariantFrom<TProduct>,
-    );
+    if (isConcreteProductVariant<TProduct>(variant)) addVariant(variants, variant, product.options);
   }
 
-  if (product.selectedOrFirstAvailableVariant) {
-    variants.set(
-      selectedOptionsKey(product.selectedOrFirstAvailableVariant.selectedOptions, product.options),
-      product.selectedOrFirstAvailableVariant as ProductVariantFrom<TProduct>,
-    );
+  if (isConcreteProductVariant<TProduct>(product.selectedOrFirstAvailableVariant)) {
+    addVariant(variants, product.selectedOrFirstAvailableVariant, product.options);
   }
 
   return [...variants.values()];
@@ -90,63 +93,32 @@ export function buildProductOptions<TProduct extends ProductInput>(
   cache?: DecodedVariantCache,
 ): VariantOptionState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>[] {
   const selectedOptionMap = selectedOptionsToMap(selectedOptions);
-  const optionIndexByName = new Map(product.options.map((option, index) => [option.name, index]));
   const optionValueIndex = buildOptionValueIndex(product);
-  const variants = mapVariants(product);
+  const selectableVariants = getAdjacentAndFirstSelectableVariants(product);
+  const encodedOptionIndexes = buildEncodedOptionIndexes(product, selectableVariants);
+  const variants = mapVariants(product, selectableVariants);
+  const currentProductOptionValues = buildCurrentProductOptionValues(product, selectableVariants);
 
   return product.options.map((option) => ({
     name: option.name,
-    values: option.optionValues.map(
-      (
+    values: option.optionValues.map((value) =>
+      buildProductOptionValue({
+        cache,
+        currentProductOptionValues,
+        encodedOptionIndexes,
+        option,
+        optionValueIndex,
+        product,
+        selectedOptionMap,
         value,
-      ): VariantOptionValueState<
-        ProductVariantFrom<TProduct>,
-        ProductOptionValueFrom<TProduct>
-      > => {
-        const targetOptionMap = { ...selectedOptionMap, [option.name]: value.name };
-        const targetSelectedOptions = selectedOptionsFromMap(product, targetOptionMap);
-        const key = selectedOptionsKey(targetSelectedOptions, product.options);
-        const variant = (variants.get(key) as ProductVariantFrom<TProduct> | undefined) ?? null;
-        const resolvedSelectedOptions = variant?.selectedOptions ?? targetSelectedOptions;
-        const firstSelectableVariant =
-          (value.firstSelectableVariant as ProductVariantFrom<TProduct> | null | undefined) ?? null;
-        const encoding = buildEncodingArray(targetOptionMap, product, optionValueIndex);
-        const optionIndex = optionIndexByName.get(option.name) ?? 0;
-        const topDownEncoding = encoding.slice(0, optionIndex + 1);
-        const selected = selectedOptionMap[option.name] === value.name;
-        const exists = resolveEncodedStatus(
-          product.encodedVariantExistence,
-          topDownEncoding,
-          true,
-          cache,
-        );
-        const available = resolveEncodedStatus(
-          product.encodedVariantAvailability,
-          topDownEncoding,
-          variant?.availableForSale ?? false,
-          cache,
-        );
-        const handle = selected
-          ? product.handle
-          : (variant?.product?.handle ?? firstSelectableVariant?.product?.handle ?? product.handle);
-
-        return {
-          name: value.name,
-          swatch: value.swatch,
-          selected,
-          exists,
-          available,
-          variant,
-          selectedOptions: resolvedSelectedOptions,
-          handle,
-        };
-      },
+        variants,
+      }),
     ),
   }));
 }
 
 export function selectedOptionsToMap(selectedOptions: SelectedOption[]): Record<string, string> {
-  const map: Record<string, string> = Object.create(null) as Record<string, string>;
+  const map: Record<string, string> = Object.create(null);
   for (const option of selectedOptions) {
     map[option.name] = option.value;
   }
@@ -174,29 +146,101 @@ export function selectedOptionsFromMap(
   return selectedOptions;
 }
 
-function toSearchParams(input: Request | URL | URLSearchParams | string): URLSearchParams {
-  if (input instanceof URLSearchParams) return new URLSearchParams(input);
-  if (input instanceof URL) return new URLSearchParams(input.searchParams);
-  if (typeof Request !== "undefined" && input instanceof Request) {
-    return new URLSearchParams(new URL(input.url).searchParams);
-  }
-
-  const value = String(input);
-  try {
-    return new URLSearchParams(new URL(value).searchParams);
-  } catch {
-    return new URLSearchParams(value.startsWith("?") ? value.slice(1) : value);
-  }
-}
-
 function mapVariants<TProduct extends ProductInput>(
   product: TProduct,
+  selectableVariants: ProductVariantFrom<TProduct>[],
 ): Map<string, ProductVariantFrom<TProduct>> {
   const variants = new Map<string, ProductVariantFrom<TProduct>>();
-  for (const variant of getAdjacentAndFirstSelectableVariants(product)) {
+  for (const variant of selectableVariants) {
     variants.set(selectedOptionsKey(variant.selectedOptions, product.options), variant);
   }
   return variants;
+}
+
+function addVariant<TVariant extends ProductVariantInput>(
+  variants: Map<string, TVariant>,
+  variant: TVariant,
+  productOptions: Array<{ name: string }>,
+): void {
+  variants.set(selectedOptionsKey(variant.selectedOptions, productOptions), variant);
+}
+
+function buildProductOptionValue<TProduct extends ProductInput>({
+  cache,
+  currentProductOptionValues,
+  encodedOptionIndexes,
+  option,
+  optionValueIndex,
+  product,
+  selectedOptionMap,
+  value,
+  variants,
+}: {
+  cache?: DecodedVariantCache;
+  currentProductOptionValues: Map<string, Set<string>>;
+  encodedOptionIndexes: Map<string, Map<string, number>>;
+  option: TProduct["options"][number];
+  optionValueIndex: Map<string, Map<string, number>>;
+  product: TProduct;
+  selectedOptionMap: Record<string, string>;
+  value: ProductOptionValueFrom<TProduct>;
+  variants: Map<string, ProductVariantFrom<TProduct>>;
+}): VariantOptionValueState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>> {
+  const firstSelectableVariant = isConcreteProductVariant<TProduct>(value.firstSelectableVariant)
+    ? value.firstSelectableVariant
+    : null;
+  const selected = selectedOptionMap[option.name] === value.name;
+  const crossProduct = isCrossProductOptionValue(
+    product,
+    option.name,
+    value.name,
+    firstSelectableVariant,
+    currentProductOptionValues,
+  );
+  const targetOptionMap = buildTargetOptionMap({
+    currentProductOptionValues,
+    crossProduct,
+    firstSelectableVariant,
+    optionName: option.name,
+    selectedOptionMap,
+    valueName: value.name,
+  });
+  const targetSelectedOptions = selectedOptionsFromMap(product, targetOptionMap);
+  const key = selectedOptionsKey(targetSelectedOptions, product.options);
+  const variant = variants.get(key) ?? null;
+  const targetProductHandle = getTargetProductHandle(product, crossProduct, firstSelectableVariant);
+  const encodingConstraints = buildEncodingConstraints(
+    targetOptionMap,
+    product,
+    optionValueIndex,
+    encodedOptionIndexes.get(targetProductHandle),
+  );
+
+  return {
+    name: value.name,
+    swatch: value.swatch,
+    selected,
+    exists: resolveEncodedStatus(product.encodedVariantExistence, encodingConstraints, true, cache),
+    available: resolveEncodedStatus(
+      product.encodedVariantAvailability,
+      encodingConstraints,
+      variant?.availableForSale ?? false,
+      cache,
+    ),
+    variant,
+    selectedOptions: variant?.selectedOptions ?? targetSelectedOptions,
+    handle: getOptionValueHandle(selected, product.handle, variant, firstSelectableVariant),
+  };
+}
+
+function getOptionValueHandle<TVariant extends ProductVariantInput>(
+  selected: boolean,
+  productHandle: string,
+  variant: TVariant | null,
+  firstSelectableVariant: TVariant | null,
+): string {
+  if (selected) return productHandle;
+  return variant?.product?.handle ?? firstSelectableVariant?.product?.handle ?? productHandle;
 }
 
 function buildOptionValueIndex<TProduct extends ProductInput>(
@@ -210,52 +254,189 @@ function buildOptionValueIndex<TProduct extends ProductInput>(
   );
 }
 
-function buildEncodingArray<TProduct extends ProductInput>(
+function getTargetProductHandle<TVariant extends ProductVariantInput>(
+  product: ProductInput,
+  crossProduct: boolean,
+  firstSelectableVariant: TVariant | null,
+): string {
+  if (crossProduct && firstSelectableVariant?.product?.handle) {
+    return firstSelectableVariant.product.handle;
+  }
+  return product.handle;
+}
+
+function buildEncodedOptionIndexes<TProduct extends ProductInput>(
+  product: TProduct,
+  selectableVariants: ProductVariantFrom<TProduct>[],
+): Map<string, Map<string, number>> {
+  const indexes = new Map<string, Map<string, number>>();
+  for (const variant of selectableVariants) {
+    const productHandle = variant.product?.handle ?? product.handle;
+    addEncodedOptionIndex(indexes, productHandle, product.options, variant.selectedOptions);
+  }
+  return indexes;
+}
+
+function addEncodedOptionIndex(
+  indexes: Map<string, Map<string, number>>,
+  productHandle: string,
+  productOptions: Array<{ name: string }>,
+  selectedOptions: SelectedOption[],
+): void {
+  const index = indexes.get(productHandle) ?? new Map<string, number>();
+  const selectedOptionNames = new Set(selectedOptions.map((option) => option.name));
+
+  for (const option of productOptions) {
+    if (!selectedOptionNames.has(option.name) || index.has(option.name)) continue;
+    index.set(option.name, index.size);
+  }
+
+  indexes.set(productHandle, index);
+}
+
+function buildCurrentProductOptionValues<TProduct extends ProductInput>(
+  product: TProduct,
+  selectableVariants: ProductVariantFrom<TProduct>[],
+): Map<string, Set<string>> {
+  const optionValues = new Map<string, Set<string>>();
+  for (const variant of selectableVariants) {
+    if (!variantBelongsToProduct(product, variant)) continue;
+    for (const option of variant.selectedOptions) {
+      addCurrentProductOptionValue(optionValues, option.name, option.value);
+    }
+  }
+  return optionValues;
+}
+
+function addCurrentProductOptionValue(
+  optionValues: Map<string, Set<string>>,
+  optionName: string,
+  valueName: string,
+): void {
+  const values = optionValues.get(optionName) ?? new Set<string>();
+  values.add(valueName);
+  optionValues.set(optionName, values);
+}
+
+function isCrossProductOptionValue<TVariant extends ProductVariantInput>(
+  product: ProductInput,
+  optionName: string,
+  valueName: string,
+  firstSelectableVariant: TVariant | null,
+  currentProductOptionValues: Map<string, Set<string>>,
+): boolean {
+  if (!firstSelectableVariant || variantBelongsToProduct(product, firstSelectableVariant)) {
+    return false;
+  }
+  return !currentProductOptionValues.get(optionName)?.has(valueName);
+}
+
+function variantBelongsToProduct<TVariant extends ProductVariantInput>(
+  product: ProductInput,
+  variant: TVariant,
+): boolean {
+  return variant.product?.handle === undefined || variant.product.handle === product.handle;
+}
+
+type TargetOptionMapInput<TVariant extends ProductVariantInput> = {
+  currentProductOptionValues: Map<string, Set<string>>;
+  crossProduct: boolean;
+  firstSelectableVariant: TVariant | null;
+  optionName: string;
+  selectedOptionMap: Record<string, string>;
+  valueName: string;
+};
+
+function buildTargetOptionMap<TVariant extends ProductVariantInput>({
+  currentProductOptionValues,
+  crossProduct,
+  firstSelectableVariant,
+  optionName,
+  selectedOptionMap,
+  valueName,
+}: TargetOptionMapInput<TVariant>): Record<string, string> {
+  if (crossProduct && firstSelectableVariant) {
+    return selectedOptionsToMap(firstSelectableVariant.selectedOptions);
+  }
+
+  const nextOptionMap = { ...selectedOptionMap, [optionName]: valueName };
+  if (currentProductOptionValues.size === 0) return nextOptionMap;
+  return filterOptionMap(nextOptionMap, currentProductOptionValues);
+}
+
+function filterOptionMap(
+  selectedOptionMap: Record<string, string>,
+  currentProductOptionValues: Map<string, Set<string>>,
+): Record<string, string> {
+  const filtered: Record<string, string> = Object.create(null);
+  for (const [optionName, values] of currentProductOptionValues) {
+    const value = selectedOptionMap[optionName];
+    if (value !== undefined && values.has(value)) filtered[optionName] = value;
+  }
+  return filtered;
+}
+
+function buildEncodingConstraints<TProduct extends ProductInput>(
   selectedOptionMap: Record<string, string>,
   product: TProduct,
   optionValueIndex = buildOptionValueIndex(product),
-): number[] {
-  const encoding: number[] = [];
+  encodedOptionIndex?: Map<string, number>,
+): EncodedVariantConstraint[] {
+  const constraints: EncodedVariantConstraint[] = [];
 
-  for (const option of product.options) {
+  for (const [productOptionIndex, option] of product.options.entries()) {
     const selectedValue = selectedOptionMap[option.name];
     if (selectedValue === undefined) continue;
-    const index = optionValueIndex.get(option.name)?.get(selectedValue);
-    if (index !== undefined) encoding.push(index);
+    const optionIndex = encodedOptionIndex?.get(option.name) ?? productOptionIndex;
+    const valueIndex = optionValueIndex.get(option.name)?.get(selectedValue);
+    if (valueIndex === undefined) continue;
+    constraints.push({ optionIndex, valueIndex });
   }
 
-  return encoding;
+  return constraints;
 }
 
 function resolveEncodedStatus(
   encodedField: string | null | undefined,
-  targetEncoding: number[],
+  constraints: EncodedVariantConstraint[],
   fallback: boolean,
   cache?: DecodedVariantCache,
 ): boolean {
   if (!encodedField) return fallback;
-  return isOptionValueCombinationInEncodedVariant(targetEncoding, encodedField, cache);
+  return isAnyEncodedVariantMatchingConstraints(constraints, encodedField, cache);
 }
 
-function isOptionValueCombinationInEncodedVariant(
-  targetOptionValueCombination: number[],
+function isAnyEncodedVariantMatchingConstraints(
+  constraints: EncodedVariantConstraint[],
   encodedVariantField: string,
   cache?: DecodedVariantCache,
 ): boolean {
-  if (targetOptionValueCombination.length === 0) return false;
+  if (constraints.length === 0) return false;
 
-  let decoded = cache?.get(encodedVariantField);
-  if (!decoded) {
-    decoded = new Set<string>();
-    for (const optionValue of decodeEncodedVariant(encodedVariantField)) {
-      for (let i = 0; i < optionValue.length; i++) {
-        decoded.add(optionValue.slice(0, i + 1).join(OPTION_VALUE_SEPARATOR));
-      }
-    }
-    cache?.set(encodedVariantField, decoded);
-  }
+  return getDecodedVariantCombinations(encodedVariantField, cache).some((combination) =>
+    combinationMatchesConstraints(combination, constraints),
+  );
+}
 
-  return decoded.has(targetOptionValueCombination.join(OPTION_VALUE_SEPARATOR));
+function getDecodedVariantCombinations(
+  encodedVariantField: string,
+  cache?: DecodedVariantCache,
+): number[][] {
+  const cached = cache?.get(encodedVariantField);
+  if (cached) return cached;
+
+  const decoded = decodeEncodedVariant(encodedVariantField);
+  cache?.set(encodedVariantField, decoded);
+  return decoded;
+}
+
+function combinationMatchesConstraints(
+  combination: number[],
+  constraints: EncodedVariantConstraint[],
+): boolean {
+  return constraints.every(
+    ({ optionIndex, valueIndex }) => combination[optionIndex] === valueIndex,
+  );
 }
 
 export function decodeEncodedVariant(encodedVariantField: string | null | undefined): number[][] {
@@ -271,62 +452,108 @@ export function decodeEncodedVariant(encodedVariantField: string | null | undefi
 
 function decodeV1EncodedVariant(encodedVariantField: string): number[][] {
   const tokenizer = /[ :,-]/g;
-  const decodedOptions: number[][] = [];
-  const currentOptionValue: number[] = [];
-  let index = 0;
-  let depth = 0;
-  let rangeStart: number | null = null;
+  const state: DecodeV1State = {
+    currentOptionValue: [],
+    decodedOptions: [],
+    depth: 0,
+    index: 0,
+    rangeStart: null,
+  };
   let token: RegExpExecArray | null;
 
   while ((token = tokenizer.exec(encodedVariantField))) {
-    const operation = token[0];
-    const optionValueIndex =
-      Number.parseInt(encodedVariantField.slice(index, token.index), 10) || 0;
-
-    if (rangeStart !== null) {
-      for (; rangeStart < optionValueIndex; rangeStart++) {
-        currentOptionValue[depth] = rangeStart;
-        decodedOptions.push([...currentOptionValue]);
-      }
-      rangeStart = null;
-    }
-
-    currentOptionValue[depth] = optionValueIndex;
-
-    if (operation === "-") {
-      rangeStart = optionValueIndex;
-    } else if (operation === ":") {
-      depth++;
-    } else {
-      if (
-        operation === " " ||
-        (operation === "," && encodedVariantField[token.index - 1] !== ",")
-      ) {
-        decodedOptions.push([...currentOptionValue]);
-      }
-
-      if (operation === ",") {
-        currentOptionValue.pop();
-        depth--;
-      }
-    }
-
-    index = tokenizer.lastIndex;
+    processDecodeV1Token(encodedVariantField, state, token, tokenizer);
   }
 
+  pushFinalDecodeV1Value(encodedVariantField, state);
+
+  return state.decodedOptions;
+}
+
+type DecodeV1State = {
+  currentOptionValue: number[];
+  decodedOptions: number[][];
+  depth: number;
+  index: number;
+  rangeStart: number | null;
+};
+
+function isConcreteProductVariant<TProduct extends ProductInput>(
+  variant: ProductVariantInput | null | undefined,
+): variant is ProductVariantFrom<TProduct> {
+  return variant !== null && variant !== undefined;
+}
+
+function processDecodeV1Token(
+  encodedVariantField: string,
+  state: DecodeV1State,
+  token: RegExpExecArray,
+  tokenizer: RegExp,
+): void {
+  const operation = token[0];
+  const optionValueIndex =
+    Number.parseInt(encodedVariantField.slice(state.index, token.index), 10) || 0;
+
+  pushDecodeV1Range(state, optionValueIndex);
+  state.currentOptionValue[state.depth] = optionValueIndex;
+
+  if (operation === "-") {
+    state.rangeStart = optionValueIndex;
+  } else if (operation === ":") {
+    state.depth++;
+  } else {
+    processDecodeV1Separator(encodedVariantField, state, token, operation);
+  }
+
+  state.index = tokenizer.lastIndex;
+}
+
+function processDecodeV1Separator(
+  encodedVariantField: string,
+  state: DecodeV1State,
+  token: RegExpExecArray,
+  operation: string,
+): void {
+  if (shouldPushDecodeV1Option(encodedVariantField, token, operation)) {
+    state.decodedOptions.push([...state.currentOptionValue]);
+  }
+
+  if (operation !== ",") return;
+
+  state.currentOptionValue.pop();
+  state.depth--;
+}
+
+function shouldPushDecodeV1Option(
+  encodedVariantField: string,
+  token: RegExpExecArray,
+  operation: string,
+): boolean {
+  return operation === " " || (operation === "," && encodedVariantField[token.index - 1] !== ",");
+}
+
+function pushFinalDecodeV1Value(encodedVariantField: string, state: DecodeV1State): void {
   const finalIndex = encodedVariantField.match(/\d+$/g)?.[0];
-  if (finalIndex !== undefined) {
-    const finalValueIndex = Number.parseInt(finalIndex, 10);
-    if (rangeStart !== null) {
-      for (; rangeStart <= finalValueIndex; rangeStart++) {
-        currentOptionValue[depth] = rangeStart;
-        decodedOptions.push([...currentOptionValue]);
-      }
-    } else {
-      currentOptionValue[depth] = finalValueIndex;
-      decodedOptions.push([...currentOptionValue]);
-    }
+  if (finalIndex === undefined) return;
+
+  const finalValueIndex = Number.parseInt(finalIndex, 10);
+  if (state.rangeStart !== null) {
+    pushDecodeV1Range(state, finalValueIndex + INCLUSIVE_RANGE_END_OFFSET);
+    return;
   }
 
-  return decodedOptions;
+  state.currentOptionValue[state.depth] = finalValueIndex;
+  state.decodedOptions.push([...state.currentOptionValue]);
+}
+
+function pushDecodeV1Range(state: DecodeV1State, rangeEndExclusive: number): void {
+  const rangeStart = state.rangeStart;
+  if (rangeStart === null) return;
+
+  for (let value = rangeStart; value < rangeEndExclusive; value++) {
+    state.currentOptionValue[state.depth] = value;
+    state.decodedOptions.push([...state.currentOptionValue]);
+  }
+
+  state.rangeStart = null;
 }

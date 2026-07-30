@@ -27,9 +27,7 @@ function toShopGid(shopId: string): string {
 }
 
 export const analyticsShop = {
-  shopId: process.env.SHOP_ID
-    ? toShopGid(process.env.SHOP_ID)
-    : "gid://shopify/Shop/55145660472",
+  shopId: process.env.SHOP_ID ? toShopGid(process.env.SHOP_ID) : "gid://shopify/Shop/55145660472",
   acceptedLanguage: "EN",
   currency: "USD",
   hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID || "1000014875",

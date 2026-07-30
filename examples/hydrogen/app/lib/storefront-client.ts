@@ -74,13 +74,14 @@ export function createStorefrontClientForRequest({
   i18n,
   shopifyRequestContext,
 }: CreateStorefrontClientOptions): StorefrontClient {
+  const buyerIp = shopifyRequestContext.buyerIp ?? getBuyerIp(request.headers);
   const client = createStorefrontClient({
     type: "private",
     requestContext: shopifyRequestContext,
     config: {
       storeDomain: env.PUBLIC_STORE_DOMAIN,
       privateStorefrontToken: getPrivateStorefrontToken(env),
-      buyerIp: getBuyerIp(request.headers),
+      buyerIp,
       cache,
       waitUntil,
     },

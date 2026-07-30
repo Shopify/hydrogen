@@ -71,9 +71,9 @@ export function CollectionBrowser(props: Props) {
 }
 ```
 
-`router.refresh()` is important when the client URL changes before the React Server Component payload catches up.
+`router.refresh()` is important when the client URL changes before the React Server Component payload catches up. Under Partial Prerendering, a `<Link>` to a changed `searchParams` (active-filter chips, clear-all, load-more) can leave the server data stale — if it does, add `onClick={() => router.refresh()}` to those links (the `<Link>` stays the no-JS baseline).
 
-Build the actual `BrowserContent` controls from the React reference patterns: sort option values come from `getSortByValue(...)`, filter checkbox names/values come from parsing `FilterValue.input` and passing that exact parsed filter through `serializeCollectionParams(...)`, and uncontrolled checkbox reset keys belong on the filter subtree when external navigation can clear filters.
+Build the actual `BrowserContent` controls from the React reference patterns: sort option values come from `getSortByValue(...)`, filter checkbox names/values come from parsing `FilterValue.input` and passing that exact parsed filter through `serializeCollectionParams(...)`, and uncontrolled checkbox reset keys belong on the filter subtree keyed by serialized **filter state** (`serializeCollectionParams({filters: state.filters, sortKey: undefined, reverse: false}).toString()`), not the live URL — the URL clears before the `CollectionProvider` reconciler settles `state.filters`, so a URL-keyed remount bakes in stale `defaultChecked`.
 
 ```tsx
 function filterValueInputParamEntries(input: string): Array<{ name: string; value: string }> {

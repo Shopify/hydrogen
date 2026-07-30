@@ -15,9 +15,11 @@ import {
 } from "@shopify/hydrogen";
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  const buyerIp = context.clientAddress;
   const requestContext = createShopifyRequestContext({
     request: context.request,
     i18n: { country: "US", language: "EN" },
+    buyerIp,
   });
   const client = createStorefrontClient({
     type: "private",
@@ -25,7 +27,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     config: {
       storeDomain: import.meta.env.PUBLIC_STORE_DOMAIN,
       privateStorefrontToken: import.meta.env.PRIVATE_STOREFRONT_API_TOKEN,
-      buyerIp: context.clientAddress,
+      buyerIp,
     },
   });
 

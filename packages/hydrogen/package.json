@@ -10,10 +10,11 @@
     "directory": "packages/hydrogen"
   },
   "bin": {
-    "hydrogen": "./dist/cli/index.mjs"
+    "hydrogen": "./bin/hydrogen.mjs"
   },
   "files": [
     "README.md",
+    "bin",
     "dist",
     "skills"
   ],
@@ -46,6 +47,11 @@
     "./skills/*": "./skills/*",
     "./storefront-api-types": "./dist/storefront-api-types.d.ts",
     "./storefront.schema.json": "./dist/storefront.schema.json",
+    "./ts-plugin": {
+      "types": "./dist/ts-plugin/index.d.cts",
+      "require": "./dist/ts-plugin/index.cjs",
+      "default": "./dist/ts-plugin/index.cjs"
+    },
     "./react": {
       "types": {
         "development": "./dist/development/react/index.d.mts",
@@ -54,6 +60,16 @@
       "import": {
         "development": "./dist/development/react/index.mjs",
         "default": "./dist/react/index.mjs"
+      }
+    },
+    "./vue": {
+      "types": {
+        "development": "./dist/development/vue/index.d.mts",
+        "default": "./dist/vue/index.d.mts"
+      },
+      "import": {
+        "development": "./dist/development/vue/index.mjs",
+        "default": "./dist/vue/index.mjs"
       }
     }
   },
@@ -73,7 +89,7 @@
     "postcodegen": "node scripts/postprocess-tada-env.ts && oxfmt src/graphql/generated/*.d.ts src/graphql/generated/*.json"
   },
   "dependencies": {
-    "gql.tada": "^1.9.2"
+    "gql.tada": "1.9.2"
   },
   "devDependencies": {
     "@0no-co/graphqlsp": "^1.15.4",
@@ -83,6 +99,7 @@
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vue/test-utils": "^2.4.0",
     "graphql": "^16.13.2",
     "happy-dom": "^20.9.0",
     "magic-string": "^0.30.21",
@@ -95,10 +112,14 @@
     "vitest": "^3.0.0"
   },
   "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0"
+    "react": "^18.0.0 || ^19.0.0",
+    "vue": "^3.5.0"
   },
   "peerDependenciesMeta": {
     "react": {
+      "optional": true
+    },
+    "vue": {
       "optional": true
     }
   },

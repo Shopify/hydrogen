@@ -1,9 +1,21 @@
 import type { ShopifyGlobal } from "../../globals";
+import type {
+  ConsentConfig,
+  ShopAnalyticsChannel,
+  StorefrontAnalyticsConfig,
+} from "../analytics/types";
 import type { I18nConfig } from "../headers";
 import type { ShopifyRouteTemplates } from "../standard-routes/index";
 
+export type ShopifyScriptsAnalyticsConfig = {
+  channel?: ShopAnalyticsChannel;
+  customData?: StorefrontAnalyticsConfig["customData"];
+};
+
 export type ShopifyScriptsI18n = Pick<I18nConfig, "country" | "language"> &
-  Partial<Pick<I18nConfig, "pathPrefix">>;
+  Partial<Pick<I18nConfig, "pathPrefix">> & {
+    currency?: string;
+  };
 
 // DOM types expose element properties such as `crossOrigin`, but these descriptors represent
 // serialized HTML attributes such as `crossorigin` so they work outside React. Attribute values are
@@ -57,17 +69,27 @@ export type ShopifyScriptTagDescriptors = {
 export type ShopifyScriptsShop = {
   shopId: string;
   storefrontId: string;
+  /** The shop's permanent `*.myshopify.com` domain, exposed as `window.Shopify.shop`. */
+  myshopifyDomain: string;
 };
 
 export type ShopifyScriptTagsOptions = {
+  analytics?: ShopifyScriptsAnalyticsConfig;
+  consent?: ConsentConfig;
   i18n?: ShopifyScriptsI18n;
+  /** Loads Inbox. Render `<shopify-chat>` where you want the chat UI to appear. */
+  inbox?: boolean;
   nonce?: string;
-  shop?: ShopifyScriptsShop | null;
+  shop: ShopifyScriptsShop;
+  shopifyAnalytics?: boolean;
 };
 
-export type InitializeShopifyScriptsOptions = {
+export type ShopifyRoutesOptions = {
   navigate?: ShopifyGlobal["navigate"];
-  routes: ShopifyRouteTemplates;
+  routes?: ShopifyRouteTemplates;
+};
+
+export type InitializeShopifyScriptsOptions = ShopifyRoutesOptions & {
   webMcp?: boolean;
 };
 

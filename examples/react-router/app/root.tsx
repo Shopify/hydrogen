@@ -1,15 +1,18 @@
-import {
-  analyticsConsent as analyticsConsentConfig,
-  analyticsShop as analyticsShopConfig,
-  shop,
-  defaultI18n,
-} from "@shared/config";
-import { Cache, gql } from "@shopify/hydrogen";
+import { analyticsConsent, defaultI18n, shop } from "@shared/config";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 
 import "./app.css";
 
-import { Links, Meta, Outlet, Scripts, ScrollRestoration, useNavigate } from "react-router";
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  isRouteErrorResponse,
+  useNavigate,
+  useRouteError,
+} from "react-router";
 
 import { AnalyticsTracker } from "~/components/AnalyticsTracker";
 import { CartAnalyticsTracker } from "~/components/CartAnalyticsTracker";
@@ -17,8 +20,10 @@ import { CartDrawer } from "~/components/CartDrawer";
 import { ConsentBanner } from "~/components/ConsentBanner";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
+import { NotFound } from "~/components/NotFound";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
+import { content } from "~/lib/content";
 import { customerAccountContext } from "~/lib/customer-account";
 import { routeTemplates } from "~/lib/route-templates";
 import { storefrontClientContext } from "~/lib/storefront-context";
@@ -34,25 +39,11 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
 ];
 
-const SHOP_ANALYTICS_QUERY = gql(`
-  query RootShopAnalytics {
-    shop {
-      id
-      name
-      description
-    }
-  }
-`);
-
 /**
- * Root loader — server-seeds the cart provider and resolves analytics shop
- * metadata. Per engineering.md F1, the cart is seeded here (the root route, not
- * a parent layout that blocks the shared shell) and the full `{cart, errors?}`
- * envelope is passed to `CartProvider` so `{cart: null}` tells the client the
- * server already checked (`hydrogen-cart-ui`).
- *
- * The analytics shop GID is fetched from the Storefront API and merged with the
- * client-safe `@shared/config` analytics metadata (`hydrogen-analytics`).
+ * Root loader — server-seeds the cart provider. Per engineering.md F1, the cart
+ * is seeded here (the root route, not a parent layout that blocks the shared
+ * shell) and the full `{cart, errors?}` envelope is passed to `CartProvider` so
+ * `{cart: null}` tells the client the server already checked (`hydrogen-cart-ui`).
  */
 export async function loader({ context }: Route.LoaderArgs) {
   const storefrontClient = context.get(storefrontClientContext);
@@ -65,40 +56,6 @@ export async function loader({ context }: Route.LoaderArgs) {
       console.error("[hydrogen] Cart seed failed", error);
       return { cart: null };
     });
-
-  // Resolve the analytics shop GID. Best-effort and NON-BLOCKING (F1): race
-  // the query against a short timeout so a slow/cold Storefront API read never
-  // blocks the shared shell — fall back to the config-derived shop GID/name.
-  // The query is `Cache.long()`-cached, so warm requests resolve instantly.
-  const shopFallback = {
-    shopId: `gid://shopify/Shop/${shop.shopId}`,
-    shopName: "CORE",
-    shopDescription: null,
-  };
-  let shopId: string = shopFallback.shopId;
-  let shopName: string = shopFallback.shopName;
-  let shopDescription: string | null = shopFallback.shopDescription;
-  try {
-    const { data, errors } = await storefrontClient.graphql(SHOP_ANALYTICS_QUERY, {
-      cache: Cache.long(),
-      signal: AbortSignal.timeout(2000),
-    });
-    if (errors) {
-      console.error("[hydrogen] Root shop query failed", errors);
-    }
-    shopId = data?.shop?.id ?? shopId;
-    shopName = data?.shop?.name ?? shopName;
-    shopDescription = data?.shop?.description ?? null;
-  } catch (error) {
-    console.error("[hydrogen] Root shop query failed or timed out", error);
-  }
-
-  const analyticsShop = {
-    shopId,
-    acceptedLanguage: analyticsShopConfig.acceptedLanguage,
-    currency: analyticsShopConfig.currency,
-    hydrogenSubchannelId: analyticsShopConfig.hydrogenSubchannelId,
-  };
 
   // Customer Accounts: `accountEnabled` is false on mock.shop (handlers not
   // registered, no Customer Account API). `isLoggedIn` is only meaningful when
@@ -114,26 +71,37 @@ export async function loader({ context }: Route.LoaderArgs) {
 
   return {
     cartData: await cartPromise,
-    analyticsShop,
-    analyticsConsent: analyticsConsentConfig,
-    shopName,
-    shopDescription,
     accountEnabled,
     isLoggedIn,
   };
 }
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate();
+
+  // `<html lang>` is derived from the i18n config source of truth
+  // (`@shared/config` `defaultI18n.language`) rather than a hardcoded literal
+  // (R20), so a store language change flows here automatically.
+  const htmlLang = defaultI18n.language.toLowerCase();
   return (
-    <html lang="en">
+    <html lang={htmlLang}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <ShopifyScripts
+          i18n={defaultI18n}
+          shop={shop}
+          consent={analyticsConsent}
+          navigate={navigate}
+          routes={routeTemplates}
+          inbox
+        />
       </head>
       <body className="bg-surface text-on-surface font-body flex min-h-svh flex-col antialiased">
         {children}
+        <shopify-chat />
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -142,8 +110,6 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const navigate = useNavigate();
-
   return (
     <CartProvider initialData={loaderData.cartData}>
       <a
@@ -155,10 +121,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
 
       <div
         role="region"
-        aria-label="Announcement"
+        aria-label={content.announcement.label}
         className="bg-on-surface px-margin py-2.5 text-center"
       >
-        <p className="type-body-sm text-surface">Free shipping on orders over $50</p>
+        <p className="type-body-sm text-surface">{content.announcement.text}</p>
       </div>
 
       <Header accountEnabled={loaderData.accountEnabled} isLoggedIn={loaderData.isLoggedIn} />
@@ -171,16 +137,38 @@ export default function App({ loaderData }: Route.ComponentProps) {
 
       <CartDrawer />
       <ConsentBanner />
-      <AnalyticsTracker shop={loaderData.analyticsShop} consent={loaderData.analyticsConsent} />
+      <AnalyticsTracker />
       <CartAnalyticsTracker />
-
-      <ShopifyScripts i18n={defaultI18n} shop={shop} navigate={navigate} routes={routeTemplates} />
     </CartProvider>
   );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  const message = error instanceof Error ? error.message : String(error);
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  // Route loaders throw `new Response("...", { status })` which React Router
+  // wraps in an `ErrorResponse` (NOT an `Error`). Branch on
+  // `isRouteErrorResponse` so a 404 renders the themed catch-all UI and other
+  // statuses render their status + data, instead of `[object Object]` from
+  // `String(error)` (R1 / known #4).
+  if (isRouteErrorResponse(error)) {
+    if (error.status === 404) return <NotFound />;
+    return (
+      <div className="max-w-page px-margin mx-auto py-16">
+        <h1 className="type-heading-xl mb-4">{error.status} — Something went wrong</h1>
+        <p className="type-body text-on-surface-secondary">
+          {typeof error.data === "string" && error.data
+            ? error.data
+            : "Something went wrong. Please try again."}
+        </p>
+      </div>
+    );
+  }
+
+  const message =
+    error instanceof Error && error.message
+      ? error.message
+      : "Something went wrong. Please try again.";
   return (
     <div className="max-w-page px-margin mx-auto py-16">
       <h1 className="type-heading-xl mb-4">Something went wrong</h1>

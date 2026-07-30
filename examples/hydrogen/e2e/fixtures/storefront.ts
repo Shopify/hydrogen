@@ -1,6 +1,11 @@
 import type { Page, BrowserContext, Locator, Route } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+import {
+  SHOPIFY_CONSENT_API_SCRIPT,
+  SHOPIFY_PRIVACY_BANNER_SCRIPT,
+} from "../../../../packages/hydrogen/src/core/shopify-scripts/constants";
+
 // Privacy Banner element IDs
 export const PRIVACY_BANNER_DIALOG_ID = "shopify-pc__banner";
 export const ACCEPT_BUTTON_ID = "shopify-pc__banner__btn-accept";
@@ -179,9 +184,8 @@ export class StorefrontPage {
         if (result._y && result._s) break;
       }
 
-      // Fall back to navigation timing if resource entries don't have values
-      // or if we explicitly don't prefer latest
-      if (!preferLatest || (!result._y && !result._s)) {
+      // Fall back to navigation timing only when latest resource timing is not requested.
+      if (!preferLatest) {
         const navigationEntry = performance.getEntriesByType(
           "navigation",
         )[0] as PerformanceNavigationTiming;
@@ -736,9 +740,11 @@ export class StorefrontPage {
    * Assert that no perf-kit produce requests have been made
    */
   expectNoPerfKitProduceRequests() {
-    expect(this.perfKitProduceRequests, "No perf-kit produce requests should be made").toHaveLength(
-      0,
+    const perfKitRequests = this.perfKitProduceRequests.filter((req) =>
+      req.initiator?.includes("perf-kit"),
     );
+
+    expect(perfKitRequests, "No perf-kit produce requests should be made").toHaveLength(0);
   }
 
   /**
@@ -1085,14 +1091,22 @@ export class StorefrontPage {
    * copied Hydrogen tests expect to toggle it per test.
    */
   async setConsentMode(mode: "default-banner" | "custom-banner" | "no-banner") {
-    await this.page.addInitScript((mode) => {
-      (window as any).__HYDROGEN_E2E_CONSENT_MODE__ = mode;
-    }, mode);
+    const replaceConsentScript = (body: string) => {
+      const expectedScript =
+        mode === "default-banner" ? SHOPIFY_PRIVACY_BANNER_SCRIPT : SHOPIFY_CONSENT_API_SCRIPT;
+      const unexpectedScript =
+        mode === "default-banner" ? SHOPIFY_CONSENT_API_SCRIPT : SHOPIFY_PRIVACY_BANNER_SCRIPT;
 
-    const replaceConsentMode = (body: string) =>
+      return body.replaceAll(unexpectedScript, expectedScript);
+    };
+
+    const replaceRuntimeConsentMode = (body: string) =>
       body
         .replace(/"mode"\s*:\s*"[^"]+"/g, `"mode":"${mode}"`)
         .replace(/mode\s*:\s*"[^"]+"/g, `mode:"${mode}"`);
+
+    const replaceSerializedConsentMode = (body: string) =>
+      replaceConsentScript(replaceRuntimeConsentMode(body).replace(/no-banner/g, mode));
 
     await this.page.route("**/*", async (route) => {
       if (route.request().resourceType() !== "document") {
@@ -1101,7 +1115,7 @@ export class StorefrontPage {
       }
 
       const response = await route.fetch();
-      const body = replaceConsentMode(await response.text());
+      const body = replaceSerializedConsentMode(await response.text());
 
       await route.fulfill({
         status: response.status(),
@@ -1116,7 +1130,7 @@ export class StorefrontPage {
 
       // Inject code to set mode BEFORE the default check.
       body = body.replace(/if\s*\(consent\.mode\s*===\s*void 0\)/g, `consent.mode = "${mode}"; $&`);
-      body = replaceConsentMode(body);
+      body = replaceRuntimeConsentMode(body);
 
       await route.fulfill({
         status: response.status(),

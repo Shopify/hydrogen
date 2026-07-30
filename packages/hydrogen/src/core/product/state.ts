@@ -29,12 +29,14 @@ export interface ProductVariantInput {
 
 export interface ProductOptionInput<TVariant extends ProductVariantInput = ProductVariantInput> {
   name: string;
-  optionValues: Array<ProductOptionValueInput & { firstSelectableVariant?: TVariant | null }>;
+  optionValues: Array<ProductOptionValueInput<TVariant>>;
 }
 
-export interface ProductOptionValueInput {
+export interface ProductOptionValueInput<
+  TVariant extends ProductVariantInput = ProductVariantInput,
+> {
   name: string;
-  firstSelectableVariant?: ProductVariantInput | null;
+  firstSelectableVariant?: TVariant | null;
   swatch?: unknown;
 }
 

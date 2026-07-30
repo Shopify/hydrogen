@@ -100,6 +100,20 @@ Optional / permission-gated Storefront data is an enhancement, never a hard depe
 
 Framework binding: Next.js fetches the optional data in a separate async server component child wrapped in `<Suspense>` (or an equivalent non-blocking boundary); React Router fetches it via a best-effort helper and returns an unresolved promise from the loader, consumed with `<Suspense>` + `<Await>` (no `defer` — `react-router@7.14` does not ship one).
 
+## F15. Store-agnostic chrome (nav, hero, brand, lang, copy)
+
+Chrome that reads as "this store" — navigation collections, hero/announcement
+copy, brand name, copyright, and `<html lang>` — must be **derived from the
+Storefront API / `shop` / i18n config**, never hardcoded to a placeholder store.
+The hardcoded `Men`/`Women`/`Accessories` nav links, the Unsplash hero image,
+the `CORE` brand literal, and the `$50` free-shipping announcement are
+**placeholder examples** a generator must remove or data-drive. Specifically:
+
+- **Nav** — fetch real collections (`collections(first: N)`) in the layout/root loader and render nav from data; fall back to `/collections` only. Hardcoded category handles 404 on stores that lack those exact collections. (The `reference/_partials/header.html` nav links are hardcoded demo handles purely as visible placeholders, like every other `href="#"` link in the static reference catalog — not functional routes; generators must data-drive them.)
+- **Hero/announcement** — drive hero copy + the announcement bar from `content` (clearly placeholder) or shop data; remove the hardcoded `$50` offer threshold; route hero CTAs to real collections or remove them; replace the hardcoded Unsplash hero with a store/featured-collection image, keeping LCP discipline (F12).
+- **Brand** — pull `shop.name` from the Storefront API and use it in the header logo, footer, copyright year, and `<title>` template. Centralize UI strings that bypass `content` ("Sale"/"Sold out"/"Load more") into the `content` dictionary.
+- **`<html lang>`** — derive from the active market/locale (i18n config `defaultI18n.language` lowercased) per request; pass the market locale to `formatPrice` instead of a hardcoded `en-US`.
+
 ## Known-deferred
 
 The **consent / cookie banner is intentionally JavaScript-only** and is the one deliberate exception to F4. It has no no-JS function: show/hide, persistence, and the Customer Privacy / analytics wiring all require client code, and with JS disabled there is no consent to capture and no analytics to gate. This exclusion is acceptable precisely because the banner gates nothing else — no content or navigation depends on it. See `notes/consent-banner.md` for the explicit statement of this exclusion.

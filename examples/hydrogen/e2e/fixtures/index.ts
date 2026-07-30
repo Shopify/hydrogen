@@ -18,6 +18,7 @@ import { DevServer, STARTUP_TIMEOUT_IN_MS, TUNNEL_READY_TIMEOUT_IN_MS } from "./
 import { StorefrontPage } from "./storefront";
 
 const fixturesRoot = fileURLToPath(new URL(".", import.meta.url));
+const hydrogenRoot = path.resolve(fixturesRoot, "../..");
 
 export * from "@playwright/test";
 export * from "./storefront";
@@ -193,7 +194,7 @@ export const configureDevServer = (options: DevServerLifecycleOptions) => {
       test.setTimeout(TUNNEL_SETUP_TIMEOUT_IN_MS);
     }
 
-    const envFile = path.resolve(fixturesRoot, `../envs/.env.${storeKey}`);
+    const envFile = path.resolve(getE2eEnvsDir(), `.env.${storeKey}`);
     await stat(envFile); // Ensure the file exists
 
     let runtimeEnvFile = envFile;
@@ -216,6 +217,13 @@ export const configureDevServer = (options: DevServerLifecycleOptions) => {
     server = devServer;
   });
 };
+
+function getE2eEnvsDir() {
+  const configuredDir = process.env.HYDROGEN_E2E_ENVS_DIR;
+  if (!configuredDir) return path.resolve(fixturesRoot, "../envs");
+
+  return path.isAbsolute(configuredDir) ? configuredDir : path.resolve(hydrogenRoot, configuredDir);
+}
 
 export const setTestStore = (
   testStore: TestStoreKey | `https://${string}`,

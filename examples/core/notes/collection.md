@@ -116,6 +116,25 @@ All of the above — `filters`, `sortKey`/`reverse`, cursor pagination — is mo
 - **Grid** is `grid-cols-2 lg:grid-cols-3` inside the results column (the product reference's related-products strip is full-width `lg:grid-cols-4`; here the sidebar takes a column so 3 reads better). Same `gap-x-1 gap-y-10`, `contain-paint`, and `rounded-card` card treatment.
 - **Pagination is a "Load more" button**, not numbered pages. The theme template ships `s-scroll-paginate` (cursor/scroll based); this reference shows the button form, which maps directly to `pageInfo.hasNextPage` + `endCursor`. The numbered `_pagination.liquid` block exists in the theme but is the offset-paginate variant — cursor "load more" is the better fit for the Storefront API.
 
+## Mobile filter reachability (no-JS, F4)
+
+Below the `lg` breakpoint the filter sidebar is unreachable without an explicit
+mobile control. That control MUST be a **native disclosure**
+(`<details>`/`<summary>`) — **never a JS-only `<dialog>`** (a `<dialog>` needs
+`showModal()` and is `display:none` with JS off, violating F4). Render the
+filters as a **SINGLE `<details open>` subtree** — one set of inputs inside the
+`method="get"` form. The `<summary>` is `lg:hidden`; `<details open>` is a static sidebar on
+desktop and a collapsible disclosure on mobile. **Do NOT render a second copy of the filter
+inputs**: two same-`name`d inputs in one GET form submit duplicate query
+params.
+The filter landmark is labeled with `aria-labelledby` pointing at the
+visually-hidden "Filters" `<h2>`. Price-range chips and labels are formatted
+with `formatPrice` in the store currency (not raw numbers); the price range
+submits on **blur/Enter, not per keystroke** (see `hydrogen-collection-browser`).
+While loading,
+facet inputs are `disabled` (`aria-disabled` on the container alone does not
+cascade to inputs).
+
 ## Without JavaScript
 
 The PLP must browse, filter, sort, and paginate with scripting disabled (engineering.md §F4). These are design requirements; skills own the framework code.

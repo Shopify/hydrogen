@@ -62,8 +62,12 @@ export function QuantityStepper<T extends React.InputHTMLAttributes<HTMLInputEle
         ref={inputRef}
         type="number"
         {...inputProps}
-        className="number-reset h-8 w-12 text-center text-sm outline-none focus:outline-none"
+        className="number-reset h-8 w-12 text-center text-sm"
         aria-label={label}
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck={false}
+        inputMode="numeric"
       />
       <button
         type="button"

@@ -1,17 +1,30 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
+
 import { useCart } from "@/lib/cart";
-import { CART_DRAWER_ID, openCartDrawer } from "@/lib/cart-drawer";
+import {
+  CART_DRAWER_ID,
+  getCartDrawerOpen,
+  openCartDrawer,
+  subscribeCartDrawerOpen,
+} from "@/lib/cart-drawer";
 import { cartIconLabel, cartItemCount } from "@/lib/content";
 
 /**
  * Cart trigger — a `<button>` that opens the cart drawer via `showModal()`
  * (`hydrogen-cart-drawer` skill). `onClick` calls `openCartDrawer()`, which
  * calls `HTMLDialogElement.showModal()`; `aria-controls`/`aria-haspopup` keep
- * the control accessible. The footer `/cart` link is the no-JS cart surface.
+ * the control accessible. The footer `/cart` link is the full-page fallback
+ * when the drawer is unavailable.
  */
 export function CartTrigger() {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
+  const cartDrawerOpen = useSyncExternalStore(
+    subscribeCartDrawerOpen,
+    getCartDrawerOpen,
+    () => false,
+  );
   const cartLabel = cartIconLabel(totalQuantity);
   const countDisplay = totalQuantity > 99 ? "99+" : String(totalQuantity);
 
@@ -22,6 +35,7 @@ export function CartTrigger() {
         onClick={openCartDrawer}
         aria-controls={CART_DRAWER_ID}
         aria-haspopup="dialog"
+        aria-expanded={cartDrawerOpen}
         className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded bg-transparent p-0 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
         aria-label={cartLabel}
       >

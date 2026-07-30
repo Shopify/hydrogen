@@ -40,9 +40,10 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 ## UI Rules
 
 - Use the framework binding when a matching reference exists. Otherwise, use the core store directly. Do not hand-roll browse state with component state.
-- Forms use `method="get"` so filters and sort work without JavaScript.
-- Use `formProps()` on the browse form. On hydrated input/select changes, call `form.requestSubmit()`.
+- The browse form must carry both `method="get"` **and** an explicit `action` (the collection/search route URL, e.g. `action="/collections/shoes"` or the search route) so filters and sort degrade to a real GET submit without JavaScript. `formProps()` only wires the submit handler — it does not set `method` or `action` — so render both literally; the helper cannot infer the route.
+- Use `formProps()` on the browse form: spread it, then add the literal `method="get"` and `action`. On hydrated changes, call `form.requestSubmit()` for **checkboxes and `<select>`**. For **text/number inputs (price min/max)** use `onBlur` + `onKeyDown` Enter instead — `onChange` fires per keystroke and would submit the GET form (and re-query Storefront) on every character.
 - Render a `noscript` submit button for filter sidebars that auto-submit when hydrated.
+- Render "load more" / pagination as a GET link (the framework's link component) carrying the next-page cursor (e.g. `?after=<endCursor>`), so it works without JavaScript. Hydration may upgrade it to append-in-place; the bare link must still load the next page server-side (it replaces the page rather than appending when JS is off).
 - Show stale products with a pending visual state while `state.status === "loading"`; do not replace the grid with a skeleton.
 - Serialize active filter chips from `serializeCollectionParams(state)` and remove filters with `getFilterRemovalUrl(...)`.
 - Use `isFilterInputActive(state.filters, value.input)` to mark checked filter inputs.
@@ -57,6 +58,7 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 - Keep `q` as a hidden input inside the filter/sort form.
 - Map unsupported search sorts back to `RELEVANCE`; only `PRICE` uses `reverse` in the current examples.
 - Empty search terms should return an empty product list and no filters rather than querying Storefront API.
+- The search input is uncontrolled (`defaultValue={term}`) so the no-JS GET submit works; add `key={term}` so navigation (e.g. "Clear search" → `/search`) resets it. Safe because `term` changes only on submit/navigation, not while typing — do **not** put `key={term}` on a controlled input that updates the term per keystroke (focus loss).
 
 ## Anti-Patterns
 
@@ -72,6 +74,7 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 - Filtering and sorting update the URL without scroll reset when hydrated.
 - Reloading the filtered URL server-renders the same filtered state.
 - With JavaScript disabled, checking filters and submitting the form loads the filtered URL.
+- With JavaScript disabled, the load-more / pagination link loads the next page server-side.
 - Active filter chips remove only one filter and preserve unrelated params.
 - Search filters preserve `q`.
 - Back/forward navigation settles loading state.

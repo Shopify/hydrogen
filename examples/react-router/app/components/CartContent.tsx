@@ -62,6 +62,11 @@ export function CartContent() {
               placeholder="Discount code"
               aria-label="Discount code"
               className="number-reset rounded-button border-border h-11 flex-1 border px-3 text-sm"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              required
             />
             <button
               type="submit"
@@ -72,28 +77,36 @@ export function CartContent() {
             </button>
           </form>
 
-          {/* Applied discount codes — each removal is its own form */}
-          {discountCodes.map((code) => (
-            <form {...formProps()} key={code.code} className="flex items-center gap-2">
-              <input type="hidden" {...register("discountCode", { value: code.code })} />
-              <span className="chip-filled rounded-full px-3 py-1 text-sm">{code.code}</span>
-              <button
-                type="submit"
-                {...register("discount-remove")}
-                className="button-icon rounded text-sm"
-                aria-label={`Remove discount ${code.code}`}
+          {/* Applied discount codes — each removal is its own form. Empty/
+              falsy codes are filtered out so an empty apply never renders a
+              blank pill or collides on a `""` React key. */}
+          {discountCodes
+            .filter((code) => code.code)
+            .map((code, index) => (
+              <form
+                {...formProps()}
+                key={`${code.code}-${index}`}
+                className="flex items-center gap-2"
               >
-                <img
-                  src="/icons/icon-x.svg"
-                  width="16"
-                  height="16"
-                  alt=""
-                  className="size-4"
-                  aria-hidden="true"
-                />
-              </button>
-            </form>
-          ))}
+                <input type="hidden" {...register("discountCode", { value: code.code })} />
+                <span className="chip-filled rounded-full px-3 py-1 text-sm">{code.code}</span>
+                <button
+                  type="submit"
+                  {...register("discount-remove")}
+                  className="button-icon rounded text-sm"
+                  aria-label={`Remove discount ${code.code}`}
+                >
+                  <img
+                    src="/icons/icon-x.svg"
+                    width="16"
+                    height="16"
+                    alt=""
+                    className="size-4"
+                    aria-hidden="true"
+                  />
+                </button>
+              </form>
+            ))}
 
           {/* Estimated total */}
           <div className="flex items-center justify-between">
