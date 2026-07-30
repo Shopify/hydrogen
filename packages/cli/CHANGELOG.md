@@ -1,5 +1,14 @@
 # @shopify/cli-hydrogen
 
+## 13.0.3
+
+### Patch Changes
+
+- Use the IPv4 loopback address in local debugger instructions. ([#3883](https://github.com/Shopify/hydrogen/pull/3883)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`7af05b8dc83a94ff8192bfb17a3fd8048dbef674`](https://github.com/Shopify/hydrogen/commit/7af05b8dc83a94ff8192bfb17a3fd8048dbef674)]:
+  - @shopify/mini-oxygen@4.2.1
+
 ## 13.0.2
 
 ### Patch Changes

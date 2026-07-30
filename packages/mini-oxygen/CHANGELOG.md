@@ -1,5 +1,11 @@
 # @shopify/mini-oxygen
 
+## 4.2.1
+
+### Patch Changes
+
+- Improve the reliability of local debugger connections. ([#3883](https://github.com/Shopify/hydrogen/pull/3883)) by [@frandiox](https://github.com/frandiox)
+
 ## 4.2.0
 
 ### Minor Changes
