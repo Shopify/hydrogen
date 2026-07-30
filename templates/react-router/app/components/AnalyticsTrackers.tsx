@@ -1,4 +1,5 @@
 import type { AnalyticsCart, ConsentConfig, ShopAnalytics } from "@shopify/hydrogen";
+import { useCartAnalytics } from "@shopify/hydrogen/react";
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router";
 
@@ -8,7 +9,6 @@ import {
   getAnalytics,
   getAnalyticsShop,
 } from "~/lib/analytics";
-import { useCart } from "~/lib/cart";
 
 type AnalyticsTapWindow = Window & {
   __analyticsEvents?: Array<{ event: string; payload: Record<string, unknown> }>;
@@ -126,15 +126,7 @@ function toAnalyticsCart(cart: unknown): AnalyticsCart | null {
 }
 
 export function CartAnalyticsTracker() {
-  const cart = useCart((state) => state.data);
-  const analyticsKey = `${cart.id ?? ""}:${String(cart.updatedAt ?? "")}`;
-
-  useEffect(() => {
-    const analyticsCart = toAnalyticsCart(cart);
-    if (!analyticsCart) return;
-    getAnalytics()?.updateCart(analyticsCart);
-  }, [analyticsKey, cart]);
-
+  useCartAnalytics();
   return null;
 }
 
@@ -143,7 +135,6 @@ export function publishCartViewed(cart: unknown) {
   if (!analytics) return;
   analytics.publish(AnalyticsEvent.CART_VIEWED, {
     cart: toAnalyticsCart(cart),
-    prevCart: null,
     url: window.location.href,
     shop: getAnalyticsShop(),
   });

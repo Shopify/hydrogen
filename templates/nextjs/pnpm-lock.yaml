@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@shopify/hydrogen':
         specifier: preview
-        version: 0.0.0-preview-0c3bff8-20260618001533(graphql@16.14.2)(react@19.2.4)(typescript@5.9.3)
+        version: 0.0.0-preview-116d5d7-20260730141607(graphql@16.14.2)(react@19.2.4)(typescript@5.9.3)
       next:
         specifier: 16.2.7
         version: 16.2.7(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -487,13 +487,16 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
-  '@shopify/hydrogen@0.0.0-preview-0c3bff8-20260618001533':
-    resolution: {integrity: sha512-Qwf6KM5EeTykdehBTe9cTZuUOA6gm2B3aFG3O0OREAX9wkwfWYQa856YjmG7dlo/jOplQl4d0DLWQEmThabqNg==}
+  '@shopify/hydrogen@0.0.0-preview-116d5d7-20260730141607':
+    resolution: {integrity: sha512-hQ5c/rTNbbu4W8TsgWrM8BjzbUNObUMeLiaqHCTKTTeoExFNkHcgqKh2raD7K0gxRGOa4cy3PRQCl5buW+XdGg==}
     hasBin: true
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
+      vue: ^3.5.0
     peerDependenciesMeta:
       react:
+        optional: true
+      vue:
         optional: true
 
   '@swc/helpers@0.5.15':
@@ -2439,7 +2442,7 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
-  '@shopify/hydrogen@0.0.0-preview-0c3bff8-20260618001533(graphql@16.14.2)(react@19.2.4)(typescript@5.9.3)':
+  '@shopify/hydrogen@0.0.0-preview-116d5d7-20260730141607(graphql@16.14.2)(react@19.2.4)(typescript@5.9.3)':
     dependencies:
       gql.tada: 1.9.2(graphql@16.14.2)(typescript@5.9.3)
     optionalDependencies:

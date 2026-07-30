@@ -1,16 +1,18 @@
 import {
   handleShopifyRedirects,
   handleShopifyRoutes,
-  type StorefrontRequestContext,
+  type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import { createRequestHandler, RouterContextProvider } from "react-router";
 import * as serverBuild from "virtual:react-router/server-build";
 
 import { cartHandlers } from "~/lib/cart-handlers";
 import { envContext } from "~/lib/env";
+import { routeTemplates } from "~/lib/route-templates";
+import { createRequestSessionManager } from "~/lib/session";
 import { createRequestStorefrontClient } from "~/lib/storefront";
 
-function withStorefrontHeaders(response: Response, requestContext: StorefrontRequestContext) {
+function withStorefrontHeaders(response: Response, requestContext: ShopifyRequestContext) {
   try {
     requestContext.applyResponseHeaders(response.headers);
     return response;
@@ -30,9 +32,12 @@ export default {
     try {
       const storefrontClient = createRequestStorefrontClient(request, env);
       const requestContext = storefrontClient.requestContext;
+      const sessionManager = createRequestSessionManager(request);
 
       const shopifyRoute = await handleShopifyRoutes({
         request,
+        requestContext,
+        sessionManager,
         storefrontClient,
         handlers: [cartHandlers],
       });
@@ -63,7 +68,11 @@ export default {
       response.headers.append("powered-by", "Shopify, Hydrogen");
 
       if (response.status === 404) {
-        const redirect = await handleShopifyRedirects({ request, storefrontClient });
+        const redirect = await handleShopifyRedirects({
+          request,
+          storefrontClient,
+          routeTemplates,
+        });
         if (redirect) return withStorefrontHeaders(redirect, requestContext);
       }
 

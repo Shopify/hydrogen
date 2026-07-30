@@ -13,9 +13,7 @@
   "compilerOptions": {
     "plugins": [
       {
-        "name": "gql.tada/ts-plugin",
-        "schema": "node_modules/@shopify/hydrogen/src/graphql/generated/storefront.schema.graphql",
-        "trackFieldUsage": false
+        "name": "@shopify/hydrogen/ts-plugin"
       }
     ],
     "lib": ["DOM", "DOM.Iterable", "ES2022"],

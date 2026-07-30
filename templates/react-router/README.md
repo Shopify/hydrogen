@@ -66,12 +66,7 @@ automatically** — the deployed site connects to your store with no extra confi
 | `npm run build` | Production React Router build for Oxygen. |
 | `npm run preview` | Build and preview locally with Vite and Mini Oxygen. |
 | `npm run deploy` | Deploy to Oxygen with the Shopify CLI. |
-| `npm run typecheck` | React Router typegen + `tsc` + `gql.tada check`. |
-
-> **Note:** `patch-hydrogen-exports.mjs` runs on `postinstall` as a temporary
-> shim — it adds the missing `"./package.json"` export to `@shopify/hydrogen` so
-> `shopify hydrogen deploy` builds under npm. Remove it (and the `postinstall`)
-> once `@shopify/hydrogen` ships that export.
+| `npm run typecheck` | React Router typegen + TypeScript + Hydrogen GraphQL checks. |
 
 ## Where to start
 

@@ -2,8 +2,9 @@ import {
   handleShopifyRedirects,
   handleShopifyRoutes,
   gql,
-  type StorefrontRequestContext,
+  type ShopifyRequestContext,
 } from "@shopify/hydrogen";
+import { ShopifyScripts } from "@shopify/hydrogen/react";
 import type { ReactNode } from "react";
 import {
   isRouteErrorResponse,
@@ -12,6 +13,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useNavigate,
 } from "react-router";
 
 import { AnalyticsTracker, CartAnalyticsTracker } from "~/components/AnalyticsTrackers";
@@ -22,7 +24,9 @@ import { Header } from "~/components/Header";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { envContext } from "~/lib/env";
-import { analyticsConsent, analyticsShop } from "~/lib/shop";
+import { routeTemplates } from "~/lib/route-templates";
+import { createRequestSessionManager } from "~/lib/session";
+import { analyticsConsent, analyticsShop, shop, storefrontConfig } from "~/lib/shop";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -48,7 +52,7 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
 ];
 
-function withStorefrontHeaders(response: Response, requestContext: StorefrontRequestContext) {
+function withStorefrontHeaders(response: Response, requestContext: ShopifyRequestContext) {
   try {
     requestContext.applyResponseHeaders(response.headers);
     return response;
@@ -65,9 +69,12 @@ export const middleware: Route.MiddlewareFunction[] = [
     const env = context.get(envContext);
     const storefrontClient = createRequestStorefrontClient(request, env);
     const requestContext = storefrontClient.requestContext;
+    const sessionManager = createRequestSessionManager(request);
 
     const shopifyRoute = await handleShopifyRoutes({
       request,
+      requestContext,
+      sessionManager,
       storefrontClient,
       handlers: [cartHandlers],
     });
@@ -78,7 +85,11 @@ export const middleware: Route.MiddlewareFunction[] = [
 
     const response = await next();
     if (response.status === 404) {
-      const redirect = await handleShopifyRedirects({ request, storefrontClient });
+      const redirect = await handleShopifyRedirects({
+        request,
+        storefrontClient,
+        routeTemplates,
+      });
       if (redirect) return withStorefrontHeaders(redirect, requestContext);
     }
 
@@ -95,7 +106,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   ]);
 
   return {
-    cart: cartResult.data.cart,
+    cartData: cartResult.data,
     navCollections: navResult.data?.collections.nodes ?? [],
     analyticsShop,
     consent: analyticsConsent,
@@ -104,15 +115,19 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function Layout({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
+
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script
-          type="module"
-          src="https://cdn.shopify.com/storefront/standard-actions.js"
-          crossOrigin="anonymous"
+        <ShopifyScripts
+          i18n={storefrontConfig.i18n}
+          shop={shop}
+          consent={analyticsConsent}
+          navigate={navigate}
+          routes={routeTemplates}
         />
         <Meta />
         <Links />
@@ -134,7 +149,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
-    <CartProvider initialData={loaderData.cart ?? undefined}>
+    <CartProvider initialData={loaderData.cartData}>
       <AnalyticsTracker
         shop={loaderData.analyticsShop}
         consent={loaderData.consent}

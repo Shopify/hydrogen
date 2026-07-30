@@ -134,7 +134,9 @@ type ProductPageProps = {
 };
 
 async function loadProduct(handle: string, searchParams: NextSearchParams) {
-  const selectedOptions = getSelectedProductOptions(toURLSearchParams(searchParams));
+  const selectedOptions = getSelectedProductOptions({
+    searchParams: toURLSearchParams(searchParams),
+  });
   const storefront = await getStorefrontClient();
   const { data } = await storefront.graphql(PRODUCT_QUERY, {
     variables: { handle, selectedOptions },

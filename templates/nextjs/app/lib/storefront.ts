@@ -1,5 +1,5 @@
 import "server-only";
-import { createStorefrontClient, createStorefrontRequestContext } from "@shopify/hydrogen";
+import { createShopifyRequestContext, createStorefrontClient } from "@shopify/hydrogen";
 import { headers } from "next/headers";
 import { cache } from "react";
 
@@ -9,7 +9,7 @@ import {
   getPrivateStorefrontToken,
   getStoreDomain,
   storefrontConfig,
-  useMockShop,
+  shouldUseMockShop,
 } from "./shop";
 
 function getRequestBuyerIp(requestHeaders: Headers): string {
@@ -22,25 +22,23 @@ function getRequestBuyerIp(requestHeaders: Headers): string {
 
 export const getStorefrontClient = cache(async () => {
   const requestHeaders = await headers();
-  const requestContext = createStorefrontRequestContext({ headers: requestHeaders });
+  const usingMockShop = shouldUseMockShop(process.env);
+  const buyerIp = usingMockShop ? getRequestBuyerIp(requestHeaders) : getBuyerIp(requestHeaders);
+  const requestContext = createShopifyRequestContext({
+    request: { headers: requestHeaders },
+    i18n: storefrontConfig.i18n,
+    buyerIp,
+  });
+  const storeDomain = usingMockShop ? "mock.shop" : getStoreDomain(process.env);
+  const privateStorefrontToken = usingMockShop ? "mock-private-token" : getPrivateStorefrontToken();
 
   return createStorefrontClient({
     type: "private",
-    config: useMockShop(process.env)
-      ? {
-          storeDomain: "mock.shop",
-          i18n: storefrontConfig.i18n,
-          privateStorefrontToken: "mock-shop",
-          buyerIp: getRequestBuyerIp(requestHeaders),
-          requestContext,
-          fetch: (_input, init) => fetch("https://mock.shop/api", init),
-        }
-      : {
-          storeDomain: getStoreDomain(process.env),
-          i18n: storefrontConfig.i18n,
-          privateStorefrontToken: getPrivateStorefrontToken(),
-          buyerIp: getBuyerIp(requestHeaders),
-          requestContext,
-        },
+    requestContext,
+    config: {
+      storeDomain,
+      privateStorefrontToken,
+      buyerIp,
+    },
   });
 });

@@ -1,6 +1,5 @@
 import { gql } from "@shopify/hydrogen";
 import type { Metadata } from "next";
-import Script from "next/script";
 import type { ReactNode } from "react";
 
 import { CartDrawer } from "./components/CartDrawer";
@@ -8,6 +7,7 @@ import { ConsentBanner } from "./components/ConsentBanner";
 import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
 import { Providers } from "./components/Providers";
+import { ShopifyScriptsWithNavigation } from "./components/ShopifyScriptsWithNavigation";
 import { cartHandlers } from "./lib/cart-handlers";
 import { analyticsConsent, analyticsShop } from "./lib/shop";
 import { getStorefrontClient } from "./lib/storefront";
@@ -45,12 +45,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <Script
-          type="module"
-          src="https://cdn.shopify.com/storefront/standard-actions.js"
-          crossOrigin="anonymous"
-          strategy="beforeInteractive"
-        />
+        <ShopifyScriptsWithNavigation />
       </head>
       <body className="bg-surface text-on-surface font-body flex min-h-svh flex-col antialiased">
         <a
@@ -67,7 +62,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <p className="type-body-sm text-surface">Free shipping on orders over $50</p>
         </div>
         <Providers
-          cart={cartData.cart ?? undefined}
+          cart={cartData}
           analyticsShop={analyticsShop}
           analyticsConsent={analyticsConsent}
           enableTestTap={process.env.MOCK_SHOP === "1"}
