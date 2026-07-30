@@ -1,6 +1,13 @@
+import { getShopifyAnalyticsBusScript, getShopifyAnalyticsConfig } from "./analytics";
+import { getShopifyConsentTrackingScript } from "./consent";
 import {
+  SHOPIFY_CONSENT_API_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
+  SHOPIFY_CONSENT_SCRIPT_ID,
+  SHOPIFY_PRIVACY_BANNER_SCRIPT,
   SHOPIFY_SHOP_APP_ORIGIN,
+  SHOPIFY_INBOX_SCRIPT,
+  SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
 } from "./constants";
@@ -16,18 +23,23 @@ import type {
 
 export {
   SHOPIFY_CDN_ORIGIN,
+  SHOPIFY_CONSENT_API_SCRIPT,
   SHOPIFY_PERF_KIT_SCRIPT,
+  SHOPIFY_PRIVACY_BANNER_SCRIPT,
   SHOPIFY_SHOP_APP_ORIGIN,
+  SHOPIFY_INBOX_SCRIPT,
+  SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
+  VISITOR_CONSENT_COLLECTED_EVENT,
 } from "./constants";
 export { getShopifyGlobal, getShopifyGlobalBootstrapScript } from "./global";
 export { initializeShopifyScripts } from "./initialize";
 export { renderShopifyScriptTag } from "./render";
-export { loadShopifyWebMcpTools } from "./webmcp";
 export type {
-  InitializeShopifyScriptsOptions,
+  ShopifyScriptsAnalyticsConfig,
+  ShopifyRoutesOptions,
   ShopifyScriptTagDescriptor,
   ShopifyScriptTagDescriptors,
   ShopifyScriptTagsOptions,
@@ -44,11 +56,16 @@ export type {
  * `initializeShopifyScripts()` during browser hydration.
  */
 export function getShopifyScriptTags({
+  analytics,
+  consent,
   i18n,
   nonce,
   shop,
-}: ShopifyScriptTagsOptions = {}): ShopifyScriptTagDescriptors {
-  const nonceAttributes = nonce ? { nonce } : undefined;
+  shopifyAnalytics = true,
+  inbox = false,
+}: ShopifyScriptTagsOptions): ShopifyScriptTagDescriptors {
+  const nonceAttributes = nonce !== undefined ? { nonce } : undefined;
+  const analyticsConfig = getShopifyAnalyticsConfig({ analytics, consent, shop });
 
   const links: ShopifyLinkDescriptor[] = [
     {
@@ -78,23 +95,84 @@ export function getShopifyScriptTags({
   const scripts: ShopifyScriptDescriptor[] = [
     {
       tagName: "script",
-      attributes: nonceAttributes,
-      innerHTML: getShopifyGlobalBootstrapScript({ i18n }),
+      attributes: { id: "shopify-global-bootstrap", ...nonceAttributes },
+      innerHTML: getShopifyGlobalBootstrapScript({ i18n, shop }),
     },
     {
       tagName: "script",
       attributes: {
-        src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
+        id: "shopify-standard-actions",
         type: "module",
         crossorigin: "anonymous",
         ...nonceAttributes,
+        src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
       },
     },
   ];
-  const perfKitScript = getPerfKitScript(shop);
+
+  if (inbox) {
+    scripts.push({
+      tagName: "script",
+      attributes: {
+        id: "shopify-inbox",
+        type: "module",
+        async: true,
+        crossorigin: "anonymous",
+        ...nonceAttributes,
+        src: SHOPIFY_INBOX_SCRIPT,
+      },
+    });
+  }
+
+  // Keep this async consent library immediately before the inline consent bootstrap.
+  // Parser-inserted async scripts execute in a later task, so the following inline
+  // script can attach a load listener before the library runs.
+  scripts.push({
+    tagName: "script",
+    attributes: {
+      id: SHOPIFY_CONSENT_SCRIPT_ID,
+      async: true,
+      crossorigin: "anonymous",
+      ...nonceAttributes,
+      src:
+        consent?.mode === "default-banner"
+          ? SHOPIFY_PRIVACY_BANNER_SCRIPT
+          : SHOPIFY_CONSENT_API_SCRIPT,
+    },
+  });
+  // This must run immediately after the consent library tag so it can find that
+  // tag and attach its load listener before consent-tracking-api/privacy-banner executes.
+  scripts.push({
+    tagName: "script",
+    attributes: { id: "shopify-consent-bootstrap", ...nonceAttributes },
+    innerHTML: getShopifyConsentTrackingScript(consent),
+  });
+
+  // This must run after getShopifyConsentTrackingScript because that script
+  // temporarily annotates visitorConsentCollected events for the analytics bus.
+  scripts.push({
+    tagName: "script",
+    attributes: { id: "shopify-analytics-bus", ...nonceAttributes },
+    innerHTML: getShopifyAnalyticsBusScript(analyticsConfig),
+  });
+
+  if (shopifyAnalytics) {
+    scripts.push({
+      tagName: "script",
+      attributes: {
+        id: "shopify-storefront-analytics",
+        async: true,
+        crossorigin: "anonymous",
+        ...nonceAttributes,
+        src: SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,
+      },
+    });
+  }
+
+  const perfKitScript = getPerfKitScript(shop, nonceAttributes);
   if (perfKitScript) {
     scripts.push(perfKitScript);
-    scripts.push(getPerfKitSpaBridgeScript(nonce));
+    scripts.push(getPerfKitSpaBridgeScript(nonceAttributes));
   }
 
   return {

@@ -46,6 +46,9 @@ export function PredictiveSearchTrigger() {
         onClick={() => setSearchOpen(true)}
         className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
         aria-label={content.general.search}
+        aria-haspopup="dialog"
+        aria-expanded={searchOpen}
+        aria-controls="search-modal"
         data-testid="search-modal-trigger"
       >
         <img

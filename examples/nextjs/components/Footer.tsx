@@ -7,16 +7,17 @@ const footerLinkClass =
 
 /**
  * Site footer — shared chrome, server-rendered. Includes the `/cart` link that
- * is the drawer's reachable no-JS fallback on every page (engineering.md F4 +
- * `notes/cart.md` "Without JavaScript").
+ * keeps the cart route reachable when the drawer is unavailable.
  */
-export function Footer() {
+export function Footer({ shopName = "CORE" }: { shopName?: string }) {
   return (
     <footer className="max-w-page px-margin mx-auto w-full">
       <div className="border-border grid grid-cols-1 gap-8 border-t py-12 text-sm md:grid-cols-2 lg:grid-cols-4">
         <div>
-          <h2 className="type-body-sm text-on-surface mb-4 font-medium">CORE</h2>
-          <p className="text-on-surface-secondary">&copy; 2026 CORE</p>
+          <h2 className="type-body-sm text-on-surface mb-4 font-medium">{shopName}</h2>
+          <p className="text-on-surface-secondary">
+            &copy; {new Date().getFullYear()} {shopName}
+          </p>
         </div>
         <nav aria-labelledby="footer-quick-links-heading">
           <h2

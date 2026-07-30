@@ -15,6 +15,30 @@ Follow these instructions in order to set up Hydrogen in an existing or new repo
 
 Assume the deterministic Hydrogen setup command has already installed `@shopify/hydrogen` and copied the packaged skills into the app. Do not redo package installation or skill copying from this LLM skill.
 
+Master build checklist (an at-a-glance index of the ordered steps below; each step has full detail in its own section):
+
+```
+- [ ] Inspect the app (package.json at app root)
+- [ ] Detect the framework
+- [ ] Use standard environment variable names
+- [ ] Keep environment access server-side
+- [ ] Use storefront route conventions
+- [ ] Set up the Storefront API client
+- [ ] Install API route handlers
+- [ ] Build the home page
+- [ ] Build collection and search browsing
+- [ ] Add the cart route
+- [ ] Install Shopify runtime scripts
+- [ ] Configure Shopify navigation
+- [ ] Add the cart drawer
+- [ ] Build the navbar
+- [ ] Build the product detail page
+- [ ] Install storefront analytics
+- [ ] Set up customer accounts (when requested)
+- [ ] Handle app-owned concerns (accounts, image optimization, SEO)
+- [ ] Run verification
+```
+
 ## Inspect The App
 
 Read `package.json` in the current directory. If it does not exist, stop and tell the user this skill must run from the app root.
@@ -34,7 +58,7 @@ Use these canonical environment variable names throughout the app:
 - `PUBLIC_STORE_DOMAIN` for the Shopify store domain.
 - `PUBLIC_STOREFRONT_API_TOKEN` for the public Storefront API token.
 - `PRIVATE_STOREFRONT_API_TOKEN` for the private Storefront API token.
-- `PUBLIC_STOREFRONT_ID` for analytics `hydrogenSubchannelId`; use `"0"` when the app does not have a storefront ID.
+- `PUBLIC_STOREFRONT_ID` for analytics `storefrontId`; use `"0"` when the app does not have a storefront ID.
 - `PUBLIC_CHECKOUT_DOMAIN` for app-level checkout-domain configuration such as CSP setup. Checkout buttons should use the cart's `checkoutUrl`.
 - `SHOP_ID` for the numeric Shopify shop ID string used by Customer Account API.
 - `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID` for Customer Account OAuth.
@@ -57,7 +81,7 @@ Preserve the app's existing route shape when present. When there is no establish
 - `/collections/{handle}` for collection detail.
 - `/search` for search results, with the term in `q`.
 - `/products/{handle}` for product detail. Use plural `products`, not `/product`.
-- `/cart` for the full cart page and no-JS cart fallback.
+- `/cart` for the full cart page and fallback route when the cart drawer is unavailable.
 
 Hydrogen-owned handlers are not page routes: `/api/cart`, `/api/{api-version}/graphql.json`, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/agent/*`, `/graphiql` in development, `/admin` redirects, and Storefront URL redirects belong in the `hydrogen-request-handlers` wiring.
 
@@ -67,7 +91,7 @@ Use the local `hydrogen-routing` skill to create the shared route template manif
 
 Use the local `hydrogen-storefront-client` skill to wire the Storefront API client or client factory for the detected framework.
 
-When setup adds or changes Storefront API `gql()` documents, use the `hydrogen-storefront-client` GraphQL type setup and query validation guidance: install `gql.tada`, add the `gql.tada/ts-plugin` to the app `tsconfig.json`, and add/run `gql.tada check`. Framework typecheck commands do not validate `gql()` documents unless this check is chained in.
+When setup adds or changes Storefront API `gql()` documents, use the `hydrogen-storefront-client` GraphQL type setup and query validation guidance: add `@shopify/hydrogen/ts-plugin` to the app `tsconfig.json`, chain `hydrogen gql check` into a package script, and run that script. Framework typecheck commands do not validate `gql()` documents unless this check is chained in.
 
 ## Install API Route Handlers
 
@@ -87,7 +111,7 @@ Use the local `hydrogen-cart-ui` skill to create the cart route at the framework
 
 ## Install Shopify Runtime Scripts
 
-Render Shopify runtime scripts once in the root document. Use the `ShopifyScripts` component from your framework binding if it exports one. Frameworks without a binding should render `getShopifyScriptTags()` / `renderShopifyScriptTags()` during SSR and call `initializeShopifyScripts()` during browser hydration. Pass the resolved market as the `i18n` prop or option, use the local `hydrogen-routing` skill for the required script routing options, and pass `{shopId: env.SHOP_ID, storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0"}` as `shop` when loading PerfKit. Framework bindings that support `ShopifyScripts` load WebMCP by default in browsers that expose model context.
+Render Shopify runtime scripts once in the root document. Use the `ShopifyScripts` component from your framework binding if it exports one. Frameworks without a binding should render `getShopifyScriptTags()` / `renderShopifyScriptTags()` during SSR and call `initializeShopifyScripts()` during browser hydration. Pass the resolved market as the `i18n` prop or option, use the local `hydrogen-routing` skill for the required script routing options, and always pass `{shopId: env.SHOP_ID, storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0", myshopifyDomain: env.PUBLIC_STORE_DOMAIN}` as `shop`. Resolve these values on the server and serialize them into ShopifyScripts. Framework bindings that support `ShopifyScripts` load WebMCP by default in browsers that expose model context.
 
 For vanilla browser code that does not use SSR or a framework head API, render the HTML from core and include it in the document shell. If your app renders tags through core helpers instead of a framework binding, call `initializeShopifyScripts()` from bundled client code:
 
@@ -114,7 +138,7 @@ Use the framework's normal client lifecycle primitive when the app is already bu
 
 ## Add The Cart Drawer
 
-Use the local `hydrogen-cart-drawer` skill to render an accessible cart drawer once in the root layout. Keep the `/cart` route as the no-JS fallback, wire the drawer's Standard Actions `openCart` handler, and preserve the `hydrogen-cart-ui` progressive line item form contract in drawer content.
+Use the local `hydrogen-cart-drawer` skill to render an accessible cart drawer once in the root layout. Keep the `/cart` route as the full-page fallback when the drawer is unavailable, wire the drawer's Standard Actions `openCart` handler, and preserve the `hydrogen-cart-ui` progressive line item form contract in drawer content.
 
 ## Build The Navbar
 
@@ -147,7 +171,7 @@ Mention these to the user when they are relevant to the storefront being built r
 Inspect `package.json` scripts and run the applicable commands in this order:
 
 1. Formatting fixer when present: `format`.
-2. Static checks when present: `lint`, `typecheck`, or `check`; these must include `gql.tada check` when setup added or changed Storefront API or Customer Account API queries.
+2. Static checks when present: `lint`, `typecheck`, or `check`; these must include `hydrogen gql check` when setup added or changed Storefront API or Customer Account API queries.
 3. Build when present: `build`.
 4. Tests when present: `test`.
 5. Formatting check when present and distinct from `format`: `format:check`.

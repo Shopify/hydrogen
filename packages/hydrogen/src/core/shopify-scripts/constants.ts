@@ -3,7 +3,15 @@ export const SHOPIFY_SHOP_APP_ORIGIN = "https://shop.app";
 export const SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/standard-actions.js`;
 export const SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/standard-events.js`;
 export const SHOPIFY_STOREFRONT_WEBMCP_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/webmcp.js`;
+export const SHOPIFY_INBOX_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/web-components/agent.js`;
 
 export const SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/analytics/shopify.js`;
 
 export const SHOPIFY_PERF_KIT_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/shopifycloud/perf-kit/shopify-perf-kit-spa.min.js?v2`;
+export const SHOPIFY_CONSENT_API_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/shopifycloud/consent-tracking-api/v0.2/consent-tracking-api.js`;
+export const SHOPIFY_PRIVACY_BANNER_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/shopifycloud/privacy-banner/storefront-banner.js`;
+
+export const SHOPIFY_CONSENT_SCRIPT_ID = "shopify-consent";
+export const SHOPIFY_PERF_KIT_SCRIPT_ID = "shopify-perfkit";
+
+export const VISITOR_CONSENT_COLLECTED_EVENT = "visitorConsentCollected";

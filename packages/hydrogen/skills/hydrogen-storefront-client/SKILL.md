@@ -2,7 +2,7 @@
 name: hydrogen-storefront-client
 description: >
   Guide for @shopify/hydrogen — the type-safe Storefront API
-  GraphQL client. Use this skill whenever writing, modifying, or reviewing code that
+  GraphQL client. Use when writing, modifying, or reviewing code that
   creates a storefront client, writes GraphQL queries with gql(), handles SFAPI errors,
   or wires up storefront data fetching in any framework.
 ---
@@ -22,7 +22,7 @@ Use these canonical environment variable names in app code and docs:
 - `PUBLIC_STORE_DOMAIN` for the Shopify store domain.
 - `PUBLIC_STOREFRONT_API_TOKEN` for the public Storefront API token.
 - `PRIVATE_STOREFRONT_API_TOKEN` for the private Storefront API token.
-- `PUBLIC_STOREFRONT_ID` for analytics `hydrogenSubchannelId`; use `"0"` when the app does not have a storefront ID.
+- `PUBLIC_STOREFRONT_ID` for analytics `storefrontId`; use `"0"` when the app does not have a storefront ID.
 - `PUBLIC_CHECKOUT_DOMAIN` for app-level checkout-domain configuration such as CSP setup. Checkout links should come from cart data, usually `cart.checkoutUrl`.
 
 If the framework requires a prefix to expose client-side variables, preserve the canonical suffix and add only that framework prefix. For example: `NEXT_PUBLIC_STORE_DOMAIN`, `VITE_PUBLIC_STORE_DOMAIN`, or `PUBLIC_STORE_DOMAIN` depending on the framework. Never expose `PRIVATE_STOREFRONT_API_TOKEN` to the client.
@@ -78,9 +78,11 @@ function getBuyerIp(headers: Headers) {
   return buyerIp;
 }
 
+const buyerIp = getBuyerIp(request.headers);
 const requestContext = createShopifyRequestContext({
   request,
   i18n: getLocaleFromRequest(request),
+  buyerIp,
 });
 
 const client = createStorefrontClient({
@@ -89,7 +91,7 @@ const client = createStorefrontClient({
   config: {
     storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
     privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-    buyerIp: getBuyerIp(request.headers),
+    buyerIp,
   },
 });
 ```
@@ -102,6 +104,8 @@ Hydrogen does not infer buyer IP headers. Apps decide how to build `buyerIp` bas
 - Fly.io: `Fly-Client-IP` (parse `X-Forwarded-For` only when another reverse proxy sits in front)
 
 Use the same request-scoped Storefront client for Hydrogen route handlers, cart server handlers, and server data loaders when they share the same request data. Route and cart handlers accept any provided Storefront client. Redirect handlers still require a private server-side client.
+
+When using `handleShopifyRoutes`, pass the same trusted `buyerIp` into `createShopifyRequestContext`. The SFAPI proxy sources buyer IP from request context so proxy requests and direct `client.graphql()` calls use the same buyer identity.
 
 ### Private client without buyer context
 
@@ -164,11 +168,7 @@ Use the fragments with `createPredictiveSearchServerHandlers({ fragments })`, or
 
 ### GraphQL type setup
 
-When adding Storefront API `gql()` documents to a TypeScript app, install `gql.tada` as a devDependency and add the `gql.tada/ts-plugin` to the app's `tsconfig.json`:
-
-```bash
-npm install -D gql.tada
-```
+When adding Storefront API `gql()` documents to a TypeScript app, add Hydrogen's packed TypeScript plugin to the app's `tsconfig.json`:
 
 ```jsonc
 // tsconfig.json
@@ -176,10 +176,7 @@ npm install -D gql.tada
   "compilerOptions": {
     "plugins": [
       {
-        "name": "gql.tada/ts-plugin",
-        "schema": "node_modules/@shopify/hydrogen/dist/storefront.schema.json",
-        "tadaOutputLocation": "./src/storefront-graphql-env.d.ts",
-        "trackFieldUsage": false
+        "name": "@shopify/hydrogen/ts-plugin"
       }
     ]
   }
@@ -188,15 +185,41 @@ npm install -D gql.tada
 
 If the app already has TypeScript plugins, append this plugin without removing framework plugins such as Next.js `name: "next"`. If the app's `tsconfig.json` extends a generated framework config, add `compilerOptions.plugins` in the extending `tsconfig.json`.
 
-The schema path above is shipped by the `@shopify/hydrogen` package.
+The plugin uses the Storefront and Customer Account API schemas shipped by `@shopify/hydrogen` and writes their generated environments at the project root.
 
-If the app also authors Customer Account API documents, use `@shopify/hydrogen/customer-account` and configure `gql.tada` with a separate `customer-account` schema entry. See `references/query-validation.md` for the multi-schema shape.
+Keep `gql(\`...\`)` calls in server/route modules, not client/browser files or barrel files (e.g. an `index.ts` that re-exports everything). Bundlers can't tell whether a `gql()` call has side effects, so any `gql()` reachable from browser code gets bundled into the browser.
+
+If the app also authors Customer Account API documents, use `@shopify/hydrogen/customer-account`; the same plugin validates both APIs.
 
 This plugin provides inline GraphQL autocompletion, validation, and hover docs inside `gql()` calls. The editor must be configured to use the workspace TypeScript version (not the bundled one) — the bundled TS server does not load plugins.
 
 ### Headless query validation
 
-Read `references/query-validation.md` when adding or changing `gql()` documents. The editor plugin does not run during `tsc`; add and run `gql.tada check` so invalid Storefront API fields fail in CI instead of surfacing as runtime GraphQL errors.
+Read `references/query-validation.md` when adding or changing `gql()` documents. The editor plugin does not run during `tsc`; add `hydrogen gql check` to a package script and run that script so invalid Storefront API fields fail in CI instead of surfacing as runtime GraphQL errors.
+
+### Typing query and fragment results
+
+`gql()` returns a **branded query string**, not a `gql.tada` document. Derive result and variable types from the `StorefrontApi` namespace exported by `@shopify/hydrogen`:
+
+```ts
+import { gql, type StorefrontApi } from "@shopify/hydrogen";
+
+const SHOP_QUERY = gql(`query { shop { name } }`);
+type ShopResult = StorefrontApi.ResultOf<typeof SHOP_QUERY>;
+type ShopVars = StorefrontApi.VariablesOf<typeof SHOP_QUERY>;
+```
+
+Because `gql()` is a branded string and not a `gql.tada` document, `gql.tada`'s `FragmentOf` does **not** apply (it will not compile). To get a standalone fragment's result type, compose it into a throwaway shape query and read `ResultOf` off that:
+
+```ts
+const PRODUCT_CARD = gql(`fragment ProductCard on Product { handle title }`);
+const PRODUCT_CARD_SHAPE = gql(
+  `query { products(first: 1) { nodes { ...ProductCard } } }`,
+  [PRODUCT_CARD],
+);
+export type ProductCardData =
+  StorefrontApi.ResultOf<typeof PRODUCT_CARD_SHAPE>["products"]["nodes"][number];
+```
 
 ---
 
@@ -231,6 +254,8 @@ const { data } = await client.graphql(QUERY, { signal });
 ```
 
 `requestContext.signal`, per-call `signal`, and the client's timeout signal are raced automatically. At the final response boundary, append committed session headers first, then call `requestContext.applyResponseHeaders(response.headers)`.
+
+Read `references/caching.md` to cache catalog reads across sub-requests on Oxygen-style runtimes.
 
 ---
 

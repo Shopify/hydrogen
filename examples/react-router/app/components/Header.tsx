@@ -1,8 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Link } from "react-router";
 
 import { useCart } from "~/lib/cart";
-import { openCartDrawer, CART_DRAWER_ID } from "~/lib/cart-drawer";
+import {
+  openCartDrawer,
+  CART_DRAWER_ID,
+  getCartDrawerOpen,
+  subscribeCartDrawerOpen,
+} from "~/lib/cart-drawer";
 import { content, cartIconLabel, cartItemCount } from "~/lib/content";
 
 import { PredictiveSearchModal } from "./PredictiveSearchModal";
@@ -32,11 +37,18 @@ const navItemHref: Record<(typeof content.header.navItems)[number], string> = {
 export function Header({
   accountEnabled,
   isLoggedIn,
+  shopName = "CORE",
 }: {
   accountEnabled: boolean;
   isLoggedIn: boolean;
+  shopName?: string;
 }) {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
+  const cartDrawerOpen = useSyncExternalStore(
+    subscribeCartDrawerOpen,
+    getCartDrawerOpen,
+    () => false,
+  );
 
   const [hasHydrated, setHasHydrated] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -60,6 +72,9 @@ export function Header({
               onClick={() => setMobileNavOpen(true)}
               className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
               aria-label={content.header.menu}
+              aria-haspopup="dialog"
+              aria-expanded={mobileNavOpen}
+              aria-controls="mobile-nav-drawer"
             >
               <img
                 src="/icons/icon-menu.svg"
@@ -76,7 +91,7 @@ export function Header({
             to="/"
             className="text-on-surface focus-visible:outline-accent inline-flex items-center rounded-sm text-lg font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
-            CORE
+            {shopName}
           </Link>
         </div>
 
@@ -102,6 +117,9 @@ export function Header({
               onClick={() => setSearchOpen(true)}
               className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
               aria-label={content.general.search}
+              aria-haspopup="dialog"
+              aria-expanded={searchOpen}
+              aria-controls="search-modal"
               data-testid="search-modal-trigger"
             >
               <img
@@ -133,7 +151,7 @@ export function Header({
           <noscript>
             <form action="/search" method="get" role="search" className="sr-only">
               <label htmlFor="header-search-q">{content.general.search}</label>
-              <input id="header-search-q" name="q" type="search" />
+              <input id="header-search-q" name="q" type="search" autoComplete="off" />
               <button type="submit">{content.search.submit}</button>
             </form>
           </noscript>
@@ -164,6 +182,7 @@ export function Header({
             onClick={openCartDrawer}
             aria-controls={CART_DRAWER_ID}
             aria-haspopup="dialog"
+            aria-expanded={cartDrawerOpen}
             className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded bg-transparent p-0 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
             aria-label={cartLabel}
           >
@@ -221,7 +240,6 @@ function MobileNavDialog({ open, onClose }: { open: boolean; onClose: () => void
           <span
             className="text-on-surface pointer-events-none absolute left-1/2 -translate-x-1/2 text-sm font-medium"
             id="mobile-nav-title"
-            aria-live="polite"
           >
             {content.header.mobileNavigation}
           </span>

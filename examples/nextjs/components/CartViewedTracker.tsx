@@ -19,7 +19,6 @@ export function CartViewedTracker() {
     if (!analytics) return;
     analytics.publish(AnalyticsEvent.CART_VIEWED, {
       cart: cart.id ? cart : null,
-      prevCart: null,
     });
   }, [cart]);
 

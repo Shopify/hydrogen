@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "Browse all collections",
   alternates: { canonical: "/collections" },
   openGraph: {
-    title: "Collections — CORE",
+    title: "Collections",
     type: "website",
     url: canonicalUrl("/collections"),
   },

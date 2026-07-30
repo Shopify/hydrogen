@@ -89,6 +89,18 @@ describe("createCartComponents", () => {
     void Consumer;
   });
 
+  it("types suspense cart state from custom cart server handlers", () => {
+    function Consumer() {
+      const availability = typedCart.useSuspenseCart((state) =>
+        state.data.lines.nodes.map((line) => line.merchandise?.availableForSale),
+      );
+
+      expectTypeOf<(typeof availability)[number]>().toExtend<boolean | undefined>();
+    }
+
+    void Consumer;
+  });
+
   it("types CartProvider initialData from custom cart server handlers", () => {
     type Props = Parameters<typeof typedCart.CartProvider>[0];
     type InitialData = NonNullable<Awaited<NonNullable<Props["initialData"]>>>;

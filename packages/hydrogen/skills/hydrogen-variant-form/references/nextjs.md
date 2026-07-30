@@ -1,5 +1,12 @@
 # Next.js App Router
 
+## Contents
+
+- Server Page
+- Client Details Component
+- Same-Product And Cross-Product Values
+- Add To Cart
+
 Product data is fetched in the server page. Variant selection and add-to-cart live in a `"use client"` component because they use `ProductProvider`, browser routing, and cart forms.
 
 ## Server Page
@@ -73,9 +80,9 @@ export const PRODUCT_QUERY = gql(`
 
 export default async function ProductPage({ params, searchParams }: Props) {
   const { handle } = await params;
-  const selectedOptions = getSelectedProductOptions(
-    toURLSearchParams(await searchParams),
-  );
+  const selectedOptions = getSelectedProductOptions({
+    searchParams: toURLSearchParams(await searchParams),
+  });
   const storefront = await getStorefrontClient();
   const { data } = await storefront.graphql(PRODUCT_QUERY, {
     variables: { handle, selectedOptions },
@@ -139,7 +146,23 @@ Wrap this tree in the app's `CartProvider` from `hydrogen-cart-ui`; `ProductProv
 
 ## Same-Product And Cross-Product Values
 
-Same-product values use `register("optionValue", ...)`. Cross-product combined-listing values must navigate to the target handle. If using a button for cross-product navigation, keep it clearly outside the form and call `router.replace(...)`; otherwise prefer `next/link` when the app expects link semantics.
+Render same-product option values as GET links (`next/link`) so variant selection degrades without JavaScript (the skill's GET-links rule and accessibility guidance cover the `aria-current`, idempotent-`onSelect`, and no-JS rationale). The `href` is the option URL built from `value.selectedOptions`; spread `register("optionValue", ...)` to enhance the link so a hydrated click selects client-side via the provider's `onSelect`. Keep sold-out-but-existing values interactive and derive their visual treatment from `value.available`. Render non-existent combinations (`exists: false`) as a disabled `<button>` instead of a link.
+
+```tsx
+<Link
+  href={variantUrl(product, value.selectedOptions, value.handle, searchParams)}
+  replace
+  scroll={false}
+  aria-current={value.selected ? "true" : undefined}
+  data-available={value.available ? "true" : "false"}
+  {...register("optionValue", { optionName: option.name, value: value.name })}
+>
+  {value.name}
+  {!value.available ? <span className="sr-only"> (Sold out)</span> : null}
+</Link>
+```
+
+Cross-product combined-listing values point at a different `value.handle` and navigate to that product. Prefer `next/link`; if using a button for cross-product navigation, keep it clearly outside the add-to-cart form and call `router.replace(...)`. Both use the same URL helper:
 
 ```tsx
 function variantUrl(

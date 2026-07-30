@@ -7,6 +7,8 @@ import {
 } from "./index";
 import { getEmptyPredictiveSearchResult } from "./search";
 
+const IMMEDIATE_DEBOUNCE_IN_MS = 0;
+
 const MOCK_RESULT: PredictiveSearchData = {
   term: "snow",
   total: 1,
@@ -323,7 +325,7 @@ describe("createPredictiveSearchStore", () => {
   it("destroy aborts active requests and resolves pending searches", async () => {
     const deferred = deferredResponse();
     const fetch = vi.fn().mockReturnValue(deferred.promise);
-    const store = createPredictiveSearchStore({ fetch, debounceInMs: 0 });
+    const store = createPredictiveSearchStore({ fetch, debounceInMs: IMMEDIATE_DEBOUNCE_IN_MS });
 
     const search = store.search("snow");
     await flushPromises();
@@ -333,6 +335,47 @@ describe("createPredictiveSearchStore", () => {
     await search;
 
     expect(signal.aborted).toBe(true);
+  });
+
+  it("searches after reconnecting a destroyed store", async () => {
+    const fetch = vi.fn().mockResolvedValue(jsonResponse(MOCK_RESULT));
+    const store = createPredictiveSearchStore({
+      fetch,
+      debounceInMs: IMMEDIATE_DEBOUNCE_IN_MS,
+    });
+
+    store.destroy();
+    store.connect();
+    await store.search("snow");
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(store.getState()).toEqual(expect.objectContaining({ term: "snow", status: "success" }));
+  });
+
+  it("ignores pre-destroy responses that settle after reconnect", async () => {
+    const first = deferredResponse();
+    const second = deferredResponse();
+    const fetch = vi.fn().mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
+    const store = createPredictiveSearchStore({
+      fetch,
+      debounceInMs: IMMEDIATE_DEBOUNCE_IN_MS,
+    });
+
+    const firstSearch = store.search("snow");
+    await flushPromises();
+    store.destroy();
+    await firstSearch;
+
+    store.connect();
+    const secondSearch = store.search("board");
+    await flushPromises();
+    second.resolve(jsonResponse({ ...MOCK_RESULT, term: "board" }));
+    await secondSearch;
+
+    first.resolve(jsonResponse({ ...MOCK_RESULT, term: "snow" }));
+    await flushPromises();
+
+    expect(store.getState()).toEqual(expect.objectContaining({ term: "board", status: "success" }));
   });
 
   it("throws when no fetch implementation exists", () => {

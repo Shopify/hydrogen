@@ -30,11 +30,11 @@ export function CartDrawer() {
         <div className="flex shrink-0 items-center py-2 ps-4 pe-2">
           <div className="flex flex-1 items-center gap-2">
             <h2 id="cart-drawer-title" className="text-on-surface text-lg font-medium">
-              {content.cart.title}
+              {content.cart.title}{" "}
+              <span className="text-on-surface-secondary text-sm font-normal">
+                {totalQuantity} {totalQuantity === 1 ? "item" : "items"}
+              </span>
             </h2>
-            <span className="cart-count-badge" aria-hidden="true">
-              {totalQuantity}
-            </span>
           </div>
           <button
             type="button"
@@ -57,10 +57,10 @@ export function CartDrawer() {
           <CartContent />
         </div>
 
-        {!isEmpty ? (
+        {!isEmpty && checkoutUrl ? (
           <div className="border-border shrink-0 border-t p-4">
             <a
-              href={checkoutUrl ?? "#"}
+              href={checkoutUrl}
               className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 w-full items-center justify-center gap-2 px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               {content.cart.checkout}

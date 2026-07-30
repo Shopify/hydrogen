@@ -11,6 +11,7 @@ type TestStorefrontConfig = {
 };
 
 const DEFAULT_I18N = { country: "US", language: "EN" } as const;
+const DEFAULT_BUYER_IP = "127.0.0.1";
 
 const defaultConfig: TestStorefrontConfig = {
   storeDomain: "test-store.myshopify.com",
@@ -31,11 +32,15 @@ function createPrivateStorefrontClient(
 ) {
   return createStorefrontClient({
     type: "private",
-    requestContext: createShopifyRequestContext({ request, i18n: DEFAULT_I18N }),
+    requestContext: createShopifyRequestContext({
+      request,
+      i18n: DEFAULT_I18N,
+      buyerIp: DEFAULT_BUYER_IP,
+    }),
     config: {
       storeDomain: fixture.storeDomain,
       privateStorefrontToken: "test-private-token",
-      buyerIp: "127.0.0.1",
+      buyerIp: DEFAULT_BUYER_IP,
     },
   });
 }

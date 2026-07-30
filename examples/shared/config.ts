@@ -4,7 +4,7 @@ type StorefrontConfigShape = {
   privateStorefrontTokenEnvKey: PrivateStorefrontTokenEnvKey;
 };
 
-type I18nShape = { country: "US"; language: "EN" };
+type I18nShape = { country: "US"; language: "EN"; currency: "USD" };
 
 type PrivateStorefrontTokenEnvKey =
   | "PRIVATE_STOREFRONT_API_TOKEN_HYDROGEN_PREVIEW"
@@ -13,18 +13,10 @@ type PrivateStorefrontTokenEnvKey =
 type ShopifyScriptsShopShape = {
   shopId: string;
   storefrontId: string;
-};
-
-type AnalyticsShopShape = {
-  shopId: string;
-  acceptedLanguage: string;
-  currency: string;
-  hydrogenSubchannelId: string;
+  myshopifyDomain: string;
 };
 
 type AnalyticsConsentShape = {
-  consentDomain?: string;
-  publicStorefrontAccessToken?: string;
   mode: "default-banner" | "custom-banner" | "no-banner";
 };
 
@@ -73,21 +65,15 @@ export const customerAccountConfig = {
 export const defaultI18n = {
   country: "US",
   language: "EN",
+  currency: "USD",
 } satisfies I18nShape;
 
 export const shop = {
   shopId: ACTIVE_STORE.shopId,
   storefrontId: ACTIVE_STORE.publicStorefrontId,
+  myshopifyDomain: ACTIVE_STORE.storeDomain,
 } satisfies ShopifyScriptsShopShape;
-
-export const analyticsShop = {
-  shopId: `gid://shopify/Shop/${ACTIVE_STORE.shopId}`,
-  acceptedLanguage: "EN",
-  currency: "USD",
-  hydrogenSubchannelId: ACTIVE_STORE.publicStorefrontId,
-} satisfies AnalyticsShopShape;
 
 export const analyticsConsent = {
   mode: "default-banner",
-  publicStorefrontAccessToken: ACTIVE_STORE.publicStorefrontToken,
 } satisfies AnalyticsConsentShape;

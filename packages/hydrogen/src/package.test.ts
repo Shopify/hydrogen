@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import packageJson from "../package.json" with { type: "json" };
 
 const PACKAGE_ROOT = resolve(import.meta.dirname, "..");
+const TS_PLUGIN_EXPORT_PATH = "./ts-plugin";
 const COPY_GENERATED_GRAPHQL_ASSETS_SCRIPT_PATH = resolve(
   PACKAGE_ROOT,
   "scripts/copy-generated-graphql-assets.ts",
@@ -19,9 +20,16 @@ const GENERATED_GRAPHQL_EXPORTS = [
   "./storefront.schema.json",
 ] as const;
 
-const BROWSER_ENTRY_DECLARATIONS = ["dist/core/index.d.mts", "dist/react/index.d.mts"] as const;
+const BROWSER_ENTRY_DECLARATIONS = [
+  "dist/core/index.d.mts",
+  "dist/react/index.d.mts",
+  "dist/vue/index.d.mts",
+] as const;
 
-const FRAMEWORK_BROWSER_ENTRY_DECLARATIONS = ["dist/react/index.d.mts"] as const;
+const FRAMEWORK_BROWSER_ENTRY_DECLARATIONS = [
+  "dist/react/index.d.mts",
+  "dist/vue/index.d.mts",
+] as const;
 
 const PUBLIC_ENTRY_DECLARATIONS = [
   ...BROWSER_ENTRY_DECLARATIONS,
@@ -29,6 +37,11 @@ const PUBLIC_ENTRY_DECLARATIONS = [
 ] as const;
 
 describe("package metadata", () => {
+  it("ships a CLI wrapper that exists before the package is built", () => {
+    expect(packageJson.bin.hydrogen).toBe("./bin/hydrogen.mjs");
+    expect(existsSync(resolve(PACKAGE_ROOT, packageJson.bin.hydrogen))).toBe(true);
+  });
+
   it("exports package metadata", () => {
     expect(packageJson.exports["./package.json"]).toBe("./package.json");
   });
@@ -48,6 +61,28 @@ describe("package metadata", () => {
     expect(packageJson.files).not.toContain("src/graphql/generated");
   });
 
+  it("exports a loadable TypeScript plugin", () => {
+    const exportTarget = packageJson.exports[TS_PLUGIN_EXPORT_PATH];
+    expect(exportTarget).toEqual({
+      types: "./dist/ts-plugin/index.d.cts",
+      require: "./dist/ts-plugin/index.cjs",
+      default: "./dist/ts-plugin/index.cjs",
+    });
+    expect(existsSync(resolve(PACKAGE_ROOT, exportTarget.types))).toBe(true);
+    expect(existsSync(resolve(PACKAGE_ROOT, exportTarget.require))).toBe(true);
+
+    execFileSync(
+      process.execPath,
+      [
+        "-e",
+        `const plugin = require("@shopify/hydrogen/ts-plugin");
+const typescript = require("typescript/lib/tsserverlibrary");
+if (typeof plugin !== "function" || typeof plugin({typescript}).create !== "function") throw new Error("Invalid TypeScript plugin export");`,
+      ],
+      { cwd: PACKAGE_ROOT },
+    );
+  });
+
   it("centralizes Shopify globals in global types", () => {
     const declaration = readFileSync(resolve(PACKAGE_ROOT, "dist/globals.d.mts"), "utf8");
 
@@ -55,6 +90,8 @@ describe("package metadata", () => {
     expect(declaration).toContain("ShopifyStandardActions");
     expect(declaration).toContain("actions: ShopifyStandardActions;");
     expect(declaration).toContain("analytics?: StorefrontAnalytics;");
+    expect(declaration).toContain("currency?: {");
+    expect(declaration).toContain("active: string;");
     expect(declaration).toContain("customerPrivacy: {");
     expect(declaration).toContain("routes: {");
     expect(declaration).toContain("root: string;");
@@ -97,7 +134,11 @@ describe("package metadata", () => {
 
     expect(coreDeclaration).toContain("./shopify-scripts/");
     expect(coreDeclaration).toContain("getShopifyScriptTags");
+    expect(coreDeclaration).toContain("initializeShopifyScripts");
     expect(coreDeclaration).toContain("renderShopifyScriptTags");
+    expect(coreDeclaration).not.toContain("initializeDeprecatedCookies");
+    expect(coreDeclaration).not.toContain("loadShopifyWebMcpTools");
+    expect(coreDeclaration).not.toContain("setShopifyRouting");
 
     for (const declarationPath of FRAMEWORK_BROWSER_ENTRY_DECLARATIONS) {
       const declaration = readFileSync(resolve(PACKAGE_ROOT, declarationPath), "utf8");

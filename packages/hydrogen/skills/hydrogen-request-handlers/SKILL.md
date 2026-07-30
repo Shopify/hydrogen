@@ -1,7 +1,7 @@
 ---
 name: hydrogen-request-handlers
 description: >
-  Guide for wiring Hydrogen request interceptors in server frameworks. Use when
+  Guide for wiring Hydrogen request handlers in server frameworks. Use when
   adding, modifying, or reviewing handleShopifyRoutes, handleShopifyRedirects,
   SFAPI proxy routes, cart, predictive search, and Customer Account server handlers,
   checkout redirects, cart permalinks, AJAX cart proxy routes, /admin redirects, Storefront URL redirects,
@@ -47,12 +47,14 @@ const redirect = await handleShopifyRedirects({
 
 - Default to one request-scoped private Storefront client per request when buyer context exists.
 - Route handlers and cart server handlers accept any provided Storefront client when public or no-buyer-context access is intentional.
-- Resolve trusted `buyerIp` before creating a private client; use the `hydrogen-storefront-client` buyer-IP guidance for the app's deployment.
-- Create `requestContext` with `createShopifyRequestContext({ request, i18n })` where the framework exposes a real `Request`; use `request: { headers }` only when no `Request` exists.
+- Resolve trusted `buyerIp` before creating a private client; pass it to both `createShopifyRequestContext` and private client config. Use the `hydrogen-storefront-client` buyer-IP guidance for the app's deployment.
+- Create `requestContext` with `createShopifyRequestContext({ request, i18n, buyerIp })` where buyer context exists and the framework exposes a real `Request`; use `request: { headers }` only when no `Request` exists.
 - Pass the same request-scoped `requestContext`, `storefrontClient`, and `sessionManager` into `handleShopifyRoutes` and registered handler groups.
 - Pass `request` and `storefrontClient` into `handleShopifyRedirects`; it does not receive a session manager.
 - Pass registered handler groups explicitly, for example `handlers: [cartHandlers, customerAccountHandlers]`.
 - `handleShopifyRoutes` applies request-context response headers before returning matched Hydrogen route responses.
+- Link and submit to Customer Account routes (`/account/login`, `/account/authorize`, `/account/refresh`, `/account/logout`) with plain HTML `<a>`/`<form>`, never the framework's client-side navigation component (`<Form>`/`<Link>` in React Router, `next/link` in Next.js, `NuxtLink` in Nuxt). The login and logout handlers return raw HTTP redirects to external Shopify URLs, which client-nav cannot process.
+- Apps authoring Customer Account API documents use the same packed Hydrogen TypeScript plugin as Storefront API documents. See `hydrogen-storefront-client/references/query-validation.md` for the exact config. Applies to every framework.
 - For framework-routed responses, commit session headers once at the final response boundary, append those headers, then call `requestContext.applyResponseHeaders(response.headers)` so SFAPI cookies, `Server-Timing`, tracking fallback headers, and personalized-response cache safety survive.
 - Wire this in production runtime code, not dev-only hooks. Only GraphiQL is dev-only.
 
@@ -76,7 +78,7 @@ import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-
 
 Run the app in dev and production modes, then check:
 
-1. `POST /api/<api-version>/graphql.json` returns Storefront API JSON, not the app 404.
+1. `POST /api/{api-version}/graphql.json` returns Storefront API JSON, not the app 404.
 2. `GET /api/cart` returns cart handler JSON when cart handlers are registered. With no cart id, the body is `{cart: null}` and no Storefront API cart lookup is made.
 3. `GET /api/predictive-search?q=snow` returns predictive search JSON when predictive search handlers are registered.
 4. `GET /account/login`, `GET /account/authorize`, `GET /account/refresh`, and `POST /account/logout` are handled before the app router when Customer Account handlers are registered.

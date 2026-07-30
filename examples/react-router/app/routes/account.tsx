@@ -4,6 +4,7 @@ import { data, Link } from "react-router";
 import type { MetaFunction } from "react-router";
 
 import { customerAccountContext } from "~/lib/customer-account";
+import { shopNameFromMatches, shopTitle } from "~/lib/meta";
 
 import type { Route } from "./+types/account";
 
@@ -19,8 +20,8 @@ const CUSTOMER_QUERY = CAAPI.gql(`
   }
 `);
 
-export const meta: MetaFunction = () => {
-  return [{ title: "Account — CORE" }];
+export const meta: MetaFunction = ({ matches }) => {
+  return [{ title: shopTitle("Account", shopNameFromMatches(matches)) }];
 };
 
 /**

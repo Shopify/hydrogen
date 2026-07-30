@@ -94,7 +94,7 @@ export function CartLineItem({ line }: { line: CartLine }) {
             </button>
             <input
               {...register("quantity", { value: line.quantity, interactive: true })}
-              className="number-reset h-8 w-12 text-center text-sm outline-none focus:outline-none"
+              className="number-reset h-8 w-12 text-center text-sm"
               aria-label={`Quantity: ${productTitle}`}
             />
             <button

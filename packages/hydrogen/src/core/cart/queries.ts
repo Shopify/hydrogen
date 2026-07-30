@@ -72,7 +72,6 @@ const HYDROGEN_CART_FRAGMENT_SOURCE = /* GraphQL */ `
             id
             title
             sku
-            quantityAvailable
             image {
               id
               url

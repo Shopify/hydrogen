@@ -17,13 +17,14 @@ const FIRST_FORWARDED_FOR_VALUE_INDEX = 0;
 
 export const getStorefrontClient = cache(async () => {
   const requestHeaders = await headers();
-  const requestContext = createShopifyRequestContext({
-    request: { headers: requestHeaders },
-    i18n: { country: "US", language: "EN" },
-  });
   const forwardedForValues = requestHeaders.get("x-forwarded-for")?.split(",");
   const buyerIp = forwardedForValues?.[FIRST_FORWARDED_FOR_VALUE_INDEX]?.trim();
   if (!buyerIp) throw new Error("buyer IP is required for private SFAPI clients");
+  const requestContext = createShopifyRequestContext({
+    request: { headers: requestHeaders },
+    i18n: { country: "US", language: "EN" },
+    buyerIp,
+  });
 
   return createStorefrontClient({
     type: "private",
@@ -58,7 +59,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
 }
 ```
 
-The private client is created inside the request path because `buyerIp` and `requestContext` are static on the client. Calling `headers()` makes this page dynamic. Route handlers and proxy files receive the actual `Request`; pass that request to `createShopifyRequestContext({ request, i18n })` there so the request URL and `request.signal` are preserved.
+The private client is created inside the request path because `buyerIp` and `requestContext` are static on the client. Calling `headers()` makes this page dynamic. Route handlers and proxy files receive the actual `Request`; pass that request and the trusted `buyerIp` to `createShopifyRequestContext({ request, i18n, buyerIp })` there so the request URL and `request.signal` are preserved.
 
 ## Static pages (no buyer IP)
 
@@ -112,4 +113,16 @@ export default async function CollectionPage({ params }: { params: Promise<{ han
 }
 ```
 
-This component never touches request-time APIs (`headers()`, `cookies()`, `searchParams`), so Next.js can prerender it at build time or cache it with ISR (`export const revalidate = 3600`). Use a per-request `private` client from `getStorefrontClient()` when you need buyer context or personalized data.
+This component never touches request-time APIs (`headers()`, `cookies()`, `searchParams`), so Next.js can prerender it at build time or cache it with ISR (`export const revalidate = 3600`). All requests share one throttle bucket — fine for pages that serve the same data to every visitor. Use a per-request `private` client from `getStorefrontClient()` when you need per-buyer isolation or personalized data.
+
+## `use cache` does not serialize `URLSearchParams`
+
+`use cache` serializes its arguments, so a `URLSearchParams` loses `.get` across the boundary. Pass a plain `string` and reconstruct `new URLSearchParams(string)` inside the cache-point:
+
+```ts
+// "use cache" cache-point
+async function fetchCollection(handle: string, searchString: string) {
+  const parsed = parseCollectionParams(new URLSearchParams(searchString));
+  // ...
+}
+```

@@ -2,7 +2,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import type { CartActionError } from "../../../vendor/standard-actions";
-import { SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT } from "../shopify-scripts";
+import {
+  SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
+  VISITOR_CONSENT_COLLECTED_EVENT,
+} from "../shopify-scripts";
 import { assert } from "../test-utils";
 import {
   configureCartEndpoint,
@@ -14,7 +17,7 @@ import {
   revalidateConnectedCartCheckoutUrls,
   type CartStore,
 } from "./cart";
-import type { CartData, CartLine, CartPending } from "./state";
+import type { CartData, CartLine, CartPending, CartState } from "./state";
 import {
   EMPTY_CART_DATA,
   EMPTY_CART_STATE,
@@ -288,9 +291,9 @@ beforeEach(() => {
     writable: true,
   });
   resetStandardActionsForTests();
-  store = createCartStore({ initialData: { cart: EMPTY_CART_DATA } });
+  mockGetCart.mockResolvedValue({ cart: null });
+  store = createCartStore({ initialData: { cart: null } });
   store.connect();
-  store.reset();
 });
 
 afterEach(() => {
@@ -331,15 +334,45 @@ describe("createCartStore", () => {
     localStore.destroy();
   });
 
-  it("does not start async initialData before connect", async () => {
+  it("does not expose a readyPromise when sync initialData has a cart", () => {
+    const localStore = createCartStore({
+      initialData: { cart: makeCartState({ totalQuantity: 5 }) },
+    });
+
+    expect(localStore.getState().readyPromise).toBeUndefined();
+
+    localStore.destroy();
+  });
+
+  it("hydrates async initialData before connect", async () => {
     const deferred = createDeferred<{ cart: CartData | null }>();
     const localStore = createCartStore({ initialData: deferred.promise });
 
     deferred.resolve({ cart: makeCartState({ totalQuantity: 5 }) });
-    await nextTick();
 
-    expect(localStore.getState().loading).toBe(true);
-    expect(localStore.getState().data.totalQuantity).toBe(0);
+    await vi.waitFor(() => {
+      expect(localStore.getState().loading).toBe(false);
+    });
+    expect(localStore.getState().data.totalQuantity).toBe(5);
+
+    localStore.destroy();
+  });
+
+  it("exposes connected async initialData readiness", async () => {
+    const deferred = createDeferred<{ cart: CartData | null }>();
+    const localStore = createCartStore({ initialData: deferred.promise });
+
+    localStore.connect();
+    const readyPromise = localStore.getState().readyPromise;
+
+    assert(readyPromise, "Expected async initialData to create a readyPromise");
+    expect(mockGetCart).not.toHaveBeenCalled();
+
+    deferred.resolve({ cart: makeCartState({ totalQuantity: 5 }) });
+    await readyPromise;
+
+    expect(localStore.getState().data.totalQuantity).toBe(5);
+    expect(localStore.getState().readyPromise).toBeUndefined();
 
     localStore.destroy();
   });
@@ -443,12 +476,45 @@ describe("createCartStore", () => {
   it("does not apply stale async initialData after state changes", async () => {
     const deferred = createDeferred<{ cart: CartData | null }>();
     const localStore = createCartStore({ initialData: deferred.promise });
+    const readyPromise = localStore.getState().readyPromise;
 
+    assert(readyPromise, "Expected async initialData to create a readyPromise");
     localStore.connect();
     localStore.hydrate(makeCartState({ totalQuantity: 1 }));
+    await readyPromise;
+
     deferred.resolve({ cart: makeCartState({ totalQuantity: 9 }) });
     await nextTick();
 
+    expect(localStore.getState().data.totalQuantity).toBe(1);
+
+    localStore.destroy();
+  });
+
+  it("settles readiness when an optimistic mutation invalidates initialData", async () => {
+    const initialDeferred = createDeferred<{ cart: CartData | null }>();
+    const localStore = createCartStore({ initialData: initialDeferred.promise });
+    const readyPromise = localStore.getState().readyPromise;
+
+    assert(readyPromise, "Expected async initialData to create a readyPromise");
+    localStore.connect();
+    const mutationPromise = localStore.handleFormSubmit(
+      submitForm({ merchandiseId: "gid://shopify/ProductVariant/1" }, "intent", "add"),
+    );
+
+    await readyPromise;
+    expect(localStore.getState().readyPromise).toBeUndefined();
+    expect(localStore.getState().loading).toBe(false);
+
+    await vi.waitFor(() => {
+      expect(updateDeferreds).toHaveLength(1);
+    });
+    const firstUpdateIndex = 0;
+    resolveUpdate(firstUpdateIndex, serverCart(1, [{ id: "line-1", quantity: 1 }]));
+    await mutationPromise;
+
+    initialDeferred.resolve({ cart: makeCartState({ totalQuantity: 9 }) });
+    await nextTick();
     expect(localStore.getState().data.totalQuantity).toBe(1);
 
     localStore.destroy();
@@ -469,6 +535,28 @@ describe("createCartStore", () => {
       expect(localStore.getState().data.id).toBe("gid://shopify/Cart/connected");
     });
     expect(localStore.getState().data.totalQuantity).toBe(4);
+
+    localStore.destroy();
+  });
+
+  it("exposes omitted initialData readiness", async () => {
+    const deferred = createDeferred<{ cart: CartData | null }>();
+    const localStore = createCartStore();
+    mockGetCart.mockReturnValue(deferred.promise);
+
+    localStore.connect();
+    const readyPromise = localStore.getState().readyPromise;
+
+    assert(readyPromise, "Expected omitted initialData to create a readyPromise");
+    await vi.waitFor(() => {
+      expect(mockGetCart).toHaveBeenCalledTimes(1);
+    });
+
+    deferred.resolve({ cart: makeCartState({ totalQuantity: 3 }) });
+    await readyPromise;
+
+    expect(localStore.getState().data.totalQuantity).toBe(3);
+    expect(localStore.getState().readyPromise).toBeUndefined();
 
     localStore.destroy();
   });
@@ -509,9 +597,13 @@ describe("CartStore.hydrate", () => {
   });
 
   it("sets loading to false", () => {
-    expect(store.getState().loading).toBe(true);
-    store.hydrate(makeCartState());
-    expect(store.getState().loading).toBe(false);
+    const localStore = createCartStore();
+
+    expect(localStore.getState().loading).toBe(true);
+    localStore.hydrate(makeCartState());
+    expect(localStore.getState().loading).toBe(false);
+
+    localStore.destroy();
   });
 
   it("resets pending state on hydration", () => {
@@ -574,7 +666,11 @@ describe("CartStore.hydrate", () => {
 
 describe("CartStore.getState", () => {
   it("returns EMPTY_CART_STATE before hydration", () => {
-    expect(store.getState()).toEqual(EMPTY_CART_STATE);
+    const localStore = createCartStore();
+
+    expect(localStore.getState()).toEqual(EMPTY_CART_STATE);
+
+    localStore.destroy();
   });
 });
 
@@ -604,11 +700,85 @@ describe("CartStore.reset", () => {
   it("clears state back to EMPTY_CART_STATE", () => {
     store.hydrate(makeCartState({ totalQuantity: 5 }));
     store.reset();
-    expect(store.getState()).toEqual(EMPTY_CART_STATE);
+    const readyPromise = store.getState().readyPromise;
+
+    assert(readyPromise, "Expected reset to create a readyPromise");
+    expect(store.getState()).toEqual({ ...EMPTY_CART_STATE, readyPromise });
+  });
+
+  it("hydrates with a fresh full-cart load after clearing connected state", async () => {
+    mockGetCart.mockResolvedValueOnce({ cart: makeCartState({ totalQuantity: 7 }) });
+    store.hydrate(makeCartState({ totalQuantity: 5 }));
+
+    store.reset();
+    const readyPromise = store.getState().readyPromise;
+
+    expect(store.getState()).toEqual({ ...EMPTY_CART_STATE, readyPromise });
+    assert(readyPromise, "Expected reset to create a readyPromise");
+
+    await readyPromise;
+    expect(store.getState().data.totalQuantity).toBe(7);
+  });
+
+  it("ignores async initialData that resolves after reset", async () => {
+    const initialDeferred = createDeferred<{ cart: CartData | null }>();
+    const resetDeferred = createDeferred<{ cart: CartData | null }>();
+    const localStore = createCartStore({ initialData: initialDeferred.promise });
+    mockGetCart.mockReturnValue(resetDeferred.promise);
+
+    localStore.connect();
+    localStore.reset();
+    const readyPromise = localStore.getState().readyPromise;
+    const fetchPromise = localStore.fetch();
+    let fetchSettled = false;
+    fetchPromise.then(() => {
+      fetchSettled = true;
+    });
+
+    assert(readyPromise, "Expected reset to create a readyPromise");
+
+    initialDeferred.resolve({ cart: makeCartState({ totalQuantity: 9 }) });
+    await nextTick();
+    expect(fetchSettled).toBe(false);
+    expect(localStore.getState().data.totalQuantity).toBe(0);
+
+    resetDeferred.resolve({ cart: makeCartState({ totalQuantity: 7 }) });
+    await fetchPromise;
+    expect(localStore.getState().data.totalQuantity).toBe(7);
+
+    localStore.destroy();
   });
 });
 
 describe("CartStore lifecycle", () => {
+  it("notifies subscribers when readyPromise visibility changes", async () => {
+    const deferred = createDeferred<{ cart: CartData }>();
+    const localStore = createCartStore();
+    let observedReadyPromise: PromiseLike<void> | undefined;
+    const listener = vi.fn((state: CartState) => {
+      observedReadyPromise = state.readyPromise;
+    });
+
+    mockGetCart.mockReturnValue(deferred.promise);
+    const unsubscribe = localStore.subscribe(listener);
+
+    localStore.connect();
+    const readyPromise = localStore.getState().readyPromise;
+
+    assert(readyPromise, "Expected connected store to expose readyPromise");
+    expect(observedReadyPromise).toBe(readyPromise);
+
+    localStore.destroy();
+    expect(localStore.getState().readyPromise).toBe(readyPromise);
+
+    deferred.resolve({ cart: makeCartState({ totalQuantity: 3 }) });
+    await readyPromise;
+    expect(observedReadyPromise).toBeUndefined();
+
+    unsubscribe();
+    localStore.destroy();
+  });
+
   it("connect is idempotent and destroy removes cart event listeners", () => {
     const addSpy = vi.spyOn(document, "addEventListener");
     const removeSpy = vi.spyOn(document, "removeEventListener");
@@ -851,37 +1021,46 @@ describe("CartStore.handleFormSubmit — line mutations", () => {
   });
 
   it("set: clamps to quantityAvailable when present", async () => {
+    const currentQuantity = 2;
+    const quantityAvailable = 4;
+    const requestedQuantity = 10;
+    const clampedTotalAmount = "40";
+
     store.destroy();
     store = createCartStore();
     mockGetCart.mockResolvedValue({ cart: null });
     store.connect();
 
     const line = {
-      ...makeLine({ id: "line-1", quantity: 2 }),
+      ...makeLine({ id: "line-1", quantity: currentQuantity }),
       merchandise: {
         id: "gid://shopify/ProductVariant/1",
         title: "Small",
         product: { title: "T-Shirt" },
-        quantityAvailable: 4,
+        quantityAvailable,
       },
     };
-    store.hydrate(makeCartState({ lines: [line], totalQuantity: 2 }));
+    store.hydrate(makeCartState({ lines: [line], totalQuantity: currentQuantity }));
 
-    const event = submitForm({ lineId: "line-1", quantity: "10" }, "intent", "set");
+    const event = submitForm(
+      { lineId: "line-1", quantity: String(requestedQuantity) },
+      "intent",
+      "set",
+    );
     const promise = store.handleFormSubmit(event);
     await nextTick();
 
-    expect(getCartLines(store.getState().data)[0].quantity).toBe(4);
+    expect(getCartLines(store.getState().data)[0].quantity).toBe(quantityAvailable);
 
     resolveUpdate(0, {
       cart: {
         ...CART_RESULT.cart,
-        totalQuantity: 4,
+        totalQuantity: quantityAvailable,
         lines: [
           {
             id: "line-1",
-            quantity: 4,
-            cost: { totalAmount: { amount: "40", currencyCode: "USD" } },
+            quantity: quantityAvailable,
+            cost: { totalAmount: { amount: clampedTotalAmount, currencyCode: "USD" } },
           },
         ],
       },
@@ -889,7 +1068,58 @@ describe("CartStore.handleFormSubmit — line mutations", () => {
     await promise;
 
     expect(mockUpdateCart).toHaveBeenCalledWith(
-      { lines: [{ id: "line-1", quantity: 4 }] },
+      { lines: [{ id: "line-1", quantity: quantityAvailable }] },
+      expect.anything(),
+    );
+  });
+
+  it("set: does not clamp to inventory when quantityAvailable is absent", async () => {
+    const currentQuantity = 2;
+    const requestedQuantity = 10;
+    const requestedTotalAmount = "100";
+
+    store.destroy();
+    store = createCartStore();
+    mockGetCart.mockResolvedValue({ cart: null });
+    store.connect();
+
+    const line = {
+      ...makeLine({ id: "line-1", quantity: currentQuantity }),
+      merchandise: {
+        id: "gid://shopify/ProductVariant/1",
+        title: "Small",
+        product: { title: "T-Shirt" },
+      },
+    };
+    store.hydrate(makeCartState({ lines: [line], totalQuantity: currentQuantity }));
+
+    const event = submitForm(
+      { lineId: "line-1", quantity: String(requestedQuantity) },
+      "intent",
+      "set",
+    );
+    const promise = store.handleFormSubmit(event);
+    await nextTick();
+
+    expect(getCartLines(store.getState().data)[0].quantity).toBe(requestedQuantity);
+
+    resolveUpdate(0, {
+      cart: {
+        ...CART_RESULT.cart,
+        totalQuantity: requestedQuantity,
+        lines: [
+          {
+            id: "line-1",
+            quantity: requestedQuantity,
+            cost: { totalAmount: { amount: requestedTotalAmount, currencyCode: "USD" } },
+          },
+        ],
+      },
+    });
+    await promise;
+
+    expect(mockUpdateCart).toHaveBeenCalledWith(
+      { lines: [{ id: "line-1", quantity: requestedQuantity }] },
       expect.anything(),
     );
   });
@@ -2031,14 +2261,17 @@ describe("CartStore.fetch", () => {
   });
 
   it("sets loading to false when getCart returns null cart", async () => {
+    const localStore = createCartStore();
     mockGetCart.mockResolvedValue({ cart: null });
 
-    expect(store.getState().loading).toBe(true);
-    await store.fetch();
+    expect(localStore.getState().loading).toBe(true);
+    await localStore.fetch();
 
-    expect(store.getState().loading).toBe(false);
-    expect(store.getState().data.id).toBeNull();
-    expect(getCartLines(store.getState().data)).toEqual([]);
+    expect(localStore.getState().loading).toBe(false);
+    expect(localStore.getState().data.id).toBeNull();
+    expect(getCartLines(localStore.getState().data)).toEqual([]);
+
+    localStore.destroy();
   });
 
   it("does not apply stale fetch result after state changes", async () => {
@@ -2047,6 +2280,9 @@ describe("CartStore.fetch", () => {
 
     const promise = store.fetch();
     store.hydrate(makeCartState({ totalQuantity: 1 }));
+
+    expect(store.getState().readyPromise).toBeUndefined();
+
     deferred.resolve({
       cart: makeCartState({
         id: "gid://shopify/Cart/stale",
@@ -2142,6 +2378,93 @@ describe("CartStore.fetch", () => {
       );
     });
     expect(store.getState().data.note).toBe("keep this note");
+  });
+
+  it("keeps an active fetch when checkoutUrl revalidation does not change state", async () => {
+    const checkoutUrl = "https://example.com/checkouts/current";
+    const fetchDeferred = createDeferred<{ cart: CartData }>();
+    store.hydrate(
+      makeCartState({
+        id: "gid://shopify/Cart/abc",
+        checkoutUrl,
+        totalQuantity: 1,
+      }),
+    );
+    mockGetCart.mockReturnValueOnce(fetchDeferred.promise).mockResolvedValueOnce({
+      cart: makeCartState({
+        id: "gid://shopify/Cart/abc",
+        checkoutUrl,
+        totalQuantity: 1,
+      }),
+    });
+
+    const fetchPromise = store.fetch();
+    const readyPromise = store.getState().readyPromise;
+    assert(readyPromise, "Expected fetch to create a readyPromise");
+    await vi.waitFor(() => {
+      expect(mockGetCart).toHaveBeenCalledTimes(1);
+    });
+
+    revalidateConnectedCartCheckoutUrls();
+    await vi.waitFor(() => {
+      expect(mockGetCart).toHaveBeenCalledTimes(2);
+    });
+    expect(store.getState().readyPromise).toBe(readyPromise);
+
+    fetchDeferred.resolve({
+      cart: makeCartState({
+        id: "gid://shopify/Cart/fresh",
+        checkoutUrl,
+        totalQuantity: 4,
+      }),
+    });
+    await fetchPromise;
+
+    expect(store.getState().data.id).toBe("gid://shopify/Cart/fresh");
+    expect(store.getState().data.totalQuantity).toBe(4);
+  });
+
+  it("revalidates checkoutUrl when connected carts observe consent collection", async () => {
+    store.hydrate(
+      makeCartState({
+        id: "gid://shopify/Cart/abc",
+        checkoutUrl: "https://example.com/checkouts/old?_shopify_y=old",
+        totalQuantity: 1,
+      }),
+    );
+    mockGetCart.mockResolvedValue({
+      cart: {
+        id: "gid://shopify/Cart/abc",
+        checkoutUrl: "https://example.com/checkouts/new?_shopify_y=new",
+        totalQuantity: 1,
+        cost: { totalAmount: { amount: "10.00", currencyCode: "USD" } },
+        lines: { nodes: [makeLine({ id: "line-1" })] },
+        discountCodes: [],
+      },
+    });
+
+    document.dispatchEvent(new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT));
+
+    await vi.waitFor(() => {
+      expect(store.getState().data.checkoutUrl).toBe(
+        "https://example.com/checkouts/new?_shopify_y=new",
+      );
+    });
+  });
+
+  it("stops listening for consent collection after the last cart store disconnects", () => {
+    store.hydrate(
+      makeCartState({
+        id: "gid://shopify/Cart/abc",
+        checkoutUrl: "https://example.com/checkouts/old?_shopify_y=old",
+        totalQuantity: 1,
+      }),
+    );
+
+    store.destroy();
+    document.dispatchEvent(new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT));
+
+    expect(mockGetCart).not.toHaveBeenCalled();
   });
 
   it("revalidates checkoutUrl per connected store cart ID", async () => {
@@ -2253,7 +2576,42 @@ describe("CartStore.fetch", () => {
     expect(state.data.totalQuantity).toBe(3);
   });
 
+  it("replaces readyPromise when reset starts a fresh endpoint fetch", async () => {
+    const firstFetchDeferred = createDeferred<Response>();
+    const resetFetchDeferred = createDeferred<Response>();
+    const mockFetch = vi
+      .fn()
+      .mockReturnValueOnce(firstFetchDeferred.promise)
+      .mockReturnValueOnce(resetFetchDeferred.promise);
+    vi.stubGlobal("fetch", mockFetch);
+
+    configureCartEndpoint("/api/cart");
+    const firstFetchPromise = store.fetch();
+    const firstReadyPromise = store.getState().readyPromise;
+
+    assert(firstReadyPromise, "Expected fetch to create a readyPromise");
+
+    store.reset();
+    const resetReadyPromise = store.getState().readyPromise;
+
+    assert(resetReadyPromise, "Expected reset to create a readyPromise");
+    expect(resetReadyPromise).not.toBe(firstReadyPromise);
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      "/api/cart",
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+
+    firstFetchDeferred.resolve(new Response(JSON.stringify({ cart: null })));
+    resetFetchDeferred.resolve(new Response(JSON.stringify({ cart: null })));
+
+    await firstFetchPromise;
+    await resetReadyPromise;
+    expect(store.getState().readyPromise).toBeUndefined();
+  });
+
   it("sets loading to false when endpoint returns null cart", async () => {
+    const localStore = createCartStore();
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -2264,11 +2622,13 @@ describe("CartStore.fetch", () => {
     );
 
     configureCartEndpoint("/api/cart");
-    expect(store.getState().loading).toBe(true);
-    await store.fetch();
+    expect(localStore.getState().loading).toBe(true);
+    await localStore.fetch();
 
-    expect(store.getState().loading).toBe(false);
+    expect(localStore.getState().loading).toBe(false);
     expect(mockGetCart).not.toHaveBeenCalled();
+
+    localStore.destroy();
   });
 
   it("throws CartNetworkError when endpoint returns non-OK response", async () => {
@@ -3392,6 +3752,10 @@ describe("add-to-cart concurrency", () => {
   });
 
   it("reset aborts in-flight merchandise adds", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(JSON.stringify({ cart: null }), { status: 200 })),
+    );
     store.hydrate(makeCartState({ lines: [], totalQuantity: 0 }));
 
     mockUpdateCart(
@@ -3430,6 +3794,7 @@ describe("add-to-cart concurrency", () => {
     const handler = configuredUpdateCartHandler;
     if (!handler) throw new Error("Expected configure handler");
 
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ cart: null }), { status: 200 }));
     store.reset();
     configureCartEndpoint("/api/cart");
     store.hydrate(makeCartState({ lines: [], totalQuantity: 0 }));
@@ -4155,12 +4520,13 @@ describe("configureCartEndpoint", () => {
   it("reset does not affect endpoint configuration", async () => {
     configureCartEndpoint("/api/cart");
     const handler = extractConfiguredHandler();
-    store.reset();
-
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ cart: null }), { status: 200 }));
     mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ cart: null }), { status: 200 }));
 
+    store.reset();
+
     await handler(vi.fn(), { lines: [{ id: "x", quantity: 1 }] });
-    expect(mockFetch).toHaveBeenCalledWith("/api/cart", expect.anything());
+    expect(mockFetch).toHaveBeenNthCalledWith(2, "/api/cart", expect.anything());
   });
 
   it("destroy does not affect app endpoint configuration", async () => {

@@ -74,6 +74,12 @@ function PredictiveSearchDialogInner({
       className="dialog-center"
       aria-labelledby="search-modal-title"
       onClose={onClose}
+      onClick={(event) => {
+        // Backdrop click: the `<dialog>` element is the click target (the
+        // backdrop is part of the dialog). Close only when the click did NOT
+        // originate inside the content box.
+        if (event.target === event.currentTarget) onClose();
+      }}
     >
       <div className="flex h-full flex-col">
         <div className="border-border flex shrink-0 items-center gap-2 border-b p-4">
@@ -88,6 +94,8 @@ function PredictiveSearchDialogInner({
               placeholder={content.search.placeholder}
               className="flex-1"
               autoComplete="off"
+              aria-expanded={state.result.term.length > 0 || state.result.items.products.length > 0}
+              aria-controls="predictive-search-results"
             />
             <button type="submit" className="sr-only">
               {content.search.submit}
@@ -111,16 +119,16 @@ function PredictiveSearchDialogInner({
         </div>
 
         {state.result.term || state.result.items.products.length > 0 ? (
-          <div className="flex-1 overflow-y-auto p-4">
+          <div id="predictive-search-results" className="flex-1 overflow-y-auto p-4">
             <h2 id="search-modal-title" className="sr-only">
               {content.search.title}
             </h2>
             <PredictiveBody state={state} onNavigate={onClose} />
           </div>
         ) : (
-          <h2 id="search-modal-title" className="sr-only">
-            {content.search.title}
-          </h2>
+          /* Empty (no term/results): keep the `aria-controls` target resolvable
+             for the input without rendering a visible results box. */
+          <div id="predictive-search-results" hidden />
         )}
 
         {state.result.items.products.length > 0 ? (
@@ -163,7 +171,7 @@ function PredictiveBody({
   }
   if (status === "success" && !hasResults && term) {
     return (
-      <div data-testid="search-modal-empty">
+      <div data-testid="search-modal-empty" role="status" aria-live="polite">
         <p className="text-on-surface text-sm">No results for “{term}”</p>
       </div>
     );
@@ -171,18 +179,18 @@ function PredictiveBody({
   if (!hasResults) return null;
 
   return (
-    <ul role="listbox" aria-label="Products" className="flex flex-col gap-2">
+    <ul role="list" aria-label="Products" className="flex flex-col gap-2">
       {products.map((product) => {
         const href = getPredictiveSearchItemUrl(product, { routes: routeTemplates, term });
         const variant = product.selectedOrFirstAvailableVariant;
         const image = variant?.image ?? null;
         const price = variant?.price ?? null;
         return (
-          <li key={product.id} role="option" aria-selected={false}>
+          <li key={product.id} role="listitem">
             <Link
               href={href}
               onClick={onNavigate}
-              className="hover:bg-hover flex items-center gap-3 rounded p-2 no-underline"
+              className="hover:bg-surface-secondary flex items-center gap-3 rounded p-2 no-underline"
             >
               {image ? (
                 <img

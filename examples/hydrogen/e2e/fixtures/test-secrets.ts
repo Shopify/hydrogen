@@ -1,11 +1,10 @@
 /**
  * Test secrets loading module.
  *
- * Retrieves E2E test secrets via EJSON decryption. Uses a single code path
- * for both local development and CI:
+ * Retrieves E2E test secrets from a generated CI file or local EJSON decryption:
  *
  * - Local: Private key from /opt/ejson/keys/{public_key} (set up via setup script)
- * - CI: Private key from EJSON_PRIVATE_KEY env var, passed via --key-from-stdin
+ * - CI: Scoped secrets file generated before Playwright starts
  *
  * This keeps secrets.ejson as the single source of truth for all secrets.
  * All fields under `e2e-testing` are automatically loaded - no code changes
@@ -13,11 +12,13 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const fixturesRoot = fileURLToPath(new URL(".", import.meta.url));
+const hydrogenRoot = path.resolve(fixturesRoot, "../..");
+const EJSON_DECRYPT_TIMEOUT_MS = 30_000;
 
 /**
  * All secrets from the `e2e-testing` section of secrets.ejson.
@@ -41,6 +42,12 @@ let cachedSecrets: TestSecrets | null = null;
 export function getTestSecrets(): TestSecrets {
   if (cachedSecrets) return cachedSecrets;
 
+  const fromGeneratedFile = loadFromGeneratedFile();
+  if (fromGeneratedFile) {
+    cachedSecrets = fromGeneratedFile;
+    return fromGeneratedFile;
+  }
+
   const fromEjson = loadFromEjson();
   if (fromEjson) {
     cachedSecrets = fromEjson;
@@ -52,8 +59,23 @@ export function getTestSecrets(): TestSecrets {
       "Local development:\n" +
       "  Run ./scripts/setup-ejson-private-key.sh to configure ejson\n\n" +
       "CI environment:\n" +
-      "  Set EJSON_PRIVATE_KEY environment variable\n",
+      "  Run hydrate-e2e-env-secrets.ts and set HYDROGEN_E2E_SECRETS_FILE\n",
   );
+}
+
+function loadFromGeneratedFile(): TestSecrets | null {
+  const configuredPath = process.env.HYDROGEN_E2E_SECRETS_FILE;
+  if (!configuredPath) return null;
+
+  const secretsPath = path.isAbsolute(configuredPath)
+    ? configuredPath
+    : path.resolve(hydrogenRoot, configuredPath);
+  if (!existsSync(secretsPath)) return null;
+
+  const parsed: unknown = JSON.parse(readFileSync(secretsPath, "utf8"));
+  if (!isObjectRecord(parsed)) return null;
+
+  return extractStringSecrets(parsed);
 }
 
 /**
@@ -120,23 +142,32 @@ function loadFromEjson(): TestSecrets | null {
       encoding: "utf-8",
       input: privateKey, // piped to stdin when --key-from-stdin is set
       stdio: ["pipe", "pipe", "pipe"],
+      timeout: EJSON_DECRYPT_TIMEOUT_MS,
     });
 
-    const secrets = JSON.parse(output) as Record<string, unknown>;
+    const secrets: unknown = JSON.parse(output);
+    if (!isObjectRecord(secrets)) return null;
+
     const e2eSection = secrets["e2e-testing"];
 
-    if (!e2eSection || typeof e2eSection !== "object") return null;
+    if (!isObjectRecord(e2eSection)) return null;
 
-    // Filter to only string values (the actual secrets)
-    const e2eSecrets: TestSecrets = {};
-    for (const [key, value] of Object.entries(e2eSection)) {
-      if (typeof value === "string") {
-        e2eSecrets[key] = value;
-      }
-    }
-
+    const e2eSecrets = extractStringSecrets(e2eSection);
     return Object.keys(e2eSecrets).length > 0 ? e2eSecrets : null;
   } catch {
     return null;
   }
+}
+
+function extractStringSecrets(record: Record<string, unknown>): TestSecrets {
+  const secrets: TestSecrets = {};
+  for (const [key, value] of Object.entries(record)) {
+    if (typeof value === "string") secrets[key] = value;
+  }
+
+  return secrets;
+}
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }

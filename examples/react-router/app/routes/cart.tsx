@@ -1,21 +1,22 @@
 import { useEffect } from "react";
-import { useRef } from "react";
 import type { MetaFunction } from "react-router";
 
 import { CartContent } from "~/components/CartContent";
 import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
 import { useCart } from "~/lib/cart";
 import { content } from "~/lib/content";
+import { shopNameFromMatches, shopTitle } from "~/lib/meta";
 import { canonicalUrl } from "~/lib/site";
 
 import type { Route } from "./+types/cart";
 
-export const meta: MetaFunction = () => {
+export const meta: MetaFunction = ({ matches }) => {
+  const title = shopTitle("Cart", shopNameFromMatches(matches));
   return [
-    { title: "Cart — CORE" },
+    { title },
     { name: "description", content: content.cart.title },
     { tagName: "link", rel: "canonical", href: canonicalUrl("/cart") },
-    { property: "og:title", content: "Cart — CORE" },
+    { property: "og:title", content: title },
     { property: "og:type", content: "website" },
   ];
 };
@@ -32,23 +33,15 @@ export default function CartRoute(_: Route.ComponentProps) {
   const checkoutUrl = useCart((state) => state.data.checkoutUrl);
   const cart = useCart((state) => state.data);
   const isEmpty = totalQuantity === 0;
-  const hasPublishedCartViewRef = useRef(false);
-  const publishedCartIdRef = useRef<string | undefined>(undefined);
 
   // Publish CART_VIEWED when the cart page is viewed (`hydrogen-analytics`).
   useEffect(() => {
-    if (hasPublishedCartViewRef.current && publishedCartIdRef.current === cart.id) return;
-
     const analytics = getAnalytics();
     if (!analytics) return;
-
     analytics.publish(AnalyticsEvent.CART_VIEWED, {
       cart: cart.id ? cart : null,
-      prevCart: null,
     });
-    hasPublishedCartViewRef.current = true;
-    publishedCartIdRef.current = cart.id;
-  }, [cart]);
+  }, [cart.id]);
 
   return (
     <div className="max-w-page px-margin mx-auto w-full py-8">

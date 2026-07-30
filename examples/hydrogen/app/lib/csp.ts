@@ -130,6 +130,7 @@ function createCSPHeader(nonce: string, props?: CreateContentSecurityPolicy & Sh
 
   const combinedDirectives = Object.assign({}, defaultDirectives, directives);
 
+  //add defaults if it was override
   for (const key in defaultDirectives) {
     const directive = directives[key as keyof CreateContentSecurityPolicy];
     if (key && directive) {
@@ -140,12 +141,12 @@ function createCSPHeader(nonce: string, props?: CreateContentSecurityPolicy & Sh
   // Make sure that at least script-src includes a nonce directive.
   // If someone doesn't want a nonce in their CSP, they probably
   // shouldn't use our utilities and just manually create their CSP.
-  if (Array.isArray(combinedDirectives.scriptSrc)) {
+  if (combinedDirectives.scriptSrc instanceof Array) {
     combinedDirectives.scriptSrc = [
       ...combinedDirectives.scriptSrc.filter((ss) => !ss.startsWith(`'nonce`)),
       nonceString,
     ];
-  } else if (Array.isArray(combinedDirectives.defaultSrc)) {
+  } else if (combinedDirectives.defaultSrc instanceof Array) {
     combinedDirectives.defaultSrc = [
       ...combinedDirectives.defaultSrc.filter((ss) => !ss.startsWith(`'nonce`)),
       nonceString,

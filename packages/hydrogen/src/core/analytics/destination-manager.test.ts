@@ -9,15 +9,11 @@ import type {
 
 const SHOP_DATA: ShopAnalytics = {
   shopId: "gid://shopify/Shop/1",
-  acceptedLanguage: "EN",
-  currency: "USD",
-  hydrogenSubchannelId: "0",
+  channel: "hydrogen",
+  storefrontId: "0",
 };
 
-const CONSENT_DATA = {
-  consentDomain: "checkout.hydrogen.shop",
-  publicStorefrontAccessToken: "33ad0f277e864013b8e3c21d19432501",
-};
+const CONSENT_DATA = {};
 
 const CONFIG: StorefrontAnalyticsConfig = {
   shop: SHOP_DATA,

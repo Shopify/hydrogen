@@ -27,9 +27,16 @@ const navItemHref: Record<(typeof content.header.navItems)[number], string> = {
  *
  * The cart trigger opens the `<dialog>` drawer via `showModal()`
  * (hydrogen-cart-drawer) — NO `hasHydrated` anchor/button swap (feedback
- * Round 4 #3). The footer `/cart` link is the no-JS cart fallback.
+ * Round 4 #3). The footer `/cart` link is the full-page fallback when the
+ * drawer is unavailable.
  */
-export function Header({ accountLink }: { accountLink?: ReactNode }) {
+export function Header({
+  accountLink,
+  shopName = "CORE",
+}: {
+  accountLink?: ReactNode;
+  shopName?: string;
+}) {
   return (
     <header className="border-border bg-surface sticky top-0 z-40 border-b">
       <div
@@ -42,7 +49,7 @@ export function Header({ accountLink }: { accountLink?: ReactNode }) {
             href="/"
             className="text-on-surface focus-visible:outline-accent inline-flex items-center rounded-sm text-lg font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
-            CORE
+            {shopName}
           </Link>
         </div>
 
@@ -66,7 +73,7 @@ export function Header({ accountLink }: { accountLink?: ReactNode }) {
           <noscript>
             <form action="/search" method="get" role="search" className="sr-only">
               <label htmlFor="header-search-q">{content.general.search}</label>
-              <input id="header-search-q" name="q" type="search" />
+              <input id="header-search-q" name="q" type="search" autoComplete="off" />
               <button type="submit">{content.search.submit}</button>
             </form>
           </noscript>

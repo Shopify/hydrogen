@@ -114,7 +114,7 @@ export function Pagination<NodesType>({
     () => ({
       ...location.state,
       pagination: {
-        ...location.state?.pagination,
+        ...(location.state?.pagination || {}),
         [namespace]: {
           pageInfo: {
             endCursor,
@@ -359,7 +359,7 @@ export function usePagination<NodesType>(
         state: { nodes: undefined, pageInfo: undefined },
       });
     }
-  }, [navigate, pathname, search, state, transition.location, transition.state]);
+  }, [pathname, search, state]);
 
   const previousPageUrl = useMemo(() => {
     const params = new URLSearchParams(search);

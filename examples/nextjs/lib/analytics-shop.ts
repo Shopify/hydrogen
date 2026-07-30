@@ -1,5 +1,6 @@
 import "server-only";
-import { analyticsShop as analyticsShopConfig, shop as shopConfig } from "@shared/config";
+import { shop as shopConfig } from "@shared/config";
+import type { ShopAnalytics } from "@shopify/hydrogen";
 import { cacheLife, cacheTag } from "next/cache";
 
 import { SHOP_ANALYTICS_QUERY } from "@/lib/queries";
@@ -9,23 +10,26 @@ import { staticStorefrontClient } from "@/lib/storefront-static";
  * Resolve the shop analytics GID best-effort + non-blocking (engineering.md F1).
  * The query runs inside a `'use cache'` cache-point (`cacheLife("hours")`,
  * `cacheTag("shop")`) so warm requests resolve instantly. On timeout/error we
- * fall back to the config-derived shop GID/name (avoids drift — `@shared/config`
- * `analyticsShop.shopId` is already `gid://shopify/Shop/${shop.shopId}`).
+ * fall back to the config-derived shop GID/name.
  */
-export type AnalyticsShop = {
+type ShopIdentity = {
   shopId: string;
   shopName: string;
   shopDescription: string | null;
 };
 
-const SHOP_FALLBACK: AnalyticsShop = {
-  shopId: analyticsShopConfig.shopId,
+export type AnalyticsShop = ShopAnalytics & ShopIdentity;
+
+const SHOP_QUERY_TIMEOUT_IN_MILLISECONDS = 2000;
+
+const SHOP_FALLBACK: ShopIdentity = {
+  shopId: `gid://shopify/Shop/${shopConfig.shopId}`,
   shopName: "CORE",
   shopDescription: null,
 };
 
 /** Cache the shop query result for hours (it almost never changes). */
-async function fetchShopAnalytics(): Promise<AnalyticsShop> {
+async function fetchShopAnalytics(): Promise<ShopIdentity> {
   "use cache";
   cacheLife("hours");
   cacheTag("shop");
@@ -43,42 +47,34 @@ async function fetchShopAnalytics(): Promise<AnalyticsShop> {
 
 /**
  * Best-effort, non-blocking shop analytics resolution. Races the cached query
- * against a 2000ms timeout; on timeout/error falls back to `@shared/config`.
- * Merges the resolved GID/name with the config-derived `analyticsShop`
- * metadata (acceptedLanguage/currency/hydrogenSubchannelId).
+ * against a configured timeout; on timeout/error falls back to `@shared/config`.
+ * Merges the resolved GID/name with the config-derived storefront ID.
  */
-export async function getAnalyticsShop(): Promise<{
-  shopId: string;
-  acceptedLanguage: string;
-  currency: string;
-  hydrogenSubchannelId: string;
-  shopName: string;
-  shopDescription: string | null;
-}> {
+export async function getAnalyticsShop(): Promise<AnalyticsShop> {
   let resolved = SHOP_FALLBACK;
   try {
-    resolved = await Promise.race([fetchShopAnalytics(), timeoutReject<AnalyticsShop>(2000)]);
+    resolved = await Promise.race([
+      fetchShopAnalytics(),
+      timeoutReject<ShopIdentity>(SHOP_QUERY_TIMEOUT_IN_MILLISECONDS),
+    ]);
   } catch (error) {
     console.error("[hydrogen] Root shop query failed or timed out", error);
   }
 
   return {
     shopId: resolved.shopId,
-    acceptedLanguage: analyticsShopConfig.acceptedLanguage,
-    currency: analyticsShopConfig.currency,
-    hydrogenSubchannelId: analyticsShopConfig.hydrogenSubchannelId,
+    channel: "hydrogen",
+    storefrontId: shopConfig.storefrontId,
     shopName: resolved.shopName,
     shopDescription: resolved.shopDescription,
   };
 }
 
-/** Merge with the config-derived shop for `ShopifyScripts` (numeric shopId). */
-export function getScriptsShop() {
-  return shopConfig;
-}
-
-function timeoutReject<T>(ms: number): Promise<T> {
+function timeoutReject<T>(timeoutInMilliseconds: number): Promise<T> {
   return new Promise((_, reject) => {
-    setTimeout(() => reject(new Error(`shop query timed out after ${ms}ms`)), ms);
+    setTimeout(
+      () => reject(new Error(`shop query timed out after ${timeoutInMilliseconds}ms`)),
+      timeoutInMilliseconds,
+    );
   });
 }

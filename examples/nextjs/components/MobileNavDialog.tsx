@@ -36,6 +36,9 @@ export function MobileNavDialog() {
         onClick={() => setOpen(true)}
         className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
         aria-label={content.header.menu}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls="mobile-nav-drawer"
       >
         <img
           src="/icons/icon-menu.svg"
@@ -58,7 +61,6 @@ export function MobileNavDialog() {
             <span
               className="text-on-surface pointer-events-none absolute left-1/2 -translate-x-1/2 text-sm font-medium"
               id="mobile-nav-title"
-              aria-live="polite"
             >
               {content.header.mobileNavigation}
             </span>

@@ -1,19 +1,25 @@
+import type { ShopifyScriptsShop } from "../shopify-scripts/types";
 import type { AnalyticsEventName } from "./events";
 
 // --- Shop Analytics ---
 
-export type ShopAnalytics = {
-  shopId: string;
-  acceptedLanguage: string;
-  currency: string;
-  hydrogenSubchannelId: string | "0";
-};
+type ShopAnalyticsBase = Pick<ShopifyScriptsShop, "shopId">;
+
+export type ShopAnalyticsChannel = "hydrogen" | "headless";
+
+export type ShopAnalytics =
+  | (ShopAnalyticsBase & {
+      channel: "hydrogen";
+      storefrontId: ShopifyScriptsShop["storefrontId"];
+    })
+  | (ShopAnalyticsBase & {
+      channel: "headless";
+      storefrontId?: never;
+    });
 
 // --- Consent ---
 
 export type ConsentConfig = {
-  consentDomain?: string;
-  publicStorefrontAccessToken?: string;
   mode?: "default-banner" | "custom-banner" | "no-banner";
 };
 
@@ -40,6 +46,10 @@ export type AnalyticsCartLine = {
 export type AnalyticsCart = {
   id: string;
   updatedAt: string;
+  cost?: {
+    subtotalAmount?: { currencyCode?: string };
+    totalAmount?: { currencyCode?: string };
+  };
   lines: {
     nodes?: AnalyticsCartLine[];
     edges?: Array<{ node: AnalyticsCartLine }>;
@@ -89,6 +99,9 @@ type SearchPayload = {
 
 type CartPayload = {
   cart: AnalyticsCart | null;
+};
+
+type CartChangePayload = CartPayload & {
   prevCart: AnalyticsCart | null;
 };
 
@@ -104,8 +117,9 @@ export type ProductViewPayload = ProductsPayload & UrlPayload & BasePayload;
 export type CollectionViewPayload = CollectionPayload & UrlPayload & BasePayload;
 export type CartViewPayload = CartPayload & UrlPayload & BasePayload;
 export type SearchViewPayload = SearchPayload & UrlPayload & BasePayload;
-export type CartUpdatePayload = CartPayload & BasePayload & OtherData;
-export type CartLineUpdatePayload = CartLinePayload & CartPayload & BasePayload & OtherData;
+export type CartUpdatePayload = CartChangePayload & BasePayload & OtherData;
+export type CartLineUpdatePayload = CartLinePayload & CartChangePayload & BasePayload & OtherData;
+export type CustomEventPayload = BasePayload & OtherData;
 
 export type EventPayloads =
   | PageViewPayload
@@ -141,12 +155,6 @@ export type StorefrontAnalyticsConfig = {
   shop: ShopAnalytics | null;
   consent: ConsentConfig;
   customData?: Record<string, unknown>;
-  cookieDomain?: string;
-};
-
-export type StorefrontAnalyticsOptions = StorefrontAnalyticsConfig & {
-  canTrack?: () => boolean;
-  shopifyAnalytics?: boolean;
 };
 
 export type StorefrontAnalyticsDestinationSetupContext = {
@@ -172,7 +180,6 @@ export type StorefrontAnalytics = {
     callback: (payload: PayloadFor<E>) => void,
   ) => () => void;
   addDestination: (destination: StorefrontAnalyticsDestination) => () => void;
-  updateCart: (cart: AnalyticsCart | null) => void;
   destroy: () => void;
   getConfig: () => StorefrontAnalyticsConfig;
 };

@@ -1,49 +1,38 @@
 # React Frameworks
 
-Use a client-side tracker component and a shared singleton module.
+Use ShopifyScripts in the root layout/head, then publish events from client-side tracker components.
 
 ## Root Tracker
 
-Server root/layout resolves safe `ShopAnalytics` data and passes it to a client tracker. `shopId` is the Shopify Shop GID; fetch `shop { id }` from the Storefront API or read it from existing server-side app config that already stores that GID. Use the app's resolved market/i18n data for `acceptedLanguage` and `currency`.
+Server root/layout resolves safe `shop` and `i18n` data and passes it to ShopifyScripts.
 
 ```tsx
-// React framework loader or server layout
-import { gql } from "@shopify/hydrogen";
-
-const SHOP_ANALYTICS_QUERY = gql(`
-  query ShopAnalytics {
-    shop { id }
-  }
-`);
-
-const { data } = await storefrontClient.graphql(SHOP_ANALYTICS_QUERY);
-
-const analyticsShop = {
-  shopId: data.shop.id,
-  acceptedLanguage: market.language,
-  currency: market.currencyCode,
-  hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID ?? "0",
-};
+<ShopifyScripts
+  shop={{
+    shopId: env.SHOP_ID,
+    storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0",
+    myshopifyDomain: env.PUBLIC_STORE_DOMAIN,
+  }}
+  i18n={{ country: market.country, language: market.language, currency: market.currencyCode }}
+  consent={{
+    mode: "default-banner",
+    publicStorefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+  }}
+/>
 ```
 
 Do not query `localization.language` just to echo the language already passed to `@inContext`. If the app only knows country/language and does not have a market currency code, add `currencyCode` to the app's market config or query `localization { country { currency { isoCode } } }` as a fallback.
 
 ```tsx
 import { useEffect } from "react";
-import type { ShopAnalytics } from "@shopify/hydrogen";
-import {
-  AnalyticsEvent,
-  configureAnalytics,
-  getAnalytics,
-} from "../lib/analytics";
+import { AnalyticsEvent, getAnalytics } from "../lib/analytics";
 
-export function AnalyticsTracker({ shop }: { shop: ShopAnalytics }) {
+export function AnalyticsTracker() {
   useEffect(() => {
-    configureAnalytics(shop);
     const analytics = getAnalytics();
     if (!analytics) return;
     analytics.publish(AnalyticsEvent.PAGE_VIEWED);
-  }, [shop]);
+  }, []);
 
   return null;
 }
@@ -51,7 +40,7 @@ export function AnalyticsTracker({ shop }: { shop: ShopAnalytics }) {
 
 Add `"use client"` only when this component lives in a Next.js App Router client component file.
 
-For real route tracking, include the framework location in the effect dependency. In React Router, read `useLocation()` and key the effect by `location.pathname + location.search`. In Next App Router, read `usePathname()` and `useSearchParams()` in a client component wrapped in `Suspense`, then key the effect by both values. Do not leave the root tracker keyed only by `shop`, or client-side navigations will miss page views. View events infer `url` from `window.location.href`; pass `url` only for an explicit override.
+For real route tracking, include the framework location in the effect dependency. In React Router, read `useLocation()` and key the effect by `location.pathname + location.search`. In Next App Router, read `usePathname()` and `useSearchParams()` in a client component wrapped in `Suspense`, then key the effect by both values. View events infer `url` from `window.location.href`; pass `url` only for an explicit override.
 
 ```tsx
 // app/layout.tsx
@@ -59,13 +48,11 @@ import { Suspense } from "react";
 import { AnalyticsTracker } from "./components/AnalyticsTracker";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const shop = await getAnalyticsShop();
-
   return (
     <html lang="en">
       <body>
         <Suspense fallback={null}>
-          <AnalyticsTracker shop={shop} />
+          <AnalyticsTracker />
         </Suspense>
         {children}
       </body>
@@ -80,20 +67,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import type { ShopAnalytics } from "@shopify/hydrogen";
-import { AnalyticsEvent, configureAnalytics, getAnalytics } from "../lib/analytics";
+import { AnalyticsEvent, getAnalytics } from "../lib/analytics";
 
-export function AnalyticsTracker({ shop }: { shop: ShopAnalytics }) {
+export function AnalyticsTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const pageKey = `${pathname}?${searchParams?.toString() ?? ""}`;
 
   useEffect(() => {
-    configureAnalytics(shop);
     const analytics = getAnalytics();
     if (!analytics) return;
     analytics.publish(AnalyticsEvent.PAGE_VIEWED);
-  }, [pageKey, shop]);
+  }, [pageKey]);
 
   return null;
 }
@@ -163,7 +148,7 @@ if (term) {
 
 ## Cart Updates
 
-Subscribe to cart store changes and call `analytics.updateCart(cart)` when server-confirmed cart data changes. Do not manually publish `product_added_to_cart`; the bus derives it from cart deltas.
+Subscribe to cart store changes and call `trackCartAnalytics(cart)` when server-confirmed cart data changes. Do not manually publish `product_added_to_cart`; the utility derives it from cart deltas and uses the global analytics bus created by ShopifyScripts.
 
 Publish `CART_VIEWED` when the cart page or drawer is viewed. The cart payload is `AnalyticsCart | null`: when a compatible cart is available, include `id`, `updatedAt`, and connection-shaped `lines`; otherwise pass `cart: null` instead of a partial cart.
 

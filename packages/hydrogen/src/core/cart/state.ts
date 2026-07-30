@@ -118,6 +118,8 @@ export interface CartData {
 export interface CartState<TData extends CartData = CartData> {
   data: TData;
   loading: boolean;
+  /** Non-rejecting signal that resolves when the current full-cart load settles or is invalidated. */
+  readonly readyPromise?: PromiseLike<void>;
   pending: CartPending;
   errors: CartErrorState;
 }

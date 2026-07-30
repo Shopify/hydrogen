@@ -198,6 +198,143 @@ const COMBINED_LISTING_PRODUCT: ProductInput = {
   adjacentVariants: [COMBINED_LISTING_EMBER_VARIANT, COMBINED_LISTING_LARGE_VARIANT],
 };
 
+const BLACK_SMALL_MATTE = makeVariant({
+  id: "v-black-small-matte",
+  title: "S / Matte",
+  availableForSale: true,
+  selectedOptions: [
+    { name: "Color", value: "Black" },
+    { name: "Size", value: "S" },
+    { name: "Finish", value: "Matte" },
+  ],
+  product: { handle: "cl-test-helmet-black" },
+});
+
+const BLACK_SMALL_GLOSS = makeVariant({
+  id: "v-black-small-gloss",
+  title: "S / Gloss",
+  availableForSale: true,
+  selectedOptions: [
+    { name: "Color", value: "Black" },
+    { name: "Size", value: "S" },
+    { name: "Finish", value: "Gloss" },
+  ],
+  product: { handle: "cl-test-helmet-black" },
+});
+
+const BLACK_MEDIUM_MATTE = makeVariant({
+  id: "v-black-medium-matte",
+  title: "M / Matte",
+  availableForSale: true,
+  selectedOptions: [
+    { name: "Color", value: "Black" },
+    { name: "Size", value: "M" },
+    { name: "Finish", value: "Matte" },
+  ],
+  product: { handle: "cl-test-helmet-black" },
+});
+
+const BLACK_LARGE_MATTE = makeVariant({
+  id: "v-black-large-matte",
+  title: "L / Matte",
+  availableForSale: true,
+  selectedOptions: [
+    { name: "Color", value: "Black" },
+    { name: "Size", value: "L" },
+    { name: "Finish", value: "Matte" },
+  ],
+  product: { handle: "cl-test-helmet-black" },
+});
+
+const WHITE_SMALL_NONE = makeVariant({
+  id: "v-white-small-none",
+  title: "S / None",
+  availableForSale: true,
+  selectedOptions: [
+    { name: "Color", value: "White" },
+    { name: "Mount", value: "None" },
+    { name: "Size", value: "S" },
+  ],
+  product: { handle: "cl-test-helmet-white" },
+});
+
+const WHITE_SMALL_GOPRO = makeVariant({
+  id: "v-white-small-gopro",
+  title: "S / GoPro",
+  availableForSale: false,
+  selectedOptions: [
+    { name: "Color", value: "White" },
+    { name: "Mount", value: "GoPro" },
+    { name: "Size", value: "S" },
+  ],
+  product: { handle: "cl-test-helmet-white" },
+});
+
+const WHITE_MEDIUM_NONE = makeVariant({
+  id: "v-white-medium-none",
+  title: "M / None",
+  availableForSale: true,
+  selectedOptions: [
+    { name: "Color", value: "White" },
+    { name: "Mount", value: "None" },
+    { name: "Size", value: "M" },
+  ],
+  product: { handle: "cl-test-helmet-white" },
+});
+
+const WHITE_LARGE_NONE = makeVariant({
+  id: "v-white-large-none",
+  title: "L / None",
+  availableForSale: true,
+  selectedOptions: [
+    { name: "Color", value: "White" },
+    { name: "Mount", value: "None" },
+    { name: "Size", value: "L" },
+  ],
+  product: { handle: "cl-test-helmet-white" },
+});
+
+const DIVERGENT_COMBINED_LISTING_PRODUCT: ProductInput = {
+  id: "gid://shopify/Product/cl-test-helmet-white",
+  title: "CL Test Helmet - White",
+  handle: "cl-test-helmet-white",
+  encodedVariantExistence: "v1_0:0:0-1,1:0-1,2:0-1,,1:0:0-1,1:0-1,2:0-1,,",
+  encodedVariantAvailability: "v1_0:0:0-1,1:0,2:0-1,,1:0:0,1:0-1,2:0-1,,",
+  options: [
+    {
+      name: "Color",
+      optionValues: [
+        { name: "Black", firstSelectableVariant: BLACK_SMALL_MATTE },
+        { name: "White", firstSelectableVariant: WHITE_SMALL_NONE },
+      ],
+    },
+    {
+      name: "Size",
+      optionValues: [
+        { name: "S", firstSelectableVariant: BLACK_SMALL_MATTE },
+        { name: "M", firstSelectableVariant: BLACK_MEDIUM_MATTE },
+        { name: "L", firstSelectableVariant: BLACK_LARGE_MATTE },
+      ],
+    },
+    {
+      name: "Finish",
+      optionValues: [
+        { name: "Matte", firstSelectableVariant: BLACK_SMALL_MATTE },
+        { name: "Gloss", firstSelectableVariant: BLACK_SMALL_GLOSS },
+      ],
+    },
+    {
+      name: "Mount",
+      optionValues: [
+        { name: "None", firstSelectableVariant: WHITE_SMALL_NONE },
+        { name: "GoPro", firstSelectableVariant: WHITE_SMALL_GOPRO },
+      ],
+    },
+  ],
+  selectedOrFirstAvailableVariant: WHITE_SMALL_NONE,
+  adjacentVariants: [WHITE_SMALL_GOPRO, WHITE_MEDIUM_NONE, WHITE_LARGE_NONE],
+};
+
 // ---------------------------------------------------------------------------
 // Mock CartStore helper
 // ---------------------------------------------------------------------------
@@ -312,6 +449,253 @@ describe("createProductFormStore", () => {
       });
 
       expect(store.getState().selectedOptions).toEqual([{ name: "Color", value: "Red" }]);
+    });
+
+    it("checks encoded availability symmetrically for earlier options", () => {
+      const product: ProductInput = {
+        ...TWO_OPTION_PRODUCT,
+        encodedVariantExistence: "v1_0:0,0:1,1:0,1:1,",
+        encodedVariantAvailability: "v1_0:0,1:1,",
+        selectedOrFirstAvailableVariant: LARGE_BLUE,
+      };
+      const store = createStore(product);
+
+      expect(store.getState().options).toMatchObject([
+        {
+          name: "Size",
+          values: [
+            { name: "Small", exists: true, available: false, selected: false },
+            { name: "Large", exists: true, available: true, selected: true },
+          ],
+        },
+        {
+          name: "Color",
+          values: [
+            { name: "Red", exists: true, available: false, selected: false },
+            { name: "Blue", exists: true, available: true, selected: true },
+          ],
+        },
+      ]);
+    });
+
+    it("checks encoded existence symmetrically for earlier options", () => {
+      const product: ProductInput = {
+        ...TWO_OPTION_PRODUCT,
+        encodedVariantExistence: "v1_0:0,1:1,",
+        encodedVariantAvailability: "v1_0:0,1:1,",
+        selectedOrFirstAvailableVariant: LARGE_BLUE,
+      };
+      const store = createStore(product);
+
+      expect(store.getState().options).toMatchObject([
+        {
+          name: "Size",
+          values: [
+            { name: "Small", exists: false, available: false, selected: false },
+            { name: "Large", exists: true, available: true, selected: true },
+          ],
+        },
+        {
+          name: "Color",
+          values: [
+            { name: "Red", exists: false, available: false, selected: false },
+            { name: "Blue", exists: true, available: true, selected: true },
+          ],
+        },
+      ]);
+    });
+
+    it("ignores selected options that are not in the product option matrix", () => {
+      const product: ProductInput = {
+        id: "gid://shopify/Product/tv-b",
+        title: "TV B",
+        handle: "tv-b",
+        encodedVariantExistence: "v1_0:0,0:1,1:0,1:1,",
+        encodedVariantAvailability: "v1_0:0,0:1,1:0,1:1,",
+        options: [
+          { name: "Size", optionValues: [{ name: '55"' }, { name: '65"' }] },
+          { name: "Mount", optionValues: [{ name: "Stand" }, { name: "Wall" }] },
+        ],
+        selectedOrFirstAvailableVariant: null,
+        adjacentVariants: [],
+      };
+      const store = createProductFormStore(product, createMockCartStore(), {
+        selectedOptions: [{ name: "Color", value: "Black" }],
+      });
+
+      expect(store.getState().options).toMatchObject([
+        {
+          name: "Size",
+          values: [
+            { name: '55"', exists: true, available: true },
+            { name: '65"', exists: true, available: true },
+          ],
+        },
+        {
+          name: "Mount",
+          values: [
+            { name: "Stand", exists: true, available: true },
+            { name: "Wall", exists: true, available: true },
+          ],
+        },
+      ]);
+    });
+
+    it("ignores selected option values outside the current combined-listing child", () => {
+      const blackSmallNone = makeVariant({
+        id: "v-stale-black-small-none",
+        title: "Black / S / None",
+        availableForSale: true,
+        selectedOptions: [
+          { name: "Color", value: "Black" },
+          { name: "Size", value: "S" },
+          { name: "Mount", value: "None" },
+        ],
+        product: { handle: "cl-test-helmet-black" },
+      });
+      const whiteChildExistenceEncoding = "v1_1:0:0-1,,";
+      const whiteChildAvailabilityEncoding = "v1_1:0:0,,";
+      const product: ProductInput = {
+        id: "gid://shopify/Product/cl-test-helmet-white-stale",
+        title: "CL Test Helmet - White",
+        handle: "cl-test-helmet-white",
+        encodedVariantExistence: whiteChildExistenceEncoding,
+        encodedVariantAvailability: whiteChildAvailabilityEncoding,
+        options: [
+          {
+            name: "Color",
+            optionValues: [
+              { name: "Black", firstSelectableVariant: blackSmallNone },
+              { name: "White", firstSelectableVariant: WHITE_SMALL_NONE },
+            ],
+          },
+          {
+            name: "Size",
+            optionValues: [{ name: "S", firstSelectableVariant: WHITE_SMALL_NONE }],
+          },
+          {
+            name: "Mount",
+            optionValues: [
+              { name: "None", firstSelectableVariant: WHITE_SMALL_NONE },
+              { name: "GoPro", firstSelectableVariant: WHITE_SMALL_GOPRO },
+            ],
+          },
+        ],
+        selectedOrFirstAvailableVariant: null,
+        adjacentVariants: [WHITE_SMALL_NONE, WHITE_SMALL_GOPRO],
+      };
+      const store = createProductFormStore(product, createMockCartStore(), {
+        selectedOptions: [
+          { name: "Color", value: "Black" },
+          { name: "Size", value: "S" },
+        ],
+      });
+
+      expect(store.getState().options).toMatchObject([
+        { name: "Color" },
+        { name: "Size" },
+        {
+          name: "Mount",
+          values: [
+            { name: "None", exists: true, available: true },
+            { name: "GoPro", exists: true, available: false },
+          ],
+        },
+      ]);
+    });
+
+    it("reads encoded availability by product option order when variant selectedOptions are reordered", () => {
+      const product: ProductInput = {
+        ...DIVERGENT_COMBINED_LISTING_PRODUCT,
+        selectedOrFirstAvailableVariant: WHITE_MEDIUM_NONE,
+        adjacentVariants: [WHITE_SMALL_NONE, WHITE_SMALL_GOPRO, WHITE_LARGE_NONE],
+      };
+      const store = createStore(product);
+
+      expect(store.getState().options).toMatchObject([
+        {
+          name: "Color",
+          values: [
+            { name: "Black", available: true, selected: false },
+            { name: "White", available: true, selected: true },
+          ],
+        },
+        {
+          name: "Size",
+          values: [
+            { name: "S", exists: true, available: true, selected: false },
+            { name: "M", exists: true, available: true, selected: true },
+            { name: "L", exists: true, available: true, selected: false },
+          ],
+        },
+        { name: "Finish" },
+        {
+          name: "Mount",
+          values: [
+            { name: "None", exists: true, available: true, selected: true },
+            { name: "GoPro", exists: true, available: true, selected: false },
+          ],
+        },
+      ]);
+    });
+
+    it("supports divergent combined-listing child option axes", () => {
+      const store = createStore(DIVERGENT_COMBINED_LISTING_PRODUCT);
+
+      expect(store.getState().options).toMatchObject([
+        {
+          name: "Color",
+          values: [
+            {
+              name: "Black",
+              exists: true,
+              available: true,
+              selected: false,
+              handle: "cl-test-helmet-black",
+              selectedOptions: [
+                { name: "Color", value: "Black" },
+                { name: "Size", value: "S" },
+                { name: "Finish", value: "Matte" },
+              ],
+            },
+            { name: "White", exists: true, available: true, selected: true },
+          ],
+        },
+        {
+          name: "Size",
+          values: [
+            { name: "S", exists: true, available: true, selected: true },
+            { name: "M", exists: true, available: true, selected: false },
+            { name: "L", exists: true, available: true, selected: false },
+          ],
+        },
+        {
+          name: "Finish",
+          values: [
+            {
+              name: "Matte",
+              exists: true,
+              available: true,
+              selected: false,
+              handle: "cl-test-helmet-black",
+            },
+            {
+              name: "Gloss",
+              exists: true,
+              available: true,
+              selected: false,
+              handle: "cl-test-helmet-black",
+            },
+          ],
+        },
+        {
+          name: "Mount",
+          values: [
+            { name: "None", exists: true, available: true, selected: true },
+            { name: "GoPro", exists: true, available: false, selected: false },
+          ],
+        },
+      ]);
     });
 
     it("starts with empty selectedOptions when no variant and no selectedOptions provided", () => {
@@ -480,6 +864,64 @@ describe("createProductFormStore", () => {
       const r2 = store.selectOption("Size", "Large");
       expect(r2.status).toBe("resolved");
       if (r2.status === "resolved") expect(r2.selectedVariant).toBe(LARGE_BLUE);
+    });
+
+    it("updates earlier option availability after selecting a later option", () => {
+      const product: ProductInput = {
+        ...TWO_OPTION_PRODUCT,
+        encodedVariantExistence: "v1_0:0,0:1,1:0,1:1,",
+        encodedVariantAvailability: "v1_0:0,1:1,",
+      };
+      const store = createStore(product);
+
+      const result = store.selectOption("Color", "Blue");
+
+      expect(result.status).toBe("resolved");
+      expect(store.getState().options).toMatchObject([
+        {
+          name: "Size",
+          values: [
+            { name: "Small", available: false, selected: true },
+            { name: "Large", available: true, selected: false },
+          ],
+        },
+        {
+          name: "Color",
+          values: [
+            { name: "Red", available: true, selected: false },
+            { name: "Blue", available: false, selected: true },
+          ],
+        },
+      ]);
+    });
+
+    it("updates later option availability after selecting an earlier option", () => {
+      const product: ProductInput = {
+        ...TWO_OPTION_PRODUCT,
+        encodedVariantExistence: "v1_0:0,0:1,1:0,1:1,",
+        encodedVariantAvailability: "v1_0:0,1:1,",
+      };
+      const store = createStore(product);
+
+      const result = store.selectOption("Size", "Large");
+
+      expect(result.status).toBe("resolved");
+      expect(store.getState().options).toMatchObject([
+        {
+          name: "Size",
+          values: [
+            { name: "Small", available: true, selected: false },
+            { name: "Large", available: false, selected: true },
+          ],
+        },
+        {
+          name: "Color",
+          values: [
+            { name: "Red", available: false, selected: true },
+            { name: "Blue", available: true, selected: false },
+          ],
+        },
+      ]);
     });
 
     it("preserves other selected options when the exact variant is not in the bounded cache", () => {

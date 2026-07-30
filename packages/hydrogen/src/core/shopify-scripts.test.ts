@@ -6,12 +6,14 @@ import {
   getShopifyGlobal,
   getShopifyGlobalBootstrapScript,
   initializeShopifyScripts,
-  loadShopifyWebMcpTools,
   renderShopifyScriptTag,
   renderShopifyScriptTags,
+  SHOPIFY_CONSENT_API_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
   SHOPIFY_PERF_KIT_SCRIPT,
   SHOPIFY_SHOP_APP_ORIGIN,
+  SHOPIFY_INBOX_SCRIPT,
+  SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
@@ -31,7 +33,13 @@ function getShopifyRoutesRoot() {
 const TEST_SHOP_GID = "gid://shopify/Shop/42";
 const TEST_SHOP_ID = "42";
 const TEST_STOREFRONT_ID = "sub-1";
+const TEST_MYSHOPIFY_DOMAIN = "test-shop.myshopify.com";
 const TEST_RESOURCE_TIMING_SAMPLING_RATE = "10";
+const TEST_SHOP = {
+  shopId: TEST_SHOP_ID,
+  storefrontId: TEST_STOREFRONT_ID,
+  myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
+};
 
 describe("shopify scripts", () => {
   const emptyRouteTemplates = createShopifyRouteTemplates({});
@@ -160,7 +168,7 @@ describe("shopify scripts", () => {
     expect(navigate).toHaveBeenCalledWith("/p/snowboard");
     expect(loadScript).toHaveBeenCalledWith(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT, {
       in: "head",
-      attributes: { crossorigin: "anonymous" },
+      attributes: { id: "shopify-webmcp", crossorigin: "anonymous" },
     });
   });
 
@@ -187,30 +195,77 @@ describe("shopify scripts", () => {
 
   it("builds a bootstrap script for i18n globals", () => {
     const script = getShopifyGlobalBootstrapScript({
-      i18n: { country: "CA", language: "FR", pathPrefix: "/fr-ca" },
+      i18n: { country: "CA", language: "FR", pathPrefix: "/fr-ca", currency: "cad" },
+      shop: {
+        shopId: TEST_SHOP_ID,
+        storefrontId: TEST_STOREFRONT_ID,
+        myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
+      },
     });
 
     (0, eval)(script);
 
     expect(window.Shopify?.country).toBe("CA");
+    expect(window.Shopify?.currency).toEqual({ active: "CAD" });
     expect(window.Shopify?.locale).toBe("fr");
+    expect(window.Shopify?.shop).toBe(TEST_MYSHOPIFY_DOMAIN);
+    expect(window.Shopify?.components.config).toEqual({
+      storeDomain: window.location.origin,
+      country: "CA",
+      language: "fr",
+    });
     expect(getShopifyRoutesRoot()).toBe("/fr-ca/");
   });
 
+  it("replaces existing storefront components config", () => {
+    (window as any).Shopify = {
+      components: {
+        config: {
+          storeDomain: "https://custom.example.com",
+          publicAccessToken: "custom-token",
+        },
+      },
+    };
+    const script = getShopifyGlobalBootstrapScript({ shop: TEST_SHOP });
+
+    (0, eval)(script);
+
+    expect(window.Shopify?.components.config).toEqual({
+      storeDomain: window.location.origin,
+      country: "US",
+      language: "en",
+    });
+  });
+
   it("falls back to US country, en locale, and root route", () => {
-    const script = getShopifyGlobalBootstrapScript({});
+    const script = getShopifyGlobalBootstrapScript({ shop: TEST_SHOP });
 
     (0, eval)(script);
 
     expect(window.Shopify?.country).toBe("US");
+    expect(window.Shopify?.currency).toBeUndefined();
     expect(window.Shopify?.locale).toBe("en");
     expect(getShopifyRoutesRoot()).toBe("/");
+  });
+
+  it("normalizes the permanent shop domain", () => {
+    const script = getShopifyGlobalBootstrapScript({
+      shop: {
+        ...TEST_SHOP,
+        myshopifyDomain: ` https://${TEST_MYSHOPIFY_DOMAIN}/// `,
+      },
+    });
+
+    (0, eval)(script);
+
+    expect(window.Shopify?.shop).toBe(TEST_MYSHOPIFY_DOMAIN);
   });
 
   it("escapes serialized data for inline script safety", () => {
     const script = getShopifyGlobalBootstrapScript({
       // @ts-expect-error Intentionally validates unsafe runtime input serialization.
       i18n: { country: "</script>", language: "EN" },
+      shop: TEST_SHOP,
     });
 
     expect(script).not.toContain("</script>");
@@ -221,6 +276,7 @@ describe("shopify scripts", () => {
     const descriptors = getShopifyScriptTags({
       i18n: { country: "US", language: "EN" },
       nonce: "test-nonce",
+      shop: TEST_SHOP,
     });
 
     expect(descriptors.tags).toEqual([
@@ -249,17 +305,68 @@ describe("shopify scripts", () => {
       },
       {
         tagName: "script",
-        attributes: { nonce: "test-nonce" },
+        attributes: { id: "shopify-global-bootstrap", nonce: "test-nonce" },
         innerHTML: expect.stringContaining('"country":"US"'),
       },
       {
         tagName: "script",
         attributes: {
-          src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
+          id: "shopify-standard-actions",
           type: "module",
           crossorigin: "anonymous",
           nonce: "test-nonce",
+          src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
         },
+      },
+      {
+        tagName: "script",
+        attributes: {
+          id: "shopify-consent",
+          async: true,
+          crossorigin: "anonymous",
+          nonce: "test-nonce",
+          src: SHOPIFY_CONSENT_API_SCRIPT,
+        },
+      },
+      {
+        tagName: "script",
+        attributes: { id: "shopify-consent-bootstrap", nonce: "test-nonce" },
+        innerHTML: expect.stringContaining("visitorConsentCollected"),
+      },
+      {
+        tagName: "script",
+        attributes: { id: "shopify-analytics-bus", nonce: "test-nonce" },
+        innerHTML: expect.stringContaining("Analytics bus already initialized"),
+      },
+      {
+        tagName: "script",
+        attributes: {
+          id: "shopify-storefront-analytics",
+          async: true,
+          crossorigin: "anonymous",
+          nonce: "test-nonce",
+          src: SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,
+        },
+      },
+      {
+        tagName: "script",
+        attributes: {
+          id: "shopify-perfkit",
+          nonce: "test-nonce",
+          async: true,
+          src: SHOPIFY_PERF_KIT_SCRIPT,
+          "data-application": "hydrogen",
+          "data-shop-id": TEST_SHOP_ID,
+          "data-storefront-id": TEST_STOREFRONT_ID,
+          "data-monorail-region": "global",
+          "data-spa-mode": "true",
+          "data-resource-timing-sampling-rate": TEST_RESOURCE_TIMING_SAMPLING_RATE,
+        },
+      },
+      {
+        tagName: "script",
+        attributes: { id: "shopify-perfkit-spa-bridge", nonce: "test-nonce" },
+        innerHTML: expect.stringContaining("perfkit-spa-bridge"),
       },
     ]);
     expect(descriptors.links).toEqual([
@@ -290,29 +397,130 @@ describe("shopify scripts", () => {
     expect(descriptors.scripts).toEqual([
       {
         tagName: "script",
-        attributes: { nonce: "test-nonce" },
+        attributes: { id: "shopify-global-bootstrap", nonce: "test-nonce" },
         innerHTML: expect.stringContaining('"country":"US"'),
       },
       {
         tagName: "script",
         attributes: {
-          src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
+          id: "shopify-standard-actions",
           type: "module",
           crossorigin: "anonymous",
           nonce: "test-nonce",
+          src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
         },
+      },
+      {
+        tagName: "script",
+        attributes: {
+          id: "shopify-consent",
+          async: true,
+          crossorigin: "anonymous",
+          nonce: "test-nonce",
+          src: SHOPIFY_CONSENT_API_SCRIPT,
+        },
+      },
+      {
+        tagName: "script",
+        attributes: { id: "shopify-consent-bootstrap", nonce: "test-nonce" },
+        innerHTML: expect.stringContaining("visitorConsentCollected"),
+      },
+      {
+        tagName: "script",
+        attributes: { id: "shopify-analytics-bus", nonce: "test-nonce" },
+        innerHTML: expect.stringContaining("Analytics bus already initialized"),
+      },
+      {
+        tagName: "script",
+        attributes: {
+          id: "shopify-storefront-analytics",
+          async: true,
+          crossorigin: "anonymous",
+          nonce: "test-nonce",
+          src: SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,
+        },
+      },
+      {
+        tagName: "script",
+        attributes: {
+          id: "shopify-perfkit",
+          nonce: "test-nonce",
+          async: true,
+          src: SHOPIFY_PERF_KIT_SCRIPT,
+          "data-application": "hydrogen",
+          "data-shop-id": TEST_SHOP_ID,
+          "data-storefront-id": TEST_STOREFRONT_ID,
+          "data-monorail-region": "global",
+          "data-spa-mode": "true",
+          "data-resource-timing-sampling-rate": TEST_RESOURCE_TIMING_SAMPLING_RATE,
+        },
+      },
+      {
+        tagName: "script",
+        attributes: { id: "shopify-perfkit-spa-bridge", nonce: "test-nonce" },
+        innerHTML: expect.stringContaining("perfkit-spa-bridge"),
       },
     ]);
     expect(descriptors.scripts[0]?.innerHTML).not.toContain('"templates"');
   });
 
-  it("does not include WebMCP in SSR descriptors", () => {
-    const descriptors = getShopifyScriptTags({});
+  it("preserves an explicitly empty nonce on nonce-capable scripts", () => {
+    const descriptors = getShopifyScriptTags({
+      nonce: "",
+      shop: TEST_SHOP,
+    });
+    expect(descriptors.scripts).toHaveLength(8);
+    for (const { attributes } of descriptors.scripts) {
+      expect(attributes).toHaveProperty("nonce", "");
+    }
+  });
 
-    expect(descriptors.scripts).toHaveLength(2);
+  it("does not include WebMCP in SSR descriptors", () => {
+    const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
+
+    expect(descriptors.scripts).toHaveLength(8);
     expect(descriptors.tags).not.toContainEqual(
       expect.objectContaining({
         innerHTML: expect.stringContaining(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT),
+      }),
+    );
+  });
+
+  it("includes the async Inbox module when enabled", () => {
+    const descriptors = getShopifyScriptTags({
+      nonce: "test-nonce",
+      shop: TEST_SHOP,
+      inbox: true,
+    });
+
+    expect(descriptors.scripts).toContainEqual({
+      tagName: "script",
+      attributes: {
+        id: "shopify-inbox",
+        type: "module",
+        async: true,
+        crossorigin: "anonymous",
+        nonce: "test-nonce",
+        src: SHOPIFY_INBOX_SCRIPT,
+      },
+    });
+    expect(
+      descriptors.scripts.findIndex(
+        ({ attributes }) => attributes?.src === SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
+      ),
+    ).toBeLessThan(
+      descriptors.scripts.findIndex(({ attributes }) => attributes?.src === SHOPIFY_INBOX_SCRIPT),
+    );
+  });
+
+  it("allows storefront analytics to be omitted from SSR descriptors", () => {
+    const descriptors = getShopifyScriptTags({ shop: TEST_SHOP, shopifyAnalytics: false });
+
+    expect(descriptors.scripts).not.toContainEqual(
+      expect.objectContaining({
+        attributes: expect.objectContaining({
+          src: SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,
+        }),
       }),
     );
   });
@@ -322,31 +530,34 @@ describe("shopify scripts", () => {
       shop: {
         shopId: TEST_SHOP_GID,
         storefrontId: TEST_STOREFRONT_ID,
+        myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
       },
     });
 
     expect(descriptors.scripts).toContainEqual({
       tagName: "script",
       attributes: {
-        id: "perfkit",
+        id: "shopify-perfkit",
         async: true,
-        src: SHOPIFY_PERF_KIT_SCRIPT,
         "data-application": "hydrogen",
         "data-shop-id": TEST_SHOP_ID,
         "data-storefront-id": TEST_STOREFRONT_ID,
         "data-monorail-region": "global",
         "data-spa-mode": "true",
         "data-resource-timing-sampling-rate": TEST_RESOURCE_TIMING_SAMPLING_RATE,
+        src: SHOPIFY_PERF_KIT_SCRIPT,
       },
     });
-    expect(getPerfKitBridgeScript(descriptors.scripts)?.innerHTML).toContain(
-      "initPerfKitSpaBridge",
-    );
-    expect(
-      renderShopifyScriptTags({
-        shop: { shopId: TEST_SHOP_ID, storefrontId: TEST_STOREFRONT_ID },
-      }).join("\n"),
-    ).toContain(`<script id="perfkit" async src="${SHOPIFY_PERF_KIT_SCRIPT}"`);
+    expect(getPerfKitBridgeScript(descriptors.scripts)?.innerHTML).toContain("perfkit-spa-bridge");
+    const renderedTags = renderShopifyScriptTags({
+      shop: {
+        shopId: TEST_SHOP_ID,
+        storefrontId: TEST_STOREFRONT_ID,
+        myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
+      },
+    }).join("\n");
+    expect(renderedTags).toContain(`<script id="shopify-perfkit" async`);
+    expect(renderedTags).toContain(`data-application="hydrogen"`);
   });
 
   it("accepts numeric PerfKit shop IDs", () => {
@@ -354,6 +565,7 @@ describe("shopify scripts", () => {
       shop: {
         shopId: TEST_SHOP_ID,
         storefrontId: TEST_STOREFRONT_ID,
+        myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
       },
     });
 
@@ -367,7 +579,9 @@ describe("shopify scripts", () => {
   });
 
   it("resolves without loading WebMCP without model context", async () => {
-    await expect(loadShopifyWebMcpTools()).resolves.toBeUndefined();
+    await expect(
+      initializeShopifyScripts({ routes: emptyRouteTemplates }),
+    ).resolves.toBeUndefined();
 
     expect(loadScript).not.toHaveBeenCalled();
   });
@@ -375,11 +589,11 @@ describe("shopify scripts", () => {
   it("loads the WebMCP CDN script with model context", async () => {
     (navigator as any).modelContext = { registerTool: vi.fn() };
 
-    await expect(loadShopifyWebMcpTools()).resolves.toBe(true);
+    await expect(initializeShopifyScripts({ routes: emptyRouteTemplates })).resolves.toBe(true);
 
     expect(loadScript).toHaveBeenCalledWith(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT, {
       in: "head",
-      attributes: { crossorigin: "anonymous" },
+      attributes: { id: "shopify-webmcp", crossorigin: "anonymous" },
     });
   });
 
@@ -388,13 +602,14 @@ describe("shopify scripts", () => {
       shop: {
         shopId: "gid://shopify/Shop/not-a-number",
         storefrontId: TEST_STOREFRONT_ID,
+        myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
       },
     });
 
     expect(descriptors.scripts).not.toContainEqual(
       expect.objectContaining({
         attributes: expect.objectContaining({
-          id: "perfkit",
+          id: "shopify-perfkit",
         }),
       }),
     );
@@ -404,7 +619,11 @@ describe("shopify scripts", () => {
     setDocumentReadyState("loading");
     const addDestination = vi.fn();
     const descriptors = getShopifyScriptTags({
-      shop: { shopId: TEST_SHOP_ID, storefrontId: TEST_STOREFRONT_ID },
+      shop: {
+        shopId: TEST_SHOP_ID,
+        storefrontId: TEST_STOREFRONT_ID,
+        myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
+      },
     });
     const bridgeScript = getPerfKitBridgeScript(descriptors.scripts);
     assert(bridgeScript?.innerHTML, "Expected ShopifyScripts to include the PerfKit bridge script");
@@ -428,7 +647,11 @@ describe("shopify scripts", () => {
       setPageType: vi.fn(),
     };
     const descriptors = getShopifyScriptTags({
-      shop: { shopId: TEST_SHOP_ID, storefrontId: TEST_STOREFRONT_ID },
+      shop: {
+        shopId: TEST_SHOP_ID,
+        storefrontId: TEST_STOREFRONT_ID,
+        myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
+      },
     });
     const bridgeScript = getPerfKitBridgeScript(descriptors.scripts);
     assert(bridgeScript?.innerHTML, "Expected ShopifyScripts to include the PerfKit bridge script");
@@ -456,24 +679,8 @@ describe("shopify scripts", () => {
     expect(window.PerfKit?.setPageType).toHaveBeenNthCalledWith(4, "cart");
   });
 
-  it("skips the PerfKit SPA bridge when the analytics bus is missing at DOMContentLoaded", () => {
-    setDocumentReadyState("loading");
-    const descriptors = getShopifyScriptTags({
-      shop: { shopId: TEST_SHOP_ID, storefrontId: TEST_STOREFRONT_ID },
-    });
-    const bridgeScript = getPerfKitBridgeScript(descriptors.scripts);
-    assert(bridgeScript?.innerHTML, "Expected ShopifyScripts to include the PerfKit bridge script");
-
-    (0, eval)(bridgeScript.innerHTML);
-    document.dispatchEvent(new Event("DOMContentLoaded"));
-
-    const addDestination = vi.fn();
-    (window as any).Shopify = { analytics: { addDestination } };
-    expect(addDestination).not.toHaveBeenCalled();
-  });
-
   it("returns a new ordered tag array each time", () => {
-    const descriptors = getShopifyScriptTags({});
+    const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
     const firstTags = descriptors.tags;
     const secondTags = descriptors.tags;
 
@@ -513,11 +720,12 @@ describe("shopify scripts", () => {
     const htmlTags = renderShopifyScriptTags({
       i18n: { country: "US", language: "EN" },
       nonce: "test-nonce",
+      shop: TEST_SHOP,
     });
     const html = htmlTags.join("\n");
 
-    expect(htmlTags).toHaveLength(5);
-    expect(html).toContain('<script nonce="test-nonce">');
+    expect(htmlTags).toHaveLength(11);
+    expect(html).toContain('<script id="shopify-global-bootstrap" nonce="test-nonce">');
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
     expect(html).toContain('"routes":{"root":"/"}');
@@ -525,7 +733,10 @@ describe("shopify scripts", () => {
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_CDN_ORIGIN}">`);
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_SHOP_APP_ORIGIN}">`);
     expect(html).toContain(
-      `<script src="${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}" type="module" crossorigin="anonymous" nonce="test-nonce"></script>`,
+      `<script id="shopify-standard-actions" type="module" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}"></script>`,
+    );
+    expect(html).toContain(
+      `<script id="shopify-storefront-analytics" async crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT}"></script>`,
     );
     expect(html).toContain(
       `<link rel="prefetch" as="script" href="${SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT}" crossorigin="anonymous">`,
@@ -534,7 +745,7 @@ describe("shopify scripts", () => {
 });
 
 function getPerfKitBridgeScript(scripts: ReturnType<typeof getShopifyScriptTags>["scripts"]) {
-  return scripts.find((script) => script.innerHTML?.includes("initPerfKitSpaBridge"));
+  return scripts.find((script) => script.innerHTML?.includes("perfkit-spa-bridge"));
 }
 
 function setDocumentReadyState(readyState: DocumentReadyState) {

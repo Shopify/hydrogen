@@ -6,8 +6,8 @@ Create or update the shared site navigation after the home page, cart route, and
 
 - Preserve the app's existing layout component and styling conventions.
 - Add a home link to `/`.
-- Add a cart link to `/cart` as the server-rendered and no-JS fallback.
-- When the cart drawer is configured, follow the local `hydrogen-cart-drawer` skill's trigger pattern so the fallback link hydrates to a drawer-opening button.
+- The cart trigger is a `/cart` anchor that opens the drawer via `showModal()` after hydration; follow `hydrogen-cart-drawer` for the markup.
+- Make `/cart` reachable as a real link in the **footer** (site chrome). `/cart` is the full-page fallback when the cart drawer is unavailable. For strict no-JS live cart HTML, the cart route must receive resolved cart `initialData`.
 - Use the framework's native link component when one is already used in the app.
 - Keep the navbar server-renderable unless the app already uses a client-only navigation shell.
 - Do not fetch cart contents just to render the navbar. A static cart link is enough for setup.
@@ -23,7 +23,8 @@ Create or update the shared site navigation after the home page, cart route, and
 ## Verify
 
 - The home link navigates to `/`.
-- The cart link navigates to `/cart` before hydration or without JavaScript.
-- When the cart drawer is configured, the hydrated cart trigger opens the drawer.
+- The cart trigger is a `/cart` anchor that opens the drawer via `showModal()` after hydration.
+- The footer exposes a real `/cart` link that reaches the cart route without JavaScript.
+- The cart trigger navigates to `/cart` before hydration; after hydration it opens the drawer via `showModal()`.
 - The navbar appears on the home and cart routes.
 - Existing navigation items and styling are not removed unless they directly conflict with the setup.

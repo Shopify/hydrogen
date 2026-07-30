@@ -1,8 +1,13 @@
+import { defaultI18n, shop } from "@shared/config";
 import type { Metadata } from "next";
-import { Suspense } from "react";
 
 import "./globals.css";
 
+import { Suspense } from "react";
+
+import { ShopifyScriptsWithNavigation } from "@/components/ShopifyScriptsWithNavigation";
+import { getAnalyticsShop } from "@/lib/analytics-shop";
+import { content } from "@/lib/content";
 import { SITE_ORIGIN } from "@/lib/site";
 
 import { AppShell } from "./app-shell";
@@ -15,30 +20,47 @@ import { AppShell } from "./app-shell";
  * the static shell serves immediately. `AppShell` calls `connection()` to opt
  * the subtree into dynamic rendering.
  *
- * `metadataBase` is set here for canonical/OG URL resolution (F10).
+ * `metadataBase` is set here for canonical/OG URL resolution (F10). The `<title>`
+ * template uses the live `shop.name` (via `getAnalyticsShop`, which is cached
+ * for hours) so the browser tab/OG titles match the header brand (N28) instead
+ * of a hardcoded "CORE".
  */
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_ORIGIN),
-  title: {
-    default: "CORE — Discover our latest collection",
-    template: "%s — CORE",
-  },
-  description: "Explore our curated selection of premium products",
-  icons: {
-    icon: { url: "/favicon.svg", type: "image/svg+xml" },
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { shopName } = await getAnalyticsShop();
+  return {
+    metadataBase: new URL(SITE_ORIGIN),
+    title: {
+      default: `${shopName} — ${content.home.hero.heading}`,
+      template: `%s — ${shopName}`,
+    },
+    description: content.home.hero.subtitle,
+    icons: {
+      icon: { url: "/favicon.svg", type: "image/svg+xml" },
+    },
+  };
+}
+
+// `<html lang>` is derived from the i18n config source of truth
+// (`@shared/config` `defaultI18n.language`) rather than a hardcoded literal, so
+// a store language change flows here automatically (N27/R20). Kept as a static
+// value (not request-scoped) to preserve the static shell (engineering.md F7 /
+// M4); a multi-market store would inject the resolved locale per request via
+// middleware/parent server component instead.
+const htmlLang = defaultI18n.language.toLowerCase();
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang={htmlLang}>
+      <head>
+        <ShopifyScriptsWithNavigation shop={shop} />
+      </head>
       <body className="bg-surface text-on-surface font-body flex min-h-svh flex-col antialiased">
         <div
           role="region"
-          aria-label="Announcement"
+          aria-label={content.announcement.label}
           className="bg-on-surface px-margin py-2.5 text-center"
         >
-          <p className="type-body-sm text-surface">Free shipping on orders over $50</p>
+          <p className="type-body-sm text-surface">{content.announcement.text}</p>
         </div>
 
         <Suspense

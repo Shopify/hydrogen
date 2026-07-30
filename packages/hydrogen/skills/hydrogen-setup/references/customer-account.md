@@ -51,7 +51,7 @@ Wrap header/account-link UI in the framework's streaming primitive when possible
 
 ## Typed Queries
 
-Use `gql` and `createCustomerAccountClient` from `@shopify/hydrogen/customer-account` in server code only. Pass the access token per GraphQL call. Configure `gql.tada` in multi-schema mode when the app authors both Storefront API and Customer Account API documents, then run `gql.tada check` before treating setup as complete.
+Use `gql` and `createCustomerAccountClient` from `@shopify/hydrogen/customer-account` in server code only. Pass the access token per GraphQL call. Configure `@shopify/hydrogen/ts-plugin`, add `hydrogen gql check` to a package script, then run that script before treating setup as complete.
 
 ## Local OAuth
 

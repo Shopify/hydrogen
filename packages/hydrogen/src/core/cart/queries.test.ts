@@ -38,17 +38,43 @@ describe("cartQueries", () => {
     }
   });
 
+  it("keeps default cart queries off inventory-gated fields", () => {
+    for (const query of Object.values(cartQueries)) {
+      expect(query).not.toContain("quantityAvailable");
+    }
+  });
+
   it("adds custom cart fields to every cart document without removing the minimum payload", () => {
     const customQueries = makeCartQueries({ fragment: customCartFragment });
 
     for (const query of Object.values(customQueries)) {
-      expect(query).toContain("quantityAvailable");
       expect(query).toContain("selectedOptions");
       expect(query).toContain("...HydrogenCartFragment");
       expect(query).toContain("...CartFragment");
       expect(query).toContain("fragment CartFragment on Cart");
       expect(query).toContain("attributes");
       expect(query).toContain("availableForSale");
+    }
+  });
+
+  it("allows custom cart fragments to opt in to inventory fields", () => {
+    const inventoryCartFragment = gql(`
+      fragment CartFragment on Cart {
+        lines(first: 250) {
+          nodes {
+            merchandise {
+              ... on ProductVariant {
+                quantityAvailable
+              }
+            }
+          }
+        }
+      }
+    `);
+    const customQueries = makeCartQueries({ fragment: inventoryCartFragment });
+
+    for (const query of Object.values(customQueries)) {
+      expect(query).toContain("quantityAvailable");
     }
   });
 

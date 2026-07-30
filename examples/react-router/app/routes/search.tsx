@@ -1,5 +1,5 @@
 import { Cache, gql } from "@shopify/hydrogen";
-import { getSortByValue, parseCollectionParams } from "@shopify/hydrogen";
+import { getSortByValue, parseCollectionParams, type StorefrontApi } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
 import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
 import { useEffect } from "react";
@@ -12,6 +12,7 @@ import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
 import { content } from "~/lib/content";
 import { FilterGroup } from "~/lib/filters";
 import { PRODUCT_CARD_FRAGMENT } from "~/lib/fragments";
+import { shopNameFromMatches, shopTitle } from "~/lib/meta";
 import { canonicalUrl } from "~/lib/site";
 import { storefrontClientContext } from "~/lib/storefront-context";
 
@@ -28,15 +29,28 @@ const SEARCH_QUERY = gql(
   query Search($query: String!, $first: Int!, $after: String, $sortKey: SearchSortKeys, $reverse: Boolean, $productFilters: [ProductFilter!], $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     search(query: $query, first: $first, after: $after, sortKey: $sortKey, reverse: $reverse, productFilters: $productFilters) {
+      totalCount
       productFilters {
         id
         label
         type
+        presentation
         values {
           id
           label
           count
           input
+          swatch {
+            color
+            image {
+              previewImage {
+                url
+                altText
+                width
+                height
+              }
+            }
+          }
         }
       }
       pageInfo {
@@ -55,12 +69,16 @@ const SEARCH_QUERY = gql(
   [PRODUCT_CARD_FRAGMENT],
 );
 
-export const meta: MetaFunction = () => {
+type SearchQuery = StorefrontApi.ResultOf<typeof SEARCH_QUERY>;
+type SearchAvailableFilter = NonNullable<SearchQuery["search"]>["productFilters"][number];
+
+export const meta: MetaFunction = ({ matches }) => {
+  const title = shopTitle("Search", shopNameFromMatches(matches));
   return [
-    { title: "Search — CORE" },
+    { title },
     { name: "description", content: "Search products" },
     { tagName: "link", rel: "canonical", href: canonicalUrl("/search") },
-    { property: "og:title", content: "Search — CORE" },
+    { property: "og:title", content: title },
     { property: "og:type", content: "website" },
   ];
 };
@@ -122,7 +140,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     availableFilters: search?.productFilters ?? [],
     pageInfo: search?.pageInfo ?? { hasNextPage: false },
     dataSearch: url.searchParams.toString(),
-    totalCount: productNodes.length,
+    totalCount: search?.totalCount ?? productNodes.length,
   };
 }
 
@@ -151,7 +169,7 @@ function SearchViewedTracker({ term, totalCount }: { term: string; totalCount: n
       searchTerm: term,
       searchResults: { totalCount },
     });
-  }, [term, totalCount]);
+  }, [term]);
   return null;
 }
 
@@ -164,6 +182,8 @@ function SearchPage({ loaderData }: SearchPageProps) {
   const state = useCollection();
   const { formProps } = useCollectionForm();
   const isLoading = state.status === "loading";
+  const currencyCode = products[0]?.priceRange.minVariantPrice.currencyCode ?? "USD";
+  const [searchParams] = useSearchParams();
 
   return (
     <div className="max-w-page px-margin mx-auto w-full py-8">
@@ -185,8 +205,10 @@ function SearchPage({ loaderData }: SearchPageProps) {
           type="search"
           name="q"
           defaultValue={term}
+          key={term}
           placeholder={content.search.placeholder}
           className="number-reset rounded-button border-border h-11 max-w-md border px-3 text-sm"
+          autoComplete="off"
         />
         <button
           type="submit"
@@ -223,11 +245,36 @@ function SearchPage({ loaderData }: SearchPageProps) {
         >
           <input type="hidden" name="q" value={term} />
 
-          <aside className="hidden flex-col gap-6 lg:flex">
-            {availableFilters.map((filter) => (
-              <FilterGroup key={filter.id} filter={filter} activeFilters={state.filters} />
-            ))}
-          </aside>
+          {/* A SINGLE filter subtree (one set of inputs) so filter params are
+              never duplicated. Desktop: `<summary>` hidden, `<details open>`
+              shows groups as a static sidebar. Mobile: collapsible disclosure,
+              reachable without JS (F4). */}
+          <details
+            open
+            className="lg:flex lg:flex-col lg:gap-6"
+            aria-labelledby="search-filters-heading"
+          >
+            <summary className="marker-hidden rounded-button button-outline focus-visible:outline-accent min-h-touch-target mb-4 inline-flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 lg:hidden">
+              {content.collection.filters}
+            </summary>
+            <div className="flex flex-col gap-6 lg:mb-0">
+              <h2
+                id="search-filters-heading"
+                className="type-heading-sm text-on-surface font-medium"
+              >
+                {content.collection.filters}
+              </h2>
+              {(availableFilters as SearchAvailableFilter[]).map((filter) => (
+                <FilterGroup
+                  key={filter.id}
+                  filter={filter}
+                  activeFilters={state.filters}
+                  disabled={isLoading}
+                  currencyCode={currencyCode}
+                />
+              ))}
+            </div>
+          </details>
 
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-4">
@@ -242,6 +289,7 @@ function SearchPage({ loaderData }: SearchPageProps) {
                   name="sort_by"
                   onChange={(event) => event.currentTarget.form?.requestSubmit()}
                   aria-busy={isLoading}
+                  disabled={isLoading}
                   className="w-auto"
                 >
                   {SEARCH_SORT_OPTIONS.map((option) => (
@@ -271,8 +319,17 @@ function SearchPage({ loaderData }: SearchPageProps) {
             {loaderData.pageInfo.hasNextPage ? (
               <div className="mt-8 text-center">
                 <Link
-                  to={`/search?q=${encodeURIComponent(term)}&after=${encodeURIComponent(loaderData.pageInfo.endCursor ?? "")}`}
-                  className="rounded-button button-outline inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline"
+                  to={{
+                    pathname: "/search",
+                    search: (() => {
+                      // Preserve all current search params (sort, filters, q)
+                      // and only update the `after` cursor (R19).
+                      const next = new URLSearchParams(searchParams);
+                      next.set("after", loaderData.pageInfo.endCursor ?? "");
+                      return next.toString();
+                    })(),
+                  }}
+                  className="rounded-button button-outline focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
                   {content.search.loadMore}
                 </Link>
