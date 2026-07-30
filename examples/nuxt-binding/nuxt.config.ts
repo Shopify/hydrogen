@@ -5,7 +5,7 @@ import {
   localHttpsDevServerConfig,
   localHttpsPlugin,
   localHttpsServerConfig,
-} from "../../shared/local-https-vite";
+} from "../shared/local-https-vite";
 
 type VitePlugin = NonNullable<NonNullable<NuxtConfig["vite"]>["plugins"]>[number];
 
@@ -16,7 +16,7 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-05-08",
   devServer: localHttpsDevServer,
   alias: {
-    "@shared": new URL("../../shared", import.meta.url).pathname,
+    "@shared": new URL("../shared", import.meta.url).pathname,
   },
   imports: {
     scan: false,

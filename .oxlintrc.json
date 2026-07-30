@@ -92,11 +92,11 @@
     },
     {
       "files": [
-        "examples/poc/nuxt/components/CartDiscountCodes.vue",
-        "examples/poc/nuxt/nuxt.config.ts",
-        "examples/poc/nuxt/pages/blogs/news/*.vue",
-        "examples/poc/nuxt/pages/index.vue",
-        "examples/poc/nuxt/pages/products/*.vue",
+        "examples/nuxt/components/CartDiscountCodes.vue",
+        "examples/nuxt/nuxt.config.ts",
+        "examples/nuxt/pages/blogs/news/*.vue",
+        "examples/nuxt/pages/index.vue",
+        "examples/nuxt/pages/products/*.vue",
         "examples/react-router/app/lib/collection.ts",
         "examples/react-router/app/lib/money.ts",
         "examples/react-router/app/lib/search.ts",
@@ -141,9 +141,9 @@
     },
     {
       "files": [
-        "examples/poc/nuxt/components/CollectionBrowserContent.vue",
-        "examples/poc/nuxt/error.vue",
-        "examples/poc/nuxt/pages/collections/*.vue",
+        "examples/nuxt/components/CollectionBrowserContent.vue",
+        "examples/nuxt/error.vue",
+        "examples/nuxt/pages/collections/*.vue",
         "examples/react-router/app/components/Cart.tsx",
         "examples/react-router/app/routes/collection.tsx",
         "examples/react-router/app/routes/product.tsx",

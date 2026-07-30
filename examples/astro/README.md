@@ -1,6 +1,6 @@
 # Astro example
 
-> **Proof of concept** — an experimental port for pressure-testing Hydrogen APIs.
+> Development example for exercising Hydrogen APIs in Astro. This is not a starter template.
 > See [`../README.md`](../README.md) for context.
 
 Port of the canonical `examples/core` design to [Astro](https://astro.build/) running on the Node SSR adapter.

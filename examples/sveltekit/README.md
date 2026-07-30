@@ -1,6 +1,6 @@
 # SvelteKit example
 
-> **Proof of concept** — an experimental port for pressure-testing Hydrogen APIs.
+> Development example for exercising Hydrogen APIs in SvelteKit. This is not a starter template.
 > See [`../README.md`](../README.md) for context.
 
 Port of the canonical `examples/core` design to [SvelteKit 2](https://svelte.dev/docs/kit) with [Svelte 5](https://svelte.dev/docs/svelte) (runes mode).

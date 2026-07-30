@@ -1,7 +1,6 @@
 packages:
   - packages/*
   - examples/*
-  - examples/poc/*
 allowBuilds:
   "@parcel/watcher": false
   esbuild: false

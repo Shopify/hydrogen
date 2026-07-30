@@ -8,7 +8,7 @@ const config = {
   },
   kit: {
     alias: {
-      "@shared": "../../shared",
+      "@shared": "../shared",
     },
     adapter: adapter(),
   },

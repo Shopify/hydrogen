@@ -1,87 +1,68 @@
 # Examples
 
-## Examples in this repo
+These projects are development examples for exercising Hydrogen across frameworks. They are useful for validating APIs, framework integrations, docs, and skills, but they are not starter kits or supported templates. Canonical starter sources live in [`templates/`](../templates/).
 
-Framework examples (built from the `core/` design source):
+## Example projects
 
-- `react-router/` — React Router v7 port with server loaders and root middleware
-- `nextjs/` — Next.js 16 (App Router) port with server components and a Cache Components prerender
-- `hydrogen/` — mirror of the Hydrogen Skeleton template, kept for parity with Hydrogen classic (synced upstream via `copy:hydrogen-preview`)
+- `react-router/` — React Router v7 with server loaders and root middleware.
+- `nextjs/` — Next.js 16 App Router with server components and Cache Components.
+- `astro/` — Astro 6 with `@astrojs/node` SSR and frontmatter data fetching.
+- `nuxt/` — Nuxt 3 with server middleware and Vue pages.
+- `nuxt-binding/` — Nuxt 3 using Hydrogen's Vue binding layer.
+- `solid-start/` — SolidStart v1 with `query`, `createAsync`, and signal-driven product state.
+- `sveltekit/` — SvelteKit 2 and Svelte 5 with server `load`.
+- `hydrogen/` — mirror of the Hydrogen Skeleton template, kept for parity with Hydrogen classic.
 
 Shared infrastructure:
 
-- `core/` — frozen, framework-agnostic storefront design source (five-page reference HTML + Tailwind tokens, no app JS). Framework examples are hand-built from this baseline.
-- `shared/` — common example configuration and request helpers used by every framework port.
+- `core/` — frozen, framework-agnostic storefront design source with reference HTML and Tailwind tokens.
+- `shared/` — configuration and request helpers shared by the framework examples.
 
-Proof-of-concept framework ports (experimental) — see [`poc/README.md`](poc/README.md):
-
-- `poc/sveltekit/` — SvelteKit 2 + Svelte 5 (runes) port with server `load`
-- `poc/astro/` — Astro 6 port with `@astrojs/node` SSR and frontmatter data fetching
-- `poc/solid-start/` — SolidStart v1 port with `query` + `createAsync` and signal-driven product page state
-- `poc/nuxt/` — Nuxt 3 port with server middleware and Vue pages
-- `poc/nuxt-binding/` — Nuxt 3 port using Hydrogen's Vue binding layer
-
-The framework examples exist to showcase and validate Hydrogen APIs in real
-storefront slices.
-
-The proof-of-concept ports in `poc/` are internal experiments and testbeds
-for Hydrogen APIs as they evolve.
-
-They exist to help us answer questions like:
+The framework examples are built from the `core/` design source. They exist to answer practical questions:
 
 - Does this API feel good in a real storefront slice?
-- Where does the framework integration get awkward?
+- Where does a framework integration get awkward?
 - What do agents need from the SDK, docs, and skills to generate a storefront reliably?
-- Which patterns should be promoted into documentation or agent skills?
+- Which patterns should move into documentation or agent skills?
 
-## Running them
+## Running examples
 
-From the repo root:
+From the repository root:
 
-- `pnpm dev` — every example's dev server in parallel (ports auto-allocated, logs interleaved in the terminal).
-- `pnpm dev:hub` — same, plus a browser UI (auto-opened) with status dots, scaled iframe thumbnails (click to pop out), and collapsible per-server log streams. Implemented in [`scripts/examples-dev.ts`](../scripts/examples-dev.ts).
-- `pnpm --filter @shopify/hydrogen-example-<name> dev` — a single example.
-- `pnpm https:setup` then `pnpm --filter @shopify/hydrogen-example-<name> https:dev` — run an account-enabled framework example on `https://localtest.me:5173` when that example provides an `https:dev` script. The Hydrogen example uses `--customer-account-push` instead of local certs.
+- `pnpm dev` — run all workspace examples in parallel.
+- `pnpm dev:hub` — run the examples with automatically allocated ports and open the browser hub with status, previews, and logs.
+- `pnpm --filter @shopify/hydrogen-example-<name> dev` — run one example.
+- `pnpm https:setup` then `pnpm --filter @shopify/hydrogen-example-<name> https:dev` — run an account-enabled example on `https://localtest.me:5173` when it provides an `https:dev` script. The Hydrogen example uses `--customer-account-push` instead of local certificates.
 
-`pnpm https:setup` requires `mkcert` to be installed locally and trusted by your OS/browser.
-
-On macOS, install it with Homebrew:
+Local HTTPS requires `mkcert`. On macOS:
 
 ```sh
 brew install mkcert
-```
-
-Then run the repo setup command from the repository root:
-
-```sh
 pnpm https:setup
 ```
 
-This installs the local certificate authority and creates trusted certificates for `localtest.me`
-under `.cert/`. The account-enabled examples use those certificates so Customer Account OAuth
-can redirect back to `https://localtest.me:5173/account/authorize`.
+This installs the local certificate authority and creates trusted `localtest.me` certificates under `.cert/` so Customer Account OAuth can redirect to `https://localtest.me:5173/account/authorize`.
 
 ## What examples are
 
 - Small end-to-end experiments around Hydrogen primitives and APIs.
-- The proof-of-concept ports are disposable validation targets while the API is still changing.
+- Disposable validation targets while APIs and framework integrations are changing.
 - Places to expose edge cases, integration friction, and missing documentation.
-- Reference material for us as we design the SDK, docs, and skills.
+- Reference material for designing the SDK, docs, and skills.
 
 ## What examples are not
 
-- The proof-of-concept ports in `poc/` are not the canonical path for users
-  or agents creating new storefronts, not starter kits, and not templates we intend to
-  maintain, version, and distribute.
-- They are not a promise of the recommended app structure.
+- Canonical app structures.
+- Starter kits that we intend to version and distribute.
+- A promise that every framework integration shown here is production-ready.
 
-The expected creation path for real storefronts is: agent skills + docs generate a storefront tailored to the merchant, framework, and requirements. The framework examples (`react-router/`, `nextjs/`, `hydrogen/`) are the ones that path builds toward.
+The React Router and Next.js starter sources live under [`templates/`](../templates/) and are prepared for standalone distribution through the Hydrogen release flow.
 
 ## Guidelines for adding examples
 
 - Optimize for learning, not polish.
-- Keep each example focused on one API question or integration scenario.
+- Keep each example focused on one API or integration question.
 - Prefer small, complete slices over broad demo apps.
 - Make assumptions explicit in the example or its README.
-- If an example reveals a durable pattern, promote that pattern into docs or skills instead of treating the example as the product.
-- If an example stops teaching us something, delete or rewrite it.
+- Promote durable patterns into docs or skills instead of treating the example as the product.
+- Delete or rewrite examples that stop teaching us something.

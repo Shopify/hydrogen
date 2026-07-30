@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 // @ts-check
 import { defineConfig } from "astro/config";
 
-import { localHttpsPlugin, localHttpsServerConfig } from "../../shared/local-https-vite";
+import { localHttpsPlugin, localHttpsServerConfig } from "../shared/local-https-vite";
 
 const localHttpsServer = localHttpsServerConfig();
 const localHttpsAstroServer = localHttpsServer
@@ -22,7 +22,7 @@ export default defineConfig({
     server: localHttpsServer,
     resolve: {
       alias: {
-        "@shared": new URL("../../shared", import.meta.url).pathname,
+        "@shared": new URL("../shared", import.meta.url).pathname,
       },
     },
   },

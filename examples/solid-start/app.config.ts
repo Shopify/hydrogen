@@ -5,7 +5,7 @@ import {
   localHttpsDevServerConfig,
   localHttpsPlugin,
   localHttpsServerConfig,
-} from "../../shared/local-https-vite";
+} from "../shared/local-https-vite";
 
 const localHttpsDevServer = localHttpsDevServerConfig();
 
@@ -19,7 +19,7 @@ export default defineConfig({
     server: localHttpsServerConfig(),
     resolve: {
       alias: {
-        "@shared": new URL("../../shared", import.meta.url).pathname,
+        "@shared": new URL("../shared", import.meta.url).pathname,
       },
     },
   },

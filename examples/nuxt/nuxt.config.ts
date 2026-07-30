@@ -2,12 +2,12 @@ import { getShopifyScriptTags } from "@shopify/hydrogen";
 import tailwindcss from "@tailwindcss/vite";
 import type { NuxtConfig } from "nuxt/schema";
 
-import { analyticsConsent, defaultI18n, shop } from "../../shared/config";
+import { analyticsConsent, defaultI18n, shop } from "../shared/config";
 import {
   localHttpsDevServerConfig,
   localHttpsPlugin,
   localHttpsServerConfig,
-} from "../../shared/local-https-vite";
+} from "../shared/local-https-vite";
 
 type VitePlugin = NonNullable<NonNullable<NuxtConfig["vite"]>["plugins"]>[number];
 type AppHead = NonNullable<NonNullable<NuxtConfig["app"]>["head"]>;
@@ -38,7 +38,7 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-05-08",
   devServer: localHttpsDevServer,
   alias: {
-    "@shared": new URL("../../shared", import.meta.url).pathname,
+    "@shared": new URL("../shared", import.meta.url).pathname,
   },
   imports: {
     scan: false,

@@ -21,7 +21,7 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "paths": {
-      "@shared/*": ["../../shared/*"],
+      "@shared/*": ["../shared/*"],
       "~/*": ["./src/*"]
     }
   }
