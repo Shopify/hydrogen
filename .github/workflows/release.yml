@@ -1,0 +1,69 @@
+# This file must be named release.yml: npm's Trusted Publishing configuration
+# for our packages allows a single workflow filename, shared across branches.
+name: Release
+
+on:
+  push:
+    branches: [preview]
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  # Queue runs instead of cancelling: a cancel that lands between npm
+  # publish and tag creation strands state a rerun cannot rebuild
+  cancel-in-progress: false
+
+jobs:
+  preview-release:
+    name: Preview Release
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'shopify'
+    permissions:
+      contents: write # push the version branch and create git tags
+      pull-requests: write # open and update the version PR
+      id-token: write # generate an ID token for npm Trusted Publishing
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+      TURBO_TELEMETRY_DISABLED: "1"
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
+      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # Changesets needs full history to generate changelogs with the correct commits
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Ensure prerelease mode
+        # Without pre.json, changeset publish would push a non-prerelease
+        # version to the npm latest dist-tag, hijacking it from the real
+        # releases published from main
+        run: jq -e '.mode == "pre" and .tag == "preview"' .changeset/pre.json
+
+      - name: Build packages
+        run: pnpm run build:pkgs
+
+      - name: Create preview release PR or publish
+        id: changesets
+        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1.7.0
+        with:
+          version: pnpm changeset version
+          publish: pnpm changeset publish
+          commit: "[ci] preview release"
+          title: "[ci] preview release"
+        env:
+          GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+          # Satisfies the action's npmrc check without configuring a real
+          # token; publishing authenticates via OIDC trusted publishing
+          NPM_TOKEN: ""
