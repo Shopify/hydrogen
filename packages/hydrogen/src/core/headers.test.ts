@@ -108,6 +108,18 @@ describe("createShopifyRequestContext", () => {
     });
   });
 
+  it("stores trusted buyer IP metadata", () => {
+    const buyerIp = "1.2.3.4";
+
+    const result = createShopifyRequestContext({
+      request: new Request("https://example.com"),
+      i18n: DEFAULT_I18N,
+      buyerIp,
+    });
+
+    expect(result.buyerIp).toBe(buyerIp);
+  });
+
   it("defaults pathPrefix to an empty string", () => {
     const result = createTestRequestContext({ headers: new Headers() });
 

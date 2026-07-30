@@ -7,16 +7,35 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "build/**", ".next/**", "!.next/cache/**", ".output/**"]
     },
+    "@shopify/hydrogen-template-nextjs#build": {
+      "dependsOn": ["@shopify/hydrogen#build"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "@shopify/hydrogen-template-react-router#build": {
+      "dependsOn": ["@shopify/hydrogen#build"],
+      "outputs": ["build/**"]
+    },
     "dev": {
       "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },
     "typecheck": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["@shopify/hydrogen#build", "^build"]
+    },
+    "libcheck": {
+      "dependsOn": ["build"]
     },
     "test": {
       "dependsOn": ["^build"]
+    },
+    "test:e2e": {
+      "dependsOn": ["^build"],
+      "passThroughEnv": [
+        "PLAYWRIGHT_BROWSER_CHANNEL",
+        "STOREFRONT_BASE_URL",
+        "STOREFRONT_E2E_WORKERS"
+      ]
     }
   }
 }

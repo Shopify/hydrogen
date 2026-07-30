@@ -1,16 +1,15 @@
 "use client";
 
-import { useCart } from "@/lib/cart";
+import { useSuspenseCart } from "@/lib/cart";
 import { content } from "@/lib/content";
 
 /**
- * `/cart` checkout button — reads the cart store (client) for `checkoutUrl` and
- * `totalQuantity`. Hidden when the cart is empty. Rendered as a client island
- * inside the server-rendered `/cart` page so it reflects the live cart.
+ * `/cart` checkout button — reads the hydrated cart store for `checkoutUrl` and
+ * `totalQuantity`. Hidden when the cart is empty.
  */
 export function CartCheckoutButton() {
-  const totalQuantity = useCart((state) => state.data.totalQuantity);
-  const checkoutUrl = useCart((state) => state.data.checkoutUrl);
+  const totalQuantity = useSuspenseCart((state) => state.data.totalQuantity);
+  const checkoutUrl = useSuspenseCart((state) => state.data.checkoutUrl);
   const isEmpty = totalQuantity === 0;
 
   if (isEmpty || !checkoutUrl) return null;

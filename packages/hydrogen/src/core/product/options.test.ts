@@ -8,7 +8,7 @@ describe("getSelectedProductOptions", () => {
     params.set("Size & Fit", "M/L + Tall");
     params.set("Color/Tone", "Red & Blue");
 
-    expect(getSelectedProductOptions(params)).toEqual([
+    expect(getSelectedProductOptions({ searchParams: params })).toEqual([
       { name: "Size & Fit", value: "M/L + Tall" },
       { name: "Color/Tone", value: "Red & Blue" },
     ]);
@@ -19,8 +19,15 @@ describe("getSelectedProductOptions", () => {
     params.set("Size & Fit", "M/L + Tall");
     params.set("ref", "campaign");
 
-    expect(getSelectedProductOptions(params, { optionNames: ["Size & Fit"] })).toEqual([
-      { name: "Size & Fit", value: "M/L + Tall" },
-    ]);
+    expect(
+      getSelectedProductOptions({ searchParams: params, allowedOptionNames: ["Size & Fit"] }),
+    ).toEqual([{ name: "Size & Fit", value: "M/L + Tall" }]);
+  });
+
+  it("returns no selected options when allowedOptionNames is empty", () => {
+    const params = new URLSearchParams();
+    params.set("Size", "M");
+
+    expect(getSelectedProductOptions({ searchParams: params, allowedOptionNames: [] })).toEqual([]);
   });
 });

@@ -4,6 +4,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { Breadcrumbs, type Crumb } from "@/components/Breadcrumbs";
 import { ProductCard, type ProductCardData } from "@/components/ProductCard";
 import { ProductDetails } from "@/components/ProductDetails";
 import { content } from "@/lib/content";
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // Variant params do NOT change the canonical (F10).
     alternates: { canonical: `/products/${handle}` },
     openGraph: {
-      title: `${title} — CORE`,
+      title,
       description: product?.description ?? "",
       url: canonicalUrl(`/products/${handle}`),
     },
@@ -46,11 +47,13 @@ async function fetchProduct(
   cacheTag("products");
 
   // Read variant selection from URL option params (F4: a no-JS GET to
-  // `?Size=Large&Color=Green` resolves the variant server-side). Do NOT pass
-  // `optionNames: []` — an empty allow-list filters out every param.
+  // `?Size=Large&Color=Green` resolves the variant server-side). If passed,
+  // `allowedOptionNames: []` intentionally filters out every option.
   // Reconstruct URLSearchParams from the serialized search string — `use cache`
   // serializes arguments, so a URLSearchParams passed in loses `.get`.
-  const selectedOptions = getSelectedProductOptions(new URLSearchParams(searchString));
+  const selectedOptions = getSelectedProductOptions({
+    searchParams: new URLSearchParams(searchString),
+  });
 
   const { data, errors } = await staticStorefrontClient.graphql(PRODUCT_QUERY, {
     variables: { handle, selectedOptions },
@@ -74,8 +77,20 @@ export default async function ProductPage({ params, searchParams }: Props) {
     notFound();
   }
 
+  const firstCollection = product.collections.nodes[0];
+  const breadcrumbItems: Crumb[] = [
+    { label: content.collections.title, href: "/collections" },
+    ...(firstCollection
+      ? [{ label: firstCollection.title, href: `/collections/${firstCollection.handle}` }]
+      : []),
+    { label: product.title },
+  ];
+
   return (
     <>
+      <div className="max-w-page px-margin mx-auto w-full pt-8">
+        <Breadcrumbs items={breadcrumbItems} />
+      </div>
       <ProductDetails product={product} />
       {/* Best-effort related products (F14): a separate async server child in a
           <Suspense> boundary that degrades silently — never blocks the PDP. */}

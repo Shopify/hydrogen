@@ -1,44 +1,20 @@
 import {
   AnalyticsEvent,
-  createStorefrontAnalytics,
   type AnalyticsCart,
   type AnalyticsCartLine,
   type CartData,
   type CartState,
   type CollectionViewPayload,
-  type ConsentConfig,
   type ProductViewPayload,
   type SearchViewPayload,
-  type ShopAnalytics,
   type StorefrontAnalytics,
 } from "@shopify/hydrogen";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type Dispatch,
-  type ReactNode,
-  type SetStateAction,
-} from "react";
+import { useCartAnalytics } from "@shopify/hydrogen/react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocation } from "react-router";
-
-import { useCart } from "~/lib/cart";
-
-declare global {
-  interface Window {
-    __HYDROGEN_E2E_CONSENT_MODE__?: ConsentConfig["mode"];
-  }
-}
-
-type MaybePromise<T> = T | Promise<T>;
 
 type AnalyticsContextValue = {
   bus: StorefrontAnalytics | null;
-  shop: ShopAnalytics | null;
-  carts: AnalyticsCarts;
-  setCarts: Dispatch<SetStateAction<AnalyticsCarts>>;
 };
 
 type PublishableAnalytics = {
@@ -46,72 +22,39 @@ type PublishableAnalytics = {
   locationKey: string;
 };
 
-type AnalyticsCarts = {
-  cart: AnalyticsCart | null;
-  prevCart: AnalyticsCart | null;
-};
-
-const EMPTY_CARTS: AnalyticsCarts = { cart: null, prevCart: null };
-
 const AnalyticsContext = createContext<AnalyticsContextValue>({
   bus: null,
-  shop: null,
-  carts: EMPTY_CARTS,
-  setCarts: () => {},
 });
 
-export function HydrogenAnalyticsProvider({
-  children,
-  consent,
-  shop,
-}: {
-  children?: ReactNode;
-  consent: ConsentConfig;
-  shop: MaybePromise<ShopAnalytics | null>;
-}) {
-  const [value, setValue] = useState<Pick<AnalyticsContextValue, "bus" | "shop">>({
-    bus: null,
-    shop: null,
-  });
-  const [carts, setCarts] = useState<AnalyticsCarts>(EMPTY_CARTS);
-  const { consentDomain, mode, publicStorefrontAccessToken } = consent;
-  const e2eConsentMode =
-    typeof window === "undefined" ? undefined : window.__HYDROGEN_E2E_CONSENT_MODE__;
-  const consentConfig = useMemo(
-    () => ({
-      consentDomain,
-      mode: e2eConsentMode ?? mode,
-      publicStorefrontAccessToken,
-    }),
-    [consentDomain, e2eConsentMode, mode, publicStorefrontAccessToken],
-  );
+export function HydrogenAnalyticsProvider({ children }: { children?: ReactNode }) {
+  const [bus, setBus] = useState<StorefrontAnalytics | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    let active = true;
-    let currentBus: StorefrontAnalytics | null = null;
+    const analyticsBus = window.Shopify?.analytics;
+    if (!analyticsBus) {
+      setError(
+        new Error(
+          "Shopify analytics bus is not available. Render <ShopifyScripts /> before rendering HydrogenAnalyticsProvider.",
+        ),
+      );
+      return;
+    }
 
-    Promise.resolve(shop).then((resolvedShop) => {
-      if (!active) return;
-
-      currentBus = createStorefrontAnalytics({ shop: resolvedShop, consent: consentConfig });
-      setValue({ bus: currentBus, shop: resolvedShop });
-    });
+    setBus(analyticsBus);
 
     return () => {
-      active = false;
-      currentBus?.destroy();
-      setValue({ bus: null, shop: null });
-      setCarts(EMPTY_CARTS);
+      setBus(null);
     };
-  }, [consentConfig, shop]);
+  }, []);
+
+  if (error) throw error;
 
   const contextValue = useMemo(
     () => ({
-      ...value,
-      carts,
-      setCarts,
+      bus,
     }),
-    [carts, value],
+    [bus],
   );
 
   return (
@@ -123,18 +66,14 @@ export function HydrogenAnalyticsProvider({
 }
 
 export function useAnalytics(): PublishableAnalytics | null {
-  const { bus, shop } = useContext(AnalyticsContext);
+  const { bus } = useContext(AnalyticsContext);
   const { hash, pathname, search } = useLocation();
   const locationKey = `${pathname}${search}${hash}`;
 
   return useMemo(() => {
-    if (!bus || !shop) return null;
+    if (!bus) return null;
     return { bus, locationKey };
-  }, [bus, locationKey, shop]);
-}
-
-export function useAnalyticsCarts(): AnalyticsCarts {
-  return useContext(AnalyticsContext).carts;
+  }, [bus, locationKey]);
 }
 
 function PageAnalyticsSync() {
@@ -150,24 +89,7 @@ function PageAnalyticsSync() {
 }
 
 export function CartAnalyticsSync() {
-  const { bus, setCarts } = useContext(AnalyticsContext);
-  const cart = useCart((state) => state);
-  const analyticsCart = useMemo(
-    () => toAnalyticsCart({ ...cart.data, pending: cart.pending }),
-    [cart],
-  );
-
-  useEffect(() => {
-    if (!analyticsCart) return;
-
-    setCarts(({ cart, prevCart }) =>
-      analyticsCart.updatedAt !== cart?.updatedAt
-        ? { cart: analyticsCart, prevCart: cart }
-        : { cart, prevCart },
-    );
-    bus?.updateCart(analyticsCart);
-  }, [analyticsCart, bus, setCarts]);
-
+  useCartAnalytics();
   return null;
 }
 
@@ -236,6 +158,7 @@ export function toAnalyticsCart(cart: AnalyticsCartInput): AnalyticsCart | null 
   return {
     id: cart.id,
     updatedAt: new Date().toISOString(),
+    cost: cart.cost,
     lines: {
       nodes: cart.lines.nodes.flatMap((line): AnalyticsCartLine[] => {
         const merchandise = line.merchandise;

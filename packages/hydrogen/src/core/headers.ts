@@ -18,6 +18,7 @@ export const SHOPIFY_STOREFRONT_Y_HEADER = "Shopify-Storefront-Y";
 export const SHOPIFY_STOREFRONT_S_HEADER = "Shopify-Storefront-S";
 export const SERVER_TIMING_HEADER = "Server-Timing";
 export const STOREFRONT_URL_HEADER = "x-storefront-url";
+export const SHOPIFY_CHAT_FRAME_ORIGIN_HEADER = "Sec-Shopify-Chat-Frame-Origin";
 const PRIVATE_RESPONSE_CACHE_CONTROL = "private, no-store, max-age=0, must-revalidate";
 const CACHE_CONTROL_HEADER = "Cache-Control";
 const CDN_CACHE_CONTROL_HEADER_RE = /^(?:.+-)?cdn-cache-control$/i;
@@ -57,6 +58,7 @@ type NormalizedI18nConfig<I18n extends I18nConfig = I18nConfig> = Omit<I18n, "pa
 type ShopifyRequestContextInput<I18n extends I18nConfig = I18nConfig> = {
   request: StorefrontRequest;
   i18n: I18n;
+  buyerIp?: string;
 };
 
 type ShopifyRequestContextBase = {
@@ -66,6 +68,7 @@ type ShopifyRequestContextBase = {
   uniqueToken?: string;
   visitToken?: string;
   legacyTokens?: boolean;
+  buyerIp?: string;
   requestGroupId: string;
   signal?: AbortSignal;
   url?: string;
@@ -92,6 +95,7 @@ type Context<I18n extends I18nConfig = I18nConfig> = {
   uniqueToken?: string;
   visitToken?: string;
   legacyTokens?: boolean;
+  buyerIp?: string;
   requestGroupId: string;
   signal?: AbortSignal;
   url?: string;
@@ -118,6 +122,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     ...(cookie && { cookie }),
     i18n,
     ...(url && { url }),
+    ...(input.buyerIp && { buyerIp: input.buyerIp }),
     requestGroupId:
       request.headers.get(REQUEST_GROUP_ID_HEADER) ??
       request.headers.get("x-request-id") ??
@@ -281,6 +286,7 @@ export const SFAPI_REQUEST_HEADER_ALLOWLIST = [
   "access-control-request-headers",
   "access-control-request-method",
   STOREFRONT_ACCESS_TOKEN_HEADER,
+  STOREFRONT_PRIVATE_TOKEN_HEADER,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
 ] as const;

@@ -3,31 +3,36 @@
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+import { checkGraphQL } from "./gql";
 import { setupHydrogen } from "./setup";
 
-const COMMANDS = {
-  setup: async () => setupHydrogen(),
-} satisfies Record<string, () => Promise<void>>;
+const CLI_ARGUMENTS_INDEX = 2;
+const FAILURE_EXIT_CODE = 1;
 
-type CommandName = keyof typeof COMMANDS;
+const COMMANDS = [
+  { path: ["setup"], run: async (_args: string[]) => setupHydrogen() },
+  { path: ["gql", "check"], run: async (args: string[]) => checkGraphQL({ args }) },
+] as const;
 
-function isCommandName(value: string): value is CommandName {
-  return value in COMMANDS;
+function commandMatches(path: readonly string[], args: string[]): boolean {
+  return path.every((segment, index) => args[index] === segment);
 }
 
-function runCli(): void {
-  const commandName = process.argv[2];
+export function runCli(): void {
+  const args = process.argv.slice(CLI_ARGUMENTS_INDEX);
+  const command = COMMANDS.find(({ path }) => commandMatches(path, args));
 
-  if (!commandName || !isCommandName(commandName)) {
-    const availableCommands = Object.keys(COMMANDS).join(", ");
+  if (!command) {
+    const commandName = args.join(" ");
+    const availableCommands = COMMANDS.map(({ path }) => path.join(" ")).join(", ");
     console.error(commandName ? `Unknown command: ${commandName}` : "No command specified.");
     console.error(`Available commands: ${availableCommands}`);
-    process.exit(1);
+    process.exit(FAILURE_EXIT_CODE);
   }
 
-  COMMANDS[commandName]().catch((error: unknown) => {
+  command.run(args.slice(command.path.length)).catch((error: unknown) => {
     console.error(error instanceof Error ? error.message : "An unexpected error occurred");
-    process.exit(1);
+    process.exit(FAILURE_EXIT_CODE);
   });
 }
 

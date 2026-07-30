@@ -270,6 +270,21 @@ describe("createStorefrontClient", () => {
       expect(headers.get("Custom-Storefront-Request-Group-ID")).toBe("request-context-group");
     });
 
+    it("rejects mismatched request context and private client buyer IP", () => {
+      const requestContext = createShopifyRequestContext({
+        request: new Request("https://example.com"),
+        i18n: DEFAULT_I18N,
+        buyerIp: "10.0.0.1",
+      });
+
+      expect(() =>
+        createPrivateClient({
+          buyerIp: "10.0.0.2",
+          requestContext,
+        }),
+      ).toThrow("requestContext.buyerIp must match private Storefront API client buyerIp");
+    });
+
     it("omits buyer meta headers for private client without buyer context", async () => {
       const client = createPrivateNoBuyerContextClient({ fetch: mockFetch });
       await client.graphql(SHOP_QUERY);

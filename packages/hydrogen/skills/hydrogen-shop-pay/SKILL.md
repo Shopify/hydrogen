@@ -58,6 +58,17 @@ For a full-cart checkout shortcut, render Shop Pay without `variants` and hide o
 ) : null}
 ```
 
+## Verify
+
+Done when:
+
+- [ ] Product buy buttons render Shop Pay only when a resolved ProductVariant ID exists.
+- [ ] Shop Pay's disabled state matches the add-to-cart button (disabled when add-to-cart is disabled or a product/cart mutation is pending).
+- [ ] Product buttons pass ProductVariant GIDs or bare numeric variant IDs (never Product IDs), with a quantity object when quantity is known.
+- [ ] Cart checkout buttons omit `variants` and are hidden or disabled when the cart is empty or a mutation is pending.
+- [ ] `channel="hydrogen"` is set unless the app deliberately uses another channel.
+- [ ] No `height` prop is passed and no checkout domain is hardcoded in framework bindings.
+
 ## Gotchas
 
 - The custom element is loaded from Shopify's Shop JS module. Framework bindings load it on mount by default.

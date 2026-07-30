@@ -1,11 +1,11 @@
-import { parseCollectionParams, type AvailableFilter } from "@shopify/hydrogen";
+import { parseCollectionParams } from "@shopify/hydrogen";
 import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 
 import { CollectionBrowser } from "@/components/CollectionBrowser";
-import { COLLECTION_QUERY } from "@/lib/queries";
+import { COLLECTION_QUERY, type CollectionAvailableFilter } from "@/lib/queries";
 import { canonicalUrl } from "@/lib/site";
 import { staticStorefrontClient } from "@/lib/storefront-static";
 import { toURLSearchParams } from "@/lib/url-params";
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     alternates: { canonical: `/collections/${handle}` },
     openGraph: {
-      title: `${title} — CORE`,
+      title,
       description,
       type: "website",
       url: canonicalUrl(`/collections/${handle}`),
@@ -40,7 +40,7 @@ async function fetchCollection(
 ): Promise<{
   collection: Awaited<ReturnType<typeof query>>["collection"] | null;
   products: Awaited<ReturnType<typeof query>>["products"];
-  availableFilters: AvailableFilter[];
+  availableFilters: CollectionAvailableFilter[];
   pageInfo: { hasNextPage: boolean; endCursor?: string | null };
 }> {
   "use cache";

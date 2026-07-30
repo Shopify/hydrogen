@@ -24,11 +24,12 @@ const cartHandlers = createCartServerHandlers();
 const customerAccountHandlers = createCustomerAccountServerHandlers({ customerSession });
 
 export async function proxy(request: NextRequest) {
+  const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
+    buyerIp,
   });
-  const buyerIp = getBuyerIp(request.headers);
   const storefrontClient = createStorefrontClient({
     type: "private",
     requestContext,
@@ -104,7 +105,9 @@ When a Server Component or layout reads Customer Account session state, it must 
 
 ## Customer Account API
 
-Register `createCustomerAccountServerHandlers({ customerSession })` with `handleShopifyRoutes`; do not create separate Next Route Handlers for the default login, authorize, refresh, or logout flow. The registered handlers own `GET /account/login`, `GET /account/authorize`, `GET /account/refresh`, and `POST /account/logout`, including session commits, sanitized redirects, logout CSRF protection, and `cache-control: no-store`.
+Register `createCustomerAccountServerHandlers({ customerSession })` with `handleShopifyRoutes`; do not create separate Next Route Handlers for the default login, authorize, refresh, or logout flow. The registered handlers own `GET /account/login`, `GET /account/authorize`, `GET /account/refresh`, and `POST /account/logout` — see `createCustomerAccountServerHandlers` for the response contract. Link to `/account/login` and submit `/account/logout` with plain `<a>`/`<form>`, not `next/link` — those handlers return raw external redirects.
+
+Because `proxy.ts` returns before RSC render begins, a session mutation made during render cannot be committed — which is why account pages read with `getAccessToken()` and delegate refresh to the registered `/account/refresh` handler.
 
 Use Server Components for read-only account state only. Header account links should call `customerSession.isLoggedIn()` through an app helper that only exposes `ReadonlyCustomerSessionManager`. Account pages that need Customer Account GraphQL should call `customerSession.getAccessToken()` first. If `isLoggedIn()` is true but `getAccessToken()` returns `undefined`, redirect once to `/account/refresh?return_to=...` and let the registered refresh handler commit new cookies before rendering private data. If `isLoggedIn()` is false, show login UI or redirect to `/account/login` instead. Include a one-shot refresh guard so a failed refresh falls back to login or an account error state instead of looping.
 
@@ -114,5 +117,5 @@ Only expose `WritableCustomerSessionManager` inside response boundaries that can
 
 - Next's `redirect()` does not preserve Hydrogen's `301` status. If permanent redirect status matters, use a framework escape hatch that can return the `Response` directly.
 - Do not run Storefront URL redirects in `proxy.ts`; that would add a Storefront API request to every app route.
-- Keep the matcher broad enough to include `/admin`, `/api/cart`, and `/api/{version}/graphql.json`, but exclude static Next assets.
+- Keep the matcher broad enough to include `/admin`, `/api/cart`, and `/api/{api-version}/graphql.json`, but exclude static Next assets.
 - Customer Account session manager initialization should be local session storage work only, such as encrypted cookie decrypt/encrypt. Token endpoint refresh belongs to `/account/refresh`, not the generic proxy path.

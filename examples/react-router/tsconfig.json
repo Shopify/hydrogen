@@ -3,20 +3,7 @@
   "compilerOptions": {
     "plugins": [
       {
-        "name": "gql.tada/ts-plugin",
-        "schemas": [
-          {
-            "name": "storefront",
-            "schema": "node_modules/@shopify/hydrogen/dist/storefront.schema.json",
-            "tadaOutputLocation": "./app/storefront-graphql-env.d.ts"
-          },
-          {
-            "name": "customer-account",
-            "schema": "node_modules/@shopify/hydrogen/dist/customer-account.schema.json",
-            "tadaOutputLocation": "./app/customer-account-graphql-env.d.ts"
-          }
-        ],
-        "trackFieldUsage": false
+        "name": "@shopify/hydrogen/ts-plugin"
       }
     ],
     "lib": ["DOM", "DOM.Iterable", "ES2022"],

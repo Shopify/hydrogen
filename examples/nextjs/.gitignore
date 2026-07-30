@@ -23,6 +23,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+storefront-graphql-env.d.ts
+customer-account-graphql-env.d.ts
 
 # local CDN asset symlinks into workspace package dist folders
 /public/storefront/analytics/shopify.js

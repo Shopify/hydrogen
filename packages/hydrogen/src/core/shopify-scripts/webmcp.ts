@@ -8,7 +8,7 @@ export function loadShopifyWebMcpTools(): Promise<boolean | void> {
   ) {
     return loadScript(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT, {
       in: "head",
-      attributes: { crossorigin: "anonymous" },
+      attributes: { id: "shopify-webmcp", crossorigin: "anonymous" },
     }).catch((error) => {
       console.warn("Failed to load Shopify WebMCP.", error);
     });

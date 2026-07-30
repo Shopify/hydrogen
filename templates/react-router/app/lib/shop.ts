@@ -21,9 +21,7 @@ export const storefrontConfig = {
 // Real store iff a private Storefront API token is available; otherwise the
 // tokenless mock.shop demo. MOCK_SHOP=1 forces mock (used by the gate + as the
 // zero-config default).
-export function useMockShop(
-  env: Pick<Env, "MOCK_SHOP" | "PRIVATE_STOREFRONT_API_TOKEN">,
-): boolean {
+export function useMockShop(env: Pick<Env, "MOCK_SHOP" | "PRIVATE_STOREFRONT_API_TOKEN">): boolean {
   return env.MOCK_SHOP === "1" || !env.PRIVATE_STOREFRONT_API_TOKEN;
 }
 

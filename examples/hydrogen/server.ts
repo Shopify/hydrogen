@@ -31,10 +31,12 @@ export default {
     try {
       const publicRequest = createPublicRequest(request);
       const i18n = getLocaleFromRequest(publicRequest);
+      const buyerIp = getBuyerIp(request.headers);
 
       const shopifyRequestContext = createShopifyRequestContext({
         request: publicRequest,
         i18n,
+        buyerIp,
       });
       const storefrontClient = createStorefrontClient({
         type: "private",
@@ -42,7 +44,7 @@ export default {
         config: {
           storeDomain: env.PUBLIC_STORE_DOMAIN,
           privateStorefrontToken: getPrivateStorefrontToken(env),
-          buyerIp: getBuyerIp(request.headers),
+          buyerIp,
         },
       });
       const customerSessionManager = await createCustomerSessionManager(

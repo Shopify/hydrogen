@@ -9,10 +9,12 @@ type ProxyDescriptor = {
   formatError: (message: string) => unknown;
   logPrefix: string;
   timeoutMs?: number;
+  prepareHeaders?: (headers: Headers, options: HydrogenRoutesOptions) => void;
 };
 
 export function createProxyInterceptor(descriptor: ProxyDescriptor) {
-  return async ({ request, storefrontClient }: HydrogenRoutesOptions): Promise<Response | null> => {
+  return async (options: HydrogenRoutesOptions): Promise<Response | null> => {
+    const { request, storefrontClient } = options;
     const url = new URL(request.url);
     if (!descriptor.match.test(url.pathname)) return null;
 
@@ -28,6 +30,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor) {
         request.headers.get("request-id") ??
         crypto.randomUUID(),
     );
+    descriptor.prepareHeaders?.(forwardedHeaders, options);
 
     try {
       const init: RequestInit & { duplex?: "half" } = {

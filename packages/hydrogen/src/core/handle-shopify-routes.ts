@@ -19,6 +19,12 @@ export type HydrogenRoutesOptions = {
   handlers?: readonly ShopifyRouteHandlerGroup[];
 };
 
+/**
+ * Matches a request against Shopify standard routes and any registered handler
+ * groups, returning a raw `Response` (redirect or JSON) when one matches, or
+ * `null` when none do. Use it as the first step of request handling, before
+ * framework routing.
+ */
 export async function handleShopifyRoutes(
   options: HydrogenRoutesOptions,
 ): Promise<Response | null> {

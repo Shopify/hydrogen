@@ -25,12 +25,26 @@ const customCartFragment = gql(`
 `);
 const customCartQueries = makeCartQueries({ fragment: customCartFragment });
 
-type CartWithCustomFields = {
-  attributes: unknown;
+const inventoryCartFragment = gql(`
+  fragment CartFragment on Cart {
+    lines(first: 250) {
+      nodes {
+        merchandise {
+          ... on ProductVariant {
+            quantityAvailable
+          }
+        }
+      }
+    }
+  }
+`);
+const inventoryCartQueries = makeCartQueries({ fragment: inventoryCartFragment });
+
+type CartWithLines = {
   lines: { nodes: Array<{ merchandise?: unknown }> };
 };
 
-type CartProductVariantMerchandise<TCart extends CartWithCustomFields | null> = NonNullable<
+type CartProductVariantMerchandise<TCart extends CartWithLines | null> = NonNullable<
   NonNullable<TCart>["lines"]["nodes"][number]["merchandise"]
 >;
 
@@ -46,8 +60,15 @@ describe("cart query result types", () => {
 
     expectTypeOf<Merchandise>().not.toBeAny();
     expectTypeOf<NonNullable<R["cart"]>>().toHaveProperty("attributes");
-    expectTypeOf<Merchandise>().toHaveProperty("quantityAvailable");
     expectTypeOf<Merchandise>().toHaveProperty("availableForSale");
+  });
+
+  it("custom inventory cart fragments add quantityAvailable", () => {
+    type R = ResultOf<typeof inventoryCartQueries.cart>;
+    type Merchandise = CartProductVariantMerchandise<R["cart"]>;
+
+    expectTypeOf<Merchandise>().not.toBeAny();
+    expectTypeOf<Merchandise>().toHaveProperty("quantityAvailable");
   });
 
   it("resolves cart data from handler options", () => {

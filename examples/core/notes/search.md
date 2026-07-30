@@ -130,6 +130,21 @@ The HTML shows the **populated** state. When `search` returns zero results, the 
 
 A no-query state (landing on `/search` with empty `q`, `search.performed == false`) renders just the header/input and nothing below it.
 
+## Mobile filter reachability + landmark labels (no-JS, F4)
+
+Below `lg` the search filter sidebar is unreachable without a mobile control.
+That control MUST be a **native `<details>`/`<summary>`** — **never a JS-only
+`<dialog>`** (F4: a `<dialog>` needs `showModal()` and is `display:none` with JS
+off). Render the filters as a **SINGLE `<details open>` subtree** — one set of
+inputs inside the `method="get"` form; `<summary>` is `lg:hidden`, content is a
+static sidebar on desktop and a collapsible disclosure on mobile. **Do NOT
+render a second copy of the filter inputs** (two same-`name`d inputs in one GET
+form submit duplicate query params). The search filter landmark gets a visually-hidden `<h2>Filters</h2>` +
+`aria-labelledby`. Price-range chips/labels are `formatPrice`-formatted
+in the store currency; the price range submits on **blur/Enter, not per
+keystroke** (see `hydrogen-collection-browser`). While loading, facet inputs
+are `disabled`.
+
 ## Without JavaScript
 
 Search must query, filter, sort, and paginate with scripting disabled (engineering.md §F4) — it inherits the PLP's no-JS contract plus the query form.

@@ -10,11 +10,11 @@ import { canonicalUrl } from "@/lib/site";
 import { staticStorefrontClient } from "@/lib/storefront-static";
 
 export const metadata: Metadata = {
-  title: "CORE — Discover our latest collection",
+  title: content.home.hero.heading,
   description: content.home.hero.subtitle,
   alternates: { canonical: "/" },
   openGraph: {
-    title: "CORE — Discover our latest collection",
+    title: content.home.hero.heading,
     description: content.home.hero.subtitle,
     type: "website",
     url: canonicalUrl("/"),

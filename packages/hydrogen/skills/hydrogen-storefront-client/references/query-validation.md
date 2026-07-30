@@ -1,22 +1,12 @@
 # Query Validation
 
-Validate every Storefront API `gql()` document headlessly before treating Hydrogen setup as complete. Editor feedback is not enough: the `gql.tada/ts-plugin` runs inside the editor's TypeScript language server, but it does not run during `tsc`.
+Validate every Storefront API `gql()` document headlessly before treating Hydrogen setup as complete. Editor feedback is not enough: the Hydrogen TypeScript plugin runs inside the editor's language server, but it does not run during `tsc`.
 
 Without a headless check, a query that references a missing or renamed field can typecheck and fail only at runtime. On a product page, that can look like an empty result and get accidentally converted into a misleading 404.
 
-## Install The CLI
-
-Install `gql.tada` as a dev dependency in the app that owns the queries:
-
-```bash
-pnpm add -D gql.tada
-```
-
-Use the app's package manager equivalent when it is not pnpm.
-
 ## Configure The Schema
 
-The CLI reads the same `tsconfig.json` plugin block used by the editor:
+Hydrogen's packed plugin configures both Shopify schemas:
 
 ```jsonc
 // tsconfig.json
@@ -24,47 +14,16 @@ The CLI reads the same `tsconfig.json` plugin block used by the editor:
   "compilerOptions": {
     "plugins": [
       {
-        "name": "gql.tada/ts-plugin",
-        "schema": "node_modules/@shopify/hydrogen/dist/storefront.schema.json",
-        "tadaOutputLocation": "./src/storefront-graphql-env.d.ts",
-        "trackFieldUsage": false
+        "name": "@shopify/hydrogen/ts-plugin"
       }
     ]
   }
 }
 ```
 
-If the app already has TypeScript plugins, append the `gql.tada/ts-plugin` entry without removing framework plugins such as Next.js `name: "next"`. If the app's `tsconfig.json` extends a generated framework config, put `compilerOptions.plugins` in the extending `tsconfig.json`.
+If the app already has TypeScript plugins, append the Hydrogen plugin without removing framework plugins such as Next.js `name: "next"`. If the app's `tsconfig.json` extends a generated framework config, put `compilerOptions.plugins` in the extending `tsconfig.json`.
 
-The schema path above is shipped by the `@shopify/hydrogen` package.
-
-Customer Account API documents use the separate `@shopify/hydrogen/customer-account` helper and schema. Apps that author both Storefront and Customer Account documents should configure `gql.tada` in multi-schema mode:
-
-```jsonc
-// tsconfig.json
-{
-  "compilerOptions": {
-    "plugins": [
-      {
-        "name": "gql.tada/ts-plugin",
-        "schemas": [
-          {
-            "name": "storefront",
-            "schema": "node_modules/@shopify/hydrogen/dist/storefront.schema.json",
-            "tadaOutputLocation": "./src/storefront-graphql-env.d.ts"
-          },
-          {
-            "name": "customer-account",
-            "schema": "node_modules/@shopify/hydrogen/dist/customer-account.schema.json",
-            "tadaOutputLocation": "./src/customer-account-graphql-env.d.ts"
-          }
-        ],
-        "trackFieldUsage": false
-      }
-    ]
-  }
-}
-```
+The plugin writes `storefront-graphql-env.d.ts` and `customer-account-graphql-env.d.ts` at the project root. Ignore these generated files. Customer Account API documents use the separate `@shopify/hydrogen/customer-account` helper but need no additional plugin configuration.
 
 The editor must use the workspace TypeScript version for inline feedback. The CLI works independently of the editor setting.
 
@@ -76,7 +35,7 @@ Add a script that runs the GraphQL validation:
 // package.json
 {
   "scripts": {
-    "check:graphql": "gql.tada check"
+    "check:graphql": "hydrogen gql check"
   }
 }
 ```
@@ -87,7 +46,7 @@ Then chain it into the existing typecheck or check command. Run the framework's 
 // package.json
 {
   "scripts": {
-    "typecheck": "react-router typegen && tsc && gql.tada check"
+    "typecheck": "react-router typegen && tsc && hydrogen gql check"
   }
 }
 ```
@@ -98,16 +57,16 @@ For apps without route type generation, use the same ordering without that first
 // package.json
 {
   "scripts": {
-    "typecheck": "tsc && gql.tada check"
+    "typecheck": "tsc && hydrogen gql check"
   }
 }
 ```
 
 For framework typecheck commands, append the GraphQL check after the framework check.
 
-Run `gql.tada check` directly before finishing any setup that added or changed Storefront API or Customer Account API queries, including additive fragments passed to Hydrogen helpers such as predictive search query builders, even if the app does not already have CI configured.
+Run the package script before finishing any setup that added or changed Storefront API or Customer Account API queries, including additive fragments passed to Hydrogen helpers such as predictive search query builders. Without a script, run `npx @shopify/hydrogen gql check`.
 
-For stricter CI, use `gql.tada check --fail-on-warn` so warning-level findings fail the build too.
+For stricter CI, append `--fail-on-warn` to the package script so warning-level findings fail the build too.
 
 ## What It Catches
 
@@ -123,3 +82,14 @@ For stricter CI, use `gql.tada check --fail-on-warn` so warning-level findings f
 - Auth, market, or argument-value errors that only the live API can enforce.
 
 For live-only failures, add an integration test or smoke check that executes each critical query and asserts the response has no `errors` value.
+
+## Select `__typename` When You Narrow On It
+
+gql.tada does NOT auto-inject `__typename` for inline fragments (`... on MediaImage { ... }`). Whenever you narrow runtime nodes by `__typename` (`search.nodes`, `product.media.nodes`, any heterogeneous `nodes` union), select `__typename` explicitly — otherwise a guard like `node.__typename === "MediaImage"` silently yields empty (no type or runtime error, just missing output).
+
+```graphql
+# bad — guard never matches
+query { product { media(first: 10) { nodes { ... on MediaImage { url } } } } }
+# good
+query { product { media(first: 10) { nodes { __typename ... on MediaImage { url } } } } }
+```

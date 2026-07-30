@@ -78,6 +78,7 @@ Pass route templates to `ShopifyScripts` so browser-side Shopify modules and age
 
 ```tsx
 <ShopifyScripts
+  shop={shop}
   i18n={i18n}
   routes={routeTemplates}
 />

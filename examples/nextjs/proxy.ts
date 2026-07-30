@@ -30,12 +30,13 @@ import { MOCK_SHOP_DOMAIN, resolveStorefrontConfig } from "@/lib/storefront-conf
  * `mock-private-token` so the example runs with zero secrets.
  */
 export async function proxy(request: NextRequest) {
+  const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
     i18n: defaultI18n,
+    buyerIp,
   });
 
-  const buyerIp = getBuyerIp(request.headers);
   const sessionManager = await createCustomerSessionManager(request);
 
   const { storeDomain, privateStorefrontToken } = resolveStorefrontConfig();

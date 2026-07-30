@@ -1,16 +1,18 @@
 import { canAddToCart, getSelectedProductOptions, Cache } from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
-import { useRef } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, isRouteErrorResponse, useNavigate } from "react-router";
 
 import { Breadcrumbs } from "~/components/Breadcrumbs";
+import { NotFound } from "~/components/NotFound";
 import { ProductCard, type ProductCardData } from "~/components/ProductCard";
 import { QuantityStepper } from "~/components/QuantityStepper";
 import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
 import { openCartDrawer } from "~/lib/cart-drawer";
 import { content } from "~/lib/content";
+import { PRODUCT_CARD_FRAGMENT } from "~/lib/fragments";
 import { shopifyImageUrl, srcSetFor } from "~/lib/image";
+import { shopNameFromMatches, shopTitle } from "~/lib/meta";
 import { formatPrice } from "~/lib/money";
 import { ProductProvider, useProductForm } from "~/lib/product";
 import { PRODUCT_QUERY, RELATED_PRODUCTS_QUERY, type ProductData } from "~/lib/product-query";
@@ -19,18 +21,19 @@ import { storefrontClientContext } from "~/lib/storefront-context";
 
 import type { Route } from "./+types/product";
 
-export const meta = ({ data, params }: Route.MetaArgs) => {
+export const meta: Route.MetaFunction = ({ data, params, matches }: Route.MetaArgs) => {
   const product = data?.product;
-  const title = product?.title ?? "Product";
+  const pageTitle = product?.title ?? "Product";
+  const title = shopTitle(pageTitle, shopNameFromMatches(matches));
   return [
-    { title: `${title} — CORE` },
+    { title },
     { name: "description", content: product?.description ?? "" },
     {
       tagName: "link",
       rel: "canonical",
       href: canonicalUrl(`/products/${params.handle ?? ""}`),
     },
-    { property: "og:title", content: `${title} — CORE` },
+    { property: "og:title", content: title },
     { property: "og:description", content: product?.description ?? "" },
     { property: "og:type", content: "product" },
     { property: "og:url", content: canonicalUrl(`/products/${params.handle ?? ""}`) },
@@ -42,8 +45,10 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   const storefrontClient = context.get(storefrontClientContext);
   // Read the variant selection from URL option params (F4: a no-JS shopper's
   // GET to `?Size=Large&Color=Green` resolves the selected variant server-side).
-  // Do not pass `optionNames: []` — an empty allow-list filters out every param.
-  const selectedOptions = getSelectedProductOptions(request);
+  // If passed, `allowedOptionNames: []` intentionally filters out every option.
+  const selectedOptions = getSelectedProductOptions({
+    searchParams: new URL(request.url).searchParams,
+  });
 
   const { data, errors } = await storefrontClient.graphql(PRODUCT_QUERY, {
     variables: { handle: params.handle, selectedOptions },
@@ -100,48 +105,25 @@ export default function ProductRoute({ loaderData }: Route.ComponentProps) {
 }
 
 function ProductViewedTracker({ product }: { product: ProductData }) {
-  const publishedProductHandleRef = useRef<string | undefined>(undefined);
-  const variant = product.selectedOrFirstAvailableVariant;
-  const productHandle = product.handle;
-  const productId = product.id;
-  const productTitle = product.title;
-  const productVendor = product.vendor;
-  const productPrice = variant?.price.amount ?? product.priceRange.minVariantPrice.amount;
-  const variantId = variant?.id ?? productId;
-  const variantTitle = variant?.title ?? productTitle;
-  const variantSku = variant?.sku ?? undefined;
-
   useEffect(() => {
-    if (publishedProductHandleRef.current === productHandle) return;
-
     const analytics = getAnalytics();
     if (!analytics) return;
-
+    const variant = product.selectedOrFirstAvailableVariant;
     analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
       products: [
         {
-          id: productId,
-          title: productTitle,
-          price: productPrice,
-          vendor: productVendor,
-          variantId,
-          variantTitle,
+          id: product.id,
+          title: product.title,
+          price: variant?.price.amount ?? product.priceRange.minVariantPrice.amount,
+          vendor: product.vendor,
+          variantId: variant?.id ?? product.id,
+          variantTitle: variant?.title ?? product.title,
           quantity: 1,
-          sku: variantSku,
+          sku: variant?.sku ?? undefined,
         },
       ],
     });
-    publishedProductHandleRef.current = productHandle;
-  }, [
-    productHandle,
-    productId,
-    productPrice,
-    productTitle,
-    productVendor,
-    variantId,
-    variantSku,
-    variantTitle,
-  ]);
+  }, [product.handle]);
 
   return null;
 }
@@ -157,6 +139,9 @@ function ProductPage({
   const addable = canAddToCart(product, options);
   // Stable add-to-cart submit button props (hydrogen-variant-form `register` API).
   const addToCartProps = register("addToCart", {});
+  // Hide the variant picker when there are no real options to choose (e.g. a
+  // single-variant product whose only option is "Title" / "Default Title").
+  const hasRealOptions = options.some((option) => option.values.length > 1);
 
   const price = selectedVariant?.price ?? product.priceRange.minVariantPrice;
   const compareAt = selectedVariant?.compareAtPrice ?? null;
@@ -257,67 +242,80 @@ function ProductPage({
             <p className="text-on-surface-secondary text-sm">{content.product.soldOut}</p>
           ) : null}
 
-          {/* Variant options */}
-          <div className="flex flex-col gap-4">
-            {options.map((option) => (
-              <fieldset key={option.name} className="flex flex-col gap-2">
-                <legend className="type-body-sm text-on-surface font-medium">{option.name}</legend>
-                <div className="flex flex-wrap gap-2">
-                  {option.values.map((value) =>
-                    value.handle && value.handle !== product.handle ? (
-                      // Cross-product value — navigates to the other product
-                      // (hydrogen-variant-form combined-listings rule).
-                      <Link
-                        key={value.name}
-                        to={variantUrl(value.handle, value.selectedOptions)}
-                        preventScrollReset
-                        className="option-pill no-underline"
-                      >
-                        {value.name}
-                      </Link>
-                    ) : value.exists ? (
-                      // Same-product value — a real GET `<Link>` to the option
-                      // URL so selection works without JS (the loader resolves
-                      // the variant server-side). Hydration enhances the same
-                      // element: the registered handler calls `selectOption`
-                      // and the provider's `onSelect` syncs the URL client-side
-                      // (hydrogen-variant-form GET-links rule). `aria-current`
-                      // marks the selected link (`aria-pressed` is invalid on a
-                      // link); `replace` + `preventScrollReset` match the
-                      // provider `onSelect` behavior.
-                      <Link
-                        key={value.name}
-                        to={variantUrl(value.handle, value.selectedOptions)}
-                        replace
-                        preventScrollReset
-                        aria-current={value.selected ? "true" : undefined}
-                        className="option-pill no-underline"
-                        {...register("optionValue", {
-                          optionName: option.name,
-                          value: value.name,
-                        })}
-                      >
-                        {value.name}
-                      </Link>
-                    ) : (
-                      // Non-existent combination — no valid option URL to
-                      // degrade to, so render a disabled `<button>` with
-                      // `aria-pressed` (hydrogen-variant-form).
-                      <button
-                        key={value.name}
-                        type="button"
-                        aria-pressed={value.selected}
-                        disabled
-                        className="option-pill"
-                      >
-                        {value.name}
-                      </button>
-                    ),
-                  )}
-                </div>
-              </fieldset>
-            ))}
-          </div>
+          {/* Variant options — hidden when the product has no real options
+              (e.g. a single-variant product). */}
+          {hasRealOptions ? (
+            <div className="flex flex-col gap-4">
+              {options.map((option) => (
+                <fieldset key={option.name} className="flex flex-col gap-2">
+                  <legend className="type-body-sm text-on-surface font-medium">
+                    {option.name}
+                  </legend>
+                  <div className="flex flex-wrap gap-2">
+                    {option.values.map((value) =>
+                      value.handle && value.handle !== product.handle ? (
+                        // Cross-product value — navigates to the other product
+                        // (hydrogen-variant-form combined-listings rule).
+                        <Link
+                          key={value.name}
+                          to={variantUrl(value.handle, value.selectedOptions)}
+                          preventScrollReset
+                          data-available={value.available ? "true" : "false"}
+                          className="option-pill no-underline"
+                        >
+                          {value.name}
+                          {!value.available ? (
+                            <span className="sr-only"> ({content.product.badge.soldOut})</span>
+                          ) : null}
+                        </Link>
+                      ) : value.exists ? (
+                        // Same-product value — a real GET `<Link>` to the option
+                        // URL so selection works without JS (the loader resolves
+                        // the variant server-side). Hydration enhances the same
+                        // element: the registered handler calls `selectOption`
+                        // and the provider's `onSelect` syncs the URL client-side
+                        // (hydrogen-variant-form GET-links rule). `aria-current`
+                        // marks the selected link (`aria-pressed` is invalid on a
+                        // link); `replace` + `preventScrollReset` match the
+                        // provider `onSelect` behavior.
+                        <Link
+                          key={value.name}
+                          to={variantUrl(value.handle, value.selectedOptions)}
+                          replace
+                          preventScrollReset
+                          aria-current={value.selected ? "true" : undefined}
+                          data-available={value.available ? "true" : "false"}
+                          className="option-pill no-underline"
+                          {...register("optionValue", {
+                            optionName: option.name,
+                            value: value.name,
+                          })}
+                        >
+                          {value.name}
+                          {!value.available ? (
+                            <span className="sr-only"> ({content.product.badge.soldOut})</span>
+                          ) : null}
+                        </Link>
+                      ) : (
+                        // Non-existent combination — no valid option URL to
+                        // degrade to, so render a disabled `<button>` with
+                        // `aria-pressed` (hydrogen-variant-form).
+                        <button
+                          key={value.name}
+                          type="button"
+                          aria-pressed={value.selected}
+                          disabled
+                          className="option-pill"
+                        >
+                          {value.name}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </fieldset>
+              ))}
+            </div>
+          ) : null}
 
           {/* Add to cart form — separate from variant selection (variant-form skill).
               `formProps({ afterSubmit: openCartDrawer })` opens the drawer once
@@ -336,7 +334,7 @@ function ProductPage({
             <button
               {...addToCartProps}
               disabled={!addable}
-              className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 items-center justify-center px-4 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
+              className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 items-center justify-center px-4 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition"
             >
               {addable
                 ? content.product.addToCart
@@ -405,4 +403,33 @@ function variantUrl(handle: string, selectedOptions: { name: string; value: stri
   }
   const search = params.toString();
   return search ? `/products/${handle}?${search}` : `/products/${handle}`;
+}
+
+/** Per-route error boundary (R1). A 404 from the loader renders the shared
+ *  themed catch-all UI; other statuses render status + data; non-route errors
+ *  fall back to a safe message. */
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  if (isRouteErrorResponse(error)) {
+    if (error.status === 404) return <NotFound />;
+    return (
+      <div className="max-w-page px-margin mx-auto py-16">
+        <h1 className="type-heading-xl mb-4">{error.status} — Something went wrong</h1>
+        <p className="type-body text-on-surface-secondary">
+          {typeof error.data === "string" && error.data
+            ? error.data
+            : "Something went wrong. Please try again."}
+        </p>
+      </div>
+    );
+  }
+  const message =
+    error instanceof Error && error.message
+      ? error.message
+      : "Something went wrong. Please try again.";
+  return (
+    <div className="max-w-page px-margin mx-auto py-16">
+      <h1 className="type-heading-xl mb-4">Something went wrong</h1>
+      <p className="type-body text-on-surface-secondary">{message}</p>
+    </div>
+  );
 }

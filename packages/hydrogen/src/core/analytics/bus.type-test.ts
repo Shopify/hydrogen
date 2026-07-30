@@ -1,7 +1,6 @@
 import { describe, it } from "vitest";
 
 import { AnalyticsEvent } from "./events";
-import { createStorefrontAnalytics } from "./bus";
 import type { StorefrontAnalytics } from "./types";
 
 declare const analytics: StorefrontAnalytics;
@@ -38,20 +37,5 @@ export function analyticsPublishTypes() {
       // @ts-expect-error custom destination subscriptions are temporarily unsupported
       subscribe("custom_marketing_banner_opened", () => {});
     },
-  });
-}
-
-export function analyticsOptionsTypes() {
-  createStorefrontAnalytics({
-    shop: null,
-    consent: {},
-    shopifyAnalytics: false,
-  });
-
-  createStorefrontAnalytics({
-    shop: null,
-    consent: {},
-    // @ts-expect-error shopifyAnalytics only accepts boolean
-    shopifyAnalytics: {},
   });
 }

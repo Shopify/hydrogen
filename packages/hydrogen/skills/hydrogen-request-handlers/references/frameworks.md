@@ -1,5 +1,13 @@
 # Framework Shapes
 
+## Contents
+
+- Single-Hook Shape
+- React Router 7
+- SolidStart
+- Unknown Framework Decision Tree
+- Gotchas
+
 This reference covers React Router, SvelteKit, Astro, SolidStart, and unknown server frameworks. For Next.js, read its dedicated reference.
 
 ## Single-Hook Shape
@@ -22,11 +30,12 @@ const cartHandlers = createCartServerHandlers();
 const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
 
 export async function handleRequest(request: Request, next: () => Promise<Response>) {
+  const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
+    buyerIp,
   });
-  const buyerIp = getBuyerIp(request.headers);
   const sessionManager = await createSessionManager(request);
   const storefrontClient = createStorefrontClient({
     type: "private",
@@ -85,11 +94,12 @@ const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ context, request }, next) => {
+    const buyerIp = getBuyerIp(request.headers);
     const requestContext = createShopifyRequestContext({
       request,
       i18n: { country: "US", language: "EN" },
+      buyerIp,
     });
-    const buyerIp = getBuyerIp(request.headers);
     const sessionManager = await createSessionManager(request);
     const storefrontClient = createStorefrontClient({
       type: "private",

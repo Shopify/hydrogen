@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
-import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
-import { createElement, type ReactNode } from "react";
+import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
+import { createElement, StrictMode, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type * as PredictiveSearchModule from "../core/predictive-search";
@@ -10,6 +10,7 @@ import {
   type PredictiveSearchStore,
 } from "../core/predictive-search";
 import { getEmptyPredictiveSearchResult } from "../core/predictive-search/search";
+import { assert } from "../core/test-utils";
 import {
   PredictiveSearchProvider,
   usePredictiveSearch,
@@ -29,6 +30,8 @@ type MockPredictiveSearchStore = PredictiveSearchStore & {
   setState(state: PredictiveSearchState): void;
 };
 
+const IMMEDIATE_DEBOUNCE_IN_MS = 0;
+
 let latestStore: MockPredictiveSearchStore;
 let subscribeListener: (() => void) | null = null;
 
@@ -42,9 +45,17 @@ function makeState(overrides: Partial<PredictiveSearchState> = {}): PredictiveSe
   };
 }
 
+function jsonResponse(body: unknown, init?: ResponseInit): Response {
+  return new Response(JSON.stringify(body), {
+    status: init?.status ?? 200,
+    headers: { "content-type": "application/json", ...init?.headers },
+  });
+}
+
 function createMockStore(): MockPredictiveSearchStore {
   let state = makeState();
   const store = {
+    connect: vi.fn(),
     getState: vi.fn(() => state),
     subscribe: vi.fn((fn: () => void) => {
       subscribeListener = fn;
@@ -114,13 +125,55 @@ describe("PredictiveSearchProvider", () => {
     expect(createPredictiveSearchStore).toHaveBeenCalledTimes(1);
   });
 
-  it("destroys the store when the provider unmounts", () => {
+  it("connects the store on mount and destroys it when the provider unmounts", () => {
     const { unmount } = render(createElement(PredictiveSearchProvider, null, null));
     const store = latestStore;
+
+    expect(store.connect).toHaveBeenCalledWith();
 
     unmount();
 
     expect(store.destroy).toHaveBeenCalledWith();
+
+    const [connectOrder] = vi.mocked(store.connect).mock.invocationCallOrder;
+    const [destroyOrder] = vi.mocked(store.destroy).mock.invocationCallOrder;
+    assert(connectOrder, "Expected provider to connect the predictive search store");
+    assert(destroyOrder, "Expected provider to destroy the predictive search store");
+    expect(connectOrder).toBeLessThan(destroyOrder);
+  });
+
+  it("keeps searches working after StrictMode effect replay", async () => {
+    const actual = await vi.importActual<typeof PredictiveSearchModule>(
+      "../core/predictive-search",
+    );
+    const fetch = vi.fn().mockResolvedValue(jsonResponse(getEmptyPredictiveSearchResult("snow")));
+
+    vi.mocked(createPredictiveSearchStore).mockImplementation(actual.createPredictiveSearchStore);
+
+    function SearchButton() {
+      const { search } = usePredictiveSearchActions();
+      return createElement("button", { onClick: () => void search("snow") }, "Search");
+    }
+
+    render(
+      createElement(
+        StrictMode,
+        null,
+        createElement(
+          PredictiveSearchProvider,
+          { fetch, debounceInMs: IMMEDIATE_DEBOUNCE_IN_MS },
+          createElement(SearchButton),
+        ),
+      ),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/predictive-search?q=snow",
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
   });
 
   it("destroys the old store when the predictive search endpoint changes", () => {

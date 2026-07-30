@@ -1,6 +1,5 @@
 "use client";
 
-import type { ConsentConfig, ShopAnalytics } from "@shopify/hydrogen";
 import { Suspense } from "react";
 import type { ReactNode } from "react";
 
@@ -12,15 +11,12 @@ import type { cartHandlers } from "@/lib/cart-handlers";
 /**
  * Client `CartProvider` wrapper + root analytics trackers
  * (`hydrogen-cart-ui` / `references/react.md` Next.js App Router section +
- * `hydrogen-analytics` / `references/react.md`). The root server layout reads
- * the cart seed and the analytics shop GID on the server, then passes them here.
+ * `hydrogen-analytics` / `references/react.md`). The server AppShell creates
+ * the cart seed promise, then passes it here.
  *
- * `cartData` is the full handler data envelope (`{cart, errors?}`). It is
- * `undefined` when the server cart read timed out or errored — **not**
- * `{cart: null}`. `{cart: null}` means "server confirmed no usable cart"
- * (suppresses the post-hydration `/api/cart` fetch); `undefined` means "no
- * bootstrap → fetch `/api/cart` after hydration" so the count self-corrects.
- * `CartProvider` accepts `undefined` (F1).
+ * `cartData` resolves to the full handler data envelope (`{cart, errors?}`).
+ * Passing the promise keeps the shell non-blocking; cart content that needs the
+ * full cart uses `useSuspenseCart()` inside a local Suspense boundary.
  *
  * `AnalyticsTracker` reads `usePathname` + `useSearchParams`; it stays inside
  * the `<Suspense>` boundary the layout wraps around `Providers` so the
@@ -30,13 +26,9 @@ export type CartData = Awaited<ReturnType<typeof cartHandlers.get>>["data"];
 
 export function Providers({
   cartData,
-  analyticsShop,
-  analyticsConsent,
   children,
 }: {
-  cartData?: CartData;
-  analyticsShop: ShopAnalytics;
-  analyticsConsent: ConsentConfig;
+  cartData?: Promise<CartData>;
   children: ReactNode;
 }) {
   return (
@@ -44,7 +36,7 @@ export function Providers({
       {/* Suspense scopes the `useSearchParams()` CSR bailout to the tracker,
           not the whole layout (hydrogen-analytics / references/react.md). */}
       <Suspense fallback={null}>
-        <AnalyticsTracker shop={analyticsShop} consent={analyticsConsent} />
+        <AnalyticsTracker />
       </Suspense>
       <CartAnalyticsTracker />
       {children}

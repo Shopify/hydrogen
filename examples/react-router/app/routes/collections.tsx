@@ -5,6 +5,7 @@ import { Breadcrumbs } from "~/components/Breadcrumbs";
 import { CollectionCard } from "~/components/CollectionCard";
 import { content } from "~/lib/content";
 import { COLLECTION_CARD_FRAGMENT } from "~/lib/fragments";
+import { shopNameFromMatches, shopTitle } from "~/lib/meta";
 import { canonicalUrl } from "~/lib/site";
 import { storefrontClientContext } from "~/lib/storefront-context";
 
@@ -28,12 +29,13 @@ const COLLECTIONS_QUERY = gql(
   [COLLECTION_CARD_FRAGMENT],
 );
 
-export const meta: MetaFunction = () => {
+export const meta: MetaFunction = ({ matches }) => {
+  const title = shopTitle("Collections", shopNameFromMatches(matches));
   return [
-    { title: "Collections — CORE" },
+    { title },
     { name: "description", content: "Browse all collections" },
     { tagName: "link", rel: "canonical", href: canonicalUrl("/collections") },
-    { property: "og:title", content: "Collections — CORE" },
+    { property: "og:title", content: title },
     { property: "og:type", content: "website" },
     { property: "og:url", content: canonicalUrl("/collections") },
   ];
@@ -88,7 +90,7 @@ export default function Collections({ loaderData }: Route.ComponentProps) {
             href={`/collections?after=${encodeURIComponent(pageInfo.endCursor ?? "")}`}
             className="rounded-button button-outline focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
-            Load more
+            {content.collection.loadMore}
           </a>
         </div>
       ) : null}

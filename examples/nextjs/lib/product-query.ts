@@ -80,6 +80,12 @@ export const PRODUCT_QUERY = gql(
           currencyCode
         }
       }
+      collections(first: 1) {
+        nodes {
+          handle
+          title
+        }
+      }
     }
   }
 `,
