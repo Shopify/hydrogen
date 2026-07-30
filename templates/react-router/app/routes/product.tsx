@@ -146,7 +146,9 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   if (!handle) throw new Response("Not Found", { status: 404 });
 
   const storefrontClient = context.get(storefrontClientContext);
-  const selectedOptions = getSelectedProductOptions(request);
+  const selectedOptions = getSelectedProductOptions({
+    searchParams: new URL(request.url).searchParams,
+  });
   const { data } = await storefrontClient.graphql(PRODUCT_QUERY, {
     variables: { handle, selectedOptions },
   });
@@ -290,7 +292,7 @@ function ProductGallery({
       >
         <div
           data-product-gallery-track
-          className="scrollbar-none flex snap-x snap-mandatory overflow-x-auto md:grid md:grid-cols-2 md:overflow-visible"
+          className="flex snap-x snap-mandatory scrollbar-none overflow-x-auto md:grid md:grid-cols-2 md:overflow-visible"
           tabIndex={0}
           onScroll={(event) => {
             const track = event.currentTarget;
@@ -640,7 +642,6 @@ function AddToCart({
             channel="hydrogen"
             disabled={!addable || pending}
             width="100%"
-            height="44px"
             borderRadius="8px"
           />
         </div>

@@ -51,7 +51,7 @@ Useful commands:
 | `pnpm build` | Build the production Next.js app. |
 | `pnpm start` | Start the production server after `pnpm build`. |
 | `pnpm lint` | Run ESLint. |
-| `pnpm typecheck` | Run `tsc --noEmit` and `gql.tada check`. |
+| `pnpm typecheck` | Run TypeScript and Hydrogen GraphQL checks. |
 
 ## Deploy to Vercel
 

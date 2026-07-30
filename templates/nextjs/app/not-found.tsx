@@ -2,6 +2,7 @@ import { handleShopifyRedirects } from "@shopify/hydrogen";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { routeTemplates } from "./lib/route-templates";
 import { getStorefrontClient } from "./lib/storefront";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ export default async function NotFound() {
     const result = await handleShopifyRedirects({
       request: new Request(url),
       storefrontClient: await getStorefrontClient(),
+      routeTemplates,
     });
     const location = result?.headers.get("location");
     if (location) redirect(location);

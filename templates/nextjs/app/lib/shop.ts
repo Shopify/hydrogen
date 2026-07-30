@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Store configuration.
 //
-// Mode is auto-detected per request (see `useMockShop` below):
+// Mode is auto-detected per request (see `shouldUseMockShop` below):
 //   • Real store — used automatically whenever a PRIVATE Storefront API token is
 //     present. On Vercel, set PRIVATE_STOREFRONT_API_TOKEN and PUBLIC_STORE_DOMAIN
 //     in project environment variables; for local real-store dev set them in `.env`.
@@ -28,9 +28,14 @@ function toShopGid(shopId: string): string {
 
 export const analyticsShop = {
   shopId: process.env.SHOP_ID ? toShopGid(process.env.SHOP_ID) : "gid://shopify/Shop/55145660472",
-  acceptedLanguage: "EN",
-  currency: "USD",
-  hydrogenSubchannelId: process.env.PUBLIC_STOREFRONT_ID || "1000014875",
+  channel: "hydrogen",
+  storefrontId: process.env.PUBLIC_STOREFRONT_ID || "1000014875",
+} as const;
+
+export const shop = {
+  shopId: analyticsShop.shopId,
+  storefrontId: analyticsShop.storefrontId,
+  myshopifyDomain: storefrontConfig.storeDomain,
 } as const;
 
 export const analyticsConsent = {
@@ -39,7 +44,7 @@ export const analyticsConsent = {
   language: "EN",
 } as const;
 
-export function useMockShop(
+export function shouldUseMockShop(
   env:
     | { MOCK_SHOP?: string; PRIVATE_STOREFRONT_API_TOKEN?: string }
     | Record<string, string | undefined> = process.env as Record<string, string | undefined>,
