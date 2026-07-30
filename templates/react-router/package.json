@@ -1,5 +1,5 @@
 {
-  "name": "@shopify/hydrogen-example-react-router",
+  "name": "@shopify/hydrogen-template-react-router",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,14 +11,14 @@
     "typecheck": "react-router typegen && tsc && hydrogen gql check --fail-on-warn"
   },
   "dependencies": {
-    "@shopify/hydrogen": "preview",
+    "@shopify/hydrogen": "workspace:*",
     "isbot": "^5.1.36",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-router": "7.14.0"
+    "react-router": "7.15.1"
   },
   "devDependencies": {
-    "@react-router/dev": "7.14.0",
+    "@react-router/dev": "7.15.1",
     "@shopify/cli": "3.94.3",
     "@shopify/mini-oxygen": "4.2.0",
     "@shopify/oxygen-workers-types": "^4.1.6",
@@ -34,5 +34,6 @@
   },
   "engines": {
     "node": "^22 || ^24"
-  }
+  },
+  "packageManager": "pnpm@10.33.0"
 }

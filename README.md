@@ -206,22 +206,20 @@ The [`examples/`](./examples) directory ports the same storefront across framewo
 
 | Example | Stack |
 | --- | --- |
-| `nextjs/` | Next.js 16 (App Router) |
-| `react-router/` | React Router v7, server loaders |
-| `hydrogen/` | Hydrogen + Oxygen‑style request context |
-| `poc/sveltekit/` | SvelteKit 2 + Svelte 5 (runes) |
-| `poc/astro/` | Astro 6 SSR |
-| `poc/solid-start/` | SolidStart v1 |
-| `poc/nuxt/` | Nuxt 3 |
-| `poc/nuxt-binding/` | Nuxt 3 on Hydrogen's Vue bindings |
+| `astro/` | Astro 6 SSR |
+| `hydrogen/` | Hydrogen + Oxygen-style request context |
+| `nuxt/` | Nuxt 3 |
+| `nuxt-binding/` | Nuxt 3 on Hydrogen's Vue bindings |
+| `solid-start/` | SolidStart v1 |
+| `sveltekit/` | SvelteKit 2 + Svelte 5 |
 
-> **These are proof‑of‑concepts, not starter kits.** They exist to validate the API across frameworks and surface integration friction — they aren't templates we version or distribute; the starters we do distribute live in [`templates/`](./templates). The canonical path to a real storefront is **agent skills + docs**, generating code tailored to your store, framework, and requirements.
+> **These are development examples, not starter kits.** They exist to validate the API across frameworks and surface integration friction. The starters we version and distribute live in [`templates/`](./templates). The canonical path to a real storefront is **agent skills + docs**, generating code tailored to your store, framework, and requirements.
 
 Run them all from the repo root:
 
 ```bash
 pnpm install
-pnpm dev        # every example in parallel
+pnpm dev        # every workspace example and template in parallel
 ```
 
 ## Repository layout
@@ -229,7 +227,7 @@ pnpm dev        # every example in parallel
 ```
 packages/hydrogen/   the @shopify/hydrogen toolkit + packaged skills
 templates/           deployable starter templates (React Router, Next.js)
-examples/            framework ports (proof-of-concepts)
+examples/            framework development examples
 scripts/             repository automation
 skills/              agent skills for working in this repo
 ```

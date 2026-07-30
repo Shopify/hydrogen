@@ -4,14 +4,12 @@ These projects are development examples for exercising Hydrogen across framework
 
 ## Example projects
 
-- `react-router/` — React Router v7 with server loaders and root middleware.
-- `nextjs/` — Next.js 16 App Router with server components and Cache Components.
 - `astro/` — Astro 6 with `@astrojs/node` SSR and frontmatter data fetching.
 - `nuxt/` — Nuxt 3 with server middleware and Vue pages.
 - `nuxt-binding/` — Nuxt 3 using Hydrogen's Vue binding layer.
 - `solid-start/` — SolidStart v1 with `query`, `createAsync`, and signal-driven product state.
 - `sveltekit/` — SvelteKit 2 and Svelte 5 with server `load`.
-- `hydrogen/` — mirror of the Hydrogen Skeleton template, kept for parity with Hydrogen classic.
+- `hydrogen/` — mirror of the Hydrogen Skeleton template, kept for parity with Hydrogen classic and its E2E suite.
 
 Shared infrastructure:
 
@@ -29,7 +27,7 @@ The framework examples are built from the `core/` design source. They exist to a
 
 From the repository root:
 
-- `pnpm dev` — run all workspace examples in parallel.
+- `pnpm dev` — run all workspace examples and templates in parallel.
 - `pnpm dev:hub` — run the examples with automatically allocated ports and open the browser hub with status, previews, and logs.
 - `pnpm --filter @shopify/hydrogen-example-<name> dev` — run one example.
 - `pnpm https:setup` then `pnpm --filter @shopify/hydrogen-example-<name> https:dev` — run an account-enabled example on `https://localtest.me:5173` when it provides an `https:dev` script. The Hydrogen example uses `--customer-account-push` instead of local certificates.

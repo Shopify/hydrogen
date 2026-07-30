@@ -24,20 +24,13 @@
     "scripts/**",
     "!scripts/copy-hydrogen-to-preview*.ts",
     "examples/**",
-    "!examples/nextjs/next.config.ts",
     "!examples/shared/local-cdn-assets-plugin/**/*.ts",
-    "!examples/react-router/app/lib/storefront.ts",
-    "!examples/react-router/app/routes/account.tsx",
     "examples/hydrogen/**",
     "!examples/hydrogen/app/components/PaginatedResourceSection.tsx",
     "!examples/hydrogen/app/lib/pagination.ts",
     "!examples/hydrogen/e2e/fixtures/index.ts",
     "!examples/hydrogen/e2e/fixtures/test-secrets.ts",
     "!examples/hydrogen/hydrate-e2e-env-secrets.ts",
-    "!examples/nextjs/app/**/*.{ts,tsx}",
-    "!examples/nextjs/lib/**/*.{ts,tsx}",
-    "!examples/nextjs/components/**/*.{ts,tsx}",
-    "!examples/nextjs/proxy.ts",
     "**/vendor/**",
     "**/public/*",
     "**/static/*",
@@ -97,12 +90,16 @@
         "examples/nuxt/pages/blogs/news/*.vue",
         "examples/nuxt/pages/index.vue",
         "examples/nuxt/pages/products/*.vue",
-        "examples/react-router/app/lib/collection.ts",
-        "examples/react-router/app/lib/money.ts",
-        "examples/react-router/app/lib/search.ts",
-        "examples/nextjs/lib/filters.tsx",
-        "examples/nextjs/app/collections/**/page.tsx",
-        "examples/nextjs/app/search/page.tsx",
+        "templates/react-router/app/components/AnalyticsTrackers.tsx",
+        "templates/react-router/app/components/ConsentBanner.tsx",
+        "templates/react-router/app/lib/analytics.ts",
+        "templates/react-router/app/lib/collection.ts",
+        "templates/react-router/app/lib/money.ts",
+        "templates/react-router/app/lib/search.ts",
+        "templates/react-router/server.ts",
+        "templates/nextjs/lib/filters.tsx",
+        "templates/nextjs/app/collections/**/page.tsx",
+        "templates/nextjs/app/search/page.tsx",
         "examples/shared/private-env.ts",
         "packages/hydrogen/src/cli/setup.ts",
         "packages/hydrogen/src/core/analytics/bus.ts",
@@ -144,15 +141,18 @@
         "examples/nuxt/components/CollectionBrowserContent.vue",
         "examples/nuxt/error.vue",
         "examples/nuxt/pages/collections/*.vue",
-        "examples/react-router/app/components/Cart.tsx",
-        "examples/react-router/app/routes/collection.tsx",
-        "examples/react-router/app/routes/product.tsx",
-        "examples/react-router/app/routes/search.tsx",
-        "examples/nextjs/components/CollectionBrowser.tsx",
-        "examples/nextjs/components/ProductDetails.tsx",
-        "examples/nextjs/components/ProductCard.tsx",
-        "examples/nextjs/components/CartLineItem.tsx",
-        "examples/nextjs/app/search/page.tsx",
+        "templates/react-router/app/components/CartDrawer.tsx",
+        "templates/react-router/app/components/CollectionBrowse.tsx",
+        "templates/react-router/app/components/CollectionCard.tsx",
+        "templates/react-router/app/components/ProductCard.tsx",
+        "templates/react-router/app/routes/collection.tsx",
+        "templates/react-router/app/routes/product.tsx",
+        "templates/react-router/app/routes/search.tsx",
+        "templates/nextjs/components/CollectionBrowser.tsx",
+        "templates/nextjs/components/ProductDetails.tsx",
+        "templates/nextjs/components/ProductCard.tsx",
+        "templates/nextjs/components/CartLineItem.tsx",
+        "templates/nextjs/app/search/page.tsx",
         "packages/hydrogen/src/client/client.ts",
         "packages/hydrogen/src/core/analytics/cart-tracker.ts",
         "packages/hydrogen/src/core/analytics/cdn/shopify-analytics.ts",
@@ -175,8 +175,9 @@
     },
     {
       "files": [
-        "examples/nextjs/components/ProductViewedTracker.tsx",
-        "examples/nextjs/components/CartViewedTracker.tsx"
+        "templates/nextjs/components/ProductViewedTracker.tsx",
+        "templates/nextjs/components/CartViewedTracker.tsx",
+        "templates/react-router/app/components/AnalyticsTrackers.tsx"
       ],
       "rules": {
         // Analytics view trackers intentionally key their effect on route
@@ -185,6 +186,13 @@
         // (hydrogen-analytics/references/react.md). The skill pattern
         // under-depends by design.
         "react-hooks/exhaustive-deps": "off"
+      }
+    },
+    {
+      "files": ["templates/react-router/app/routes/*.tsx"],
+      "rules": {
+        "no-empty-pattern": "off",
+        "unicorn/consistent-function-scoping": "off"
       }
     },
     {
