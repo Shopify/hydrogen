@@ -33,7 +33,6 @@
     "format:check": "oxfmt --check",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm run build:pkgs && changeset publish --tag preview",
     "test": "pnpm run test:scripts && turbo run test",
     "test:scripts": "node --test scripts/*.test.ts",
     "test:benchmark-harness": "tsc -p scripts/storefront-benchmark-harness/tsconfig.json && node --test scripts/storefront-benchmark-harness/*.test.ts",

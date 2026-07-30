@@ -35,6 +35,11 @@ jobs:
       - name: Format check
         run: pnpm run format:check
 
+      - name: Ensure prerelease mode
+        # Catch a deleted or exited pre.json at PR time; without it the
+        # release job publishes a plain version to the latest dist-tag
+        run: jq -e '.mode == "pre" and .tag == "preview"' .changeset/pre.json
+
       - name: Lint
         run: pnpm run lint:ci
 
