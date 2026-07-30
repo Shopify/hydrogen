@@ -53,10 +53,13 @@ Do not hard block just because no reference file exists. Continue when the app h
 
 ## Use Standard Environment Names
 
-Use canonical environment variable names throughout the app. For Storefront API variables, see `hydrogen-storefront-client` for the canonical list.
+Use these canonical environment variable names throughout the app (kept in sync with `hydrogen-storefront-client`):
 
-Also documented here:
-
+- `PUBLIC_STORE_DOMAIN` for the Shopify store domain.
+- `PUBLIC_STOREFRONT_API_TOKEN` for the public Storefront API token.
+- `PRIVATE_STOREFRONT_API_TOKEN` for the private Storefront API token.
+- `PUBLIC_STOREFRONT_ID` for analytics `storefrontId`; use `"0"` when the app does not have a storefront ID.
+- `PUBLIC_CHECKOUT_DOMAIN` for app-level checkout-domain configuration such as CSP setup. Checkout links should come from cart data, usually `cart.checkoutUrl`.
 - `SHOP_ID` for the numeric Shopify shop ID string. Required by Shopify runtime scripts (`ShopifyScripts`) for every storefront, and by Customer Account API.
 - `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID` for Customer Account OAuth.
 - `CUSTOMER_ACCOUNT_SESSION_SECRET` for encrypted cookie examples. Prefer opaque server-side sessions in production apps.
