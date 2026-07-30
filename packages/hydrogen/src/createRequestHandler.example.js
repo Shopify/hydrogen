@@ -44,12 +44,15 @@ class AppSession {
   isPending = false;
 
   static async init(request, secrets) {
+    const isProduction = process.env.NODE_ENV === 'production';
+
     const storage = createCookieSessionStorage({
       cookie: {
         name: 'session',
         httpOnly: true,
         path: '/',
         sameSite: 'lax',
+        secure: isProduction,
         secrets,
       },
     });
