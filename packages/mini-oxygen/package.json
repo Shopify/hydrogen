@@ -56,7 +56,7 @@
     "source-map-support": "^0.5.21",
     "stack-trace": "^1.0.0-pre2",
     "undici": "7.24.0",
-    "ws": "^8.18.0"
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@shopify/oxygen-workers-types": "^4.1.6",
