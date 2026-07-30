@@ -2,7 +2,6 @@
 
 import {
   AnalyticsEvent,
-  createStorefrontAnalytics,
   type ConsentConfig,
   type ShopAnalytics,
   type StorefrontAnalytics,
@@ -10,13 +9,11 @@ import {
 
 export { AnalyticsEvent };
 
-let bus: StorefrontAnalytics | null = null;
-let configuredConsent: ConsentConfig = { mode: "custom-banner" };
 let configuredShop: ShopAnalytics | null = null;
 
 export function configureAnalytics(shop: ShopAnalytics, consent: ConsentConfig) {
   configuredShop = shop;
-  configuredConsent = consent;
+  void consent;
 }
 
 export function getAnalyticsShop() {
@@ -25,10 +22,5 @@ export function getAnalyticsShop() {
 
 export function getAnalytics() {
   if (typeof window === "undefined") return null;
-  if (!configuredShop) return null;
-  bus ??= createStorefrontAnalytics({
-    shop: configuredShop,
-    consent: configuredConsent,
-  });
-  return bus;
+  return (window.Shopify?.analytics as StorefrontAnalytics | undefined) ?? null;
 }

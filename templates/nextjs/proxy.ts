@@ -1,18 +1,19 @@
 import {
+  createShopifyRequestContext,
   createStorefrontClient,
-  createStorefrontRequestContext,
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { cartHandlers } from "./app/lib/cart-handlers";
+import { createRequestSessionManager } from "./app/lib/session";
 import {
   DEVELOPMENT_BUYER_IP,
   getBuyerIp,
   getPrivateStorefrontToken,
   getStoreDomain,
   storefrontConfig,
-  useMockShop,
+  shouldUseMockShop,
 } from "./app/lib/shop";
 
 function getMockBuyerIp(headers: Pick<Headers, "get">): string {
@@ -24,29 +25,29 @@ function getMockBuyerIp(headers: Pick<Headers, "get">): string {
 }
 
 export async function proxy(request: NextRequest) {
-  const requestContext = createStorefrontRequestContext(request);
+  const usingMockShop = shouldUseMockShop(process.env);
+  const buyerIp = usingMockShop ? getMockBuyerIp(request.headers) : getBuyerIp(request.headers);
+  const requestContext = createShopifyRequestContext({
+    request,
+    i18n: storefrontConfig.i18n,
+    buyerIp,
+  });
+  const storeDomain = usingMockShop ? "mock.shop" : getStoreDomain(process.env);
+  const privateStorefrontToken = usingMockShop ? "mock-private-token" : getPrivateStorefrontToken();
   const storefrontClient = createStorefrontClient({
     type: "private",
-    config: useMockShop(process.env)
-      ? {
-          storeDomain: "mock.shop",
-          i18n: storefrontConfig.i18n,
-          privateStorefrontToken: "mock-shop",
-          buyerIp: getMockBuyerIp(request.headers),
-          requestContext,
-          fetch: (_input, init) => fetch("https://mock.shop/api", init),
-        }
-      : {
-          storeDomain: getStoreDomain(process.env),
-          i18n: storefrontConfig.i18n,
-          privateStorefrontToken: getPrivateStorefrontToken(),
-          buyerIp: getBuyerIp(request.headers),
-          requestContext,
-        },
+    requestContext,
+    config: {
+      storeDomain,
+      privateStorefrontToken,
+      buyerIp,
+    },
   });
 
   const shopifyRoute = await handleShopifyRoutes({
     request,
+    requestContext,
+    sessionManager: createRequestSessionManager(request),
     storefrontClient,
     handlers: [cartHandlers],
   });

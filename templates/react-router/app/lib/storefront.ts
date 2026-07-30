@@ -1,8 +1,8 @@
 import {
+  createShopifyRequestContext,
   createStorefrontClient,
-  createStorefrontRequestContext,
   type RequestScopedPrivateStorefrontClient,
-  type StorefrontRequestContext,
+  type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import { createContext } from "react-router";
 
@@ -13,7 +13,7 @@ import {
   getPrivateStorefrontToken,
   getStoreDomain,
   storefrontConfig,
-  useMockShop,
+  shouldUseMockShop,
 } from "~/lib/shop";
 
 function getMockBuyerIp(headers: Pick<Headers, "get">): string {
@@ -28,33 +28,29 @@ export function createRequestStorefrontClient(
   request: Request,
   env: Env,
 ): RequestScopedPrivateStorefrontClient {
-  const requestContext = createStorefrontRequestContext(request);
+  const usingMockShop = shouldUseMockShop(env);
+  const buyerIp = usingMockShop ? getMockBuyerIp(request.headers) : getBuyerIp(request.headers);
+  const requestContext = createShopifyRequestContext({
+    request,
+    i18n: storefrontConfig.i18n,
+    buyerIp,
+  });
 
-  if (useMockShop(env)) {
-    return createStorefrontClient({
-      type: "private",
-      config: {
-        storeDomain: "mock.shop",
-        i18n: storefrontConfig.i18n,
-        privateStorefrontToken: "mock-shop",
-        buyerIp: getMockBuyerIp(request.headers),
-        requestContext,
-        fetch: (_input, init) => fetch("https://mock.shop/api", init),
-      },
-    });
-  }
+  const storeDomain = usingMockShop ? "mock.shop" : getStoreDomain(env);
+  const privateStorefrontToken = usingMockShop
+    ? "mock-private-token"
+    : getPrivateStorefrontToken(env);
 
   return createStorefrontClient({
     type: "private",
+    requestContext,
     config: {
-      storeDomain: getStoreDomain(env),
-      i18n: storefrontConfig.i18n,
-      privateStorefrontToken: getPrivateStorefrontToken(env),
-      buyerIp: getBuyerIp(request.headers),
-      requestContext,
+      storeDomain,
+      privateStorefrontToken,
+      buyerIp,
     },
   });
 }
 
 export const storefrontClientContext = createContext<RequestScopedPrivateStorefrontClient>();
-export const storefrontRequestContext = createContext<StorefrontRequestContext>();
+export const storefrontRequestContext = createContext<ShopifyRequestContext>();

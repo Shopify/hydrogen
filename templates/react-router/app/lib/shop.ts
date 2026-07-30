@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Store configuration.
 //
-// Mode is auto-detected per request (see `useMockShop` below):
+// Mode is auto-detected per request (see `shouldUseMockShop` below):
 //   • Real store — used automatically whenever a PRIVATE Storefront API token is
 //     present. On Oxygen, a linked storefront injects PRIVATE_STOREFRONT_API_TOKEN
 //     and PUBLIC_STORE_DOMAIN; for local real-store dev set them in `.env`.
@@ -21,7 +21,9 @@ export const storefrontConfig = {
 // Real store iff a private Storefront API token is available; otherwise the
 // tokenless mock.shop demo. MOCK_SHOP=1 forces mock (used by the gate + as the
 // zero-config default).
-export function useMockShop(env: Pick<Env, "MOCK_SHOP" | "PRIVATE_STOREFRONT_API_TOKEN">): boolean {
+export function shouldUseMockShop(
+  env: Pick<Env, "MOCK_SHOP" | "PRIVATE_STOREFRONT_API_TOKEN">,
+): boolean {
   return env.MOCK_SHOP === "1" || !env.PRIVATE_STOREFRONT_API_TOKEN;
 }
 
@@ -34,9 +36,14 @@ export function getStoreDomain(env: Pick<Env, "PUBLIC_STORE_DOMAIN">): string {
 // Analytics shop identity. `shopId` is a real Shopify Shop GID.
 export const analyticsShop = {
   shopId: "gid://shopify/Shop/55145660472", // ← replace with your Shop GID
-  acceptedLanguage: "EN",
-  currency: "USD",
-  hydrogenSubchannelId: "1000014875", // ← replace with your storefront id
+  channel: "hydrogen",
+  storefrontId: "1000014875", // ← replace with your storefront id
+} as const;
+
+export const shop = {
+  shopId: analyticsShop.shopId,
+  storefrontId: analyticsShop.storefrontId,
+  myshopifyDomain: storefrontConfig.storeDomain,
 } as const;
 
 // Consent config. This example renders its own (CORE) consent banner, so the

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit && gql.tada check"
+    "typecheck": "tsc --noEmit && hydrogen gql check --fail-on-warn"
   },
   "dependencies": {
     "@shopify/hydrogen": "preview",
