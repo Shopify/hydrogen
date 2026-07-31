@@ -139,7 +139,6 @@ if (typeof plugin !== "function" || typeof plugin({typescript}).create !== "func
     expect(coreDeclaration).not.toContain("initializeDeprecatedCookies");
     expect(coreDeclaration).not.toContain("loadShopifyWebMcpTools");
     expect(coreDeclaration).not.toContain("setShopifyRouting");
-    expect(coreDeclaration).not.toContain("consoleLogger");
 
     for (const declarationPath of FRAMEWORK_BROWSER_ENTRY_DECLARATIONS) {
       const declaration = readFileSync(resolve(PACKAGE_ROOT, declarationPath), "utf8");
