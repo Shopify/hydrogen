@@ -75,12 +75,16 @@ export interface StorefrontCartSummary {
 	cost: CartCost;
 	lines: StorefrontCartLinesConnection;
 	discountCodes: CartDiscountCode[];
+	attributes?: Array<{
+		key: string;
+		value: string;
+	}>;
 }
 export type UpdateCartEventTargetMeta = {
 	type: "shopify:cart:lines-update";
 	action: CartUpdateAction;
 } | {
-	type: "shopify:cart:note-update" | "shopify:cart:discount-update" | "shopify:cart:error";
+	type: "shopify:cart:note-update" | "shopify:cart:attributes-update" | "shopify:cart:discount-update" | "shopify:cart:error";
 };
 export interface EventTargetConfigurationMeta {
 	/**
@@ -115,6 +119,10 @@ export interface UpdateCartPayload {
 	lines?: CartLineInput[];
 	note?: string;
 	discountCodes?: string[];
+	attributes?: Array<{
+		key: string;
+		value: string;
+	}>;
 }
 export interface UpdateCartResult {
 	cart: StorefrontCartSummary;

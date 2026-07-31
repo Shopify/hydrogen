@@ -475,6 +475,7 @@ describe("useCartForm", () => {
           pending: {
             lines: new Set(["line-1"]),
             note: false,
+            attributes: false,
             discountCodes: new Set(),
           },
         }),
@@ -505,6 +506,7 @@ describe("useCartForm", () => {
           pending: {
             lines: new Set(["line-1"]),
             note: false,
+            attributes: false,
             discountCodes: new Set(),
           },
         }),

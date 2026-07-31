@@ -81,12 +81,13 @@ export interface CartNetworkEntry {
 
 export interface Attribute {
   key: string;
-  value: string;
+  value: string | null;
 }
 
 export interface CartPending {
   lines: Set<string>;
   note: boolean;
+  attributes: boolean;
   discountCodes: Set<string>;
 }
 
@@ -94,12 +95,14 @@ export interface CartErrorState {
   cart: CartErrorGroup;
   lines: Map<string, CartErrorGroup>;
   note: CartErrorGroup;
+  attributes: Map<string, CartErrorGroup>;
   discountCodes: Map<string, CartErrorGroup>;
   network: CartNetworkEntry[];
   lastUpdatedAt: number;
   cartUpdatedAt: number;
   linesUpdatedAt: number;
   noteUpdatedAt: number;
+  attributesUpdatedAt: number;
   discountCodesUpdatedAt: number;
   networkUpdatedAt: number;
 }
@@ -110,6 +113,7 @@ export interface CartData {
   totalQuantity: number;
   cost: CartCost;
   note?: string | null;
+  attributes: Attribute[];
   lines: CartLineConnection;
   discountCodes: DiscountCode[];
   [key: string]: unknown;
@@ -125,7 +129,7 @@ export interface CartState<TData extends CartData = CartData> {
 }
 
 export function createEmptyPending(): CartPending {
-  return { lines: new Set(), note: false, discountCodes: new Set() };
+  return { lines: new Set(), note: false, attributes: false, discountCodes: new Set() };
 }
 
 export function createEmptyErrorGroup(): CartErrorGroup {
@@ -137,12 +141,14 @@ export function createEmptyCartErrors(): CartErrorState {
     cart: createEmptyErrorGroup(),
     lines: new Map(),
     note: createEmptyErrorGroup(),
+    attributes: new Map(),
     discountCodes: new Map(),
     network: [],
     lastUpdatedAt: 0,
     cartUpdatedAt: 0,
     linesUpdatedAt: 0,
     noteUpdatedAt: 0,
+    attributesUpdatedAt: 0,
     discountCodesUpdatedAt: 0,
     networkUpdatedAt: 0,
   };
@@ -158,6 +164,7 @@ export const EMPTY_CART_DATA: CartData = Object.freeze({
     checkoutChargeAmount: Object.freeze({ amount: "0", currencyCode: "" }),
   }),
   note: "",
+  attributes: [] as Attribute[],
   lines: Object.freeze({ nodes: [] as CartLine[] }),
   discountCodes: [] as DiscountCode[],
 });
