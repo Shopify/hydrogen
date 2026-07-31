@@ -104,7 +104,7 @@ Use the route-handler form for browser-backed autocomplete. Use `makePredictiveS
 - Keep debounce in the client store; do not add ad-hoc debounce in components unless there is a separate UX reason.
 - Prefer additive fragments over full query overrides.
 - Return empty UI for blank terms rather than querying Storefront API.
-- The modal is a native `<dialog>` opened with `showModal()`. For backdrop-dismiss and `closedby`, follow `hydrogen-cart-drawer`'s `references/accessibility.md` — do not reimplement (use the pointerdown guard from that reference, not a bare click handler).
+- The modal is a native `<dialog>` opened with `showModal()`. For backdrop-dismiss, use `closedby="any"` where supported. For browsers without `closedby` support, use a pointerdown-plus-click guard: record whether `pointerdown` started on the dialog backdrop, then close only when the following `click` also targets the dialog. Do not close on a plain `click.self` alone — a drag that starts inside and ends on the backdrop can produce an accidental close.
 
 ## Verify
 
