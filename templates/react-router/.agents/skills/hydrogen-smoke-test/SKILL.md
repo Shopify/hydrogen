@@ -65,7 +65,7 @@ Analytics:
 - [ ] Product/collection/search/cart view events fire once per route data change
 - [ ] trackCartAnalytics(cart) runs when confirmed cart data changes, and the cart query includes updatedAt
 - [ ] No browser module reads private env variables
-- [ ] Production does not override canTrack to always true
+- [ ] Production does not bypass Customer Privacy consent gating (no forced-always-true consent checks)
 
 Markets and money:
 - [ ] Market-aware Storefront API queries declare $country, $language, and @inContext
@@ -161,7 +161,7 @@ Expected: framework 404 unless Shopify has a matching URL redirect.
 
 - Page view fires on initial load and client navigations.
 - Product/collection/search/cart view events fire once per route data change.
-- `trackCartAnalytics(cart)` runs when confirmed cart data changes, and the cart query includes `updatedAt`.
+- Cart tracking is wired once via `trackCartAnalytics(cartStore)` (React: `useCartAnalytics()`), cart delta events fire on confirmed cart data changes, and the cart query includes `updatedAt`.
 - No browser module reads private env variables.
 - Analytics destinations only receive events after Shopify Customer Privacy allows analytics processing.
 

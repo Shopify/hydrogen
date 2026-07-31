@@ -45,7 +45,7 @@ export { trackCartAnalytics };
 
 Read `shop` and `i18n` values on the server and pass them to `ShopifyScripts`. Do not read env APIs in browser modules.
 
-`ShopAnalytics.channel` is required. Use `channel: "hydrogen"` with `hydrogenSubchannelId` for Hydrogen storefronts, or `channel: "headless"` without `hydrogenSubchannelId` for Headless storefronts.
+`ShopAnalytics.channel` is required. Hydrogen storefronts use `channel: "hydrogen"` (the default), which includes the `storefrontId` from the ShopifyScripts `shop` config in analytics payloads. Headless storefronts pass `channel: "headless"` in the ShopifyScripts `analytics` config — the analytics payload then omits `storefrontId`, but `shop.storefrontId` itself is still required (pass `"0"` when the app has no storefront ID).
 
 ## Publish Events
 
@@ -56,7 +56,7 @@ Publish these from route/page boundaries:
 - `COLLECTION_VIEWED` when collection data is resolved.
 - `SEARCH_VIEWED` when a non-empty search term has results metadata.
 - `CART_VIEWED` when the full cart page or cart drawer is viewed.
-- `trackCartAnalytics(cart)` whenever confirmed cart state resolves; do not manually publish cart delta events.
+- Wire cart tracking once with `trackCartAnalytics(cartStore)` — React apps use the `useCartAnalytics()` hook from `@shopify/hydrogen/react` and Vue apps use the `useCartAnalytics()` composable from `@shopify/hydrogen/vue`; both call it with the provider's cart store and clean up on unmount. The tracker subscribes to the cart store itself, publishes cart delta events on confirmed cart changes, and returns an unsubscribe function. Do not manually publish cart delta events.
 
 The bus defaults `shop` from the top-level `shop` config passed to ShopifyScripts; pass `shop` in an event payload only when intentionally overriding that configured value. Shopify analytics reads language and currency from `window.Shopify.locale` and `window.Shopify.currency.active`.
 
@@ -75,6 +75,6 @@ Required product analytics fields include Shopify Product GID, ProductVariant GI
 
 - Page view fires on initial load and client navigations.
 - Product, collection, search, and cart view events fire once per relevant route data change.
-- Confirmed cart data changes call `trackCartAnalytics(cart)` and the cart query includes `updatedAt`.
+- Cart tracking is wired via `trackCartAnalytics(cartStore)` (React/Vue bindings: `useCartAnalytics()`), and the cart query includes `updatedAt`.
 - Consent-denied visitors do not deliver destination events.
 - No browser module reads private or server-only env variables.

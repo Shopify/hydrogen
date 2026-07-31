@@ -75,4 +75,4 @@ Avoid publishing view events before server data is available.
 
 ## Cart Updates
 
-Watch the cart store's confirmed cart data and call `trackCartAnalytics(cart)`. Let the utility publish derived cart delta events through the global analytics bus.
+Call the `useCartAnalytics()` composable from `@shopify/hydrogen/vue` in a component rendered inside `CartProvider`. It subscribes the provider's cart store on mount, publishes derived cart delta events through the global analytics bus on confirmed cart changes, and unsubscribes when the component is disposed. If the app owns its cart store directly (`createCartStore` from `@shopify/hydrogen`), call `trackCartAnalytics(store)` once instead; it returns an unsubscribe function.

@@ -20,6 +20,7 @@ import {
   type CreateCartStoreOptions,
   type CartStore,
 } from "../core/cart/cart";
+import { trackCartAnalytics } from "../core/analytics/cart-tracker";
 import { createCartFormRegister, type CartFormRegister } from "../core/cart/form";
 import type { CartDataFromHandlers } from "../core/cart/server-handlers";
 import type { CartData, CartState } from "../core/cart/state";
@@ -129,6 +130,17 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
   const store = useCartStore();
   const resolve = selector ?? ((state: CartState<TData>) => state as unknown as S);
   return useCartSelector(store, resolve, isEqual) as Readonly<ShallowRef<S>>;
+}
+
+export function useCartAnalytics(): void {
+  const store = useCartStore();
+  let stopTracking: (() => void) | undefined;
+
+  onMounted(() => {
+    stopTracking = trackCartAnalytics(store);
+  });
+
+  onScopeDispose(() => stopTracking?.());
 }
 
 /**
