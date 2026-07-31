@@ -56,6 +56,12 @@ Hydrogen uses an automated release system built on Changesets, GitHub Actions (`
      - Commit and push to main branch **(MANUAL)**
      - Changes are served via https://hydrogen.shopify.dev/changelog.json **(AUTOMATIC)**
 
+5. **Post-Release: Blog Posts (manual step, major releases only)**
+   - For major CalVer releases (X.Y.0), publish release communications **(MANUAL)**
+   - Two destinations: `shopify.dev/changelog` and `hydrogen.shopify.dev/updates`
+   - Managed via hydrogen-hub Shopify admin
+   - See `hydrogen-release-comms` skill for writing guidelines and examples
+
    **How `h2 upgrade` works:**
    - Fetches changelog.json from hydrogen.shopify.dev (proxies to the raw content of this file on the `main` branch in the Hydrogen repo)
    - Compares user's current version against available versions
@@ -116,6 +122,7 @@ Hydrogen uses an automated release system built on Changesets, GitHub Actions (`
 2. **Maintainer Actions — Regular Releases**
    - **Merge Version PR**: Review and merge the auto-generated open CI release PR to trigger npm publication
    - **Update changelog.json**: After npm release, manually update this file to enable `h2 upgrade` command
+   - **Publish blog posts** (major releases only): Write and publish to shopify.dev/changelog and hydrogen.shopify.dev/updates via hydrogen-hub admin — see `hydrogen-release-comms` skill
    - **Monitor releases**: Verify packages published correctly and Slack notifications sent
 
 3. **Maintainer Actions — CLI Releases**
