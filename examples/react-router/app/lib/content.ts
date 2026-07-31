@@ -40,6 +40,12 @@ export const content = {
     itemRemoved: "Item removed from cart",
     updated: "Cart updated",
     updateError: "Could not update cart. Please try again.",
+    giftMessage: {
+      label: "Gift message",
+      placeholder: "Add a message for the recipient",
+      save: "Save message",
+      saving: "Saving…",
+    },
     iconLabel: {
       one: "Cart (1 item)",
       other: "Cart ({{ count }} items)",
