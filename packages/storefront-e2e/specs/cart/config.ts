@@ -16,7 +16,7 @@ const PRODUCT_VARIANT_COUNT = 10;
 
 const CART_ENABLED_PRODUCTS_QUERY = gql(`
   query CartEnabledProducts($count: Int!, $variantCount: Int!) {
-    products(first: $count, query: "availableForSale:true") {
+    products(first: $count, query: "available_for_sale:true") {
       nodes {
         handle
         requiresSellingPlan
