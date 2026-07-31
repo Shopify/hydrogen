@@ -42,7 +42,7 @@ log.error("cart initial load failed", { error });
 
 ### `HydrogenLogger`
 
-A pino-compatible structural interface with six level methods:
+A minimal structural interface with six level methods:
 
 ```ts
 interface HydrogenLogger {
@@ -67,31 +67,11 @@ configureLogging({ logger?, level? });
 - Global, called once at startup (app entry on the browser, module init on the server).
 - `logger` — any `HydrogenLogger`; defaults to the built-in console sink.
 - `level` — minimum severity forwarded; defaults to `"info"`.
-- Last-call-wins: reconfiguring warns and applies the new options.
+- Last-call-wins: reconfiguring applies the new options.
 
 ### Default console sink
 
 Formats entries as `[hydrogen:<level>:<scope>] <message>`, followed by `context.error` (if present) and a trailing object of remaining context fields.
-
-### Pino adapter
-
-A pino instance is directly assignable to `HydrogenLogger` — extra args are `util.format`-ed. For fully-structured output, wrap it so context is passed first:
-
-```ts
-import pino from "pino";
-const pinoInstance = pino();
-
-configureLogging({
-  logger: {
-    error: (msg, ctx) => pinoInstance.error(ctx, msg),
-    warn:  (msg, ctx) => pinoInstance.warn(ctx, msg),
-    info:  (msg, ctx) => pinoInstance.info(ctx, msg),
-    debug: (msg, ctx) => pinoInstance.debug(ctx, msg),
-    trace: (msg, ctx) => pinoInstance.trace(ctx, msg),
-    fatal: (msg, ctx) => pinoInstance.fatal(ctx, msg),
-  },
-});
-```
 
 ## Serialized inline scripts — documented exception
 

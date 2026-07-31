@@ -7,7 +7,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts";
-import { assert } from "../test-utils";
+import { assert, createTestLogger } from "../test-utils";
 import {
   configureCartEndpoint,
   getShopifyStandardActions,
@@ -25,17 +25,6 @@ import {
   createEmptyPending,
   createEmptyCartErrors,
 } from "./state";
-
-function createTestLogger() {
-  return {
-    trace: vi.fn(),
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    fatal: vi.fn(),
-  };
-}
 
 function makeLine(overrides: Partial<CartLine> & { id: string }): CartLine {
   return {

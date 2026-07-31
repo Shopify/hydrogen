@@ -6,18 +6,7 @@ import { handleShopifyRedirects } from "./handle-shopify-redirects";
 import { createShopifyRequestContext } from "./headers";
 import { configureLogging, resetLoggingForTests } from "./logging";
 import { createShopifyRouteTemplates } from "./standard-routes/index";
-import { assert } from "./test-utils";
-
-function createTestLogger() {
-  return {
-    trace: vi.fn(),
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    fatal: vi.fn(),
-  };
-}
+import { assert, createTestLogger } from "./test-utils";
 
 const defaultConfig = {
   storeDomain: "test-store.myshopify.com",

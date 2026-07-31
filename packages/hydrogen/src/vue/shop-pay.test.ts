@@ -7,6 +7,7 @@ import { renderToString } from "vue/server-renderer";
 import { configureLogging, resetLoggingForTests } from "../core/logging";
 import type * as ShopPayModule from "../core/shop-pay";
 import { loadShopJs, SHOP_PAY_BUTTON_TAG_NAME } from "../core/shop-pay";
+import { createTestLogger } from "../core/test-utils";
 import { ShopPayButton } from "./shop-pay";
 
 vi.mock("../core/shop-pay", async (importOriginal) => {
@@ -17,16 +18,6 @@ vi.mock("../core/shop-pay", async (importOriginal) => {
     loadShopJs: vi.fn(() => Promise.resolve()),
   };
 });
-function createTestLogger() {
-  return {
-    trace: vi.fn(),
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    fatal: vi.fn(),
-  };
-}
 
 beforeEach(() => {
   vi.clearAllMocks();

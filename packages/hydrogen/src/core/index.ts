@@ -246,7 +246,6 @@ export type { FormatMoneyOptions, FormattedMoney, FormattedMoneyRange, MoneyV2 }
 
 export {
   configureLogging,
-  consoleLogger,
   type ConfigureLoggingOptions,
   type HydrogenLogger,
   type LogContext,

@@ -1,10 +1,9 @@
 /**
  * Logging contract for `@shopify/hydrogen` runtime failures.
  *
- * The interface is intentionally minimal and structural: the built-in console
- * logger satisfies it, and so does any pino-style logger instance (pino's
- * `(msg, ...args)` call signature is assignable to `(message, context?)`).
- * Hydrogen never depends on a specific logging library.
+ * The interface is intentionally minimal and structural: any logger with these
+ * level methods can receive Hydrogen entries. Hydrogen never depends on a
+ * specific logging library.
  */
 
 /** Log severities, ordered. `silent` disables all output. */
@@ -24,8 +23,8 @@ export type LogContext = {
 type LogFn = (message: string, context?: LogContext) => void;
 
 /**
- * Sink that receives Hydrogen log entries. Pass your own (e.g. a pino
- * instance) to `configureLogging`, or rely on the built-in console logger.
+ * Sink that receives Hydrogen log entries. Pass your own logger to
+ * `configureLogging`, or rely on the built-in console logger.
  *
  * Messages arrive unprefixed; `context.scope` identifies the subsystem so
  * custom sinks control their own formatting. The built-in console logger

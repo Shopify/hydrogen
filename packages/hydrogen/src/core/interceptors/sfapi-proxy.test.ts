@@ -7,19 +7,8 @@ import {
   STOREFRONT_PRIVATE_TOKEN_HEADER,
 } from "../headers";
 import { configureLogging, resetLoggingForTests } from "../logging";
-import { assert } from "../test-utils";
+import { assert, createTestLogger } from "../test-utils";
 import { handleSfapiProxy as handleSfapiProxyImpl } from "./sfapi-proxy";
-
-function createTestLogger() {
-  return {
-    trace: vi.fn(),
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    fatal: vi.fn(),
-  };
-}
 
 const defaultStoreUrl = "https://test-store.myshopify.com";
 const defaultBuyerIp = "127.0.0.1";

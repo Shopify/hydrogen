@@ -9,6 +9,7 @@ import { EMPTY_CART_DATA, EMPTY_CART_STATE, createEmptyCartErrors } from "../cor
 import { configureLogging, resetLoggingForTests } from "../core/logging";
 import { createProductFormStore } from "../core/product/product-form";
 import type { ProductInput, ProductVariantInput } from "../core/product/state";
+import { createTestLogger } from "../core/test-utils";
 import { CartProvider, configureCartEndpoint } from "./cart";
 import { createProductComponents, useProductForm } from "./product";
 
@@ -16,16 +17,6 @@ vi.mock("../core/cart/cart", () => ({
   configureCartEndpoint: vi.fn(),
   createCartStore: vi.fn(),
 }));
-function createTestLogger() {
-  return {
-    trace: vi.fn(),
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    fatal: vi.fn(),
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Fixtures

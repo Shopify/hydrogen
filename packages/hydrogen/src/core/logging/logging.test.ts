@@ -97,6 +97,16 @@ describe("getLogger", () => {
     ]);
   });
 
+  it("does not let context override the fixed logger scope", () => {
+    const sink = createLoggerSpy();
+    configureLogging({ logger: sink });
+    const context = JSON.parse('{"scope":"checkout"}');
+
+    getLogger("cart").error("failed", context);
+
+    expect(sink.calls).toEqual([["error", "failed", { scope: "cart" }]]);
+  });
+
   it("resolves the sink lazily so configureLogging applies to existing loggers", () => {
     const log = getLogger("cart");
     const sink = createLoggerSpy();
@@ -125,21 +135,21 @@ describe("getLogger", () => {
     expect(sink.calls).toEqual([]);
   });
 
-  it("accepts a pino-style logger whose methods take rest arguments", () => {
+  it("accepts logger methods that take rest arguments", () => {
     const entries: unknown[][] = [];
-    const pinoLike =
+    const methodWithRestArgs =
       () =>
       (...args: unknown[]): void => {
         entries.push(args);
       };
     configureLogging({
       logger: {
-        trace: pinoLike(),
-        debug: pinoLike(),
-        info: pinoLike(),
-        warn: pinoLike(),
-        error: pinoLike(),
-        fatal: pinoLike(),
+        trace: methodWithRestArgs(),
+        debug: methodWithRestArgs(),
+        info: methodWithRestArgs(),
+        warn: methodWithRestArgs(),
+        error: methodWithRestArgs(),
+        fatal: methodWithRestArgs(),
       },
     });
 
@@ -150,33 +160,16 @@ describe("getLogger", () => {
 });
 
 describe("configureLogging", () => {
-  it("is silent when called twice with identical options", () => {
-    const sink = createLoggerSpy();
-
-    configureLogging({ logger: sink, level: "warn" });
-    configureLogging({ logger: sink, level: "warn" });
-
-    expect(sink.calls).toEqual([]);
-  });
-
-  it("warns via the new sink and applies the new options on reconfigure", () => {
+  it("applies the new options on reconfigure", () => {
     const first = createLoggerSpy();
     const second = createLoggerSpy();
 
     configureLogging({ logger: first });
     configureLogging({ logger: second });
 
-    expect(second.calls).toEqual([
-      [
-        "warn",
-        "configureLogging called again; the new configuration replaces the previous one.",
-        { scope: "logging" },
-      ],
-    ]);
-
     getLogger("cart").error("routed to second");
     expect(first.calls).toEqual([]);
-    expect(second.calls).toHaveLength(2);
+    expect(second.calls).toEqual([["error", "routed to second", { scope: "cart" }]]);
   });
 });
 

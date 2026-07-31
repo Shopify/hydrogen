@@ -75,12 +75,12 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 
 **Use case:** Developers sometimes need to hit `unstable` or a newer API version for specific queries before doing a full migration. frandiox raised this as a known Hydrogen use case.
 
-**Why it's deferred:** Overriding the version per-query is a type-safety footgun — `gql.tada` infers types against the schema of the configured version. A query running against a different version would have types that don't match the actual response shape, with no compiler warning.
+**Why it's deferred:** Overriding the version per-query is a type-safety footgun — `apiVersion` only changes endpoint routing, while Hydrogen's bundled `gql.tada` schema still controls type inference. A query running against a different version could have types that don't match the actual response shape, with no compiler warning.
 
 **Possible approaches:**
 1. A `dangerously_overrideVersion` parameter on `graphql()` — makes the risk explicit in the API name.
-2. Instruct users to create a separate `createStorefrontClient({ config: { apiVersion } })` instance for unstable queries, keeping type boundaries clean.
+2. Instruct users to create a separate `createStorefrontClient({ config: { apiVersion } })` instance for unstable queries, keeping version routing explicit.
 
 **Done when:** We decide on an approach and either implement the escape hatch or document the separate-client workaround.
 
-**Resolution:** Approach #2 was chosen: create a separate `createStorefrontClient` instance with a different `apiVersion` for queries that need a different Storefront API version (e.g. `unstable`). This is already supported via the client config and keeps `gql.tada` type boundaries clean — each client infers types from its configured version's schema. The escape-hatch parameter (approach #1) was rejected as a type-safety footgun: a query running against a different version would have types that don't match the actual response shape, with no compiler warning. The workaround is documented in the JSDoc on the `apiVersion` field of `CommonOptions` in `src/client/types.ts`.
+**Resolution:** Approach #2 was chosen: create a separate `createStorefrontClient` instance with a different `apiVersion` for queries that need a different Storefront API version (e.g. `unstable`). This is already supported via the client config and keeps version routing explicit. The escape-hatch parameter (approach #1) was rejected as a type-safety footgun: a query running against a different version would have types that don't match the actual response shape, with no compiler warning. Hydrogen's bundled `gql.tada` schema still controls type inference, so queries against fields outside that schema need their own typing. The workaround is documented in the JSDoc on the `apiVersion` field of `CommonOptions` in `src/client/types.ts`.

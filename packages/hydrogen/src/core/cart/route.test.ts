@@ -4,19 +4,8 @@ import { createStorefrontClient } from "../../client/client";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../handle-shopify-routes";
 import { createShopifyRequestContext } from "../headers";
 import { configureLogging, resetLoggingForTests } from "../logging";
-import { assert } from "../test-utils";
+import { assert, createTestLogger } from "../test-utils";
 import { createCartServerHandlers } from "./server-handlers";
-
-function createTestLogger() {
-  return {
-    trace: vi.fn(),
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    fatal: vi.fn(),
-  };
-}
 
 type TestStorefrontConfig = {
   storeDomain: string;

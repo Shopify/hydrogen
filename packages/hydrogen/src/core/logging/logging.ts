@@ -56,13 +56,11 @@ export type ConfigureLoggingOptions = {
 type LoggingState = {
   logger: HydrogenLogger;
   level: LogLevel;
-  configured: boolean;
 };
 
 const state: LoggingState = {
   logger: consoleLogger,
   level: DEFAULT_LOG_LEVEL,
-  configured: false,
 };
 
 /**
@@ -70,33 +68,23 @@ const state: LoggingState = {
  * Call it once at startup (app entry on the browser, module init on the
  * server) before Hydrogen helpers run.
  *
- * Reconfiguring with different options warns and applies the new options
- * (last call wins). Inline bootstrap scripts that Hydrogen serializes into
- * HTML (analytics, consent) run outside the app bundle and always write to
- * the console with the standard prefix; they cannot receive a custom logger.
+ * Reconfiguring with different options applies the new options (last call
+ * wins). Inline bootstrap scripts that Hydrogen serializes into HTML
+ * (analytics, consent) run outside the app bundle and always write to the
+ * console with the standard prefix; they cannot receive a custom logger.
  */
 export function configureLogging(options: ConfigureLoggingOptions): void {
   const logger = options.logger ?? consoleLogger;
   const level = options.level ?? DEFAULT_LOG_LEVEL;
 
-  const isReconfiguration = state.configured && (logger !== state.logger || level !== state.level);
-
   state.logger = logger;
   state.level = level;
-  state.configured = true;
-
-  if (isReconfiguration) {
-    getLogger("logging").warn(
-      "configureLogging called again; the new configuration replaces the previous one.",
-    );
-  }
 }
 
 /** @internal */
 export function resetLoggingForTests(): void {
   state.logger = consoleLogger;
   state.level = DEFAULT_LOG_LEVEL;
-  state.configured = false;
 }
 
 /**
@@ -104,11 +92,16 @@ export function resetLoggingForTests(): void {
  * tagged with `scope`, then forwarded to the configured sink. Resolution is
  * lazy: `configureLogging` affects loggers obtained before or after the call.
  */
-export type ScopedLogger = Record<LogSeverity, (message: string, context?: LogContext) => void>;
+type ScopedLogContext = Omit<LogContext, "scope"> & { scope?: never };
+
+export type ScopedLogger = Record<
+  LogSeverity,
+  (message: string, context?: ScopedLogContext) => void
+>;
 
 function emit(scope: string, level: LogSeverity, message: string, context?: LogContext): void {
   if (!isLevelEnabled(level, state.level)) return;
-  state.logger[level](message, { scope, ...context });
+  state.logger[level](message, { ...context, scope });
 }
 
 /** @internal Returns the lazily-resolved scoped logger for a Hydrogen subsystem. */
