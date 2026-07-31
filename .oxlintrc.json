@@ -23,6 +23,7 @@
     "patches/**",
     "scripts/**",
     "!scripts/copy-hydrogen-to-preview*.ts",
+    "!scripts/preview-template-dist*.ts",
     "examples/**",
     "!examples/shared/local-cdn-assets-plugin/**/*.ts",
     "examples/hydrogen/**",
