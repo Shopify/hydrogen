@@ -31,6 +31,12 @@ export type CartFormRegister = {
   (field: "merchandiseId", opts: { value: string }): { name: "merchandiseId"; value: string };
   (field: "note", opts: { value: string }): { name: "note"; value: string };
   (field: "note", opts: { defaultValue: string }): { name: "note"; defaultValue: string };
+  (field: "attributeKey", opts: { value: string }): { name: "attributeKey"; value: string };
+  (field: "attributeValue", opts: { value: string }): { name: "attributeValue"; value: string };
+  (
+    field: "attributeValue",
+    opts: { defaultValue: string },
+  ): { name: "attributeValue"; defaultValue: string };
   (field: "sellingPlanId", opts: { value: string }): { name: "sellingPlanId"; value: string };
   (action: "add"): { name: "intent"; value: "add" };
   (action: "increase"): { name: "intent"; value: "increase" };
@@ -40,6 +46,7 @@ export type CartFormRegister = {
   (action: "discount-apply"): { name: "intent"; value: "discount-apply" };
   (action: "discount-remove"): { name: "intent"; value: "discount-remove" };
   (action: "note-update"): { name: "intent"; value: "note-update" };
+  (action: "attributes-update"): { name: "intent"; value: "attributes-update" };
 };
 
 const FIELD_REGISTERS = new Set([
@@ -48,6 +55,8 @@ const FIELD_REGISTERS = new Set([
   "discountCode",
   "merchandiseId",
   "note",
+  "attributeKey",
+  "attributeValue",
   "sellingPlanId",
 ]);
 

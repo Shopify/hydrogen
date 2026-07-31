@@ -60,6 +60,17 @@ describe("createCartFormRegister", () => {
       expect(result).toEqual({ name: "note", defaultValue: "gift wrap" });
     });
 
+    it("attribute fields return repeatable key and value names", () => {
+      expect(register("attributeKey", { value: "gift-message" })).toEqual({
+        name: "attributeKey",
+        value: "gift-message",
+      });
+      expect(register("attributeValue", { defaultValue: "Happy birthday!" })).toEqual({
+        name: "attributeValue",
+        defaultValue: "Happy birthday!",
+      });
+    });
+
     it("sellingPlanId returns name and value", () => {
       const result = register("sellingPlanId", {
         value: "gid://shopify/SellingPlan/1",
@@ -103,6 +114,13 @@ describe("createCartFormRegister", () => {
       expect(register("note-update")).toEqual({
         name: "intent",
         value: "note-update",
+      });
+    });
+
+    it("attributes-update returns intent", () => {
+      expect(register("attributes-update")).toEqual({
+        name: "intent",
+        value: "attributes-update",
       });
     });
 
