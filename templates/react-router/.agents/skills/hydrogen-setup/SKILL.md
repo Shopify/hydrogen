@@ -15,7 +15,7 @@ Follow these instructions in order to set up Hydrogen in an existing or new repo
 
 Assume the deterministic Hydrogen setup command has already installed `@shopify/hydrogen` and copied the packaged skills into the app. Do not redo package installation or skill copying from this LLM skill.
 
-Master build checklist (an at-a-glance index of the ordered steps below; each step has full detail in its own section):
+Master build checklist:
 
 ```
 - [ ] Inspect the app (package.json at app root)
@@ -45,7 +45,7 @@ Read `package.json` in the current directory. If it does not exist, stop and tel
 
 ## Detect The Framework
 
-Use LLM judgment for this step. Inspect dependencies, configuration files, server entry points, route directories, and existing request lifecycle code. Identify whether the app has a framework that can run server code and expose request handlers, middleware, loaders, server functions, or route handlers.
+Inspect dependencies, configuration files, server entry points, route directories, and existing request lifecycle code. Identify whether the app has a framework that can run server code and expose request handlers, middleware, loaders, server functions, or route handlers.
 
 After detecting the framework, check `references/` for a matching framework reference file. Normalize likely framework or binding names to lowercase kebab-case and read the matching file before making framework-specific setup choices. If no matching reference exists, continue from the generic instructions here and follow the app's existing conventions.
 
@@ -53,14 +53,14 @@ Do not hard block just because no reference file exists. Continue when the app h
 
 ## Use Standard Environment Names
 
-Use these canonical environment variable names throughout the app:
+Use these canonical environment variable names throughout the app (kept in sync with `hydrogen-storefront-client`):
 
 - `PUBLIC_STORE_DOMAIN` for the Shopify store domain.
 - `PUBLIC_STOREFRONT_API_TOKEN` for the public Storefront API token.
 - `PRIVATE_STOREFRONT_API_TOKEN` for the private Storefront API token.
 - `PUBLIC_STOREFRONT_ID` for analytics `storefrontId`; use `"0"` when the app does not have a storefront ID.
-- `PUBLIC_CHECKOUT_DOMAIN` for app-level checkout-domain configuration such as CSP setup. Checkout buttons should use the cart's `checkoutUrl`.
-- `SHOP_ID` for the numeric Shopify shop ID string used by Customer Account API.
+- `PUBLIC_CHECKOUT_DOMAIN` for app-level checkout-domain configuration such as CSP setup. Checkout links should come from cart data, usually `cart.checkoutUrl`.
+- `SHOP_ID` for the numeric Shopify shop ID string. Required by Shopify runtime scripts (`ShopifyScripts`) for every storefront, and by Customer Account API.
 - `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID` for Customer Account OAuth.
 - `CUSTOMER_ACCOUNT_SESSION_SECRET` for encrypted cookie examples. Prefer opaque server-side sessions in production apps.
 

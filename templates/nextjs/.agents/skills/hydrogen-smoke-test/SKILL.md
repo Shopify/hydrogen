@@ -63,7 +63,7 @@ Collection and search:
 Analytics:
 - [ ] Page view fires on initial load and client navigations
 - [ ] Product/collection/search/cart view events fire once per route data change
-- [ ] analytics.updateCart(cart) runs when confirmed cart data changes, and the cart query includes updatedAt
+- [ ] trackCartAnalytics(cart) runs when confirmed cart data changes, and the cart query includes updatedAt
 - [ ] No browser module reads private env variables
 - [ ] Production does not override canTrack to always true
 
@@ -89,10 +89,10 @@ Run the app's available scripts:
 
 ## Request Handlers
 
-Replace `<port>` with the running app port:
+Replace `<port>` with the running app port, and `{api-version}` with the Storefront API version configured by the app:
 
 ```bash
-curl -i -X POST http://localhost:<port>/api/2026-04/graphql.json \
+curl -i -X POST http://localhost:<port>/api/{api-version}/graphql.json \
   -H "content-type: application/json" \
   -H "X-Shopify-Storefront-Access-Token: <public-token>" \
   -d '{"query":"{ shop { name } }"}'
@@ -100,7 +100,7 @@ curl -i -X POST http://localhost:<port>/api/2026-04/graphql.json \
 
 Expected: Storefront API JSON, not the framework 404.
 
-Use the Storefront API version configured by the app when it differs from `2026-04`. The SFAPI proxy forwards the incoming public token header; it does not inject a token from server config.
+The SFAPI proxy forwards the incoming public token header; it does not inject a token from server config.
 
 ```bash
 curl -i http://localhost:<port>/api/cart

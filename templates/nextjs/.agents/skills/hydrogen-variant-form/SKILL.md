@@ -242,16 +242,9 @@ Pass `allowedOptionNames` to filter search params to only known product option n
 
 ## Anti-patterns
 
-- **Hiding option values based on selection.** Showing only "compatible" values for the current selection collapses the option matrix and prevents exploration. Always show all values; use `exists` and `available` for visual treatment.
-- **Disabling sold-out variants.** Sold-out variants (`available: false`) should be selectable so buyers can see what they would get. Only non-existent combinations (`exists: false`) are truly disabled.
-- **Client-computed prices.** Never compute prices from variant data or option combinations. Always use server-provided `price` / `compareAtPrice` / `priceRange` amounts.
-- **Recreating the store on product prop changes.** Use `hydrate()` instead. Recreating discards the decoded variant cache, the cart subscription, and any user interaction state.
 - **Using reactive effects on state to sync selection to URL.** The `selectOption` return value provides the selection result synchronously. Reacting to `state.selectedOptions` instead introduces an extra update cycle and can fire with stale values.
 - **Navigating inside same-product option buttons.** Do not destructure `onClick` / `onChange` from `register("optionValue", ...)`, call `navigate()`, and then call the registered handler manually. This bypasses the provider `onSelect` contract and can navigate from stale or invalid data.
 - **Button-/onClick-only same-product option values.** A same-product option value rendered as `<button onClick={selectOption}>` with no `href` is dead without JavaScript — a no-JS shopper cannot switch variants and is stuck on the default. Render it as a GET link to the option URL and let the registered handler enhance it; the `href` is the progressive-enhancement fallback.
-- **Calling `selectOption` for combined-listing values.** When `value.handle` differs from the current product's handle, the value belongs to a different product. Use a navigation element (anchor or link component) for full navigation — `selectOption` only understands the current product's matrix.
 - **Using raw anchors when the framework has a client-side link component.** Raw `<a>` tags lose client-router behavior such as scroll preservation, pending navigation state, prefetching, and route transitions. Use the app's established link component unless raw anchors are the framework convention.
-- **Checking only `selectedVariant !== null` for add-to-cart.** This misses two constraints: the variant must be `availableForSale`, and `product.requiresSellingPlan` must not be `true`. Use `canAddToCart()`.
 - **Putting variant selection inside the add-to-cart form.** Variant selection is button/link interactions that update store state. The add-to-cart form submits `merchandiseId` and `quantity` to the cart. Mixing them creates ambiguous form semantics and breaks progressive enhancement.
 - **Ignoring `errors` state after form submission.** Cart user errors, warnings, and network errors are surfaced reactively on the store state. Failing to display these leaves the buyer with no feedback when something goes wrong.
-- **Manually computing `selectedVariant` from `options`.** Use `state.selectedVariant` directly — it is derived and kept in sync automatically. The older pattern of `options[0].values.find(v => v.selected)?.variant` is unnecessary.

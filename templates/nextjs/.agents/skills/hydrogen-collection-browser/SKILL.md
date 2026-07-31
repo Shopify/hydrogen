@@ -56,7 +56,7 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 - Keep the search term in `q`.
 - Use a collection handle like `search:${term}` so a new term rebuilds the browse store and does not carry old filters.
 - Keep `q` as a hidden input inside the filter/sort form.
-- Map unsupported search sorts back to `RELEVANCE`; only `PRICE` uses `reverse` in the current examples.
+- Map unsupported search sorts back to `RELEVANCE`; only `PRICE` uses `reverse`.
 - Empty search terms should return an empty product list and no filters rather than querying Storefront API.
 - The search input is uncontrolled (`defaultValue={term}`) so the no-JS GET submit works; add `key={term}` so navigation (e.g. "Clear search" → `/search`) resets it. Safe because `term` changes only on submit/navigation, not while typing — do **not** put `key={term}` on a controlled input that updates the term per keystroke (focus loss).
 
