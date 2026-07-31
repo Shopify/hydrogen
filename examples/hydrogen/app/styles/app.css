@@ -1,7 +1,7 @@
 :root {
   --aside-width: 400px;
-  --cart-aside-summary-height-with-discount: 300px;
-  --cart-aside-summary-height: 250px;
+  --cart-aside-summary-height-with-discount: 450px;
+  --cart-aside-summary-height: 400px;
   --grid-item-width: 355px;
   --header-height: 64px;
   --color-dark: #000;
@@ -352,6 +352,16 @@ button.reset:hover:not(:has(> *)) {
   align-items: center;
   display: flex;
   margin-top: 0.25rem;
+}
+
+.cart-attribute {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.cart-attribute textarea {
+  resize: vertical;
 }
 
 .cart-subtotal {

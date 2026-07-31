@@ -2,7 +2,7 @@ import type { CartData, MoneyV2 } from "@shopify/hydrogen";
 import { useId } from "react";
 
 import type { CartLayout } from "~/components/CartMain";
-import { useCartForm } from "~/lib/cart";
+import { useCart, useCartForm } from "~/lib/cart";
 import { formatMoney } from "~/lib/money";
 
 type CartSummaryProps = {
@@ -32,8 +32,46 @@ export function CartSummary({ cart, layout, totalsPending }: CartSummaryProps) {
         discountsHeadingId={discountsHeadingId}
         discountCodeInputId={discountCodeInputId}
       />
+      <CartGiftMessage attributes={cart.attributes} />
       <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
     </div>
+  );
+}
+
+const GIFT_MESSAGE_ATTRIBUTE = "gift-message";
+
+function CartGiftMessage({ attributes }: { attributes: CartData["attributes"] }) {
+  const { formProps, register } = useCartForm();
+  const attributesPending = useCart((state) => state.pending.attributes);
+  const giftMessageId = useId();
+  const giftMessage = attributes.find(({ key }) => key === GIFT_MESSAGE_ATTRIBUTE)?.value ?? "";
+  const preservedAttributes = attributes.filter(({ key }) => key !== GIFT_MESSAGE_ATTRIBUTE);
+
+  return (
+    <form {...formProps()} className="cart-attribute">
+      {preservedAttributes.map(({ key, value }) => (
+        <div key={key}>
+          <input type="hidden" {...register("attributeKey", { value: key })} />
+          <input type="hidden" {...register("attributeValue", { value: value ?? "" })} />
+        </div>
+      ))}
+      <input type="hidden" {...register("attributeKey", { value: GIFT_MESSAGE_ATTRIBUTE })} />
+      <label htmlFor={giftMessageId}>Gift message</label>
+      <textarea
+        id={giftMessageId}
+        rows={3}
+        {...register("attributeValue", { defaultValue: giftMessage })}
+        placeholder="Add a message for the recipient"
+      />
+      <button
+        type="submit"
+        {...register("attributes-update")}
+        disabled={attributesPending}
+        aria-busy={attributesPending}
+      >
+        {attributesPending ? "Saving…" : "Save message"}
+      </button>
+    </form>
   );
 }
 
