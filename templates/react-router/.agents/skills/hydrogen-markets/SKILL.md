@@ -113,8 +113,6 @@ export function getMarketFromRequest(request: Request): Market {
 }
 ```
 
-This keeps market selection at the server boundary. Product queries, collection queries, cart queries, and checkout URLs all become market-aware when they use `@inContext`.
-
 ---
 
 ## Per-Market Domains
@@ -135,8 +133,6 @@ export function getMarketFromRequest(request: Request): Market {
   return MARKET_BY_HOST[host] ?? DEFAULT_MARKET;
 }
 ```
-
-This is the cleanest option when SEO, legal entities, or merchant operations require distinct domains. The storefront does not need a visible market prefix in the path because the host already carries the market.
 
 ---
 
