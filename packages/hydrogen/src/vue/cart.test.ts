@@ -162,6 +162,17 @@ describe("useCartAnalytics", () => {
 
     expect(subscribeListener).toBeNull();
   });
+
+  it("throws a composable-specific error outside CartProvider", () => {
+    const Consumer = defineComponent({
+      setup() {
+        useCartAnalytics();
+        return () => null;
+      },
+    });
+
+    expect(() => mount(Consumer)).toThrow("useCartAnalytics must be used inside a <CartProvider>");
+  });
 });
 
 describe("CartProvider", () => {

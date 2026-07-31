@@ -63,7 +63,7 @@ Collection and search:
 Analytics:
 - [ ] Page view fires on initial load and client navigations
 - [ ] Product/collection/search/cart view events fire once per route data change
-- [ ] trackCartAnalytics(cart) runs when confirmed cart data changes, and the cart query includes updatedAt
+- [ ] Cart tracking is wired once via trackCartAnalytics(cartStore) (React/Vue: useCartAnalytics()), delta events fire on confirmed cart data changes, and the cart query includes updatedAt
 - [ ] No browser module reads private env variables
 - [ ] Production does not bypass Customer Privacy consent gating (no forced-always-true consent checks)
 
