@@ -70,7 +70,6 @@ describe('useCustomerPrivacy with a non-configurable window.Shopify', () => {
 
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining('Could not observe `Shopify`'),
-      expect.anything(),
     );
 
     // The foreign global is left intact rather than clobbered.

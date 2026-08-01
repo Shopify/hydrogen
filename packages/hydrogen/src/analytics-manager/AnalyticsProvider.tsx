@@ -1,6 +1,9 @@
 import {
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
   startTransition,
+  useCallback,
   useEffect,
   useState,
   useMemo,
@@ -308,7 +311,21 @@ function AnalyticsProvider({
     customCanTrack ? true : false,
   );
   const [consentCollected, setConsentCollected] = useState(false);
-  const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
+  const [carts, setCartsState] = useState<Carts>({cart: null, prevCart: null});
+
+  // This provider sits above every route-level Suspense boundary, so an urgent
+  // update from it interrupts hydration and forces boundaries that are still
+  // dehydrated to discard their server HTML and client-render (React #418).
+  // None of this analytics bookkeeping is urgent, so every update that can land
+  // after hydration begins is applied as a transition.
+  //
+  // `setCarts` is handed to `CartAnalytics`, which applies it when the deferred
+  // cart resolves. Transition at the declaration, not at that call site, so the
+  // guarantee holds for every caller.
+  const setCarts = useCallback<Dispatch<SetStateAction<Carts>>>(
+    (update) => startTransition(() => setCartsState(update)),
+    [],
+  );
   const [canTrack, setCanTrack] = useState<() => boolean>(
     customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
   );
@@ -392,8 +409,6 @@ function AnalyticsProvider({
         <ShopifyAnalytics
           consent={consent}
           onReady={() => {
-            // Same reasoning as `useShopAnalytics` above: these land after
-            // hydration starts and must not interrupt it.
             startTransition(() => {
               setAnalyticsLoaded(true);
               setCanTrack(
@@ -436,10 +451,8 @@ function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
 
   // resolve the shop analytics that could have been deferred
   useEffect(() => {
-    // `AnalyticsProvider` sits above every route-level Suspense boundary, so an
-    // urgent update here interrupts hydration and forces boundaries that are
-    // still dehydrated to throw away their server HTML and client-render.
-    // Analytics bookkeeping is never urgent — mark it as a transition.
+    // Transitioned for the same reason as the provider's other deferred
+    // updates: this lands after hydration begins and must not interrupt it.
     Promise.resolve(shopProp).then((resolvedShop) => {
       startTransition(() => setShop(resolvedShop));
     });
