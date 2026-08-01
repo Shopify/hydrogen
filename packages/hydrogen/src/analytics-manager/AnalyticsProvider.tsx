@@ -1,5 +1,6 @@
 import {
   type ReactNode,
+  startTransition,
   useEffect,
   useState,
   useMemo,
@@ -391,14 +392,18 @@ function AnalyticsProvider({
         <ShopifyAnalytics
           consent={consent}
           onReady={() => {
-            setAnalyticsLoaded(true);
-            setCanTrack(
-              customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
-            );
+            // Same reasoning as `useShopAnalytics` above: these land after
+            // hydration starts and must not interrupt it.
+            startTransition(() => {
+              setAnalyticsLoaded(true);
+              setCanTrack(
+                customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
+              );
 
-            // Delay loading PerfKit until consent is collected
-            // so that it reads updated tracking values from old cookies.
-            setConsentCollected(true);
+              // Delay loading PerfKit until consent is collected
+              // so that it reads updated tracking values from old cookies.
+              setConsentCollected(true);
+            });
           }}
           domain={cookieDomain}
         />
@@ -431,7 +436,13 @@ function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
 
   // resolve the shop analytics that could have been deferred
   useEffect(() => {
-    Promise.resolve(shopProp).then(setShop);
+    // `AnalyticsProvider` sits above every route-level Suspense boundary, so an
+    // urgent update here interrupts hydration and forces boundaries that are
+    // still dehydrated to throw away their server HTML and client-render.
+    // Analytics bookkeeping is never urgent — mark it as a transition.
+    Promise.resolve(shopProp).then((resolvedShop) => {
+      startTransition(() => setShop(resolvedShop));
+    });
     return () => {};
   }, [setShop, shopProp]);
 

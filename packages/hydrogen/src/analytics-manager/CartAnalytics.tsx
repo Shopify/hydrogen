@@ -1,4 +1,4 @@
-import {useEffect, useRef} from 'react';
+import {startTransition, useEffect, useRef} from 'react';
 import {
   useAnalytics,
   type AnalyticsProviderProps,
@@ -45,10 +45,16 @@ export function CartAnalytics({
         }
       }
 
-      setCarts(({cart, prevCart}: Carts) => {
-        return updatedCart?.updatedAt !== cart?.updatedAt
-          ? {cart: updatedCart, prevCart: cart}
-          : {cart, prevCart};
+      // `setCarts` updates state owned by `AnalyticsProvider`, which sits above
+      // every route-level Suspense boundary. Left urgent, this resolution
+      // interrupts hydration and forces still-dehydrated boundaries to
+      // client-render (React error #418). Analytics state is never urgent.
+      startTransition(() => {
+        setCarts(({cart, prevCart}: Carts) => {
+          return updatedCart?.updatedAt !== cart?.updatedAt
+            ? {cart: updatedCart, prevCart: cart}
+            : {cart, prevCart};
+        });
       });
     });
     return () => {};
