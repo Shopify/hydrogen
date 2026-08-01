@@ -2,6 +2,8 @@ export type { RedirectOptions } from "./handle-shopify-redirects";
 export { createShopifyRouteTemplates } from "./standard-routes/index";
 export type { ShopifyRouteTemplates } from "./standard-routes/index";
 export { handleShopifyRedirects } from "./handle-shopify-redirects";
+export { handleVariantDeepLink } from "./interceptors/variant-deep-link";
+export type { VariantDeepLinkOptions } from "./interceptors/variant-deep-link";
 export { handleShopifyRoutes } from "./handle-shopify-routes";
 export { createShopifyRouteHandler } from "./route-handlers";
 export type {
@@ -178,7 +180,7 @@ export type {
   ValidProductSelectionResult,
   VariantSelectionResult,
 } from "./product";
-export { getSelectedProductOptions } from "./product";
+export { getSelectedProductOptions, getVariantIdParam } from "./product";
 export type {
   ProductInput,
   ProductAddToCartProps,

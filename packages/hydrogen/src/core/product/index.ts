@@ -13,7 +13,7 @@ export type {
   ValidProductSelectionResult,
   VariantSelectionResult,
 } from "./product-form";
-export { getSelectedProductOptions } from "./options";
+export { getSelectedProductOptions, getVariantIdParam } from "./options";
 export { createProductFormRegister } from "./form";
 export type {
   ProductAddToCartProps,

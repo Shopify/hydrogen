@@ -1,3 +1,4 @@
+import { parseGid } from "../utils/parse-gid";
 import type {
   ProductInput,
   ProductOptionValueFrom,
@@ -60,6 +61,52 @@ export function getSelectedProductOptions({
   }
 
   return selectedOptions;
+}
+
+const VARIANT_ID_PARAM = "variant";
+const PRODUCT_VARIANT_GID_PREFIX = "gid://shopify/ProductVariant/";
+
+/**
+ * Reads an inbound `?variant=<id>` search param and normalizes it to a
+ * `ProductVariant` GID.
+ *
+ * Shopify's own surfaces — Liquid storefronts, Shopping feeds, email campaigns,
+ * paid ads, and Shop Pay links — deep-link to a product with a bare variant id
+ * (`/products/shoes?variant=41565182099480`) rather than one param per option.
+ * A storefront that only understands option params (`?Color=Red&Size=M`)
+ * silently drops that selection and renders the default variant, so every link
+ * a merchant already has in market lands on the wrong variant.
+ *
+ * Use this to detect such a link, resolve the variant, and redirect to your
+ * canonical option-param URL. Existing marketing links keep working without
+ * changing the URL contract the product page is built around.
+ *
+ * Returns `null` when the param is absent, empty, or is not a product variant
+ * id — including GIDs for other resource types, so an untrusted param can't be
+ * forwarded into a `node(id:)` lookup for an unrelated object.
+ *
+ * @example
+ * ```ts
+ * const variantId = getVariantIdParam({ searchParams });
+ * if (variantId) {
+ *   // Resolve the variant's selectedOptions, then redirect to the canonical URL.
+ * }
+ * ```
+ */
+export function getVariantIdParam({
+  searchParams,
+}: {
+  searchParams: URLSearchParams;
+}): string | null {
+  const raw = searchParams.get(VARIANT_ID_PARAM)?.trim();
+  if (!raw) return null;
+
+  // Accept both the bare legacy id Liquid emits and a full Storefront API GID.
+  const parsed = parseGid(raw);
+  if (parsed.resource && parsed.resource !== "ProductVariant") return null;
+
+  const bareId = parsed.id || raw;
+  return /^\d+$/.test(bareId) ? `${PRODUCT_VARIANT_GID_PREFIX}${bareId}` : null;
 }
 
 export function getAdjacentAndFirstSelectableVariants<TProduct extends ProductInput>(

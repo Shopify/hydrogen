@@ -6,6 +6,7 @@ import {
   createStorefrontClient,
   handleShopifyRedirects,
   handleShopifyRoutes,
+  handleVariantDeepLink,
   type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import { createCustomerAccountClient } from "@shopify/hydrogen/customer-account";
@@ -144,6 +145,19 @@ export const storefrontMiddleware: MiddlewareFunction<Response> = async (
   // `Set-Cookie`) and applies SFAPI response headers, so the early-return
   // path needs no further post-processing.
   if (shopifyRoute) return shopifyRoute;
+
+  // Shopify's own surfaces (Liquid storefronts, Shopping feeds, email, ads,
+  // Shop Pay) deep-link with a bare `?variant=<id>`. Translate it to the
+  // option-param URL the product route reads. Runs before `next()` so it stays
+  // a real HTTP redirect for a no-JS shopper (F4).
+  const variantRedirect = await handleVariantDeepLink({
+    request,
+    storefrontClient,
+    routeTemplates,
+  });
+  if (variantRedirect) {
+    return finalizeResponse(requestContext, variantRedirect, sessionManager);
+  }
 
   // Loaders read both clients from context. Handlers don't read context, so
   // this only needs to be set on the framework-router path (after the
