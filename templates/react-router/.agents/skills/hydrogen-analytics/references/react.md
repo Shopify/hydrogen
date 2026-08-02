@@ -145,14 +145,13 @@ if (term) {
 
 ## Cart Updates
 
-Use the `useCartAnalytics()` hook from the React binding — rendered inside `CartProvider`, it calls `trackCartAnalytics(store)` in an effect and cleans up on unmount. Outside the binding, call `trackCartAnalytics(store)` once with the cart store; it subscribes itself, publishes deltas when server-confirmed cart data changes, and returns an unsubscribe function. Do not manually publish `product_added_to_cart`; the utility derives it from cart deltas and uses the global analytics bus created by ShopifyScripts.
+Use the `useCartAnalytics()` hook from the React binding — rendered inside `CartProvider`, it calls `trackCartAnalytics(store)` in an effect and cleans up on unmount. Outside the binding, call `trackCartAnalytics(store)` once with the cart store from a client-only effect (`useEffect`) — never at cart-store creation time, since it throws when `window.Shopify.analytics` is missing during SSR. It subscribes itself, publishes deltas when server-confirmed cart data changes, and returns an unsubscribe function. Do not manually publish `product_added_to_cart`; the utility derives it from cart deltas and uses the global analytics bus created by ShopifyScripts.
 
 Publish `CART_VIEWED` when the cart page or drawer is viewed. The cart payload is `AnalyticsCart | null`: when a compatible cart is available, include `id`, `updatedAt`, and connection-shaped `lines`; otherwise pass `cart: null` instead of a partial cart.
 
 ```tsx
 analytics.publish(AnalyticsEvent.CART_VIEWED, {
   cart: analyticsCart ?? null,
-  prevCart: null,
 });
 ```
 

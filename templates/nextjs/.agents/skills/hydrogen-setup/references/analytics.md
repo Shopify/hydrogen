@@ -265,16 +265,17 @@ On search results page:
   analytics.publish(AnalyticsEvent.SEARCH_VIEWED, { searchTerm })
 
 On cart view (page or drawer):
-  analytics.publish(AnalyticsEvent.CART_VIEWED, { cart, prevCart })
+  analytics.publish(AnalyticsEvent.CART_VIEWED, { cart })
 
-Once, where the cart store is created:
+Once, in a client-only effect after ShopifyScripts has rendered:
   trackCartAnalytics(cartStore) // subscribes to the store; emits cart_updated / product_added_to_cart / product_removed_from_cart on confirmed changes
+  // never at cart-store creation time — that runs during SSR, where the analytics bus does not exist
   // React/Vue bindings: render useCartAnalytics() inside CartProvider instead
 ```
 
 Required product fields for `product_viewed` and `product_added_to_cart` Monorail dispatch: `id`, `title`, `price`, `vendor`, `variantId`, `variantTitle`. `id` must be the Shopify Product GID and `variantId` must be the Shopify ProductVariant GID when one is available; handles are routing/display data, not analytics IDs. Missing fields cause the Shopify analytics subscriber to skip the Monorail event and log a field-specific error — the bus event still fires for your subscribers, only the Monorail leg drops.
 
-`CART_VIEWED` requires `{ cart, prevCart }`. `cart` and `prevCart` are `AnalyticsCart | null`; when a compatible cart is available, include `id`, `updatedAt`, and connection-shaped `lines`, otherwise pass `cart: null` rather than a partial object.
+`CART_VIEWED` requires `{ cart }`. `cart` is `AnalyticsCart | null`; when a compatible cart is available, include `id`, `updatedAt`, and connection-shaped `lines`, otherwise pass `cart: null` rather than a partial object. (`prevCart` belongs to the cart-change events emitted by `trackCartAnalytics`, not to `CART_VIEWED`.)
 
 ## Framework-specific shapes
 
@@ -521,7 +522,7 @@ Three questions, in order, decide where things go:
 
 2. **Where does per-page server-resolved data become available on the client?** That is where each view event (`product_viewed`, `collection_viewed`, etc.) goes. In React, that is a `useEffect` keyed on the resolved data. In Solid, a `createEffect` reading the async value. In Svelte 5, an `$effect`. In Astro, an inline script that reads from a data-attribute bridge.
 
-3. **Where is the cart store created?** That is where you call `trackCartAnalytics(cartStore)` once — see Cart Tracking below. The tracker subscribes to the store itself, so every confirmed cart change from any source (initial fetch, mutation result, SPA navigation re-fetch, optimistic update settled) is tracked without further app code.
+3. **Where does the client first have the cart store?** That is where you call `trackCartAnalytics(cartStore)` once — in a client-only effect after ShopifyScripts has rendered, never at cart-store creation time (that runs during SSR, where the analytics bus does not exist yet). The tracker subscribes to the store itself, so every confirmed cart change from any source (initial fetch, mutation result, SPA navigation re-fetch, optimistic update settled) is tracked without further app code. See Cart Tracking below.
 
 The singleton + lazy-init pattern from the previous section is universal. Every framework converges on the same shape: one shared analytics module, getter that no-ops on the server, and adapters that translate framework lifecycle into `publish()` / `trackCartAnalytics()` calls.
 
@@ -552,7 +553,7 @@ type AnalyticsCart = {
 };
 ```
 
-Both `lines.nodes` and `lines.edges` (GraphQL connection) shapes work. The cart query must include `updatedAt` — the tracker keys dedupe on it. Without it, the tracker falls back to a fresh timestamp per state and can emit duplicate cart events.
+Manually published `AnalyticsCart` payloads (like `CART_VIEWED`) accept both `lines.nodes` and `lines.edges` (GraphQL connection) shapes at the type level; the bus forwards them unchanged, so subscribers that read lines should flatten them with the exported `flattenConnection()` helper. The cart store consumed by `trackCartAnalytics` is different: it reads `cart.lines.nodes` directly, so the app's cart query must select `lines.nodes`. The cart query must also include `updatedAt` — the tracker keys dedupe on it. Without it, the tracker falls back to a fresh timestamp per state and can emit duplicate cart events.
 
 Application code should not manually publish `cart_updated`, `product_added_to_cart`, or `product_removed_from_cart`. Always go through `trackCartAnalytics`.
 

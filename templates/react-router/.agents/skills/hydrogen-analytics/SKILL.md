@@ -15,7 +15,7 @@ Hydrogen's analytics bus owns the event API, event normalization, and consent-ga
 
 Before wiring route events, check whether this skill has a reference file for the app's framework in `references/`. If one exists, read it and use that framework's route-change and lifecycle primitives. If there is no matching reference, keep the core singleton below and adapt page-view, product-view, collection-view, search-view, and cart tracking to the app's own route lifecycle.
 
-Prerequisite: analytics depends on the same-origin SFAPI proxy (see `hydrogen-request-handlers`) so the browser can observe tracking values from Storefront API responses. Without it, analytics falls back to deprecated JavaScript-visible cookies and session continuity into checkout breaks — treat it as incomplete until the proxy is wired. Key consent setup: Shopify Customer Privacy controls destination delivery in production. Raw subscribers can observe events before consent; destinations receive only consent-allowed replay. Do not override `canTrack` to always `true` in production.
+Prerequisite: analytics depends on the same-origin SFAPI proxy (see `hydrogen-request-handlers`) so the browser can observe tracking values from Storefront API responses. Without it, analytics falls back to deprecated JavaScript-visible cookies and session continuity into checkout breaks — treat it as incomplete until the proxy is wired. Key consent setup: Shopify Customer Privacy controls destination delivery in production. Raw subscribers can observe events before consent; destinations receive only consent-allowed replay. Do not bypass Customer Privacy consent gating in production.
 
 ## Core Pattern
 
@@ -45,7 +45,7 @@ export { trackCartAnalytics };
 
 Read `shop` and `i18n` values on the server and pass them to `ShopifyScripts`. Do not read env APIs in browser modules.
 
-`ShopAnalytics.channel` is required. Hydrogen storefronts use `channel: "hydrogen"` (the default), which includes the `storefrontId` from the ShopifyScripts `shop` config in analytics payloads. Headless storefronts pass `channel: "headless"` in the ShopifyScripts `analytics` config — the analytics payload then omits `storefrontId`, but `shop.storefrontId` itself is still required (pass `"0"` when the app has no storefront ID).
+In the ShopifyScripts `analytics` config, `channel` is optional and defaults to `"hydrogen"`. The `"hydrogen"` channel is the one that requires `storefrontId` — it is pulled from the ShopifyScripts `shop` config into analytics payloads. Headless storefronts pass `channel: "headless"` in the ShopifyScripts `analytics` config; the analytics payload then omits `storefrontId`, but `shop.storefrontId` itself is still required (pass `"0"` when the app has no storefront ID).
 
 ## Publish Events
 
@@ -56,7 +56,7 @@ Publish these from route/page boundaries:
 - `COLLECTION_VIEWED` when collection data is resolved.
 - `SEARCH_VIEWED` when a non-empty search term has results metadata.
 - `CART_VIEWED` when the full cart page or cart drawer is viewed.
-- Wire cart tracking once with `trackCartAnalytics(cartStore)` — React apps use the `useCartAnalytics()` hook from `@shopify/hydrogen/react` and Vue apps use the `useCartAnalytics()` composable from `@shopify/hydrogen/vue`; both call it with the provider's cart store and clean up on unmount. The tracker subscribes to the cart store itself, publishes cart delta events on confirmed cart changes, and returns an unsubscribe function. Do not manually publish cart delta events.
+- Wire cart tracking once with `trackCartAnalytics(cartStore)` — React apps use the `useCartAnalytics()` hook from `@shopify/hydrogen/react` and Vue apps use the `useCartAnalytics()` composable from `@shopify/hydrogen/vue`; both call it with the provider's cart store and clean up on unmount. The tracker subscribes to the cart store itself, publishes cart delta events on confirmed cart changes, and returns an unsubscribe function. Call it from a client-only effect (`useEffect` / `onMounted`), never at cart-store creation time — it throws when `window.Shopify.analytics` is missing (SSR). Do not manually publish cart delta events.
 
 The bus defaults `shop` from the top-level `shop` config passed to ShopifyScripts; pass `shop` in an event payload only when intentionally overriding that configured value. Shopify analytics reads language and currency from `window.Shopify.locale` and `window.Shopify.currency.active`.
 
