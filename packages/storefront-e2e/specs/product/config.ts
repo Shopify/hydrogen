@@ -16,7 +16,7 @@ const PRODUCT_PATHS = {
 
 const PRODUCTS_IN_STOCK_QUERY = gql(`
   query ProductsInStock($count: Int!, $variantCount: Int!) {
-    products(first: $count, query: "availableForSale:true") {
+    products(first: $count, query: "available_for_sale:true") {
       nodes {
         handle
         title

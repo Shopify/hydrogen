@@ -17,7 +17,7 @@ const SEARCH_PATHS = {
 
 const SEARCH_PRODUCTS_QUERY = gql(`
   query SearchProducts($count: Int!) {
-    products(first: $count, query: "availableForSale:true") {
+    products(first: $count, query: "available_for_sale:true") {
       nodes {
         title
       }
