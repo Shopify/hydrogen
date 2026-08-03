@@ -1,12 +1,8 @@
-<div align="center">
-
 # Hydrogen
 
 **Shopify's headless toolkit — framework‑agnostic, runtime‑agnostic, built for agents.**
 
 Bring your own framework. Deploy to any runtime. Let your coding agent wire it up to Shopify.
-
-</div>
 
 ---
 
