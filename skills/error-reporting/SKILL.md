@@ -38,7 +38,7 @@ log.error("cart initial load failed", { error });
 - `getLogger(scope)` returns a lazily-resolved scoped logger. Prefer one module-level `const log` per file when the scope is static. Use stable subsystem scopes; proxy descriptors provide dynamic scopes.
 - Messages are unprefixed, lowercase-leaning, and without trailing colons; the sink owns formatting.
 - `context.error` becomes a separate console argument; other context keys become a trailing object.
-- Never call `console.*` directly in `packages/hydrogen/src` — the `no-console` lint rule enforces this. Sanctioned exceptions: the built-in sink in `src/core/logging/logging.ts` and the CLI.
+- Never call `console.*` directly in runtime files under `packages/hydrogen/src` — the `no-console` lint rule enforces this. Sanctioned runtime exceptions: the built-in sink in `src/core/logging/logging.ts` and the CLI. Tests may spy on or mock `console` for the exceptions listed below.
 
 ### `HydrogenLogger`
 

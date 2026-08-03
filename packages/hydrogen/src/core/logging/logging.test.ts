@@ -172,6 +172,11 @@ describe("getLogger", () => {
     expect(errorSpy).toHaveBeenCalledWith(
       "[hydrogen:error:logging] configured logger failed",
       loggerError,
+      {
+        originalLevel: "error",
+        originalMessage: "failed",
+        originalScope: "cart",
+      },
     );
   });
 });

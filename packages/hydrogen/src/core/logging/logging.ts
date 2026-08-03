@@ -106,15 +106,31 @@ function emit(scope: string, level: LogSeverity, message: string, context?: LogC
   try {
     state.logger[level](message, { ...context, scope });
   } catch (error) {
-    reportLoggerFailure(error);
+    reportLoggerFailure(error, { level, scope, message, context });
   }
 }
 
-function reportLoggerFailure(error: unknown): void {
+type FailedLogEntry = {
+  level: LogSeverity;
+  scope: string;
+  message: string;
+  context?: LogContext;
+};
+
+function reportLoggerFailure(error: unknown, failedEntry: FailedLogEntry): void {
   if (state.logger === consoleLogger) return;
 
+  const fallbackContext: LogContext = {
+    scope: "logging",
+    error,
+    originalLevel: failedEntry.level,
+    originalScope: failedEntry.scope,
+    originalMessage: failedEntry.message,
+  };
+  if (failedEntry.context !== undefined) fallbackContext.originalContext = failedEntry.context;
+
   try {
-    consoleLogger.error("configured logger failed", { scope: "logging", error });
+    consoleLogger.error("configured logger failed", fallbackContext);
   } catch {
     // Logging failures must never change the runtime path that triggered the log.
   }
