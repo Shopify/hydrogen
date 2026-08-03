@@ -18,8 +18,8 @@ Proof-of-concept framework ports (experimental) — see [`poc/README.md`](poc/RE
 - `poc/sveltekit/` — SvelteKit 2 + Svelte 5 (runes) port with server `load`
 - `poc/astro/` — Astro 6 port with `@astrojs/node` SSR and frontmatter data fetching
 - `poc/solid-start/` — SolidStart v1 port with `query` + `createAsync` and signal-driven product page state
-- `poc/nuxt/` — Nuxt 4 port with server middleware and Vue pages
-- `poc/nuxt-binding/` — Nuxt 4 port using Hydrogen's Vue binding layer
+- `poc/nuxt/` — Nuxt 3 port with server middleware and Vue pages
+- `poc/nuxt-binding/` — Nuxt 3 port using Hydrogen's Vue binding layer
 
 The framework examples exist to showcase and validate Hydrogen APIs in real
 storefront slices.
