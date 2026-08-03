@@ -14,6 +14,7 @@ import {
   type ShallowRef,
 } from "vue";
 
+import { trackCartAnalytics } from "../core/analytics/cart-tracker";
 import {
   configureCartEndpoint as configureCoreCartEndpoint,
   createCartStore,
@@ -82,9 +83,11 @@ function createTypedCartProvider<TData extends CartData>(): TypedCartProvider<TD
   return TypedCartProvider as unknown as TypedCartProvider<TData>;
 }
 
-export function useCartStore(): CartStore {
+export function useCartStore(composableName = "useCartStore"): CartStore {
   const store = inject(CartStoreKey, null);
-  if (!store) throw new Error("useCart must be used inside <CartProvider>.");
+  if (!store) {
+    throw new Error(`${composableName} must be used inside a <CartProvider>.`);
+  }
   return store;
 }
 
@@ -126,9 +129,20 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
   selector?: (state: CartState<TData>) => S,
   isEqual?: (a: S, b: S) => boolean,
 ): Readonly<ShallowRef<S | CartState>> {
-  const store = useCartStore();
+  const store = useCartStore("useCart");
   const resolve = selector ?? ((state: CartState<TData>) => state as unknown as S);
   return useCartSelector(store, resolve, isEqual) as Readonly<ShallowRef<S>>;
+}
+
+export function useCartAnalytics(): void {
+  const store = useCartStore("useCartAnalytics");
+  let stopTracking: (() => void) | undefined;
+
+  onMounted(() => {
+    stopTracking = trackCartAnalytics(store);
+  });
+
+  onScopeDispose(() => stopTracking?.());
 }
 
 /**
@@ -173,7 +187,7 @@ export function useCartForm(): {
     lines: (lineId?: string) => boolean;
   };
 } {
-  const store = useCartStore();
+  const store = useCartStore("useCartForm");
   const loading = useCart((s) => s.loading);
   const pendingLines = useCart((s) => s.pending.lines);
   const register = createCartFormRegister();

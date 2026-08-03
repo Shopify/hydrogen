@@ -12,7 +12,14 @@ import {
 import type { CartData, CartState } from "../core/cart/state";
 import { EMPTY_CART_DATA, EMPTY_CART_STATE } from "../core/cart/state";
 import { assert } from "../core/test-utils";
-import { CartProvider, configureCartEndpoint, useCart, useCartForm, useOptionalCart } from "./cart";
+import {
+  CartProvider,
+  configureCartEndpoint,
+  useCart,
+  useCartAnalytics,
+  useCartForm,
+  useOptionalCart,
+} from "./cart";
 
 vi.mock("../core/cart/cart", () => ({
   configureCartEndpoint: vi.fn(),
@@ -126,6 +133,46 @@ beforeEach(() => {
   subscribeListener = null;
   vi.mocked(createCartStore).mockImplementation((options) => createMockStore(options?.initialData));
   configureCartEndpoint("/api/cart");
+  delete (window as { Shopify?: unknown }).Shopify;
+});
+
+describe("useCartAnalytics", () => {
+  it("subscribes the cart store to analytics tracking on mount and unsubscribes on unmount", () => {
+    (window as { Shopify?: unknown }).Shopify = {
+      analytics: { publish: vi.fn(), getConfig: () => ({}) },
+    };
+
+    const wrapper = mount(CartProvider, {
+      slots: {
+        default: () =>
+          h(
+            defineComponent({
+              setup() {
+                useCartAnalytics();
+                return () => null;
+              },
+            }),
+          ),
+      },
+    });
+
+    expect(subscribeListener).not.toBeNull();
+
+    wrapper.unmount();
+
+    expect(subscribeListener).toBeNull();
+  });
+
+  it("throws a composable-specific error outside CartProvider", () => {
+    const Consumer = defineComponent({
+      setup() {
+        useCartAnalytics();
+        return () => null;
+      },
+    });
+
+    expect(() => mount(Consumer)).toThrow("useCartAnalytics must be used inside a <CartProvider>");
+  });
 });
 
 describe("CartProvider", () => {
