@@ -4,7 +4,7 @@ Quick lookup: "I changed X, what docs do I update?"
 
 ## Hydrogen Logging Contract
 
-**Code**: `packages/hydrogen/src/core/logging/`, `packages/hydrogen/src/core/index.ts`, serialized-script call sites that use `consoleLogger`, runtime call sites that use `getLogger` or `configureLogging`, and `.oxlintrc.json` when changing console policy.
+**Code**: `packages/hydrogen/src/core/logging/`, `packages/hydrogen/src/core/index.ts`, serialized-script import chains and other direct `consoleLogger` call sites, runtime call sites that use `getLogger` or `configureLogging`, and `.oxlintrc.json` when changing console policy.
 
 **Docs to Update**:
 - `skills/error-reporting/SKILL.md` - internal policy, call conventions, and test expectations.

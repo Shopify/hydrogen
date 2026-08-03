@@ -18,7 +18,7 @@ Pick the mechanism from the failure class. Never double-report (throw AND log th
 | --- | --- | --- |
 | Programming errors | Throw a typed error synchronously. | Bad arguments, invariant violations. |
 | Request-scoped failures with a caller | Throw a typed error; the caller decides retry/render. | `StorefrontApiError`, `CustomerAccountApiError`, `CartActionError`, `CartNetworkError`. |
-| Server handlers (cart, predictive-search, etc.) | Catch failures, log via the scoped logger, return a structured error `Response`. | Cart server handler catches a network failure and returns `500` with a JSON error body. |
+| Server handlers with internal recovery | Catch failures, log via the scoped logger, return a structured error `Response`. | Cart server handler catches a network failure and returns `500` with a JSON error body. |
 | Background browser failures | Scoped logger at `error` level. | Script loads (Shop Pay), background cart loads, analytics publish failures. |
 | Misuse / degradation | Scoped logger at `warn` level. | Mock shop detected, analytics destination misconfigured, deprecated option passed. |
 | Buyer-visible user errors | Reactive state only — never logged. | Cart `userErrors` surfaced to the UI; the user corrects and retries. |
@@ -85,7 +85,7 @@ Formats entries as `[hydrogen:<level>:<scope>] <message>`, followed by `context.
 
 ## Serialized inline scripts — documented exception
 
-Inline/CDN scripts that Hydrogen serializes into HTML (analytics bus, consent bootstrap) are compiled to strings via `import … with { type: "script" }` chains. They never see the app bundle's global state, so `configureLogging` cannot reach them. These scripts always write to `console` with the standard `[hydrogen:<level>:<scope>]` prefix via the `consoleLogger` sink — when writing code in a serialized-script import chain, use `consoleLogger` directly with an explicit `{ scope }` instead of `getLogger`.
+Inline/CDN scripts that Hydrogen serializes into HTML are compiled to strings via `import … with { type: "script" }` chains. They never see the app bundle's global state, so `configureLogging` cannot reach them. The analytics bootstrap path, its bus/destination-manager modules, and the consent bootstrap always write to `console` with the standard `[hydrogen:<level>:<scope>]` prefix via the `consoleLogger` sink — when writing code in a serialized-script import chain, use `consoleLogger` directly with an explicit `{ scope }` instead of `getLogger`.
 
 ## Non-goals
 
@@ -94,5 +94,5 @@ Inline/CDN scripts that Hydrogen serializes into HTML (analytics bus, consent bo
 ## Test expectations
 
 - Failure paths inject a test logger instead of mocking `console`: `configureLogging({ logger })` with six `vi.fn()` methods, `resetLoggingForTests()` in `afterEach`. Assert `(message, { scope, ...context })` — no prefix strings.
-- Exceptions that still spy `console`: serialized inline-script code (analytics bus, consent) writes through `consoleLogger` directly, and `logging.test.ts` verifies the sink's own `[hydrogen:<level>:<scope>]` formatting.
+- Exceptions that still spy `console`: serialized inline-script import chains (analytics bus/destination-manager, consent) write through `consoleLogger` directly, and `logging.test.ts` verifies the sink's own `[hydrogen:<level>:<scope>]` formatting.
 - The `no-console` lint rule enforces the policy: the only sanctioned `console` call site is `src/core/logging/logging.ts`, which carries an inline `oxlint-disable-next-line no-console`. CLI and test files are exempt.
