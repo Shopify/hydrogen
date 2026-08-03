@@ -11,6 +11,7 @@ import {
 
 export type ShopifyScriptsProps = ShopifyScriptTagsOptions & {
   navigate?: ShopifyRoutesOptions["navigate"];
+  routes?: ShopifyRoutesOptions["routes"];
   webMcp?: boolean;
 };
 
@@ -35,7 +36,7 @@ export const ShopifyScripts = defineComponent({
     },
     routes: {
       type: routesProp,
-      required: true,
+      default: undefined,
     },
     navigate: {
       type: navigateProp,

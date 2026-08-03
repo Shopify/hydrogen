@@ -6,9 +6,6 @@
 - Configuration
   - `shop`
   - `consent`
-  - Custom-banner consent hooks
-  - `canTrack` — DO NOT override in production
-  - `cookieDomain`
 - The shared singleton pattern
 - Root configuration examples
 - Per-route view events
@@ -92,9 +89,7 @@ const i18n: ShopifyScriptsI18n = {
 };
 
 const consent: ConsentConfig = {
-  publicStorefrontAccessToken: "<public 32-char token>", // optional, public token only
-  consentDomain: "www.my-store.com",      // optional; defaults to window.location.host
-  mode: "default-banner",                 // "default-banner" | "custom-banner" | "no-banner"
+  mode: "default-banner", // "default-banner" | "custom-banner" | "no-banner"
 };
 
 const analytics: NonNullable<ShopifyScriptTagsOptions["analytics"]> = {
@@ -127,10 +122,6 @@ This is where the location/region nuance lives. Shopify's hosted Customer Privac
 - **Visitors in jurisdictions with consent requirements** (EU/EEA/UK GDPR, parts of Canada, California CCPA, etc.) — analytics must wait for consent. Use `mode: "default-banner"` for Shopify's hosted privacy banner, or `mode: "custom-banner"` if your app renders its own banner and calls `window.Shopify.customerPrivacy.setTrackingConsent()`.
 - **Visitors in jurisdictions without consent requirements** — the Customer Privacy SDK auto-allows tracking and the banner does not render. The bus dispatches normally.
 
-`publicStorefrontAccessToken` is optional. If provided, it must be the public token. ShopifyScripts logs an error if it appears to be a `shpat_*` private token or is not 32 characters.
-
-`consentDomain` overrides the domain used for consent configuration and browser consent-cookie queries. Pass a host without protocol. If omitted, ShopifyScripts uses `window.location.host` and assumes the SFAPI proxy is available.
-
 `mode` controls how consent is collected:
 
 - `"default-banner"` loads Shopify's hosted privacy banner and waits when the Customer Privacy API says banner interaction is required.
@@ -152,10 +143,6 @@ Events published before consent is ready are buffered for destinations and repla
 Custom event names such as `custom_*` are temporarily unsupported. Publishing or subscribing to an unsupported event name logs a small warning and the event is ignored.
 
 Do not bypass this gate in production. Shipping consent bypasses is a regulatory issue.
-
-### `cookieDomain`
-
-Only affects deprecated JS-visible cookies (`_shopify_y`, `_shopify_s`) — preserved for downstream systems still reading them. Modern http-only Shopify cookies are set by same-origin Storefront API traffic through your proxy, not by this option.
 
 ---
 
@@ -236,10 +223,7 @@ React root layout:
     myshopifyDomain: env.PUBLIC_STORE_DOMAIN,
   }}
   i18n={{ country: market.country, language: market.language, currency: market.currencyCode }}
-  consent={{
-    mode: "default-banner",
-    publicStorefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-  }}
+  consent={{ mode: "default-banner" }}
 />
 ```
 
@@ -253,10 +237,7 @@ const shopifyTags = renderShopifyScriptTags({
     myshopifyDomain: env.PUBLIC_STORE_DOMAIN,
   },
   i18n: { country: market.country, language: market.language, currency: market.currencyCode },
-  consent: {
-    mode: "default-banner",
-    publicStorefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-  },
+  consent: { mode: "default-banner" },
 });
 ```
 
@@ -284,15 +265,17 @@ On search results page:
   analytics.publish(AnalyticsEvent.SEARCH_VIEWED, { searchTerm })
 
 On cart view (page or drawer):
-  analytics.publish(AnalyticsEvent.CART_VIEWED, { cart, prevCart })
+  analytics.publish(AnalyticsEvent.CART_VIEWED, { cart })
 
-Whenever cart state resolves (any source — fetch, mutation, SPA nav):
-  trackCartAnalytics(cart) // emits cart_updated / product_added_to_cart / product_removed_from_cart
+Once, in a client-only effect after ShopifyScripts has rendered:
+  trackCartAnalytics(cartStore) // subscribes to the store; emits cart_updated / product_added_to_cart / product_removed_from_cart on confirmed changes
+  // never at cart-store creation time — that runs during SSR, where the analytics bus does not exist
+  // React/Vue bindings: render useCartAnalytics() inside CartProvider instead
 ```
 
 Required product fields for `product_viewed` and `product_added_to_cart` Monorail dispatch: `id`, `title`, `price`, `vendor`, `variantId`, `variantTitle`. `id` must be the Shopify Product GID and `variantId` must be the Shopify ProductVariant GID when one is available; handles are routing/display data, not analytics IDs. Missing fields cause the Shopify analytics subscriber to skip the Monorail event and log a field-specific error — the bus event still fires for your subscribers, only the Monorail leg drops.
 
-`CART_VIEWED` requires `{ cart, prevCart }`. `cart` and `prevCart` are `AnalyticsCart | null`; when a compatible cart is available, include `id`, `updatedAt`, and connection-shaped `lines`, otherwise pass `cart: null` rather than a partial object.
+`CART_VIEWED` requires `{ cart }`. `cart` is `AnalyticsCart | null`; when a compatible cart is available, include `id`, `updatedAt`, and connection-shaped `lines`, otherwise pass `cart: null` rather than a partial object. (`prevCart` belongs to the cart-change events emitted by `trackCartAnalytics`, not to `CART_VIEWED`.)
 
 ## Framework-specific shapes
 
@@ -539,7 +522,7 @@ Three questions, in order, decide where things go:
 
 2. **Where does per-page server-resolved data become available on the client?** That is where each view event (`product_viewed`, `collection_viewed`, etc.) goes. In React, that is a `useEffect` keyed on the resolved data. In Solid, a `createEffect` reading the async value. In Svelte 5, an `$effect`. In Astro, an inline script that reads from a data-attribute bridge.
 
-3. **Where is cart state resolved?** That is where you call `trackCartAnalytics(cart)` — see Cart Tracking below. This must fire on every cart change from any source (initial fetch, mutation result, SPA navigation re-fetch, optimistic update settled). The cart tracker dedupes internally per global bus — extra calls are cheap, missed calls are silent data loss.
+3. **Where does the client first have the cart store?** That is where you call `trackCartAnalytics(cartStore)` once — in a client-only effect after ShopifyScripts has rendered, never at cart-store creation time (that runs during SSR, where the analytics bus does not exist yet). The tracker subscribes to the store itself, so every confirmed cart change from any source (initial fetch, mutation result, SPA navigation re-fetch, optimistic update settled) is tracked without further app code. See Cart Tracking below.
 
 The singleton + lazy-init pattern from the previous section is universal. Every framework converges on the same shape: one shared analytics module, getter that no-ops on the server, and adapters that translate framework lifecycle into `publish()` / `trackCartAnalytics()` calls.
 
@@ -547,13 +530,13 @@ The singleton + lazy-init pattern from the previous section is universal. Every 
 
 ## Cart Tracking
 
-Cart events do not come from `publish()` — they come from a cart tracker that uses the global bus:
+Cart events do not come from `publish()` — they come from a cart tracker subscribed to the cart store:
 
 ```ts
-trackCartAnalytics(cart);
+const stopTracking = trackCartAnalytics(cartStore);
 ```
 
-The utility throws if `window.Shopify.analytics` is unavailable, stores tracker state internally per analytics bus, and runs change detection:
+Pass the cart store created by Hydrogen (`createCartStore`, or the store provided by the React/Vue `CartProvider` — the React and Vue bindings export a `useCartAnalytics()` hook/composable that does this for the provider's store). The tracker subscribes to the store itself, skips states with pending optimistic cart work, and returns an unsubscribe function. It throws if `window.Shopify.analytics` is unavailable — render ShopifyScripts first — and runs change detection:
 
 - Compares the new cart's `updatedAt` against the previous in-memory cart, against `localStorage.cartLastUpdatedAt`, and against the last emitted event ID.
 - Diffs lines: removed lines emit `product_removed_from_cart`, new lines or quantity increases emit `product_added_to_cart`, quantity decreases emit `product_removed_from_cart`.
@@ -570,7 +553,7 @@ type AnalyticsCart = {
 };
 ```
 
-Both `lines.nodes` and `lines.edges` (GraphQL connection) shapes work. Call `trackCartAnalytics(cart)` whenever your framework resolves cart state — initial load, after mutations, on SPA navigation. Carts without `updatedAt` are silently ignored (no error logged).
+Manually published `AnalyticsCart` payloads (like `CART_VIEWED`) accept both `lines.nodes` and `lines.edges` (GraphQL connection) shapes at the type level; the bus forwards them unchanged, so subscribers that read lines should flatten them with the exported `flattenConnection()` helper. The cart store consumed by `trackCartAnalytics` is different: it reads `cart.lines.nodes` directly, so the app's cart query must select `lines.nodes`. The cart query must also include `updatedAt` — the tracker keys dedupe on it. Without it, the tracker falls back to a fresh timestamp per state and can emit duplicate cart events.
 
 Application code should not manually publish `cart_updated`, `product_added_to_cart`, or `product_removed_from_cart`. Always go through `trackCartAnalytics`.
 
@@ -616,14 +599,13 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Replay is destination-only.** Raw `analytics.subscribe()` listeners only receive live events. `analytics.addDestination()` callbacks receive consent-gated live events plus buffered replay after analytics consent is granted. If the visitor explicitly denies analytics consent, the buffer is cleared and those pre-denial events are never replayed.
 - **The singleton must be lazy.** Reading the global bus at module top-level can run on the server during SSR and crash on `window` access. Always wrap in a `typeof window === 'undefined'` guard.
 - **Use the right shop shape for each API.** `ShopifyScripts` accepts a numeric Shop ID or Shopify Shop GID plus `storefrontId` and the permanent `myshopifyDomain`; the analytics bus normalizes `shop.shopId` to a Shopify Shop GID before dispatch, while the bootstrap exposes the domain as `window.Shopify.shop`.
-- **`publicStorefrontAccessToken` must be public when provided.** ShopifyScripts logs an error if the token starts with `shpat_` or is not 32 characters. Private tokens stay server-side.
 - **Customer Privacy script blocked by CSP.** If your CSP does not allow `cdn.shopify.com`, the consent script never loads, `analyticsProcessingAllowed()` stays `false`, and destination events never deliver. Check Network tab for blocked requests; add `cdn.shopify.com` to `script-src`.
 - **`mode: "no-banner"` is wrong for any storefront with EU/UK/CA visitors unless consent is handled elsewhere.** Without a hosted or custom banner, those visitors have no UI to grant consent — destination events never deliver. Default to `mode: "default-banner"` unless you have a custom consent UI that calls `setTrackingConsent()`.
 - **Multiple bus instances on the same page conflict.** `window.Shopify.customerPrivacy.config` is global; the latest initialized config wins. Multi-store-per-page is not supported. Use one bus per active storefront shell.
 - **Astro inline scripts cannot reference component scope.** Astro hoists `<script>` tags at build time. Bridge SSR data through hidden DOM (`data-*` attributes) and read it from the script. Trying to interpolate `{product.id}` directly into a script body silently fails — the script ships as a static string.
 - **Astro page-view fires only on full loads.** Astro is MPA-by-default. If you adopt View Transitions, listen for `astro:after-swap` instead of relying on the inline-script-runs-on-load behavior — otherwise SPA-nav transitions skip `page_viewed`.
 - **Required product fields silently drop the Monorail leg.** Missing `id`/`title`/`vendor`/`variantId`/`variantTitle`/`price` causes the Shopify analytics subscriber to skip Monorail dispatch and log a field-specific error. The bus event still fires for your subscribers — the loss is only in Shopify analytics. Watch the console.
-- **`updatedAt` missing from cart query drops cart tracking.** The cart tracker keys dedupe on `updatedAt`. Without it, every `trackCartAnalytics()` call is silently ignored.
+- **`updatedAt` missing from cart query breaks cart tracking dedupe.** The cart tracker keys dedupe on `updatedAt`. Without it, the tracker falls back to a fresh timestamp per cart state, so duplicate `cart_updated` / line-delta events can fire for the same logical cart.
 - **`destroy()` is not called by any of the framework adapter sketches.** During HMR or React Strict Mode double-mount, this means duplicate event subscribers and possibly duplicate Monorail events in dev. For production this is rarely visible (one bus per page lifetime). If duplicate dev events bother you, wire `analytics.destroy()` into your framework's teardown (React effect cleanup, Svelte `onDestroy`, Solid `onCleanup`, or equivalent).
 - **Lighthouse skip is silent.** Monorail dispatch is skipped for Chrome Lighthouse user-agents. If your synthetic monitoring runs Lighthouse, you will see no Monorail requests in those runs — this is intentional.
 
