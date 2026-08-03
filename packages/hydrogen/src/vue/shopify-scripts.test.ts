@@ -36,8 +36,6 @@ const CONSENT = {
 };
 
 describe("ShopifyScripts", () => {
-  const emptyRouteTemplates = createShopifyRouteTemplates({});
-
   it("renders Shopify storefront runtime scripts during SSR", async () => {
     const routeTemplates = createShopifyRouteTemplates({
       product: "/p/:productHandle",
@@ -82,10 +80,9 @@ describe("ShopifyScripts", () => {
     expect(html).not.toContain(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT);
   });
 
-  it("always renders standard scripts", async () => {
+  it("always renders standard scripts, with routes optional", async () => {
     const html = await renderToString(
       h(ShopifyScripts, {
-        routes: emptyRouteTemplates,
         shop: TEST_SHOP,
       }),
     );
@@ -104,7 +101,6 @@ describe("ShopifyScripts", () => {
   it("accepts disabled WebMCP without rendering SSR scripts", async () => {
     const html = await renderToString(
       h(ShopifyScripts, {
-        routes: emptyRouteTemplates,
         shop: TEST_SHOP,
         webMcp: false,
       }),

@@ -1,4 +1,4 @@
-export { createCartComponents } from "./cart";
+export { createCartComponents, useCartAnalytics } from "./cart";
 export type { ShopifyGlobal } from "../globals";
 export {
   CollectionProvider,
