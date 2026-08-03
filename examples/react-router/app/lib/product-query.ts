@@ -3,7 +3,7 @@ import { gql, type StorefrontApi } from "@shopify/hydrogen";
 import { PRODUCT_CARD_FRAGMENT, VARIANT_FIELDS_FRAGMENT } from "./fragments";
 
 /**
- * Product detail query (`hydrogen-setup` / `references/product-page.md` +
+ * Product detail query (`hydrogen-setup` / `steps/6-product-detail-page.md` +
  * `hydrogen-variant-form`). Derives URL-selected options with
  * `getSelectedProductOptions`, includes the variant-form encoded fields, and
  * uses one reusable `VariantFields` fragment across all variant caches.

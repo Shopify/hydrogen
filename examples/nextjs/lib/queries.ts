@@ -4,7 +4,7 @@ import { COLLECTION_CARD_FRAGMENT, PRODUCT_CARD_FRAGMENT } from "./fragments";
 
 /**
  * Home query — best-selling products (first 8) + featured collections (first 3).
- * Used by the home page (`hydrogen-setup` / `references/home-page.md`).
+ * Used by the home page (`hydrogen-setup` / `steps/3-build-home-page.md`).
  */
 export const HOME_QUERY = gql(
   `

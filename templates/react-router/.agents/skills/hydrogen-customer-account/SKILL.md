@@ -1,6 +1,14 @@
+---
+name: hydrogen-customer-account
+description: >
+  Customer Account API setup for Hydrogen storefronts. Use when wiring customer
+  sessions, login/logout/OAuth route handlers, account profile, order history,
+  account-gated UI, or Customer Account GraphQL queries.
+---
+
 # Customer Account API
 
-Set up Customer Account API only when the storefront needs login, account profile, order history, or account-gated UI. Hydrogen provides typed GraphQL helpers and OAuth/session primitives; the app still owns framework integration, UI, and session storage.
+The Customer Account API powers login, account profile, order history, and account-gated UI. Hydrogen provides typed GraphQL helpers and OAuth/session primitives; the app still owns framework integration, UI, and session storage.
 
 ## Configuration
 
@@ -49,9 +57,21 @@ Server-rendered account UI must keep session reads and token refresh separate:
 
 Wrap header/account-link UI in the framework's streaming primitive when possible so the shell can render before session state resolves.
 
+## Account Page
+
+Hydrogen ships no account UI yet — the app owns it. A storefront with the handlers wired but no account page has working auth endpoints a buyer can never reach. Build at least a minimal `/account` route:
+
+- **Signed out** — render a sign-in panel linking to `/account/login?return_to=/account`. The login link must be a full-document navigation (plain `<a>` or the framework link's reload-document mode): the handler returns a raw redirect to Shopify's hosted login page that client-side routing cannot follow.
+- **Signed in** — fetch and render a minimal profile (`customer { firstName lastName emailAddress { emailAddress } }`). Check GraphQL `errors` and render an error state instead of crashing.
+- **Logout** — a plain HTML `<form method="post" action="/account/logout">` with a submit button. The handler enforces same-origin POST and returns a raw redirect (to Shopify's logout endpoint when an `id_token` exists); a native browser submit follows it, a client-side form component or fetch call does not. This also keeps logout working without JavaScript. An optional `return_to` search param on the action URL controls the post-logout destination.
+- **Navbar** — link to `/account`. A static link is enough; the page handles both states. If showing signed-in state in the header, use `isLoggedIn()` behind the framework's streaming primitive per the Server Rendering rules above.
+- Never serialize tokens or session objects into loader data or HTML; render only derived profile fields.
+
 ## Typed Queries
 
-Use `gql` and `createCustomerAccountClient` from `@shopify/hydrogen/customer-account` in server code only. Pass the access token per GraphQL call. Configure `@shopify/hydrogen/ts-plugin`, add `hydrogen gql check` to a package script, then run that script before treating setup as complete.
+Use `gql` and `createCustomerAccountClient` from `@shopify/hydrogen/customer-account` in server code only. Pass the access token per GraphQL call.
+
+The same `@shopify/hydrogen/ts-plugin` and `hydrogen gql check` setup from the `hydrogen-storefront-client` skill validates Customer Account API documents too. If the check is not already chained into the app's `typecheck` package script, add it there (create the script if the app has none), then run it before treating setup as complete — framework typecheck commands do not validate `gql()` documents on their own.
 
 ## Local OAuth
 

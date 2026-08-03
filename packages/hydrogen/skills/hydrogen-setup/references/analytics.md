@@ -26,7 +26,7 @@
 **Prerequisites:**
 
 - A storefront built on `@shopify/hydrogen` with the request interceptors already wired (`handleShopifyRoutes` and `handleShopifyRedirects`). The analytics bus depends on the SFAPI proxy so the browser can observe same-origin Storefront API responses for session cookies. Without the proxy, analytics falls back to deprecated JavaScript-visible cookies and should be treated as incomplete. If you have not installed the interceptors yet, install them first with the local `hydrogen-request-handlers` skill.
-- Shopify runtime scripts rendered from the root/document head. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass `{country, language, currency?}` as `i18n`; pass `{shopId: env.SHOP_ID, storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0", myshopifyDomain: env.PUBLIC_STORE_DOMAIN}` as `shop`. Resolve both on the server and serialize them into ShopifyScripts. ShopifyScripts creates `window.Shopify.analytics` by default and exposes the permanent domain as `window.Shopify.shop`. Analytics consent config does not accept `country` or `language`.
+- Shopify runtime scripts rendered from the root/document head. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass `{country, language, currency?}` as `i18n`; pass `{shopId: env.SHOP_ID, storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0", myshopifyDomain: env.PUBLIC_STORE_DOMAIN}` as `shop`. Resolve both on the server, declare them as consts annotated with the `ShopifyScriptsShop` / `ShopifyScriptsI18n` types from `@shopify/hydrogen` (so wrong or missing fields fail typecheck where they are built), and serialize them into ShopifyScripts. ShopifyScripts creates `window.Shopify.analytics` by default and exposes the permanent domain as `window.Shopify.shop`. Analytics consent config does not accept `country` or `language`.
 - A client-side lifecycle hook in your framework (route-change effect, navigation event, `<script>` tag, etc.) so view events can fire on the right URL transitions.
 
 `ShopifyScripts` creates the zero-dependency analytics bus, sets it on `window.Shopify.analytics`, and owns Shopify consent setup, analytics CDN loading, and deprecated-cookie compatibility. Framework adapters stay thin: they translate framework lifecycle events into bus calls and wire cart delta tracking with `trackCartAnalytics()`.
@@ -109,6 +109,8 @@ storefront needs to omit that CDN script.
 ### `shop`
 
 Required flat shop metadata. `shopId` may be a numeric Shop ID or a Shopify Shop GID (e.g. `gid://shopify/Shop/12345`); it is normalized before the analytics bus receives it.
+
+`shopId` and `storefrontId` are different identifiers: `shopId` identifies the shop itself (the same shop as the Customer Account API `SHOP_ID`), while `storefrontId` identifies the specific headless/Hydrogen storefront instance attached to that shop — a shop can have several storefronts, and analytics/PerfKit attribute traffic to this one. Use `"0"` when the app has no provisioned storefront ID.
 
 Resolve shop metadata on the server and pass it to ShopifyScripts. Shopify analytics needs the shop ID, PerfKit needs the numeric shop ID plus storefront ID, and storefront components use `myshopifyDomain` through `window.Shopify.shop`.
 
