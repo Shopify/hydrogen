@@ -34,8 +34,9 @@ function writeToConsole(level: LogSeverity, message: string, context?: LogContex
 }
 
 /**
- * Built-in sink: writes `[hydrogen:<level>:<scope>] <message>` to the matching
- * `console` method, followed by `context.error` and any extra context fields.
+ * Built-in sink: writes `[hydrogen:<level>:<scope>] <message>` to a
+ * level-specific `console` method, followed by `context.error` and any extra
+ * context fields. `trace` uses `console.debug`; `fatal` uses `console.error`.
  */
 export const consoleLogger: HydrogenLogger = {
   trace: (message, context) => writeToConsole("trace", message, context),
