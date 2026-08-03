@@ -157,6 +157,23 @@ describe("getLogger", () => {
 
     expect(entries).toEqual([["failed", { scope: "cart", error: "boom" }]]);
   });
+
+  it("does not let a throwing custom sink affect callers", () => {
+    const sink = createLoggerSpy();
+    const loggerError = new Error("logger unavailable");
+    sink.error = (): void => {
+      throw loggerError;
+    };
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    configureLogging({ logger: sink });
+
+    expect(() => getLogger("cart").error("failed")).not.toThrow();
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      "[hydrogen:error:logging] configured logger failed",
+      loggerError,
+    );
+  });
 });
 
 describe("configureLogging", () => {

@@ -35,7 +35,7 @@ const log = getLogger("cart");
 log.error("cart initial load failed", { error });
 ```
 
-- `getLogger(scope)` returns a lazily-resolved scoped logger. Declare one module-level `const log` per file. Fixed scope names: `cart`, `cart-api`, `analytics`, `consent`, `webmcp`, `checkout`, `redirects`, `product`, `shop-pay`, and per-proxy scopes (`sfapi-proxy`, `mcp-proxy`, `ajax-api`, `agent-proxy`). Adding a subsystem? Add one scope name and keep it stable.
+- `getLogger(scope)` returns a lazily-resolved scoped logger. Prefer one module-level `const log` per file when the scope is static. Use stable subsystem scopes; proxy descriptors provide dynamic scopes.
 - Messages are unprefixed, lowercase-leaning, and without trailing colons; the sink owns formatting.
 - `context.error` becomes a separate console argument; other context keys become a trailing object.
 - Never call `console.*` directly in `packages/hydrogen/src` — the `no-console` lint rule enforces this. Sanctioned exceptions: the built-in sink in `src/core/logging/logging.ts` and the CLI.
@@ -61,7 +61,17 @@ interface HydrogenLogger {
 
 ```ts
 import { configureLogging } from "@shopify/hydrogen";
-configureLogging({ logger?, level? });
+
+const logger = {
+  trace: console.debug,
+  debug: console.debug,
+  info: console.info,
+  warn: console.warn,
+  error: console.error,
+  fatal: console.error,
+};
+
+configureLogging({ logger, level: "warn" });
 ```
 
 - Global, called once at startup (app entry on the browser, module init on the server).

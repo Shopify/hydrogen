@@ -101,7 +101,22 @@ export type ScopedLogger = Record<
 
 function emit(scope: string, level: LogSeverity, message: string, context?: LogContext): void {
   if (!isLevelEnabled(level, state.level)) return;
-  state.logger[level](message, { ...context, scope });
+
+  try {
+    state.logger[level](message, { ...context, scope });
+  } catch (error) {
+    reportLoggerFailure(error);
+  }
+}
+
+function reportLoggerFailure(error: unknown): void {
+  if (state.logger === consoleLogger) return;
+
+  try {
+    consoleLogger.error("configured logger failed", { scope: "logging", error });
+  } catch {
+    // Logging failures must never change the runtime path that triggered the log.
+  }
 }
 
 /** @internal Returns the lazily-resolved scoped logger for a Hydrogen subsystem. */
