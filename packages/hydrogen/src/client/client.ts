@@ -9,6 +9,7 @@ import { DEFAULT_TIMEOUT_IN_MS, STOREFRONT_API_VERSION } from "../core/constants
 import {
   REQUEST_GROUP_ID_HEADER,
   SHOPIFY_CLIENT_IP_HEADER,
+  SHOPIFY_CLIENT_IP_SIG_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
   STOREFRONT_ACCESS_TOKEN_HEADER,
@@ -66,6 +67,7 @@ const REQUEST_IDENTITY_HEADERS = new Set([
   REQUEST_GROUP_ID_HEADER.toLowerCase(),
   STOREFRONT_BUYER_IP_HEADER.toLowerCase(),
   SHOPIFY_CLIENT_IP_HEADER.toLowerCase(),
+  SHOPIFY_CLIENT_IP_SIG_HEADER.toLowerCase(),
   SHOPIFY_UNIQUE_TOKEN_HEADER.toLowerCase(),
   SHOPIFY_VISIT_TOKEN_HEADER.toLowerCase(),
   SHOPIFY_STOREFRONT_Y_HEADER.toLowerCase(),
@@ -215,6 +217,11 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
     requestHeaders.set(name, value);
   }
 
+  if (requestContext.clientIp && requestContext.clientIpSig) {
+    requestHeaders.set(SHOPIFY_CLIENT_IP_HEADER, requestContext.clientIp);
+    requestHeaders.set(SHOPIFY_CLIENT_IP_SIG_HEADER, requestContext.clientIpSig);
+  }
+
   if (clientType === "private") {
     const { buyerIp } = config;
     if (!buyerIp) {
@@ -225,7 +232,6 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
     }
     const trustedBuyerIp = requestContext.buyerIp ?? buyerIp;
     requestHeaders.set(STOREFRONT_BUYER_IP_HEADER, trustedBuyerIp);
-    requestHeaders.set(SHOPIFY_CLIENT_IP_HEADER, trustedBuyerIp);
   }
 
   async function graphql(

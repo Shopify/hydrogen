@@ -88,6 +88,22 @@ describe("handleShopifyRedirects", () => {
     expect(result.headers.get("location")).toBe("/new-page");
   });
 
+  it("forwards Oxygen-provided client IP headers to redirect queries", async () => {
+    const request = new Request("https://my-app.com/old-page", {
+      headers: {
+        "oxygen-buyer-ip": "1.2.3.4",
+        "X-Shopify-Client-IP-Sig": "signed-client-ip",
+      },
+    });
+
+    await handleShopifyRedirects(redirectOptions(request));
+
+    const [, init] = mockFetch.mock.calls[0];
+    const headers = new Headers(init.headers);
+    expect(headers.get("X-Shopify-Client-IP")).toBe("1.2.3.4");
+    expect(headers.get("X-Shopify-Client-IP-Sig")).toBe("signed-client-ip");
+  });
+
   it("falls through to query param redirect", async () => {
     const request = new Request("https://my-app.com/some-page?return_to=/dashboard");
     const result = await handleShopifyRedirects(redirectOptions(request));

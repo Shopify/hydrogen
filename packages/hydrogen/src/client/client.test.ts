@@ -251,7 +251,7 @@ describe("createStorefrontClient", () => {
       expect(headers.get("Shopify-Storefront-Private-Token")).toBe("priv-token-456");
     });
 
-    it("sends buyer meta headers for private client", async () => {
+    it("keeps private-client buyer IP separate from Oxygen client IP", async () => {
       const requestContext = createTestRequestContext(
         new Request("https://example.com", {
           headers: { "request-id": "request-context-group" },
@@ -266,8 +266,28 @@ describe("createStorefrontClient", () => {
 
       const headers = getHeaders(mockFetch);
       expect(headers.get("Shopify-Storefront-Buyer-IP")).toBe("10.0.0.1");
-      expect(headers.get("X-Shopify-Client-IP")).toBe("10.0.0.1");
+      expect(headers.get("X-Shopify-Client-IP")).toBeNull();
+      expect(headers.get("X-Shopify-Client-IP-Sig")).toBeNull();
       expect(headers.get("Custom-Storefront-Request-Group-ID")).toBe("request-context-group");
+    });
+
+    it("sends Oxygen-provided client IP headers", async () => {
+      const requestContext = createTestRequestContext(
+        new Request("https://example.com", {
+          headers: {
+            "oxygen-buyer-ip": "10.0.0.2",
+            "X-Shopify-Client-IP-Sig": "signed-client-ip",
+          },
+        }),
+      );
+      const client = createPublicClient({ fetch: mockFetch, requestContext });
+
+      await client.graphql(SHOP_QUERY);
+
+      const headers = getHeaders(mockFetch);
+      expect(headers.get("X-Shopify-Client-IP")).toBe("10.0.0.2");
+      expect(headers.get("X-Shopify-Client-IP-Sig")).toBe("signed-client-ip");
+      expect(headers.get("Shopify-Storefront-Buyer-IP")).toBeNull();
     });
 
     it("rejects mismatched request context and private client buyer IP", () => {

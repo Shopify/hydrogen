@@ -12,6 +12,7 @@ export const STOREFRONT_PRIVATE_TOKEN_HEADER = "Shopify-Storefront-Private-Token
 export const REQUEST_GROUP_ID_HEADER = "Custom-Storefront-Request-Group-ID";
 export const STOREFRONT_BUYER_IP_HEADER = "Shopify-Storefront-Buyer-IP";
 export const SHOPIFY_CLIENT_IP_HEADER = "X-Shopify-Client-IP";
+export const SHOPIFY_CLIENT_IP_SIG_HEADER = "X-Shopify-Client-IP-Sig";
 export const SHOPIFY_UNIQUE_TOKEN_HEADER = "X-Shopify-UniqueToken";
 export const SHOPIFY_VISIT_TOKEN_HEADER = "X-Shopify-VisitToken";
 export const SHOPIFY_STOREFRONT_Y_HEADER = "Shopify-Storefront-Y";
@@ -69,6 +70,8 @@ type ShopifyRequestContextBase = {
   visitToken?: string;
   legacyTokens?: boolean;
   buyerIp?: string;
+  clientIp?: string;
+  clientIpSig?: string;
   requestGroupId: string;
   signal?: AbortSignal;
   url?: string;
@@ -96,6 +99,8 @@ type Context<I18n extends I18nConfig = I18nConfig> = {
   visitToken?: string;
   legacyTokens?: boolean;
   buyerIp?: string;
+  clientIp?: string;
+  clientIpSig?: string;
   requestGroupId: string;
   signal?: AbortSignal;
   url?: string;
@@ -118,11 +123,19 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
   const i18n = normalizeI18n(input.i18n);
   const cookie = request.headers.get("cookie") || undefined;
   const url = request.url ?? request.headers.get(STOREFRONT_URL_HEADER) ?? undefined;
+
+  // Temporary workaround of Oxygen
+  const clientIp = request.headers.get("oxygen-buyer-ip") || undefined;
+  const clientIpSig = clientIp
+    ? request.headers.get(SHOPIFY_CLIENT_IP_SIG_HEADER) || undefined
+    : undefined;
+
   const context = {
     ...(cookie && { cookie }),
     i18n,
     ...(url && { url }),
     ...(input.buyerIp && { buyerIp: input.buyerIp }),
+    ...(clientIp && clientIpSig && { clientIp, clientIpSig }),
     requestGroupId:
       request.headers.get(REQUEST_GROUP_ID_HEADER) ??
       request.headers.get("x-request-id") ??

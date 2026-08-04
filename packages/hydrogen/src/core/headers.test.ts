@@ -8,6 +8,7 @@ import {
   SHOPIFY_STOREFRONT_Y_HEADER,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
+  SHOPIFY_CLIENT_IP_SIG_HEADER,
   REQUEST_GROUP_ID_HEADER,
 } from "./headers";
 
@@ -118,6 +119,42 @@ describe("createShopifyRequestContext", () => {
     });
 
     expect(result.buyerIp).toBe(buyerIp);
+  });
+
+  it("stores Oxygen-provided client IP metadata", () => {
+    const result = createTestRequestContext(
+      new Request("https://example.com", {
+        headers: {
+          "oxygen-buyer-ip": "1.2.3.4",
+          [SHOPIFY_CLIENT_IP_SIG_HEADER]: "signed-client-ip",
+        },
+      }),
+    );
+
+    expect(result.clientIp).toBe("1.2.3.4");
+    expect(result.clientIpSig).toBe("signed-client-ip");
+  });
+
+  it("ignores a client IP signature outside Oxygen", () => {
+    const result = createTestRequestContext(
+      new Request("https://example.com", {
+        headers: { [SHOPIFY_CLIENT_IP_SIG_HEADER]: "untrusted-signature" },
+      }),
+    );
+
+    expect(result.clientIp).toBeUndefined();
+    expect(result.clientIpSig).toBeUndefined();
+  });
+
+  it("ignores an unsigned Oxygen client IP", () => {
+    const result = createTestRequestContext(
+      new Request("https://example.com", {
+        headers: { "oxygen-buyer-ip": "1.2.3.4" },
+      }),
+    );
+
+    expect(result.clientIp).toBeUndefined();
+    expect(result.clientIpSig).toBeUndefined();
   });
 
   it("defaults pathPrefix to an empty string", () => {

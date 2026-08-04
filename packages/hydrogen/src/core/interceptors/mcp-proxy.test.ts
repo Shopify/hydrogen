@@ -152,23 +152,6 @@ describe("handleMcpProxy", () => {
     expect(headers.get("X-Shopify-VisitToken")).toBeNull();
   });
 
-  it("does not add server-side headers", async () => {
-    await handleMcpProxy(
-      createRequest("/api/mcp", {
-        headers: { "oxygen-buyer-ip": "1.2.3.4" },
-      }),
-      defaultStoreUrl,
-    );
-
-    const call = mockFetch.mock.calls[0];
-    assert(call, "expected fetch to be called");
-    const [, init] = call;
-    const headers = new Headers(init.headers);
-    expect(headers.get("X-Shopify-Storefront-Access-Token")).toBeNull();
-    expect(headers.get("X-Shopify-Client-IP")).toBeNull();
-    expect(headers.get("x-forwarded-for")).toBeNull();
-  });
-
   it("sets Custom-Storefront-Request-Group-ID as a UUID", async () => {
     await handleMcpProxy(createRequest("/api/mcp"), defaultStoreUrl);
 

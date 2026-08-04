@@ -1,5 +1,10 @@
 import type { HydrogenRoutesOptions } from "../handle-shopify-routes";
-import { extractHeaders, REQUEST_GROUP_ID_HEADER } from "../headers";
+import {
+  extractHeaders,
+  REQUEST_GROUP_ID_HEADER,
+  SHOPIFY_CLIENT_IP_HEADER,
+  SHOPIFY_CLIENT_IP_SIG_HEADER,
+} from "../headers";
 
 const PROXY_TIMEOUT_MS = 30_000;
 
@@ -31,6 +36,15 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor) {
         crypto.randomUUID(),
     );
     descriptor.prepareHeaders?.(forwardedHeaders, options);
+
+    forwardedHeaders.delete(SHOPIFY_CLIENT_IP_HEADER);
+    forwardedHeaders.delete(SHOPIFY_CLIENT_IP_SIG_HEADER);
+    if (options.requestContext.clientIp) {
+      forwardedHeaders.set(SHOPIFY_CLIENT_IP_HEADER, options.requestContext.clientIp);
+    }
+    if (options.requestContext.clientIpSig) {
+      forwardedHeaders.set(SHOPIFY_CLIENT_IP_SIG_HEADER, options.requestContext.clientIpSig);
+    }
 
     try {
       const init: RequestInit & { duplex?: "half" } = {
