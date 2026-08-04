@@ -10,7 +10,10 @@ import {
   CUSTOMER_ACCOUNT_LOGOUT_PATH,
   CUSTOMER_ACCOUNT_REFRESH_PATH,
   type Awaitable,
+  type CreateCustomerAccountServerHandlersOptions,
   type CustomerAccountServerHandlers,
+  type CustomerAccountServerHandlersWithLifecycleHooks,
+  type CustomerAccountSessionLifecycleHook,
   type ReadonlyCustomerSessionManager,
   type WritableCustomerSessionManager,
 } from "./index";
@@ -41,6 +44,9 @@ const requestContext = createShopifyRequestContext({
   request: new Request("https://example.com"),
   i18n: { country: "US", language: "EN" },
 });
+const lifecycleHook: CustomerAccountSessionLifecycleHook = async (context) => {
+  void context.storefrontClient;
+};
 
 describe("Customer Account session type boundary", () => {
   it("exports route constants as literals", () => {
@@ -96,12 +102,28 @@ describe("Customer Account session type boundary", () => {
   });
 
   it("returns handlers compatible with handleShopifyRoutes", () => {
-    const handlers = createCustomerAccountServerHandlers({
+    const handlers = createCustomerAccountServerHandlers({ customerSession });
+    const handlersWithLifecycleHooks = createCustomerAccountServerHandlers({
       customerSession,
+      onAuthenticated: lifecycleHook,
+      onTokenRefresh: lifecycleHook,
+      onLogout: lifecycleHook,
     });
+    const options: CreateCustomerAccountServerHandlersOptions = {
+      customerSession,
+      onAuthenticated: lifecycleHook,
+    };
+    const handlersFromAnnotatedOptions = createCustomerAccountServerHandlers(options);
 
     expectTypeOf(handlers).toMatchTypeOf<CustomerAccountServerHandlers>();
     expectTypeOf(handlers).toMatchTypeOf<ShopifyRouteHandlerGroup>();
+    expectTypeOf(handlersWithLifecycleHooks).toMatchTypeOf<
+      CustomerAccountServerHandlersWithLifecycleHooks
+    >();
+    expectTypeOf(handlersWithLifecycleHooks).toMatchTypeOf<ShopifyRouteHandlerGroup>();
+    expectTypeOf(handlersFromAnnotatedOptions).toMatchTypeOf<
+      CustomerAccountServerHandlersWithLifecycleHooks
+    >();
     expectTypeOf(handlers.authorize).toHaveProperty("pathname").toEqualTypeOf<
       typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH
     >();

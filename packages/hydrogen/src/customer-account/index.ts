@@ -34,6 +34,8 @@ export type {
   CreateCustomerAccountServerHandlersOptions,
   CreateCustomerSessionOptions,
   CustomerAccountServerHandlers,
+  CustomerAccountServerHandlersWithLifecycleHooks,
+  CustomerAccountSessionLifecycleHook,
   CustomerSession,
   LogoutOptions,
   PrepareLoginUrlOptions,

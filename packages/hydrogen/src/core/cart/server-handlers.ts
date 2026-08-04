@@ -1,7 +1,12 @@
 import type { GraphQLFormattedError, StorefrontClient } from "../../client";
+import type {
+  CustomerSession,
+  ReadonlyCustomerSessionManager,
+} from "../../customer-account/session";
 import type { AnyStorefrontQueryString } from "../../graphql";
 import { applyPrivateResponseCacheHeaders } from "../headers";
 import { getLogger } from "../logging";
+import type { ShopifyRequestContext } from "../request-context";
 import { createProxyResponseHeaders } from "../request-routing/interceptors/proxy";
 import type {
   CallableRouteHandler,
@@ -19,6 +24,7 @@ import {
   cartQueries,
   makeCartQueries,
   type CartDataForOptions,
+  type CartQueriesForOptions,
   type CreateCartQueriesOptions,
 } from "./queries";
 import type { CartData } from "./state";
@@ -54,19 +60,25 @@ type CartPostHandlerContext = {
   storefrontClient: StorefrontClient;
 };
 
-export type CartGetHandler<TCart = CartData> = CallableRouteHandler<
-  CartGetHandlerContext,
+type CartCustomerSessionContext = {
+  sessionManager: ReadonlyCustomerSessionManager;
+  requestContext: ShopifyRequestContext;
+};
+
+type CartCustomerSession = Pick<CustomerSession, "getAccessToken" | "isLoggedIn">;
+
+export type CartGetHandler<
+  TCart = CartData,
+  TContext extends CartGetHandlerContext = CartGetHandlerContext,
+> = CallableRouteHandler<
+  TContext,
   CartGetResult<TCart>,
   typeof CART_API_PATH,
   typeof CART_GET_METHOD
 >;
 
-export type CartPostHandler = CallableRouteHandler<
-  CartPostHandlerContext,
-  CartPostResult,
-  typeof CART_API_PATH,
-  typeof CART_POST_METHOD
->;
+export type CartPostHandler<TContext extends CartPostHandlerContext = CartPostHandlerContext> =
+  CallableRouteHandler<TContext, CartPostResult, typeof CART_API_PATH, typeof CART_POST_METHOD>;
 
 export type CartServerHandlers<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
@@ -75,6 +87,15 @@ export type CartServerHandlers<
   readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;
   get: CartGetHandler<TCart>;
   post: CartPostHandler;
+};
+
+export type CartServerHandlersWithCustomerSession<
+  TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
+  TCart extends CartData = CartDataFromQuery<TCartQuery>,
+> = {
+  readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;
+  get: CartGetHandler<TCart, CartGetHandlerContext & CartCustomerSessionContext>;
+  post: CartPostHandler<CartPostHandlerContext & CartCustomerSessionContext>;
 };
 
 type AsyncHandlerResult<THandler> = THandler extends (
@@ -101,47 +122,64 @@ export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
 
 type CreateCartServerHandlersOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
-> = CreateCartQueriesOptions<TCartFragment>;
+> = {
+  readonly fragment?: TCartFragment;
+} & ({ readonly customerSession: CartCustomerSession } | { readonly customerSession?: undefined });
+
+type CartServerHandlersForOptions<TOptions> = TOptions extends {
+  readonly customerSession: CartCustomerSession;
+}
+  ? CartServerHandlersWithCustomerSession<
+      CartQueriesForOptions<TOptions>["cart"],
+      CartDataForOptions<TOptions>
+    >
+  : CartServerHandlers<CartQueriesForOptions<TOptions>["cart"], CartDataForOptions<TOptions>>;
 
 export function createCartServerHandlers(): CartServerHandlers<typeof cartQueries.cart>;
 export function createCartServerHandlers<const TOptions extends CreateCartServerHandlersOptions>(
   options: TOptions,
-): CartServerHandlers<AnyStorefrontQueryString, CartDataForOptions<TOptions>>;
+): CartServerHandlersForOptions<TOptions>;
 export function createCartServerHandlers(
   options?: CreateCartServerHandlersOptions,
-): CartServerHandlers {
-  const queries = options
-    ? makeCartQueries(options as CreateCartServerHandlersOptions<AnyStorefrontQueryString>)
+): CartServerHandlers | CartServerHandlersWithCustomerSession {
+  const queries = options?.fragment
+    ? makeCartQueries({ fragment: options.fragment } as CreateCartQueriesOptions)
     : cartQueries;
   const runtimeQueries = queries as RuntimeCartQueries;
+  const customerSession = options?.customerSession;
 
   const handlers = {
     get: createCallableRouteHandler(
       CART_API_PATH,
       CART_GET_METHOD,
-      (context: CartGetHandlerContext) => handleGet(context, runtimeQueries),
+      (context: CartGetHandlerContext & Partial<CartCustomerSessionContext>) =>
+        handleGet(context, runtimeQueries, customerSession),
     ),
     post: createCallableRouteHandler(
       CART_API_PATH,
       CART_POST_METHOD,
-      (context: CartPostHandlerContext) => handlePost(context, runtimeQueries),
+      (context: CartPostHandlerContext & Partial<CartCustomerSessionContext>) =>
+        handlePost(context, runtimeQueries, customerSession),
     ),
-  } as CartServerHandlers;
+  };
 
   Object.defineProperty(handlers, cartServerHandlersCartQuery, { value: queries.cart });
-  return handlers;
+  return handlers as CartServerHandlers | CartServerHandlersWithCustomerSession;
 }
 
 type RuntimeCartQueries = typeof cartQueries;
 
 async function handleGet(
-  { request, storefrontClient }: CartGetHandlerContext,
+  context: CartGetHandlerContext & Partial<CartCustomerSessionContext>,
   queries: RuntimeCartQueries,
+  customerSession?: CartCustomerSession,
 ): Promise<CartGetResult> {
+  const { request, storefrontClient } = context;
   const cartIdSource = request ?? storefrontClient.requestContext;
   const result = await getCart(getCartId(cartIdSource), storefrontClient, queries.cart);
   logCartErrors(result.errors);
-  const data = { cart: result.cart, ...(result.errors && { errors: result.errors }) };
+  const cart = await addLoggedInCheckoutParam(result.cart, context, customerSession);
+  const data = { cart, ...(result.errors && { errors: result.errors }) };
   const headers = createProxyResponseHeaders(result.headers);
   applyPrivateResponseCacheHeaders(headers);
 
@@ -158,8 +196,9 @@ function logCartErrors(errors: CartGetData["errors"]): void {
 }
 
 async function handlePost(
-  context: CartPostHandlerContext,
+  context: CartPostHandlerContext & Partial<CartCustomerSessionContext>,
   queries: RuntimeCartQueries,
+  customerSession?: CartCustomerSession,
 ): Promise<CartPostResult> {
   const { request, storefrontClient } = context;
   const isFormRequest = !request.headers.get("content-type")?.includes("application/json");
@@ -182,7 +221,19 @@ async function handlePost(
     return errorResult("missing_cart", "No cart exists. Add an item first.");
   }
 
-  const result = await executeMutation(action, cartId, storefrontClient, queries);
+  const customerAccessToken = await getCartCreateCustomerAccessToken(
+    action,
+    cartId,
+    context,
+    customerSession,
+  );
+  const result = await executeMutation(
+    action,
+    cartId,
+    storefrontClient,
+    queries,
+    customerAccessToken,
+  );
   const headers = createProxyResponseHeaders(result.headers);
 
   // Only persist carts the browser already owns, including newly-created carts.
@@ -261,9 +312,10 @@ async function executeMutation(
   cartId: string | null,
   storefront: CartMutationClient,
   queries: RuntimeCartQueries,
+  customerAccessToken?: string,
 ): Promise<MutationResult> {
   if (action.intent === "add") {
-    return executeAdd(action.lines, cartId, storefront, queries);
+    return executeAdd(action.lines, cartId, storefront, queries, customerAccessToken);
   }
 
   if (!cartId) {
@@ -315,6 +367,7 @@ async function executeAdd(
   cartId: string | null,
   storefront: CartMutationClient,
   queries: RuntimeCartQueries,
+  customerAccessToken?: string,
 ): Promise<MutationResult> {
   if (cartId) {
     const result = await storefront.graphql(queries.cartLinesAdd, {
@@ -325,10 +378,59 @@ async function executeAdd(
   }
 
   const result = await storefront.graphql(queries.cartCreate, {
-    variables: { input: { lines } },
+    variables: {
+      input: {
+        lines,
+        ...(customerAccessToken && { buyerIdentity: { customerAccessToken } }),
+      },
+    },
   });
   const { cart, userErrors, warnings } = assertMutationData(result, "cartCreate");
   return createMutationResult(cart, userErrors, warnings, result.headers);
+}
+
+async function getCustomerAccessToken(
+  context: Partial<CartCustomerSessionContext>,
+  customerSession?: CartCustomerSession,
+): Promise<string | undefined> {
+  if (!customerSession) return undefined;
+  assertCustomerSessionContext(context);
+  return customerSession.getAccessToken(context.sessionManager, context.requestContext);
+}
+
+async function getCartCreateCustomerAccessToken(
+  action: CartAction,
+  cartId: string | null,
+  context: Partial<CartCustomerSessionContext>,
+  customerSession?: CartCustomerSession,
+): Promise<string | undefined> {
+  if (action.intent !== "add" || cartId) return undefined;
+  return getCustomerAccessToken(context, customerSession);
+}
+
+async function addLoggedInCheckoutParam<TCart extends CartData>(
+  cart: TCart | null,
+  context: Partial<CartCustomerSessionContext>,
+  customerSession?: CartCustomerSession,
+): Promise<TCart | null> {
+  if (!cart || !customerSession) return cart;
+  assertCustomerSessionContext(context);
+  if (!(await customerSession.isLoggedIn(context.sessionManager, context.requestContext)))
+    return cart;
+  if (!cart.checkoutUrl) return cart;
+
+  const checkoutUrl = new URL(cart.checkoutUrl);
+  checkoutUrl.searchParams.set("logged_in", "true");
+  return { ...cart, checkoutUrl: checkoutUrl.toString() };
+}
+
+function assertCustomerSessionContext(
+  context: Partial<CartCustomerSessionContext>,
+): asserts context is CartCustomerSessionContext {
+  if (context.sessionManager && context.requestContext) return;
+  throw new Error(
+    "Cart handlers configured with customerSession require sessionManager and requestContext.",
+  );
 }
 
 async function executeDiscountModify(
