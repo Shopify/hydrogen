@@ -23,14 +23,9 @@ import { normalizeStoreDomain } from "../core/url";
 import type { AnyStorefrontQueryString } from "../graphql";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";
 import type {
+  ClientType,
   CreateStorefrontClientArgs,
   GraphQLFormattedError,
-  PrivateClientOptions,
-  PrivateStorefrontClient,
-  PublicClientOptions,
-  PublicStorefrontClient,
-  PrivateNoBuyerContextClientOptions,
-  PrivateNoBuyerContextStorefrontClient,
   StorefrontClient,
   StorefrontGraphqlResult,
 } from "./types";
@@ -38,7 +33,6 @@ import type {
 type DocLike = TadaDocumentNode<unknown, unknown> | AnyStorefrontQueryString;
 type FetchInput = Parameters<typeof globalThis.fetch>[0];
 type FetchInit = Parameters<typeof globalThis.fetch>[1];
-type StorefrontClientFetch = typeof globalThis.fetch | ((...args: never[]) => Promise<Response>);
 type ResolvedStorefrontFetch = (
   input: FetchInput,
   init: FetchInit,
@@ -97,54 +91,22 @@ class StorefrontCacheConfigError extends Error {}
  * @see {@link https://shopify.dev/docs/api/storefront#authentication | Storefront API authentication}
  */
 export function createStorefrontClient<
+  const Type extends ClientType,
   const RequestContext extends ShopifyRequestContext,
-  const Fetch extends StorefrontClientFetch | undefined = undefined,
->(args: {
-  type: "public";
-  requestContext: RequestContext;
-  config: PublicClientOptions<Fetch> & { cache: CacheInstance };
-}): PublicStorefrontClient<{ cache?: CachingStrategy }, RequestContext>;
-export function createStorefrontClient<
-  const RequestContext extends ShopifyRequestContext,
-  const Fetch extends StorefrontClientFetch | undefined = undefined,
->(args: {
-  type: "public";
-  requestContext: RequestContext;
-  config: PublicClientOptions<Fetch> & { cache?: undefined };
-}): PublicStorefrontClient<{}, RequestContext>;
-export function createStorefrontClient<
-  const RequestContext extends ShopifyRequestContext,
-  const Fetch extends StorefrontClientFetch | undefined = undefined,
->(args: {
-  type: "private";
-  requestContext: RequestContext;
-  config: PrivateClientOptions<Fetch> & { cache: CacheInstance };
-}): PrivateStorefrontClient<{ cache?: CachingStrategy }, RequestContext>;
-export function createStorefrontClient<
-  const RequestContext extends ShopifyRequestContext,
-  const Fetch extends StorefrontClientFetch | undefined = undefined,
->(args: {
-  type: "private";
-  requestContext: RequestContext;
-  config: PrivateClientOptions<Fetch> & { cache?: undefined };
-}): PrivateStorefrontClient<{}, RequestContext>;
-export function createStorefrontClient<
-  const RequestContext extends ShopifyRequestContext,
-  const Fetch extends StorefrontClientFetch | undefined = undefined,
->(args: {
-  type: "private_no_buyer_context";
-  requestContext: RequestContext;
-  config: PrivateNoBuyerContextClientOptions<Fetch> & { cache: CacheInstance };
-}): PrivateNoBuyerContextStorefrontClient<{ cache?: CachingStrategy }, RequestContext>;
-export function createStorefrontClient<
-  const RequestContext extends ShopifyRequestContext,
-  const Fetch extends StorefrontClientFetch | undefined = undefined,
->(args: {
-  type: "private_no_buyer_context";
-  requestContext: RequestContext;
-  config: PrivateNoBuyerContextClientOptions<Fetch> & { cache?: undefined };
-}): PrivateNoBuyerContextStorefrontClient<{}, RequestContext>;
-export function createStorefrontClient(args: CreateStorefrontClientArgs): StorefrontClient;
+  const CacheConfig extends CacheInstance | undefined = undefined,
+>(
+  args: CreateStorefrontClientArgs<RequestContext, Type, CacheConfig>,
+): StorefrontClient<
+  // Tuple-wrapped to stay non-distributive so an explicit
+  // `CacheInstance | undefined` type argument yields one client type, not a
+  // union. Note a *value* of that type still unlocks cache options: optional
+  // property inference strips `undefined` before it reaches CacheConfig, so
+  // definiteness is undecidable here — the runtime guard rejects cache
+  // options when no cache instance was actually configured.
+  [CacheConfig] extends [CacheInstance] ? { cache?: CachingStrategy } : {},
+  Type,
+  RequestContext
+>;
 export function createStorefrontClient(args: CreateStorefrontClientArgs): StorefrontClient {
   const { config, requestContext, type: clientType } = args;
 
