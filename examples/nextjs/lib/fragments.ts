@@ -89,7 +89,7 @@ export const COLLECTION_CARD_QUERY = gql(
 /**
  * Variant fields fragment — one reusable shape for
  * `firstSelectableVariant`, `selectedOrFirstAvailableVariant`, and
- * `adjacentVariants` (`hydrogen-setup` / `references/product-page.md`). After
+ * `adjacentVariants` (`hydrogen-setup` / `steps/6-product-detail-page.md`). After
  * option selection, `selectedVariant` can come from any of those caches and
  * must still contain the fields the UI needs.
  */
