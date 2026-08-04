@@ -97,7 +97,13 @@ export function createStorefrontClient<
 >(
   args: CreateStorefrontClientArgs<RequestContext, Type, CacheConfig>,
 ): StorefrontClient<
-  CacheConfig extends CacheInstance ? { cache?: CachingStrategy } : {},
+  // Tuple-wrapped to stay non-distributive so an explicit
+  // `CacheInstance | undefined` type argument yields one client type, not a
+  // union. Note a *value* of that type still unlocks cache options: optional
+  // property inference strips `undefined` before it reaches CacheConfig, so
+  // definiteness is undecidable here — the runtime guard rejects cache
+  // options when no cache instance was actually configured.
+  [CacheConfig] extends [CacheInstance] ? { cache?: CachingStrategy } : {},
   Type,
   RequestContext
 >;

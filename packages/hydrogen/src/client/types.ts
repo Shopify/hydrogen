@@ -62,6 +62,8 @@ type CommonOptions = {
    */
   apiVersion?: string;
   defaultTimeoutInMs?: number;
+  // Mirrored by the `cache?: CacheConfig` inference hole in
+  // CreateStorefrontClientArgs — keep the key and type in sync.
   cache?: CacheInstance;
   waitUntil?: WaitUntil;
 };

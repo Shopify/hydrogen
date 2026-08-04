@@ -76,6 +76,20 @@ const storefrontClient = createStorefrontClient({
     expect(completions).toContain("private_no_buyer_context");
   });
 
+  it("suggests public config keys once `type` is narrowed to public", () => {
+    const completions = getCompletionsAt(`${SCRATCH_PRELUDE}
+const storefrontClient = createStorefrontClient({
+  type: "public",
+  requestContext,
+  config: { ${CURSOR} },
+});
+`);
+
+    expect(completions).toContain("publicStorefrontToken");
+    expect(completions).not.toContain("privateStorefrontToken");
+    expect(completions).not.toContain("buyerIp");
+  });
+
   it("suggests private config keys once `type` is narrowed to private", () => {
     const completions = getCompletionsAt(`${SCRATCH_PRELUDE}
 const storefrontClient = createStorefrontClient({
