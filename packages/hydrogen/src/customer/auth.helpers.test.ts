@@ -14,6 +14,7 @@ vi.mock('./BadRequest', () => {
   return {
     BadRequest: class BadRequest {
       message: string;
+      status = 400;
       constructor(message?: string, helpMessage?: string) {
         this.message = `${message} ${helpMessage}`;
       }
@@ -25,19 +26,25 @@ vi.stubGlobal(
   'Response',
   class Response {
     message;
+    status;
     constructor(body: any, options: any) {
       this.message = body;
+      this.status = options?.status;
     }
   },
 );
 
 const fetch = (globalThis.fetch = vi.fn() as any);
 
-function createFetchResponse<T>(data: T, options: {ok: boolean}) {
+function createFetchResponse<T>(
+  data: T,
+  options: {ok: boolean; status?: number},
+) {
   return {
     json: () => new Promise((resolve) => resolve(data)),
     text: async () => JSON.stringify(data),
     ok: options.ok,
+    status: options.status,
   };
 }
 
@@ -97,6 +104,7 @@ describe('auth.helpers', () => {
       await expect(run).rejects.toThrowError(
         'Unauthorized No refreshToken found in the session. Make sure your session is configured correctly and passed to `createCustomerAccountClient`.',
       );
+      expect(session.unset).toHaveBeenCalledWith(CUSTOMER_ACCOUNT_SESSION_KEY);
     });
 
     it('Throws Unauthorized when refresh token fails', async () => {
@@ -144,6 +152,34 @@ describe('auth.helpers', () => {
       await expect(run).rejects.toThrowError(
         'Unauthorized Invalid access token received.',
       );
+      expect(session.unset).not.toHaveBeenCalled();
+    });
+
+    it('Clears the session when a success response carries invalid_grant', async () => {
+      (session.get as any).mockReturnValueOnce({
+        refreshToken: 'refreshToken',
+      });
+
+      fetch.mockResolvedValue(
+        createFetchResponse(
+          {access_token: '', error: 'invalid_grant'},
+          {ok: true},
+        ),
+      );
+
+      async function run() {
+        await refreshToken({
+          session,
+          customerAccountId: 'customerAccountId',
+          customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
+          httpsOrigin: 'https://localhost',
+        });
+      }
+
+      await expect(run).rejects.toThrowError(
+        'Unauthorized Invalid access token received.',
+      );
+      expect(session.unset).toHaveBeenCalledWith(CUSTOMER_ACCOUNT_SESSION_KEY);
     });
 
     it('Refreshes the token', async () => {
@@ -216,6 +252,17 @@ describe('auth.helpers', () => {
     afterEach(() => {
       vi.clearAllMocks();
     });
+
+    function checkExpiredSession() {
+      return checkExpires({
+        locks: {},
+        expiresAt: '100',
+        session,
+        customerAccountId: 'customerAccountId',
+        customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
+        httpsOrigin: 'https://localhost',
+      });
+    }
 
     it("no-ops if the session isn't expired", async () => {
       async function run() {
@@ -303,6 +350,90 @@ describe('auth.helpers', () => {
         expiresAt: expect.any(String),
         refreshToken: 'refresh_token',
       });
+    });
+
+    it('clears the session when the refresh token is invalid', async () => {
+      (session.get as any).mockReturnValueOnce({
+        refreshToken: 'old_refresh_token',
+      });
+      fetch.mockResolvedValue(
+        createFetchResponse(
+          {error: 'invalid_grant', error_description: 'Invalid refresh token.'},
+          {ok: false, status: 400},
+        ),
+      );
+
+      await expect(checkExpiredSession()).rejects.toThrowError();
+      expect(session.unset).toHaveBeenCalledWith(CUSTOMER_ACCOUNT_SESSION_KEY);
+    });
+
+    it.each([
+      ['another 4xx', 401, {error: 'temporarily_unavailable'}],
+      ['rate limiting', 429, {error: 'temporarily_unavailable'}],
+    ])('does not clear the session for %s', async (_, status, body) => {
+      (session.get as any).mockReturnValueOnce({
+        refreshToken: 'old_refresh_token',
+      });
+      fetch.mockResolvedValue(createFetchResponse(body, {ok: false, status}));
+
+      await expect(checkExpiredSession()).rejects.toThrowError();
+      expect(session.unset).not.toHaveBeenCalled();
+    });
+
+    it('does not clear the session for a non-JSON error body', async () => {
+      (session.get as any).mockReturnValueOnce({
+        refreshToken: 'old_refresh_token',
+      });
+      fetch.mockResolvedValue({
+        text: async () => '<html>502 Bad Gateway</html>',
+        ok: false,
+        status: 502,
+      });
+
+      await expect(checkExpiredSession()).rejects.toThrowError();
+      expect(session.unset).not.toHaveBeenCalled();
+    });
+
+    it('retries after a transient failure without clearing the session', async () => {
+      (session.get as any).mockReturnValue({
+        refreshToken: 'old_refresh_token',
+      });
+      fetch
+        .mockResolvedValueOnce(
+          createFetchResponse('Internal Server Error', {
+            ok: false,
+            status: 500,
+          }),
+        )
+        .mockResolvedValueOnce(
+          createFetchResponse(
+            {
+              access_token: 'access_token',
+              expires_in: 3600,
+              refresh_token: 'refresh_token',
+            },
+            {ok: true},
+          ),
+        );
+
+      await expect(checkExpiredSession()).rejects.toThrowError();
+      await expect(checkExpiredSession()).resolves.toBeUndefined();
+
+      expect(session.unset).not.toHaveBeenCalled();
+      expect(session.set).toHaveBeenCalledWith(
+        CUSTOMER_ACCOUNT_SESSION_KEY,
+        expect.objectContaining({accessToken: 'access_token'}),
+      );
+    });
+
+    it('does not clear the session for a network error', async () => {
+      (session.get as any).mockReturnValueOnce({
+        refreshToken: 'old_refresh_token',
+      });
+      fetch.mockRejectedValue(new TypeError('fetch failed'));
+
+      await expect(checkExpiredSession()).rejects.toThrowError('fetch failed');
+      expect(session.unset).not.toHaveBeenCalled();
     });
   });
 });
