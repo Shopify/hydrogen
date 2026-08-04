@@ -39,8 +39,12 @@ function proxyRequest(request: Request, descriptor: Partial<ProxyDescriptor> = {
     sessionManager: {
       getSessionOrigin: () => new URL(request.url).origin,
       getSessionItem: (key) => data.get(key),
-      setSessionItem: (key, value) => data.set(key, value),
-      removeSessionItem: (key) => data.delete(key),
+      setSessionItem: (key, value) => {
+        data.set(key, value);
+      },
+      removeSessionItem: (key) => {
+        data.delete(key);
+      },
     },
   });
 }
