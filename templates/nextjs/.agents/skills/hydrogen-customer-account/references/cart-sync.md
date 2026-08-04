@@ -10,7 +10,10 @@ The standard `/api/cart` handler does not create a protected server-side ownersh
 
 ```ts
 import { gql, type ShopifyRouteHandlerContext } from "@shopify/hydrogen";
-import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
+import {
+  createCustomerAccountServerHandlers,
+  type CustomerAccountTokenRefreshResult,
+} from "@shopify/hydrogen/customer-account";
 
 const CART_BUYER_IDENTITY_UPDATE = gql(`
   mutation CartBuyerIdentityUpdate(
@@ -61,18 +64,12 @@ const updateCartBuyerIdentity = async (
   }
 };
 
-const attachCartBuyerIdentity = async (context: ShopifyRouteHandlerContext) => {
-  const customerAccessToken = await customerSession.getAccessToken(
-    context.sessionManager,
-    context.requestContext,
-  );
-  if (!customerAccessToken) return;
-  await updateCartBuyerIdentity(context, customerAccessToken);
-};
-
-const clearCartBuyerIdentity = async (context: ShopifyRouteHandlerContext) => {
+const synchronizeCartBuyerIdentity = async (
+  context: ShopifyRouteHandlerContext,
+  customerAccessToken: string | null,
+) => {
   try {
-    await updateCartBuyerIdentity(context, null);
+    await updateCartBuyerIdentity(context, customerAccessToken);
   } catch (error) {
     await context.sessionManager.removeSessionItem(VERIFIED_CART_ID_SESSION_KEY);
     await context.sessionManager.setSessionItem(CLEAR_CART_COOKIE_ON_COMMIT_SESSION_KEY, true);
@@ -80,19 +77,40 @@ const clearCartBuyerIdentity = async (context: ShopifyRouteHandlerContext) => {
   }
 };
 
+const attachCartBuyerIdentity = async (
+  context: ShopifyRouteHandlerContext,
+  customerAccessToken: string,
+) => {
+  await synchronizeCartBuyerIdentity(context, customerAccessToken);
+};
+
+const refreshCartBuyerIdentity = async (
+  context: ShopifyRouteHandlerContext,
+  result: CustomerAccountTokenRefreshResult,
+) => {
+  if (result.status === "transient") return;
+  await synchronizeCartBuyerIdentity(context, result.accessToken ?? null);
+};
+
+const clearCartBuyerIdentity = async (context: ShopifyRouteHandlerContext) => {
+  await synchronizeCartBuyerIdentity(context, null);
+};
+
 const customerAccountHandlers = createCustomerAccountServerHandlers({
   customerSession,
   onAuthenticated: attachCartBuyerIdentity,
-  onTokenRefresh: attachCartBuyerIdentity,
+  onTokenRefresh: refreshCartBuyerIdentity,
   onLogout: clearCartBuyerIdentity,
 });
 ```
 
-Call `rememberVerifiedCartId(sessionManager, cartId)` from that server-side cart creation boundary immediately after SFAPI returns the new cart ID, or after independently verifying ownership. Never populate it from client input. Do not register the synchronization hooks until this binding path is active. The hooks run before `sessionManager.commit()`. `onTokenRefresh` runs whenever the refresh route completes; a transient refresh can leave no usable access token while preserving a refreshable session, so it should not clear cart identity when `getAccessToken()` returns `undefined`. `onLogout` should explicitly send `customerAccessToken: null`.
+Call `rememberVerifiedCartId(sessionManager, cartId)` from that server-side cart creation boundary immediately after SFAPI returns the new cart ID, or after independently verifying ownership. Never populate it from client input. Do not register the synchronization hooks until this binding path is active. The hooks run before `sessionManager.commit()`. `onAuthenticated` receives the new access token. `onTokenRefresh` runs whenever the refresh route completes and receives a discriminated result: preserve cart identity for `transient`, attach for `authenticated`, and clear for `unauthenticated`. `onLogout` should explicitly send `customerAccessToken: null`.
 
 Configure the app's session-manager `commit()` to translate `CLEAR_CART_COOKIE_ON_COMMIT_SESSION_KEY` into an expired `Set-Cookie` header for the browser cart cookie, then remove the marker. This makes logout cleanup fail-safe: an unconfirmed SFAPI disassociation removes both the protected binding and browser capability.
 
 If a hook rejects, Hydrogen commits the updated session and returns a sanitized server error instead of the normal redirect. Hydrogen deliberately does not log the raw hook error because it can contain tokens; log allowlisted diagnostics inside the hook before throwing. Bound downstream work to an appropriate timeout and honor `context.request.signal`.
+
+Hooks can execute more than once when lifecycle requests retry or overlap. Keep synchronization idempotent by setting buyer identity to the desired state rather than applying non-repeatable side effects.
 
 Lifecycle hooks are post-authentication integration points, not authorization guards. Rejecting `onAuthenticated` does not roll back the newly authenticated session.
 

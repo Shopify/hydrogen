@@ -11,9 +11,13 @@ import {
   CUSTOMER_ACCOUNT_REFRESH_PATH,
   type Awaitable,
   type CreateCustomerAccountServerHandlersOptions,
+  type CustomerAccountAuthenticatedHook,
   type CustomerAccountServerHandlers,
   type CustomerAccountServerHandlersWithLifecycleHooks,
   type CustomerAccountSessionLifecycleHook,
+  type CustomerAccountTokenRefreshHook,
+  type CustomerAccountTokenRefreshResult,
+  type CustomerSession,
   type ReadonlyCustomerSessionManager,
   type WritableCustomerSessionManager,
 } from "./index";
@@ -46,6 +50,20 @@ const requestContext = createShopifyRequestContext({
 });
 const lifecycleHook: CustomerAccountSessionLifecycleHook = async (context) => {
   void context.storefrontClient;
+};
+const authenticatedHook: CustomerAccountAuthenticatedHook = async (_context, accessToken) => {
+  expectTypeOf(accessToken).toEqualTypeOf<string>();
+};
+const tokenRefreshHook: CustomerAccountTokenRefreshHook = async (
+  _context,
+  result,
+) => {
+  expectTypeOf(result).toEqualTypeOf<CustomerAccountTokenRefreshResult>();
+  if (result.status === "authenticated") {
+    expectTypeOf(result.accessToken).toEqualTypeOf<string>();
+  } else {
+    expectTypeOf(result.accessToken).toEqualTypeOf<undefined>();
+  }
 };
 
 describe("Customer Account session type boundary", () => {
@@ -105,15 +123,25 @@ describe("Customer Account session type boundary", () => {
     const handlers = createCustomerAccountServerHandlers({ customerSession });
     const handlersWithLifecycleHooks = createCustomerAccountServerHandlers({
       customerSession,
-      onAuthenticated: lifecycleHook,
-      onTokenRefresh: lifecycleHook,
+      onAuthenticated: authenticatedHook,
+      onTokenRefresh: tokenRefreshHook,
       onLogout: lifecycleHook,
     });
     const options: CreateCustomerAccountServerHandlersOptions = {
       customerSession,
-      onAuthenticated: lifecycleHook,
+      onAuthenticated: authenticatedHook,
     };
     const handlersFromAnnotatedOptions = createCustomerAccountServerHandlers(options);
+    const unbrandedSession: CustomerSession = customerSession;
+    // @ts-expect-error lifecycle token hooks require a session created by createCustomerSession
+    createCustomerAccountServerHandlers({
+      customerSession: unbrandedSession,
+      onAuthenticated: authenticatedHook,
+    });
+    const unbrandedLogoutHandlers = createCustomerAccountServerHandlers({
+      customerSession: unbrandedSession,
+      onLogout: lifecycleHook,
+    });
 
     expectTypeOf(handlers).toMatchTypeOf<CustomerAccountServerHandlers>();
     expectTypeOf(handlers).toMatchTypeOf<ShopifyRouteHandlerGroup>();
@@ -122,6 +150,9 @@ describe("Customer Account session type boundary", () => {
     >();
     expectTypeOf(handlersWithLifecycleHooks).toMatchTypeOf<ShopifyRouteHandlerGroup>();
     expectTypeOf(handlersFromAnnotatedOptions).toMatchTypeOf<
+      CustomerAccountServerHandlersWithLifecycleHooks
+    >();
+    expectTypeOf(unbrandedLogoutHandlers).toMatchTypeOf<
       CustomerAccountServerHandlersWithLifecycleHooks
     >();
     expectTypeOf(handlers.authorize).toHaveProperty("pathname").toEqualTypeOf<

@@ -48,6 +48,7 @@ const MAX_SET_TIMEOUT_IN_MS = 2_147_483_647;
 const SHOP_ID_RE = /^\d+$/;
 const CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON = "customer-session-access-token";
 const CUSTOMER_SESSION_MUTATION_PERSONALIZATION_REASON = "customer-session-mutation";
+const CUSTOMER_SESSION_LIFECYCLE_BRAND: unique symbol = Symbol("hydrogen.customerSessionLifecycle");
 
 export type Awaitable<T> = T | Promise<T>;
 
@@ -175,17 +176,49 @@ export type CustomerAccountServerHandlers<
 
 /**
  * Runs inside a Customer Account route before session commit. A rejected hook
- * commits the updated session and returns a sanitized server error.
+ * commits the updated session and returns a sanitized server error. Hooks can run
+ * more than once when requests are retried or overlap, so implementations must be idempotent.
  */
 export type CustomerAccountSessionLifecycleHook = (
   context: ShopifyRouteHandlerContext,
 ) => Awaitable<void>;
 
+export type CustomerAccountAuthenticatedHook = (
+  context: ShopifyRouteHandlerContext,
+  accessToken: string,
+) => Awaitable<void>;
+export type CustomerAccountTokenRefreshResult =
+  | {
+      /** A usable access token is available. */
+      status: "authenticated";
+      accessToken: string;
+    }
+  | {
+      /** Refresh failed transiently, but the refreshable session remains. */
+      status: "transient";
+      accessToken: undefined;
+    }
+  | {
+      /** No usable or refreshable customer session remains. */
+      status: "unauthenticated";
+      accessToken: undefined;
+    };
+export type CustomerAccountTokenRefreshHook = (
+  context: ShopifyRouteHandlerContext,
+  result: CustomerAccountTokenRefreshResult,
+) => Awaitable<void>;
+
 export type CustomerAccountServerHandlersWithLifecycleHooks =
   CustomerAccountServerHandlers<ShopifyRouteHandlerContext>;
 
-type CreateCustomerAccountServerHandlersBaseOptions = {
-  customerSession: CustomerSession;
+type CustomerSessionWithLifecycleHooks = CustomerSession & {
+  readonly [CUSTOMER_SESSION_LIFECYCLE_BRAND]: true;
+};
+
+type CreateCustomerAccountServerHandlersBaseOptions<
+  TCustomerSession extends CustomerSession = CustomerSession,
+> = {
+  customerSession: TCustomerSession;
   defaultPostLoginRedirectPathname?: string;
   loginFailedRedirectPath?: string;
   origin?: string | ((request: Request) => string);
@@ -196,11 +229,14 @@ type CustomerAccountLifecycleHooks = {
   /**
    * Runs after authorization creates an authenticated session and before it is
    * committed. This is an integration hook, not an authorization guard: rejection
-   * does not roll back the authenticated session.
+   * does not roll back the authenticated session. Receives the newly stored access token.
    */
-  onAuthenticated?: CustomerAccountSessionLifecycleHook;
-  /** Runs after the refresh route completes and before session state is committed. */
-  onTokenRefresh?: CustomerAccountSessionLifecycleHook;
+  onAuthenticated?: CustomerAccountAuthenticatedHook;
+  /**
+   * Runs after the refresh route completes and before session state is committed.
+   * Receives a discriminated result describing the token and refresh outcome.
+   */
+  onTokenRefresh?: CustomerAccountTokenRefreshHook;
   /** Runs after logout removes the authenticated session and before it is committed. */
   onLogout?: CustomerAccountSessionLifecycleHook;
 };
@@ -211,16 +247,27 @@ type CustomerAccountLifecycleHooksDisabled = {
   onLogout?: undefined;
 };
 
-type CustomerAccountLifecycleHooksEnabled = CustomerAccountLifecycleHooks &
+type CustomerAccountTokenLifecycleHooksEnabled = CustomerAccountLifecycleHooks &
   (
-    | { onAuthenticated: CustomerAccountSessionLifecycleHook }
-    | { onTokenRefresh: CustomerAccountSessionLifecycleHook }
-    | { onLogout: CustomerAccountSessionLifecycleHook }
+    | { onAuthenticated: CustomerAccountAuthenticatedHook }
+    | { onTokenRefresh: CustomerAccountTokenRefreshHook }
   );
 
+type CustomerAccountLogoutHookEnabled = CustomerAccountLifecycleHooks & {
+  onAuthenticated?: undefined;
+  onTokenRefresh?: undefined;
+  onLogout: CustomerAccountSessionLifecycleHook;
+};
+
+type CustomerAccountLifecycleHooksEnabled =
+  | CustomerAccountTokenLifecycleHooksEnabled
+  | CustomerAccountLogoutHookEnabled;
+
 export type CreateCustomerAccountServerHandlersOptions =
-  CreateCustomerAccountServerHandlersBaseOptions &
-    (CustomerAccountLifecycleHooksDisabled | CustomerAccountLifecycleHooksEnabled);
+  | (CreateCustomerAccountServerHandlersBaseOptions &
+      (CustomerAccountLifecycleHooksDisabled | CustomerAccountLogoutHookEnabled))
+  | (CreateCustomerAccountServerHandlersBaseOptions<CustomerSessionWithLifecycleHooks> &
+      CustomerAccountTokenLifecycleHooksEnabled);
 
 type CustomerAccountTokens = NonNullable<CustomerAccountSessionData["tokens"]>;
 type PendingLogin = NonNullable<CustomerAccountSessionData["pendingLogin"]>;
@@ -240,6 +287,23 @@ type RefreshResult =
   | { type: "success"; tokens: CustomerAccountTokens }
   | { type: "invalid" }
   | { type: "transient" };
+type OAuthCallbackResult = {
+  location: string;
+  accessToken: string;
+};
+type CustomerSessionInternals = {
+  getOrRefreshAccessToken(
+    sessionManager: WritableCustomerSessionManager,
+    requestContext: ShopifyRequestContext,
+    options?: RequestOriginOptions,
+  ): Promise<CustomerAccountTokenRefreshResult>;
+  handleOAuthCallback(
+    sessionManager: WritableCustomerSessionManager,
+    requestContext: ShopifyRequestContext,
+    request: Request,
+  ): Promise<OAuthCallbackResult>;
+};
+const customerSessionInternals = new WeakMap<CustomerSession, CustomerSessionInternals>();
 type CustomerAccountRouteResult = ShopifyRouteRedirectResult | ShopifyRouteErrorResult;
 type CustomerAccountRouteHandlerContext = {
   request: Request;
@@ -267,7 +331,7 @@ export function createCustomerSession({
   customerAccountApiUrl,
   fetch: customFetch,
   defaultTimeoutInMs = DEFAULT_TIMEOUT_IN_MS,
-}: CreateCustomerSessionOptions): CustomerSession {
+}: CreateCustomerSessionOptions): CustomerSessionWithLifecycleHooks {
   if (typeof document !== "undefined") {
     throw new Error(
       "Customer Account OAuth sessions cannot be used in a browser context. Use this helper from server or edge routes only.",
@@ -302,13 +366,22 @@ export function createCustomerSession({
     requestContext: ShopifyRequestContext,
     options: RequestOriginOptions = {},
   ) {
+    const result = await getOrRefreshAccessTokenResult(sessionManager, requestContext, options);
+    return result.accessToken;
+  }
+
+  async function getOrRefreshAccessTokenResult(
+    sessionManager: WritableCustomerSessionManager,
+    requestContext: ShopifyRequestContext,
+    options: RequestOriginOptions = {},
+  ): Promise<CustomerAccountTokenRefreshResult> {
     requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON);
     const sessionData = await readSessionData(sessionManager);
     const accessToken = getUsableAccessToken(sessionData);
-    if (accessToken) return accessToken;
+    if (accessToken) return { status: "authenticated", accessToken };
 
     const refreshToken = getRefreshToken(sessionData);
-    if (!refreshToken) return undefined;
+    if (!refreshToken) return { status: "unauthenticated", accessToken: undefined };
 
     const origin = await getResolvedOrigin(sessionManager, options.origin);
     const idToken = sessionData.tokens?.idToken;
@@ -324,15 +397,23 @@ export function createCustomerSession({
     });
 
     if (refreshResult.type === "success") {
+      const refreshedAccessToken = refreshResult.tokens.accessToken;
+      if (!refreshedAccessToken) {
+        return { status: "transient", accessToken: undefined };
+      }
       await writeTokens(sessionManager, refreshResult.tokens);
-      return refreshResult.tokens.accessToken;
+      return {
+        status: "authenticated",
+        accessToken: refreshedAccessToken,
+      };
     }
 
     if (refreshResult.type === "invalid") {
       await clearTokens(sessionManager);
+      return { status: "unauthenticated", accessToken: undefined };
     }
 
-    return undefined;
+    return { status: "transient", accessToken: undefined };
   }
 
   async function prepareLoginUrl(
@@ -374,6 +455,14 @@ export function createCustomerSession({
     requestContext: ShopifyRequestContext,
     request: Request,
   ) {
+    return (await handleOAuthCallbackResult(sessionManager, requestContext, request)).location;
+  }
+
+  async function handleOAuthCallbackResult(
+    sessionManager: WritableCustomerSessionManager,
+    requestContext: ShopifyRequestContext,
+    request: Request,
+  ): Promise<OAuthCallbackResult> {
     requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_MUTATION_PERSONALIZATION_REASON);
     try {
       return await completeOAuthCallback({
@@ -414,7 +503,8 @@ export function createCustomerSession({
     return logoutUrl.toString();
   }
 
-  return {
+  const customerSession: CustomerSessionWithLifecycleHooks = {
+    [CUSTOMER_SESSION_LIFECYCLE_BRAND]: true,
     isLoggedIn: async (sessionManager, requestContext) => {
       requestContext.markResponseAsPersonalized(
         CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON,
@@ -427,6 +517,11 @@ export function createCustomerSession({
     handleOAuthCallback,
     logout,
   };
+  customerSessionInternals.set(customerSession, {
+    getOrRefreshAccessToken: getOrRefreshAccessTokenResult,
+    handleOAuthCallback: handleOAuthCallbackResult,
+  });
+  return customerSession;
 }
 
 /**
@@ -454,6 +549,11 @@ export function createCustomerAccountServerHandlers(
     postLogoutRedirectUri = DEFAULT_POST_LOGOUT_REDIRECT_URI,
   } = options;
   const { origin: originOption } = options;
+  if (hasTokenLifecycleHooks(options) && !customerSessionInternals.has(customerSession)) {
+    throw new Error(
+      "Customer Account token lifecycle hooks require the customerSession returned by createCustomerSession.",
+    );
+  }
 
   return {
     authorize: createCallableRouteHandler(
@@ -505,6 +605,10 @@ export function createCustomerAccountServerHandlers(
       },
     ),
   };
+}
+
+function hasTokenLifecycleHooks(options: CreateCustomerAccountServerHandlersOptions): boolean {
+  return Boolean(options.onAuthenticated || options.onTokenRefresh);
 }
 
 async function handleLoginRoute(
@@ -565,16 +669,31 @@ async function handleAuthorizeRoute(
   context: CustomerAccountRuntimeRouteHandlerContext,
   loginFailedRedirectPath: string,
   originOption: string | ((request: Request) => string) | undefined,
-  onAuthenticated: CustomerAccountSessionLifecycleHook | undefined,
+  onAuthenticated: CustomerAccountAuthenticatedHook | undefined,
 ): Promise<CustomerAccountRouteResult> {
   const { request, sessionManager, requestContext } = context;
   try {
-    const location = await customerSession.handleOAuthCallback(
+    if (!onAuthenticated) {
+      const location = await customerSession.handleOAuthCallback(
+        sessionManager,
+        requestContext,
+        request,
+      );
+      return redirectResult(location, await commitSession(sessionManager));
+    }
+
+    const { location, accessToken } = await handleOAuthCallbackWithAccessToken(
+      customerSession,
       sessionManager,
       requestContext,
       request,
     );
-    const hookError = await runSessionLifecycleHook(onAuthenticated, context, "authenticated");
+    const hookError = await runSessionLifecycleHook(
+      onAuthenticated,
+      context,
+      "authenticated",
+      accessToken,
+    );
     if (hookError) return lifecycleHookErrorResult(await commitSession(sessionManager));
     return redirectResult(location, await commitSession(sessionManager));
   } catch (error) {
@@ -591,24 +710,79 @@ async function handleRefreshRoute(
   customerSession: CustomerSession,
   context: CustomerAccountRuntimeRouteHandlerContext,
   originOption: string | ((request: Request) => string) | undefined,
-  onTokenRefresh: CustomerAccountSessionLifecycleHook | undefined,
+  onTokenRefresh: CustomerAccountTokenRefreshHook | undefined,
 ): Promise<CustomerAccountRouteResult> {
   const { request, sessionManager, requestContext } = context;
   const origin = await resolveRouteOrigin(sessionManager, request, originOption);
-  await customerSession.getOrRefreshAccessToken(sessionManager, requestContext, { origin });
-  const hookError = await runSessionLifecycleHook(onTokenRefresh, context, "token-refresh");
+  if (!onTokenRefresh) {
+    await customerSession.getOrRefreshAccessToken(sessionManager, requestContext, { origin });
+    return refreshRedirectResult(request, origin, await commitSession(sessionManager));
+  }
+
+  const refreshResult = await getOrRefreshAccessTokenWithStatus(
+    customerSession,
+    sessionManager,
+    requestContext,
+    { origin },
+  );
+  const hookError = await runSessionLifecycleHook(
+    onTokenRefresh,
+    context,
+    "token-refresh",
+    refreshResult,
+  );
   if (hookError) return lifecycleHookErrorResult(await commitSession(sessionManager));
 
+  return refreshRedirectResult(request, origin, await commitSession(sessionManager));
+}
+
+function refreshRedirectResult(
+  request: Request,
+  origin: string,
+  headers?: HeadersInit,
+): ShopifyRouteRedirectResult {
   const requestUrl = new URL(request.url);
   const returnTo =
     requestUrl.searchParams.get("return_to") ?? requestUrl.searchParams.get("returnTo");
-  return redirectResult(sanitizeReturnTo(returnTo, origin), await commitSession(sessionManager));
+  return redirectResult(sanitizeReturnTo(returnTo, origin), headers);
 }
 
-async function runSessionLifecycleHook(
-  hook: CustomerAccountSessionLifecycleHook | undefined,
+async function handleOAuthCallbackWithAccessToken(
+  customerSession: CustomerSession,
+  sessionManager: WritableCustomerSessionManager,
+  requestContext: ShopifyRequestContext,
+  request: Request,
+): Promise<OAuthCallbackResult> {
+  const internal = customerSessionInternals.get(customerSession);
+  if (!internal) {
+    throw new Error("Customer session does not support lifecycle hooks");
+  }
+  return internal.handleOAuthCallback(sessionManager, requestContext, request);
+}
+
+async function getOrRefreshAccessTokenWithStatus(
+  customerSession: CustomerSession,
+  sessionManager: WritableCustomerSessionManager,
+  requestContext: ShopifyRequestContext,
+  options: RequestOriginOptions,
+): Promise<CustomerAccountTokenRefreshResult> {
+  const internal = customerSessionInternals.get(customerSession);
+  if (!internal) {
+    throw new Error("Customer session does not support lifecycle hooks");
+  }
+  return internal.getOrRefreshAccessToken(sessionManager, requestContext, options);
+}
+
+type SessionLifecycleHook<TArgs extends unknown[]> = (
+  context: ShopifyRouteHandlerContext,
+  ...args: TArgs
+) => Awaitable<void>;
+
+async function runSessionLifecycleHook<TArgs extends unknown[]>(
+  hook: SessionLifecycleHook<TArgs> | undefined,
   context: CustomerAccountRuntimeRouteHandlerContext,
   lifecycle: "authenticated" | "token-refresh" | "logout",
+  ...args: TArgs
 ): Promise<boolean> {
   if (!hook) return false;
 
@@ -618,10 +792,13 @@ async function runSessionLifecycleHook(
         "Customer Account handlers configured with lifecycle hooks require storefrontClient.",
       );
     }
-    await hook({
-      ...context,
-      storefrontClient: context.storefrontClient,
-    });
+    await hook(
+      {
+        ...context,
+        storefrontClient: context.storefrontClient,
+      },
+      ...args,
+    );
     return false;
   } catch {
     log.error("customer session lifecycle hook failed", { lifecycle });
@@ -698,7 +875,7 @@ async function completeOAuthCallback({
   customerAccountApiClientId: string;
   fetch: typeof globalThis.fetch;
   timeoutInMs: number;
-}): Promise<string> {
+}): Promise<OAuthCallbackResult> {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const state = requestUrl.searchParams.get("state");
@@ -727,7 +904,10 @@ async function completeOAuthCallback({
     tokens: createTokensFromResponse(tokenResponse),
   });
 
-  return pendingLogin.returnTo ?? DEFAULT_LOGIN_RETURN_TO_PATH;
+  return {
+    location: pendingLogin.returnTo ?? DEFAULT_LOGIN_RETURN_TO_PATH,
+    accessToken: tokenResponse.access_token,
+  };
 }
 
 function isSameOriginPost(request: Request, trustedOrigin: string): boolean {
