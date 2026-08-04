@@ -30,6 +30,9 @@ Request handlers:
 - [ ] GET /admin redirects to the configured shop/admin domain
 - [ ] Unknown path returns framework 404 unless a Shopify URL redirect matches
 
+Navigation:
+- [ ] Every navbar and footer link href returns 200 when curled directly (no invented routes)
+
 Product page:
 - [ ] Server-renders title, gallery, price, variant options, add-to-cart form, and related products when available
 - [ ] URL option params select the expected variant on reload
@@ -119,6 +122,28 @@ curl -i http://localhost:<port>/this-does-not-exist
 ```
 
 Expected: framework 404 unless Shopify has a matching URL redirect.
+
+## Navigation
+
+Extract every `href` from the rendered navbar and footer and request each one directly:
+
+```bash
+curl -s -o /dev/null -w "%{http_code} <href>\n" http://localhost:<port><href>
+```
+
+Expected: 200 for every link. A 404 means the link points to a route the app never created or a handle the shop does not have. `/collections/all` is the classic failure: the Liquid "all" collection does not exist in the Storefront API, so only link to it when the shop really has a collection with that handle.
+
+## Account
+
+```bash
+curl -i http://localhost:<port>/account/login
+```
+
+Expected: a redirect whose `location` header points at Shopify's hosted login, not a framework 404 or 500.
+
+- `/account` renders the signed-out panel when no session exists, without touching access tokens.
+- The logout control is a native `<form method="post" action="/account/logout">`; the handler enforces same-origin POST and returns a raw redirect only a native browser submit can follow.
+- Completing a real login requires a public HTTPS origin registered for the OAuth callback; when the local origin is not registered, verify the signed-out checks and say so instead of faking signed-in ones.
 
 ## Product Page
 
