@@ -181,15 +181,24 @@ return (
 window.Shopify.actions.openCart();
 ```
 
-**3. After a successful add-to-cart** — if the product UX should open the drawer on add, pass the same helper to the product form's submit hooks.
+**3. On add-to-cart** — if the product UX should open the drawer on add, pass the same helper to one of the product form's submit hooks. The hook choice decides where add-to-cart errors surface:
 
 ```tsx
+// Option A: instant — drawer opens as the mutation starts
+<form {...formProps({ beforeSubmit: openCartDrawer })}>
+  {/* add-to-cart controls */}
+</form>
+
+// Option B: on success — drawer opens only after the mutation succeeds
 <form {...formProps({ afterSubmit: openCartDrawer })}>
   {/* add-to-cart controls */}
 </form>
 ```
 
-This opens the drawer only after the mutation succeeds. Keep validation and cancellation in `beforeSubmit` — for example, call `event.preventDefault()` there if the quantity is invalid and the drawer should not open. Do not push this policy into core cart mutations; some storefronts want a toast, a cart page navigation, or no automatic UI change.
+- `beforeSubmit: openCartDrawer` feels instant: the drawer opens synchronously on submit while the mutation is still pending. Because the user is already looking at the drawer when a failure comes back, add-to-cart errors must be surfaced inside the drawer — the header error banner fed by the cart store's `errors` state.
+- `afterSubmit: openCartDrawer` feels slower — the drawer waits for the mutation round trip — but it never opens on failure, so add-to-cart errors can be surfaced in the PDP (the form's `errors.userErrors` alert) without disrupting navigation.
+
+`beforeSubmit` is also the validation and cancellation hook: `formProps` skips the submission when `beforeSubmit` calls `event.preventDefault()`. When combining validation with the instant open, validate first and open the drawer only when the event was not cancelled — the drawer must not open for a cancelled submit. Do not push this policy into core cart mutations; some storefronts want a toast, a cart page navigation, or no automatic UI change.
 
 ### Closing the drawer
 

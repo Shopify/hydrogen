@@ -19,7 +19,7 @@ Prerequisite: analytics depends on the same-origin SFAPI proxy (see `hydrogen-re
 
 ## Core Pattern
 
-Render Shopify runtime scripts once from the app root/document head with the same resolved market used by Storefront API requests. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass `{shopId: env.SHOP_ID, storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0", myshopifyDomain: env.PUBLIC_STORE_DOMAIN}` as `shop` and pass `{country, language, currency?}` as `i18n`; resolve both on the server and serialize them into ShopifyScripts. The analytics bus is created by default; pass `analytics` only for optional bus configuration such as `customData`. Do not pass market `country` or `language` through analytics consent config.
+Render Shopify runtime scripts once from the app root/document head with the same resolved market used by Storefront API requests. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass the `shop` object matching the `ShopifyScriptsShop` type, and `i18n` matching the `ShopifyScriptsI18n` type and serialize them into ShopifyScripts. — declare them as constants with type annotations to keep errors located close to the source of writing. The analytics bus is created by default; pass `analytics` only for optional bus configuration such as `customData`. Do not pass market `country` or `language` through analytics consent config.
 
 Read one browser-lazy singleton from the Shopify global created by `ShopifyScripts`:
 
