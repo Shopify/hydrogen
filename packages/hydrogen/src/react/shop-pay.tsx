@@ -9,6 +9,7 @@ import {
   type ReactElement,
 } from "react";
 
+import { getLogger } from "../core/logging";
 import {
   getShopPayButtonAttributes,
   getShopPayButtonStyleProperties,
@@ -18,6 +19,8 @@ import {
   type ShopPayButtonOptions,
 } from "../core/shop-pay";
 import { DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT } from "../core/shop-pay/shop-pay";
+
+const log = getLogger("shop-pay");
 
 export type ShopPayButtonProps = Omit<ShopPayButtonOptions, "checkoutUrl"> & {
   className?: string;
@@ -38,7 +41,7 @@ export function ShopPayButton({
   useEffect(() => {
     if (!loadScript) return;
     loadShopJs().catch((error: unknown) => {
-      console.error("[hydrogen:error:ShopPay] shop-js failed to load:", error);
+      log.error("shop-js failed to load", { error });
     });
   }, [loadScript]);
 

@@ -192,6 +192,24 @@
       "rules": {
         "no-unused-expressions": "off"
       }
+    },
+    {
+      "files": ["packages/hydrogen/src/**"],
+      "rules": {
+        "no-console": "error"
+      }
+    },
+    {
+      "files": ["packages/hydrogen/src/cli/**"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["**/*.test.*"],
+      "rules": {
+        "no-console": "off"
+      }
     }
   ]
 }

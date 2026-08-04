@@ -6,7 +6,7 @@ export const handleAgentProxy = createProxyInterceptor({
   match: AGENT_BUYER_CLAIMS_RE,
   allowlist: AGENT_REQUEST_HEADER_ALLOWLIST,
   formatError: (message) => ({ error: message }),
-  logPrefix: "Agent proxy",
+  scope: "agent-proxy",
   prepareHeaders(headers, { request }) {
     headers.set(SHOPIFY_CHAT_FRAME_ORIGIN_HEADER, new URL(request.url).origin);
   },

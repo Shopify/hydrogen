@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
 import {
   createShopifyRequestContext,
@@ -6,7 +6,8 @@ import {
   STOREFRONT_BUYER_IP_HEADER,
   STOREFRONT_PRIVATE_TOKEN_HEADER,
 } from "../headers";
-import { assert } from "../test-utils";
+import { configureLogging, resetLoggingForTests } from "../logging";
+import { assert, createTestLogger } from "../test-utils";
 import { handleSfapiProxy as handleSfapiProxyImpl } from "./sfapi-proxy";
 
 const defaultStoreUrl = "https://test-store.myshopify.com";
@@ -112,6 +113,9 @@ function createTestSessionManager(request: Request) {
 
 describe("handleSfapiProxy", () => {
   let mockFetch: ReturnType<typeof vi.fn>;
+  afterEach(() => {
+    resetLoggingForTests();
+  });
 
   beforeEach(() => {
     mockFetch = vi.fn().mockResolvedValue(
@@ -432,8 +436,10 @@ describe("handleSfapiProxy", () => {
   });
 
   it("returns 502 on upstream fetch failure", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockFetch.mockRejectedValueOnce(new Error("Connection refused"));
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const error = new Error("Connection refused");
+    mockFetch.mockRejectedValueOnce(error);
 
     const result = await handleSfapiProxy(
       createRequest("/api/2025-01/graphql.json"),
@@ -446,8 +452,7 @@ describe("handleSfapiProxy", () => {
 
     const body = await result.json();
     expect(body).toEqual({ error: "Connection refused" });
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(logger.error).toHaveBeenCalledWith("request failed", { scope: "sfapi-proxy", error });
   });
 
   it("passes AbortSignal.timeout to upstream fetch", async () => {

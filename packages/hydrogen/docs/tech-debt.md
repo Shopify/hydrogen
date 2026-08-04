@@ -34,7 +34,7 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 
 ## Hydrogen error logging policy
 
-**Status:** Open
+**Status:** Resolved (2026-07-28)
 **Added:** 2026-05-25
 
 **What:** Runtime helpers currently log errors ad hoc. Shop Pay script loading logs a console error on failure, but there is no package-level policy for when to log, throw, expose reactive error state, or invoke a user-supplied reporter.
@@ -42,6 +42,8 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 **Why it matters:** Silent runtime failures are difficult to debug, but unstructured console logging can be noisy and inconsistent across framework adapters.
 
 **Done when:** Hydrogen has a documented error reporting contract for browser runtime failures, including adapter behavior, optional user hooks, and test expectations.
+
+**Resolution:** The logging contract is implemented in `src/core/logging/` and documented in the repo-level `error-reporting` skill (`skills/error-reporting/SKILL.md`). Runtime helpers obtain a scoped logger via `getLogger(scope)`; callers configure the global sink and level through `configureLogging({ logger, level })`. The `no-console` lint rule enforces that the sanctioned `console` call sites are the built-in sink in `src/core/logging/logging.ts` and the serialized consent bootstrap in `src/core/shopify-scripts/consent-script.ts`. Serialized inline-script import chains (analytics bus/destination-manager, consent bootstrap) are documented exceptions — they always write to `console` with the standard `[hydrogen:<level>:<scope>]` prefix.
 
 ---
 
@@ -66,17 +68,19 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 
 ## Per-query GraphQL API version override
 
-**Status:** Open — deferred, low priority
+**Status:** Closed — documented workaround (2026-07-28)
 **Added:** 2026-05-07
 
 **What:** The Storefront API version is currently set once at client creation time (`STOREFRONT_API_VERSION`). There is no mechanism to override the version for an individual query.
 
 **Use case:** Developers sometimes need to hit `unstable` or a newer API version for specific queries before doing a full migration. frandiox raised this as a known Hydrogen use case.
 
-**Why it's deferred:** Overriding the version per-query is a type-safety footgun — `gql.tada` infers types against the schema of the configured version. A query running against a different version would have types that don't match the actual response shape, with no compiler warning.
+**Why it's deferred:** Overriding the version per-query is a type-safety footgun — `apiVersion` only changes endpoint routing, while Hydrogen's bundled `gql.tada` schema still controls type inference. A query running against a different version could have types that don't match the actual response shape, with no compiler warning.
 
 **Possible approaches:**
 1. A `dangerously_overrideVersion` parameter on `graphql()` — makes the risk explicit in the API name.
-2. Instruct users to create a separate `createStorefrontClient({ config: { apiVersion } })` instance for unstable queries, keeping type boundaries clean.
+2. Instruct users to create a separate `createStorefrontClient({ config: { apiVersion } })` instance for unstable queries, keeping version routing explicit.
 
 **Done when:** We decide on an approach and either implement the escape hatch or document the separate-client workaround.
+
+**Resolution:** Approach #2 was chosen: create a separate `createStorefrontClient` instance with a different `apiVersion` for queries that need a different Storefront API version (e.g. `unstable`). This is already supported via the client config and keeps version routing explicit. The escape-hatch parameter (approach #1) was rejected as a type-safety footgun: a query running against a different version would have types that don't match the actual response shape, with no compiler warning. Hydrogen's bundled `gql.tada` schema still controls type inference, so queries against fields outside that schema need their own typing. The workaround is documented in the JSDoc on the `apiVersion` field of `CommonOptions` in `src/client/types.ts`.

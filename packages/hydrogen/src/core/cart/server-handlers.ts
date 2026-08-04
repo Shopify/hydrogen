@@ -1,6 +1,7 @@
 import type { GraphQLFormattedError, StorefrontClient } from "../../client";
 import type { AnyStorefrontQueryString } from "../../graphql";
 import { createProxyResponseHeaders } from "../interceptors/proxy";
+import { getLogger } from "../logging";
 import type {
   CallableRouteHandler,
   ShopifyRouteError,
@@ -20,6 +21,7 @@ import {
   type CreateCartQueriesOptions,
 } from "./queries";
 import type { CartData } from "./state";
+const log = getLogger("cart-api");
 
 export const CART_API_PATH = "/api/cart" as const;
 export const CART_GET_METHOD = "GET" as const;
@@ -150,7 +152,7 @@ async function handleGet(
 
 function logCartErrors(errors: CartGetData["errors"]): void {
   if (!errors?.length) return;
-  console.error(errors.map(({ message }) => message).join("\n"));
+  log.error(errors.map(({ message }) => message).join("\n"));
 }
 
 async function handlePost(

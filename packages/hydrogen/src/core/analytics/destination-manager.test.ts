@@ -196,7 +196,7 @@ describe("createDestinationManager", () => {
 
   describe("destination setup", () => {
     it("rejects duplicate destination names without running setup", () => {
-      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const errorSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       const { manager } = createTestManager(() => true);
       const firstSetup = vi.fn(({ subscribe }: StorefrontAnalyticsDestinationSetupContext) => {
         subscribe("page_viewed", () => {});
@@ -215,7 +215,7 @@ describe("createDestinationManager", () => {
       expect(firstSetup).toHaveBeenCalledOnce();
       expect(duplicateSetup).not.toHaveBeenCalled();
       expect(errorSpy).toHaveBeenCalledWith(
-        '[h3] Analytics destination "ga4" is already registered.',
+        '[hydrogen:warn:analytics] analytics destination "ga4" is already registered',
       );
 
       removeDuplicate();
@@ -249,7 +249,7 @@ describe("createDestinationManager", () => {
     });
 
     it("reserves destination names while async setup is pending", async () => {
-      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const errorSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       const { manager } = createTestManager(() => true);
       let finishSetup: (() => void) | undefined;
 
@@ -268,7 +268,7 @@ describe("createDestinationManager", () => {
       });
 
       expect(errorSpy).toHaveBeenCalledWith(
-        '[h3] Analytics destination "ga4" is already registered.',
+        '[hydrogen:warn:analytics] analytics destination "ga4" is already registered',
       );
 
       finishSetup?.();
@@ -332,7 +332,7 @@ describe("createDestinationManager", () => {
 
       expect(destination).not.toHaveBeenCalled();
       expect(errorSpy).toHaveBeenCalledWith(
-        '[h3] Error setting up analytics destination "broken-destination":',
+        '[hydrogen:error:analytics] error setting up analytics destination "broken-destination"',
         expect.any(Error),
       );
       errorSpy.mockRestore();
@@ -352,7 +352,7 @@ describe("createDestinationManager", () => {
 
       await vi.waitFor(() => {
         expect(errorSpy).toHaveBeenCalledWith(
-          '[h3] Error setting up analytics destination "broken-async-destination":',
+          '[hydrogen:error:analytics] error setting up analytics destination "broken-async-destination"',
           expect.any(Error),
         );
       });
@@ -464,7 +464,7 @@ describe("createDestinationManager", () => {
 
       expect(healthyDestination).toHaveBeenCalledOnce();
       expect(errorSpy).toHaveBeenCalledWith(
-        '[h3] Error in analytics destination "test-destination":',
+        '[hydrogen:error:analytics] error in analytics destination "test-destination"',
         expect.any(Error),
       );
       errorSpy.mockRestore();
