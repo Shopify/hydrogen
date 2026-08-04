@@ -232,9 +232,7 @@ function convertBufferToString(hash: ArrayBuffer) {
 }
 
 export function generateState() {
-  const timestamp = Date.now().toString();
-  const randomString = Math.random().toString(36).substring(2);
-  return timestamp + randomString;
+  return base64UrlEncode(generateRandomCode());
 }
 
 export async function exchangeAccessToken(

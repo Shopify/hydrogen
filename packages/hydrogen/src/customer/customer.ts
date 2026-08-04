@@ -53,6 +53,9 @@ import {warnOnce} from '../utils/warning';
 import {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 
 const HYDROGEN_TUNNEL_DOMAIN_SUFFIX = '.tryhydrogen.dev';
+const OAUTH_RECOVERY_PARAM = 'oauth_recovery';
+// State survives the OAuth round trip even when the browser drops the session cookie.
+const OAUTH_RECOVERY_STATE_PREFIX = 'oauth-recovery.';
 
 function checkTunnelDomain(
   hostname: string,
@@ -392,7 +395,11 @@ export function createCustomerAccountClient({
 
       const loginUrl = new URL(getCustomerAccountUrl(URL_TYPE.AUTH));
 
-      const state = generateState();
+      const isOAuthRecovery =
+        requestUrl.searchParams.get(OAUTH_RECOVERY_PARAM) === 'true';
+      const state = `${
+        isOAuthRecovery ? OAUTH_RECOVERY_STATE_PREFIX : ''
+      }${generateState()}`;
       const nonce = generateNonce();
 
       loginUrl.searchParams.set('client_id', customerAccountId);
@@ -510,20 +517,34 @@ export function createCustomerAccountClient({
       const state = requestUrl.searchParams.get('state');
 
       if (!code || !state) {
-        clearSession(session);
-
         throw new BadRequest(
           'Unauthorized',
           'No code or state parameter found in the redirect URL.',
         );
       }
 
-      if (session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.state !== state) {
-        clearSession(session);
+      const customerAccountSession = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
 
-        throw new BadRequest(
-          'Unauthorized',
-          'The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
+      if (customerAccountSession?.state !== state) {
+        if (state.startsWith(OAUTH_RECOVERY_STATE_PREFIX)) {
+          throw new BadRequest(
+            'Unable to complete sign in. Please try again.',
+            'The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
+          );
+        }
+
+        warnOnce(
+          '[h2:warn:customerAccount] OAuth callback state mismatch. Restarting customer login once.',
+        );
+        const recoveryLoginUrl = new URL(loginPath, request.url);
+        recoveryLoginUrl.searchParams.set(
+          'return_to',
+          customerAccountSession?.redirectPath ?? defaultRedirectPath,
+        );
+        recoveryLoginUrl.searchParams.set(OAUTH_RECOVERY_PARAM, 'true');
+
+        return redirect(
+          `${recoveryLoginUrl.pathname}${recoveryLoginUrl.search}`,
         );
       }
 
