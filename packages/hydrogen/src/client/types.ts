@@ -5,7 +5,6 @@ import type {
 } from "gql.tada";
 
 import type { CacheInstance, WaitUntil } from "../core/cache/run-with-cache";
-import type { CachingStrategy } from "../core/cache/strategies";
 import type { ShopifyRequestContext } from "../core/headers";
 import type { AnyStorefrontQueryString, SourceOf, StorefrontQueryString } from "../graphql";
 import type { InferResult, InferVariables } from "../graphql";
