@@ -7,6 +7,10 @@
  * pattern are supported too.
  */
 
+import { getLogger } from "../../logging";
+
+const log = getLogger("analytics");
+
 type Connection<T> = {
   nodes?: T[];
   edges?: Array<{ node: T }>;
@@ -15,9 +19,7 @@ type Connection<T> = {
 export function flattenConnection<T>(connection?: Connection<T> | null): T[] {
   if (!connection) {
     if (connection === null) {
-      console.warn(
-        "[h2:warn:flattenConnection] Received null connection. Expected an object with `nodes` or `edges`.",
-      );
+      log.warn("received null connection; expected an object with `nodes` or `edges`");
     }
     return [];
   }

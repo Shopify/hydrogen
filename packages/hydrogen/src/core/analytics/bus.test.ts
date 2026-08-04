@@ -263,7 +263,7 @@ describe("setupStorefrontAnalytics", () => {
 
       expect(callback).not.toHaveBeenCalled();
       expect(warnSpy).toHaveBeenCalledWith(
-        '[h3:warn:Analytics] Unsupported analytics event "custom_my_event".',
+        '[hydrogen:warn:analytics] unsupported analytics event "custom_my_event"',
       );
       warnSpy.mockRestore();
     });
@@ -278,7 +278,7 @@ describe("setupStorefrontAnalytics", () => {
 
       expect(callback).not.toHaveBeenCalled();
       expect(warnSpy).toHaveBeenCalledWith(
-        '[h3:warn:Analytics] Unsupported analytics event "custom_my_event".',
+        '[hydrogen:warn:analytics] unsupported analytics event "custom_my_event"',
       );
       warnSpy.mockRestore();
     });
@@ -693,7 +693,7 @@ describe("setupStorefrontAnalytics", () => {
 
       expect(destination).not.toHaveBeenCalled();
       expect(warnSpy).toHaveBeenCalledWith(
-        '[h3:warn:Analytics] Unsupported analytics event "custom_my_event".',
+        '[hydrogen:warn:analytics] unsupported analytics event "custom_my_event"',
       );
       warnSpy.mockRestore();
     });
@@ -717,7 +717,7 @@ describe("setupStorefrontAnalytics", () => {
 
       expect(destination).not.toHaveBeenCalled();
       expect(warnSpy).toHaveBeenCalledWith(
-        '[h3:warn:Analytics] Unsupported analytics event "custom_my_event".',
+        '[hydrogen:warn:analytics] unsupported analytics event "custom_my_event"',
       );
       warnSpy.mockRestore();
     });

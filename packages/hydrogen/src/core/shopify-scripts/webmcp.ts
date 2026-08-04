@@ -1,5 +1,8 @@
+import { getLogger } from "../logging";
 import { loadScript } from "../utils/load-script";
 import { SHOPIFY_STOREFRONT_WEBMCP_SCRIPT } from "./constants";
+
+const log = getLogger("webmcp");
 
 export function loadShopifyWebMcpTools(): Promise<boolean | void> {
   if (
@@ -10,7 +13,7 @@ export function loadShopifyWebMcpTools(): Promise<boolean | void> {
       in: "head",
       attributes: { id: "shopify-webmcp", crossorigin: "anonymous" },
     }).catch((error) => {
-      console.warn("Failed to load Shopify WebMCP.", error);
+      log.warn("failed to load Shopify WebMCP", { error });
     });
   }
 

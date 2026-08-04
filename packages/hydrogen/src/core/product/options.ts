@@ -1,3 +1,4 @@
+import { getLogger } from "../logging";
 import type {
   ProductInput,
   ProductOptionValueFrom,
@@ -7,6 +8,8 @@ import type {
   VariantOptionState,
   VariantOptionValueState,
 } from "./state";
+
+const log = getLogger("product");
 
 const INCLUSIVE_RANGE_END_OFFSET = 1;
 
@@ -442,9 +445,7 @@ function combinationMatchesConstraints(
 export function decodeEncodedVariant(encodedVariantField: string | null | undefined): number[][] {
   if (!encodedVariantField) return [];
   if (!encodedVariantField.startsWith("v1_")) {
-    if (typeof console !== "undefined") {
-      console.warn(`[hydrogen] Unsupported variant encoding: "${encodedVariantField}"`);
-    }
+    log.warn(`unsupported variant encoding: "${encodedVariantField}"`);
     return [];
   }
   return decodeV1EncodedVariant(encodedVariantField.replace(/^v1_/, ""));

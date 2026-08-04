@@ -53,6 +53,13 @@ export interface GraphQLFormattedError {
 
 type CommonOptions = {
   storeDomain: string;
+  /**
+   * Storefront API version used in the GraphQL endpoint path (`/api/<version>/graphql.json`).
+   * Defaults to the version baked into the package. To send some queries to a different endpoint
+   * version (e.g. `unstable`), create a second `createStorefrontClient` instance with that
+   * `apiVersion` so version routing stays explicit. Hydrogen's bundled gql.tada schema still
+   * controls type inference, so queries against fields outside that schema need their own typing.
+   */
   apiVersion?: string;
   defaultTimeoutInMs?: number;
   cache?: CacheInstance;

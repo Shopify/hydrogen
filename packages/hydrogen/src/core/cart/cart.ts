@@ -14,6 +14,7 @@ import type {
   CartNoteUpdateResult,
 } from "../../../vendor/standard-events";
 import type { CartErrorCode, CartWarningCode } from "../../graphql/generated/storefront-api-types";
+import { getLogger } from "../logging";
 import { createObservable } from "../observable";
 import {
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
@@ -32,6 +33,8 @@ import type {
 } from "./state";
 import { createCartState, createEmptyCartState, createEmptyErrorGroup } from "./state";
 import { syncQuantityInputs } from "./sync-quantity-inputs";
+
+const log = getLogger("cart");
 
 interface CartResponse extends CartData {
   id: string;
@@ -178,7 +181,7 @@ export function createCartStore<TData extends CartData = CartData>(
   if (initialDataState.type === "async") {
     const initialCartPromise = Promise.resolve(initialDataState.data).then(({ cart }) => cart);
     loadCartInStore(context, initialCartPromise).catch((error: unknown) =>
-      console.error("[hydrogen] cart initial load failed:", error),
+      log.error("cart initial load failed", { error }),
     );
   }
 
@@ -190,7 +193,7 @@ export function createCartStore<TData extends CartData = CartData>(
       if (connected && !initialCartLoadStarted) {
         initialCartLoadStarted = true;
         loadCartInStore(context).catch((error: unknown) =>
-          console.error("[hydrogen] cart initial load failed:", error),
+          log.error("cart initial load failed", { error }),
         );
       }
     },
@@ -615,9 +618,7 @@ function resetCartStore(store: CartStoreContext): void {
 
   if (store.cartSyncAttached) {
     const cartLoadPromise = loadCartInStore(store);
-    cartLoadPromise.catch((error: unknown) =>
-      console.error("[hydrogen] cart reset load failed:", error),
-    );
+    cartLoadPromise.catch((error: unknown) => log.error("cart reset load failed", { error }));
   }
 }
 
@@ -1317,7 +1318,7 @@ export function resetStandardActionsForTests(): void {
 export function configureCartEndpoint(endpoint: string): void {
   if (configuredCartEndpoint === endpoint) return;
   if (configuredCartEndpoint !== null) {
-    console.warn(
+    log.warn(
       `configureCartEndpoint called with "${endpoint}" but already configured with "${configuredCartEndpoint}".`,
     );
   }

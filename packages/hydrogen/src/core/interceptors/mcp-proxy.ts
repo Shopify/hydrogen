@@ -12,5 +12,5 @@ export const handleMcpProxy = createProxyInterceptor({
     error: { code: JSON_RPC_INTERNAL_ERROR, message },
     id: null,
   }),
-  logPrefix: "MCP proxy",
+  scope: "mcp-proxy",
 });
