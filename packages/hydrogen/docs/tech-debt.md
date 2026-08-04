@@ -43,7 +43,7 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 
 **Done when:** Hydrogen has a documented error reporting contract for browser runtime failures, including adapter behavior, optional user hooks, and test expectations.
 
-**Resolution:** The logging contract is implemented in `src/core/logging/` and documented in the repo-level `error-reporting` skill (`skills/error-reporting/SKILL.md`). Runtime helpers obtain a scoped logger via `getLogger(scope)`; callers configure the global sink and level through `configureLogging({ logger, level })`. The `no-console` lint rule enforces that the only sanctioned `console` call site is the built-in sink in `src/core/logging/logging.ts`. Serialized inline-script import chains (analytics bus/destination-manager, consent bootstrap) are documented exceptions — they always write to `console` with the standard `[hydrogen:<level>:<scope>]` prefix.
+**Resolution:** The logging contract is implemented in `src/core/logging/` and documented in the repo-level `error-reporting` skill (`skills/error-reporting/SKILL.md`). Runtime helpers obtain a scoped logger via `getLogger(scope)`; callers configure the global sink and level through `configureLogging({ logger, level })`. The `no-console` lint rule enforces that the sanctioned `console` call sites are the built-in sink in `src/core/logging/logging.ts` and the serialized consent bootstrap in `src/core/shopify-scripts/consent-script.ts`. Serialized inline-script import chains (analytics bus/destination-manager, consent bootstrap) are documented exceptions — they always write to `console` with the standard `[hydrogen:<level>:<scope>]` prefix.
 
 ---
 

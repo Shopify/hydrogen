@@ -1,6 +1,5 @@
 import type { ShopifyGlobal } from "../../globals";
 import type { ConsentConfig } from "../analytics/types";
-import { consoleLogger } from "../logging";
 
 type RuntimeCustomerPrivacy = Partial<NonNullable<ShopifyGlobal["customerPrivacy"]>>;
 type RuntimeShopifyGlobal = Partial<Omit<ShopifyGlobal, "customerPrivacy">> & {
@@ -18,6 +17,15 @@ export type ShopifyConsentTrackingConfig = {
 
 function isVisitorConsentEventDetail(value: unknown): value is VisitorConsentEventDetail {
   return typeof value === "object" && value !== null;
+}
+
+// This module is serialized and inlined into every HTML response; importing
+// the logging module would inline it too. Hardcode the sink's prefix instead.
+function logConsentError(message: string, error?: unknown) {
+  const args: unknown[] = [`[hydrogen:error:consent] ${message}`];
+  if (error !== undefined) args.push(error);
+  // oxlint-disable-next-line no-console -- Sanctioned exception: serialized inline script (see skills/error-reporting).
+  console.error(...args);
 }
 
 export default function initializeShopifyConsentTracking(config: ShopifyConsentTrackingConfig) {
@@ -46,16 +54,13 @@ export default function initializeShopifyConsentTracking(config: ShopifyConsentT
   const requestInitialConsent = () => {
     const setTrackingConsent = getCustomerPrivacy()?.setTrackingConsent;
     if (typeof setTrackingConsent !== "function") {
-      consoleLogger.error("unable to request initial consent", { scope: "consent" });
+      logConsentError("unable to request initial consent");
       return markConsentReady();
     }
 
     setTrackingConsent({ headlessStorefront: true }, (result) => {
       if (result?.error) {
-        consoleLogger.error("unable to request initial consent", {
-          scope: "consent",
-          error: result.error,
-        });
+        logConsentError("unable to request initial consent", result.error);
         return;
       }
 
