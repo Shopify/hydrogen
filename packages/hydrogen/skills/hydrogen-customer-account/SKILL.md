@@ -49,7 +49,7 @@ const customerAccountHandlers = createCustomerAccountServerHandlers({
 });
 ```
 
-Hooks run after their route reaches its lifecycle transition and before the session manager is committed. `onTokenRefresh` runs whenever the refresh route completes, even when no token changed. A rejected hook commits the updated session and returns a sanitized server error instead of the normal redirect. For secure cart buyer identity integration, read [Synchronize Customer Accounts with cart](references/cart-sync.md).
+Hooks run after their route reaches its lifecycle transition and before the session manager is committed. `onAuthenticated` receives the newly stored access token. `onTokenRefresh` receives a discriminated result with an `authenticated`, `transient`, or `unauthenticated` status and the corresponding access token, and runs whenever the refresh route completes even when no token changed. These token-bearing hooks require the `customerSession` returned by `createCustomerSession`; custom session implementations can still use standard routes and `onLogout`. Hooks may execute more than once when requests retry or overlap, so implementations must be idempotent. A rejected hook commits the updated session and returns a sanitized server error instead of the normal redirect. For secure cart buyer identity integration, read [Synchronize Customer Accounts with cart](references/cart-sync.md).
 
 Lifecycle hooks are post-authentication integration points, not authorization guards. Rejecting `onAuthenticated` does not roll back the authenticated session.
 
