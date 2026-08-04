@@ -19,8 +19,6 @@ function isVisitorConsentEventDetail(value: unknown): value is VisitorConsentEve
   return typeof value === "object" && value !== null;
 }
 
-// This module is serialized and inlined into every HTML response; importing
-// the logging module would inline it too. Hardcode the sink's prefix instead.
 function logConsentError(message: string, error?: unknown) {
   const args: unknown[] = [`[hydrogen:error:consent] ${message}`];
   if (error !== undefined) args.push(error);
