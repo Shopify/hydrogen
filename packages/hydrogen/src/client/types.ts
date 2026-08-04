@@ -62,6 +62,8 @@ type CommonOptions = {
    */
   apiVersion?: string;
   defaultTimeoutInMs?: number;
+  // Mirrored by the `cache?: CacheConfig` inference hole in
+  // CreateStorefrontClientArgs — keep the key and type in sync.
   cache?: CacheInstance;
   waitUntil?: WaitUntil;
 };
@@ -120,23 +122,31 @@ export type StorefrontClientOptions =
   | PrivateClientOptions
   | PrivateNoBuyerContextClientOptions;
 
+// `Type` and `CacheConfig` are inference holes for `createStorefrontClient`:
+// each member's discriminant is intersected with `Type` (resolving to the plain
+// literal when `Type` is the full `ClientType` default) and `cache` narrows
+// `CacheConfig`, so the call signature can recover both without wrapping this
+// union in an intersection — which would defeat discriminant narrowing and
+// excess-property checks while the user is still typing.
 export type CreateStorefrontClientArgs<
   RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
+  Type extends ClientType = ClientType,
+  CacheConfig extends CacheInstance | undefined = CacheInstance | undefined,
 > =
   | {
-      type: "public";
+      type: "public" & Type;
       requestContext: RequestContext;
-      config: PublicClientOptions<AnyFetch | undefined>;
+      config: PublicClientOptions<AnyFetch | undefined> & { cache?: CacheConfig };
     }
   | {
-      type: "private";
+      type: "private" & Type;
       requestContext: RequestContext;
-      config: PrivateClientOptions<AnyFetch | undefined>;
+      config: PrivateClientOptions<AnyFetch | undefined> & { cache?: CacheConfig };
     }
   | {
-      type: "private_no_buyer_context";
+      type: "private_no_buyer_context" & Type;
       requestContext: RequestContext;
-      config: PrivateNoBuyerContextClientOptions<AnyFetch | undefined>;
+      config: PrivateNoBuyerContextClientOptions<AnyFetch | undefined> & { cache?: CacheConfig };
     };
 type AutoAddedVariableNames = "country" | "language";
 type UserVariables<Doc> = Omit<VariablesOfDoc<Doc>, AutoAddedVariableNames>;

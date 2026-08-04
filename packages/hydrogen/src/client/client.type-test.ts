@@ -479,6 +479,26 @@ describe('type tests', () => {
         publicClient.graphql(SHOP_QUERY, {cache: Cache.long()});
     });
 
+    it('accepts cache options when the configured cache is possibly undefined', () => {
+      const maybeCache = Math.random() > 0.5 ? keyValueCache : undefined;
+      const maybeCacheClient = createStorefrontClient({
+        type: 'public',
+        requestContext: createTestRequestContext(),
+        config: {
+          storeDomain: 'test.myshopify.com',
+          publicStorefrontToken: 'pub-token',
+          cache: maybeCache,
+        },
+      });
+
+      // Deliberate: optional property inference strips `undefined`, so cache
+      // definiteness is undecidable at the type level (and consumer tsconfigs
+      // control inference anyway). A maybe-undefined cache unlocks cache
+      // options; the runtime StorefrontCacheConfigError guard rejects them
+      // when the cache turned out to be absent.
+      () => maybeCacheClient.graphql(SHOP_QUERY, {cache: Cache.long()});
+    });
+
     it('accepts cache options when cache is configured with a custom origin fetch', () => {
       const customOriginClient = createStorefrontClient({
         type: 'public',
