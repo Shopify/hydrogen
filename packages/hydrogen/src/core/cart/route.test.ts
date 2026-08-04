@@ -1,9 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../handle-shopify-routes";
 import { createShopifyRequestContext } from "../headers";
-import { assert } from "../test-utils";
+import { configureLogging, resetLoggingForTests } from "../logging";
+import { assert, createTestLogger } from "../test-utils";
 import { createCartServerHandlers } from "./server-handlers";
 
 type TestStorefrontConfig = {
@@ -161,6 +162,10 @@ describe("createCartServerHandlers", () => {
   beforeEach(() => {
     mockFetch = vi.fn();
     vi.stubGlobal("fetch", mockFetch);
+  });
+
+  afterEach(() => {
+    resetLoggingForTests();
   });
 
   describe("handler contract", () => {
@@ -338,20 +343,17 @@ describe("createCartServerHandlers", () => {
     });
 
     it("returns null cart with GraphQL errors", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
       mockFetch.mockResolvedValueOnce(mockGqlErrorResponse([{ message: "Cart not found" }]));
-      const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      try {
-        const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
-        assert(result, "expected a response");
-        const body = await result.json();
-        expect(body.cart).toBeNull();
-        expect(body.errors).toEqual([{ message: "Cart not found" }]);
-        expect(consoleError).toHaveBeenCalledOnce();
-        expect(consoleError).toHaveBeenCalledWith("Cart not found");
-      } finally {
-        consoleError.mockRestore();
-      }
+      const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
+      assert(result, "expected a response");
+      const body = await result.json();
+      expect(body.cart).toBeNull();
+      expect(body.errors).toEqual([{ message: "Cart not found" }]);
+      expect(logger.error).toHaveBeenCalledOnce();
+      expect(logger.error).toHaveBeenCalledWith("Cart not found", { scope: "cart-api" });
     });
   });
 

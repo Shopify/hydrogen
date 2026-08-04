@@ -1,3 +1,4 @@
+import { consoleLogger } from "../logging";
 import type { AnalyticsEventName } from "./events";
 import type {
   PayloadFor,
@@ -36,7 +37,10 @@ function deliverDestinationEvent(destination: DestinationRecord, entry: ReplayEn
     try {
       callback(entry.payload);
     } catch (error) {
-      console.error(`[h3] Error in analytics destination "${destination.name}":`, error);
+      consoleLogger.error(`error in analytics destination "${destination.name}"`, {
+        scope: "analytics",
+        error,
+      });
     }
   }
 
@@ -97,7 +101,9 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
    */
   function addDestination(destination: StorefrontAnalyticsDestination): () => void {
     if (destinationNames.has(destination.name)) {
-      console.error(`[h3] Analytics destination "${destination.name}" is already registered.`);
+      consoleLogger.warn(`analytics destination "${destination.name}" is already registered`, {
+        scope: "analytics",
+      });
       return () => {};
     }
 
@@ -171,17 +177,20 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
       if (setupResult && typeof (setupResult as PromiseLike<unknown>).then === "function") {
         const setupPromise = setupResult as Promise<void | (() => void)>;
         setupPromise.then(finishSetup).catch((error: unknown) => {
-          console.error(
-            `[h3] Error setting up analytics destination "${destination.name}":`,
+          consoleLogger.error(`error setting up analytics destination "${destination.name}"`, {
+            scope: "analytics",
             error,
-          );
+          });
           removeDestination();
         });
       } else {
         finishSetup(setupResult as void | (() => void));
       }
     } catch (error) {
-      console.error(`[h3] Error setting up analytics destination "${destination.name}":`, error);
+      consoleLogger.error(`error setting up analytics destination "${destination.name}"`, {
+        scope: "analytics",
+        error,
+      });
       removeDestination();
     }
 

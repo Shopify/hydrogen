@@ -19,6 +19,13 @@ function isVisitorConsentEventDetail(value: unknown): value is VisitorConsentEve
   return typeof value === "object" && value !== null;
 }
 
+function logConsentError(message: string, error?: unknown) {
+  const args: unknown[] = [`[hydrogen:error:consent] ${message}`];
+  if (error !== undefined) args.push(error);
+  // oxlint-disable-next-line no-console -- Sanctioned exception: serialized inline script (see skills/error-reporting).
+  console.error(...args);
+}
+
 export default function initializeShopifyConsentTracking(config: ShopifyConsentTrackingConfig) {
   const shopifyWindow: Window & { Shopify?: RuntimeShopifyGlobal } = window;
   const usesDefaultBanner = config.mode === "default-banner";
@@ -43,16 +50,15 @@ export default function initializeShopifyConsentTracking(config: ShopifyConsentT
   };
 
   const requestInitialConsent = () => {
-    const errorMessage = "[hydrogen:error:Consent] Unable to request initial consent.";
     const setTrackingConsent = getCustomerPrivacy()?.setTrackingConsent;
     if (typeof setTrackingConsent !== "function") {
-      console.error(errorMessage);
+      logConsentError("unable to request initial consent");
       return markConsentReady();
     }
 
     setTrackingConsent({ headlessStorefront: true }, (result) => {
       if (result?.error) {
-        console.error(errorMessage, result.error);
+        logConsentError("unable to request initial consent", result.error);
         return;
       }
 

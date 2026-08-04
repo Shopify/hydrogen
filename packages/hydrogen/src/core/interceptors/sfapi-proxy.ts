@@ -25,5 +25,5 @@ export const handleSfapiProxy = createProxyInterceptor({
     }
   },
   formatError: (message) => ({ error: message }),
-  logPrefix: "SFAPI proxy",
+  scope: "sfapi-proxy",
 });

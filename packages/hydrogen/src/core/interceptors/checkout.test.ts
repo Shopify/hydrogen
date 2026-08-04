@@ -1,7 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
 import { createShopifyRequestContext } from "../headers";
+import { configureLogging, resetLoggingForTests } from "../logging";
+import { createTestLogger } from "../test-utils";
 import { handleCheckoutRedirect as handleCheckoutRedirectImpl } from "./checkout";
 
 type TestStorefrontConfig = {
@@ -75,6 +77,10 @@ function createTestSessionManager(request: Request) {
 describe("handleCheckoutRedirect", () => {
   let mockFetch: ReturnType<typeof vi.fn>;
 
+  afterEach(() => {
+    resetLoggingForTests();
+  });
+
   beforeEach(() => {
     mockFetch = vi.fn();
     vi.stubGlobal("fetch", mockFetch);
@@ -147,8 +153,10 @@ describe("handleCheckoutRedirect", () => {
   });
 
   it("returns 502 when checkout mode cannot load the cart", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockFetch.mockRejectedValueOnce(new Error("Connection refused"));
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const error = new Error("Connection refused");
+    mockFetch.mockRejectedValueOnce(error);
 
     const result = await handleCheckoutRedirect(
       new Request("https://my-app.com/checkout?payment=shop_pay", {
@@ -159,7 +167,10 @@ describe("handleCheckoutRedirect", () => {
 
     expect(result?.status).toBe(502);
     expect(await result?.json()).toEqual({ error: "SFAPI request failed" });
-    consoleSpy.mockRestore();
+    expect(logger.error).toHaveBeenCalledWith("checkout redirect request failed", {
+      scope: "checkout",
+      error: expect.any(Error),
+    });
   });
 
   it("redirects variant cart permalinks to the configured store domain", async () => {
@@ -204,8 +215,10 @@ describe("handleCheckoutRedirect", () => {
   });
 
   it("still redirects variant cart permalinks when cart tracking params cannot be loaded", async () => {
-    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    mockFetch.mockRejectedValueOnce(new Error("Connection refused"));
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const error = new Error("Connection refused");
+    mockFetch.mockRejectedValueOnce(error);
 
     const result = await handleCheckoutRedirect(
       new Request("https://my-app.com/cart/123:2?payment=shop_pay", {
@@ -218,7 +231,10 @@ describe("handleCheckoutRedirect", () => {
     expect(result?.headers.get("location")).toBe(
       "https://test-store.myshopify.com/cart/123:2?payment=shop_pay",
     );
-    consoleSpy.mockRestore();
+    expect(logger.warn).toHaveBeenCalledWith(
+      "checkout redirect could not load cart permalink tracking params",
+      { scope: "checkout", error: expect.any(Error) },
+    );
   });
 
   it("sets shop_pay as the default payment option when missing", async () => {

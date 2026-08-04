@@ -1,13 +1,15 @@
 // @vitest-environment happy-dom
 import { act, renderHook } from "@testing-library/react";
 import { createElement, type ReactNode, type SubmitEvent as ReactSubmitEvent } from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { createCartStore, type CartStore, type CreateCartStoreOptions } from "../core/cart/cart";
 import type { CartData, CartLine, CartState } from "../core/cart/state";
 import { EMPTY_CART_DATA, EMPTY_CART_STATE, createEmptyCartErrors } from "../core/cart/state";
+import { configureLogging, resetLoggingForTests } from "../core/logging";
 import { createProductFormStore } from "../core/product/product-form";
 import type { ProductInput, ProductVariantInput } from "../core/product/state";
+import { createTestLogger } from "../core/test-utils";
 import { CartProvider, configureCartEndpoint } from "./cart";
 import { createProductComponents, useProductForm } from "./product";
 
@@ -217,6 +219,9 @@ describe("useProductForm", () => {
       ),
     );
     configureCartEndpoint("/api/cart");
+  });
+  afterEach(() => {
+    resetLoggingForTests();
   });
 
   describe("initial state", () => {
@@ -529,7 +534,8 @@ describe("useProductForm", () => {
       const { result } = renderHook(() => useProductForm(store));
 
       const afterSubmit = vi.fn();
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const logger = createTestLogger();
+      configureLogging({ logger });
 
       await act(async () => {
         result.current.formProps({ afterSubmit }).onSubmit?.(makeMockEvent());
@@ -537,11 +543,10 @@ describe("useProductForm", () => {
       });
 
       expect(afterSubmit).not.toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "[hydrogen] form submission error:",
-        expect.any(Error),
-      );
-      consoleSpy.mockRestore();
+      expect(logger.error).toHaveBeenCalledWith("form submission error", {
+        scope: "product",
+        error: expect.any(Error),
+      });
     });
 
     it("does not submit if beforeSubmit prevents default", () => {

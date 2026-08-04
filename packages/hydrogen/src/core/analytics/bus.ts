@@ -1,3 +1,4 @@
+import { consoleLogger } from "../logging";
 import { VISITOR_CONSENT_COLLECTED_EVENT } from "../shopify-scripts/constants";
 import { getShopifyGlobal } from "../shopify-scripts/global";
 import { isObjectRecord } from "../utils/record";
@@ -83,7 +84,7 @@ function isSupportedAnalyticsEvent(event: unknown): event is AnalyticsEventName 
 }
 
 function warnUnsupportedAnalyticsEvent(event: unknown): void {
-  console.warn(`[h3:warn:Analytics] Unsupported analytics event "${String(event)}".`);
+  consoleLogger.warn(`unsupported analytics event "${String(event)}"`, { scope: "analytics" });
 }
 
 function hasNoConsentInteraction(currentVisitorConsent: unknown): boolean {
@@ -181,11 +182,7 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
       try {
         callback(normalizedPayload);
       } catch (error) {
-        if (error instanceof Error) {
-          console.error("Analytics publish error", error.message, subscriberId, error.stack);
-        } else {
-          console.error("Analytics publish error", error, subscriberId);
-        }
+        consoleLogger.error("analytics publish error", { scope: "analytics", error, subscriberId });
       }
     });
 
@@ -286,7 +283,9 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
   };
 
   if (shop?.shopId && String(shop.shopId).endsWith(MOCK_SHOP_ID_SUFFIX)) {
-    console.warn("[h2:warn:Analytics] Mock shop detected. Analytics will not work properly.");
+    consoleLogger.warn("mock shop detected; analytics will not work properly", {
+      scope: "analytics",
+    });
   }
 
   initConsentReplay();

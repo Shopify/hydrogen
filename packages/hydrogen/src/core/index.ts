@@ -243,3 +243,11 @@ export type {
 export { formatMoney } from "./money";
 export { flattenConnection } from "./analytics/utils/flatten-connection";
 export type { FormatMoneyOptions, FormattedMoney, FormattedMoneyRange, MoneyV2 } from "./money";
+
+export {
+  configureLogging,
+  type ConfigureLoggingOptions,
+  type HydrogenLogger,
+  type LogContext,
+  type LogLevel,
+} from "./logging";
