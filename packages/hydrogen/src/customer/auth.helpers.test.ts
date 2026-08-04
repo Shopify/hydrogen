@@ -1,6 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import type {HydrogenSession} from '../types';
-import {CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
+import {BUYER_SESSION_KEY, CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
 import {
   checkExpires,
   clearSession,
@@ -105,6 +105,7 @@ describe('auth.helpers', () => {
         'Unauthorized No refreshToken found in the session. Make sure your session is configured correctly and passed to `createCustomerAccountClient`.',
       );
       expect(session.unset).toHaveBeenCalledWith(CUSTOMER_ACCOUNT_SESSION_KEY);
+      expect(session.unset).toHaveBeenCalledWith(BUYER_SESSION_KEY);
     });
 
     it('Throws Unauthorized when refresh token fails', async () => {
@@ -180,6 +181,7 @@ describe('auth.helpers', () => {
         'Unauthorized Invalid access token received.',
       );
       expect(session.unset).toHaveBeenCalledWith(CUSTOMER_ACCOUNT_SESSION_KEY);
+      expect(session.unset).toHaveBeenCalledWith(BUYER_SESSION_KEY);
     });
 
     it('Refreshes the token', async () => {
@@ -236,6 +238,7 @@ describe('auth.helpers', () => {
     it('Clears the session', async () => {
       clearSession(session);
       expect(session.unset).toHaveBeenCalledWith(CUSTOMER_ACCOUNT_SESSION_KEY);
+      expect(session.unset).toHaveBeenCalledWith(BUYER_SESSION_KEY);
     });
   });
 
@@ -365,6 +368,7 @@ describe('auth.helpers', () => {
 
       await expect(checkExpiredSession()).rejects.toThrowError();
       expect(session.unset).toHaveBeenCalledWith(CUSTOMER_ACCOUNT_SESSION_KEY);
+      expect(session.unset).toHaveBeenCalledWith(BUYER_SESSION_KEY);
     });
 
     it.each([
