@@ -3,7 +3,8 @@ name: hydrogen-customer-account
 description: >
   Customer Account API setup for Hydrogen storefronts. Use when wiring customer
   sessions, login/logout/OAuth route handlers, account profile, order history,
-  account-gated UI, or Customer Account GraphQL queries.
+  account-gated UI, cart buyer identity synchronization, or Customer Account
+  GraphQL queries.
 ---
 
 # Customer Account API
@@ -35,7 +36,24 @@ This makes the dangerous path harder to hold wrong: TypeScript rejects `customer
 
 ## Route Wiring
 
-Register `createCustomerAccountServerHandlers({ customerSession })` with the app's `handleShopifyRoutes` setup. These handlers own:
+Register `createCustomerAccountServerHandlers({ customerSession })` with the app's `handleShopifyRoutes` setup. Use `onAuthenticated`, `onTokenRefresh`, and `onLogout` for app-owned work that must follow authenticated session lifecycle changes:
+
+```ts
+import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
+
+const customerAccountHandlers = createCustomerAccountServerHandlers({
+  customerSession,
+  onAuthenticated,
+  onTokenRefresh,
+  onLogout,
+});
+```
+
+Hooks run after their route reaches its lifecycle transition and before the session manager is committed. `onTokenRefresh` runs whenever the refresh route completes, even when no token changed. A rejected hook commits the updated session and returns a sanitized server error instead of the normal redirect. For secure cart buyer identity integration, read [Synchronize Customer Accounts with cart](references/cart-sync.md).
+
+Lifecycle hooks are post-authentication integration points, not authorization guards. Rejecting `onAuthenticated` does not roll back the authenticated session.
+
+The Customer Account handlers own:
 
 - `GET /account/login`
 - `GET /account/authorize`

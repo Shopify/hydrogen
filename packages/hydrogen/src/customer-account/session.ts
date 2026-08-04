@@ -1,13 +1,18 @@
+import type { StorefrontClient } from "../client";
 import { DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
 import type { ShopifyRequestContext } from "../core/headers";
+import { getLogger } from "../core/logging";
 import {
   createCallableRouteHandler,
   type CallableRouteHandler,
   type ShopifyRouteErrorResult,
+  type ShopifyRouteHandlerContext,
   type ShopifyRouteRedirectResult,
   type ShopifyRouteSessionManager,
 } from "../core/route-handlers";
 import { CustomerAccountApiError, CustomerAccountOAuthError } from "./errors";
+
+const log = getLogger("customer-account");
 
 export const CUSTOMER_ACCOUNT_AUTHORIZE_PATH = "/account/authorize" as const;
 export const CUSTOMER_ACCOUNT_LOGIN_PATH = "/account/login" as const;
@@ -22,6 +27,9 @@ const FAILED_LOGIN_PATH = "/account?login=failed";
 const FORBIDDEN_STATUS = 403;
 const FORBIDDEN_ERROR_CODE = "forbidden";
 const FORBIDDEN_ERROR_MESSAGE = "Forbidden";
+const LIFECYCLE_HOOK_ERROR_STATUS = 500;
+const LIFECYCLE_HOOK_ERROR_CODE = "session_lifecycle_hook_failed";
+const LIFECYCLE_HOOK_ERROR_MESSAGE = "Customer session lifecycle hook failed";
 const NO_STORE_CACHE_CONTROL = "no-store";
 const AUTHORIZATION_CODE_GRANT_TYPE = "authorization_code";
 const REFRESH_TOKEN_GRANT_TYPE = "refresh_token";
@@ -136,40 +144,83 @@ export type CustomerSession = {
   ): Promise<string>;
 };
 
-export type CustomerAccountServerHandlers = {
+export type CustomerAccountServerHandlers<
+  TContext extends CustomerAccountRouteHandlerContext = CustomerAccountRouteHandlerContext,
+> = {
   authorize: CallableRouteHandler<
-    CustomerAccountRouteHandlerContext,
+    TContext,
     CustomerAccountRouteResult,
     typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH,
     "GET"
   >;
   login: CallableRouteHandler<
-    CustomerAccountRouteHandlerContext,
+    TContext,
     CustomerAccountRouteResult,
     typeof CUSTOMER_ACCOUNT_LOGIN_PATH,
     "GET"
   >;
   logout: CallableRouteHandler<
-    CustomerAccountRouteHandlerContext,
+    TContext,
     CustomerAccountRouteResult,
     typeof CUSTOMER_ACCOUNT_LOGOUT_PATH,
     "POST"
   >;
   refresh: CallableRouteHandler<
-    CustomerAccountRouteHandlerContext,
+    TContext,
     CustomerAccountRouteResult,
     typeof CUSTOMER_ACCOUNT_REFRESH_PATH,
     "GET"
   >;
 };
 
-export type CreateCustomerAccountServerHandlersOptions = {
+/**
+ * Runs inside a Customer Account route before session commit. A rejected hook
+ * commits the updated session and returns a sanitized server error.
+ */
+export type CustomerAccountSessionLifecycleHook = (
+  context: ShopifyRouteHandlerContext,
+) => Awaitable<void>;
+
+export type CustomerAccountServerHandlersWithLifecycleHooks =
+  CustomerAccountServerHandlers<ShopifyRouteHandlerContext>;
+
+type CreateCustomerAccountServerHandlersBaseOptions = {
   customerSession: CustomerSession;
   defaultPostLoginRedirectPathname?: string;
   loginFailedRedirectPath?: string;
   origin?: string | ((request: Request) => string);
   postLogoutRedirectUri?: string;
 };
+
+type CustomerAccountLifecycleHooks = {
+  /**
+   * Runs after authorization creates an authenticated session and before it is
+   * committed. This is an integration hook, not an authorization guard: rejection
+   * does not roll back the authenticated session.
+   */
+  onAuthenticated?: CustomerAccountSessionLifecycleHook;
+  /** Runs after the refresh route completes and before session state is committed. */
+  onTokenRefresh?: CustomerAccountSessionLifecycleHook;
+  /** Runs after logout removes the authenticated session and before it is committed. */
+  onLogout?: CustomerAccountSessionLifecycleHook;
+};
+
+type CustomerAccountLifecycleHooksDisabled = {
+  onAuthenticated?: undefined;
+  onTokenRefresh?: undefined;
+  onLogout?: undefined;
+};
+
+type CustomerAccountLifecycleHooksEnabled = CustomerAccountLifecycleHooks &
+  (
+    | { onAuthenticated: CustomerAccountSessionLifecycleHook }
+    | { onTokenRefresh: CustomerAccountSessionLifecycleHook }
+    | { onLogout: CustomerAccountSessionLifecycleHook }
+  );
+
+export type CreateCustomerAccountServerHandlersOptions =
+  CreateCustomerAccountServerHandlersBaseOptions &
+    (CustomerAccountLifecycleHooksDisabled | CustomerAccountLifecycleHooksEnabled);
 
 type CustomerAccountTokens = NonNullable<CustomerAccountSessionData["tokens"]>;
 type PendingLogin = NonNullable<CustomerAccountSessionData["pendingLogin"]>;
@@ -195,6 +246,13 @@ type CustomerAccountRouteHandlerContext = {
   sessionManager: WritableCustomerSessionManager;
   requestContext: ShopifyRequestContext;
 };
+type CustomerAccountRuntimeRouteHandlerContext = CustomerAccountRouteHandlerContext & {
+  storefrontClient?: StorefrontClient;
+};
+type CustomerAccountServerHandlersForOptions<TOptions> =
+  TOptions extends CustomerAccountLifecycleHooksEnabled
+    ? CustomerAccountServerHandlersWithLifecycleHooks
+    : CustomerAccountServerHandlers;
 type TokenRequestParams = {
   url: string;
   origin: string;
@@ -380,13 +438,19 @@ export function createCustomerSession({
  * full-page navigation (plain `<a>`/`<form>`), not a framework client-side
  * navigation component — client-nav cannot follow these raw redirects.
  */
+export function createCustomerAccountServerHandlers<
+  const TOptions extends CreateCustomerAccountServerHandlersOptions,
+>(options: TOptions): CustomerAccountServerHandlersForOptions<TOptions>;
 export function createCustomerAccountServerHandlers(
   options: CreateCustomerAccountServerHandlersOptions,
-): CustomerAccountServerHandlers {
+): CustomerAccountServerHandlers | CustomerAccountServerHandlersWithLifecycleHooks {
   const {
     customerSession,
     defaultPostLoginRedirectPathname = DEFAULT_POST_LOGIN_REDIRECT_PATHNAME,
     loginFailedRedirectPath = FAILED_LOGIN_PATH,
+    onAuthenticated,
+    onLogout,
+    onTokenRefresh,
     postLogoutRedirectUri = DEFAULT_POST_LOGOUT_REDIRECT_URI,
   } = options;
   const { origin: originOption } = options;
@@ -395,21 +459,21 @@ export function createCustomerAccountServerHandlers(
     authorize: createCallableRouteHandler(
       CUSTOMER_ACCOUNT_AUTHORIZE_PATH,
       "GET",
-      async ({ request, sessionManager, requestContext }) => {
+      async (context: CustomerAccountRuntimeRouteHandlerContext) => {
         return handleAuthorizeRoute(
           customerSession,
-          sessionManager,
-          requestContext,
-          request,
+          context,
           loginFailedRedirectPath,
           originOption,
+          onAuthenticated,
         );
       },
     ),
     login: createCallableRouteHandler(
       CUSTOMER_ACCOUNT_LOGIN_PATH,
       "GET",
-      async ({ request, sessionManager, requestContext }) => {
+      async (context: CustomerAccountRuntimeRouteHandlerContext) => {
+        const { request, sessionManager, requestContext } = context;
         return handleLoginRoute(
           customerSession,
           sessionManager,
@@ -423,28 +487,21 @@ export function createCustomerAccountServerHandlers(
     logout: createCallableRouteHandler(
       CUSTOMER_ACCOUNT_LOGOUT_PATH,
       "POST",
-      async ({ request, sessionManager, requestContext }) => {
+      async (context: CustomerAccountRuntimeRouteHandlerContext) => {
         return handleLogoutRoute(
           customerSession,
-          sessionManager,
-          requestContext,
-          request,
+          context,
           postLogoutRedirectUri,
           originOption,
+          onLogout,
         );
       },
     ),
     refresh: createCallableRouteHandler(
       CUSTOMER_ACCOUNT_REFRESH_PATH,
       "GET",
-      async ({ request, sessionManager, requestContext }) => {
-        return handleRefreshRoute(
-          customerSession,
-          sessionManager,
-          requestContext,
-          request,
-          originOption,
-        );
+      async (context: CustomerAccountRuntimeRouteHandlerContext) => {
+        return handleRefreshRoute(customerSession, context, originOption, onTokenRefresh);
       },
     ),
   };
@@ -482,12 +539,12 @@ async function handleLoginRoute(
 
 async function handleLogoutRoute(
   customerSession: CustomerSession,
-  sessionManager: WritableCustomerSessionManager,
-  requestContext: ShopifyRequestContext,
-  request: Request,
+  context: CustomerAccountRuntimeRouteHandlerContext,
   postLogoutRedirectUri: string,
   originOption: string | ((request: Request) => string) | undefined,
+  onLogout: CustomerAccountSessionLifecycleHook | undefined,
 ): Promise<CustomerAccountRouteResult> {
+  const { request, sessionManager, requestContext } = context;
   const origin = await resolveRouteOrigin(sessionManager, request, originOption);
   if (!isSameOriginPost(request, origin)) return forbiddenResult();
 
@@ -498,23 +555,27 @@ async function handleLogoutRoute(
     origin,
     postLogoutRedirectUri: sanitizeReturnTo(requestedReturnTo, origin, postLogoutRedirectUri),
   });
+  const hookError = await runSessionLifecycleHook(onLogout, context, "logout");
+  if (hookError) return lifecycleHookErrorResult(await commitSession(sessionManager));
   return redirectResult(logoutUrl, await commitSession(sessionManager));
 }
 
 async function handleAuthorizeRoute(
   customerSession: CustomerSession,
-  sessionManager: WritableCustomerSessionManager,
-  requestContext: ShopifyRequestContext,
-  request: Request,
+  context: CustomerAccountRuntimeRouteHandlerContext,
   loginFailedRedirectPath: string,
   originOption: string | ((request: Request) => string) | undefined,
+  onAuthenticated: CustomerAccountSessionLifecycleHook | undefined,
 ): Promise<CustomerAccountRouteResult> {
+  const { request, sessionManager, requestContext } = context;
   try {
     const location = await customerSession.handleOAuthCallback(
       sessionManager,
       requestContext,
       request,
     );
+    const hookError = await runSessionLifecycleHook(onAuthenticated, context, "authenticated");
+    if (hookError) return lifecycleHookErrorResult(await commitSession(sessionManager));
     return redirectResult(location, await commitSession(sessionManager));
   } catch (error) {
     if (!(error instanceof CustomerAccountOAuthError)) throw error;
@@ -528,18 +589,44 @@ async function handleAuthorizeRoute(
 
 async function handleRefreshRoute(
   customerSession: CustomerSession,
-  sessionManager: WritableCustomerSessionManager,
-  requestContext: ShopifyRequestContext,
-  request: Request,
+  context: CustomerAccountRuntimeRouteHandlerContext,
   originOption: string | ((request: Request) => string) | undefined,
+  onTokenRefresh: CustomerAccountSessionLifecycleHook | undefined,
 ): Promise<CustomerAccountRouteResult> {
+  const { request, sessionManager, requestContext } = context;
   const origin = await resolveRouteOrigin(sessionManager, request, originOption);
   await customerSession.getOrRefreshAccessToken(sessionManager, requestContext, { origin });
+  const hookError = await runSessionLifecycleHook(onTokenRefresh, context, "token-refresh");
+  if (hookError) return lifecycleHookErrorResult(await commitSession(sessionManager));
 
   const requestUrl = new URL(request.url);
   const returnTo =
     requestUrl.searchParams.get("return_to") ?? requestUrl.searchParams.get("returnTo");
   return redirectResult(sanitizeReturnTo(returnTo, origin), await commitSession(sessionManager));
+}
+
+async function runSessionLifecycleHook(
+  hook: CustomerAccountSessionLifecycleHook | undefined,
+  context: CustomerAccountRuntimeRouteHandlerContext,
+  lifecycle: "authenticated" | "token-refresh" | "logout",
+): Promise<boolean> {
+  if (!hook) return false;
+
+  try {
+    if (!context.storefrontClient) {
+      throw new Error(
+        "Customer Account handlers configured with lifecycle hooks require storefrontClient.",
+      );
+    }
+    await hook({
+      ...context,
+      storefrontClient: context.storefrontClient,
+    });
+    return false;
+  } catch {
+    log.error("customer session lifecycle hook failed", { lifecycle });
+    return true;
+  }
 }
 
 async function resolveRouteOrigin(
@@ -574,6 +661,20 @@ function forbiddenResult(): ShopifyRouteErrorResult {
     status: FORBIDDEN_STATUS,
     error: { code: FORBIDDEN_ERROR_CODE, message: FORBIDDEN_ERROR_MESSAGE },
     headers: { "cache-control": NO_STORE_CACHE_CONTROL },
+  };
+}
+
+function lifecycleHookErrorResult(headers?: HeadersInit): ShopifyRouteErrorResult {
+  const errorHeaders = new Headers(headers);
+  errorHeaders.set("cache-control", NO_STORE_CACHE_CONTROL);
+  return {
+    type: "error",
+    status: LIFECYCLE_HOOK_ERROR_STATUS,
+    error: {
+      code: LIFECYCLE_HOOK_ERROR_CODE,
+      message: LIFECYCLE_HOOK_ERROR_MESSAGE,
+    },
+    headers: errorHeaders,
   };
 }
 

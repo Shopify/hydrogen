@@ -93,6 +93,8 @@ export type {
   CartDataFromQuery,
   CartResult,
   CartServerHandlers,
+  CartServerHandlersWithCustomerSession,
+  CreateCartServerHandlersOptions,
 } from "./cart";
 export type {
   CartState,
