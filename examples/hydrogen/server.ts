@@ -5,6 +5,7 @@ import {
   createShopifyRequestContext,
   handleShopifyRedirects,
   handleShopifyRoutes,
+  handleVariantDeepLink,
 } from "@shopify/hydrogen";
 import { createStorefrontClient } from "@shopify/hydrogen";
 import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
@@ -74,6 +75,25 @@ export default {
         handlers: [cartHandlers, predictiveSearchHandlers, customerAccountHandlers],
       });
       if (shopifyRoute) return shopifyRoute;
+
+      /**
+       * Shopify's own surfaces (Liquid storefronts, Shopping feeds, email, ads,
+       * Shop Pay) deep-link with a bare `?variant=<id>`. Translate it to the
+       * option-param URL the product route reads, before the app renders, so it
+       * stays a real HTTP redirect for a shopper without JavaScript.
+       */
+      const variantRedirect = await handleVariantDeepLink({
+        request: publicRequest,
+        routeTemplates,
+        storefrontClient,
+      });
+      if (variantRedirect) {
+        // Mirrors the `shopifyRoute` early return above: nothing has rendered
+        // yet, so there are no pending session commits to flush — only the
+        // SFAPI response headers need merging.
+        shopifyRequestContext.applyResponseHeaders(variantRedirect.headers);
+        return variantRedirect;
+      }
 
       const routerContext = await createHydrogenRouterContext(
         publicRequest,

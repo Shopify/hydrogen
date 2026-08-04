@@ -4,6 +4,7 @@ import {
   createShopifyRequestContext,
   createStorefrontClient,
   handleShopifyRoutes,
+  handleVariantDeepLink,
 } from "@shopify/hydrogen";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -11,6 +12,7 @@ import { cartHandlers } from "@/lib/cart-handlers";
 import { createCustomerSessionManager } from "@/lib/customer-account";
 import { customerSessionHandlers } from "@/lib/customer-session-handlers";
 import { predictiveSearchHandlers } from "@/lib/predictive-search-handlers";
+import { routeTemplates } from "@/lib/route-templates";
 import { MOCK_SHOP_DOMAIN, resolveStorefrontConfig } from "@/lib/storefront-config";
 
 /**
@@ -19,6 +21,13 @@ import { MOCK_SHOP_DOMAIN, resolveStorefrontConfig } from "@/lib/storefront-conf
  * routing — Hydrogen-owned routes (`/api/cart`, `/api/predictive-search`,
  * `/api/{ver}/graphql.json`, `/admin`, …) short-circuit here. Storefront URL
  * redirects run in `app/not-found.tsx` (post-404), never here.
+ *
+ * `?variant=<id>` deep links (Liquid storefronts, Shopping feeds, email, ads,
+ * Shop Pay) are normalized to the PDP's option-param URL here too — distinct
+ * from the admin-configured Storefront URL redirects above, and placed before
+ * framework routing so it stays a real HTTP redirect for no-JS shoppers (F4)
+ * rather than the client-side one a page-level `redirect()` degrades to under
+ * Cache Components.
  *
  * The original request URL is forwarded to Server Components via
  * `requestContext.getForwardedRequestHeaders()` (carries `x-storefront-url` for
@@ -37,8 +46,6 @@ export async function proxy(request: NextRequest) {
     buyerIp,
   });
 
-  const sessionManager = await createCustomerSessionManager(request);
-
   const { storeDomain, privateStorefrontToken } = resolveStorefrontConfig();
 
   const storefrontClient = createStorefrontClient({
@@ -50,6 +57,26 @@ export async function proxy(request: NextRequest) {
       buyerIp,
     },
   });
+
+  // Normalize `?variant=<id>` deep links to the PDP's option-param URL. Runs
+  // ahead of the session manager: a redirected request never reads the session,
+  // so there's no reason to pay its cookie decrypt first.
+  const variantRedirect = await handleVariantDeepLink({
+    request,
+    storefrontClient,
+    routeTemplates,
+  });
+  if (variantRedirect) {
+    // Hydrogen returns a relative `location`, which is what a framework router
+    // wants. Next's proxy resolves the header with `new URL()` and throws on a
+    // relative value, so rebuild it against the request origin here.
+    const location = variantRedirect.headers.get("location") ?? "/";
+    const response = NextResponse.redirect(new URL(location, request.url), variantRedirect.status);
+    requestContext.applyResponseHeaders(response.headers);
+    return response;
+  }
+
+  const sessionManager = await createCustomerSessionManager(request);
 
   // Customer Accounts are only available on a real store (mock.shop has no
   // Customer Account API). Inline the resolved `storeDomain` check rather than
