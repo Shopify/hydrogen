@@ -21,7 +21,7 @@ export { Cache, createFetchWithCache, createRunWithCache } from "./cache";
 export type { CacheInstance, CacheOptions, CachingStrategy } from "./cache";
 export { StorefrontApiError, StorefrontTimeoutError } from "../client/errors";
 export { gql } from "../graphql";
-export type { I18nConfig, ShopifyRequestContext } from "./request-context";
+export type { I18nConfig, ShopifyBuyerRequestContext, ShopifyRequestContext } from "./request-context";
 export type { AnyStorefrontQueryString, StorefrontQueryString } from "../graphql";
 export type { InferResult, InferVariables } from "../graphql";
 export type {

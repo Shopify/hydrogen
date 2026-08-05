@@ -1,4 +1,3 @@
-import { getBuyerIp } from "@shared/buyer-ip";
 import { getPrivateStorefrontToken } from "@shared/private-env";
 import {
   Cache as HydrogenCache,
@@ -6,18 +5,16 @@ import {
   type GraphQLFormattedError,
   type RequestScopedPrivateStorefrontClient,
   type CachingStrategy,
-  type ShopifyRequestContext,
+  type ShopifyBuyerRequestContext,
 } from "@shopify/hydrogen";
 
 import type { I18nLocale } from "~/lib/i18n";
 
 type CreateStorefrontClientOptions = {
-  request: Request;
   env: Env;
   cache: Cache;
   waitUntil: ExecutionContext["waitUntil"];
-  i18n: I18nLocale;
-  shopifyRequestContext: ShopifyRequestContext;
+  shopifyRequestContext: ShopifyBuyerRequestContext;
 };
 
 type StorefrontQueryOptions = {
@@ -67,21 +64,17 @@ function CacheDefault(): CachingStrategy {
 }
 
 export function createStorefrontClientForRequest({
-  request,
   env,
   cache,
   waitUntil,
-  i18n,
   shopifyRequestContext,
 }: CreateStorefrontClientOptions): StorefrontClient {
-  const buyerIp = shopifyRequestContext.buyerIp ?? getBuyerIp(request.headers);
   const client = createStorefrontClient({
     type: "private",
     requestContext: shopifyRequestContext,
     config: {
       storeDomain: env.PUBLIC_STORE_DOMAIN,
       privateStorefrontToken: getPrivateStorefrontToken(env),
-      buyerIp,
       cache,
       waitUntil,
     },

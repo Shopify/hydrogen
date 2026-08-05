@@ -171,16 +171,12 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
   requestContext.applyStorefrontRequestHeaders(requestHeaders);
 
   if (clientType === "private") {
-    const { buyerIp } = config;
+    const { buyerIp } = requestContext;
     if (!buyerIp) {
-      throw new Error("buyerIp is required for private Storefront API clients");
+      throw new Error("requestContext.buyerIp is required for private Storefront API clients");
     }
-    if (requestContext.buyerIp && requestContext.buyerIp !== buyerIp) {
-      throw new Error("requestContext.buyerIp must match private Storefront API client buyerIp");
-    }
-    const trustedBuyerIp = requestContext.buyerIp ?? buyerIp;
-    requestHeaders.set(STOREFRONT_BUYER_IP_HEADER, trustedBuyerIp);
-    requestHeaders.set(SHOPIFY_CLIENT_IP_HEADER, trustedBuyerIp);
+    requestHeaders.set(STOREFRONT_BUYER_IP_HEADER, buyerIp);
+    requestHeaders.set(SHOPIFY_CLIENT_IP_HEADER, buyerIp);
   }
 
   async function graphql(

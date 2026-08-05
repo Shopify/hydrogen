@@ -11,6 +11,7 @@ import {
   createShopifyRequestContext,
   handleShopifyRedirects,
   handleShopifyRoutes,
+  type ShopifyBuyerRequestContext,
   type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import { defineMiddleware } from "astro:middleware";
@@ -31,7 +32,7 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
     i18n: defaultI18n,
     buyerIp,
   });
-  const storefrontClient = createPrivateStorefrontClient(requestContext, buyerIp);
+  const storefrontClient = createPrivateStorefrontClient(requestContext);
   const sessionManager = await createCustomerSessionManager(request);
 
   const kitRoute = await handleShopifyRoutes({
@@ -77,14 +78,13 @@ function applyStorefrontResponseHeaders(
   }
 }
 
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContext, buyerIp: string) {
+function createPrivateStorefrontClient(requestContext: ShopifyBuyerRequestContext) {
   return createStorefrontClient({
     type: "private",
     requestContext,
     config: {
       storeDomain: storefrontConfig.storeDomain,
       privateStorefrontToken: getPrivateStorefrontToken(),
-      buyerIp,
       cache: storefrontCache,
     },
   });

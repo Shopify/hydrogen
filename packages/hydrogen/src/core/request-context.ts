@@ -43,11 +43,16 @@ type NormalizedI18nConfig<I18n extends I18nConfig = I18nConfig> = Omit<I18n, "pa
   pathPrefix: string;
 };
 
-type ShopifyRequestContextInput<I18n extends I18nConfig = I18nConfig> = {
+type ShopifyRequestContextInputBase<I18n extends I18nConfig = I18nConfig> = {
   request: StorefrontRequest;
   i18n: I18n;
-  buyerIp?: string;
 };
+
+type ShopifyRequestContextInput<I18n extends I18nConfig = I18nConfig> =
+  ShopifyRequestContextInputBase<I18n> & { buyerIp?: never };
+
+type ShopifyBuyerRequestContextInput<I18n extends I18nConfig = I18nConfig> =
+  ShopifyRequestContextInputBase<I18n> & { buyerIp: string };
 
 type ShopifyRequestContextBase = {
   // -- Private fields --
@@ -103,6 +108,9 @@ export type ShopifyRequestContext<I18n extends I18nConfig = I18nConfig> =
     i18n: NormalizedI18nConfig<I18n>;
   };
 
+export type ShopifyBuyerRequestContext<I18n extends I18nConfig = I18nConfig> =
+  ShopifyRequestContext<I18n> & { buyerIp: string };
+
 type Context<I18n extends I18nConfig = I18nConfig> = {
   cookie?: string;
   uniqueToken?: string;
@@ -118,15 +126,22 @@ type Context<I18n extends I18nConfig = I18nConfig> = {
 };
 
 export function createShopifyRequestContext<const I18n extends I18nConfig>(
+  input: ShopifyBuyerRequestContextInput<I18n>,
+): ShopifyBuyerRequestContext<I18n>;
+export function createShopifyRequestContext<const I18n extends I18nConfig>(
   input: ShopifyRequestContextInput<I18n>,
 ): ShopifyRequestContext<I18n>;
 export function createShopifyRequestContext<const I18n extends I18nConfig>(
-  input: ShopifyRequestContextInput<I18n>,
+  input: ShopifyRequestContextInputBase<I18n> & { buyerIp?: string },
 ): ShopifyRequestContext<I18n> {
   const { request } = input;
 
   if (!input.i18n?.country || !input.i18n?.language) {
     throw new Error("i18n with country and language is required for Shopify request contexts.");
+  }
+
+  if ("buyerIp" in input && !input.buyerIp) {
+    throw new Error("buyerIp must be non-empty when provided");
   }
 
   const i18n = normalizeI18n(input.i18n);

@@ -120,11 +120,11 @@ function createPrivateStorefrontClient(
     requestContext: createShopifyRequestContext({
       request,
       i18n: fixture.i18n ?? DEFAULT_I18N,
+      buyerIp: "127.0.0.1",
     }),
     config: {
       storeDomain: fixture.storeDomain,
       privateStorefrontToken: "test-private-token",
-      buyerIp: "127.0.0.1",
     },
   });
 }

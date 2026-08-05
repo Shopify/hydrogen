@@ -34,7 +34,6 @@ export const handle: Handle = async ({ event, resolve }) => {
     config: {
       storeDomain: PUBLIC_STORE_DOMAIN,
       privateStorefrontToken: PRIVATE_STOREFRONT_API_TOKEN,
-      buyerIp,
     },
   });
 
@@ -105,7 +104,6 @@ export const handle: Handle = async ({ event, resolve }) => {
     config: {
       storeDomain: PUBLIC_STORE_DOMAIN,
       privateStorefrontToken: PRIVATE_STOREFRONT_API_TOKEN,
-      buyerIp,
     },
   });
 

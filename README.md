@@ -99,6 +99,8 @@ Below is the kind of code the skills produce.
 
 **A typed Storefront API client** — works anywhere you can `fetch`:
 
+Implement `getBuyerIp` using trusted request data exposed by your deployment platform.
+
 ```ts
 import {
   createShopifyRequestContext,
@@ -106,11 +108,14 @@ import {
   gql,
 } from "@shopify/hydrogen";
 
+const buyerIp = getBuyerIp(request.headers);
+
 const storefront = createStorefrontClient({
   type: "private",
   requestContext: createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
+    buyerIp,
   }),
   config: {
     storeDomain: process.env.NEXT_PUBLIC_STORE_DOMAIN,

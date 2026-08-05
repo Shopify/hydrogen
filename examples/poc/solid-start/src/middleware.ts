@@ -10,7 +10,7 @@ import {
   createCartServerHandlers,
   createStorefrontClient,
   createShopifyRequestContext,
-  type ShopifyRequestContext,
+  type ShopifyBuyerRequestContext,
 } from "@shopify/hydrogen";
 import { createMiddleware } from "@solidjs/start/middleware";
 import { LRUCache } from "lru-cache";
@@ -43,7 +43,7 @@ export default createMiddleware({
         i18n: defaultI18n,
         buyerIp,
       });
-      const storefrontClient = createPrivateStorefrontClient(requestContext, buyerIp);
+      const storefrontClient = createPrivateStorefrontClient(requestContext);
       const sessionManager = await createCustomerSessionManager(event.request);
       const customerAccountClient = createRequestCustomerAccountClient(requestContext);
 
@@ -73,14 +73,13 @@ export default createMiddleware({
   ],
 });
 
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContext, buyerIp: string) {
+function createPrivateStorefrontClient(requestContext: ShopifyBuyerRequestContext) {
   return createStorefrontClient({
     type: "private",
     requestContext,
     config: {
       storeDomain: storefrontConfig.storeDomain,
       privateStorefrontToken: getPrivateStorefrontToken(),
-      buyerIp,
       cache: storefrontCache,
     },
   });

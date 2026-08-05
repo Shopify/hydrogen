@@ -45,6 +45,8 @@ type MockStorefrontClientOptions = {
   rejectWith?: Error;
 };
 
+const DEFAULT_BUYER_IP = "127.0.0.1";
+
 function mockStorefrontClient(
   data: unknown,
   options: MockStorefrontClientOptions = {},
@@ -62,6 +64,7 @@ function mockStorefrontClient(
     requestContext: createShopifyRequestContext({
       request: options.request ?? new Request("https://shop.example.com/"),
       i18n: { country: "US", language: "EN" },
+      buyerIp: DEFAULT_BUYER_IP,
     }),
     graphql: options.rejectWith
       ? vi.fn().mockRejectedValue(options.rejectWith)

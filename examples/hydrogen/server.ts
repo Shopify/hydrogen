@@ -44,7 +44,6 @@ export default {
         config: {
           storeDomain: env.PUBLIC_STORE_DOMAIN,
           privateStorefrontToken: getPrivateStorefrontToken(env),
-          buyerIp,
         },
       });
       const customerSessionManager = await createCustomerSessionManager(

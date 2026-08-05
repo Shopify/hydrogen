@@ -5,7 +5,7 @@ import type {
 } from "gql.tada";
 
 import type { CacheInstance, WaitUntil } from "../core/cache/run-with-cache";
-import type { ShopifyRequestContext } from "../core/request-context";
+import type { ShopifyBuyerRequestContext, ShopifyRequestContext } from "../core/request-context";
 import type { AnyStorefrontQueryString, SourceOf, StorefrontQueryString } from "../graphql";
 import type { InferResult, InferVariables } from "../graphql";
 import type { InferOperationKind } from "../graphql/type-resolver";

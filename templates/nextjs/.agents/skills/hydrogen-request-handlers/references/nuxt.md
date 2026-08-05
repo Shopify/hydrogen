@@ -29,7 +29,7 @@ import {
   createStorefrontClient,
   createShopifyRequestContext,
   handleShopifyRoutes,
-  type ShopifyRequestContext,
+  type ShopifyBuyerRequestContext,
 } from "@shopify/hydrogen";
 
 const cartHandlers = createCartServerHandlers();
@@ -43,33 +43,34 @@ export default defineEventHandler(async (event) => {
     buyerIp,
   });
   const sessionManager = await createSessionManager(request);
-  const storefrontClient = createPrivateStorefrontClient(requestContext, buyerIp);
+  const storefrontClient = createPrivateStorefrontClient(requestContext);
 
-  const shopifyRoute = await handleShopifyRoutes({
+  const shopifyRoute = handleShopifyRoutes({
     request,
     requestContext,
     sessionManager,
     storefrontClient,
     handlers: [cartHandlers],
   });
-  if (shopifyRoute) return sendWebResponse(event, shopifyRoute);
+  if (shopifyRoute) return sendWebResponse(event, await shopifyRoute);
 
   event.context.shopifyRequestContext = requestContext;
   event.context.storefrontClient = storefrontClient;
 });
 
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContext, buyerIp: string) {
+function createPrivateStorefrontClient(requestContext: ShopifyBuyerRequestContext) {
   return createStorefrontClient({
     type: "private",
     requestContext,
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
       privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-      buyerIp,
     },
   });
 }
 ```
+
+This middleware awaits a matched promise because `sendWebResponse` needs the resolved `Response`; rejected promises continue through Nitro's request error handling. Do not attach an inline `.catch()` unless this route intentionally needs handling that differs from the app's normal error boundary.
 
 Use project-owned helpers for env access. Do not expose the private token to client plugins.
 
@@ -163,8 +164,10 @@ if (import.meta.server && props.error.statusCode === 404) {
     const storefrontClient = event.context.storefrontClient;
     if (!storefrontClient) throw new Error("Storefront client was not created.");
     const redirect = await handleShopifyRedirects({ request, routeTemplates, storefrontClient });
-    const location = redirect?.headers.get("location");
-    if (location) await navigateTo(location, { redirectCode: redirect!.status as 301 | 302 });
+    if (redirect) {
+      const location = redirect.headers.get("location");
+      if (location) await navigateTo(location, { redirectCode: redirect.status as 301 | 302 });
+    }
   }
 }
 </script>
