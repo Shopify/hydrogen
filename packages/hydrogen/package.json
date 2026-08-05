@@ -1,6 +1,6 @@
 {
   "name": "@shopify/hydrogen",
-  "version": "0.0.1",
+  "version": "2026.10.0-preview.0",
   "description": "Framework-agnostic Shopify storefront SDK and agent skills.",
   "license": "MIT",
   "author": "Shopify",
