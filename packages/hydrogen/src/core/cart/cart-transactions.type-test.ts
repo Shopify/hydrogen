@@ -8,6 +8,7 @@ describe("cart transaction payloads", () => {
       lines: Array<{
         merchandiseId: string;
         quantity: number;
+        attributes?: Array<{ key: string; value: string }>;
         sellingPlanId?: string;
       }>;
       products: Array<Record<string, unknown>>;

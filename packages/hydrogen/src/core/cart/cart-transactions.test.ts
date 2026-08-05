@@ -27,11 +27,18 @@ function createDeferred<T>(): Deferred<T> {
   return { promise, resolve, reject };
 }
 
-function makeLine(id: string, quantity: number, merchandiseId?: string): CartLine {
+function makeLine(
+  id: string,
+  quantity: number,
+  merchandiseId?: string,
+  sellingPlanId?: string,
+  attributes: Array<{ key: string; value: string }> = [],
+): CartLine {
   const amount = { amount: "10", currencyCode: "USD" };
-  return {
+  const line: CartLine = {
     id,
     quantity,
+    attributes,
     ...(merchandiseId && {
       merchandise: { id: merchandiseId, title: "Small", product: { title: "Shirt" } },
     }),
@@ -42,6 +49,9 @@ function makeLine(id: string, quantity: number, merchandiseId?: string): CartLin
       compareAtAmountPerQuantity: null,
     },
   };
+  if (sellingPlanId) line.sellingPlanAllocation = { sellingPlan: { id: sellingPlanId } };
+  if (!sellingPlanId) line.sellingPlanAllocation = null;
+  return line;
 }
 
 function makeCart(lines: CartLine[]): CartData {
@@ -54,6 +64,11 @@ function makeCart(lines: CartLine[]): CartData {
   };
 }
 
+function makeMinimalLine(id: string, quantity: number): CartLine {
+  const { attributes: _attributes, ...line } = makeLine(id, quantity);
+  return line;
+}
+
 function product(merchandiseId: string): Record<string, unknown> {
   return {
     id: merchandiseId,
@@ -64,7 +79,12 @@ function product(merchandiseId: string): Record<string, unknown> {
 }
 
 function dispatchAdd(
-  lines: Array<{ merchandiseId: string; quantity: number }>,
+  lines: Array<{
+    merchandiseId: string;
+    quantity: number;
+    attributes?: Array<{ key: string; value: string }>;
+    sellingPlanId?: string;
+  }>,
   products: Array<Record<string, unknown>>,
   deferred: Deferred<unknown>,
 ): void {
@@ -129,6 +149,7 @@ describe("transaction cart store", () => {
   let transportDeferreds: Array<Deferred<unknown>>;
   let transportSignals: AbortSignal[];
   let dispatchEventsSynchronously: boolean;
+  let getCart: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     transportDeferreds = [];
@@ -169,8 +190,9 @@ describe("transaction cart store", () => {
       ),
       { configure: vi.fn(() => true), isDefault: vi.fn(() => true) },
     );
+    getCart = vi.fn(() => Promise.resolve({ cart: makeCart([]) }));
     Object.defineProperty(window, "Shopify", {
-      value: { actions: { updateCart, getCart: vi.fn() } },
+      value: { actions: { updateCart, getCart } },
       configurable: true,
       writable: true,
     });
@@ -228,6 +250,101 @@ describe("transaction cart store", () => {
     expect(store.getState().data.lines.nodes.map((line) => line.id)).toEqual(["line-a"]);
   });
 
+  it("merges only add-owned lines from stale overlapping add responses", async () => {
+    const lineA = makeLine("line-a", 1, "variant-a");
+    const lineB = makeLine("line-b", 1, "variant-b");
+    const lineC = makeLine("line-c", 1, "variant-c");
+    store.hydrate(makeCart([lineA, lineB]));
+    getCart.mockResolvedValue({ cart: makeCart([lineA, lineC]) });
+
+    const addition = createDeferred<unknown>();
+    dispatchAdd([{ merchandiseId: "variant-c", quantity: 1 }], [product("variant-c")], addition);
+    const removeLine = store.handleFormSubmit(submitLine("line-b", "set", 0));
+    await Promise.resolve();
+
+    transportDeferreds[0].resolve(serverResult([lineA]));
+    await removeLine;
+    expect(store.getState().data.lines.nodes.map((line) => line.id)).toEqual([
+      "line-a",
+      "optimistic:variant-c",
+    ]);
+
+    addition.resolve(serverResult([lineA, lineB, lineC]));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(store.getState().data.lines.nodes.map((line) => line.id)).toEqual(["line-a", "line-c"]);
+  });
+
+  it("matches add projections by selling plan", async () => {
+    const merchandiseId = "gid://shopify/ProductVariant/1";
+    const planA = "gid://shopify/SellingPlan/1";
+    const planB = "gid://shopify/SellingPlan/2";
+    store.hydrate(makeCart([makeLine("line-plan-a", 1, merchandiseId, planA)]));
+
+    const addition = createDeferred<unknown>();
+    dispatchAdd(
+      [{ merchandiseId, quantity: 1, sellingPlanId: planB }],
+      [product(merchandiseId)],
+      addition,
+    );
+    expect(store.getState().data.lines.nodes).toEqual([
+      makeLine("line-plan-a", 1, merchandiseId, planA),
+      makeLine(`optimistic:${merchandiseId}:${planB}`, 1, merchandiseId, planB),
+    ]);
+
+    addition.resolve(
+      serverResult([
+        makeLine("line-plan-a", 1, merchandiseId, planA),
+        makeLine("line-plan-b", 1, merchandiseId, planB),
+      ]),
+    );
+    await Promise.resolve();
+    expect(store.getState().data.lines.nodes).toEqual([
+      makeLine("line-plan-a", 1, merchandiseId, planA),
+      makeLine("line-plan-b", 1, merchandiseId, planB),
+    ]);
+
+    dispatchAdd(
+      [{ merchandiseId, quantity: 1, sellingPlanId: planA }],
+      [product(merchandiseId)],
+      createDeferred<unknown>(),
+    );
+    expect(store.getState().data.lines.nodes[0].quantity).toBe(2);
+  });
+
+  it("matches add projections by attributes", async () => {
+    const merchandiseId = "gid://shopify/ProductVariant/1";
+    const giftAttributes = [{ key: "gift", value: "true" }];
+    const regularAttributes = [{ key: "gift", value: "false" }];
+    store.hydrate(makeCart([makeLine("line-gift", 1, merchandiseId, undefined, giftAttributes)]));
+
+    const addition = createDeferred<unknown>();
+    dispatchAdd(
+      [{ merchandiseId, quantity: 1, attributes: regularAttributes }],
+      [product(merchandiseId)],
+      addition,
+    );
+    expect(store.getState().data.lines.nodes[0].quantity).toBe(1);
+    const optimisticLine = store.getState().data.lines.nodes[1];
+    expect(optimisticLine.id.startsWith(`optimistic:${merchandiseId}:`)).toBe(true);
+    expect(optimisticLine.id).not.toContain("gift");
+    expect(optimisticLine).toMatchObject({ quantity: 1, attributes: regularAttributes });
+
+    addition.resolve(
+      serverResult([
+        makeLine("line-gift", 1, merchandiseId, undefined, giftAttributes),
+        makeLine("line-regular", 1, merchandiseId, undefined, regularAttributes),
+      ]),
+    );
+    await Promise.resolve();
+
+    expect(store.getState().data.lines.nodes).toEqual([
+      makeLine("line-gift", 1, merchandiseId, undefined, giftAttributes),
+      makeLine("line-regular", 1, merchandiseId, undefined, regularAttributes),
+    ]);
+  });
+
   it("settles endpoint results that already contain a lines connection", async () => {
     const addition = createDeferred<unknown>();
     dispatchAdd([{ merchandiseId: "variant-a", quantity: 1 }], [product("variant-a")], addition);
@@ -242,6 +359,18 @@ describe("transaction cart store", () => {
     expect(store.getState().data.lines.nodes).toHaveLength(1);
     expect(store.getState().data.lines.nodes[0].id).toBe("line-a");
     expect(store.getState().pending.lines).toEqual(new Set());
+  });
+
+  it("settles a minimal add response by its single new line", async () => {
+    store.hydrate(makeCart([makeLine("line-a", 1, "variant-a")]));
+    const addition = createDeferred<unknown>();
+    dispatchAdd([{ merchandiseId: "variant-b", quantity: 1 }], [product("variant-b")], addition);
+
+    addition.resolve(serverResult([makeMinimalLine("line-a", 1), makeMinimalLine("line-b", 1)]));
+    await Promise.resolve();
+
+    expect(store.getState().data.lines.nodes.map((line) => line.id)).toEqual(["line-a", "line-b"]);
+    expect(store.getState().data.lines.nodes[1].merchandise?.id).toBe("variant-b");
   });
 
   it("does not let one keyed line abort an unrelated line", async () => {
@@ -365,6 +494,34 @@ describe("transaction cart store", () => {
     dispatchAdd([{ merchandiseId: "variant-a", quantity: 1 }], [product("variant-a")], retry);
     expect(store.getState().errors.network).toEqual([]);
     expect(store.getState().data.lines.nodes[0].quantity).toBe(1);
+  });
+
+  it("clears add warnings when the resolved line is retried", async () => {
+    const lineId = "gid://shopify/CartLine/line-a";
+    const addition = createDeferred<unknown>();
+    dispatchAdd([{ merchandiseId: "variant-a", quantity: 1 }], [product("variant-a")], addition);
+    addition.resolve({
+      cart: {
+        id: "gid://shopify/Cart/test",
+        totalQuantity: 1,
+        cost: { totalAmount: { amount: "10", currencyCode: "USD" } },
+        lines: [makeLine(lineId, 1, "variant-a")],
+        discountCodes: [],
+      },
+      warnings: [{ code: "MAXIMUM_EXCEEDED", message: "Only 1 in stock", target: lineId }],
+    });
+    await Promise.resolve();
+
+    expect(store.getState().errors.lines.get(lineId)?.warnings).toEqual([
+      { code: "MAXIMUM_EXCEEDED", message: "Only 1 in stock" },
+    ]);
+
+    const retry = store.handleFormSubmit(submitLine(lineId, "set", 1));
+    await Promise.resolve();
+    expect(store.getState().errors.lines.get(lineId)).toBeUndefined();
+
+    transportDeferreds[0].resolve(serverResult([makeLine(lineId, 1, "variant-a")]));
+    await retry;
   });
 
   it("syncs an existing quantity input when add-to-cart changes its line", async () => {

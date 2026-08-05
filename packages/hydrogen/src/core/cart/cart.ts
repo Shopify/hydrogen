@@ -54,7 +54,7 @@ type VendorUserError = NonNullable<CartActionFailure["userErrors"]>[number];
 type VendorWarning = NonNullable<CartActionFailure["warnings"]>[number];
 type KeyResult = string | string[] | undefined;
 type ErrorProjector = (state: CartState, timestampMs: number) => CartState;
-type AddError = (project: ErrorProjector) => void;
+type AddError = (project: ErrorProjector, keys?: string[]) => void;
 type TransactionSettlementOptions = { mergeServerCart: boolean };
 type UpdateCartTransport = (
   payload: UpdateCartPayload,
@@ -72,6 +72,8 @@ const TRANSACTION_EVENT_TOKEN_KEY = "__shopifyHydrogenCartTransaction";
 const DEFAULT_ADD_QUANTITY = 1;
 const NOOP = () => {};
 const EMPTY_QUANTITY = 0;
+const FNV1A_OFFSET_BASIS = 0x811c9dc5;
+const FNV1A_PRIME = 0x01000193;
 const CART_REVALIDATION_ERROR_MESSAGE =
   "Something went wrong refreshing your cart. Please try again.";
 
@@ -110,8 +112,12 @@ export type CreateCartStoreOptions<TData extends CartData = CartData> = {
 type AddLinePayload = {
   merchandiseId: string;
   quantity: number;
+  attributes?: AddLineAttribute[];
   sellingPlanId?: string;
 };
+type AddLineIdentity = Pick<AddLinePayload, "merchandiseId" | "attributes" | "sellingPlanId">;
+type AddLineAttribute = { key: string; value: string };
+type LineAttribute = { key: string; value: string | null };
 
 type AddToCartPayload = {
   lines: AddLinePayload[];
@@ -321,13 +327,87 @@ function lineKey(lineId: string): string {
   return `${LINE_KEY_PREFIX}${lineId}`;
 }
 
-function merchandiseKey(line: Pick<AddLinePayload, "merchandiseId" | "sellingPlanId">): string {
-  return `${MERCHANDISE_KEY_PREFIX}${line.merchandiseId}:${line.sellingPlanId ?? ""}`;
+function compareAttributes(left: LineAttribute, right: LineAttribute): number {
+  if (left.key !== right.key) return left.key < right.key ? -1 : 1;
+  if (left.value === null) return right.value === null ? 0 : -1;
+  if (right.value === null) return 1;
+  if (left.value !== right.value) return left.value < right.value ? -1 : 1;
+  return 0;
 }
 
-function optimisticLineId(line: Pick<AddLinePayload, "merchandiseId" | "sellingPlanId">): string {
+function normalizeAttributes<TAttribute extends LineAttribute>(
+  attributes: readonly TAttribute[] | undefined,
+): TAttribute[] {
+  if (!attributes?.length) return [];
+  return attributes.toSorted(compareAttributes);
+}
+
+function sameAttributes(
+  left: readonly LineAttribute[] | undefined,
+  right: readonly LineAttribute[] | undefined,
+): boolean {
+  const normalizedLeft = normalizeAttributes(left);
+  const normalizedRight = normalizeAttributes(right);
+  if (normalizedLeft.length !== normalizedRight.length) return false;
+  return normalizedLeft.every(
+    (attribute, index) =>
+      attribute.key === normalizedRight[index].key &&
+      attribute.value === normalizedRight[index].value,
+  );
+}
+
+function hashString(value: string): string {
+  let hash = FNV1A_OFFSET_BASIS;
+  for (const character of value) {
+    hash ^= character.codePointAt(0) ?? 0;
+    hash = Math.imul(hash, FNV1A_PRIME);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function merchandiseKey(line: AddLineIdentity): string {
+  return `${MERCHANDISE_KEY_PREFIX}${JSON.stringify({
+    merchandiseId: line.merchandiseId,
+    sellingPlanId: line.sellingPlanId ?? null,
+    attributes: normalizeAttributes(line.attributes),
+  })}`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isAttribute(value: unknown): value is AddLineAttribute {
+  return isRecord(value) && typeof value.key === "string" && typeof value.value === "string";
+}
+
+function parseMerchandiseKey(key: string): AddLineIdentity | undefined {
+  if (!key.startsWith(MERCHANDISE_KEY_PREFIX)) return undefined;
+  const value = key.slice(MERCHANDISE_KEY_PREFIX.length);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    return undefined;
+  }
+
+  if (!isRecord(parsed) || typeof parsed.merchandiseId !== "string") return undefined;
+  if (parsed.sellingPlanId !== null && typeof parsed.sellingPlanId !== "string") return undefined;
+  if (!Array.isArray(parsed.attributes) || !parsed.attributes.every(isAttribute)) return undefined;
+  const attributes = normalizeAttributes(parsed.attributes);
+  return {
+    merchandiseId: parsed.merchandiseId,
+    ...(parsed.sellingPlanId ? { sellingPlanId: parsed.sellingPlanId } : {}),
+    ...(attributes.length > 0 ? { attributes } : {}),
+  };
+}
+
+function optimisticLineId(line: AddLineIdentity): string {
   const sellingPlanSuffix = line.sellingPlanId ? `:${line.sellingPlanId}` : "";
-  return `${OPTIMISTIC_LINE_ID_PREFIX}${line.merchandiseId}${sellingPlanSuffix}`;
+  const attributes = normalizeAttributes(line.attributes);
+  const attributesSuffix =
+    attributes.length > 0 ? `:${hashString(JSON.stringify(attributes))}` : "";
+  return `${OPTIMISTIC_LINE_ID_PREFIX}${line.merchandiseId}${sellingPlanSuffix}${attributesSuffix}`;
 }
 
 function cartResponseFromStandardEvent(cart: StandardEventCart): CartResponse {
@@ -421,9 +501,9 @@ function derivePending(state: CartState, transactions: PendingTransaction[]): Ca
         discountCodes.add(key.slice(DISCOUNT_KEY_PREFIX.length));
         cost = true;
       }
-      if (!key.startsWith(MERCHANDISE_KEY_PREFIX)) continue;
-      const identity = key.slice(MERCHANDISE_KEY_PREFIX.length).split(":")[0];
-      const line = getLines(state.data).find((candidate) => candidate.merchandise?.id === identity);
+      const addition = parseMerchandiseKey(key);
+      if (!addition) continue;
+      const line = findLineForAddition(getLines(state.data), addition);
       if (line) lines.add(line.id);
       cost = true;
     }
@@ -716,11 +796,159 @@ function extractProductDetails(
   );
 }
 
-function findLineForAddition(lines: CartLine[], addition: AddLinePayload): CartLine | undefined {
-  const optimisticId = optimisticLineId(addition);
-  return lines.find(
-    (line) => line.merchandise?.id === addition.merchandiseId || line.id === optimisticId,
+function getLineSellingPlanId(line: CartLine): string | undefined {
+  return line.sellingPlanAllocation?.sellingPlan.id;
+}
+
+function hasKnownLineIdentity(line: CartLine): boolean {
+  return Object.hasOwn(line, "attributes") && Object.hasOwn(line, "sellingPlanAllocation");
+}
+
+function hasAdditionIdentityDetails(addition: AddLineIdentity): boolean {
+  return (
+    addition.sellingPlanId !== undefined || normalizeAttributes(addition.attributes).length > 0
   );
+}
+
+function lineMatchesAddition(line: CartLine, addition: AddLineIdentity): boolean {
+  if (line.id === optimisticLineId(addition)) return true;
+  if (line.merchandise?.id !== addition.merchandiseId) return false;
+  if (!hasKnownLineIdentity(line)) return !hasAdditionIdentityDetails(addition);
+  if (getLineSellingPlanId(line) !== addition.sellingPlanId) return false;
+  return sameAttributes(line.attributes, addition.attributes);
+}
+
+function findLineForAddition(lines: CartLine[], addition: AddLineIdentity): CartLine | undefined {
+  return lines.find((line) => lineMatchesAddition(line, addition));
+}
+
+function findAvailableLineForAddition(
+  lines: CartLine[],
+  addition: AddLineIdentity,
+  usedLineIds: Set<string>,
+): CartLine | undefined {
+  return lines.find((line) => !usedLineIds.has(line.id) && lineMatchesAddition(line, addition));
+}
+
+function findResponseLineForAddition(
+  serverLines: CartLine[],
+  currentLines: CartLine[],
+  addition: AddLineIdentity,
+  usedLineIds: Set<string>,
+  canInferSingleLine: boolean,
+  remainingAdditions: number,
+): CartLine | undefined {
+  const exact = findAvailableLineForAddition(serverLines, addition, usedLineIds);
+  if (exact) return exact;
+
+  const currentLine = findLineForAddition(currentLines, addition);
+  const matchingCurrentLine = serverLines.find(
+    (line) => !usedLineIds.has(line.id) && line.id === currentLine?.id,
+  );
+  if (matchingCurrentLine) return matchingCurrentLine;
+
+  const currentLineIds = new Set(currentLines.map((line) => line.id));
+  const newLines = serverLines.filter(
+    (line) => !usedLineIds.has(line.id) && !currentLineIds.has(line.id),
+  );
+  if (remainingAdditions === newLines.length && newLines.length === 1) return newLines[0];
+
+  return canInferSingleLine ? serverLines.find((line) => !usedLineIds.has(line.id)) : undefined;
+}
+
+function withAdditionMerchandise(
+  line: CartLine,
+  addition: AddLineIdentity,
+  products: Array<Record<string, unknown>>,
+): CartLine {
+  if (line.merchandise) return line;
+  const product = products.find((candidate) => candidate.id === addition.merchandiseId);
+  if (!product) return line;
+  const { price: _price, ...merchandise } = product;
+  return { ...line, merchandise: merchandise as unknown as CartLine["merchandise"] };
+}
+
+function replaceOrAppendLine(
+  lines: CartLine[],
+  previous: CartLine | undefined,
+  next: CartLine,
+): CartLine[] {
+  if (previous) return lines.map((line) => (line === previous ? next : line));
+  if (lines.some((line) => line.id === next.id)) {
+    return lines.map((line) => (line.id === next.id ? next : line));
+  }
+  return [...lines, next];
+}
+
+function mergeAddResponseLines(
+  currentLines: CartLine[],
+  serverLines: CartLine[],
+  payload: AddToCartPayload,
+): CartLine[] {
+  let lines = currentLines;
+  const usedLineIds = new Set<string>();
+  const canInferSingleLine = payload.lines.length === 1 && serverLines.length === 1;
+
+  for (const addition of payload.lines) {
+    const remainingAdditions = payload.lines.length - usedLineIds.size;
+    const serverLine = findResponseLineForAddition(
+      serverLines,
+      lines,
+      addition,
+      usedLineIds,
+      canInferSingleLine,
+      remainingAdditions,
+    );
+    if (!serverLine) continue;
+    usedLineIds.add(serverLine.id);
+
+    const previous =
+      findLineForAddition(lines, addition) ?? lines.find((line) => line.id === serverLine.id);
+    const next = withAdditionMerchandise(serverLine, addition, payload.products);
+    lines = replaceOrAppendLine(lines, previous, mergeServerLine(previous, next));
+  }
+
+  return lines;
+}
+
+function resolveAddLineIds(
+  currentLines: CartLine[],
+  serverLines: CartLine[],
+  payload: AddToCartPayload,
+): string[] {
+  const usedLineIds = new Set<string>();
+  const canInferSingleLine = payload.lines.length === 1 && serverLines.length === 1;
+  return payload.lines.map((addition) => {
+    const remainingAdditions = payload.lines.length - usedLineIds.size;
+    const serverLine = findResponseLineForAddition(
+      serverLines,
+      currentLines,
+      addition,
+      usedLineIds,
+      canInferSingleLine,
+      remainingAdditions,
+    );
+    if (serverLine) {
+      usedLineIds.add(serverLine.id);
+      return serverLine.id;
+    }
+    return findLineForAddition(currentLines, addition)?.id ?? "";
+  });
+}
+
+function getAddErrorKeys(
+  payload: AddToCartPayload,
+  lineIds: string[],
+  failure: CartActionFailure | undefined,
+): string[] {
+  const keys = new Set(payload.lines.map(merchandiseKey));
+  for (const lineId of lineIds) {
+    if (lineId) keys.add(lineKey(lineId));
+  }
+  for (const warning of failure?.warnings ?? []) {
+    if (isCartLineId(warning.target)) keys.add(lineKey(warning.target));
+  }
+  return [...keys];
 }
 
 function mergeServerLine(previous: CartLine | undefined, next: CartLine): CartLine {
@@ -782,6 +1010,10 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
           {
             id: optimisticLineId(addition),
             quantity: addition.quantity,
+            attributes: addition.attributes ?? [],
+            sellingPlanAllocation: addition.sellingPlanId
+              ? { sellingPlan: { id: addition.sellingPlanId } }
+              : null,
             merchandise: merchandise as unknown as CartLine["merchandise"],
             cost: {
               totalAmount: amount,
@@ -803,29 +1035,18 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
     },
     projectPromise: (state, result, payload, addError) => {
       const currentLines = getLines(state.data);
-      const lineIds = payload.lines.map(
-        (addition) => findLineForAddition(currentLines, addition)?.id ?? "",
-      );
+      const cart = result.cart ? cartResponseFromStandardEvent(result.cart) : undefined;
+      const serverLines = cart ? getLines(cart) : [];
+      const lineIds = resolveAddLineIds(currentLines, serverLines, payload);
       if (hasProjectedErrors(result)) {
-        addError((current, timestampMs) =>
-          projectLineErrors(current, result, lineIds, timestampMs),
+        addError(
+          (current, timestampMs) => projectLineErrors(current, result, lineIds, timestampMs),
+          getAddErrorKeys(payload, lineIds, result),
         );
       }
-      if (!result.cart) return state;
+      if (!cart) return state;
 
-      const cart = cartResponseFromStandardEvent(result.cart);
-      const previousById = new Map(currentLines.map((line) => [line.id, line]));
-      const lines = getLines(cart).map((line) => {
-        const previous = previousById.get(line.id);
-        if (line.merchandise || previous?.merchandise || payload.products.length !== 1) {
-          return mergeServerLine(previous, line);
-        }
-        const { price: _price, ...merchandise } = payload.products[0];
-        return mergeServerLine(previous, {
-          ...line,
-          merchandise: merchandise as unknown as CartLine["merchandise"],
-        });
-      });
+      const lines = mergeAddResponseLines(currentLines, serverLines, payload);
       return { ...state, data: reconcileCartLines(state.data, lines) };
     },
     getPendingKeys: (state, payload) => {
@@ -1157,8 +1378,8 @@ function fulfillTransaction(
     return;
   }
 
-  store.settled = transaction.projectPromise(store.settled, result, (projector) =>
-    addProjectedError(store, transaction.errorKeys, projector),
+  store.settled = transaction.projectPromise(store.settled, result, (projector, keys) =>
+    addProjectedError(store, keys ?? transaction.errorKeys, projector),
   );
   store.settled = addSnapshotIdentity(store.settled, result);
   if (
@@ -1191,8 +1412,8 @@ function rejectTransaction(store: CartStoreContext, transactionId: number, error
   if (owned) {
     const failure = extractCartActionFailure(error);
     if (failure) {
-      transaction.projectPromise(store.settled, rejectedResult(failure), (projector) =>
-        addProjectedError(store, transaction.errorKeys, projector),
+      transaction.projectPromise(store.settled, rejectedResult(failure), (projector, keys) =>
+        addProjectedError(store, keys ?? transaction.errorKeys, projector),
       );
     }
     if (!failure && !isAbortError(error)) {

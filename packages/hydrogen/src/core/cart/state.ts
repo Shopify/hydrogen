@@ -42,8 +42,10 @@ export interface CartLineMerchandise {
 export interface CartLine {
   id: string;
   quantity: number;
+  attributes?: Attribute[];
   cost: CartLineCost;
   merchandise?: CartLineMerchandise;
+  sellingPlanAllocation?: { sellingPlan: { id: string } } | null;
   parentRelationship?: { parent: { id: string } } | null;
   lineComponents?: CartLine[];
 }
@@ -81,7 +83,7 @@ export interface CartNetworkEntry {
 
 export interface Attribute {
   key: string;
-  value: string;
+  value: string | null;
 }
 
 export interface CartPending {
