@@ -17,11 +17,8 @@ export function canonicalUrl(path: string): string {
 /**
  * Serialize JSON-LD and escape it for safe embedding in a `<script type="application/ld+json">`
  * tag (engineering.md F6). This is an app-owned helper — it is NOT a Hydrogen
- * export. It escapes `<` and `</script>` so the payload cannot break out of the
- * script element.
+ * export. It escapes `<` so the payload cannot break out of the script element.
  */
 export function jsonLdScript(data: object): string {
-  const json = JSON.stringify(data);
-  const escaped = json.replace(/</g, "\\u003c").replace(/<\/script>/gi, "\\u003c/script\\u003e");
-  return escaped;
+  return JSON.stringify(data).replace(/</g, "\\u003c");
 }
