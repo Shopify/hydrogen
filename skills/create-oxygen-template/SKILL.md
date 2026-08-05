@@ -42,7 +42,7 @@ Keep `lib/route-templates.ts` unchanged. It defines `routeTemplates` via `create
    - `@shopify/mini-oxygen`: pin `^4.2.0` — its `oxygen()` plugin adds `configurePreviewServer`, which `vite preview`
      needs to run the Worker.
    - `@shopify/oxygen-workers-types`
-   - `@shopify/cli` only for the deploy script (pin `3.94.3` or newer only after verifying deploy behavior)
+   - `@shopify/cli` only for the deploy script. Pin `4.6.0` (minimum `4.4.0`) because deploy must support the explicit `--assets-dir` and `--worker-dir` flags.
    - a Worker entrypoint, usually root `server.ts`
    - plain `oxygen()` in `vite.config.ts`. The plugin auto-loads `.env` into the Worker via its own `loadEnv` fallback
      when no env is provided (MiniOxygen >= 4.2.0).
@@ -78,9 +78,13 @@ Use the workspace package in this repository:
 This keeps the canonical template wired to the Hydrogen code under development, so repository builds and E2E tests
 cover package and template changes together.
 
-The source template is not the standalone distribution artifact. This repository's release flow must replace
-`workspace:*` with the published preview or release version before generating the standalone lockfile. The distributed package must expose `./customer-account`, `./react`, and `./package.json`, and
-a preview version must still satisfy `shopify hydrogen deploy`'s `isHydrogenPreviewVersion` check (CLI #3819).
+The source template is not the standalone distribution artifact. This repository's release flow replaces
+`workspace:*` with the version selected by the `preview` dist-tag before generating the standalone lockfile. Preview
+cuts use the `2026.10.0-preview.<n>` format and must resolve from the registry with an integrity hash.
+
+Do not rely on `shopify hydrogen deploy` recognizing that version format. The template's deploy script passes
+`--assets-dir dist/client --worker-dir dist/server`, which selects the template's `react-router build` output without
+the CLI version sniff. The distributed package must still expose `./customer-account`, `./react`, and `./package.json`.
 
 ## React Router Template Pattern
 
@@ -92,14 +96,16 @@ without adding framework-specific guidance first.
 
 ## Lockfile
 
-The source template declares `"packageManager": "npm@11.17.0"` but does not commit `package-lock.json`; the root
-`.gitignore` keeps source-template lockfiles out of this repository. The source remains workspace-linked so local E2E
-covers the current Hydrogen package.
+The source template declares `"packageManager": "pnpm@10.33.0"` so local development uses the repository's package
+manager and root lockfile. It does not commit a template lockfile; the root `.gitignore` keeps source-template
+lockfiles out of this repository.
 
-Standalone lockfile generation belongs to this repository's release flow after it replaces `workspace:*` with the
-published package version. Oxygen requires that generated `package-lock.json` for `npm ci`. Verify its
-`node_modules/@shopify/hydrogen` entry resolves to a registry package with an integrity hash, not a `link:`,
-`workspace:`, or vendored `file:` entry.
+During distribution, the release flow changes the template to `"packageManager": "npm@11.17.0"`, replaces
+`workspace:*` with the version selected by the `preview` dist-tag, and generates `package-lock.json`. Oxygen requires
+that generated lockfile for `npm ci`. Verify its
+`node_modules/@shopify/hydrogen` entry resolves to a registry tarball with an integrity hash, not a `link:`,
+`workspace:`, or vendored `file:` entry. Independently verify the template deploy script includes
+`--assets-dir dist/client --worker-dir dist/server`; the lockfile does not prove the CLI will use those outputs.
 
 ### `minimumReleaseAge` supply-chain policy (org environments)
 
@@ -179,12 +185,17 @@ Before finishing:
 1. Install with `CI=true` (see Prerequisites).
 2. Run `rg -n "@shared/|examples/shared|localCdnAssets|localHttps|hydrogen-classic|@react-router/node|@react-router/serve|lru-cache|catalog:|process\\.env|file:./shopify-hydrogen" templates/<name> -g '!pnpm-lock.yaml' -g '!package-lock.json' -g '!node_modules'`. Exclude `pnpm-lock.yaml`, `package-lock.json`, and `node_modules` — lockfiles can legitimately list transitive `@react-router/node`, `@react-router/serve`, and `lru-cache` even after the template drops them as direct deps; scanning them produces false positives.
 3. Run the template typecheck (`react-router typegen && tsc --noEmit && hydrogen gql check --fail-on-warn`).
-4. Run the template build.
-5. **Actually drive both runtimes, don't just check that a server starts** (static assets can serve even when the Worker isn't exercised):
+4. Run the template build. Confirm it creates `dist/client`, `dist/server`, and `dist/server/index.js`.
+5. Run `node_modules/.bin/shopify hydrogen deploy --help` from the template directory. Confirm it lists
+   `--assets-dir` and `--worker-dir`. A deploy with fake credentials must get past flag parsing and fail on
+   authentication instead of reporting `Nonexistent flags`.
+6. **Actually drive both runtimes, don't just check that a server starts** (static assets can serve even when the Worker isn't exercised):
    - `npm run dev`: request `/`, a product, a collection, `/search`, `/account`, `/cart` — expect HTTP 200 and live data.
    - `npm run preview` (= `react-router build && vite preview`, requires MiniOxygen `>= 4.2.0`): same requests through the built Worker. Confirm `.env` is loaded (root routes need real env, or they 500).
-6. For distribution validation, copy the template to a temporary directory, replace `workspace:*` with the published Hydrogen preview version, generate `package-lock.json`, and verify the package resolves to a registry tarball with integrity. Leave the source template lockfile-free.
-7. Report any validation not run and why (e.g. an org `minimumReleaseAge` policy blocked install — that is an environment gate, not a template defect).
+7. For distribution validation, copy the template to a temporary directory, replace `workspace:*` with the version
+   selected by the `preview` dist-tag, generate `package-lock.json`, and verify Hydrogen resolves to a registry tarball
+   with integrity. Leave the source template lockfile-free.
+8. Report any validation not run and why (e.g. an org `minimumReleaseAge` policy blocked install — that is an environment gate, not a template defect).
 
 Expected local noise / environment gotchas (do not treat as template bugs):
 

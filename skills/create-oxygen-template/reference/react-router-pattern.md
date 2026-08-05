@@ -34,7 +34,7 @@ Use Vite/React Router scripts, not Hydrogen CLI dev/build scripts:
     "build": "react-router build",
     "preview": "react-router build && vite preview",
     "typecheck": "react-router typegen && tsc --noEmit && hydrogen gql check --fail-on-warn",
-    "deploy": "shopify hydrogen deploy"
+    "deploy": "shopify hydrogen deploy --assets-dir dist/client --worker-dir dist/server"
   }
 }
 ```
@@ -47,11 +47,14 @@ Dependencies:
 - Remove `lru-cache`, `@react-router/node`, and `@react-router/serve`.
 - Add `@shopify/mini-oxygen`, `@shopify/oxygen-workers-types`, and `@shopify/cli`.
 - **`@shopify/hydrogen`: use `workspace:*` in this repository** so template builds and E2E exercise the package under
-  development. The `Shopify/hydrogen` release flow must replace it with the published version before standalone
-  lockfile generation. A preview distribution still needs a `0.0.0-preview-*` registry package that exposes
-  `./customer-account` and `./package.json` and satisfies `shopify hydrogen deploy`'s `isHydrogenPreviewVersion` check
-  (CLI #3819), so deploy runs `react-router build`.
-- **`@shopify/cli`: pin `3.94.3`** unless a newer version has been verified with the deploy path.
+  development. The `Shopify/hydrogen` release flow replaces it with the version selected by the `preview` dist-tag
+  before standalone lockfile generation. Preview cuts use `2026.10.0-preview.<n>` and must resolve to a registry
+  tarball with an integrity hash.
+- **`@shopify/cli`: pin `4.6.0` (minimum `4.4.0`)**. Those releases support the explicit deploy output flags. Keep
+  `--assets-dir dist/client --worker-dir dist/server` in the deploy script so the CLI runs `react-router build` and
+  uses this template's configured output without relying on a Hydrogen version sniff.
+- **Package manager:** use `pnpm@10.33.0` in the source template so the monorepo has one package manager and lockfile.
+  The preview dist compiler changes the standalone template to `npm@11.17.0` before generating `package-lock.json`.
 - **`@shopify/mini-oxygen`: pin `^4.2.0`** — its `oxygen()` plugin adds `configurePreviewServer`, which `vite preview`
   needs to run the Worker.
 - Add `"engines": {"node": "^22 || ^24"}`.
@@ -107,6 +110,8 @@ Preserve the React Router config behavior required by the app:
 
 ```ts
 export default {
+  appDirectory: "app",
+  buildDirectory: "dist",
   ssr: true,
   subResourceIntegrity: false,
   future: {
@@ -116,7 +121,7 @@ export default {
 };
 ```
 
-Preserve any additional future flags that the template needs. Do not force `buildDirectory: "dist"` unless the current MiniOxygen/deploy tooling or the user explicitly requires it.
+Preserve any additional future flags that the template needs. Keep `buildDirectory: "dist"` aligned with the deploy script's `dist/client` and `dist/server` flags. If one changes, update the other in the same change.
 
 ## server.ts
 
