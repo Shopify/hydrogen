@@ -79,4 +79,34 @@ describe("handleShopifyRoutesDev", () => {
     assert(result, "expected MCP proxy response");
     expect(result.status).toBe(200);
   });
+
+  it("proxies products.json to Shopify for the standard events inspector", async () => {
+    const products = [{ id: 1, title: "Snowboard", variants: [] }];
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ products }), { status: 200 }));
+    vi.stubGlobal("fetch", mockFetch);
+
+    const result = await handleShopifyRoutesDev({
+      request: new Request("https://my-app.com/products.json?limit=25"),
+    });
+
+    assert(result, "expected products JSON response");
+    await expect(result.json()).resolves.toEqual({ products });
+    expect(mockFetch).toHaveBeenCalledOnce();
+    expect(String(mockFetch.mock.calls[0]?.[0])).toBe(
+      "https://test-store.myshopify.com/products.json?limit=25",
+    );
+  });
+
+  it("does not proxy non-GET products.json requests", async () => {
+    const mockFetch = vi.mocked(fetch);
+
+    const result = await handleShopifyRoutesDev({
+      request: new Request("https://my-app.com/products.json", { method: "POST" }),
+    });
+
+    expect(result).toBeNull();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 });
