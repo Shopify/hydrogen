@@ -6,7 +6,7 @@ const proxyProductsJson = createProxyInterceptor({
   match: /^\/products\.json$/,
   allowlist: AJAX_API_REQUEST_HEADER_ALLOWLIST,
   formatError: (message) => ({ error: message }),
-  logPrefix: "Products JSON proxy",
+  scope: "products-json",
 });
 
 export function handleProductsJson(options: HydrogenRoutesOptions): Promise<Response | null> {
