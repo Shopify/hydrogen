@@ -86,11 +86,13 @@ export async function refreshToken({
   const refreshToken = customerAccount?.refreshToken;
   const idToken = customerAccount?.idToken;
 
-  if (!refreshToken)
+  if (!refreshToken) {
+    clearSession(session);
     throw new BadRequest(
       'Unauthorized',
       'No refreshToken found in the session. Make sure your session is configured correctly and passed to `createCustomerAccountClient`.',
     );
+  }
 
   newBody.append('grant_type', 'refresh_token');
   newBody.append('refresh_token', refreshToken);
@@ -120,6 +122,14 @@ export async function refreshToken({
 
   if (!response.ok) {
     const text = await response.text();
+
+    // `invalid_grant` means the refresh token is expired, revoked, or invalid
+    // and cannot recover. Other OAuth and HTTP errors can be transient, so keep
+    // the session intact and retry the refresh on a subsequent request.
+    if (getOAuthError(text) === 'invalid_grant') {
+      clearSession(session);
+    }
+
     throw new Response(text, {
       status: response.status,
       headers: {
@@ -132,9 +142,16 @@ export async function refreshToken({
     access_token,
     expires_in,
     refresh_token,
+    error,
   }: Omit<AccessTokenResponse, 'id_token'> = await response.json();
 
   if (!access_token || access_token.length === 0) {
+    // Defensive: a success status that still carries `invalid_grant` means the
+    // refresh token is dead, so treat it like the error response above.
+    if (error === 'invalid_grant') {
+      clearSession(session);
+    }
+
     throw new BadRequest('Unauthorized', 'Invalid access token received.');
   }
 
@@ -185,8 +202,6 @@ export async function checkExpires({
       await locks.refresh;
       delete locks.refresh;
     } catch (error) {
-      clearSession(session);
-
       if (error && (error as Response).status !== 401) {
         throw error;
       } else {
@@ -196,6 +211,15 @@ export async function checkExpires({
         );
       }
     }
+  }
+}
+
+function getOAuthError(body: string): string | undefined {
+  try {
+    const data = JSON.parse(body);
+    return typeof data?.error === 'string' ? data.error : undefined;
+  } catch {
+    return undefined;
   }
 }
 
