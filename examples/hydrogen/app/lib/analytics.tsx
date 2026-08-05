@@ -197,6 +197,9 @@ export function toAnalyticsCart(cart: AnalyticsCartInput): AnalyticsCart | null 
 function hasPendingCartWork(cart: AnalyticsCartInput) {
   return Boolean(
     cart.pending &&
-    (cart.pending.lines.size > 0 || cart.pending.note || cart.pending.discountCodes.size > 0),
+    (cart.pending.lines.size > 0 ||
+      cart.pending.note ||
+      cart.pending.attributes ||
+      cart.pending.discountCodes.size > 0),
   );
 }

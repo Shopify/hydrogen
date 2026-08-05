@@ -31,6 +31,10 @@ const HYDROGEN_CART_FRAGMENT_SOURCE = /* GraphQL */ `
     checkoutUrl
     totalQuantity
     note
+    attributes {
+      key
+      value
+    }
     cost {
       subtotalAmount {
         amount
@@ -363,6 +367,49 @@ const CART_NOTE_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
   }
 `;
 
+const CART_ATTRIBUTES_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
+  mutation CartAttributesUpdate($cartId: ID!, $attributes: [AttributeInput!]!, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
+      cart {
+        ${HYDROGEN_CART_FRAGMENT_SPREAD}
+      }
+      userErrors {
+        code
+        field
+        message
+      }
+      warnings {
+        code
+        message
+        target
+      }
+    }
+  }
+`;
+
+const CUSTOM_CART_ATTRIBUTES_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
+  mutation CartAttributesUpdate($cartId: ID!, $attributes: [AttributeInput!]!, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
+      cart {
+        ${HYDROGEN_CART_FRAGMENT_SPREAD}
+        ${CART_FRAGMENT_SPREAD}
+      }
+      userErrors {
+        code
+        field
+        message
+      }
+      warnings {
+        code
+        message
+        target
+      }
+    }
+  }
+`;
+
 const CUSTOM_CART_NOTE_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
   mutation CartNoteUpdate($cartId: ID!, $note: String!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
@@ -407,6 +454,7 @@ type CartQueriesForSources<
   CartLinesRemoveMutationSource extends string,
   CartDiscountCodesUpdateMutationSource extends string,
   CartNoteUpdateMutationSource extends string,
+  CartAttributesUpdateMutationSource extends string,
 > = {
   readonly cart: QueryFor<CartQuerySource, Fragments>;
   readonly cartCreate: QueryFor<CartCreateMutationSource, Fragments>;
@@ -415,6 +463,7 @@ type CartQueriesForSources<
   readonly cartLinesRemove: QueryFor<CartLinesRemoveMutationSource, Fragments>;
   readonly cartDiscountCodesUpdate: QueryFor<CartDiscountCodesUpdateMutationSource, Fragments>;
   readonly cartNoteUpdate: QueryFor<CartNoteUpdateMutationSource, Fragments>;
+  readonly cartAttributesUpdate: QueryFor<CartAttributesUpdateMutationSource, Fragments>;
 };
 
 export type CartQueriesForFragment<TCartFragment extends CartFragmentDocument> =
@@ -426,7 +475,8 @@ export type CartQueriesForFragment<TCartFragment extends CartFragmentDocument> =
     typeof CUSTOM_CART_LINES_UPDATE_MUTATION_SOURCE,
     typeof CUSTOM_CART_LINES_REMOVE_MUTATION_SOURCE,
     typeof CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE,
-    typeof CUSTOM_CART_NOTE_UPDATE_MUTATION_SOURCE
+    typeof CUSTOM_CART_NOTE_UPDATE_MUTATION_SOURCE,
+    typeof CUSTOM_CART_ATTRIBUTES_UPDATE_MUTATION_SOURCE
   >;
 
 type DefaultCartQueries = CartQueriesForSources<
@@ -437,7 +487,8 @@ type DefaultCartQueries = CartQueriesForSources<
   typeof CART_LINES_UPDATE_MUTATION_SOURCE,
   typeof CART_LINES_REMOVE_MUTATION_SOURCE,
   typeof CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE,
-  typeof CART_NOTE_UPDATE_MUTATION_SOURCE
+  typeof CART_NOTE_UPDATE_MUTATION_SOURCE,
+  typeof CART_ATTRIBUTES_UPDATE_MUTATION_SOURCE
 >;
 
 export type CartFragmentForOptions<TOptions> = TOptions extends {
@@ -523,6 +574,7 @@ function createDefaultCartQueries(): DefaultCartQueries {
   const cartDiscountCodesUpdate = gql(CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE, fragments);
 
   const cartNoteUpdate = gql(CART_NOTE_UPDATE_MUTATION_SOURCE, fragments);
+  const cartAttributesUpdate = gql(CART_ATTRIBUTES_UPDATE_MUTATION_SOURCE, fragments);
 
   return {
     cart,
@@ -532,6 +584,7 @@ function createDefaultCartQueries(): DefaultCartQueries {
     cartLinesRemove,
     cartDiscountCodesUpdate,
     cartNoteUpdate,
+    cartAttributesUpdate,
   } as const;
 }
 
@@ -553,6 +606,7 @@ function createCartQueries<const TCartFragment extends CartFragmentDocument>(
   const cartDiscountCodesUpdate = gql(CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE, fragments);
 
   const cartNoteUpdate = gql(CUSTOM_CART_NOTE_UPDATE_MUTATION_SOURCE, fragments);
+  const cartAttributesUpdate = gql(CUSTOM_CART_ATTRIBUTES_UPDATE_MUTATION_SOURCE, fragments);
 
   return {
     cart,
@@ -562,6 +616,7 @@ function createCartQueries<const TCartFragment extends CartFragmentDocument>(
     cartLinesRemove,
     cartDiscountCodesUpdate,
     cartNoteUpdate,
+    cartAttributesUpdate,
   } as const;
 }
 

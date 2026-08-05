@@ -236,6 +236,15 @@ function createStandardActionsMock() {
         },
       );
       document.dispatchEvent(event);
+    } else if (payload.attributes !== undefined) {
+      const event = Object.assign(
+        new Event("shopify:cart:attributes-update", { bubbles: true, cancelable: true }),
+        {
+          attributes: payload.attributes,
+          promise: eventDeferred.promise,
+        },
+      );
+      document.dispatchEvent(event);
     }
 
     if (options?.signal) {
@@ -323,7 +332,12 @@ describe("createCartStore", () => {
 
     const state = localStore.getState();
     expect(state.loading).toBe(false);
-    expect(state.pending).toEqual({ lines: new Set(), note: false, discountCodes: new Set() });
+    expect(state.pending).toEqual({
+      lines: new Set(),
+      note: false,
+      attributes: false,
+      discountCodes: new Set(),
+    });
     expect(state.errors).toEqual(createEmptyCartErrors());
   });
 
@@ -798,14 +812,14 @@ describe("CartStore lifecycle", () => {
 
       expect(
         addSpy.mock.calls.filter(([eventName]) => String(eventName).startsWith("shopify:cart:")),
-      ).toHaveLength(3);
+      ).toHaveLength(4);
 
       localStore.destroy();
       localStore.destroy();
 
       expect(
         removeSpy.mock.calls.filter(([eventName]) => String(eventName).startsWith("shopify:cart:")),
-      ).toHaveLength(3);
+      ).toHaveLength(4);
     } finally {
       localStore.destroy();
       addSpy.mockRestore();
@@ -1832,6 +1846,136 @@ describe("CartStore.handleFormSubmit — error handling", () => {
     ]);
     expect(errors.note.warnings).toEqual([{ code: "LOW_STOCK", message: "Limited stock" }]);
     expect(errors.network).toEqual([]);
+  });
+
+  it("optimistically updates cart attributes from a form and reconciles the result", async () => {
+    store.hydrate(
+      makeCartState({
+        id: "gid://shopify/Cart/attributes-success",
+        attributes: [{ key: "gift-message", value: "Old" }],
+      }),
+    );
+    expect(store.getState().data.attributes).toEqual([{ key: "gift-message", value: "Old" }]);
+    const event = submitForm(
+      { attributeKey: "gift-message", attributeValue: "Happy birthday!" },
+      "intent",
+      "attributes-update",
+    );
+    const promise = store.handleFormSubmit(event);
+    await nextTick();
+
+    expect(mockUpdateCart).toHaveBeenCalledWith(
+      { attributes: [{ key: "gift-message", value: "Happy birthday!" }] },
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+    expect(store.getState().data.attributes).toEqual([
+      { key: "gift-message", value: "Happy birthday!" },
+    ]);
+    expect(store.getState().pending.attributes).toBe(true);
+
+    // Resolved standard-event carts intentionally omit attributes; the
+    // event's top-level attributes describe the resulting state.
+    resolveUpdate(0, serverResult());
+    await promise;
+
+    expect(store.getState().pending.attributes).toBe(false);
+    expect(store.getState().data.attributes).toEqual([
+      { key: "gift-message", value: "Happy birthday!" },
+    ]);
+  });
+
+  it("restores baseline attributes when the result resolves with userErrors", async () => {
+    store.hydrate(
+      makeCartState({
+        id: "gid://shopify/Cart/attributes-user-errors",
+        attributes: [{ key: "gift-message", value: "Old" }],
+      }),
+    );
+    const event = submitForm(
+      { attributeKey: "gift-message", attributeValue: "New" },
+      "intent",
+      "attributes-update",
+    );
+    const promise = store.handleFormSubmit(event);
+    await nextTick();
+
+    expect(store.getState().data.attributes).toEqual([{ key: "gift-message", value: "New" }]);
+
+    resolveUpdate(0, {
+      ...serverResult(),
+      userErrors: [
+        { code: "INVALID", message: "Invalid gift message", field: ["attributes", "0"] },
+      ],
+    });
+    await promise;
+
+    const state = store.getState();
+    expect(state.data.attributes).toEqual([{ key: "gift-message", value: "Old" }]);
+    expect(state.pending.attributes).toBe(false);
+    expect(state.errors.attributes.get("gift-message")?.userErrors).toEqual([
+      { code: "INVALID", message: "Invalid gift message", field: ["attributes", "0"] },
+    ]);
+  });
+
+  it("preserves attributes when other cart mutations resolve", async () => {
+    store.hydrate(
+      makeCartState({
+        id: "gid://shopify/Cart/attributes-preserved",
+        attributes: [{ key: "gift-message", value: "Keep me" }],
+      }),
+    );
+    const event = submitForm({ note: "new note" }, "intent", "note-update");
+    const promise = store.handleFormSubmit(event);
+    await nextTick();
+
+    // Resolved standard-event carts omit attributes entirely.
+    resolveUpdate(0, serverResult());
+    await promise;
+
+    expect(store.getState().data.note).toBe("new note");
+    expect(store.getState().data.attributes).toEqual([{ key: "gift-message", value: "Keep me" }]);
+  });
+
+  it("rolls back rejected attributes and scopes errors by attribute key", async () => {
+    store.hydrate(
+      makeCartState({
+        id: "gid://shopify/Cart/attributes-failure",
+        attributes: [{ key: "gift-message", value: "Old" }],
+      }),
+    );
+    expect(store.getState().data.attributes).toEqual([{ key: "gift-message", value: "Old" }]);
+    const event = submitForm(
+      { attributeKey: "gift-message", attributeValue: "New" },
+      "intent",
+      "attributes-update",
+    );
+    const promise = store.handleFormSubmit(event);
+    await nextTick();
+
+    rejectUpdate(
+      0,
+      cartActionError({
+        userErrors: [
+          {
+            code: "INVALID",
+            message: "Invalid gift message",
+            field: ["attributes", "0"],
+          },
+        ],
+      }),
+    );
+    await expect(promise).rejects.toThrow("Cart action failed");
+
+    const state = store.getState();
+    expect(state.data.attributes).toEqual([{ key: "gift-message", value: "Old" }]);
+    expect(state.pending.attributes).toBe(false);
+    expect(state.errors.attributes.get("gift-message")?.userErrors).toEqual([
+      {
+        code: "INVALID",
+        message: "Invalid gift message",
+        field: ["attributes", "0"],
+      },
+    ]);
   });
 
   it("routes note business errors to errors.network", async () => {

@@ -52,7 +52,8 @@ Cart:
 - [ ] Each line item form includes hidden set, scoped lineId, and editable quantity
 - [ ] Quantity Enter key submits a set action
 - [ ] Rapid quantity clicks settle to the final expected quantity
-- [ ] Line, discount, note, network, and cart-level errors appear in the right scope
+- [ ] Line, discount, note, attribute, network, and cart-level errors appear in the right scope
+- [ ] Attribute editing submits the complete list, preserves unrelated attributes, and shows scoped pending UI
 - [ ] Totals are server-provided and visually pending during cart mutations
 
 Collection and search:
@@ -170,7 +171,8 @@ Expected: a redirect whose `location` header points at Shopify's hosted login, n
 - Each line item form includes hidden `set`, scoped `lineId`, and editable `quantity`.
 - Quantity Enter key submits a set action.
 - Rapid quantity clicks settle to the final expected quantity.
-- Line, discount, note, network, and cart-level errors appear in the right scope.
+- Line, discount, note, attribute, network, and cart-level errors appear in the right scope.
+- Saving one cart attribute submits the complete next list, preserves unrelated attributes, and shows a saving state while `pending.attributes` is true. Submitting no attribute pairs clears the list.
 - Totals are server-provided and visually pending during cart mutations.
 
 ## Collection And Search

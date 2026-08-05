@@ -301,6 +301,13 @@ async function executeMutation(
       const { cart, userErrors, warnings } = assertMutationData(result, "cartNoteUpdate");
       return createMutationResult(cart, userErrors, warnings, result.headers);
     }
+    case "attributes-update": {
+      const result = await storefront.graphql(queries.cartAttributesUpdate, {
+        variables: { cartId, attributes: action.attributes },
+      });
+      const { cart, userErrors, warnings } = assertMutationData(result, "cartAttributesUpdate");
+      return createMutationResult(cart, userErrors, warnings, result.headers);
+    }
     default: {
       const _exhaustive: never = action;
       throw new Error(`Unhandled cart action intent: ${(_exhaustive as CartAction).intent}`);

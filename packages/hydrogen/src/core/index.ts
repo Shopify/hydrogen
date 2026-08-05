@@ -78,7 +78,7 @@ export { createCartFormRegister } from "./cart";
 export type { CartFormRegister, QuantityInputAttributes, SetButtonAttributes } from "./cart";
 export { attachQuantityInput } from "./cart";
 export { parseCartRequest } from "./cart";
-export type { CartAction, CartLineAddInput, CartLineUpdateInput } from "./cart";
+export type { CartAction, CartAttributeInput, CartLineAddInput, CartLineUpdateInput } from "./cart";
 export { cartQueries, createCartCookie } from "./cart";
 export { getCartId, getCart, createCartServerHandlers } from "./cart";
 export type {
@@ -109,6 +109,7 @@ export type {
   CartLineMerchandise,
   CartCost,
   DiscountCode,
+  Attribute,
 } from "./cart";
 export {
   EMPTY_CART_DATA,

@@ -1,16 +1,18 @@
 import { normalizeCartId } from "./cookie";
 
+export type CartAttributeInput = { key: string; value: string };
+
 export type CartLineAddInput = {
   merchandiseId: string;
   quantity: number;
-  attributes?: Array<{ key: string; value: string }>;
+  attributes?: CartAttributeInput[];
   sellingPlanId?: string;
 };
 
 export type CartLineUpdateInput = {
   id: string;
   quantity: number;
-  attributes?: Array<{ key: string; value: string }>;
+  attributes?: CartAttributeInput[];
   sellingPlanId?: string;
 };
 
@@ -21,6 +23,7 @@ export type CartAction =
   | { intent: "discount-update"; discountCodes: string[] }
   | { intent: "discount-apply"; code: string }
   | { intent: "discount-remove"; code: string }
+  | { intent: "attributes-update"; attributes: CartAttributeInput[] }
   | { intent: "note-update"; note: string };
 
 type ParsedCartRequest = {
@@ -74,8 +77,17 @@ function parseJsonBody(body: unknown): ParsedCartRequest {
     };
   }
 
+  if ("attributes" in body && Array.isArray(body.attributes)) {
+    return {
+      action: { intent: "attributes-update", attributes: parseAttributes(body.attributes) },
+      cartId,
+    };
+  }
+
   if (!("lines" in body) || !Array.isArray(body.lines)) {
-    throw new CartActionError('Request body must contain "lines", "discountCodes", or "note".');
+    throw new CartActionError(
+      'Request body must contain "lines", "discountCodes", "attributes", or "note".',
+    );
   }
 
   const lines = body.lines as unknown[];
@@ -153,7 +165,7 @@ function extractOptionalLineFields(
   const result: Pick<CartLineAddInput, "attributes" | "sellingPlanId"> = {};
 
   if ("attributes" in line && Array.isArray(line.attributes)) {
-    result.attributes = line.attributes as Array<{ key: string; value: string }>;
+    result.attributes = line.attributes as CartAttributeInput[];
   }
 
   if ("sellingPlanId" in line && typeof line.sellingPlanId === "string") {
@@ -171,7 +183,7 @@ function extractOptionalLineFields(
 //   Update qty:     server does the math — form sends current qty, server increments/decrements
 //   Remove line:    explicit intent field (can't express "quantity=0 means remove" implicitly)
 //   Discount bulk:  no FormData equivalent — forms handle one code at a time
-//   Attributes:     not supported in FormData (nested objects can't be expressed in flat fields)
+//   Cart attributes: parallel attributeKey/attributeValue fields preserve the ordered list
 //   Selling plan:   add only — no way to change selling plan on existing line via form
 //
 // Design decisions:
@@ -216,8 +228,12 @@ function parseFormData(form: FormData): CartAction {
     return parseNoteIntent(form);
   }
 
+  if (intent === "attributes-update") {
+    return parseAttributesIntent(form);
+  }
+
   throw new CartActionError(
-    `Unknown intent "${intent}". Expected one of: add, increase, decrease, remove, set, discount-apply, discount-remove, note-update.`,
+    `Unknown intent "${intent}". Expected one of: add, increase, decrease, remove, set, discount-apply, discount-remove, attributes-update, note-update.`,
   );
 }
 
@@ -281,6 +297,34 @@ function parseNoteIntent(form: FormData): CartAction {
     throw new CartActionError('Intent "note-update" requires a "note" field.');
   }
   return { intent: "note-update", note: String(noteValue) };
+}
+
+function parseAttributesIntent(form: FormData): CartAction {
+  const keys = form.getAll("attributeKey");
+  const values = form.getAll("attributeValue");
+
+  if (keys.length !== values.length) {
+    throw new CartActionError(
+      'Intent "attributes-update" requires one "attributeValue" field for every "attributeKey" field.',
+    );
+  }
+
+  return {
+    intent: "attributes-update",
+    attributes: parseAttributes(keys.map((key, index) => ({ key, value: values[index] }))),
+  };
+}
+
+function parseAttributes(values: unknown[]): CartAttributeInput[] {
+  return values.map((value, index) => {
+    assertObject(value);
+    assertString(value.key, `attributes[${index}].key`);
+    assertString(value.value, `attributes[${index}].value`);
+    if (!value.key) {
+      throw new CartActionError(`Expected "attributes[${index}].key" not to be empty.`);
+    }
+    return { key: value.key, value: value.value };
+  });
 }
 
 // --- Assertion helpers ---

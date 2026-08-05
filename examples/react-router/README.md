@@ -63,7 +63,7 @@ The `/account` page shows your name + email. The header account link is hidden o
 - **`/collections/:handle`** — Live: queries `collection(handle:)` with URL-synced filters, sort, and active filter chips.
 - **`/products/:handle`** — Live: gallery, URL-synced variant options, add-to-cart, Shop Pay, and related products.
 - **`/search`** — Live: storefront `search()` with filters, sort, pagination, and predictive search.
-- **`/cart`** — Live: server-rendered cart page (the drawer's no-JS fallback) with optimistic line updates, discount codes, order note, totals, checkout, and Shop Pay.
+- **`/cart`** — Live: server-rendered cart page (the drawer's no-JS fallback) with optimistic line updates, discount codes, a gift-message cart attribute, totals, checkout, and Shop Pay.
 - **`/account`** — Live (real store only): Customer Account OAuth session, basic customer name/email, logout form. Renders a "requires a real store" notice on mock.shop.
   - `/account/login`, `/account/logout`, `/account/refresh`, `/account/authorize` are Hydrogen-owned routes intercepted by the root middleware (no route files exist for them) — Customer Account OAuth login/refresh/logout is handled there.
 - **`/sitemap.xml`** — Live: lists product and collection URLs with `updatedAt`, from a cacheable Storefront query.

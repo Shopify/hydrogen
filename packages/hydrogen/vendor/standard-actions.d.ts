@@ -1,4 +1,8 @@
 // version: ea315691e9819723879605d727a20fde6bdda314
+// NOTE: hand-patched with cart attribute types from
+// shopify-playground/storefront-standard-events#161 (84234055) pending the
+// next Standard Actions CDN release. Re-run scripts/download-standard-types.ts
+// once the release ships to replace this file.
 export interface Price {
 	amount: string;
 	currencyCode: string;
@@ -66,6 +70,10 @@ export interface ActionFunction<P, R, Meta extends object = {}, O = void> {
 }
 export type UpdateCartUserError = CartMutationUserError;
 export type UpdateCartWarning = CartMutationWarning;
+export interface CartAttributeInput {
+	key: string;
+	value: string;
+}
 export interface StorefrontCartLinesConnection {
 	nodes: CartLine[];
 }
@@ -80,7 +88,7 @@ export type UpdateCartEventTargetMeta = {
 	type: "shopify:cart:lines-update";
 	action: CartUpdateAction;
 } | {
-	type: "shopify:cart:note-update" | "shopify:cart:discount-update" | "shopify:cart:error";
+	type: "shopify:cart:note-update" | "shopify:cart:attributes-update" | "shopify:cart:discount-update" | "shopify:cart:error";
 };
 export interface EventTargetConfigurationMeta {
 	/**
@@ -102,10 +110,8 @@ export interface CartLineInput {
 	merchandiseId?: string;
 	/** Set to 0 to remove. */
 	quantity: number;
-	attributes?: Array<{
-		key: string;
-		value: string;
-	}>;
+	/** Line item-level custom attributes */
+	attributes?: CartAttributeInput[];
 	/** Selling plan GID or raw selling plan id. */
 	sellingPlanId?: string;
 }
@@ -115,6 +121,8 @@ export interface UpdateCartPayload {
 	lines?: CartLineInput[];
 	note?: string;
 	discountCodes?: string[];
+	/** Cart-level custom attributes */
+	attributes?: CartAttributeInput[];
 }
 export interface UpdateCartResult {
 	cart: StorefrontCartSummary;

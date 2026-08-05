@@ -1,4 +1,18 @@
 // version: ea315691e9819723879605d727a20fde6bdda314
+// NOTE: hand-patched with cart attribute types from
+// shopify-playground/storefront-standard-events#161 (84234055) pending the
+// next Standard Events CDN release. Re-run scripts/download-standard-types.ts
+// once the release ships to replace this file.
+export interface CartAttributeInput {
+	key: string;
+	value: string;
+}
+export interface CartAttributesUpdatePayloadDetail {
+	[k: string]: unknown;
+}
+export interface CartAttributesUpdateResultDetail {
+	[k: string]: unknown;
+}
 export interface CartDiscountUpdatePayloadDetail {
 	[k: string]: unknown;
 }
@@ -49,6 +63,55 @@ export interface SearchUpdatePayloadDetail {
 }
 export interface SearchUpdateResultDetail {
 	[k: string]: unknown;
+}
+export interface CartAttributesUpdatePayload {
+	context: "product" | "cart" | "dialog" | "standard-action";
+	attributes: CartAttributeInput[];
+	promise: Promise<CartAttributesUpdateResult>;
+	/**
+	 * Optional custom data. Use this to provide additional data for internal use in the theme.
+	 */
+	detail?: CartAttributesUpdatePayloadDetail;
+}
+export interface CartAttributesUpdateResult {
+	cart: {
+		id: string;
+		totalQuantity: number;
+		cost: {
+			totalAmount: {
+				amount: string;
+				currencyCode: string;
+			};
+		};
+		lines: {
+			id: string;
+			quantity: number;
+			cost: {
+				totalAmount: {
+					amount: string;
+					currencyCode: string;
+				};
+			};
+		}[];
+		discountCodes: {
+			applicable: boolean;
+			code: string;
+		}[];
+	} | null;
+	userErrors?: {
+		code?: string;
+		field?: string[];
+		message: string;
+	}[];
+	warnings?: {
+		code?: string;
+		message: string;
+		target?: string;
+	}[];
+	/**
+	 * Optional custom data. Use this to provide additional data for internal use in the theme.
+	 */
+	detail?: CartAttributesUpdateResultDetail;
 }
 export interface CartDiscountUpdatePayload {
 	discountCodes: {
@@ -522,6 +585,7 @@ export interface SearchUpdateResult {
 	detail?: SearchUpdateResultDetail;
 }
 export interface StandardStorefrontEventMap {
+	"shopify:cart:attributes-update": CartAttributesUpdateEvent;
 	"shopify:cart:discount-update": CartDiscountUpdateEvent;
 	"shopify:cart:error": CartErrorEvent;
 	"shopify:cart:lines-update": CartLinesUpdateEvent;
@@ -596,6 +660,7 @@ export declare const StandardEvents: {
 	readonly cartError: "shopify:cart:error";
 	readonly cartLinesUpdate: "shopify:cart:lines-update";
 	readonly cartNoteUpdate: "shopify:cart:note-update";
+	readonly cartAttributesUpdate: "shopify:cart:attributes-update";
 	readonly cartDiscountUpdate: "shopify:cart:discount-update";
 	readonly searchUpdate: "shopify:search:update";
 	readonly collectionView: "shopify:collection:view";
@@ -862,6 +927,14 @@ export declare class CartNoteUpdateEvent extends ShopifyStandardEvent {
 		reject: (reason?: any) => void;
 	};
 	constructor(payload: WithGidInput<CartNoteUpdatePayload>);
+}
+export interface CartAttributesUpdateEvent extends CartAttributesUpdatePayload {
+}
+export declare class CartAttributesUpdateEvent extends ShopifyStandardEvent {
+	static readonly eventName: "shopify:cart:attributes-update";
+	static createCartFromAjaxResponse: typeof fromAjaxCart;
+	static createPromise: typeof CartNoteUpdateEvent.createPromise;
+	constructor(payload: WithGidInput<CartAttributesUpdatePayload>);
 }
 export interface CartDiscountUpdateEvent extends CartDiscountUpdatePayload {
 }

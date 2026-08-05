@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 import { useCart, useCartForm } from "~/lib/cart";
 import { content } from "~/lib/content";
 import { formatPrice } from "~/lib/money";
@@ -108,6 +110,8 @@ export function CartContent() {
               </form>
             ))}
 
+          <CartGiftMessage attributes={cart.attributes} />
+
           {/* Estimated total */}
           <div className="flex items-center justify-between">
             <span className="text-on-surface text-sm font-medium">{content.cart.totalLabel}</span>
@@ -119,5 +123,49 @@ export function CartContent() {
         </div>
       </div>
     </div>
+  );
+}
+
+const GIFT_MESSAGE_ATTRIBUTE = "gift-message";
+
+function CartGiftMessage({
+  attributes,
+}: {
+  attributes: Array<{ key: string; value: string | null }>;
+}) {
+  const { formProps, register } = useCartForm();
+  const attributesPending = useCart((state) => state.pending.attributes);
+  const giftMessageId = useId();
+  const giftMessage = attributes.find(({ key }) => key === GIFT_MESSAGE_ATTRIBUTE)?.value ?? "";
+  const preservedAttributes = attributes.filter(({ key }) => key !== GIFT_MESSAGE_ATTRIBUTE);
+
+  return (
+    <form {...formProps()} className="flex flex-col gap-2">
+      {preservedAttributes.map(({ key, value }) => (
+        <div key={key}>
+          <input type="hidden" {...register("attributeKey", { value: key })} />
+          <input type="hidden" {...register("attributeValue", { value: value ?? "" })} />
+        </div>
+      ))}
+      <input type="hidden" {...register("attributeKey", { value: GIFT_MESSAGE_ATTRIBUTE })} />
+      <label htmlFor={giftMessageId} className="text-on-surface text-sm font-medium">
+        {content.cart.giftMessage.label}
+      </label>
+      <textarea
+        id={giftMessageId}
+        rows={2}
+        {...register("attributeValue", { defaultValue: giftMessage })}
+        placeholder={content.cart.giftMessage.placeholder}
+      />
+      <button
+        type="submit"
+        {...register("attributes-update")}
+        disabled={attributesPending}
+        aria-busy={attributesPending}
+        className="rounded-button button-secondary inline-flex h-11 items-center justify-center px-4 text-sm font-medium"
+      >
+        {attributesPending ? content.cart.giftMessage.saving : content.cart.giftMessage.save}
+      </button>
+    </form>
   );
 }

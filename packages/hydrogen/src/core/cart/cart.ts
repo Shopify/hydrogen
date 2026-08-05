@@ -6,9 +6,11 @@ import type {
   UpdateCartResult,
 } from "../../../vendor/standard-actions";
 import type {
+  CartAttributesUpdateEvent,
   CartLinesUpdateEvent,
   CartDiscountUpdateEvent,
   CartNoteUpdateEvent,
+  CartAttributesUpdateResult,
   CartLinesUpdateResult,
   CartDiscountUpdateResult,
   CartNoteUpdateResult,
@@ -51,14 +53,24 @@ function setLines<TData extends CartData>(cart: TData, lines: CartLine[]): TData
 }
 
 type StandardEventCart = NonNullable<
-  (CartLinesUpdateResult | CartDiscountUpdateResult | CartNoteUpdateResult)["cart"]
+  (
+    | CartAttributesUpdateResult
+    | CartLinesUpdateResult
+    | CartDiscountUpdateResult
+    | CartNoteUpdateResult
+  )["cart"]
 >;
 
 /**
  * Standard Events flatten cart lines. Unflatten them here.
+ * Standard-event carts intentionally omit `attributes`; callers must derive
+ * them from prior state or the event payload when merging into cart state.
  */
 function cartResponseFromStandardEvent(cart: StandardEventCart): CartResponse {
-  return { ...(cart as unknown as CartResponse), lines: { nodes: cart.lines as CartLine[] } };
+  return {
+    ...(cart as unknown as CartResponse),
+    lines: { nodes: cart.lines as CartLine[] },
+  };
 }
 
 export class CartNetworkError extends Error {
@@ -92,10 +104,12 @@ type CartStoreContext = {
   lineControllers: Map<string, AbortController>;
   discountController: AbortController | null;
   noteController: AbortController | null;
+  attributesController: AbortController | null;
   merchandiseControllers: Map<string, AbortController>;
   lineBaselines: Map<string, CartLine>;
   discountBaseline: CartState["data"]["discountCodes"] | null;
   noteBaseline: CartData["note"] | undefined;
+  attributesBaseline: CartData["attributes"] | null;
   cartSyncAttached: boolean;
 };
 
@@ -132,6 +146,7 @@ type CartEventHandlers = {
   lines: EventListener;
   discount: EventListener;
   note: EventListener;
+  attributes: EventListener;
 };
 
 type InitialDataState<TData extends CartData> =
@@ -162,10 +177,12 @@ export function createCartStore<TData extends CartData = CartData>(
     lineControllers: new Map<string, AbortController>(),
     discountController: null,
     noteController: null,
+    attributesController: null,
     merchandiseControllers: new Map<string, AbortController>(),
     lineBaselines: new Map<string, CartLine>(),
     discountBaseline: null,
     noteBaseline: undefined,
+    attributesBaseline: null,
     cartSyncAttached: false,
   };
 
@@ -176,6 +193,8 @@ export function createCartStore<TData extends CartData = CartData>(
       handleCartDiscountUpdate(context, event as CartDiscountUpdateEvent)) as EventListener,
     note: ((event: Event) =>
       handleCartNoteUpdate(context, event as CartNoteUpdateEvent)) as EventListener,
+    attributes: ((event: Event) =>
+      handleCartAttributesUpdate(context, event as CartAttributesUpdateEvent)) as EventListener,
   };
 
   if (initialDataState.type === "async") {
@@ -304,6 +323,30 @@ function groupDiscountErrors(
   return { discountCodes: codes, cart };
 }
 
+function groupAttributeErrors(
+  failure: CartActionFailure | undefined,
+  attributes: CartData["attributes"],
+): { attributes: Map<string, CartErrorGroup>; cart: CartErrorGroup } {
+  const attributeErrors = new Map<string, CartErrorGroup>();
+  const cart = createEmptyErrorGroup();
+
+  for (const error of failure?.userErrors ?? []) {
+    const attributeIndex = findFieldIndex(error.field, "attributes");
+    const key = attributeIndex !== undefined ? attributes[attributeIndex]?.key : undefined;
+    if (key) {
+      getErrorGroup(attributeErrors, key).userErrors.push(toCartUserError(error));
+    } else {
+      cart.userErrors.push(toCartUserError(error));
+    }
+  }
+
+  for (const warning of failure?.warnings ?? []) {
+    cart.warnings.push(toCartWarning(warning));
+  }
+
+  return { attributes: attributeErrors, cart };
+}
+
 function toCartErrorGroup(failure: CartActionFailure): CartErrorGroup {
   return {
     userErrors: (failure?.userErrors ?? []).map(toCartUserError),
@@ -360,6 +403,7 @@ function clearPendingWork(store: CartStoreContext): void {
   for (const controller of store.lineControllers.values()) controller.abort();
   store.discountController?.abort();
   store.noteController?.abort();
+  store.attributesController?.abort();
   for (const controller of store.merchandiseControllers.values()) {
     controller.abort();
   }
@@ -367,10 +411,12 @@ function clearPendingWork(store: CartStoreContext): void {
   store.lineControllers.clear();
   store.discountController = null;
   store.noteController = null;
+  store.attributesController = null;
   store.merchandiseControllers.clear();
   store.lineBaselines.clear();
   store.discountBaseline = null;
   store.noteBaseline = undefined;
+  store.attributesBaseline = null;
 }
 
 function destroyCartStore(store: CartStoreContext, eventHandlers: CartEventHandlers): void {
@@ -380,6 +426,7 @@ function destroyCartStore(store: CartStoreContext, eventHandlers: CartEventHandl
     document.removeEventListener("shopify:cart:lines-update", eventHandlers.lines);
     document.removeEventListener("shopify:cart:discount-update", eventHandlers.discount);
     document.removeEventListener("shopify:cart:note-update", eventHandlers.note);
+    document.removeEventListener("shopify:cart:attributes-update", eventHandlers.attributes);
   }
 
   connectedCartStores.delete(store);
@@ -523,6 +570,7 @@ function hydrateCartInStore(store: CartStoreContext, data: CartData): void {
   if (
     current.pending.lines.size > 0 ||
     current.pending.note ||
+    current.pending.attributes ||
     current.pending.discountCodes.size > 0
   ) {
     store.observable.clearReadyState();
@@ -539,6 +587,7 @@ function fetchCartData(cartId?: string | null): Promise<CartData | null> {
           ...cart,
           checkoutUrl: cart.checkoutUrl ?? null,
           note: extractNoteFromCart(cart),
+          attributes: cart.attributes ?? [],
         }
       : null,
   );
@@ -697,6 +746,7 @@ function resolveCartLines(
               ? mergedLines.reduce((sum, l) => sum + l.quantity, 0)
               : data.totalQuantity,
           note: prev.pending.note ? prev.data.note : data.note,
+          attributes: prev.data.attributes,
           discountCodes:
             prev.pending.discountCodes.size > 0 ? prev.data.discountCodes : data.discountCodes,
         },
@@ -1198,6 +1248,7 @@ function handleCartDiscountUpdate(store: CartStoreContext, event: CartDiscountUp
                   ? mergedLines.reduce((sum, l) => sum + l.quantity, 0)
                   : data.totalQuantity,
               note: prev.pending.note ? prev.data.note : data.note,
+              attributes: prev.data.attributes,
             },
             mergedLines,
           ),
@@ -1282,6 +1333,7 @@ function handleCartNoteUpdate(store: CartStoreContext, event: CartNoteUpdateEven
                   : data.totalQuantity,
               discountCodes:
                 prev.pending.discountCodes.size > 0 ? prev.data.discountCodes : data.discountCodes,
+              attributes: prev.data.attributes,
             },
             mergedLines,
           ),
@@ -1296,6 +1348,101 @@ function handleCartNoteUpdate(store: CartStoreContext, event: CartNoteUpdateEven
       });
     },
     (error) => rollbackNote(extractCartActionFailure(error)),
+  );
+}
+
+function handleCartAttributesUpdate(
+  store: CartStoreContext,
+  event: CartAttributesUpdateEvent,
+): void {
+  const cartObservable = store.observable;
+  const controllerAtEventTime = store.attributesController;
+
+  if (store.attributesBaseline === null) {
+    store.attributesBaseline = cartObservable.state.data.attributes;
+  }
+
+  cartObservable.setState((prev) => ({
+    ...prev,
+    data: { ...prev.data, attributes: event.attributes },
+    pending: { ...prev.pending, attributes: true },
+  }));
+
+  const rollbackAttributes = (failure?: CartActionFailure): void => {
+    if (store.attributesController !== controllerAtEventTime) return;
+
+    const baseline = store.attributesBaseline ?? [];
+    store.attributesBaseline = null;
+    const grouped = failure ? groupAttributeErrors(failure, event.attributes) : null;
+    const now = grouped ? Date.now() : 0;
+
+    cartObservable.setState((prev) => ({
+      ...prev,
+      data: { ...prev.data, attributes: baseline },
+      pending: { ...prev.pending, attributes: false },
+      ...(grouped && {
+        errors: {
+          ...prev.errors,
+          attributes: grouped.attributes,
+          cart: grouped.cart,
+          attributesUpdatedAt: now,
+          cartUpdatedAt: now,
+          lastUpdatedAt: now,
+        },
+      }),
+    }));
+  };
+
+  event.promise.then(
+    (result: CartAttributesUpdateResult) => {
+      if (!result?.cart) {
+        rollbackAttributes(result);
+        return;
+      }
+
+      const cart = cartResponseFromStandardEvent(result.cart);
+      const baseline = store.attributesBaseline ?? [];
+      store.attributesBaseline = null;
+      const grouped = groupAttributeErrors(result, event.attributes);
+      // Resolved carts omit attributes: when there are no userErrors the
+      // event's top-level attributes describe the resulting state; with
+      // userErrors the mutation did not apply, so restore the baseline.
+      const resolvedAttributes = result.userErrors?.length ? baseline : event.attributes;
+      const now = Date.now();
+
+      cartObservable.setState((prev) => {
+        const mergedLines = reconcileLines(getLines(prev.data), getLines(cart), prev.pending.lines);
+        const data = cart;
+
+        return {
+          ...prev,
+          data: setLines(
+            {
+              ...data,
+              attributes: resolvedAttributes,
+              totalQuantity:
+                prev.pending.lines.size > 0
+                  ? mergedLines.reduce((sum, line) => sum + line.quantity, 0)
+                  : data.totalQuantity,
+              note: prev.pending.note ? prev.data.note : data.note,
+              discountCodes:
+                prev.pending.discountCodes.size > 0 ? prev.data.discountCodes : data.discountCodes,
+            },
+            mergedLines,
+          ),
+          pending: { ...prev.pending, attributes: false },
+          errors: {
+            ...prev.errors,
+            attributes: grouped.attributes,
+            cart: grouped.cart,
+            attributesUpdatedAt: now,
+            cartUpdatedAt: now,
+            lastUpdatedAt: now,
+          },
+        };
+      });
+    },
+    (error) => rollbackAttributes(extractCartActionFailure(error)),
   );
 }
 
@@ -1359,6 +1506,7 @@ function connectCartStore(store: CartStoreContext, eventHandlers: CartEventHandl
     document.addEventListener("shopify:cart:lines-update", eventHandlers.lines);
     document.addEventListener("shopify:cart:discount-update", eventHandlers.discount);
     document.addEventListener("shopify:cart:note-update", eventHandlers.note);
+    document.addEventListener("shopify:cart:attributes-update", eventHandlers.attributes);
   }
 
   void getShopifyStandardActions().catch(() => {});
@@ -1528,6 +1676,19 @@ async function handleFormSubmitInStore(
     return submitNoteMutation(store, updateCart, note);
   }
 
+  if (intent === "attributes-update") {
+    const keys = formData.getAll("attributeKey");
+    const values = formData.getAll("attributeValue");
+    if (keys.length !== values.length) {
+      throw new Error('Cart attributes require one "attributeValue" for every "attributeKey".');
+    }
+    const attributes = keys.map((key, index) => ({
+      key: String(key),
+      value: String(values[index]),
+    }));
+    return submitAttributesMutation(store, updateCart, attributes);
+  }
+
   throw new Error(`Unknown cart form intent: "${intent}"`);
 }
 
@@ -1658,6 +1819,30 @@ async function submitNoteMutation(
 
   try {
     await updateCart({ note }, { signal });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") return;
+    if (extractCartActionFailure(error)) throw error;
+    writeNetworkError(store, error);
+    throw error;
+  }
+}
+
+async function submitAttributesMutation(
+  store: CartStoreContext,
+  updateCart: UpdateCartFn,
+  attributes: Array<{ key: string; value: string }>,
+): Promise<void> {
+  store.attributesController?.abort();
+  const controller = new AbortController();
+  store.attributesController = controller;
+
+  const signal = AbortSignal.any([
+    controller.signal,
+    AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS),
+  ]);
+
+  try {
+    await updateCart({ attributes }, { signal });
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") return;
     if (extractCartActionFailure(error)) throw error;
