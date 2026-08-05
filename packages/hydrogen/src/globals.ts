@@ -37,11 +37,13 @@ export type ShopifyGlobal = {
     shouldShowBanner: () => boolean;
   };
   locale: Lowercase<I18nConfig["language"]> | string;
+  /** @deprecated Use `Shopify.routes.navigate` instead. */
   navigate?: (url: string) => void | Promise<void>;
   routes: {
     root: string;
     match?: (url: string) => ShopifyStandardRouteMatch | null;
     resolve?: (url: string) => string;
+    navigate?: (url: string) => void | Promise<void>;
     [key: string]: unknown;
   };
   /** The shop's permanent `*.myshopify.com` domain. */

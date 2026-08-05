@@ -276,14 +276,16 @@ describe("ShopifyScripts", () => {
     );
 
     await waitFor(() => {
-      expect(window.Shopify?.navigate).toEqual(expect.any(Function));
+      expect(window.Shopify?.routes.navigate).toEqual(expect.any(Function));
+      expect(window.Shopify?.navigate).toBe(window.Shopify?.routes.navigate);
       expect(window.Shopify?.routes.match?.("/p/snowboard")).toEqual({
         route: "product",
+        pageTemplateName: "product",
         params: { productHandle: "snowboard" },
       });
       expect(window.Shopify?.routes.resolve?.("/products/snowboard")).toBe("/p/snowboard");
     });
-    window.Shopify?.navigate?.("/products/snowboard");
+    window.Shopify?.routes.navigate?.("/products/snowboard");
     expect(navigate).toHaveBeenCalledWith("/p/snowboard");
     expect(initializeShopifyScripts).toHaveBeenCalledWith({
       navigate,

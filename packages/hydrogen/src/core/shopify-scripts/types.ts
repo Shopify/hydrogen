@@ -85,7 +85,7 @@ export type ShopifyScriptTagsOptions = {
 };
 
 export type ShopifyRoutesOptions = {
-  navigate?: ShopifyGlobal["navigate"];
+  navigate?: ShopifyGlobal["routes"]["navigate"];
   routes?: ShopifyRouteTemplates;
 };
 

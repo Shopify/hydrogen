@@ -89,9 +89,42 @@ describe("shopify scripts", () => {
     expect(navigate).toHaveBeenCalledWith("/products/snowboard");
     expect(window.Shopify?.routes.match?.("/products/snowboard")).toEqual({
       route: "product",
+      pageTemplateName: "product",
+      params: { productHandle: "snowboard" },
+    });
+    expect(window.Shopify?.routes.match?.("/")).toEqual({
+      route: "index",
+      pageTemplateName: "index",
+      params: {},
+    });
+    expect(window.Shopify?.routes.resolve?.("/products/snowboard")).toBe("/products/snowboard");
+  });
+
+  it("sets default Shopify route hooks when route templates are omitted", async () => {
+    await initializeShopifyScripts({ webMcp: false });
+
+    expect(window.Shopify?.routes.match?.("/products/snowboard")).toEqual({
+      route: "product",
+      pageTemplateName: "product",
       params: { productHandle: "snowboard" },
     });
     expect(window.Shopify?.routes.resolve?.("/products/snowboard")).toBe("/products/snowboard");
+  });
+
+  it("falls back to native navigation when a navigator is omitted", async () => {
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+    const routeTemplates = createShopifyRouteTemplates({
+      product: "/p/:productHandle",
+    });
+
+    await initializeShopifyScripts({ routes: routeTemplates, webMcp: false });
+
+    const shopifyNavigate = window.Shopify?.routes.navigate;
+    assert(shopifyNavigate, "Expected Shopify.routes.navigate to be configured.");
+    shopifyNavigate("/products/snowboard");
+
+    expect(assign).toHaveBeenCalledWith("/p/snowboard");
+    expect(window.Shopify?.navigate).toBe(shopifyNavigate);
   });
 
   it("sets Shopify navigation without replacing existing route state", async () => {
@@ -100,7 +133,7 @@ describe("shopify scripts", () => {
 
     await initializeShopifyScripts({ navigate, routes: emptyRouteTemplates, webMcp: false });
 
-    expect(window.Shopify?.navigate).toEqual(expect.any(Function));
+    expect(window.Shopify?.routes.navigate).toEqual(expect.any(Function));
     expect((window.Shopify?.routes as any)?.existing).toBe("value");
   });
 
@@ -117,8 +150,8 @@ describe("shopify scripts", () => {
 
     await initializeShopifyScripts({ navigate, routes: routeTemplates, webMcp: false });
 
-    const shopifyNavigate = window.Shopify?.navigate;
-    assert(shopifyNavigate, "Expected Shopify.navigate to be configured.");
+    const shopifyNavigate = window.Shopify?.routes.navigate;
+    assert(shopifyNavigate, "Expected Shopify.routes.navigate to be configured.");
     shopifyNavigate("/fr-ca/products/snowboard?variant=1#reviews");
 
     expect(navigate).toHaveBeenCalledWith("/fr-ca/p/snowboard?variant=1#reviews");
@@ -141,6 +174,7 @@ describe("shopify scripts", () => {
     );
     expect(window.Shopify?.routes.match?.("/fr-ca/p/snowboard?variant=1#reviews")).toEqual({
       route: "product",
+      pageTemplateName: "product",
       params: { productHandle: "snowboard" },
     });
     expect(
