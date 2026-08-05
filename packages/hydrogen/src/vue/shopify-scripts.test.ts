@@ -42,6 +42,7 @@ describe("ShopifyScripts", () => {
     });
     const html = await renderToString(
       h(ShopifyScripts, {
+        debug: { standardEventsInspector: true },
         i18n: { country: "US", language: "EN" },
         nonce: "test-nonce",
         routes: routeTemplates,
@@ -61,6 +62,7 @@ describe("ShopifyScripts", () => {
     expect(html).toContain(
       `<script id="shopify-standard-actions" type="module" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}"></script>`,
     );
+    expect(html).toContain("shopify-standard-events-inspector");
     expect(html).toContain(
       `<script id="shopify-inbox" type="module" async crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_INBOX_SCRIPT}"></script>`,
     );

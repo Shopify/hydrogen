@@ -30,6 +30,7 @@ export type ShopifyScriptTagAttributes = ShopifyDataAttributes &
   Partial<{
     async: boolean;
     crossorigin: ShopifyCrossOrigin;
+    defer: boolean;
     id: string;
     nonce: string;
     src: string;
@@ -76,6 +77,10 @@ export type ShopifyScriptsShop = {
 export type ShopifyScriptTagsOptions = {
   analytics?: ShopifyScriptsAnalyticsConfig;
   consent?: ConsentConfig;
+  debug?: {
+    /** Loads Shopify's standard events inspector in development builds. */
+    standardEventsInspector?: boolean;
+  };
   i18n?: ShopifyScriptsI18n;
   /** Loads Inbox. Render `<shopify-chat>` where you want the chat UI to appear. */
   inbox?: boolean;

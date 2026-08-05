@@ -8,6 +8,7 @@ import packageJson from "../package.json" with { type: "json" };
 
 const PACKAGE_ROOT = resolve(import.meta.dirname, "..");
 const TS_PLUGIN_EXPORT_PATH = "./ts-plugin";
+const STANDARD_EVENTS_INSPECTOR_ID = "shopify-standard-events-inspector";
 const COPY_GENERATED_GRAPHQL_ASSETS_SCRIPT_PATH = resolve(
   PACKAGE_ROOT,
   "scripts/copy-generated-graphql-assets.ts",
@@ -155,5 +156,19 @@ if (typeof plugin !== "function" || typeof plugin({typescript}).create !== "func
       expect(declaration).not.toContain("__DEV__");
       expect(declaration).not.toContain("__HYDROGEN_VERSION__");
     }
+  });
+
+  it("only includes the standard events inspector in the development build", () => {
+    const productionShopifyScripts = readFileSync(
+      resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/index.mjs"),
+      "utf8",
+    );
+    const developmentShopifyScripts = readFileSync(
+      resolve(PACKAGE_ROOT, "dist/development/core/shopify-scripts/index.mjs"),
+      "utf8",
+    );
+
+    expect(productionShopifyScripts).not.toContain(STANDARD_EVENTS_INSPECTOR_ID);
+    expect(developmentShopifyScripts).toContain(STANDARD_EVENTS_INSPECTOR_ID);
   });
 });

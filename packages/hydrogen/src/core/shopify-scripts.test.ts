@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, beforeEach, vi } from "vitest";
 
+import { SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT } from "./shopify-scripts/constants";
 import {
   getShopifyScriptTags,
   getShopifyGlobal,
@@ -308,6 +309,7 @@ describe("shopify scripts", () => {
 
   it("builds script tag descriptors for the Shopify runtime", () => {
     const descriptors = getShopifyScriptTags({
+      debug: { standardEventsInspector: true },
       i18n: { country: "US", language: "EN" },
       nonce: "test-nonce",
       shop: TEST_SHOP,
@@ -350,6 +352,16 @@ describe("shopify scripts", () => {
           crossorigin: "anonymous",
           nonce: "test-nonce",
           src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
+        },
+      },
+      {
+        tagName: "script",
+        attributes: {
+          id: "shopify-standard-events-inspector",
+          defer: true,
+          crossorigin: "anonymous",
+          nonce: "test-nonce",
+          src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,
         },
       },
       {
@@ -447,6 +459,16 @@ describe("shopify scripts", () => {
       {
         tagName: "script",
         attributes: {
+          id: "shopify-standard-events-inspector",
+          defer: true,
+          crossorigin: "anonymous",
+          nonce: "test-nonce",
+          src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,
+        },
+      },
+      {
+        tagName: "script",
+        attributes: {
           id: "shopify-consent",
           async: true,
           crossorigin: "anonymous",
@@ -500,10 +522,11 @@ describe("shopify scripts", () => {
 
   it("preserves an explicitly empty nonce on nonce-capable scripts", () => {
     const descriptors = getShopifyScriptTags({
+      debug: { standardEventsInspector: true },
       nonce: "",
       shop: TEST_SHOP,
     });
-    expect(descriptors.scripts).toHaveLength(8);
+    expect(descriptors.scripts).toHaveLength(9);
     for (const { attributes } of descriptors.scripts) {
       expect(attributes).toHaveProperty("nonce", "");
     }
@@ -513,6 +536,13 @@ describe("shopify scripts", () => {
     const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
 
     expect(descriptors.scripts).toHaveLength(8);
+    expect(descriptors.scripts).not.toContainEqual(
+      expect.objectContaining({
+        attributes: expect.objectContaining({
+          src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,
+        }),
+      }),
+    );
     expect(descriptors.tags).not.toContainEqual(
       expect.objectContaining({
         innerHTML: expect.stringContaining(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT),
@@ -752,13 +782,14 @@ describe("shopify scripts", () => {
 
   it("renders all Shopify script tags to an HTML array", () => {
     const htmlTags = renderShopifyScriptTags({
+      debug: { standardEventsInspector: true },
       i18n: { country: "US", language: "EN" },
       nonce: "test-nonce",
       shop: TEST_SHOP,
     });
     const html = htmlTags.join("\n");
 
-    expect(htmlTags).toHaveLength(11);
+    expect(htmlTags).toHaveLength(12);
     expect(html).toContain('<script id="shopify-global-bootstrap" nonce="test-nonce">');
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
@@ -768,6 +799,9 @@ describe("shopify scripts", () => {
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_SHOP_APP_ORIGIN}">`);
     expect(html).toContain(
       `<script id="shopify-standard-actions" type="module" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}"></script>`,
+    );
+    expect(html).toContain(
+      `<script id="shopify-standard-events-inspector" defer crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT}"></script>`,
     );
     expect(html).toContain(
       `<script id="shopify-storefront-analytics" async crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT}"></script>`,
