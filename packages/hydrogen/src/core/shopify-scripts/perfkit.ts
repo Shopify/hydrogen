@@ -1,11 +1,9 @@
 import { SHOPIFY_PERF_KIT_SCRIPT, SHOPIFY_PERF_KIT_SCRIPT_ID } from "./constants";
-import initPerfKitSpaBridge from "./perfkit-spa-bridge-script" with { type: "script" };
 import type {
   ShopifyScriptDescriptor,
   ShopifyScriptsShop,
   ShopifyScriptTagAttributes,
 } from "./types";
-import { asInlineScript } from "./utils/inline-script";
 
 const SHOPIFY_SHOP_ID_PATTERN = /^\d+$/;
 
@@ -32,19 +30,6 @@ export function getPerfKitScript(
       "data-spa-mode": "true",
       "data-resource-timing-sampling-rate": "10",
     },
-  };
-}
-
-export function getPerfKitSpaBridgeScript(
-  extraAttributes?: Pick<ShopifyScriptTagAttributes, "nonce">,
-): ShopifyScriptDescriptor {
-  return {
-    tagName: "script",
-    attributes: {
-      id: "shopify-perfkit-spa-bridge",
-      ...extraAttributes,
-    },
-    innerHTML: asInlineScript(initPerfKitSpaBridge)(),
   };
 }
 

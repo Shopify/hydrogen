@@ -12,7 +12,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
 } from "./constants";
 import { getShopifyGlobalBootstrapScript } from "./global";
-import { getPerfKitScript, getPerfKitSpaBridgeScript } from "./perfkit";
+import { getPerfKitScript } from "./perfkit";
 import { renderShopifyScriptTag } from "./render";
 import type {
   ShopifyLinkDescriptor,
@@ -172,7 +172,6 @@ export function getShopifyScriptTags({
   const perfKitScript = getPerfKitScript(shop, nonceAttributes);
   if (perfKitScript) {
     scripts.push(perfKitScript);
-    scripts.push(getPerfKitSpaBridgeScript(nonceAttributes));
   }
 
   return {
