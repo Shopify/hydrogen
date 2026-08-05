@@ -1,5 +1,5 @@
 import type * as StandardEventsModule from "../../../vendor/standard-events";
-import { SHOPIFY_PERF_KIT_SCRIPT_ID, SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT } from "./constants";
+import { SHOPIFY_PERF_KIT_SCRIPT_ID } from "./constants";
 import { observeNavigation } from "./utils/navigation";
 
 let cleanupPageViewEvents: (() => void) | undefined;
@@ -8,9 +8,15 @@ const getPageKey = () => `${window.location.pathname}${window.location.search}`;
 const getPageTemplate = (url = window.location.href) =>
   window.Shopify?.routes?.match?.(url)?.pageTemplateName ?? "unknown";
 
+// Keep this URL inline so consumer bundlers such as Vite recognize it as an external import.
+const importStandardEventsFromCDN: () => Promise<
+  Pick<typeof StandardEventsModule, "PageViewEvent">
+> = () =>
+  // @ts-expect-error CDN package without automatic types
+  import("https://cdn.shopify.com/storefront/standard-events.js");
+
 export function initializeShopifyPageViewEvents(
-  importStandardEvents: () => Promise<Pick<typeof StandardEventsModule, "PageViewEvent">> = () =>
-    import(SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT),
+  importStandardEvents = importStandardEventsFromCDN,
 ) {
   if (cleanupPageViewEvents) return cleanupPageViewEvents;
 

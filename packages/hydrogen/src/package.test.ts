@@ -8,6 +8,7 @@ import packageJson from "../package.json" with { type: "json" };
 
 const PACKAGE_ROOT = resolve(import.meta.dirname, "..");
 const TS_PLUGIN_EXPORT_PATH = "./ts-plugin";
+const STANDARD_EVENTS_SCRIPT_URL = "https://cdn.shopify.com/storefront/standard-events.js";
 const STANDARD_EVENTS_INSPECTOR_ID = "shopify-standard-events-inspector";
 const COPY_GENERATED_GRAPHQL_ASSETS_SCRIPT_PATH = resolve(
   PACKAGE_ROOT,
@@ -170,5 +171,14 @@ if (typeof plugin !== "function" || typeof plugin({typescript}).create !== "func
 
     expect(productionShopifyScripts).not.toContain(STANDARD_EVENTS_INSPECTOR_ID);
     expect(developmentShopifyScripts).toContain(STANDARD_EVENTS_INSPECTOR_ID);
+  });
+
+  it("preserves the standard events URL as a literal dynamic import", () => {
+    const pageViewScript = readFileSync(
+      resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/page-view.mjs"),
+      "utf8",
+    );
+
+    expect(pageViewScript).toContain(`import("${STANDARD_EVENTS_SCRIPT_URL}")`);
   });
 });
