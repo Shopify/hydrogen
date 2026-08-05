@@ -11,6 +11,7 @@ export default defineConfig({
   sortTailwindcss: true,
   sortPackageJson: true,
   ignorePatterns: [
+    ".changeset/pre.json",
     "dist/**",
     "build/**",
     ".next/**",
