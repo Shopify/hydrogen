@@ -60,11 +60,12 @@ type StandardEventCart = NonNullable<
 
 /**
  * Standard Events flatten cart lines. Unflatten them here.
+ * Standard-event carts intentionally omit `attributes`; callers must derive
+ * them from prior state or the event payload when merging into cart state.
  */
 function cartResponseFromStandardEvent(cart: StandardEventCart): CartResponse {
   return {
     ...(cart as unknown as CartResponse),
-    attributes: cart.attributes ?? [],
     lines: { nodes: cart.lines as CartLine[] },
   };
 }
@@ -744,7 +745,7 @@ function resolveCartLines(
               ? mergedLines.reduce((sum, l) => sum + l.quantity, 0)
               : data.totalQuantity,
           note: prev.pending.note ? prev.data.note : data.note,
-          attributes: prev.pending.attributes ? prev.data.attributes : data.attributes,
+          attributes: prev.data.attributes,
           discountCodes:
             prev.pending.discountCodes.size > 0 ? prev.data.discountCodes : data.discountCodes,
         },
@@ -1246,7 +1247,7 @@ function handleCartDiscountUpdate(store: CartStoreContext, event: CartDiscountUp
                   ? mergedLines.reduce((sum, l) => sum + l.quantity, 0)
                   : data.totalQuantity,
               note: prev.pending.note ? prev.data.note : data.note,
-              attributes: prev.pending.attributes ? prev.data.attributes : data.attributes,
+              attributes: prev.data.attributes,
             },
             mergedLines,
           ),
@@ -1331,7 +1332,7 @@ function handleCartNoteUpdate(store: CartStoreContext, event: CartNoteUpdateEven
                   : data.totalQuantity,
               discountCodes:
                 prev.pending.discountCodes.size > 0 ? prev.data.discountCodes : data.discountCodes,
-              attributes: prev.pending.attributes ? prev.data.attributes : data.attributes,
+              attributes: prev.data.attributes,
             },
             mergedLines,
           ),
@@ -1399,8 +1400,13 @@ function handleCartAttributesUpdate(
       }
 
       const cart = cartResponseFromStandardEvent(result.cart);
+      const baseline = store.attributesBaseline ?? [];
       store.attributesBaseline = null;
       const grouped = groupAttributeErrors(result, event.attributes);
+      // Resolved carts omit attributes: when there are no userErrors the
+      // event's top-level attributes describe the resulting state; with
+      // userErrors the mutation did not apply, so restore the baseline.
+      const resolvedAttributes = result.userErrors?.length ? baseline : event.attributes;
       const now = Date.now();
 
       cartObservable.setState((prev) => {
@@ -1412,6 +1418,7 @@ function handleCartAttributesUpdate(
           data: setLines(
             {
               ...data,
+              attributes: resolvedAttributes,
               totalQuantity:
                 prev.pending.lines.size > 0
                   ? mergedLines.reduce((sum, line) => sum + line.quantity, 0)

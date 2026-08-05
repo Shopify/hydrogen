@@ -1,20 +1,20 @@
 import { normalizeCartId } from "./cookie";
 
+export type CartAttributeInput = { key: string; value: string };
+
 export type CartLineAddInput = {
   merchandiseId: string;
   quantity: number;
-  attributes?: Array<{ key: string; value: string }>;
+  attributes?: CartAttributeInput[];
   sellingPlanId?: string;
 };
 
 export type CartLineUpdateInput = {
   id: string;
   quantity: number;
-  attributes?: Array<{ key: string; value: string }>;
+  attributes?: CartAttributeInput[];
   sellingPlanId?: string;
 };
-
-export type CartAttributeInput = { key: string; value: string };
 
 export type CartAction =
   | { intent: "add"; lines: CartLineAddInput[] }
@@ -165,7 +165,7 @@ function extractOptionalLineFields(
   const result: Pick<CartLineAddInput, "attributes" | "sellingPlanId"> = {};
 
   if ("attributes" in line && Array.isArray(line.attributes)) {
-    result.attributes = line.attributes as Array<{ key: string; value: string }>;
+    result.attributes = line.attributes as CartAttributeInput[];
   }
 
   if ("sellingPlanId" in line && typeof line.sellingPlanId === "string") {

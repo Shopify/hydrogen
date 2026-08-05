@@ -1866,16 +1866,67 @@ describe("CartStore.handleFormSubmit — error handling", () => {
     ]);
     expect(store.getState().pending.attributes).toBe(true);
 
-    resolveUpdate(
-      0,
-      serverResult({ attributes: [{ key: "gift-message", value: "Happy birthday!" }] }),
-    );
+    // Resolved standard-event carts intentionally omit attributes; the
+    // event's top-level attributes describe the resulting state.
+    resolveUpdate(0, serverResult());
     await promise;
 
     expect(store.getState().pending.attributes).toBe(false);
     expect(store.getState().data.attributes).toEqual([
       { key: "gift-message", value: "Happy birthday!" },
     ]);
+  });
+
+  it("restores baseline attributes when the result resolves with userErrors", async () => {
+    store.hydrate(
+      makeCartState({
+        id: "gid://shopify/Cart/attributes-user-errors",
+        attributes: [{ key: "gift-message", value: "Old" }],
+      }),
+    );
+    const event = submitForm(
+      { attributeKey: "gift-message", attributeValue: "New" },
+      "intent",
+      "attributes-update",
+    );
+    const promise = store.handleFormSubmit(event);
+    await nextTick();
+
+    expect(store.getState().data.attributes).toEqual([{ key: "gift-message", value: "New" }]);
+
+    resolveUpdate(0, {
+      ...serverResult(),
+      userErrors: [
+        { code: "INVALID", message: "Invalid gift message", field: ["attributes", "0"] },
+      ],
+    });
+    await promise;
+
+    const state = store.getState();
+    expect(state.data.attributes).toEqual([{ key: "gift-message", value: "Old" }]);
+    expect(state.pending.attributes).toBe(false);
+    expect(state.errors.attributes.get("gift-message")?.userErrors).toEqual([
+      { code: "INVALID", message: "Invalid gift message", field: ["attributes", "0"] },
+    ]);
+  });
+
+  it("preserves attributes when other cart mutations resolve", async () => {
+    store.hydrate(
+      makeCartState({
+        id: "gid://shopify/Cart/attributes-preserved",
+        attributes: [{ key: "gift-message", value: "Keep me" }],
+      }),
+    );
+    const event = submitForm({ note: "new note" }, "intent", "note-update");
+    const promise = store.handleFormSubmit(event);
+    await nextTick();
+
+    // Resolved standard-event carts omit attributes entirely.
+    resolveUpdate(0, serverResult());
+    await promise;
+
+    expect(store.getState().data.note).toBe("new note");
+    expect(store.getState().data.attributes).toEqual([{ key: "gift-message", value: "Keep me" }]);
   });
 
   it("rolls back rejected attributes and scopes errors by attribute key", async () => {
