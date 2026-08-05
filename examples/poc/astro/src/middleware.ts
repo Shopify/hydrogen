@@ -1,10 +1,10 @@
 import { getBuyerIp } from "@shared/buyer-ip";
-import { defaultI18n, storefrontConfig } from "@shared/config";
-import { getPrivateStorefrontToken } from "@shared/private-env";
+import { defaultI18n } from "@shared/config";
 import {
   STOREFRONT_CACHE_MAX_ENTRIES,
   createStorefrontCacheAdapter,
 } from "@shared/storefront-cache";
+import { resolveStorefrontConfig } from "@shared/storefront-config";
 import {
   createCartServerHandlers,
   createStorefrontClient,
@@ -78,12 +78,14 @@ function applyStorefrontResponseHeaders(
 }
 
 function createPrivateStorefrontClient(requestContext: ShopifyRequestContext, buyerIp: string) {
+  const { storeDomain, privateStorefrontToken } = resolveStorefrontConfig("hydrogen-example-astro");
+
   return createStorefrontClient({
     type: "private",
     requestContext,
     config: {
-      storeDomain: storefrontConfig.storeDomain,
-      privateStorefrontToken: getPrivateStorefrontToken(),
+      storeDomain,
+      privateStorefrontToken,
       buyerIp,
       cache: storefrontCache,
     },
