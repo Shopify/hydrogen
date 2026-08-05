@@ -41,8 +41,11 @@ export type ShopifyGlobal = {
   navigate?: (url: string) => void | Promise<void>;
   routes: {
     root: string;
+    /** @internal */
     match?: (url: string) => ShopifyStandardRouteMatch | null;
+    /** @internal */
     resolve?: (url: string) => string;
+    /** @internal */
     navigate?: (url: string) => void | Promise<void>;
     [key: string]: unknown;
   };
