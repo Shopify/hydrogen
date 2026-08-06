@@ -14,31 +14,23 @@ const accountLinkClassName =
  * external. A plain `<a>` forces a full-page navigation the proxy intercepts
  * cleanly — the native choice for handler-intercepted paths.
  *
- * Gated on availability (not just `isLoggedIn`): on mock.shop the handlers
- * aren't registered, so `/account/login` would 404. Hide the link entirely.
+ * `/account/login` only exists when Customer Account handlers are registered.
+ * Keep the icon visible for mock/unconfigured stores by linking to `/account`,
+ * where the page explains the required setup.
  */
 export async function HeaderAccountLink() {
   const available = isCustomerAccountsAvailable(); // sync — no await
-  if (!available) return null;
+  if (!available) return <AccountIconLink href="/account" label="Account" />;
 
   const loggedIn = await isCustomerLoggedIn();
-  if (loggedIn) {
-    return (
-      <a href="/account" className={accountLinkClassName} aria-label="Account">
-        <img
-          src="/icons/icon-user.svg"
-          width="20"
-          height="20"
-          alt=""
-          className="size-5"
-          aria-hidden="true"
-        />
-      </a>
-    );
-  }
+  if (loggedIn) return <AccountIconLink href="/account" label="Account" />;
 
+  return <AccountIconLink href="/account/login" label="Log in" />;
+}
+
+function AccountIconLink({ href, label }: { href: string; label: string }) {
   return (
-    <a href="/account/login" className={accountLinkClassName} aria-label="Log in">
+    <a href={href} className={accountLinkClassName} aria-label={label}>
       <img
         src="/icons/icon-user.svg"
         width="20"
@@ -53,8 +45,8 @@ export async function HeaderAccountLink() {
 
 export function HeaderAccountLinkFallback() {
   // Icon-sized placeholder (not the word "Account"): the resolved link renders
-  // a 20px user icon — or `null` on mock.shop — so showing text here would flash
-  // and swap to an icon. A dimmed icon matches the header's icon-button sizing.
+  // a 20px user icon, so showing text here would flash and swap to an icon.
+  // A dimmed icon matches the header's icon-button sizing.
   return (
     <span
       role="status"
