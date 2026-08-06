@@ -1,32 +1,16 @@
-import type { StorefrontClient } from "../client";
-import type { ShopifyRequestContext } from "./headers";
 import { handleAgentProxy } from "./interceptors/agent-proxy";
 import { handleAjaxApi } from "./interceptors/ajax-api";
 import { handleCheckoutRedirect } from "./interceptors/checkout";
 import { handleMcpProxy } from "./interceptors/mcp-proxy";
 import { handleSfapiProxy } from "./interceptors/sfapi-proxy";
-import {
-  handleShopifyRouteHandlers,
-  type ShopifyRouteHandlerGroup,
-  type ShopifyRouteSessionManager,
-} from "./route-handlers";
+import { handleShopifyRouteHandlers } from "./route-handlers";
+import type { HydrogenRouteHandler, HydrogenRoutesOptions } from "./route-types";
 
-export type HydrogenRoutesOptions = {
-  request: Request;
-  sessionManager: ShopifyRouteSessionManager;
-  storefrontClient: StorefrontClient;
-  requestContext: ShopifyRequestContext;
-  handlers?: readonly ShopifyRouteHandlerGroup[];
-};
-
-export type HydrogenRouteHandler<TExtraOptions extends object = object> = (
-  options: HydrogenRoutesOptions & TExtraOptions,
-) => null | Promise<Response>;
-
-export type HydrogenRouteInterceptor<TExtraOptions extends object = object> = (
-  url: URL,
-  ...args: Parameters<HydrogenRouteHandler<TExtraOptions>>
-) => ReturnType<HydrogenRouteHandler<TExtraOptions>>;
+export type {
+  HydrogenRouteHandler,
+  HydrogenRouteInterceptor,
+  HydrogenRoutesOptions,
+} from "./route-types";
 
 /**
  * Matches a request against Shopify standard routes and any registered handler

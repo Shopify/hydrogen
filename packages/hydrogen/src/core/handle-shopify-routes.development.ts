@@ -1,9 +1,6 @@
-import {
-  handleShopifyRoutes,
-  type HydrogenRouteHandler,
-  type HydrogenRoutesOptions,
-} from "./handle-shopify-routes";
+import { handleShopifyRoutes } from "./handle-shopify-routes";
 import { handleGraphiql } from "./interceptors/graphiql";
+import type { HydrogenRouteHandler, HydrogenRoutesOptions } from "./route-types";
 import type { GraphiQLOptions } from "./types";
 
 type HydrogenRoutesDevOptions = {

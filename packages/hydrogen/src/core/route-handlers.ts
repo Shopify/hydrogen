@@ -1,74 +1,28 @@
-import type { StorefrontClient } from "../client";
-import type { HydrogenRouteInterceptor } from "./handle-shopify-routes";
-import type { ShopifyRequestContext } from "./headers";
+import type {
+  CallableRouteHandler,
+  HydrogenRouteInterceptor,
+  ShopifyRouteHandler,
+  ShopifyRouteHandlerContext,
+  ShopifyRouteHandlerResult,
+} from "./route-types";
+
+export type {
+  CallableRouteHandler,
+  ShopifyRouteError,
+  ShopifyRouteErrorResult,
+  ShopifyRouteHandler,
+  ShopifyRouteHandlerContext,
+  ShopifyRouteHandlerGroup,
+  ShopifyRouteHandlerResult,
+  ShopifyRouteJsonResult,
+  ShopifyRouteRedirectResult,
+  ShopifyRouteSessionManager,
+} from "./route-types";
 
 const HTTP_OK_STATUS = 200;
 const HTTP_SEE_OTHER_STATUS = 303;
 const HTTP_METHOD_NOT_ALLOWED_STATUS = 405;
 const HTTP_BAD_REQUEST_STATUS = 400;
-
-type Awaitable<T> = T | Promise<T>;
-
-export type ShopifyRouteSessionManager = {
-  getSessionOrigin(): Awaitable<string>;
-  getSessionItem(key: string): Awaitable<unknown>;
-  setSessionItem(key: string, value: unknown): Awaitable<void>;
-  removeSessionItem(key: string): Awaitable<void>;
-  commit?(): Awaitable<HeadersInit | void>;
-};
-
-export type ShopifyRouteHandlerContext = {
-  request: Request;
-  sessionManager: ShopifyRouteSessionManager;
-  storefrontClient: StorefrontClient;
-  requestContext: ShopifyRequestContext;
-};
-
-export type ShopifyRouteJsonResult<TData = unknown> = {
-  type: "json";
-  data: TData;
-  headers?: HeadersInit;
-};
-
-export type ShopifyRouteRedirectResult = {
-  type: "redirect";
-  location: string;
-  headers?: HeadersInit;
-};
-
-export type ShopifyRouteError = {
-  code: string;
-  message: string;
-};
-
-export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRouteError> = {
-  type: "error";
-  error: TError;
-  status?: number;
-  headers?: HeadersInit;
-};
-
-export type ShopifyRouteHandlerResult<
-  TData = unknown,
-  TError extends ShopifyRouteError = ShopifyRouteError,
-> = ShopifyRouteJsonResult<TData> | ShopifyRouteRedirectResult | ShopifyRouteErrorResult<TError>;
-
-export type CallableRouteHandler<
-  TContext,
-  TResult,
-  TPathname extends string = string,
-  TMethod extends string = string,
-> = ((context: TContext) => Promise<TResult>) & {
-  readonly pathname: TPathname;
-  readonly method: TMethod;
-};
-
-export type ShopifyRouteHandler<
-  TPathname extends string = string,
-  TMethod extends string = string,
-> = CallableRouteHandler<ShopifyRouteHandlerContext, ShopifyRouteHandlerResult, TPathname, TMethod>;
-
-export type ShopifyRouteHandlerGroup = Record<string, ShopifyRouteHandler>;
 
 export function createShopifyRouteHandler<
   const TPathname extends string,

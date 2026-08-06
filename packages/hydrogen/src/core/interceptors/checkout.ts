@@ -1,7 +1,7 @@
 import type { StorefrontClient } from "../../client";
 import { getCart, getCartId } from "../cart/get-cart";
-import type { HydrogenRouteInterceptor } from "../handle-shopify-routes";
 import { getLogger } from "../logging";
+import type { HydrogenRouteInterceptor } from "../route-types";
 import { CART_PERMALINK_RE, CHECKOUT_RE } from "../url";
 
 const log = getLogger("checkout");
