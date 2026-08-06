@@ -19,13 +19,17 @@ export type HydrogenRoutesOptions = {
   handlers?: readonly ShopifyRouteHandlerGroup[];
 };
 
+export type HydrogenRouteInterceptor<TExtraOptions extends object = object> = (
+  options: HydrogenRoutesOptions & TExtraOptions,
+) => null | Promise<Response>;
+
 /**
  * Matches a request against Shopify standard routes and any registered handler
  * groups, returning a raw `Response` (redirect or JSON) when one matches, or
  * `null` when none do. Use it as the first step of request handling, before
  * framework routing.
  */
-export function handleShopifyRoutes(options: HydrogenRoutesOptions): null | Promise<Response> {
+export const handleShopifyRoutes: HydrogenRouteInterceptor = (options) => {
   assertSingleRequestContext(options);
 
   const sfapiProxy = handleSfapiProxy(options);
@@ -45,7 +49,7 @@ export function handleShopifyRoutes(options: HydrogenRoutesOptions): null | Prom
 
   const ajaxApi = handleAjaxApi(options);
   return ajaxApi ? applyResponseHeadersFromPromise(options, ajaxApi) : null;
-}
+};
 
 function assertSingleRequestContext(options: HydrogenRoutesOptions): void {
   if (options.requestContext === options.storefrontClient.requestContext) return;

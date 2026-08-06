@@ -1,4 +1,5 @@
 import type { StorefrontClient } from "../client";
+import type { HydrogenRouteInterceptor } from "./handle-shopify-routes";
 import type { ShopifyRequestContext } from "./headers";
 
 const HTTP_OK_STATUS = 200;
@@ -69,10 +70,6 @@ export type ShopifyRouteHandler<
 
 export type ShopifyRouteHandlerGroup = Record<string, ShopifyRouteHandler>;
 
-export type ShopifyRouteHandlerOptions = ShopifyRouteHandlerContext & {
-  handlers?: readonly ShopifyRouteHandlerGroup[];
-};
-
 export function createShopifyRouteHandler<
   const TPathname extends string,
   const TMethod extends string,
@@ -97,13 +94,13 @@ export function createCallableRouteHandler<
   return Object.assign(handler, { pathname, method });
 }
 
-export function handleShopifyRouteHandlers({
+export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = ({
   request,
   sessionManager,
   storefrontClient,
   requestContext,
   handlers = [],
-}: ShopifyRouteHandlerOptions): Promise<Response> | null {
+}) => {
   const routeHandlers = handlers.flatMap((group) => Object.values(group));
   if (routeHandlers.length === 0) return null;
 
@@ -120,7 +117,7 @@ export function handleShopifyRouteHandlers({
   return match({ request, sessionManager, storefrontClient, requestContext }).then((result) =>
     createShopifyRouteResponse(result, request),
   );
-}
+};
 
 export function createShopifyRouteResponse(
   result: ShopifyRouteHandlerResult,

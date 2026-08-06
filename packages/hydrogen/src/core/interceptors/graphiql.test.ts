@@ -3,7 +3,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { PrivateStorefrontClient } from "../../client";
 import { createShopifyRequestContext } from "../headers";
 import { assert } from "../test-utils";
-import { handleGraphiql } from "./graphiql";
+import type { GraphiQLOptions } from "../types";
+import { handleGraphiql as handleGraphiqlImpl } from "./graphiql";
 
 const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
 
@@ -18,6 +19,25 @@ const storefrontClient = {
     i18n: DEFAULT_I18N,
   }),
 } satisfies PrivateStorefrontClient;
+
+function handleGraphiql(
+  request: Request,
+  client: PrivateStorefrontClient,
+  graphiql?: GraphiQLOptions,
+) {
+  return handleGraphiqlImpl({
+    request,
+    storefrontClient: client,
+    requestContext: client.requestContext,
+    sessionManager: {
+      getSessionOrigin: () => new URL(request.url).origin,
+      getSessionItem: () => undefined,
+      setSessionItem: () => undefined,
+      removeSessionItem: () => undefined,
+    },
+    graphiql,
+  });
+}
 
 describe("handleGraphiql", () => {
   beforeEach(() => {

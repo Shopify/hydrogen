@@ -1,4 +1,4 @@
-import type { HydrogenRoutesOptions } from "../handle-shopify-routes";
+import type { HydrogenRouteInterceptor, HydrogenRoutesOptions } from "../handle-shopify-routes";
 import { extractHeaders, REQUEST_GROUP_ID_HEADER } from "../headers";
 import { getLogger } from "../logging";
 
@@ -17,10 +17,10 @@ type ProxyDescriptor = {
   timeoutMs?: number;
 };
 
-export function createProxyInterceptor(descriptor: ProxyDescriptor) {
+export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRouteInterceptor {
   const log = getLogger(descriptor.scope);
   const formatError = descriptor.formatError ?? defaultFormatError;
-  return (options: HydrogenRoutesOptions): Promise<Response> | null => {
+  return (options) => {
     const { request, storefrontClient } = options;
     const url = new URL(request.url);
     if (!descriptor.match.test(url.pathname)) return null;

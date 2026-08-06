@@ -1,18 +1,23 @@
 import type { StorefrontClient } from "../../client";
+import type { HydrogenRouteInterceptor } from "../handle-shopify-routes";
 import type { GraphiQLOptions } from "../types";
 
 const DEV_SCHEMA_FETCH_TIMEOUT_MS = 10_000;
 
-export function handleGraphiql(
-  request: Request,
-  storefrontClient: StorefrontClient,
-  graphiqlOptions?: GraphiQLOptions,
-): null | Promise<Response> {
+type GraphiqlRouteOptions = {
+  graphiql?: GraphiQLOptions;
+};
+
+export const handleGraphiql: HydrogenRouteInterceptor<GraphiqlRouteOptions> = ({
+  request,
+  storefrontClient,
+  graphiql: graphiqlOptions,
+}) => {
   const url = new URL(request.url);
   if (request.method !== "GET" || url.pathname !== "/graphiql") return null;
 
   return createGraphiqlResponse(storefrontClient, graphiqlOptions);
-}
+};
 
 async function createGraphiqlResponse(
   storefrontClient: StorefrontClient,

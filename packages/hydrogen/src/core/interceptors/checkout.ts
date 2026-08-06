@@ -1,15 +1,12 @@
 import type { StorefrontClient } from "../../client";
 import { getCart, getCartId } from "../cart/get-cart";
-import type { HydrogenRoutesOptions } from "../handle-shopify-routes";
+import type { HydrogenRouteInterceptor } from "../handle-shopify-routes";
 import { getLogger } from "../logging";
 import { CART_PERMALINK_RE, CHECKOUT_RE } from "../url";
 
 const log = getLogger("checkout");
 
-export function handleCheckoutRedirect({
-  request,
-  storefrontClient,
-}: HydrogenRoutesOptions): Promise<Response> | null {
+export const handleCheckoutRedirect: HydrogenRouteInterceptor = ({ request, storefrontClient }) => {
   const url = new URL(request.url);
   if (!CHECKOUT_RE.test(url.pathname) && !CART_PERMALINK_RE.test(url.pathname)) {
     return null;
@@ -41,7 +38,7 @@ export function handleCheckoutRedirect({
         headers: { "content-type": "application/json" },
       });
     });
-}
+};
 
 async function getCheckoutRedirectUrl(
   request: Request,
