@@ -20,13 +20,22 @@ export type StandardHeaderName =
   | "access-control-request-headers"
   | "access-control-request-method"
   | typeof CACHE_CONTROL_HEADER
+  | "connection"
   | "content-length"
   | "content-type"
   | "cookie"
+  | "host"
+  | "keep-alive"
   | "origin"
+  | "proxy-authenticate"
+  | "proxy-authorization"
   | "referer"
   | typeof SERVER_TIMING_HEADER
   | typeof SURROGATE_CONTROL_HEADER
+  | "te"
+  | "trailer"
+  | "transfer-encoding"
+  | "upgrade"
   | "user-agent"
   | "x-requested-with";
 
@@ -104,4 +113,17 @@ export const AJAX_API_REQUEST_HEADER_ALLOWLIST = defineHeaderList(
   ...COMMON_PROXY_HEADER_ALLOWLIST,
   "content-length",
   "x-requested-with",
+);
+
+export const SHOPIFY_API_PROXY_REQUEST_HEADER_DENYLIST = defineHeaderList(
+  "connection",
+  "content-length",
+  "host",
+  "keep-alive",
+  "proxy-authenticate",
+  "proxy-authorization",
+  "te",
+  "trailer",
+  "transfer-encoding",
+  "upgrade",
 );

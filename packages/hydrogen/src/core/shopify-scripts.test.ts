@@ -249,6 +249,7 @@ describe("shopify scripts", () => {
       country: "CA",
       language: "fr",
     });
+    expect(window.Shopify?.routes.apiProxyPrefix).toBe("/__shopify");
     expect(getShopifyRoutesRoot()).toBe("/fr-ca/");
   });
 
@@ -793,7 +794,7 @@ describe("shopify scripts", () => {
     expect(html).toContain('<script id="shopify-global-bootstrap" nonce="test-nonce">');
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/"}');
+    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
     expect(html).not.toContain('"templates"');
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_CDN_ORIGIN}">`);
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_SHOP_APP_ORIGIN}">`);

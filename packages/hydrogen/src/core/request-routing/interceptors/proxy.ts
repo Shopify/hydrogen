@@ -4,8 +4,10 @@ import type { HydrogenRouteInterceptor, HydrogenRoutesOptions } from "../route-t
 
 const PROXY_TIMEOUT_MS = 30_000;
 
-type ProxyHeaderOptions = {
-  allow: readonly string[];
+type ProxyHeaderOptions = (
+  | { allow: readonly string[]; deny?: never }
+  | { allow?: never; deny: readonly string[] }
+) & {
   prepare?: (headers: Headers, options: HydrogenRoutesOptions, url: URL) => void;
 };
 
@@ -15,6 +17,7 @@ type ProxyDescriptor = {
   formatError?: (message: string) => unknown;
   scope: string;
   timeoutMs?: number;
+  rewritePathname?: (pathname: string) => string;
 };
 
 export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRouteInterceptor {
@@ -24,18 +27,10 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
     const { request, storefrontClient } = options;
     if (!descriptor.match.test(url.pathname)) return null;
 
-    const upstreamUrl = new URL(url.pathname + url.search, storefrontClient.storeUrl);
+    const upstreamPathname = descriptor.rewritePathname?.(url.pathname) ?? url.pathname;
+    const upstreamUrl = new URL(upstreamPathname + url.search, storefrontClient.storeUrl);
 
-    const forwardedHeaders = new Headers(
-      extractHeaders((key) => request.headers.get(key), descriptor.headers.allow),
-    );
-    forwardedHeaders.set(
-      REQUEST_GROUP_ID_HEADER,
-      request.headers.get(REQUEST_GROUP_ID_HEADER) ??
-        request.headers.get("x-request-id") ??
-        request.headers.get("request-id") ??
-        crypto.randomUUID(),
-    );
+    const forwardedHeaders = createProxyRequestHeaders(descriptor, request);
     descriptor.headers.prepare?.(forwardedHeaders, options, url);
 
     const init: RequestInit & { duplex?: "half" } = {
@@ -72,6 +67,22 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
 
 function defaultFormatError(message: string): { error: string } {
   return { error: message };
+}
+
+function createProxyRequestHeaders(descriptor: ProxyDescriptor, request: Request): Headers {
+  const { allow, deny } = descriptor.headers;
+  const headers = allow
+    ? new Headers(extractHeaders((key) => request.headers.get(key), allow))
+    : new Headers(request.headers);
+  for (const header of deny ?? []) headers.delete(header);
+  headers.set(
+    REQUEST_GROUP_ID_HEADER,
+    request.headers.get(REQUEST_GROUP_ID_HEADER) ??
+      request.headers.get("x-request-id") ??
+      request.headers.get("request-id") ??
+      crypto.randomUUID(),
+  );
+  return headers;
 }
 
 export function createProxyResponseHeaders(upstreamHeaders: Headers): Headers {
