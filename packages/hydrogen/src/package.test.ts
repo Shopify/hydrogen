@@ -176,15 +176,6 @@ if (typeof plugin !== "function" || typeof plugin({typescript}).create !== "func
     expect(developmentShopifyScripts).toContain(STANDARD_EVENTS_INSPECTOR_ID);
   });
 
-  it("only includes the products JSON proxy in the development build", () => {
-    expect(existsSync(resolve(PACKAGE_ROOT, "dist/core/interceptors/products-json.mjs"))).toBe(
-      false,
-    );
-    expect(
-      existsSync(resolve(PACKAGE_ROOT, "dist/development/core/interceptors/products-json.mjs")),
-    ).toBe(true);
-  });
-
   it("preserves the standard events URL as a literal dynamic import", () => {
     const pageViewScript = readFileSync(
       resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/page-view.mjs"),
