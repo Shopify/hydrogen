@@ -1,69 +1,61 @@
 import { useEffect } from "react";
+import type { MetaFunction } from "react-router";
 
-import { publishCartViewed } from "~/components/AnalyticsTrackers";
-import { CartLineItem } from "~/components/CartDrawer";
+import { CartContent } from "~/components/CartContent";
+import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
 import { useCart } from "~/lib/cart";
-import { formatPrice } from "~/lib/money";
+import { content } from "~/lib/content";
+import { shopNameFromMatches, shopTitle, siteOriginFromMatches } from "~/lib/meta";
+import { canonicalUrl } from "~/lib/site";
 
 import type { Route } from "./+types/cart";
 
-export function meta({}: Route.MetaArgs) {
-  return [{ title: "Cart · CORE" }];
-}
+export const meta: MetaFunction = ({ matches }) => {
+  const title = shopTitle("Cart", shopNameFromMatches(matches));
+  const siteOrigin = siteOriginFromMatches(matches);
+  return [
+    { title },
+    { name: "description", content: content.cart.title },
+    { tagName: "link", rel: "canonical", href: canonicalUrl("/cart", siteOrigin) },
+    { property: "og:title", content: title },
+    { property: "og:type", content: "website" },
+  ];
+};
 
-export default function CartRoute() {
+export default function CartRoute(_: Route.ComponentProps) {
+  const totalQuantity = useCart((state) => state.data.totalQuantity);
+  const checkoutUrl = useCart((state) => state.data.checkoutUrl);
   const cart = useCart((state) => state.data);
-  const loading = useCart((state) => state.loading);
-  const lines = cart.lines.nodes;
+  const isEmpty = totalQuantity === 0;
 
   useEffect(() => {
-    publishCartViewed(cart);
-  }, [cart]);
+    const analytics = getAnalytics();
+    if (!analytics) return;
+    analytics.publish(AnalyticsEvent.CART_VIEWED, {
+      cart: cart.id ? cart : null,
+    });
+  }, [cart.id]);
 
   return (
-    <main
-      id="main-content"
-      tabIndex={-1}
-      className="max-w-page px-margin mx-auto w-full flex-1 py-12"
-    >
-      <h1 className="type-display text-on-surface mb-8">Cart</h1>
-      {loading ? <p className="text-on-surface-secondary">Loading cart…</p> : null}
-      {!loading && lines.length === 0 ? (
-        <div>
-          <p className="text-on-surface font-medium">Your cart is empty.</p>
-          <p className="text-on-surface-secondary mt-2 text-sm">
-            Looks like you haven&apos;t added anything to your cart yet.
-          </p>
-        </div>
-      ) : null}
-      {lines.length > 0 ? (
-        <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
-          <ul role="list" className="divide-border divide-y">
-            {lines.map((line) => (
-              <CartLineItem key={line.id} line={line} />
-            ))}
-          </ul>
-          <aside className="border-border h-fit rounded border p-4" aria-label="Cart summary">
-            <div className="flex items-center justify-between">
-              <span className="text-on-surface text-sm font-medium">Estimated total</span>
-              <span className="text-on-surface text-base font-medium">
-                {formatPrice(cart.cost.totalAmount)}
-              </span>
-            </div>
-            <p className="text-on-surface-secondary mt-3 text-xs">
-              Taxes and shipping calculated at checkout
-            </p>
-            {cart.checkoutUrl ? (
-              <a
-                href={cart.checkoutUrl}
-                className="rounded-button button-primary focus-visible:outline-accent mt-4 inline-flex h-11 w-full items-center justify-center gap-2 px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
-              >
-                Checkout
-              </a>
-            ) : null}
-          </aside>
-        </div>
-      ) : null}
-    </main>
+    <div className="max-w-page px-margin mx-auto w-full py-8">
+      <h1 className="type-display mb-8" data-cart-heading tabIndex={-1}>
+        {content.cart.title}
+      </h1>
+
+      <div className="mx-auto max-w-2xl">
+        <CartContent />
+
+        {!isEmpty && checkoutUrl ? (
+          <div className="border-border mt-6 border-t pt-4">
+            <a
+              href={checkoutUrl}
+              className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 w-full items-center justify-center px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              {content.cart.checkout}
+            </a>
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 }

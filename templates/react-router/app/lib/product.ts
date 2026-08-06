@@ -1,9 +1,10 @@
 import { createProductComponents } from "@shopify/hydrogen/react";
 
-import type { Route } from "../routes/+types/product";
+import type { ProductData } from "./product-query";
 
-type ProductData = Route.ComponentProps["loaderData"]["product"];
-export type ProductVariantData = NonNullable<ProductData["selectedOrFirstAvailableVariant"]>;
-
-export const { ProductProvider, useProduct, useProductForm } =
-  createProductComponents<ProductData>();
+/**
+ * React product bindings derived from the typed product query
+ * (`hydrogen-variant-form` / `references/react.md`). The provider owns variant
+ * selection state; `onSelect` is where same-product URL sync happens.
+ */
+export const { ProductProvider, useProductForm } = createProductComponents<ProductData>();

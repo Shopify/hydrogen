@@ -104,7 +104,8 @@ Generate or refresh the lockfile whenever `templates/react-router/package.json` 
   commit the result, then copy that committed lockfile back.
 
 Verify the lockfile's `node_modules/@shopify/hydrogen` entry resolves to a `0.0.0-preview-*` version with an integrity
-hash (not a `link:` or vendored `file:` entry). Keep the generator workflow in sync with dependency-file path filters.
+hash and a public `https://registry.npmjs.org/` tarball URL (not `link:`, vendored `file:`, or an internal registry URL).
+Keep the generator workflow in sync with dependency-file path filters.
 
 ### `minimumReleaseAge` supply-chain policy (org environments)
 
@@ -168,7 +169,7 @@ template ships into users' repos, so it cannot rely on a relative path to the re
 
    The fastest way to deploy is the button above — it creates a new Oxygen project from this template and links it to your Shopify store.
 
-   When you deploy from the command line with `npm run deploy`, a linked storefront injects your env vars (`PUBLIC_STORE_DOMAIN`, `PRIVATE_STOREFRONT_API_TOKEN`, `SESSION_SECRET`) automatically, so the deployed site connects to your store with no extra config.
+   When you deploy from the command line with `npm run deploy`, a linked storefront injects your store env vars (`PUBLIC_STORE_DOMAIN`, `PRIVATE_STOREFRONT_API_TOKEN`) automatically, so the deployed site connects to your store with no extra config.
    ```
 
 The button's `template=react-router` query param and the image URL's `preview` branch path are fixed — keep them
@@ -182,7 +183,7 @@ in place, so the template does not need to ship a copy.)
 Before finishing:
 
 1. Install with `CI=true` (see Prerequisites).
-2. Run `rg -n "@shared/|examples/shared|localCdnAssets|localHttps|hydrogen-classic|@react-router/node|@react-router/serve|lru-cache|catalog:|process\\.env|workspace:|file:./shopify-hydrogen" templates/<name> -g '!pnpm-lock.yaml' -g '!package-lock.json' -g '!node_modules'`. Exclude `pnpm-lock.yaml`, `package-lock.json`, and `node_modules` — lockfiles can legitimately list transitive `@react-router/node`, `@react-router/serve`, and `lru-cache` even after the template drops them as direct deps; scanning them produces false positives.
+2. Run `rg -n "@shared/|examples/shared|localCdnAssets|localHttps|hydrogen-classic|@react-router/node|@react-router/serve|lru-cache|catalog:|process\\.env|workspace:|file:./shopify-hydrogen" templates/<name> -g '!pnpm-lock.yaml' -g '!package-lock.json' -g '!node_modules' -g '!.agents/**'`. Exclude `pnpm-lock.yaml`, `package-lock.json`, `node_modules`, and `.agents/**` — lockfiles and embedded docs can legitimately mention transitive packages or illustrative framework snippets after the template drops them as direct runtime deps.
 3. Run the template typecheck (`react-router typegen && tsc --noEmit && hydrogen gql check --fail-on-warn`).
 4. Run the template build.
 5. **Actually drive both runtimes, don't just check that a server starts** (static assets can serve even when the Worker isn't exercised):

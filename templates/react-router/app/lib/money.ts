@@ -1,21 +1,18 @@
 import { formatMoney, type MoneyV2 } from "@shopify/hydrogen";
 
+/**
+ * App wrapper around Hydrogen's `formatMoney()` (`hydrogen-money` skill).
+ * Keeps locale and display options consistent. Never build money strings by
+ * concatenation and never compute totals client-side.
+ *
+ * This storefront is single-market (US/EN), so `en-US` is the correct locale.
+ * Market-aware stores would pass the active market locale instead.
+ */
 export function formatPrice(money: MoneyV2, locale = "en-US"): string {
   return formatMoney(money, { locale }).toString();
 }
 
-export function compareMoney(a: MoneyV2 | null | undefined, b: MoneyV2 | null | undefined): number {
-  if (!a || !b) return 0;
-  return Number.parseFloat(a.amount) - Number.parseFloat(b.amount);
-}
-
-export function salePercent(
-  price: MoneyV2,
-  compareAtPrice: MoneyV2 | null | undefined,
-): number | null {
-  if (!compareAtPrice) return null;
-  const current = Number.parseFloat(price.amount);
-  const compare = Number.parseFloat(compareAtPrice.amount);
-  if (!Number.isFinite(current) || !Number.isFinite(compare) || compare <= current) return null;
-  return Math.round(((compare - current) / compare) * 100);
+/** Format a price range from min/max `MoneyV2` values. */
+export function formatPriceRange(min: MoneyV2, max: MoneyV2, locale = "en-US"): string {
+  return formatMoney([min, max], { locale }).toString();
 }

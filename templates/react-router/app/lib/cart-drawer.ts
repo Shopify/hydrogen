@@ -1,54 +1,69 @@
 export const CART_DRAWER_ID = "cart-drawer";
-export const MOBILE_NAV_DRAWER_ID = "mobile-nav-drawer";
+const STANDARD_ACTIONS_READY_EVENT = "DOMContentLoaded";
 
 let openCartActionConfigured = false;
 let openCartActionRetryQueued = false;
 
-function getDialog(id: string): HTMLDialogElement | null {
+/* --- Drawer open-state store (for `aria-expanded` on the cart trigger) ---
+   The drawer opens via `showModal()` and can close via `closeCartDrawer()`,
+   the ESC key, or a backdrop click (all fire the `<dialog>` `close` event).
+   `useSyncExternalStore`-compatible so the cart trigger can reflect real open
+   state instead of a hardcoded value. */
+let cartDrawerOpen = false;
+const listeners = new Set<() => void>();
+let closeListenerWired = false;
+
+function notifyCartDrawerOpen() {
+  for (const listener of listeners) listener();
+}
+
+function syncFromDrawer(drawer: HTMLDialogElement | null) {
+  const next = drawer?.open ?? false;
+  if (next !== cartDrawerOpen) {
+    cartDrawerOpen = next;
+    notifyCartDrawerOpen();
+  }
+}
+
+function ensureCloseListener(drawer: HTMLDialogElement) {
+  if (closeListenerWired) return;
+  drawer.addEventListener("close", () => syncFromDrawer(getCartDrawer()), { passive: true });
+  closeListenerWired = true;
+}
+
+export function subscribeCartDrawerOpen(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+export function getCartDrawerOpen() {
+  return cartDrawerOpen;
+}
+
+function getCartDrawer() {
   if (typeof document === "undefined") return null;
-  const dialog = document.getElementById(id);
-  return dialog instanceof HTMLDialogElement ? dialog : null;
+
+  const drawer = document.getElementById(CART_DRAWER_ID);
+  return drawer instanceof HTMLDialogElement ? drawer : null;
 }
 
-function supportsDialogCommands(): boolean {
-  if (typeof HTMLButtonElement === "undefined") return false;
-  return (
-    "command" in HTMLButtonElement.prototype && "commandForElement" in HTMLButtonElement.prototype
-  );
+/** Open the cart drawer (`<dialog>` + `showModal()`). */
+export function openCartDrawer() {
+  const drawer = getCartDrawer();
+  if (!drawer || drawer.open) return;
+  ensureCloseListener(drawer);
+  drawer.showModal();
+  syncFromDrawer(drawer);
 }
 
-export function openDialog(id: string): void {
-  const dialog = getDialog(id);
-  if (!dialog || dialog.open) return;
-  dialog.showModal();
+/** Close the cart drawer. */
+export function closeCartDrawer() {
+  const drawer = getCartDrawer();
+  drawer?.close();
+  syncFromDrawer(drawer);
 }
 
-export function closeDialog(id: string): void {
-  getDialog(id)?.close();
-}
-
-export function openCartDrawer(): void {
-  openDialog(CART_DRAWER_ID);
-}
-
-export function closeCartDrawer(): void {
-  closeDialog(CART_DRAWER_ID);
-}
-
-export function openMobileNavDrawer(): void {
-  openDialog(MOBILE_NAV_DRAWER_ID);
-}
-
-export function closeMobileNavDrawer(): void {
-  closeDialog(MOBILE_NAV_DRAWER_ID);
-}
-
-export function openDialogFallback(id: string): void {
-  if (supportsDialogCommands()) return;
-  openDialog(id);
-}
-
-function configureOpenCartActionNow(): boolean {
+function configureOpenCartActionNow() {
   const openCart = typeof window !== "undefined" ? window.Shopify?.actions?.openCart : undefined;
   if (!openCart) return false;
 
@@ -59,14 +74,21 @@ function configureOpenCartActionNow(): boolean {
   return true;
 }
 
-export function configureOpenCartAction(): void {
+/**
+ * Register the drawer's DOM helper as the `window.Shopify.actions.openCart()`
+ * Standard Action handler (`hydrogen-cart-drawer` skill). The module-scope call
+ * no-ops during SSR, configures immediately when Standard Actions is available,
+ * and retries once on `DOMContentLoaded` when the runtime loads after this
+ * module.
+ */
+export function configureOpenCartAction() {
   if (typeof document === "undefined" || openCartActionConfigured) return;
   if (configureOpenCartActionNow()) return;
   if (openCartActionRetryQueued || document.readyState !== "loading") return;
 
   openCartActionRetryQueued = true;
   document.addEventListener(
-    "DOMContentLoaded",
+    STANDARD_ACTIONS_READY_EVENT,
     () => {
       openCartActionRetryQueued = false;
       configureOpenCartAction();
