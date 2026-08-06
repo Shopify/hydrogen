@@ -21,6 +21,7 @@ const routesProp: PropType<NonNullable<ShopifyRoutesOptions["routes"]>> | null =
 const shopProp: PropType<ShopifyScriptsShop> = Object;
 const consentProp: PropType<ShopifyScriptTagsOptions["consent"]> = Object;
 const analyticsProp: PropType<ShopifyScriptTagsOptions["analytics"]> = Object;
+const debugProp: PropType<ShopifyScriptTagsOptions["debug"]> = Object;
 const inboxProp: PropType<ShopifyScriptTagsOptions["inbox"]> = [Boolean, Object];
 
 export const ShopifyScripts = defineComponent({
@@ -50,6 +51,10 @@ export const ShopifyScripts = defineComponent({
       type: analyticsProp,
       default: undefined,
     },
+    debug: {
+      type: debugProp,
+      default: undefined,
+    },
     webMcp: {
       type: Boolean,
       default: undefined,
@@ -76,6 +81,7 @@ export const ShopifyScripts = defineComponent({
       getShopifyScriptTags({
         analytics: props.analytics,
         consent: props.consent,
+        debug: props.debug,
         i18n: props.i18n,
         nonce: props.nonce,
         shop: props.shop,

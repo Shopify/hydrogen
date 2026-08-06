@@ -2,7 +2,9 @@ import { DEFAULT_STANDARD_ROUTES, isStandardRouteName, isStandardRouteParamName 
 import { parseSameOriginUrl, stripI18nPathPrefix, stripTrailingSlash } from "./path";
 import type {
   ShopifyRouteTemplates,
+  ShopifyPageTemplateName,
   ShopifyStandardRouteMatch,
+  ShopifyStandardRouteName,
   StandardRouteName,
   StandardRouteParams,
 } from "./types";
@@ -28,6 +30,9 @@ export function matchStandardRouteUrl({
   const parsedUrl = parseSameOriginUrl(url, baseUrl);
   if (!parsedUrl) return null;
 
+  const pathname = stripI18nPathPrefix(stripTrailingSlash(parsedUrl.pathname), pathPrefix);
+  if (pathname === "/") return { route: "index", pageTemplateName: "index", params: {} };
+
   return matchStandardRouteTemplates(parsedUrl.pathname, pathPrefix, (route) => [
     routeTemplates[route],
     DEFAULT_STANDARD_ROUTES[route],
@@ -45,7 +50,7 @@ export function matchStandardRouteTemplates(
   pathname: string,
   pathPrefix: string | undefined,
   getTemplatesForRoute: (route: StandardRouteName) => ReadonlyArray<string | undefined>,
-): ShopifyStandardRouteMatch | null {
+): ShopifyStandardRouteMatch<StandardRouteName> | null {
   const normalizedPathname = stripI18nPathPrefix(stripTrailingSlash(pathname), pathPrefix);
 
   for (const route in DEFAULT_STANDARD_ROUTES) {
@@ -55,11 +60,31 @@ export function matchStandardRouteTemplates(
       if (!template) continue;
 
       const match = matchRouteTemplate(normalizedPathname, template);
-      if (match) return { route, params: match };
+      if (match) {
+        return {
+          route,
+          params: match,
+          pageTemplateName: normalizeStandardRouteTemplateName(route),
+        };
+      }
     }
   }
 
   return null;
+}
+
+/**
+ * Converts a standard route identity to the corresponding
+ * page template name that matches the convention in Liquid.
+ * Collection-scoped product URLs still render the `product` template.
+ */
+function normalizeStandardRouteTemplateName<TRoute extends ShopifyStandardRouteName>(
+  route: TRoute,
+): ShopifyPageTemplateName<TRoute>;
+function normalizeStandardRouteTemplateName(
+  route: ShopifyStandardRouteName,
+): ShopifyPageTemplateName {
+  return route === "productInCollection" ? "product" : route;
 }
 
 /**

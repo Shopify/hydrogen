@@ -92,6 +92,7 @@ describe("ShopifyScripts", () => {
     });
     const html = renderToStaticMarkup(
       createElement(ShopifyScripts, {
+        debug: { standardEventsInspector: true },
         i18n: { country: "US", language: "EN" },
         nonce: "test-nonce",
         routes: routeTemplates,
@@ -114,6 +115,7 @@ describe("ShopifyScripts", () => {
     expect(html).toContain(
       `<script id="shopify-standard-actions" type="module" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}"></script>`,
     );
+    expect(html).toContain("shopify-standard-events-inspector");
     expect(html).toContain(
       `<script id="shopify-inbox" type="module" async="" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_INBOX_SCRIPT}"></script>`,
     );
@@ -276,14 +278,16 @@ describe("ShopifyScripts", () => {
     );
 
     await waitFor(() => {
-      expect(window.Shopify?.navigate).toEqual(expect.any(Function));
+      expect(window.Shopify?.routes.navigate).toEqual(expect.any(Function));
+      expect(window.Shopify?.navigate).toBe(window.Shopify?.routes.navigate);
       expect(window.Shopify?.routes.match?.("/p/snowboard")).toEqual({
         route: "product",
+        pageTemplateName: "product",
         params: { productHandle: "snowboard" },
       });
       expect(window.Shopify?.routes.resolve?.("/products/snowboard")).toBe("/p/snowboard");
     });
-    window.Shopify?.navigate?.("/products/snowboard");
+    window.Shopify?.routes.navigate?.("/products/snowboard");
     expect(navigate).toHaveBeenCalledWith("/p/snowboard");
     expect(initializeShopifyScripts).toHaveBeenCalledWith({
       navigate,
