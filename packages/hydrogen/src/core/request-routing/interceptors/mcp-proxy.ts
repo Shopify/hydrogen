@@ -1,5 +1,5 @@
-import { MCP_REQUEST_HEADER_ALLOWLIST } from "../headers";
-import { MCP_RE } from "../url";
+import { MCP_REQUEST_HEADER_ALLOWLIST } from "../../headers";
+import { MCP_RE } from "../../url";
 import { createProxyInterceptor } from "./proxy";
 
 const JSON_RPC_INTERNAL_ERROR = -32603;

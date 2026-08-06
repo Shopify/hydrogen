@@ -1,5 +1,5 @@
-import { extractHeaders, REQUEST_GROUP_ID_HEADER } from "../headers";
-import { getLogger } from "../logging";
+import { extractHeaders, REQUEST_GROUP_ID_HEADER } from "../../headers";
+import { getLogger } from "../../logging";
 import type { HydrogenRouteInterceptor, HydrogenRoutesOptions } from "../route-types";
 
 const PROXY_TIMEOUT_MS = 30_000;

@@ -1,6 +1,6 @@
-import type { StorefrontClient } from "../../client";
+import type { StorefrontClient } from "../../../client";
+import type { GraphiQLOptions } from "../../types";
 import type { HydrogenRouteInterceptor } from "../route-types";
-import type { GraphiQLOptions } from "../types";
 
 const DEV_SCHEMA_FETCH_TIMEOUT_MS = 10_000;
 

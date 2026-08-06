@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { createStorefrontClient } from "../client/client";
+import { createStorefrontClient } from "../../client/client";
+import { createShopifyRequestContext } from "../headers";
+import { assert } from "../test-utils";
 import { handleShopifyRoutesDev as handleShopifyRoutesDevImpl } from "./handle-shopify-routes.development";
-import { createShopifyRequestContext } from "./headers";
-import { assert } from "./test-utils";
 
 const defaultConfig = {
   storeDomain: "test-store.myshopify.com",

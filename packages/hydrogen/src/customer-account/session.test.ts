@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createStorefrontClient } from "../client/client";
-import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../core/handle-shopify-routes";
 import { createShopifyRequestContext } from "../core/headers";
+import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../core/request-routing/handle-shopify-routes";
 import {
   createCustomerAccountServerHandlers,
   createCustomerSession,

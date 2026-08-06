@@ -6,7 +6,7 @@ import {
   type ShopifyRouteErrorResult,
   type ShopifyRouteRedirectResult,
   type ShopifyRouteSessionManager,
-} from "../core/route-handlers";
+} from "../core/request-routing/registered-routes";
 import { CustomerAccountApiError, CustomerAccountOAuthError } from "./errors";
 
 export const CUSTOMER_ACCOUNT_AUTHORIZE_PATH = "/account/authorize" as const;

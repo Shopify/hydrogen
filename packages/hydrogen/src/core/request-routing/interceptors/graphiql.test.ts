@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import type { PrivateStorefrontClient } from "../../client";
-import { createShopifyRequestContext } from "../headers";
-import { assert } from "../test-utils";
-import type { GraphiQLOptions } from "../types";
+import type { PrivateStorefrontClient } from "../../../client";
+import { createShopifyRequestContext } from "../../headers";
+import { assert } from "../../test-utils";
+import type { GraphiQLOptions } from "../../types";
 import { handleGraphiql as handleGraphiqlImpl } from "./graphiql";
 
 const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;

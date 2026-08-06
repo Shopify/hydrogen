@@ -1,5 +1,5 @@
-import { AJAX_API_REQUEST_HEADER_ALLOWLIST } from "../headers";
-import { AJAX_CART_RE } from "../url";
+import { AJAX_API_REQUEST_HEADER_ALLOWLIST } from "../../headers";
+import { AJAX_CART_RE } from "../../url";
 import { createProxyInterceptor } from "./proxy";
 
 export const handleAjaxApi = createProxyInterceptor({

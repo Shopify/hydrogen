@@ -1,8 +1,8 @@
-import type { StorefrontClient } from "../../client";
-import { getCart, getCartId } from "../cart/get-cart";
-import { getLogger } from "../logging";
+import type { StorefrontClient } from "../../../client";
+import { getCart, getCartId } from "../../cart/get-cart";
+import { getLogger } from "../../logging";
+import { CART_PERMALINK_RE, CHECKOUT_RE } from "../../url";
 import type { HydrogenRouteInterceptor } from "../route-types";
-import { CART_PERMALINK_RE, CHECKOUT_RE } from "../url";
 
 const log = getLogger("checkout");
 

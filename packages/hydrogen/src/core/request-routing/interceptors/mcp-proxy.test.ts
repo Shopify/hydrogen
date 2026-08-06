@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
-import { createShopifyRequestContext } from "../headers";
-import { configureLogging, resetLoggingForTests } from "../logging";
-import { assert, createTestLogger } from "../test-utils";
+import { createShopifyRequestContext } from "../../headers";
+import { configureLogging, resetLoggingForTests } from "../../logging";
+import { assert, createTestLogger } from "../../test-utils";
 import { handleMcpProxy as handleMcpProxyImpl } from "./mcp-proxy";
 
 const defaultStoreUrl = "https://test-store.myshopify.com";

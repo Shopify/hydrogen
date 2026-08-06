@@ -1,5 +1,5 @@
-import type { StorefrontClient } from "../client";
-import type { ShopifyRequestContext } from "./headers";
+import type { StorefrontClient } from "../../client";
+import type { ShopifyRequestContext } from "../headers";
 
 type Awaitable<T> = T | Promise<T>;
 

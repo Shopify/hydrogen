@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { createStorefrontClient } from "../../client/client";
+import { createStorefrontClient } from "../../../client/client";
+import { createShopifyRequestContext } from "../../headers";
+import { createShopifyRouteTemplates } from "../../standard-routes/index";
+import { assert } from "../../test-utils";
 import type { RedirectOptions } from "../handle-shopify-redirects";
-import { createShopifyRequestContext } from "../headers";
-import { createShopifyRouteTemplates } from "../standard-routes/index";
-import { assert } from "../test-utils";
 import { handleUrlRedirects as handleUrlRedirectsImpl } from "./url-redirects";
 
 type TestStorefrontConfig = {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { createShopifyRequestContext, SHOPIFY_CHAT_FRAME_ORIGIN_HEADER } from "../headers";
-import { assert } from "../test-utils";
+import { createShopifyRequestContext, SHOPIFY_CHAT_FRAME_ORIGIN_HEADER } from "../../headers";
+import { assert } from "../../test-utils";
 import { handleAgentProxy as handleAgentProxyImpl } from "./agent-proxy";
 
 const defaultStoreUrl = "https://test-store.myshopify.com";

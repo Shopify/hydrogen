@@ -2,8 +2,8 @@ import {
   SFAPI_REQUEST_HEADER_ALLOWLIST,
   SHOPIFY_CLIENT_IP_HEADER,
   STOREFRONT_BUYER_IP_HEADER,
-} from "../headers";
-import { SFAPI_RE } from "../url";
+} from "../../headers";
+import { SFAPI_RE } from "../../url";
 import { createProxyInterceptor } from "./proxy";
 
 export const handleSfapiProxy = createProxyInterceptor({

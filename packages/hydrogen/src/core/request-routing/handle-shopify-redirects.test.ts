@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-import { createStorefrontClient } from "../client/client";
-import type { I18nConfig } from "../client/types";
+import { createStorefrontClient } from "../../client/client";
+import type { I18nConfig } from "../../client/types";
+import { createShopifyRequestContext } from "../headers";
+import { configureLogging, resetLoggingForTests } from "../logging";
+import { createShopifyRouteTemplates } from "../standard-routes/index";
+import { assert, createTestLogger } from "../test-utils";
 import { handleShopifyRedirects } from "./handle-shopify-redirects";
-import { createShopifyRequestContext } from "./headers";
-import { configureLogging, resetLoggingForTests } from "./logging";
-import { createShopifyRouteTemplates } from "./standard-routes/index";
-import { assert, createTestLogger } from "./test-utils";
 
 const defaultConfig = {
   storeDomain: "test-store.myshopify.com",

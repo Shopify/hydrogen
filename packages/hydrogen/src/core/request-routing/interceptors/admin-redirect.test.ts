@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 
-import type { PrivateStorefrontClient } from "../../client";
+import type { PrivateStorefrontClient } from "../../../client";
+import { createShopifyRequestContext } from "../../headers";
+import { createShopifyRouteTemplates } from "../../standard-routes/index";
+import { assert } from "../../test-utils";
 import type { RedirectOptions } from "../handle-shopify-redirects";
-import { createShopifyRequestContext } from "../headers";
-import { createShopifyRouteTemplates } from "../standard-routes/index";
-import { assert } from "../test-utils";
 import { handleAdminRedirect } from "./admin-redirect";
 
 const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;

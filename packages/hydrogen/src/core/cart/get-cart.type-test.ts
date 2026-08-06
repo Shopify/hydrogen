@@ -1,7 +1,7 @@
 import { describe, it } from "vitest";
 
 import { createStorefrontClient } from "../../client";
-import { handleShopifyRoutes } from "../handle-shopify-routes";
+import { handleShopifyRoutes } from "../request-routing/handle-shopify-routes";
 import { createShopifyRequestContext } from "../headers";
 import { createCartServerHandlers } from "./server-handlers";
 

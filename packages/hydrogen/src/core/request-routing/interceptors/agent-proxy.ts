@@ -1,5 +1,5 @@
-import { AGENT_REQUEST_HEADER_ALLOWLIST, SHOPIFY_CHAT_FRAME_ORIGIN_HEADER } from "../headers";
-import { AGENT_BUYER_CLAIMS_RE } from "../url";
+import { AGENT_REQUEST_HEADER_ALLOWLIST, SHOPIFY_CHAT_FRAME_ORIGIN_HEADER } from "../../headers";
+import { AGENT_BUYER_CLAIMS_RE } from "../../url";
 import { createProxyInterceptor } from "./proxy";
 
 export const handleAgentProxy = createProxyInterceptor({

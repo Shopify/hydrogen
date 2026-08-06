@@ -5,9 +5,9 @@ import {
   SHOPIFY_CLIENT_IP_HEADER,
   STOREFRONT_BUYER_IP_HEADER,
   STOREFRONT_PRIVATE_TOKEN_HEADER,
-} from "../headers";
-import { configureLogging, resetLoggingForTests } from "../logging";
-import { assert, createTestLogger } from "../test-utils";
+} from "../../headers";
+import { configureLogging, resetLoggingForTests } from "../../logging";
+import { assert, createTestLogger } from "../../test-utils";
 import { handleSfapiProxy as handleSfapiProxyImpl } from "./sfapi-proxy";
 
 const defaultStoreUrl = "https://test-store.myshopify.com";

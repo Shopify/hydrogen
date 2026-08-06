@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { createStorefrontClient } from "../client/client";
-import { createCartServerHandlers } from "./cart/server-handlers";
+import { createStorefrontClient } from "../../client/client";
+import { createCartServerHandlers } from "../cart/server-handlers";
+import { createShopifyRequestContext } from "../headers";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "./handle-shopify-routes";
-import { createShopifyRequestContext } from "./headers";
-import { createShopifyRouteHandler } from "./route-handlers";
+import { createShopifyRouteHandler } from "./registered-routes";
 
 type TestStorefrontConfig = {
   storeDomain: string;

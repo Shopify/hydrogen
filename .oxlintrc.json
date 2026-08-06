@@ -119,7 +119,7 @@
         "packages/hydrogen/src/core/cart/standard-actions-adapter.ts",
         "packages/hydrogen/src/core/cart/state.ts",
         "packages/hydrogen/src/core/collection/collection.ts",
-        "packages/hydrogen/src/core/interceptors/graphiql.ts",
+        "packages/hydrogen/src/core/request-routing/interceptors/graphiql.ts",
         "packages/hydrogen/src/core/money/format.ts",
         "packages/hydrogen/src/core/observable.ts",
         "packages/hydrogen/src/core/product/product-form.ts",

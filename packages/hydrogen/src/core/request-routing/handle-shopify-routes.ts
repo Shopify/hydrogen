@@ -3,7 +3,7 @@ import { handleAjaxApi } from "./interceptors/ajax-api";
 import { handleCheckoutRedirect } from "./interceptors/checkout";
 import { handleMcpProxy } from "./interceptors/mcp-proxy";
 import { handleSfapiProxy } from "./interceptors/sfapi-proxy";
-import { handleShopifyRouteHandlers } from "./route-handlers";
+import { handleShopifyRouteHandlers } from "./registered-routes";
 import type { HydrogenRouteHandler, HydrogenRoutesOptions } from "./route-types";
 
 export type {
