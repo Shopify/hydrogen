@@ -2,7 +2,7 @@ import "server-only";
 import type { ShopAnalytics } from "@shopify/hydrogen";
 import { cacheLife, cacheTag } from "next/cache";
 
-import { shop as shopConfig } from "@/lib/config";
+import { defaultI18n, shop as shopConfig } from "@/lib/config";
 import { SHOP_ANALYTICS_QUERY } from "@/lib/queries";
 import { staticStorefrontClient } from "@/lib/storefront-static";
 
@@ -16,6 +16,15 @@ type ShopIdentity = {
   shopId: string;
   shopName: string;
   shopDescription: string | null;
+  currency: string;
+};
+
+type LocalizationData = {
+  localization?: {
+    country?: {
+      currency?: { isoCode?: string } | null;
+    } | null;
+  } | null;
 };
 
 export type AnalyticsShop = ShopAnalytics & ShopIdentity;
@@ -26,6 +35,7 @@ const SHOP_FALLBACK: ShopIdentity = {
   shopId: shopConfig.shopId ? `gid://shopify/Shop/${shopConfig.shopId}` : "",
   shopName: "CORE",
   shopDescription: null,
+  currency: defaultI18n.currency,
 };
 
 /** Cache the shop query result for hours (it almost never changes). */
@@ -42,7 +52,12 @@ async function fetchShopAnalytics(): Promise<ShopIdentity> {
     shopId: data?.shop?.id ?? SHOP_FALLBACK.shopId,
     shopName: data?.shop?.name ?? SHOP_FALLBACK.shopName,
     shopDescription: data?.shop?.description ?? null,
+    currency: getLocalizationCurrency(data),
   };
+}
+
+function getLocalizationCurrency(data: LocalizationData | null | undefined): string {
+  return data?.localization?.country?.currency?.isoCode ?? SHOP_FALLBACK.currency;
 }
 
 /**
@@ -67,6 +82,7 @@ export async function getAnalyticsShop(): Promise<AnalyticsShop> {
     storefrontId: shopConfig.storefrontId,
     shopName: resolved.shopName,
     shopDescription: resolved.shopDescription,
+    currency: resolved.currency,
   };
 }
 

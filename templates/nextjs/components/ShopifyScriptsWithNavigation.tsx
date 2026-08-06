@@ -16,11 +16,17 @@ import { routeTemplates } from "@/lib/route-templates";
  */
 type ShopConfig = NonNullable<ShopifyScriptsProps["shop"]>;
 
-export function ShopifyScriptsWithNavigation({ shop }: { shop: ShopConfig }) {
+export function ShopifyScriptsWithNavigation({
+  shop,
+  currency,
+}: {
+  shop: ShopConfig;
+  currency: string;
+}) {
   const router = useRouter();
   return (
     <ShopifyScripts
-      i18n={defaultI18n}
+      i18n={{ ...defaultI18n, currency }}
       shop={shop}
       consent={analyticsConsent}
       navigate={(url: string) => router.push(url)}
