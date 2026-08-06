@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
+import { SHOPIFY_STOREFRONT_ORIGIN_HEADER } from "../../headers";
 import { configureLogging, resetLoggingForTests } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
 import { assert, createTestLogger } from "../../test-utils";
@@ -128,18 +129,17 @@ describe("handleMcpProxy", () => {
     const [, init] = call;
     const headers = new Headers(init.headers);
     expect(headers.get("content-type")).toBe("application/json");
+    expect(headers.get(SHOPIFY_STOREFRONT_ORIGIN_HEADER)).toBe("https://my-app.com");
     expect(headers.get("user-agent")).toBe("test-agent");
   });
 
-  it("does NOT forward CORS or browser tracking headers", async () => {
+  it("filters CORS headers", async () => {
     const request = createRequest("/api/mcp", {
       headers: {
         "content-type": "application/json",
         "access-control-request-headers": "x-test",
         "access-control-request-method": "POST",
         "content-length": "100",
-        "X-Shopify-UniqueToken": "unique-token",
-        "X-Shopify-VisitToken": "visit-token",
       },
     });
 
@@ -152,8 +152,6 @@ describe("handleMcpProxy", () => {
     expect(headers.get("access-control-request-headers")).toBeNull();
     expect(headers.get("access-control-request-method")).toBeNull();
     expect(headers.get("content-length")).toBeNull();
-    expect(headers.get("X-Shopify-UniqueToken")).toBeNull();
-    expect(headers.get("X-Shopify-VisitToken")).toBeNull();
   });
 
   it("does not add server-side headers", async () => {

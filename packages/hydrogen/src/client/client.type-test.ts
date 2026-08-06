@@ -233,9 +233,7 @@ describe('type tests', () => {
           getForwardedRequestHeaders() {
             return new Headers();
           },
-          getSubrequestHeaders() {
-            return new Headers();
-          },
+          applyStorefrontRequestHeaders() {},
           captureSubrequestHeaders() {},
           applyResponseHeaders() {},
         },

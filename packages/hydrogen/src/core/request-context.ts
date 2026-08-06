@@ -6,10 +6,16 @@ import type {
   CountryCode as StorefrontCountryCode,
   LanguageCode as StorefrontLanguageCode,
 } from "../graphql/generated/storefront-api-types";
+import { STOREFRONT_API_VERSION } from "./constants";
 import {
   applyPrivateResponseCacheHeaders,
+  HYDROGEN_VERSION_HEADER,
   REQUEST_GROUP_ID_HEADER,
+  SDK_VARIANT_HEADER,
+  SDK_VARIANT_SOURCE_HEADER,
+  SDK_VERSION_HEADER,
   SERVER_TIMING_HEADER,
+  SHOPIFY_STOREFRONT_ORIGIN_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
@@ -54,10 +60,12 @@ type ShopifyRequestContextBase = {
   requestGroupId: string;
   signal?: AbortSignal;
   url?: string;
+  /** Origin of the storefront request URL. */
+  storefrontOrigin?: string;
   /** Return incoming request headers plus request lifecycle headers for proxy/origin handoff. */
   getForwardedRequestHeaders(): Headers;
-  /** Return mutable Storefront API subrequest headers from this request context. */
-  getSubrequestHeaders(): Headers;
+  /** Apply request-scoped headers required by every Shopify storefront subrequest. */
+  applyStorefrontRequestHeaders(headers: Headers): void;
   /** Capture the first fresh SFAPI response headers for replay onto the final app response. */
   captureSubrequestHeaders(headers: Headers): void;
   /** Mark the final app response as influenced by private customer state. */
@@ -81,6 +89,7 @@ type Context<I18n extends I18nConfig = I18nConfig> = {
   requestGroupId: string;
   signal?: AbortSignal;
   url?: string;
+  storefrontOrigin?: string;
   i18n: NormalizedI18nConfig<I18n>;
   documentRequest?: boolean;
 };
@@ -100,10 +109,12 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
   const i18n = normalizeI18n(input.i18n);
   const cookie = request.headers.get("cookie") || undefined;
   const url = request.url ?? request.headers.get(STOREFRONT_URL_HEADER) ?? undefined;
+  const storefrontOrigin = getUrlOrigin(url);
   const context = {
     ...(cookie && { cookie }),
     i18n,
     ...(url && { url }),
+    ...(storefrontOrigin && { storefrontOrigin }),
     ...(input.buyerIp && { buyerIp: input.buyerIp }),
     requestGroupId:
       request.headers.get(REQUEST_GROUP_ID_HEADER) ??
@@ -138,16 +149,12 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     ...context,
     getForwardedRequestHeaders() {
       const headers = new Headers(request.headers);
-      applyShopifyRequestContextHeaders(context, headers);
+      applyStorefrontRequestHeaders(context, headers);
       if (context.url) headers.set(STOREFRONT_URL_HEADER, context.url);
       return headers;
     },
-    getSubrequestHeaders() {
-      const headers = new Headers();
-      headers.set("content-type", "application/json");
-      if (context.cookie) headers.set("cookie", context.cookie);
-      applyShopifyRequestContextHeaders(context, headers);
-      return headers;
+    applyStorefrontRequestHeaders(headers) {
+      applyStorefrontRequestHeaders(context, headers);
     },
     captureSubrequestHeaders(headers) {
       // Capture this the first time we get a fresh response to increase the
@@ -209,8 +216,19 @@ function normalizePathPrefix(pathPrefix: string | undefined): string {
   return normalized ? `/${normalized}` : "";
 }
 
-function applyShopifyRequestContextHeaders(context: Context, headers: Headers): void {
+function applyStorefrontRequestHeaders(context: Context, headers: Headers): void {
+  headers.set(SDK_VARIANT_HEADER, "hydrogen");
+  headers.set(SDK_VARIANT_SOURCE_HEADER, "kit");
+  headers.set(SDK_VERSION_HEADER, STOREFRONT_API_VERSION);
+  headers.set(HYDROGEN_VERSION_HEADER, __HYDROGEN_VERSION__);
   headers.set(REQUEST_GROUP_ID_HEADER, context.requestGroupId);
+
+  if (context.cookie) headers.set("cookie", context.cookie);
+  else headers.delete("cookie");
+  if (context.storefrontOrigin) {
+    headers.set(SHOPIFY_STOREFRONT_ORIGIN_HEADER, context.storefrontOrigin);
+  } else headers.delete(SHOPIFY_STOREFRONT_ORIGIN_HEADER);
+
   if (context.uniqueToken) headers.set(SHOPIFY_UNIQUE_TOKEN_HEADER, context.uniqueToken);
   if (context.visitToken) headers.set(SHOPIFY_VISIT_TOKEN_HEADER, context.visitToken);
   if (context.legacyTokens && context.uniqueToken) {
@@ -218,6 +236,15 @@ function applyShopifyRequestContextHeaders(context: Context, headers: Headers): 
   }
   if (context.legacyTokens && context.visitToken) {
     headers.set(SHOPIFY_STOREFRONT_S_HEADER, context.visitToken);
+  }
+}
+
+function getUrlOrigin(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    return new URL(url).origin;
+  } catch {
+    return undefined;
   }
 }
 

@@ -1,4 +1,4 @@
-import { extractHeaders, REQUEST_GROUP_ID_HEADER } from "../../headers";
+import { extractHeaders } from "../../headers";
 import { getLogger } from "../../logging";
 import type { HydrogenRouteInterceptor, HydrogenRoutesOptions } from "../route-types";
 
@@ -23,6 +23,7 @@ type ProxyDescriptor = {
 export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRouteInterceptor {
   const log = getLogger(descriptor.scope);
   const formatError = descriptor.formatError ?? defaultFormatError;
+
   return (url, options) => {
     const { request, storefrontClient } = options;
     if (!descriptor.match.test(url.pathname)) return null;
@@ -31,6 +32,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
     const upstreamUrl = new URL(upstreamPathname + url.search, storefrontClient.storeUrl);
 
     const forwardedHeaders = createProxyRequestHeaders(descriptor, request);
+    options.requestContext.applyStorefrontRequestHeaders(forwardedHeaders);
     descriptor.headers.prepare?.(forwardedHeaders, options, url);
 
     const init: RequestInit & { duplex?: "half" } = {
@@ -75,13 +77,6 @@ function createProxyRequestHeaders(descriptor: ProxyDescriptor, request: Request
     ? new Headers(extractHeaders((key) => request.headers.get(key), allow))
     : new Headers(request.headers);
   for (const header of deny ?? []) headers.delete(header);
-  headers.set(
-    REQUEST_GROUP_ID_HEADER,
-    request.headers.get(REQUEST_GROUP_ID_HEADER) ??
-      request.headers.get("x-request-id") ??
-      request.headers.get("request-id") ??
-      crypto.randomUUID(),
-  );
   return headers;
 }
 

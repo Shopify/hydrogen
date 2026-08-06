@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { SHOPIFY_STOREFRONT_ORIGIN_HEADER } from "../../headers";
 import { createShopifyRequestContext } from "../../request-context";
 import { assert } from "../../test-utils";
 import { handleShopifyApiProxy as handleShopifyApiProxyImpl } from "./api-proxy";
@@ -93,6 +94,7 @@ describe("handleShopifyApiProxy", () => {
           authorization: "Bearer browser-token",
           cookie: "_shopify_y=abc",
           "content-type": "application/json",
+          [SHOPIFY_STOREFRONT_ORIGIN_HEADER]: "https://untrusted.example",
           "sec-fetch-site": "same-origin",
           "x-custom-header": "custom-value",
         },
@@ -108,6 +110,7 @@ describe("handleShopifyApiProxy", () => {
     expect(headers.get("authorization")).toBe("Bearer browser-token");
     expect(headers.get("cookie")).toBe("_shopify_y=abc");
     expect(headers.get("content-type")).toBe("application/json");
+    expect(headers.get(SHOPIFY_STOREFRONT_ORIGIN_HEADER)).toBe("https://my-app.com");
     expect(headers.get("sec-fetch-site")).toBe("same-origin");
     expect(headers.get("x-custom-header")).toBe("custom-value");
   });
