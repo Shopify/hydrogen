@@ -1,11 +1,10 @@
 import { createRequestHandler, RouterContextProvider } from "react-router";
 import * as serverBuild from "virtual:react-router/server-build";
 
-import { envContext } from "~/lib/env";
+import { cacheContext, envContext, waitUntilContext } from "./app/lib/platform";
 
-/**
- * Export a fetch handler in module format for Oxygen / mini-oxygen.
- */
+const handleRequest = createRequestHandler(serverBuild, import.meta.env.MODE);
+
 export default {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext): Promise<Response> {
     try {
@@ -22,13 +21,12 @@ export default {
         });
       }
 
-      const routerContext = new RouterContextProvider();
-      routerContext.set(envContext, env);
-      routerContext.env = env;
-      routerContext.waitUntil = executionContext.waitUntil.bind(executionContext);
+      const context = new RouterContextProvider();
+      context.set(envContext, env);
+      context.set(waitUntilContext, executionContext.waitUntil.bind(executionContext));
+      context.set(cacheContext, await caches.open("hydrogen"));
 
-      const handleRequest = createRequestHandler(serverBuild, process.env.NODE_ENV);
-      return handleRequest(request, routerContext as never);
+      return handleRequest(request, context);
     } catch (error) {
       console.error(error);
       return new Response("An unexpected error occurred", { status: 500 });

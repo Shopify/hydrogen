@@ -1,7 +1,7 @@
 # React Router Template Pattern
 
-Concrete file-by-file shape for `templates/react-router`. Read this when implementing or maintaining the template.
-Do not generalize these instructions to framework examples such as Next, Nuxt, Astro, Solid, or SvelteKit
+Concrete file-by-file shape for `examples/react-router` -> `templates/react-router`. Read this when implementing the
+template. Do not generalize these instructions to framework examples such as Next, Nuxt, Astro, Solid, or SvelteKit
 without adding framework-specific guidance first. For the high-level workflow, dependency mechanism, lockfile, and
 validation, see [SKILL.md](../SKILL.md).
 
@@ -34,7 +34,7 @@ Use Vite/React Router scripts, not Hydrogen CLI dev/build scripts:
     "build": "react-router build",
     "preview": "react-router build && vite preview",
     "typecheck": "react-router typegen && tsc --noEmit && hydrogen gql check --fail-on-warn",
-    "deploy": "shopify hydrogen deploy --assets-dir dist/client --worker-dir dist/server"
+    "deploy": "shopify hydrogen deploy"
   }
 }
 ```
@@ -43,18 +43,14 @@ Remove Node-server scripts such as `start: react-router-serve ...` unless explic
 
 Dependencies:
 
-- Keep app dependencies required by the template, such as `@shopify/hydrogen`, React, React Router, and `isbot`.
+- Keep app dependencies required by the example, such as `@shopify/hydrogen`, React, React Router, and `isbot`.
 - Remove `lru-cache`, `@react-router/node`, and `@react-router/serve`.
 - Add `@shopify/mini-oxygen`, `@shopify/oxygen-workers-types`, and `@shopify/cli`.
-- **`@shopify/hydrogen`: use `workspace:*` in this repository** so template builds and E2E exercise the package under
-  development. The `Shopify/hydrogen` release flow replaces it with the version selected by the `preview` dist-tag
-  before standalone lockfile generation. Preview cuts use `2026.10.0-preview.<n>` and must resolve to a registry
-  tarball with an integrity hash.
-- **`@shopify/cli`: pin `4.6.0` (minimum `4.4.0`)**. Those releases support the explicit deploy output flags. Keep
-  `--assets-dir dist/client --worker-dir dist/server` in the deploy script so the CLI runs `react-router build` and
-  uses this template's configured output without relying on a Hydrogen version sniff.
-- **Package manager:** use `pnpm@10.33.0` in the source template so the monorepo has one package manager and lockfile.
-  The preview dist compiler changes the standalone template to `npm@11.17.0` before generating `package-lock.json`.
+- **`@shopify/hydrogen`: use `preview`**. The published preview resolves to a `0.0.0-preview-*` registry package,
+  exposes the React Router template surface (including `./customer-account` and `./package.json`), and satisfies
+  `shopify hydrogen deploy`'s `isHydrogenPreviewVersion` check (CLI #3819) so deploy runs `react-router build`. No
+  repo-local dependency, vendored tarball, or version hack is needed.
+- **`@shopify/cli`: pin `3.94.3`** unless a newer version has been verified with the deploy path.
 - **`@shopify/mini-oxygen`: pin `^4.2.0`** — its `oxygen()` plugin adds `configurePreviewServer`, which `vite preview`
   needs to run the Worker.
 - Add `"engines": {"node": "^22 || ^24"}`.
@@ -106,12 +102,10 @@ Keep the `build.assetsInlineLimit: 0` and `ssr.optimizeDeps.include` interop set
 
 ## react-router.config.ts
 
-Preserve the React Router config behavior required by the app:
+Start from the copied React Router config and preserve behavior required by the app:
 
 ```ts
 export default {
-  appDirectory: "app",
-  buildDirectory: "dist",
   ssr: true,
   subResourceIntegrity: false,
   future: {
@@ -121,7 +115,7 @@ export default {
 };
 ```
 
-Preserve any additional future flags that the template needs. Keep `buildDirectory: "dist"` aligned with the deploy script's `dist/client` and `dist/server` flags. If one changes, update the other in the same change.
+Preserve any additional future flags that the source example already needs. Do not force `buildDirectory: "dist"` unless the current MiniOxygen/deploy tooling or the user explicitly requires it.
 
 ## server.ts
 
@@ -163,12 +157,12 @@ async function createAppLoadContext(
 }
 ```
 
-Use actual context names that match the template. Keep Shopify initialization and request handling in root middleware,
-with `server.ts` responsible only for providing Worker values through React Router context and invoking the framework
-request handler. The root middleware owns `handleShopifyRoutes` before `next()`, `handleShopifyRedirects` after a
-framework 404, and storefront response headers on framework responses. Shopify handler responses already include
-their own storefront response headers. The catch-all route should only produce the framework 404 that lets the root
-middleware check for a Shopify redirect.
+Use actual context names that match the template. If the app currently initializes Shopify context in root middleware, either:
+
+- keep that middleware and provide `env`, `waitUntil`, and `cache` through React Router context, or
+- move only the top-level request setup into `server.ts` while preserving route behavior.
+
+Prefer the smaller app-code change. The React Router example already has most Shopify route handling in middleware; adapt it rather than rewriting route modules.
 
 ## entry.server.tsx and entry.client.tsx (REQUIRED)
 
@@ -238,7 +232,7 @@ Oxygen is a Worker runtime. Do not create request-specific Shopify objects at mo
 
 Module scope is only appropriate for pure constants and stateless handler factories that do not capture request/env/session data. When in doubt, keep the object request-scoped until MiniOxygen runtime validation proves otherwise.
 
-Keep request-time values in context instead of imported shared constants. Root middleware reads `env`, `cache`, and `waitUntil` from React Router context before creating `createShopifyRequestContext`, `createStorefrontClient`, and the storefront client (pass `cache` and `waitUntil` on its `config`).
+Expect to adjust app code so request-time values come from context instead of imported shared constants. For example, root middleware may need to read `env`, `cache`, and `waitUntil` from React Router context before creating `createShopifyRequestContext`, `createStorefrontClient`, and the storefront client (pass `cache` on its `config`; an Oxygen template should also pass `waitUntil`).
 
 ## Oxygen cache
 
@@ -253,15 +247,14 @@ Pass `cache` directly to `createStorefrontClient`'s `config` — the client wrap
 
 ## Env and types
 
-Ship a `.env.example` (committed, blank) and a gitignored `.env`. Only the two real secrets are required; everything
-else public lives in `app/lib/config.ts` (see config split). To smoke-test against the demo store in this repo, run
-`pnpm run examples:secrets:decrypt` from the repository root (needs the ejson key locally). It writes the private token
-and store domain to the gitignored `templates/react-router/.env`.
+Ship a `.env.example` (committed, blank) and a gitignored `.env`. Keep the authoritative env list in
+`templates/react-router/.env.example`; do not duplicate it in prose. The required real-store input is a private
+Storefront API token, while Customer Accounts are optional and require their own account/session env vars.
 
 ```sh
-SESSION_SECRET="replace-with-a-long-random-secret-32+"
 PRIVATE_STOREFRONT_API_TOKEN=""
-# PUBLIC_STORE_DOMAIN="your-shop.myshopify.com"   # optional override of app/lib/config.ts
+# PUBLIC_STORE_DOMAIN="your-shop.myshopify.com"
+# CUSTOMER_ACCOUNT_SESSION_SECRET="replace-with-a-long-random-secret-32+"
 ```
 
 Add or update TypeScript declarations so the Worker env is typed:
@@ -271,12 +264,10 @@ Add or update TypeScript declarations so the Worker env is typed:
 /// <reference types="react-router" />
 /// <reference types="vite/client" />
 
+import type { Env as AppEnv } from "./app/lib/platform";
+
 declare global {
-  interface Env {
-    SESSION_SECRET: string;
-    PRIVATE_STOREFRONT_API_TOKEN: string;
-    PUBLIC_STORE_DOMAIN?: string;
-  }
+  interface Env extends AppEnv {}
 }
 
 export {};
@@ -284,19 +275,19 @@ export {};
 
 Add typed React Router contexts for Worker values the app needs, such as `env`, `cache`, and `waitUntil`. Use `createContext<T>()`/`RouterContextProvider` consistently so middleware and loaders do not reach for globals or `process.env`.
 
-Do not replace `tsconfig.json` wholesale. Keep `types` set to `["@shopify/oxygen-workers-types", "react-router", "vite/client"]` without `node`. Under `verbatimModuleSyntax`, any binding used only in a type position must use `import type`. Example: `defaultI18n` in `app/lib/storefront.ts` is used only as `typeof defaultI18n`, so it must be `import type {defaultI18n}`.
+Start from the copied `tsconfig.json`; do not replace it wholesale. Include `@shopify/oxygen-workers-types`, `react-router`, and `vite/client` in `types`. Keep `node` only when build tooling in the same TypeScript program needs it. Under `verbatimModuleSyntax`, any binding used only in a type position must use `import type`.
 
 Keep `@types/node` in `devDependencies` (build tooling needs it at runtime); it is just not in the app `types` array.
 
-Keep `hydrogen gql check --fail-on-warn` in `typecheck` and preserve the `@shopify/hydrogen/ts-plugin` entry. Hydrogen packages both schemas and their gql.tada tooling.
+Keep `hydrogen gql check --fail-on-warn` in `typecheck` and preserve the `@shopify/hydrogen/ts-plugin` entry from the source example. Hydrogen packages both schemas and their gql.tada tooling.
 
 ## Shared code migration
 
 Replace each `@shared/*` import with template-local code:
 
 - config constants -> local `app/lib/config.ts` (see config split below)
-- private token lookup -> local `app/lib/env.ts`
-- buyer IP helper -> local `app/lib/buyer-ip.ts` (replace `process.env.NODE_ENV` with `import.meta.env.PROD`)
+- Worker env/context helpers -> local `app/lib/platform.ts`
+- private token lookup and buyer IP helper -> local `app/lib/config.ts`
 - encrypted customer session -> copy into `app/lib/customer-session.ts` if Customer Account remains enabled (it is
   already Web-Crypto based and Oxygen-safe)
 - storefront cache adapter -> remove if replacing LRU with Oxygen `caches.open`
@@ -304,15 +295,12 @@ Replace each `@shared/*` import with template-local code:
 
 Additionally, keep `lib/route-templates.ts` unchanged — `routeTemplates` is required by `handleShopifyRedirects({routeTemplates})`, `<ShopifyScripts routes={routeTemplates}>`, and `getPredictiveSearchItemUrl(product, {routes: routeTemplates, …})`.
 
-**Config split (public vs secret).** Do not try to make everything env-driven — `ShopifyScripts` (in the root
-`Layout`) and analytics run on the CLIENT, where the Worker `env` is not available. Split it:
+**Config split (public vs secret).** Keep Worker env reads behind `app/lib/platform.ts` and route/middleware boundaries. Split it:
 
-- Public identity -> bundled `app/lib/config.ts` (store domain, public Storefront token, shop/storefront IDs,
-  Customer Account client ID, `defaultI18n`, `analyticsShop`, `analyticsConsent`). These are non-secret and safe in the
-  client bundle; default them to the demo store so the template runs out of the box.
-- Real secrets -> Worker `env`, read on the server only: `SESSION_SECRET`, `PRIVATE_STOREFRONT_API_TOKEN`, plus an
-  optional `PUBLIC_STORE_DOMAIN` override. Read them in root middleware, not at module scope.
+- Public defaults -> bundled `app/lib/config.ts` (`defaultI18n`, analytics consent, fallback shop identity). These are non-secret and keep the template running out of the box.
+- Runtime bindings -> Worker `env`, read on the server only and passed through root loader data when browser code needs public values such as Shopify Scripts shop identity.
+- Real secrets -> Worker `env`, read in root middleware, not at module scope.
 
-This avoids a fragile loader->client refactor and keeps every feature working. Note this applies beyond root middleware: route modules also import public identity (e.g. `analyticsShop`) on the client, so keeping it as a bundled `config.ts` constant — rather than something read from `env` — is what makes those client imports work.
+This keeps private values server-only while still letting browser code receive safe public values through loader data.
 
 Keep Customer Account, cart, search, analytics, and other example features unless the user explicitly asks to remove them.

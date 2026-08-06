@@ -1,24 +1,63 @@
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Link } from "react-router";
 
 import { useCart } from "~/lib/cart";
-import { CART_DRAWER_ID, openDialogFallback } from "~/lib/cart-drawer";
+import {
+  openCartDrawer,
+  CART_DRAWER_ID,
+  getCartDrawerOpen,
+  subscribeCartDrawerOpen,
+} from "~/lib/cart-drawer";
+import { content, cartIconLabel, cartItemCount } from "~/lib/content";
 
-import { MobileNav, MobileNavTrigger, type NavCollection } from "./MobileNav";
+import { PredictiveSearchModal } from "./PredictiveSearchModal";
 
-function cartCountLabel(count: number) {
-  return count === 1 ? "Cart (1 item)" : `Cart (${count} items)`;
-}
+/** Maps a header nav item to its route. "Collections" -> the collections
+ * index; the category items -> their collection PLP. */
+const navItemHref: Record<(typeof content.header.navItems)[number], string> = {
+  Collections: "/collections",
+  Men: "/collections/men",
+  Women: "/collections/women",
+  Accessories: "/collections/accessories",
+};
 
-function liveCartCountLabel(count: number) {
-  return count === 1 ? "1 item in cart" : `${count} items in cart`;
-}
-
-function displayCount(count: number) {
-  return count > 99 ? "99+" : String(count);
-}
-
-export function Header({ navCollections }: { navCollections: NavCollection[] }) {
+/**
+ * Site header — shared chrome (`navbar.md`, `notes/cart.md`,
+ * `notes/predictive-search.md`). Server-rendered nav. The cart trigger opens
+ * the drawer with a JS `showModal()` call; the footer `/cart` link is the no-JS
+ * cart fallback (F4). The search trigger is a real `/search` link that hydrates
+ * into the predictive-search modal. The mobile nav is a `<dialog>` with an
+ * always-rendered fallback link list.
+ *
+ * `accountEnabled`/`isLoggedIn` are server-resolved booleans from the root
+ * loader (which re-runs on every route change). The account link is gated on
+ * `accountEnabled` first: on mock.shop the customer account handlers are not
+ * registered, so `/account/login` has no route and would 404 — render nothing.
+ */
+export function Header({
+  accountEnabled,
+  isLoggedIn,
+  shopName = "CORE",
+}: {
+  accountEnabled: boolean;
+  isLoggedIn: boolean;
+  shopName?: string;
+}) {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
+  const cartDrawerOpen = useSyncExternalStore(
+    subscribeCartDrawerOpen,
+    getCartDrawerOpen,
+    () => false,
+  );
+
+  const [hasHydrated, setHasHydrated] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => setHasHydrated(true), []);
+
+  const cartLabel = cartIconLabel(totalQuantity);
+  const countDisplay = totalQuantity > 99 ? "99+" : String(totalQuantity);
 
   return (
     <header className="border-border bg-surface sticky top-0 z-40 border-b">
@@ -27,77 +66,217 @@ export function Header({ navCollections }: { navCollections: NavCollection[] }) 
         data-header-nav-group
       >
         <div className="flex items-center gap-2">
-          <div className="-ms-2 hidden max-md:block" data-hamburger-wrapper>
-            <MobileNavTrigger />
+          <div className="-ms-2 hidden max-md:block">
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+              aria-label={content.header.menu}
+              aria-haspopup="dialog"
+              aria-expanded={mobileNavOpen}
+              aria-controls="mobile-nav-drawer"
+            >
+              <img
+                src="/icons/icon-menu.svg"
+                width="20"
+                height="20"
+                alt=""
+                className="size-5"
+                aria-hidden="true"
+              />
+            </button>
           </div>
+
           <Link
             to="/"
             className="text-on-surface focus-visible:outline-accent inline-flex items-center rounded-sm text-lg font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
-            CORE
+            {shopName}
           </Link>
         </div>
 
         <nav
-          aria-label="Main navigation"
+          aria-label={content.header.navigation}
           className="mx-8 hidden min-w-0 flex-1 items-center gap-8 md:flex"
-          data-desktop-nav
         >
-          {navCollections.map((collection) => (
+          {content.header.navItems.map((item) => (
             <Link
-              key={collection.handle}
-              to={`/collections/${collection.handle}`}
+              key={item}
+              to={navItemHref[item]}
               className="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
             >
-              {collection.title}
+              {item}
             </Link>
           ))}
         </nav>
 
         <div className="flex items-center gap-0">
-          <Link
-            to="/search"
-            className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center gap-2 rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
-            aria-label="Search"
-          >
-            <img src="/icons/icon-search.svg" alt="" className="size-5" aria-hidden="true" />
-          </Link>
-          <a
-            href="#"
-            className="text-on-surface focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
-            aria-label="Account"
-          >
-            <img src="/icons/icon-user.svg" alt="" className="size-5" aria-hidden="true" />
-          </a>
+          {hasHydrated ? (
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+              aria-label={content.general.search}
+              aria-haspopup="dialog"
+              aria-expanded={searchOpen}
+              aria-controls="search-modal"
+              data-testid="search-modal-trigger"
+            >
+              <img
+                src="/icons/icon-search.svg"
+                width="20"
+                height="20"
+                alt=""
+                className="size-5"
+                aria-hidden="true"
+              />
+            </button>
+          ) : (
+            <a
+              href="/search"
+              className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+              aria-label={content.general.search}
+              data-testid="search-modal-trigger"
+            >
+              <img
+                src="/icons/icon-search.svg"
+                width="20"
+                height="20"
+                alt=""
+                className="size-5"
+                aria-hidden="true"
+              />
+            </a>
+          )}
+          <noscript>
+            <form action="/search" method="get" role="search" className="sr-only">
+              <label htmlFor="header-search-q">{content.general.search}</label>
+              <input id="header-search-q" name="q" type="search" autoComplete="off" />
+              <button type="submit">{content.search.submit}</button>
+            </form>
+          </noscript>
+
+          {accountEnabled ? (
+            <Link
+              to={isLoggedIn ? "/account" : "/account/login"}
+              reloadDocument={!isLoggedIn}
+              className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+              aria-label={isLoggedIn ? content.general.account : "Log in"}
+            >
+              <img
+                src="/icons/icon-user.svg"
+                width="20"
+                height="20"
+                alt=""
+                className="size-5"
+                aria-hidden="true"
+              />
+            </Link>
+          ) : null}
+
+          {/* Cart trigger (hydrogen-cart-drawer). `onClick` calls showModal()
+              to open the `<dialog>` drawer after hydration. The footer `/cart`
+              link remains the no-JS cart surface (F4). */}
           <button
             type="button"
-            commandfor={CART_DRAWER_ID}
-            command="show-modal"
-            className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded bg-transparent p-0 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
-            aria-label={cartCountLabel(totalQuantity)}
+            onClick={openCartDrawer}
             aria-controls={CART_DRAWER_ID}
             aria-haspopup="dialog"
-            data-testid="cart-trigger"
-            onClick={() => openDialogFallback(CART_DRAWER_ID)}
+            aria-expanded={cartDrawerOpen}
+            className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded bg-transparent p-0 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
+            aria-label={cartLabel}
           >
-            <span
-              className="relative inline-flex size-5 shrink-0 items-center justify-center"
-              aria-hidden="true"
-            >
-              <img src="/icons/icon-cart.svg" alt="" className="size-5" />
-              {totalQuantity > 0 ? (
-                <span className="bg-interactive text-interactive-text absolute end-0 top-0 flex h-5 min-w-5 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full px-1 text-xs font-medium">
-                  {displayCount(totalQuantity)}
-                </span>
-              ) : null}
-            </span>
+            <CartIcon count={totalQuantity} display={countDisplay} />
           </button>
           <span aria-live="polite" aria-atomic="true" className="sr-only">
-            {liveCartCountLabel(totalQuantity)}
+            {cartItemCount(totalQuantity)}
           </span>
         </div>
       </div>
-      <MobileNav collections={navCollections} />
+
+      <MobileNavDialog open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+
+      <PredictiveSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
+  );
+}
+
+function CartIcon({ count, display }: { count: number; display: string }) {
+  return (
+    <span
+      className="relative inline-flex size-5 shrink-0 items-center justify-center"
+      aria-hidden="true"
+    >
+      <img src="/icons/icon-cart.svg" width="20" height="20" alt="" className="size-5" />
+      {count > 0 ? (
+        <span className="bg-interactive text-interactive-text absolute end-0 top-0 flex h-5 w-5 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-medium">
+          {display}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function MobileNavDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (open && !dialog.open) dialog.showModal();
+    else if (!open && dialog.open) dialog.close();
+  }, [open]);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      id="mobile-nav-drawer"
+      className="drawer-left bg-surface text-on-surface"
+      aria-labelledby="mobile-nav-title"
+      onClose={onClose}
+    >
+      <div className="flex h-full flex-col">
+        <div className="relative flex min-h-[52px] shrink-0 items-center px-4 py-1">
+          <span
+            className="text-on-surface pointer-events-none absolute left-1/2 -translate-x-1/2 text-sm font-medium"
+            id="mobile-nav-title"
+          >
+            {content.header.mobileNavigation}
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="button-icon focus-visible:outline-accent ms-auto inline-flex h-11 w-11 items-center justify-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            aria-label={content.general.close}
+          >
+            <img
+              src="/icons/icon-x.svg"
+              width="20"
+              height="20"
+              alt=""
+              className="size-5"
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          <nav aria-label={content.header.mobileNavigation}>
+            <ul role="list" className="flex flex-col">
+              {content.header.navItems.map((item) => (
+                <li key={item}>
+                  <Link
+                    to={navItemHref[item]}
+                    onClick={onClose}
+                    className="text-on-surface flex items-center rounded-sm py-3 text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
+                  >
+                    {item}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </dialog>
   );
 }

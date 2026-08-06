@@ -1,190 +1,171 @@
-import { handleShopifyRedirects, handleShopifyRoutes, gql } from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
-import type { ReactNode } from "react";
+
+import "./app.css";
+
 import {
-  isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
+  isRouteErrorResponse,
   useNavigate,
+  useRouteLoaderData,
+  useRouteError,
 } from "react-router";
 
-import { AnalyticsTracker, CartAnalyticsTracker } from "~/components/AnalyticsTrackers";
+import { AnalyticsTracker } from "~/components/AnalyticsTracker";
+import { CartAnalyticsTracker } from "~/components/CartAnalyticsTracker";
 import { CartDrawer } from "~/components/CartDrawer";
 import { ConsentBanner } from "~/components/ConsentBanner";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
+import { NotFound } from "~/components/NotFound";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
-import { envContext } from "~/lib/env";
+import { analyticsConsent, defaultI18n, defaultShop, getShop, getSiteOrigin } from "~/lib/config";
+import { content } from "~/lib/content";
+import { customerAccountContext } from "~/lib/customer-account";
+import { envContext } from "~/lib/platform";
 import { routeTemplates } from "~/lib/route-templates";
-import { createRequestSessionManager } from "~/lib/session";
-import { analyticsConsent, analyticsShop, shop, storefrontConfig } from "~/lib/shop";
-import {
-  createRequestStorefrontClient,
-  storefrontClientContext,
-  storefrontRequestContext,
-} from "~/lib/storefront";
+import { storefrontClientContext } from "~/lib/storefront-context";
+import { storefrontMiddleware } from "~/lib/storefront-middleware";
 
 import type { Route } from "./+types/root";
 
-import "./app.css";
+// Root middleware — the single Hydrogen request lifecycle entry point.
+export const middleware: Route.MiddlewareFunction[] = [storefrontMiddleware];
 
-const NAV_COLLECTIONS_QUERY = gql(`
-  query NavCollections {
-    collections(first: 5) {
-      nodes {
-        handle
-        title
-      }
-    }
-  }
-`);
-
+// Static head links — Hydrogen favicon (rendered by <Links /> in the Layout).
 export const links: Route.LinksFunction = () => [
-  { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+  { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
 ];
 
-export const middleware: Route.MiddlewareFunction[] = [
-  async ({ context, request }, next) => {
-    const env = context.get(envContext);
-    const storefrontClient = createRequestStorefrontClient(request, env);
-    const requestContext = storefrontClient.requestContext;
-    const sessionManager = createRequestSessionManager(request);
-
-    const shopifyRoute = handleShopifyRoutes({
-      request,
-      requestContext,
-      sessionManager,
-      storefrontClient,
-      handlers: [cartHandlers],
-    });
-
-    if (shopifyRoute) return shopifyRoute;
-
-    context.set(storefrontClientContext, storefrontClient);
-    context.set(storefrontRequestContext, requestContext);
-
-    const response = await next();
-    if (response.status === 404) {
-      const redirect = await handleShopifyRedirects({
-        request,
-        storefrontClient,
-        routeTemplates,
-      });
-
-      if (redirect) return redirect;
-    }
-
-    requestContext.applyResponseHeaders(response.headers);
-    return response;
-  },
-];
-
-export async function loader({ context, request }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
-  const [cartResult, navResult] = await Promise.all([
-    cartHandlers.get({ storefrontClient, request }),
-    storefrontClient.graphql(NAV_COLLECTIONS_QUERY),
-  ]);
+  const customerAccount = context.get(customerAccountContext);
+
+  const cartPromise = cartHandlers
+    .get({ storefrontClient })
+    .then((result) => ({ cart: result.data.cart ?? null, errors: result.data.errors }))
+    .catch((error) => {
+      console.error("[hydrogen] Cart seed failed", error);
+      return { cart: null };
+    });
+
+  const accountEnabled = customerAccount?.available ?? false;
+  const isLoggedIn = customerAccount?.available
+    ? await customerAccount.session.isLoggedIn(
+        customerAccount.sessionManager,
+        customerAccount.requestContext,
+      )
+    : false;
 
   return {
-    cartData: cartResult.data,
-    navCollections: navResult.data?.collections.nodes ?? [],
-    analyticsShop,
-    consent: analyticsConsent,
-    forceConsentBanner: env.MOCK_SHOP === "1",
+    cartData: await cartPromise,
+    accountEnabled,
+    isLoggedIn,
+    shopName: "CORE",
+    shop: getShop(env),
+    siteOrigin: getSiteOrigin(env),
   };
 }
 
-export function Layout({ children }: { children: ReactNode }) {
+export const Layout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
+  const rootData = useRouteLoaderData<typeof loader>("root");
 
+  const htmlLang = defaultI18n.language.toLowerCase();
   return (
-    <html lang="en">
+    <html lang={htmlLang}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Meta />
+        <Links />
         <ShopifyScripts
-          i18n={storefrontConfig.i18n}
-          shop={shop}
+          i18n={defaultI18n}
+          shop={rootData?.shop ?? defaultShop}
           consent={analyticsConsent}
           navigate={navigate}
           routes={routeTemplates}
+          inbox
         />
-        <Meta />
-        <Links />
       </head>
       <body className="bg-surface text-on-surface font-body flex min-h-svh flex-col antialiased">
-        <a
-          href="#main-content"
-          className="focus-visible:bg-interactive focus-visible:text-interactive-text sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:start-4 focus-visible:top-4 focus-visible:z-50 focus-visible:rounded focus-visible:px-4 focus-visible:py-2"
-        >
-          Skip to content
-        </a>
         {children}
+        <shopify-chat />
         <ScrollRestoration />
         <Scripts />
       </body>
     </html>
   );
-}
+};
 
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <CartProvider initialData={loaderData.cartData}>
-      <AnalyticsTracker
-        shop={loaderData.analyticsShop}
-        consent={loaderData.consent}
-        enableTestTap={loaderData.forceConsentBanner}
-      />
-      <CartAnalyticsTracker />
+      <a
+        href="#main-content"
+        className="focus-visible:bg-interactive focus-visible:text-interactive-text sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:start-4 focus-visible:top-4 focus-visible:z-50 focus-visible:rounded focus-visible:px-4 focus-visible:py-2"
+      >
+        Skip to content
+      </a>
+
       <div
         role="region"
-        aria-label="Announcement"
+        aria-label={content.announcement.label}
         className="bg-on-surface px-margin py-2.5 text-center"
       >
-        <p className="type-body-sm text-surface">Free shipping on orders over $50</p>
+        <p className="type-body-sm text-surface">{content.announcement.text}</p>
       </div>
-      <Header navCollections={loaderData.navCollections} />
-      <Outlet />
-      <Footer />
+
+      <Header
+        accountEnabled={loaderData.accountEnabled}
+        isLoggedIn={loaderData.isLoggedIn}
+        shopName={loaderData.shopName}
+      />
+
+      <main className="flex-1" id="main-content" tabIndex={-1}>
+        <Outlet />
+      </main>
+
+      <Footer shopName={loaderData.shopName} />
+
       <CartDrawer />
-      <ConsentBanner forceShow={loaderData.forceConsentBanner} />
+      <ConsentBanner />
+      <AnalyticsTracker />
+      <CartAnalyticsTracker />
     </CartProvider>
   );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
+export function ErrorBoundary() {
+  const error = useRouteError();
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404 ? "The requested page could not be found." : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
+    if (error.status === 404) return <NotFound />;
+    return (
+      <div className="max-w-page px-margin mx-auto py-16">
+        <h1 className="type-heading-xl mb-4">{error.status} — Something went wrong</h1>
+        <p className="type-body text-on-surface-secondary">
+          {typeof error.data === "string" && error.data
+            ? error.data
+            : "Something went wrong. Please try again."}
+        </p>
+      </div>
+    );
   }
 
+  const message =
+    error instanceof Error && error.message
+      ? error.message
+      : "Something went wrong. Please try again.";
   return (
-    <main
-      id="main-content"
-      tabIndex={-1}
-      className="max-w-page px-margin mx-auto w-full flex-1 py-12"
-    >
-      <h1 className="type-display text-on-surface">{message}</h1>
-      <p className="text-on-surface-secondary mt-4">{details}</p>
-      {stack ? (
-        <pre className="border-border mt-6 w-full overflow-x-auto rounded border p-4 text-sm">
-          <code>{stack}</code>
-        </pre>
-      ) : null}
-    </main>
+    <div className="max-w-page px-margin mx-auto py-16">
+      <h1 className="type-heading-xl mb-4">Something went wrong</h1>
+      <p className="type-body text-on-surface-secondary">{message}</p>
+    </div>
   );
 }

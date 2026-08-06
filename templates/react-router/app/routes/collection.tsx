@@ -1,260 +1,520 @@
-import { getSortByValue } from "@shopify/hydrogen";
-import { CollectionProvider } from "@shopify/hydrogen/react";
-import { useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
-
+import { gql } from "@shopify/hydrogen";
 import {
-  ActiveFilterChips,
-  COLLECTION_SORT_OPTIONS,
-  FacetForm,
-  FilterDrawer,
-  LoadMore,
-  Toolbar,
-  useLoadMore,
-} from "~/components/CollectionBrowse";
+  Cache,
+  getFilterRemovalUrl,
+  getSortByValue,
+  parseCollectionParams,
+  serializeCollectionParams,
+  type ProductFilter,
+  type StorefrontApi,
+} from "@shopify/hydrogen";
+import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
+import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
+import { useEffect } from "react";
+import { Link, isRouteErrorResponse, useNavigate, useSearchParams } from "react-router";
+
+import { Breadcrumbs } from "~/components/Breadcrumbs";
+import { NotFound } from "~/components/NotFound";
 import { ProductCard } from "~/components/ProductCard";
-import { AnalyticsEvent, getAnalytics, getAnalyticsShop } from "~/lib/analytics";
-import { loadCollectionPage } from "~/lib/collection";
-import { storefrontClientContext } from "~/lib/storefront";
+import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
+import { content } from "~/lib/content";
+import { FilterGroup } from "~/lib/filters";
+import { PRODUCT_CARD_FRAGMENT } from "~/lib/fragments";
+import { shopNameFromMatches, shopTitle, siteOriginFromMatches } from "~/lib/meta";
+import { formatPrice } from "~/lib/money";
+import { canonicalUrl } from "~/lib/site";
+import { storefrontClientContext } from "~/lib/storefront-context";
 
 import type { Route } from "./+types/collection";
 
-export function meta({}: Route.MetaArgs) {
+const COLLECTION_SORT_OPTIONS = [
+  { label: "Featured", value: getSortByValue("COLLECTION_DEFAULT", false) },
+  { label: "Best selling", value: getSortByValue("BEST_SELLING", false) },
+  { label: "Alphabetically, A-Z", value: getSortByValue("TITLE", false) },
+  { label: "Alphabetically, Z-A", value: getSortByValue("TITLE", true) },
+  { label: "Price, low to high", value: getSortByValue("PRICE", false) },
+  { label: "Price, high to low", value: getSortByValue("PRICE", true) },
+  { label: "Date, new to old", value: getSortByValue("CREATED", true) },
+];
+
+const COLLECTION_QUERY = gql(
+  `
+  query Collection($handle: String!, $first: Int!, $after: String, $sortKey: ProductCollectionSortKeys, $reverse: Boolean, $filters: [ProductFilter!], $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    collection(handle: $handle) {
+      id
+      handle
+      title
+      description
+      descriptionHtml
+      image {
+        url
+        altText
+        width
+        height
+      }
+      products(first: $first, after: $after, sortKey: $sortKey, reverse: $reverse, filters: $filters) {
+        filters {
+          id
+          label
+          type
+          presentation
+          values {
+            id
+            label
+            count
+            input
+            swatch {
+              color
+              image {
+                previewImage {
+                  url
+                  altText
+                  width
+                  height
+                }
+              }
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          ...ProductCard
+        }
+      }
+    }
+  }
+`,
+  [PRODUCT_CARD_FRAGMENT],
+);
+
+type CollectionQuery = StorefrontApi.ResultOf<typeof COLLECTION_QUERY>;
+type CollectionProducts = NonNullable<CollectionQuery["collection"]>["products"];
+type CollectionAvailableFilter = CollectionProducts["filters"][number];
+
+export const meta: Route.MetaFunction = ({ data, params, matches }: Route.MetaArgs) => {
+  const pageTitle = data?.collection?.title ?? "Collection";
+  const description = data?.collection?.description ?? "";
+  const title = shopTitle(pageTitle, shopNameFromMatches(matches));
+  const siteOrigin = siteOriginFromMatches(matches);
   return [
-    { title: "Collection · CORE" },
+    { title },
+    { name: "description", content: description },
     {
-      name: "description",
-      content: "Shop the CORE collection page.",
+      tagName: "link",
+      rel: "canonical",
+      href: canonicalUrl(`/collections/${params.handle ?? ""}`, siteOrigin),
     },
+    { property: "og:title", content: title },
+    { property: "og:description", content: description },
+    { property: "og:type", content: "website" },
   ];
-}
+};
 
 export async function loader({ context, params, request }: Route.LoaderArgs) {
-  const handle = params.handle;
-  if (!handle) throw new Response("Not Found", { status: 404 });
-
   const storefrontClient = context.get(storefrontClientContext);
-  return loadCollectionPage({ storefrontClient, handle, request });
-}
+  const url = new URL(request.url);
+  const browse = parseCollectionParams(url.searchParams);
 
-type CollectionData = Route.ComponentProps["loaderData"]["collection"];
-type ProductNode = Route.ComponentProps["loaderData"]["products"][number];
+  const { data, errors } = await storefrontClient.graphql(COLLECTION_QUERY, {
+    variables: {
+      handle: params.handle,
+      first: 24,
+      after: url.searchParams.get("after") ?? undefined,
+      filters:
+        browse.filters.length > 0
+          ? // F13: skill-sanctioned generated-type cast at the query variable boundary
+            // (hydrogen-collection-browser/references/react.md). Kept verbatim.
+            (browse.filters as StorefrontApiProductFilter[])
+          : undefined,
+      sortKey: browse.sortKey,
+      reverse: browse.reverse || undefined,
+    },
+    cache: Cache.short(),
+  });
 
-function CollectionViewedTracker({ collection }: { collection: CollectionData }) {
-  useEffect(() => {
-    const analytics = getAnalytics();
-    const shop = getAnalyticsShop();
-    if (!analytics || !shop) return;
+  if (errors) {
+    console.error("[hydrogen] Collection query failed", errors);
+    throw new Response("Collection query failed", { status: 500 });
+  }
 
-    analytics.publish(AnalyticsEvent.COLLECTION_VIEWED, {
-      collection: {
-        id: collection.id,
-        handle: collection.handle,
-      },
-      url: window.location.href,
-      shop,
-    });
-  }, [collection.id, collection.handle]);
+  if (!data?.collection) {
+    throw new Response("Collection not found", { status: 404 });
+  }
 
-  return null;
-}
-
-function BreadcrumbJsonLd({ collection, origin }: { collection: CollectionData; origin: string }) {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: `${origin}/`,
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: collection.title,
-        item: `${origin}/collections/${collection.handle}`,
-      },
-    ],
+  return {
+    collection: data.collection,
+    products: data.collection.products.nodes,
+    availableFilters: data.collection.products.filters,
+    dataSearch: url.searchParams.toString(),
   };
-
-  return <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>;
-}
-
-function Breadcrumb({ collection }: { collection: CollectionData }) {
-  return (
-    <nav aria-label="Breadcrumb" className="mb-6">
-      <ol className="text-on-surface-secondary flex items-center gap-1.5 text-sm">
-        <li>
-          <Link
-            to="/"
-            className="hover:text-on-surface rounded-sm py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current motion-safe:transition-colors"
-          >
-            Home
-          </Link>
-        </li>
-        <li aria-hidden="true" className="text-on-surface-secondary">
-          /
-        </li>
-        <li>
-          <span aria-current="page" className="text-on-surface font-medium">
-            {collection.title}
-          </span>
-        </li>
-      </ol>
-    </nav>
-  );
-}
-
-function CollectionHeader({ collection }: { collection: CollectionData }) {
-  return (
-    <div className="mb-8">
-      <div className="grid gap-6 md:grid-cols-[1fr_16rem] md:items-start">
-        <div>
-          <h1 className="type-display text-on-surface mb-2">{collection.title}</h1>
-          {collection.description ? (
-            <div className="richtext text-on-surface-secondary type-body-sm max-w-2xl">
-              <p>{collection.description}</p>
-            </div>
-          ) : null}
-        </div>
-        {collection.image ? (
-          <div className="bg-surface-secondary aspect-landscape rounded-card overflow-hidden">
-            <img
-              src={collection.image.url}
-              alt={collection.image.altText ?? collection.title}
-              width={collection.image.width ?? undefined}
-              height={collection.image.height ?? undefined}
-              className="h-full w-full object-cover"
-              loading="eager"
-              fetchPriority="high"
-            />
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function ProductGrid({ products }: { products: readonly ProductNode[] }) {
-  if (products.length === 0) return null;
-
-  return (
-    <div className="px-1 contain-paint">
-      <ul
-        id="product-grid"
-        data-testid="product-grid"
-        role="list"
-        className="grid grid-cols-2 gap-x-1 gap-y-10 lg:grid-cols-3"
-      >
-        {products.map((product, index) => (
-          <li key={`${product.handle}-${index}`}>
-            <ProductCard product={product} priority={index < 3} />
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function EmptyState({ collectionPath }: { collectionPath: string }) {
-  return (
-    <div className="border-border bg-surface-secondary rounded-card border p-8 text-center">
-      <h2 className="type-heading-md text-on-surface">No products found</h2>
-      <p className="text-on-surface-secondary mt-2 text-sm">
-        Try removing filters to see more products in this collection.
-      </p>
-      <Link
-        to={collectionPath}
-        preventScrollReset
-        className="rounded-button button-primary focus-visible:outline-accent mt-6 inline-flex h-11 items-center justify-center px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
-      >
-        Clear all filters
-      </Link>
-    </div>
-  );
-}
-
-function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["loaderData"] }) {
-  const collectionPath = `/collections/${loaderData.collection.handle}`;
-  const { nodes, pageInfo, isLoading, loadMore } = useLoadMore(
-    loaderData.products,
-    loaderData.pageInfo,
-    loaderData.dataSearch,
-  );
-  const countText = `Showing ${nodes.length}`;
-  const defaultSortValue = getSortByValue("COLLECTION_DEFAULT", false);
-
-  return (
-    <>
-      <Toolbar
-        countText={countText}
-        sortOptions={COLLECTION_SORT_OPTIONS}
-        defaultSortValue={defaultSortValue}
-      />
-      <ActiveFilterChips
-        basePath={collectionPath}
-        clearAllTo={collectionPath}
-        currencyCode={loaderData.currencyCode}
-      />
-      <h2 className="sr-only">Products</h2>
-      {nodes.length > 0 ? (
-        <ProductGrid products={nodes} />
-      ) : (
-        <EmptyState collectionPath={collectionPath} />
-      )}
-      <LoadMore
-        pageInfo={pageInfo}
-        loadedCount={nodes.length}
-        countLabel={`Showing ${nodes.length} products`}
-        isLoading={isLoading}
-        onLoad={loadMore}
-      />
-      <FilterDrawer availableFilters={loaderData.availableFilters} />
-    </>
-  );
 }
 
 export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const collectionPath = `/collections/${loaderData.collection.handle}`;
+
   return (
     <CollectionProvider
-      data={{ handle: loaderData.collection.handle, dataSearch: loaderData.dataSearch }}
+      data={{
+        handle: loaderData.collection.handle,
+        dataSearch: loaderData.dataSearch,
+      }}
       urlSearch={searchParams.toString()}
-      onChange={(search) => {
-        const nextParams = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
-        nextParams.delete("after");
-        const nextSearch = nextParams.toString();
-        void navigate(
-          { search: nextSearch ? `?${nextSearch}` : "" },
+      onChange={(search) =>
+        navigate(
+          { search },
           {
             replace: searchParams.size > 0,
             preventScrollReset: true,
           },
-        );
-      }}
+        )
+      }
     >
       <CollectionViewedTracker collection={loaderData.collection} />
-      <main className="flex-1" id="main-content" tabIndex={-1}>
-        <div className="max-w-page px-margin mx-auto w-full py-8 md:py-12">
-          <BreadcrumbJsonLd collection={loaderData.collection} origin={loaderData.origin} />
-          <Breadcrumb collection={loaderData.collection} />
-          <CollectionHeader collection={loaderData.collection} />
-          <div className="lg:grid lg:grid-cols-[15rem_1fr] lg:gap-10">
-            <aside className="hidden lg:block" aria-label="Filters">
-              <div className="sticky top-8">
-                <h2 className="type-heading-sm text-on-surface mb-2">Filters</h2>
-                <FacetForm availableFilters={loaderData.availableFilters} />
-              </div>
-            </aside>
-            <div>
-              <CollectionResults loaderData={loaderData} />
-            </div>
-          </div>
-        </div>
-      </main>
+      <CollectionPage
+        collection={loaderData.collection}
+        products={loaderData.products}
+        availableFilters={loaderData.availableFilters}
+        pageInfo={loaderData.collection.products.pageInfo}
+        collectionPath={collectionPath}
+      />
     </CollectionProvider>
+  );
+}
+
+type CollectionPageProps = {
+  collection: Route.ComponentProps["loaderData"]["collection"];
+  products: Route.ComponentProps["loaderData"]["products"];
+  availableFilters: CollectionAvailableFilter[];
+  pageInfo: { hasNextPage: boolean; endCursor?: string | null };
+  collectionPath: string;
+};
+
+function CollectionPage({
+  collection,
+  products,
+  availableFilters,
+  pageInfo,
+  collectionPath,
+}: CollectionPageProps) {
+  const state = useCollection();
+  const { formProps } = useCollectionForm();
+  const isLoading = state.status === "loading";
+  const currencyCode = products[0]?.priceRange.minVariantPrice.currencyCode ?? "USD";
+
+  const showingCount = content.collection.showingCountPartial.replace(
+    "{{ shown }}",
+    String(products.length),
+  );
+
+  return (
+    <div className="max-w-page px-margin mx-auto w-full py-8">
+      <div className="mb-6">
+        <Breadcrumbs
+          items={[{ label: "Collections", href: "/collections" }, { label: collection.title }]}
+        />
+      </div>
+
+      <h1 className="type-display mb-4">{collection.title}</h1>
+      {collection.descriptionHtml ? (
+        <div
+          className="richtext type-body text-on-surface-secondary mb-6 max-w-prose"
+          dangerouslySetInnerHTML={{ __html: collection.descriptionHtml }}
+        />
+      ) : collection.description ? (
+        <p className="type-body text-on-surface-secondary mb-6 max-w-prose">
+          {collection.description}
+        </p>
+      ) : null}
+
+      <form
+        {...formProps()}
+        method="get"
+        action={collectionPath}
+        className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
+      >
+        <FilterSidebar
+          availableFilters={availableFilters}
+          activeFilters={state.filters}
+          collectionPath={collectionPath}
+          disabled={isLoading}
+          currencyCode={currencyCode}
+        />
+
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <p className="type-body-sm text-on-surface-secondary" aria-live="polite">
+              {showingCount}
+            </p>
+            <SortSelect isLoading={isLoading} />
+          </div>
+
+          <ActiveFilterChips
+            activeFilters={state.filters}
+            collectionPath={collectionPath}
+            currencyCode={currencyCode}
+          />
+
+          {products.length === 0 ? (
+            <p className="text-on-surface-secondary py-12 text-center">
+              {content.collection.noProducts}
+            </p>
+          ) : (
+            <ul
+              role="list"
+              className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-3"
+            >
+              {products.map((product, index) => (
+                <li key={product.id} className={isLoading ? "opacity-60" : ""}>
+                  <ProductCard
+                    product={product}
+                    loading={index < 3 ? "eager" : "lazy"}
+                    fetchPriority={index === 0 ? "high" : "auto"}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <LoadMore pageInfo={pageInfo} collectionPath={collectionPath} />
+
+          {/* No-JS submit so the GET filter/sort form is submittable without JS (F4). */}
+          <noscript>
+            <button type="submit" className="rounded-button button-primary h-11 px-4">
+              {content.collection.showResults}
+            </button>
+          </noscript>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function CollectionViewedTracker({
+  collection,
+}: {
+  collection: Route.ComponentProps["loaderData"]["collection"];
+}) {
+  useEffect(() => {
+    const analytics = getAnalytics();
+    if (!analytics) return;
+    analytics.publish(AnalyticsEvent.COLLECTION_VIEWED, {
+      collection,
+      url: window.location.href,
+    });
+  }, [collection.id]);
+  return null;
+}
+
+function SortSelect({ isLoading }: { isLoading: boolean }) {
+  const state = useCollection();
+  const currentSort = state.sortKey
+    ? getSortByValue(state.sortKey, state.reverse)
+    : COLLECTION_SORT_OPTIONS[0].value;
+
+  return (
+    <label className="flex items-center gap-2 text-sm">
+      <span className="text-on-surface-secondary">{content.collection.sortBy}</span>
+      <select
+        name="sort_by"
+        defaultValue={currentSort}
+        onChange={(event) => event.currentTarget.form?.requestSubmit()}
+        aria-busy={isLoading}
+        disabled={isLoading}
+        className="w-auto"
+      >
+        {COLLECTION_SORT_OPTIONS.map((option) => (
+          <option key={option.label} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+type FilterSidebarProps = {
+  availableFilters: CollectionAvailableFilter[];
+  activeFilters: ProductFilter[];
+  collectionPath: string;
+  disabled: boolean;
+  currencyCode: string;
+};
+
+function FilterSidebar({
+  availableFilters,
+  activeFilters,
+  collectionPath: _collectionPath,
+  disabled,
+  currencyCode,
+}: FilterSidebarProps) {
+  if (availableFilters.length === 0) return null;
+
+  const filterGroups = availableFilters.map((filter) => (
+    <FilterGroup
+      key={filter.id}
+      filter={filter}
+      activeFilters={activeFilters}
+      disabled={disabled}
+      currencyCode={currencyCode}
+    />
+  ));
+
+  return (
+    /* A SINGLE filter subtree rendered once inside the `method="get"` form so
+       each filter input exists exactly once (no duplicate query params).
+       Desktop (lg+): `<summary>` hidden, `<details open>` shows the groups as a
+       static sidebar. Mobile: `<summary>` visible, collapsible disclosure —
+       reachable WITHOUT JS (F4). */
+    <details
+      open
+      className="lg:flex lg:flex-col lg:gap-6"
+      aria-labelledby="collection-filters-heading"
+    >
+      <summary className="marker-hidden rounded-button button-outline focus-visible:outline-accent min-h-touch-target mb-4 inline-flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 lg:hidden">
+        {content.collection.filters}
+      </summary>
+      <div className="flex flex-col gap-6 lg:mb-0">
+        <h2 id="collection-filters-heading" className="type-heading-sm text-on-surface font-medium">
+          {content.collection.filters}
+        </h2>
+        {filterGroups}
+      </div>
+    </details>
+  );
+}
+
+function ActiveFilterChips({
+  activeFilters,
+  collectionPath,
+  currencyCode,
+}: {
+  activeFilters: ProductFilter[];
+  collectionPath: string;
+  currencyCode: string;
+}) {
+  const state = useCollection();
+  if (activeFilters.length === 0) return null;
+
+  return (
+    <ul role="list" className="flex flex-wrap gap-2">
+      {activeFilters
+        .filter((filter) => describeFilter(filter, currencyCode) !== "")
+        .map((filter, index) => {
+          const currentParams = serializeCollectionParams({
+            filters: activeFilters,
+            sortKey: state.sortKey,
+            reverse: state.reverse,
+          });
+          const removalParams = new URLSearchParams(getFilterRemovalUrl(currentParams, filter));
+          removalParams.delete("after");
+          const removal = removalParams.toString();
+          const href = removal ? `${collectionPath}?${removal}` : collectionPath;
+          return (
+            <li key={`${filter.toString()}-${index}`}>
+              <a
+                href={href}
+                className="chip-filled inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm no-underline"
+              >
+                {describeFilter(filter, currencyCode)}
+                <span aria-hidden="true">×</span>
+              </a>
+            </li>
+          );
+        })}
+      <li>
+        <a
+          href={collectionPath}
+          className="text-link inline-flex items-center rounded-full px-3 py-1 text-sm no-underline underline"
+        >
+          {content.collection.clearAll}
+        </a>
+      </li>
+    </ul>
+  );
+}
+
+function describeFilter(filter: ProductFilter, currencyCode = "USD"): string {
+  if (filter.available !== undefined) return filter.available ? "In stock" : "Out of stock";
+  if (filter.productType) return filter.productType;
+  if (filter.productVendor) return filter.productVendor;
+  if (filter.tag) return filter.tag;
+  if (filter.variantOption) {
+    const option = filter.variantOption;
+    const value = option.value ?? option.name ?? "";
+    return option.name && option.value ? `${option.name}: ${option.value}` : value;
+  }
+  if (filter.price) {
+    const price = filter.price;
+    const min = price.min;
+    const max = price.max;
+    const hasMin = min != null && Number(min) > 0;
+    const hasMax = max != null;
+    const format = (value: string | number) => formatPrice({ amount: String(value), currencyCode });
+    if (hasMin && hasMax && min != null && max != null)
+      return `${format(min)} ${content.collection.priceTo} ${format(max)}`;
+    if (hasMax && max != null) return `Up to ${format(max)}`;
+    if (hasMin && min != null) return `From ${format(min)}`;
+    return "Price";
+  }
+  return "";
+}
+
+function LoadMore({
+  pageInfo,
+  collectionPath,
+}: {
+  pageInfo: { hasNextPage: boolean; endCursor?: string | null };
+  collectionPath: string;
+}) {
+  const state = useCollection();
+  if (!pageInfo.hasNextPage) return null;
+  const params = serializeCollectionParams(state);
+  params.set("after", pageInfo.endCursor ?? "");
+  const href = `${collectionPath}?${params.toString()}`;
+
+  return (
+    <div className="mt-8 text-center">
+      <Link
+        to={href}
+        className="rounded-button button-outline focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+      >
+        {content.collection.loadMore}
+      </Link>
+    </div>
+  );
+}
+
+/** Per-route error boundary (R1). A 404 from the loader renders the shared
+ *  themed catch-all UI; other statuses render status + data; non-route errors
+ *  fall back to a safe message. */
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  if (isRouteErrorResponse(error)) {
+    if (error.status === 404) return <NotFound />;
+    return (
+      <div className="max-w-page px-margin mx-auto py-16">
+        <h1 className="type-heading-xl mb-4">{error.status} — Something went wrong</h1>
+        <p className="type-body text-on-surface-secondary">
+          {typeof error.data === "string" && error.data
+            ? error.data
+            : "Something went wrong. Please try again."}
+        </p>
+      </div>
+    );
+  }
+  const message =
+    error instanceof Error && error.message
+      ? error.message
+      : "Something went wrong. Please try again.";
+  return (
+    <div className="max-w-page px-margin mx-auto py-16">
+      <h1 className="type-heading-xl mb-4">Something went wrong</h1>
+      <p className="type-body text-on-surface-secondary">{message}</p>
+    </div>
   );
 }

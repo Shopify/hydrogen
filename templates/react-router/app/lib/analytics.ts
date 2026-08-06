@@ -1,24 +1,36 @@
-import {
-  AnalyticsEvent,
-  type ConsentConfig,
-  type ShopAnalytics,
-  type StorefrontAnalytics,
-} from "@shopify/hydrogen";
+import { AnalyticsEvent } from "@shopify/hydrogen";
 
 export { AnalyticsEvent };
 
-let configuredShop: ShopAnalytics | null = null;
-
-export function configureAnalytics(shop: ShopAnalytics, consent?: ConsentConfig): void {
-  configuredShop = shop;
-  void consent;
-}
-
-export function getAnalyticsShop(): ShopAnalytics | null {
-  return configuredShop;
-}
-
-export function getAnalytics(): StorefrontAnalytics | null {
+export function getAnalytics() {
   if (typeof window === "undefined") return null;
-  return (window.Shopify?.analytics as StorefrontAnalytics | undefined) ?? null;
+  return window.Shopify?.analytics ?? null;
+}
+
+export function addAnalyticsConsoleDestination(): (() => void) | null {
+  const analytics = getAnalytics();
+  if (!analytics) return null;
+
+  return analytics.addDestination({
+    name: "example-console-logger",
+    setup({ subscribe }) {
+      const events = [
+        AnalyticsEvent.PAGE_VIEWED,
+        AnalyticsEvent.PRODUCT_VIEWED,
+        AnalyticsEvent.COLLECTION_VIEWED,
+        AnalyticsEvent.CART_VIEWED,
+        AnalyticsEvent.SEARCH_VIEWED,
+      ] as const;
+      const unsubscribers = events.map((event) =>
+        subscribe(event, (payload) => {
+          // eslint-disable-next-line no-console
+          console.log(`[analytics] ${event}`, payload);
+        }),
+      );
+
+      return () => {
+        for (const unsubscribe of unsubscribers) unsubscribe();
+      };
+    },
+  });
 }

@@ -1,80 +1,98 @@
-# Hydrogen React Router template
+# React Router Hydrogen template
 
 <a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src="https://raw.githubusercontent.com/Shopify/hydrogen/preview/.github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
 
-A React Router 7 (framework mode, SSR) storefront built on
-[`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen) and the
-Oxygen runtime through Vite and Mini Oxygen. It's a starting point you can clone
-and build your store on top of — five pages on a shared layout, with a real cart,
-analytics, and a consent banner wired up.
+A standalone React Router 7 storefront built on Hydrogen 3 and optimized for Oxygen deployments. Copy this folder into a new project, install dependencies, and run it with no Shopify secrets against mock.shop.
 
-## Pages
+## What's Included
 
-- `/` — home (editorial hero, best sellers, shop by category)
-- `/products/:handle` — product detail (gallery, variants, add to cart)
-- `/collections` — all collections
-- `/collections/:handle` — collection with filters, sort, and pagination
-- `/search` — product search with the same filtering
-- `/cart` — cart (also the no-JS fallback for the cart drawer)
+- `/` — home with featured products and collections.
+- `/collections` and `/collections/:handle` — collections, filters, sort, and pagination.
+- `/products/:handle` — product details, variant selection, add to cart, Shop Pay, and related products.
+- `/search` — search with predictive search, filters, sort, and pagination.
+- `/cart` — server-rendered cart page and no-JS fallback for the cart drawer.
+- `/account` — optional Customer Accounts profile/login surface for real stores.
+- `/sitemap.xml` and `/robots.txt` — SEO resource routes.
 
-## What it demonstrates
-
-- Server `loader`s as the data path; each route owns its GraphQL query (typed via
-  `gql.tada`).
-- A real cart: storefront client + request handlers + `/api/cart` + an accessible
-  cart drawer wired to Shopify Standard Actions.
-- A shared layout (header with mobile nav, footer, announcement bar).
-- Analytics + a consent banner.
-- The design tokens in `app/tokens.css` and SVG icons in `public/icons/`.
-
-## Run it
+## Run Locally
 
 ```bash
 npm install
-```
-
-**Zero-config demo** — runs against `mock.shop` (a public mock Storefront API, no
-account or token needed):
-
-```bash
-cp .env.example .env
-# uncomment MOCK_SHOP=1 in .env
 npm run dev
 ```
 
-**Against a real store** — set your store domain and a **private** Storefront API
-token, then run normally:
+With no `PRIVATE_STOREFRONT_API_TOKEN`, the template uses mock.shop and runs without configuration.
+
+## Use A Real Store
 
 ```bash
-cp .env.example .env   # set PUBLIC_STORE_DOMAIN + PRIVATE_STOREFRONT_API_TOKEN
-npm run dev               # Vite/Mini Oxygen loads .env into the worker environment
+cp .env.example .env
 ```
 
-Mode is **auto-detected**: when a `PRIVATE_STOREFRONT_API_TOKEN` is present the
-app talks to the real store (`PUBLIC_STORE_DOMAIN`, falling back to the default in
-`app/lib/shop.ts`); with none it falls back to the `mock.shop` demo, so a fresh
-deploy always renders. **On Oxygen, a linked storefront injects these env vars
-automatically** — the deployed site connects to your store with no extra config
-(and shows the `mock.shop` demo until it's linked). `MOCK_SHOP=1` forces mock.
-(`mock.shop` and the Hydrogen Preview store are different data sources.)
+Set these values in `.env`:
+
+```bash
+PUBLIC_STORE_DOMAIN=<your-shop>.myshopify.com
+PRIVATE_STOREFRONT_API_TOKEN=<your-private-storefront-api-token>
+```
+
+Oxygen injects those bindings automatically for linked storefronts. `MOCK_SHOP=1` forces the mock.shop demo.
+
+## Deploy to Oxygen
+
+<a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src="https://raw.githubusercontent.com/Shopify/hydrogen/preview/.github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
+
+The fastest way to deploy is the button above. It creates a new Oxygen project from this template and links it to your Shopify store.
+
+For manual deploys, run:
+
+```bash
+npm run deploy
+```
+
+A linked Oxygen storefront injects `PUBLIC_STORE_DOMAIN` and `PRIVATE_STOREFRONT_API_TOKEN` automatically.
+
+## Customer Accounts
+
+Customer Accounts are optional and disabled until the template is using a real store and all account values are present:
+
+```bash
+PUBLIC_STORE_DOMAIN=<your-shop>.myshopify.com
+PRIVATE_STOREFRONT_API_TOKEN=<your-private-storefront-api-token>
+SHOP_ID=<numeric-shop-id>
+PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID=<customer-account-api-client-id>
+CUSTOMER_ACCOUNT_SESSION_SECRET=<32-plus-character-secret>
+```
+
+Local Customer Account OAuth requires an HTTPS origin configured in Shopify admin. This template's default `npm run dev` server is HTTP, so use an Oxygen deployment for account testing or run the app behind your own trusted HTTPS tunnel/origin.
 
 ## Scripts
 
 | Script | Does |
 | --- | --- |
 | `npm run dev` | Start the Vite dev server with Mini Oxygen. |
-| `npm run build` | Production React Router build for Oxygen. |
-| `npm run preview` | Build and preview locally with Vite and Mini Oxygen. |
-| `npm run deploy` | Deploy to Oxygen with the Shopify CLI. |
-| `npm run typecheck` | React Router typegen + TypeScript + Hydrogen GraphQL checks. |
+| `npm run build` | Build the React Router app for Oxygen. |
+| `npm run preview` | Build and preview locally with Mini Oxygen. |
+| `npm run deploy` | Deploy to Oxygen with Shopify CLI. |
+| `npm run typecheck` | Generate React Router types, run TypeScript, and validate GraphQL. |
 
-## Where to start
+## Environment
 
-- Swap the store in `app/lib/shop.ts` + `.env`.
-- Routes live in `app/routes/`; shared UI in `app/components/`; data/query helpers
-  in `app/lib/`.
-- The design is yours to change — `app/tokens.css` holds the design tokens; the
-  components use them via semantic classes.
+- `MOCK_SHOP` — set to `1` to force mock.shop.
+- `PUBLIC_STORE_DOMAIN` — real store domain.
+- `PRIVATE_STOREFRONT_API_TOKEN` — private Storefront API token.
+- `PUBLIC_SITE_ORIGIN` — canonical origin for sitemap, robots, and meta tags.
+- `SHOP_ID` — numeric Shopify shop ID for Customer Accounts.
+- `PUBLIC_STOREFRONT_ID` — storefront ID for Shopify scripts.
+- `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID` — Customer Account API client ID.
+- `CUSTOMER_ACCOUNT_SESSION_SECRET` — private cookie encryption secret.
+
+## Where To Start
+
+- Routes live in `app/routes`.
+- Shared UI lives in `app/components`.
+- Storefront, cart, account, and runtime helpers live in `app/lib`.
+- Styling lives in `app/app.css` and uses Tailwind CSS 4.
 
 ## License
 
