@@ -3,7 +3,8 @@ name: hydrogen-customer-account
 description: >
   Customer Account API setup for Hydrogen storefronts. Use when wiring customer
   sessions, login/logout/OAuth route handlers, account profile, order history,
-  account-gated UI, or Customer Account GraphQL queries.
+  account-gated UI, cart buyer identity synchronization, or Customer Account
+  GraphQL queries.
 ---
 
 # Customer Account API
@@ -35,7 +36,24 @@ This makes the dangerous path harder to hold wrong: TypeScript rejects `customer
 
 ## Route Wiring
 
-Register `createCustomerAccountServerHandlers({ customerSession })` with the app's `handleShopifyRoutes` setup. These handlers own:
+Register `createCustomerAccountServerHandlers({ customerSession })` with the app's `handleShopifyRoutes` setup. Use `onAuthenticated`, `onTokenRefresh`, and `onLogout` for app-owned work that must follow authenticated session lifecycle changes:
+
+```ts
+import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
+
+const customerAccountHandlers = createCustomerAccountServerHandlers({
+  customerSession,
+  onAuthenticated,
+  onTokenRefresh,
+  onLogout,
+});
+```
+
+Hooks run after their route reaches its lifecycle transition and before the session manager is committed. `onAuthenticated` receives the newly stored access token. `onTokenRefresh` receives a discriminated result with an `authenticated`, `transient`, or `unauthenticated` status and the corresponding access token, and runs whenever the refresh route completes even when no token changed. These token-bearing hooks require the `customerSession` returned by `createCustomerSession`; custom session implementations can still use standard routes and `onLogout`. Hooks may execute more than once when requests retry or overlap, so implementations must be idempotent. A rejected hook commits the updated session and returns a sanitized server error instead of the normal redirect. For secure cart buyer identity integration, read [Synchronize Customer Accounts with cart](references/cart-sync.md).
+
+Lifecycle hooks are post-authentication integration points, not authorization guards. Rejecting `onAuthenticated` does not roll back the authenticated session.
+
+The Customer Account handlers own:
 
 - `GET /account/login`
 - `GET /account/authorize`

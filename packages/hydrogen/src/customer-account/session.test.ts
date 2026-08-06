@@ -11,6 +11,7 @@ import {
   CUSTOMER_ACCOUNT_LOGOUT_PATH,
   CUSTOMER_ACCOUNT_REFRESH_PATH,
   CustomerAccountOAuthError,
+  type CustomerSession,
   type WritableCustomerSessionManager,
 } from "./index";
 
@@ -637,6 +638,21 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(handlers.refresh.method).toBe("GET");
   });
 
+  it.each(["onAuthenticated", "onTokenRefresh"] as const)(
+    "rejects custom customer sessions using %s",
+    (hookName) => {
+      const customerSession: CustomerSession = { ...createSession() };
+
+      expect(() =>
+        Reflect.apply(createCustomerAccountServerHandlers, undefined, [
+          { customerSession, [hookName]: vi.fn() },
+        ]),
+      ).toThrow(
+        "Customer Account token lifecycle hooks require the customerSession returned by createCustomerSession.",
+      );
+    },
+  );
+
   it("starts login, commits pending state, and redirects to Shopify", async () => {
     const sessionManager = new TestSessionManager();
     const request = new Request(
@@ -708,6 +724,10 @@ describe("createCustomerAccountServerHandlers", () => {
 
   it("logs out, commits cleared state, and redirects through Shopify", async () => {
     const sessionManager = new TestSessionManager(validSessionData());
+    const onLogout = vi.fn().mockImplementation(async () => {
+      expect(sessionManager.data).toBeUndefined();
+      expect(sessionManager.commits).toHaveLength(0);
+    });
     const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
       method: "POST",
       headers: { origin: ORIGIN },
@@ -719,6 +739,7 @@ describe("createCustomerAccountServerHandlers", () => {
       handlers: [
         createCustomerAccountServerHandlers({
           customerSession: createSession(),
+          onLogout,
           postLogoutRedirectUri: "/",
         }),
       ],
@@ -733,6 +754,60 @@ describe("createCustomerAccountServerHandlers", () => {
     );
     expect(response?.headers.get("set-cookie")).toBe("session=1");
     expect(sessionManager.data).toBeUndefined();
+    expect(onLogout).toHaveBeenCalledOnce();
+  });
+
+  it("supports logout hooks on custom customer sessions", async () => {
+    const customerSession: CustomerSession = { ...createSession() };
+    const sessionManager = new TestSessionManager(validSessionData());
+    const onLogout = vi.fn();
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
+      method: "POST",
+      headers: { origin: ORIGIN },
+    });
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      handlers: [createCustomerAccountServerHandlers({ customerSession, onLogout })],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(onLogout).toHaveBeenCalledOnce();
+  });
+
+  it("commits cleared session state and returns an error when the logout hook fails", async () => {
+    const sessionManager = new TestSessionManager(validSessionData());
+    const onLogout = vi.fn().mockRejectedValue(new Error("Hook failed"));
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
+      method: "POST",
+      headers: { origin: ORIGIN },
+    });
+
+    try {
+      const response = await handleShopifyRoutes({
+        request,
+        sessionManager,
+        handlers: [
+          createCustomerAccountServerHandlers({
+            customerSession: createSession(),
+            onLogout,
+          }),
+        ],
+      });
+
+      expect(response?.status).toBe(500);
+      expect(response?.headers.get("location")).toBeNull();
+      expect(response?.headers.get("set-cookie")).toBe("session=1");
+      expect(sessionManager.data).toBeUndefined();
+      expect(consoleError).toHaveBeenCalledWith(
+        "[hydrogen:error:customer-account] customer session lifecycle hook failed",
+        { lifecycle: "logout" },
+      );
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 
   it("uses same-origin logout return_to when provided", async () => {
@@ -886,6 +961,13 @@ describe("createCustomerAccountServerHandlers", () => {
     const sessionManager = new TestSessionManager({
       pendingLogin: validPendingLogin(),
     });
+    const onAuthenticated = vi
+      .fn()
+      .mockImplementation(async (_context: unknown, accessToken: string) => {
+        expect(accessToken).toBe(NEW_ACCESS_TOKEN);
+        expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
+        expect(sessionManager.commits).toHaveLength(0);
+      });
     const request = new Request(
       `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
     );
@@ -896,6 +978,7 @@ describe("createCustomerAccountServerHandlers", () => {
       handlers: [
         createCustomerAccountServerHandlers({
           customerSession: createSession({ fetch: fetchMock }),
+          onAuthenticated,
         }),
       ],
     });
@@ -903,6 +986,99 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(response?.status).toBe(303);
     expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
     expect(response?.headers.get("set-cookie")).toBe("session=1");
+    expect(onAuthenticated).toHaveBeenCalledOnce();
+    expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
+  });
+
+  it("supports authorization without token hooks on custom customer sessions", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(tokenResponse({ id_token: ID_TOKEN }));
+    const customerSession: CustomerSession = { ...createSession({ fetch: fetchMock }) };
+    const sessionManager = new TestSessionManager({ pendingLogin: validPendingLogin() });
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+    );
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      handlers: [createCustomerAccountServerHandlers({ customerSession })],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
+  });
+
+  it("passes the newly issued token to the authentication hook before expiry filtering", async () => {
+    const shortTokenLifetimeInSeconds = 60;
+    const fetchMock = vi.fn().mockResolvedValue(
+      tokenResponse({
+        id_token: ID_TOKEN,
+        expires_in: shortTokenLifetimeInSeconds,
+      }),
+    );
+    const sessionManager = new TestSessionManager({ pendingLogin: validPendingLogin() });
+    const onAuthenticated = vi
+      .fn()
+      .mockImplementation(async (_context: unknown, accessToken: string) => {
+        expect(accessToken).toBe(NEW_ACCESS_TOKEN);
+      });
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+    );
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession: createSession({ fetch: fetchMock }),
+          onAuthenticated,
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(onAuthenticated).toHaveBeenCalledOnce();
+  });
+
+  it("commits session state and returns an error when the lifecycle hook fails", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(tokenResponse({ id_token: ID_TOKEN }));
+    const lifecycleError = new Error("Hook failed");
+    const onAuthenticated = vi.fn().mockRejectedValue(lifecycleError);
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const sessionManager = new TestSessionManager({ pendingLogin: validPendingLogin() });
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+    );
+
+    try {
+      const response = await handleShopifyRoutes({
+        request,
+        sessionManager,
+        handlers: [
+          createCustomerAccountServerHandlers({
+            customerSession: createSession({ fetch: fetchMock }),
+            onAuthenticated,
+          }),
+        ],
+      });
+
+      expect(response?.status).toBe(500);
+      expect(response?.headers.get("location")).toBeNull();
+      expect(response?.headers.get("set-cookie")).toBe("session=1");
+      await expect(response?.json()).resolves.toEqual({
+        error: {
+          code: "session_lifecycle_hook_failed",
+          message: "Customer session lifecycle hook failed",
+        },
+      });
+      expect(consoleError).toHaveBeenCalledWith(
+        "[hydrogen:error:customer-account] customer session lifecycle hook failed",
+        { lifecycle: "authenticated" },
+      );
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 
   it("refreshes tokens, commits session headers, and redirects", async () => {
@@ -910,6 +1086,16 @@ describe("createCustomerAccountServerHandlers", () => {
     const sessionManager = new TestSessionManager(
       validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
     );
+    const onTokenRefresh = vi
+      .fn()
+      .mockImplementation(async (_context: unknown, result: unknown) => {
+        expect(result).toEqual({
+          status: "authenticated",
+          accessToken: NEW_ACCESS_TOKEN,
+        });
+        expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
+        expect(sessionManager.commits).toHaveLength(0);
+      });
     const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=/account`);
 
     const response = await handleShopifyRoutes({
@@ -918,6 +1104,7 @@ describe("createCustomerAccountServerHandlers", () => {
       handlers: [
         createCustomerAccountServerHandlers({
           customerSession: createSession({ fetch: fetchMock }),
+          onTokenRefresh,
         }),
       ],
     });
@@ -926,6 +1113,107 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
     expect(response?.headers.get("set-cookie")).toBe("session=1");
     expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
+    expect(onTokenRefresh).toHaveBeenCalledOnce();
+  });
+
+  it("runs the token refresh hook when the existing token is still usable", async () => {
+    const fetchMock = vi.fn();
+    const sessionManager = new TestSessionManager(validSessionData());
+    const onTokenRefresh = vi
+      .fn()
+      .mockImplementation(async (_context: unknown, result: unknown) => {
+        expect(result).toEqual({ status: "authenticated", accessToken: ACCESS_TOKEN });
+        expect(sessionManager.data?.tokens?.accessToken).toBe(ACCESS_TOKEN);
+        expect(sessionManager.commits).toHaveLength(0);
+      });
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=/account`);
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession: createSession({ fetch: fetchMock }),
+          onTokenRefresh,
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(onTokenRefresh).toHaveBeenCalledOnce();
+  });
+
+  it("supports refresh without token hooks on custom customer sessions", async () => {
+    const fetchMock = vi.fn();
+    const customerSession: CustomerSession = { ...createSession({ fetch: fetchMock }) };
+    const sessionManager = new TestSessionManager(validSessionData());
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=/account`);
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      handlers: [createCustomerAccountServerHandlers({ customerSession })],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("passes transient refresh status to the token refresh hook", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("try later", { status: 503 }));
+    const sessionManager = new TestSessionManager(
+      validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
+    );
+    const onTokenRefresh = vi
+      .fn()
+      .mockImplementation(async (_context: unknown, result: unknown) => {
+        expect(result).toEqual({ status: "transient", accessToken: undefined });
+        expect(sessionManager.data?.tokens?.refreshToken).toBe(REFRESH_TOKEN);
+      });
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=/account`);
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession: createSession({ fetch: fetchMock }),
+          onTokenRefresh,
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(onTokenRefresh).toHaveBeenCalledOnce();
+  });
+
+  it("passes unauthenticated refresh status after definitive rejection", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("invalid", { status: 401 }));
+    const sessionManager = new TestSessionManager(
+      validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
+    );
+    const onTokenRefresh = vi
+      .fn()
+      .mockImplementation(async (_context: unknown, result: unknown) => {
+        expect(result).toEqual({ status: "unauthenticated", accessToken: undefined });
+        expect(sessionManager.data?.tokens).toBeUndefined();
+      });
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=/account`);
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession: createSession({ fetch: fetchMock }),
+          onTokenRefresh,
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(onTokenRefresh).toHaveBeenCalledOnce();
   });
 
   it("passes through unrelated routes", async () => {
