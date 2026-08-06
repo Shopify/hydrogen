@@ -247,14 +247,14 @@ Pass `cache` directly to `createStorefrontClient`'s `config` — the client wrap
 
 ## Env and types
 
-Ship a `.env.example` (committed, blank) and a gitignored `.env`. Only the two real secrets are required; everything
-else public lives in `app/lib/config.ts` (see config split). To smoke-test against the demo store in this repo, obtain
-a real `PRIVATE_STOREFRONT_API_TOKEN` with `node scripts/decrypt-example-secrets.ts` (needs the ejson key locally).
+Ship a `.env.example` (committed, blank) and a gitignored `.env`. Keep the authoritative env list in
+`templates/react-router/.env.example`; do not duplicate it in prose. The required real-store input is a private
+Storefront API token, while Customer Accounts are optional and require their own account/session env vars.
 
 ```sh
-SESSION_SECRET="replace-with-a-long-random-secret-32+"
 PRIVATE_STOREFRONT_API_TOKEN=""
-# PUBLIC_STORE_DOMAIN="your-shop.myshopify.com"   # optional override of app/lib/config.ts
+# PUBLIC_STORE_DOMAIN="your-shop.myshopify.com"
+# CUSTOMER_ACCOUNT_SESSION_SECRET="replace-with-a-long-random-secret-32+"
 ```
 
 Add or update TypeScript declarations so the Worker env is typed:
@@ -264,12 +264,10 @@ Add or update TypeScript declarations so the Worker env is typed:
 /// <reference types="react-router" />
 /// <reference types="vite/client" />
 
+import type { Env as AppEnv } from "./app/lib/platform";
+
 declare global {
-  interface Env {
-    SESSION_SECRET: string;
-    PRIVATE_STOREFRONT_API_TOKEN: string;
-    PUBLIC_STORE_DOMAIN?: string;
-  }
+  interface Env extends AppEnv {}
 }
 
 export {};
@@ -277,7 +275,7 @@ export {};
 
 Add typed React Router contexts for Worker values the app needs, such as `env`, `cache`, and `waitUntil`. Use `createContext<T>()`/`RouterContextProvider` consistently so middleware and loaders do not reach for globals or `process.env`.
 
-Start from the copied `tsconfig.json`; do not replace it wholesale. Update `types` to `["@shopify/oxygen-workers-types", "react-router", "vite/client"]` and remove `node`. Under `verbatimModuleSyntax`, any binding used only in a type position must use `import type`. Example: `defaultI18n` in `app/lib/storefront.ts` is used only as `typeof defaultI18n`, so it must be `import type {defaultI18n}`.
+Start from the copied `tsconfig.json`; do not replace it wholesale. Include `@shopify/oxygen-workers-types`, `react-router`, and `vite/client` in `types`. Keep `node` only when build tooling in the same TypeScript program needs it. Under `verbatimModuleSyntax`, any binding used only in a type position must use `import type`.
 
 Keep `@types/node` in `devDependencies` (build tooling needs it at runtime); it is just not in the app `types` array.
 
@@ -288,8 +286,8 @@ Keep `hydrogen gql check --fail-on-warn` in `typecheck` and preserve the `@shopi
 Replace each `@shared/*` import with template-local code:
 
 - config constants -> local `app/lib/config.ts` (see config split below)
-- private token lookup -> local `app/lib/env.ts`
-- buyer IP helper -> local `app/lib/buyer-ip.ts` (replace `process.env.NODE_ENV` with `import.meta.env.PROD`)
+- Worker env/context helpers -> local `app/lib/platform.ts`
+- private token lookup and buyer IP helper -> local `app/lib/config.ts`
 - encrypted customer session -> copy into `app/lib/customer-session.ts` if Customer Account remains enabled (it is
   already Web-Crypto based and Oxygen-safe)
 - storefront cache adapter -> remove if replacing LRU with Oxygen `caches.open`
@@ -297,15 +295,12 @@ Replace each `@shared/*` import with template-local code:
 
 Additionally, keep `lib/route-templates.ts` unchanged — `routeTemplates` is required by `handleShopifyRedirects({routeTemplates})`, `<ShopifyScripts routes={routeTemplates}>`, and `getPredictiveSearchItemUrl(product, {routes: routeTemplates, …})`.
 
-**Config split (public vs secret).** Do not try to make everything env-driven — `ShopifyScripts` (in the root
-`Layout`) and analytics run on the CLIENT, where the Worker `env` is not available. Split it:
+**Config split (public vs secret).** Keep Worker env reads behind `app/lib/platform.ts` and route/middleware boundaries. Split it:
 
-- Public identity -> bundled `app/lib/config.ts` (store domain, public Storefront token, shop/storefront IDs,
-  Customer Account client ID, `defaultI18n`, `analyticsShop`, `analyticsConsent`). These are non-secret and safe in the
-  client bundle; default them to the demo store so the template runs out of the box.
-- Real secrets -> Worker `env`, read on the server only: `SESSION_SECRET`, `PRIVATE_STOREFRONT_API_TOKEN`, plus an
-  optional `PUBLIC_STORE_DOMAIN` override. Read them in root middleware, not at module scope.
+- Public defaults -> bundled `app/lib/config.ts` (`defaultI18n`, analytics consent, fallback shop identity). These are non-secret and keep the template running out of the box.
+- Runtime bindings -> Worker `env`, read on the server only and passed through root loader data when browser code needs public values such as Shopify Scripts shop identity.
+- Real secrets -> Worker `env`, read in root middleware, not at module scope.
 
-This avoids a fragile loader->client refactor and keeps every feature working. Note this applies beyond root middleware: route modules also import public identity (e.g. `analyticsShop`) on the client, so keeping it as a bundled `config.ts` constant — rather than something read from `env` — is what makes those client imports work.
+This keeps private values server-only while still letting browser code receive safe public values through loader data.
 
 Keep Customer Account, cart, search, analytics, and other example features unless the user explicitly asks to remove them.

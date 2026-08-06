@@ -1,96 +1,71 @@
-import { gql, type StorefrontApi } from "@shopify/hydrogen";
+import type { StorefrontApi } from "@shopify/hydrogen";
 import { Link } from "react-router";
 
-import { compareMoney, formatPrice } from "~/lib/money";
+import { content } from "~/lib/content";
+import { PRODUCT_CARD_QUERY } from "~/lib/fragments";
+import { shopifyImageUrl, srcSetFor } from "~/lib/image";
+import { formatPrice } from "~/lib/money";
 
-export const PRODUCT_CARD_FRAGMENT = gql(`
-  fragment ProductCard on Product {
-    handle
-    title
-    featuredImage {
-      url
-      altText
-      width
-      height
-    }
-    images(first: 2) {
-      nodes {
-        url
-        altText
-      }
-    }
-    availableForSale
-    priceRange {
-      minVariantPrice {
-        amount
-        currencyCode
-      }
-    }
-    compareAtPriceRange {
-      minVariantPrice {
-        amount
-        currencyCode
-      }
-    }
-  }
-`);
-
-const PRODUCT_CARD_SHAPE_QUERY = gql(
-  `query ProductCardShape { products(first: 1) { nodes { ...ProductCard } } }`,
-  [PRODUCT_CARD_FRAGMENT],
-);
-
-export type ProductCardData = StorefrontApi.ResultOf<
-  typeof PRODUCT_CARD_SHAPE_QUERY
->["products"]["nodes"][number];
+/** The typed product card node consumed by grids across the storefront. */
+export type ProductCardData = NonNullable<
+  StorefrontApi.ResultOf<typeof PRODUCT_CARD_QUERY>["product"]
+>;
 
 type ProductCardProps = {
   product: ProductCardData;
-  priority?: boolean;
+  /** Eager-load the first row on hero-less pages (PLP/search LCP). */
+  loading?: "eager" | "lazy";
+  fetchPriority?: "high" | "low" | "auto";
 };
 
-export function ProductCard({ product, priority = false }: ProductCardProps) {
-  const primaryImage = product.featuredImage ?? product.images.nodes[0] ?? null;
-  const hoverImage = product.images.nodes[1] ?? null;
-  const price = product.priceRange.minVariantPrice;
-  const compareAt = product.compareAtPriceRange.minVariantPrice;
-  const onSale = compareMoney(compareAt, price) > 0;
-  const badge = !product.availableForSale ? "Sold out" : onSale ? "Sale" : null;
-  const badgeClass = !product.availableForSale ? "badge-soldout" : "badge-sale";
+export function ProductCard({
+  product,
+  loading = "lazy",
+  fetchPriority = "auto",
+}: ProductCardProps) {
+  const primaryImage = product.featuredImage;
+  const secondaryImage = product.images.nodes[1] ?? null;
+  const minPrice = product.priceRange.minVariantPrice;
+  const compareAt = product.compareAtPriceRange?.minVariantPrice ?? null;
+  const onSale = compareAt && Number(compareAt.amount) > Number(minPrice.amount);
+  const soldOut = !product.availableForSale;
 
   return (
-    <article
-      className="group card flex flex-col gap-2"
-      aria-label={product.title}
-      data-testid="product-card"
-    >
-      <div className="rounded-card bg-surface-secondary relative block aspect-square overflow-hidden">
+    <article className="group card flex flex-col gap-2" aria-label={product.title}>
+      <div className="rounded-card relative block aspect-square overflow-hidden">
         {primaryImage ? (
           <div className="h-full w-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04]">
             <img
-              src={primaryImage.url}
+              src={shopifyImageUrl(primaryImage.url, { width: 600 })}
+              srcSet={srcSetFor(primaryImage.url, { width: 600 })}
               alt={primaryImage.altText ?? product.title}
               className="h-full w-full object-cover"
-              loading={priority ? "eager" : "lazy"}
-              fetchPriority={priority ? "high" : "auto"}
+              loading={loading}
+              {...(fetchPriority !== "auto" ? { fetchPriority: fetchPriority } : {})}
             />
           </div>
-        ) : null}
-        {hoverImage ? (
+        ) : (
+          <div className="bg-surface-secondary h-full w-full" />
+        )}
+        {secondaryImage ? (
           <div className="pointer-events-none absolute inset-0 opacity-0 motion-safe:transition-opacity motion-safe:duration-300 motion-safe:group-hover:opacity-100">
             <img
-              src={hoverImage.url}
-              alt={hoverImage.altText ?? ""}
+              src={shopifyImageUrl(secondaryImage.url, { width: 600 })}
+              srcSet={srcSetFor(secondaryImage.url, { width: 600 })}
+              alt={secondaryImage.altText ?? `${product.title} alternate`}
               className="h-full w-full object-cover"
               loading="lazy"
             />
           </div>
         ) : null}
-        {badge ? (
-          <span
-            className={`${badgeClass} absolute start-2 top-2 inline-flex items-center rounded-full font-medium`}
-          >
-            {badge}
+        {onSale ? (
+          <span className="badge-sale absolute start-2 top-2 inline-flex items-center rounded-full font-medium">
+            {content.product.badge.sale}
+          </span>
+        ) : null}
+        {soldOut ? (
+          <span className="badge-soldout absolute start-2 top-2 inline-flex items-center rounded-full font-medium">
+            {content.product.badge.soldOut}
           </span>
         ) : null}
       </div>
@@ -101,23 +76,16 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           </Link>
         </h3>
         <div className="inline-flex flex-wrap items-baseline gap-2 text-sm">
-          {onSale ? (
-            <>
-              <span className="text-sale font-medium">
-                <span className="sr-only">Sale price: </span>
-                {formatPrice(price)}
-              </span>
-              <s className="text-compare text-sm">
-                <span className="sr-only">Regular price: </span>
-                {formatPrice(compareAt)}
-              </s>
-            </>
-          ) : (
-            <span className="text-on-surface font-medium">
-              <span className="sr-only">Price: </span>
-              {formatPrice(price)}
-            </span>
-          )}
+          <span className={onSale ? "text-sale font-medium" : "text-on-surface font-medium"}>
+            <span className="sr-only">{onSale ? "Sale price: " : "Price: "}</span>
+            {formatPrice(minPrice)}
+          </span>
+          {onSale && compareAt ? (
+            <s className="text-compare text-sm">
+              <span className="sr-only">Regular price: </span>
+              {formatPrice(compareAt)}
+            </s>
+          ) : null}
         </div>
       </div>
     </article>
