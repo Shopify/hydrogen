@@ -4,6 +4,7 @@
 	import CartErrorBanner from './CartErrorBanner.svelte';
 	import CartLineItems from './CartLineItems.svelte';
 	import CartNote from './CartNote.svelte';
+	import CartRevalidationStatus from './CartRevalidationStatus.svelte';
 	import CartTotals from './CartTotals.svelte';
 
 	const loading = cartState((s) => s.loading);
@@ -12,6 +13,7 @@
 </script>
 
 <div>
+	<CartRevalidationStatus />
 	<CartErrorBanner />
 	<CartLineItems />
 

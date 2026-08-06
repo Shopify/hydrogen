@@ -9,6 +9,7 @@ const hasCartContent = computed(() => !loading.value && lines.value.length > 0);
 
 <template>
   <div>
+    <CartRevalidationStatus />
     <CartErrorBanner />
     <CartLineItems />
 

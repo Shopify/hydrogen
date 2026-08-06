@@ -81,7 +81,7 @@ Build route query objects by copying `route.query`, deleting all product option 
 ## Add To Cart
 
 ```vue
-<form v-bind="form.formProps({ afterSubmit: openCartDrawer })">
+<form v-bind="form.formProps({ beforeSubmit: openCartDrawer })">
   <input type="hidden" v-bind="form.register('merchandiseId', {})" />
   <input v-bind="form.register('quantity', { value: quantity })" />
   <button v-bind="form.register('addToCart', {})" :disabled="!addable || form.pending.value">

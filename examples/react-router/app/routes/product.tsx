@@ -318,9 +318,9 @@ function ProductPage({
           ) : null}
 
           {/* Add to cart form — separate from variant selection (variant-form skill).
-              `formProps({ afterSubmit: openCartDrawer })` opens the drawer once
-              on a successful reply; do not double-wire it on the button. */}
-          <form {...formProps({ afterSubmit: openCartDrawer })} className="flex flex-col gap-3">
+              `formProps({ beforeSubmit: openCartDrawer })` opens the drawer as
+              soon as the optimistic update starts. */}
+          <form {...formProps({ beforeSubmit: openCartDrawer })} className="flex flex-col gap-3">
             <input type="hidden" {...register("merchandiseId", {})} />
             <div className="flex items-center gap-3">
               <span className="type-body-sm text-on-surface font-medium">

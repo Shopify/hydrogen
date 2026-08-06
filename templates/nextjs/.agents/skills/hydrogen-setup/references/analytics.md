@@ -269,7 +269,7 @@ On search results page:
 On cart view (page or drawer):
   analytics.publish(AnalyticsEvent.CART_VIEWED, { cart })
 
-Once, in a client-only effect after ShopifyScripts has rendered:
+Once per cart store lifecycle, in a client-only effect after ShopifyScripts has rendered:
   trackCartAnalytics(cartStore) // subscribes to the store; emits cart_updated / product_added_to_cart / product_removed_from_cart on confirmed changes
   // never at cart-store creation time — that runs during SSR, where the analytics bus does not exist
   // React/Vue bindings: render useCartAnalytics() inside CartProvider instead
@@ -524,7 +524,7 @@ Three questions, in order, decide where things go:
 
 2. **Where does per-page server-resolved data become available on the client?** That is where each view event (`product_viewed`, `collection_viewed`, etc.) goes. In React, that is a `useEffect` keyed on the resolved data. In Solid, a `createEffect` reading the async value. In Svelte 5, an `$effect`. In Astro, an inline script that reads from a data-attribute bridge.
 
-3. **Where does the client first have the cart store?** That is where you call `trackCartAnalytics(cartStore)` once — in a client-only effect after ShopifyScripts has rendered, never at cart-store creation time (that runs during SSR, where the analytics bus does not exist yet). The tracker subscribes to the store itself, so every confirmed cart change from any source (initial fetch, mutation result, SPA navigation re-fetch, optimistic update settled) is tracked without further app code. See Cart Tracking below.
+3. **Where does the client first have the cart store?** That is where you call `trackCartAnalytics(cartStore)` once — in a client-only effect after ShopifyScripts has rendered, never at cart-store creation time (that runs during SSR, where the analytics bus does not exist yet). The tracker subscribes to the store itself, so every confirmed cart change from any source (initial fetch, mutation result, SPA navigation re-fetch, optimistic update settled) is tracked without further app code. Keep the cleanup returned by the tracker when your framework has teardown hooks. See Cart Tracking below.
 
 The singleton + lazy-init pattern from the previous section is universal. Every framework converges on the same shape: one shared analytics module, getter that no-ops on the server, and adapters that translate framework lifecycle into `publish()` / `trackCartAnalytics()` calls.
 
@@ -538,7 +538,7 @@ Cart events do not come from `publish()` — they come from a cart tracker subsc
 const stopTracking = trackCartAnalytics(cartStore);
 ```
 
-Pass the cart store created by Hydrogen (`createCartStore`, or the store provided by the React/Vue `CartProvider` — the React and Vue bindings export a `useCartAnalytics()` hook/composable that does this for the provider's store). The tracker subscribes to the store itself, skips states with pending optimistic cart work, and returns an unsubscribe function. It throws if `window.Shopify.analytics` is unavailable — render ShopifyScripts first — and runs change detection:
+Pass the cart store created by Hydrogen (`createCartStore`, or the store provided by the React/Vue `CartProvider` — the React and Vue bindings export a `useCartAnalytics()` hook/composable that does this for the provider's store). The tracker subscribes to the store itself, stores tracker state internally per analytics bus, skips pending/revalidating/note updates, and returns an unsubscribe function. It throws if `window.Shopify.analytics` is unavailable — render ShopifyScripts first — and runs change detection:
 
 - Compares the new cart's `updatedAt` against the previous in-memory cart, against `localStorage.cartLastUpdatedAt`, and against the last emitted event ID.
 - Diffs lines: removed lines emit `product_removed_from_cart`, new lines or quantity increases emit `product_added_to_cart`, quantity decreases emit `product_removed_from_cart`.
@@ -549,13 +549,13 @@ The cart payload type is intentionally lightweight (no Hydrogen cart-type depend
 ```ts
 type AnalyticsCart = {
   id: string;
-  updatedAt: string;                    // required for dedupe
+  updatedAt: string;                    // required by AnalyticsCart for stable dedupe
   lines: { nodes?: AnalyticsCartLine[]; edges?: { node: AnalyticsCartLine }[] };
   [key: string]: unknown;
 };
 ```
 
-Manually published `AnalyticsCart` payloads (like `CART_VIEWED`) accept both `lines.nodes` and `lines.edges` (GraphQL connection) shapes at the type level; the bus forwards them unchanged, so subscribers that read lines should flatten them with the exported `flattenConnection()` helper. The cart store consumed by `trackCartAnalytics` is different: it reads `cart.lines.nodes` directly, so the app's cart query must select `lines.nodes`. The cart query must also include `updatedAt` — the tracker keys dedupe on it. Without it, the tracker falls back to a fresh timestamp per state and can emit duplicate cart events.
+Manually published `AnalyticsCart` payloads (like `CART_VIEWED`) accept both `lines.nodes` and `lines.edges` (GraphQL connection) shapes at the type level; the bus forwards them unchanged, so subscribers that read lines should flatten them with the exported `flattenConnection()` helper. The cart store consumed by `trackCartAnalytics` is different: it reads `cart.lines.nodes` directly, so the app's cart query must select `lines.nodes`. The tracker falls back to the current time internally if store data is missing `updatedAt`, but include `updatedAt` in the cart query for stable dedupe.
 
 Application code should not manually publish `cart_updated`, `product_added_to_cart`, or `product_removed_from_cart`. Always go through `trackCartAnalytics`.
 
@@ -607,7 +607,7 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Astro inline scripts cannot reference component scope.** Astro hoists `<script>` tags at build time. Bridge SSR data through hidden DOM (`data-*` attributes) and read it from the script. Trying to interpolate `{product.id}` directly into a script body silently fails — the script ships as a static string.
 - **Astro page-view fires only on full loads.** Astro is MPA-by-default. If you adopt View Transitions, listen for `astro:after-swap` instead of relying on the inline-script-runs-on-load behavior — otherwise SPA-nav transitions skip `page_viewed`.
 - **Required product fields silently drop the Monorail leg.** Missing `id`/`title`/`vendor`/`variantId`/`variantTitle`/`price` causes the Shopify analytics subscriber to skip Monorail dispatch and log a field-specific error. The bus event still fires for your subscribers — the loss is only in Shopify analytics. Watch the console.
-- **`updatedAt` missing from cart query breaks cart tracking dedupe.** The cart tracker keys dedupe on `updatedAt`. Without it, the tracker falls back to a fresh timestamp per cart state, so duplicate `cart_updated` / line-delta events can fire for the same logical cart.
+- **`updatedAt` missing from cart query weakens dedupe.** The cart tracker prefers cart `updatedAt`, but falls back to the current time when it is absent. Include `updatedAt` in cart queries for stable dedupe across navigations and reloads.
 - **`destroy()` is not called by any of the framework adapter sketches.** During HMR or React Strict Mode double-mount, this means duplicate event subscribers and possibly duplicate Monorail events in dev. For production this is rarely visible (one bus per page lifetime). If duplicate dev events bother you, wire `analytics.destroy()` into your framework's teardown (React effect cleanup, Svelte `onDestroy`, Solid `onCleanup`, or equivalent).
 - **Lighthouse skip is silent.** Monorail dispatch is skipped for Chrome Lighthouse user-agents. If your synthetic monitoring runs Lighthouse, you will see no Monorail requests in those runs — this is intentional.
 
@@ -616,7 +616,7 @@ For production, re-verify against the production bundle. Several gotchas only ap
 ## Anti-patterns
 
 - **Don't construct the bus on the server.** SSR has no `window`, no consent SDK, and no useful behavior. Constructing on the server initializes browser internals against undefined globals and crashes — or worse, no-ops silently and ships analytics-free.
-- **Don't manually publish `cart_updated` / `product_added_to_cart` / `product_removed_from_cart`.** These events come from `trackCartAnalytics()`'s diff. Manual publishing bypasses the dedupe and produces duplicate or contradictory cart history.
+- **Don't manually publish `cart_updated` / `product_added_to_cart` / `product_removed_from_cart`.** These events come from `trackCartAnalytics(cartStore)`'s diff. Manual publishing bypasses the dedupe and produces duplicate or contradictory cart history.
 - **Don't reimplement consent.** Shopify's Customer Privacy SDK already implements region-aware gating. Trying to replace that logic almost always introduces regulatory exposure.
 - **Don't reimplement Monorail dispatch.** If you need a third-party destination, register it with `addDestination()` and forward from there — do not parallel-publish to Monorail yourself.
 - **Don't put per-route view events in a global subscriber.** A single subscriber that watches `page_viewed` and synthesizes `product_viewed` from URL parsing is brittle and loses payload context. Publish each view event from the route that has the data.

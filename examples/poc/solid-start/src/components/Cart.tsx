@@ -5,6 +5,7 @@ import { CartDiscountCodes } from "./CartDiscountCodes";
 import { CartErrorBanner } from "./CartErrorBanner";
 import { CartLineItems } from "./CartLineItems";
 import { CartNote } from "./CartNote";
+import { CartRevalidationStatus } from "./CartRevalidationStatus";
 import { CartTotals } from "./CartTotals";
 
 export function Cart() {
@@ -13,6 +14,7 @@ export function Cart() {
 
   return (
     <div>
+      <CartRevalidationStatus />
       <CartErrorBanner />
       <CartLineItems />
 

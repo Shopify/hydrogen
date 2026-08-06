@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useCart, useCartForm } from "../lib/cart";
 import { shopifyImageUrl, srcSetFor } from "../lib/image";
@@ -30,7 +30,11 @@ function CartLineItem({ line }: { line: CartLineView }) {
   const options = merchandise?.selectedOptions ?? [];
 
   return (
-    <li data-testid="cart-line" className="flex gap-3 py-4">
+    <li
+      data-testid="cart-line"
+      className={`flex gap-3 py-4 transition-opacity ${pending ? "opacity-60" : ""}`}
+      {...(pending ? { "aria-busy": "true" } : {})}
+    >
       <div className="bg-surface-secondary size-20 shrink-0 overflow-hidden">
         {merchandise?.image ? (
           <img
@@ -108,11 +112,60 @@ function CartLineItem({ line }: { line: CartLineView }) {
   );
 }
 
+function hasPendingCost(pending: {
+  cost?: boolean;
+  discountCodes: Set<string>;
+  lines: Set<string>;
+}): boolean {
+  return pending.cost ?? (pending.lines.size > 0 || pending.discountCodes.size > 0);
+}
+
+function CartStatus({
+  isPending,
+  networkErrors,
+}: {
+  isPending: boolean;
+  networkErrors: readonly { message: string }[];
+}) {
+  const message = useCartStatusMessage(isPending, networkErrors.length > 0);
+
+  return (
+    <>
+      <span role="status" className="sr-only" data-cart-status>
+        {message}
+      </span>
+      {networkErrors.length > 0 ? (
+        <div role="alert" aria-atomic="true" className="mb-3 text-sm">
+          {networkErrors.map((error, index) => (
+            <p key={`${error.message}-${index}`}>{error.message}</p>
+          ))}
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+function useCartStatusMessage(isPending: boolean, hasNetworkErrors: boolean): string {
+  const [sawPending, setSawPending] = useState(false);
+
+  useEffect(() => {
+    if (isPending) setSawPending(true);
+  }, [isPending]);
+
+  if (isPending) return "Updating cart totals";
+  if (sawPending && !hasNetworkErrors) return "Cart totals updated";
+  return "";
+}
+
 export function CartContents({ compact = false }: { compact?: boolean }) {
   const cart = useCart((state) => state.data);
   const loading = useCart((state) => state.loading);
+  const pending = useCart((state) => state.pending);
+  const revalidating = useCart((state) => "revalidating" in state && state.revalidating === true);
+  const networkErrors = useCart((state) => state.errors.network);
   const lines = cart.lines.nodes as CartLineView[];
   const empty = !loading && lines.length === 0;
+  const isPending = hasPendingCost(pending) || revalidating;
 
   if (loading && lines.length === 0) {
     return <p className="text-on-surface-secondary p-4 text-sm">Loading cart…</p>;
@@ -120,36 +173,51 @@ export function CartContents({ compact = false }: { compact?: boolean }) {
 
   if (empty) {
     return (
-      <div className="p-4">
-        <p className="text-on-surface font-medium">Your cart is empty.</p>
-        <p className="text-on-surface-secondary mt-2 text-sm">
-          Looks like you have not added anything to your cart yet.
-        </p>
-      </div>
+      <>
+        <CartStatus isPending={isPending} networkErrors={networkErrors} />
+        <div className="p-4" aria-busy={isPending}>
+          <p className="text-on-surface font-medium">Your cart is empty.</p>
+          <p className="text-on-surface-secondary mt-2 text-sm">
+            Looks like you have not added anything to your cart yet.
+          </p>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className={compact ? "" : "max-w-page px-margin mx-auto w-full"}>
-      <ul role="list" className="divide-border divide-y">
-        {lines.map((line) => (
-          <CartLineItem key={line.id} line={line} />
-        ))}
-      </ul>
-    </div>
+    <>
+      <CartStatus isPending={isPending} networkErrors={networkErrors} />
+      <div className={compact ? "" : "max-w-page px-margin mx-auto w-full"}>
+        <ul role="list" className="divide-border divide-y">
+          {lines.map((line) => (
+            <CartLineItem key={line.id} line={line} />
+          ))}
+        </ul>
+      </div>
+    </>
   );
 }
 
 export function CartSummary() {
   const cart = useCart((state) => state.data);
+  const pending = useCart((state) => state.pending);
+  const revalidating = useCart((state) => "revalidating" in state && state.revalidating === true);
   const lines = cart.lines.nodes;
+  const isPending = hasPendingCost(pending) || revalidating;
+
   if (lines.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <span className="text-on-surface text-sm font-medium">Estimated total</span>
-        <span className="text-on-surface text-base font-medium">
+      <div className="flex items-center justify-between" aria-busy={isPending}>
+        <span className="text-on-surface text-sm font-medium">
+          Estimated total
+          {isPending ? <span aria-hidden="true"> (updating)</span> : null}
+        </span>
+        <span
+          className={`text-on-surface text-base font-medium ${isPending ? "text-on-surface-secondary" : ""}`}
+        >
           {formatPrice(cart.cost.totalAmount)}
         </span>
       </div>
