@@ -61,28 +61,27 @@ export function configureShopifyRouting({
   navigate,
   routes,
 }: {
-  navigate?: ShopifyGlobal["navigate"];
+  navigate?: ShopifyGlobal["routes"]["navigate"];
   routes?: ShopifyRouteTemplates;
 }) {
   const shopify = getShopifyGlobal();
   if (!shopify) return;
 
-  if (routes) {
-    const getRouteOptions = (url: string) => ({
-      baseUrl: window.location.href,
-      pathPrefix: shopify.routes?.root,
-      routeTemplates: routes,
-      url,
-    });
+  const getRouteOptions = (url: string) => ({
+    baseUrl: window.location.href,
+    pathPrefix: shopify.routes?.root,
+    routeTemplates: routes ?? {},
+    url,
+  });
 
-    shopify.routes ??= {};
-    shopify.routes.match = (url) => matchStandardRouteUrl(getRouteOptions(url));
-    shopify.routes.resolve = (url) => resolveStandardRouteUrl(getRouteOptions(url));
-  }
+  shopify.routes ??= {};
+  shopify.routes.match = (url) => matchStandardRouteUrl(getRouteOptions(url));
+  shopify.routes.resolve = (url) => resolveStandardRouteUrl(getRouteOptions(url));
 
-  shopify.navigate = navigate
-    ? (url: string) => navigate(shopify.routes?.resolve?.(url) ?? url)
-    : navigate;
+  const navigateTo = navigate ?? ((url: string) => window.location.assign(url));
+  shopify.routes.navigate = (url) => navigateTo(shopify.routes?.resolve?.(url) ?? url);
+  // Deprecated, kept for temporary backwards compat with WebMCP
+  shopify.navigate = shopify.routes.navigate;
 }
 
 function getShopifyRoutesRoot(pathPrefix: I18nConfig["pathPrefix"]): string {

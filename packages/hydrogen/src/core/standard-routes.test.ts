@@ -62,6 +62,7 @@ describe("standard routes", () => {
 
     expect(matchStandardRouteUrl({ routeTemplates, url: "/p/snow board?variant=1" })).toEqual({
       route: "product",
+      pageTemplateName: "product",
       params: { productHandle: "snow board" },
     });
     expect(
@@ -71,6 +72,7 @@ describe("standard routes", () => {
       }),
     ).toEqual({
       route: "article",
+      pageTemplateName: "article",
       params: { blogHandle: "news", articleHandle: "waxing guide" },
     });
   });
@@ -82,12 +84,31 @@ describe("standard routes", () => {
 
     expect(matchStandardRouteUrl({ routeTemplates, url: "/products/snowboard" })).toEqual({
       route: "product",
+      pageTemplateName: "product",
       params: { productHandle: "snowboard" },
     });
     expect(matchStandardRouteUrl({ routeTemplates, url: "/collections/winter" })).toEqual({
       route: "collection",
+      pageTemplateName: "collection",
       params: { collectionHandle: "winter" },
     });
+  });
+
+  it("matches the root as the index route", () => {
+    const routeTemplates = createShopifyRouteTemplates({});
+
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/" })).toEqual({
+      route: "index",
+      pageTemplateName: "index",
+      params: {},
+    });
+    expect(
+      matchStandardRouteUrl({
+        pathPrefix: "/fr-ca/",
+        routeTemplates,
+        url: "/fr-ca/",
+      }),
+    ).toEqual({ route: "index", pageTemplateName: "index", params: {} });
   });
 
   it("resolves standard route URLs with an i18n path prefix", () => {
@@ -117,6 +138,7 @@ describe("standard routes", () => {
       }),
     ).toEqual({
       route: "productInCollection",
+      pageTemplateName: "product",
       params: { collectionHandle: "winter", productHandle: "snowboard" },
     });
   });

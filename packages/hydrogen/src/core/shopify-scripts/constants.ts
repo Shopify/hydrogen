@@ -2,6 +2,7 @@ export const SHOPIFY_CDN_ORIGIN = "https://cdn.shopify.com";
 export const SHOPIFY_SHOP_APP_ORIGIN = "https://shop.app";
 export const SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/standard-actions.js`;
 export const SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/standard-events.js`;
+export const SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/standard-events-inspector.js`;
 export const SHOPIFY_STOREFRONT_WEBMCP_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/webmcp.js`;
 export const SHOPIFY_INBOX_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/web-components/agent.js`;
 

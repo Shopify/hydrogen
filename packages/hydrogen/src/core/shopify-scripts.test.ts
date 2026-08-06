@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, beforeEach, vi } from "vitest";
 
+import { SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT } from "./shopify-scripts/constants";
 import {
   getShopifyScriptTags,
   getShopifyGlobal,
@@ -89,9 +90,42 @@ describe("shopify scripts", () => {
     expect(navigate).toHaveBeenCalledWith("/products/snowboard");
     expect(window.Shopify?.routes.match?.("/products/snowboard")).toEqual({
       route: "product",
+      pageTemplateName: "product",
+      params: { productHandle: "snowboard" },
+    });
+    expect(window.Shopify?.routes.match?.("/")).toEqual({
+      route: "index",
+      pageTemplateName: "index",
+      params: {},
+    });
+    expect(window.Shopify?.routes.resolve?.("/products/snowboard")).toBe("/products/snowboard");
+  });
+
+  it("sets default Shopify route hooks when route templates are omitted", async () => {
+    await initializeShopifyScripts({ webMcp: false });
+
+    expect(window.Shopify?.routes.match?.("/products/snowboard")).toEqual({
+      route: "product",
+      pageTemplateName: "product",
       params: { productHandle: "snowboard" },
     });
     expect(window.Shopify?.routes.resolve?.("/products/snowboard")).toBe("/products/snowboard");
+  });
+
+  it("falls back to native navigation when a navigator is omitted", async () => {
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+    const routeTemplates = createShopifyRouteTemplates({
+      product: "/p/:productHandle",
+    });
+
+    await initializeShopifyScripts({ routes: routeTemplates, webMcp: false });
+
+    const shopifyNavigate = window.Shopify?.routes.navigate;
+    assert(shopifyNavigate, "Expected Shopify.routes.navigate to be configured.");
+    shopifyNavigate("/products/snowboard");
+
+    expect(assign).toHaveBeenCalledWith("/p/snowboard");
+    expect(window.Shopify?.navigate).toBe(shopifyNavigate);
   });
 
   it("sets Shopify navigation without replacing existing route state", async () => {
@@ -100,7 +134,7 @@ describe("shopify scripts", () => {
 
     await initializeShopifyScripts({ navigate, routes: emptyRouteTemplates, webMcp: false });
 
-    expect(window.Shopify?.navigate).toEqual(expect.any(Function));
+    expect(window.Shopify?.routes.navigate).toEqual(expect.any(Function));
     expect((window.Shopify?.routes as any)?.existing).toBe("value");
   });
 
@@ -117,8 +151,8 @@ describe("shopify scripts", () => {
 
     await initializeShopifyScripts({ navigate, routes: routeTemplates, webMcp: false });
 
-    const shopifyNavigate = window.Shopify?.navigate;
-    assert(shopifyNavigate, "Expected Shopify.navigate to be configured.");
+    const shopifyNavigate = window.Shopify?.routes.navigate;
+    assert(shopifyNavigate, "Expected Shopify.routes.navigate to be configured.");
     shopifyNavigate("/fr-ca/products/snowboard?variant=1#reviews");
 
     expect(navigate).toHaveBeenCalledWith("/fr-ca/p/snowboard?variant=1#reviews");
@@ -141,6 +175,7 @@ describe("shopify scripts", () => {
     );
     expect(window.Shopify?.routes.match?.("/fr-ca/p/snowboard?variant=1#reviews")).toEqual({
       route: "product",
+      pageTemplateName: "product",
       params: { productHandle: "snowboard" },
     });
     expect(
@@ -274,6 +309,7 @@ describe("shopify scripts", () => {
 
   it("builds script tag descriptors for the Shopify runtime", () => {
     const descriptors = getShopifyScriptTags({
+      debug: { standardEventsInspector: true },
       i18n: { country: "US", language: "EN" },
       nonce: "test-nonce",
       shop: TEST_SHOP,
@@ -316,6 +352,16 @@ describe("shopify scripts", () => {
           crossorigin: "anonymous",
           nonce: "test-nonce",
           src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
+        },
+      },
+      {
+        tagName: "script",
+        attributes: {
+          id: "shopify-standard-events-inspector",
+          defer: true,
+          crossorigin: "anonymous",
+          nonce: "test-nonce",
+          src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,
         },
       },
       {
@@ -413,6 +459,16 @@ describe("shopify scripts", () => {
       {
         tagName: "script",
         attributes: {
+          id: "shopify-standard-events-inspector",
+          defer: true,
+          crossorigin: "anonymous",
+          nonce: "test-nonce",
+          src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,
+        },
+      },
+      {
+        tagName: "script",
+        attributes: {
           id: "shopify-consent",
           async: true,
           crossorigin: "anonymous",
@@ -466,10 +522,11 @@ describe("shopify scripts", () => {
 
   it("preserves an explicitly empty nonce on nonce-capable scripts", () => {
     const descriptors = getShopifyScriptTags({
+      debug: { standardEventsInspector: true },
       nonce: "",
       shop: TEST_SHOP,
     });
-    expect(descriptors.scripts).toHaveLength(8);
+    expect(descriptors.scripts).toHaveLength(9);
     for (const { attributes } of descriptors.scripts) {
       expect(attributes).toHaveProperty("nonce", "");
     }
@@ -479,6 +536,13 @@ describe("shopify scripts", () => {
     const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
 
     expect(descriptors.scripts).toHaveLength(8);
+    expect(descriptors.scripts).not.toContainEqual(
+      expect.objectContaining({
+        attributes: expect.objectContaining({
+          src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,
+        }),
+      }),
+    );
     expect(descriptors.tags).not.toContainEqual(
       expect.objectContaining({
         innerHTML: expect.stringContaining(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT),
@@ -718,13 +782,14 @@ describe("shopify scripts", () => {
 
   it("renders all Shopify script tags to an HTML array", () => {
     const htmlTags = renderShopifyScriptTags({
+      debug: { standardEventsInspector: true },
       i18n: { country: "US", language: "EN" },
       nonce: "test-nonce",
       shop: TEST_SHOP,
     });
     const html = htmlTags.join("\n");
 
-    expect(htmlTags).toHaveLength(11);
+    expect(htmlTags).toHaveLength(12);
     expect(html).toContain('<script id="shopify-global-bootstrap" nonce="test-nonce">');
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
@@ -734,6 +799,9 @@ describe("shopify scripts", () => {
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_SHOP_APP_ORIGIN}">`);
     expect(html).toContain(
       `<script id="shopify-standard-actions" type="module" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}"></script>`,
+    );
+    expect(html).toContain(
+      `<script id="shopify-standard-events-inspector" defer crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT}"></script>`,
     );
     expect(html).toContain(
       `<script id="shopify-storefront-analytics" async crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT}"></script>`,

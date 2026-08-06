@@ -60,6 +60,10 @@ export type ShopifyRouteTemplates = {
 };
 
 export type StandardRouteName = keyof ShopifyRouteTemplates;
+export type ShopifyStandardRouteName = StandardRouteName | "index";
+export type ShopifyPageTemplateName<
+  TRoute extends ShopifyStandardRouteName = ShopifyStandardRouteName,
+> = TRoute extends "productInCollection" ? "product" : TRoute;
 export type StandardRouteParamName =
   | "articleHandle"
   | "blogHandle"
@@ -77,7 +81,10 @@ export type StandardRouteParamsByName = {
 };
 export type StandardRouteOptions = Pick<I18nConfig, "pathPrefix">;
 
-export type ShopifyStandardRouteMatch = {
+export type ShopifyStandardRouteMatch<
+  TRoute extends ShopifyStandardRouteName = ShopifyStandardRouteName,
+> = {
   params: StandardRouteParams;
-  route: StandardRouteName;
+  route: TRoute;
+  pageTemplateName: ShopifyPageTemplateName<TRoute>;
 };
