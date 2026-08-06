@@ -1,6 +1,6 @@
 import {
   handleShopifyRoutes,
-  type HydrogenRouteInterceptor,
+  type HydrogenRouteHandler,
   type HydrogenRoutesOptions,
 } from "./handle-shopify-routes";
 import { handleGraphiql } from "./interceptors/graphiql";
@@ -12,11 +12,9 @@ type HydrogenRoutesDevOptions = {
 
 export type HydrogenRoutesOptionsWithDev = HydrogenRoutesOptions & HydrogenRoutesDevOptions;
 
-export const handleShopifyRoutesDev: HydrogenRouteInterceptor<HydrogenRoutesDevOptions> = (
-  options,
-) => {
+export const handleShopifyRoutesDev: HydrogenRouteHandler<HydrogenRoutesDevOptions> = (options) => {
   const productionResult = handleShopifyRoutes(options);
   if (productionResult) return productionResult;
 
-  return handleGraphiql(options);
+  return handleGraphiql(new URL(options.request.url), options);
 };

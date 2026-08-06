@@ -94,18 +94,14 @@ export function createCallableRouteHandler<
   return Object.assign(handler, { pathname, method });
 }
 
-export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = ({
-  request,
-  sessionManager,
-  storefrontClient,
-  requestContext,
-  handlers = [],
-}) => {
+export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
+  url,
+  { request, sessionManager, storefrontClient, requestContext, handlers = [] },
+) => {
   const routeHandlers = handlers.flatMap((group) => Object.values(group));
   if (routeHandlers.length === 0) return null;
 
-  const pathname = new URL(request.url).pathname;
-  const pathMatches = routeHandlers.filter((entry) => entry.pathname === pathname);
+  const pathMatches = routeHandlers.filter((entry) => entry.pathname === url.pathname);
   if (pathMatches.length === 0) return null;
 
   const match = pathMatches.find((candidate) => candidate.method === request.method);

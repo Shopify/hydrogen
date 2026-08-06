@@ -30,7 +30,7 @@ function handleSfapiProxy(request: Request, storeUrl = defaultStoreUrl, buyerIp 
     i18n: { country: "US", language: "EN" },
     buyerIp,
   });
-  return handleSfapiProxyImpl({
+  return handleSfapiProxyImpl(new URL(request.url), {
     request,
     requestContext,
     sessionManager: createTestSessionManager(request),
@@ -67,7 +67,7 @@ function handleSfapiProxyWithClientType(
     type === "public"
       ? { ...clientBase, type: "public" as const }
       : { ...clientBase, type: "private_no_buyer_context" as const };
-  return handleSfapiProxyImpl({
+  return handleSfapiProxyImpl(new URL(request.url), {
     request,
     requestContext,
     sessionManager: createTestSessionManager(request),
@@ -80,7 +80,7 @@ function handlePrivateSfapiProxyWithoutBuyerContext(request: Request, storeUrl =
     request,
     i18n: { country: "US", language: "EN" },
   });
-  return handleSfapiProxyImpl({
+  return handleSfapiProxyImpl(new URL(request.url), {
     request,
     requestContext,
     sessionManager: createTestSessionManager(request),

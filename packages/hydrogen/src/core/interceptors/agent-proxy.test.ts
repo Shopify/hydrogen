@@ -15,7 +15,7 @@ function handleAgentProxy(request: Request, storeUrl = defaultStoreUrl) {
     request,
     i18n: { country: "US", language: "EN" },
   });
-  return handleAgentProxyImpl({
+  return handleAgentProxyImpl(new URL(request.url), {
     request,
     requestContext,
     sessionManager: createTestSessionManager(request),

@@ -25,7 +25,7 @@ function handleGraphiql(
   client: PrivateStorefrontClient,
   graphiql?: GraphiQLOptions,
 ) {
-  return handleGraphiqlImpl({
+  return handleGraphiqlImpl(new URL(request.url), {
     request,
     storefrontClient: client,
     requestContext: client.requestContext,

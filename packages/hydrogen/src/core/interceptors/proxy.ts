@@ -6,7 +6,7 @@ const PROXY_TIMEOUT_MS = 30_000;
 
 type ProxyHeaderOptions = {
   allow: readonly string[];
-  prepare?: (headers: Headers, options: HydrogenRoutesOptions) => void;
+  prepare?: (headers: Headers, options: HydrogenRoutesOptions, url: URL) => void;
 };
 
 type ProxyDescriptor = {
@@ -20,9 +20,8 @@ type ProxyDescriptor = {
 export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRouteInterceptor {
   const log = getLogger(descriptor.scope);
   const formatError = descriptor.formatError ?? defaultFormatError;
-  return (options) => {
+  return (url, options) => {
     const { request, storefrontClient } = options;
-    const url = new URL(request.url);
     if (!descriptor.match.test(url.pathname)) return null;
 
     const upstreamUrl = new URL(url.pathname + url.search, storefrontClient.storeUrl);
@@ -37,7 +36,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
         request.headers.get("request-id") ??
         crypto.randomUUID(),
     );
-    descriptor.headers.prepare?.(forwardedHeaders, options);
+    descriptor.headers.prepare?.(forwardedHeaders, options, url);
 
     const init: RequestInit & { duplex?: "half" } = {
       method: request.method,

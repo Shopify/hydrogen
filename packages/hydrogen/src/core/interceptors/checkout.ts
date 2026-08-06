@@ -6,8 +6,10 @@ import { CART_PERMALINK_RE, CHECKOUT_RE } from "../url";
 
 const log = getLogger("checkout");
 
-export const handleCheckoutRedirect: HydrogenRouteInterceptor = ({ request, storefrontClient }) => {
-  const url = new URL(request.url);
+export const handleCheckoutRedirect: HydrogenRouteInterceptor = (
+  url,
+  { request, storefrontClient },
+) => {
   if (!CHECKOUT_RE.test(url.pathname) && !CART_PERMALINK_RE.test(url.pathname)) {
     return null;
   }

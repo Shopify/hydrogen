@@ -19,9 +19,14 @@ export type HydrogenRoutesOptions = {
   handlers?: readonly ShopifyRouteHandlerGroup[];
 };
 
-export type HydrogenRouteInterceptor<TExtraOptions extends object = object> = (
+export type HydrogenRouteHandler<TExtraOptions extends object = object> = (
   options: HydrogenRoutesOptions & TExtraOptions,
 ) => null | Promise<Response>;
+
+export type HydrogenRouteInterceptor<TExtraOptions extends object = object> = (
+  url: URL,
+  ...args: Parameters<HydrogenRouteHandler<TExtraOptions>>
+) => ReturnType<HydrogenRouteHandler<TExtraOptions>>;
 
 /**
  * Matches a request against Shopify standard routes and any registered handler
@@ -29,25 +34,26 @@ export type HydrogenRouteInterceptor<TExtraOptions extends object = object> = (
  * `null` when none do. Use it as the first step of request handling, before
  * framework routing.
  */
-export const handleShopifyRoutes: HydrogenRouteInterceptor = (options) => {
+export const handleShopifyRoutes: HydrogenRouteHandler = (options) => {
   assertSingleRequestContext(options);
+  const url = new URL(options.request.url);
 
-  const sfapiProxy = handleSfapiProxy(options);
+  const sfapiProxy = handleSfapiProxy(url, options);
   if (sfapiProxy) return applyResponseHeadersFromPromise(options, sfapiProxy);
 
-  const registeredRoute = handleShopifyRouteHandlers(options);
+  const registeredRoute = handleShopifyRouteHandlers(url, options);
   if (registeredRoute) return applyResponseHeadersFromPromise(options, registeredRoute);
 
-  const checkoutRedirect = handleCheckoutRedirect(options);
+  const checkoutRedirect = handleCheckoutRedirect(url, options);
   if (checkoutRedirect) return applyResponseHeadersFromPromise(options, checkoutRedirect);
 
-  const mcpProxy = handleMcpProxy(options);
+  const mcpProxy = handleMcpProxy(url, options);
   if (mcpProxy) return applyResponseHeadersFromPromise(options, mcpProxy);
 
-  const agentProxy = handleAgentProxy(options);
+  const agentProxy = handleAgentProxy(url, options);
   if (agentProxy) return applyResponseHeadersFromPromise(options, agentProxy);
 
-  const ajaxApi = handleAjaxApi(options);
+  const ajaxApi = handleAjaxApi(url, options);
   return ajaxApi ? applyResponseHeadersFromPromise(options, ajaxApi) : null;
 };
 

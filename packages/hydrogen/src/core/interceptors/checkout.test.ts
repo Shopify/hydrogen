@@ -50,7 +50,7 @@ function createPrivateStorefrontClient(
 
 function handleCheckoutRedirect(request: Request, fixture: TestStorefrontConfig = defaultConfig) {
   const storefrontClient = createPrivateStorefrontClient(request, fixture);
-  return handleCheckoutRedirectImpl({
+  return handleCheckoutRedirectImpl(new URL(request.url), {
     request,
     requestContext: storefrontClient.requestContext,
     sessionManager: createTestSessionManager(request),

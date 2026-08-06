@@ -8,12 +8,10 @@ type GraphiqlRouteOptions = {
   graphiql?: GraphiQLOptions;
 };
 
-export const handleGraphiql: HydrogenRouteInterceptor<GraphiqlRouteOptions> = ({
-  request,
-  storefrontClient,
-  graphiql: graphiqlOptions,
-}) => {
-  const url = new URL(request.url);
+export const handleGraphiql: HydrogenRouteInterceptor<GraphiqlRouteOptions> = (
+  url,
+  { request, storefrontClient, graphiql: graphiqlOptions },
+) => {
   if (request.method !== "GET" || url.pathname !== "/graphiql") return null;
 
   return createGraphiqlResponse(storefrontClient, graphiqlOptions);

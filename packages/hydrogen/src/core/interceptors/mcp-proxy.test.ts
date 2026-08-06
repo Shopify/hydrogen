@@ -23,7 +23,7 @@ function handleMcpProxy(request: Request, storeUrl = defaultStoreUrl) {
     request,
     i18n: { country: "US", language: "EN" },
   });
-  return handleMcpProxyImpl({
+  return handleMcpProxyImpl(new URL(request.url), {
     request,
     requestContext,
     sessionManager: createTestSessionManager(request),
