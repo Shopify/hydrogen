@@ -127,7 +127,15 @@ function SearchToggle() {
   );
 }
 
-function CartBadge({ cart, pending }: { cart: CartData; pending: CartPending }) {
+function CartBadge({
+  cart,
+  pending,
+  revalidating,
+}: {
+  cart: CartData;
+  pending: CartPending;
+  revalidating?: boolean;
+}) {
   const { open } = useAside();
   const analytics = useAnalytics();
 
@@ -138,7 +146,7 @@ function CartBadge({ cart, pending }: { cart: CartData; pending: CartPending }) 
         e.preventDefault();
         open("cart");
         if (!analytics) return;
-        const analyticsCart = toAnalyticsCart({ ...cart, pending });
+        const analyticsCart = toAnalyticsCart({ ...cart, pending, revalidating });
         if (!analyticsCart) return;
 
         analytics.bus.publish(AnalyticsEvent.CART_VIEWED, {
@@ -153,7 +161,7 @@ function CartBadge({ cart, pending }: { cart: CartData; pending: CartPending }) 
 
 function CartToggle() {
   const cart = useCart((cart) => cart);
-  return <CartBadge cart={cart.data} pending={cart.pending} />;
+  return <CartBadge cart={cart.data} pending={cart.pending} revalidating={cart.revalidating} />;
 }
 
 const FALLBACK_HEADER_MENU = {

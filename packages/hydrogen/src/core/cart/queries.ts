@@ -49,6 +49,10 @@ const HYDROGEN_CART_FRAGMENT_SOURCE = /* GraphQL */ `
       nodes {
         id
         quantity
+        attributes {
+          key
+          value
+        }
         cost {
           totalAmount {
             amount
@@ -90,6 +94,11 @@ const HYDROGEN_CART_FRAGMENT_SOURCE = /* GraphQL */ `
               name
               value
             }
+          }
+        }
+        sellingPlanAllocation {
+          sellingPlan {
+            id
           }
         }
         ... on CartLine {

@@ -186,7 +186,7 @@ if (!data?.product) {
 ## UI
 
 - You must invoke the `hydrogen-variant-form` skill for option controls, add-to-cart form structure, URL selection, combined listings, price display, disabled states, sold-out states, cart error display, and user acceptance tests. Do not duplicate its rules or invent separate variant matrix logic.
-- Open the cart drawer when adding to cart via a `formProps` submit hook: `beforeSubmit: openCartDrawer` opens instantly but errors must surface inside the drawer; `afterSubmit: openCartDrawer` opens only on success so errors surface in the PDP without disrupting navigation. See the `hydrogen-cart-drawer` skill for the tradeoff; the samples below use `afterSubmit`.
+- When the cart drawer is configured with the canonical anchor trigger, follow the `hydrogen-cart-drawer` skill's guidance and open optimistic state via `formProps({ beforeSubmit: openCartDrawer })`; the samples below use `beforeSubmit`.
 - Product route loaders and server helpers may read env indirectly through server-only client/config modules. Product client components must not read `process.env`, `import.meta.env`, or framework env modules.
 
 ### React
@@ -245,7 +245,7 @@ function ProductPurchasePanel({ product }: { product: ProductData }) {
   return (
     <>
       {/* Option controls: see hydrogen-variant-form + its React reference */}
-      <form {...formProps({ afterSubmit: openCartDrawer })}>
+      <form {...formProps({ beforeSubmit: openCartDrawer })}>
         <input type="hidden" {...register("merchandiseId", {})} />
         <input {...register("quantity", { defaultValue: 1 })} />
         <button {...register("addToCart", {})} disabled={!addable}>
@@ -349,7 +349,7 @@ const addable = computed(() => canAddToCart(props.product, form.options));
 
   <!-- Option controls: see hydrogen-variant-form + its Nuxt/Vue reference -->
 
-  <form v-bind="form.formProps({ afterSubmit: openCartDrawer })">
+  <form v-bind="form.formProps({ beforeSubmit: openCartDrawer })">
     <input type="hidden" v-bind="form.register('merchandiseId', {})" />
     <input v-bind="form.register('quantity', { defaultValue: 1 })" />
     <button

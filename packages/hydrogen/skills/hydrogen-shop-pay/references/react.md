@@ -16,7 +16,7 @@ function AddToCart({ product }: { product: ProductData }) {
 
   return (
     <>
-      <form {...formProps({ afterSubmit: openCartDrawer })}>
+      <form {...formProps({ beforeSubmit: openCartDrawer })}>
         <input type="hidden" {...register("merchandiseId", {})} />
         <input {...register("quantity", { value: quantity })} />
         <button {...register("addToCart", {})} disabled={!addable || pending}>Add to cart</button>

@@ -15,6 +15,7 @@ description: >
 3. **Never use timeouts or networkidle** - Wait for visible effects only
 4. **Improve accessibility while testing** - Tests drive better markup
 5. **Wait for user-visible changes** - Not implementation details like network requests
+6. **Set up portable contracts through the UI** - Never inject application state through cookies, storage, databases, or framework internals
 
 ### Anti-Patterns to Avoid
 
@@ -50,6 +51,21 @@ e.g., `/products/${KNOWN_PRODUCT.handle}`.
 Playwright automatically provides test isolation - each test runs in its own browser context with isolated storage, cookies, and state. You generally don't need to manually clear cookies or storage between tests.
 
 **Exception:** If you need to clear state within a single test (e.g., testing empty cart after clearing), do so explicitly in that test.
+
+### Portable Storefront State
+
+Portable storefront contract tests must create and mutate state through the same UI available to a buyer. Discovery may identify suitable products or expected server limits, but tests must not inject discovered cart IDs or other state through cookies, local storage, session storage, databases, request headers, or framework-specific APIs.
+
+Implementation-level seeding makes the suite pass only for storefronts that share that storage convention. For example, setting a `cart` cookie breaks storefronts that keep cart identity in another cookie, server session, local storage, or a custom backend.
+
+```typescript
+// BAD: Assumes cart identity is stored in this cookie.
+await context.addCookies([{name: 'cart', value: cartId, url: baseUrl}]);
+
+// GOOD: Uses the storefront contract a buyer can actually exercise.
+await productPage.addToCart();
+await cartPage.setLineQuantity(maxQuantity);
+```
 
 ## Test Organization
 

@@ -8,9 +8,10 @@ import { formatMoney } from "~/lib/money";
 type CartSummaryProps = {
   cart: CartData;
   layout: CartLayout;
+  totalsPending: boolean;
 };
 
-export function CartSummary({ cart, layout }: CartSummaryProps) {
+export function CartSummary({ cart, layout, totalsPending }: CartSummaryProps) {
   const className = layout === "page" ? "cart-summary-page" : "cart-summary-aside";
   const summaryId = useId();
   const discountsHeadingId = useId();
@@ -19,8 +20,8 @@ export function CartSummary({ cart, layout }: CartSummaryProps) {
 
   return (
     <div aria-labelledby={summaryId} className={className}>
-      <h4 id={summaryId}>Totals</h4>
-      <div aria-label="Subtotal" role="group">
+      <h4 id={summaryId}>Totals {totalsPending ? <span>(updating)</span> : null}</h4>
+      <div aria-label="Subtotal" aria-busy={totalsPending} role="group">
         <dl className="cart-subtotal">
           <dt>Subtotal</dt>
           <dd>{subtotalAmount ? formatMoney(subtotalAmount) : "-"}</dd>
