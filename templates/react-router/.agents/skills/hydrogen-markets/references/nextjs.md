@@ -18,10 +18,10 @@ Next.js App Router Server Components do not receive a standard `Request` object 
 
 Use this for domain or subdomain routing, like `example.ca`, `fr.example.com`, or `ca.example.com`.
 
-This assumes the app uses the same proxy handoff as `examples/nextjs/proxy.ts`: create a request context from the `NextRequest`, forward `requestContext.getForwardedRequestHeaders()`, then recreate the request context from `headers()` in Server Components. That handoff includes the original URL.
+This assumes the app uses the same proxy handoff as the Next.js template: create a request context from the `NextRequest`, forward `requestContext.getForwardedRequestHeaders()`, then recreate the request context from `headers()` in Server Components. That handoff includes the original URL.
 
 ```ts
-// app/lib/markets.ts
+// lib/markets.ts
 type Market = {
   country: string;
   language: string;
@@ -53,9 +53,8 @@ export function getMarketFromHeaders(headers: Pick<Headers, "get">): Market {
 Use an allowlist like `MARKET_BY_HOST`; do not blindly trust request hosts for anything security-sensitive.
 
 ```ts
-// app/lib/storefront.ts
+// lib/storefront.ts
 import "server-only";
-import { storefrontConfig } from "@shared/config";
 import {
   createStorefrontClient,
   createShopifyRequestContext,
@@ -63,6 +62,7 @@ import {
 import { headers } from "next/headers";
 import { cache } from "react";
 
+import { storefrontConfig } from "./config";
 import { getMarketFromHeaders } from "./markets";
 
 export const getStorefrontClient = cache(async () => {
@@ -93,7 +93,7 @@ export const getStorefrontClient = cache(async () => {
 Use this for routes like `/en-ca/products/shirt` or `/fr-fr/products/shirt`. Model the market prefix as a route segment so Server Components can read it from `params` without `headers()`.
 
 ```ts
-// app/lib/path-markets.ts
+// lib/path-markets.ts
 type Market = {
   country: string;
   language: string;
@@ -118,7 +118,7 @@ export function getMarketFromParam(marketParam: string): Market {
 For static or ISR-cached pages, use a `private_no_buyer_context` client and pass the market from route params. The page can be prerendered when the route uses `generateStaticParams` and does not call request-time APIs like `headers()` or `cookies()`.
 
 ```ts
-// app/lib/static-storefront.ts
+// lib/static-storefront.ts
 import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
 
 import { getMarketFromParam } from "./path-markets";
@@ -133,7 +133,7 @@ export function createStaticStorefrontClient(marketParam: string) {
     type: "private_no_buyer_context",
     requestContext,
     config: {
-      storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
+      storeDomain: process.env.NEXT_PUBLIC_STORE_DOMAIN!,
       privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
     },
   });
