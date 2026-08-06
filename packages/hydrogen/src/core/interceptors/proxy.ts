@@ -12,13 +12,14 @@ type ProxyHeaderOptions = {
 type ProxyDescriptor = {
   headers: ProxyHeaderOptions;
   match: RegExp;
-  formatError: (message: string) => unknown;
+  formatError?: (message: string) => unknown;
   scope: string;
   timeoutMs?: number;
 };
 
 export function createProxyInterceptor(descriptor: ProxyDescriptor) {
   const log = getLogger(descriptor.scope);
+  const formatError = descriptor.formatError ?? defaultFormatError;
   return async (options: HydrogenRoutesOptions): Promise<Response | null> => {
     const { request, storefrontClient } = options;
     const url = new URL(request.url);
@@ -61,12 +62,16 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor) {
       log.error("request failed", { error });
       const message = error instanceof Error ? error.message : "Internal proxy error";
 
-      return new Response(JSON.stringify(descriptor.formatError(message)), {
+      return new Response(JSON.stringify(formatError(message)), {
         status: 502,
         headers: { "content-type": "application/json" },
       });
     }
   };
+}
+
+function defaultFormatError(message: string): { error: string } {
+  return { error: message };
 }
 
 export function createProxyResponseHeaders(upstreamHeaders: Headers): Headers {

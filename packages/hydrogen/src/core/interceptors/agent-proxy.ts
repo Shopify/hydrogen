@@ -10,6 +10,5 @@ export const handleAgentProxy = createProxyInterceptor({
       headers.set(SHOPIFY_CHAT_FRAME_ORIGIN_HEADER, new URL(request.url).origin);
     },
   },
-  formatError: (message) => ({ error: message }),
   scope: "agent-proxy",
 });
