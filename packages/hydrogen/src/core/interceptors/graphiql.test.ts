@@ -51,21 +51,21 @@ describe("handleGraphiql", () => {
     expect(html).toContain("Storefront API");
   });
 
-  it("returns null for non-GET requests", async () => {
+  it("returns null synchronously for non-GET requests", () => {
     const request = new Request("https://my-app.com/graphiql", {
       method: "POST",
     });
 
-    const result = await handleGraphiql(request, storefrontClient);
+    const result = handleGraphiql(request, storefrontClient);
     expect(result).toBeNull();
   });
 
-  it("returns null for non-matching paths", async () => {
+  it("returns null synchronously for non-matching paths", () => {
     const request = new Request("https://my-app.com/other", {
       method: "GET",
     });
 
-    const result = await handleGraphiql(request, storefrontClient);
+    const result = handleGraphiql(request, storefrontClient);
     expect(result).toBeNull();
   });
 

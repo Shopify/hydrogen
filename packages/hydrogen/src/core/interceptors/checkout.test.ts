@@ -86,8 +86,8 @@ describe("handleCheckoutRedirect", () => {
     vi.stubGlobal("fetch", mockFetch);
   });
 
-  it("returns null for unrelated routes", async () => {
-    const result = await handleCheckoutRedirect(
+  it("returns null synchronously for unrelated routes", () => {
+    const result = handleCheckoutRedirect(
       new Request("https://my-app.com/products/snowboard"),
       defaultConfig,
     );
@@ -95,8 +95,8 @@ describe("handleCheckoutRedirect", () => {
     expect(result).toBeNull();
   });
 
-  it("returns null for non-cart-permalink subroutes", async () => {
-    const result = await handleCheckoutRedirect(
+  it("returns null synchronously for non-cart-permalink subroutes", () => {
+    const result = handleCheckoutRedirect(
       new Request("https://my-app.com/cart/recommendations"),
       defaultConfig,
     );

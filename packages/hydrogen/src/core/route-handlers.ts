@@ -97,13 +97,13 @@ export function createCallableRouteHandler<
   return Object.assign(handler, { pathname, method });
 }
 
-export async function handleShopifyRouteHandlers({
+export function handleShopifyRouteHandlers({
   request,
   sessionManager,
   storefrontClient,
   requestContext,
   handlers = [],
-}: ShopifyRouteHandlerOptions): Promise<Response | null> {
+}: ShopifyRouteHandlerOptions): Promise<Response> | null {
   const routeHandlers = handlers.flatMap((group) => Object.values(group));
   if (routeHandlers.length === 0) return null;
 
@@ -112,11 +112,13 @@ export async function handleShopifyRouteHandlers({
   if (pathMatches.length === 0) return null;
 
   const match = pathMatches.find((candidate) => candidate.method === request.method);
-  if (!match) return new Response("Method Not Allowed", { status: HTTP_METHOD_NOT_ALLOWED_STATUS });
+  if (!match)
+    return Promise.resolve(
+      new Response("Method Not Allowed", { status: HTTP_METHOD_NOT_ALLOWED_STATUS }),
+    );
 
-  return createShopifyRouteResponse(
-    await match({ request, sessionManager, storefrontClient, requestContext }),
-    request,
+  return match({ request, sessionManager, storefrontClient, requestContext }).then((result) =>
+    createShopifyRouteResponse(result, request),
   );
 }
 

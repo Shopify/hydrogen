@@ -79,4 +79,12 @@ describe("handleShopifyRoutesDev", () => {
     assert(result, "expected MCP proxy response");
     expect(result.status).toBe(200);
   });
+
+  it("returns null synchronously for unrelated routes", () => {
+    const result = handleShopifyRoutesDev({
+      request: new Request("https://my-app.com/products/snowboard"),
+    });
+
+    expect(result).toBeNull();
+  });
 });

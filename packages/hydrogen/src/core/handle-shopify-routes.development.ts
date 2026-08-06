@@ -6,10 +6,10 @@ export type HydrogenRoutesOptionsWithDev = HydrogenRoutesOptions & {
   graphiql?: GraphiQLOptions;
 };
 
-export async function handleShopifyRoutesDev(
+export function handleShopifyRoutesDev(
   options: HydrogenRoutesOptionsWithDev,
-): Promise<Response | null> {
-  const productionResult = await handleShopifyRoutes(options);
+): null | Promise<Response> {
+  const productionResult = handleShopifyRoutes(options);
   if (productionResult) return productionResult;
 
   return handleGraphiql(options.request, options.storefrontClient, options.graphiql);

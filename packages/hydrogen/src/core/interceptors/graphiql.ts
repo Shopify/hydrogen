@@ -3,14 +3,21 @@ import type { GraphiQLOptions } from "../types";
 
 const DEV_SCHEMA_FETCH_TIMEOUT_MS = 10_000;
 
-export async function handleGraphiql(
+export function handleGraphiql(
   request: Request,
   storefrontClient: StorefrontClient,
   graphiqlOptions?: GraphiQLOptions,
-): Promise<Response | null> {
+): null | Promise<Response> {
   const url = new URL(request.url);
   if (request.method !== "GET" || url.pathname !== "/graphiql") return null;
 
+  return createGraphiqlResponse(storefrontClient, graphiqlOptions);
+}
+
+async function createGraphiqlResponse(
+  storefrontClient: StorefrontClient,
+  graphiqlOptions?: GraphiQLOptions,
+): Promise<Response> {
   const schemas: Record<
     string,
     {

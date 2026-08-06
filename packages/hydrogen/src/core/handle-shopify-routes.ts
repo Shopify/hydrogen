@@ -25,28 +25,26 @@ export type HydrogenRoutesOptions = {
  * `null` when none do. Use it as the first step of request handling, before
  * framework routing.
  */
-export async function handleShopifyRoutes(
-  options: HydrogenRoutesOptions,
-): Promise<Response | null> {
+export function handleShopifyRoutes(options: HydrogenRoutesOptions): null | Promise<Response> {
   assertSingleRequestContext(options);
 
-  const sfapiProxy = await handleSfapiProxy(options);
-  if (sfapiProxy) return applyRouteResponseHeaders(options, sfapiProxy);
+  const sfapiProxy = handleSfapiProxy(options);
+  if (sfapiProxy) return applyResponseHeadersFromPromise(options, sfapiProxy);
 
-  const registeredRoute = await handleShopifyRouteHandlers(options);
-  if (registeredRoute) return applyRouteResponseHeaders(options, registeredRoute);
+  const registeredRoute = handleShopifyRouteHandlers(options);
+  if (registeredRoute) return applyResponseHeadersFromPromise(options, registeredRoute);
 
-  const checkoutRedirect = await handleCheckoutRedirect(options);
-  if (checkoutRedirect) return applyRouteResponseHeaders(options, checkoutRedirect);
+  const checkoutRedirect = handleCheckoutRedirect(options);
+  if (checkoutRedirect) return applyResponseHeadersFromPromise(options, checkoutRedirect);
 
-  const mcpProxy = await handleMcpProxy(options);
-  if (mcpProxy) return applyRouteResponseHeaders(options, mcpProxy);
+  const mcpProxy = handleMcpProxy(options);
+  if (mcpProxy) return applyResponseHeadersFromPromise(options, mcpProxy);
 
-  const agentProxy = await handleAgentProxy(options);
-  if (agentProxy) return applyRouteResponseHeaders(options, agentProxy);
+  const agentProxy = handleAgentProxy(options);
+  if (agentProxy) return applyResponseHeadersFromPromise(options, agentProxy);
 
-  const ajaxApi = await handleAjaxApi(options);
-  return ajaxApi ? applyRouteResponseHeaders(options, ajaxApi) : null;
+  const ajaxApi = handleAjaxApi(options);
+  return ajaxApi ? applyResponseHeadersFromPromise(options, ajaxApi) : null;
 }
 
 function assertSingleRequestContext(options: HydrogenRoutesOptions): void {
@@ -56,7 +54,17 @@ function assertSingleRequestContext(options: HydrogenRoutesOptions): void {
   );
 }
 
-function applyRouteResponseHeaders(options: HydrogenRoutesOptions, response: Response): Response {
+function applyResponseHeadersFromPromise(
+  options: HydrogenRoutesOptions,
+  responsePromise: Promise<Response>,
+): Promise<Response> {
+  return responsePromise.then((response) => applyResponseHeadersFromOptions(options, response));
+}
+
+function applyResponseHeadersFromOptions(
+  options: HydrogenRoutesOptions,
+  response: Response,
+): Response {
   try {
     options.requestContext.applyResponseHeaders(response.headers);
     return response;

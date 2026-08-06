@@ -180,14 +180,14 @@ describe("handleShopifyRoutes", () => {
     expect(headers.get("Shopify-Storefront-Buyer-IP")).toBeNull();
   });
 
-  it("rejects a request context that differs from the storefront client's context", async () => {
+  it("throws when the request context differs from the storefront client's context", () => {
     const request = new Request("https://my-app.com/custom");
     const storefrontClient = createPrivateStorefrontClient(request);
     const requestContext = createShopifyRequestContext({ request, i18n: DEFAULT_I18N });
 
-    await expect(
-      handleShopifyRoutes({ request, requestContext, storefrontClient }),
-    ).rejects.toThrow("same requestContext");
+    expect(() => handleShopifyRoutes({ request, requestContext, storefrontClient })).toThrow(
+      "same requestContext",
+    );
   });
 
   it("maps registered handler error results to 400 JSON responses", async () => {
@@ -300,8 +300,8 @@ describe("handleShopifyRoutes", () => {
     expect(headers.get("X-Shopify-Storefront-Access-Token")).toBeNull();
   });
 
-  it("returns null for non-matching URLs", async () => {
-    const result = await handleShopifyRoutes({
+  it("returns null synchronously for non-matching URLs", () => {
+    const result = handleShopifyRoutes({
       request: new Request("https://my-app.com/products"),
     });
 
