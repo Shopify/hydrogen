@@ -10,6 +10,7 @@ import {
   isSfapiProxyEnabled,
   hasServerReturnedTrackingValues,
 } from '../utils/server-timing';
+import {warnOnce} from '../utils/warning';
 
 export type ConsentStatus = boolean | undefined;
 
@@ -171,15 +172,26 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   const {revalidate} = useRevalidator();
 
   // Load the Shopify customer privacy API with or without the privacy banner
-  // NOTE: We no longer use the status because we need `ready` to be not when the script is loaded
-  // but instead when both `privacyBanner` (optional) and customerPrivacy are loaded in the window
-  useLoadScript(withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API, {
-    attributes: {
-      id: 'customer-privacy-api',
+  // NOTE: `ready` is not driven by this status — it fires when both
+  // `privacyBanner` (optional) and customerPrivacy are loaded in the window. The
+  // status is only consulted by the degraded path below, where no property
+  // watcher could be installed and the script's own load event is the signal.
+  const consentScriptStatus = useLoadScript(
+    withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,
+    {
+      attributes: {
+        id: 'customer-privacy-api',
+      },
     },
-  });
+  );
 
   const {observing, setLoaded, apisLoaded} = useApisLoaded({withPrivacyBanner});
+
+  // Tracks watchers we could not install because the property was already
+  // defined non-configurably (see `tryDefineProperty`). When that happens we
+  // cannot be notified on assignment, so we read the APIs once the consent
+  // script reports it has loaded instead.
+  const watcherFailed = useRef({customerPrivacy: false, privacyBanner: false});
 
   const config = useMemo(() => {
     if (!checkoutDomain) logMissingConfig('checkoutDomain');
@@ -323,7 +335,9 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       },
     };
 
-    Object.defineProperty(window, 'privacyBanner', privacyBannerWatcher);
+    if (!tryDefineProperty(window, 'privacyBanner', privacyBannerWatcher)) {
+      watcherFailed.current.privacyBanner = true;
+    }
   }, [
     withPrivacyBanner,
     config,
@@ -346,8 +360,33 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     let customShopify: {customerPrivacy: CustomerPrivacy} | undefined | object =
       window.Shopify || undefined;
 
-    // monitor for when window.Shopify = {} is first set
-    Object.defineProperty(window, 'Shopify', {
+    const customerPrivacyWatcher = {
+      configurable: true,
+      get() {
+        return fullCustomerPrivacy ?? backendConsentStub;
+      },
+      set(value: unknown) {
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          'setTrackingConsent' in value
+        ) {
+          fullCustomerPrivacy = withConfiguredTrackingConsent(
+            value as CustomerPrivacy,
+            config,
+          );
+
+          customShopify = {
+            ...customShopify,
+            customerPrivacy: fullCustomerPrivacy,
+          };
+
+          setLoaded.customerPrivacy();
+        }
+      },
+    };
+
+    const shopifyWatcher = {
       configurable: true,
       get() {
         return customShopify;
@@ -368,46 +407,63 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
           backendConsentStub = {backendConsentEnabled: true};
 
           // monitor for when window.Shopify.customerPrivacy is set
-          Object.defineProperty(window.Shopify, 'customerPrivacy', {
-            configurable: true,
-            get() {
-              return fullCustomerPrivacy ?? backendConsentStub;
-            },
-            set(value: unknown) {
-              if (
-                typeof value === 'object' &&
-                value !== null &&
-                'setTrackingConsent' in value
-              ) {
-                const customerPrivacy = value as CustomerPrivacy;
-
-                // overwrite the tracking consent method
-                fullCustomerPrivacy = {
-                  ...customerPrivacy,
-                  // Note: this method is not used by the privacy-banner,
-                  // it bundles its own setTrackingConsent.
-                  setTrackingConsent: overrideCustomerPrivacySetTrackingConsent(
-                    {customerPrivacy, config},
-                  ),
-                };
-
-                customShopify = {
-                  ...customShopify,
-                  customerPrivacy: fullCustomerPrivacy,
-                };
-
-                setLoaded.customerPrivacy();
-              }
-            },
-          });
+          if (
+            !tryDefineProperty(
+              window.Shopify,
+              'customerPrivacy',
+              customerPrivacyWatcher,
+            )
+          ) {
+            watcherFailed.current.customerPrivacy = true;
+          }
         }
       },
-    });
+    };
+
+    // monitor for when window.Shopify = {} is first set
+    if (!tryDefineProperty(window, 'Shopify', shopifyWatcher)) {
+      watcherFailed.current.customerPrivacy = true;
+    }
   }, [
     config,
     overrideCustomerPrivacySetTrackingConsent,
     setLoaded.customerPrivacy,
   ]);
+
+  // Degraded path for watchers that could not be installed. Without a setter we
+  // never learn about the assignment, so the consent script's own load status is
+  // the signal instead. No polling — `useLoadScript` resolves from the script's
+  // `load` event.
+  useEffect(() => {
+    // Settled, not strictly `done`: a storefront can end up with the API present
+    // even when `useLoadScript` reports an error (an existing tag, a CSP-blocked
+    // duplicate injection), and reading is harmless when it is absent.
+    if (consentScriptStatus === 'loading') return;
+    const failed = watcherFailed.current;
+
+    if (failed.customerPrivacy) {
+      const customerPrivacy = getCustomerPrivacy();
+      if (customerPrivacy) {
+        // Best effort: apply the config-bound `setTrackingConsent` override by
+        // assignment. The container may still be read-only, in which case the
+        // un-overridden API is used as-is rather than failing the page.
+        try {
+          window.Shopify.customerPrivacy = withConfiguredTrackingConsent(
+            customerPrivacy,
+            config,
+          );
+        } catch (error) {}
+
+        setLoaded.customerPrivacy();
+      }
+    }
+
+    // `watcherFailed.privacyBanner` is only ever set on the `withPrivacyBanner`
+    // path, so it already implies the banner was requested.
+    if (failed.privacyBanner && getPrivacyBanner()) {
+      setLoaded.privacyBanner();
+    }
+  }, [consentScriptStatus, config, setLoaded]);
 
   useEffect(() => {
     if (!apisLoaded || !cookiesReady) return;
@@ -452,6 +508,46 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   return result;
 }
 
+/**
+ * Installs a property watcher, reporting failure instead of throwing.
+ *
+ * `Object.defineProperty` throws when the property already exists and is
+ * non-configurable — which browser extensions and theme-era apps do to
+ * `window.Shopify`. Callers degrade on `false` rather than believing they are
+ * observing the property.
+ */
+function tryDefineProperty(
+  target: object,
+  property: string,
+  descriptor: PropertyDescriptor,
+): boolean {
+  try {
+    Object.defineProperty(target, property, descriptor);
+    return true;
+  } catch (error) {
+    warnOnce(
+      `[h2:warn:useCustomerPrivacy] Could not observe \`${property}\`, likely because another script or browser extension already defined it as non-configurable. Falling back to reading it once the consent API has loaded. ${String(error)}`,
+    );
+    return false;
+  }
+}
+
+/** Rebuilds the CDN's consent API with the merchant's config pre-applied. */
+function withConfiguredTrackingConsent(
+  customerPrivacy: CustomerPrivacy,
+  config: CustomerPrivacyConsentConfig,
+): CustomerPrivacy {
+  return {
+    ...customerPrivacy,
+    // Note: this method is not used by the privacy-banner, it bundles its own
+    // setTrackingConsent.
+    setTrackingConsent: overrideCustomerPrivacySetTrackingConsent({
+      customerPrivacy,
+      config,
+    }),
+  };
+}
+
 let hasEmitted = false;
 function emitCustomerPrivacyApiLoaded() {
   if (hasEmitted) return;
@@ -472,21 +568,27 @@ function useApisLoaded({withPrivacyBanner}: {withPrivacyBanner: boolean}) {
   // combined loaded state for both APIs
   const apisLoaded = apisLoadedArray.every(Boolean);
 
-  const setLoaded = {
-    customerPrivacy: () => {
-      if (withPrivacyBanner) {
-        setApisLoaded((prev) => [true, prev[1]]);
-      } else {
-        setApisLoaded(() => [true]);
-      }
-    },
-    privacyBanner: () => {
-      if (!withPrivacyBanner) {
-        return;
-      }
-      setApisLoaded((prev) => [prev[0], true]);
-    },
-  };
+  // Memoized so effects can depend on it honestly. Rebuilt every render, these
+  // are fresh identities each time, which re-runs every effect that lists them
+  // (all the watchers below) on every render of the consuming component.
+  const setLoaded = useMemo(
+    () => ({
+      customerPrivacy: () => {
+        if (withPrivacyBanner) {
+          setApisLoaded((prev) => [true, prev[1]]);
+        } else {
+          setApisLoaded(() => [true]);
+        }
+      },
+      privacyBanner: () => {
+        if (!withPrivacyBanner) {
+          return;
+        }
+        setApisLoaded((prev) => [prev[0], true]);
+      },
+    }),
+    [withPrivacyBanner],
+  );
 
   return {observing, setLoaded, apisLoaded};
 }
