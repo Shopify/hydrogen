@@ -10,6 +10,7 @@ import { HeaderAccountLink, HeaderAccountLinkFallback } from "@/components/Heade
 import { getAnalyticsShop } from "@/lib/analytics-shop";
 import { cartHandlers } from "@/lib/cart-handlers";
 import { getStorefrontClient } from "@/lib/storefront";
+import { shouldUseMockShop } from "@/lib/storefront-config";
 
 import { Providers } from "./providers";
 
@@ -58,7 +59,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       <Footer shopName={analyticsShop.shopName} />
 
       <CartDrawer />
-      <ConsentBanner />
+      <ConsentBanner forceShow={shouldUseMockShop()} />
     </Providers>
   );
 }

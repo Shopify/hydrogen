@@ -43,5 +43,5 @@ export const shop = {
 } satisfies ShopifyScriptsShopShape;
 
 export const analyticsConsent = {
-  mode: "default-banner",
+  mode: "custom-banner",
 } satisfies AnalyticsConsentShape;

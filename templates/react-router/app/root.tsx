@@ -26,7 +26,13 @@ import { cartHandlers } from "~/lib/cart-handlers";
 import { envContext } from "~/lib/env";
 import { routeTemplates } from "~/lib/route-templates";
 import { createRequestSessionManager } from "~/lib/session";
-import { analyticsConsent, analyticsShop, shop, storefrontConfig } from "~/lib/shop";
+import {
+  analyticsConsent,
+  analyticsShop,
+  shop,
+  shouldUseMockShop,
+  storefrontConfig,
+} from "~/lib/shop";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -110,7 +116,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     navCollections: navResult.data?.collections.nodes ?? [],
     analyticsShop,
     consent: analyticsConsent,
-    forceConsentBanner: env.MOCK_SHOP === "1",
+    forceConsentBanner: shouldUseMockShop(env),
   };
 }
 

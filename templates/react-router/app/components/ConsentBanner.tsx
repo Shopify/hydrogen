@@ -8,6 +8,7 @@ type ConsentChoice = {
 };
 
 type CustomerPrivacy = {
+  consentStatus?: "pending" | "loaded";
   shouldShowBanner?: () => boolean;
   setTrackingConsent?: (choice: ConsentChoice, callback?: () => void) => void;
 };
@@ -58,9 +59,12 @@ export function ConsentBanner({ forceShow }: { forceShow: boolean }) {
     let cancelled = false;
     const decide = () => {
       if (cancelled) return true;
-      const shouldShowBanner = customerPrivacy()?.shouldShowBanner;
-      if (!shouldShowBanner) return false;
-      setVisible(Boolean(shouldShowBanner()));
+      const privacy = customerPrivacy();
+      // The API methods are installed before Shopify finishes loading the
+      // buyer's initial consent state. Do not make the one-time visibility
+      // decision until that state is ready.
+      if (privacy?.consentStatus !== "loaded" || !privacy.shouldShowBanner) return false;
+      setVisible(Boolean(privacy.shouldShowBanner()));
       return true;
     };
 
