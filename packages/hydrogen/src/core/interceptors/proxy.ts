@@ -4,13 +4,17 @@ import { getLogger } from "../logging";
 
 const PROXY_TIMEOUT_MS = 30_000;
 
+type ProxyHeaderOptions = {
+  allow: readonly string[];
+  prepare?: (headers: Headers, options: HydrogenRoutesOptions) => void;
+};
+
 type ProxyDescriptor = {
+  headers: ProxyHeaderOptions;
   match: RegExp;
-  allowlist: readonly string[];
   formatError: (message: string) => unknown;
   scope: string;
   timeoutMs?: number;
-  prepareHeaders?: (headers: Headers, options: HydrogenRoutesOptions) => void;
 };
 
 export function createProxyInterceptor(descriptor: ProxyDescriptor) {
@@ -23,7 +27,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor) {
     const upstreamUrl = new URL(url.pathname + url.search, storefrontClient.storeUrl);
 
     const forwardedHeaders = new Headers(
-      extractHeaders((key) => request.headers.get(key), descriptor.allowlist),
+      extractHeaders((key) => request.headers.get(key), descriptor.headers.allow),
     );
     forwardedHeaders.set(
       REQUEST_GROUP_ID_HEADER,
@@ -32,7 +36,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor) {
         request.headers.get("request-id") ??
         crypto.randomUUID(),
     );
-    descriptor.prepareHeaders?.(forwardedHeaders, options);
+    descriptor.headers.prepare?.(forwardedHeaders, options);
 
     try {
       const init: RequestInit & { duplex?: "half" } = {
