@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.39
+
+### Patch Changes
+
+- Recommend the Shopify AI Toolkit in newly scaffolded storefronts. ([#3887](https://github.com/Shopify/hydrogen/pull/3887)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
 ## 5.0.38
 
 ### Patch Changes
