@@ -69,7 +69,7 @@ index c584e5370..1ac3a34cb 100644
 +
 +1. **Partytown** runs third-party scripts in a web worker, keeping the main thread free
 +2. **GTM scripts** are loaded with `type="text/partytown"` to run in the worker
-+3. **Reverse proxy** handles scripts that need CORS headers
++3. **Reverse proxy** handles scripts that need CORS headers, rejects upstream responses without a JavaScript content type, and blocks redirects outside the allowlist
 +4. **CSP headers** are configured to allow GTM and Google Analytics domains
 +
 +### Performance benefits

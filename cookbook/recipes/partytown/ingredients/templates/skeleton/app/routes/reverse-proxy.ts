@@ -3,11 +3,13 @@
 
 import type {Route} from './+types/reverse-proxy';
 
-type HandleRequestResponHeaders = {
+type ProxyResponseHeaders = {
   'Access-Control-Allow-Origin': string;
+  'Content-Security-Policy': string;
   Vary: string;
+  'X-Content-Type-Options': string;
   'cache-control'?: string;
-  'content-type'?: string;
+  'content-type': string;
 };
 
 type CorsHeaders = {
@@ -25,6 +27,23 @@ const ALLOWED_PROXY_DOMAINS = new Set([
   'https://www.google-analytics.com',
   // other domains you may want to allow to proxy to
 ]);
+
+const CORS_PREFLIGHT_MAX_AGE_IN_SECONDS = '86400';
+const PROXY_CONTENT_SECURITY_POLICY =
+  "default-src 'none'; script-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'";
+const FORBIDDEN_STATUS = 403;
+const MAX_PROXY_REDIRECTS = 3;
+const UNSUPPORTED_MEDIA_TYPE_STATUS = 415;
+
+const ALLOWED_SCRIPT_CONTENT_TYPES = new Set([
+  'application/ecmascript',
+  'application/javascript',
+  'application/x-javascript',
+  'text/ecmascript',
+  'text/javascript',
+]);
+
+const REDIRECT_RESPONSE_STATUSES = new Set([301, 302, 303, 307, 308]);
 
 // Handle CORS preflight for POST requests
 export async function action({request}: Route.ActionArgs) {
@@ -124,7 +143,7 @@ function handleCorsOptions(request: Route.LoaderArgs['request']) {
   const corsHeaders: CorsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,HEAD,POST,OPTIONS',
-    'Access-Control-Max-Age': '86400',
+    'Access-Control-Max-Age': CORS_PREFLIGHT_MAX_AGE_IN_SECONDS,
   };
 
   const haveAcessControlHeaders =
@@ -163,25 +182,37 @@ async function handleRequest(request: Route.LoaderArgs['request']) {
 
   if (!ALLOWED_PROXY_DOMAINS.has(apiUrlObj.origin)) {
     return handleErrorResponse({
-      status: 403,
+      status: FORBIDDEN_STATUS,
       statusText: 'Forbidden',
     });
   }
 
   try {
-    // fetch the requested resource
-    const response = await fetch(apiUrl);
+    const response = await fetchAllowedProxyResponse(apiUrlObj);
 
-    const respHeaders: HandleRequestResponHeaders = {
-      'Access-Control-Allow-Origin': url.origin,
-      Vary: 'Origin', // Append to/Add Vary header so browser will cache response correctly
-    };
-
-    if (response.headers.has('content-type')) {
-      respHeaders['content-type'] = response.headers.get(
-        'content-type',
-      ) as string;
+    if (response == null) {
+      return handleErrorResponse({
+        status: FORBIDDEN_STATUS,
+        statusText: 'Forbidden',
+      });
     }
+
+    const contentType = response.headers.get('content-type');
+
+    if (!hasAllowedScriptContentType(contentType)) {
+      return handleErrorResponse({
+        status: UNSUPPORTED_MEDIA_TYPE_STATUS,
+        statusText: 'Unsupported Media Type',
+      });
+    }
+
+    const respHeaders: ProxyResponseHeaders = {
+      'Access-Control-Allow-Origin': url.origin,
+      'Content-Security-Policy': PROXY_CONTENT_SECURITY_POLICY,
+      Vary: 'Origin',
+      'X-Content-Type-Options': 'nosniff',
+      'content-type': contentType,
+    };
 
     if (response.headers.has('cache-control')) {
       respHeaders['cache-control'] = response.headers.get(
@@ -201,4 +232,49 @@ async function handleRequest(request: Route.LoaderArgs['request']) {
       });
     }
   }
+}
+
+async function fetchAllowedProxyResponse(apiUrlObj: URL) {
+  let redirectCount = 0;
+  let nextUrl = apiUrlObj;
+
+  while (true) {
+    const response = await fetch(nextUrl.href, {redirect: 'manual'});
+
+    if (!isRedirectResponse(response)) {
+      return response;
+    }
+
+    if (redirectCount >= MAX_PROXY_REDIRECTS) {
+      return null;
+    }
+
+    const location = response.headers.get('location');
+    if (location == null) {
+      return null;
+    }
+
+    nextUrl = new URL(location, nextUrl);
+    if (!ALLOWED_PROXY_DOMAINS.has(nextUrl.origin)) {
+      return null;
+    }
+
+    redirectCount += 1;
+  }
+}
+
+function hasAllowedScriptContentType(
+  contentType: string | null,
+): contentType is string {
+  if (contentType == null) {
+    return false;
+  }
+
+  const [mediaType] = contentType.split(';');
+
+  return ALLOWED_SCRIPT_CONTENT_TYPES.has(mediaType.trim().toLowerCase());
+}
+
+function isRedirectResponse(response: Response) {
+  return REDIRECT_RESPONSE_STATUSES.has(response.status);
 }
