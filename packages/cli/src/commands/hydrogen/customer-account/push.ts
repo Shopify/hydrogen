@@ -54,7 +54,6 @@ export async function runCustomerAccountPush({
   devOrigin: string;
   redirectUriRelativeUrl?: string;
   logoutUriRelativeUrl?: string;
-  removeRegex?: string;
 }) {
   const storefrontId = await getStorefrontId(root, storefrontIdFromFlag);
 
@@ -77,23 +76,19 @@ export async function runCustomerAccountPush({
       return;
     }
 
-    const {session, config} = await login(root);
-    const customerAccountConfig = config?.storefront?.customerAccountConfig;
+    const {session} = await login(root);
     const {success, userErrors} = await replaceCustomerApplicationUrls(
       session,
       storefrontId,
       {
         redirectUri: {
           add: redirectUri ? [redirectUri] : undefined,
-          removeRegex: customerAccountConfig?.redirectUri,
         },
         javascriptOrigin: {
           add: javascriptOrigin ? [javascriptOrigin] : undefined,
-          removeRegex: customerAccountConfig?.javascriptOrigin,
         },
         logoutUris: {
           add: logoutUri ? [logoutUri] : undefined,
-          removeRegex: customerAccountConfig?.logoutUri,
         },
       },
     );
@@ -192,14 +187,22 @@ async function cleanupCustomerApplicationUrls(
   );
 
   await replaceCustomerApplicationUrls(session, storefrontId, {
-    redirectUri: {removeRegex: customerAccountConfig?.redirectUri},
-    javascriptOrigin: {removeRegex: customerAccountConfig?.javascriptOrigin},
-    logoutUris: {removeRegex: customerAccountConfig?.logoutUri},
+    redirectUri: {
+      removeRegex: escapeRegex(customerAccountConfig?.redirectUri),
+    },
+    javascriptOrigin: {
+      removeRegex: escapeRegex(customerAccountConfig?.javascriptOrigin),
+    },
+    logoutUris: {removeRegex: escapeRegex(customerAccountConfig?.logoutUri)},
   }).catch((error) => {
     outputDebug(
       `Failed to clean up Customer Application url "${customerAccountConfig.redirectUri}":\n${error?.message}`,
     );
   });
+}
+
+function escapeRegex(value?: string) {
+  return value?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export async function getStorefrontId(
