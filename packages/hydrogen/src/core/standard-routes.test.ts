@@ -20,12 +20,22 @@ describe("standard routes", () => {
         productHandle: "snowboard",
       }),
     ).toBe("/collections/winter/products/snowboard");
+    expect(getStandardRoute(routeTemplates, "cart", {})).toBe("/cart");
+    expect(getStandardRoute(routeTemplates, "collectionList", {})).toBe("/collections");
+    expect(getStandardRoute(routeTemplates, "policy", { policyHandle: "privacy-policy" })).toBe(
+      "/policies/privacy-policy",
+    );
+    expect(getStandardRoute(routeTemplates, "search", {})).toBe("/search");
   });
 
   it("builds configured standard routes", () => {
     const routeTemplates = createShopifyRouteTemplates({
       article: "/journal/:blogHandle/:articleHandle",
+      cart: "/basket",
+      collectionList: "/catalog",
+      policy: "/legal/:policyHandle",
       product: "/p/:productHandle",
+      search: "/find",
     });
 
     expect(
@@ -39,6 +49,12 @@ describe("standard routes", () => {
     expect(getStandardRoute(routeTemplates, "collection", { collectionHandle: "winter" })).toBe(
       "/collections/winter",
     );
+    expect(getStandardRoute(routeTemplates, "cart", {})).toBe("/basket");
+    expect(getStandardRoute(routeTemplates, "collectionList", {})).toBe("/catalog");
+    expect(getStandardRoute(routeTemplates, "policy", { policyHandle: "refund-policy" })).toBe(
+      "/legal/refund-policy",
+    );
+    expect(getStandardRoute(routeTemplates, "search", {})).toBe("/find");
   });
 
   it("resolves standard route URLs to configured route templates", () => {
@@ -111,6 +127,82 @@ describe("standard routes", () => {
     ).toEqual({ route: "index", pageTemplateName: "index", params: {} });
   });
 
+  it.each([
+    {
+      url: "/cart",
+      expected: { route: "cart", pageTemplateName: "cart", params: {} },
+    },
+    {
+      url: "/search?q=snowboard",
+      expected: { route: "search", pageTemplateName: "search", params: {} },
+    },
+    {
+      url: "/collections",
+      expected: {
+        route: "collectionList",
+        pageTemplateName: "list-collections",
+        params: {},
+      },
+    },
+    {
+      url: "/products",
+      expected: {
+        route: "collectionList",
+        pageTemplateName: "list-collections",
+        params: {},
+      },
+    },
+    {
+      url: "/policies/privacy-policy",
+      expected: {
+        route: "policy",
+        pageTemplateName: "policy",
+        params: { policyHandle: "privacy-policy" },
+      },
+    },
+  ] as const)("matches the Liquid page template for $url", ({ url, expected }) => {
+    const routeTemplates = createShopifyRouteTemplates({});
+
+    expect(matchStandardRouteUrl({ routeTemplates, url })).toEqual(expected);
+  });
+
+  it("matches configured storefront utility routes", () => {
+    const routeTemplates = createShopifyRouteTemplates({
+      cart: "/basket",
+      collectionList: "/catalog",
+      policy: "/legal/:policyHandle",
+      search: "/find",
+    });
+
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/basket" })).toEqual({
+      route: "cart",
+      pageTemplateName: "cart",
+      params: {},
+    });
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/catalog" })).toEqual({
+      route: "collectionList",
+      pageTemplateName: "list-collections",
+      params: {},
+    });
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/legal/terms-of-service" })).toEqual({
+      route: "policy",
+      pageTemplateName: "policy",
+      params: { policyHandle: "terms-of-service" },
+    });
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/find?q=snowboard" })).toEqual({
+      route: "search",
+      pageTemplateName: "search",
+      params: {},
+    });
+  });
+
+  it("resolves canonical and legacy collection-listing routes", () => {
+    const routeTemplates = createShopifyRouteTemplates({ collectionList: "/catalog" });
+
+    expect(resolveStandardRouteUrl({ routeTemplates, url: "/collections" })).toBe("/catalog");
+    expect(resolveStandardRouteUrl({ routeTemplates, url: "/products" })).toBe("/catalog");
+  });
+
   it("resolves standard route URLs with an i18n path prefix", () => {
     const routeTemplates = createShopifyRouteTemplates({
       article: "/journal/:blogHandle/:articleHandle",
@@ -165,7 +257,7 @@ describe("standard routes", () => {
       product: "/p/:productHandle",
     });
 
-    expect(matchStandardRouteUrl({ routeTemplates, url: "/search?q=snow" })).toBeNull();
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/unknown?q=snow" })).toBeNull();
     expect(
       matchStandardRouteUrl({
         baseUrl: "https://shop.example",
