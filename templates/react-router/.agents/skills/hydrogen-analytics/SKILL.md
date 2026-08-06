@@ -56,7 +56,7 @@ Publish these from route/page boundaries:
 - `COLLECTION_VIEWED` when collection data is resolved.
 - `SEARCH_VIEWED` when a non-empty search term has results metadata.
 - `CART_VIEWED` when the full cart page or cart drawer is viewed.
-- Wire cart tracking once with `trackCartAnalytics(cartStore)` — React apps use the `useCartAnalytics()` hook from `@shopify/hydrogen/react` and Vue apps use the `useCartAnalytics()` composable from `@shopify/hydrogen/vue`; both call it with the provider's cart store and clean up on unmount. The tracker subscribes to the cart store itself, publishes cart delta events on confirmed cart changes, and returns an unsubscribe function. Call it from a client-only effect (`useEffect` / `onMounted`), never at cart-store creation time — it throws when `window.Shopify.analytics` is missing (SSR). Do not manually publish cart delta events.
+- Wire cart tracking once per cart store lifecycle with `trackCartAnalytics(cartStore)` — React apps use the `useCartAnalytics()` hook from `@shopify/hydrogen/react` and Vue apps use the `useCartAnalytics()` composable from `@shopify/hydrogen/vue`; both call it with the provider's cart store and clean up on unmount. The tracker subscribes to the cart store itself, skips pending/revalidating/note updates, publishes cart delta events on confirmed cart changes, and returns an unsubscribe function. Call it from a client-only effect (`useEffect` / `onMounted`), never at cart-store creation time — it throws when `window.Shopify.analytics` is missing (SSR). Do not manually publish cart delta events.
 
 The bus defaults `shop` from the top-level `shop` config passed to ShopifyScripts; pass `shop` in an event payload only when intentionally overriding that configured value. Shopify analytics reads language and currency from `window.Shopify.locale` and `window.Shopify.currency.active`.
 
@@ -75,6 +75,6 @@ Required product analytics fields include Shopify Product GID, ProductVariant GI
 
 - Page view fires on initial load and client navigations.
 - Product, collection, search, and cart view events fire once per relevant route data change.
-- Cart tracking is wired via `trackCartAnalytics(cartStore)` (React/Vue bindings: `useCartAnalytics()`), and the cart query includes `updatedAt`.
+- Confirmed cart data changes flow through `trackCartAnalytics(cartStore)` (React/Vue bindings: `useCartAnalytics()`), and the cart query includes `updatedAt`.
 - Consent-denied visitors do not deliver destination events.
 - No browser module reads private or server-only env variables.

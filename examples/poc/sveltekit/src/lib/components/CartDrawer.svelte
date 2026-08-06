@@ -11,6 +11,7 @@
 	import CartDiscountCodes from './CartDiscountCodes.svelte';
 	import CartErrorBanner from './CartErrorBanner.svelte';
 	import CartLineItems from './CartLineItems.svelte';
+	import CartRevalidationStatus from './CartRevalidationStatus.svelte';
 	import CartNote from './CartNote.svelte';
 	import CartTotals from './CartTotals.svelte';
 
@@ -41,7 +42,8 @@
 		</div>
 
 		<div class="flex-1 overflow-y-auto px-6 py-4">
-			<CartErrorBanner />
+				<CartRevalidationStatus />
+				<CartErrorBanner />
 			<CartLineItems emptyHeadingLevel="h3" errorIdPrefix="cart-drawer-line-error" />
 		</div>
 

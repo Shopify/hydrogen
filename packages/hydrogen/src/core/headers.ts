@@ -197,7 +197,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       }
 
       if (personalizedResponseReason) {
-        applyPersonalizedResponseCacheHeaders(headers);
+        applyPrivateResponseCacheHeaders(headers);
       }
 
       // Generated fallback tokens are only for document navigation bootstrap.
@@ -215,7 +215,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
   } as ShopifyRequestContext<I18n>;
 }
 
-function applyPersonalizedResponseCacheHeaders(headers: Headers): void {
+export function applyPrivateResponseCacheHeaders(headers: Headers): void {
   headers.set(CACHE_CONTROL_HEADER, PRIVATE_RESPONSE_CACHE_CONTROL);
   for (const header of Array.from(headers.keys())) {
     if (

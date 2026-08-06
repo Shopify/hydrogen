@@ -145,7 +145,7 @@ export function SearchView({ searchResults, searchTerm }: Omit<SearchViewPayload
  * compatibility concern at this example boundary instead of changing cart
  * state to match analytics.
  */
-type AnalyticsCartInput = CartData & Partial<Pick<CartState, "pending">>;
+type AnalyticsCartInput = CartData & Partial<Pick<CartState, "pending" | "revalidating">>;
 
 export function toAnalyticsCart(cart: AnalyticsCartInput): AnalyticsCart | null {
   if (!cart.id) return null;
@@ -195,8 +195,9 @@ export function toAnalyticsCart(cart: AnalyticsCartInput): AnalyticsCart | null 
 }
 
 function hasPendingCartWork(cart: AnalyticsCartInput) {
-  return Boolean(
-    cart.pending &&
-    (cart.pending.lines.size > 0 || cart.pending.note || cart.pending.discountCodes.size > 0),
-  );
+  if (cart.revalidating === true) return true;
+  if (!cart.pending) return false;
+  const hasPendingCost =
+    cart.pending.cost ?? (cart.pending.lines.size > 0 || cart.pending.discountCodes.size > 0);
+  return hasPendingCost || cart.pending.note;
 }
