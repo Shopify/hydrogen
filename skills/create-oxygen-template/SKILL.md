@@ -58,6 +58,24 @@ Keep `lib/route-templates.ts` unchanged — it is NOT example-only coupling. It 
 8. Update README and env files for a real starter project.
 9. Run install/typecheck/build/dev/preview validation (see "Prerequisites" and "Validation").
 
+When analytics is enabled, resolve the active-market currency in the root loader from Storefront API localization and
+pass the loader-derived value to `ShopifyScripts` as `i18n.currency` before consent can replay events:
+
+```graphql
+localization {
+  country {
+    currency {
+      isoCode
+    }
+  }
+}
+```
+
+Run this field under the same `@inContext(country:, language:)` values as the storefront request. Keep an explicit
+configured fallback for API failures and mock mode, but do not use `shop.paymentSettings.currencyCode`: it is the shop
+currency, not necessarily the active market's presentment currency. Cart data may synchronize currency later, but it
+must not be the initial source because analytics can replay immediately after consent.
+
 Implementation details (exact per-file shape) live in [reference/react-router-pattern.md](reference/react-router-pattern.md) — read it when writing the template files.
 
 ## Prerequisites (do these before validating)
@@ -188,6 +206,8 @@ Before finishing:
 5. **Actually drive both runtimes, don't just check that a server starts** (static assets can serve even when the Worker isn't exercised):
    - `npm run dev`: request `/`, a product, a collection, `/search`, `/account`, `/cart` — expect HTTP 200 and live data.
    - `npm run preview` (= `react-router build && vite preview`, requires MiniOxygen `>= 4.2.0`): same requests through the built Worker. Confirm `.env` is loaded (root routes need real env, or they 500).
+   - Before and after accepting consent, confirm `window.Shopify.currency.active` exists and matches the resolved
+     market currency without requiring a cart mutation.
 6. Regenerate and commit the standalone npm `package-lock.json`; verify `@shopify/hydrogen` resolves to a `0.0.0-preview-*` registry tarball with integrity.
 7. Report any validation not run and why (e.g. an org `minimumReleaseAge` policy blocked install — that is an environment gate, not a template defect).
 

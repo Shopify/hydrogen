@@ -50,11 +50,12 @@ const htmlLang = defaultI18n.language.toLowerCase();
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { currency } = await getAnalyticsShop();
+  const i18n = { ...defaultI18n, currency };
 
   return (
     <html lang={htmlLang}>
       <head>
-        <ShopifyScriptsWithNavigation shop={shop} currency={currency} />
+        <ShopifyScriptsWithNavigation shop={shop} i18n={i18n} />
       </head>
       <body className="bg-surface text-on-surface font-body flex min-h-svh flex-col antialiased">
         <div
