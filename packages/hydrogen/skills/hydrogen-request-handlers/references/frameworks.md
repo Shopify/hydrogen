@@ -47,7 +47,7 @@ export async function handleRequest(request: Request, next: () => Promise<Respon
     },
   });
 
-  const shopifyRoute = await handleShopifyRoutes({
+  const shopifyRoute = handleShopifyRoutes({
     request,
     requestContext,
     sessionManager,
@@ -111,7 +111,7 @@ export const middleware: Route.MiddlewareFunction[] = [
       },
     });
 
-    const shopifyRoute = await handleShopifyRoutes({
+    const shopifyRoute = handleShopifyRoutes({
       request,
       requestContext,
       sessionManager,
@@ -143,7 +143,7 @@ SolidStart middleware can short-circuit before routing, but cannot reliably obse
 In middleware, create an app-owned request-scoped `sessionManager` before calling `handleShopifyRoutes`:
 
 ```ts
-const shopifyRoute = await handleShopifyRoutes({
+const shopifyRoute = handleShopifyRoutes({
   request: event.request,
   requestContext,
   sessionManager,

@@ -41,7 +41,7 @@ export async function proxy(request: NextRequest) {
   });
   const sessionManager = await createSessionManager(request);
 
-  const shopifyRoute = await handleShopifyRoutes({
+  const shopifyRoute = handleShopifyRoutes({
     request,
     requestContext,
     sessionManager,
