@@ -5,4 +5,9 @@ export {
   resolveStandardRouteUrl,
 } from "./redirects";
 export { matchStandardRouteUrl } from "./match";
-export type { ShopifyRouteTemplates, ShopifyStandardRouteMatch } from "./types";
+export type {
+  ShopifyPageTemplateName,
+  ShopifyRouteTemplates,
+  ShopifyStandardRouteMatch,
+  ShopifyStandardRouteName,
+} from "./types";
