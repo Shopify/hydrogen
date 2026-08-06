@@ -4,13 +4,22 @@ import { handleCheckoutRedirect } from "./interceptors/checkout";
 import { handleMcpProxy } from "./interceptors/mcp-proxy";
 import { handleSfapiProxy } from "./interceptors/sfapi-proxy";
 import { handleShopifyRouteHandlers } from "./registered-routes";
-import type { HydrogenRouteHandler, HydrogenRoutesOptions } from "./route-types";
+import type { HydrogenRouteHandler, HydrogenRouteInterceptor } from "./route-types";
 
 export type {
   HydrogenRouteHandler,
   HydrogenRouteInterceptor,
   HydrogenRoutesOptions,
 } from "./route-types";
+
+const SHOPIFY_ROUTE_INTERCEPTORS = [
+  handleSfapiProxy,
+  handleShopifyRouteHandlers,
+  handleCheckoutRedirect,
+  handleMcpProxy,
+  handleAgentProxy,
+  handleAjaxApi,
+] satisfies readonly HydrogenRouteInterceptor[];
 
 /**
  * Matches a request against Shopify standard routes and any registered handler
@@ -19,53 +28,31 @@ export type {
  * framework routing.
  */
 export const handleShopifyRoutes: HydrogenRouteHandler = (options) => {
-  assertSingleRequestContext(options);
+  if (options.requestContext !== options.storefrontClient.requestContext) {
+    throw new Error(
+      "handleShopifyRoutes must receive the same requestContext used by storefrontClient.",
+    );
+  }
+
   const url = new URL(options.request.url);
 
-  const sfapiProxy = handleSfapiProxy(url, options);
-  if (sfapiProxy) return applyResponseHeadersFromPromise(options, sfapiProxy);
+  for (const interceptor of SHOPIFY_ROUTE_INTERCEPTORS) {
+    const responsePromise = interceptor(url, options);
+    if (!responsePromise) continue;
 
-  const registeredRoute = handleShopifyRouteHandlers(url, options);
-  if (registeredRoute) return applyResponseHeadersFromPromise(options, registeredRoute);
+    return responsePromise.then((response) => {
+      try {
+        options.requestContext.applyResponseHeaders(response.headers);
+        return response;
+      } catch (error) {
+        if (!(error instanceof TypeError)) throw error;
+      }
 
-  const checkoutRedirect = handleCheckoutRedirect(url, options);
-  if (checkoutRedirect) return applyResponseHeadersFromPromise(options, checkoutRedirect);
-
-  const mcpProxy = handleMcpProxy(url, options);
-  if (mcpProxy) return applyResponseHeadersFromPromise(options, mcpProxy);
-
-  const agentProxy = handleAgentProxy(url, options);
-  if (agentProxy) return applyResponseHeadersFromPromise(options, agentProxy);
-
-  const ajaxApi = handleAjaxApi(url, options);
-  return ajaxApi ? applyResponseHeadersFromPromise(options, ajaxApi) : null;
-};
-
-function assertSingleRequestContext(options: HydrogenRoutesOptions): void {
-  if (options.requestContext === options.storefrontClient.requestContext) return;
-  throw new Error(
-    "handleShopifyRoutes must receive the same requestContext used by storefrontClient.",
-  );
-}
-
-function applyResponseHeadersFromPromise(
-  options: HydrogenRoutesOptions,
-  responsePromise: Promise<Response>,
-): Promise<Response> {
-  return responsePromise.then((response) => applyResponseHeadersFromOptions(options, response));
-}
-
-function applyResponseHeadersFromOptions(
-  options: HydrogenRoutesOptions,
-  response: Response,
-): Response {
-  try {
-    options.requestContext.applyResponseHeaders(response.headers);
-    return response;
-  } catch (error) {
-    if (!(error instanceof TypeError)) throw error;
-    const mutableResponse = new Response(response.body, response);
-    options.requestContext.applyResponseHeaders(mutableResponse.headers);
-    return mutableResponse;
+      const mutableResponse = new Response(response.body, response);
+      options.requestContext.applyResponseHeaders(mutableResponse.headers);
+      return mutableResponse;
+    });
   }
-}
+
+  return null;
+};
