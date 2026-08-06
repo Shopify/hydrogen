@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createStorefrontClient } from "../../../client/client";
-import { createShopifyRequestContext } from "../../headers";
 import { configureLogging, resetLoggingForTests } from "../../logging";
+import { createShopifyRequestContext } from "../../request-context";
 import { createTestLogger } from "../../test-utils";
 import { handleCheckoutRedirect as handleCheckoutRedirectImpl } from "./checkout";
 

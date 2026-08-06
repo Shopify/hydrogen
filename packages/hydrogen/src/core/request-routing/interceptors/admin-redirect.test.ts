@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
 import type { PrivateStorefrontClient } from "../../../client";
-import { createShopifyRequestContext } from "../../headers";
+import { createShopifyRequestContext } from "../../request-context";
 import { createShopifyRouteTemplates } from "../../standard-routes/index";
 import { assert } from "../../test-utils";
 import type { RedirectOptions } from "../handle-shopify-redirects";

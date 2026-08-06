@@ -1,6 +1,6 @@
 import { describe, expectTypeOf, it } from "vitest";
 
-import { createShopifyRequestContext } from "../core/headers";
+import { createShopifyRequestContext } from "../core/request-context";
 import type { ShopifyRouteHandlerGroup } from "../core/request-routing/registered-routes";
 import {
   createCustomerAccountServerHandlers,

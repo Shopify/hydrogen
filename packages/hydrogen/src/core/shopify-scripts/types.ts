@@ -4,7 +4,7 @@ import type {
   ShopAnalyticsChannel,
   StorefrontAnalyticsConfig,
 } from "../analytics/types";
-import type { I18nConfig } from "../headers";
+import type { I18nConfig } from "../request-context";
 import type { ShopifyRouteTemplates } from "../standard-routes/index";
 
 export type ShopifyScriptsAnalyticsConfig = {

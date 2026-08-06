@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import type { PrivateStorefrontClient } from "../../../client";
-import { createShopifyRequestContext } from "../../headers";
+import { createShopifyRequestContext } from "../../request-context";
 import { assert } from "../../test-utils";
 import type { GraphiQLOptions } from "../../types";
 import { handleGraphiql as handleGraphiqlImpl } from "./graphiql";

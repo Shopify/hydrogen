@@ -164,7 +164,7 @@
         "packages/hydrogen/src/core/predictive-search/search.ts",
         "packages/hydrogen/src/core/collection/reconciler.ts",
         "packages/hydrogen/src/core/collection/url.ts",
-        "packages/hydrogen/src/core/headers.ts",
+        "packages/hydrogen/src/core/request-context.ts",
         "packages/hydrogen/src/core/product/form.ts"
       ],
       "rules": {

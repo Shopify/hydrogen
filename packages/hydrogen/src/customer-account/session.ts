@@ -1,5 +1,5 @@
 import { DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
-import type { ShopifyRequestContext } from "../core/headers";
+import type { ShopifyRequestContext } from "../core/request-context";
 import {
   createCallableRouteHandler,
   type CallableRouteHandler,

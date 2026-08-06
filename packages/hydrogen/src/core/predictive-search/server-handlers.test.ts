@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
-import { createShopifyRequestContext } from "../headers";
+import { createShopifyRequestContext } from "../request-context";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../request-routing/handle-shopify-routes";
 import { assert } from "../test-utils";
 import { DEFAULT_PREDICTIVE_SEARCH_LIMIT, getEmptyPredictiveSearchResult } from "./search";

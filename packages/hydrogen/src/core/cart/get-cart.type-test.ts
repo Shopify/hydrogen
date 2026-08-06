@@ -2,7 +2,7 @@ import { describe, it } from "vitest";
 
 import { createStorefrontClient } from "../../client";
 import { handleShopifyRoutes } from "../request-routing/handle-shopify-routes";
-import { createShopifyRequestContext } from "../headers";
+import { createShopifyRequestContext } from "../request-context";
 import { createCartServerHandlers } from "./server-handlers";
 
 const i18n = { country: "US", language: "EN" } as const;

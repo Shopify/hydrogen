@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
 import {
-  createShopifyRequestContext,
   SHOPIFY_CLIENT_IP_HEADER,
   STOREFRONT_BUYER_IP_HEADER,
   STOREFRONT_PRIVATE_TOKEN_HEADER,
 } from "../../headers";
 import { configureLogging, resetLoggingForTests } from "../../logging";
+import { createShopifyRequestContext } from "../../request-context";
 import { assert, createTestLogger } from "../../test-utils";
 import { handleSfapiProxy as handleSfapiProxyImpl } from "./sfapi-proxy";
 

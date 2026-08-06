@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
 import { createCartServerHandlers } from "../cart/server-handlers";
-import { createShopifyRequestContext } from "../headers";
+import { createShopifyRequestContext } from "../request-context";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "./handle-shopify-routes";
 import { createShopifyRouteHandler } from "./registered-routes";
 

@@ -16,12 +16,12 @@ export type {
   ShopifyRouteRedirectResult,
 } from "./request-routing/registered-routes";
 export { createStorefrontClient } from "../client/client";
-export { createShopifyRequestContext } from "./headers";
+export { createShopifyRequestContext } from "./request-context";
 export { Cache, createFetchWithCache, createRunWithCache } from "./cache";
 export type { CacheInstance, CacheOptions, CachingStrategy } from "./cache";
 export { StorefrontApiError, StorefrontTimeoutError } from "../client/errors";
 export { gql } from "../graphql";
-export type { I18nConfig, ShopifyRequestContext } from "./headers";
+export type { I18nConfig, ShopifyRequestContext } from "./request-context";
 export type { AnyStorefrontQueryString, StorefrontQueryString } from "../graphql";
 export type { InferResult, InferVariables } from "../graphql";
 export type {

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { createShopifyRequestContext, SHOPIFY_CHAT_FRAME_ORIGIN_HEADER } from "../../headers";
+import { SHOPIFY_CHAT_FRAME_ORIGIN_HEADER } from "../../headers";
+import { createShopifyRequestContext } from "../../request-context";
 import { assert } from "../../test-utils";
 import { handleAgentProxy as handleAgentProxyImpl } from "./agent-proxy";
 

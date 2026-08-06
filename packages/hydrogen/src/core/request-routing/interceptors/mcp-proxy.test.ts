@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
-import { createShopifyRequestContext } from "../../headers";
 import { configureLogging, resetLoggingForTests } from "../../logging";
+import { createShopifyRequestContext } from "../../request-context";
 import { assert, createTestLogger } from "../../test-utils";
 import { handleMcpProxy as handleMcpProxyImpl } from "./mcp-proxy";
 

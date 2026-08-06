@@ -5,12 +5,12 @@ import type {
 } from "gql.tada";
 
 import type { CacheInstance, WaitUntil } from "../core/cache/run-with-cache";
-import type { ShopifyRequestContext } from "../core/headers";
+import type { ShopifyRequestContext } from "../core/request-context";
 import type { AnyStorefrontQueryString, SourceOf, StorefrontQueryString } from "../graphql";
 import type { InferResult, InferVariables } from "../graphql";
 import type { InferOperationKind } from "../graphql/type-resolver";
 
-export type { I18nConfig } from "../core/headers";
+export type { I18nConfig } from "../core/request-context";
 
 type DocLike = TadaDocumentNode<any, any> | AnyStorefrontQueryString;
 type InferredDoc<T extends string> = StorefrontQueryString<InferResult<T>, InferVariables<T>, T>;

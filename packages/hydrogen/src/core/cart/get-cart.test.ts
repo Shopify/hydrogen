@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 
 import type { RequestScopedPrivateStorefrontClient } from "../../client";
 import { gql } from "../../graphql";
-import { createShopifyRequestContext } from "../headers";
+import { createShopifyRequestContext } from "../request-context";
 import { assert } from "../test-utils";
 import { getCart, getCartId } from "./get-cart";
 import { cartQueries, makeCartQueries } from "./queries";

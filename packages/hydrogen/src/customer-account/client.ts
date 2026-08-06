@@ -1,6 +1,6 @@
 import type { GraphQLFormattedError } from "../client/types";
 import { CUSTOMER_ACCOUNT_API_VERSION, DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
-import type { ShopifyRequestContext } from "../core/headers";
+import type { ShopifyRequestContext } from "../core/request-context";
 import { isObjectRecord } from "../core/utils/record";
 import {
   CustomerAccountApiError,

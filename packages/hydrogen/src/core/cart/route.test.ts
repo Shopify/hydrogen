@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
-import { createShopifyRequestContext } from "../headers";
 import { configureLogging, resetLoggingForTests } from "../logging";
+import { createShopifyRequestContext } from "../request-context";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../request-routing/handle-shopify-routes";
 import { assert, createTestLogger } from "../test-utils";
 import { createCartServerHandlers } from "./server-handlers";
