@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit && hydrogen gql check --fail-on-warn"
   },
   "dependencies": {
-    "@shopify/hydrogen": "preview",
+    "@shopify/hydrogen": "0.0.0-preview-116d5d7-20260730141607",
     "isbot": "^5",
     "next": "16.2.9",
     "react": "^19.2.4",

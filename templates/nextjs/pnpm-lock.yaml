@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@shopify/hydrogen':
-        specifier: preview
+        specifier: 0.0.0-preview-116d5d7-20260730141607
         version: 0.0.0-preview-116d5d7-20260730141607(graphql@16.14.2)(react@19.2.4)(typescript@5.9.3)
       isbot:
         specifier: ^5
