@@ -50,29 +50,52 @@ type ShopifyRequestContextInput<I18n extends I18nConfig = I18nConfig> = {
 };
 
 type ShopifyRequestContextBase = {
-  /** Compile-time brand so callers use createShopifyRequestContext(). */
+  // -- Private fields --
+  /**
+   * Compile-time brand so callers use createShopifyRequestContext().
+   * @internal
+   */
   readonly __hydrogenShopifyRequestContextBrand: never;
+  /** @internal */
   cookie?: string;
+  /** @internal */
   uniqueToken?: string;
+  /** @internal */
   visitToken?: string;
+  /** @internal */
   legacyTokens?: boolean;
+  /** @internal */
   buyerIp?: string;
+  /** @internal */
   requestGroupId: string;
+  /** @internal */
   signal?: AbortSignal;
+  /** @internal */
   url?: string;
-  /** Origin of the storefront request URL. */
+  /** @internal */
   storefrontOrigin?: string;
+  /**
+   * Apply request-scoped headers required by every Shopify storefront subrequest.
+   * @internal
+   */
+  applyStorefrontRequestHeaders(headers: Headers): void;
+  /**
+   * Capture the first fresh SFAPI response headers for replay onto the final app response.
+   * @internal
+   */
+  captureSubrequestHeaders(headers: Headers): void;
+  /**
+   * Mark the final app response as influenced by private customer state.
+   * @internal
+   */
+  markResponseAsPersonalized(reason: string): void;
+
+  // -- Public fields --
+  i18n: NormalizedI18nConfig;
   /** Return incoming request headers plus request lifecycle headers for proxy/origin handoff. */
   getForwardedRequestHeaders(): Headers;
-  /** Apply request-scoped headers required by every Shopify storefront subrequest. */
-  applyStorefrontRequestHeaders(headers: Headers): void;
-  /** Capture the first fresh SFAPI response headers for replay onto the final app response. */
-  captureSubrequestHeaders(headers: Headers): void;
-  /** Mark the final app response as influenced by private customer state. */
-  markResponseAsPersonalized(reason: string): void;
   /** Apply captured SFAPI headers and document tracking fallback headers to an app response. */
   applyResponseHeaders(headers: Headers): void;
-  i18n: NormalizedI18nConfig;
 };
 
 export type ShopifyRequestContext<I18n extends I18nConfig = I18nConfig> =
