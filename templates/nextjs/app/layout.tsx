@@ -48,11 +48,13 @@ export async function generateMetadata(): Promise<Metadata> {
 // middleware/parent server component instead.
 const htmlLang = defaultI18n.language.toLowerCase();
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { currency } = await getAnalyticsShop();
+
   return (
     <html lang={htmlLang}>
       <head>
-        <ShopifyScriptsWithNavigation shop={shop} />
+        <ShopifyScriptsWithNavigation shop={shop} currency={currency} />
       </head>
       <body className="bg-surface text-on-surface font-body flex min-h-svh flex-col antialiased">
         <div
