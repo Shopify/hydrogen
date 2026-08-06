@@ -5,35 +5,43 @@ import {
 } from "@shopify/hydrogen";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { cartHandlers } from "./app/lib/cart-handlers";
-import { createRequestSessionManager } from "./app/lib/session";
+import { getBuyerIp } from "@/lib/buyer-ip";
+import { cartHandlers } from "@/lib/cart-handlers";
+import { defaultI18n } from "@/lib/config";
 import {
-  DEVELOPMENT_BUYER_IP,
-  getBuyerIp,
-  getPrivateStorefrontToken,
-  getStoreDomain,
-  storefrontConfig,
-  shouldUseMockShop,
-} from "./app/lib/shop";
+  createCustomerSessionManager,
+  createEphemeralSessionManager,
+} from "@/lib/customer-account";
+import { getCustomerSessionHandlers } from "@/lib/customer-session-handlers";
+import { predictiveSearchHandlers } from "@/lib/predictive-search-handlers";
+import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/storefront-config";
 
-function getMockBuyerIp(headers: Pick<Headers, "get">): string {
-  try {
-    return getBuyerIp(headers);
-  } catch {
-    return DEVELOPMENT_BUYER_IP;
-  }
-}
-
+/**
+ * Next.js request lifecycle (`hydrogen-request-handlers` /
+ * `references/nextjs.md`). `proxy.ts` runs `handleShopifyRoutes` before framework
+ * routing — Hydrogen-owned routes (`/api/cart`, `/api/predictive-search`,
+ * `/api/{ver}/graphql.json`, `/admin`, …) short-circuit here. Storefront URL
+ * redirects run in `app/not-found.tsx` (post-404), never here.
+ *
+ * The original request URL is forwarded to Server Components via
+ * `requestContext.getForwardedRequestHeaders()` (carries `x-storefront-url` for
+ * `not-found.tsx` and `getMarketFromHeaders`). SFAPI response headers are merged
+ * onto the forwarded response via `requestContext.applyResponseHeaders`.
+ *
+ * mock.shop fallback: when no `PRIVATE_STOREFRONT_API_TOKEN` is present, the
+ * shared `resolveStorefrontConfig()` falls back to `mock.shop` + its well-known
+ * `mock-private-token` so the example runs with zero secrets.
+ */
 export async function proxy(request: NextRequest) {
-  const usingMockShop = shouldUseMockShop(process.env);
-  const buyerIp = usingMockShop ? getMockBuyerIp(request.headers) : getBuyerIp(request.headers);
+  const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: storefrontConfig.i18n,
+    i18n: defaultI18n,
     buyerIp,
   });
-  const storeDomain = usingMockShop ? "mock.shop" : getStoreDomain(process.env);
-  const privateStorefrontToken = usingMockShop ? "mock-private-token" : getPrivateStorefrontToken();
+
+  const { storeDomain, privateStorefrontToken } = resolveStorefrontConfig();
+
   const storefrontClient = createStorefrontClient({
     type: "private",
     requestContext,
@@ -44,15 +52,34 @@ export async function proxy(request: NextRequest) {
     },
   });
 
+  // Sync — no `await` — so the handlers can never be a stray `Promise<boolean>`
+  // that's always truthy when spread.
+  const customerAccountsAvailable = isCustomerAccountsAvailable();
+  const sessionManager = customerAccountsAvailable
+    ? await createCustomerSessionManager(request)
+    : createEphemeralSessionManager(request);
+  const handlers = [
+    cartHandlers,
+    predictiveSearchHandlers,
+    ...(customerAccountsAvailable ? [getCustomerSessionHandlers()] : []),
+  ];
+
   const shopifyRoute = await handleShopifyRoutes({
     request,
     requestContext,
-    sessionManager: createRequestSessionManager(request),
+    sessionManager,
     storefrontClient,
-    handlers: [cartHandlers],
+    handlers,
   });
-  if (shopifyRoute) return shopifyRoute;
+  if (shopifyRoute) {
+    // Hydrogen-owned route (cart/predictive-search/SFAPI proxy/admin).
+    // `handleShopifyRoutes` already applies SFAPI response headers onto the
+    // short-circuited response internally, so no `applyResponseHeaders` here.
+    return shopifyRoute;
+  }
 
+  // Forward the original URL (via `x-storefront-url`) + request context headers
+  // to Server Components, then merge SFAPI response headers onto the response.
   const requestHeaders = requestContext.getForwardedRequestHeaders();
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   requestContext.applyResponseHeaders(response.headers);
@@ -60,5 +87,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // Exclude static Next assets; keep Hydrogen-owned paths (e.g. /admin,
+  // /api/cart, /api/{ver}/graphql.json) reachable.
   matcher: ["/((?!_next/static|_next/image|_next/data|favicon.ico).*)"],
 };
