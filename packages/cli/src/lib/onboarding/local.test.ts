@@ -62,9 +62,9 @@ describe('local templates', () => {
         `"name": "${basename(tmpDir)}"`,
       );
 
-      // Creates .env without mock.shop
+      // Creates .env without Mock Shop domain
       await expect(readFile(`${tmpDir}/.env`)).resolves.not.toMatch(
-        `mock.shop`,
+        `mockdotshop.myshopify.com`,
       );
 
       const output = outputMock.info();
