@@ -9,7 +9,7 @@ import { handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createStorefrontClient,
   createShopifyRequestContext,
-  type ShopifyBuyerRequestContext,
+  type ShopifyRequestContextWithBuyerIp,
 } from "@shopify/hydrogen";
 import { LRUCache } from "lru-cache";
 
@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
   event.context.customerAccountClient = customerAccountClient;
 });
 
-function createPrivateStorefrontClient(requestContext: ShopifyBuyerRequestContext) {
+function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({
     type: "private",
     requestContext,

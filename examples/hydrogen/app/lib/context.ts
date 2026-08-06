@@ -1,4 +1,4 @@
-import type { ShopifyBuyerRequestContext, ShopifyRequestContext } from "@shopify/hydrogen";
+import type { ShopifyRequestContext, ShopifyRequestContextWithBuyerIp } from "@shopify/hydrogen";
 import { RouterContextProvider } from "react-router";
 
 import { AppSession } from "~/lib/session";
@@ -27,7 +27,7 @@ export async function createHydrogenRouterContext(
   request: Request,
   env: Env,
   executionContext: ExecutionContext,
-  shopifyRequestContext: ShopifyBuyerRequestContext,
+  shopifyRequestContext: ShopifyRequestContextWithBuyerIp,
   customerAccount: CustomerAccountContext,
 ) {
   const waitUntil = executionContext.waitUntil.bind(executionContext);

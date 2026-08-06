@@ -5,7 +5,7 @@ import {
   type GraphQLFormattedError,
   type RequestScopedPrivateStorefrontClient,
   type CachingStrategy,
-  type ShopifyBuyerRequestContext,
+  type ShopifyRequestContextWithBuyerIp,
 } from "@shopify/hydrogen";
 
 import type { I18nLocale } from "~/lib/i18n";
@@ -14,7 +14,7 @@ type CreateStorefrontClientOptions = {
   env: Env;
   cache: Cache;
   waitUntil: ExecutionContext["waitUntil"];
-  shopifyRequestContext: ShopifyBuyerRequestContext;
+  shopifyRequestContext: ShopifyRequestContextWithBuyerIp;
 };
 
 type StorefrontQueryOptions = {

@@ -4,8 +4,8 @@ export { gql } from "../graphql";
 export { StorefrontApiError, StorefrontTimeoutError } from "./errors";
 export type {
   I18nConfig,
-  ShopifyBuyerRequestContext,
   ShopifyRequestContext,
+  ShopifyRequestContextWithBuyerIp,
 } from "../core/request-context";
 export type { AnyStorefrontQueryString, StorefrontQueryString } from "../graphql";
 export type { InferResult, InferVariables } from "../graphql";

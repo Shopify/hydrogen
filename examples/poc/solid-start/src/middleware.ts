@@ -10,7 +10,7 @@ import {
   createCartServerHandlers,
   createStorefrontClient,
   createShopifyRequestContext,
-  type ShopifyBuyerRequestContext,
+  type ShopifyRequestContextWithBuyerIp,
 } from "@shopify/hydrogen";
 import { createMiddleware } from "@solidjs/start/middleware";
 import { LRUCache } from "lru-cache";
@@ -73,7 +73,7 @@ export default createMiddleware({
   ],
 });
 
-function createPrivateStorefrontClient(requestContext: ShopifyBuyerRequestContext) {
+function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({
     type: "private",
     requestContext,

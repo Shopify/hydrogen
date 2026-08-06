@@ -5,7 +5,7 @@ import { handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createStorefrontClient,
   createShopifyRequestContext,
-  type ShopifyBuyerRequestContext,
+  type ShopifyRequestContextWithBuyerIp,
 } from "@shopify/hydrogen";
 
 import { cartHandlers } from "../../storefront/cart-handlers";
@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
   event.context.customerAccountClient = customerAccountClient;
 });
 
-function createPrivateStorefrontClient(requestContext: ShopifyBuyerRequestContext) {
+function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({
     type: "private",
     requestContext,

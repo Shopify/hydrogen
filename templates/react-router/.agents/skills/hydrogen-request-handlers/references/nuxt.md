@@ -29,7 +29,7 @@ import {
   createStorefrontClient,
   createShopifyRequestContext,
   handleShopifyRoutes,
-  type ShopifyBuyerRequestContext,
+  type ShopifyRequestContextWithBuyerIp,
 } from "@shopify/hydrogen";
 
 const cartHandlers = createCartServerHandlers();
@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
   event.context.storefrontClient = storefrontClient;
 });
 
-function createPrivateStorefrontClient(requestContext: ShopifyBuyerRequestContext) {
+function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({
     type: "private",
     requestContext,

@@ -15,7 +15,7 @@ Create the private client in server middleware where Nuxt exposes the incoming r
 import {
   createStorefrontClient,
   createShopifyRequestContext,
-  type ShopifyBuyerRequestContext,
+  type ShopifyRequestContextWithBuyerIp,
 } from "@shopify/hydrogen";
 
 export default defineEventHandler((event) => {
@@ -31,7 +31,7 @@ export default defineEventHandler((event) => {
   event.context.shopifyRequestContext = requestContext;
 });
 
-function createPrivateStorefrontClient(requestContext: ShopifyBuyerRequestContext) {
+function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({
     type: "private",
     requestContext,

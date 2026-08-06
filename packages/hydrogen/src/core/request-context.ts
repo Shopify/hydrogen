@@ -51,7 +51,7 @@ type ShopifyRequestContextInputBase<I18n extends I18nConfig = I18nConfig> = {
 type ShopifyRequestContextInput<I18n extends I18nConfig = I18nConfig> =
   ShopifyRequestContextInputBase<I18n> & { buyerIp?: never };
 
-type ShopifyBuyerRequestContextInput<I18n extends I18nConfig = I18nConfig> =
+type ShopifyRequestContextWithBuyerIpInput<I18n extends I18nConfig = I18nConfig> =
   ShopifyRequestContextInputBase<I18n> & { buyerIp: string };
 
 type ShopifyRequestContextBase = {
@@ -70,7 +70,7 @@ type ShopifyRequestContextBase = {
   /** @internal */
   legacyTokens?: boolean;
   /** @internal */
-  buyerIp?: string;
+  readonly buyerIp?: string;
   /** @internal */
   requestGroupId: string;
   /** @internal */
@@ -108,8 +108,8 @@ export type ShopifyRequestContext<I18n extends I18nConfig = I18nConfig> =
     i18n: NormalizedI18nConfig<I18n>;
   };
 
-export type ShopifyBuyerRequestContext<I18n extends I18nConfig = I18nConfig> =
-  ShopifyRequestContext<I18n> & { buyerIp: string };
+export type ShopifyRequestContextWithBuyerIp<I18n extends I18nConfig = I18nConfig> =
+  ShopifyRequestContext<I18n> & { readonly buyerIp: string };
 
 type Context<I18n extends I18nConfig = I18nConfig> = {
   cookie?: string;
@@ -126,8 +126,8 @@ type Context<I18n extends I18nConfig = I18nConfig> = {
 };
 
 export function createShopifyRequestContext<const I18n extends I18nConfig>(
-  input: ShopifyBuyerRequestContextInput<I18n>,
-): ShopifyBuyerRequestContext<I18n>;
+  input: ShopifyRequestContextWithBuyerIpInput<I18n>,
+): ShopifyRequestContextWithBuyerIp<I18n>;
 export function createShopifyRequestContext<const I18n extends I18nConfig>(
   input: ShopifyRequestContextInput<I18n>,
 ): ShopifyRequestContext<I18n>;
@@ -140,7 +140,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     throw new Error("i18n with country and language is required for Shopify request contexts.");
   }
 
-  if ("buyerIp" in input && !input.buyerIp) {
+  if (input.buyerIp !== undefined && !input.buyerIp) {
     throw new Error("buyerIp must be non-empty when provided");
   }
 

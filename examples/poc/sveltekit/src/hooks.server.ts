@@ -13,7 +13,7 @@ import {
   createCartServerHandlers,
   createStorefrontClient,
   createShopifyRequestContext,
-  type ShopifyBuyerRequestContext,
+  type ShopifyRequestContextWithBuyerIp,
   type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import type { Handle } from "@sveltejs/kit";
@@ -77,7 +77,7 @@ function applyStorefrontResponseHeaders(
   }
 }
 
-function createPrivateStorefrontClient(requestContext: ShopifyBuyerRequestContext) {
+function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({
     type: "private",
     requestContext,

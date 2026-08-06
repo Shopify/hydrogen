@@ -11,7 +11,7 @@ import {
   createShopifyRequestContext,
   handleShopifyRedirects,
   handleShopifyRoutes,
-  type ShopifyBuyerRequestContext,
+  type ShopifyRequestContextWithBuyerIp,
   type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import { defineMiddleware } from "astro:middleware";
@@ -78,7 +78,7 @@ function applyStorefrontResponseHeaders(
   }
 }
 
-function createPrivateStorefrontClient(requestContext: ShopifyBuyerRequestContext) {
+function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({
     type: "private",
     requestContext,

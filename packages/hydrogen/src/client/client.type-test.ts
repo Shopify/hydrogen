@@ -343,6 +343,9 @@ describe('type tests', () => {
 
       expectTypeOf(requestContext.buyerIp).toEqualTypeOf<string>();
       expectTypeOf<PrivateStorefrontClient['requestContext']['buyerIp']>().toEqualTypeOf<string>();
+
+      // @ts-expect-error — buyerIp is immutable after context creation
+      requestContext.buyerIp = '4.3.2.1';
     });
 
     it('rejects requestGroupId next to buyerIp', () => {

@@ -173,7 +173,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
   if (clientType === "private") {
     const { buyerIp } = requestContext;
     if (!buyerIp) {
-      throw new Error("requestContext.buyerIp is required for private Storefront API clients");
+      throw new TypeError("requestContext.buyerIp is required for private Storefront API clients");
     }
     requestHeaders.set(STOREFRONT_BUYER_IP_HEADER, buyerIp);
     requestHeaders.set(SHOPIFY_CLIENT_IP_HEADER, buyerIp);
