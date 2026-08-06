@@ -38,6 +38,25 @@ Next.js on Vercel runs on the Node/serverless runtime, so `process.env` works an
 7. Update README and env files for a Vercel starter.
 8. Run install/typecheck/build/dev validation (see "Prerequisites" and "Validation").
 
+When analytics is enabled, resolve the active-market currency in a server-side root/shop lookup from Storefront API
+localization, assemble the complete `i18n` object in the server layout, and pass it to `ShopifyScripts` as `i18n`
+before consent can replay events:
+
+```graphql
+localization {
+  country {
+    currency {
+      isoCode
+    }
+  }
+}
+```
+
+Run this field under the same `@inContext(country:, language:)` values as storefront requests. Reuse the template's
+cached shop lookup when practical and keep an explicit fallback for API failures and mock mode. Do not add a required
+currency environment variable, do not use `shop.paymentSettings.currencyCode` (shop currency is not necessarily the
+active market's presentment currency), and do not wait for cart data to initialize currency.
+
 ## Prerequisites (do these before validating)
 
 - **Use `CI=true` for installs** in this repo (installs abort without a TTY), and `--no-frozen-lockfile` on the first
@@ -291,6 +310,8 @@ Before finishing:
    the demo store, scrape `href="/products/..."` / `href="/collections/..."` from `/` or a collection page (guessing
    handles 404s); e.g. `v2-snowboard` and the `freestyle` collection are live. `/account` legitimately 307-redirects to
    `/account/refresh?...` when logged out — that is the Customer Account flow, not a failure.
+   Before and after accepting consent, confirm `window.Shopify.currency.active` exists and matches the resolved market
+   currency without requiring a cart mutation.
 7. **Check the output isn't gitignored:** run `git check-ignore templates/<name>` — if the whole `templates/` dir is
    ignored (a bare `templates` line in the repo root `.gitignore`), the template can't be committed. Surface this to the
    user rather than shipping an untrackable template.
