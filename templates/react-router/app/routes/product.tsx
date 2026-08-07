@@ -452,7 +452,7 @@ function VariantOptions({ product }: { product: ProductData }) {
                 if (renderSwatches) {
                   const swatch = swatches.get(`${option.name}:${valueName}`);
                   const swatchStyle = swatch?.imageUrl
-                    ? { backgroundImage: `url(${swatch.imageUrl})` }
+                    ? { backgroundImage: `url("${swatch.imageUrl}")` }
                     : { backgroundColor: swatch?.color ?? undefined };
                   const content = (
                     <>

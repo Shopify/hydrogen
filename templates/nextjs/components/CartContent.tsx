@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useCart, useCartForm } from "@/lib/cart";
 import { content } from "@/lib/content";
@@ -211,7 +211,13 @@ function CartStatus({
 }
 
 function useCartStatusMessage(isPending: boolean, hasNetworkErrors: boolean): string {
+  const [sawPending, setSawPending] = useState(false);
+
+  useEffect(() => {
+    if (isPending) setSawPending(true);
+  }, [isPending]);
+
   if (isPending) return "Updating cart totals";
-  if (hasNetworkErrors) return "";
+  if (sawPending && !hasNetworkErrors) return "Cart totals updated";
   return "";
 }

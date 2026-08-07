@@ -11,9 +11,6 @@ import type { NextConfig } from "next";
 export default function nextConfig(): NextConfig {
   return {
     cacheComponents: true,
-    turbopack: {
-      root: __dirname,
-    },
     // React Strict Mode is disabled because `@shopify/hydrogen/react`'s
     // `PredictiveSearchProvider` destroys its store in the Strict Mode effect
     // cleanup (double-invoke), and `useMemo` returns the same (now-destroyed)
