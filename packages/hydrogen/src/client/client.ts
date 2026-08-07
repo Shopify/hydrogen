@@ -7,7 +7,11 @@ import type { CacheInstance } from "../core/cache/run-with-cache";
 import type { CachingStrategy } from "../core/cache/strategies";
 import { DEFAULT_TIMEOUT_IN_MS, STOREFRONT_API_VERSION } from "../core/constants";
 import {
+  HYDROGEN_VERSION_HEADER,
   REQUEST_GROUP_ID_HEADER,
+  SDK_VARIANT_HEADER,
+  SDK_VARIANT_SOURCE_HEADER,
+  SDK_VERSION_HEADER,
   SHOPIFY_CLIENT_IP_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
@@ -38,10 +42,6 @@ type ResolvedStorefrontFetch = (
   cacheOptions: FetchCacheOptions | undefined,
 ) => Promise<Response>;
 
-const SDK_VARIANT_HEADER = "X-SDK-Variant";
-const SDK_VARIANT_SOURCE_HEADER = "X-SDK-Variant-Source";
-const SDK_VERSION_HEADER = "X-SDK-Version";
-const HYDROGEN_VERSION_HEADER = "X-Hydrogen-Version";
 const COUNTRY_VAR_RE = /\$country\s*:/;
 const LANGUAGE_VAR_RE = /\$language\s*:/;
 const REQUEST_CACHE_KEY_HEADERS = new Set([
@@ -138,10 +138,6 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
 
   const staticHeaders: Record<string, string> = {
     "content-type": "application/json",
-    [SDK_VARIANT_HEADER]: "hydrogen",
-    [SDK_VARIANT_SOURCE_HEADER]: "kit",
-    [SDK_VERSION_HEADER]: STOREFRONT_API_VERSION,
-    [HYDROGEN_VERSION_HEADER]: __HYDROGEN_VERSION__,
   };
 
   switch (clientType) {
@@ -171,10 +167,8 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
   }
 
   const i18n = requestContext.i18n;
-  const requestHeaders = requestContext.getSubrequestHeaders();
-  for (const [name, value] of Object.entries(staticHeaders)) {
-    requestHeaders.set(name, value);
-  }
+  const requestHeaders = new Headers(staticHeaders);
+  requestContext.applyStorefrontRequestHeaders(requestHeaders);
 
   if (clientType === "private") {
     const { buyerIp } = config;

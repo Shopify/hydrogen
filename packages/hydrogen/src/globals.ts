@@ -42,6 +42,8 @@ export type ShopifyGlobal = {
   routes: {
     root: string;
     /** @internal */
+    apiProxyPrefix?: string;
+    /** @internal */
     match?: (url: string) => ShopifyStandardRouteMatch | null;
     /** @internal */
     resolve?: (url: string) => string;

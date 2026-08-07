@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createStorefrontClient } from "../../client/client";
 import { createCartServerHandlers } from "../cart/server-handlers";
 import { createShopifyRequestContext } from "../request-context";
+import { assert } from "../test-utils";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "./handle-shopify-routes";
 import { createShopifyRouteHandler } from "./registered-routes";
 
@@ -90,6 +91,25 @@ describe("handleShopifyRoutes", () => {
 
     expect(result).not.toBeNull();
     expect(result).toBeInstanceOf(Response);
+  });
+
+  it("returns Response for Shopify API proxy requests", async () => {
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/__shopify/apps/inbox/config.json"),
+    });
+
+    expect(result).not.toBeNull();
+    expect(result).toBeInstanceOf(Response);
+  });
+
+  it("rewrites cart.js AJAX requests to cart.json", async () => {
+    await handleShopifyRoutes({
+      request: new Request("https://my-app.com/en/cart.js?locale=en"),
+    });
+
+    const call = mockFetch.mock.calls[0];
+    assert(call, "expected fetch to be called");
+    expect(call[0].href).toBe("https://test-store.myshopify.com/en/cart.json?locale=en");
   });
 
   it("returns Response for MCP proxy requests", async () => {

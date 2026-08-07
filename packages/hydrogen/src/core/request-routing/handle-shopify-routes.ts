@@ -1,5 +1,6 @@
 import { handleAgentProxy } from "./interceptors/agent-proxy";
 import { handleAjaxApi } from "./interceptors/ajax-api";
+import { handleShopifyApiProxy } from "./interceptors/api-proxy";
 import { handleCheckoutRedirect } from "./interceptors/checkout";
 import { handleMcpProxy } from "./interceptors/mcp-proxy";
 import { handleSfapiProxy } from "./interceptors/sfapi-proxy";
@@ -13,6 +14,7 @@ export type {
 } from "./route-types";
 
 const SHOPIFY_ROUTE_INTERCEPTORS = [
+  handleShopifyApiProxy,
   handleSfapiProxy,
   handleShopifyRouteHandlers,
   handleCheckoutRedirect,

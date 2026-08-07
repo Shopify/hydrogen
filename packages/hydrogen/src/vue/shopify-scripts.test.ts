@@ -55,7 +55,7 @@ describe("ShopifyScripts", () => {
     expect(html).toContain('nonce="test-nonce"');
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/"}');
+    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
     expect(html).toContain(`"shop":"${TEST_MYSHOPIFY_DOMAIN}"`);
     expect(html).not.toContain('"templates"');
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_CDN_ORIGIN}">`);
@@ -98,7 +98,7 @@ describe("ShopifyScripts", () => {
     expect(html).not.toContain(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT);
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/"}');
+    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
     expect(html).not.toContain('"templates"');
   });
 

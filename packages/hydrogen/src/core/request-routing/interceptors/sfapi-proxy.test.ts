@@ -332,11 +332,28 @@ describe("handleSfapiProxy", () => {
     expect(headers.get(SHOPIFY_CLIENT_IP_HEADER)).toBeNull();
   });
 
-  it("requires request context buyer IP for private client proxy requests", () => {
-    expect(() =>
-      handlePrivateSfapiProxyWithoutBuyerContext(createRequest("/api/2025-01/graphql.json")),
-    ).toThrow("requestContext.buyerIp is required for private Storefront API proxy requests");
+  it("returns 500 when request header preparation fails", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
+    const responsePromise = handlePrivateSfapiProxyWithoutBuyerContext(
+      createRequest("/api/2025-01/graphql.json"),
+    );
+
+    expect(responsePromise).toBeInstanceOf(Promise);
+    const response = await responsePromise;
+    assert(response, "expected proxy to return an error response");
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      error: "requestContext.buyerIp is required for private Storefront API proxy requests",
+    });
     expect(mockFetch).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith("request failed", {
+      scope: "sfapi-proxy",
+      error: expect.objectContaining({
+        message: "requestContext.buyerIp is required for private Storefront API proxy requests",
+      }),
+    });
   });
 
   it("sets Custom-Storefront-Request-Group-ID as a UUID", async () => {
