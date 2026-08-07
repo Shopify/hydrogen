@@ -28,23 +28,29 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
     const { request, storefrontClient } = options;
     if (!descriptor.match.test(url.pathname)) return null;
 
-    const upstreamPathname = descriptor.rewritePathname?.(url.pathname) ?? url.pathname;
-    const upstreamUrl = new URL(upstreamPathname + url.search, storefrontClient.storeUrl);
+    let upstreamUrl: URL;
+    let init: RequestInit & { duplex?: "half" };
+    try {
+      const upstreamPathname = descriptor.rewritePathname?.(url.pathname) ?? url.pathname;
+      upstreamUrl = new URL(upstreamPathname + url.search, storefrontClient.storeUrl);
+      const forwardedHeaders = createProxyRequestHeaders(descriptor, request);
+      options.requestContext.applyStorefrontRequestHeaders(forwardedHeaders);
+      descriptor.headers.prepare?.(forwardedHeaders, options, url);
 
-    const forwardedHeaders = createProxyRequestHeaders(descriptor, request);
-    options.requestContext.applyStorefrontRequestHeaders(forwardedHeaders);
-    descriptor.headers.prepare?.(forwardedHeaders, options, url);
+      init = {
+        method: request.method,
+        body: request.body,
+        headers: forwardedHeaders,
+        signal: AbortSignal.timeout(descriptor.timeoutMs ?? PROXY_TIMEOUT_MS),
+        redirect: "manual",
+      };
 
-    const init: RequestInit & { duplex?: "half" } = {
-      method: request.method,
-      body: request.body,
-      headers: forwardedHeaders,
-      signal: AbortSignal.timeout(descriptor.timeoutMs ?? PROXY_TIMEOUT_MS),
-      redirect: "manual",
-    };
-
-    // Node's fetch requires this when forwarding a streaming request body.
-    if (request.body) init.duplex = "half";
+      // Node's fetch requires this when forwarding a streaming request body.
+      if (request.body) init.duplex = "half";
+    } catch (error) {
+      log.error("request failed", { error });
+      return Promise.resolve(createProxyErrorResponse(error, 500, formatError));
+    }
 
     return fetch(upstreamUrl, init)
       .then(
@@ -57,18 +63,25 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
       )
       .catch((error) => {
         log.error("request failed", { error });
-        const message = error instanceof Error ? error.message : "Internal proxy error";
-
-        return new Response(JSON.stringify(formatError(message)), {
-          status: 502,
-          headers: { "content-type": "application/json" },
-        });
+        return createProxyErrorResponse(error, 502, formatError);
       });
   };
 }
 
 function defaultFormatError(message: string): { error: string } {
   return { error: message };
+}
+
+function createProxyErrorResponse(
+  error: unknown,
+  status: number,
+  formatError: (message: string) => unknown,
+): Response {
+  const message = error instanceof Error ? error.message : "Internal proxy error";
+  return new Response(JSON.stringify(formatError(message)), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
 }
 
 function createProxyRequestHeaders(descriptor: ProxyDescriptor, request: Request): Headers {
