@@ -18,11 +18,10 @@ const DEFAULT_ROUTE_TEMPLATES = createShopifyRouteTemplates({});
 function createPrivateStorefrontClient(request: Request, i18n: I18nConfig = DEFAULT_I18N) {
   return createStorefrontClient({
     type: "private",
-    requestContext: createShopifyRequestContext({ request, i18n }),
+    requestContext: createShopifyRequestContext({ request, i18n, buyerIp: "127.0.0.1" }),
     config: {
       storeDomain: defaultConfig.storeDomain,
       privateStorefrontToken: "test-private-token",
-      buyerIp: "127.0.0.1",
     },
   });
 }

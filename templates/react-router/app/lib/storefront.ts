@@ -47,7 +47,6 @@ export function createRequestStorefrontClient(
     config: {
       storeDomain,
       privateStorefrontToken,
-      buyerIp,
     },
   });
 }

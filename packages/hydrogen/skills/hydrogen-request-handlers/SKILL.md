@@ -47,7 +47,7 @@ const redirect = await handleShopifyRedirects({
 
 - Default to one request-scoped private Storefront client per request when buyer context exists.
 - Route handlers and cart server handlers accept any provided Storefront client when public or no-buyer-context access is intentional.
-- Resolve trusted `buyerIp` before creating a private client; pass it to both `createShopifyRequestContext` and private client config. Use the `hydrogen-storefront-client` buyer-IP guidance for the app's deployment.
+- Resolve trusted `buyerIp` before creating a private client and pass it to `createShopifyRequestContext`. Use the `hydrogen-storefront-client` buyer-IP guidance for the app's deployment.
 - Create `requestContext` with `createShopifyRequestContext({ request, i18n, buyerIp })` where buyer context exists and the framework exposes a real `Request`; use `request: { headers }` only when no `Request` exists.
 - Pass the same request-scoped `requestContext`, `storefrontClient`, and `sessionManager` into `handleShopifyRoutes` and registered handler groups.
 - Call `handleShopifyRoutes` without awaiting it immediately. It returns `null` synchronously when no route matches; only return or await the promise after checking that it is truthy.

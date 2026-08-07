@@ -1,7 +1,6 @@
-import type { ShopifyRequestContext } from "@shopify/hydrogen";
+import type { ShopifyRequestContext, ShopifyRequestContextWithBuyerIp } from "@shopify/hydrogen";
 import { RouterContextProvider } from "react-router";
 
-import { getLocaleFromRequest } from "~/lib/i18n";
 import { AppSession } from "~/lib/session";
 import { createStorefrontClientForRequest, type StorefrontClient } from "~/lib/storefront-client";
 
@@ -28,7 +27,7 @@ export async function createHydrogenRouterContext(
   request: Request,
   env: Env,
   executionContext: ExecutionContext,
-  shopifyRequestContext: ShopifyRequestContext,
+  shopifyRequestContext: ShopifyRequestContextWithBuyerIp,
   customerAccount: CustomerAccountContext,
 ) {
   const waitUntil = executionContext.waitUntil.bind(executionContext);
@@ -36,13 +35,10 @@ export async function createHydrogenRouterContext(
     caches.open("hydrogen"),
     AppSession.init(request, [env.SESSION_SECRET]),
   ]);
-  const i18n = getLocaleFromRequest(request);
   const storefront = createStorefrontClientForRequest({
-    request,
     env,
     cache,
     waitUntil,
-    i18n,
     shopifyRequestContext,
   });
   const contextValues: HydrogenRouterContext = {

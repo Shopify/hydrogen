@@ -32,7 +32,6 @@ export const getStorefrontClient = cache(async () => {
     config: {
       storeDomain: process.env.NEXT_PUBLIC_STORE_DOMAIN!,
       privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-      buyerIp,
     },
   });
 });

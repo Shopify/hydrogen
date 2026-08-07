@@ -41,7 +41,6 @@ function createPrivateStorefrontClient(
     config: {
       storeDomain: fixture.storeDomain,
       privateStorefrontToken: "test-private-token",
-      buyerIp: DEFAULT_BUYER_IP,
     },
   });
 }
@@ -151,14 +150,17 @@ describe("handleShopifyRoutes", () => {
     const request = new Request("https://my-app.com/api/cart?cartId=123", {
       headers: { "oxygen-buyer-ip": "10.0.0.2" },
     });
-    const requestContext = createShopifyRequestContext({ request, i18n: DEFAULT_I18N });
+    const requestContext = createShopifyRequestContext({
+      request,
+      i18n: DEFAULT_I18N,
+      buyerIp: "10.0.0.2",
+    });
     const storefrontClient = createStorefrontClient({
       type: "private",
       requestContext,
       config: {
         storeDomain: defaultConfig.storeDomain,
         privateStorefrontToken: "test-private-token",
-        buyerIp: "10.0.0.2",
       },
     });
 
@@ -300,14 +302,17 @@ describe("handleShopifyRoutes", () => {
         "oxygen-buyer-ip": "10.0.0.2",
       },
     });
-    const requestContext = createShopifyRequestContext({ request, i18n: DEFAULT_I18N });
+    const requestContext = createShopifyRequestContext({
+      request,
+      i18n: DEFAULT_I18N,
+      buyerIp: "10.0.0.2",
+    });
     const storefrontClient = createStorefrontClient({
       type: "private",
       requestContext,
       config: {
         storeDomain: defaultConfig.storeDomain,
         privateStorefrontToken: "test-private-token",
-        buyerIp: "10.0.0.2",
       },
     });
 

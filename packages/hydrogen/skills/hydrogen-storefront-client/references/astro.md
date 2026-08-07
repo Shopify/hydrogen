@@ -27,7 +27,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     config: {
       storeDomain: import.meta.env.PUBLIC_STORE_DOMAIN,
       privateStorefrontToken: import.meta.env.PRIVATE_STOREFRONT_API_TOKEN,
-      buyerIp,
     },
   });
 

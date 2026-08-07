@@ -10,6 +10,7 @@ import type {
   StorefrontGraphqlResult,
   GraphQLFormattedError,
   I18nConfig,
+  PrivateStorefrontClient,
   StorefrontQueryString,
 } from './index';
 import type {CachingStrategy} from '../core';
@@ -23,6 +24,14 @@ vi.stubGlobal('fetch', fetchMock);
 
 function createTestRequestContext(i18n: I18nConfig = DEFAULT_I18N) {
   return createShopifyRequestContext({request: {headers: new Headers()}, i18n});
+}
+
+function createBuyerRequestContext(i18n: I18nConfig = DEFAULT_I18N) {
+  return createShopifyRequestContext({
+    request: {headers: new Headers()},
+    i18n,
+    buyerIp: '1.2.3.4',
+  });
 }
 
 const SHOP_QUERY = gql(`query { shop { name } }`);
@@ -173,11 +182,10 @@ describe('type tests', () => {
     it('private client accepts all optional fields from PrivateClientOptions', () => {
       createStorefrontClient({
         type: 'private',
-        requestContext: createTestRequestContext(),
+        requestContext: createBuyerRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
-          buyerIp: '1.2.3.4',
           fetch: globalThis.fetch,
           defaultTimeoutInMs: 5000,
         },
@@ -199,9 +207,9 @@ describe('type tests', () => {
   });
 
   describe('discriminated union enforcement', () => {
-    it('rejects private token without buyerIp', () => {
+    it('rejects private clients without buyerIp on requestContext', () => {
       () =>
-        // @ts-expect-error — buyerIp required with private token
+        // @ts-expect-error — private clients require a buyer request context
         createStorefrontClient({
           type: 'private',
           requestContext: createTestRequestContext(),
@@ -318,11 +326,10 @@ describe('type tests', () => {
     it('rejects both public and private tokens', () => {
       createStorefrontClient({
         type: 'private',
-        requestContext: createTestRequestContext(),
+        requestContext: createBuyerRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
-          buyerIp: '1.2.3.4',
           // @ts-expect-error — choose either public or private token path
           publicStorefrontToken: 'pub-token',
         },
@@ -331,26 +338,23 @@ describe('type tests', () => {
   });
 
   describe('buyerIp', () => {
-    it('accepts a static buyer IP string', () => {
-      createStorefrontClient({
-        type: 'private',
-        requestContext: createTestRequestContext(),
-        config: {
-          storeDomain: 'test.myshopify.com',
-          privateStorefrontToken: 'priv-token',
-          buyerIp: '1.2.3.4',
-        },
-      });
+    it('preserves a static buyer IP on the request context type', () => {
+      const requestContext = createBuyerRequestContext();
+
+      expectTypeOf(requestContext.buyerIp).toEqualTypeOf<string>();
+      expectTypeOf<PrivateStorefrontClient['requestContext']['buyerIp']>().toEqualTypeOf<string>();
+
+      // @ts-expect-error — buyerIp is immutable after context creation
+      requestContext.buyerIp = '4.3.2.1';
     });
 
     it('rejects requestGroupId next to buyerIp', () => {
       createStorefrontClient({
         type: 'private',
-        requestContext: createTestRequestContext(),
+        requestContext: createBuyerRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
-          buyerIp: '1.2.3.4',
           // @ts-expect-error — requestGroupId belongs to requestContext
           requestGroupId: 'g',
         },
@@ -358,14 +362,23 @@ describe('type tests', () => {
     });
 
     it('rejects buyerIp callbacks', () => {
+      // @ts-expect-error — resolve request-derived buyerIp before creating the context
+      createShopifyRequestContext({
+        request: {headers: new Headers()},
+        i18n: DEFAULT_I18N,
+        buyerIp: (_request: Request) => '1.2.3.4',
+      });
+    });
+
+    it('rejects buyerIp in private client config', () => {
       createStorefrontClient({
         type: 'private',
-        requestContext: createTestRequestContext(),
+        requestContext: createBuyerRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
-          // @ts-expect-error — resolve request-derived buyerIp before creating the client
-          buyerIp: (_request: Request) => '1.2.3.4',
+          // @ts-expect-error — buyerIp belongs to requestContext
+          buyerIp: '1.2.3.4',
         },
       });
     });
@@ -379,7 +392,6 @@ describe('type tests', () => {
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
-          buyerIp: '1.2.3.4',
         },
       });
     });
@@ -387,11 +399,10 @@ describe('type tests', () => {
     it('private client accepts requestContext at client creation', () => {
       const client = createStorefrontClient({
         type: 'private',
-        requestContext: createTestRequestContext(),
+        requestContext: createBuyerRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
-          buyerIp: '1.2.3.4',
         },
       });
       () => client.graphql(SHOP_QUERY);
@@ -400,13 +411,12 @@ describe('type tests', () => {
     it('rejects raw request at client creation', () => {
       createStorefrontClient({
         type: 'private',
-        requestContext: createTestRequestContext(),
+        requestContext: createBuyerRequestContext(),
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
           // @ts-expect-error — pass createShopifyRequestContext({request, i18n}) instead
           request: new Request('http://localhost'),
-          buyerIp: '1.2.3.4',
         },
       });
     });
@@ -565,11 +575,10 @@ describe('type tests', () => {
   describe('private client graphql signature', () => {
     const privateClient = createStorefrontClient({
       type: 'private',
-      requestContext: createTestRequestContext(),
+      requestContext: createBuyerRequestContext(),
       config: {
         storeDomain: 'test.myshopify.com',
         privateStorefrontToken: 'priv-token',
-        buyerIp: '1.2.3.4',
       },
     });
 

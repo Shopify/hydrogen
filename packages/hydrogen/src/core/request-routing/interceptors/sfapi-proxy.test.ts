@@ -51,11 +51,16 @@ function handleSfapiProxyWithClientType(
   storeUrl = defaultStoreUrl,
   buyerIp?: string,
 ) {
-  const requestContext = createShopifyRequestContext({
-    request,
-    i18n: { country: "US", language: "EN" },
-    buyerIp,
-  });
+  const requestContext = buyerIp
+    ? createShopifyRequestContext({
+        request,
+        i18n: { country: "US", language: "EN" },
+        buyerIp,
+      })
+    : createShopifyRequestContext({
+        request,
+        i18n: { country: "US", language: "EN" },
+      });
   const clientBase = {
     i18n: { country: "US", language: "EN", pathPrefix: "" } as const,
     storeUrl,

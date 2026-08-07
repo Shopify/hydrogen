@@ -59,7 +59,6 @@ export async function handleRequest(request: Request, next: () => Promise<Respon
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
       privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-      buyerIp,
     },
   });
 
@@ -123,7 +122,6 @@ export const middleware: Route.MiddlewareFunction[] = [
       config: {
         storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
         privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-        buyerIp,
       },
     });
 
