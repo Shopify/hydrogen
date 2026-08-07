@@ -1,6 +1,6 @@
 import type { ShopifyStandardActions } from "../vendor/standard-actions";
 import type { StorefrontAnalytics } from "./core/analytics/types";
-import type { I18nConfig } from "./core/headers";
+import type { I18nConfig } from "./core/request-context";
 import type { ShopifyStandardRouteMatch } from "./core/standard-routes/index";
 
 export type ShopifyGlobal = {

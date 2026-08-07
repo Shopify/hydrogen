@@ -1,4 +1,4 @@
 export * from "./index";
 
 /** Development overrides */
-export { handleShopifyRoutesDev as handleShopifyRoutes } from "./handle-shopify-routes.development";
+export { handleShopifyRoutesDev as handleShopifyRoutes } from "./request-routing/handle-shopify-routes.development";

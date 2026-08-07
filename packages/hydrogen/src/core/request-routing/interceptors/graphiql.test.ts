@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import type { PrivateStorefrontClient } from "../../client";
-import { createShopifyRequestContext } from "../headers";
-import { assert } from "../test-utils";
-import { handleGraphiql } from "./graphiql";
+import type { PrivateStorefrontClient } from "../../../client";
+import { createShopifyRequestContext } from "../../request-context";
+import { assert } from "../../test-utils";
+import type { GraphiQLOptions } from "../../types";
+import { handleGraphiql as handleGraphiqlImpl } from "./graphiql";
 
 const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
 
@@ -18,6 +19,25 @@ const storefrontClient = {
     i18n: DEFAULT_I18N,
   }),
 } satisfies PrivateStorefrontClient;
+
+function handleGraphiql(
+  request: Request,
+  client: PrivateStorefrontClient,
+  graphiql?: GraphiQLOptions,
+) {
+  return handleGraphiqlImpl(new URL(request.url), {
+    request,
+    storefrontClient: client,
+    requestContext: client.requestContext,
+    sessionManager: {
+      getSessionOrigin: () => new URL(request.url).origin,
+      getSessionItem: () => undefined,
+      setSessionItem: () => undefined,
+      removeSessionItem: () => undefined,
+    },
+    graphiql,
+  });
+}
 
 describe("handleGraphiql", () => {
   beforeEach(() => {
@@ -51,21 +71,21 @@ describe("handleGraphiql", () => {
     expect(html).toContain("Storefront API");
   });
 
-  it("returns null for non-GET requests", async () => {
+  it("returns null synchronously for non-GET requests", () => {
     const request = new Request("https://my-app.com/graphiql", {
       method: "POST",
     });
 
-    const result = await handleGraphiql(request, storefrontClient);
+    const result = handleGraphiql(request, storefrontClient);
     expect(result).toBeNull();
   });
 
-  it("returns null for non-matching paths", async () => {
+  it("returns null synchronously for non-matching paths", () => {
     const request = new Request("https://my-app.com/other", {
       method: "GET",
     });
 
-    const result = await handleGraphiql(request, storefrontClient);
+    const result = handleGraphiql(request, storefrontClient);
     expect(result).toBeNull();
   });
 

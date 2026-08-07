@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { STOREFRONT_URL_HEADER } from "../core/headers";
 import {
   createShopifyRequestContext,
-  STOREFRONT_URL_HEADER,
   type I18nConfig,
   type ShopifyRequestContext,
-} from "../core/headers";
+} from "../core/request-context";
 import {
   createCustomerAccountClient,
   CustomerAccountApiError,

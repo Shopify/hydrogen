@@ -41,7 +41,7 @@ export async function proxy(request: NextRequest) {
   });
   const sessionManager = await createSessionManager(request);
 
-  const shopifyRoute = await handleShopifyRoutes({
+  const shopifyRoute = handleShopifyRoutes({
     request,
     requestContext,
     sessionManager,
@@ -60,6 +60,8 @@ export const config = {
   matcher: ["/((?!_next/static|_next/image|_next/data|favicon.ico).*)"],
 };
 ```
+
+The proxy returns a matched promise directly so Next owns any rejection. If the app adds a request-level `try/catch` that returns a custom error response, use `return await shopifyRoute` inside that boundary after the truthy check.
 
 Use `proxy.ts` for Next 16+. Older Next projects may still use `middleware.ts`, but keep the file name and exported function name matched to the installed Next version.
 

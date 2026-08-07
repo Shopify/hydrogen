@@ -16,9 +16,8 @@ import {
   STOREFRONT_PRIVATE_TOKEN_HEADER,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
-  type I18nConfig,
-  type ShopifyRequestContext,
 } from "../core/headers";
+import type { I18nConfig, ShopifyRequestContext } from "../core/request-context";
 import { normalizeStoreDomain } from "../core/url";
 import type { AnyStorefrontQueryString } from "../graphql";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";

@@ -1,10 +1,10 @@
-import type { PrivateStorefrontClient } from "../client";
+import type { PrivateStorefrontClient } from "../../client";
+import { getLogger } from "../logging";
+import type { ShopifyRouteTemplates } from "../standard-routes/index";
 import { handleAdminRedirect } from "./interceptors/admin-redirect";
 import { handleQueryParamRedirect } from "./interceptors/query-param-redirect";
 import { handleStandardRouteRedirects } from "./interceptors/standard-routes";
 import { handleUrlRedirects } from "./interceptors/url-redirects";
-import { getLogger } from "./logging";
-import type { ShopifyRouteTemplates } from "./standard-routes/index";
 
 const log = getLogger("redirects");
 

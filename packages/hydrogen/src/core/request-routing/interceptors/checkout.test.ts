@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createStorefrontClient } from "../../client/client";
-import { createShopifyRequestContext } from "../headers";
-import { configureLogging, resetLoggingForTests } from "../logging";
-import { createTestLogger } from "../test-utils";
+import { createStorefrontClient } from "../../../client/client";
+import { configureLogging, resetLoggingForTests } from "../../logging";
+import { createShopifyRequestContext } from "../../request-context";
+import { createTestLogger } from "../../test-utils";
 import { handleCheckoutRedirect as handleCheckoutRedirectImpl } from "./checkout";
 
 type TestStorefrontConfig = {
@@ -50,7 +50,7 @@ function createPrivateStorefrontClient(
 
 function handleCheckoutRedirect(request: Request, fixture: TestStorefrontConfig = defaultConfig) {
   const storefrontClient = createPrivateStorefrontClient(request, fixture);
-  return handleCheckoutRedirectImpl({
+  return handleCheckoutRedirectImpl(new URL(request.url), {
     request,
     requestContext: storefrontClient.requestContext,
     sessionManager: createTestSessionManager(request),
@@ -86,8 +86,8 @@ describe("handleCheckoutRedirect", () => {
     vi.stubGlobal("fetch", mockFetch);
   });
 
-  it("returns null for unrelated routes", async () => {
-    const result = await handleCheckoutRedirect(
+  it("returns null synchronously for unrelated routes", () => {
+    const result = handleCheckoutRedirect(
       new Request("https://my-app.com/products/snowboard"),
       defaultConfig,
     );
@@ -95,8 +95,8 @@ describe("handleCheckoutRedirect", () => {
     expect(result).toBeNull();
   });
 
-  it("returns null for non-cart-permalink subroutes", async () => {
-    const result = await handleCheckoutRedirect(
+  it("returns null synchronously for non-cart-permalink subroutes", () => {
+    const result = handleCheckoutRedirect(
       new Request("https://my-app.com/cart/recommendations"),
       defaultConfig,
     );
