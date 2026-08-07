@@ -33,10 +33,16 @@ export function matchStandardRouteUrl({
   const pathname = stripI18nPathPrefix(stripTrailingSlash(parsedUrl.pathname), pathPrefix);
   if (pathname === "/") return { route: "index", pageTemplateName: "index", params: {} };
 
-  return matchStandardRouteTemplates(parsedUrl.pathname, pathPrefix, (route) => [
-    routeTemplates[route],
-    DEFAULT_STANDARD_ROUTES[route],
-  ]);
+  return (
+    matchStandardRouteTemplates(parsedUrl.pathname, pathPrefix, (route) => [
+      routeTemplates[route],
+    ]) ??
+    matchStandardRouteTemplates(
+      parsedUrl.pathname,
+      pathPrefix,
+      (route) => DEFAULT_STANDARD_ROUTES[route],
+    )
+  );
 }
 
 /**
@@ -76,7 +82,8 @@ export function matchStandardRouteTemplates(
 /**
  * Converts a standard route identity to the corresponding
  * page template name that matches the convention in Liquid.
- * Collection-scoped product URLs still render the `product` template.
+ * Collection-scoped product URLs still render the `product` template, while
+ * the collection-listing route uses Liquid's hyphenated `list-collections` name.
  */
 function normalizeStandardRouteTemplateName<TRoute extends ShopifyStandardRouteName>(
   route: TRoute,
@@ -84,18 +91,20 @@ function normalizeStandardRouteTemplateName<TRoute extends ShopifyStandardRouteN
 function normalizeStandardRouteTemplateName(
   route: ShopifyStandardRouteName,
 ): ShopifyPageTemplateName {
-  return route === "productInCollection" ? "product" : route;
+  if (route === "productInCollection") return "product";
+  if (route === "collectionList") return "list-collections";
+  return route;
 }
 
 /**
  * Matches a normalized pathname against one route template and returns decoded handle params.
  */
 function matchRouteTemplate(pathname: string, template: string): StandardRouteParams | null {
-  const groups = templateToPattern(template).exec(pathname)?.groups;
-  if (!groups) return null;
+  const match = templateToPattern(template).exec(pathname);
+  if (!match) return null;
 
   const params: StandardRouteParams = {};
-  for (const [name, value] of Object.entries(groups)) {
+  for (const [name, value] of Object.entries(match.groups ?? {})) {
     if (!isStandardRouteParamName(name)) continue;
 
     params[name] = decodePathSegment(value);

@@ -184,6 +184,30 @@ describe("handleShopifyRedirects", () => {
       routeTemplates: { blog: "/journal/:blogHandle" },
       expectedLocation: "/journal/news?utm_source=test",
     },
+    {
+      name: "cart",
+      requestUrl: "https://my-app.com/cart?utm_source=test",
+      routeTemplates: { cart: "/basket" },
+      expectedLocation: "/basket?utm_source=test",
+    },
+    {
+      name: "collection listing",
+      requestUrl: "https://my-app.com/collections?utm_source=test",
+      routeTemplates: { collectionList: "/catalog" },
+      expectedLocation: "/catalog?utm_source=test",
+    },
+    {
+      name: "policy",
+      requestUrl: "https://my-app.com/policies/privacy-policy?utm_source=test",
+      routeTemplates: { policy: "/legal/:policyHandle" },
+      expectedLocation: "/legal/privacy-policy?utm_source=test",
+    },
+    {
+      name: "search",
+      requestUrl: "https://my-app.com/search?utm_source=test",
+      routeTemplates: { search: "/find" },
+      expectedLocation: "/find?utm_source=test",
+    },
   ] as const)("redirects standard $name routes using configured templates", async (scenario) => {
     const request = new Request(scenario.requestUrl);
     const result = await handleShopifyRedirects(
@@ -195,6 +219,20 @@ describe("handleShopifyRedirects", () => {
     assert(result, `expected ${scenario.name} standard route redirect response`);
     expect(result.status).toBe(301);
     expect(result.headers.get("location")).toBe(scenario.expectedLocation);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("redirects the legacy collection-listing route using its configured template", async () => {
+    const request = new Request("https://my-app.com/products?utm_source=test");
+    const result = await handleShopifyRedirects(
+      redirectOptions(request, {
+        routeTemplates: { collectionList: "/catalog" },
+      }),
+    );
+
+    assert(result, "expected legacy collection-listing redirect response");
+    expect(result.status).toBe(301);
+    expect(result.headers.get("location")).toBe("/catalog?utm_source=test");
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
