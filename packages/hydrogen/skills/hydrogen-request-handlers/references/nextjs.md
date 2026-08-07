@@ -36,7 +36,6 @@ export async function proxy(request: NextRequest) {
     config: {
       storeDomain: process.env.NEXT_PUBLIC_STORE_DOMAIN!,
       privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-      buyerIp,
     },
   });
   const sessionManager = await createSessionManager(request);

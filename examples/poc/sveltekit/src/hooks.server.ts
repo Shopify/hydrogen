@@ -13,6 +13,7 @@ import {
   createCartServerHandlers,
   createStorefrontClient,
   createShopifyRequestContext,
+  type ShopifyRequestContextWithBuyerIp,
   type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import type { Handle } from "@sveltejs/kit";
@@ -30,7 +31,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     i18n: defaultI18n,
     buyerIp,
   });
-  const storefrontClient = createPrivateStorefrontClient(requestContext, buyerIp);
+  const storefrontClient = createPrivateStorefrontClient(requestContext);
   const sessionManager = await createCustomerSessionManager(event.request);
 
   const kitRoute = await handleShopifyRoutes({
@@ -76,14 +77,13 @@ function applyStorefrontResponseHeaders(
   }
 }
 
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContext, buyerIp: string) {
+function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({
     type: "private",
     requestContext,
     config: {
       storeDomain: storefrontConfig.storeDomain,
       privateStorefrontToken: getPrivateStorefrontToken(env),
-      buyerIp,
       cache: storefrontCache,
     },
   });

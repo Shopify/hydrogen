@@ -107,7 +107,6 @@ export const storefrontMiddleware: MiddlewareFunction<Response> = async (
     config: {
       storeDomain,
       privateStorefrontToken: resolvedPrivateStorefrontToken,
-      buyerIp,
       cache: storefrontCache,
     },
   });

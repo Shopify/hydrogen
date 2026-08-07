@@ -40,7 +40,6 @@ export const getStorefrontClient = cache(
       config: {
         storeDomain,
         privateStorefrontToken,
-        buyerIp,
       },
     });
   },

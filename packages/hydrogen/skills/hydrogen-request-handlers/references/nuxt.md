@@ -29,7 +29,7 @@ import {
   createStorefrontClient,
   createShopifyRequestContext,
   handleShopifyRoutes,
-  type ShopifyRequestContext,
+  type ShopifyRequestContextWithBuyerIp,
 } from "@shopify/hydrogen";
 
 const cartHandlers = createCartServerHandlers();
@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
     buyerIp,
   });
   const sessionManager = await createSessionManager(request);
-  const storefrontClient = createPrivateStorefrontClient(requestContext, buyerIp);
+  const storefrontClient = createPrivateStorefrontClient(requestContext);
 
   const shopifyRoute = handleShopifyRoutes({
     request,
@@ -58,14 +58,13 @@ export default defineEventHandler(async (event) => {
   event.context.storefrontClient = storefrontClient;
 });
 
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContext, buyerIp: string) {
+function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({
     type: "private",
     requestContext,
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
       privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-      buyerIp,
     },
   });
 }

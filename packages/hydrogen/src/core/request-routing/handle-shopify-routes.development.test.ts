@@ -20,6 +20,7 @@ function handleShopifyRoutesDev(
   const requestContext = createShopifyRequestContext({
     request: options.request,
     i18n: DEFAULT_I18N,
+    buyerIp: "127.0.0.1",
   });
   return handleShopifyRoutesDevImpl({
     ...options,
@@ -31,7 +32,6 @@ function handleShopifyRoutesDev(
       config: {
         storeDomain: defaultConfig.storeDomain,
         privateStorefrontToken: "test-private-token",
-        buyerIp: "127.0.0.1",
       },
     }),
   });

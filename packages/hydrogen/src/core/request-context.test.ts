@@ -98,6 +98,26 @@ describe("createShopifyRequestContext", () => {
     expect(result.buyerIp).toBe(buyerIp);
   });
 
+  it("rejects an empty buyer IP", () => {
+    expect(() =>
+      createShopifyRequestContext({
+        request: new Request("https://example.com"),
+        i18n: DEFAULT_I18N,
+        buyerIp: "",
+      }),
+    ).toThrow("buyerIp must be non-empty when provided");
+  });
+
+  it("treats an undefined buyer IP as absent", () => {
+    const result = createShopifyRequestContext({
+      request: new Request("https://example.com"),
+      i18n: DEFAULT_I18N,
+      buyerIp: undefined,
+    });
+
+    expect(result).not.toHaveProperty("buyerIp");
+  });
+
   it("defaults pathPrefix to an empty string", () => {
     const result = createTestRequestContext({ headers: new Headers() });
 

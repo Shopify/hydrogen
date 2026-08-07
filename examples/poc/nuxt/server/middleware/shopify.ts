@@ -9,7 +9,7 @@ import { handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createStorefrontClient,
   createShopifyRequestContext,
-  type ShopifyRequestContext,
+  type ShopifyRequestContextWithBuyerIp,
 } from "@shopify/hydrogen";
 import { LRUCache } from "lru-cache";
 
@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     i18n: defaultI18n,
     buyerIp,
   });
-  const storefrontClient = createPrivateStorefrontClient(requestContext, buyerIp);
+  const storefrontClient = createPrivateStorefrontClient(requestContext);
   const sessionManager = await createCustomerSessionManager(request);
   const customerAccountClient = createRequestCustomerAccountClient(requestContext);
 
@@ -54,14 +54,13 @@ export default defineEventHandler(async (event) => {
   event.context.customerAccountClient = customerAccountClient;
 });
 
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContext, buyerIp: string) {
+function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({
     type: "private",
     requestContext,
     config: {
       storeDomain: storefrontConfig.storeDomain,
       privateStorefrontToken: getPrivateStorefrontToken(),
-      buyerIp,
       cache: storefrontCache,
     },
   });

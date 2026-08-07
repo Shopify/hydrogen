@@ -91,7 +91,6 @@ const client = createStorefrontClient({
   config: {
     storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
     privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-    buyerIp,
   },
 });
 ```
@@ -105,7 +104,7 @@ Hydrogen does not infer buyer IP headers. Apps decide how to build `buyerIp` bas
 
 Use the same request-scoped Storefront client for Hydrogen route handlers, cart server handlers, and server data loaders when they share the same request data. Route and cart handlers accept any provided Storefront client. Redirect handlers still require a private server-side client.
 
-When using `handleShopifyRoutes`, pass the same trusted `buyerIp` into `createShopifyRequestContext`. The SFAPI proxy sources buyer IP from request context so proxy requests and direct `client.graphql()` calls use the same buyer identity.
+When using `handleShopifyRoutes`, pass the trusted `buyerIp` into `createShopifyRequestContext`. Both the SFAPI proxy and direct `client.graphql()` calls source buyer identity from that request context.
 
 ### Private client without buyer context
 
