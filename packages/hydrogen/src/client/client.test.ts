@@ -238,6 +238,7 @@ describe("createStorefrontClient", () => {
       expect(headers.get("X-Shopify-UniqueToken")).toBe("unique-token");
       expect(headers.get("X-Shopify-VisitToken")).toBe("visit-token");
       expect(headers.get("Custom-Storefront-Request-Group-ID")).toBeTruthy();
+      expect(headers.get("Sec-Shopify-Storefront-Origin")).toBe("https://example.com");
     });
 
     it("sends private access token header", async () => {

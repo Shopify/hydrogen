@@ -1,4 +1,6 @@
 export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
+export const SHOPIFY_API_PROXY_PREFIX = "/__shopify";
+export const SHOPIFY_API_PROXY_RE = /^\/__shopify(?:\/|$)/;
 export const MCP_RE = /^\/api\/mcp$/;
 export const CART_RE = /^\/api\/cart$/;
 export const CHECKOUT_RE = /^\/checkout$/;

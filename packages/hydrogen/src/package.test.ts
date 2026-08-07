@@ -97,6 +97,7 @@ if (typeof plugin !== "function" || typeof plugin({typescript}).create !== "func
     expect(declaration).toContain("customerPrivacy: {");
     expect(declaration).toContain("routes: {");
     expect(declaration).toContain("root: string;");
+    expect(declaration).toMatch(/\/\*\* @internal \*\/\s+apiProxyPrefix\?:/);
     expect(declaration).toMatch(/\/\*\* @internal \*\/\s+match\?:/);
     expect(declaration).toMatch(/\/\*\* @internal \*\/\s+resolve\?:/);
     expect(declaration).toMatch(/\/\*\* @internal \*\/\s+navigate\?:/);

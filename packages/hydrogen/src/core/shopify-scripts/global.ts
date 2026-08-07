@@ -5,6 +5,7 @@ import {
   resolveStandardRouteUrl,
   type ShopifyRouteTemplates,
 } from "../standard-routes/index";
+import { SHOPIFY_API_PROXY_PREFIX } from "../url";
 import initializeShopifyGlobal from "./global-script" with { type: "script" };
 import type { ShopifyScriptsI18n } from "./types";
 import type { ShopifyScriptsShop } from "./types";
@@ -20,6 +21,7 @@ export type ShopifyGlobalConfig = {
   };
   routes: {
     root: string;
+    apiProxyPrefix: string;
   };
   shop: string;
 };
@@ -116,6 +118,7 @@ export function getShopifyGlobalBootstrapScript({
     >,
     routes: {
       root: getShopifyRoutesRoot(i18n?.pathPrefix),
+      apiProxyPrefix: SHOPIFY_API_PROXY_PREFIX,
     },
     shop: normalizeMyshopifyDomain(shop.myshopifyDomain),
     customerPrivacy: {
