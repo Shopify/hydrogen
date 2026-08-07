@@ -1,7 +1,7 @@
 # React Router Template Pattern
 
-Concrete file-by-file shape for `examples/react-router` -> `templates/react-router`. Read this when implementing the
-template. Do not generalize these instructions to framework examples such as Next, Nuxt, Astro, Solid, or SvelteKit
+Concrete file-by-file shape for `templates/react-router`. Read this when implementing or maintaining the template.
+Do not generalize these instructions to framework examples such as Next, Nuxt, Astro, Solid, or SvelteKit
 without adding framework-specific guidance first. For the high-level workflow, dependency mechanism, lockfile, and
 validation, see [SKILL.md](../SKILL.md).
 
@@ -34,7 +34,7 @@ Use Vite/React Router scripts, not Hydrogen CLI dev/build scripts:
     "build": "react-router build",
     "preview": "react-router build && vite preview",
     "typecheck": "react-router typegen && tsc --noEmit && hydrogen gql check --fail-on-warn",
-    "deploy": "shopify hydrogen deploy"
+    "deploy": "shopify hydrogen deploy --assets-dir dist/client --worker-dir dist/server"
   }
 }
 ```
@@ -43,14 +43,18 @@ Remove Node-server scripts such as `start: react-router-serve ...` unless explic
 
 Dependencies:
 
-- Keep app dependencies required by the example, such as `@shopify/hydrogen`, React, React Router, and `isbot`.
+- Keep app dependencies required by the template, such as `@shopify/hydrogen`, React, React Router, and `isbot`.
 - Remove `lru-cache`, `@react-router/node`, and `@react-router/serve`.
 - Add `@shopify/mini-oxygen`, `@shopify/oxygen-workers-types`, and `@shopify/cli`.
-- **`@shopify/hydrogen`: use `preview`**. The published preview resolves to a `0.0.0-preview-*` registry package,
-  exposes the React Router template surface (including `./customer-account` and `./package.json`), and satisfies
-  `shopify hydrogen deploy`'s `isHydrogenPreviewVersion` check (CLI #3819) so deploy runs `react-router build`. No
-  repo-local dependency, vendored tarball, or version hack is needed.
-- **`@shopify/cli`: pin `3.94.3`** unless a newer version has been verified with the deploy path.
+- **`@shopify/hydrogen`: use `workspace:*` in this repository** so template builds and E2E exercise the package under
+  development. The `Shopify/hydrogen` release flow replaces it with the version selected by the `preview` dist-tag
+  before standalone lockfile generation. Preview cuts use `2026.10.0-preview.<n>` and must resolve to a registry
+  tarball with an integrity hash.
+- **`@shopify/cli`: pin `4.6.0` (minimum `4.4.0`)**. Those releases support the explicit deploy output flags. Keep
+  `--assets-dir dist/client --worker-dir dist/server` in the deploy script so the CLI runs `react-router build` and
+  uses this template's configured output without relying on a Hydrogen version sniff.
+- **Package manager:** use `pnpm@10.33.0` in the source template so the monorepo has one package manager and lockfile.
+  The preview dist compiler changes the standalone template to `npm@11.17.0` before generating `package-lock.json`.
 - **`@shopify/mini-oxygen`: pin `^4.2.0`** — its `oxygen()` plugin adds `configurePreviewServer`, which `vite preview`
   needs to run the Worker.
 - Add `"engines": {"node": "^22 || ^24"}`.
@@ -102,10 +106,12 @@ Keep the `build.assetsInlineLimit: 0` and `ssr.optimizeDeps.include` interop set
 
 ## react-router.config.ts
 
-Start from the copied React Router config and preserve behavior required by the app:
+Preserve the React Router config behavior required by the app:
 
 ```ts
 export default {
+  appDirectory: "app",
+  buildDirectory: "dist",
   ssr: true,
   subResourceIntegrity: false,
   future: {
@@ -115,7 +121,7 @@ export default {
 };
 ```
 
-Preserve any additional future flags that the source example already needs. Do not force `buildDirectory: "dist"` unless the current MiniOxygen/deploy tooling or the user explicitly requires it.
+Preserve any additional future flags that the template needs. Keep `buildDirectory: "dist"` aligned with the deploy script's `dist/client` and `dist/server` flags. If one changes, update the other in the same change.
 
 ## server.ts
 
@@ -232,7 +238,7 @@ Oxygen is a Worker runtime. Do not create request-specific Shopify objects at mo
 
 Module scope is only appropriate for pure constants and stateless handler factories that do not capture request/env/session data. When in doubt, keep the object request-scoped until MiniOxygen runtime validation proves otherwise.
 
-Expect to adjust app code so request-time values come from context instead of imported shared constants. For example, root middleware may need to read `env`, `cache`, and `waitUntil` from React Router context before creating `createShopifyRequestContext`, `createStorefrontClient`, and the storefront client (pass `cache` on its `config`; an Oxygen template should also pass `waitUntil`).
+Keep request-time values in context instead of imported shared constants. Root middleware reads `env`, `cache`, and `waitUntil` from React Router context before creating `createShopifyRequestContext`, `createStorefrontClient`, and the storefront client (pass `cache` and `waitUntil` on its `config`).
 
 ## Oxygen cache
 
@@ -277,11 +283,11 @@ export {};
 
 Add typed React Router contexts for Worker values the app needs, such as `env`, `cache`, and `waitUntil`. Use `createContext<T>()`/`RouterContextProvider` consistently so middleware and loaders do not reach for globals or `process.env`.
 
-Start from the copied `tsconfig.json`; do not replace it wholesale. Update `types` to `["@shopify/oxygen-workers-types", "react-router", "vite/client"]` and remove `node`. Under `verbatimModuleSyntax`, any binding used only in a type position must use `import type`. Example: `defaultI18n` in `app/lib/storefront.ts` is used only as `typeof defaultI18n`, so it must be `import type {defaultI18n}`.
+Do not replace `tsconfig.json` wholesale. Keep `types` set to `["@shopify/oxygen-workers-types", "react-router", "vite/client"]` without `node`. Under `verbatimModuleSyntax`, any binding used only in a type position must use `import type`. Example: `defaultI18n` in `app/lib/storefront.ts` is used only as `typeof defaultI18n`, so it must be `import type {defaultI18n}`.
 
 Keep `@types/node` in `devDependencies` (build tooling needs it at runtime); it is just not in the app `types` array.
 
-Keep `hydrogen gql check --fail-on-warn` in `typecheck` and preserve the `@shopify/hydrogen/ts-plugin` entry from the source example. Hydrogen packages both schemas and their gql.tada tooling.
+Keep `hydrogen gql check --fail-on-warn` in `typecheck` and preserve the `@shopify/hydrogen/ts-plugin` entry. Hydrogen packages both schemas and their gql.tada tooling.
 
 ## Shared code migration
 

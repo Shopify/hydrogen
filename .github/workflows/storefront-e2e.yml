@@ -1,0 +1,105 @@
+name: Storefront E2E
+
+on:
+  push:
+    branches: [preview]
+  pull_request:
+    branches: [preview]
+
+concurrency:
+  group: storefront-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  templates:
+    name: ${{ matrix.template.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+      PLAYWRIGHT_BROWSER_CHANNEL: chrome
+      TURBO_TELEMETRY_DISABLED: "1"
+      STOREFRONT_E2E_WORKERS: "2"
+    strategy:
+      fail-fast: false
+      matrix:
+        template:
+          - name: React Router
+            directory: react-router
+            package: "@shopify/hydrogen-template-react-router"
+            port: 4201
+            devCommand: "pnpm --filter @shopify/hydrogen-template-react-router exec vite dev --port 4201"
+          - name: Next.js
+            directory: nextjs
+            package: "@shopify/hydrogen-template-nextjs"
+            port: 4202
+            devCommand: "pnpm --filter @shopify/hydrogen-template-nextjs exec next dev -p 4202"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify Chrome is available
+        run: google-chrome --version
+
+      - name: Build packages
+        run: pnpm run build:pkgs
+
+      - name: Configure ${{ matrix.template.name }}
+        run: cp templates/${{ matrix.template.directory }}/.env.example templates/${{ matrix.template.directory }}/.env
+
+      - name: Build ${{ matrix.template.name }}
+        run: pnpm --filter ${{ matrix.template.package }} build
+
+      - name: Start ${{ matrix.template.name }} dev server
+        run: |
+          ${{ matrix.template.devCommand }} > template-dev.log 2>&1 &
+          echo $! > template-dev.pid
+
+      - name: Wait for ${{ matrix.template.name }}
+        run: |
+          node -e "const url='http://localhost:${{ matrix.template.port }}/'; const deadline=Date.now()+60000; (async()=>{let last; while(Date.now()<deadline){try{const r=await fetch(url); if(r.ok){console.log(url+' ready: '+r.status); return;} last=new Error('HTTP '+r.status);}catch(e){last=e;} await new Promise(r=>setTimeout(r,1000));} throw last;})()"
+
+      - name: Run storefront E2E
+        timeout-minutes: 8
+        run: pnpm test:e2e:storefront
+        env:
+          STOREFRONT_BASE_URL: http://localhost:${{ matrix.template.port }}/
+
+      - name: Stop dev server
+        if: always()
+        run: |
+          if [ -f template-dev.pid ]; then
+            kill "$(cat template-dev.pid)" 2>/dev/null || true
+          fi
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: storefront-e2e-report-${{ matrix.template.port }}
+          path: packages/storefront-e2e/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload template dev log
+        if: failure()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: storefront-e2e-dev-log-${{ matrix.template.port }}
+          path: template-dev.log
+          if-no-files-found: ignore
+          retention-days: 7

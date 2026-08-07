@@ -10,7 +10,7 @@ Next.js App Router Server Components do not receive a standard `Request` object 
 
 - Host or subdomain markets: read the URL from Hydrogen's request context when the app proxy forwards it.
 - Path-prefix markets: model the market as a route segment, such as `app/[market]/products/[handle]/page.tsx`, and read it from `params`.
-- Raw URL markets: use the same request-context handoff as the Next.js example proxy; do not invent a second URL header.
+- Raw URL markets: use a request-context handoff in `proxy.ts`; do not invent a second URL header.
 
 ---
 
@@ -18,7 +18,7 @@ Next.js App Router Server Components do not receive a standard `Request` object 
 
 Use this for domain or subdomain routing, like `example.ca`, `fr.example.com`, or `ca.example.com`.
 
-This assumes the app uses the same proxy handoff as the Next.js template: create a request context from the `NextRequest`, forward `requestContext.getForwardedRequestHeaders()`, then recreate the request context from `headers()` in Server Components. That handoff includes the original URL.
+`proxy.ts` creates a request context from the `NextRequest`, forwards `requestContext.getForwardedRequestHeaders()`, and Server Components recreate the request context from `headers()`. That handoff includes the original URL.
 
 ```ts
 // lib/markets.ts
@@ -148,7 +148,7 @@ Use the query shape from `SKILL.md`: declare `$country` and `$language`, use `@i
 
 Use raw URLs only when host headers or route params cannot represent the market, usually with rewrites or catch-all route setups.
 
-Prefer the Next.js example proxy pattern:
+Use this proxy handoff:
 
 - In `proxy.ts`, create a request context from the `NextRequest`.
 - Forward `requestContext.getForwardedRequestHeaders()` through `NextResponse.next({ request: { headers } })`.

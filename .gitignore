@@ -21,3 +21,8 @@ examples/**/storefront-graphql-env.d.ts
 packages/*/playwright-report/
 packages/*/test-results/
 examples/hydrogen/.tmp/
+/templates/*/package-lock.json
+/templates/*/pnpm-lock.yaml
+/templates/*/yarn.lock
+/templates/*/bun.lock
+/templates/*/bun.lockb

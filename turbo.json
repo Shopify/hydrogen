@@ -13,7 +13,7 @@
     },
     "@shopify/hydrogen-template-react-router#build": {
       "dependsOn": ["@shopify/hydrogen#build"],
-      "outputs": ["build/**"]
+      "outputs": ["dist/**"]
     },
     "dev": {
       "dependsOn": ["^build"],
@@ -31,6 +31,7 @@
     },
     "test:e2e": {
       "dependsOn": ["^build"],
+      "cache": false,
       "passThroughEnv": [
         "PLAYWRIGHT_BROWSER_CHANNEL",
         "STOREFRONT_BASE_URL",

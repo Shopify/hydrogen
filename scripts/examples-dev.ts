@@ -44,35 +44,18 @@ type ExampleState = {
 
 type StatePatch = Partial<Pick<ExampleState, "port" | "status">>;
 
-// Each example must accept `--port <n>` via its `dev` script. base/scripts/dev.js
-// wraps `serve` to match the framework dev commands.
+// Each example must accept `--port <n>` via its `dev` script. The core
+// example's scripts/dev.js wraps `serve` to match the framework dev commands.
 async function discoverExamples(): Promise<Example[]> {
   const out: Example[] = [];
-
-  // One-level scan of examples/, plus an explicit scan of the nested
-  // poc/ group (no deep recursion — matches the repo's
-  // "no magic" principle and avoids picking up unintended nested dirs).
   const dirs = await readdir(EXAMPLES_DIR, { withFileTypes: true });
-  const pocDir = resolve(EXAMPLES_DIR, "poc");
-  const pocDirs = await readdir(pocDir, { withFileTypes: true }).catch(() => []);
 
-  const candidates: { name: string; dir: string }[] = [];
-  for (const e of dirs) {
-    if (!e.isDirectory()) continue;
-    // The poc/ group is scanned separately below; skip it here
-    // so its children aren't missed by the one-level readdir.
-    if (e.name === "poc") continue;
-    candidates.push({ name: e.name, dir: resolve(EXAMPLES_DIR, e.name) });
-  }
-  for (const e of pocDirs) {
-    if (!e.isDirectory()) continue;
-    candidates.push({
-      name: `poc/${e.name}`,
-      dir: resolve(pocDir, e.name),
-    });
-  }
+  for (const entry of dirs) {
+    if (!entry.isDirectory()) continue;
 
-  for (const { name, dir } of candidates) {
+    const name = entry.name;
+    const dir = resolve(EXAMPLES_DIR, name);
+
     try {
       const pkg = JSON.parse(await readFile(resolve(dir, "package.json"), "utf8")) as {
         name?: string;
@@ -158,9 +141,9 @@ function tryConnectHost(port: number, host: string): Promise<boolean> {
   });
 }
 
-// Vite-based dev servers (astro, sveltekit, react-router, vinxi) bind to
-// IPv6 [::1] only by default; `serve` and Next bind to all interfaces. Probe
-// both so we don't false-negative on the IPv6-only ones.
+// Some framework dev servers bind to IPv6 [::1] only by default while others
+// bind to all interfaces. Probe both so we don't false-negative on the
+// IPv6-only ones.
 async function tryConnect(port: number): Promise<boolean> {
   const [v4, v6] = await Promise.all([
     tryConnectHost(port, "127.0.0.1"),

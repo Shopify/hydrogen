@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 
 import { useCart } from "~/lib/cart";
-import { CART_DRAWER_ID, openCartDrawer, openDialogFallback } from "~/lib/cart-drawer";
+import { CART_DRAWER_ID, openDialogFallback } from "~/lib/cart-drawer";
 
 import { MobileNav, MobileNavTrigger, type NavCollection } from "./MobileNav";
 
