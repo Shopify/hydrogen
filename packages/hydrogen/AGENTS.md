@@ -6,6 +6,7 @@
 
 ## When writing documentation
 - Do not over-document. If the Typescript LSP covers it, do not add thorough documentation. E.g.: listing the entire list of exports of a module, interfaces etc.
+- Write packaged skills from the consumer project's perspective. Do not reference repository-only paths under `examples/` or `templates/`.
 
 ## When writing code
 - Keep bundle size to a minimum: no unnecessary libraries, no unnecessary guards, no verbosity. Use tree-shaking and lazy loading to your advantage.

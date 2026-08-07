@@ -2,7 +2,7 @@
 
 ## Basic Compatibility
 
-Read `package.json` in the current directory. 
+Read `package.json` in the current directory.
 
 If it does not exist, stop and tell the user this skill must run in a javascript application with a `package.json` at its root.
 

@@ -113,7 +113,7 @@ function getFilterSwatchStyle(value: FilterValueWithVisuals): CSSProperties {
 
   return {
     "--filter-swatch-color": value.swatch?.color ?? "#e5e5e5",
-    backgroundImage: image ? `url(${image})` : undefined,
+    backgroundImage: image ? `url("${image}")` : undefined,
     backgroundPosition: "center",
     backgroundSize: "cover",
   } as CSSProperties;

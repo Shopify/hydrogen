@@ -1,58 +1,73 @@
 ---
 name: create-vercel-template
 description: >
-  Convert the Next.js example into a standalone Vercel-ready template under templates/nextjs, or repeat that
-  Next.js-specific workflow for closely related examples. Use when asked to create, upgrade, or maintain a professional
-  Next.js App Router storefront starter that deploys to Vercel, with env-driven secrets, local config, and removal of
-  example-only shared or development dependencies.
+  Create, upgrade, or maintain the canonical source for the Vercel-ready Next.js template under templates/nextjs. Use for a
+  professional Next.js App Router storefront starter that deploys to Vercel, with env-driven secrets, local config,
+  and no monorepo-only app imports or development plugins.
 ---
 
 # Create Vercel Template
 
 ## Goal
 
-Create a standalone Next.js (App Router) template from `examples/nextjs` that deploys to Vercel, keeps the example's app behavior, and does not rely on monorepo-only shared code or development-only plugins.
+Maintain `templates/nextjs` as the canonical source for a Next.js App Router starter that deploys to Vercel. Keep the app decoupled from monorepo-only shared code and development-only plugins while using the workspace Hydrogen package for local integration coverage.
 
 Next.js on Vercel runs on the Node/serverless runtime, so `process.env` works and there is no worker entrypoint, Vite plugin, or SSR/client entry rework. The core work is decoupling from `@shared/*`, preserving the example behavior, and fixing deps/config/docs for a standalone starter.
 
 ## Workflow
 
-1. Copy `examples/nextjs` to `templates/nextjs` unless the user names a closely related Next.js source.
-   Do NOT copy build/generated/local artifacts — exclude them at copy time (e.g. `rsync -a --exclude ...`):
-   - `node_modules/`, `.next/`, `.turbo/` (deps + build output)
-   - `.env` (may contain a real decrypted secret — the template ships `.env.example` + a fresh gitignored `.env`)
-   - `*-graphql-env.d.ts`, `tsconfig.tsbuildinfo` (generated)
-   Then ensure the template `.gitignore` covers all of the above (and `.vercel`).
+1. Work directly in `templates/nextjs`; it is the source of truth for the starter.
+   Keep generated and local artifacts out of the source template:
+   - `node_modules/`, `.next/`, `.turbo/`
+   - `.env` (the template ships `.env.example` and a gitignored `.env`)
+   - `*-graphql-env.d.ts`, `tsconfig.tsbuildinfo`
+   - package-manager lockfiles (ignored by the repository root)
+   Keep lockfile ignores at the repository root rather than in the template's own `.gitignore`, so the distributed starter can commit its generated lockfile.
 2. Preserve app features and route behavior unless the user explicitly asks to simplify.
-3. Remove example-only coupling:
+3. Remove monorepo-only coupling:
    - no `@shared/*` imports
    - no `examples/shared/*` runtime dependency
    - no `localCdnAssets` (drop the turbopack rule from `next.config.ts`)
    - no local-HTTPS dev script (the `https:dev` script points at `../../.cert`)
    - no `catalog:` dependency ranges in the final template package
-   - replace `@shopify/hydrogen: workspace:*` with the published `preview` dist-tag.
+   - use `@shopify/hydrogen: workspace:*` in this repository so template E2E exercises the package under development
+     (see "Hydrogen dependency" below). Do not use repo-local `file:` dependencies or vendored package tarballs.
 4. Move shared logic into template-local files under root `lib/` (see "Shared code migration").
 5. Fix `package.json`, `next.config.ts`, and `tsconfig.json` (see "Config").
 6. Env: read secrets from `process.env`; keep public identity in `lib/config.ts` using `NEXT_PUBLIC_*` values (see "Env and config").
 7. Update README and env files for a Vercel starter.
-8. Install inside the template, then run typecheck/build/dev validation (see "Prerequisites" and "Validation").
+8. Run install/typecheck/build/dev validation (see "Prerequisites" and "Validation").
 
 ## Prerequisites (do these before validating)
 
-- **Use `CI=true` for installs** in this repo (installs abort without a TTY).
-- Keep a template-local `pnpm-workspace.yaml` with `packages: []` so `pnpm --dir templates/nextjs install` resolves the template's own dependencies instead of the root workspace.
+- **Use `CI=true` for installs** in this repo (installs abort without a TTY), and `--no-frozen-lockfile` on the first
+  install after adding or changing the template.
+- **Build the local Hydrogen package first**: `pnpm --filter @shopify/hydrogen build`. The source template consumes
+  `@shopify/hydrogen: workspace:*`, so its runtime imports, packed TypeScript plugin, and schemas use the package built in this repository.
 
 ## Hydrogen dependency
 
-The template must use the published `@shopify/hydrogen` `preview` dist-tag, not `workspace:*` or `file:`. It is meant to install outside the monorepo and deploy from `templates/nextjs` on Vercel.
+Use the workspace package in this repository:
+
+```json
+"@shopify/hydrogen": "workspace:*"
+```
+
+This keeps the canonical template wired to the Hydrogen code under development, so repository builds and E2E tests
+cover package and template changes together.
+
+The source template is not the standalone distribution artifact. This repository's release flow replaces
+`workspace:*` with the published preview version before generating the standalone lockfile. The distributed package
+must expose the template's required APIs, subpaths, TypeScript plugin, and schemas.
 
 ## Config
 
 ### package.json
 
 - Rename to `@shopify/hydrogen-template-nextjs`.
-- Keep `next`, `react`, `react-dom`, `@shopify/hydrogen` (`preview`), `tailwindcss` /
+- Keep `next`, `react`, `react-dom`, `@shopify/hydrogen` (`workspace:*`), `tailwindcss` /
   `@tailwindcss/postcss`, `eslint`, `eslint-config-next`.
+- Keep `"packageManager": "pnpm@10.33.0"` so the eventual standalone distribution uses the intended manager.
 - Do not add `@vercel/functions` unless the app reintroduces an explicit Storefront cache adapter; the current Next template uses Next Cache Components (`"use cache"`, `cacheLife`, `cacheTag`).
 - Replace `typescript: catalog:` with a real npm range (e.g. `^5.9.3`).
 - Remove the `https:dev` script (it references `../../.cert`). Keep `dev`, `build`, `start`, `lint`, `typecheck`.
@@ -61,18 +76,15 @@ The template must use the published `@shopify/hydrogen` `preview` dist-tag, not 
 
 ### next.config.ts
 
-Drop the shared CDN turbopack rule, and pin the Turbopack workspace root to the template dir. With a template-local
-`pnpm-workspace.yaml` (mechanism #2), Next sees more than one lockfile and warns it "inferred your workspace root"
-(selecting the repo root) — which can make Turbopack resolve modules from the wrong root. `root: __dirname` silences it
-and keeps resolution local (`__dirname` works inside `next.config.ts`):
+Drop the shared CDN Turbopack rule and keep Cache Components enabled. Do not pin `turbopack.root` in the source
+template: its pnpm links resolve through the repository workspace outside `templates/nextjs`. The compiled template
+installs standalone with its own lockfile, so Next infers the project directory there.
 
 ```ts
 import type {NextConfig} from "next";
 
 const nextConfig: NextConfig = {
-  turbopack: {
-    root: __dirname,
-  },
+  cacheComponents: true,
 };
 
 export default nextConfig;
@@ -192,7 +204,9 @@ Verify the app still renders live data after the swap (see "Validation").
 
 ## Lockfile
 
-A standalone `pnpm-lock.yaml` is expected because the template depends on the published `@shopify/hydrogen@preview` dist-tag. Keep the template-local `pnpm-workspace.yaml` so installs inside the monorepo do not resolve through the root workspace.
+The source template does not commit `pnpm-lock.yaml`; the root lockfile covers local workspace development. During
+preview distribution, the release flow replaces `workspace:*` with the exact published Hydrogen version and generates
+a standalone lockfile with `--ignore-workspace`.
 
 ### `minimumReleaseAge` supply-chain policy (org environments)
 
@@ -233,7 +247,7 @@ shopify-dev):
 1. **At the very top of the README**, immediately under the `#` title line:
 
    ```markdown
-   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fpreview%2Ftemplates%2Fnextjs)
+   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fdist-preview%2Ftemplates%2Fnextjs)
    ```
 
 2. **In the "Deploy to Vercel" section**, leading with the button and the one-click flow, then a short manual
@@ -244,7 +258,7 @@ shopify-dev):
 
    The fastest path is one click:
 
-   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fpreview%2Ftemplates%2Fnextjs)
+   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fdist-preview%2Ftemplates%2Fnextjs)
 
    1. Click **Deploy with Vercel** above. Vercel clones this template into a new repository on your own Git provider (GitHub, GitLab, or Bitbucket).
    2. Keep the auto-detected Next.js settings (`next build`; no `vercel.json` needed).
@@ -254,27 +268,31 @@ shopify-dev):
    Prefer to wire it up yourself? Push this project to a Git provider, import it in Vercel, keep the detected Next.js settings, and deploy — the same auto-detection and `mock.shop` fallback apply.
    ```
 
-The button's `repository-url` points at `templates/nextjs` on the **`preview`** branch of `Shopify/hydrogen`. Keep
-that exact branch/path — it is what the one-click deploy clones. (If a future published template moves to `main`,
-update the URL then; do not point it at the repo root, which is not a deployable Next.js project.)
+The button's `repository-url` points at `templates/nextjs` on the **`dist-preview`** branch of `Shopify/hydrogen`.
+Keep that exact branch/path because it contains the compiled template with a published Hydrogen version, standalone
+lockfile, and packaged skills. Do not point it at `preview`, whose source template uses `workspace:*`, or at the
+repository root, which is not a deployable Next.js project.
 
 ## Validation
 
 Before finishing:
 
-1. Install with `CI=true pnpm --dir templates/nextjs install`.
-2. Run `rg -n "@shared/|examples/shared|localCdnAssets|localHttps|lru-cache|catalog:|workspace:" templates/<name> -g '!pnpm-lock.yaml' -g '!node_modules' -g '!templates/<name>/.agents/**'` — expect no matches. (`process.env` is expected in Next.js server/middleware, so it is not in the pattern.)
+1. Install with `CI=true` from the repository root.
+2. Run `rg -n "@shared/|examples/shared|localCdnAssets|localHttps|lru-cache|catalog:|file:" templates/<name> -g '!pnpm-lock.yaml' -g '!node_modules'` — expect no matches. (`process.env` and `workspace:*` are expected in the source Next.js template.)
 3. Run the template lint and typecheck (`eslint`, then `tsc --noEmit && hydrogen gql check --fail-on-warn`). Note: the GraphQL check passes without
    emitting the `*-graphql-env.d.ts` files on disk (they're gitignored, generated on demand) — that is expected.
-4. Run `next build`. Expect no "inferred your workspace root / multiple lockfiles" warning once `turbopack.root` is set.
-5. **Actually drive the app, don't just check that it starts:** `next dev` (or `next start` after a build) and request
+4. Run `next build`. The source build can infer the repository workspace root; the standalone distribution should infer the template directory after installing its generated lockfile.
+5. For distribution validation, copy the template to a temporary directory, replace `workspace:*` with the published
+   Hydrogen preview version, generate `pnpm-lock.yaml` with `--ignore-workspace`, and verify it uses registry
+   dependencies. Leave the source template lockfile-free.
+6. **Actually drive the app, don't just check that it starts:** `next dev` (or `next start` after a build) and request
    `/`, a product, a collection, `/search`, `/account`, `/cart` — expect HTTP 200 and live data. Confirm `.env` is loaded.
    There is no `curl` in some environments — Node's global `fetch` works. To get a valid product/collection handle for
    the demo store, scrape `href="/products/..."` / `href="/collections/..."` from `/` or a collection page (guessing
    handles 404s); e.g. `v2-snowboard` and the `freestyle` collection are live. `/account` legitimately 307-redirects to
    `/account/refresh?...` when logged out — that is the Customer Account flow, not a failure.
-6. **Check the output isn't gitignored:** run `git check-ignore templates/<name>` — if the whole `templates/` dir is
+7. **Check the output isn't gitignored:** run `git check-ignore templates/<name>` — if the whole `templates/` dir is
    ignored (a bare `templates` line in the repo root `.gitignore`), the template can't be committed. Surface this to the
    user rather than shipping an untrackable template.
-7. Report any validation not run and why. A real Vercel deploy needs a Vercel account/login; local `next build` +
+8. Report any validation not run and why. A real Vercel deploy needs a Vercel account/login; local `next build` +
    `next start` is the closest offline proxy, plus `npx vercel build` if the CLI is available.
