@@ -2,7 +2,6 @@ import { getStandardRoute, type ShopifyRouteTemplates } from "../standard-routes
 import type { PredictiveSearchData } from "./search";
 
 const RELATIVE_URL_BASE = "https://hydrogen.local";
-const DEFAULT_PREDICTIVE_SEARCH_PATH = "/search";
 
 type PredictiveSearchItems = PredictiveSearchData["items"];
 
@@ -27,6 +26,8 @@ export type PredictiveSearchItemUrlOptions = {
 };
 
 export type PredictiveSearchQueryItemUrlOptions = {
+  pathPrefix?: string;
+  routes?: ShopifyRouteTemplates;
   searchPath?: string;
 };
 
@@ -93,7 +94,15 @@ function getPredictiveSearchItemBaseUrl(
 
 function getQueryBaseUrl(options: AnyPredictiveSearchItemUrlOptions | undefined): string {
   if (options && "searchPath" in options && options.searchPath) return options.searchPath;
-  return DEFAULT_PREDICTIVE_SEARCH_PATH;
+
+  return getStandardRoute(
+    options?.routes ?? {},
+    "search",
+    {},
+    {
+      pathPrefix: options?.pathPrefix,
+    },
+  );
 }
 
 function getResourceBaseUrl(
