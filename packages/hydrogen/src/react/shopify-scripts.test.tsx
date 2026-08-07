@@ -104,7 +104,7 @@ describe("ShopifyScripts", () => {
     expect(html).toContain('nonce="test-nonce"');
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/"}');
+    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
     expect(html).toContain(`"shop":"${TEST_MYSHOPIFY_DOMAIN}"`);
     expect(html).toContain('"customerPrivacy":{"config":{"isHeadless":true}');
     expect(html).toContain("consentDomain=window.location.host");
@@ -197,7 +197,7 @@ describe("ShopifyScripts", () => {
     expect(html).not.toContain(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT);
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/"}');
+    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
     expect(html).toContain('"customerPrivacy":{"config":{"isHeadless":true}');
     expect(html).toContain("consentDomain=window.location.host");
     expect(html).toContain(`id="shopify-consent"`);

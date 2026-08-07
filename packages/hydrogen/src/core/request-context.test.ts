@@ -1,7 +1,12 @@
 import { describe, it, expect } from "vitest";
 
 import {
+  HYDROGEN_VERSION_HEADER,
   REQUEST_GROUP_ID_HEADER,
+  SDK_VARIANT_HEADER,
+  SDK_VARIANT_SOURCE_HEADER,
+  SDK_VERSION_HEADER,
+  SHOPIFY_STOREFRONT_ORIGIN_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
@@ -33,6 +38,7 @@ describe("createShopifyRequestContext", () => {
     const result = createTestRequestContext(request);
 
     expect(result.url).toBe("https://example.com/products/snowboard");
+    expect(result.storefrontOrigin).toBe("https://example.com");
     expect(result.requestGroupId).toBeTruthy();
     expect(result.uniqueToken).toBeTruthy();
     expect(result.visitToken).toBeTruthy();
@@ -57,6 +63,10 @@ describe("createShopifyRequestContext", () => {
     });
 
     expect(result.url).toBe("https://example.com/products/snowboard");
+    expect(result.storefrontOrigin).toBe("https://example.com");
+    const headers = new Headers();
+    result.applyStorefrontRequestHeaders(headers);
+    expect(headers.get(SHOPIFY_STOREFRONT_ORIGIN_HEADER)).toBe("https://example.com");
   });
 
   it("stores request-scoped i18n metadata", () => {
@@ -198,6 +208,7 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("cookie")).toBe("_shopify_y=unique-token; _shopify_s=visit-token");
     expect(headers.get("x-storefront-url")).toBe("https://example.com/products/snowboard");
     expect(headers.get(REQUEST_GROUP_ID_HEADER)).toBe("incoming-request-id");
+    expect(headers.get(SHOPIFY_STOREFRONT_ORIGIN_HEADER)).toBe("https://example.com");
     expect(headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBe("unique-token");
     expect(headers.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBe("visit-token");
     expect(headers.get(SHOPIFY_STOREFRONT_Y_HEADER)).toBe("unique-token");
@@ -217,7 +228,7 @@ describe("createShopifyRequestContext", () => {
     expect(originalHeaders.get(REQUEST_GROUP_ID_HEADER)).toBeNull();
   });
 
-  it("gets subrequest headers from only storefront context", () => {
+  it("applies storefront request headers from only storefront context", () => {
     const context = createTestRequestContext(
       new Request("https://example.com/products/snowboard", {
         headers: {
@@ -229,29 +240,29 @@ describe("createShopifyRequestContext", () => {
       }),
     );
 
-    const headers = context.getSubrequestHeaders();
+    const headers = new Headers({
+      [SHOPIFY_STOREFRONT_ORIGIN_HEADER]: "https://untrusted.example",
+      "x-custom": "preserved",
+    });
+    context.applyStorefrontRequestHeaders(headers);
 
     expect(headers.get("accept")).toBeNull();
     expect(headers.get("x-random")).toBeNull();
     expect(headers.get("x-storefront-url")).toBeNull();
-    expect(headers.get("content-type")).toBe("application/json");
+    expect(headers.get("content-type")).toBeNull();
     expect(headers.get("x-shopify-storefront-access-token")).toBeNull();
+    expect(headers.get("x-custom")).toBe("preserved");
+    expect(headers.get(SDK_VARIANT_HEADER)).toBe("hydrogen");
+    expect(headers.get(SDK_VARIANT_SOURCE_HEADER)).toBe("kit");
+    expect(headers.get(SDK_VERSION_HEADER)).toBe("2026-04");
+    expect(headers.get(HYDROGEN_VERSION_HEADER)).toBeTruthy();
     expect(headers.get("cookie")).toBe("_shopify_y=unique-token; _shopify_s=visit-token");
     expect(headers.get(REQUEST_GROUP_ID_HEADER)).toBe("incoming-request-id");
+    expect(headers.get(SHOPIFY_STOREFRONT_ORIGIN_HEADER)).toBe("https://example.com");
     expect(headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBe("unique-token");
     expect(headers.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBe("visit-token");
     expect(headers.get(SHOPIFY_STOREFRONT_Y_HEADER)).toBe("unique-token");
     expect(headers.get(SHOPIFY_STOREFRONT_S_HEADER)).toBe("visit-token");
-  });
-
-  it("gets mutable subrequest headers", () => {
-    const context = createTestRequestContext(new Request("https://example.com"));
-
-    const headers = context.getSubrequestHeaders();
-    headers.set("content-type", "application/json");
-
-    expect(headers.get(REQUEST_GROUP_ID_HEADER)).toBeTruthy();
-    expect(headers.get("content-type")).toBe("application/json");
   });
 
   it("applies tracking tokens as server-timing", () => {
