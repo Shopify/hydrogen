@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { createShopifyRequestContext, SHOPIFY_CHAT_FRAME_ORIGIN_HEADER } from "../headers";
-import { assert } from "../test-utils";
+import { SHOPIFY_CHAT_FRAME_ORIGIN_HEADER } from "../../headers";
+import { createShopifyRequestContext } from "../../request-context";
+import { assert } from "../../test-utils";
 import { handleAgentProxy as handleAgentProxyImpl } from "./agent-proxy";
 
 const defaultStoreUrl = "https://test-store.myshopify.com";
@@ -15,7 +16,7 @@ function handleAgentProxy(request: Request, storeUrl = defaultStoreUrl) {
     request,
     i18n: { country: "US", language: "EN" },
   });
-  return handleAgentProxyImpl({
+  return handleAgentProxyImpl(new URL(request.url), {
     request,
     requestContext,
     sessionManager: createTestSessionManager(request),

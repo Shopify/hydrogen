@@ -1,4 +1,4 @@
-import { gql } from "../../graphql";
+import { gql } from "../../../graphql";
 import type { RedirectOptions } from "../handle-shopify-redirects";
 
 type UrlRedirectOptions = Pick<RedirectOptions, "request" | "storefrontClient">;

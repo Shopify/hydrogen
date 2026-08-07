@@ -1,4 +1,4 @@
-import type { I18nConfig } from "../headers";
+import type { I18nConfig } from "../request-context";
 
 type StandardRouteTemplateWithParam<Param extends string> =
   | `/${string}:${Param}`

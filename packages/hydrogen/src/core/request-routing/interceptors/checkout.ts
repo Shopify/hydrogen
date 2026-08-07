@@ -1,46 +1,46 @@
-import type { StorefrontClient } from "../../client";
-import { getCart, getCartId } from "../cart/get-cart";
-import type { HydrogenRoutesOptions } from "../handle-shopify-routes";
-import { getLogger } from "../logging";
-import { CART_PERMALINK_RE, CHECKOUT_RE } from "../url";
+import type { StorefrontClient } from "../../../client";
+import { getCart, getCartId } from "../../cart/get-cart";
+import { getLogger } from "../../logging";
+import { CART_PERMALINK_RE, CHECKOUT_RE } from "../../url";
+import type { HydrogenRouteInterceptor } from "../route-types";
 
 const log = getLogger("checkout");
 
-export async function handleCheckoutRedirect({
-  request,
-  storefrontClient,
-}: HydrogenRoutesOptions): Promise<Response | null> {
-  const url = new URL(request.url);
+export const handleCheckoutRedirect: HydrogenRouteInterceptor = (
+  url,
+  { request, storefrontClient },
+) => {
   if (!CHECKOUT_RE.test(url.pathname) && !CART_PERMALINK_RE.test(url.pathname)) {
     return null;
   }
 
   if (request.method !== "GET" && request.method !== "HEAD") {
-    return new Response("Method Not Allowed", { status: 405 });
+    return Promise.resolve(new Response("Method Not Allowed", { status: 405 }));
   }
 
-  let redirectUrl: URL;
-  try {
-    redirectUrl = CHECKOUT_RE.test(url.pathname)
-      ? await getCheckoutRedirectUrl(request, storefrontClient)
-      : await getCartRedirectUrl(request, storefrontClient);
-  } catch (error) {
-    log.error("checkout redirect request failed", { error });
-    const message = error instanceof Error ? error.message : "Internal redirect error";
+  const redirectUrlPromise = CHECKOUT_RE.test(url.pathname)
+    ? getCheckoutRedirectUrl(request, storefrontClient)
+    : getCartRedirectUrl(request, storefrontClient);
 
-    return new Response(JSON.stringify({ error: message }), {
-      status: 502,
-      headers: { "content-type": "application/json" },
+  return redirectUrlPromise
+    .then((redirectUrl) => {
+      if (redirectUrl.pathname !== "/") {
+        mergeSearchParams(redirectUrl, url.searchParams);
+        redirectUrl.searchParams.set("payment", url.searchParams.get("payment") ?? "shop_pay");
+      }
+
+      return Response.redirect(redirectUrl, 302);
+    })
+    .catch((error) => {
+      log.error("checkout redirect request failed", { error });
+      const message = error instanceof Error ? error.message : "Internal redirect error";
+
+      return new Response(JSON.stringify({ error: message }), {
+        status: 502,
+        headers: { "content-type": "application/json" },
+      });
     });
-  }
-
-  if (redirectUrl.pathname !== "/") {
-    mergeSearchParams(redirectUrl, url.searchParams);
-    redirectUrl.searchParams.set("payment", url.searchParams.get("payment") ?? "shop_pay");
-  }
-
-  return Response.redirect(redirectUrl, 302);
-}
+};
 
 async function getCheckoutRedirectUrl(
   request: Request,
