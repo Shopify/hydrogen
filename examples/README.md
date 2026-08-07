@@ -40,6 +40,8 @@ pnpm https:setup
 
 This installs the local certificate authority and creates trusted `localtest.me` certificates under `.cert/` so Customer Account OAuth can redirect to `https://localtest.me:5173/account/authorize`.
 
+The Next.js template provisions its own development certificate and does not use the repository certificates.
+
 ## What examples are
 
 - Small end-to-end experiments around Hydrogen primitives and APIs.

@@ -1,10 +1,13 @@
 import { reactRouter } from "@react-router/dev/vite";
+import { localHttps } from "@shopify/hydrogen/vite";
 import { oxygen } from "@shopify/mini-oxygen/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
 const oxygenPlugins = oxygen();
 const oxygenPlugin = oxygenPlugins.find((plugin) => plugin.name === "oxygen:main");
+const enabled = process.env.VITE_LOCAL_HTTPS === "1";
+const httpsOptions = { enabled };
 
 if (!oxygenPlugin?.api) {
   throw new Error("MiniOxygen plugin API is unavailable.");
@@ -15,7 +18,7 @@ if (!oxygenPlugin?.api) {
 oxygenPlugin.api.registerPluginOptions({ compatibilityDate: "2026-04-01" });
 
 export default defineConfig({
-  plugins: [tailwindcss(), ...oxygenPlugins, reactRouter()],
+  plugins: [localHttps(httpsOptions), tailwindcss(), ...oxygenPlugins, reactRouter()],
   resolve: {
     tsconfigPaths: true,
   },

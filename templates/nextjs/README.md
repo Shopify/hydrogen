@@ -20,6 +20,14 @@ pnpm dev
 
 Open <http://localhost:3000>.
 
+Customer Accounts require an HTTPS origin because Shopify OAuth rejects `http`. Run the HTTPS development server and open <https://localtest.me:5173>:
+
+```sh
+pnpm https:dev
+```
+
+Next.js provisions and reuses a trusted development certificate under `certificates/`. On first run, it may prompt to install the local certificate authority.
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` when you are ready to connect a real store:
@@ -55,6 +63,7 @@ If `PRIVATE_STOREFRONT_API_TOKEN` is unset, the app uses `mock.shop`. If you set
 | Script | Does |
 | --- | --- |
 | `pnpm dev` | Start the Next.js dev server. |
+| `pnpm https:dev` | Start the Next.js dev server with trusted local HTTPS. |
 | `pnpm build` | Build the production app. |
 | `pnpm start` | Start the production server after `pnpm build`. |
 | `pnpm lint` | Run ESLint. |
