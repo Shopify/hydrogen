@@ -162,11 +162,19 @@ export type SearchAvailableFilter = NonNullable<SearchQuery["search"]>["productF
 
 /** Shop analytics GID query (root layout, best-effort + non-blocking, F1). */
 export const SHOP_ANALYTICS_QUERY = gql(`
-  query RootShopAnalytics {
+  query RootShopAnalytics($country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
     shop {
       id
       name
       description
+    }
+    localization {
+      country {
+        currency {
+          isoCode
+        }
+      }
     }
   }
 `);

@@ -302,10 +302,18 @@ Additionally, keep `lib/route-templates.ts` unchanged — `routeTemplates` is re
 
 - Public identity -> bundled `app/lib/config.ts` (store domain, public Storefront token, shop/storefront IDs,
   Customer Account client ID, `defaultI18n`, `analyticsShop`, `analyticsConsent`). These are non-secret and safe in the
-  client bundle; default them to the demo store so the template runs out of the box.
+  client bundle; default them to the demo store so the template runs out of the box. Treat `defaultI18n.currency` as a
+  startup fallback only.
 - Real secrets -> Worker `env`, read on the server only: `SESSION_SECRET`, `PRIVATE_STOREFRONT_API_TOKEN`, plus an
   optional `PUBLIC_STORE_DOMAIN` override. Read them in root middleware, not at module scope.
 
 This avoids a fragile loader->client refactor and keeps every feature working. Note this applies beyond root middleware: route modules also import public identity (e.g. `analyticsShop`) on the client, so keeping it as a bundled `config.ts` constant — rather than something read from `env` — is what makes those client imports work.
+
+The active-market currency is request data, not bundled identity. Select
+`localization.country.currency.isoCode` in a root-loader Storefront query using the same `@inContext(country:,
+language:)` values as the rest of the request, fall back to `defaultI18n.currency` on failure, and return the resolved
+`i18n` through loader data. The root `Layout` must pass that loader-derived `i18n` to `ShopifyScripts` so
+`window.Shopify.currency.active` exists before consent replay. Do not use `shop.paymentSettings.currencyCode`, and do
+not wait for cart data to initialize it.
 
 Keep Customer Account, cart, search, analytics, and other example features unless the user explicitly asks to remove them.

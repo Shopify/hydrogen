@@ -14,6 +14,7 @@ import {
   Scripts,
   ScrollRestoration,
   useNavigate,
+  useRouteLoaderData,
 } from "react-router";
 
 import { AnalyticsTracker, CartAnalyticsTracker } from "~/components/AnalyticsTrackers";
@@ -38,7 +39,15 @@ import type { Route } from "./+types/root";
 import "./app.css";
 
 const NAV_COLLECTIONS_QUERY = gql(`
-  query NavCollections {
+  query NavCollections($country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    localization {
+      country {
+        currency {
+          isoCode
+        }
+      }
+    }
     collections(first: 5) {
       nodes {
         handle
@@ -108,6 +117,11 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return {
     cartData: cartResult.data,
     navCollections: navResult.data?.collections.nodes ?? [],
+    i18n: {
+      ...storefrontConfig.i18n,
+      currency:
+        navResult.data?.localization?.country?.currency?.isoCode ?? storefrontConfig.i18n.currency,
+    },
     analyticsShop,
     consent: analyticsConsent,
     forceConsentBanner: env.MOCK_SHOP === "1",
@@ -116,6 +130,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
 export function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const rootData = useRouteLoaderData<typeof loader>("root");
 
   return (
     <html lang="en">
@@ -123,7 +138,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <ShopifyScripts
-          i18n={storefrontConfig.i18n}
+          i18n={rootData?.i18n ?? storefrontConfig.i18n}
           shop={shop}
           consent={analyticsConsent}
           navigate={navigate}

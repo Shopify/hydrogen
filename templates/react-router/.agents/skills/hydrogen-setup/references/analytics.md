@@ -23,7 +23,7 @@
 **Prerequisites:**
 
 - A storefront built on `@shopify/hydrogen` with the request interceptors already wired (`handleShopifyRoutes` and `handleShopifyRedirects`). The analytics bus depends on the SFAPI proxy so the browser can observe same-origin Storefront API responses for session cookies. Without the proxy, analytics falls back to deprecated JavaScript-visible cookies and should be treated as incomplete. If you have not installed the interceptors yet, install them first with the local `hydrogen-request-handlers` skill.
-- Shopify runtime scripts rendered from the root/document head. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass `{country, language, currency?}` as `i18n`; pass `{shopId: env.SHOP_ID, storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0", myshopifyDomain: env.PUBLIC_STORE_DOMAIN}` as `shop`. Resolve both on the server, declare them as consts annotated with the `ShopifyScriptsShop` / `ShopifyScriptsI18n` types from `@shopify/hydrogen` (so wrong or missing fields fail typecheck where they are built), and serialize them into ShopifyScripts. ShopifyScripts creates `window.Shopify.analytics` by default and exposes the permanent domain as `window.Shopify.shop`. Analytics consent config does not accept `country` or `language`.
+- Shopify runtime scripts rendered from the root/document head. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass `{country, language, currency}` as `i18n`; pass `{shopId: env.SHOP_ID, storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0", myshopifyDomain: env.PUBLIC_STORE_DOMAIN}` as `shop`. Resolve both on the server, declare them as consts annotated with the `ShopifyScriptsShop` / `ShopifyScriptsI18n` types from `@shopify/hydrogen` (so wrong or missing fields fail typecheck where they are built), and serialize them into ShopifyScripts. ShopifyScripts creates `window.Shopify.analytics` by default and exposes the permanent domain as `window.Shopify.shop`. Analytics consent config does not accept `country` or `language`.
 - A client-side lifecycle hook in your framework (route-change effect, navigation event, `<script>` tag, etc.) so view events can fire on the right URL transitions.
 
 `ShopifyScripts` creates the zero-dependency analytics bus, sets it on `window.Shopify.analytics`, and owns Shopify consent setup, analytics CDN loading, and deprecated-cookie compatibility. Framework adapters stay thin: they translate framework lifecycle events into bus calls and wire cart delta tracking with `trackCartAnalytics()`.
@@ -85,7 +85,7 @@ const shop: ShopifyScriptsShop = {
 const i18n: ShopifyScriptsI18n = {
   country: "US",
   language: "EN",              // sent as Monorail content language
-  currency: "USD",             // optional; sets window.Shopify.currency.active
+  currency: "USD",             // required for analytics initialization
 };
 
 const consent: ConsentConfig = {
@@ -111,11 +111,31 @@ Resolve shop metadata on the server and pass it to ShopifyScripts. Shopify analy
 
 ### `i18n`
 
-Pass the app's resolved `country` and `language` market values. Optional `currency` sets `window.Shopify.currency.active` for Shopify runtime scripts and Shopify analytics. Shopify analytics reads its content language from `window.Shopify.locale`.
+Pass the app's resolved market values. Although `currency` is optional in the general ShopifyScripts type, treat it as
+required when Shopify analytics is enabled: it initializes `window.Shopify.currency.active` before consent-gated
+events can replay. Use an authoritative configured market currency or select the active presentment currency from the
+Storefront API under the same market context as the request:
+
+```graphql
+query AnalyticsCurrency($country: CountryCode, $language: LanguageCode)
+@inContext(country: $country, language: $language) {
+  localization {
+    country {
+      currency {
+        isoCode
+      }
+    }
+  }
+}
+```
+
+Keep an explicit configured fallback for API failures or mock mode. Do not use
+`shop.paymentSettings.currencyCode`: that is the shop currency and may differ from the active market's presentment
+currency. Shopify analytics reads its content language from `window.Shopify.locale`.
 
 ### `analytics`
 
-The analytics bus is enabled by default. Pass `analytics` only when you need optional bus configuration such as `customData`, which is attached to bus-generated payloads. Shopify analytics reads currency from `window.Shopify.currency.active`, which is seeded by `i18n.currency` and updated from cart currency when available.
+The analytics bus is enabled by default. Pass `analytics` only when you need optional bus configuration such as `customData`, which is attached to bus-generated payloads. Shopify analytics reads currency from `window.Shopify.currency.active`, which must be seeded by `i18n.currency`; cart currency is only later synchronization or fallback, not initial setup.
 
 ### `consent`
 
@@ -591,6 +611,8 @@ After wiring, smoke-test each event in the browser dev tools:
 3. **Per-route navigation fires page_viewed** — click around. Each navigation should produce a fresh `page_viewed` event. If only the initial page load fires, the route-change hook is wired wrong (e.g. effect dependency missing in React, reactive read missing in Solid).
 4. **Cart events fire** — add an item to the cart. You should see `cart_updated` followed by `product_added_to_cart`. If you see `cart_updated` repeating with the same payload, the dedupe key (`updatedAt`) is stale — confirm your cart query selects `updatedAt`.
 5. **Privacy banner renders for EU/UK visitors** — if `mode: "default-banner"`, simulate a GDPR-protected region with browser dev-tools location override or VPN. The banner should render. If it does not, check that `cdn.shopify.com` is not blocked by your CSP.
+6. **Currency exists across consent** — before and after granting consent, verify `window.Shopify.currency.active`
+   matches the resolved market currency without first adding an item to the cart.
 
 For production, re-verify against the production bundle. Several gotchas only appear once the SSR/CSR boundary stabilizes.
 
@@ -601,6 +623,9 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Replay is destination-only.** Raw `analytics.subscribe()` listeners only receive live events. `analytics.addDestination()` callbacks receive consent-gated live events plus buffered replay after analytics consent is granted. If the visitor explicitly denies analytics consent, the buffer is cleared and those pre-denial events are never replayed.
 - **The singleton must be lazy.** Reading the global bus at module top-level can run on the server during SSR and crash on `window` access. Always wrap in a `typeof window === 'undefined'` guard.
 - **Use the right shop shape for each API.** `ShopifyScripts` accepts a numeric Shop ID or Shopify Shop GID plus `storefrontId` and the permanent `myshopifyDomain`; the analytics bus normalizes `shop.shopId` to a Shopify Shop GID before dispatch, while the bootstrap exposes the domain as `window.Shopify.shop`.
+- **Currency only appears after a cart mutation.** The cart tracker can synchronize currency, which may hide missing
+  bootstrap data. Resolve the active market currency on the server and pass it as `i18n.currency` during initial
+  ShopifyScripts rendering.
 - **Customer Privacy script blocked by CSP.** If your CSP does not allow `cdn.shopify.com`, the consent script never loads, `analyticsProcessingAllowed()` stays `false`, and destination events never deliver. Check Network tab for blocked requests; add `cdn.shopify.com` to `script-src`.
 - **`mode: "no-banner"` is wrong for any storefront with EU/UK/CA visitors unless consent is handled elsewhere.** Without a hosted or custom banner, those visitors have no UI to grant consent — destination events never deliver. Default to `mode: "default-banner"` unless you have a custom consent UI that calls `setTrackingConsent()`.
 - **Multiple bus instances on the same page conflict.** `window.Shopify.customerPrivacy.config` is global; the latest initialized config wins. Multi-store-per-page is not supported. Use one bus per active storefront shell.
@@ -622,3 +647,5 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Don't put per-route view events in a global subscriber.** A single subscriber that watches `page_viewed` and synthesizes `product_viewed` from URL parsing is brittle and loses payload context. Publish each view event from the route that has the data.
 - **Don't construct multiple buses for "different consent contexts" on the same page.** Customer Privacy config is global; the latest initialized config takes effect. If you need conditional behavior, branch inside subscribers, not at construction.
 - **Don't skip the request-handler prerequisite.** Without the SFAPI proxy, modern same-origin Shopify cookies cannot be set. Analytics may appear to work via deprecated JS-visible cookies, but session continuity into checkout breaks. Treat analytics as incomplete until the proxy is live in production.
+- **Don't use `shop.paymentSettings.currencyCode` for market analytics.** It is the shop currency, not necessarily the
+  active market's presentment currency; use `localization.country.currency.isoCode` in the active market context.
