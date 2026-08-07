@@ -6,6 +6,7 @@ import {
   matchStandardRouteUrl,
   resolveStandardRouteUrl,
 } from "./standard-routes/index";
+import { normalizePathPrefix, prependPathPrefix } from "./standard-routes/path";
 
 describe("standard routes", () => {
   it("builds default Shopify standard routes", () => {
@@ -158,6 +159,13 @@ describe("standard routes", () => {
         url: "https://cdn.example/products/snowboard",
       }),
     ).toBe("https://cdn.example/products/snowboard");
+  });
+
+  it("normalizes path prefixes with surrounding whitespace", () => {
+    expect(normalizePathPrefix(" /fr-ca/ ")).toBe("/fr-ca");
+    expect(normalizePathPrefix("  ")).toBe("");
+    expect(normalizePathPrefix(undefined)).toBe("");
+    expect(prependPathPrefix("/products", " /fr-ca/ ")).toBe("/fr-ca/products");
   });
 
   it("does not match external or unknown URLs", () => {

@@ -1,6 +1,6 @@
 export const HYDROGEN_CACHE_STATUS_PRODUCT = "Hydrogen";
 
-export type HydrogenCacheStatus = "hit" | "miss" | "bypass";
+type HydrogenCacheStatus = "hit" | "miss" | "bypass";
 
 export function getHydrogenCacheStatus(headers: Headers): HydrogenCacheStatus | undefined {
   const cacheStatus = headers.get("cache-status");

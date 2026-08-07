@@ -16,7 +16,6 @@ export { createCollectionReconciler } from "./reconciler";
 export type { CollectionReconciler, ReconcilerCallbacks } from "./reconciler";
 
 export {
-  collectionSearchEqual,
   filterEquals,
   isFilterInputActive,
   getFilterRemovalUrl,

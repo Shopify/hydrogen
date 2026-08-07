@@ -29,7 +29,7 @@ export type CacheOptions = {
   staleIfError?: CacheDuration;
 };
 
-export type NoStoreStrategy = CachingStrategy & {
+type NoStoreStrategy = CachingStrategy & {
   mode: typeof NO_STORE;
 };
 
@@ -46,21 +46,6 @@ export function getCacheRetentionTtl(strategy: CachingStrategy): number {
     0,
     (strategy.maxAge ?? 0) + (strategy.staleWhileRevalidate ?? 0) + (strategy.staleIfError ?? 0),
   );
-}
-
-export function getCacheControlHeader(strategy: CachingStrategy): string {
-  const cacheControl: string[] = [];
-
-  if (strategy.mode) cacheControl.push(strategy.mode);
-  if (strategy.maxAge != null) cacheControl.push(`max-age=${strategy.maxAge}`);
-  if (strategy.staleWhileRevalidate != null) {
-    cacheControl.push(`stale-while-revalidate=${strategy.staleWhileRevalidate}`);
-  }
-  if (strategy.staleIfError != null) {
-    cacheControl.push(`stale-if-error=${strategy.staleIfError}`);
-  }
-
-  return cacheControl.join(", ");
 }
 
 export function getPlatformCacheControlHeader(strategy: CachingStrategy): string {

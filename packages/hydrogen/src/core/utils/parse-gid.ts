@@ -3,7 +3,7 @@
  * Parses Shopify Global IDs (GIDs) into their component parts.
  */
 
-export type ShopifyGid = Pick<URL, "search" | "searchParams" | "hash"> & {
+type ShopifyGid = Pick<URL, "search" | "searchParams" | "hash"> & {
   id: string;
   resource: string | null;
   resourceId: string | null;
