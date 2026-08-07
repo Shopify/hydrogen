@@ -39,11 +39,14 @@ function createPrivateStorefrontClient(
 ) {
   return createStorefrontClient({
     type: "private",
-    requestContext: createShopifyRequestContext({ request, i18n: DEFAULT_I18N }),
+    requestContext: createShopifyRequestContext({
+      request,
+      i18n: DEFAULT_I18N,
+      buyerIp: "127.0.0.1",
+    }),
     config: {
       storeDomain: fixture.storeDomain,
       privateStorefrontToken: "test-private-token",
-      buyerIp: "127.0.0.1",
     },
   });
 }

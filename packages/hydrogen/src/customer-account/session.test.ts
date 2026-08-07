@@ -185,14 +185,17 @@ function createRequestContext(request = new Request(ORIGIN)) {
 }
 
 function createPrivateStorefrontClient(request: Request) {
-  const requestContext = createRequestContext(request);
+  const requestContext = createShopifyRequestContext({
+    request,
+    i18n: { country: "US", language: "EN" },
+    buyerIp: "127.0.0.1",
+  });
   return createStorefrontClient({
     type: "private",
     requestContext,
     config: {
       storeDomain: "test-store.myshopify.com",
       privateStorefrontToken: "test-private-token",
-      buyerIp: "127.0.0.1",
     },
   });
 }

@@ -7,6 +7,7 @@ import type { GraphiQLOptions } from "../../types";
 import { handleGraphiql as handleGraphiqlImpl } from "./graphiql";
 
 const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
+const DEFAULT_BUYER_IP = "127.0.0.1";
 
 const storefrontClient = {
   type: "private",
@@ -17,6 +18,7 @@ const storefrontClient = {
   requestContext: createShopifyRequestContext({
     request: { headers: new Headers() },
     i18n: DEFAULT_I18N,
+    buyerIp: DEFAULT_BUYER_IP,
   }),
 } satisfies PrivateStorefrontClient;
 

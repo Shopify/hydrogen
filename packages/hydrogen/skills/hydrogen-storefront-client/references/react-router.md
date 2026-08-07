@@ -39,7 +39,6 @@ export const storefrontMiddleware: Route.MiddlewareFunction = async (
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
       privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-      buyerIp,
     },
   });
 

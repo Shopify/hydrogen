@@ -48,7 +48,6 @@ export async function proxy(request: NextRequest) {
     config: {
       storeDomain,
       privateStorefrontToken,
-      buyerIp,
     },
   });
 

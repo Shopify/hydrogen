@@ -8,6 +8,7 @@ import type { RedirectOptions } from "../handle-shopify-redirects";
 import { handleAdminRedirect } from "./admin-redirect";
 
 const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
+const DEFAULT_BUYER_IP = "127.0.0.1";
 const DEFAULT_ROUTE_TEMPLATES = createShopifyRouteTemplates({});
 
 function mockStorefrontClient(
@@ -22,6 +23,7 @@ function mockStorefrontClient(
     requestContext: createShopifyRequestContext({
       request: { headers: new Headers() },
       i18n: DEFAULT_I18N,
+      buyerIp: DEFAULT_BUYER_IP,
     }),
   } satisfies PrivateStorefrontClient;
 }
