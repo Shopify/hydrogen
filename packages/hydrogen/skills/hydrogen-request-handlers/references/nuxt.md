@@ -71,6 +71,8 @@ function createPrivateStorefrontClient(requestContext: ShopifyRequestContext, bu
 }
 ```
 
+This middleware awaits a matched promise because `sendWebResponse` needs the resolved `Response`; rejected promises continue through Nitro's request error handling. Do not attach an inline `.catch()` unless this route intentionally needs handling that differs from the app's normal error boundary.
+
 Use project-owned helpers for env access. Do not expose the private token to client plugins.
 
 ## Server Plugin Injection

@@ -51,6 +51,7 @@ const redirect = await handleShopifyRedirects({
 - Create `requestContext` with `createShopifyRequestContext({ request, i18n, buyerIp })` where buyer context exists and the framework exposes a real `Request`; use `request: { headers }` only when no `Request` exists.
 - Pass the same request-scoped `requestContext`, `storefrontClient`, and `sessionManager` into `handleShopifyRoutes` and registered handler groups.
 - Call `handleShopifyRoutes` without awaiting it immediately. It returns `null` synchronously when no route matches; only return or await the promise after checking that it is truthy.
+- If the app has a request-level `try/catch` that converts errors into a `Response`, use `return await shopifyRoute` inside that boundary so rejected route promises reach the same error handling as synchronous setup failures. If the framework owns request error handling, return `shopifyRoute` directly. Do not add an inline `.catch()` unless the matched route intentionally needs different error handling.
 - Pass `request` and `storefrontClient` into `handleShopifyRedirects`; it does not receive a session manager.
 - Pass registered handler groups explicitly, for example `handlers: [cartHandlers, customerAccountHandlers]`.
 - `handleShopifyRoutes` applies request-context response headers before returning matched Hydrogen route responses.

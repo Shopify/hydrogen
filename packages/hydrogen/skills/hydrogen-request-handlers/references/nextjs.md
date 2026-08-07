@@ -61,6 +61,8 @@ export const config = {
 };
 ```
 
+The proxy returns a matched promise directly so Next owns any rejection. If the app adds a request-level `try/catch` that returns a custom error response, use `return await shopifyRoute` inside that boundary after the truthy check.
+
 Use `proxy.ts` for Next 16+. Older Next projects may still use `middleware.ts`, but keep the file name and exported function name matched to the installed Next version.
 
 Keep `handleShopifyRoutes` broad inside `proxy.ts`. Do not manually whitelist Hydrogen-owned path regexes before calling it; `handleShopifyRoutes` already no-ops for unmatched app routes, and manually duplicating its route list goes stale when Hydrogen adds handlers. The matcher should exclude static Next assets, not app pages.
