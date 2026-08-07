@@ -248,41 +248,49 @@ export function CartDrawer() {
   }, [cart]);
 
   return (
-    <dialog
-      id={CART_DRAWER_ID}
-      className="drawer-right bg-surface text-on-surface"
-      aria-labelledby="cart-drawer-title"
-      data-testid="cart-drawer"
-      closedby="any"
-    >
-      <div className="flex h-full flex-col">
-        <div className="flex shrink-0 items-center py-2 ps-4">
-          <div className="flex flex-1 items-center gap-2">
-            <h2 id="cart-drawer-title" className="text-on-surface text-lg font-medium">
-              Cart
-            </h2>
-            <span className="cart-count-badge">{totalQuantity}</span>
+    <>
+      <span
+        role="status"
+        className="sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+        data-cart-status
+      >
+        {statusMessage}
+      </span>
+      <dialog
+        id={CART_DRAWER_ID}
+        className="drawer-right bg-surface text-on-surface"
+        aria-labelledby="cart-drawer-title"
+        data-testid="cart-drawer"
+        closedby="any"
+      >
+        <div className="flex h-full flex-col">
+          <div className="flex shrink-0 items-center py-2 ps-4">
+            <div className="flex flex-1 items-center gap-2">
+              <h2 id="cart-drawer-title" className="text-on-surface text-lg font-medium">
+                Cart
+              </h2>
+              <span className="cart-count-badge">{totalQuantity}</span>
+            </div>
+            <button
+              type="button"
+              commandfor={CART_DRAWER_ID}
+              command="close"
+              className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+              aria-label="Close"
+              onClick={() => closeCartDrawer()}
+            >
+              <img src="/icons/icon-x.svg" alt="" className="size-5" aria-hidden="true" />
+            </button>
           </div>
-          <button
-            type="button"
-            commandfor={CART_DRAWER_ID}
-            command="close"
-            className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
-            aria-label="Close"
-            onClick={() => closeCartDrawer()}
-          >
-            <img src="/icons/icon-x.svg" alt="" className="size-5" aria-hidden="true" />
-          </button>
+          <CartErrorBanner />
+          <div className="flex-1 overflow-y-auto p-4">
+            <CartLines />
+          </div>
+          <CartFooter />
         </div>
-        <CartErrorBanner />
-        <div className="flex-1 overflow-y-auto p-4">
-          <CartLines />
-          <span className="sr-only" aria-live="polite" aria-atomic="true" data-cart-status>
-            {statusMessage}
-          </span>
-        </div>
-        <CartFooter />
-      </div>
-    </dialog>
+      </dialog>
+    </>
   );
 }
