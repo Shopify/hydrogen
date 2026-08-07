@@ -48,6 +48,7 @@ describe("ShopifyScripts", () => {
         routes: routeTemplates,
         shop: TEST_SHOP,
         inbox: true,
+        shopifyAnalytics: false,
       }),
     );
 
@@ -66,6 +67,7 @@ describe("ShopifyScripts", () => {
     expect(html).toContain(
       `<script id="shopify-inbox" type="module" async crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_INBOX_SCRIPT}"></script>`,
     );
+    expect(html).not.toContain(`id="shopify-storefront-analytics"`);
     expect(html).not.toContain("<shopify-chat");
     expect(html).toContain(`id="shopify-perfkit"`);
     expect(html).toContain(`async`);
