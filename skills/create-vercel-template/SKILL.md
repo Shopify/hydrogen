@@ -28,7 +28,7 @@ Next.js on Vercel runs on the Node/serverless runtime, so `process.env` works an
    - no `@shared/*` imports
    - no `examples/shared/*` runtime dependency
    - no `localCdnAssets` (drop the turbopack rule from `next.config.ts`)
-   - no local-HTTPS dev script (the `https:dev` script points at `../../.cert`)
+    - no local-HTTPS dev script (Vercel templates intentionally omit local account wiring)
    - no `catalog:` dependency ranges in the final template package
    - replace `@shopify/hydrogen: workspace:*` with the published `preview` dist-tag.
 4. Move shared logic into template-local files under root `lib/` (see "Shared code migration").
@@ -55,7 +55,7 @@ The template must use the published `@shopify/hydrogen` `preview` dist-tag, not 
   `@tailwindcss/postcss`, `eslint`, `eslint-config-next`.
 - Do not add `@vercel/functions` unless the app reintroduces an explicit Storefront cache adapter; the current Next template uses Next Cache Components (`"use cache"`, `cacheLife`, `cacheTag`).
 - Replace `typescript: catalog:` with a real npm range (e.g. `^5.9.3`).
-- Remove the `https:dev` script (it references `../../.cert`). Keep `dev`, `build`, `start`, `lint`, `typecheck`.
+- Remove the example-only `https:dev` script. Keep `dev`, `build`, `start`, `lint`, `typecheck`.
 - Deploy uses the Vercel CLI, not a build dependency: document `npx vercel` / `npx vercel --prod` (optionally add a
   `"deploy": "vercel --prod"` script and tell the user to have the Vercel CLI available).
 

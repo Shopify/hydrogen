@@ -43,16 +43,15 @@ instead of mock.shop; `PUBLIC_STORE_DOMAIN` overrides the bundled demo store dom
 
 Customer Accounts require an HTTPS origin (Shopify OAuth rejects `http`) and a real store (mock.shop has no Customer Account API).
 
-One-time setup:
-
-1. `pnpm https:setup` (repo root) — trusts `mkcert` and creates the `.cert/localtest.me*` certificates.
-2. Set `PRIVATE_STOREFRONT_API_TOKEN` (and `PUBLIC_STORE_DOMAIN`) to your store — see [Point it at your store](#point-it-at-your-store) — so the example runs against a real store instead of mock.shop.
+Set `PRIVATE_STOREFRONT_API_TOKEN` (and `PUBLIC_STORE_DOMAIN`) to your store — see [Point it at your store](#point-it-at-your-store) — so the example runs against a real store instead of mock.shop.
 
 Run the HTTPS dev server and open <https://localtest.me:5173>:
 
 ```sh
 pnpm --filter @shopify/hydrogen-example-nextjs https:dev
 ```
+
+Next.js provisions and reuses a trusted development certificate under `certificates/`. On first run, it may prompt to install the local certificate authority.
 
 The `/account` page shows your name + email. The header account link is hidden on mock.shop and shown only when a real store is configured.
 

@@ -41,7 +41,7 @@ From the repo root:
 - `pnpm dev` — every example's dev server in parallel (ports auto-allocated, logs interleaved in the terminal).
 - `pnpm dev:hub` — same, plus a browser UI (auto-opened) with status dots, scaled iframe thumbnails (click to pop out), and collapsible per-server log streams. Implemented in [`scripts/examples-dev.ts`](../scripts/examples-dev.ts).
 - `pnpm --filter @shopify/hydrogen-example-<name> dev` — a single example.
-- `pnpm https:setup` then `pnpm --filter @shopify/hydrogen-example-<name> https:dev` — run an account-enabled framework example on `https://localtest.me:5173` when that example provides an `https:dev` script. The Hydrogen example uses `--customer-account-push` instead of local certs.
+- `pnpm https:setup` then `pnpm --filter @shopify/hydrogen-example-<name> https:dev` — run a Vite-based account-enabled example on `https://localtest.me:5173`. Next.js provisions its own certificate, so it only needs the `https:dev` command. The Hydrogen example uses `--customer-account-push` instead of local certificates.
 
 `pnpm https:setup` requires `mkcert` to be installed locally and trusted by your OS/browser.
 
@@ -58,8 +58,8 @@ pnpm https:setup
 ```
 
 This installs the local certificate authority and creates trusted certificates for `localtest.me`
-under `.cert/`. The account-enabled examples use those certificates so Customer Account OAuth
-can redirect back to `https://localtest.me:5173/account/authorize`.
+under `.cert/`. The Vite-based account-enabled examples use those certificates so Customer Account
+OAuth can redirect back to `https://localtest.me:5173/account/authorize`.
 
 ## What examples are
 

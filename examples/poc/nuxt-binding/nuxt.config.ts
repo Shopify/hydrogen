@@ -1,20 +1,20 @@
+import { localHttps, localHttpsDevServer } from "@shopify/hydrogen/vite";
 import tailwindcss from "@tailwindcss/vite";
 import type { NuxtConfig } from "nuxt/schema";
 
-import {
-  localHttpsDevServerConfig,
-  localHttpsPlugin,
-  localHttpsServerConfig,
-} from "../../shared/local-https-vite";
-
 type VitePlugin = NonNullable<NonNullable<NuxtConfig["vite"]>["plugins"]>[number];
 
-const localHttpsServer = localHttpsServerConfig();
-const localHttpsDevServer = localHttpsDevServerConfig();
+const enabled = process.env.VITE_LOCAL_HTTPS === "1";
+const certDir = new URL("../../../.cert/", import.meta.url);
+const httpsOptions = {
+  enabled,
+  certPath: new URL("localtest.me.pem", certDir),
+  keyPath: new URL("localtest.me-key.pem", certDir),
+};
 
 export default defineNuxtConfig({
   compatibilityDate: "2025-05-08",
-  devServer: localHttpsDevServer,
+  devServer: localHttpsDevServer(httpsOptions),
   alias: {
     "@shared": new URL("../../shared", import.meta.url).pathname,
   },
@@ -28,7 +28,6 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css"],
   ssr: true,
   vite: {
-    plugins: [localHttpsPlugin() as VitePlugin, tailwindcss() as VitePlugin],
-    server: localHttpsServer,
+    plugins: [localHttps(httpsOptions) as VitePlugin, tailwindcss() as VitePlugin],
   },
 });

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "https:dev": "next dev --experimental-https --experimental-https-cert ../../.cert/localtest.me.pem --experimental-https-key ../../.cert/localtest.me-key.pem --hostname localtest.me --port 5173",
+    "https:dev": "next dev --experimental-https --hostname localtest.me --port 5173",
     "build": "next build --debug-prerender",
     "start": "next start",
     "typecheck": "tsc && hydrogen gql check --fail-on-warn"
