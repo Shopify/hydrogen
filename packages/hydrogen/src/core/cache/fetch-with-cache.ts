@@ -44,12 +44,12 @@ export type FetchCacheOptions = {
   shouldCacheResponse?: (context: FetchCacheResponseContext) => MaybePromise<boolean>;
 };
 
-export type FetchWithCache = {
+type FetchWithCache = {
   (input: FetchInput, init?: FetchInit): Promise<Response>;
   (input: FetchInput, init: FetchInit | undefined, options: FetchCacheOptions): Promise<Response>;
 };
 
-export type CreateFetchWithCacheOptions = (
+type CreateFetchWithCacheOptions = (
   | CreateRunWithCacheOptions
   | {
       runWithCache: RunWithCache;

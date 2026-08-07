@@ -137,6 +137,19 @@ describe("createShopifyRequestContext", () => {
     expect(result.i18n.pathPrefix).toBe("/es-es");
   });
 
+  it("normalizes pathPrefix with surrounding whitespace", () => {
+    const result = createTestRequestContext(
+      { headers: new Headers() },
+      {
+        country: "FR",
+        language: "FR",
+        pathPrefix: " /fr-ca/ ",
+      },
+    );
+
+    expect(result.i18n.pathPrefix).toBe("/fr-ca");
+  });
+
   it("does not create fallback tokens when modern Shopify analytics cookies are present", () => {
     const result = createTestRequestContext(
       new Request("https://example.com", {

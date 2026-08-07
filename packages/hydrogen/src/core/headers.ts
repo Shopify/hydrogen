@@ -62,7 +62,7 @@ export type ShopifyHeaderName =
   | typeof STOREFRONT_PRIVATE_TOKEN_HEADER
   | typeof STOREFRONT_URL_HEADER;
 
-export type KnownHeaderName = StandardHeaderName | ShopifyHeaderName;
+type KnownHeaderName = StandardHeaderName | ShopifyHeaderName;
 
 export function defineHeaderList<const HeaderNames extends readonly KnownHeaderName[]>(
   ...headerNames: HeaderNames
