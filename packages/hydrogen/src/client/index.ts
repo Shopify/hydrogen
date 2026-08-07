@@ -1,8 +1,8 @@
 export { createStorefrontClient } from "./client";
-export { createShopifyRequestContext } from "../core/headers";
+export { createShopifyRequestContext } from "../core/request-context";
 export { gql } from "../graphql";
 export { StorefrontApiError, StorefrontTimeoutError } from "./errors";
-export type { I18nConfig, ShopifyRequestContext } from "../core/headers";
+export type { I18nConfig, ShopifyRequestContext } from "../core/request-context";
 export type { AnyStorefrontQueryString, StorefrontQueryString } from "../graphql";
 export type { InferResult, InferVariables } from "../graphql";
 export type {

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import type { CacheInstance } from "../core";
 import { Cache } from "../core/cache";
-import { createShopifyRequestContext, type ShopifyRequestContext } from "../core/headers";
+import { createShopifyRequestContext, type ShopifyRequestContext } from "../core/request-context";
 import { assert } from "../core/test-utils";
 import { gql } from "../graphql";
 import { createStorefrontClient } from "./client";
@@ -238,6 +238,7 @@ describe("createStorefrontClient", () => {
       expect(headers.get("X-Shopify-UniqueToken")).toBe("unique-token");
       expect(headers.get("X-Shopify-VisitToken")).toBe("visit-token");
       expect(headers.get("Custom-Storefront-Request-Group-ID")).toBeTruthy();
+      expect(headers.get("Sec-Shopify-Storefront-Origin")).toBe("https://example.com");
     });
 
     it("sends private access token header", async () => {

@@ -11,6 +11,7 @@ import { CartDiscountCodes } from "./CartDiscountCodes";
 import { CartErrorBanner } from "./CartErrorBanner";
 import { CartLineItems } from "./CartLineItems";
 import { CartNote } from "./CartNote";
+import { CartRevalidationStatus } from "./CartRevalidationStatus";
 import { CartTotals } from "./CartTotals";
 
 export function CartDrawer() {
@@ -51,6 +52,7 @@ export function CartDrawer() {
         </div>
 
         <div class="flex-1 overflow-y-auto px-6 py-4">
+          <CartRevalidationStatus />
           <CartErrorBanner />
           <CartLineItems emptyHeadingLevel="h3" errorIdPrefix="cart-drawer-line-error" />
         </div>

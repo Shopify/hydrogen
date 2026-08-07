@@ -147,6 +147,7 @@ Use `useCart(selector)` for reactive state. Select only what the component needs
 const totalQuantity = useCart((state) => state.data.totalQuantity);
 const lines = useCart((state) => state.data.lines.nodes);
 const pendingLines = useCart((state) => state.pending.lines);
+const totalsPending = useCart((state) => state.pending.cost === true || state.revalidating === true);
 const lineErrors = useCart((state) => state.errors.lines);
 ```
 

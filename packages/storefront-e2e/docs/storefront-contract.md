@@ -54,7 +54,7 @@ The selected variant must be represented in the URL and must render as visible t
 
 Cart lines must be visible list items containing the product title.
 
-After Add to cart, the storefront must show a cart drawer dialog containing the added line before the suite navigates to the cart page.
+After Add to cart, the suite must be able to inspect the added line in a cart drawer dialog before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible page-level button whose accessible name begins with Cart, Open cart, or View cart so the suite can open the drawer while the update is pending.
 
 Each line must expose:
 
@@ -63,6 +63,8 @@ Each line must expose:
 - A visible increase control named Increase or +
 - A visible decrease control named Decrease or -
 - A visible remove control named Remove
+
+Cart totals must expose a `role="status"` region that says `Updating cart totals` while cart totals are stale, then `Cart totals updated` after mutation settlement. Do not announce `Cart totals updated` on initial idle render before a mutation cycle. The region may be visually hidden if it remains available to assistive technology.
 
 Accessible labels are preferred. Broad data-testid attributes should only be used when a semantic role or label cannot express the user-facing concept.
 

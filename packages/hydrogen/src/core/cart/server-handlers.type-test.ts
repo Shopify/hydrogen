@@ -1,7 +1,7 @@
 import { describe, it, expectTypeOf } from "vitest";
 
 import type { PublicStorefrontClient } from "../../client";
-import type { ShopifyRouteHandlerGroup } from "../route-handlers";
+import type { ShopifyRouteHandlerGroup } from "../request-routing/registered-routes";
 import type { CartServerHandlers } from "./server-handlers";
 
 describe("CartServerHandlers route handler compatibility", () => {

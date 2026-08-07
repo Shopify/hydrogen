@@ -181,8 +181,9 @@ function toAnalyticsCart(state: CartState): AnalyticsCart | null {
   };
 }
 
-function hasPendingCartWork({ pending }: CartState): boolean {
-  return pending.lines.size > 0 || pending.note || pending.discountCodes.size > 0;
+function hasPendingCartWork({ pending, revalidating }: CartState): boolean {
+  const hasPendingCost = pending.cost ?? (pending.lines.size > 0 || pending.discountCodes.size > 0);
+  return revalidating === true || hasPendingCost || pending.note;
 }
 
 function getCartUpdatedAt(cart: CartData): string {

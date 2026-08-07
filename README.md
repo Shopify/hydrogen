@@ -82,13 +82,13 @@ It picks up the installed skills and wires commerce into your app:
 Hydrogen skills detected — setting up your storefront.
 
   ✓ Detected Next.js (App Router)
-  ✓ Storefront API client            app/lib/storefront.ts
+  ✓ Storefront API client            lib/storefront.ts
   ✓ Request handlers (cart, SFAPI)   proxy.ts
   ✓ Home, collection & product pages app/…
-  ✓ Cart drawer + line‑item forms    app/components/…
-  ✓ First‑party analytics + consent  app/lib/analytics.ts
+  ✓ Cart drawer + line‑item forms    components/…
+  ✓ First‑party analytics + consent  lib/analytics.ts
 
-Set PUBLIC_STORE_DOMAIN and PRIVATE_STOREFRONT_API_TOKEN, then run your dev server.
+Set NEXT_PUBLIC_STORE_DOMAIN and PRIVATE_STOREFRONT_API_TOKEN, then run your dev server.
 ```
 
 You'll need Storefront API access for the store you're connecting — create one and manage credentials through the [Headless channel](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/manage-headless-channels).
@@ -113,7 +113,7 @@ const storefront = createStorefrontClient({
     i18n: { country: "US", language: "EN" },
   }),
   config: {
-    storeDomain: process.env.PUBLIC_STORE_DOMAIN,
+    storeDomain: process.env.NEXT_PUBLIC_STORE_DOMAIN,
     privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN,
   },
 });

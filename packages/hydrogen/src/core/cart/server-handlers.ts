@@ -1,15 +1,16 @@
 import type { GraphQLFormattedError, StorefrontClient } from "../../client";
 import type { AnyStorefrontQueryString } from "../../graphql";
-import { createProxyResponseHeaders } from "../interceptors/proxy";
+import { applyPrivateResponseCacheHeaders } from "../headers";
 import { getLogger } from "../logging";
+import { createProxyResponseHeaders } from "../request-routing/interceptors/proxy";
 import type {
   CallableRouteHandler,
   ShopifyRouteError,
   ShopifyRouteErrorResult,
   ShopifyRouteJsonResult,
   ShopifyRouteRedirectResult,
-} from "../route-handlers";
-import { createCallableRouteHandler } from "../route-handlers";
+} from "../request-routing/registered-routes";
+import { createCallableRouteHandler } from "../request-routing/registered-routes";
 import { parseCartRequest } from "./actions";
 import type { CartAction, CartLineAddInput } from "./actions";
 import { getCartIdFromCookie, createCartCookie } from "./cookie";
@@ -142,6 +143,7 @@ async function handleGet(
   logCartErrors(result.errors);
   const data = { cart: result.cart, ...(result.errors && { errors: result.errors }) };
   const headers = createProxyResponseHeaders(result.headers);
+  applyPrivateResponseCacheHeaders(headers);
 
   return {
     type: "json",

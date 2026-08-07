@@ -34,14 +34,14 @@ export async function proxy(request: NextRequest) {
     type: "private",
     requestContext,
     config: {
-      storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
+      storeDomain: process.env.NEXT_PUBLIC_STORE_DOMAIN!,
       privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
       buyerIp,
     },
   });
   const sessionManager = await createSessionManager(request);
 
-  const shopifyRoute = await handleShopifyRoutes({
+  const shopifyRoute = handleShopifyRoutes({
     request,
     requestContext,
     sessionManager,
@@ -61,6 +61,8 @@ export const config = {
 };
 ```
 
+The proxy returns a matched promise directly so Next owns any rejection. If the app adds a request-level `try/catch` that returns a custom error response, use `return await shopifyRoute` inside that boundary after the truthy check.
+
 Use `proxy.ts` for Next 16+. Older Next projects may still use `middleware.ts`, but keep the file name and exported function name matched to the installed Next version.
 
 Keep `handleShopifyRoutes` broad inside `proxy.ts`. Do not manually whitelist Hydrogen-owned path regexes before calling it; `handleShopifyRoutes` already no-ops for unmatched app routes, and manually duplicating its route list goes stale when Hydrogen adds handlers. The matcher should exclude static Next assets, not app pages.
@@ -73,12 +75,25 @@ Next docs warn that Proxy is not for slow data fetching or full session manageme
 import { handleShopifyRedirects } from "@shopify/hydrogen";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
+import { Suspense } from "react";
 
-import { getStorefrontClient } from "./lib/storefront";
+import { getStorefrontClient } from "@/lib/storefront";
+import { routeTemplates } from "@/lib/route-templates";
 
-export const dynamic = "force-dynamic";
+export default function NotFound() {
+  return (
+    <div>
+      <Suspense fallback={null}>
+        <RedirectChecker />
+      </Suspense>
+      <h1>404</h1>
+    </div>
+  );
+}
 
-export default async function NotFound() {
+async function RedirectChecker() {
+  await connection();
   const url = (await headers()).get("x-storefront-url");
 
   if (url) {
@@ -91,17 +106,17 @@ export default async function NotFound() {
     if (location) redirect(location);
   }
 
-  return <main><h1>404</h1></main>;
+  return null;
 }
 ```
 
-`force-dynamic` is mandatory because `headers()` and `redirect()` are per-request APIs.
+With `cacheComponents: true`, keep request-time work in an async child under `<Suspense>` and call `connection()` before `headers()`. Do not add `export const dynamic` / `fetchCache` / `revalidate` route config under Cache Components.
 
 ## Storefront Client
 
 In server components, use a cached server-only factory that reads `headers()` and creates a private request-scoped client. In `proxy.ts`, use the actual `NextRequest` so URL, signal, and forwarded headers are preserved. `requestContext.getForwardedRequestHeaders()` carries the original URL through `x-storefront-url` for `not-found.tsx`.
 
-When a Server Component or layout reads Customer Account session state, it must opt out of static caching. `await cookies()` is a request-time API and opts the route into dynamic rendering, but prefer making account/session boundaries explicit with `export const dynamic = "force-dynamic"` and `export const fetchCache = "force-no-store"` on pages or layouts that render account-derived UI. For smaller server-only helpers, call Next's no-store API before session-derived work if the route segment is not already dynamic.
+When a Server Component or layout reads Customer Account session state under Cache Components, put that read below an explicit dynamic boundary (`connection()` + `<Suspense>`). Do not rely on static route-segment config that Cache Components rejects.
 
 ## Customer Account API
 
