@@ -33,10 +33,16 @@ export function matchStandardRouteUrl({
   const pathname = stripI18nPathPrefix(stripTrailingSlash(parsedUrl.pathname), pathPrefix);
   if (pathname === "/") return { route: "index", pageTemplateName: "index", params: {} };
 
-  return matchStandardRouteTemplates(parsedUrl.pathname, pathPrefix, (route) => [
-    routeTemplates[route],
-    ...DEFAULT_STANDARD_ROUTES[route],
-  ]);
+  return (
+    matchStandardRouteTemplates(parsedUrl.pathname, pathPrefix, (route) => [
+      routeTemplates[route],
+    ]) ??
+    matchStandardRouteTemplates(
+      parsedUrl.pathname,
+      pathPrefix,
+      (route) => DEFAULT_STANDARD_ROUTES[route],
+    )
+  );
 }
 
 /**

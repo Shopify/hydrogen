@@ -110,6 +110,18 @@ describe("standard routes", () => {
     });
   });
 
+  it("prefers configured route templates over defaults for other routes", () => {
+    const routeTemplates = createShopifyRouteTemplates({
+      policy: "/pages/:policyHandle",
+    });
+
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/pages/privacy-policy" })).toEqual({
+      route: "policy",
+      pageTemplateName: "policy",
+      params: { policyHandle: "privacy-policy" },
+    });
+  });
+
   it("matches the root as the index route", () => {
     const routeTemplates = createShopifyRouteTemplates({});
 
