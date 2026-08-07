@@ -8,7 +8,7 @@ export function prependPathPrefix(pathname: string, pathPrefix: string | undefin
 export function normalizePathPrefix(pathPrefix: string | undefined): string {
   if (!pathPrefix) return "";
 
-  const trimmedPathPrefix = pathPrefix.replace(/^\/+|\/+$/g, "");
+  const trimmedPathPrefix = pathPrefix.trim().replace(/^\/+|\/+$/g, "");
   return trimmedPathPrefix ? `/${trimmedPathPrefix}` : "";
 }
 

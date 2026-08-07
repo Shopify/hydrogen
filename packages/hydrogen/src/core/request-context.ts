@@ -22,6 +22,7 @@ import {
   SHOPIFY_VISIT_TOKEN_HEADER,
   STOREFRONT_URL_HEADER,
 } from "./headers";
+import { normalizePathPrefix } from "./standard-routes/path";
 
 const UNIQUE_TOKEN_MARKER = "_y";
 const VISIT_TOKEN_MARKER = "_s";
@@ -247,11 +248,6 @@ function normalizeI18n<I18n extends I18nConfig>(i18n: I18n): NormalizedI18nConfi
     ...i18n,
     pathPrefix: normalizePathPrefix(i18n.pathPrefix),
   } as NormalizedI18nConfig<I18n>;
-}
-
-function normalizePathPrefix(pathPrefix: string | undefined): string {
-  const normalized = pathPrefix?.trim().replace(/^\/+/, "").replace(/\/+$/, "") ?? "";
-  return normalized ? `/${normalized}` : "";
 }
 
 function applyStorefrontRequestHeaders(context: Context, headers: Headers): void {
