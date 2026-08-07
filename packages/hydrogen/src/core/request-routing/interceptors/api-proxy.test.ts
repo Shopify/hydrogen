@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SHOPIFY_STOREFRONT_ORIGIN_HEADER } from "../../headers";
+import { configureLogging, resetLoggingForTests } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
-import { assert } from "../../test-utils";
+import { assert, createTestLogger } from "../../test-utils";
 import { handleShopifyApiProxy as handleShopifyApiProxyImpl } from "./api-proxy";
 
 const STORE_URL = "https://test-store.myshopify.com";
@@ -36,6 +37,10 @@ function handleShopifyApiProxy(request: Request) {
 describe("handleShopifyApiProxy", () => {
   let mockFetch: ReturnType<typeof vi.fn>;
 
+  afterEach(() => {
+    resetLoggingForTests();
+  });
+
   beforeEach(() => {
     mockFetch = vi.fn().mockResolvedValue(new Response("ok"));
     vi.stubGlobal("fetch", mockFetch);
@@ -66,12 +71,38 @@ describe("handleShopifyApiProxy", () => {
     expect(call[0].href).toBe("https://test-store.myshopify.com/");
   });
 
-  it("rewrites the cart.js endpoint to cart.json", async () => {
-    await handleShopifyApiProxy(new Request("https://my-app.com/__shopify/cart.js?locale=en"));
+  it.each([
+    ["cart.js", "cart.json"],
+    ["products/snowboard.js", "products/snowboard.json"],
+    ["variants/123.js", "variants/123.json"],
+  ])("rewrites the %s endpoint to %s", async (requestPath, upstreamPath) => {
+    await handleShopifyApiProxy(
+      new Request(`https://my-app.com/__shopify/${requestPath}?locale=en`),
+    );
 
     const call = mockFetch.mock.calls[0];
     assert(call, "expected fetch to be called");
-    expect(call[0].href).toBe("https://test-store.myshopify.com/cart.json?locale=en");
+    expect(call[0].href).toBe(`https://test-store.myshopify.com/${upstreamPath}?locale=en`);
+  });
+
+  it("returns 500 for unsupported CDN proxy requests", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
+    const responsePromise = handleShopifyApiProxy(
+      new Request("https://my-app.com/__shopify/cdn/assets/theme.js?version=1"),
+    );
+
+    expect(responsePromise).toBeInstanceOf(Promise);
+    const response = await responsePromise;
+    assert(response, "expected proxy to return an error response");
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: "CDN proxy is not supported." });
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith("request failed", {
+      scope: "shopify-api-proxy",
+      error: expect.objectContaining({ message: "CDN proxy is not supported." }),
+    });
   });
 
   it("keeps repeated slashes in the path from changing the upstream origin", async () => {
