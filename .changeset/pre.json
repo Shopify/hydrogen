@@ -1,5 +1,18 @@
 {
   "mode": "pre",
   "tag": "preview",
-  "changesets": []
+  "changesets": [
+    "breezy-pandas-repeat",
+    "calm-cats-context",
+    "calm-routes-proxy",
+    "cart-transaction-model",
+    "fast-routes-match",
+    "fresh-pages-navigate",
+    "fuzzy-wolves-signal",
+    "hydrogen-error-reporting-policy",
+    "template-source-path",
+    "vue-shopify-scripts-optional-routes",
+    "vue-shopify-scripts-props",
+    "vue-use-cart-analytics"
+  ]
 }
