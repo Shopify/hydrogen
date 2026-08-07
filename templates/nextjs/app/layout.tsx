@@ -1,78 +1,75 @@
-import { gql } from "@shopify/hydrogen";
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
-
-import { CartDrawer } from "./components/CartDrawer";
-import { ConsentBanner } from "./components/ConsentBanner";
-import { Footer } from "./components/Footer";
-import { Header } from "./components/Header";
-import { Providers } from "./components/Providers";
-import { ShopifyScriptsWithNavigation } from "./components/ShopifyScriptsWithNavigation";
-import { cartHandlers } from "./lib/cart-handlers";
-import { analyticsConsent, analyticsShop } from "./lib/shop";
-import { getStorefrontClient } from "./lib/storefront";
 
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "CORE Storefront",
-  description: "A Storefront Kit example built with Next.js.",
-};
+import { Suspense } from "react";
 
-const NAV_COLLECTIONS_QUERY = gql(`
-  query NavCollections {
-    collections(first: 5) {
-      nodes {
-        handle
-        title
-      }
-    }
-  }
-`);
+import { ShopifyScriptsWithNavigation } from "@/components/ShopifyScriptsWithNavigation";
+import { getAnalyticsShop } from "@/lib/analytics-shop";
+import { defaultI18n, shop } from "@/lib/config";
+import { content } from "@/lib/content";
+import { SITE_ORIGIN } from "@/lib/site";
 
-const FALLBACK_COLLECTIONS = [{ handle: "men", title: "Men" }];
+import { AppShell } from "./app-shell";
 
-export default async function RootLayout({ children }: { children: ReactNode }) {
-  const storefrontClient = await getStorefrontClient();
-  const [{ data: cartData }, navResult] = await Promise.all([
-    cartHandlers.get({ storefrontClient }),
-    storefrontClient.graphql(NAV_COLLECTIONS_QUERY),
-  ]);
-  const navCollections = navResult.data?.collections.nodes.length
-    ? navResult.data.collections.nodes
-    : FALLBACK_COLLECTIONS;
+/**
+ * Root layout. With `cacheComponents: true`,
+ * the layout is a **static shell** — it prerenders the `<html>`/`<body>` +
+ * announcement bar, then wraps the per-request (dynamic) `AppShell` (cart seed
+ * + analytics shop + chrome) in `<Suspense>` so the dynamic parts stream while
+ * the static shell serves immediately. `AppShell` calls `connection()` to opt
+ * the subtree into dynamic rendering.
+ *
+ * `metadataBase` is set here for canonical/OG URL resolution (F10). The `<title>`
+ * template uses the live `shop.name` (via `getAnalyticsShop`, which is cached
+ * for hours) so the browser tab/OG titles match the header brand (N28) instead
+ * of a hardcoded "CORE".
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const { shopName } = await getAnalyticsShop();
+  return {
+    metadataBase: new URL(SITE_ORIGIN),
+    title: {
+      default: `${shopName} — ${content.home.hero.heading}`,
+      template: `%s — ${shopName}`,
+    },
+    description: content.home.hero.subtitle,
+    icons: {
+      icon: { url: "/favicon.svg", type: "image/svg+xml" },
+    },
+  };
+}
 
+// `<html lang>` is derived from the i18n config source of truth
+// (`defaultI18n.language`) rather than a hardcoded literal, so
+// a store language change flows here automatically (N27/R20). Kept as a static
+// value (not request-scoped) to preserve the static shell; a multi-market store
+// would inject the resolved locale per request via
+// middleware/parent server component instead.
+const htmlLang = defaultI18n.language.toLowerCase();
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang={htmlLang}>
       <head>
-        <ShopifyScriptsWithNavigation />
+        <ShopifyScriptsWithNavigation shop={shop} />
       </head>
       <body className="bg-surface text-on-surface font-body flex min-h-svh flex-col antialiased">
-        <a
-          href="#main-content"
-          className="focus-visible:bg-interactive focus-visible:text-interactive-text sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:start-4 focus-visible:top-4 focus-visible:z-50 focus-visible:rounded focus-visible:px-4 focus-visible:py-2"
-        >
-          Skip to content
-        </a>
         <div
           role="region"
-          aria-label="Announcement"
+          aria-label={content.announcement.label}
           className="bg-on-surface px-margin py-2.5 text-center"
         >
-          <p className="type-body-sm text-surface">Free shipping on orders over $50</p>
+          <p className="type-body-sm text-surface">{content.announcement.text}</p>
         </div>
-        <Providers
-          cart={cartData}
-          analyticsShop={analyticsShop}
-          analyticsConsent={analyticsConsent}
-          enableTestTap={process.env.MOCK_SHOP === "1"}
+
+        <Suspense
+          fallback={
+            <div className="bg-surface text-on-surface-secondary flex-1" aria-busy="true" />
+          }
         >
-          <Header collections={navCollections} />
-          {children}
-          <Footer />
-          <CartDrawer />
-          <ConsentBanner forceShow={process.env.MOCK_SHOP === "1"} />
-        </Providers>
+          <AppShell>{children}</AppShell>
+        </Suspense>
       </body>
     </html>
   );

@@ -62,6 +62,18 @@ export function extractHeaders(
   }, []);
 }
 
+export function applyPrivateResponseCacheHeaders(headers: Headers): void {
+  headers.set(CACHE_CONTROL_HEADER, "private, no-store, max-age=0, must-revalidate");
+  for (const header of Array.from(headers.keys())) {
+    if (
+      /^(?:.+-)?cdn-cache-control$/i.test(header) ||
+      header.toLowerCase() === SURROGATE_CONTROL_HEADER.toLowerCase()
+    ) {
+      headers.delete(header);
+    }
+  }
+}
+
 const COMMON_PROXY_HEADER_ALLOWLIST = defineHeaderList(
   "accept",
   "accept-encoding",

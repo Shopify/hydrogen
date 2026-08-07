@@ -186,7 +186,7 @@ Expected: a redirect whose `location` header points at Shopify's hosted login, n
 
 - Page view fires on initial load and client navigations.
 - Product/collection/search/cart view events fire once per route data change.
-- Cart tracking is wired once via `trackCartAnalytics(cartStore)` (React/Vue: `useCartAnalytics()`), cart delta events fire on confirmed cart data changes, and the cart query includes `updatedAt`.
+- Cart tracking is wired once per cart store lifecycle via `trackCartAnalytics(cartStore)` (React/Vue: `useCartAnalytics()`), cart delta events fire on confirmed cart data changes, and the cart query includes `updatedAt`.
 - No browser module reads private env variables.
 - Analytics destinations only receive events after Shopify Customer Privacy allows analytics processing.
 

@@ -642,7 +642,7 @@ describe("useCart pending state", () => {
     const mockStore = createMockStore();
     mockStore.setState(
       makeCartState({
-        pending: { lines: new Set(["line-1"]), note: false, discountCodes: new Set() },
+        pending: { lines: new Set(["line-1"]), note: false, discountCodes: new Set(), cost: true },
       }),
     );
     vi.mocked(createCartStore).mockImplementation(() => mockStore);
@@ -664,7 +664,7 @@ describe("useCart pending state", () => {
     const mockStore = createMockStore();
     mockStore.setState(
       makeCartState({
-        pending: { lines: new Set(), note: true, discountCodes: new Set() },
+        pending: { lines: new Set(), note: true, discountCodes: new Set(), cost: false },
       }),
     );
     vi.mocked(createCartStore).mockImplementation(() => mockStore);
@@ -682,7 +682,7 @@ describe("useCart pending state", () => {
     const mockStore = createMockStore();
     mockStore.setState(
       makeCartState({
-        pending: { lines: new Set(), note: false, discountCodes: new Set(["SAVE10"]) },
+        pending: { lines: new Set(), note: false, discountCodes: new Set(["SAVE10"]), cost: true },
       }),
     );
     vi.mocked(createCartStore).mockImplementation(() => mockStore);
@@ -694,6 +694,24 @@ describe("useCart pending state", () => {
         { "data-testid": "result" },
         pendingCodes.has("SAVE10") ? "yes" : "no",
       );
+    }
+
+    render(createElement(CartProvider, null, createElement(Consumer)));
+    expect(screen.getByTestId("result").textContent).toBe("yes");
+  });
+
+  it("useCart(s => s.pending.cost) returns pending cost boolean", () => {
+    const mockStore = createMockStore();
+    mockStore.setState(
+      makeCartState({
+        pending: { lines: new Set(), note: false, discountCodes: new Set(), cost: true },
+      }),
+    );
+    vi.mocked(createCartStore).mockImplementation(() => mockStore);
+
+    function Consumer() {
+      const pendingCost = useCart((s) => s.pending.cost);
+      return createElement("span", { "data-testid": "result" }, pendingCost ? "yes" : "no");
     }
 
     render(createElement(CartProvider, null, createElement(Consumer)));

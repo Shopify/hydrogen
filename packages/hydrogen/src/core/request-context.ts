@@ -7,7 +7,7 @@ import type {
   LanguageCode as StorefrontLanguageCode,
 } from "../graphql/generated/storefront-api-types";
 import {
-  CACHE_CONTROL_HEADER,
+  applyPrivateResponseCacheHeaders,
   REQUEST_GROUP_ID_HEADER,
   SERVER_TIMING_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
@@ -15,11 +15,7 @@ import {
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
   STOREFRONT_URL_HEADER,
-  SURROGATE_CONTROL_HEADER,
 } from "./headers";
-
-const PRIVATE_RESPONSE_CACHE_CONTROL = "private, no-store, max-age=0, must-revalidate";
-const CDN_CACHE_CONTROL_HEADER_RE = /^(?:.+-)?cdn-cache-control$/i;
 
 const UNIQUE_TOKEN_MARKER = "_y";
 const VISIT_TOKEN_MARKER = "_s";
@@ -183,7 +179,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       }
 
       if (personalizedResponseReason) {
-        applyPersonalizedResponseCacheHeaders(headers);
+        applyPrivateResponseCacheHeaders(headers);
       }
 
       // Generated fallback tokens are only for document navigation bootstrap.
@@ -199,18 +195,6 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       }
     },
   } as ShopifyRequestContext<I18n>;
-}
-
-function applyPersonalizedResponseCacheHeaders(headers: Headers): void {
-  headers.set(CACHE_CONTROL_HEADER, PRIVATE_RESPONSE_CACHE_CONTROL);
-  for (const header of Array.from(headers.keys())) {
-    if (
-      CDN_CACHE_CONTROL_HEADER_RE.test(header) ||
-      header.toLowerCase() === SURROGATE_CONTROL_HEADER.toLowerCase()
-    ) {
-      headers.delete(header);
-    }
-  }
 }
 
 function normalizeI18n<I18n extends I18nConfig>(i18n: I18n): NormalizedI18nConfig<I18n> {

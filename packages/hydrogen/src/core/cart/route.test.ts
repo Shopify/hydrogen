@@ -278,6 +278,32 @@ describe("createCartServerHandlers", () => {
       expect(body.cart).toEqual(MOCK_CART);
     });
 
+    it("prevents shared caches from storing cart responses", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse(
+          { cart: MOCK_CART },
+          {
+            "cache-control": "public, max-age=600",
+            "cdn-cache-control": "public, s-maxage=600",
+            "cloudflare-cdn-cache-control": "public, s-maxage=600",
+            "netlify-cdn-cache-control": "public, s-maxage=600",
+            "surrogate-control": "max-age=600",
+          },
+        ),
+      );
+
+      const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
+
+      assert(result, "expected a response");
+      expect(result.headers.get("cache-control")).toBe(
+        "private, no-store, max-age=0, must-revalidate",
+      );
+      expect(result.headers.get("cdn-cache-control")).toBeNull();
+      expect(result.headers.get("cloudflare-cdn-cache-control")).toBeNull();
+      expect(result.headers.get("netlify-cdn-cache-control")).toBeNull();
+      expect(result.headers.get("surrogate-control")).toBeNull();
+    });
+
     it("forwards SFAPI server-timing when cart cookie is present", async () => {
       mockFetch.mockResolvedValueOnce(
         mockGqlResponse(

@@ -1,5 +1,6 @@
 import type { GraphQLFormattedError, StorefrontClient } from "../../client";
 import type { AnyStorefrontQueryString } from "../../graphql";
+import { applyPrivateResponseCacheHeaders } from "../headers";
 import { getLogger } from "../logging";
 import { createProxyResponseHeaders } from "../request-routing/interceptors/proxy";
 import type {
@@ -142,6 +143,7 @@ async function handleGet(
   logCartErrors(result.errors);
   const data = { cart: result.cart, ...(result.errors && { errors: result.errors }) };
   const headers = createProxyResponseHeaders(result.headers);
+  applyPrivateResponseCacheHeaders(headers);
 
   return {
     type: "json",

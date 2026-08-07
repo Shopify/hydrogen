@@ -191,7 +191,7 @@ function AddToCart({ product }: { product: ProductData }) {
   const addable = canAddToCart(product, options);
 
   return (
-    <form {...formProps({ afterSubmit: openCartDrawer })}>
+    <form {...formProps({ beforeSubmit: openCartDrawer })}>
       <input type="hidden" {...register("merchandiseId", {})} />
       <input {...register("quantity", { value: 1 })} />
       <button {...register("addToCart", {})} disabled={!addable || pending}>
