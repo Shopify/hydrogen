@@ -14,6 +14,22 @@ This reference covers React Router, SvelteKit, Astro, SolidStart, and unknown se
 
 Use this when one server hook can both return a `Response` before routing and inspect the resolved response status after routing. SvelteKit and Astro fit this shape.
 
+The example lets the framework handle rejected route promises, so it returns a matched promise directly. If the app instead wraps the request lifecycle in a `try/catch` that creates an error `Response`, await only after the truthy check so that boundary also catches a matched route rejection:
+
+```ts
+try {
+  const shopifyRoute = handleShopifyRoutes(options);
+  if (shopifyRoute) return await shopifyRoute;
+
+  // Continue framework routing.
+} catch (error) {
+  logger.error(error);
+  return new Response("Unexpected error", { status: 500 });
+}
+```
+
+Prefer this over adding `.catch()` only to the returned promise: the request-level boundary also handles synchronous setup and validation errors.
+
 Resolve `buyerIp` with the app's trusted deployment header before creating the private client. Use the buyer-IP guidance from `hydrogen-storefront-client`.
 
 ```ts
@@ -47,7 +63,7 @@ export async function handleRequest(request: Request, next: () => Promise<Respon
     },
   });
 
-  const shopifyRoute = await handleShopifyRoutes({
+  const shopifyRoute = handleShopifyRoutes({
     request,
     requestContext,
     sessionManager,
@@ -111,7 +127,7 @@ export const middleware: Route.MiddlewareFunction[] = [
       },
     });
 
-    const shopifyRoute = await handleShopifyRoutes({
+    const shopifyRoute = handleShopifyRoutes({
       request,
       requestContext,
       sessionManager,
@@ -143,7 +159,7 @@ SolidStart middleware can short-circuit before routing, but cannot reliably obse
 In middleware, create an app-owned request-scoped `sessionManager` before calling `handleShopifyRoutes`:
 
 ```ts
-const shopifyRoute = await handleShopifyRoutes({
+const shopifyRoute = handleShopifyRoutes({
   request: event.request,
   requestContext,
   sessionManager,

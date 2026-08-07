@@ -1,16 +1,26 @@
-import type { StorefrontClient } from "../../client";
-import type { GraphiQLOptions } from "../types";
+import type { StorefrontClient } from "../../../client";
+import type { GraphiQLOptions } from "../../types";
+import type { HydrogenRouteInterceptor } from "../route-types";
 
 const DEV_SCHEMA_FETCH_TIMEOUT_MS = 10_000;
 
-export async function handleGraphiql(
-  request: Request,
-  storefrontClient: StorefrontClient,
-  graphiqlOptions?: GraphiQLOptions,
-): Promise<Response | null> {
-  const url = new URL(request.url);
+type GraphiqlRouteOptions = {
+  graphiql?: GraphiQLOptions;
+};
+
+export const handleGraphiql: HydrogenRouteInterceptor<GraphiqlRouteOptions> = (
+  url,
+  { request, storefrontClient, graphiql: graphiqlOptions },
+) => {
   if (request.method !== "GET" || url.pathname !== "/graphiql") return null;
 
+  return createGraphiqlResponse(storefrontClient, graphiqlOptions);
+};
+
+async function createGraphiqlResponse(
+  storefrontClient: StorefrontClient,
+  graphiqlOptions?: GraphiQLOptions,
+): Promise<Response> {
   const schemas: Record<
     string,
     {

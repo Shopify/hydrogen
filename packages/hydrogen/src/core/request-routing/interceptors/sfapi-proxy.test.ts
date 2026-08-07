@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
 import {
-  createShopifyRequestContext,
   SHOPIFY_CLIENT_IP_HEADER,
   STOREFRONT_BUYER_IP_HEADER,
   STOREFRONT_PRIVATE_TOKEN_HEADER,
-} from "../headers";
-import { configureLogging, resetLoggingForTests } from "../logging";
-import { assert, createTestLogger } from "../test-utils";
+} from "../../headers";
+import { configureLogging, resetLoggingForTests } from "../../logging";
+import { createShopifyRequestContext } from "../../request-context";
+import { assert, createTestLogger } from "../../test-utils";
 import { handleSfapiProxy as handleSfapiProxyImpl } from "./sfapi-proxy";
 
 const defaultStoreUrl = "https://test-store.myshopify.com";
@@ -30,7 +30,7 @@ function handleSfapiProxy(request: Request, storeUrl = defaultStoreUrl, buyerIp 
     i18n: { country: "US", language: "EN" },
     buyerIp,
   });
-  return handleSfapiProxyImpl({
+  return handleSfapiProxyImpl(new URL(request.url), {
     request,
     requestContext,
     sessionManager: createTestSessionManager(request),
@@ -67,7 +67,7 @@ function handleSfapiProxyWithClientType(
     type === "public"
       ? { ...clientBase, type: "public" as const }
       : { ...clientBase, type: "private_no_buyer_context" as const };
-  return handleSfapiProxyImpl({
+  return handleSfapiProxyImpl(new URL(request.url), {
     request,
     requestContext,
     sessionManager: createTestSessionManager(request),
@@ -80,7 +80,7 @@ function handlePrivateSfapiProxyWithoutBuyerContext(request: Request, storeUrl =
     request,
     i18n: { country: "US", language: "EN" },
   });
-  return handleSfapiProxyImpl({
+  return handleSfapiProxyImpl(new URL(request.url), {
     request,
     requestContext,
     sessionManager: createTestSessionManager(request),
@@ -127,8 +127,8 @@ describe("handleSfapiProxy", () => {
     vi.stubGlobal("fetch", mockFetch);
   });
 
-  it("returns null for non-SFAPI URLs", async () => {
-    const result = await handleSfapiProxy(createRequest("/some-page"), defaultStoreUrl);
+  it("returns null synchronously for non-SFAPI URLs", () => {
+    const result = handleSfapiProxy(createRequest("/some-page"), defaultStoreUrl);
     expect(result).toBeNull();
     expect(mockFetch).not.toHaveBeenCalled();
   });
@@ -332,12 +332,10 @@ describe("handleSfapiProxy", () => {
     expect(headers.get(SHOPIFY_CLIENT_IP_HEADER)).toBeNull();
   });
 
-  it("requires request context buyer IP for private client proxy requests", async () => {
-    await expect(
+  it("requires request context buyer IP for private client proxy requests", () => {
+    expect(() =>
       handlePrivateSfapiProxyWithoutBuyerContext(createRequest("/api/2025-01/graphql.json")),
-    ).rejects.toThrow(
-      "requestContext.buyerIp is required for private Storefront API proxy requests",
-    );
+    ).toThrow("requestContext.buyerIp is required for private Storefront API proxy requests");
     expect(mockFetch).not.toHaveBeenCalled();
   });
 

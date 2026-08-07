@@ -1,6 +1,6 @@
 import type { StorefrontClient } from "../../client";
 import type { AnyStorefrontQueryString, StorefrontQueryString } from "../../graphql";
-import type { ShopifyRequestContext } from "../headers";
+import type { ShopifyRequestContext } from "../request-context";
 import { getCartIdFromCookie } from "./cookie";
 import { cartQueries } from "./queries";
 import type { CartData } from "./state";

@@ -1,5 +1,5 @@
 import type { ShopifyGlobal } from "../../globals";
-import type { I18nConfig } from "../headers";
+import type { I18nConfig } from "../request-context";
 import {
   matchStandardRouteUrl,
   resolveStandardRouteUrl,

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { createStorefrontClient } from "../client/client";
+import { createStorefrontClient } from "../../client/client";
+import { createShopifyRequestContext } from "../request-context";
+import { assert } from "../test-utils";
 import { handleShopifyRoutesDev as handleShopifyRoutesDevImpl } from "./handle-shopify-routes.development";
-import { createShopifyRequestContext } from "./headers";
-import { assert } from "./test-utils";
 
 const defaultConfig = {
   storeDomain: "test-store.myshopify.com",
@@ -78,5 +78,13 @@ describe("handleShopifyRoutesDev", () => {
 
     assert(result, "expected MCP proxy response");
     expect(result.status).toBe(200);
+  });
+
+  it("returns null synchronously for unrelated routes", () => {
+    const result = handleShopifyRoutesDev({
+      request: new Request("https://my-app.com/products/snowboard"),
+    });
+
+    expect(result).toBeNull();
   });
 });

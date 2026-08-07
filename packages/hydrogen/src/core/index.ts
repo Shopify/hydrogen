@@ -1,9 +1,9 @@
-export type { RedirectOptions } from "./handle-shopify-redirects";
+export type { RedirectOptions } from "./request-routing/handle-shopify-redirects";
 export { createShopifyRouteTemplates } from "./standard-routes/index";
 export type { ShopifyRouteTemplates } from "./standard-routes/index";
-export { handleShopifyRedirects } from "./handle-shopify-redirects";
-export { handleShopifyRoutes } from "./handle-shopify-routes";
-export { createShopifyRouteHandler } from "./route-handlers";
+export { handleShopifyRedirects } from "./request-routing/handle-shopify-redirects";
+export { handleShopifyRoutes } from "./request-routing/handle-shopify-routes";
+export { createShopifyRouteHandler } from "./request-routing/registered-routes";
 export type {
   CallableRouteHandler,
   ShopifyRouteError,
@@ -14,14 +14,14 @@ export type {
   ShopifyRouteHandlerResult,
   ShopifyRouteJsonResult,
   ShopifyRouteRedirectResult,
-} from "./route-handlers";
+} from "./request-routing/registered-routes";
 export { createStorefrontClient } from "../client/client";
-export { createShopifyRequestContext } from "./headers";
+export { createShopifyRequestContext } from "./request-context";
 export { Cache, createFetchWithCache, createRunWithCache } from "./cache";
 export type { CacheInstance, CacheOptions, CachingStrategy } from "./cache";
 export { StorefrontApiError, StorefrontTimeoutError } from "../client/errors";
 export { gql } from "../graphql";
-export type { I18nConfig, ShopifyRequestContext } from "./headers";
+export type { I18nConfig, ShopifyRequestContext } from "./request-context";
 export type { AnyStorefrontQueryString, StorefrontQueryString } from "../graphql";
 export type { InferResult, InferVariables } from "../graphql";
 export type {

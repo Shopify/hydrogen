@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { assert } from "../test-utils";
+import { assert } from "../../test-utils";
 import { handleQueryParamRedirect } from "./query-param-redirect";
 
 describe("handleQueryParamRedirect", () => {

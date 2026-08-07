@@ -1,9 +1,9 @@
-import type { PrivateStorefrontClient } from "../../client";
+import type { PrivateStorefrontClient } from "../../../client";
 import {
   getStandardRouteTarget,
   isStandardRouteSelfRedirect,
   type ShopifyRouteTemplates,
-} from "../standard-routes/index";
+} from "../../standard-routes/index";
 import { createRedirectLocation, createRedirectResponse } from "./url-redirects";
 
 export async function handleStandardRouteRedirects({
