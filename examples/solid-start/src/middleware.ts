@@ -47,7 +47,7 @@ export default createMiddleware({
       const sessionManager = await createCustomerSessionManager(event.request);
       const customerAccountClient = createRequestCustomerAccountClient(requestContext);
 
-      const kitRoute = await handleShopifyRoutes({
+      const kitRoute = handleShopifyRoutes({
         request: event.request,
         requestContext,
         sessionManager,

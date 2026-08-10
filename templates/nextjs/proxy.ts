@@ -63,7 +63,7 @@ export async function proxy(request: NextRequest) {
     ...(customerAccountsAvailable ? [getCustomerSessionHandlers()] : []),
   ];
 
-  const shopifyRoute = await handleShopifyRoutes({
+  const shopifyRoute = handleShopifyRoutes({
     request,
     requestContext,
     sessionManager,

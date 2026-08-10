@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
   const sessionManager = await createCustomerSessionManager(request);
   const customerAccountClient = createRequestCustomerAccountClient(requestContext);
 
-  const shopifyRoute = await handleShopifyRoutes({
+  const shopifyRoute = handleShopifyRoutes({
     request,
     requestContext,
     sessionManager,
@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
     handlers: [cartHandlers, predictiveSearchHandlers, customerSessionHandlers],
   });
   if (shopifyRoute) {
-    return sendWebResponse(event, shopifyRoute);
+    return sendWebResponse(event, await shopifyRoute);
   }
 
   event.context.shopifyRequestContext = requestContext;

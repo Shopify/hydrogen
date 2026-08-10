@@ -65,14 +65,14 @@ export default {
         postLogoutRedirectUri: "/",
       });
 
-      const shopifyRoute = await handleShopifyRoutes({
+      const shopifyRoute = handleShopifyRoutes({
         request: publicRequest,
         requestContext: shopifyRequestContext,
         sessionManager: customerSessionManager,
         storefrontClient,
         handlers: [cartHandlers, predictiveSearchHandlers, customerAccountHandlers],
       });
-      if (shopifyRoute) return shopifyRoute;
+      if (shopifyRoute) return await shopifyRoute;
 
       const routerContext = await createHydrogenRouterContext(
         publicRequest,

@@ -34,7 +34,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   const storefrontClient = createPrivateStorefrontClient(requestContext);
   const sessionManager = await createCustomerSessionManager(event.request);
 
-  const kitRoute = await handleShopifyRoutes({
+  const kitRoute = handleShopifyRoutes({
     request: event.request,
     requestContext,
     sessionManager,

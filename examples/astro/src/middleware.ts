@@ -35,7 +35,7 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
   const storefrontClient = createPrivateStorefrontClient(requestContext);
   const sessionManager = await createCustomerSessionManager(request);
 
-  const kitRoute = await handleShopifyRoutes({
+  const kitRoute = handleShopifyRoutes({
     request,
     requestContext,
     sessionManager,

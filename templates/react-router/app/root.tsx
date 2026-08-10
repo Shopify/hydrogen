@@ -71,14 +71,16 @@ export const middleware: Route.MiddlewareFunction[] = [
     const requestContext = storefrontClient.requestContext;
     const sessionManager = createRequestSessionManager(request);
 
-    const shopifyRoute = await handleShopifyRoutes({
+    const shopifyRoute = handleShopifyRoutes({
       request,
       requestContext,
       sessionManager,
       storefrontClient,
       handlers: [cartHandlers],
     });
-    if (shopifyRoute) return withStorefrontHeaders(shopifyRoute, requestContext);
+    if (shopifyRoute) {
+      return withStorefrontHeaders(await shopifyRoute, requestContext);
+    }
 
     context.set(storefrontClientContext, storefrontClient);
     context.set(storefrontRequestContext, requestContext);

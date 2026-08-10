@@ -34,14 +34,16 @@ export default {
       const requestContext = storefrontClient.requestContext;
       const sessionManager = createRequestSessionManager(request);
 
-      const shopifyRoute = await handleShopifyRoutes({
+      const shopifyRoute = handleShopifyRoutes({
         request,
         requestContext,
         sessionManager,
         storefrontClient,
         handlers: [cartHandlers],
       });
-      if (shopifyRoute) return withStorefrontHeaders(shopifyRoute, requestContext);
+      if (shopifyRoute) {
+        return withStorefrontHeaders(await shopifyRoute, requestContext);
+      }
 
       const method = request.method;
       if ((method === "GET" || method === "HEAD") && request.body) {
