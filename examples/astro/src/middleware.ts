@@ -55,9 +55,8 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
       routeTemplates,
       storefrontClient,
     });
-    if (redirect) {
-      return applyStorefrontResponseHeaders(requestContext, redirect);
-    }
+
+    if (redirect) return redirect;
   }
 
   return applyStorefrontResponseHeaders(requestContext, response);

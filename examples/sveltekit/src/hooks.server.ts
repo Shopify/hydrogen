@@ -54,9 +54,8 @@ export const handle: Handle = async ({ event, resolve }) => {
       routeTemplates,
       storefrontClient,
     });
-    if (redirect) {
-      return applyStorefrontResponseHeaders(requestContext, redirect);
-    }
+
+    if (redirect) return redirect;
   }
 
   return applyStorefrontResponseHeaders(requestContext, response);

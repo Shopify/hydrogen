@@ -64,7 +64,7 @@ Invoke the `hydrogen-storefront-client` skill to wire the Storefront API client 
 
 ## Install API Route Handlers
 
-Invoke the `hydrogen-request-handlers` skill to wire `handleShopifyRoutes` before routing, `handleShopifyRedirects` after a 404 or in the framework's catch-all route, and request-context response-header propagation.
+Invoke the `hydrogen-request-handlers` skill to wire `handleShopifyRoutes` before routing, `handleShopifyRedirects` after a 404 or in the framework's catch-all route, and request-context response-header propagation for custom and framework responses.
 
 ### Continue when
 

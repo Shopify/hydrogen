@@ -1,8 +1,4 @@
-import {
-  handleShopifyRedirects,
-  handleShopifyRoutes,
-  type ShopifyRequestContext,
-} from "@shopify/hydrogen";
+import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
 import { createRequestHandler, RouterContextProvider } from "react-router";
 import * as serverBuild from "virtual:react-router/server-build";
 
@@ -11,18 +7,6 @@ import { envContext } from "~/lib/env";
 import { routeTemplates } from "~/lib/route-templates";
 import { createRequestSessionManager } from "~/lib/session";
 import { createRequestStorefrontClient } from "~/lib/storefront";
-
-function withStorefrontHeaders(response: Response, requestContext: ShopifyRequestContext) {
-  try {
-    requestContext.applyResponseHeaders(response.headers);
-    return response;
-  } catch (error) {
-    if (!(error instanceof TypeError)) throw error;
-    const mutable = new Response(response.body, response);
-    requestContext.applyResponseHeaders(mutable.headers);
-    return mutable;
-  }
-}
 
 /**
  * Export a fetch handler in module format for Oxygen / mini-oxygen.
@@ -41,9 +25,8 @@ export default {
         storefrontClient,
         handlers: [cartHandlers],
       });
-      if (shopifyRoute) {
-        return withStorefrontHeaders(await shopifyRoute, requestContext);
-      }
+
+      if (shopifyRoute) return shopifyRoute;
 
       const method = request.method;
       if ((method === "GET" || method === "HEAD") && request.body) {
@@ -75,7 +58,8 @@ export default {
           storefrontClient,
           routeTemplates,
         });
-        if (redirect) return withStorefrontHeaders(redirect, requestContext);
+
+        if (redirect) return redirect;
       }
 
       return response;

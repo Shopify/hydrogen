@@ -120,9 +120,8 @@ export default {
           routeTemplates,
           storefrontClient,
         });
-        if (redirect) {
-          return finalizeHydrogenResponse(redirect, routerContext, shopifyRequestContext);
-        }
+
+        if (redirect) return redirect;
       }
 
       return response;

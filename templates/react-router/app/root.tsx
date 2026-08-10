@@ -1,9 +1,4 @@
-import {
-  handleShopifyRedirects,
-  handleShopifyRoutes,
-  gql,
-  type ShopifyRequestContext,
-} from "@shopify/hydrogen";
+import { handleShopifyRedirects, handleShopifyRoutes, gql } from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import type { ReactNode } from "react";
 import {
@@ -52,18 +47,6 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
 ];
 
-function withStorefrontHeaders(response: Response, requestContext: ShopifyRequestContext) {
-  try {
-    requestContext.applyResponseHeaders(response.headers);
-    return response;
-  } catch (error) {
-    if (!(error instanceof TypeError)) throw error;
-    const mutable = new Response(response.body, response);
-    requestContext.applyResponseHeaders(mutable.headers);
-    return mutable;
-  }
-}
-
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ context, request }, next) => {
     const env = context.get(envContext);
@@ -78,9 +61,8 @@ export const middleware: Route.MiddlewareFunction[] = [
       storefrontClient,
       handlers: [cartHandlers],
     });
-    if (shopifyRoute) {
-      return withStorefrontHeaders(await shopifyRoute, requestContext);
-    }
+
+    if (shopifyRoute) return shopifyRoute;
 
     context.set(storefrontClientContext, storefrontClient);
     context.set(storefrontRequestContext, requestContext);
@@ -92,10 +74,12 @@ export const middleware: Route.MiddlewareFunction[] = [
         storefrontClient,
         routeTemplates,
       });
-      if (redirect) return withStorefrontHeaders(redirect, requestContext);
+
+      if (redirect) return redirect;
     }
 
-    return withStorefrontHeaders(response, requestContext);
+    requestContext.applyResponseHeaders(response.headers);
+    return response;
   },
 ];
 
