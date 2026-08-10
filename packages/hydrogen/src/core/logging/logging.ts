@@ -95,10 +95,7 @@ export function resetLoggingForTests(): void {
  */
 type ScopedLogContext = Omit<LogContext, "scope"> & { scope?: never };
 
-export type ScopedLogger = Record<
-  LogSeverity,
-  (message: string, context?: ScopedLogContext) => void
->;
+type ScopedLogger = Record<LogSeverity, (message: string, context?: ScopedLogContext) => void>;
 
 function emit(scope: string, level: LogSeverity, message: string, context?: LogContext): void {
   if (!isLevelEnabled(level, state.level)) return;

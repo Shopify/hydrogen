@@ -1,4 +1,4 @@
-export interface Observable<T> {
+interface Observable<T> {
   readonly state: T;
   subscribe(fn: (state: T) => void): () => void;
   subscribe<S>(

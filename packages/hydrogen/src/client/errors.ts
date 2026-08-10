@@ -1,4 +1,4 @@
-export interface StorefrontApiErrorOptions {
+interface StorefrontApiErrorOptions {
   requestId?: string;
   status?: number;
   cause?: unknown;

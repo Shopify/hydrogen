@@ -119,7 +119,6 @@ export type CartViewPayload = CartPayload & UrlPayload & BasePayload;
 export type SearchViewPayload = SearchPayload & UrlPayload & BasePayload;
 export type CartUpdatePayload = CartChangePayload & BasePayload & OtherData;
 export type CartLineUpdatePayload = CartLinePayload & CartChangePayload & BasePayload & OtherData;
-export type CustomEventPayload = BasePayload & OtherData;
 
 export type EventPayloads =
   | PageViewPayload

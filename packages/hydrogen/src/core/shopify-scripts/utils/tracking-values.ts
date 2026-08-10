@@ -4,7 +4,7 @@
  * and the Performance API.
  */
 
-export type TrackingValues = {
+type TrackingValues = {
   uniqueToken: string;
   visitToken: string;
   consent: string;

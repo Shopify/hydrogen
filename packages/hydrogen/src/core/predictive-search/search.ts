@@ -56,7 +56,7 @@ export type QueryPredictiveSearchOptions<
   signal?: AbortSignal;
 };
 
-export type FetchPredictiveSearchResult<TQuery extends AnyStorefrontQueryString> = {
+type FetchPredictiveSearchResult<TQuery extends AnyStorefrontQueryString> = {
   data: PredictiveSearchDataForQuery<TQuery>;
   headers: Headers;
 };

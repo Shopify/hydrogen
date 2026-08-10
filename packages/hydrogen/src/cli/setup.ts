@@ -53,7 +53,7 @@ export type RunCommand = (
   options: { cwd: string },
 ) => Promise<void>;
 
-export interface SetupHydrogenOptions {
+interface SetupHydrogenOptions {
   cwd?: string;
   packageRoot?: string;
   env?: Record<string, string | undefined>;

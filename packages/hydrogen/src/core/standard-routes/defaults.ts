@@ -7,7 +7,7 @@ type DefaultStandardRoutes = {
   ];
 };
 
-export const STANDARD_ROUTE_PARAM_NAMES = [
+const STANDARD_ROUTE_PARAM_NAMES = [
   "articleHandle",
   "blogHandle",
   "collectionHandle",

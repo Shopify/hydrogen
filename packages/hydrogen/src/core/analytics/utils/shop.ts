@@ -2,7 +2,7 @@ import type { ShopAnalytics, StorefrontAnalyticsConfig } from "../types";
 
 const SHOPIFY_SHOP_GID_PREFIX = "gid://shopify/Shop/";
 
-export function normalizeShopifyShopId(shopId: ShopAnalytics["shopId"]): string {
+function toShopAnalyticsGid(shopId: ShopAnalytics["shopId"]): string {
   return shopId.startsWith(SHOPIFY_SHOP_GID_PREFIX)
     ? shopId
     : `${SHOPIFY_SHOP_GID_PREFIX}${shopId}`;
@@ -15,6 +15,6 @@ export function normalizeShopAnalytics(
 
   return {
     ...shop,
-    shopId: normalizeShopifyShopId(shop.shopId),
+    shopId: toShopAnalyticsGid(shop.shopId),
   };
 }

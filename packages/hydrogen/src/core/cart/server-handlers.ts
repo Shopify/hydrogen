@@ -24,10 +24,10 @@ import {
 import type { CartData } from "./state";
 const log = getLogger("cart-api");
 
-export const CART_API_PATH = "/api/cart" as const;
-export const CART_GET_METHOD = "GET" as const;
-export const CART_POST_METHOD = "POST" as const;
-export const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
+const CART_API_PATH = "/api/cart" as const;
+const CART_GET_METHOD = "GET" as const;
+const CART_POST_METHOD = "POST" as const;
+const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
 export type CartGetData<TCart = CartData> = {
   cart: TCart | null;
@@ -99,7 +99,7 @@ export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
   CartGetHandlerResult<THandlers>
 >;
 
-export type CreateCartServerHandlersOptions<
+type CreateCartServerHandlersOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
 > = CreateCartQueriesOptions<TCartFragment>;
 
