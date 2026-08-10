@@ -79,7 +79,9 @@ export const ShopPayButton = defineComponent({
           // buttonText is escaped by getShopPayButtonContentHtml.
           innerHTML: getShopPayButtonContentHtml(props),
         }),
-        h("style", SHOP_PAY_BUTTON_STYLES),
+        // innerHTML instead of a text child: Vue SSR entity-escapes style text,
+        // which browsers do not decode inside <style>.
+        h("style", { innerHTML: SHOP_PAY_BUTTON_STYLES }),
       ];
     };
   },

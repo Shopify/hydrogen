@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it } from "vitest";
 
-import { assert } from "../test-utils";
+import { configureLogging, resetLoggingForTests } from "../logging";
+import { assert, createTestLogger } from "../test-utils";
 import { getShopPayButtonLabel } from "./labels";
 import {
   createShopPayButton,
@@ -15,6 +16,7 @@ import {
 afterEach(() => {
   document.head.innerHTML = "";
   document.body.innerHTML = "";
+  resetLoggingForTests();
 });
 
 describe("getShopPayButtonUrl", () => {
@@ -243,5 +245,20 @@ describe("defineShopPayButton", () => {
     const enabledAnchor = element.querySelector("a");
     assert(enabledAnchor, "expected the element to re-render an anchor");
     expect(enabledAnchor.getAttribute("href")).toBe("/cart/456:3?payment=shop_pay&source=hydrogen");
+  });
+
+  it("logs instead of throwing when attributes are invalid", () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    defineShopPayButton();
+
+    const element = document.createElement(SHOP_PAY_BUTTON_TAG_NAME);
+    element.setAttribute("variants", "123:invalid");
+    document.body.append(element);
+
+    expect(logger.error).toHaveBeenCalledWith("shop-pay button render failed", {
+      scope: "shop-pay",
+      error: expect.objectContaining({ message: expect.stringMatching(/positive integers/) }),
+    });
   });
 });

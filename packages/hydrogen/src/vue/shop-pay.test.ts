@@ -76,6 +76,8 @@ describe("ShopPayButton", () => {
     assert(html, "expected SSR output");
     expect(html).toContain('href="/cart/123:2?payment=shop_pay_installments&amp;source=hydrogen"');
     expect(html).toContain("shop-pay-button__label");
-    expect(html).toContain("<style>");
+    // The disabled-state selector must survive SSR unescaped; Vue
+    // entity-escapes text children of <style>, which browsers do not decode.
+    expect(html).toContain(".shop-pay-button[aria-disabled=true]{opacity:.5");
   });
 });

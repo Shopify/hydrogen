@@ -15,7 +15,9 @@ localized accessible label, and the button styles. Pick by integration shape:
 
 - `renderShopPayButton(options)` returns an HTML string. Use it in server
   templates or frameworks with raw-HTML rendering (`{@html}`, `v-html`,
-  `innerHTML`). The output needs no client JavaScript.
+  `innerHTML`). The output needs no client JavaScript. Each render inlines the
+  ~1KB button styles so it works standalone; the duplication across multiple
+  buttons on a page is harmless.
 - `createShopPayButton(options)` returns a detached DOM element and injects the
   button styles into `document.head` once. Use it for imperative DOM UIs.
 - `defineShopPayButton()` registers the `<shop-pay-button>` custom element for

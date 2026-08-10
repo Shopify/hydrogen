@@ -1,6 +1,9 @@
+import { getLogger } from "../logging";
 import { normalizeStoreDomain } from "../url";
 import { parseGid } from "../utils/parse-gid";
 import { getShopPayButtonLabel } from "./labels";
+
+const log = getLogger("shop-pay");
 
 const DEFAULT_SOURCE = "hydrogen";
 const ERROR_PREFIX = "[hydrogen:error:ShopPay]";
@@ -10,14 +13,17 @@ const STYLE_ELEMENT_ID = "shop-pay-button-styles";
 
 /**
  * Button styles matching the hosted shop-js pay button: brand colors, focus
- * ring, and the same `--shop-pay-button-*` custom properties for sizing.
+ * ring, and the same `--shop-pay-button-*` custom properties for sizing. The
+ * `--shop-pay-button-border-radius` option wins over the page-level
+ * `--buttons-radius` theme token. Selectors avoid quotes because some server
+ * renderers (Vue) entity-escape `<style>` text children.
  */
 export const SHOP_PAY_BUTTON_STYLES =
   `${SHOP_PAY_BUTTON_TAG_NAME}{display:block}` +
-  `.${SHOP_PAY_BUTTON_CLASS_NAME}{position:relative;display:flex;align-items:center;box-sizing:border-box;margin:0;padding:10px 16px;overflow:visible;width:var(--shop-pay-button-width,260px);border:none;border-radius:var(--buttons-radius,var(--x-primary-button-border-radius,var(--shop-pay-button-border-radius,12px)));background-color:#5433eb;color:#fff;cursor:pointer;text-decoration:none;transition:all .15s cubic-bezier(.4,0,.2,1)}` +
+  `.${SHOP_PAY_BUTTON_CLASS_NAME}{position:relative;display:flex;align-items:center;box-sizing:border-box;margin:0;padding:10px 16px;overflow:visible;width:var(--shop-pay-button-width,260px);border:none;border-radius:var(--shop-pay-button-border-radius,var(--buttons-radius,12px));background-color:#5433eb;color:#fff;cursor:pointer;text-decoration:none;transition:all .15s cubic-bezier(.4,0,.2,1)}` +
   `.${SHOP_PAY_BUTTON_CLASS_NAME}:hover{background-color:#4524db}` +
   `.${SHOP_PAY_BUTTON_CLASS_NAME}:focus-visible{outline:none;box-shadow:0 0 0 3px #9c83f8}` +
-  `.${SHOP_PAY_BUTTON_CLASS_NAME}[aria-disabled="true"]{opacity:.5;pointer-events:none;cursor:default}` +
+  `.${SHOP_PAY_BUTTON_CLASS_NAME}[aria-disabled=true]{opacity:.5;pointer-events:none;cursor:default}` +
   `.${SHOP_PAY_BUTTON_CLASS_NAME}__logo{position:relative;display:inline-block;margin:0 auto;width:88px;height:auto}` +
   `.${SHOP_PAY_BUTTON_CLASS_NAME}__text{margin:0 auto;font-family:inherit;font-size:16px;font-weight:500;line-height:22px;letter-spacing:-.5px}` +
   `.${SHOP_PAY_BUTTON_CLASS_NAME}__label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}`;
@@ -107,7 +113,8 @@ export function renderShopPayButton(options: ShopPayButtonOptions): string {
 export function createShopPayButton(options: ShopPayButtonOptions): HTMLElement {
   const template = document.createElement("template");
   template.innerHTML = renderShopPayButton(options);
-  const anchor = template.content.firstElementChild as HTMLElement;
+  const anchor = template.content.querySelector("a");
+  if (!anchor) throw shopPayError("Shop Pay button markup failed to parse.");
 
   if (!document.getElementById(STYLE_ELEMENT_ID)) {
     const style = document.createElement("style");
@@ -153,7 +160,17 @@ export function defineShopPayButton(): void {
         if (this.isConnected) this.#render();
       }
 
+      // Invalid attributes log instead of throwing: lifecycle callbacks have
+      // no caller to catch, and an uncaught throw leaves an empty element.
       #render(): void {
+        try {
+          this.#renderButton();
+        } catch (error) {
+          log.error("shop-pay button render failed", { error });
+        }
+      }
+
+      #renderButton(): void {
         this.innerHTML = renderShopPayButton({
           buttonText: this.getAttribute("button-text") ?? undefined,
           channel: (this.getAttribute("channel") as ShopPayButtonOptions["channel"]) ?? undefined,

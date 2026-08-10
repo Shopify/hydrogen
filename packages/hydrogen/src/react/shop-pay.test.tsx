@@ -85,6 +85,6 @@ describe("ShopPayButton", () => {
 
     expect(html).toContain('href="/cart/123:2?payment=shop_pay_installments&amp;source=hydrogen"');
     expect(html).toContain("shop-pay-button__label");
-    expect(html).toContain("<style>");
+    expect(html).toContain(".shop-pay-button[aria-disabled=true]{opacity:.5");
   });
 });
