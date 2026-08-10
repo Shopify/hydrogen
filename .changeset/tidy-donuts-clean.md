@@ -2,4 +2,4 @@
 "@shopify/hydrogen": patch
 ---
 
-Remove dead code and tighten internal module boundaries. Delete unused files and helpers, stop exporting internal symbols that nothing consumes, prune unused barrel re-exports, and consolidate duplicated path-prefix normalization (which also fixes whitespace-padded locale prefixes producing malformed paths). No public API changes.
+Fix malformed URLs when a locale path prefix has surrounding whitespace: a prefix like `" /fr-ca/ "` now normalizes to `/fr-ca` instead of leaking spaces and slashes into resolved paths. Also removes internal dead code; no public API changes.
