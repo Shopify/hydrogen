@@ -12,7 +12,7 @@ import { getEmptyPredictiveSearchResult, type PredictiveSearchData } from "./sea
 export const DEFAULT_PREDICTIVE_SEARCH_DEBOUNCE_IN_MS = 150;
 
 /** Default minimum trimmed term length required before predictive search sends a request. */
-export const DEFAULT_PREDICTIVE_SEARCH_MIN_TERM_LENGTH = 1;
+const DEFAULT_PREDICTIVE_SEARCH_MIN_TERM_LENGTH = 1;
 
 /** Lifecycle state for the predictive search client store. */
 export type PredictiveSearchStatus = "idle" | "loading" | "success" | "error";

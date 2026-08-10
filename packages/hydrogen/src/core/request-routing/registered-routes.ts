@@ -69,10 +69,7 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   );
 };
 
-export function createShopifyRouteResponse(
-  result: ShopifyRouteHandlerResult,
-  request: Request,
-): Response {
+function createShopifyRouteResponse(result: ShopifyRouteHandlerResult, request: Request): Response {
   if (result.type === "redirect") {
     const headers = new Headers(result.headers);
     headers.set("location", resolveRedirectLocation(result.location, request));
