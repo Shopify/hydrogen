@@ -3,14 +3,12 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 
 import { CartDrawer } from "@/components/CartDrawer";
-import { ConsentBanner } from "@/components/ConsentBanner";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { HeaderAccountLink, HeaderAccountLinkFallback } from "@/components/HeaderAccountLink";
 import { getAnalyticsShop } from "@/lib/analytics-shop";
 import { cartHandlers } from "@/lib/cart-handlers";
 import { getStorefrontClient } from "@/lib/storefront";
-import { shouldUseMockShop } from "@/lib/storefront-config";
 
 import { Providers } from "./providers";
 
@@ -59,7 +57,6 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       <Footer shopName={analyticsShop.shopName} />
 
       <CartDrawer />
-      <ConsentBanner forceShow={shouldUseMockShop()} />
     </Providers>
   );
 }

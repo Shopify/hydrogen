@@ -27,10 +27,6 @@ export type ResolvedStorefrontConfig = {
 
 let mockShopFallbackWarned = false;
 
-export function shouldUseMockShop(): boolean {
-  return !getOptionalPrivateStorefrontToken();
-}
-
 /** Whether Customer Accounts are enabled for the resolved storefront.
  *
  * Sync on purpose: `resolveStorefrontConfig` is sync, and keeping this sync
