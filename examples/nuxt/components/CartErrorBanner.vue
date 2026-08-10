@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { CartLine } from "@shopify/hydrogen";
-
 import { ref, computed } from "#imports";
 import { useCart } from "~/storefront/cart";
 
@@ -8,7 +6,7 @@ const errors = useCart((s) => s.errors);
 const lines = useCart((s) => s.data.lines.nodes);
 const dismissedAt = ref(0);
 
-const visibleLineIds = computed(() => new Set(lines.value.map((l: CartLine) => l.id)));
+const visibleLineIds = computed(() => new Set(lines.value.map((l) => l.id)));
 
 const orphanedLineErrors = computed(() =>
   [...errors.value.lines.entries()]

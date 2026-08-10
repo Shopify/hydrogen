@@ -1,17 +1,12 @@
 import { getBuyerIp } from "@shared/buyer-ip";
 import { defaultI18n, storefrontConfig } from "@shared/config";
 import { getPrivateStorefrontToken } from "@shared/private-env";
-import {
-  STOREFRONT_CACHE_MAX_ENTRIES,
-  createStorefrontCacheAdapter,
-} from "@shared/storefront-cache";
 import { handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createStorefrontClient,
   createShopifyRequestContext,
   type ShopifyRequestContextWithBuyerIp,
 } from "@shopify/hydrogen";
-import { LRUCache } from "lru-cache";
 
 import { cartHandlers } from "../../storefront/cart-handlers";
 import {
@@ -20,10 +15,6 @@ import {
   customerSessionHandlers,
 } from "../../storefront/customer-account";
 import { predictiveSearchHandlers } from "../../storefront/predictive-search-handlers";
-
-const storefrontCache = createStorefrontCacheAdapter(
-  new LRUCache<string, object>({ max: STOREFRONT_CACHE_MAX_ENTRIES }),
-);
 
 export default defineEventHandler(async (event) => {
   const request = toWebRequest(event);
@@ -61,7 +52,6 @@ function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWith
     config: {
       storeDomain: storefrontConfig.storeDomain,
       privateStorefrontToken: getPrivateStorefrontToken(),
-      cache: storefrontCache,
     },
   });
 }

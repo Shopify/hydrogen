@@ -3,7 +3,7 @@ import type { AvailableFilter } from "@shopify/hydrogen";
 import { normalizeCollectionSearch } from "@shopify/hydrogen";
 
 import type { ProductCardData } from "~/components/ProductCard.vue";
-import { provideCollectionStore } from "~/storefront/collection";
+import { CollectionProvider } from "~/storefront/collection";
 import { collectionRouteSearch } from "~/utils/collection-route-search";
 
 const props = defineProps<{
@@ -19,7 +19,7 @@ const props = defineProps<{
 
 const route = useRoute();
 
-// The collection store settles when dataSearch === urlSearch. Pin urlSearch to the
+// CollectionProvider settles when dataSearch === urlSearch. Pin urlSearch to the
 // target we're navigating to — collectionRouteSearch(route) can lag behind the
 // address bar for a tick after navigateTo, which leaves filters stuck loading.
 const urlSearchOverride = ref<string | null>(null);
@@ -46,20 +46,16 @@ async function handleChange(search: string) {
     props.setQueryWatchSuppressed(false);
   }
 }
-
-provideCollectionStore({
-  data: collectionData,
-  urlSearch,
-  onChange: handleChange,
-});
 </script>
 
 <template>
-  <CollectionBrowserContent
-    :title="title"
-    :description="description"
-    :products="products"
-    :available-filters="availableFilters"
-    :collection-path="route.path"
-  />
+  <CollectionProvider :data="collectionData" :url-search="urlSearch" @change="handleChange">
+    <CollectionBrowserContent
+      :title="title"
+      :description="description"
+      :products="products"
+      :available-filters="availableFilters"
+      :collection-path="route.path"
+    />
+  </CollectionProvider>
 </template>
