@@ -110,20 +110,28 @@ describe("standard routes", () => {
     });
   });
 
-  it("prefers configured route templates over defaults for other routes", () => {
+  it("prefers Shopify default route identities over overlapping configured templates", () => {
     const routeTemplates = createShopifyRouteTemplates({
       policy: "/pages/:policyHandle",
+      productInCollection: "/products/:productHandle",
     });
 
     expect(matchStandardRouteUrl({ routeTemplates, url: "/pages/privacy-policy" })).toEqual({
-      route: "policy",
-      pageTemplateName: "policy",
-      params: { policyHandle: "privacy-policy" },
+      route: "page",
+      pageTemplateName: "page",
+      params: { pageHandle: "privacy-policy" },
+    });
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/products/snowboard" })).toEqual({
+      route: "product",
+      pageTemplateName: "product",
+      params: { productHandle: "snowboard" },
     });
   });
 
   it("matches the root as the index route", () => {
-    const routeTemplates = createShopifyRouteTemplates({});
+    const routeTemplates = createShopifyRouteTemplates({ collectionList: "/" });
+
+    expect(resolveStandardRouteUrl({ routeTemplates, url: "/collections" })).toBe("/");
 
     expect(matchStandardRouteUrl({ routeTemplates, url: "/" })).toEqual({
       route: "index",

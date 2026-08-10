@@ -19,8 +19,10 @@ import type {
  * pathname template. Templates must start with `/` and include the required named handle
  * placeholders for routes that identify a resource. Do not include an i18n path prefix in the
  * template; Hydrogen applies `i18n.pathPrefix` separately when resolving routes. Pass an empty
- * object when the app uses Shopify's default paths so there is still one app-owned routing manifest
- * to update if routes change later.
+ * object when the app uses standard storefront routes so there is still one app-owned routing
+ * manifest to update if routes change later. When matching the current page, standard storefront
+ * routes retain their page-template identities even if a configured template resolves another
+ * route to the same pathname.
  *
  * @example
  * ```ts

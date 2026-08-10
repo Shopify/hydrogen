@@ -10,11 +10,12 @@ import type {
 } from "./types";
 
 /**
- * Matches a URL against both configured app route templates and Shopify's default route templates.
+ * Matches a URL against both configured app route templates and standard storefront routes.
  *
  * This powers browser current-page detection, where consumers need to recognize the standard
- * Shopify resource represented by either a custom app URL like `/p/snowboard` or the default URL
- * like `/products/snowboard`.
+ * Shopify resource represented by either a custom app URL like `/p/snowboard` or a standard URL
+ * like `/products/snowboard`. The root and standard storefront routes retain their page-template
+ * identities; configured templates identify otherwise non-standard app paths.
  */
 export function matchStandardRouteUrl({
   baseUrl,
@@ -34,14 +35,12 @@ export function matchStandardRouteUrl({
   if (pathname === "/") return { route: "index", pageTemplateName: "index", params: {} };
 
   return (
-    matchStandardRouteTemplates(parsedUrl.pathname, pathPrefix, (route) => [
-      routeTemplates[route],
-    ]) ??
     matchStandardRouteTemplates(
       parsedUrl.pathname,
       pathPrefix,
       (route) => DEFAULT_STANDARD_ROUTES[route],
-    )
+    ) ??
+    matchStandardRouteTemplates(parsedUrl.pathname, pathPrefix, (route) => [routeTemplates[route]])
   );
 }
 
@@ -49,8 +48,8 @@ export function matchStandardRouteUrl({
  * Iterates over known Shopify route names and tries the templates supplied by the caller.
  *
  * Different callers choose different template sets: redirects only match default Shopify templates
- * for resources with custom app templates, while browser matching tries custom templates first and
- * default Shopify templates second.
+ * for resources with custom app templates, while browser matching tries Shopify defaults before
+ * configured app templates.
  */
 export function matchStandardRouteTemplates(
   pathname: string,
@@ -80,10 +79,9 @@ export function matchStandardRouteTemplates(
 }
 
 /**
- * Converts a standard route identity to the corresponding
- * page template name that matches the convention in Liquid.
+ * Converts a standard route identity to the corresponding page template name.
  * Collection-scoped product URLs still render the `product` template, while
- * the collection-listing route uses Liquid's hyphenated `list-collections` name.
+ * the collection-listing route uses the hyphenated `list-collections` name.
  */
 function normalizeStandardRouteTemplateName<TRoute extends ShopifyStandardRouteName>(
   route: TRoute,
