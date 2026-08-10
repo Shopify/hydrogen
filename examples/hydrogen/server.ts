@@ -166,7 +166,6 @@ async function finalizeHydrogenResponse(
     mutableResponse.headers,
   );
   shopifyRequestContext.applyResponseHeaders(mutableResponse.headers);
-  mutableResponse.headers.append("powered-by", "Shopify, Hydrogen");
 
   return mutableResponse;
 }

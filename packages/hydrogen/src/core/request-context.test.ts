@@ -305,6 +305,15 @@ describe("createShopifyRequestContext", () => {
     );
   });
 
+  it("applies the Hydrogen powered-by header", () => {
+    const context = createTestRequestContext(new Request("https://example.com"));
+    const headers = new Headers();
+
+    context.applyResponseHeaders(headers);
+
+    expect(headers.get("powered-by")).toBe("Shopify, Hydrogen");
+  });
+
   it("applies generated tracking tokens as server-timing when cookies are missing", () => {
     const context = createTestRequestContext(new Request("https://example.com"));
     const headers = new Headers({ "content-type": "text/html" });

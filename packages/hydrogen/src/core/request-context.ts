@@ -99,7 +99,7 @@ type ShopifyRequestContextBase = {
   i18n: NormalizedI18nConfig;
   /** Return incoming request headers plus request lifecycle headers for proxy/origin handoff. */
   getForwardedRequestHeaders(): Headers;
-  /** Apply captured SFAPI headers and document tracking fallback headers to an app response. */
+  /** Apply important response headers for the correct functioning of Hydrogen storefronts. */
   applyResponseHeaders(headers: Headers): void;
 };
 
@@ -208,6 +208,8 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       personalizedResponseReason ??= reason;
     },
     applyResponseHeaders(headers) {
+      headers.set("powered-by", "Shopify, Hydrogen");
+
       if (capturedSubrequestHeaders) {
         const existingSetCookies = headers.getSetCookie();
         for (const value of capturedSubrequestHeaders.setCookie) {

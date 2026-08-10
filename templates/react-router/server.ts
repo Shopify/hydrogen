@@ -28,10 +28,7 @@ export default {
       routerContext.waitUntil = executionContext.waitUntil.bind(executionContext);
 
       const handleRequest = createRequestHandler(serverBuild, process.env.NODE_ENV);
-      const response = await handleRequest(request, routerContext as never);
-
-      response.headers.append("powered-by", "Shopify, Hydrogen");
-      return response;
+      return handleRequest(request, routerContext as never);
     } catch (error) {
       console.error(error);
       return new Response("An unexpected error occurred", { status: 500 });
