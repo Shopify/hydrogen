@@ -1,21 +1,14 @@
-import { defineComponent, h, onMounted, shallowRef, type PropType } from "vue";
+import { defineComponent, h, type PropType } from "vue";
 
-import { getLogger } from "../core/logging";
 import {
-  getShopPayButtonAttributes,
+  getShopPayButtonAnchorAttributes,
+  getShopPayButtonContentHtml,
   getShopPayButtonStyleProperties,
-  handleShopPayCheckoutClick,
-  loadShopJs,
-  SHOP_PAY_BUTTON_TAG_NAME,
+  SHOP_PAY_BUTTON_STYLES,
   type ShopPayButtonOptions,
-} from "../core/shop-pay";
-import { DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT } from "../core/shop-pay/shop-pay";
+} from "../core/shop-pay/shop-pay";
 
-const log = getLogger("shop-pay");
-
-export type ShopPayButtonProps = Omit<ShopPayButtonOptions, "checkoutUrl"> & {
-  loadScript?: boolean;
-};
+export type ShopPayButtonProps = ShopPayButtonOptions;
 
 export const ShopPayButton = defineComponent({
   name: "ShopPayButton",
@@ -23,6 +16,10 @@ export const ShopPayButton = defineComponent({
   props: {
     variants: {
       type: Array as PropType<ShopPayButtonOptions["variants"]>,
+      default: undefined,
+    },
+    checkoutUrl: {
+      type: String,
       default: undefined,
     },
     paymentOption: {
@@ -53,47 +50,37 @@ export const ShopPayButton = defineComponent({
       type: String,
       default: undefined,
     },
-    loadScript: {
-      type: Boolean,
-      default: true,
+    locale: {
+      type: String,
+      default: undefined,
+    },
+    buttonText: {
+      type: String,
+      default: undefined,
     },
   },
   setup(props, { attrs }) {
-    const storefrontUrl = shallowRef<string>();
-
-    onMounted(() => {
-      storefrontUrl.value = window.location.origin;
-      if (!props.loadScript) return;
-      loadShopJs().catch((error: unknown) => {
-        log.error("shop-js failed to load", { error });
-      });
-    });
-
     return () => {
-      const style = getShopPayButtonStyleProperties(props);
-      const { style: wrapperStyle, ...elementAttrs } = attrs;
-      const effectiveProps = {
-        ...props,
-        checkoutUrl: storefrontUrl.value,
-      };
-      const element = h(SHOP_PAY_BUTTON_TAG_NAME, {
-        ...elementAttrs,
-        ...getShopPayButtonAttributes(effectiveProps),
-        ...(__DEV__
-          ? {
-              onClickCapture: (event: MouseEvent) => {
-                handleShopPayCheckoutClick(event, effectiveProps);
-              },
-            }
-          : {}),
-        ...(Object.keys(style).length > 0 ? { style } : {}),
-      });
+      const {
+        class: buttonClassName,
+        href,
+        "aria-disabled": ariaDisabled,
+      } = getShopPayButtonAnchorAttributes(props);
+      const { class: extraClassName, style: extraStyle, ...anchorAttrs } = attrs;
 
-      return h(
-        "div",
-        { style: [{ minHeight: DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT }, wrapperStyle] },
-        element,
-      );
+      return [
+        h("a", {
+          ...anchorAttrs,
+          class: [buttonClassName, extraClassName],
+          href,
+          "aria-disabled": ariaDisabled,
+          style: [getShopPayButtonStyleProperties(props), extraStyle],
+          // Static, locale-keyed markup owned by this package; user-provided
+          // buttonText is escaped by getShopPayButtonContentHtml.
+          innerHTML: getShopPayButtonContentHtml(props),
+        }),
+        h("style", SHOP_PAY_BUTTON_STYLES),
+      ];
     };
   },
 });

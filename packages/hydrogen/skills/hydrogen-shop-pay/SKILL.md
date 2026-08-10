@@ -2,18 +2,22 @@
 name: hydrogen-shop-pay
 description: >
   Guide for adding or reviewing Shop Pay buttons in Hydrogen storefronts. Use
-  when working with ShopPayButton, createShopPayButton, shop-pay-button custom
-  elements, product buy buttons, cart checkout acceleration, variant IDs,
-  quantities, channel/source attributes, or Shop Pay script loading.
+  when working with ShopPayButton, renderShopPayButton, createShopPayButton,
+  defineShopPayButton, shop-pay-button custom elements, product buy buttons,
+  cart checkout acceleration, variant IDs, quantities, or channel/source
+  attributes.
 ---
 
 # Shop Pay
 
-Hydrogen provides framework bindings for Shop Pay plus lower-level helpers for custom UI.
+Hydrogen renders the Shop Pay button locally: a styled anchor pointing at the
+storefront's own `/checkout` or `/cart/<id>:<qty>` permalink paths, which
+`handleShopifyRoutes` redirects to the store's real checkout. No external
+script loads and the server-rendered button works before any JavaScript runs.
 
 ## Framework References
 
-Before writing UI, check whether this skill has a reference file for the app's framework in `references/`. If one exists, read it and use that framework binding. If there is no matching reference, use `references/core.md` and wire the framework-neutral custom element helpers into the app's existing component and routing conventions.
+Before writing UI, check whether this skill has a reference file for the app's framework in `references/`. If one exists, read it and use that framework binding. If there is no matching reference, use `references/core.md` and wire the framework-neutral helpers into the app's existing component and routing conventions.
 
 ## Rules
 
@@ -23,9 +27,9 @@ Before writing UI, check whether this skill has a reference file for the app's f
 - For cart checkout buttons, omit `variants`; checkout mode uses the current cart.
 - Disable Shop Pay whenever the add-to-cart button is disabled or a product/cart mutation is pending.
 - Use `channel="hydrogen"` for Hydrogen headless storefronts unless the app has a reason to use a different channel.
-- Do not hardcode checkout domains in framework bindings; they derive checkout URL from `window.location.origin`.
+- Do not pass `checkoutUrl` on storefront pages; the default same-origin URLs are handled by `handleShopifyRoutes`. Pass it only when rendering the button outside the storefront origin.
 - Keep Shop Pay near the primary purchase action, and keep its disabled state aligned with `canAddToCart(...)`.
-- Do not pass `height`; the Shop Pay custom element does not honor it. Hydrogen reserves space by default while the element hydrates. Use wrapper styles only when the wrapper needs a different reservation.
+- Size with `width` and `borderRadius`; there is no `height` option. Pass `locale` when the storefront language is not English.
 
 ## Product Page Pattern
 
@@ -67,10 +71,10 @@ Done when:
 - [ ] Product buttons pass ProductVariant GIDs or bare numeric variant IDs (never Product IDs), with a quantity object when quantity is known.
 - [ ] Cart checkout buttons omit `variants` and are hidden or disabled when the cart is empty or a mutation is pending.
 - [ ] `channel="hydrogen"` is set unless the app deliberately uses another channel.
-- [ ] No `height` prop is passed and no checkout domain is hardcoded in framework bindings.
+- [ ] No `checkoutUrl` is passed for buttons rendered on the storefront origin.
 
 ## Gotchas
 
-- The custom element is loaded from Shopify's Shop JS module. Framework bindings load it on mount by default.
-- In development, Hydrogen's bindings intercept clicks to support localhost checkout behavior.
-- If the button renders but does nothing, verify variant ID format and disabled state first.
+- The button's same-origin URLs only check out if the app routes requests through `handleShopifyRoutes`, which redirects `/checkout` and `/cart/<id>:<qty>` permalinks to the store's checkout.
+- Disabled buttons render without an `href` (with `aria-disabled="true"`), so nothing navigates while a mutation is pending.
+- If the button renders but checkout fails, verify variant ID format and that `handleShopifyRoutes` handles the request first.

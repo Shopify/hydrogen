@@ -1,21 +1,30 @@
 # Core Helpers
 
-Use core helpers when not using React bindings:
+Use core helpers when not using the React or Vue bindings:
 
 ```ts
 import {
   createShopPayButton,
-  getShopPayButtonAttributes,
-  loadShopJs,
+  defineShopPayButton,
+  renderShopPayButton,
 } from "@shopify/hydrogen";
 ```
 
-Load Shop JS before relying on the custom element.
+All three render the same markup: a styled `<a>` with the Shop Pay logo, a
+localized accessible label, and the button styles. Pick by integration shape:
+
+- `renderShopPayButton(options)` returns an HTML string. Use it in server
+  templates or frameworks with raw-HTML rendering (`{@html}`, `v-html`,
+  `innerHTML`). The output needs no client JavaScript.
+- `createShopPayButton(options)` returns a detached DOM element and injects the
+  button styles into `document.head` once. Use it for imperative DOM UIs.
+- `defineShopPayButton()` registers the `<shop-pay-button>` custom element for
+  declarative HTML. Call it once in the client entry; it is browser-only, safe
+  to call repeatedly, and skipped if the tag is already defined.
 
 For product buy buttons, pass variants:
 
 ```ts
-await loadShopJs();
 const button = createShopPayButton({
   variants: [{ id: selectedVariant.id, quantity: 1 }],
   channel: "hydrogen",
@@ -24,26 +33,33 @@ const button = createShopPayButton({
 container.append(button);
 ```
 
-For cart checkout buttons, pass the checkout URL from cart state and omit variants:
+Or declaratively, after `defineShopPayButton()`:
+
+```html
+<shop-pay-button variants="123:1" channel="hydrogen"></shop-pay-button>
+```
+
+The element re-renders when its attributes change. Size it by setting the CSS
+custom properties on the element: `style="--shop-pay-button-width: 100%"`.
+
+For cart checkout buttons, omit `variants`; the button links to the same-origin
+`/checkout` path and `handleShopifyRoutes` redirects it to the current cart's
+checkout:
 
 ```ts
-await loadShopJs();
 const button = createShopPayButton({
-  checkoutUrl: cart.checkoutUrl,
   channel: "hydrogen",
   width: "100%",
 });
 container.append(button);
 ```
 
-For server-rendered markup, render the custom element attributes from `getShopPayButtonAttributes(...)` and load Shop JS on the client.
-
-When wiring core helpers directly, put the custom element in a wrapper that reserves vertical space while Shop JS hydrates. This prevents layout shift when the button loads. The logo button currently renders at roughly 42px tall, but treat that as an estimate rather than a stable API. If you need a richer loading state, render a skeleton in the wrapper until the custom element is ready.
-
 ## Validation Rules
 
 - Variant IDs must be Shopify ProductVariant GIDs or bare numeric variant IDs.
 - Quantities must be positive integers.
 - Mixed variant formats are invalid: use all strings or all `{ id, quantity }` objects.
-- Cart checkout mode omits `variants` and uses the current cart's `checkoutUrl`.
-- `disabled` suppresses checkout URL generation.
+- Cart checkout mode omits `variants`; the current cart checks out.
+- `disabled` renders the button without an `href` and with `aria-disabled="true"`.
+- `locale` selects the accessible label language (defaults to English).
+- `checkoutUrl` is only for rendering the button outside the storefront origin.

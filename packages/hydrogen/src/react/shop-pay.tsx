@@ -1,82 +1,42 @@
-"use client";
+import type { CSSProperties, ReactElement } from "react";
 
 import {
-  createElement,
-  useEffect,
-  useState,
-  type CSSProperties,
-  type MouseEvent,
-  type ReactElement,
-} from "react";
-
-import { getLogger } from "../core/logging";
-import {
-  getShopPayButtonAttributes,
+  getShopPayButtonAnchorAttributes,
+  getShopPayButtonContentHtml,
   getShopPayButtonStyleProperties,
-  handleShopPayCheckoutClick,
-  loadShopJs,
-  SHOP_PAY_BUTTON_TAG_NAME,
+  SHOP_PAY_BUTTON_STYLES,
   type ShopPayButtonOptions,
-} from "../core/shop-pay";
-import { DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT } from "../core/shop-pay/shop-pay";
+} from "../core/shop-pay/shop-pay";
 
-const log = getLogger("shop-pay");
-
-export type ShopPayButtonProps = Omit<ShopPayButtonOptions, "checkoutUrl"> & {
+export type ShopPayButtonProps = ShopPayButtonOptions & {
   className?: string;
-  loadScript?: boolean;
   style?: CSSProperties;
 };
 
 type ShopPayButtonStyle = CSSProperties & Record<string, string>;
 
-export function ShopPayButton({
-  className,
-  loadScript = true,
-  style: wrapperStyle,
-  ...options
-}: ShopPayButtonProps): ReactElement {
-  const storefrontUrl = useStorefrontUrl();
+export function ShopPayButton({ className, style, ...options }: ShopPayButtonProps): ReactElement {
+  const {
+    class: buttonClassName,
+    href,
+    "aria-disabled": ariaDisabled,
+  } = getShopPayButtonAnchorAttributes(options);
 
-  useEffect(() => {
-    if (!loadScript) return;
-    loadShopJs().catch((error: unknown) => {
-      log.error("shop-js failed to load", { error });
-    });
-  }, [loadScript]);
-
-  const style = getShopPayButtonStyleProperties(options) as ShopPayButtonStyle;
-  const effectiveOptions = {
-    ...options,
-    checkoutUrl: storefrontUrl,
-  };
-  const props = {
-    ...getShopPayButtonAttributes(effectiveOptions),
-    ...(className ? { className } : {}),
-    ...(__DEV__
-      ? {
-          onClickCapture: (event: MouseEvent<HTMLElement>) => {
-            handleShopPayCheckoutClick(event, effectiveOptions);
-          },
-        }
-      : {}),
-    ...(Object.keys(style).length > 0 ? { style } : {}),
-  };
-  const element = createElement(SHOP_PAY_BUTTON_TAG_NAME, props);
-  const wrapperStyles = {
-    ...wrapperStyle,
-    minHeight: wrapperStyle?.minHeight ?? DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT,
-  };
-
-  return createElement("div", { style: wrapperStyles }, element);
-}
-
-function useStorefrontUrl(): string | undefined {
-  const [storefrontUrl, setStorefrontUrl] = useState<string>();
-
-  useEffect(() => {
-    setStorefrontUrl(window.location.origin);
-  }, []);
-
-  return storefrontUrl;
+  return (
+    <>
+      <a
+        className={className ? `${buttonClassName} ${className}` : buttonClassName}
+        href={href}
+        aria-disabled={ariaDisabled as "true" | undefined}
+        style={{
+          ...(getShopPayButtonStyleProperties(options) as ShopPayButtonStyle),
+          ...style,
+        }}
+        // Static, locale-keyed markup owned by this package; user-provided
+        // buttonText is escaped by getShopPayButtonContentHtml.
+        dangerouslySetInnerHTML={{ __html: getShopPayButtonContentHtml(options) }}
+      />
+      <style>{SHOP_PAY_BUTTON_STYLES}</style>
+    </>
+  );
 }

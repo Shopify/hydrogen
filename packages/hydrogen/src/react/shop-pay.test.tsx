@@ -1,176 +1,81 @@
 // @vitest-environment happy-dom
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { configureLogging, resetLoggingForTests } from "../core/logging";
-import type * as ShopPayModule from "../core/shop-pay";
-import { loadShopJs, SHOP_PAY_BUTTON_TAG_NAME } from "../core/shop-pay";
-import { createTestLogger } from "../core/test-utils";
+import { assert } from "../core/test-utils";
 import { ShopPayButton } from "./shop-pay";
 
-vi.mock("../core/shop-pay", async (importOriginal) => {
-  const actual = await importOriginal<typeof ShopPayModule>();
-
-  return {
-    ...actual,
-    loadShopJs: vi.fn(() => Promise.resolve()),
-  };
-});
-
-beforeEach(() => {
-  vi.clearAllMocks();
-});
-afterEach(() => {
-  resetLoggingForTests();
-});
-
 describe("ShopPayButton", () => {
-  it("renders the shop-pay-button custom element", async () => {
+  it("renders an anchor with a same-origin cart permalink", () => {
     const { container } = render(
       createElement(ShopPayButton, {
-        variants: ["gid://shopify/ProductVariant/123"],
+        variants: [{ id: "gid://shopify/ProductVariant/123", quantity: 2 }],
         channel: "headless",
         width: "100%",
       }),
     );
 
-    const element = container.querySelector<HTMLElement>(SHOP_PAY_BUTTON_TAG_NAME);
-
-    expect(element).not.toBeNull();
-    expect(element?.getAttribute("store-url")).toBe("http://localhost:3000");
-    expect(element?.getAttribute("variants")).toBe("123");
-    expect(element?.getAttribute("source")).toBe("hydrogen");
-    expect(element?.getAttribute("channel")).toBe("headless");
-    expect(element?.style.getPropertyValue("--shop-pay-button-width")).toBe("100%");
-
-    await waitFor(() => expect(loadShopJs).toHaveBeenCalledTimes(1));
-  });
-
-  it("can skip loading shop-js", () => {
-    render(
-      createElement(ShopPayButton, {
-        loadScript: false,
-      }),
+    const anchor = container.querySelector("a");
+    assert(anchor, "expected an anchor");
+    expect(anchor.getAttribute("href")).toBe(
+      "/cart/123:2?payment=shop_pay&source=hydrogen&channel=headless",
     );
-
-    expect(loadShopJs).not.toHaveBeenCalled();
+    expect(anchor.className).toBe("shop-pay-button");
+    expect(anchor.style.getPropertyValue("--shop-pay-button-width")).toBe("100%");
   });
 
-  it("reserves the default logo button height while the custom element hydrates", () => {
+  it("renders a same-origin checkout URL without variants", () => {
+    const { container } = render(createElement(ShopPayButton, {}));
+
+    const anchor = container.querySelector("a");
+    assert(anchor, "expected an anchor");
+    expect(anchor.getAttribute("href")).toBe("/checkout?payment=shop_pay&source=hydrogen");
+  });
+
+  it("renders the accessible label, logo, and styles", () => {
+    const { container } = render(createElement(ShopPayButton, { locale: "de" }));
+
+    const label = container.querySelector(".shop-pay-button__label");
+    assert(label, "expected the accessible label");
+    expect(label.textContent).toBe("Mit Shop Pay kaufen");
+    expect(container.querySelector("svg.shop-pay-button__logo")).not.toBeNull();
+    expect(container.querySelector("style")).not.toBeNull();
+  });
+
+  it("merges className and style with the button defaults", () => {
     const { container } = render(
       createElement(ShopPayButton, {
-        loadScript: false,
+        className: "extra",
+        style: { marginTop: "4px" },
+        borderRadius: "6px",
       }),
     );
 
-    const wrapper = container.firstElementChild as HTMLElement | null;
-    const element = wrapper?.querySelector<HTMLElement>(SHOP_PAY_BUTTON_TAG_NAME);
-
-    expect(wrapper?.tagName).toBe("DIV");
-    expect(wrapper?.style.minHeight).toBe("43px");
-    expect(element).not.toBeNull();
+    const anchor = container.querySelector("a");
+    assert(anchor, "expected an anchor");
+    expect(anchor.className).toBe("shop-pay-button extra");
+    expect(anchor.style.marginTop).toBe("4px");
+    expect(anchor.style.getPropertyValue("--shop-pay-button-border-radius")).toBe("6px");
   });
 
-  it("reserves a custom style minHeight while the custom element hydrates", () => {
-    const { container } = render(
-      createElement(ShopPayButton, {
-        style: { minHeight: "48px" },
-        className: "shop-pay",
-        loadScript: false,
-      }),
-    );
+  it("renders a disabled button without an href", () => {
+    const { container } = render(createElement(ShopPayButton, { disabled: true }));
 
-    const wrapper = container.firstElementChild as HTMLElement | null;
-    const element = wrapper?.querySelector<HTMLElement>(SHOP_PAY_BUTTON_TAG_NAME);
-
-    expect(wrapper?.tagName).toBe("DIV");
-    expect(wrapper?.style.minHeight).toBe("48px");
-    expect(element).not.toBeNull();
-    expect(element?.className).toBe("shop-pay");
-  });
-
-  it("renders without variants for checkout mode", () => {
-    const { container } = render(
-      createElement(ShopPayButton, {
-        loadScript: false,
-      }),
-    );
-
-    const element = container.querySelector<HTMLElement>(SHOP_PAY_BUTTON_TAG_NAME);
-
-    expect(element?.getAttribute("store-url")).toBe("http://localhost:3000");
-    expect(element?.hasAttribute("variants")).toBe(false);
+    const anchor = container.querySelector("a");
+    assert(anchor, "expected an anchor");
+    expect(anchor.hasAttribute("href")).toBe(false);
+    expect(anchor.getAttribute("aria-disabled")).toBe("true");
   });
 
   it("does not require CartProvider", () => {
-    const { container } = render(
-      createElement(ShopPayButton, {
-        loadScript: false,
-      }),
-    );
+    const { container } = render(createElement(ShopPayButton, {}));
 
-    expect(container.querySelector(SHOP_PAY_BUTTON_TAG_NAME)).not.toBeNull();
+    expect(container.querySelector("a.shop-pay-button")).not.toBeNull();
   });
 
-  it("builds a same-origin checkout URL for checkout-mode clicks", () => {
-    const { container } = render(
-      createElement(ShopPayButton, {
-        loadScript: false,
-      }),
-    );
-
-    const element = container.querySelector<HTMLElement>(SHOP_PAY_BUTTON_TAG_NAME);
-    expect(element).not.toBeNull();
-    expect(element?.getAttribute("store-url")).toBe("http://localhost:3000");
-
-    fireEvent.click(element as HTMLElement);
-
-    expect(window.location.href).toBe(
-      "http://localhost:3000/checkout?payment=shop_pay&source=hydrogen",
-    );
-  });
-
-  it("builds the variant cart permalink for variant-mode clicks", () => {
-    const { container } = render(
-      createElement(ShopPayButton, {
-        variants: [{ id: "gid://shopify/ProductVariant/123", quantity: 2 }],
-        loadScript: false,
-      }),
-    );
-
-    const element = container.querySelector<HTMLElement>(SHOP_PAY_BUTTON_TAG_NAME);
-    expect(element).not.toBeNull();
-
-    fireEvent.click(element as HTMLElement);
-
-    expect(window.location.href).toBe(
-      "http://localhost:3000/cart/123:2?payment=shop_pay&source=hydrogen",
-    );
-  });
-
-  it("logs when shop-js fails to load", async () => {
-    const error = new Error("network unavailable");
-    const logger = createTestLogger();
-    configureLogging({ logger });
-    vi.mocked(loadShopJs).mockRejectedValueOnce(error);
-
-    render(
-      createElement(ShopPayButton, {
-        variants: ["123"],
-      }),
-    );
-
-    await waitFor(() =>
-      expect(logger.error).toHaveBeenCalledWith("shop-js failed to load", {
-        scope: "shop-pay",
-        error,
-      }),
-    );
-  });
-
-  it("renders the element during SSR", () => {
+  it("renders a working button during SSR with no client JavaScript", () => {
     const html = renderToString(
       createElement(ShopPayButton, {
         variants: [{ id: "gid://shopify/ProductVariant/123", quantity: 2 }],
@@ -178,10 +83,8 @@ describe("ShopPayButton", () => {
       }),
     );
 
-    expect(html).toContain(`<${SHOP_PAY_BUTTON_TAG_NAME}`);
-    expect(html).not.toContain("store-url=");
-    expect(html).toContain('variants="123:2"');
-    expect(html).toContain('source="hydrogen"');
-    expect(html).toContain('payment-option="shop_pay_installments"');
+    expect(html).toContain('href="/cart/123:2?payment=shop_pay_installments&amp;source=hydrogen"');
+    expect(html).toContain("shop-pay-button__label");
+    expect(html).toContain("<style>");
   });
 });

@@ -36,8 +36,9 @@ function AddToCart({ product }: { product: ProductData }) {
 }
 ```
 
-`ShopPayButton` is a client-only component because it reads `window.location.origin` after mount and loads Shop JS. In Next.js, put it in a `"use client"` component.
+`ShopPayButton` renders a plain anchor with no hooks, so it server-renders as a
+working button — including in React Server Components — with no `"use client"`
+requirement of its own.
 
-Hydrogen reserves space around the custom element while it hydrates. Use wrapper `style` only when it needs a different reservation; do not pass `height`.
-
-Use `loadScript={false}` only when the app already loads the Shop Pay loader globally.
+Size with `width`/`borderRadius` props; `className` and `style` merge onto the
+anchor. Pass `locale` when the storefront language is not English.

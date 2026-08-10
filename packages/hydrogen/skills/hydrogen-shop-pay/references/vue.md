@@ -26,8 +26,9 @@ Render only when a variant is resolved:
 />
 ```
 
-In Nuxt, this component should render in a client-capable component. The Vue binding sets the checkout URL and loads Shop JS in `onMounted`.
+The component renders a plain anchor, so it works with Nuxt server rendering
+and needs no client-only wrapper.
 
-Hydrogen reserves space around the custom element while it hydrates. Use wrapper `style` only when it needs a different reservation; do not pass `height`.
-
-Use `:load-script="false"` only when another component/script already loads Shop JS.
+Size with `width`/`border-radius` props; extra attributes (including `class`
+and `style`) fall through to the anchor. Pass `locale` when the storefront
+language is not English.
