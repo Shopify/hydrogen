@@ -254,8 +254,9 @@ Pass `cache` directly to `createStorefrontClient`'s `config` — the client wrap
 ## Env and types
 
 Ship a `.env.example` (committed, blank) and a gitignored `.env`. Only the two real secrets are required; everything
-else public lives in `app/lib/config.ts` (see config split). To smoke-test against the demo store in this repo, obtain
-a real `PRIVATE_STOREFRONT_API_TOKEN` with `node scripts/decrypt-example-secrets.ts` (needs the ejson key locally).
+else public lives in `app/lib/config.ts` (see config split). To smoke-test against the demo store in this repo, run
+`pnpm run examples:secrets:decrypt` from the repository root (needs the ejson key locally). It writes the private token
+and store domain to the gitignored `templates/react-router/.env`.
 
 ```sh
 SESSION_SECRET="replace-with-a-long-random-secret-32+"
