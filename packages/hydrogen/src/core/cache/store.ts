@@ -30,7 +30,7 @@ export type KeyValueCacheLike = {
   delete?(key: string): unknown | Promise<unknown>;
 };
 
-export type NormalizedCacheStore = {
+type NormalizedCacheStore = {
   get<T extends SerializableCacheValue>(key: string): Promise<CacheEnvelope<T> | undefined>;
   set<T extends SerializableCacheValue>(
     key: string,

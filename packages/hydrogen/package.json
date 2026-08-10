@@ -92,7 +92,6 @@
     "gql.tada": "1.9.2"
   },
   "devDependencies": {
-    "@0no-co/graphqlsp": "^1.15.4",
     "@graphql-codegen/cli": "^7.0.0",
     "@graphql-codegen/introspection": "^6.0.0",
     "@graphql-codegen/typescript": "^6.0.0",

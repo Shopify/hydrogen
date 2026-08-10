@@ -2,7 +2,6 @@ export { gql } from "./graphql";
 export type {
   AnyStorefrontQueryString,
   ComposedSource,
-  FragmentSources,
   SourceOf,
   StorefrontQueryString,
 } from "./graphql";

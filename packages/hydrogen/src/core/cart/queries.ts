@@ -426,17 +426,16 @@ type CartQueriesForSources<
   readonly cartNoteUpdate: QueryFor<CartNoteUpdateMutationSource, Fragments>;
 };
 
-export type CartQueriesForFragment<TCartFragment extends CartFragmentDocument> =
-  CartQueriesForSources<
-    readonly [typeof HYDROGEN_CART_FRAGMENT, TCartFragment],
-    typeof CUSTOM_CART_QUERY_SOURCE,
-    typeof CUSTOM_CART_CREATE_MUTATION_SOURCE,
-    typeof CUSTOM_CART_LINES_ADD_MUTATION_SOURCE,
-    typeof CUSTOM_CART_LINES_UPDATE_MUTATION_SOURCE,
-    typeof CUSTOM_CART_LINES_REMOVE_MUTATION_SOURCE,
-    typeof CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE,
-    typeof CUSTOM_CART_NOTE_UPDATE_MUTATION_SOURCE
-  >;
+type CartQueriesForFragment<TCartFragment extends CartFragmentDocument> = CartQueriesForSources<
+  readonly [typeof HYDROGEN_CART_FRAGMENT, TCartFragment],
+  typeof CUSTOM_CART_QUERY_SOURCE,
+  typeof CUSTOM_CART_CREATE_MUTATION_SOURCE,
+  typeof CUSTOM_CART_LINES_ADD_MUTATION_SOURCE,
+  typeof CUSTOM_CART_LINES_UPDATE_MUTATION_SOURCE,
+  typeof CUSTOM_CART_LINES_REMOVE_MUTATION_SOURCE,
+  typeof CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE,
+  typeof CUSTOM_CART_NOTE_UPDATE_MUTATION_SOURCE
+>;
 
 type DefaultCartQueries = CartQueriesForSources<
   readonly [typeof HYDROGEN_CART_FRAGMENT],
@@ -448,17 +447,6 @@ type DefaultCartQueries = CartQueriesForSources<
   typeof CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE,
   typeof CART_NOTE_UPDATE_MUTATION_SOURCE
 >;
-
-export type CartFragmentForOptions<TOptions> = TOptions extends {
-  readonly fragment: infer TCartFragment extends AnyStorefrontQueryString;
-}
-  ? TCartFragment
-  : typeof HYDROGEN_CART_FRAGMENT;
-
-export type CartFragmentResult<TFragment extends AnyStorefrontQueryString> =
-  TFragment extends StorefrontQueryString<infer TResult, infer _Variables, infer _Source>
-    ? TResult
-    : unknown;
 
 type CartDataFromCartQuery<TQuery extends AnyStorefrontQueryString> =
   TQuery extends StorefrontQueryString<infer Result, infer _Variables, string>
@@ -588,4 +576,3 @@ export function makeCartQueries(options?: CreateCartQueriesOptions) {
 }
 
 export const cartQueries = makeCartQueries();
-export type CartQueries = ReturnType<typeof makeCartQueries>;

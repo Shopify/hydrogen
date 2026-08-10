@@ -65,7 +65,7 @@ export function getSelectedProductOptions({
   return selectedOptions;
 }
 
-export function getAdjacentAndFirstSelectableVariants<TProduct extends ProductInput>(
+function getAdjacentAndFirstSelectableVariants<TProduct extends ProductInput>(
   product: TProduct,
 ): ProductVariantFrom<TProduct>[] {
   // Shopify returns a bounded set, not the whole matrix. Treat it as a concrete-variant cache.
@@ -442,7 +442,7 @@ function combinationMatchesConstraints(
   );
 }
 
-export function decodeEncodedVariant(encodedVariantField: string | null | undefined): number[][] {
+function decodeEncodedVariant(encodedVariantField: string | null | undefined): number[][] {
   if (!encodedVariantField) return [];
   if (!encodedVariantField.startsWith("v1_")) {
     log.warn(`unsupported variant encoding: "${encodedVariantField}"`);

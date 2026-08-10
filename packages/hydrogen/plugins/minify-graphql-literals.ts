@@ -3,7 +3,7 @@ import MagicString, { type SourceMap } from "magic-string";
 import { parseSync, type Comment, type Node } from "oxc-parser";
 import { walk } from "oxc-walker";
 
-export type MinifyGraphQLLiteralsOptions = {
+type MinifyGraphQLLiteralsOptions = {
   /**
    * Function calls whose first string/template argument is GraphQL. Member
    * calls are matched by their final property name, e.g. `client.gql(...)`.

@@ -20,7 +20,7 @@ interface RunCommandOptions {
 
 type RunCommand = (command: string, args: string[], options: RunCommandOptions) => Promise<void>;
 
-export interface CheckGraphQLOptions {
+interface CheckGraphQLOptions {
   args?: string[];
   cwd?: string;
   gqlTadaCliPath?: string;

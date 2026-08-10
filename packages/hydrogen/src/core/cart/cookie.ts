@@ -2,7 +2,7 @@ const COOKIE_NAME = "cart";
 const MAX_AGE_IN_SECONDS = 1209600; // 14 days
 const CART_GID_PREFIX = "gid://shopify/Cart/";
 
-export type CartCookieSource = Request | { cookie?: string };
+type CartCookieSource = Request | { cookie?: string };
 
 export function normalizeCartId(cartId: string | null | undefined): string | null {
   if (!cartId) return null;
