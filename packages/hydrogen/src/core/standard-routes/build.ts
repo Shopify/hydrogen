@@ -9,18 +9,20 @@ import type {
 } from "./types";
 
 /**
- * Creates a typed map of custom route templates for Shopify standard resource routes.
+ * Creates a typed map of custom route templates for Shopify standard storefront routes.
  *
  * Use the returned object anywhere Hydrogen needs to understand the app's URL shape for
- * Shopify resources: `handleShopifyRedirects({routeTemplates})`, `ShopifyScripts`
+ * Shopify resources and utility pages: `handleShopifyRedirects({routeTemplates})`, `ShopifyScripts`
  * `routes={routeTemplates}`, and predictive search URL helpers.
  *
  * Each key represents a Shopify standard route identity, while each value is the app's custom
- * pathname template for that resource. Templates must start with `/` and include the required
- * named handle placeholders for the selected resource. Do not include an i18n path prefix in the
+ * pathname template. Templates must start with `/` and include the required named handle
+ * placeholders for routes that identify a resource. Do not include an i18n path prefix in the
  * template; Hydrogen applies `i18n.pathPrefix` separately when resolving routes. Pass an empty
- * object when the app uses Shopify's default resource paths so there is still one app-owned routing
- * manifest to update if routes change later.
+ * object when the app uses standard storefront routes so there is still one app-owned routing
+ * manifest to update if routes change later. When matching the current page, standard storefront
+ * routes retain their page-template identities even if a configured template resolves another
+ * route to the same pathname.
  *
  * @example
  * ```ts
@@ -28,6 +30,8 @@ import type {
  *   product: "/p/:productHandle",
  *   collection: "/c/:collectionHandle",
  *   article: "/journal/:blogHandle/:articleHandle",
+ *   cart: "/basket",
+ *   policy: "/legal/:policyHandle",
  * });
  * ```
  */
@@ -43,7 +47,7 @@ export function getStandardRoute<const TRoute extends StandardRouteName>(
   params: StandardRouteParamsByName[TRoute],
   options: StandardRouteOptions = {},
 ): string {
-  const target = routeTemplates[route] ?? DEFAULT_STANDARD_ROUTES[route];
+  const target = routeTemplates[route] ?? DEFAULT_STANDARD_ROUTES[route][0];
 
   return buildStandardRouteTarget(target, params, options.pathPrefix);
 }
