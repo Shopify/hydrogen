@@ -88,12 +88,12 @@ describe("shopify scripts", () => {
     window.Shopify?.navigate?.("/products/snowboard");
 
     expect(navigate).toHaveBeenCalledWith("/products/snowboard");
-    expect(window.Shopify?.routes.match?.("/products/snowboard")).toEqual({
+    expect(window.Shopify?.routes.match?.("/products/snowboard")).toMatchObject({
       route: "product",
       pageTemplateName: "product",
       params: { productHandle: "snowboard" },
     });
-    expect(window.Shopify?.routes.match?.("/")).toEqual({
+    expect(window.Shopify?.routes.match?.("/")).toMatchObject({
       route: "index",
       pageTemplateName: "index",
       params: {},
@@ -104,27 +104,27 @@ describe("shopify scripts", () => {
   it("sets default Shopify route hooks when route templates are omitted", async () => {
     await initializeShopifyScripts({ webMcp: false });
 
-    expect(window.Shopify?.routes.match?.("/products/snowboard")).toEqual({
+    expect(window.Shopify?.routes.match?.("/products/snowboard")).toMatchObject({
       route: "product",
       pageTemplateName: "product",
       params: { productHandle: "snowboard" },
     });
-    expect(window.Shopify?.routes.match?.("/cart")).toEqual({
+    expect(window.Shopify?.routes.match?.("/cart")).toMatchObject({
       route: "cart",
       pageTemplateName: "cart",
       params: {},
     });
-    expect(window.Shopify?.routes.match?.("/products")).toEqual({
+    expect(window.Shopify?.routes.match?.("/products")).toMatchObject({
       route: "collectionList",
       pageTemplateName: "list-collections",
       params: {},
     });
-    expect(window.Shopify?.routes.match?.("/policies/privacy-policy")).toEqual({
+    expect(window.Shopify?.routes.match?.("/policies/privacy-policy")).toMatchObject({
       route: "policy",
       pageTemplateName: "policy",
       params: { policyHandle: "privacy-policy" },
     });
-    expect(window.Shopify?.routes.match?.("/search?q=snowboard")).toEqual({
+    expect(window.Shopify?.routes.match?.("/search?q=snowboard")).toMatchObject({
       route: "search",
       pageTemplateName: "search",
       params: {},
@@ -197,6 +197,11 @@ describe("shopify scripts", () => {
       route: "product",
       pageTemplateName: "product",
       params: { productHandle: "snowboard" },
+      standardPathname: "/fr-ca/products/snowboard",
+      templates: {
+        standard: "/products/:productHandle",
+        custom: "/p/:productHandle",
+      },
     });
     expect(
       (window.Shopify?.routes as Record<string, unknown> | undefined)?.templates,
