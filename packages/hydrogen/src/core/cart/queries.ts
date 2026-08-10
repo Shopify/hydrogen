@@ -394,7 +394,26 @@ const CUSTOM_CART_NOTE_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
   }
 `;
 
+// Minimal payload on purpose: buyer identity sync callers only need success or
+// userErrors, never the cart body, so no custom-fragment variant exists.
+const CART_BUYER_IDENTITY_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
+  mutation CartBuyerIdentityUpdate($cartId: ID!, $buyerIdentity: CartBuyerIdentityInput!) {
+    cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
+      cart {
+        id
+      }
+      userErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
+
 const HYDROGEN_CART_FRAGMENT = gql(HYDROGEN_CART_FRAGMENT_SOURCE);
+
+export const cartBuyerIdentityUpdateMutation = gql(CART_BUYER_IDENTITY_UPDATE_MUTATION_SOURCE);
 
 type QueryFor<
   Source extends string,

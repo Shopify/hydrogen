@@ -18,9 +18,15 @@ import type {
 import { createCallableRouteHandler } from "../request-routing/registered-routes";
 import { parseCartRequest } from "./actions";
 import type { CartAction, CartLineAddInput } from "./actions";
-import { getCartIdFromCookie, createCartCookie } from "./cookie";
+import {
+  cartBuyerIdentitySync,
+  type CartBuyerIdentitySync,
+  type CartBuyerIdentitySyncContext,
+} from "./buyer-identity-sync";
+import { getCartIdFromCookie, createCartCookie, createExpiredCartCookie } from "./cookie";
 import { getCart, getCartId, type CartDataFromQuery } from "./get-cart";
 import {
+  cartBuyerIdentityUpdateMutation,
   cartQueries,
   makeCartQueries,
   type CartDataForOptions,
@@ -94,6 +100,7 @@ export type CartServerHandlersWithCustomerSession<
   TCart extends CartData = CartDataFromQuery<TCartQuery>,
 > = {
   readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;
+  readonly [cartBuyerIdentitySync]: CartBuyerIdentitySync;
   get: CartGetHandler<TCart, CartGetHandlerContext & CartCustomerSessionContext>;
   post: CartPostHandler<CartPostHandlerContext & CartCustomerSessionContext>;
 };
@@ -164,7 +171,37 @@ export function createCartServerHandlers(
   };
 
   Object.defineProperty(handlers, cartServerHandlersCartQuery, { value: queries.cart });
+  if (customerSession) {
+    // Symbol-keyed and non-enumerable so the capability never registers as a
+    // route in handleShopifyRoutes and stays uncallable outside Hydrogen wiring.
+    Object.defineProperty(handlers, cartBuyerIdentitySync, {
+      value: createCartBuyerIdentitySync(),
+    });
+  }
   return handlers as CartServerHandlers | CartServerHandlersWithCustomerSession;
+}
+
+function createCartBuyerIdentitySync(): CartBuyerIdentitySync {
+  return {
+    updateBuyerIdentity: updateCartBuyerIdentity,
+    expiredCartCookie: createExpiredCartCookie(),
+  };
+}
+
+async function updateCartBuyerIdentity(
+  context: CartBuyerIdentitySyncContext,
+  customerAccessToken: string | null,
+): Promise<void> {
+  const cartId = getCartIdFromCookie(context.request);
+  if (!cartId) return;
+
+  const result = await context.storefrontClient.graphql(cartBuyerIdentityUpdateMutation, {
+    variables: { cartId, buyerIdentity: { customerAccessToken } },
+  });
+  const { userErrors } = assertMutationData(result, "cartBuyerIdentityUpdate");
+  if (userErrors.length > 0) {
+    throw new Error(userErrors.map(({ message }) => message).join("\n"));
+  }
 }
 
 type RuntimeCartQueries = typeof cartQueries;

@@ -1,4 +1,9 @@
 import type { StorefrontClient } from "../client";
+import {
+  getCartBuyerIdentitySync,
+  type CartBuyerIdentitySync,
+  type CartBuyerIdentitySyncSource,
+} from "../core/cart/buyer-identity-sync";
 import { DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
 import type { ShopifyRequestContext } from "../core/request-context";
 import { getLogger } from "../core/logging";
@@ -27,9 +32,6 @@ const FAILED_LOGIN_PATH = "/account?login=failed";
 const FORBIDDEN_STATUS = 403;
 const FORBIDDEN_ERROR_CODE = "forbidden";
 const FORBIDDEN_ERROR_MESSAGE = "Forbidden";
-const LIFECYCLE_HOOK_ERROR_STATUS = 500;
-const LIFECYCLE_HOOK_ERROR_CODE = "session_lifecycle_hook_failed";
-const LIFECYCLE_HOOK_ERROR_MESSAGE = "Customer session lifecycle hook failed";
 const NO_STORE_CACHE_CONTROL = "no-store";
 const AUTHORIZATION_CODE_GRANT_TYPE = "authorization_code";
 const REFRESH_TOKEN_GRANT_TYPE = "refresh_token";
@@ -48,7 +50,7 @@ const MAX_SET_TIMEOUT_IN_MS = 2_147_483_647;
 const SHOP_ID_RE = /^\d+$/;
 const CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON = "customer-session-access-token";
 const CUSTOMER_SESSION_MUTATION_PERSONALIZATION_REASON = "customer-session-mutation";
-const CUSTOMER_SESSION_LIFECYCLE_BRAND: unique symbol = Symbol("hydrogen.customerSessionLifecycle");
+const CUSTOMER_SESSION_INTERNAL_BRAND: unique symbol = Symbol("hydrogen.customerSessionInternal");
 
 export type Awaitable<T> = T | Promise<T>;
 
@@ -174,45 +176,12 @@ export type CustomerAccountServerHandlers<
   >;
 };
 
-/**
- * Runs inside a Customer Account route before session commit. A rejected hook
- * commits the updated session and returns a sanitized server error. Hooks can run
- * more than once when requests are retried or overlap, so implementations must be idempotent.
- */
-export type CustomerAccountSessionLifecycleHook = (
-  context: ShopifyRouteHandlerContext,
-) => Awaitable<void>;
-
-export type CustomerAccountAuthenticatedHook = (
-  context: ShopifyRouteHandlerContext,
-  accessToken: string,
-) => Awaitable<void>;
-export type CustomerAccountTokenRefreshResult =
-  | {
-      /** A usable access token is available. */
-      status: "authenticated";
-      accessToken: string;
-    }
-  | {
-      /** Refresh failed transiently, but the refreshable session remains. */
-      status: "transient";
-      accessToken: undefined;
-    }
-  | {
-      /** No usable or refreshable customer session remains. */
-      status: "unauthenticated";
-      accessToken: undefined;
-    };
-export type CustomerAccountTokenRefreshHook = (
-  context: ShopifyRouteHandlerContext,
-  result: CustomerAccountTokenRefreshResult,
-) => Awaitable<void>;
-
-export type CustomerAccountServerHandlersWithLifecycleHooks =
+/** Customer Account handlers that also synchronize cart buyer identity, so their context requires `storefrontClient`. */
+export type CustomerAccountServerHandlersWithCartSync =
   CustomerAccountServerHandlers<ShopifyRouteHandlerContext>;
 
-type CustomerSessionWithLifecycleHooks = CustomerSession & {
-  readonly [CUSTOMER_SESSION_LIFECYCLE_BRAND]: true;
+type CustomerSessionWithInternals = CustomerSession & {
+  readonly [CUSTOMER_SESSION_INTERNAL_BRAND]: true;
 };
 
 type CreateCustomerAccountServerHandlersBaseOptions<
@@ -225,49 +194,19 @@ type CreateCustomerAccountServerHandlersBaseOptions<
   postLogoutRedirectUri?: string;
 };
 
-type CustomerAccountLifecycleHooks = {
-  /**
-   * Runs after authorization creates an authenticated session and before it is
-   * committed. This is an integration hook, not an authorization guard: rejection
-   * does not roll back the authenticated session. Receives the newly stored access token.
-   */
-  onAuthenticated?: CustomerAccountAuthenticatedHook;
-  /**
-   * Runs after the refresh route completes and before session state is committed.
-   * Receives a discriminated result describing the token and refresh outcome.
-   */
-  onTokenRefresh?: CustomerAccountTokenRefreshHook;
-  /** Runs after logout removes the authenticated session and before it is committed. */
-  onLogout?: CustomerAccountSessionLifecycleHook;
-};
-
-type CustomerAccountLifecycleHooksDisabled = {
-  onAuthenticated?: undefined;
-  onTokenRefresh?: undefined;
-  onLogout?: undefined;
-};
-
-type CustomerAccountTokenLifecycleHooksEnabled = CustomerAccountLifecycleHooks &
-  (
-    | { onAuthenticated: CustomerAccountAuthenticatedHook }
-    | { onTokenRefresh: CustomerAccountTokenRefreshHook }
-  );
-
-type CustomerAccountLogoutHookEnabled = CustomerAccountLifecycleHooks & {
-  onAuthenticated?: undefined;
-  onTokenRefresh?: undefined;
-  onLogout: CustomerAccountSessionLifecycleHook;
-};
-
-type CustomerAccountLifecycleHooksEnabled =
-  | CustomerAccountTokenLifecycleHooksEnabled
-  | CustomerAccountLogoutHookEnabled;
-
 export type CreateCustomerAccountServerHandlersOptions =
-  | (CreateCustomerAccountServerHandlersBaseOptions &
-      (CustomerAccountLifecycleHooksDisabled | CustomerAccountLogoutHookEnabled))
-  | (CreateCustomerAccountServerHandlersBaseOptions<CustomerSessionWithLifecycleHooks> &
-      CustomerAccountTokenLifecycleHooksEnabled);
+  | (CreateCustomerAccountServerHandlersBaseOptions & { cartServerHandlers?: undefined })
+  | (CreateCustomerAccountServerHandlersBaseOptions<CustomerSessionWithInternals> & {
+      /**
+       * Cart server handlers created with `createCartServerHandlers({customerSession})`.
+       * When provided, the authorize, refresh, and logout routes keep the browser
+       * cart's buyer identity in step with the customer session: attach on login
+       * and refresh, detach on logout. Sync is best-effort — failures are logged
+       * and never block the route's redirect; a failed detach during logout
+       * expires the cart cookie instead.
+       */
+      cartServerHandlers: CartBuyerIdentitySyncSource;
+    });
 
 type CustomerAccountTokens = NonNullable<CustomerAccountSessionData["tokens"]>;
 type PendingLogin = NonNullable<CustomerAccountSessionData["pendingLogin"]>;
@@ -287,6 +226,22 @@ type RefreshResult =
   | { type: "success"; tokens: CustomerAccountTokens }
   | { type: "invalid" }
   | { type: "transient" };
+type TokenRefreshResult =
+  | {
+      /** A usable access token is available. */
+      status: "authenticated";
+      accessToken: string;
+    }
+  | {
+      /** Refresh failed transiently, but the refreshable session remains. */
+      status: "transient";
+      accessToken: undefined;
+    }
+  | {
+      /** No usable or refreshable customer session remains. */
+      status: "unauthenticated";
+      accessToken: undefined;
+    };
 type OAuthCallbackResult = {
   location: string;
   accessToken: string;
@@ -296,7 +251,7 @@ type CustomerSessionInternals = {
     sessionManager: WritableCustomerSessionManager,
     requestContext: ShopifyRequestContext,
     options?: RequestOriginOptions,
-  ): Promise<CustomerAccountTokenRefreshResult>;
+  ): Promise<TokenRefreshResult>;
   handleOAuthCallback(
     sessionManager: WritableCustomerSessionManager,
     requestContext: ShopifyRequestContext,
@@ -313,10 +268,11 @@ type CustomerAccountRouteHandlerContext = {
 type CustomerAccountRuntimeRouteHandlerContext = CustomerAccountRouteHandlerContext & {
   storefrontClient?: StorefrontClient;
 };
-type CustomerAccountServerHandlersForOptions<TOptions> =
-  TOptions extends CustomerAccountLifecycleHooksEnabled
-    ? CustomerAccountServerHandlersWithLifecycleHooks
-    : CustomerAccountServerHandlers;
+type CustomerAccountServerHandlersForOptions<TOptions> = TOptions extends {
+  cartServerHandlers: CartBuyerIdentitySyncSource;
+}
+  ? CustomerAccountServerHandlersWithCartSync
+  : CustomerAccountServerHandlers;
 type TokenRequestParams = {
   url: string;
   origin: string;
@@ -331,7 +287,7 @@ export function createCustomerSession({
   customerAccountApiUrl,
   fetch: customFetch,
   defaultTimeoutInMs = DEFAULT_TIMEOUT_IN_MS,
-}: CreateCustomerSessionOptions): CustomerSessionWithLifecycleHooks {
+}: CreateCustomerSessionOptions): CustomerSessionWithInternals {
   if (typeof document !== "undefined") {
     throw new Error(
       "Customer Account OAuth sessions cannot be used in a browser context. Use this helper from server or edge routes only.",
@@ -374,7 +330,7 @@ export function createCustomerSession({
     sessionManager: WritableCustomerSessionManager,
     requestContext: ShopifyRequestContext,
     options: RequestOriginOptions = {},
-  ): Promise<CustomerAccountTokenRefreshResult> {
+  ): Promise<TokenRefreshResult> {
     requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON);
     const sessionData = await readSessionData(sessionManager);
     const accessToken = getUsableAccessToken(sessionData);
@@ -503,8 +459,8 @@ export function createCustomerSession({
     return logoutUrl.toString();
   }
 
-  const customerSession: CustomerSessionWithLifecycleHooks = {
-    [CUSTOMER_SESSION_LIFECYCLE_BRAND]: true,
+  const customerSession: CustomerSessionWithInternals = {
+    [CUSTOMER_SESSION_INTERNAL_BRAND]: true,
     isLoggedIn: async (sessionManager, requestContext) => {
       requestContext.markResponseAsPersonalized(
         CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON,
@@ -538,22 +494,15 @@ export function createCustomerAccountServerHandlers<
 >(options: TOptions): CustomerAccountServerHandlersForOptions<TOptions>;
 export function createCustomerAccountServerHandlers(
   options: CreateCustomerAccountServerHandlersOptions,
-): CustomerAccountServerHandlers | CustomerAccountServerHandlersWithLifecycleHooks {
+): CustomerAccountServerHandlers | CustomerAccountServerHandlersWithCartSync {
   const {
     customerSession,
     defaultPostLoginRedirectPathname = DEFAULT_POST_LOGIN_REDIRECT_PATHNAME,
     loginFailedRedirectPath = FAILED_LOGIN_PATH,
-    onAuthenticated,
-    onLogout,
-    onTokenRefresh,
     postLogoutRedirectUri = DEFAULT_POST_LOGOUT_REDIRECT_URI,
   } = options;
   const { origin: originOption } = options;
-  if (hasTokenLifecycleHooks(options) && !customerSessionInternals.has(customerSession)) {
-    throw new Error(
-      "Customer Account token lifecycle hooks require the customerSession returned by createCustomerSession.",
-    );
-  }
+  const cartSync = resolveCartBuyerIdentitySync(options);
 
   return {
     authorize: createCallableRouteHandler(
@@ -565,7 +514,7 @@ export function createCustomerAccountServerHandlers(
           context,
           loginFailedRedirectPath,
           originOption,
-          onAuthenticated,
+          cartSync,
         );
       },
     ),
@@ -593,7 +542,7 @@ export function createCustomerAccountServerHandlers(
           context,
           postLogoutRedirectUri,
           originOption,
-          onLogout,
+          cartSync,
         );
       },
     ),
@@ -601,14 +550,29 @@ export function createCustomerAccountServerHandlers(
       CUSTOMER_ACCOUNT_REFRESH_PATH,
       "GET",
       async (context: CustomerAccountRuntimeRouteHandlerContext) => {
-        return handleRefreshRoute(customerSession, context, originOption, onTokenRefresh);
+        return handleRefreshRoute(customerSession, context, originOption, cartSync);
       },
     ),
   };
 }
 
-function hasTokenLifecycleHooks(options: CreateCustomerAccountServerHandlersOptions): boolean {
-  return Boolean(options.onAuthenticated || options.onTokenRefresh);
+function resolveCartBuyerIdentitySync(
+  options: CreateCustomerAccountServerHandlersOptions,
+): CartBuyerIdentitySync | undefined {
+  if (!options.cartServerHandlers) return undefined;
+
+  const cartSync = getCartBuyerIdentitySync(options.cartServerHandlers);
+  if (!cartSync) {
+    throw new Error(
+      "cartServerHandlers must be created by createCartServerHandlers with the customerSession option.",
+    );
+  }
+  if (!customerSessionInternals.has(options.customerSession)) {
+    throw new Error(
+      "Cart buyer identity sync requires the customerSession returned by createCustomerSession.",
+    );
+  }
+  return cartSync;
 }
 
 async function handleLoginRoute(
@@ -646,7 +610,7 @@ async function handleLogoutRoute(
   context: CustomerAccountRuntimeRouteHandlerContext,
   postLogoutRedirectUri: string,
   originOption: string | ((request: Request) => string) | undefined,
-  onLogout: CustomerAccountSessionLifecycleHook | undefined,
+  cartSync: CartBuyerIdentitySync | undefined,
 ): Promise<CustomerAccountRouteResult> {
   const { request, sessionManager, requestContext } = context;
   const origin = await resolveRouteOrigin(sessionManager, request, originOption);
@@ -659,9 +623,17 @@ async function handleLogoutRoute(
     origin,
     postLogoutRedirectUri: sanitizeReturnTo(requestedReturnTo, origin, postLogoutRedirectUri),
   });
-  const hookError = await runSessionLifecycleHook(onLogout, context, "logout");
-  if (hookError) return lifecycleHookErrorResult(await commitSession(sessionManager));
-  return redirectResult(logoutUrl, await commitSession(sessionManager));
+
+  // The redirect must complete even when detach fails: skipping it would leave
+  // the Shopify IdP session alive after the app session is already destroyed.
+  // Expiring the cart cookie is the fail-safe when the cart keeps the identity.
+  let detachFailed = false;
+  if (cartSync) {
+    detachFailed = !(await syncCartBuyerIdentity(cartSync, context, null, "logout"));
+  }
+  const headers = new Headers(await commitSession(sessionManager));
+  if (cartSync && detachFailed) headers.append("set-cookie", cartSync.expiredCartCookie);
+  return redirectResult(logoutUrl, headers);
 }
 
 async function handleAuthorizeRoute(
@@ -669,11 +641,11 @@ async function handleAuthorizeRoute(
   context: CustomerAccountRuntimeRouteHandlerContext,
   loginFailedRedirectPath: string,
   originOption: string | ((request: Request) => string) | undefined,
-  onAuthenticated: CustomerAccountAuthenticatedHook | undefined,
+  cartSync: CartBuyerIdentitySync | undefined,
 ): Promise<CustomerAccountRouteResult> {
   const { request, sessionManager, requestContext } = context;
   try {
-    if (!onAuthenticated) {
+    if (!cartSync) {
       const location = await customerSession.handleOAuthCallback(
         sessionManager,
         requestContext,
@@ -688,13 +660,10 @@ async function handleAuthorizeRoute(
       requestContext,
       request,
     );
-    const hookError = await runSessionLifecycleHook(
-      onAuthenticated,
-      context,
-      "authenticated",
-      accessToken,
-    );
-    if (hookError) return lifecycleHookErrorResult(await commitSession(sessionManager));
+    // Best-effort: the customer is authenticated at this point, so a failed
+    // cart sync must not turn a successful login into an error response. The
+    // next refresh retries the attach.
+    await syncCartBuyerIdentity(cartSync, context, accessToken, "authorize");
     return redirectResult(location, await commitSession(sessionManager));
   } catch (error) {
     if (!(error instanceof CustomerAccountOAuthError)) throw error;
@@ -710,11 +679,11 @@ async function handleRefreshRoute(
   customerSession: CustomerSession,
   context: CustomerAccountRuntimeRouteHandlerContext,
   originOption: string | ((request: Request) => string) | undefined,
-  onTokenRefresh: CustomerAccountTokenRefreshHook | undefined,
+  cartSync: CartBuyerIdentitySync | undefined,
 ): Promise<CustomerAccountRouteResult> {
   const { request, sessionManager, requestContext } = context;
   const origin = await resolveRouteOrigin(sessionManager, request, originOption);
-  if (!onTokenRefresh) {
+  if (!cartSync) {
     await customerSession.getOrRefreshAccessToken(sessionManager, requestContext, { origin });
     return refreshRedirectResult(request, origin, await commitSession(sessionManager));
   }
@@ -725,13 +694,11 @@ async function handleRefreshRoute(
     requestContext,
     { origin },
   );
-  const hookError = await runSessionLifecycleHook(
-    onTokenRefresh,
-    context,
-    "token-refresh",
-    refreshResult,
-  );
-  if (hookError) return lifecycleHookErrorResult(await commitSession(sessionManager));
+  // Transient refresh failures keep the refreshable session, so the cart's
+  // identity is left untouched; a definitive outcome attaches or detaches it.
+  if (refreshResult.status !== "transient") {
+    await syncCartBuyerIdentity(cartSync, context, refreshResult.accessToken ?? null, "refresh");
+  }
 
   return refreshRedirectResult(request, origin, await commitSession(sessionManager));
 }
@@ -755,7 +722,7 @@ async function handleOAuthCallbackWithAccessToken(
 ): Promise<OAuthCallbackResult> {
   const internal = customerSessionInternals.get(customerSession);
   if (!internal) {
-    throw new Error("Customer session does not support lifecycle hooks");
+    throw new Error("Customer session was not created by createCustomerSession");
   }
   return internal.handleOAuthCallback(sessionManager, requestContext, request);
 }
@@ -765,44 +732,34 @@ async function getOrRefreshAccessTokenWithStatus(
   sessionManager: WritableCustomerSessionManager,
   requestContext: ShopifyRequestContext,
   options: RequestOriginOptions,
-): Promise<CustomerAccountTokenRefreshResult> {
+): Promise<TokenRefreshResult> {
   const internal = customerSessionInternals.get(customerSession);
   if (!internal) {
-    throw new Error("Customer session does not support lifecycle hooks");
+    throw new Error("Customer session was not created by createCustomerSession");
   }
   return internal.getOrRefreshAccessToken(sessionManager, requestContext, options);
 }
 
-type SessionLifecycleHook<TArgs extends unknown[]> = (
-  context: ShopifyRouteHandlerContext,
-  ...args: TArgs
-) => Awaitable<void>;
-
-async function runSessionLifecycleHook<TArgs extends unknown[]>(
-  hook: SessionLifecycleHook<TArgs> | undefined,
+async function syncCartBuyerIdentity(
+  cartSync: CartBuyerIdentitySync,
   context: CustomerAccountRuntimeRouteHandlerContext,
-  lifecycle: "authenticated" | "token-refresh" | "logout",
-  ...args: TArgs
+  customerAccessToken: string | null,
+  route: "authorize" | "refresh" | "logout",
 ): Promise<boolean> {
-  if (!hook) return false;
-
   try {
     if (!context.storefrontClient) {
       throw new Error(
-        "Customer Account handlers configured with lifecycle hooks require storefrontClient.",
+        "Customer Account handlers configured with cartServerHandlers require storefrontClient.",
       );
     }
-    await hook(
-      {
-        ...context,
-        storefrontClient: context.storefrontClient,
-      },
-      ...args,
+    await cartSync.updateBuyerIdentity(
+      { request: context.request, storefrontClient: context.storefrontClient },
+      customerAccessToken,
     );
-    return false;
-  } catch {
-    log.error("customer session lifecycle hook failed", { lifecycle });
     return true;
+  } catch (error) {
+    log.error("cart buyer identity sync failed", { route, error });
+    return false;
   }
 }
 
@@ -838,20 +795,6 @@ function forbiddenResult(): ShopifyRouteErrorResult {
     status: FORBIDDEN_STATUS,
     error: { code: FORBIDDEN_ERROR_CODE, message: FORBIDDEN_ERROR_MESSAGE },
     headers: { "cache-control": NO_STORE_CACHE_CONTROL },
-  };
-}
-
-function lifecycleHookErrorResult(headers?: HeadersInit): ShopifyRouteErrorResult {
-  const errorHeaders = new Headers(headers);
-  errorHeaders.set("cache-control", NO_STORE_CACHE_CONTROL);
-  return {
-    type: "error",
-    status: LIFECYCLE_HOOK_ERROR_STATUS,
-    error: {
-      code: LIFECYCLE_HOOK_ERROR_CODE,
-      message: LIFECYCLE_HOOK_ERROR_MESSAGE,
-    },
-    headers: errorHeaders,
   };
 }
 

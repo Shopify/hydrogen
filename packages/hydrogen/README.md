@@ -73,20 +73,7 @@ Customer Account OAuth methods require a public HTTPS origin. The writable sessi
 
 Pass `customerSession` to `createCartServerHandlers({customerSession})` to associate newly created carts with a currently usable customer token and mark checkout URLs in authenticated cart GET responses with `logged_in=true`.
 
-Use `createCustomerAccountServerHandlers({customerSession})` with `handleShopifyRoutes` to install the default `GET /account/login`, `GET /account/authorize`, `GET /account/refresh`, and `POST /account/logout` handlers. Use the optional lifecycle hooks for application-owned integration after session changes:
-
-```ts
-import * as CAAPI from "@shopify/hydrogen/customer-account";
-
-const customerAccountHandlers = CAAPI.createCustomerAccountServerHandlers({
-  customerSession,
-  onAuthenticated,
-  onTokenRefresh,
-  onLogout,
-});
-```
-
-The hooks run after their Customer Account route reaches its lifecycle transition and before the handler commits session state. `onAuthenticated` receives the new access token. `onTokenRefresh` receives a discriminated result with an `authenticated`, `transient`, or `unauthenticated` status and the corresponding access token. These token-bearing hooks require the `customerSession` returned by `createCustomerSession`; custom session implementations can still use the standard routes and `onLogout`. Hooks may execute more than once when requests retry or overlap, so implementations must be idempotent. The token-refresh hook runs whenever the refresh route completes, even when no token changed. If a hook rejects, Hydrogen commits the updated session and returns a sanitized server error instead of the normal redirect. Pass the same request-scoped `requestContext` and `sessionManager` into `handleShopifyRoutes` once alongside the `storefrontClient`. Session managers can be read-only for `isLoggedIn()` / `getAccessToken()` and writable for `getOrRefreshAccessToken()`, `prepareLoginUrl()`, `handleOAuthCallback()`, `logout()`, and registered account handlers. `isLoggedIn()` is a read-only UI/session-presence check: it returns true for a usable access token or a refresh token that can attempt to restore one later. `getAccessToken()` still returns only a currently usable access token and never refreshes.
+Use `createCustomerAccountServerHandlers({customerSession})` with `handleShopifyRoutes` to install the default `GET /account/login`, `GET /account/authorize`, `GET /account/refresh`, and `POST /account/logout` handlers. Pass those cart server handlers as `cartServerHandlers` to also keep the browser cart's buyer identity in step with the customer session: authorization and refresh attach the customer to the cart, a definitive refresh rejection and logout detach it. Sync is best-effort — a failed cart mutation never blocks the route's redirect; a failed detach during logout expires the cart cookie instead. `cartServerHandlers` requires the `customerSession` returned by `createCustomerSession` shared by both handler groups. Pass the same request-scoped `requestContext` and `sessionManager` into `handleShopifyRoutes` once alongside the `storefrontClient`. Session managers can be read-only for `isLoggedIn()` / `getAccessToken()` and writable for `getOrRefreshAccessToken()`, `prepareLoginUrl()`, `handleOAuthCallback()`, `logout()`, and registered account handlers. `isLoggedIn()` is a read-only UI/session-presence check: it returns true for a usable access token or a refresh token that can attempt to restore one later. `getAccessToken()` still returns only a currently usable access token and never refreshes.
 
 The login handler respects a sanitized `return_to` search parameter and otherwise redirects back to `defaultPostLoginRedirectPathname` (default `/`). The logout handler redirects through Shopify using `postLogoutRedirectUri` (default `/`) when an ID token is present; otherwise, it redirects directly to `postLogoutRedirectUri`. Apps can still implement their own framework routes when they need custom behavior.
 

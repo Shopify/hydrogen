@@ -1,5 +1,6 @@
 import { describe, expectTypeOf, it } from "vitest";
 
+import { createCartServerHandlers } from "../core/cart/server-handlers";
 import { createShopifyRequestContext } from "../core/request-context";
 import type { ShopifyRouteHandlerGroup } from "../core/request-routing/registered-routes";
 import {
@@ -11,12 +12,8 @@ import {
   CUSTOMER_ACCOUNT_REFRESH_PATH,
   type Awaitable,
   type CreateCustomerAccountServerHandlersOptions,
-  type CustomerAccountAuthenticatedHook,
   type CustomerAccountServerHandlers,
-  type CustomerAccountServerHandlersWithLifecycleHooks,
-  type CustomerAccountSessionLifecycleHook,
-  type CustomerAccountTokenRefreshHook,
-  type CustomerAccountTokenRefreshResult,
+  type CustomerAccountServerHandlersWithCartSync,
   type CustomerSession,
   type ReadonlyCustomerSessionManager,
   type WritableCustomerSessionManager,
@@ -26,6 +23,7 @@ const customerSession = createCustomerSession({
   shopId: "123456789",
   customerAccountApiClientId: "shp_test-client-id",
 });
+const cartServerHandlers = createCartServerHandlers({ customerSession });
 
 const readonlySessionManager: ReadonlyCustomerSessionManager = {
   getSessionItem(_key: string) {
@@ -48,23 +46,6 @@ const requestContext = createShopifyRequestContext({
   request: new Request("https://example.com"),
   i18n: { country: "US", language: "EN" },
 });
-const lifecycleHook: CustomerAccountSessionLifecycleHook = async (context) => {
-  void context.storefrontClient;
-};
-const authenticatedHook: CustomerAccountAuthenticatedHook = async (_context, accessToken) => {
-  expectTypeOf(accessToken).toEqualTypeOf<string>();
-};
-const tokenRefreshHook: CustomerAccountTokenRefreshHook = async (
-  _context,
-  result,
-) => {
-  expectTypeOf(result).toEqualTypeOf<CustomerAccountTokenRefreshResult>();
-  if (result.status === "authenticated") {
-    expectTypeOf(result.accessToken).toEqualTypeOf<string>();
-  } else {
-    expectTypeOf(result.accessToken).toEqualTypeOf<undefined>();
-  }
-};
 
 describe("Customer Account session type boundary", () => {
   it("exports route constants as literals", () => {
@@ -121,40 +102,38 @@ describe("Customer Account session type boundary", () => {
 
   it("returns handlers compatible with handleShopifyRoutes", () => {
     const handlers = createCustomerAccountServerHandlers({ customerSession });
-    const handlersWithLifecycleHooks = createCustomerAccountServerHandlers({
+    const handlersWithCartSync = createCustomerAccountServerHandlers({
       customerSession,
-      onAuthenticated: authenticatedHook,
-      onTokenRefresh: tokenRefreshHook,
-      onLogout: lifecycleHook,
+      cartServerHandlers,
     });
     const options: CreateCustomerAccountServerHandlersOptions = {
       customerSession,
-      onAuthenticated: authenticatedHook,
+      cartServerHandlers,
     };
     const handlersFromAnnotatedOptions = createCustomerAccountServerHandlers(options);
     const unbrandedSession: CustomerSession = customerSession;
-    // @ts-expect-error lifecycle token hooks require a session created by createCustomerSession
-    createCustomerAccountServerHandlers({
+    const rejectedCalls = () => {
+      // @ts-expect-error cart buyer identity sync requires a session created by createCustomerSession
+      createCustomerAccountServerHandlers({
+        customerSession: unbrandedSession,
+        cartServerHandlers,
+      });
+      // @ts-expect-error cart handlers without customerSession cannot synchronize buyer identity
+      createCustomerAccountServerHandlers({ customerSession, cartServerHandlers: createCartServerHandlers() });
+    };
+    expectTypeOf(rejectedCalls).toBeFunction();
+    const unbrandedHandlers = createCustomerAccountServerHandlers({
       customerSession: unbrandedSession,
-      onAuthenticated: authenticatedHook,
-    });
-    const unbrandedLogoutHandlers = createCustomerAccountServerHandlers({
-      customerSession: unbrandedSession,
-      onLogout: lifecycleHook,
     });
 
     expectTypeOf(handlers).toMatchTypeOf<CustomerAccountServerHandlers>();
     expectTypeOf(handlers).toMatchTypeOf<ShopifyRouteHandlerGroup>();
-    expectTypeOf(handlersWithLifecycleHooks).toMatchTypeOf<
-      CustomerAccountServerHandlersWithLifecycleHooks
-    >();
-    expectTypeOf(handlersWithLifecycleHooks).toMatchTypeOf<ShopifyRouteHandlerGroup>();
+    expectTypeOf(handlersWithCartSync).toMatchTypeOf<CustomerAccountServerHandlersWithCartSync>();
+    expectTypeOf(handlersWithCartSync).toMatchTypeOf<ShopifyRouteHandlerGroup>();
     expectTypeOf(handlersFromAnnotatedOptions).toMatchTypeOf<
-      CustomerAccountServerHandlersWithLifecycleHooks
+      CustomerAccountServerHandlersWithCartSync
     >();
-    expectTypeOf(unbrandedLogoutHandlers).toMatchTypeOf<
-      CustomerAccountServerHandlersWithLifecycleHooks
-    >();
+    expectTypeOf(unbrandedHandlers).toMatchTypeOf<CustomerAccountServerHandlers>();
     expectTypeOf(handlers.authorize).toHaveProperty("pathname").toEqualTypeOf<
       typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH
     >();

@@ -27,3 +27,7 @@ export function createCartCookie(cartId: string): string {
   const encoded = encodeURIComponent(token);
   return `${COOKIE_NAME}=${encoded}; Path=/; SameSite=Lax; Max-Age=${MAX_AGE_IN_SECONDS}`;
 }
+
+export function createExpiredCartCookie(): string {
+  return `${COOKIE_NAME}=; Path=/; SameSite=Lax; Max-Age=0`;
+}

@@ -3,7 +3,7 @@ name: hydrogen-customer-account
 description: >
   Customer Account API setup for Hydrogen storefronts. Use when wiring customer
   sessions, login/logout/OAuth route handlers, account profile, order history,
-  account-gated UI, cart buyer identity synchronization, or Customer Account
+  account-gated UI, cart buyer identity sync, or Customer Account
   GraphQL queries.
 ---
 
@@ -36,22 +36,33 @@ This makes the dangerous path harder to hold wrong: TypeScript rejects `customer
 
 ## Route Wiring
 
-Register `createCustomerAccountServerHandlers({ customerSession })` with the app's `handleShopifyRoutes` setup. Use `onAuthenticated`, `onTokenRefresh`, and `onLogout` for app-owned work that must follow authenticated session lifecycle changes:
+Register `createCustomerAccountServerHandlers({ customerSession })` with the app's `handleShopifyRoutes` setup.
+
+## Cart Buyer Identity Sync
+
+To keep the browser cart's buyer identity in step with the customer session, create the cart handlers with the same `customerSession` and pass them to the Customer Account handlers:
 
 ```ts
+import { createCartServerHandlers } from "@shopify/hydrogen";
 import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
+
+const cartHandlers = createCartServerHandlers({ customerSession });
 
 const customerAccountHandlers = createCustomerAccountServerHandlers({
   customerSession,
-  onAuthenticated,
-  onTokenRefresh,
-  onLogout,
+  cartServerHandlers: cartHandlers,
 });
 ```
 
-Hooks run after their route reaches its lifecycle transition and before the session manager is committed. `onAuthenticated` receives the newly stored access token. `onTokenRefresh` receives a discriminated result with an `authenticated`, `transient`, or `unauthenticated` status and the corresponding access token, and runs whenever the refresh route completes even when no token changed. These token-bearing hooks require the `customerSession` returned by `createCustomerSession`; custom session implementations can still use standard routes and `onLogout`. Hooks may execute more than once when requests retry or overlap, so implementations must be idempotent. A rejected hook commits the updated session and returns a sanitized server error instead of the normal redirect. For secure cart buyer identity integration, read [Synchronize Customer Accounts with cart](references/cart-sync.md).
+With this wiring, Hydrogen owns the whole loop:
 
-Lifecycle hooks are post-authentication integration points, not authorization guards. Rejecting `onAuthenticated` does not roll back the authenticated session.
+- New carts are created with the current customer's buyer identity, and authenticated cart reads mark checkout URLs with `logged_in=true` (from the cart handlers' `customerSession` option).
+- Authorization and refresh attach the customer to the cart from the request's cart cookie; a definitive refresh rejection detaches it. Transient refresh failures leave the cart untouched.
+- Logout detaches the customer from the cart.
+
+Sync is best-effort: a failed cart mutation never blocks the route's redirect — it is logged, and the next refresh retries. If the detach during logout fails, the handler expires the cart cookie so a shared device never keeps a cart bound to the previous customer.
+
+`cartServerHandlers` requires both handler groups to share the `customerSession` returned by `createCustomerSession`; TypeScript rejects cart handlers created without `customerSession`.
 
 The Customer Account handlers own:
 
