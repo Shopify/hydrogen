@@ -131,10 +131,27 @@ describe("getPredictiveSearchItemUrl", () => {
     expect(getPredictiveSearchItemUrl(mockItems.queries[0])).toBe("/search?q=snowboard");
   });
 
-  it("uses a configurable search path for query suggestions", () => {
-    expect(getPredictiveSearchItemUrl(mockItems.queries[0], { searchPath: "/find" })).toBe(
-      "/find?q=snowboard",
-    );
+  it("uses the configured search route for query suggestions", () => {
+    const routeTemplates = createShopifyRouteTemplates({ search: "/find" });
+
+    expect(
+      getPredictiveSearchItemUrl(mockItems.queries[0], {
+        pathPrefix: "/fr-ca",
+        routes: routeTemplates,
+      }),
+    ).toBe("/fr-ca/find?q=snowboard");
+  });
+
+  it("prefers an explicit query suggestion search path", () => {
+    const routeTemplates = createShopifyRouteTemplates({ search: "/find" });
+
+    expect(
+      getPredictiveSearchItemUrl(mockItems.queries[0], {
+        pathPrefix: "/fr-ca",
+        routes: routeTemplates,
+        searchPath: "/results",
+      }),
+    ).toBe("/results?q=snowboard");
   });
 
   it("uses standard route templates for resource routes", () => {

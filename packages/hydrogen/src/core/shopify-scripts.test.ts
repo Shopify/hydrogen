@@ -109,6 +109,26 @@ describe("shopify scripts", () => {
       pageTemplateName: "product",
       params: { productHandle: "snowboard" },
     });
+    expect(window.Shopify?.routes.match?.("/cart")).toEqual({
+      route: "cart",
+      pageTemplateName: "cart",
+      params: {},
+    });
+    expect(window.Shopify?.routes.match?.("/products")).toEqual({
+      route: "collectionList",
+      pageTemplateName: "list-collections",
+      params: {},
+    });
+    expect(window.Shopify?.routes.match?.("/policies/privacy-policy")).toEqual({
+      route: "policy",
+      pageTemplateName: "policy",
+      params: { policyHandle: "privacy-policy" },
+    });
+    expect(window.Shopify?.routes.match?.("/search?q=snowboard")).toEqual({
+      route: "search",
+      pageTemplateName: "search",
+      params: {},
+    });
     expect(window.Shopify?.routes.resolve?.("/products/snowboard")).toBe("/products/snowboard");
   });
 

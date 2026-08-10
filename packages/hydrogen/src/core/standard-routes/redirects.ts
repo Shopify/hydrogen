@@ -21,7 +21,7 @@ export function getStandardRouteTarget({
   routeTemplates: ShopifyRouteTemplates;
 }): string | null {
   const match = matchStandardRouteTemplates(pathname, pathPrefix, (route) =>
-    routeTemplates[route] ? [DEFAULT_STANDARD_ROUTES[route]] : [],
+    routeTemplates[route] ? DEFAULT_STANDARD_ROUTES[route] : [],
   );
 
   if (!match) return null;
