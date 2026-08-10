@@ -23,13 +23,24 @@ export function toURL(req: string | IncomingMessage = '/', origin?: string) {
  * Turns a Node request into a Web request by using native Node APIs.
  */
 export function toWeb(req: IncomingMessage, headers?: Record<string, string>) {
-  if (!req.headers.host) {
+  const authorityHeader = req.headers.host || req.headers[':authority'];
+  const authority = Array.isArray(authorityHeader)
+    ? authorityHeader[0]
+    : authorityHeader;
+  if (!authority) {
     throw new Error('Request must contain a host header.');
   }
 
-  return new Request(toURL(req), {
+  const requestHeaders = Object.fromEntries(
+    Object.entries({...headers, ...(req.headers as object)}).filter(
+      ([name]) => !name.startsWith(':'),
+    ),
+  );
+  requestHeaders.host = authority;
+
+  return new Request(toURL(req, `http://${authority}`), {
     method: req.method,
-    headers: {...headers, ...(req.headers as object)},
+    headers: requestHeaders,
     body: req.headers['content-length']
       ? (Readable.toWeb(req) as unknown as BodyInit)
       : undefined,
