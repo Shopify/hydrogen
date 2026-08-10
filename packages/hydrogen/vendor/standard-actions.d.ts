@@ -1,8 +1,4 @@
-// version: ea315691e9819723879605d727a20fde6bdda314
-// NOTE: hand-patched with cart attribute types from
-// shopify-playground/storefront-standard-events#161 (84234055) pending the
-// next Standard Actions CDN release. Re-run scripts/download-standard-types.ts
-// once the release ships to replace this file.
+// version: 977e4f914dd2b3eca85ad01dee81c2c96eb1b2e5
 export interface Price {
 	amount: string;
 	currencyCode: string;

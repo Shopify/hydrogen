@@ -1,12 +1,4 @@
-// version: ea315691e9819723879605d727a20fde6bdda314
-// NOTE: hand-patched with cart attribute types from
-// shopify-playground/storefront-standard-events#161 (84234055) pending the
-// next Standard Events CDN release. Re-run scripts/download-standard-types.ts
-// once the release ships to replace this file.
-export interface CartAttributeInput {
-	key: string;
-	value: string;
-}
+// version: 977e4f914dd2b3eca85ad01dee81c2c96eb1b2e5
 export interface CartAttributesUpdatePayloadDetail {
 	[k: string]: unknown;
 }
@@ -66,7 +58,10 @@ export interface SearchUpdateResultDetail {
 }
 export interface CartAttributesUpdatePayload {
 	context: "product" | "cart" | "dialog" | "standard-action";
-	attributes: CartAttributeInput[];
+	attributes: {
+		key: string;
+		value: string;
+	}[];
 	promise: Promise<CartAttributesUpdateResult>;
 	/**
 	 * Optional custom data. Use this to provide additional data for internal use in the theme.
@@ -933,7 +928,83 @@ export interface CartAttributesUpdateEvent extends CartAttributesUpdatePayload {
 export declare class CartAttributesUpdateEvent extends ShopifyStandardEvent {
 	static readonly eventName: "shopify:cart:attributes-update";
 	static createCartFromAjaxResponse: typeof fromAjaxCart;
-	static createPromise: typeof CartNoteUpdateEvent.createPromise;
+	static createPromise: () => {
+		promise: Promise<{
+			cart: {
+				id: string | number;
+				totalQuantity: number;
+				cost: {
+					totalAmount: {
+						amount: string;
+						currencyCode: string;
+					};
+				};
+				lines: {
+					id: string | number;
+					quantity: number;
+					cost: {
+						totalAmount: {
+							amount: string;
+							currencyCode: string;
+						};
+					};
+				}[];
+				discountCodes: {
+					applicable: boolean;
+					code: string;
+				}[];
+			} | null;
+			userErrors?: {
+				code?: string | undefined;
+				field?: string[] | undefined;
+				message: string;
+			}[] | undefined;
+			warnings?: {
+				code?: string | undefined;
+				message: string;
+				target?: string | undefined;
+			}[] | undefined;
+			detail?: any;
+		}>;
+		resolve: (value: {
+			cart: {
+				id: string | number;
+				totalQuantity: number;
+				cost: {
+					totalAmount: {
+						amount: string;
+						currencyCode: string;
+					};
+				};
+				lines: {
+					id: string | number;
+					quantity: number;
+					cost: {
+						totalAmount: {
+							amount: string;
+							currencyCode: string;
+						};
+					};
+				}[];
+				discountCodes: {
+					applicable: boolean;
+					code: string;
+				}[];
+			} | null;
+			userErrors?: {
+				code?: string | undefined;
+				field?: string[] | undefined;
+				message: string;
+			}[] | undefined;
+			warnings?: {
+				code?: string | undefined;
+				message: string;
+				target?: string | undefined;
+			}[] | undefined;
+			detail?: any;
+		}) => void;
+		reject: (reason?: any) => void;
+	};
 	constructor(payload: WithGidInput<CartAttributesUpdatePayload>);
 }
 export interface CartDiscountUpdateEvent extends CartDiscountUpdatePayload {
