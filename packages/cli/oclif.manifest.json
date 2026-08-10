@@ -220,6 +220,13 @@
           "multiple": false,
           "type": "option"
         },
+        "javascript-origin": {
+          "description": "The origin to register as the allowed JavaScript origin for the Customer Account API OAuth flow. Defaults to --dev-origin. Must not include a port (Shopify rejects origins with ports); use this to register a portless origin while keeping a portful --dev-origin.",
+          "name": "javascript-origin",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "relative-redirect-uri": {
           "description": "The relative url of allowed callback url for Customer Account API OAuth flow. Default is '/account/authorize'",
           "name": "relative-redirect-uri",
