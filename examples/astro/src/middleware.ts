@@ -35,14 +35,14 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
   const storefrontClient = createPrivateStorefrontClient(requestContext);
   const sessionManager = await createCustomerSessionManager(request);
 
-  const kitRoute = handleShopifyRoutes({
+  const shopifyRoute = handleShopifyRoutes({
     request,
     requestContext,
     sessionManager,
     storefrontClient,
     handlers: [cartHandlers, customerSessionHandlers],
   });
-  if (kitRoute) return kitRoute;
+  if (shopifyRoute) return shopifyRoute;
 
   locals.shopifyRequestContext = requestContext;
   locals.storefrontClient = storefrontClient;
