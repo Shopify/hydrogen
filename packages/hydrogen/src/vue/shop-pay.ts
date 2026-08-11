@@ -1,10 +1,7 @@
 import { defineComponent, h, type PropType } from "vue";
 
 import {
-  getShopPayButtonAnchorAttributes,
-  getShopPayButtonContentHtml,
-  getShopPayButtonStyleProperties,
-  SHOP_PAY_BUTTON_STYLES,
+  getShopPayButtonElementContentHtml,
   SHOP_PAY_BUTTON_TAG_NAME,
   type ShopPayButtonOptions,
 } from "../core/shop-pay/shop-pay";
@@ -62,30 +59,64 @@ export const ShopPayButton = defineComponent({
   },
   setup(props, { attrs }) {
     return () => {
-      const {
-        class: buttonClassName,
-        href,
-        "aria-disabled": ariaDisabled,
-        "aria-label": ariaLabel,
-      } = getShopPayButtonAnchorAttributes(props);
-      const { class: extraClassName, style: extraStyle, ...anchorAttrs } = attrs;
+      const { class: className, style, ...anchorAttrs } = attrs;
 
-      return h(SHOP_PAY_BUTTON_TAG_NAME, [
-        // innerHTML instead of a text child: Vue SSR entity-escapes style text,
-        // which browsers do not decode inside <style>.
-        h("style", { innerHTML: SHOP_PAY_BUTTON_STYLES }),
-        h("a", {
-          ...anchorAttrs,
-          class: [buttonClassName, extraClassName],
-          href,
-          "aria-disabled": ariaDisabled,
-          "aria-label": ariaLabel,
-          style: [getShopPayButtonStyleProperties(props), extraStyle],
-          // Static markup owned by this package; user-provided text is escaped
-          // by getShopPayButtonContentHtml.
-          innerHTML: getShopPayButtonContentHtml(props),
+      return h(SHOP_PAY_BUTTON_TAG_NAME, {
+        innerHTML: getShopPayButtonElementContentHtml(props, {
+          ...serializeAttrs(anchorAttrs),
+          class: serializeClass(className),
+          style: serializeStyle(style),
         }),
-      ]);
+      });
     };
   },
 });
+
+function serializeAttrs(attrs: Record<string, unknown>): Record<string, string | undefined> {
+  const serialized: Record<string, string | undefined> = {};
+
+  for (const [name, value] of Object.entries(attrs)) {
+    if (name.startsWith("on") || value === null || value === undefined || value === false) continue;
+    serialized[name] = value === true ? "" : serializePrimitive(value);
+  }
+
+  return serialized;
+}
+
+function serializeClass(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return value.map(serializeClass).filter(Boolean).join(" ");
+  if (!isRecord(value)) return undefined;
+
+  return Object.entries(value)
+    .filter((entry) => Boolean(entry[1]))
+    .map((entry) => entry[0])
+    .join(" ");
+}
+
+function serializeStyle(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return value.map(serializeStyle).filter(Boolean).join(";");
+  if (!isRecord(value)) return undefined;
+
+  return Object.entries(value)
+    .map(([name, styleValue]) => {
+      const serialized = serializePrimitive(styleValue);
+      return serialized ? `${hyphenateStyleName(name)}:${serialized}` : undefined;
+    })
+    .filter(Boolean)
+    .join(";");
+}
+
+function serializePrimitive(value: unknown): string | undefined {
+  return typeof value === "string" || typeof value === "number" ? String(value) : undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function hyphenateStyleName(name: string): string {
+  if (name.startsWith("--")) return name;
+  return name.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
+}
