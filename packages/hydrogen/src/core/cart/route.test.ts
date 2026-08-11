@@ -207,7 +207,8 @@ describe("createCartServerHandlers", () => {
       if (result.type !== "error") throw new Error("expected error result");
       expect(result.error).toEqual({
         code: "invalid_cart_request",
-        message: 'Request body must contain "lines", "discountCodes", or "note".',
+        message:
+          'Request body must contain "lines", "discountCodes", "note", "metafields", or "deleteMetafield".',
       });
       expect("status" in result).toBe(false);
     });
@@ -645,6 +646,144 @@ describe("createCartServerHandlers", () => {
     });
   });
 
+  describe("POST — JSON metafields", () => {
+    const GIFT_METAFIELD = { key: "custom.gift", type: "boolean", value: "true" };
+
+    it("sets metafields with injected ownerId then refetches the cart", async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockGqlResponse({ cartMetafieldsSet: { userErrors: [] } }))
+        .mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+
+      const result = await handleCartRequest(
+        createJsonPostRequest({ metafields: [GIFT_METAFIELD] }, "cart=123"),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(200);
+
+      const body = await result.json();
+      expect(body.cart).toEqual(MOCK_CART);
+      expect(body.userErrors).toEqual([]);
+
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      const [, mutationInit] = mockFetch.mock.calls[0];
+      const mutationBody = JSON.parse(mutationInit.body);
+      expect(mutationBody.query).toContain("cartMetafieldsSet");
+      expect(mutationBody.variables.metafields).toEqual([
+        { ...GIFT_METAFIELD, ownerId: "gid://shopify/Cart/123" },
+      ]);
+
+      const [, refetchInit] = mockFetch.mock.calls[1];
+      const refetchBody = JSON.parse(refetchInit.body);
+      expect(refetchBody.query).toContain("query Cart");
+      expect(refetchBody.variables.id).toBe("gid://shopify/Cart/123");
+    });
+
+    it("creates a cart with metafields when no cart exists", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartCreate: { cart: MOCK_CART, userErrors: [] } }),
+      );
+
+      const result = await handleCartRequest(
+        createJsonPostRequest({ metafields: [GIFT_METAFIELD] }),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(200);
+      expect(result.headers.get("set-cookie")).toContain("cart=");
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [, init] = mockFetch.mock.calls[0];
+      const gqlBody = JSON.parse(init.body);
+      expect(gqlBody.query).toContain("cartCreate");
+      expect(gqlBody.variables.input.metafields).toEqual([GIFT_METAFIELD]);
+    });
+
+    it("returns metafield userErrors alongside the refetched cart", async () => {
+      const userErrors = [
+        { code: "INVALID_TYPE", elementIndex: 0, field: ["type"], message: "Invalid type" },
+      ];
+      mockFetch
+        .mockResolvedValueOnce(mockGqlResponse({ cartMetafieldsSet: { userErrors } }))
+        .mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+
+      const result = await handleCartRequest(
+        createJsonPostRequest({ metafields: [GIFT_METAFIELD] }, "cart=123"),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(200);
+      const body = await result.json();
+      expect(body.userErrors).toEqual(userErrors);
+      expect(body.cart).toEqual(MOCK_CART);
+    });
+
+    it("deletes a metafield by key then refetches the cart", async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockGqlResponse({ cartMetafieldDelete: { userErrors: [] } }))
+        .mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+
+      const result = await handleCartRequest(
+        createJsonPostRequest({ deleteMetafield: "custom.gift" }, "cart=123"),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(200);
+
+      const body = await result.json();
+      expect(body.cart).toEqual(MOCK_CART);
+      expect(body.userErrors).toEqual([]);
+
+      const [, init] = mockFetch.mock.calls[0];
+      const gqlBody = JSON.parse(init.body);
+      expect(gqlBody.query).toContain("cartMetafieldDelete");
+      expect(gqlBody.variables.input).toEqual({
+        ownerId: "gid://shopify/Cart/123",
+        key: "custom.gift",
+      });
+    });
+
+    it("returns 400 missing_cart for metafield-delete without a cart", async () => {
+      const result = await handleCartRequest(
+        createJsonPostRequest({ deleteMetafield: "custom.gift" }),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(400);
+      const body = await result.json();
+      expect(body.error.code).toBe("missing_cart");
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("returns 303 redirect for FormData metafields-set", async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockGqlResponse({ cartMetafieldsSet: { userErrors: [] } }))
+        .mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+
+      const result = await handleCartRequest(
+        createFormPostRequest(
+          {
+            intent: "metafields-set",
+            metafieldKey: "custom.gift",
+            metafieldType: "boolean",
+            metafieldValue: "true",
+          },
+          { cookies: "cart=123", referer: "https://my-app.com/cart" },
+        ),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(303);
+      expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/cart`);
+    });
+  });
+
   describe("POST — JSON error handling", () => {
     it("returns 400 for invalid request body", async () => {
       const result = await handleCartRequest(createJsonPostRequest({}), defaultConfig);
@@ -653,7 +792,8 @@ describe("createCartServerHandlers", () => {
       const body = await result.json();
       expect(body.error).toEqual({
         code: "invalid_cart_request",
-        message: 'Request body must contain "lines", "discountCodes", or "note".',
+        message:
+          'Request body must contain "lines", "discountCodes", "note", "metafields", or "deleteMetafield".',
       });
     });
 

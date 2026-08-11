@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { gql } from "../../graphql";
-import { cartQueries, makeCartQueries } from "./queries";
+import {
+  cartMetafieldDeleteMutation,
+  cartMetafieldsSetMutation,
+  cartQueries,
+  makeCartQueries,
+} from "./queries";
 
 const customCartFragment = gql(`
   fragment CartFragment on Cart {
@@ -75,6 +80,24 @@ describe("cartQueries", () => {
 
     for (const query of Object.values(customQueries)) {
       expect(query).toContain("quantityAvailable");
+    }
+  });
+
+  it("declares Storefront API context on metafield mutations", () => {
+    for (const mutation of [cartMetafieldsSetMutation, cartMetafieldDeleteMutation]) {
+      expect(mutation).toContain("$country: CountryCode");
+      expect(mutation).toContain("$language: LanguageCode");
+      expect(mutation).toContain("@inContext(country: $country, language: $language)");
+    }
+  });
+
+  it("keeps metafield mutations free of cart fragment spreads", () => {
+    // cartMetafieldsSet and cartMetafieldDelete responses contain no cart
+    // object, so there is no cart selection to spread fragments into.
+    for (const mutation of [cartMetafieldsSetMutation, cartMetafieldDeleteMutation]) {
+      expect(mutation).toContain("userErrors");
+      expect(mutation).not.toContain("...HydrogenCartFragment");
+      expect(mutation).not.toContain("...CartFragment");
     }
   });
 

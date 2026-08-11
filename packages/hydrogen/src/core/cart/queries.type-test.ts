@@ -3,7 +3,12 @@ import type { ResultOf, VariablesOf } from "gql.tada";
 
 import type { StorefrontGraphqlResult } from "../../client";
 import { gql } from "../../graphql";
-import type { CartDataForOptions, cartQueries } from "./queries";
+import type {
+  CartDataForOptions,
+  cartMetafieldDeleteMutation,
+  cartMetafieldsSetMutation,
+  cartQueries,
+} from "./queries";
 import { makeCartQueries } from "./queries";
 
 const customCartFragment = gql(`
@@ -39,6 +44,17 @@ const inventoryCartFragment = gql(`
   }
 `);
 const inventoryCartQueries = makeCartQueries({ fragment: inventoryCartFragment });
+
+const metafieldsCartFragment = gql(`
+  fragment CartFragment on Cart {
+    metafields(identifiers: [{ namespace: "custom", key: "gift" }]) {
+      namespace
+      key
+      type
+      value
+    }
+  }
+`);
 
 type CartWithLines = {
   lines: { nodes: Array<{ merchandise?: unknown }> };
@@ -118,6 +134,29 @@ describe("cart query result types", () => {
     type R = ResultOf<typeof cartQueries.cartNoteUpdate>;
     expectTypeOf<R>().toHaveProperty("cartNoteUpdate");
   });
+
+  it("cartMetafieldsSet returns userErrors and no cart", () => {
+    type R = ResultOf<typeof cartMetafieldsSetMutation>;
+    type Payload = NonNullable<R["cartMetafieldsSet"]>;
+    expectTypeOf<Payload>().toHaveProperty("userErrors");
+    expectTypeOf<keyof Payload>().not.toEqualTypeOf<"cart">();
+  });
+
+  it("cartMetafieldDelete returns userErrors and no cart", () => {
+    type R = ResultOf<typeof cartMetafieldDeleteMutation>;
+    type Payload = NonNullable<R["cartMetafieldDelete"]>;
+    expectTypeOf<Payload>().toHaveProperty("userErrors");
+    expectTypeOf<keyof Payload>().not.toEqualTypeOf<"cart">();
+  });
+
+  it("metafields cart fragments flow into cart query and handler data types", () => {
+    const metafieldsCartQueries = makeCartQueries({ fragment: metafieldsCartFragment });
+    type R = ResultOf<typeof metafieldsCartQueries.cart>;
+    type Cart = CartDataForOptions<{ readonly fragment: typeof metafieldsCartFragment }>;
+
+    expectTypeOf<NonNullable<R["cart"]>>().toHaveProperty("metafields");
+    expectTypeOf<Cart>().toHaveProperty("metafields");
+  });
 });
 
 describe("cart query variable types", () => {
@@ -162,6 +201,18 @@ describe("cart query variable types", () => {
     type V = VariablesOf<typeof cartQueries.cartNoteUpdate>;
     expectTypeOf<V>().toHaveProperty("cartId");
     expectTypeOf<V>().toHaveProperty("note");
+  });
+
+  it("cartMetafieldsSet requires metafields with ownerId", () => {
+    type V = VariablesOf<typeof cartMetafieldsSetMutation>;
+    expectTypeOf<V>().toHaveProperty("metafields");
+    expectTypeOf<V["metafields"][number]>().toHaveProperty("ownerId");
+  });
+
+  it("cartMetafieldDelete requires input with ownerId and key", () => {
+    type V = VariablesOf<typeof cartMetafieldDeleteMutation>;
+    expectTypeOf<V["input"]>().toHaveProperty("ownerId");
+    expectTypeOf<V["input"]>().toHaveProperty("key");
   });
 });
 

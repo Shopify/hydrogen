@@ -423,6 +423,49 @@ const DEFAULT_CART_QUERIES = {
 
 type DefaultCartQueries = typeof DEFAULT_CART_QUERIES;
 
+// cartMetafieldsSet and cartMetafieldDelete are the only SFAPI cart mutations
+// whose responses contain no cart object, only userErrors. With no cart
+// selection to spread fragments into, these mutation strings are identical
+// whether or not a custom CartFragment is configured, so they are plain
+// constants outside makeCartQueries. The server handler refetches the cart
+// after mutating to return up-to-date cart data.
+const CART_METAFIELDS_SET_MUTATION_SOURCE = /* GraphQL */ `
+  mutation CartMetafieldsSet(
+    $metafields: [CartMetafieldsSetInput!]!
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    cartMetafieldsSet(metafields: $metafields) {
+      userErrors {
+        code
+        elementIndex
+        field
+        message
+      }
+    }
+  }
+`;
+
+const CART_METAFIELD_DELETE_MUTATION_SOURCE = /* GraphQL */ `
+  mutation CartMetafieldDelete(
+    $input: CartMetafieldDeleteInput!
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    cartMetafieldDelete(input: $input) {
+      userErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
+
+export const cartMetafieldsSetMutation = gql(CART_METAFIELDS_SET_MUTATION_SOURCE);
+
+export const cartMetafieldDeleteMutation = gql(CART_METAFIELD_DELETE_MUTATION_SOURCE);
+
 type QueryFor<
   Source extends string,
   Fragments extends readonly AnyStorefrontQueryString[],

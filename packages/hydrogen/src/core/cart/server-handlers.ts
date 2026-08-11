@@ -12,10 +12,12 @@ import type {
 } from "../request-routing/registered-routes";
 import { createCallableRouteHandler } from "../request-routing/registered-routes";
 import { parseCartRequest } from "./actions";
-import type { CartAction, CartLineAddInput } from "./actions";
+import type { CartAction, CartLineAddInput, CartMetafieldInput } from "./actions";
 import { getCartIdFromCookie, createCartCookie } from "./cookie";
 import { getCart, getCartId, type CartDataFromQuery } from "./get-cart";
 import {
+  cartMetafieldDeleteMutation,
+  cartMetafieldsSetMutation,
   cartQueries,
   makeCartQueries,
   type CartDataForOptions,
@@ -177,7 +179,7 @@ async function handlePost(
   const cookieCartId = getCartIdFromCookie(request);
   const cartId = bodyCartId ?? cookieCartId;
 
-  if (action.intent !== "add" && !cartId) {
+  if (!CART_CREATING_INTENTS.has(action.intent) && !cartId) {
     if (isFormRequest) return redirectResult(redirectTarget);
     return errorResult("missing_cart", "No cart exists. Add an item first.");
   }
@@ -254,6 +256,9 @@ function createMutationResult(
   };
 }
 
+// Intents that fall back to cartCreate when no cart exists yet.
+const CART_CREATING_INTENTS: ReadonlySet<CartAction["intent"]> = new Set(["add", "metafields-set"]);
+
 type CartMutationClient = Pick<StorefrontClient, "graphql">;
 
 async function executeMutation(
@@ -266,8 +271,12 @@ async function executeMutation(
     return executeAdd(action.lines, cartId, storefront, queries);
   }
 
+  if (action.intent === "metafields-set") {
+    return executeMetafieldsSet(action.metafields, cartId, storefront, queries);
+  }
+
   if (!cartId) {
-    throw new Error("cartId is required for non-add mutations");
+    throw new Error("cartId is required for mutations that cannot create a cart");
   }
 
   switch (action.intent) {
@@ -303,6 +312,14 @@ async function executeMutation(
       const { cart, userErrors, warnings } = assertMutationData(result, "cartNoteUpdate");
       return createMutationResult(cart, userErrors, warnings, result.headers);
     }
+    case "metafield-delete": {
+      const result = await storefront.graphql(cartMetafieldDeleteMutation, {
+        variables: { input: { ownerId: cartId, key: action.key } },
+      });
+      const { userErrors } = assertMutationData(result, "cartMetafieldDelete");
+      return refetchCartAfterMetafieldMutation(cartId, userErrors, storefront, queries);
+    }
+
     default: {
       const _exhaustive: never = action;
       throw new Error(`Unhandled cart action intent: ${(_exhaustive as CartAction).intent}`);
@@ -329,6 +346,40 @@ async function executeAdd(
   });
   const { cart, userErrors, warnings } = assertMutationData(result, "cartCreate");
   return createMutationResult(cart, userErrors, warnings, result.headers);
+}
+
+// cartMetafieldsSet/cartMetafieldDelete return no cart in their payloads — only
+// userErrors — so the cart is refetched to keep MutationResult uniform across intents.
+async function refetchCartAfterMetafieldMutation(
+  cartId: string,
+  userErrors: unknown,
+  storefront: CartMutationClient,
+  queries: RuntimeCartQueries,
+): Promise<MutationResult> {
+  const result = await storefront.graphql(queries.cart, { variables: { id: cartId } });
+  const { cart } = assertGraphQLData(result);
+  return createMutationResult(cart, userErrors, [], result.headers);
+}
+
+async function executeMetafieldsSet(
+  metafields: CartMetafieldInput[],
+  cartId: string | null,
+  storefront: CartMutationClient,
+  queries: RuntimeCartQueries,
+): Promise<MutationResult> {
+  if (!cartId) {
+    const result = await storefront.graphql(queries.cartCreate, {
+      variables: { input: { metafields } },
+    });
+    const { cart, userErrors, warnings } = assertMutationData(result, "cartCreate");
+    return createMutationResult(cart, userErrors, warnings, result.headers);
+  }
+
+  const result = await storefront.graphql(cartMetafieldsSetMutation, {
+    variables: { metafields: metafields.map((metafield) => ({ ...metafield, ownerId: cartId })) },
+  });
+  const { userErrors } = assertMutationData(result, "cartMetafieldsSet");
+  return refetchCartAfterMetafieldMutation(cartId, userErrors, storefront, queries);
 }
 
 async function executeDiscountModify(

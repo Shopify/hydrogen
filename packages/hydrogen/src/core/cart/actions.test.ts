@@ -172,6 +172,103 @@ describe("parseCartRequest", () => {
     });
   });
 
+  describe("JSON — metafield payloads", () => {
+    it("parses metafields array as metafields-set", async () => {
+      const { action } = await parseCartRequest(
+        jsonRequest({
+          metafields: [{ key: "custom.gift", type: "boolean", value: "true" }],
+        }),
+      );
+      expect(action).toEqual({
+        intent: "metafields-set",
+        metafields: [{ key: "custom.gift", type: "boolean", value: "true" }],
+      });
+    });
+
+    it("parses multiple metafields in one request", async () => {
+      const { action } = await parseCartRequest(
+        jsonRequest({
+          metafields: [
+            { key: "custom.gift", type: "boolean", value: "true" },
+            { key: "custom.note", type: "single_line_text_field", value: "hi" },
+          ],
+        }),
+      );
+      expect(action).toEqual({
+        intent: "metafields-set",
+        metafields: [
+          { key: "custom.gift", type: "boolean", value: "true" },
+          { key: "custom.note", type: "single_line_text_field", value: "hi" },
+        ],
+      });
+    });
+
+    it("strips unknown fields such as ownerId from metafield entries", async () => {
+      const { action } = await parseCartRequest(
+        jsonRequest({
+          metafields: [
+            {
+              key: "custom.gift",
+              type: "boolean",
+              value: "true",
+              ownerId: "gid://shopify/Cart/hijack",
+            },
+          ],
+        }),
+      );
+      expect(action).toEqual({
+        intent: "metafields-set",
+        metafields: [{ key: "custom.gift", type: "boolean", value: "true" }],
+      });
+    });
+
+    it("parses deleteMetafield string as metafield-delete", async () => {
+      const { action } = await parseCartRequest(jsonRequest({ deleteMetafield: "custom.gift" }));
+      expect(action).toEqual({ intent: "metafield-delete", key: "custom.gift" });
+    });
+
+    it("rejects empty metafields array", async () => {
+      await expect(parseCartRequest(jsonRequest({ metafields: [] }))).rejects.toThrow(
+        /metafields/i,
+      );
+    });
+
+    it("rejects metafield entries missing key", async () => {
+      await expect(
+        parseCartRequest(jsonRequest({ metafields: [{ type: "boolean", value: "true" }] })),
+      ).rejects.toThrow(/key/i);
+    });
+
+    it("rejects metafield entries missing type", async () => {
+      await expect(
+        parseCartRequest(jsonRequest({ metafields: [{ key: "custom.gift", value: "true" }] })),
+      ).rejects.toThrow(/type/i);
+    });
+
+    it("rejects metafield entries missing value", async () => {
+      await expect(
+        parseCartRequest(jsonRequest({ metafields: [{ key: "custom.gift", type: "boolean" }] })),
+      ).rejects.toThrow(/value/i);
+    });
+
+    it("rejects empty deleteMetafield string", async () => {
+      await expect(parseCartRequest(jsonRequest({ deleteMetafield: "" }))).rejects.toThrow(
+        /deleteMetafield/i,
+      );
+    });
+
+    it("preserves cartId alongside metafields", async () => {
+      const parsed = await parseCartRequest(
+        jsonRequest({
+          cartId: "gid://shopify/Cart/body-cart",
+          metafields: [{ key: "custom.gift", type: "boolean", value: "true" }],
+        }),
+      );
+      expect(parsed.cartId).toBe("gid://shopify/Cart/body-cart");
+      expect(parsed.action.intent).toBe("metafields-set");
+    });
+  });
+
   describe("JSON — cartId metadata", () => {
     it("preserves full cart GID from the body", async () => {
       const parsed = await parseCartRequest(
@@ -548,6 +645,87 @@ describe("parseCartRequest", () => {
     it("note-update without note field rejects", async () => {
       await expect(parseCartRequest(formRequest({ intent: "note-update" }))).rejects.toThrow(
         /note/i,
+      );
+    });
+  });
+
+  describe("FormData — metafield intents", () => {
+    it("metafields-set produces a single-metafield set action", async () => {
+      const { action } = await parseCartRequest(
+        formRequest({
+          intent: "metafields-set",
+          metafieldKey: "custom.gift",
+          metafieldType: "boolean",
+          metafieldValue: "true",
+        }),
+      );
+      expect(action).toEqual({
+        intent: "metafields-set",
+        metafields: [{ key: "custom.gift", type: "boolean", value: "true" }],
+      });
+    });
+
+    it("metafields-set with empty metafieldValue is valid", async () => {
+      const { action } = await parseCartRequest(
+        formRequest({
+          intent: "metafields-set",
+          metafieldKey: "custom.note",
+          metafieldType: "single_line_text_field",
+          metafieldValue: "",
+        }),
+      );
+      expect(action).toEqual({
+        intent: "metafields-set",
+        metafields: [{ key: "custom.note", type: "single_line_text_field", value: "" }],
+      });
+    });
+
+    it("metafields-set without metafieldKey rejects", async () => {
+      await expect(
+        parseCartRequest(
+          formRequest({
+            intent: "metafields-set",
+            metafieldType: "boolean",
+            metafieldValue: "true",
+          }),
+        ),
+      ).rejects.toThrow(/metafieldKey/i);
+    });
+
+    it("metafields-set without metafieldType rejects", async () => {
+      await expect(
+        parseCartRequest(
+          formRequest({
+            intent: "metafields-set",
+            metafieldKey: "custom.gift",
+            metafieldValue: "true",
+          }),
+        ),
+      ).rejects.toThrow(/metafieldType/i);
+    });
+
+    it("metafields-set without metafieldValue rejects", async () => {
+      await expect(
+        parseCartRequest(
+          formRequest({
+            intent: "metafields-set",
+            metafieldKey: "custom.gift",
+            metafieldType: "boolean",
+          }),
+        ),
+      ).rejects.toThrow(/metafieldValue/i);
+    });
+
+    it("metafield-delete produces a delete action", async () => {
+      const { action } = await parseCartRequest(
+        formRequest({ intent: "metafield-delete", metafieldKey: "custom.gift" }),
+      );
+      expect(action).toEqual({ intent: "metafield-delete", key: "custom.gift" });
+    });
+
+    it("metafield-delete without metafieldKey rejects", async () => {
+      await expect(parseCartRequest(formRequest({ intent: "metafield-delete" }))).rejects.toThrow(
+        /metafieldKey/i,
       );
     });
   });

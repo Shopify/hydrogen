@@ -14,6 +14,12 @@ export type CartLineUpdateInput = {
   sellingPlanId?: string;
 };
 
+export type CartMetafieldInput = {
+  key: string;
+  type: string;
+  value: string;
+};
+
 export type CartAction =
   | { intent: "add"; lines: CartLineAddInput[] }
   | { intent: "update"; lines: CartLineUpdateInput[] }
@@ -21,7 +27,9 @@ export type CartAction =
   | { intent: "discount-update"; discountCodes: string[] }
   | { intent: "discount-apply"; code: string }
   | { intent: "discount-remove"; code: string }
-  | { intent: "note-update"; note: string };
+  | { intent: "note-update"; note: string }
+  | { intent: "metafields-set"; metafields: CartMetafieldInput[] }
+  | { intent: "metafield-delete"; key: string };
 
 type ParsedCartRequest = {
   action: CartAction;
@@ -74,8 +82,22 @@ function parseJsonBody(body: unknown): ParsedCartRequest {
     };
   }
 
+  if ("metafields" in body && Array.isArray(body.metafields)) {
+    return { action: parseMetafieldsSet(body.metafields), cartId };
+  }
+
+  if ("deleteMetafield" in body) {
+    assertString(body.deleteMetafield, "deleteMetafield");
+    if (body.deleteMetafield === "") {
+      throw new CartActionError('"deleteMetafield" must be a non-empty metafield key.');
+    }
+    return { action: { intent: "metafield-delete", key: body.deleteMetafield }, cartId };
+  }
+
   if (!("lines" in body) || !Array.isArray(body.lines)) {
-    throw new CartActionError('Request body must contain "lines", "discountCodes", or "note".');
+    throw new CartActionError(
+      'Request body must contain "lines", "discountCodes", "note", "metafields", or "deleteMetafield".',
+    );
   }
 
   const lines = body.lines as unknown[];
@@ -147,6 +169,22 @@ function partitionLines(rawLines: unknown[]): CartAction {
   return { intent: "remove", lineIds: removeIds };
 }
 
+function parseMetafieldsSet(rawMetafields: unknown[]): CartAction {
+  if (rawMetafields.length === 0) {
+    throw new CartActionError("Metafields array must not be empty.");
+  }
+
+  const metafields = rawMetafields.map((raw): CartMetafieldInput => {
+    assertObject(raw);
+    assertString(raw.key, "metafields[].key");
+    assertString(raw.type, "metafields[].type");
+    assertString(raw.value, "metafields[].value");
+    return { key: raw.key, type: raw.type, value: raw.value };
+  });
+
+  return { intent: "metafields-set", metafields };
+}
+
 function extractOptionalLineFields(
   line: Record<string, unknown>,
 ): Pick<CartLineAddInput, "attributes" | "sellingPlanId"> {
@@ -173,6 +211,7 @@ function extractOptionalLineFields(
 //   Discount bulk:  no FormData equivalent — forms handle one code at a time
 //   Attributes:     not supported in FormData (nested objects can't be expressed in flat fields)
 //   Selling plan:   add only — no way to change selling plan on existing line via form
+//   Metafields:     one metafield per submission (flat metafieldKey/Type/Value fields)
 //
 // Design decisions:
 //   - `intent` field disambiguates operations (forms need explicit routing; JSON infers from structure)
@@ -216,9 +255,38 @@ function parseFormData(form: FormData): CartAction {
     return parseNoteIntent(form);
   }
 
+  if (intent === "metafields-set") {
+    return parseMetafieldsSetIntent(form);
+  }
+
+  if (intent === "metafield-delete") {
+    return { intent: "metafield-delete", key: requireMetafieldKey(form, intent) };
+  }
+
   throw new CartActionError(
-    `Unknown intent "${intent}". Expected one of: add, increase, decrease, remove, set, discount-apply, discount-remove, note-update.`,
+    `Unknown intent "${intent}". Expected one of: add, increase, decrease, remove, set, discount-apply, discount-remove, note-update, metafields-set, metafield-delete.`,
   );
+}
+
+function parseMetafieldsSetIntent(form: FormData): CartAction {
+  const key = requireMetafieldKey(form, "metafields-set");
+  const type = formString(form, "metafieldType");
+  if (!type) {
+    throw new CartActionError('Intent "metafields-set" requires a "metafieldType" field.');
+  }
+  const value = form.get("metafieldValue");
+  if (value === null) {
+    throw new CartActionError('Intent "metafields-set" requires a "metafieldValue" field.');
+  }
+  return { intent: "metafields-set", metafields: [{ key, type, value: String(value) }] };
+}
+
+function requireMetafieldKey(form: FormData, intent: string): string {
+  const key = formString(form, "metafieldKey");
+  if (!key) {
+    throw new CartActionError(`Intent "${intent}" requires a "metafieldKey" field.`);
+  }
+  return key;
 }
 
 function parseLineIntent(intent: string, form: FormData): CartAction {
