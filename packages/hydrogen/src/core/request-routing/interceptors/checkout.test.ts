@@ -192,6 +192,19 @@ describe("handleCheckoutRedirect", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
+  it("redirects mock.shop variant cart permalinks to the demo store", async () => {
+    const result = await handleCheckoutRedirect(
+      new Request("https://my-app.com/cart/123:2?payment=shop_pay&source=hydrogen"),
+      { storeDomain: "mock.shop" },
+    );
+
+    expect(result?.status).toBe(302);
+    expect(result?.headers.get("location")).toBe(
+      "https://demostore.mock.shop/cart/123:2?payment=shop_pay&source=hydrogen",
+    );
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
   it("merges checkout URL search params into variant cart permalinks when a cart exists", async () => {
     mockFetch.mockResolvedValueOnce(
       mockGqlResponse({

@@ -5,6 +5,7 @@ import { CART_PERMALINK_RE, CHECKOUT_RE } from "../../url";
 import type { HydrogenRouteInterceptor } from "../route-types";
 
 const log = getLogger("checkout");
+const MOCK_SHOP_CART_PERMALINK_ORIGIN = "https://demostore.mock.shop";
 
 export const handleCheckoutRedirect: HydrogenRouteInterceptor = (
   url,
@@ -61,7 +62,10 @@ async function getCartRedirectUrl(
   storefrontClient: StorefrontClient,
 ): Promise<URL> {
   const sourceUrl = new URL(request.url);
-  const redirectUrl = new URL(sourceUrl.pathname, storefrontClient.storeUrl);
+  const redirectUrl = new URL(
+    sourceUrl.pathname,
+    getCartPermalinkOrigin(storefrontClient.storeUrl),
+  );
 
   const cartId = getCartId(request);
   if (!cartId) return redirectUrl;
@@ -76,6 +80,11 @@ async function getCartRedirectUrl(
   }
 
   return redirectUrl;
+}
+
+function getCartPermalinkOrigin(storeUrl: string): string {
+  const url = new URL(storeUrl);
+  return url.hostname === "mock.shop" ? MOCK_SHOP_CART_PERMALINK_ORIGIN : url.origin;
 }
 
 function mergeSearchParams(target: URL, source: URLSearchParams): void {

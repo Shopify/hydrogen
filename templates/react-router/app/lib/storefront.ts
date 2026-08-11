@@ -36,7 +36,7 @@ export function createRequestStorefrontClient(
     buyerIp,
   });
 
-  const storeDomain = usingMockShop ? "demostore.mock.shop" : getStoreDomain(env);
+  const storeDomain = usingMockShop ? "mock.shop" : getStoreDomain(env);
   const privateStorefrontToken = usingMockShop
     ? "mock-private-token"
     : getPrivateStorefrontToken(env);
