@@ -3,10 +3,10 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { configureLogging, resetLoggingForTests } from "../logging";
 import { assert, createTestLogger } from "../test-utils";
-import { getShopPayButtonLabel } from "./labels";
 import {
   createShopPayButton,
   defineShopPayButton,
+  getShopPayButtonElementContentHtml,
   getShopPayButtonUrl,
   renderShopPayButton,
   SHOP_PAY_BUTTON_TAG_NAME,
@@ -116,28 +116,6 @@ describe("getShopPayButtonUrl", () => {
   });
 });
 
-describe("getShopPayButtonLabel", () => {
-  it("defaults to English", () => {
-    expect(getShopPayButtonLabel()).toBe("Buy with Shop Pay");
-  });
-
-  it("matches exact locales case-insensitively", () => {
-    expect(getShopPayButtonLabel("PT-br")).toBe("Comprar com Shop Pay");
-  });
-
-  it("matches base languages ignoring unknown regions", () => {
-    expect(getShopPayButtonLabel("fr-CA")).toBe("Acheter avec Shop Pay");
-  });
-
-  it("falls back to the first regional variant of a base language", () => {
-    expect(getShopPayButtonLabel("pt")).toBe("Comprar com o Shop Pay");
-  });
-
-  it("falls back to English for unknown locales", () => {
-    expect(getShopPayButtonLabel("xx-XX")).toBe("Buy with Shop Pay");
-  });
-});
-
 describe("renderShopPayButton", () => {
   function renderToElement(options: ShopPayButtonOptions): HTMLElement {
     document.body.innerHTML = renderShopPayButton(options);
@@ -149,20 +127,31 @@ describe("renderShopPayButton", () => {
   it("renders a zero-JS anchor with the checkout URL", () => {
     const anchor = renderToElement({ variants: ["123"] });
 
+    expect(document.body.querySelector(SHOP_PAY_BUTTON_TAG_NAME)).not.toBeNull();
     expect(anchor.getAttribute("href")).toBe("/cart/123:1?payment=shop_pay&source=hydrogen");
     expect(anchor.getAttribute("class")).toBe("shop-pay-button");
   });
 
-  it("renders the localized accessible label and the Shop Pay logo", () => {
-    const anchor = renderToElement({ locale: "fr" });
+  it("renders the default accessible label and the Shop Pay logo", () => {
+    const anchor = renderToElement({});
 
-    const label = anchor.querySelector(".shop-pay-button__label");
-    assert(label, "expected an accessible label");
-    expect(label.textContent).toBe("Acheter avec Shop Pay");
+    expect(anchor.getAttribute("aria-label")).toBe("Buy with Shop Pay");
 
     const logo = anchor.querySelector("svg.shop-pay-button__logo");
     assert(logo, "expected the Shop Pay logo");
     expect(logo.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("renders a caller-provided localized accessible label", () => {
+    const anchor = renderToElement({ accessibilityLabel: "Shop Pay से खरीदें" });
+
+    expect(anchor.getAttribute("aria-label")).toBe("Shop Pay से खरीदें");
+  });
+
+  it("falls back to the default accessible label for blank labels", () => {
+    const anchor = renderToElement({ accessibilityLabel: " " });
+
+    expect(anchor.getAttribute("aria-label")).toBe("Buy with Shop Pay");
   });
 
   it("renders escaped custom button text instead of the logo", () => {
@@ -172,7 +161,24 @@ describe("renderShopPayButton", () => {
     const text = anchor.querySelector(".shop-pay-button__text");
     assert(text, "expected visible button text");
     expect(text.textContent).toBe("Pay <fast> & easy");
-    expect(anchor.querySelector(".shop-pay-button__label")).not.toBeNull();
+    expect(anchor.hasAttribute("aria-label")).toBe(false);
+  });
+
+  it("uses accessibilityLabel as the accessible name when custom button text is present", () => {
+    const anchor = renderToElement({
+      accessibilityLabel: "Shop Payで購入",
+      buttonText: "Shop Pay",
+    });
+
+    expect(anchor.getAttribute("aria-label")).toBe("Shop Payで購入");
+  });
+
+  it("treats blank custom button text as absent", () => {
+    const anchor = renderToElement({ buttonText: " " });
+
+    expect(anchor.querySelector("svg.shop-pay-button__logo")).not.toBeNull();
+    expect(anchor.querySelector(".shop-pay-button__text")).toBeNull();
+    expect(anchor.getAttribute("aria-label")).toBe("Buy with Shop Pay");
   });
 
   it("renders a disabled button without an href", () => {
@@ -182,30 +188,38 @@ describe("renderShopPayButton", () => {
     expect(anchor.getAttribute("aria-disabled")).toBe("true");
   });
 
-  it("maps width and borderRadius to shop-js CSS custom properties", () => {
+  it("maps width and borderRadius to direct anchor styles", () => {
     const anchor = renderToElement({ width: "100%", borderRadius: "6px" });
 
-    expect(anchor.style.getPropertyValue("--shop-pay-button-width")).toBe("100%");
-    expect(anchor.style.getPropertyValue("--shop-pay-button-border-radius")).toBe("6px");
+    expect(anchor.style.width).toBe("100%");
+    expect(anchor.style.borderRadius).toBe("6px");
   });
 
-  it("includes the button styles for zero-JS rendering", () => {
+  it("carries the button styles for zero-JS rendering", () => {
     const html = renderShopPayButton({});
 
+    expect(html).toContain("<hydrogen-shop-pay-button>");
     expect(html).toContain("<style>");
-    expect(html).toContain(".shop-pay-button{");
+    expect(html).toContain("background-color:#5433eb");
+    expect(html).not.toContain("--shop-pay-button");
+    expect(html).not.toContain("--buttons-radius");
   });
 });
 
 describe("createShopPayButton", () => {
-  it("creates the anchor element and injects the styles once", () => {
+  it("creates the self-contained custom element", () => {
     const first = createShopPayButton({ variants: ["123"] });
     const second = createShopPayButton({});
+    const firstAnchor = first.querySelector("a");
+    const secondAnchor = second.querySelector("a");
 
-    expect(first.tagName.toLowerCase()).toBe("a");
-    expect(first.getAttribute("href")).toBe("/cart/123:1?payment=shop_pay&source=hydrogen");
-    expect(second.getAttribute("href")).toBe("/checkout?payment=shop_pay&source=hydrogen");
-    expect(document.head.querySelectorAll("style")).toHaveLength(1);
+    assert(firstAnchor, "expected first element to contain an anchor");
+    assert(secondAnchor, "expected second element to contain an anchor");
+    expect(first.tagName.toLowerCase()).toBe(SHOP_PAY_BUTTON_TAG_NAME);
+    expect(first.querySelector("style")?.textContent).toContain("background-color:#5433eb");
+    expect(firstAnchor.getAttribute("href")).toBe("/cart/123:1?payment=shop_pay&source=hydrogen");
+    expect(secondAnchor.getAttribute("href")).toBe("/checkout?payment=shop_pay&source=hydrogen");
+    expect(document.head.querySelectorAll("style")).toHaveLength(0);
   });
 });
 
@@ -215,6 +229,7 @@ describe("defineShopPayButton", () => {
     defineShopPayButton();
 
     const element = document.createElement(SHOP_PAY_BUTTON_TAG_NAME);
+    element.setAttribute("accessibility-label", "Shop Payで購入");
     element.setAttribute("variants", "123:2,456:1");
     element.setAttribute("payment-option", "shop_pay_installments");
     document.body.append(element);
@@ -224,6 +239,7 @@ describe("defineShopPayButton", () => {
     expect(anchor.getAttribute("href")).toBe(
       "/cart/123:2,456:1?payment=shop_pay_installments&source=hydrogen",
     );
+    expect(anchor.getAttribute("aria-label")).toBe("Shop Payで購入");
   });
 
   it("re-renders when observed attributes change", () => {
@@ -232,12 +248,15 @@ describe("defineShopPayButton", () => {
     const element = document.createElement(SHOP_PAY_BUTTON_TAG_NAME);
     element.setAttribute("variants", "123:1");
     document.body.append(element);
+    const firstAnchor = element.querySelector("a");
+    assert(firstAnchor, "expected the element to render an anchor");
 
     element.setAttribute("variants", "456:3");
     element.setAttribute("disabled", "");
 
     const anchor = element.querySelector("a");
     assert(anchor, "expected the element to render an anchor");
+    expect(anchor).toBe(firstAnchor);
     expect(anchor.hasAttribute("href")).toBe(false);
     expect(anchor.getAttribute("aria-disabled")).toBe("true");
 
@@ -245,6 +264,59 @@ describe("defineShopPayButton", () => {
     const enabledAnchor = element.querySelector("a");
     assert(enabledAnchor, "expected the element to re-render an anchor");
     expect(enabledAnchor.getAttribute("href")).toBe("/cart/456:3?payment=shop_pay&source=hydrogen");
+  });
+
+  it("preserves focus when a managed custom element updates", () => {
+    defineShopPayButton();
+
+    const element = document.createElement(SHOP_PAY_BUTTON_TAG_NAME);
+    element.setAttribute("variants", "123:1");
+    document.body.append(element);
+
+    const anchor = element.querySelector("a");
+    assert(anchor, "expected the element to render an anchor");
+    anchor.focus();
+
+    element.setAttribute("width", "100%");
+
+    expect(element.querySelector("a")).toBe(anchor);
+    expect(document.activeElement).toBe(anchor);
+    expect(anchor.style.width).toBe("100%");
+  });
+
+  it("does not clobber framework-rendered children when the element is defined", () => {
+    defineShopPayButton();
+
+    const element = document.createElement(SHOP_PAY_BUTTON_TAG_NAME);
+    element.innerHTML = getShopPayButtonElementContentHtml({
+      accessibilityLabel: "Shop Payで購入",
+      disabled: true,
+      variants: ["123"],
+    });
+    document.body.append(element);
+
+    const anchor = element.querySelector("a");
+    assert(anchor, "expected the element to keep its existing anchor");
+    expect(anchor.hasAttribute("href")).toBe(false);
+    expect(anchor.getAttribute("aria-disabled")).toBe("true");
+    expect(anchor.getAttribute("aria-label")).toBe("Shop Payで購入");
+  });
+
+  it("updates server-rendered managed elements in place after upgrade", () => {
+    defineShopPayButton();
+
+    document.body.innerHTML = renderShopPayButton({ variants: ["123"] });
+    const element = document.body.querySelector(SHOP_PAY_BUTTON_TAG_NAME);
+    assert(element, "expected renderShopPayButton to render an element");
+    const firstAnchor = element.querySelector("a");
+    assert(firstAnchor, "expected the element to contain an anchor");
+
+    element.setAttribute("variants", "456:2");
+
+    const updatedAnchor = element.querySelector("a");
+    assert(updatedAnchor, "expected the element to keep an anchor");
+    expect(updatedAnchor).toBe(firstAnchor);
+    expect(updatedAnchor.getAttribute("href")).toBe("/cart/456:2?payment=shop_pay&source=hydrogen");
   });
 
   it("logs instead of throwing when attributes are invalid", () => {

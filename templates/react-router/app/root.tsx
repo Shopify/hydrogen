@@ -30,7 +30,7 @@ import {
 
 import type { Route } from "./+types/root";
 
-import "./app.css";
+import appStylesHref from "./app.css?url";
 
 const NAV_COLLECTIONS_QUERY = gql(`
   query NavCollections {
@@ -44,6 +44,7 @@ const NAV_COLLECTIONS_QUERY = gql(`
 `);
 
 export const links: Route.LinksFunction = () => [
+  { rel: "stylesheet", href: appStylesHref },
   { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
 ];
 

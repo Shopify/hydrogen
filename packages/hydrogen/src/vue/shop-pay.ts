@@ -5,6 +5,7 @@ import {
   getShopPayButtonContentHtml,
   getShopPayButtonStyleProperties,
   SHOP_PAY_BUTTON_STYLES,
+  SHOP_PAY_BUTTON_TAG_NAME,
   type ShopPayButtonOptions,
 } from "../core/shop-pay/shop-pay";
 
@@ -50,7 +51,7 @@ export const ShopPayButton = defineComponent({
       type: String,
       default: undefined,
     },
-    locale: {
+    accessibilityLabel: {
       type: String,
       default: undefined,
     },
@@ -65,24 +66,26 @@ export const ShopPayButton = defineComponent({
         class: buttonClassName,
         href,
         "aria-disabled": ariaDisabled,
+        "aria-label": ariaLabel,
       } = getShopPayButtonAnchorAttributes(props);
       const { class: extraClassName, style: extraStyle, ...anchorAttrs } = attrs;
 
-      return [
+      return h(SHOP_PAY_BUTTON_TAG_NAME, [
+        // innerHTML instead of a text child: Vue SSR entity-escapes style text,
+        // which browsers do not decode inside <style>.
+        h("style", { innerHTML: SHOP_PAY_BUTTON_STYLES }),
         h("a", {
           ...anchorAttrs,
           class: [buttonClassName, extraClassName],
           href,
           "aria-disabled": ariaDisabled,
+          "aria-label": ariaLabel,
           style: [getShopPayButtonStyleProperties(props), extraStyle],
-          // Static, locale-keyed markup owned by this package; user-provided
-          // buttonText is escaped by getShopPayButtonContentHtml.
+          // Static markup owned by this package; user-provided text is escaped
+          // by getShopPayButtonContentHtml.
           innerHTML: getShopPayButtonContentHtml(props),
         }),
-        // innerHTML instead of a text child: Vue SSR entity-escapes style text,
-        // which browsers do not decode inside <style>.
-        h("style", { innerHTML: SHOP_PAY_BUTTON_STYLES }),
-      ];
+      ]);
     };
   },
 });

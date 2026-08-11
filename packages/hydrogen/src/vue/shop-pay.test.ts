@@ -25,7 +25,7 @@ describe("ShopPayButton", () => {
       "/cart/123:1?payment=shop_pay&source=hydrogen&channel=headless",
     );
     expect(anchor.className).toBe("shop-pay-button extra");
-    expect(anchor.style.getPropertyValue("--shop-pay-button-width")).toBe("100%");
+    expect(anchor.style.width).toBe("100%");
   });
 
   it("renders a same-origin checkout URL without variants", () => {
@@ -37,10 +37,12 @@ describe("ShopPayButton", () => {
   });
 
   it("renders the accessible label, logo, and styles", () => {
-    const wrapper = mount(ShopPayButton, { props: { locale: "de" } });
+    const wrapper = mount(ShopPayButton, {
+      props: { accessibilityLabel: "Shop Pay से खरीदें" },
+    });
 
-    const label = wrapper.find(".shop-pay-button__label");
-    expect(label.text()).toBe("Mit Shop Pay kaufen");
+    expect(wrapper.find("a").attributes("aria-label")).toBe("Shop Pay से खरीदें");
+    expect(wrapper.find("hydrogen-shop-pay-button").exists()).toBe(true);
     expect(wrapper.find("svg.shop-pay-button__logo").exists()).toBe(true);
     expect(wrapper.find("style").exists()).toBe(true);
   });
@@ -75,9 +77,11 @@ describe("ShopPayButton", () => {
 
     assert(html, "expected SSR output");
     expect(html).toContain('href="/cart/123:2?payment=shop_pay_installments&amp;source=hydrogen"');
-    expect(html).toContain("shop-pay-button__label");
+    expect(html).toContain("<hydrogen-shop-pay-button");
+    expect(html).toContain('aria-label="Buy with Shop Pay"');
     // The disabled-state selector must survive SSR unescaped; Vue
     // entity-escapes text children of <style>, which browsers do not decode.
-    expect(html).toContain(".shop-pay-button[aria-disabled=true]{opacity:.5");
+    expect(html).toContain("shop-pay-button>.shop-pay-button[aria-disabled=true]{opacity:.5");
+    expect(html).not.toContain("--shop-pay-button");
   });
 });

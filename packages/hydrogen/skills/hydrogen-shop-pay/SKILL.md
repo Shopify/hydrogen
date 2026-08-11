@@ -10,10 +10,11 @@ description: >
 
 # Shop Pay
 
-Hydrogen renders the Shop Pay button locally: a styled anchor pointing at the
-storefront's own `/checkout` or `/cart/<id>:<qty>` permalink paths, which
-`handleShopifyRoutes` redirects to the store's real checkout. No external
-script loads and the server-rendered button works before any JavaScript runs.
+Hydrogen renders the Shop Pay button locally: a self-contained
+`<hydrogen-shop-pay-button>` element carrying its own styles and an anchor pointing at
+the storefront's own `/checkout` or `/cart/<id>:<qty>` permalink paths, which
+`handleShopifyRoutes` redirects to the store's real checkout. No external script
+loads and the server-rendered button works before any JavaScript runs.
 
 ## Framework References
 
@@ -29,7 +30,7 @@ Before writing UI, check whether this skill has a reference file for the app's f
 - Use `channel="hydrogen"` for Hydrogen headless storefronts unless the app has a reason to use a different channel.
 - Do not pass `checkoutUrl` on storefront pages; the default same-origin URLs are handled by `handleShopifyRoutes`. Pass it only when rendering the button outside the storefront origin.
 - Keep Shop Pay near the primary purchase action, and keep its disabled state aligned with `canAddToCart(...)`.
-- Size with `width` and `borderRadius`; there is no `height` option. Pass `locale` when the storefront language is not English.
+- Size with `width` and `borderRadius`; there is no `height` option. Pass `accessibilityLabel` when the storefront language is not English, and never translate the `Shop Pay` brand name.
 
 ## Product Page Pattern
 

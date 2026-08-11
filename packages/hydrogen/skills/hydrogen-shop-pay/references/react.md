@@ -29,6 +29,7 @@ function AddToCart({ product }: { product: ProductData }) {
           disabled={!addable || pending}
           width="100%"
           borderRadius="9999px"
+          accessibilityLabel="Shop Payで購入"
         />
       ) : null}
     </>
@@ -36,9 +37,10 @@ function AddToCart({ product }: { product: ProductData }) {
 }
 ```
 
-`ShopPayButton` renders a plain anchor with no hooks, so it server-renders as a
-working button — including in React Server Components — with no `"use client"`
-requirement of its own.
+`ShopPayButton` renders a self-contained `<hydrogen-shop-pay-button>` element with no
+hooks, so it server-renders as a working button — including in React Server
+Components — with no `"use client"` requirement of its own.
 
 Size with `width`/`borderRadius` props; `className` and `style` merge onto the
-anchor. Pass `locale` when the storefront language is not English.
+inner anchor. Pass `accessibilityLabel` when the storefront language is not English.
+Localize words around the brand, but never translate `Shop Pay` itself.

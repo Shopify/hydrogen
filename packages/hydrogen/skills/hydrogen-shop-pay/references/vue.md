@@ -23,12 +23,14 @@ Render only when a variant is resolved:
   :disabled="!addable || form.pending.value"
   width="100%"
   border-radius="9999px"
+  accessibility-label="Shop Pay से खरीदें"
 />
 ```
 
-The component renders a plain anchor, so it works with Nuxt server rendering
-and needs no client-only wrapper.
+The component renders a self-contained `<hydrogen-shop-pay-button>` element, so it works
+with Nuxt server rendering and needs no client-only wrapper.
 
-Size with `width`/`border-radius` props; extra attributes (including `class`
-and `style`) fall through to the anchor. Pass `locale` when the storefront
-language is not English.
+Size with `width`/`border-radius` props; extra attributes (including `class` and
+`style`) fall through to the inner anchor. Pass `accessibility-label` when the
+storefront language is not English. Localize words around the brand, but never
+translate `Shop Pay` itself.

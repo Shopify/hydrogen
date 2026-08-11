@@ -1,32 +1,41 @@
 import { getLogger } from "../logging";
 import { normalizeStoreDomain } from "../url";
 import { parseGid } from "../utils/parse-gid";
-import { getShopPayButtonLabel } from "./labels";
 
 const log = getLogger("shop-pay");
 
 const DEFAULT_SOURCE = "hydrogen";
+const DEFAULT_ACCESSIBILITY_LABEL = "Buy with Shop Pay";
 const ERROR_PREFIX = "[hydrogen:error:ShopPay]";
-export const SHOP_PAY_BUTTON_TAG_NAME = "shop-pay-button";
+export const SHOP_PAY_BUTTON_TAG_NAME = "hydrogen-shop-pay-button";
 export const SHOP_PAY_BUTTON_CLASS_NAME = "shop-pay-button";
-const STYLE_ELEMENT_ID = "shop-pay-button-styles";
+const SHOP_PAY_BUTTON_OBSERVED_ATTRIBUTES = [
+  "accessibility-label",
+  "border-radius",
+  "button-text",
+  "channel",
+  "checkout-url",
+  "disabled",
+  "payment-option",
+  "source",
+  "source-token",
+  "variants",
+  "width",
+] as const;
 
 /**
- * Button styles matching the hosted shop-js pay button: brand colors, focus
- * ring, and the same `--shop-pay-button-*` custom properties for sizing. The
- * `--shop-pay-button-border-radius` option wins over the page-level
- * `--buttons-radius` theme token. Selectors avoid quotes because some server
- * renderers (Vue) entity-escape `<style>` text children.
+ * Button styles matching the hosted shop-js pay button: fixed brand colors,
+ * hover state, focus ring, and disabled state. Selectors avoid quotes because
+ * some server renderers (Vue) entity-escape `<style>` text children.
  */
 export const SHOP_PAY_BUTTON_STYLES =
   `${SHOP_PAY_BUTTON_TAG_NAME}{display:block}` +
-  `.${SHOP_PAY_BUTTON_CLASS_NAME}{position:relative;display:flex;align-items:center;box-sizing:border-box;margin:0;padding:10px 16px;overflow:visible;width:var(--shop-pay-button-width,260px);border:none;border-radius:var(--shop-pay-button-border-radius,var(--buttons-radius,12px));background-color:#5433eb;color:#fff;cursor:pointer;text-decoration:none;transition:all .15s cubic-bezier(.4,0,.2,1)}` +
-  `.${SHOP_PAY_BUTTON_CLASS_NAME}:hover{background-color:#4524db}` +
-  `.${SHOP_PAY_BUTTON_CLASS_NAME}:focus-visible{outline:none;box-shadow:0 0 0 3px #9c83f8}` +
-  `.${SHOP_PAY_BUTTON_CLASS_NAME}[aria-disabled=true]{opacity:.5;pointer-events:none;cursor:default}` +
-  `.${SHOP_PAY_BUTTON_CLASS_NAME}__logo{position:relative;display:inline-block;margin:0 auto;width:88px;height:auto}` +
-  `.${SHOP_PAY_BUTTON_CLASS_NAME}__text{margin:0 auto;font-family:inherit;font-size:16px;font-weight:500;line-height:22px;letter-spacing:-.5px}` +
-  `.${SHOP_PAY_BUTTON_CLASS_NAME}__label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}`;
+  `${SHOP_PAY_BUTTON_TAG_NAME}>.${SHOP_PAY_BUTTON_CLASS_NAME}{position:relative;display:flex;align-items:center;box-sizing:border-box;margin:0;padding:10px 16px;overflow:visible;width:260px;border:none;border-radius:12px;background-color:#5433eb;color:#fff;cursor:pointer;text-decoration:none;transition:all .15s cubic-bezier(.4,0,.2,1)}` +
+  `${SHOP_PAY_BUTTON_TAG_NAME}>.${SHOP_PAY_BUTTON_CLASS_NAME}:hover{background-color:#4524db}` +
+  `${SHOP_PAY_BUTTON_TAG_NAME}>.${SHOP_PAY_BUTTON_CLASS_NAME}:focus-visible{outline:none;box-shadow:0 0 0 3px #9c83f8}` +
+  `${SHOP_PAY_BUTTON_TAG_NAME}>.${SHOP_PAY_BUTTON_CLASS_NAME}[aria-disabled=true]{opacity:.5;pointer-events:none;cursor:default}` +
+  `${SHOP_PAY_BUTTON_TAG_NAME} .${SHOP_PAY_BUTTON_CLASS_NAME}__logo{position:relative;display:inline-block;margin:0 auto;width:88px;height:auto}` +
+  `${SHOP_PAY_BUTTON_TAG_NAME} .${SHOP_PAY_BUTTON_CLASS_NAME}__text{margin:0 auto;font-family:inherit;font-size:16px;font-weight:500;line-height:22px;letter-spacing:-.5px}`;
 
 const SHOP_PAY_LOGO_SVG =
   `<svg class="${SHOP_PAY_BUTTON_CLASS_NAME}__logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 99 25" aria-hidden="true" focusable="false">` +
@@ -49,9 +58,28 @@ type ShopPayButtonBaseOptions = {
   disabled?: boolean;
   width?: string;
   borderRadius?: string;
-  /** BCP 47 language tag for the button's accessible label. Defaults to `"en"`. */
-  locale?: string;
-  /** Replaces the Shop Pay logo with visible text. The accessible label is always rendered. */
+  /**
+   * Localized accessible label for the Shop Pay logo, or for custom button text
+   * that needs an explicit accessible name. Logo-only buttons default to `"Buy with Shop Pay"`.
+   * Never translate the brand name `"Shop Pay"`; keep it in Latin script in every locale.
+   *
+   * @example English
+   * `"Buy with Shop Pay"`
+   *
+   * @example Japanese
+   * `"Shop Payで購入"`
+   *
+   * @example Hindi
+   * `"Shop Pay से खरीदें"`
+   *
+   * @example Arabic
+   * `"الشراء باستخدام Shop Pay"`
+   */
+  accessibilityLabel?: string;
+  /**
+   * Replaces the Shop Pay logo with visible text. Without `accessibilityLabel`,
+   * this visible text names the button.
+   */
   buttonText?: string;
 };
 
@@ -94,40 +122,36 @@ export function getShopPayButtonUrl(options: ShopPayButtonOptions): string | nul
 }
 
 /**
- * Renders the Shop Pay button as an HTML string: a styled anchor that needs no
- * client JavaScript. Use it from server templates or frameworks without a
- * Hydrogen binding.
+ * Renders the Shop Pay button as an HTML string: a self-contained custom
+ * element carrying the styles and anchor it needs to work without client
+ * JavaScript. Use it from server templates or frameworks without a Hydrogen
+ * binding.
  */
 export function renderShopPayButton(options: ShopPayButtonOptions): string {
-  const attributes = Object.entries(getShopPayButtonAnchorAttributes(options))
+  const attributes = Object.entries(getShopPayButtonElementAttributes(options))
     .map(([name, value]) => `${name}="${escapeAttribute(value)}"`)
     .join(" ");
 
-  return `<a ${attributes}>${getShopPayButtonContentHtml(options)}</a><style>${SHOP_PAY_BUTTON_STYLES}</style>`;
+  return `<${SHOP_PAY_BUTTON_TAG_NAME}${attributes ? ` ${attributes}` : ""}>${getShopPayButtonElementContentHtml(options)}</${SHOP_PAY_BUTTON_TAG_NAME}>`;
 }
 
 /**
- * Creates the Shop Pay button as a detached DOM element and injects the button
- * styles into the document once.
+ * Creates the Shop Pay button as a detached DOM element. The returned element
+ * carries the button styles with it.
  */
 export function createShopPayButton(options: ShopPayButtonOptions): HTMLElement {
   const template = document.createElement("template");
   template.innerHTML = renderShopPayButton(options);
-  const anchor = template.content.querySelector("a");
-  if (!anchor) throw shopPayError("Shop Pay button markup failed to parse.");
-
-  if (!document.getElementById(STYLE_ELEMENT_ID)) {
-    const style = document.createElement("style");
-    style.id = STYLE_ELEMENT_ID;
-    style.textContent = SHOP_PAY_BUTTON_STYLES;
-    document.head.append(style);
+  const element = template.content.querySelector(SHOP_PAY_BUTTON_TAG_NAME);
+  if (!(element instanceof HTMLElement)) {
+    throw shopPayError("Shop Pay button markup failed to parse.");
   }
 
-  return anchor;
+  return element;
 }
 
 /**
- * Registers the `<shop-pay-button>` custom element for declarative usage
+ * Registers the `<hydrogen-shop-pay-button>` custom element for declarative usage
  * without a framework binding. The element renders the button from its
  * attributes and re-renders when they change. Browser-only; safe to call more
  * than once, and skipped when another script already defined the tag.
@@ -140,24 +164,18 @@ export function defineShopPayButton(): void {
   customElements.define(
     SHOP_PAY_BUTTON_TAG_NAME,
     class extends HTMLElement {
-      static observedAttributes = [
-        "button-text",
-        "channel",
-        "checkout-url",
-        "disabled",
-        "locale",
-        "payment-option",
-        "source",
-        "source-token",
-        "variants",
-      ];
+      #managed = false;
+
+      static observedAttributes = SHOP_PAY_BUTTON_OBSERVED_ATTRIBUTES;
 
       connectedCallback(): void {
+        if (this.children.length > 0 && !this.#hasManagedAttributes()) return;
+        this.#managed = true;
         this.#render();
       }
 
       attributeChangedCallback(): void {
-        if (this.isConnected) this.#render();
+        if (this.isConnected && this.#managed) this.#render();
       }
 
       // Invalid attributes log instead of throwing: lifecycle callbacks have
@@ -171,19 +189,60 @@ export function defineShopPayButton(): void {
       }
 
       #renderButton(): void {
-        this.innerHTML = renderShopPayButton({
+        const options = this.#getOptions();
+        const style = this.#getStyleElement();
+        const anchor = this.#getAnchorElement();
+
+        style.textContent = SHOP_PAY_BUTTON_STYLES;
+        syncAttributes(anchor, getShopPayButtonAnchorAttributes(options));
+        anchor.innerHTML = getShopPayButtonContentHtml(options);
+
+        if (!style.isConnected) this.append(style);
+        if (!anchor.isConnected) this.append(anchor);
+        if (this.firstElementChild !== style) this.prepend(style);
+        if (style.nextElementSibling !== anchor) style.after(anchor);
+      }
+
+      #getOptions(): ShopPayButtonOptions {
+        return {
+          accessibilityLabel: this.getAttribute("accessibility-label") ?? undefined,
+          borderRadius: this.getAttribute("border-radius") ?? undefined,
           buttonText: this.getAttribute("button-text") ?? undefined,
           channel: (this.getAttribute("channel") as ShopPayButtonOptions["channel"]) ?? undefined,
           checkoutUrl: this.getAttribute("checkout-url") ?? undefined,
           disabled: this.hasAttribute("disabled"),
-          locale: this.getAttribute("locale") ?? undefined,
           paymentOption:
             (this.getAttribute("payment-option") as ShopPayButtonOptions["paymentOption"]) ??
             undefined,
           source: this.getAttribute("source") ?? undefined,
           sourceToken: this.getAttribute("source-token") ?? undefined,
           variants: parseVariantsAttribute(this.getAttribute("variants")),
-        });
+          width: this.getAttribute("width") ?? undefined,
+        };
+      }
+
+      #getStyleElement(): HTMLStyleElement {
+        const element = Array.from(this.children).find(
+          (child) => child.tagName.toLowerCase() === "style",
+        );
+        return element instanceof HTMLStyleElement
+          ? element
+          : this.ownerDocument.createElement("style");
+      }
+
+      #getAnchorElement(): HTMLAnchorElement {
+        const element = Array.from(this.children).find(
+          (child) => child.tagName.toLowerCase() === "a",
+        );
+        return element instanceof HTMLAnchorElement
+          ? element
+          : this.ownerDocument.createElement("a");
+      }
+
+      #hasManagedAttributes(): boolean {
+        return SHOP_PAY_BUTTON_OBSERVED_ATTRIBUTES.some((attribute) =>
+          this.hasAttribute(attribute),
+        );
       }
     },
   );
@@ -205,27 +264,55 @@ export function getShopPayButtonAnchorAttributes(
     attributes["aria-disabled"] = "true";
   }
 
-  const style = Object.entries(getShopPayButtonStyleProperties(options))
-    .map(([name, value]) => `${name}:${value}`)
-    .join(";");
+  const style = serializeStyleProperties(getShopPayButtonStyleProperties(options));
   if (style) attributes.style = style;
+
+  if (!hasContent(options.buttonText) || hasContent(options.accessibilityLabel)) {
+    attributes["aria-label"] = getShopPayAccessibilityLabel(options.accessibilityLabel);
+  }
 
   return attributes;
 }
 
+function getShopPayButtonElementAttributes(options: ShopPayButtonOptions): Record<string, string> {
+  const attributes: Record<string, string> = {};
+  const variants = getShopPayVariants(options);
+
+  if (hasContent(options.accessibilityLabel)) {
+    attributes["accessibility-label"] = options.accessibilityLabel.trim();
+  }
+  if (hasContent(options.borderRadius)) attributes["border-radius"] = options.borderRadius.trim();
+  if (hasContent(options.buttonText)) attributes["button-text"] = options.buttonText.trim();
+  if (options.channel) attributes.channel = options.channel;
+  if (options.checkoutUrl) attributes["checkout-url"] = options.checkoutUrl;
+  if (options.disabled) attributes.disabled = "";
+  if (options.paymentOption) attributes["payment-option"] = options.paymentOption;
+  if (options.source) attributes.source = options.source;
+  if (options.sourceToken) attributes["source-token"] = options.sourceToken;
+  if (variants) attributes.variants = variants;
+  if (hasContent(options.width)) attributes.width = options.width.trim();
+
+  return attributes;
+}
+
+export function getShopPayButtonElementContentHtml(options: ShopPayButtonOptions): string {
+  const attributes = Object.entries(getShopPayButtonAnchorAttributes(options))
+    .map(([name, value]) => `${name}="${escapeAttribute(value)}"`)
+    .join(" ");
+
+  return `<style>${SHOP_PAY_BUTTON_STYLES}</style><a ${attributes}>${getShopPayButtonContentHtml(options)}</a>`;
+}
+
 /**
- * Inner HTML for framework bindings that render the anchor natively: the
- * localized accessible label plus the Shop Pay logo or custom button text.
+ * Inner HTML for framework bindings that render the anchor natively: the Shop
+ * Pay logo or custom button text.
  */
 export function getShopPayButtonContentHtml(
-  options: Pick<ShopPayButtonOptions, "buttonText" | "locale">,
+  options: Pick<ShopPayButtonOptions, "buttonText">,
 ): string {
-  const label = escapeText(getShopPayButtonLabel(options.locale));
-  const visible = options.buttonText
-    ? `<span class="${SHOP_PAY_BUTTON_CLASS_NAME}__text">${escapeText(options.buttonText)}</span>`
+  return hasContent(options.buttonText)
+    ? `<span class="${SHOP_PAY_BUTTON_CLASS_NAME}__text">${escapeText(options.buttonText.trim())}</span>`
     : SHOP_PAY_LOGO_SVG;
-
-  return `<span class="${SHOP_PAY_BUTTON_CLASS_NAME}__label">${label}</span>${visible}`;
 }
 
 export function getShopPayButtonStyleProperties(
@@ -233,10 +320,8 @@ export function getShopPayButtonStyleProperties(
 ): Record<string, string> {
   const style: Record<string, string> = {};
 
-  if (options.width) style["--shop-pay-button-width"] = options.width;
-  if (options.borderRadius) {
-    style["--shop-pay-button-border-radius"] = options.borderRadius;
-  }
+  if (hasContent(options.width)) style.width = options.width.trim();
+  if (hasContent(options.borderRadius)) style.borderRadius = options.borderRadius.trim();
 
   return style;
 }
@@ -359,6 +444,34 @@ function escapeText(value: string): string {
 
 function escapeAttribute(value: string): string {
   return escapeText(value).replace(/"/g, "&quot;");
+}
+
+function getShopPayAccessibilityLabel(label: string | undefined): string {
+  return hasContent(label) ? label.trim() : DEFAULT_ACCESSIBILITY_LABEL;
+}
+
+function hasContent(value: string | undefined): value is string {
+  return typeof value === "string" && value.trim() !== "";
+}
+
+function serializeStyleProperties(style: Record<string, string>): string {
+  return Object.entries(style)
+    .map(([name, value]) => `${hyphenateStyleName(name)}:${value}`)
+    .join(";");
+}
+
+function hyphenateStyleName(name: string): string {
+  return name.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
+}
+
+function syncAttributes(element: Element, attributes: Record<string, string>): void {
+  for (const name of element.getAttributeNames()) {
+    if (!(name in attributes)) element.removeAttribute(name);
+  }
+
+  for (const [name, value] of Object.entries(attributes)) {
+    element.setAttribute(name, value);
+  }
 }
 
 function shopPayError(message: string): Error {

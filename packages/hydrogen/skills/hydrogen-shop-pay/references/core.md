@@ -10,17 +10,18 @@ import {
 } from "@shopify/hydrogen";
 ```
 
-All three render the same markup: a styled `<a>` with the Shop Pay logo, a
-localized accessible label, and the button styles. Pick by integration shape:
+All three render the same markup: a self-contained `<hydrogen-shop-pay-button>` element
+with its own styles and an anchor containing the Shop Pay logo. Pick by
+integration shape:
 
 - `renderShopPayButton(options)` returns an HTML string. Use it in server
   templates or frameworks with raw-HTML rendering (`{@html}`, `v-html`,
-  `innerHTML`). The output needs no client JavaScript. Each render inlines the
-  ~1KB button styles so it works standalone; the duplication across multiple
-  buttons on a page is harmless.
-- `createShopPayButton(options)` returns a detached DOM element and injects the
-  button styles into `document.head` once. Use it for imperative DOM UIs.
-- `defineShopPayButton()` registers the `<shop-pay-button>` custom element for
+  `innerHTML`). The output needs no client JavaScript. Each render carries the
+  button styles so it works standalone; duplication across multiple buttons on a
+  page is harmless.
+- `createShopPayButton(options)` returns a detached self-contained
+  `<hydrogen-shop-pay-button>` element. Use it for imperative DOM UIs.
+- `defineShopPayButton()` registers the `<hydrogen-shop-pay-button>` custom element for
   declarative HTML. Call it once in the client entry; it is browser-only, safe
   to call repeatedly, and skipped if the tag is already defined.
 
@@ -38,11 +39,16 @@ container.append(button);
 Or declaratively, after `defineShopPayButton()`:
 
 ```html
-<shop-pay-button variants="123:1" channel="hydrogen"></shop-pay-button>
+<hydrogen-shop-pay-button
+  variants="123:1"
+  channel="hydrogen"
+  accessibility-label="Shop Payで購入"
+  width="100%"
+></hydrogen-shop-pay-button>
 ```
 
-The element re-renders when its attributes change. Size it by setting the CSS
-custom properties on the element: `style="--shop-pay-button-width: 100%"`.
+The element re-renders when its attributes change. Size it with `width` and
+`border-radius` attributes.
 
 For cart checkout buttons, omit `variants`; the button links to the same-origin
 `/checkout` path and `handleShopifyRoutes` redirects it to the current cart's
@@ -63,5 +69,5 @@ container.append(button);
 - Mixed variant formats are invalid: use all strings or all `{ id, quantity }` objects.
 - Cart checkout mode omits `variants`; the current cart checks out.
 - `disabled` renders the button without an `href` and with `aria-disabled="true"`.
-- `locale` selects the accessible label language (defaults to English).
+- `accessibilityLabel` sets the accessible name for logo-only buttons, which otherwise default to English. If `buttonText` is present and `accessibilityLabel` is omitted, the visible text names the button. Localize words around the brand, but never translate `Shop Pay` itself.
 - `checkoutUrl` is only for rendering the button outside the storefront origin.

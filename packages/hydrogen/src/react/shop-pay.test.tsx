@@ -23,7 +23,7 @@ describe("ShopPayButton", () => {
       "/cart/123:2?payment=shop_pay&source=hydrogen&channel=headless",
     );
     expect(anchor.className).toBe("shop-pay-button");
-    expect(anchor.style.getPropertyValue("--shop-pay-button-width")).toBe("100%");
+    expect(anchor.style.width).toBe("100%");
   });
 
   it("renders a same-origin checkout URL without variants", () => {
@@ -35,12 +35,15 @@ describe("ShopPayButton", () => {
   });
 
   it("renders the accessible label, logo, and styles", () => {
-    const { container } = render(createElement(ShopPayButton, { locale: "de" }));
+    const { container } = render(
+      createElement(ShopPayButton, { accessibilityLabel: "Shop Payで購入" }),
+    );
 
-    const label = container.querySelector(".shop-pay-button__label");
-    assert(label, "expected the accessible label");
-    expect(label.textContent).toBe("Mit Shop Pay kaufen");
+    const anchor = container.querySelector("a");
+    assert(anchor, "expected an anchor");
+    expect(anchor.getAttribute("aria-label")).toBe("Shop Payで購入");
     expect(container.querySelector("svg.shop-pay-button__logo")).not.toBeNull();
+    expect(container.querySelector("hydrogen-shop-pay-button")).not.toBeNull();
     expect(container.querySelector("style")).not.toBeNull();
   });
 
@@ -57,7 +60,7 @@ describe("ShopPayButton", () => {
     assert(anchor, "expected an anchor");
     expect(anchor.className).toBe("shop-pay-button extra");
     expect(anchor.style.marginTop).toBe("4px");
-    expect(anchor.style.getPropertyValue("--shop-pay-button-border-radius")).toBe("6px");
+    expect(anchor.style.borderRadius).toBe("6px");
   });
 
   it("renders a disabled button without an href", () => {
@@ -84,7 +87,9 @@ describe("ShopPayButton", () => {
     );
 
     expect(html).toContain('href="/cart/123:2?payment=shop_pay_installments&amp;source=hydrogen"');
-    expect(html).toContain("shop-pay-button__label");
-    expect(html).toContain(".shop-pay-button[aria-disabled=true]{opacity:.5");
+    expect(html).toContain("<hydrogen-shop-pay-button");
+    expect(html).toContain('aria-label="Buy with Shop Pay"');
+    expect(html).toContain("shop-pay-button>.shop-pay-button[aria-disabled=true]{opacity:.5");
+    expect(html).not.toContain("--shop-pay-button");
   });
 });
