@@ -12,7 +12,6 @@ describe("ShopPayButton", () => {
     const { container } = render(
       createElement(ShopPayButton, {
         variants: [{ id: "gid://shopify/ProductVariant/123", quantity: 2 }],
-        channel: "headless",
         width: "100%",
       }),
     );
@@ -20,7 +19,7 @@ describe("ShopPayButton", () => {
     const anchor = container.querySelector("a");
     assert(anchor, "expected an anchor");
     expect(anchor.getAttribute("href")).toBe(
-      "/cart/123:2?payment=shop_pay&source=hydrogen&channel=headless",
+      "/cart/123:2?payment=shop_pay&source=hydrogen&channel=hydrogen",
     );
     expect(anchor.className).toBe("shop-pay-button");
     expect(anchor.style.width).toBe("100%");
@@ -31,7 +30,9 @@ describe("ShopPayButton", () => {
 
     const anchor = container.querySelector("a");
     assert(anchor, "expected an anchor");
-    expect(anchor.getAttribute("href")).toBe("/checkout?payment=shop_pay&source=hydrogen");
+    expect(anchor.getAttribute("href")).toBe(
+      "/checkout?payment=shop_pay&source=hydrogen&channel=hydrogen",
+    );
   });
 
   it("renders the accessible label, logo, and styles", () => {
@@ -47,19 +48,12 @@ describe("ShopPayButton", () => {
     expect(container.querySelector("style")).not.toBeNull();
   });
 
-  it("merges className and style with the button defaults", () => {
-    const { container } = render(
-      createElement(ShopPayButton, {
-        className: "extra",
-        style: { marginTop: "4px" },
-        borderRadius: "6px",
-      }),
-    );
+  it("does not pass wrapper attributes through to the anchor", () => {
+    const { container } = render(createElement(ShopPayButton, { borderRadius: "6px" }));
 
     const anchor = container.querySelector("a");
     assert(anchor, "expected an anchor");
-    expect(anchor.className).toBe("shop-pay-button extra");
-    expect(anchor.style.marginTop).toBe("4px");
+    expect(anchor.className).toBe("shop-pay-button");
     expect(anchor.style.borderRadius).toBe("6px");
   });
 
@@ -86,7 +80,9 @@ describe("ShopPayButton", () => {
       }),
     );
 
-    expect(html).toContain('href="/cart/123:2?payment=shop_pay_installments&amp;source=hydrogen"');
+    expect(html).toContain(
+      'href="/cart/123:2?payment=shop_pay_installments&amp;source=hydrogen&amp;channel=hydrogen"',
+    );
     expect(html).toContain("<hydrogen-shop-pay-button");
     expect(html).toContain('aria-label="Buy with Shop Pay"');
     expect(html).toContain("shop-pay-button>.shop-pay-button[aria-disabled=true]{opacity:.5");

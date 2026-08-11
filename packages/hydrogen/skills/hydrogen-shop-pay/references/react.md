@@ -25,7 +25,6 @@ function AddToCart({ product }: { product: ProductData }) {
       {selectedVariant ? (
         <ShopPayButton
           variants={[{ id: selectedVariant.id, quantity }]}
-          channel="hydrogen"
           disabled={!addable || pending}
           width="100%"
           borderRadius="9999px"

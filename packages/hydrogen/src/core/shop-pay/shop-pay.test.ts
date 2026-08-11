@@ -1,12 +1,9 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it } from "vitest";
 
-import { configureLogging, resetLoggingForTests } from "../logging";
-import { assert, createTestLogger } from "../test-utils";
+import { assert } from "../test-utils";
 import {
   createShopPayButton,
-  defineShopPayButton,
-  getShopPayButtonElementContentHtml,
   getShopPayButtonUrl,
   renderShopPayButton,
   SHOP_PAY_BUTTON_TAG_NAME,
@@ -16,12 +13,13 @@ import {
 afterEach(() => {
   document.head.innerHTML = "";
   document.body.innerHTML = "";
-  resetLoggingForTests();
 });
 
 describe("getShopPayButtonUrl", () => {
   it("builds a same-origin checkout URL by default", () => {
-    expect(getShopPayButtonUrl({})).toBe("/checkout?payment=shop_pay&source=hydrogen");
+    expect(getShopPayButtonUrl({})).toBe(
+      "/checkout?payment=shop_pay&source=hydrogen&channel=hydrogen",
+    );
   });
 
   it("builds a same-origin cart permalink for variant mode", () => {
@@ -29,14 +27,13 @@ describe("getShopPayButtonUrl", () => {
       getShopPayButtonUrl({
         variants: [{ id: "gid://shopify/ProductVariant/123", quantity: 2 }, { id: "456" }],
         paymentOption: "shop_pay_installments",
-        channel: "headless",
       }),
-    ).toBe("/cart/123:2,456:1?payment=shop_pay_installments&source=hydrogen&channel=headless");
+    ).toBe("/cart/123:2,456:1?payment=shop_pay_installments&source=hydrogen&channel=hydrogen");
   });
 
   it("normalizes Shopify ProductVariant GIDs and defaults quantities to one", () => {
     expect(getShopPayButtonUrl({ variants: ["gid://shopify/ProductVariant/123", "456"] })).toBe(
-      "/cart/123:1,456:1?payment=shop_pay&source=hydrogen",
+      "/cart/123:1,456:1?payment=shop_pay&source=hydrogen&channel=hydrogen",
     );
   });
 
@@ -45,9 +42,8 @@ describe("getShopPayButtonUrl", () => {
       getShopPayButtonUrl({
         source: "custom-source",
         sourceToken: "token-1",
-        channel: "headless",
       }),
-    ).toBe("/checkout?payment=shop_pay&source=custom-source&source_token=token-1&channel=headless");
+    ).toBe("/checkout?payment=shop_pay&source=custom-source&source_token=token-1&channel=hydrogen");
   });
 
   it("returns null when disabled", () => {
@@ -60,7 +56,7 @@ describe("getShopPayButtonUrl", () => {
         checkoutUrl: "https://example.myshopify.com/checkouts/cn/abc?key=value",
       }),
     ).toBe(
-      "https://example.myshopify.com/checkouts/cn/abc?key=value&payment=shop_pay&source=hydrogen",
+      "https://example.myshopify.com/checkouts/cn/abc?key=value&payment=shop_pay&source=hydrogen&channel=hydrogen",
     );
   });
 
@@ -71,13 +67,13 @@ describe("getShopPayButtonUrl", () => {
         variants: ["gid://shopify/ProductVariant/123", "456"],
       }),
     ).toBe(
-      "https://example.myshopify.com/cart/123:1,456:1?key=value&payment=shop_pay&source=hydrogen",
+      "https://example.myshopify.com/cart/123:1,456:1?key=value&payment=shop_pay&source=hydrogen&channel=hydrogen",
     );
   });
 
   it("uses /checkout when only a store domain is provided", () => {
     expect(getShopPayButtonUrl({ checkoutUrl: "example.myshopify.com" })).toBe(
-      "https://example.myshopify.com/checkout?payment=shop_pay&source=hydrogen",
+      "https://example.myshopify.com/checkout?payment=shop_pay&source=hydrogen&channel=hydrogen",
     );
   });
 
@@ -87,7 +83,7 @@ describe("getShopPayButtonUrl", () => {
         checkoutUrl: "example.myshopify.com?discount=SAVE10&payment=bogus#ignored",
       }),
     ).toBe(
-      "https://example.myshopify.com/checkout?discount=SAVE10&payment=shop_pay&source=hydrogen",
+      "https://example.myshopify.com/checkout?discount=SAVE10&payment=shop_pay&source=hydrogen&channel=hydrogen",
     );
   });
 
@@ -128,7 +124,9 @@ describe("renderShopPayButton", () => {
     const anchor = renderToElement({ variants: ["123"] });
 
     expect(document.body.querySelector(SHOP_PAY_BUTTON_TAG_NAME)).not.toBeNull();
-    expect(anchor.getAttribute("href")).toBe("/cart/123:1?payment=shop_pay&source=hydrogen");
+    expect(anchor.getAttribute("href")).toBe(
+      "/cart/123:1?payment=shop_pay&source=hydrogen&channel=hydrogen",
+    );
     expect(anchor.getAttribute("class")).toBe("shop-pay-button");
   });
 
@@ -207,7 +205,7 @@ describe("renderShopPayButton", () => {
 });
 
 describe("createShopPayButton", () => {
-  it("creates the self-contained custom element", () => {
+  it("creates the self-contained wrapper element", () => {
     const first = createShopPayButton({ variants: ["123"] });
     const second = createShopPayButton({});
     const firstAnchor = first.querySelector("a");
@@ -217,120 +215,12 @@ describe("createShopPayButton", () => {
     assert(secondAnchor, "expected second element to contain an anchor");
     expect(first.tagName.toLowerCase()).toBe(SHOP_PAY_BUTTON_TAG_NAME);
     expect(first.querySelector("style")?.textContent).toContain("background-color:#5433eb");
-    expect(firstAnchor.getAttribute("href")).toBe("/cart/123:1?payment=shop_pay&source=hydrogen");
-    expect(secondAnchor.getAttribute("href")).toBe("/checkout?payment=shop_pay&source=hydrogen");
-    expect(document.head.querySelectorAll("style")).toHaveLength(0);
-  });
-});
-
-describe("defineShopPayButton", () => {
-  it("registers the custom element once and renders from attributes", () => {
-    defineShopPayButton();
-    defineShopPayButton();
-
-    const element = document.createElement(SHOP_PAY_BUTTON_TAG_NAME);
-    element.setAttribute("accessibility-label", "Shop Payで購入");
-    element.setAttribute("variants", "123:2,456:1");
-    element.setAttribute("payment-option", "shop_pay_installments");
-    document.body.append(element);
-
-    const anchor = element.querySelector("a");
-    assert(anchor, "expected the element to render an anchor");
-    expect(anchor.getAttribute("href")).toBe(
-      "/cart/123:2,456:1?payment=shop_pay_installments&source=hydrogen",
+    expect(firstAnchor.getAttribute("href")).toBe(
+      "/cart/123:1?payment=shop_pay&source=hydrogen&channel=hydrogen",
     );
-    expect(anchor.getAttribute("aria-label")).toBe("Shop Payで購入");
-  });
-
-  it("re-renders when observed attributes change", () => {
-    defineShopPayButton();
-
-    const element = document.createElement(SHOP_PAY_BUTTON_TAG_NAME);
-    element.setAttribute("variants", "123:1");
-    document.body.append(element);
-    const firstAnchor = element.querySelector("a");
-    assert(firstAnchor, "expected the element to render an anchor");
-
-    element.setAttribute("variants", "456:3");
-    element.setAttribute("disabled", "");
-
-    const anchor = element.querySelector("a");
-    assert(anchor, "expected the element to render an anchor");
-    expect(anchor).toBe(firstAnchor);
-    expect(anchor.hasAttribute("href")).toBe(false);
-    expect(anchor.getAttribute("aria-disabled")).toBe("true");
-
-    element.removeAttribute("disabled");
-    const enabledAnchor = element.querySelector("a");
-    assert(enabledAnchor, "expected the element to re-render an anchor");
-    expect(enabledAnchor.getAttribute("href")).toBe("/cart/456:3?payment=shop_pay&source=hydrogen");
-  });
-
-  it("preserves focus when a managed custom element updates", () => {
-    defineShopPayButton();
-
-    const element = document.createElement(SHOP_PAY_BUTTON_TAG_NAME);
-    element.setAttribute("variants", "123:1");
-    document.body.append(element);
-
-    const anchor = element.querySelector("a");
-    assert(anchor, "expected the element to render an anchor");
-    anchor.focus();
-
-    element.setAttribute("width", "100%");
-
-    expect(element.querySelector("a")).toBe(anchor);
-    expect(document.activeElement).toBe(anchor);
-    expect(anchor.style.width).toBe("100%");
-  });
-
-  it("does not clobber framework-rendered children when the element is defined", () => {
-    defineShopPayButton();
-
-    const element = document.createElement(SHOP_PAY_BUTTON_TAG_NAME);
-    element.innerHTML = getShopPayButtonElementContentHtml({
-      accessibilityLabel: "Shop Payで購入",
-      disabled: true,
-      variants: ["123"],
-    });
-    document.body.append(element);
-
-    const anchor = element.querySelector("a");
-    assert(anchor, "expected the element to keep its existing anchor");
-    expect(anchor.hasAttribute("href")).toBe(false);
-    expect(anchor.getAttribute("aria-disabled")).toBe("true");
-    expect(anchor.getAttribute("aria-label")).toBe("Shop Payで購入");
-  });
-
-  it("updates server-rendered managed elements in place after upgrade", () => {
-    defineShopPayButton();
-
-    document.body.innerHTML = renderShopPayButton({ variants: ["123"] });
-    const element = document.body.querySelector(SHOP_PAY_BUTTON_TAG_NAME);
-    assert(element, "expected renderShopPayButton to render an element");
-    const firstAnchor = element.querySelector("a");
-    assert(firstAnchor, "expected the element to contain an anchor");
-
-    element.setAttribute("variants", "456:2");
-
-    const updatedAnchor = element.querySelector("a");
-    assert(updatedAnchor, "expected the element to keep an anchor");
-    expect(updatedAnchor).toBe(firstAnchor);
-    expect(updatedAnchor.getAttribute("href")).toBe("/cart/456:2?payment=shop_pay&source=hydrogen");
-  });
-
-  it("logs instead of throwing when attributes are invalid", () => {
-    const logger = createTestLogger();
-    configureLogging({ logger });
-    defineShopPayButton();
-
-    const element = document.createElement(SHOP_PAY_BUTTON_TAG_NAME);
-    element.setAttribute("variants", "123:invalid");
-    document.body.append(element);
-
-    expect(logger.error).toHaveBeenCalledWith("shop-pay button render failed", {
-      scope: "shop-pay",
-      error: expect.objectContaining({ message: expect.stringMatching(/positive integers/) }),
-    });
+    expect(secondAnchor.getAttribute("href")).toBe(
+      "/checkout?payment=shop_pay&source=hydrogen&channel=hydrogen",
+    );
+    expect(document.head.querySelectorAll("style")).toHaveLength(0);
   });
 });

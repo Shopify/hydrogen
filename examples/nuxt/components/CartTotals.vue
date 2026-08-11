@@ -34,7 +34,7 @@ const isTotalsPending = useCart((s) => s.pending.cost === true || s.revalidating
     </div>
 
     <div v-if="checkoutUrl && totalQuantity > 0" class="mt-6 space-y-3">
-      <ShopPayButton channel="headless" width="100%" border-radius="4px" />
+      <ShopPayButton width="100%" border-radius="4px" />
       <a
         :href="checkoutUrl"
         class="block rounded bg-black px-6 py-3 text-center text-sm font-medium text-white hover:bg-neutral-800"

@@ -33,7 +33,7 @@
 
 	{#if $checkoutUrl && $totalQuantity > 0}
 		<div class="mt-6 space-y-3">
-			<ShopPayButton checkoutUrl={$checkoutUrl} channel="headless" width="100%" borderRadius="4px" />
+			<ShopPayButton checkoutUrl={$checkoutUrl} width="100%" borderRadius="4px" />
 			<a
 				href={$checkoutUrl}
 				class="block rounded bg-black px-6 py-3 text-center text-sm font-medium text-white hover:bg-neutral-800"

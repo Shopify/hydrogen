@@ -5,12 +5,11 @@ Use core helpers when not using the React or Vue bindings:
 ```ts
 import {
   createShopPayButton,
-  defineShopPayButton,
   renderShopPayButton,
 } from "@shopify/hydrogen";
 ```
 
-All three render the same markup: a self-contained `<hydrogen-shop-pay-button>` element
+Both helpers render the same markup: a self-contained `<hydrogen-shop-pay-button>` element
 with its own styles and an anchor containing the Shop Pay logo. Pick by
 integration shape:
 
@@ -21,34 +20,19 @@ integration shape:
   page is harmless.
 - `createShopPayButton(options)` returns a detached self-contained
   `<hydrogen-shop-pay-button>` element. Use it for imperative DOM UIs.
-- `defineShopPayButton()` registers the `<hydrogen-shop-pay-button>` custom element for
-  declarative HTML. Call it once in the client entry; it is browser-only, safe
-  to call repeatedly, and skipped if the tag is already defined.
 
 For product buy buttons, pass variants:
 
 ```ts
 const button = createShopPayButton({
   variants: [{ id: selectedVariant.id, quantity: 1 }],
-  channel: "hydrogen",
   width: "100%",
 });
 container.append(button);
 ```
 
-Or declaratively, after `defineShopPayButton()`:
-
-```html
-<hydrogen-shop-pay-button
-  variants="123:1"
-  channel="hydrogen"
-  accessibility-label="Shop Payで購入"
-  width="100%"
-></hydrogen-shop-pay-button>
-```
-
-The element re-renders when its attributes change. Size it with `width` and
-`border-radius` attributes.
+The element is not registered as a custom element. It is just a wrapper carrying
+the styles and anchor HTML.
 
 For cart checkout buttons, omit `variants`; the button links to the same-origin
 `/checkout` path and `handleShopifyRoutes` redirects it to the current cart's
@@ -56,7 +40,6 @@ checkout:
 
 ```ts
 const button = createShopPayButton({
-  channel: "hydrogen",
   width: "100%",
 });
 container.append(button);

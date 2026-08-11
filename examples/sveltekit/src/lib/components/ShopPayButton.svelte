@@ -4,7 +4,6 @@
 	let {
 		variants,
 		checkoutUrl,
-		channel = 'headless',
 		disabled = false,
 		width,
 		borderRadius,
@@ -12,7 +11,7 @@
 	}: ShopPayButtonOptions = $props();
 
 	const html = $derived(
-		renderShopPayButton({ variants, checkoutUrl, channel, disabled, width, borderRadius, accessibilityLabel })
+		renderShopPayButton({ variants, checkoutUrl, disabled, width, borderRadius, accessibilityLabel })
 	);
 </script>
 

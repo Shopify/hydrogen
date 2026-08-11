@@ -12,7 +12,6 @@ describe("ShopPayButton", () => {
     const wrapper = mount(ShopPayButton, {
       props: {
         variants: ["gid://shopify/ProductVariant/123"],
-        channel: "headless",
         width: "100%",
       },
       attrs: {
@@ -22,9 +21,9 @@ describe("ShopPayButton", () => {
 
     const anchor = wrapper.find("a").element;
     expect(anchor.getAttribute("href")).toBe(
-      "/cart/123:1?payment=shop_pay&source=hydrogen&channel=headless",
+      "/cart/123:1?payment=shop_pay&source=hydrogen&channel=hydrogen",
     );
-    expect(anchor.className).toBe("shop-pay-button extra");
+    expect(anchor.className).toBe("shop-pay-button");
     expect(anchor.style.width).toBe("100%");
   });
 
@@ -32,7 +31,7 @@ describe("ShopPayButton", () => {
     const wrapper = mount(ShopPayButton);
 
     expect(wrapper.find("a").element.getAttribute("href")).toBe(
-      "/checkout?payment=shop_pay&source=hydrogen",
+      "/checkout?payment=shop_pay&source=hydrogen&channel=hydrogen",
     );
   });
 
@@ -63,7 +62,7 @@ describe("ShopPayButton", () => {
     await wrapper.setProps({ variants: [{ id: "456", quantity: 3 }] });
 
     expect(wrapper.find("a").element.getAttribute("href")).toBe(
-      "/cart/456:3?payment=shop_pay&source=hydrogen",
+      "/cart/456:3?payment=shop_pay&source=hydrogen&channel=hydrogen",
     );
   });
 
@@ -76,7 +75,9 @@ describe("ShopPayButton", () => {
     );
 
     assert(html, "expected SSR output");
-    expect(html).toContain('href="/cart/123:2?payment=shop_pay_installments&amp;source=hydrogen"');
+    expect(html).toContain(
+      'href="/cart/123:2?payment=shop_pay_installments&amp;source=hydrogen&amp;channel=hydrogen"',
+    );
     expect(html).toContain("<hydrogen-shop-pay-button");
     expect(html).toContain('aria-label="Buy with Shop Pay"');
     // The disabled-state selector must survive SSR unescaped; Vue

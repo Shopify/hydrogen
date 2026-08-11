@@ -1,27 +1,12 @@
-import { getLogger } from "../logging";
 import { normalizeStoreDomain } from "../url";
 import { parseGid } from "../utils/parse-gid";
 
-const log = getLogger("shop-pay");
-
 const DEFAULT_SOURCE = "hydrogen";
+const CHANNEL = "hydrogen";
 const DEFAULT_ACCESSIBILITY_LABEL = "Buy with Shop Pay";
 const ERROR_PREFIX = "[hydrogen:error:ShopPay]";
 export const SHOP_PAY_BUTTON_TAG_NAME = "hydrogen-shop-pay-button";
 export const SHOP_PAY_BUTTON_CLASS_NAME = "shop-pay-button";
-const SHOP_PAY_BUTTON_OBSERVED_ATTRIBUTES = [
-  "accessibility-label",
-  "border-radius",
-  "button-text",
-  "channel",
-  "checkout-url",
-  "disabled",
-  "payment-option",
-  "source",
-  "source-token",
-  "variants",
-  "width",
-] as const;
 
 /**
  * Button styles matching the hosted shop-js pay button: fixed brand colors,
@@ -51,12 +36,36 @@ type ShopPayButtonBaseOptions = {
    * store's real checkout.
    */
   checkoutUrl?: string;
+  /**
+   * Checkout payment mode. Defaults to `"shop_pay"`. Use
+   * `"shop_pay_installments"` only when the checkout path should open Shop Pay
+   * Installments.
+   */
   paymentOption?: "shop_pay" | "shop_pay_installments";
+  /**
+   * Attribution source appended to the checkout URL as `source`. Defaults to
+   * `"hydrogen"`. Most storefronts should not override this.
+   */
   source?: string;
+  /**
+   * Optional attribution token appended to the checkout URL as `source_token`.
+   * Only pass a value when Shopify has provided one for the integration.
+   */
   sourceToken?: string;
-  channel?: "headless" | "hydrogen";
+  /**
+   * Disables the button. Disabled buttons render without an `href` and include
+   * `aria-disabled="true"`.
+   */
   disabled?: boolean;
+  /**
+   * CSS width for the rendered anchor, for example `"100%"`. Omit it to use
+   * the Shop Pay default width.
+   */
   width?: string;
+  /**
+   * CSS border radius for the rendered anchor, for example `"8px"`. Omit it to
+   * use the Shop Pay default radius.
+   */
   borderRadius?: string;
   /**
    * Localized accessible label for the Shop Pay logo, or for custom button text
@@ -84,7 +93,9 @@ type ShopPayButtonBaseOptions = {
 };
 
 type ShopPayVariantWithQuantity = {
+  /** ProductVariant GID or bare numeric ProductVariant ID. Product IDs are invalid. */
   id: string;
+  /** Quantity for this variant. Defaults to `1`. */
   quantity?: number;
 };
 
@@ -92,6 +103,10 @@ type ShopPayVariant = string | ShopPayVariantWithQuantity;
 type ShopPayVariants = readonly string[] | readonly ShopPayVariantWithQuantity[];
 
 export type ShopPayButtonOptions = ShopPayButtonBaseOptions & {
+  /**
+   * Variants to check out immediately via a Shopify cart permalink. Omit this
+   * for cart checkout mode, where `/checkout` checks out the current cart.
+   */
   variants?: ShopPayVariants;
 };
 
@@ -122,17 +137,13 @@ export function getShopPayButtonUrl(options: ShopPayButtonOptions): string | nul
 }
 
 /**
- * Renders the Shop Pay button as an HTML string: a self-contained custom
+ * Renders the Shop Pay button as an HTML string: a self-contained wrapper
  * element carrying the styles and anchor it needs to work without client
  * JavaScript. Use it from server templates or frameworks without a Hydrogen
  * binding.
  */
 export function renderShopPayButton(options: ShopPayButtonOptions): string {
-  const attributes = Object.entries(getShopPayButtonElementAttributes(options))
-    .map(([name, value]) => `${name}="${escapeAttribute(value)}"`)
-    .join(" ");
-
-  return `<${SHOP_PAY_BUTTON_TAG_NAME}${attributes ? ` ${attributes}` : ""}>${getShopPayButtonElementContentHtml(options)}</${SHOP_PAY_BUTTON_TAG_NAME}>`;
+  return `<${SHOP_PAY_BUTTON_TAG_NAME}>${getShopPayButtonElementContentHtml(options)}</${SHOP_PAY_BUTTON_TAG_NAME}>`;
 }
 
 /**
@@ -148,104 +159,6 @@ export function createShopPayButton(options: ShopPayButtonOptions): HTMLElement 
   }
 
   return element;
-}
-
-/**
- * Registers the `<hydrogen-shop-pay-button>` custom element for declarative usage
- * without a framework binding. The element renders the button from its
- * attributes and re-renders when they change. Browser-only; safe to call more
- * than once, and skipped when another script already defined the tag.
- */
-export function defineShopPayButton(): void {
-  if (typeof customElements === "undefined" || customElements.get(SHOP_PAY_BUTTON_TAG_NAME)) {
-    return;
-  }
-
-  customElements.define(
-    SHOP_PAY_BUTTON_TAG_NAME,
-    class extends HTMLElement {
-      #managed = false;
-
-      static observedAttributes = SHOP_PAY_BUTTON_OBSERVED_ATTRIBUTES;
-
-      connectedCallback(): void {
-        if (this.children.length > 0 && !this.#hasManagedAttributes()) return;
-        this.#managed = true;
-        this.#render();
-      }
-
-      attributeChangedCallback(): void {
-        if (this.isConnected && this.#managed) this.#render();
-      }
-
-      // Invalid attributes log instead of throwing: lifecycle callbacks have
-      // no caller to catch, and an uncaught throw leaves an empty element.
-      #render(): void {
-        try {
-          this.#renderButton();
-        } catch (error) {
-          log.error("shop-pay button render failed", { error });
-        }
-      }
-
-      #renderButton(): void {
-        const options = this.#getOptions();
-        const style = this.#getStyleElement();
-        const anchor = this.#getAnchorElement();
-
-        style.textContent = SHOP_PAY_BUTTON_STYLES;
-        syncAttributes(anchor, getShopPayButtonAnchorAttributes(options));
-        anchor.innerHTML = getShopPayButtonContentHtml(options);
-
-        if (!style.isConnected) this.append(style);
-        if (!anchor.isConnected) this.append(anchor);
-        if (this.firstElementChild !== style) this.prepend(style);
-        if (style.nextElementSibling !== anchor) style.after(anchor);
-      }
-
-      #getOptions(): ShopPayButtonOptions {
-        return {
-          accessibilityLabel: this.getAttribute("accessibility-label") ?? undefined,
-          borderRadius: this.getAttribute("border-radius") ?? undefined,
-          buttonText: this.getAttribute("button-text") ?? undefined,
-          channel: (this.getAttribute("channel") as ShopPayButtonOptions["channel"]) ?? undefined,
-          checkoutUrl: this.getAttribute("checkout-url") ?? undefined,
-          disabled: this.hasAttribute("disabled"),
-          paymentOption:
-            (this.getAttribute("payment-option") as ShopPayButtonOptions["paymentOption"]) ??
-            undefined,
-          source: this.getAttribute("source") ?? undefined,
-          sourceToken: this.getAttribute("source-token") ?? undefined,
-          variants: parseVariantsAttribute(this.getAttribute("variants")),
-          width: this.getAttribute("width") ?? undefined,
-        };
-      }
-
-      #getStyleElement(): HTMLStyleElement {
-        const element = Array.from(this.children).find(
-          (child) => child.tagName.toLowerCase() === "style",
-        );
-        return element instanceof HTMLStyleElement
-          ? element
-          : this.ownerDocument.createElement("style");
-      }
-
-      #getAnchorElement(): HTMLAnchorElement {
-        const element = Array.from(this.children).find(
-          (child) => child.tagName.toLowerCase() === "a",
-        );
-        return element instanceof HTMLAnchorElement
-          ? element
-          : this.ownerDocument.createElement("a");
-      }
-
-      #hasManagedAttributes(): boolean {
-        return SHOP_PAY_BUTTON_OBSERVED_ATTRIBUTES.some((attribute) =>
-          this.hasAttribute(attribute),
-        );
-      }
-    },
-  );
 }
 
 /**
@@ -274,34 +187,8 @@ export function getShopPayButtonAnchorAttributes(
   return attributes;
 }
 
-function getShopPayButtonElementAttributes(options: ShopPayButtonOptions): Record<string, string> {
-  const attributes: Record<string, string> = {};
-  const variants = getShopPayVariants(options);
-
-  if (hasContent(options.accessibilityLabel)) {
-    attributes["accessibility-label"] = options.accessibilityLabel.trim();
-  }
-  if (hasContent(options.borderRadius)) attributes["border-radius"] = options.borderRadius.trim();
-  if (hasContent(options.buttonText)) attributes["button-text"] = options.buttonText.trim();
-  if (options.channel) attributes.channel = options.channel;
-  if (options.checkoutUrl) attributes["checkout-url"] = options.checkoutUrl;
-  if (options.disabled) attributes.disabled = "";
-  if (options.paymentOption) attributes["payment-option"] = options.paymentOption;
-  if (options.source) attributes.source = options.source;
-  if (options.sourceToken) attributes["source-token"] = options.sourceToken;
-  if (variants) attributes.variants = variants;
-  if (hasContent(options.width)) attributes.width = options.width.trim();
-
-  return attributes;
-}
-
-export function getShopPayButtonElementContentHtml(
-  options: ShopPayButtonOptions,
-  anchorAttributes: Record<string, string | undefined> = {},
-): string {
-  const attributes = Object.entries(
-    mergeShopPayButtonAnchorAttributes(getShopPayButtonAnchorAttributes(options), anchorAttributes),
-  )
+export function getShopPayButtonElementContentHtml(options: ShopPayButtonOptions): string {
+  const attributes = Object.entries(getShopPayButtonAnchorAttributes(options))
     .map(([name, value]) => `${name}="${escapeAttribute(value)}"`)
     .join(" ");
 
@@ -320,7 +207,7 @@ export function getShopPayButtonContentHtml(
     : SHOP_PAY_LOGO_SVG;
 }
 
-export function getShopPayButtonStyleProperties(
+function getShopPayButtonStyleProperties(
   options: Pick<ShopPayButtonOptions, "width" | "borderRadius">,
 ): Record<string, string> {
   const style: Record<string, string> = {};
@@ -338,18 +225,9 @@ function getShopPaySearchParams(options: ShopPayButtonOptions): URLSearchParams 
   const source = options.source ?? DEFAULT_SOURCE;
   if (source) params.set("source", source);
   if (options.sourceToken) params.set("source_token", options.sourceToken);
-  if (options.channel) params.set("channel", options.channel);
+  params.set("channel", CHANNEL);
 
   return params;
-}
-
-function parseVariantsAttribute(value: string | null): ShopPayVariants | undefined {
-  if (!value) return undefined;
-
-  return value.split(",").map((entry) => {
-    const [id = "", quantity] = entry.split(":");
-    return { id: id.trim(), quantity: quantity === undefined ? undefined : Number(quantity) };
-  });
 }
 
 function getShopPayCheckoutModeUrl(checkoutUrl: string): URL {
@@ -467,37 +345,6 @@ function serializeStyleProperties(style: Record<string, string>): string {
 
 function hyphenateStyleName(name: string): string {
   return name.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
-}
-
-function syncAttributes(element: Element, attributes: Record<string, string>): void {
-  for (const name of element.getAttributeNames()) {
-    if (!(name in attributes)) element.removeAttribute(name);
-  }
-
-  for (const [name, value] of Object.entries(attributes)) {
-    element.setAttribute(name, value);
-  }
-}
-
-function mergeShopPayButtonAnchorAttributes(
-  base: Record<string, string>,
-  extra: Record<string, string | undefined>,
-): Record<string, string> {
-  const attributes = { ...base };
-
-  for (const [name, value] of Object.entries(extra)) {
-    if (!hasContent(value)) continue;
-
-    if (name === "class") {
-      attributes.class = `${attributes.class} ${value.trim()}`;
-    } else if (name === "style" && attributes.style) {
-      attributes.style = `${attributes.style};${value.trim()}`;
-    } else {
-      attributes[name] = value.trim();
-    }
-  }
-
-  return attributes;
 }
 
 function shopPayError(message: string): Error {
