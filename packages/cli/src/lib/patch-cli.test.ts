@@ -8,6 +8,9 @@ import {
 } from 'node:fs';
 import {resolve} from 'node:path';
 import {tmpdir} from 'node:os';
+import {fileURLToPath} from 'node:url';
+import {Plugin} from '@oclif/core';
+import {COMMANDS} from '../index.js';
 import {
   MARKER,
   getRunJsPath,
@@ -19,6 +22,7 @@ import {
 } from './patch-cli.js';
 
 const tempDirs: string[] = [];
+const CLI_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
 function createTempFile(content: string): string {
   const dir = resolve(
@@ -40,6 +44,34 @@ afterEach(() => {
 });
 
 describe('patch-cli', () => {
+  describe('local plugin command resolution', () => {
+    it('loads the canonical command IDs from local source', async () => {
+      const plugin = new Plugin({
+        root: CLI_ROOT,
+        type: 'core',
+        ignoreManifest: true,
+        errorOnManifestCreate: true,
+      });
+
+      await plugin.load();
+
+      expect(plugin.commands.map(({id}) => id).sort()).toEqual(
+        Object.keys(COMMANDS).sort(),
+      );
+
+      const command = plugin.commands.find(
+        ({id}) => id === 'hydrogen:customer-account-push',
+      );
+      expect(command).toBeDefined();
+
+      const CommandClass = await command!.load();
+      expect(CommandClass.flags).toHaveProperty('javascript-origin');
+      expect(
+        plugin.commands.some(({id}) => id === 'hydrogen:customer-account:push'),
+      ).toBe(false);
+    });
+  });
+
   describe('MARKER', () => {
     it('is the expected string', () => {
       expect(MARKER).toBe('// [hydrogen-monorepo-patch]');

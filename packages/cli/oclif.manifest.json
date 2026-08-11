@@ -192,7 +192,7 @@
         "codegen.js"
       ]
     },
-    "hydrogen:customer-account:push": {
+    "hydrogen:customer-account-push": {
       "aliases": [],
       "args": {},
       "description": "Push project configuration to admin",
@@ -244,7 +244,7 @@
       },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
-      "id": "hydrogen:customer-account:push",
+      "id": "hydrogen:customer-account-push",
       "pluginAlias": "@shopify/cli-hydrogen",
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
@@ -255,8 +255,7 @@
         "dist",
         "commands",
         "hydrogen",
-        "customer-account",
-        "push.js"
+        "customer-account-push.js"
       ]
     },
     "hydrogen:debug:cpu": {
