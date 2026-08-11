@@ -127,7 +127,7 @@ export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
   CartGetHandlerResult<THandlers>
 >;
 
-type CreateCartServerHandlersOptions<
+export type CreateCartServerHandlersOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
 > = {
   readonly fragment?: TCartFragment;
