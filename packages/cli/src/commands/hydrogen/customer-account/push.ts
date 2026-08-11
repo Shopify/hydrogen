@@ -26,6 +26,10 @@ export default class CustomerAccountPush extends Command {
       description: 'The development domain of your application.',
       required: true,
     }),
+    'javascript-origin': Flags.string({
+      description:
+        'The origin to register as the allowed JavaScript origin for the Customer Account API OAuth flow. Defaults to --dev-origin. Must not include a port (Shopify rejects origins with ports); use this to register a portless origin while keeping a portful --dev-origin.',
+    }),
     'relative-redirect-uri': Flags.string({
       description:
         "The relative url of allowed callback url for Customer Account API OAuth flow. Default is '/account/authorize'",
@@ -46,12 +50,14 @@ export async function runCustomerAccountPush({
   path: root = process.cwd(),
   storefrontId: storefrontIdFromFlag,
   devOrigin,
+  javascriptOrigin: javascriptOriginFromArg,
   redirectUriRelativeUrl = '/account/authorize',
   logoutUriRelativeUrl,
 }: {
   path?: string;
   storefrontId?: string;
   devOrigin: string;
+  javascriptOrigin?: string;
   redirectUriRelativeUrl?: string;
   logoutUriRelativeUrl?: string;
   removeRegex?: string;
@@ -68,7 +74,7 @@ export async function runCustomerAccountPush({
     const redirectUri = redirectUriRelativeUrl
       ? new URL(redirectUriRelativeUrl, devOrigin).toString()
       : devOrigin;
-    const javascriptOrigin = devOrigin;
+    const javascriptOrigin = javascriptOriginFromArg ?? devOrigin;
     const logoutUri = logoutUriRelativeUrl
       ? new URL(logoutUriRelativeUrl, devOrigin).toString()
       : devOrigin;
