@@ -295,8 +295,13 @@ function getShopPayButtonElementAttributes(options: ShopPayButtonOptions): Recor
   return attributes;
 }
 
-export function getShopPayButtonElementContentHtml(options: ShopPayButtonOptions): string {
-  const attributes = Object.entries(getShopPayButtonAnchorAttributes(options))
+export function getShopPayButtonElementContentHtml(
+  options: ShopPayButtonOptions,
+  anchorAttributes: Record<string, string | undefined> = {},
+): string {
+  const attributes = Object.entries(
+    mergeShopPayButtonAnchorAttributes(getShopPayButtonAnchorAttributes(options), anchorAttributes),
+  )
     .map(([name, value]) => `${name}="${escapeAttribute(value)}"`)
     .join(" ");
 
@@ -472,6 +477,27 @@ function syncAttributes(element: Element, attributes: Record<string, string>): v
   for (const [name, value] of Object.entries(attributes)) {
     element.setAttribute(name, value);
   }
+}
+
+function mergeShopPayButtonAnchorAttributes(
+  base: Record<string, string>,
+  extra: Record<string, string | undefined>,
+): Record<string, string> {
+  const attributes = { ...base };
+
+  for (const [name, value] of Object.entries(extra)) {
+    if (!hasContent(value)) continue;
+
+    if (name === "class") {
+      attributes.class = `${attributes.class} ${value.trim()}`;
+    } else if (name === "style" && attributes.style) {
+      attributes.style = `${attributes.style};${value.trim()}`;
+    } else {
+      attributes[name] = value.trim();
+    }
+  }
+
+  return attributes;
 }
 
 function shopPayError(message: string): Error {

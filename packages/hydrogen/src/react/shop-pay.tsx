@@ -1,10 +1,7 @@
 import { createElement, type CSSProperties, type ReactElement } from "react";
 
 import {
-  getShopPayButtonAnchorAttributes,
-  getShopPayButtonContentHtml,
-  getShopPayButtonStyleProperties,
-  SHOP_PAY_BUTTON_STYLES,
+  getShopPayButtonElementContentHtml,
   SHOP_PAY_BUTTON_TAG_NAME,
   type ShopPayButtonOptions,
 } from "../core/shop-pay/shop-pay";
@@ -14,32 +11,30 @@ export type ShopPayButtonProps = ShopPayButtonOptions & {
   style?: CSSProperties;
 };
 
-type ShopPayButtonStyle = CSSProperties & Record<string, string>;
-
 export function ShopPayButton({ className, style, ...options }: ShopPayButtonProps): ReactElement {
-  const {
-    class: buttonClassName,
-    href,
-    "aria-disabled": ariaDisabled,
-    "aria-label": ariaLabel,
-  } = getShopPayButtonAnchorAttributes(options);
+  return createElement(SHOP_PAY_BUTTON_TAG_NAME, {
+    dangerouslySetInnerHTML: {
+      __html: getShopPayButtonElementContentHtml(options, {
+        class: className,
+        style: serializeReactStyle(style),
+      }),
+    },
+  });
+}
 
-  return createElement(
-    SHOP_PAY_BUTTON_TAG_NAME,
-    null,
-    createElement("style", { dangerouslySetInnerHTML: { __html: SHOP_PAY_BUTTON_STYLES } }),
-    createElement("a", {
-      className: className ? `${buttonClassName} ${className}` : buttonClassName,
-      href,
-      "aria-disabled": ariaDisabled as "true" | undefined,
-      "aria-label": ariaLabel,
-      style: {
-        ...(getShopPayButtonStyleProperties(options) as ShopPayButtonStyle),
-        ...style,
-      },
-      // Static markup owned by this package; user-provided text is escaped by
-      // getShopPayButtonContentHtml.
-      dangerouslySetInnerHTML: { __html: getShopPayButtonContentHtml(options) },
-    }),
-  );
+function serializeReactStyle(style: CSSProperties | undefined): string | undefined {
+  if (!style) return undefined;
+
+  return Object.entries(style)
+    .filter((entry): entry is [string, string | number] => {
+      const value = entry[1];
+      return typeof value === "string" || typeof value === "number";
+    })
+    .map(([name, value]) => `${hyphenateStyleName(name)}:${value}`)
+    .join(";");
+}
+
+function hyphenateStyleName(name: string): string {
+  if (name.startsWith("--")) return name;
+  return name.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
 }
