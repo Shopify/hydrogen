@@ -5,8 +5,8 @@ import {
   type CartBuyerIdentitySyncSource,
 } from "../core/cart/buyer-identity-sync";
 import { DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
-import type { ShopifyRequestContext } from "../core/request-context";
 import { getLogger } from "../core/logging";
+import type { ShopifyRequestContext } from "../core/request-context";
 import {
   createCallableRouteHandler,
   type CallableRouteHandler,
