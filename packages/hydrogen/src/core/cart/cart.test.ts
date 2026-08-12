@@ -3249,8 +3249,8 @@ describe("event-driven sync", () => {
     const lineB = makeLine({ id: "line-b", quantity: 2 });
     store.hydrate(makeCartState({ lines: [lineA, lineB], totalQuantity: 5 }));
 
-    const kitEvent = submitForm({ lineId: "line-a" }, "intent", "increase");
-    store.handleFormSubmit(kitEvent);
+    const submitEvent = submitForm({ lineId: "line-a" }, "intent", "increase");
+    store.handleFormSubmit(submitEvent);
     await nextTick();
     expect(getCartLines(store.getState().data).find((l) => l.id === "line-a")?.quantity).toBe(4);
 
@@ -3288,8 +3288,8 @@ describe("event-driven sync", () => {
     const lineB = makeLine({ id: "line-b", quantity: 2 });
     store.hydrate(makeCartState({ lines: [lineA, lineB], totalQuantity: 5 }));
 
-    const kitEvent = submitForm({ lineId: "line-a" }, "intent", "remove");
-    store.handleFormSubmit(kitEvent);
+    const submitEvent = submitForm({ lineId: "line-a" }, "intent", "remove");
+    store.handleFormSubmit(submitEvent);
     await nextTick();
     expect(getCartLines(store.getState().data).some((l) => l.id === "line-a")).toBe(false);
 
@@ -3327,8 +3327,8 @@ describe("event-driven sync", () => {
       }),
     );
 
-    const kitEvent = submitForm({ discountCode: "SAVE10" }, "intent", "discount-apply");
-    store.handleFormSubmit(kitEvent);
+    const submitEvent = submitForm({ discountCode: "SAVE10" }, "intent", "discount-apply");
+    store.handleFormSubmit(submitEvent);
     await nextTick();
     expect(store.getState().data.discountCodes).toEqual([{ code: "SAVE10", applicable: false }]);
 
@@ -3708,8 +3708,8 @@ describe("add-to-cart optimistic updates", () => {
       }),
     );
 
-    const kitEvent = submitForm({ lineId: "line-b" }, "intent", "increase");
-    store.handleFormSubmit(kitEvent);
+    const submitEvent = submitForm({ lineId: "line-b" }, "intent", "increase");
+    store.handleFormSubmit(submitEvent);
     await nextTick();
     expect(getCartLines(store.getState().data).find((l) => l.id === "line-b")?.quantity).toBe(3);
 
@@ -4143,8 +4143,8 @@ describe("add-to-cart optimistic updates", () => {
     });
     expect(getCartLines(store.getState().data)[0].quantity).toBe(5);
 
-    const kitEvent = submitForm({ lineId: "line-1" }, "intent", "increase");
-    store.handleFormSubmit(kitEvent);
+    const submitEvent = submitForm({ lineId: "line-1" }, "intent", "increase");
+    store.handleFormSubmit(submitEvent);
     await nextTick();
     expect(getCartLines(store.getState().data)[0].quantity).toBe(6);
 

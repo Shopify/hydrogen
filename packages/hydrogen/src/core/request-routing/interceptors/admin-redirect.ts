@@ -2,10 +2,10 @@ import type { RedirectOptions } from "../handle-shopify-redirects";
 
 type AdminRedirectOptions = Pick<RedirectOptions, "request" | "storefrontClient">;
 
-export async function handleAdminRedirect({
+export function handleAdminRedirect({
   request,
   storefrontClient,
-}: AdminRedirectOptions): Promise<Response | null> {
+}: AdminRedirectOptions): Response | null {
   const url = new URL(request.url);
   if (url.pathname !== "/admin") return null;
 

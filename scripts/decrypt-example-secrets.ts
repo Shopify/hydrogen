@@ -9,10 +9,10 @@ import {
   unlinkSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { storefrontConfig } from "../examples/shared/config.ts";
+import { customerAccountConfig, shop, storefrontConfig } from "../examples/shared/config.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
@@ -33,6 +33,7 @@ type EnvFileTarget = {
   path: string;
   examplePath: string;
   legacyPath: string;
+  values?: Record<string, string>;
 };
 
 try {
@@ -51,8 +52,9 @@ try {
   const secrets = JSON.parse(output) as Record<string, string>;
   const envSecrets = getEnvSecrets(secrets);
 
-  for (const envFileTarget of getExampleEnvFileTargets()) {
-    updateEnvFile(envFileTarget, envSecrets);
+  for (const envFileTarget of getEnvFileTargets()) {
+    assertEnvFileIgnored(envFileTarget.path);
+    updateEnvFile(envFileTarget, { ...envSecrets, ...envFileTarget.values });
     process.stderr.write(`Wrote ${envFileTarget.path}\n`);
   }
 } catch (error) {
@@ -85,6 +87,12 @@ function getEnvSecrets(secrets: Record<string, string>): Record<string, string> 
   };
 }
 
+function getEnvFileTargets(): EnvFileTarget[] {
+  return [...getExampleEnvFileTargets(), ...getTemplateEnvFileTargets()].sort((a, b) =>
+    a.path.localeCompare(b.path),
+  );
+}
+
 function getExampleEnvFileTargets(): EnvFileTarget[] {
   const examplesDir = resolve(root, "examples");
   const envFileTargets: EnvFileTarget[] = [];
@@ -99,16 +107,51 @@ function getExampleEnvFileTargets(): EnvFileTarget[] {
       scripts?: Record<string, string>;
     };
     if (packageJson.scripts?.dev) {
-      const exampleDir = resolve(examplesDir, entry.name);
-      envFileTargets.push({
-        path: resolve(exampleDir, ".env"),
-        examplePath: resolve(exampleDir, ".env.example"),
-        legacyPath: resolve(exampleDir, ".env.local"),
-      });
+      envFileTargets.push(createEnvFileTarget(resolve(examplesDir, entry.name)));
     }
   }
 
-  return envFileTargets.sort((a, b) => a.path.localeCompare(b.path));
+  return envFileTargets;
+}
+
+function getTemplateEnvFileTargets(): EnvFileTarget[] {
+  const templatesDir = resolve(root, "templates");
+
+  return [
+    createEnvFileTarget(resolve(templatesDir, "react-router"), {
+      PUBLIC_STORE_DOMAIN: storefrontConfig.storeDomain,
+    }),
+    createEnvFileTarget(resolve(templatesDir, "nextjs"), {
+      SESSION_SECRET: customerAccountConfig.sessionSecret,
+      NEXT_PUBLIC_STORE_DOMAIN: storefrontConfig.storeDomain,
+      NEXT_PUBLIC_STOREFRONT_API_TOKEN: storefrontConfig.publicStorefrontToken || "",
+      NEXT_PUBLIC_SHOP_ID: customerAccountConfig.shopId,
+      NEXT_PUBLIC_STOREFRONT_ID: shop.storefrontId,
+      NEXT_PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: customerAccountConfig.customerAccountApiClientId,
+    }),
+  ];
+}
+
+function createEnvFileTarget(projectDir: string, values?: Record<string, string>): EnvFileTarget {
+  return {
+    path: resolve(projectDir, ".env"),
+    examplePath: resolve(projectDir, ".env.example"),
+    legacyPath: resolve(projectDir, ".env.local"),
+    values,
+  };
+}
+
+function assertEnvFileIgnored(path: string): void {
+  const relativePath = relative(root, path);
+
+  try {
+    execFileSync("git", ["check-ignore", "--quiet", "--", relativePath], {
+      cwd: root,
+      stdio: "ignore",
+    });
+  } catch {
+    throw new Error(`Refusing to write ${relativePath} because Git does not ignore it.`);
+  }
 }
 
 function formatGeneratedSecretsBlock(secrets: Record<string, string>): string {

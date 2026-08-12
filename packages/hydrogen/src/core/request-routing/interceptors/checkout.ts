@@ -29,7 +29,10 @@ export const handleCheckoutRedirect: HydrogenRouteInterceptor = (
         redirectUrl.searchParams.set("payment", url.searchParams.get("payment") ?? "shop_pay");
       }
 
-      return Response.redirect(redirectUrl, 302);
+      return new Response(null, {
+        status: 302,
+        headers: { location: redirectUrl.toString() },
+      });
     })
     .catch((error) => {
       log.error("checkout redirect request failed", { error });

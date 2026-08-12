@@ -14,7 +14,7 @@ const collectionQueryKey = computed(() => collectionRouteSearch(route));
 // Pin the fetch target while handleChange's refresh() runs. Without this,
 // collectionRouteSearch(route) inside the fetcher can read a stale route
 // (navigateTo updates the URL bar first), so dataSearch disagrees with
-// urlSearch and the collection store stays in loading forever.
+// urlSearch and CollectionProvider stays in loading forever.
 const fetchSearchOverride = ref<string | null>(null);
 const collectionApiPath = computed(
   () => `/api/collections/${encodeURIComponent(handle.value)}` as const,
@@ -26,7 +26,7 @@ const { data, refresh } = await useFetch(() => collectionApiPath.value, {
   // Only watch handle — filter/sort refetch via refreshCollection() from handleChange.
   // Also watching collectionQueryKey here races that explicit refresh: two concurrent
   // fetches can finish out of order and tag dataSearch with a stale route snapshot
-  // while urlSearch already moved, so the collection store never settles.
+  // while urlSearch already moved, so CollectionProvider never settles.
   watch: [handle],
 });
 
