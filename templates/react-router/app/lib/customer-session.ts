@@ -1,4 +1,4 @@
-const COOKIE_NAME = "__Host-hydrogen_customer_session";
+export const CUSTOMER_SESSION_COOKIE_NAME = "__Host-hydrogen_customer_session";
 const COOKIE_PATH = "/";
 const COOKIE_VERSION = "v1";
 const COOKIE_SEPARATOR = ".";
@@ -29,7 +29,7 @@ export class EncryptedCookieCustomerSession {
 
   static async init(request: Request, secret: string) {
     assertSessionSecret(secret);
-    const cookieValue = getCookieValue(request.headers.get("cookie"), COOKIE_NAME);
+    const cookieValue = getCookieValue(request.headers.get("cookie"), CUSTOMER_SESSION_COOKIE_NAME);
     const data = cookieValue ? await decryptSessionCookie(cookieValue, secret) : {};
     return new EncryptedCookieCustomerSession(data, new URL(request.url).origin, secret);
   }
@@ -105,7 +105,7 @@ async function deriveKey(secret: string): Promise<CryptoKey> {
 }
 
 async function serializeSessionCookie(value: string): Promise<string> {
-  return serializeCookie(COOKIE_NAME, value, [
+  return serializeCookie(CUSTOMER_SESSION_COOKIE_NAME, value, [
     `Path=${COOKIE_PATH}`,
     "HttpOnly",
     "Secure",
@@ -114,7 +114,7 @@ async function serializeSessionCookie(value: string): Promise<string> {
 }
 
 function serializeExpiredSessionCookie(): string {
-  return serializeCookie(COOKIE_NAME, "", [
+  return serializeCookie(CUSTOMER_SESSION_COOKIE_NAME, "", [
     `Path=${COOKIE_PATH}`,
     "HttpOnly",
     "Secure",

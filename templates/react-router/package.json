@@ -8,7 +8,7 @@
     "deploy": "shopify hydrogen deploy --assets-dir dist/client --worker-dir dist/server",
     "dev": "vite dev",
     "preview": "react-router build && vite preview",
-    "test": "node --experimental-strip-types --test app/lib/filter-input.test.ts",
+    "test": "node --experimental-strip-types --test app/lib/*.test.ts",
     "typecheck": "react-router typegen && tsc && hydrogen gql check --fail-on-warn"
   },
   "dependencies": {

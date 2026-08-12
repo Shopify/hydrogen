@@ -24,6 +24,7 @@ import {
 import { createCustomerSessionHandlers } from "./customer-session-handlers";
 import { cacheContext, envContext, waitUntilContext } from "./platform";
 import { predictiveSearchHandlers } from "./predictive-search-handlers";
+import { requestForShopifyContext } from "./request-sanitization";
 import { routeTemplates } from "./route-templates";
 import { storefrontClientContext } from "./storefront-context";
 
@@ -55,7 +56,7 @@ export const storefrontMiddleware: MiddlewareFunction<Response> = async (
   const waitUntil = context.get(waitUntilContext);
   const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
-    request,
+    request: requestForShopifyContext(request),
     i18n: defaultI18n,
     buyerIp,
   });

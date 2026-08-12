@@ -26,7 +26,7 @@ export default {
       context.set(waitUntilContext, executionContext.waitUntil.bind(executionContext));
       context.set(cacheContext, await caches.open("hydrogen"));
 
-      return handleRequest(request, context);
+      return await handleRequest(request, context);
     } catch (error) {
       console.error(error);
       return new Response("An unexpected error occurred", { status: 500 });
