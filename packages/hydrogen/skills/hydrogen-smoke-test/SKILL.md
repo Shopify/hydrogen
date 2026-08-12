@@ -45,7 +45,7 @@ Product page:
 
 Cart:
 - [ ] /cart works without JavaScript and is reachable via a real /cart link in the footer
-- [ ] Header cart trigger is a `/cart` anchor that opens the drawer via `showModal()` after hydration
+- [ ] Header cart trigger remains a `/cart` link and opens the drawer on normal activation after hydration
 - [ ] window.Shopify.actions.openCart() opens the drawer after Standard Actions loads
 - [ ] A mutation driven through the real Add to cart UI or framework cart action issues `Set-Cookie` and propagates expected response headers
 - [ ] Add-to-cart can open the drawer after a successful submit when the product UX chooses that behavior
@@ -159,7 +159,7 @@ Expected: a redirect whose `location` header points at Shopify's hosted login, n
 ## Cart
 
 - `/cart` works without JavaScript and is reachable via a real `/cart` link in the footer.
-- The header cart trigger is a `/cart` anchor that opens the drawer via `showModal()` after hydration.
+- The header cart trigger remains a `/cart` link and opens the drawer on normal activation after hydration.
 - `window.Shopify.actions.openCart()` opens the drawer after Standard Actions loads.
 - Exercise a mutation through the real Add to cart UI or the framework's cart action. Do not hand-craft an internal
   Hydrogen cart payload. Confirm the response issues the expected cart or session `Set-Cookie` and propagates the

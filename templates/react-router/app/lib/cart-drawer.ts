@@ -50,10 +50,16 @@ function getCartDrawer() {
 /** Open the cart drawer (`<dialog>` + `showModal()`). */
 export function openCartDrawer() {
   const drawer = getCartDrawer();
-  if (!drawer || drawer.open) return;
+  if (!drawer) return false;
+  if (drawer.open) return true;
   ensureCloseListener(drawer);
-  drawer.showModal();
-  syncFromDrawer(drawer);
+  try {
+    drawer.showModal();
+    syncFromDrawer(drawer);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Close the cart drawer. */
@@ -68,7 +74,9 @@ function configureOpenCartActionNow() {
   if (!openCart) return false;
 
   openCart.configure({
-    handler: async () => openCartDrawer(),
+    handler: async () => {
+      openCartDrawer();
+    },
   });
   openCartActionConfigured = true;
   return true;

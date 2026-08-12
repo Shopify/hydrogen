@@ -186,7 +186,7 @@ if (!data?.product) {
 ## UI
 
 - You must invoke the `hydrogen-variant-form` skill for option controls, add-to-cart form structure, URL selection, combined listings, price display, disabled states, sold-out states, cart error display, and user acceptance tests. Do not duplicate its rules or invent separate variant matrix logic.
-- When the cart drawer is configured with the canonical anchor trigger, follow the `hydrogen-cart-drawer` skill's guidance and open optimistic state via `formProps({ beforeSubmit: openCartDrawer })`; the samples below use `beforeSubmit`.
+- When the cart drawer is configured, follow the `hydrogen-cart-drawer` skill's trigger guidance and open optimistic state via `formProps({ beforeSubmit: openCartDrawer })`; the samples below use `beforeSubmit`.
 - Product route loaders and server helpers may read env indirectly through server-only client/config modules. Product client components must not read `process.env`, `import.meta.env`, or framework env modules.
 
 ### React

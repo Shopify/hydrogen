@@ -81,7 +81,7 @@ Use a primitive library only when the app already depends on one for dialog-like
 
 ### Opening the drawer
 
-The cart trigger renders in SSR as `<a href="/cart">Cart</a>` so it works before hydration and without JavaScript (the anchor navigates to the full `/cart` page). After hydration, an `onClick` calls `e.preventDefault()` then `openCartDrawer()` (which calls `showModal()`), so the click opens the drawer instead of navigating; no `hasHydrated` swap is needed — the anchor is the no-JS baseline and the `onClick` is the enhancement.
+Always render the cart trigger as a real `/cart` link so SSR and no-JS navigation reach the full cart page. After hydration, enhance normal activation to open the drawer instead of navigating. Preserve native link behavior for modified activation, new tabs, or when the drawer cannot open. This is the same progressive-enhancement pattern used by client-side routers.
 
 Keep the drawer as hydrated progressive enhancement. Do not make the drawer itself the fallback route; the `/cart` page is that full-page fallback.
 
@@ -101,8 +101,14 @@ function getCartDrawer() {
 
 export function openCartDrawer() {
   const drawer = getCartDrawer();
-  if (!drawer || drawer.open) return;
-  drawer.showModal();
+  if (!drawer) return false;
+  if (drawer.open) return true;
+  try {
+    drawer.showModal();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function closeCartDrawer() {
@@ -114,7 +120,9 @@ function configureOpenCartActionNow() {
   if (!openCart) return false;
 
   openCart.configure({
-    handler: async () => openCartDrawer(),
+    handler: async () => {
+      openCartDrawer();
+    },
   });
   openCartActionConfigured = true;
   return true;
@@ -165,14 +173,12 @@ function CartDrawer() {
 
 The drawer opens from three surfaces. The cart trigger is the canonical one; the other two reuse the same helper.
 
-**1. The cart trigger.** A `/cart` anchor with an `onClick` that opens the drawer after hydration. It carries the accessibility attributes `aria-controls` and `aria-haspopup="dialog"`:
+**1. The cart trigger.** Keep link semantics before and after hydration. Once hydrated, intercept only unmodified, same-context activation, and prevent navigation only when `openCartDrawer()` succeeds. Native link behavior remains the fallback. When enhancement is active, add `aria-haspopup="dialog"`, `aria-controls`, and `aria-expanded`; keep `aria-expanded` synchronized with the drawer's open state.
 
-```tsx
-return (
-  <a href="/cart" onClick={(e) => { e.preventDefault(); openCartDrawer(); }} aria-controls={CART_DRAWER_ID} aria-haspopup="dialog">
-    Cart
-  </a>
-);
+```text
+without enhancement: <a href="/cart">Cart</a> -> navigate to /cart
+with enhancement:    <a href="/cart">Cart</a> -> open the drawer for normal activation
+guard:               prevent navigation only after the drawer opens successfully
 ```
 
 **2. `window.Shopify.actions.openCart()`** — the Standard Action for programmatic opening, so external code (Standard Actions tools, agents, third-party components) can open the drawer. Register the same stable DOM helper as the `openCart` handler (see §8 for the handler-permanence caveat).
@@ -181,7 +187,7 @@ return (
 window.Shopify.actions.openCart();
 ```
 
-**3. From add-to-cart** — when the canonical cart trigger is an anchor, open the drawer immediately with optimistic state so pending cart contents remain inspectable. Opening only after success is compatible with the storefront contract only when the page also provides a visible button that opens the drawer while the mutation is pending.
+**3. From add-to-cart** — open the drawer immediately with optimistic state so pending cart contents remain inspectable. Opening only after success is compatible with the storefront contract only when the page also provides a visible control that opens the drawer while the mutation is pending.
 
 ```tsx
 <form {...formProps({ beforeSubmit: openCartDrawer })}>
@@ -217,8 +223,8 @@ See `references/css.md` for the reference drawer shell, entry/exit animation, ba
 
 After building the cart drawer, test:
 
-- [ ] Cart trigger is a `/cart` anchor pre-hydration; after hydration its `onClick` opens the drawer via `showModal()`
-- [ ] If a no-JS fallback is required, it navigates to `/cart` without JavaScript
+- [ ] Cart trigger remains a `/cart` link; after hydration, normal activation opens the drawer
+- [ ] Without JavaScript, the cart trigger navigates to `/cart`
 - [ ] `window.Shopify.actions.openCart()` opens drawer (test from browser console)
 - [ ] Drawer closes via Escape, backdrop click (with `closedby="any"`), and the close button
 - [ ] Focus returns to the cart icon after close

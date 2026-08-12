@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
 import { Link } from "react-router";
 
 import { useCart } from "~/lib/cart";
@@ -23,9 +23,9 @@ const navItemHref: Record<(typeof content.header.navItems)[number], string> = {
 
 /**
  * Site header — shared chrome (`navbar.md`, `notes/cart.md`,
- * `notes/predictive-search.md`). Server-rendered nav. The cart trigger opens
- * the drawer with a JS `showModal()` call; the footer `/cart` link is the no-JS
- * cart fallback (F4). The search trigger is a real `/search` link that hydrates
+ * `notes/predictive-search.md`). Server-rendered nav. The cart trigger is a real
+ * `/cart` link that hydration enhances with a JS `showModal()` call (F4). The
+ * search trigger is a real `/search` link that hydrates
  * into the predictive-search modal. The mobile nav is a `<dialog>` with an
  * always-rendered fallback link list.
  *
@@ -174,20 +174,17 @@ export function Header({
             </Link>
           ) : null}
 
-          {/* Cart trigger (hydrogen-cart-drawer). `onClick` calls showModal()
-              to open the `<dialog>` drawer after hydration. The footer `/cart`
-              link remains the no-JS cart surface (F4). */}
-          <button
-            type="button"
-            onClick={openCartDrawer}
-            aria-controls={CART_DRAWER_ID}
-            aria-haspopup="dialog"
-            aria-expanded={cartDrawerOpen}
+          <a
+            href="/cart"
+            onClick={openCartDrawerFromLink}
+            aria-controls={hasHydrated ? CART_DRAWER_ID : undefined}
+            aria-haspopup={hasHydrated ? "dialog" : undefined}
+            aria-expanded={hasHydrated ? cartDrawerOpen : undefined}
             className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded bg-transparent p-0 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
             aria-label={cartLabel}
           >
             <CartIcon count={totalQuantity} display={countDisplay} />
-          </button>
+          </a>
           <span aria-live="polite" aria-atomic="true" className="sr-only">
             {cartItemCount(totalQuantity)}
           </span>
@@ -199,6 +196,12 @@ export function Header({
       <PredictiveSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
+}
+
+function openCartDrawerFromLink(event: MouseEvent<HTMLAnchorElement>) {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+    return;
+  if (openCartDrawer()) event.preventDefault();
 }
 
 function CartIcon({ count, display }: { count: number; display: string }) {
