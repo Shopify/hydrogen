@@ -1,5 +1,6 @@
 "use client";
 
+import type { ShopifyScriptsI18nWithCurrency } from "@shopify/hydrogen";
 import { ShopifyScripts, type ShopifyScriptsProps } from "@shopify/hydrogen/react";
 import { useRouter } from "next/navigation";
 
@@ -13,7 +14,7 @@ import { routeTemplates } from "@/lib/route-templates";
  * `i18n` (with server-fetched currency) and passes it here as a complete object.
  */
 type ShopConfig = NonNullable<ShopifyScriptsProps["shop"]>;
-type I18nConfig = NonNullable<ShopifyScriptsProps["i18n"]>;
+type I18nConfig = ShopifyScriptsI18nWithCurrency;
 
 export function ShopifyScriptsWithNavigation({
   shop,

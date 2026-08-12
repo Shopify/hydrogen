@@ -136,6 +136,7 @@ export type {
   ShopifyScriptsShop,
   ShopifyScriptTagsOptions,
   ShopifyScriptsI18n,
+  ShopifyScriptsI18nWithCurrency,
 } from "./shopify-scripts/index";
 
 export { createCollectionReconciler, createCollectionStore } from "./collection";

@@ -23,7 +23,7 @@
 **Prerequisites:**
 
 - A storefront built on `@shopify/hydrogen` with the request interceptors already wired (`handleShopifyRoutes` and `handleShopifyRedirects`). The analytics bus depends on the SFAPI proxy so the browser can observe same-origin Storefront API responses for session cookies. Without the proxy, analytics falls back to deprecated JavaScript-visible cookies and should be treated as incomplete. If you have not installed the interceptors yet, install them first with the local `hydrogen-request-handlers` skill.
-- Shopify runtime scripts rendered from the root/document head. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass `{country, language, currency}` as `i18n`; pass `{shopId: env.SHOP_ID, storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0", myshopifyDomain: env.PUBLIC_STORE_DOMAIN}` as `shop`. Resolve both on the server, declare them as consts annotated with the `ShopifyScriptsShop` / `ShopifyScriptsI18n` types from `@shopify/hydrogen` (so wrong or missing fields fail typecheck where they are built), and serialize them into ShopifyScripts. ShopifyScripts creates `window.Shopify.analytics` by default and exposes the permanent domain as `window.Shopify.shop`. Analytics consent config does not accept `country` or `language`.
+- Shopify runtime scripts rendered from the root/document head. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass `{country, language, currency}` as `i18n`; pass `{shopId: env.SHOP_ID, storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0", myshopifyDomain: env.PUBLIC_STORE_DOMAIN}` as `shop`. Resolve both on the server, declare them as consts annotated with the `ShopifyScriptsShop` / `ShopifyScriptsI18nWithCurrency` types from `@shopify/hydrogen` (so wrong or missing fields fail typecheck where they are built), and serialize them into ShopifyScripts. ShopifyScripts creates `window.Shopify.analytics` by default and exposes the permanent domain as `window.Shopify.shop`. Analytics consent config does not accept `country` or `language`.
 - A client-side lifecycle hook in your framework (route-change effect, navigation event, `<script>` tag, etc.) so view events can fire on the right URL transitions.
 
 `ShopifyScripts` creates the zero-dependency analytics bus, sets it on `window.Shopify.analytics`, and owns Shopify consent setup, analytics CDN loading, and deprecated-cookie compatibility. Framework adapters stay thin: they translate framework lifecycle events into bus calls and wire cart delta tracking with `trackCartAnalytics()`.
@@ -73,7 +73,7 @@ import {
   type ConsentConfig,
   type ShopifyScriptTagsOptions,
   type ShopifyScriptsShop,
-  type ShopifyScriptsI18n,
+  type ShopifyScriptsI18nWithCurrency,
 } from "@shopify/hydrogen";
 
 const shop: ShopifyScriptsShop = {
@@ -82,10 +82,10 @@ const shop: ShopifyScriptsShop = {
   myshopifyDomain: "example.myshopify.com", // permanent MyShopify domain
 };
 
-const i18n: ShopifyScriptsI18n = {
+const i18n: ShopifyScriptsI18nWithCurrency = {
   country: "US",
   language: "EN",              // sent as Monorail content language
-  currency: "USD",             // required for analytics initialization
+  currency: "USD",             // required while Shopify analytics is enabled
 };
 
 const consent: ConsentConfig = {
@@ -111,9 +111,9 @@ Resolve shop metadata on the server and pass it to ShopifyScripts. Shopify analy
 
 ### `i18n`
 
-Pass the app's resolved market values. Although `currency` is optional in the general ShopifyScripts type, treat it as
-required when Shopify analytics is enabled: it initializes `window.Shopify.currency.active` before consent-gated
-events can replay. Use an authoritative configured market currency or select the active presentment currency from the
+Pass the app's resolved market values. `currency` is required by the ShopifyScripts types whenever Shopify analytics
+is enabled (the default); it is only optional with `shopifyAnalytics: false`. It initializes
+`window.Shopify.currency.active` before consent-gated events can replay. Use an authoritative configured market currency or select the active presentment currency from the
 Storefront API under the same market context as the request:
 
 ```graphql

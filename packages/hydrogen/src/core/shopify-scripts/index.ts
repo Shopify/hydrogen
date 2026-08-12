@@ -1,3 +1,4 @@
+import { getLogger } from "../logging";
 import { getShopifyAnalyticsBusScript, getShopifyAnalyticsConfig } from "./analytics";
 import { getShopifyConsentTrackingScript } from "./consent";
 import {
@@ -46,8 +47,24 @@ export type {
   ShopifyScriptTagsOptions,
   ShopifyScriptsOptions,
   ShopifyScriptsI18n,
+  ShopifyScriptsI18nWithCurrency,
   ShopifyScriptsShop,
 } from "./types";
+
+const log = getLogger("shopify-scripts");
+
+// Compile-time enforcement lives in ShopifyScriptTagsOptions; this guard covers JS consumers and
+// bindings (such as Vue) whose runtime props cannot express that union.
+function warnWhenAnalyticsCurrencyMissing(
+  shopifyAnalytics: boolean,
+  i18n: ShopifyScriptTagsOptions["i18n"],
+): void {
+  if (shopifyAnalytics && i18n?.currency === undefined) {
+    log.warn(
+      "shopify analytics is enabled without i18n.currency; analytics events fail until window.Shopify.currency.active is set",
+    );
+  }
+}
 
 /**
  * Returns grouped Shopify storefront script/link descriptors for SSR frameworks and bindings.
@@ -66,6 +83,8 @@ export function getShopifyScriptTags({
   shopifyAnalytics = true,
   inbox = false,
 }: ShopifyScriptTagsOptions): ShopifyScriptTagDescriptors {
+  warnWhenAnalyticsCurrencyMissing(shopifyAnalytics, i18n);
+
   const nonceAttributes = nonce !== undefined ? { nonce } : undefined;
   const analyticsConfig = getShopifyAnalyticsConfig({ analytics, consent, shop });
 
