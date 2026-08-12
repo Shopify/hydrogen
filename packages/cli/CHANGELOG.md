@@ -1,5 +1,18 @@
 # @shopify/cli-hydrogen
 
+## 13.0.4
+
+### Patch Changes
+
+- New flag `--javascript-origin` override to `hydrogen customer-account-push`. Not providing it still defaults to `--dev-origin`. ([#3938](https://github.com/Shopify/hydrogen/pull/3938)) by [@fredericoo](https://github.com/fredericoo)
+
+- Fix local Hydrogen CLI discovery so `shopify hydrogen customer-account-push` resolves to the local command implementation. ([#3941](https://github.com/Shopify/hydrogen/pull/3941)) by [@fredericoo](https://github.com/fredericoo)
+
+- Recommend the Shopify AI Toolkit in newly scaffolded storefronts. ([#3887](https://github.com/Shopify/hydrogen/pull/3887)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Updated dependencies [[`28eb887f4787ece9b03bceae089cf2f060a7af77`](https://github.com/Shopify/hydrogen/commit/28eb887f4787ece9b03bceae089cf2f060a7af77)]:
+  - @shopify/mini-oxygen@4.2.2
+
 ## 13.0.3
 
 ### Patch Changes

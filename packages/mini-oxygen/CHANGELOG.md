@@ -1,5 +1,11 @@
 # @shopify/mini-oxygen
 
+## 4.2.2
+
+### Patch Changes
+
+- Support HTTP/2 requests in MiniOxygen's Vite request conversion. ([#3939](https://github.com/Shopify/hydrogen/pull/3939)) by [@fredericoo](https://github.com/fredericoo)
+
 ## 4.2.1
 
 ### Patch Changes

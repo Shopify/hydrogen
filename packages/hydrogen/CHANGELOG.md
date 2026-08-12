@@ -1,5 +1,13 @@
 # @shopify/hydrogen
 
+## 2026.4.5
+
+### Patch Changes
+
+- Recover customer account login when switching browser contexts or opening multiple login tabs. OAuth state values now use cryptographically secure randomness. ([#3856](https://github.com/Shopify/hydrogen/pull/3856)) by [@fredericoo](https://github.com/fredericoo)
+
+- Keep customers logged in when a Customer Account API token refresh fails due to a transient error. The session is now only cleared when the refresh token is missing or the token endpoint returns `invalid_grant`, so other OAuth errors, HTTP failures, and network failures can be retried on a subsequent request. ([#3916](https://github.com/Shopify/hydrogen/pull/3916)) by [@markusvoigt](https://github.com/markusvoigt)
+
 ## 2026.4.4
 
 ### Patch Changes
