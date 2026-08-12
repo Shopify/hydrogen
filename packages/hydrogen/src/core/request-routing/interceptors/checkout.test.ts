@@ -121,6 +121,7 @@ describe("handleCheckoutRedirect", () => {
     expect(result?.headers.get("location")).toBe(
       "https://test-store.myshopify.com/checkouts/cn/abc?key=value&payment=shop_pay&source=hydrogen",
     );
+    expect(() => result?.headers.set("x-test", "1")).not.toThrow();
   });
 
   it("redirects checkout mode to the root route without a cart", async () => {

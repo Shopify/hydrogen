@@ -3,7 +3,7 @@ import type { AvailableFilter } from "@shopify/hydrogen";
 import { normalizeCollectionSearch } from "@shopify/hydrogen";
 
 import type { ProductCardData } from "~/components/ProductCard.vue";
-import { provideCollectionStore } from "~/storefront/collection";
+import { CollectionProvider } from "~/storefront/collection";
 import { collectionRouteSearch } from "~/utils/collection-route-search";
 
 const props = defineProps<{
@@ -43,20 +43,16 @@ async function handleChange(search: string) {
     props.setQueryWatchSuppressed(false);
   }
 }
-
-provideCollectionStore({
-  data: collectionData,
-  urlSearch,
-  onChange: handleChange,
-});
 </script>
 
 <template>
-  <SearchBrowserContent
-    :term="term"
-    :total-count="totalCount"
-    :products="products"
-    :available-filters="availableFilters"
-    :search-path="searchPath"
-  />
+  <CollectionProvider :data="collectionData" :url-search="urlSearch" @change="handleChange">
+    <SearchBrowserContent
+      :term="term"
+      :total-count="totalCount"
+      :products="products"
+      :available-filters="availableFilters"
+      :search-path="searchPath"
+    />
+  </CollectionProvider>
 </template>

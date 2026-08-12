@@ -5,8 +5,7 @@ These projects are development examples for exercising Hydrogen across framework
 ## Example projects
 
 - `astro/` — Astro 6 with `@astrojs/node` SSR and frontmatter data fetching.
-- `nuxt/` — Nuxt 3 with server middleware and Vue pages.
-- `nuxt-binding/` — Nuxt 3 using Hydrogen's Vue binding layer.
+- `nuxt/` — Nuxt 3 using Hydrogen's Vue binding layer.
 - `solid-start/` — SolidStart v1 with `query`, `createAsync`, and signal-driven product state.
 - `sveltekit/` — SvelteKit 2 and Svelte 5 with server `load`.
 - `hydrogen/` — mirror of the Hydrogen Skeleton template, kept for parity with Hydrogen classic and its E2E suite.

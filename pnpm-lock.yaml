@@ -157,40 +157,6 @@ importers:
       '@shopify/hydrogen':
         specifier: workspace:*
         version: link:../../packages/hydrogen
-      lru-cache:
-        specifier: ^11.3.6
-        version: 11.3.6
-      nuxt:
-        specifier: ^3.17.0
-        version: 3.21.4(@parcel/watcher@2.5.6)(@types/node@25.8.0)(@vercel/functions@3.7.4(ws@8.20.0))(@vue/compiler-sfc@3.5.33)(cac@6.7.14)(db0@0.3.4)(eslint@9.39.4(jiti@2.6.1))(ioredis@5.10.1)(lightningcss@1.32.0)(magicast@0.5.2)(optionator@0.9.4)(oxlint@1.62.0)(rolldown@1.0.0-rc.17)(rollup-plugin-visualizer@7.0.1(rolldown@1.0.0-rc.17)(rollup@4.60.3))(rollup@4.60.3)(terser@5.46.2)(tsx@4.21.0)(typescript@5.9.3)(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))(vue-tsc@3.3.3(typescript@5.9.3))(yaml@2.9.0)
-      vue:
-        specifier: ^3.5.0
-        version: 3.5.33(typescript@5.9.3)
-      vue-router:
-        specifier: ^4.5.0
-        version: 4.6.4(vue@3.5.33(typescript@5.9.3))
-    devDependencies:
-      '@nuxt/fonts':
-        specifier: ^0.11.0
-        version: 0.11.4(@vercel/functions@3.7.4(ws@8.20.0))(db0@0.3.4)(ioredis@5.10.1)(magicast@0.5.2)(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))
-      '@tailwindcss/vite':
-        specifier: ^4.2.0
-        version: 4.2.4(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))
-      tailwindcss:
-        specifier: ^4.2.0
-        version: 4.2.4
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.3
-      vue-tsc:
-        specifier: 3.3.3
-        version: 3.3.3(typescript@5.9.3)
-
-  examples/nuxt-binding:
-    dependencies:
-      '@shopify/hydrogen':
-        specifier: workspace:*
-        version: link:../../packages/hydrogen
       nuxt:
         specifier: ^3.17.0
         version: 3.21.4(@parcel/watcher@2.5.6)(@types/node@25.8.0)(@vercel/functions@3.7.4(ws@8.20.0))(@vue/compiler-sfc@3.5.33)(cac@6.7.14)(db0@0.3.4)(eslint@9.39.4(jiti@2.6.1))(ioredis@5.10.1)(lightningcss@1.32.0)(magicast@0.5.2)(optionator@0.9.4)(oxlint@1.62.0)(rolldown@1.0.0-rc.17)(rollup-plugin-visualizer@7.0.1(rolldown@1.0.0-rc.17)(rollup@4.60.3))(rollup@4.60.3)(terser@5.46.2)(tsx@4.21.0)(typescript@5.9.3)(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))(vue-tsc@3.3.3(typescript@5.9.3))(yaml@2.9.0)

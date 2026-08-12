@@ -6,6 +6,7 @@ import { handleMcpProxy } from "./interceptors/mcp-proxy";
 import { handleSfapiProxy } from "./interceptors/sfapi-proxy";
 import { handleShopifyRouteHandlers } from "./registered-routes";
 import type { HydrogenRouteHandler, HydrogenRouteInterceptor } from "./route-types";
+import { safeApplyResponseHeaders } from "./safe-apply-response-headers";
 
 const SHOPIFY_ROUTE_INTERCEPTORS = [
   handleShopifyApiProxy,
@@ -21,7 +22,8 @@ const SHOPIFY_ROUTE_INTERCEPTORS = [
  * Matches a request against Shopify standard routes and any registered handler
  * groups, returning a raw `Response` (redirect or JSON) when one matches, or
  * `null` when none do. Use it as the first step of request handling, before
- * framework routing.
+ * framework routing. Matched responses already include request-context
+ * response headers.
  */
 export const handleShopifyRoutes: HydrogenRouteHandler = (options) => {
   if (options.requestContext !== options.storefrontClient.requestContext) {
@@ -36,18 +38,9 @@ export const handleShopifyRoutes: HydrogenRouteHandler = (options) => {
     const responsePromise = interceptor(url, options);
     if (!responsePromise) continue;
 
-    return responsePromise.then((response) => {
-      try {
-        options.requestContext.applyResponseHeaders(response.headers);
-        return response;
-      } catch (error) {
-        if (!(error instanceof TypeError)) throw error;
-      }
-
-      const mutableResponse = new Response(response.body, response);
-      options.requestContext.applyResponseHeaders(mutableResponse.headers);
-      return mutableResponse;
-    });
+    return responsePromise.then((response) =>
+      safeApplyResponseHeaders(response, options.requestContext),
+    );
   }
 
   return null;
