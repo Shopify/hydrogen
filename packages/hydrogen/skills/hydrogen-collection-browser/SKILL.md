@@ -33,7 +33,7 @@ Server data should include:
 - `dataSearch`: the exact search string used for the server query.
 - `products`: Storefront API product nodes shaped for the product card.
 - `availableFilters`: normalized filter metadata from `products.filters` or `search.productFilters`.
-- Optional `totalCount` and `pageInfo` for search or pagination UI.
+- Optional `totalCount` and cursor-complete `pageInfo` (`startCursor`, `endCursor`, `hasPreviousPage`, and `hasNextPage`) for search or pagination UI.
 
 Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass parsed `filters`, `sortKey`, and `reverse` into `collection.products(...)` or `search(...)`.
 
@@ -42,10 +42,14 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 - Use the framework binding when a matching reference exists. Otherwise, use the core store directly. Do not hand-roll browse state with component state.
 - The browse form must carry both `method="get"` **and** an explicit `action` (the collection/search route URL, e.g. `action="/collections/shoes"` or the search route) so filters and sort degrade to a real GET submit without JavaScript. `formProps()` only wires the submit handler — it does not set `method` or `action` — so render both literally; the helper cannot infer the route.
 - Use `formProps()` on the browse form: spread it, then add the literal `method="get"` and `action`. On hydrated changes, call `form.requestSubmit()` for **checkboxes and `<select>`**. For **text/number inputs (price min/max)** use `onBlur` + `onKeyDown` Enter instead — `onChange` fires per keystroke and would submit the GET form (and re-query Storefront) on every character.
-- Render a `noscript` submit button for filter sidebars that auto-submit when hydrated.
-- Render "load more" / pagination as a GET link (the framework's link component) carrying the next-page cursor (e.g. `?after=<endCursor>`), so it works without JavaScript. Hydration may upgrade it to append-in-place; the bare link must still load the next page server-side (it replaces the page rather than appending when JS is off).
+- Provide a native submit control for every auto-submitting browse form so filtering and sorting remain usable without JavaScript.
+- For collection routes, render pagination as native GET links carrying `before` or `after` cursors. Place "Load previous" immediately before the results list and "Load more" after it. After hydrated pagination succeeds, push the cursor URL into browser history while preserving the accumulated products. This keeps each cursor URL shareable: opening or reloading it starts at that cursor and exposes the available previous/next links. Preserve native navigation for JavaScript-disabled and modified-click flows. Apply the framework reference's hydrated enhancement when one is provided.
+- Start every filter or sort change from the first page. Hydrogen's collection reconciler clears `before` and `after` during hydrated browse changes. Native GET forms use the base collection/search route as their explicit `action` and submit filter/sort controls without cursor fields.
+- Keep all collection filter controls interactive while browse data is loading. Fade stale numeric result metadata, including the displayed result count and each filter value's available-item count, until fresh data arrives.
+- Keep the collection sort select interactive and visually unchanged while browse data is loading.
 - Show stale products with a pending visual state while `state.status === "loading"`; do not replace the grid with a skeleton.
 - Serialize active filter chips from `serializeCollectionParams(state)` and remove filters with `getFilterRemovalUrl(...)`.
+- Preserve the current scroll position when hydrated active-filter chips or clear-filter links navigate. Keep native links as the non-JavaScript fallback, and use the framework reference's scroll-preserving client navigation option when one is provided.
 - Use `isFilterInputActive(state.filters, value.input)` to mark checked filter inputs.
 - Treat each Storefront API `FilterValue.input` JSON string as the authoritative filter identity. To render one checkbox, parse that JSON into a `ProductFilter`, wrap it as `{ filters: [filter], sortKey: undefined, reverse: false }`, and pass it to `serializeCollectionParams(...)` for the field name/value. Do not derive filter shapes or param names from filter IDs, labels, or types.
 - Build sort option values with `getSortByValue(...)`; it emits the Liquid-compatible `sort_by` strings that `parseCollectionParams()` understands.
@@ -75,6 +79,12 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 - Reloading the filtered URL server-renders the same filtered state.
 - With JavaScript disabled, checking filters and submitting the form loads the filtered URL.
 - With JavaScript disabled, the load-more / pagination link loads the next page server-side.
-- Active filter chips remove only one filter and preserve unrelated params.
+- With JavaScript enabled, collection pagination appends or prepends unique products and keeps the current results visible.
+- Successful hydrated pagination pushes the current `before` or `after` cursor into a shareable browser URL.
+- Direct cursor URLs render a link to the previous page when `hasPreviousPage` is true.
+- Filter and sort changes clear `before` and `after`.
+- All stale numeric result metadata shows pending opacity while collection filter controls remain interactive (for example, result totals and available-item counts).
+- The collection sort select remains interactive and visually unchanged while loading.
+- Active filter chips remove only one filter, preserve unrelated params, and do not reset scroll when hydrated.
 - Search filters preserve `q`.
 - Back/forward navigation settles loading state.

@@ -97,7 +97,9 @@ export function normalizeCollectionSearch(search: string): string {
 
 /**
  * Merges store-owned params from `state` into `existing`, preserving
- * non-store keys (e.g. `grid`, `view`) already present in the URL.
+ * unrelated keys (e.g. `grid`, `view`) already present in the URL. Collection
+ * pagination cursors (`before`, `after`) are cleared so changed browse intent
+ * starts from the first page.
  */
 export function mergeCollectionParams(
   existing: URLSearchParams,
@@ -106,7 +108,7 @@ export function mergeCollectionParams(
   const merged = new URLSearchParams(existing);
 
   for (const key of Array.from(merged.keys())) {
-    if (isStoreOwnedParam(key)) {
+    if (isStoreOwnedParam(key) || key === "before" || key === "after") {
       merged.delete(key);
     }
   }

@@ -10,13 +10,20 @@ import {
 } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
 import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
-import { useEffect, useEffectEvent } from "react";
-import { Link, isRouteErrorResponse, useNavigate, useSearchParams } from "react-router";
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
+import { Link, isRouteErrorResponse, useFetcher, useNavigate, useSearchParams } from "react-router";
 
 import { Breadcrumbs } from "~/components/Breadcrumbs";
 import { NotFound } from "~/components/NotFound";
 import { ProductCard } from "~/components/ProductCard";
 import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
+import { mergeProductWindow, type ProductWindow } from "~/lib/collection-pagination";
 import { content } from "~/lib/content";
 import { FilterGroup } from "~/lib/filters";
 import { PRODUCT_CARD_FRAGMENT } from "~/lib/fragments";
@@ -39,7 +46,7 @@ const COLLECTION_SORT_OPTIONS = [
 
 const COLLECTION_QUERY = gql(
   `
-  query Collection($handle: String!, $first: Int!, $after: String, $sortKey: ProductCollectionSortKeys, $reverse: Boolean, $filters: [ProductFilter!], $country: CountryCode, $language: LanguageCode)
+  query Collection($handle: String!, $first: Int, $last: Int, $before: String, $after: String, $sortKey: ProductCollectionSortKeys, $reverse: Boolean, $filters: [ProductFilter!], $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       id
@@ -53,7 +60,7 @@ const COLLECTION_QUERY = gql(
         width
         height
       }
-      products(first: $first, after: $after, sortKey: $sortKey, reverse: $reverse, filters: $filters) {
+      products(first: $first, last: $last, before: $before, after: $after, sortKey: $sortKey, reverse: $reverse, filters: $filters) {
         filters {
           id
           label
@@ -78,7 +85,9 @@ const COLLECTION_QUERY = gql(
           }
         }
         pageInfo {
+          hasPreviousPage
           hasNextPage
+          startCursor
           endCursor
         }
         nodes {
@@ -94,6 +103,8 @@ const COLLECTION_QUERY = gql(
 type CollectionQuery = StorefrontApi.ResultOf<typeof COLLECTION_QUERY>;
 type CollectionProducts = NonNullable<CollectionQuery["collection"]>["products"];
 type CollectionAvailableFilter = CollectionProducts["filters"][number];
+type CollectionProduct = CollectionProducts["nodes"][number];
+type CollectionPageInfo = CollectionProducts["pageInfo"];
 
 export const meta: Route.MetaFunction = ({ data, params, matches }: Route.MetaArgs) => {
   const pageTitle = data?.collection?.title ?? "Collection";
@@ -118,42 +129,80 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   const storefrontClient = context.get(storefrontClientContext);
   const url = new URL(request.url);
   const browse = parseCollectionParams(url.searchParams);
+  const browseSearch = serializeCollectionParams(browse).toString();
+  const dataSearch = url.searchParams.toString();
+  const isPaginationRequest = url.searchParams.get("_pagination") === "1";
+  const before = url.searchParams.get("before") || undefined;
+  const after = before ? undefined : url.searchParams.get("after") || undefined;
 
-  const { data, errors } = await storefrontClient.graphql(COLLECTION_QUERY, {
-    variables: {
-      handle: params.handle,
-      first: 24,
-      after: url.searchParams.get("after") ?? undefined,
-      filters:
-        browse.filters.length > 0
-          ? // F13: skill-sanctioned generated-type cast at the query variable boundary
-            // (hydrogen-collection-browser/references/react.md). Kept verbatim.
-            (browse.filters as StorefrontApiProductFilter[])
-          : undefined,
-      sortKey: browse.sortKey,
-      reverse: browse.reverse || undefined,
-    },
-    cache: Cache.short(),
-  });
+  const queryResult = await storefrontClient
+    .graphql(COLLECTION_QUERY, {
+      variables: {
+        handle: params.handle,
+        first: before ? undefined : 24,
+        last: before ? 24 : undefined,
+        before,
+        after,
+        filters:
+          browse.filters.length > 0
+            ? // F13: skill-sanctioned generated-type cast at the query variable boundary
+              // (hydrogen-collection-browser/references/react.md). Kept verbatim.
+              (browse.filters as StorefrontApiProductFilter[])
+            : undefined,
+        sortKey: browse.sortKey,
+        reverse: browse.reverse || undefined,
+      },
+      cache: Cache.short(),
+    })
+    .catch((error: unknown) => {
+      console.error("[hydrogen] Collection query failed", error);
+      if (isPaginationRequest) return null;
+      throw error;
+    });
+
+  if (!queryResult) return paginationErrorLoaderData(browseSearch, dataSearch);
+
+  const { data, errors } = queryResult;
 
   if (errors) {
     console.error("[hydrogen] Collection query failed", errors);
+    if (isPaginationRequest) return paginationErrorLoaderData(browseSearch, dataSearch);
     throw new Response("Collection query failed", { status: 500 });
   }
 
   if (!data?.collection) {
+    if (isPaginationRequest) return paginationErrorLoaderData(browseSearch, dataSearch);
     throw new Response("Collection not found", { status: 404 });
   }
 
   return {
     collection: data.collection,
     products: data.collection.products.nodes,
+    pageInfo: data.collection.products.pageInfo,
     availableFilters: data.collection.products.filters,
-    dataSearch: url.searchParams.toString(),
+    browseSearch,
+    dataSearch,
+    paginationError: false as const,
+  };
+}
+
+function paginationErrorLoaderData(browseSearch: string, dataSearch: string) {
+  return {
+    collection: null,
+    products: [],
+    pageInfo: null,
+    availableFilters: [],
+    browseSearch,
+    dataSearch,
+    paginationError: true as const,
   };
 }
 
 export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
+  if (loaderData.paginationError || !loaderData.collection || !loaderData.pageInfo) {
+    throw new Response("Collection query failed", { status: 500 });
+  }
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const collectionPath = `/collections/${loaderData.collection.handle}`;
@@ -177,10 +226,12 @@ export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
     >
       <CollectionViewedTracker collection={loaderData.collection} />
       <CollectionPage
+        key={`${loaderData.collection.handle}:${loaderData.browseSearch}`}
         collection={loaderData.collection}
         products={loaderData.products}
         availableFilters={loaderData.availableFilters}
-        pageInfo={loaderData.collection.products.pageInfo}
+        pageInfo={loaderData.pageInfo}
+        browseSearch={loaderData.browseSearch}
         collectionPath={collectionPath}
       />
     </CollectionProvider>
@@ -188,10 +239,11 @@ export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
 }
 
 type CollectionPageProps = {
-  collection: Route.ComponentProps["loaderData"]["collection"];
+  collection: NonNullable<Route.ComponentProps["loaderData"]["collection"]>;
   products: Route.ComponentProps["loaderData"]["products"];
   availableFilters: CollectionAvailableFilter[];
-  pageInfo: { hasNextPage: boolean; endCursor?: string | null };
+  pageInfo: CollectionPageInfo;
+  browseSearch: string;
   collectionPath: string;
 };
 
@@ -200,16 +252,79 @@ function CollectionPage({
   products,
   availableFilters,
   pageInfo,
+  browseSearch,
   collectionPath,
 }: CollectionPageProps) {
   const state = useCollection();
   const { formProps } = useCollectionForm();
+  const pagination = useFetcher<typeof loader>();
+  const paginationNavigate = useNavigate();
+  const [productWindow, setProductWindow] = useState<ProductWindow<CollectionProduct>>(() => ({
+    products,
+    pageInfo,
+  }));
+  const [paginationErrorDirection, setPaginationErrorDirection] = useState<
+    "next" | "previous" | null
+  >(null);
+  const [pendingDirection, setPendingDirection] = useState<"next" | "previous" | null>(null);
+  const [focusProductId, setFocusProductId] = useState<string | null>(null);
+  const productWindowRef = useRef(productWindow);
+  const addedProductRef = useRef<HTMLAnchorElement>(null);
+  productWindowRef.current = productWindow;
+  const hasAvailableFilters = availableFilters.length > 0;
   const isLoading = state.status === "loading";
-  const currencyCode = products[0]?.priceRange.minVariantPrice.currencyCode ?? "USD";
+  const isLoadingMore = pagination.state !== "idle";
+  const currentBrowseSearch = serializeCollectionParams(state).toString();
+  const isBrowsePending = isLoading || currentBrowseSearch !== browseSearch;
+  const currencyCode = productWindow.products[0]?.priceRange.minVariantPrice.currencyCode ?? "USD";
+
+  useEffect(() => {
+    setProductWindow({ products, pageInfo });
+    setFocusProductId(null);
+    setPaginationErrorDirection(null);
+  }, [pageInfo, products]);
+
+  useEffect(() => {
+    if (pagination.state === "idle") setPendingDirection(null);
+  }, [pagination.state]);
+
+  useEffect(() => {
+    const page = pagination.data;
+    if (!page || page.browseSearch !== currentBrowseSearch || page.browseSearch !== browseSearch)
+      return;
+    const isPreviousPage = new URLSearchParams(page.dataSearch).has("before");
+    const direction = isPreviousPage ? "previous" : "next";
+
+    if (page.paginationError) {
+      setPaginationErrorDirection(direction);
+      return;
+    }
+
+    const nextPageInfo = page.pageInfo;
+    const merged = mergeProductWindow(
+      productWindowRef.current,
+      { products: page.products, pageInfo: nextPageInfo },
+      isPreviousPage ? "previous" : "next",
+    );
+    setFocusProductId(merged.firstAddedProductId);
+    setPaginationErrorDirection(null);
+    setProductWindow(merged.window);
+
+    const shareableParams = new URLSearchParams(page.dataSearch);
+    shareableParams.delete("_pagination");
+    void paginationNavigate(
+      { search: `?${shareableParams.toString()}` },
+      { defaultShouldRevalidate: false, preventScrollReset: true },
+    );
+  }, [browseSearch, currentBrowseSearch, pagination.data, paginationNavigate]);
+
+  useEffect(() => {
+    if (focusProductId) addedProductRef.current?.focus();
+  }, [focusProductId, productWindow.products]);
 
   const showingCount = content.collection.showingCountPartial.replace(
     "{{ shown }}",
-    String(products.length),
+    String(productWindow.products.length),
   );
 
   return (
@@ -236,22 +351,38 @@ function CollectionPage({
         {...formProps()}
         method="get"
         action={collectionPath}
-        className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
+        className={hasAvailableFilters ? "lg:grid lg:grid-cols-[240px_1fr] lg:gap-8" : undefined}
       >
-        <FilterSidebar
-          availableFilters={availableFilters}
-          activeFilters={state.filters}
-          collectionPath={collectionPath}
-          disabled={isLoading}
-          currencyCode={currencyCode}
-        />
+        {hasAvailableFilters ? (
+          <FilterSidebar
+            availableFilters={availableFilters}
+            activeFilters={state.filters}
+            countPending={isLoading}
+            currencyCode={currencyCode}
+          />
+        ) : null}
 
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-4">
-            <p className="type-body-sm text-on-surface-secondary" aria-live="polite">
+            <p role="status" className="sr-only">
+              {isLoading ? content.collection.updatingCounts : ""}
+            </p>
+            <p
+              className={`type-body-sm text-on-surface-secondary motion-safe:transition-opacity ${isLoading ? "opacity-40" : ""}`}
+              aria-live="polite"
+            >
               {showingCount}
             </p>
-            <SortSelect isLoading={isLoading} />
+            <div className="flex items-center gap-2">
+              <SortSelect />
+              {!hasAvailableFilters ? (
+                <noscript>
+                  <button type="submit" className="rounded-button button-primary h-11 px-4">
+                    {content.collection.applySort}
+                  </button>
+                </noscript>
+              ) : null}
+            </div>
           </div>
 
           <ActiveFilterChips
@@ -260,7 +391,27 @@ function CollectionPage({
             currencyCode={currencyCode}
           />
 
-          {products.length === 0 ? (
+          <PaginationStatus
+            hasError={paginationErrorDirection !== null}
+            pendingDirection={pendingDirection}
+          />
+
+          <PaginationControls
+            direction="previous"
+            pageInfo={productWindow.pageInfo}
+            collectionPath={collectionPath}
+            hasError={paginationErrorDirection === "previous"}
+            isBrowsePending={isBrowsePending}
+            isLoading={isLoadingMore}
+            pendingDirection={pendingDirection}
+            loadPage={(href, direction) => {
+              setPaginationErrorDirection(null);
+              setPendingDirection(direction);
+              pagination.load(`${href}&_pagination=1`);
+            }}
+          />
+
+          {productWindow.products.length === 0 ? (
             <p className="text-on-surface-secondary py-12 text-center">
               {content.collection.noProducts}
             </p>
@@ -269,26 +420,33 @@ function CollectionPage({
               role="list"
               className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-3"
             >
-              {products.map((product, index) => (
+              {productWindow.products.map((product, index) => (
                 <li key={product.id} className={isLoading ? "opacity-60" : ""}>
                   <ProductCard
                     product={product}
                     loading={index < 3 ? "eager" : "lazy"}
                     fetchPriority={index === 0 ? "high" : "auto"}
+                    linkRef={product.id === focusProductId ? addedProductRef : undefined}
                   />
                 </li>
               ))}
             </ul>
           )}
 
-          <LoadMore pageInfo={pageInfo} collectionPath={collectionPath} />
-
-          {/* No-JS submit so the GET filter/sort form is submittable without JS (F4). */}
-          <noscript>
-            <button type="submit" className="rounded-button button-primary h-11 px-4">
-              {content.collection.showResults}
-            </button>
-          </noscript>
+          <PaginationControls
+            direction="next"
+            pageInfo={productWindow.pageInfo}
+            collectionPath={collectionPath}
+            hasError={paginationErrorDirection === "next"}
+            isBrowsePending={isBrowsePending}
+            isLoading={isLoadingMore}
+            pendingDirection={pendingDirection}
+            loadPage={(href, direction) => {
+              setPaginationErrorDirection(null);
+              setPendingDirection(direction);
+              pagination.load(`${href}&_pagination=1`);
+            }}
+          />
         </div>
       </form>
     </div>
@@ -298,7 +456,7 @@ function CollectionPage({
 function CollectionViewedTracker({
   collection,
 }: {
-  collection: Route.ComponentProps["loaderData"]["collection"];
+  collection: NonNullable<Route.ComponentProps["loaderData"]["collection"]>;
 }) {
   const publishCollectionViewed = useEffectEvent(() => {
     const analytics = getAnalytics();
@@ -315,7 +473,7 @@ function CollectionViewedTracker({
   return null;
 }
 
-function SortSelect({ isLoading }: { isLoading: boolean }) {
+function SortSelect() {
   const state = useCollection();
   const currentSort = state.sortKey
     ? getSortByValue(state.sortKey, state.reverse)
@@ -328,8 +486,6 @@ function SortSelect({ isLoading }: { isLoading: boolean }) {
         name="sort_by"
         defaultValue={currentSort}
         onChange={(event) => event.currentTarget.form?.requestSubmit()}
-        aria-busy={isLoading}
-        disabled={isLoading}
         className="w-auto"
       >
         {COLLECTION_SORT_OPTIONS.map((option) => (
@@ -345,26 +501,22 @@ function SortSelect({ isLoading }: { isLoading: boolean }) {
 type FilterSidebarProps = {
   availableFilters: CollectionAvailableFilter[];
   activeFilters: ProductFilter[];
-  collectionPath: string;
-  disabled: boolean;
+  countPending: boolean;
   currencyCode: string;
 };
 
 function FilterSidebar({
   availableFilters,
   activeFilters,
-  collectionPath: _collectionPath,
-  disabled,
+  countPending,
   currencyCode,
 }: FilterSidebarProps) {
-  if (availableFilters.length === 0) return null;
-
   const filterGroups = availableFilters.map((filter) => (
     <FilterGroup
       key={filter.id}
       filter={filter}
       activeFilters={activeFilters}
-      disabled={disabled}
+      countPending={countPending}
       currencyCode={currencyCode}
     />
   ));
@@ -387,6 +539,11 @@ function FilterSidebar({
         <h2 id="collection-filters-heading" className="type-heading-sm text-on-surface font-medium">
           {content.collection.filters}
         </h2>
+        <noscript>
+          <button type="submit" className="rounded-button button-primary h-11 px-4">
+            {content.collection.applyFilters}
+          </button>
+        </noscript>
         {filterGroups}
       </div>
     </details>
@@ -421,23 +578,25 @@ function ActiveFilterChips({
           const href = removal ? `${collectionPath}?${removal}` : collectionPath;
           return (
             <li key={`${filter.toString()}-${index}`}>
-              <a
-                href={href}
+              <Link
+                to={href}
+                preventScrollReset
                 className="chip-filled inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm no-underline"
               >
                 {describeFilter(filter, currencyCode)}
                 <span aria-hidden="true">×</span>
-              </a>
+              </Link>
             </li>
           );
         })}
       <li>
-        <a
-          href={collectionPath}
+        <Link
+          to={collectionPath}
+          preventScrollReset
           className="text-link inline-flex items-center rounded-full px-3 py-1 text-sm no-underline underline"
         >
           {content.collection.clearAll}
-        </a>
+        </Link>
       </li>
     </ul>
   );
@@ -469,28 +628,130 @@ function describeFilter(filter: ProductFilter, currencyCode = "USD"): string {
   return "";
 }
 
-function LoadMore({
+function PaginationControls({
+  direction,
   pageInfo,
   collectionPath,
+  hasError,
+  isBrowsePending,
+  isLoading,
+  pendingDirection,
+  loadPage,
 }: {
-  pageInfo: { hasNextPage: boolean; endCursor?: string | null };
+  direction: "next" | "previous";
+  pageInfo: CollectionPageInfo;
   collectionPath: string;
+  hasError: boolean;
+  isBrowsePending: boolean;
+  isLoading: boolean;
+  pendingDirection: "next" | "previous" | null;
+  loadPage: (href: string, direction: "next" | "previous") => void;
 }) {
-  const state = useCollection();
-  if (!pageInfo.hasNextPage) return null;
-  const params = serializeCollectionParams(state);
-  params.set("after", pageInfo.endCursor ?? "");
-  const href = `${collectionPath}?${params.toString()}`;
+  const [searchParams] = useSearchParams();
+  if (isBrowsePending) return null;
+
+  const previousParams = new URLSearchParams(searchParams);
+  const nextParams = new URLSearchParams(searchParams);
+  previousParams.delete("before");
+  previousParams.delete("after");
+  nextParams.delete("before");
+  nextParams.delete("after");
+
+  if (pageInfo.startCursor) previousParams.set("before", pageInfo.startCursor);
+  if (pageInfo.endCursor) nextParams.set("after", pageInfo.endCursor);
+
+  const previousHref = `${collectionPath}?${previousParams.toString()}`;
+  const nextHref = `${collectionPath}?${nextParams.toString()}`;
+
+  if (direction === "previous") {
+    if ((!pageInfo.hasPreviousPage || !pageInfo.startCursor) && !hasError) return null;
+
+    return (
+      <div className="mb-4 flex flex-col items-center gap-3 text-center" aria-busy={isLoading}>
+        {hasError ? (
+          <p className="text-on-surface-secondary text-sm">{content.collection.paginationError}</p>
+        ) : null}
+        {pageInfo.hasPreviousPage && pageInfo.startCursor ? (
+          <a
+            href={previousHref}
+            aria-disabled={isLoading || undefined}
+            onClick={(event) => {
+              if (!isPlainLeftClick(event)) return;
+              event.preventDefault();
+              if (!isLoading) loadPage(previousHref, "previous");
+            }}
+            className="rounded-button button-outline focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            {pendingDirection === "previous"
+              ? content.collection.loadingPrevious
+              : content.collection.loadPrevious}
+          </a>
+        ) : null}
+      </div>
+    );
+  }
+
+  const hasNextPage = pageInfo.hasNextPage && Boolean(pageInfo.endCursor);
+  if (!hasNextPage && !hasError) return null;
 
   return (
-    <div className="mt-8 text-center">
-      <Link
-        to={href}
-        className="rounded-button button-outline focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-      >
-        {content.collection.loadMore}
-      </Link>
+    <div className="mt-8 flex flex-col items-center justify-center gap-3">
+      {hasError ? (
+        <p className="text-on-surface-secondary text-sm">{content.collection.paginationError}</p>
+      ) : null}
+      <div className="flex items-center justify-center gap-3" aria-busy={isLoading}>
+        {hasNextPage ? (
+          <a
+            href={nextHref}
+            aria-disabled={isLoading || undefined}
+            onClick={(event) => {
+              if (!isPlainLeftClick(event)) return;
+              event.preventDefault();
+              if (!isLoading) loadPage(nextHref, "next");
+            }}
+            className="rounded-button button-outline focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            {pendingDirection === "next"
+              ? content.collection.loadingMore
+              : content.collection.loadMore}
+          </a>
+        ) : null}
+      </div>
     </div>
+  );
+}
+
+function PaginationStatus({
+  hasError,
+  pendingDirection,
+}: {
+  hasError: boolean;
+  pendingDirection: "next" | "previous" | null;
+}) {
+  return (
+    <>
+      <p role="alert" className="sr-only">
+        {hasError ? content.collection.paginationError : ""}
+      </p>
+      <p aria-live="polite" className="sr-only">
+        {pendingDirection === "previous"
+          ? content.collection.loadingPrevious
+          : pendingDirection === "next"
+            ? content.collection.loadingMore
+            : ""}
+      </p>
+    </>
+  );
+}
+
+function isPlainLeftClick(event: ReactMouseEvent<HTMLAnchorElement>): boolean {
+  return (
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey &&
+    event.currentTarget.target !== "_blank"
   );
 }
 

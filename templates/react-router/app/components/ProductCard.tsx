@@ -1,4 +1,5 @@
 import type { StorefrontApi } from "@shopify/hydrogen";
+import type { Ref } from "react";
 import { Link } from "react-router";
 
 import { content } from "~/lib/content";
@@ -16,12 +17,14 @@ type ProductCardProps = {
   /** Eager-load the first row on hero-less pages (PLP/search LCP). */
   loading?: "eager" | "lazy";
   fetchPriority?: "high" | "low" | "auto";
+  linkRef?: Ref<HTMLAnchorElement>;
 };
 
 export function ProductCard({
   product,
   loading = "lazy",
   fetchPriority = "auto",
+  linkRef,
 }: ProductCardProps) {
   const primaryImage = product.featuredImage;
   const secondaryImage = product.images.nodes[1] ?? null;
@@ -71,7 +74,11 @@ export function ProductCard({
       </div>
       <div className="flex flex-col gap-0.5 text-left">
         <h3 className="type-body-sm text-on-surface line-clamp-2 font-medium">
-          <Link to={`/products/${product.handle}`} className="card-link text-on-surface">
+          <Link
+            ref={linkRef}
+            to={`/products/${product.handle}`}
+            className="card-link text-on-surface"
+          >
             {product.title}
           </Link>
         </h3>

@@ -109,7 +109,7 @@ For search forms:
 
 ## Links And Clear URLs
 
-Use `next/link` for clear links and active filter chips. If a removal URL is `"?"`, link to the base pathname. For search pages, preserve `q` when removing filters.
+Use `next/link` for clear links and active filter chips, with `scroll={false}` so client navigation keeps the buyer's current scroll position. If a removal URL is `"?"`, link to the base pathname. For search pages, preserve `q` when removing filters.
 
 ## Gotchas
 

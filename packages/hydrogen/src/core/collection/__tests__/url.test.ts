@@ -707,7 +707,9 @@ describe("collectionSearchEqual", () => {
 
 describe("mergeCollectionParams", () => {
   it("replaces store-owned keys while preserving others", () => {
-    const existing = new URLSearchParams("grid=3&filter.p.tag=men&sort_by=price-ascending");
+    const existing = new URLSearchParams(
+      "grid=3&before=previous&after=next&filter.p.tag=men&sort_by=price-ascending",
+    );
 
     const merged = mergeCollectionParams(existing, {
       filters: [{ tag: "women" }],
@@ -719,6 +721,8 @@ describe("mergeCollectionParams", () => {
     expect(merged.get("filter.p.tag")).toBe("women");
     expect(merged.get("sort_by")).toBe("title-descending");
     expect(merged.getAll("filter.p.tag")).not.toContain("men");
+    expect(merged.has("before")).toBe(false);
+    expect(merged.has("after")).toBe(false);
   });
 });
 

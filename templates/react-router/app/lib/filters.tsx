@@ -38,11 +38,13 @@ export function FilterValueInput({
   value,
   activeFilters,
   disabled,
+  countPending,
 }: {
   filter: VisualAvailableFilter;
   value: FilterValueWithVisuals;
   activeFilters: ProductFilter[];
   disabled?: boolean;
+  countPending?: boolean;
 }) {
   const entries = filterValueInputParamEntries(value.input);
   if (entries.length !== 1) return null;
@@ -65,7 +67,11 @@ export function FilterValueInput({
       {isSwatch ? <FilterValueSwatch value={value} /> : null}
       <span className="text-on-surface">{value.label}</span>
       {value.count > 0 ? (
-        <span className="text-on-surface-secondary text-xs">({value.count})</span>
+        <span
+          className={`text-on-surface-secondary text-xs motion-safe:transition-opacity ${countPending ? "opacity-40" : ""}`}
+        >
+          ({value.count})
+        </span>
       ) : null}
     </label>
   );
@@ -166,11 +172,13 @@ export function FilterGroup({
   filter,
   activeFilters,
   disabled,
+  countPending,
   currencyCode,
 }: {
   filter: VisualAvailableFilter;
   activeFilters: ProductFilter[];
   disabled?: boolean;
+  countPending?: boolean;
   currencyCode?: string;
 }) {
   if (filter.type === "PRICE_RANGE") {
@@ -193,6 +201,7 @@ export function FilterGroup({
           value={value}
           activeFilters={activeFilters}
           disabled={disabled}
+          countPending={countPending}
         />
       ))}
     </fieldset>

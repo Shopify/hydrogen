@@ -511,6 +511,7 @@ function ActiveFilterChips({
             <li key={`${filter.toString()}-${index}`}>
               <Link
                 href={href}
+                scroll={false}
                 onClick={onNavigate}
                 aria-label={`Remove filter: ${filterLabel}`}
                 className="chip-filled inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm no-underline"
@@ -524,6 +525,7 @@ function ActiveFilterChips({
       <li>
         <Link
           href={collectionPath}
+          scroll={false}
           onClick={onNavigate}
           className="text-link inline-flex items-center rounded-full px-3 py-1 text-sm no-underline underline"
         >

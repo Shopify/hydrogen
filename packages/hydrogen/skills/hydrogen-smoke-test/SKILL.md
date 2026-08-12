@@ -58,7 +58,7 @@ Cart:
 Collection and search:
 - [ ] Collection filters and sort update the URL and product grid
 - [ ] Reloading a filtered URL server-renders the same filter/sort state
-- [ ] Active filter chips remove one filter and preserve unrelated params
+- [ ] Active filter chips remove one filter, preserve unrelated params, and do not reset scroll when hydrated
 - [ ] Search filters preserve q
 - [ ] JavaScript-disabled filter forms still submit with GET
 - [ ] Back/forward navigation does not leave browse state stuck in loading
@@ -177,7 +177,7 @@ Expected: a redirect whose `location` header points at Shopify's hosted login, n
 
 - Collection filters and sort update the URL and product grid.
 - Reloading a filtered URL server-renders the same filter/sort state.
-- Active filter chips remove one filter and preserve unrelated params.
+- Active filter chips remove one filter, preserve unrelated params, and do not reset scroll when hydrated.
 - Search filters preserve `q`.
 - JavaScript-disabled filter forms still submit with GET.
 - Back/forward navigation does not leave browse state stuck in loading.
