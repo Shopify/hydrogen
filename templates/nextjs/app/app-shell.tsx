@@ -3,7 +3,6 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 
 import { CartDrawer } from "@/components/CartDrawer";
-import { ConsentBanner } from "@/components/ConsentBanner";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { HeaderAccountLink, HeaderAccountLinkFallback } from "@/components/HeaderAccountLink";
@@ -58,7 +57,6 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       <Footer shopName={analyticsShop.shopName} />
 
       <CartDrawer />
-      <ConsentBanner />
     </Providers>
   );
 }
