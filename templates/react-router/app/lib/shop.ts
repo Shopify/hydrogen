@@ -46,11 +46,9 @@ export const shop = {
   myshopifyDomain: storefrontConfig.storeDomain,
 } as const;
 
-// Consent config. This example renders its own (CORE) consent banner, so the
-// analytics bus runs in "custom-banner" mode (loads only the Customer Privacy
-// API; our banner drives setTrackingConsent()).
+// Use Shopify's default consent banner and Customer Privacy behavior.
 export const analyticsConsent = {
-  mode: "custom-banner",
+  mode: "default-banner",
   country: "US",
   language: "EN",
 } as const;
