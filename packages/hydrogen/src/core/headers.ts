@@ -25,6 +25,7 @@ export type StandardHeaderName =
   | "access-control-request-headers"
   | "access-control-request-method"
   | typeof CACHE_CONTROL_HEADER
+  | "cf-connecting-ip"
   | "connection"
   | "content-length"
   | "content-type"
@@ -126,6 +127,7 @@ export const AJAX_API_REQUEST_HEADER_ALLOWLIST = defineHeaderList(
 );
 
 export const SHOPIFY_API_PROXY_REQUEST_HEADER_DENYLIST = defineHeaderList(
+  "cf-connecting-ip",
   "connection",
   "content-length",
   "host",
