@@ -73,4 +73,21 @@ export function shopifyScriptCurrencyTypes() {
     i18n: { country: "US", language: "EN" },
   };
   void analyticsDisabledWithoutCurrency;
+
+  const runtimeFlag = Math.random() > 0.5;
+
+  const runtimeFlagWithCurrency: ShopifyScriptTagsOptions = {
+    shop,
+    shopifyAnalytics: runtimeFlag,
+    i18n: { country: "US", language: "EN", currency: "USD" },
+  };
+  void runtimeFlagWithCurrency;
+
+  // @ts-expect-error a runtime boolean cannot prove analytics is disabled, so currency is required
+  const runtimeFlagWithoutCurrency: ShopifyScriptTagsOptions = {
+    shop,
+    shopifyAnalytics: runtimeFlag,
+    i18n: { country: "US", language: "EN" },
+  };
+  void runtimeFlagWithoutCurrency;
 }

@@ -59,7 +59,9 @@ function warnWhenAnalyticsCurrencyMissing(
   shopifyAnalytics: boolean,
   i18n: ShopifyScriptTagsOptions["i18n"],
 ): void {
-  if (shopifyAnalytics && i18n?.currency === undefined) {
+  // `!currency?.trim()` treats undefined, null, empty, and whitespace-only values as missing:
+  // untyped consumers can pass any of these, and all leave window.Shopify.currency.active unusable.
+  if (shopifyAnalytics && !i18n?.currency?.trim()) {
     log.warn(
       "shopify analytics is enabled without i18n.currency; analytics events fail until window.Shopify.currency.active is set",
     );

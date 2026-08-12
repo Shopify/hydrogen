@@ -634,6 +634,21 @@ describe("shopify scripts", () => {
     );
   });
 
+  it.each(["", "   "])("warns when the currency is blank (%j)", (currency) => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
+    getShopifyScriptTags({
+      i18n: { country: "US", language: "EN", currency },
+      shop: TEST_SHOP,
+    });
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      "shopify analytics is enabled without i18n.currency; analytics events fail until window.Shopify.currency.active is set",
+      { scope: "shopify-scripts" },
+    );
+  });
+
   it("does not warn about currency when Shopify analytics is disabled", () => {
     const logger = createTestLogger();
     configureLogging({ logger });

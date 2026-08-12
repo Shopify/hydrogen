@@ -102,8 +102,11 @@ type ShopifyScriptTagsBaseOptions = {
 export type ShopifyScriptTagsOptions =
   | (ShopifyScriptTagsBaseOptions & {
       i18n: ShopifyScriptsI18nWithCurrency;
-      /** Shopify analytics is enabled by default and requires `i18n.currency`. */
-      shopifyAnalytics?: true;
+      /**
+       * Shopify analytics is enabled by default and requires `i18n.currency`. Accepts any
+       * boolean so runtime-computed flags type-check; currency is present either way.
+       */
+      shopifyAnalytics?: boolean;
     })
   | (ShopifyScriptTagsBaseOptions & {
       i18n?: ShopifyScriptsI18n;
