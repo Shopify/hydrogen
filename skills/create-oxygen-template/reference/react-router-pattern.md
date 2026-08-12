@@ -1,7 +1,7 @@
 # React Router Template Pattern
 
-Concrete file-by-file shape for `examples/react-router` -> `templates/react-router`. Read this when implementing the
-template. Do not generalize these instructions to framework examples such as Next, Nuxt, Astro, Solid, or SvelteKit
+Concrete file-by-file shape for `templates/react-router`. Read this when implementing or maintaining the template.
+Do not generalize these instructions to framework examples such as Next, Nuxt, Astro, Solid, or SvelteKit
 without adding framework-specific guidance first. For the high-level workflow, dependency mechanism, lockfile, and
 validation, see [SKILL.md](../SKILL.md).
 
@@ -34,7 +34,7 @@ Use Vite/React Router scripts, not Hydrogen CLI dev/build scripts:
     "build": "react-router build",
     "preview": "react-router build && vite preview",
     "typecheck": "react-router typegen && tsc --noEmit && hydrogen gql check --fail-on-warn",
-    "deploy": "shopify hydrogen deploy"
+    "deploy": "shopify hydrogen deploy --assets-dir dist/client --worker-dir dist/server"
   }
 }
 ```
@@ -43,17 +43,22 @@ Remove Node-server scripts such as `start: react-router-serve ...` unless explic
 
 Dependencies:
 
-- Keep app dependencies required by the example, such as `@shopify/hydrogen`, React, React Router, and `isbot`.
+- Keep app dependencies required by the template, such as `@shopify/hydrogen`, React, React Router, and `isbot`.
 - Remove `lru-cache`, `@react-router/node`, and `@react-router/serve`.
 - Add `@shopify/mini-oxygen`, `@shopify/oxygen-workers-types`, and `@shopify/cli`.
-- **`@shopify/hydrogen`: use `preview`**. The published preview resolves to a `0.0.0-preview-*` registry package,
-  exposes the React Router template surface (including `./customer-account` and `./package.json`), and satisfies
-  `shopify hydrogen deploy`'s `isHydrogenPreviewVersion` check (CLI #3819) so deploy runs `react-router build`. No
-  repo-local dependency, vendored tarball, or version hack is needed.
-- **`@shopify/cli`: pin `3.94.3`** unless a newer version has been verified with the deploy path.
+- **`@shopify/hydrogen`: use `workspace:*` in this repository** so template builds and E2E exercise the package under
+  development. The release flow replaces it with the exact published preview version before standalone lockfile
+  generation. The release compiler validates the version format; the generated lockfile records registry integrity,
+  and the standalone `npm ci` verifies installation.
+- **`@shopify/cli`:** keep the version declared in the template manifest. It must support the explicit deploy output
+  flags. Keep `--assets-dir dist/client --worker-dir dist/server` in the deploy script so the CLI uses this template's
+  configured build output without relying on a Hydrogen version sniff.
+- **Package manager:** keep the source template's `packageManager` aligned with the repository root. The preview dist
+  compiler changes the standalone template to its configured npm version and removes stale locks; the release workflow
+  generates `package-lock.json` in the isolated distribution copy.
 - **`@shopify/mini-oxygen`: pin `^4.2.0`** — its `oxygen()` plugin adds `configurePreviewServer`, which `vite preview`
   needs to run the Worker.
-- Add `"engines": {"node": "^22 || ^24"}`.
+- Add `"engines": {"node": "^22.12.0 || ^24"}`.
 - Replace `catalog:` ranges with npm-compatible semver ranges. Keep `@types/node` in `devDependencies` (build tooling
   such as `vite.config.ts` needs it) even though it is dropped from the app tsconfig `types` (see "Env and types").
 - Choose other package versions at implementation time; prefer the versions already present in the example's package files.
@@ -102,10 +107,12 @@ Keep the `build.assetsInlineLimit: 0` and `ssr.optimizeDeps.include` interop set
 
 ## react-router.config.ts
 
-Start from the copied React Router config and preserve behavior required by the app:
+Preserve the React Router config behavior required by the app:
 
 ```ts
 export default {
+  appDirectory: "app",
+  buildDirectory: "dist",
   ssr: true,
   subResourceIntegrity: false,
   future: {
@@ -115,7 +122,7 @@ export default {
 };
 ```
 
-Preserve any additional future flags that the source example already needs. Do not force `buildDirectory: "dist"` unless the current MiniOxygen/deploy tooling or the user explicitly requires it.
+Preserve any additional future flags that the template needs. Keep `buildDirectory: "dist"` aligned with the deploy script's `dist/client` and `dist/server` flags. If one changes, update the other in the same change.
 
 ## server.ts
 

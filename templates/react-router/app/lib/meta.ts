@@ -15,8 +15,17 @@ export function siteOriginFromMatches(matches: unknown): string {
 }
 
 function rootDataFromMatches(matches: unknown): RootRouteData | undefined {
-  const root = (matches as ReadonlyArray<{ id: string; data?: unknown }> | undefined)?.find(
-    (match) => match?.id === "root",
-  );
-  return root?.data as RootRouteData | undefined;
+  if (!Array.isArray(matches)) return undefined;
+
+  const root = matches.find((match: unknown) => isRecord(match) && match.id === "root");
+  if (!isRecord(root) || !isRecord(root.data)) return undefined;
+
+  return {
+    shopName: typeof root.data.shopName === "string" ? root.data.shopName : undefined,
+    siteOrigin: typeof root.data.siteOrigin === "string" ? root.data.siteOrigin : undefined,
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }

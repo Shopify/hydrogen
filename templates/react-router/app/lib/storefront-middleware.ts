@@ -67,17 +67,7 @@ export const storefrontMiddleware: MiddlewareFunction<Response> = async (
     customerAccountConfig?.sessionSecret ?? DISABLED_CUSTOMER_ACCOUNT_SESSION_SECRET,
   );
 
-  // No private token -> fall back to mock.shop so the example runs locally with
-  // zero secrets. mock.shop accepts the well-known `mock-private-token` for the
-  // private-client auth header, so we keep `type: "private"` (preserving the
-  // request-scoped private client contract the handlers/context expect).
-  if (storefrontConfig.usingMockShop && !mockShopFallbackWarned) {
-    mockShopFallbackWarned = true;
-    console.warn(
-      `[hydrogen-template-react-router] No PRIVATE_STOREFRONT_API_TOKEN found — ` +
-        `running against mock.shop. Set PRIVATE_STOREFRONT_API_TOKEN to hit a real store.`,
-    );
-  }
+  warnWhenUsingMockShop(storefrontConfig.usingMockShop);
 
   const storefrontClient = createStorefrontClient({
     type: "private",
@@ -85,13 +75,11 @@ export const storefrontMiddleware: MiddlewareFunction<Response> = async (
     config: {
       storeDomain: storefrontConfig.storeDomain,
       privateStorefrontToken: storefrontConfig.privateStorefrontToken,
-      buyerIp,
       cache,
       waitUntil,
     },
   });
 
-  const customerAccountsAvailable = Boolean(customerAccountConfig);
   const customerAccountClient = customerAccountConfig
     ? createCustomerAccountClient({
         shopId: customerAccountConfig.shopId,
@@ -125,22 +113,21 @@ export const storefrontMiddleware: MiddlewareFunction<Response> = async (
   // this only needs to be set on the framework-router path (after the
   // `shopifyRoute` early-return).
   context.set(storefrontClientContext, storefrontClient);
-  context.set(
-    customerAccountContext,
-    customerAccountsAvailable && customerAccountClient && customerSession
-      ? {
-          available: true,
-          client: customerAccountClient,
-          requestContext,
-          session: customerSession,
-          sessionManager,
-        }
-      : {
-          available: false,
-          requestContext,
-          sessionManager,
-        },
-  );
+  if (customerAccountClient && customerSession) {
+    context.set(customerAccountContext, {
+      available: true,
+      client: customerAccountClient,
+      requestContext,
+      session: customerSession,
+      sessionManager,
+    });
+  } else {
+    context.set(customerAccountContext, {
+      available: false,
+      requestContext,
+      sessionManager,
+    });
+  }
 
   const response = await next();
   let finalResponse = response;
@@ -179,3 +166,15 @@ function appendHeaders(source: HeadersInit, target: Headers): void {
 }
 
 let mockShopFallbackWarned = false;
+
+function warnWhenUsingMockShop(usingMockShop: boolean): void {
+  if (!usingMockShop || mockShopFallbackWarned) return;
+
+  // mock.shop accepts this template's well-known private token, preserving the
+  // request-scoped private client contract while running without store secrets.
+  mockShopFallbackWarned = true;
+  console.warn(
+    `[hydrogen-template-react-router] No PRIVATE_STOREFRONT_API_TOKEN found — ` +
+      `running against mock.shop. Set PRIVATE_STOREFRONT_API_TOKEN to hit a real store.`,
+  );
+}

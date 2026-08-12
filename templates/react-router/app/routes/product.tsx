@@ -1,6 +1,6 @@
 import { canAddToCart, getSelectedProductOptions, Cache } from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { Link, isRouteErrorResponse, useMatches, useNavigate } from "react-router";
 
 import { Breadcrumbs } from "~/components/Breadcrumbs";
@@ -10,7 +10,6 @@ import { QuantityStepper } from "~/components/QuantityStepper";
 import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
 import { openCartDrawer } from "~/lib/cart-drawer";
 import { content } from "~/lib/content";
-import { PRODUCT_CARD_FRAGMENT } from "~/lib/fragments";
 import { shopifyImageUrl, srcSetFor } from "~/lib/image";
 import { shopNameFromMatches, shopTitle, siteOriginFromMatches } from "~/lib/meta";
 import { formatPrice } from "~/lib/money";
@@ -111,7 +110,7 @@ export default function ProductRoute({ loaderData }: Route.ComponentProps) {
 }
 
 function ProductViewedTracker({ product }: { product: ProductData }) {
-  useEffect(() => {
+  const publishProductViewed = useEffectEvent(() => {
     const analytics = getAnalytics();
     if (!analytics) return;
     const variant = product.selectedOrFirstAvailableVariant;
@@ -129,6 +128,10 @@ function ProductViewedTracker({ product }: { product: ProductData }) {
         },
       ],
     });
+  });
+
+  useEffect(() => {
+    publishProductViewed();
   }, [product.handle]);
 
   return null;
@@ -346,7 +349,7 @@ function ProductPage({
             </div>
             <button
               {...addToCartProps}
-                disabled={!addable || pending}
+              disabled={!addable || pending}
               className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 items-center justify-center px-4 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition"
             >
               {addable

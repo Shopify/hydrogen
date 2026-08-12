@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 import type { MetaFunction } from "react-router";
 
 import { CartContent } from "~/components/CartContent";
@@ -28,12 +28,16 @@ export default function CartRoute(_: Route.ComponentProps) {
   const cart = useCart((state) => state.data);
   const isEmpty = totalQuantity === 0;
 
-  useEffect(() => {
+  const publishCartViewed = useEffectEvent(() => {
     const analytics = getAnalytics();
     if (!analytics) return;
     analytics.publish(AnalyticsEvent.CART_VIEWED, {
       cart: cart.id ? cart : null,
     });
+  });
+
+  useEffect(() => {
+    publishCartViewed();
   }, [cart.id]);
 
   return (

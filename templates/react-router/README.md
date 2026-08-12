@@ -2,7 +2,7 @@
 
 <a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src="https://raw.githubusercontent.com/Shopify/hydrogen/preview/.github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
 
-A standalone React Router 7 storefront built on Hydrogen 3 and optimized for Oxygen deployments. Copy this folder into a new project, install dependencies, and run it with no Shopify secrets against mock.shop.
+A React Router 7 storefront built on Hydrogen 3 and optimized for Oxygen deployments. The deploy button and `dist-preview` branch provide standalone copies of the template.
 
 ## What's Included
 
@@ -16,10 +16,14 @@ A standalone React Router 7 storefront built on Hydrogen 3 and optimized for Oxy
 
 ## Run Locally
 
+In a standalone checkout generated from `dist-preview`:
+
 ```bash
 npm install
 npm run dev
 ```
+
+Inside the Hydrogen monorepo, run `pnpm install` from the repository root, then start this workspace with `pnpm --filter @shopify/hydrogen-template-react-router dev`.
 
 With no `PRIVATE_STOREFRONT_API_TOKEN`, the template uses mock.shop and runs without configuration.
 

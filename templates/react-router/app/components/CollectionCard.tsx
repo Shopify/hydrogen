@@ -1,7 +1,7 @@
 import type { StorefrontApi } from "@shopify/hydrogen";
 import { Link } from "react-router";
 
-import { COLLECTION_CARD_QUERY } from "~/lib/fragments";
+import type { COLLECTION_CARD_QUERY } from "~/lib/fragments";
 import { shopifyImageUrl, srcSetFor } from "~/lib/image";
 
 /** The typed collection card node. */
@@ -40,7 +40,7 @@ export function CollectionCard({
       <div className="overlay-dark pointer-events-none absolute inset-0" />
       <Link
         to={`/collections/${collection.handle}`}
-        className="focus-visible:outline-accent absolute inset-0 z-20 rounded-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="focus-visible:outline-accent rounded-card absolute inset-0 z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
         aria-label={collection.title}
       />
       <div className="text-interactive-text pointer-events-none absolute inset-x-0 bottom-0 z-10 p-4 text-left">

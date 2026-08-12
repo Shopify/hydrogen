@@ -1,3 +1,5 @@
+import type { SubmitEvent } from "react";
+
 import { useCart, useCartForm } from "~/lib/cart";
 import { shopifyImageUrl } from "~/lib/image";
 import { formatPrice } from "~/lib/money";
@@ -23,61 +25,36 @@ export function CartLineItem({ line }: { line: CartLine }) {
   const { formProps, register } = useCartForm();
   const pendingLines = useCart((state) => state.pending.lines);
   const isPending = pendingLines.has(line.id);
-
-  const merchandise = line.merchandise;
-  const productTitle = merchandise?.product?.title ?? merchandise?.title ?? "Product";
-  const productHandle = merchandise?.product?.handle;
-  const selectedOptions = merchandise?.selectedOptions ?? [];
-  const variantSubtitle = selectedOptions.map((option) => option.value).join(" / ");
-
-  const totalAmount = line.cost.totalAmount;
-  const compareAt = line.cost.compareAtAmountPerQuantity ?? null;
-  const onSale = compareAt && Number(compareAt.amount) > Number(totalAmount.amount);
+  const {
+    merchandise,
+    productTitle,
+    productHandle,
+    variantSubtitle,
+    amountPerQuantity,
+    compareAt,
+  } = getCartLineDisplay(line);
 
   return (
     <div
       className={`grid grid-cols-[var(--spacing-cart-line-thumbnail-width)_1fr_auto] items-stretch gap-3 py-4`}
-      {...(isPending ? { "aria-busy": "true" } : {})}
+      aria-busy={isPending || undefined}
     >
-      <div className="bg-surface-secondary h-full w-full overflow-hidden">
-        {merchandise?.image ? (
-          <img
-            src={shopifyImageUrl(merchandise.image.url, { width: 128 })}
-            alt={merchandise.image.altText ?? `${productTitle} in ${variantSubtitle}`}
-            className="h-full w-full object-cover"
-          />
-        ) : null}
-      </div>
+      <CartLineImage
+        merchandise={merchandise}
+        productTitle={productTitle}
+        variantSubtitle={variantSubtitle}
+      />
 
       <div className="min-w-0">
-        {productHandle ? (
-          <a
-            href={`/products/${productHandle}`}
-            className="type-body-sm text-on-surface font-medium no-underline hover:opacity-70"
-          >
-            {productTitle}
-          </a>
-        ) : (
-          <p className="type-body-sm text-on-surface font-medium">{productTitle}</p>
-        )}
+        <CartLineTitle productHandle={productHandle} productTitle={productTitle} />
         {variantSubtitle ? (
           <p className="text-on-surface-secondary mt-1 text-xs">{variantSubtitle}</p>
         ) : null}
-        <p
-          className={`text-on-surface mt-2 text-sm transition-opacity ${isPending ? "opacity-30" : ""}`}
-        >
-          {onSale ? (
-            <span className="text-sale font-medium">{formatPrice(totalAmount)}</span>
-          ) : (
-            formatPrice(totalAmount)
-          )}
-          {onSale && compareAt ? (
-            <>
-              {" "}
-              <s className="text-compare text-sm">{formatPrice(compareAt)}</s>
-            </>
-          ) : null}
-        </p>
+        <CartLinePrice
+          amountPerQuantity={amountPerQuantity}
+          compareAt={compareAt}
+          isPending={isPending}
+        />
 
         <form {...formProps()} className="mt-3">
           <button {...register("set")} className="sr-only" tabIndex={-1} />
@@ -111,7 +88,7 @@ export function CartLineItem({ line }: { line: CartLine }) {
 
       <form
         {...formProps({
-          afterSubmit: () => window.setTimeout(focusNextCartControl, 0),
+          afterSubmit: scheduleRemovalFocus,
         })}
       >
         <input type="hidden" {...register("lineId", { value: line.id })} />
@@ -136,9 +113,117 @@ export function CartLineItem({ line }: { line: CartLine }) {
   );
 }
 
-function focusNextCartControl() {
-  const target = document.querySelector<HTMLElement>(
-    "[data-cart-line-control], [data-cart-empty], [data-cart-heading]",
+function getCartLineDisplay(line: CartLine) {
+  const merchandise = line.merchandise;
+  const productTitle = merchandise?.product?.title ?? merchandise?.title ?? "Product";
+  const selectedOptions = merchandise?.selectedOptions ?? [];
+
+  return {
+    merchandise,
+    productTitle,
+    productHandle: merchandise?.product?.handle,
+    variantSubtitle: selectedOptions.map((option) => option.value).join(" / "),
+    amountPerQuantity: line.cost.amountPerQuantity,
+    compareAt: line.cost.compareAtAmountPerQuantity ?? null,
+  };
+}
+
+function CartLineImage({
+  merchandise,
+  productTitle,
+  variantSubtitle,
+}: {
+  merchandise: CartLine["merchandise"];
+  productTitle: string;
+  variantSubtitle: string;
+}) {
+  const image = merchandise?.image;
+  const fallbackAlt = variantSubtitle ? `${productTitle} in ${variantSubtitle}` : productTitle;
+
+  return (
+    <div className="bg-surface-secondary h-full w-full overflow-hidden">
+      {image ? (
+        <img
+          src={shopifyImageUrl(image.url, { width: 128 })}
+          alt={image.altText ?? fallbackAlt}
+          className="h-full w-full object-cover"
+        />
+      ) : null}
+    </div>
   );
-  target?.focus();
+}
+
+function CartLineTitle({
+  productHandle,
+  productTitle,
+}: {
+  productHandle?: string | null;
+  productTitle: string;
+}) {
+  if (!productHandle) {
+    return <p className="type-body-sm text-on-surface font-medium">{productTitle}</p>;
+  }
+
+  return (
+    <a
+      href={`/products/${productHandle}`}
+      className="type-body-sm text-on-surface font-medium no-underline hover:opacity-70"
+    >
+      {productTitle}
+    </a>
+  );
+}
+
+function CartLinePrice({
+  amountPerQuantity,
+  compareAt,
+  isPending,
+}: {
+  amountPerQuantity: CartLine["cost"]["amountPerQuantity"];
+  compareAt: CartLine["cost"]["compareAtAmountPerQuantity"] | null;
+  isPending: boolean;
+}) {
+  const onSale = compareAt != null && Number(compareAt.amount) > Number(amountPerQuantity.amount);
+
+  return (
+    <p
+      className={`text-on-surface mt-2 text-sm transition-opacity ${isPending ? "opacity-30" : ""}`}
+    >
+      {onSale ? <span className="sr-only">Sale price: </span> : null}
+      <span className={onSale ? "text-sale font-medium" : undefined}>
+        {formatPrice(amountPerQuantity)}
+      </span>
+      <span className="text-on-surface-secondary text-xs"> each</span>
+      {onSale && compareAt ? (
+        <>
+          <span className="sr-only">; original price: </span>{" "}
+          <s className="text-compare text-sm">{formatPrice(compareAt)}</s>
+          <span className="text-on-surface-secondary text-xs"> each</span>
+        </>
+      ) : null}
+    </p>
+  );
+}
+
+function scheduleRemovalFocus(event: SubmitEvent<HTMLFormElement>): void {
+  const form = event.target;
+  if (!(form instanceof HTMLFormElement)) return;
+
+  const item = form.closest("li");
+  const scope = form.closest("dialog[open]") ?? form.closest("main") ?? document;
+  const next = findCartLineControl(item?.nextElementSibling ?? null);
+  const previous = findCartLineControl(item?.previousElementSibling ?? null);
+
+  window.setTimeout(() => {
+    const target =
+      (next?.isConnected ? next : null) ??
+      (previous?.isConnected ? previous : null) ??
+      scope.querySelector<HTMLElement>("[data-cart-empty]") ??
+      scope.querySelector<HTMLElement>("[data-cart-heading]");
+    target?.focus();
+  }, 0);
+}
+
+function findCartLineControl(element: Element | null): HTMLElement | null {
+  return element?.querySelector<HTMLElement>("[data-cart-line-control]") ?? null;
 }

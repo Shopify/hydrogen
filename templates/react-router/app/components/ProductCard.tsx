@@ -2,7 +2,7 @@ import type { StorefrontApi } from "@shopify/hydrogen";
 import { Link } from "react-router";
 
 import { content } from "~/lib/content";
-import { PRODUCT_CARD_QUERY } from "~/lib/fragments";
+import type { PRODUCT_CARD_QUERY } from "~/lib/fragments";
 import { shopifyImageUrl, srcSetFor } from "~/lib/image";
 import { formatPrice } from "~/lib/money";
 

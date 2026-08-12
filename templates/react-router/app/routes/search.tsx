@@ -2,7 +2,7 @@ import { Cache, gql } from "@shopify/hydrogen";
 import { getSortByValue, parseCollectionParams, type StorefrontApi } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
 import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import type { MetaFunction } from "react-router";
 
@@ -162,7 +162,7 @@ export default function SearchRoute({ loaderData }: Route.ComponentProps) {
 }
 
 function SearchViewedTracker({ term, totalCount }: { term: string; totalCount: number }) {
-  useEffect(() => {
+  const publishSearchViewed = useEffectEvent(() => {
     if (!term) return;
     const analytics = getAnalytics();
     if (!analytics) return;
@@ -170,6 +170,10 @@ function SearchViewedTracker({ term, totalCount }: { term: string; totalCount: n
       searchTerm: term,
       searchResults: { totalCount },
     });
+  });
+
+  useEffect(() => {
+    publishSearchViewed();
   }, [term]);
   return null;
 }

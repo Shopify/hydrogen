@@ -1,13 +1,8 @@
-import {
-  isFilterInputActive,
-  serializeCollectionParams,
-  type AvailableFilter,
-  type ProductFilter,
-} from "@shopify/hydrogen";
+import { isFilterInputActive, type AvailableFilter, type ProductFilter } from "@shopify/hydrogen";
 import type { CSSProperties } from "react";
 
 import { content } from "./content";
-import { formatPrice } from "./money";
+import { filterValueInputParamEntries } from "./filter-input";
 
 type FilterSwatch = {
   color?: string | null;
@@ -27,29 +22,6 @@ export type VisualAvailableFilter = Omit<AvailableFilter, "values"> & {
  * Extracted so the collection PLP and the search page render filters
  * identically and don't fork the param-serialization + value-input logic.
  */
-
-/** Serialize a Storefront API filter `input` string into form field entries. */
-export function filterValueInputParamEntries(
-  input: string,
-): Array<{ name: string; value: string }> {
-  let parsedFilter: ProductFilter;
-  try {
-    // F13: skill-sanctioned cast mirroring hydrogen-collection-browser/references/react.md
-    // (JSON.parse of the Storefront `FilterValue.input` JSON string).
-    parsedFilter = JSON.parse(input) as ProductFilter;
-  } catch {
-    return [];
-  }
-
-  return Array.from(
-    serializeCollectionParams({
-      filters: [parsedFilter],
-      sortKey: undefined,
-      reverse: false,
-    }),
-    ([name, value]) => ({ name, value }),
-  );
-}
 
 /** Active price filter values (for prefilling min/max), if any. */
 export function activePriceRange(activeFilters: ProductFilter[]): { min: string; max: string } {
@@ -112,12 +84,13 @@ function FilterValueSwatch({ value }: { value: FilterValueWithVisuals }) {
 function getFilterSwatchStyle(value: FilterValueWithVisuals): CSSProperties {
   const image = value.swatch?.image?.previewImage?.url;
 
-  return {
+  const style: CSSProperties & { "--filter-swatch-color": string } = {
     "--filter-swatch-color": value.swatch?.color ?? "#e5e5e5",
     backgroundImage: image ? `url(${image})` : undefined,
     backgroundPosition: "center",
     backgroundSize: "cover",
-  } as CSSProperties;
+  };
+  return style;
 }
 
 /** A min/max price range filter (PRICE_RANGE filter type). */

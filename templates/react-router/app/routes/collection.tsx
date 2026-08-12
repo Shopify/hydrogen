@@ -10,7 +10,7 @@ import {
 } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
 import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { Link, isRouteErrorResponse, useNavigate, useSearchParams } from "react-router";
 
 import { Breadcrumbs } from "~/components/Breadcrumbs";
@@ -300,13 +300,17 @@ function CollectionViewedTracker({
 }: {
   collection: Route.ComponentProps["loaderData"]["collection"];
 }) {
-  useEffect(() => {
+  const publishCollectionViewed = useEffectEvent(() => {
     const analytics = getAnalytics();
     if (!analytics) return;
     analytics.publish(AnalyticsEvent.COLLECTION_VIEWED, {
       collection,
       url: window.location.href,
     });
+  });
+
+  useEffect(() => {
+    publishCollectionViewed();
   }, [collection.id]);
   return null;
 }
