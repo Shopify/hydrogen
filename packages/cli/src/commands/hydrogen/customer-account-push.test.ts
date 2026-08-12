@@ -1,12 +1,12 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {type AdminSession, login} from '../../../lib/auth.js';
-import {replaceCustomerApplicationUrls} from '../../../lib/graphql/admin/customer-application-update.js';
-import {setCustomerAccountConfig} from '../../../lib/shopify-config.js';
-import {runCustomerAccountPush} from './push.js';
+import {type AdminSession, login} from '../../lib/auth.js';
+import {replaceCustomerApplicationUrls} from '../../lib/graphql/admin/customer-application-update.js';
+import {setCustomerAccountConfig} from '../../lib/shopify-config.js';
+import {runCustomerAccountPush} from './customer-account-push.js';
 
-vi.mock('../../../lib/auth.js');
-vi.mock('../../../lib/graphql/admin/customer-application-update.js');
-vi.mock('../../../lib/shopify-config.js');
+vi.mock('../../lib/auth.js');
+vi.mock('../../lib/graphql/admin/customer-application-update.js');
+vi.mock('../../lib/shopify-config.js');
 
 const ADMIN_SESSION: AdminSession = {
   token: 'token',

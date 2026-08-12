@@ -10,7 +10,7 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {
   getStorefrontId,
   runCustomerAccountPush,
-} from '../commands/hydrogen/customer-account/push.js';
+} from '../commands/hydrogen/customer-account-push.js';
 import {getLocalVariables} from '../lib/environment-variables.js';
 import {startTunnelPlugin, pollTunnelURL} from './tunneling.js';
 import {getConfig} from './shopify-config.js';

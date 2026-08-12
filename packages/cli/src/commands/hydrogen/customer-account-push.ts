@@ -2,16 +2,16 @@ import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputDebug} from '@shopify/cli-kit/node/output';
-import {linkStorefront} from '../link.js';
-import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
-import {getCliCommand} from '../../../lib/shell.js';
-import {type AdminSession, login} from '../../../lib/auth.js';
+import {linkStorefront} from './link.js';
+import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
+import {getCliCommand} from '../../lib/shell.js';
+import {type AdminSession, login} from '../../lib/auth.js';
 import {
   type ShopifyConfig,
   getConfig,
   setCustomerAccountConfig,
-} from '../../../lib/shopify-config.js';
-import {replaceCustomerApplicationUrls} from '../../../lib/graphql/admin/customer-application-update.js';
+} from '../../lib/shopify-config.js';
+import {replaceCustomerApplicationUrls} from '../../lib/graphql/admin/customer-application-update.js';
 
 export default class CustomerAccountPush extends Command {
   static description = 'Push project configuration to admin';
