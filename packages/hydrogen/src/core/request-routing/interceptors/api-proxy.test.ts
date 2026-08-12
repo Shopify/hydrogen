@@ -147,6 +147,7 @@ describe("handleShopifyApiProxy", () => {
   });
 
   it.each([
+    "cf-connecting-ip",
     "connection",
     "content-length",
     "host",
