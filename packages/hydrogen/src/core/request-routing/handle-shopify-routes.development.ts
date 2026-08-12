@@ -1,14 +1,12 @@
 import type { GraphiQLOptions } from "../types";
 import { handleShopifyRoutes } from "./handle-shopify-routes";
 import { handleGraphiql } from "./interceptors/graphiql";
-import type { HydrogenRouteHandler, HydrogenRoutesOptions } from "./route-types";
+import type { HydrogenRouteHandler } from "./route-types";
 import { safeApplyResponseHeaders } from "./safe-apply-response-headers";
 
 type HydrogenRoutesDevOptions = {
   graphiql?: GraphiQLOptions;
 };
-
-export type HydrogenRoutesOptionsWithDev = HydrogenRoutesOptions & HydrogenRoutesDevOptions;
 
 export const handleShopifyRoutesDev: HydrogenRouteHandler<HydrogenRoutesDevOptions> = (options) => {
   const productionResult = handleShopifyRoutes(options);

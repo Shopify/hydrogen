@@ -8,12 +8,6 @@ import { handleShopifyRouteHandlers } from "./registered-routes";
 import type { HydrogenRouteHandler, HydrogenRouteInterceptor } from "./route-types";
 import { safeApplyResponseHeaders } from "./safe-apply-response-headers";
 
-export type {
-  HydrogenRouteHandler,
-  HydrogenRouteInterceptor,
-  HydrogenRoutesOptions,
-} from "./route-types";
-
 const SHOPIFY_ROUTE_INTERCEPTORS = [
   handleShopifyApiProxy,
   handleSfapiProxy,
