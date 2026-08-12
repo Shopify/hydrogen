@@ -112,7 +112,7 @@ describe("handleAgentProxy", () => {
   });
 
   it("forwards the embedding parent origin through a browser-forbidden Sec header", async () => {
-    await handleAgentProxy(createRequest("/agent/handoff", "https://headless.example"));
+    await handleAgentProxy(createRequest("/agent/buyer-claims", "https://headless.example"));
 
     const call = mockFetch.mock.calls[0];
     assert(call, "expected fetch to be called");
@@ -122,7 +122,7 @@ describe("handleAgentProxy", () => {
   });
 
   it("forwards explicit-port loopback origins for local development", async () => {
-    await handleAgentProxy(createRequest("/agent/handoff", "http://localhost:3000"));
+    await handleAgentProxy(createRequest("/agent/buyer-claims", "http://localhost:3000"));
 
     const call = mockFetch.mock.calls[0];
     assert(call, "expected fetch to be called");
@@ -132,7 +132,7 @@ describe("handleAgentProxy", () => {
   });
 
   it("does not allow incoming headers to override the request origin", async () => {
-    const request = new Request("https://headless.example/agent/handoff", {
+    const request = new Request("https://headless.example/agent/buyer-claims", {
       headers: {
         [SHOPIFY_CHAT_FRAME_ORIGIN_HEADER]: "https://attacker.example",
       },

@@ -4,6 +4,7 @@ export const SHOPIFY_API_PROXY_RE = /^\/__shopify(?:\/|$)/;
 export const MCP_RE = /^\/api\/mcp$/;
 export const CHECKOUT_RE = /^\/checkout$/;
 export const CART_PERMALINK_RE = /^\/cart\/\d+:\d+(?:,\d+:\d+)*$/;
+// `handoff` is a legacy rollout alias; `buyer-claims` is the canonical route.
 export const AGENT_BUYER_CLAIMS_RE =
   /^(?:\/[a-z]{2}(?:-[a-z]{2})?)?\/agent\/(?:handoff|buyer-claims)(?:\.[^/.]+)?\/?$/i;
 export const AJAX_CART_RE =
