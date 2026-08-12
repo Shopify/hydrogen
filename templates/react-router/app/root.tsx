@@ -13,7 +13,6 @@ import {
 
 import { AnalyticsTracker, CartAnalyticsTracker } from "~/components/AnalyticsTrackers";
 import { CartDrawer } from "~/components/CartDrawer";
-import { ConsentBanner } from "~/components/ConsentBanner";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
 import { CartProvider } from "~/lib/cart";
@@ -96,7 +95,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     navCollections: navResult.data?.collections.nodes ?? [],
     analyticsShop,
     consent: analyticsConsent,
-    forceConsentBanner: env.MOCK_SHOP === "1",
+    enableAnalyticsTestTap: env.MOCK_SHOP === "1",
   };
 }
 
@@ -139,7 +138,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <AnalyticsTracker
         shop={loaderData.analyticsShop}
         consent={loaderData.consent}
-        enableTestTap={loaderData.forceConsentBanner}
+        enableTestTap={loaderData.enableAnalyticsTestTap}
       />
       <CartAnalyticsTracker />
       <div
@@ -153,7 +152,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <Outlet />
       <Footer />
       <CartDrawer />
-      <ConsentBanner forceShow={loaderData.forceConsentBanner} />
     </CartProvider>
   );
 }

@@ -125,14 +125,6 @@ export const content = {
     shopByCategory: "Shop by category",
     viewAll: "View all",
   },
-  consent: {
-    label: "Cookie consent",
-    message: "We use cookies to improve your experience, analyze traffic, and personalize content.",
-    privacyPolicy: "Privacy Policy",
-    acceptAll: "Accept all",
-    decline: "Decline",
-    managePreferences: "Manage preferences",
-  },
 } as const;
 
 /** Pluralized cart icon label. */
