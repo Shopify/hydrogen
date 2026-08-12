@@ -1,7 +1,4 @@
 import { ShopifyScripts } from "@shopify/hydrogen/react";
-
-import "./app.css";
-
 import {
   Links,
   Meta,
@@ -33,11 +30,13 @@ import { storefrontMiddleware } from "~/lib/storefront-middleware";
 
 import type { Route } from "./+types/root";
 
+import appStyles from "./app.css?url";
+
 // Root middleware — the single Hydrogen request lifecycle entry point.
 export const middleware: Route.MiddlewareFunction[] = [storefrontMiddleware];
 
-// Static head links — Hydrogen favicon (rendered by <Links /> in the Layout).
 export const links: Route.LinksFunction = () => [
+  { rel: "stylesheet", href: appStyles },
   { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
 ];
 
