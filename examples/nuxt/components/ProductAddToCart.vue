@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { canAddToCart } from "@shopify/hydrogen";
+import { ShopPayButton } from "@shopify/hydrogen/vue";
 
 import { openCartDrawer } from "~/storefront/cart-drawer";
 import type { ProductData } from "~/storefront/product";

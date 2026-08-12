@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ShopPayButton } from "@shopify/hydrogen/vue";
+
 import { useCart } from "~/storefront/cart";
 import { formatMoney } from "~/storefront/money";
 

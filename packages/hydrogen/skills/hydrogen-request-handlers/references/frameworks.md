@@ -74,10 +74,7 @@ export async function handleRequest(request: Request, next: () => Promise<Respon
   const response = await next();
   if (response.status === 404) {
     const redirect = await handleShopifyRedirects({ request, routeTemplates, storefrontClient });
-    if (redirect) {
-      storefrontClient.requestContext.applyResponseHeaders(redirect.headers);
-      return redirect;
-    }
+    if (redirect) return redirect;
   }
 
   storefrontClient.requestContext.applyResponseHeaders(response.headers);
@@ -139,10 +136,7 @@ export const middleware: Route.MiddlewareFunction[] = [
     const response = await next();
     if (response.status === 404) {
       const redirect = await handleShopifyRedirects({ request, routeTemplates, storefrontClient });
-      if (redirect) {
-        storefrontClient.requestContext.applyResponseHeaders(redirect.headers);
-        return redirect;
-      }
+      if (redirect) return redirect;
     }
     storefrontClient.requestContext.applyResponseHeaders(response.headers);
     return response;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { provideProductForm, type ProductVariantData } from "~/storefront/product";
+import { ProductProvider, type ProductVariantData } from "~/storefront/product";
 import { toFetchQuery } from "~/utils/fetch-query";
 
 const route = useRoute();
@@ -52,37 +52,37 @@ function variantQuery(nextSelectedOptions: { name: string; value: string }[]) {
   for (const option of nextSelectedOptions) query[option.name] = option.value;
   return query;
 }
-
-provideProductForm(product, { onSelect: handleSelect });
 </script>
 
 <template>
-  <main id="main-content" tabindex="-1">
-    <section
-      class="grid grid-cols-1 gap-12 px-6 py-10 md:grid-cols-[minmax(0,1fr)_420px] md:gap-16 md:px-10 md:py-12"
-    >
-      <div class="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-2">
-        <div
-          v-for="(image, i) in product.images.nodes"
-          :key="image.url"
-          class="aspect-square overflow-hidden bg-neutral-100"
-        >
-          <img
-            :src="image.url"
-            :alt="image.altText ?? `${product.title} — image ${i + 1}`"
-            class="h-full w-full object-cover"
-          />
+  <ProductProvider :product="product" :on-select="handleSelect">
+    <main id="main-content" tabindex="-1">
+      <section
+        class="grid grid-cols-1 gap-12 px-6 py-10 md:grid-cols-[minmax(0,1fr)_420px] md:gap-16 md:px-10 md:py-12"
+      >
+        <div class="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-2">
+          <div
+            v-for="(image, i) in product.images.nodes"
+            :key="image.url"
+            class="aspect-square overflow-hidden bg-neutral-100"
+          >
+            <img
+              :src="image.url"
+              :alt="image.altText ?? `${product.title} — image ${i + 1}`"
+              class="h-full w-full object-cover"
+            />
+          </div>
         </div>
-      </div>
 
-      <ProductPurchasePanel :product="product" />
-    </section>
+        <ProductPurchasePanel :product="product" />
+      </section>
 
-    <section class="border-t border-black/10 px-6 py-16 md:px-10 md:py-20">
-      <h2 class="text-2xl font-black tracking-tight">You may also like</h2>
-      <div class="mt-8 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-4">
-        <ProductCard v-for="p in related" :key="p.handle" :product="p" />
-      </div>
-    </section>
-  </main>
+      <section class="border-t border-black/10 px-6 py-16 md:px-10 md:py-20">
+        <h2 class="text-2xl font-black tracking-tight">You may also like</h2>
+        <div class="mt-8 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-4">
+          <ProductCard v-for="p in related" :key="p.handle" :product="p" />
+        </div>
+      </section>
+    </main>
+  </ProductProvider>
 </template>

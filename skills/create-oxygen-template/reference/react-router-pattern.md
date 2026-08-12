@@ -163,12 +163,12 @@ async function createAppLoadContext(
 }
 ```
 
-Use actual context names that match the template. If the app currently initializes Shopify context in root middleware, either:
-
-- keep that middleware and provide `env`, `waitUntil`, and `cache` through React Router context, or
-- move only the top-level request setup into `server.ts` while preserving route behavior.
-
-Prefer the smaller app-code change. The React Router example already has most Shopify route handling in middleware; adapt it rather than rewriting route modules.
+Use actual context names that match the template. Keep Shopify initialization and request handling in root middleware,
+with `server.ts` responsible only for providing Worker values through React Router context and invoking the framework
+request handler. The root middleware owns `handleShopifyRoutes` before `next()`, `handleShopifyRedirects` after a
+framework 404, and storefront response headers on framework responses. Shopify handler responses already include
+their own storefront response headers. The catch-all route should only produce the framework 404 that lets the root
+middleware check for a Shopify redirect.
 
 ## entry.server.tsx and entry.client.tsx (REQUIRED)
 
@@ -254,8 +254,9 @@ Pass `cache` directly to `createStorefrontClient`'s `config` — the client wrap
 ## Env and types
 
 Ship a `.env.example` (committed, blank) and a gitignored `.env`. Only the two real secrets are required; everything
-else public lives in `app/lib/config.ts` (see config split). To smoke-test against the demo store in this repo, obtain
-a real `PRIVATE_STOREFRONT_API_TOKEN` with `node scripts/decrypt-example-secrets.ts` (needs the ejson key locally).
+else public lives in `app/lib/config.ts` (see config split). To smoke-test against the demo store in this repo, run
+`pnpm run examples:secrets:decrypt` from the repository root (needs the ejson key locally). It writes the private token
+and store domain to the gitignored `templates/react-router/.env`.
 
 ```sh
 SESSION_SECRET="replace-with-a-long-random-secret-32+"

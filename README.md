@@ -208,8 +208,7 @@ The [`examples/`](./examples) directory ports the same storefront across framewo
 | --- | --- |
 | `astro/` | Astro 6 SSR |
 | `hydrogen/` | Hydrogen + Oxygen-style request context |
-| `nuxt/` | Nuxt 3 |
-| `nuxt-binding/` | Nuxt 3 on Hydrogen's Vue bindings |
+| `nuxt/` | Nuxt 3 on Hydrogen's Vue bindings |
 | `solid-start/` | SolidStart v1 |
 | `sveltekit/` | SvelteKit 2 + Svelte 5 |
 

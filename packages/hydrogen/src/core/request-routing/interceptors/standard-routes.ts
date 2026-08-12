@@ -6,7 +6,7 @@ import {
 } from "../../standard-routes/index";
 import { createRedirectLocation, createRedirectResponse } from "./url-redirects";
 
-export async function handleStandardRouteRedirects({
+export function handleStandardRouteRedirects({
   request,
   storefrontClient,
   routeTemplates,
@@ -14,7 +14,7 @@ export async function handleStandardRouteRedirects({
   request: Request;
   storefrontClient: PrivateStorefrontClient;
   routeTemplates: ShopifyRouteTemplates;
-}): Promise<Response | null> {
+}): Response | null {
   const url = new URL(request.url);
   const target = getStandardRouteTarget({
     pathname: url.pathname,
