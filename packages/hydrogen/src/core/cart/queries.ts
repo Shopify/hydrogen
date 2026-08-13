@@ -2,6 +2,7 @@ import {
   gql,
   type AnyStorefrontQueryString,
   type ComposedSource,
+  type SourceOf,
   type StorefrontQueryString,
 } from "../../graphql";
 import type { InferResult, InferVariables } from "../../graphql";
@@ -257,25 +258,28 @@ const CART_NOTE_UPDATE_MUTATION = gql(
 );
 
 // The custom variants spread the consumer's `CartFragment`, which only exists
-// at runtime, so they cannot be declared with `gql()` here. They stay as raw
-// sources composed with the consumer's fragment in `createCartQueries`.
-const CUSTOM_CART_QUERY_SOURCE = /* GraphQL */ `
-  query Cart($id: ID!, $country: CountryCode, $language: LanguageCode)
+// at runtime. Its spread is interpolated on purpose: the gql.tada plugin skips
+// documents containing interpolations instead of flagging an unknown fragment,
+// while TypeScript still resolves the full literal source type. The consumer's
+// fragment is composed in at runtime by `createCartQueries`.
+const CUSTOM_CART_QUERY = gql(
+  `query Cart($id: ID!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cart(id: $id) {
       ...HydrogenCartFragment
-      ...CartFragment
+      ...${CART_FRAGMENT_NAME}
     }
-  }
-`;
+  }`,
+  [HYDROGEN_CART_FRAGMENT],
+);
 
-const CUSTOM_CART_CREATE_MUTATION_SOURCE = /* GraphQL */ `
-  mutation CartCreate($input: CartInput!, $country: CountryCode, $language: LanguageCode)
+const CUSTOM_CART_CREATE_MUTATION = gql(
+  `mutation CartCreate($input: CartInput!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartCreate(input: $input) {
       cart {
         ...HydrogenCartFragment
-        ...CartFragment
+        ...${CART_FRAGMENT_NAME}
       }
       userErrors {
         code
@@ -288,20 +292,17 @@ const CUSTOM_CART_CREATE_MUTATION_SOURCE = /* GraphQL */ `
         target
       }
     }
-  }
-`;
+  }`,
+  [HYDROGEN_CART_FRAGMENT],
+);
 
-const CUSTOM_CART_LINES_ADD_MUTATION_SOURCE = /* GraphQL */ `
-  mutation CartLinesAdd(
-    $cartId: ID!
-    $lines: [CartLineInput!]!
-    $country: CountryCode
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+const CUSTOM_CART_LINES_ADD_MUTATION = gql(
+  `mutation CartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
       cart {
         ...HydrogenCartFragment
-        ...CartFragment
+        ...${CART_FRAGMENT_NAME}
       }
       userErrors {
         code
@@ -314,20 +315,17 @@ const CUSTOM_CART_LINES_ADD_MUTATION_SOURCE = /* GraphQL */ `
         target
       }
     }
-  }
-`;
+  }`,
+  [HYDROGEN_CART_FRAGMENT],
+);
 
-const CUSTOM_CART_LINES_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
-  mutation CartLinesUpdate(
-    $cartId: ID!
-    $lines: [CartLineUpdateInput!]!
-    $country: CountryCode
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+const CUSTOM_CART_LINES_UPDATE_MUTATION = gql(
+  `mutation CartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
         ...HydrogenCartFragment
-        ...CartFragment
+        ...${CART_FRAGMENT_NAME}
       }
       userErrors {
         code
@@ -340,20 +338,17 @@ const CUSTOM_CART_LINES_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
         target
       }
     }
-  }
-`;
+  }`,
+  [HYDROGEN_CART_FRAGMENT],
+);
 
-const CUSTOM_CART_LINES_REMOVE_MUTATION_SOURCE = /* GraphQL */ `
-  mutation CartLinesRemove(
-    $cartId: ID!
-    $lineIds: [ID!]!
-    $country: CountryCode
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+const CUSTOM_CART_LINES_REMOVE_MUTATION = gql(
+  `mutation CartLinesRemove($cartId: ID!, $lineIds: [ID!]!, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
     cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
       cart {
         ...HydrogenCartFragment
-        ...CartFragment
+        ...${CART_FRAGMENT_NAME}
       }
       userErrors {
         code
@@ -366,20 +361,17 @@ const CUSTOM_CART_LINES_REMOVE_MUTATION_SOURCE = /* GraphQL */ `
         target
       }
     }
-  }
-`;
+  }`,
+  [HYDROGEN_CART_FRAGMENT],
+);
 
-const CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
-  mutation CartDiscountCodesUpdate(
-    $cartId: ID!
-    $discountCodes: [String!]!
-    $country: CountryCode
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+const CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION = gql(
+  `mutation CartDiscountCodesUpdate($cartId: ID!, $discountCodes: [String!]!, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
       cart {
         ...HydrogenCartFragment
-        ...CartFragment
+        ...${CART_FRAGMENT_NAME}
       }
       userErrors {
         code
@@ -392,20 +384,17 @@ const CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
         target
       }
     }
-  }
-`;
+  }`,
+  [HYDROGEN_CART_FRAGMENT],
+);
 
-const CUSTOM_CART_NOTE_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
-  mutation CartNoteUpdate(
-    $cartId: ID!
-    $note: String!
-    $country: CountryCode
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+const CUSTOM_CART_NOTE_UPDATE_MUTATION = gql(
+  `mutation CartNoteUpdate($cartId: ID!, $note: String!, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
     cartNoteUpdate(cartId: $cartId, note: $note) {
       cart {
         ...HydrogenCartFragment
-        ...CartFragment
+        ...${CART_FRAGMENT_NAME}
       }
       userErrors {
         code
@@ -418,8 +407,9 @@ const CUSTOM_CART_NOTE_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
         target
       }
     }
-  }
-`;
+  }`,
+  [HYDROGEN_CART_FRAGMENT],
+);
 
 const DEFAULT_CART_QUERIES = {
   cart: CART_QUERY,
@@ -445,34 +435,22 @@ type QueryFor<
 
 type CartFragmentDocument = AnyStorefrontQueryString;
 
-type CustomQueryFor<Source extends string, TCartFragment extends CartFragmentDocument> = QueryFor<
-  Source,
-  readonly [typeof HYDROGEN_CART_FRAGMENT, TCartFragment]
->;
+type CustomQueryFor<
+  Document extends AnyStorefrontQueryString,
+  TCartFragment extends CartFragmentDocument,
+> = QueryFor<SourceOf<Document>, readonly [TCartFragment]>;
 
 type CartQueriesForFragment<TCartFragment extends CartFragmentDocument> = {
-  readonly cart: CustomQueryFor<typeof CUSTOM_CART_QUERY_SOURCE, TCartFragment>;
-  readonly cartCreate: CustomQueryFor<typeof CUSTOM_CART_CREATE_MUTATION_SOURCE, TCartFragment>;
-  readonly cartLinesAdd: CustomQueryFor<
-    typeof CUSTOM_CART_LINES_ADD_MUTATION_SOURCE,
-    TCartFragment
-  >;
-  readonly cartLinesUpdate: CustomQueryFor<
-    typeof CUSTOM_CART_LINES_UPDATE_MUTATION_SOURCE,
-    TCartFragment
-  >;
-  readonly cartLinesRemove: CustomQueryFor<
-    typeof CUSTOM_CART_LINES_REMOVE_MUTATION_SOURCE,
-    TCartFragment
-  >;
+  readonly cart: CustomQueryFor<typeof CUSTOM_CART_QUERY, TCartFragment>;
+  readonly cartCreate: CustomQueryFor<typeof CUSTOM_CART_CREATE_MUTATION, TCartFragment>;
+  readonly cartLinesAdd: CustomQueryFor<typeof CUSTOM_CART_LINES_ADD_MUTATION, TCartFragment>;
+  readonly cartLinesUpdate: CustomQueryFor<typeof CUSTOM_CART_LINES_UPDATE_MUTATION, TCartFragment>;
+  readonly cartLinesRemove: CustomQueryFor<typeof CUSTOM_CART_LINES_REMOVE_MUTATION, TCartFragment>;
   readonly cartDiscountCodesUpdate: CustomQueryFor<
-    typeof CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE,
+    typeof CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION,
     TCartFragment
   >;
-  readonly cartNoteUpdate: CustomQueryFor<
-    typeof CUSTOM_CART_NOTE_UPDATE_MUTATION_SOURCE,
-    TCartFragment
-  >;
+  readonly cartNoteUpdate: CustomQueryFor<typeof CUSTOM_CART_NOTE_UPDATE_MUTATION, TCartFragment>;
 };
 
 type CartDataFromCartQuery<TQuery extends AnyStorefrontQueryString> =
@@ -534,21 +512,21 @@ function createFragmentPattern({ name, typeName }: FragmentContract): RegExp {
 function createCartQueries<const TCartFragment extends CartFragmentDocument>(
   cartFragment: TCartFragment,
 ): CartQueriesForFragment<TCartFragment> {
-  const fragments = [HYDROGEN_CART_FRAGMENT, cartFragment] as const;
+  const fragments = [cartFragment] as const;
 
-  const cart = gql(CUSTOM_CART_QUERY_SOURCE, fragments);
+  const cart = gql(CUSTOM_CART_QUERY, fragments);
 
-  const cartCreate = gql(CUSTOM_CART_CREATE_MUTATION_SOURCE, fragments);
+  const cartCreate = gql(CUSTOM_CART_CREATE_MUTATION, fragments);
 
-  const cartLinesAdd = gql(CUSTOM_CART_LINES_ADD_MUTATION_SOURCE, fragments);
+  const cartLinesAdd = gql(CUSTOM_CART_LINES_ADD_MUTATION, fragments);
 
-  const cartLinesUpdate = gql(CUSTOM_CART_LINES_UPDATE_MUTATION_SOURCE, fragments);
+  const cartLinesUpdate = gql(CUSTOM_CART_LINES_UPDATE_MUTATION, fragments);
 
-  const cartLinesRemove = gql(CUSTOM_CART_LINES_REMOVE_MUTATION_SOURCE, fragments);
+  const cartLinesRemove = gql(CUSTOM_CART_LINES_REMOVE_MUTATION, fragments);
 
-  const cartDiscountCodesUpdate = gql(CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION_SOURCE, fragments);
+  const cartDiscountCodesUpdate = gql(CUSTOM_CART_DISCOUNT_CODES_UPDATE_MUTATION, fragments);
 
-  const cartNoteUpdate = gql(CUSTOM_CART_NOTE_UPDATE_MUTATION_SOURCE, fragments);
+  const cartNoteUpdate = gql(CUSTOM_CART_NOTE_UPDATE_MUTATION, fragments);
 
   return {
     cart,

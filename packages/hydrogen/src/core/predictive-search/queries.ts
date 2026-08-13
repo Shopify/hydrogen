@@ -2,6 +2,7 @@ import {
   gql,
   type AnyStorefrontQueryString,
   type ComposedSource,
+  type SourceOf,
   type StorefrontQueryString,
 } from "../../graphql";
 import type { InferResult, InferVariables } from "../../graphql";
@@ -53,52 +54,6 @@ const QUERY_CONTRACT = {
   name: QUERY_FRAGMENT_NAME,
   typeName: QUERY_TYPE_NAME,
 } as const satisfies FragmentContract;
-
-// Spreads the consumer-overridable fragments (e.g. PredictiveSearchProductFragment),
-// which only exist at runtime, so it cannot be declared with `gql()` here. It stays
-// a raw source composed with the resolved fragments in `makePredictiveSearchQueries`.
-const PREDICTIVE_SEARCH_QUERY_SOURCE = /* GraphQL */ `
-  query PredictiveSearch(
-    $country: CountryCode
-    $language: LanguageCode
-    $limit: Int
-    $limitScope: PredictiveSearchLimitScope
-    $term: String!
-    $types: [PredictiveSearchType!]
-    $searchableFields: [SearchableField!]
-    $unavailableProducts: SearchUnavailableProductsType
-  ) @inContext(country: $country, language: $language) {
-    predictiveSearch(
-      limit: $limit
-      limitScope: $limitScope
-      query: $term
-      types: $types
-      searchableFields: $searchableFields
-      unavailableProducts: $unavailableProducts
-    ) {
-      articles {
-        ...HydrogenPredictiveSearchArticleFragment
-        ...PredictiveSearchArticleFragment
-      }
-      collections {
-        ...HydrogenPredictiveSearchCollectionFragment
-        ...PredictiveSearchCollectionFragment
-      }
-      pages {
-        ...HydrogenPredictiveSearchPageFragment
-        ...PredictiveSearchPageFragment
-      }
-      products {
-        ...HydrogenPredictiveSearchProductFragment
-        ...PredictiveSearchProductFragment
-      }
-      queries {
-        ...HydrogenPredictiveSearchQueryFragment
-        ...PredictiveSearchQueryFragment
-      }
-    }
-  }
-`;
 
 const HYDROGEN_PRODUCT_FRAGMENT = gql(`
   fragment HydrogenPredictiveSearchProductFragment on Product {
@@ -181,6 +136,61 @@ const HYDROGEN_QUERY_FRAGMENT = gql(`
   }
 `);
 
+// The consumer-overridable fragment spreads (e.g. PredictiveSearchProductFragment)
+// are interpolated on purpose: those fragments only exist at runtime, and the
+// gql.tada plugin skips documents containing interpolations instead of flagging
+// unknown fragments, while TypeScript still resolves the full literal source type.
+// The resolved fragments are composed in at runtime by `makePredictiveSearchQueries`.
+const PREDICTIVE_SEARCH_QUERY = gql(
+  `query PredictiveSearch(
+    $country: CountryCode
+    $language: LanguageCode
+    $limit: Int
+    $limitScope: PredictiveSearchLimitScope
+    $term: String!
+    $types: [PredictiveSearchType!]
+    $searchableFields: [SearchableField!]
+    $unavailableProducts: SearchUnavailableProductsType
+  ) @inContext(country: $country, language: $language) {
+    predictiveSearch(
+      limit: $limit
+      limitScope: $limitScope
+      query: $term
+      types: $types
+      searchableFields: $searchableFields
+      unavailableProducts: $unavailableProducts
+    ) {
+      articles {
+        ...HydrogenPredictiveSearchArticleFragment
+        ...${ARTICLE_FRAGMENT_NAME}
+      }
+      collections {
+        ...HydrogenPredictiveSearchCollectionFragment
+        ...${COLLECTION_FRAGMENT_NAME}
+      }
+      pages {
+        ...HydrogenPredictiveSearchPageFragment
+        ...${PAGE_FRAGMENT_NAME}
+      }
+      products {
+        ...HydrogenPredictiveSearchProductFragment
+        ...${PRODUCT_FRAGMENT_NAME}
+      }
+      queries {
+        ...HydrogenPredictiveSearchQueryFragment
+        ...${QUERY_FRAGMENT_NAME}
+      }
+    }
+  }`,
+  [
+    HYDROGEN_PRODUCT_FRAGMENT,
+    HYDROGEN_COLLECTION_FRAGMENT,
+    HYDROGEN_PAGE_FRAGMENT,
+    HYDROGEN_ARTICLE_FRAGMENT,
+    HYDROGEN_QUERY_FRAGMENT,
+  ],
+);
+
 const DEFAULT_PRODUCT_FRAGMENT = gql(`
   fragment PredictiveSearchProductFragment on Product {
     id
@@ -236,11 +246,6 @@ type FragmentForOptions<
   : TDefault;
 
 type PredictiveSearchQueryFragmentsForOptions<TOptions> = [
-  typeof HYDROGEN_PRODUCT_FRAGMENT,
-  typeof HYDROGEN_COLLECTION_FRAGMENT,
-  typeof HYDROGEN_PAGE_FRAGMENT,
-  typeof HYDROGEN_ARTICLE_FRAGMENT,
-  typeof HYDROGEN_QUERY_FRAGMENT,
   FragmentForOptions<TOptions, "product", typeof DEFAULT_PRODUCT_FRAGMENT>,
   FragmentForOptions<TOptions, "collection", typeof DEFAULT_COLLECTION_FRAGMENT>,
   FragmentForOptions<TOptions, "page", typeof DEFAULT_PAGE_FRAGMENT>,
@@ -249,7 +254,7 @@ type PredictiveSearchQueryFragmentsForOptions<TOptions> = [
 ];
 
 type PredictiveSearchQuerySourceForOptions<TOptions> = ComposedSource<
-  typeof PREDICTIVE_SEARCH_QUERY_SOURCE,
+  SourceOf<typeof PREDICTIVE_SEARCH_QUERY>,
   PredictiveSearchQueryFragmentsForOptions<TOptions>
 >;
 
@@ -280,11 +285,6 @@ function resolveFragments(fragments: PredictiveSearchFragments | undefined) {
   if (fragments?.query) assertFragmentContract(fragments.query, QUERY_CONTRACT);
 
   return [
-    HYDROGEN_PRODUCT_FRAGMENT,
-    HYDROGEN_COLLECTION_FRAGMENT,
-    HYDROGEN_PAGE_FRAGMENT,
-    HYDROGEN_ARTICLE_FRAGMENT,
-    HYDROGEN_QUERY_FRAGMENT,
     fragments?.product ?? DEFAULT_PRODUCT_FRAGMENT,
     fragments?.collection ?? DEFAULT_COLLECTION_FRAGMENT,
     fragments?.page ?? DEFAULT_PAGE_FRAGMENT,
@@ -299,7 +299,7 @@ export function makePredictiveSearchQueries<
 export function makePredictiveSearchQueries(): PredictiveSearchQueriesForOptions<undefined>;
 export function makePredictiveSearchQueries(options?: CreatePredictiveSearchQueriesOptions) {
   return {
-    predictiveSearch: gql(PREDICTIVE_SEARCH_QUERY_SOURCE, resolveFragments(options?.fragments)),
+    predictiveSearch: gql(PREDICTIVE_SEARCH_QUERY, resolveFragments(options?.fragments)),
   } as PredictiveSearchQueriesForOptions<typeof options>;
 }
 
