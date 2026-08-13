@@ -15,6 +15,9 @@ export interface CollectionParams {
 const SORT_BY_DESCENDING_SUFFIX = "-descending";
 const SORT_BY_ASCENDING_SUFFIX = "-ascending";
 
+/** Storefront API pagination cursor params cleared when browse intent changes. */
+const PAGINATION_CURSOR_PARAMS: readonly string[] = ["before", "after"];
+
 const SORT_KEY_TO_SORT_BY: Record<string, string> = {
   BEST_SELLING: "best-selling",
   CREATED: "created",
@@ -108,7 +111,7 @@ export function mergeCollectionParams(
   const merged = new URLSearchParams(existing);
 
   for (const key of Array.from(merged.keys())) {
-    if (isStoreOwnedParam(key) || key === "before" || key === "after") {
+    if (isStoreOwnedParam(key) || PAGINATION_CURSOR_PARAMS.includes(key)) {
       merged.delete(key);
     }
   }
