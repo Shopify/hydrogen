@@ -2,6 +2,7 @@ import {
   SFAPI_REQUEST_HEADER_ALLOWLIST,
   SHOPIFY_CLIENT_IP_HEADER,
   STOREFRONT_BUYER_IP_HEADER,
+  STOREFRONT_ID_HEADER,
 } from "../../headers";
 import { SFAPI_RE } from "../../url";
 import { createProxyInterceptor } from "./proxy";
@@ -11,6 +12,11 @@ export const handleSfapiProxy = createProxyInterceptor({
   headers: {
     allow: SFAPI_REQUEST_HEADER_ALLOWLIST,
     prepare: (headers, { requestContext, storefrontClient }) => {
+      headers.delete(STOREFRONT_ID_HEADER);
+      if (storefrontClient.storefrontId) {
+        headers.set(STOREFRONT_ID_HEADER, storefrontClient.storefrontId);
+      }
+
       headers.delete(STOREFRONT_BUYER_IP_HEADER);
       headers.delete(SHOPIFY_CLIENT_IP_HEADER);
       const { buyerIp } = requestContext;

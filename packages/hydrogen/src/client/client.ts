@@ -17,6 +17,7 @@ import {
   SHOPIFY_STOREFRONT_Y_HEADER,
   STOREFRONT_ACCESS_TOKEN_HEADER,
   STOREFRONT_BUYER_IP_HEADER,
+  STOREFRONT_ID_HEADER,
   STOREFRONT_PRIVATE_TOKEN_HEADER,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
@@ -139,6 +140,9 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
   const staticHeaders: Record<string, string> = {
     "content-type": "application/json",
   };
+  if (config.storefrontId) {
+    staticHeaders[STOREFRONT_ID_HEADER] = config.storefrontId;
+  }
 
   switch (clientType) {
     case "private":
@@ -318,6 +322,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
     graphql: graphql as StorefrontClient["graphql"],
     apiUrl,
     storeUrl,
+    storefrontId: config.storefrontId,
     requestContext,
   };
 }

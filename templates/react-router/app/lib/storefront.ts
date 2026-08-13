@@ -12,6 +12,7 @@ import {
   getBuyerIp,
   getPrivateStorefrontToken,
   getStoreDomain,
+  shop,
   storefrontConfig,
   shouldUseMockShop,
 } from "~/lib/shop";
@@ -47,6 +48,7 @@ export function createRequestStorefrontClient(
     config: {
       storeDomain,
       privateStorefrontToken,
+      storefrontId: shop.storefrontId,
     },
   });
 }
