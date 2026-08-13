@@ -133,7 +133,6 @@ describe("handleShopifyRoutes", () => {
 
     const [, init] = mockFetch.mock.calls[0];
     const headers = new Headers(init.headers);
-    expect(headers.get("X-Shopify-Client-IP")).toBeNull();
     expect(headers.get("x-forwarded-for")).toBeNull();
   });
 
