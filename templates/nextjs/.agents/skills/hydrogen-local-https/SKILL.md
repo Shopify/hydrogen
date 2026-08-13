@@ -7,7 +7,7 @@ description: >
 
 # Local HTTPS
 
-Customer Account login, logout, and OAuth callbacks require an HTTPS, non-`localhost` origin that exactly matches the URLs registered in Shopify admin. `localtest.me` resolves publicly to `127.0.0.1`, so it provides a stable local hostname.
+Customer Account login, logout, and OAuth callbacks require an HTTPS, non-`localhost` origin that exactly matches the URLs registered in Shopify admin. `local.tryhydrogen.dev` is a Shopify-owned domain that resolves publicly to `127.0.0.1`, so it provides a stable local hostname.
 
 ## Vite Certificate Setup
 
@@ -18,9 +18,9 @@ brew install mkcert
 mkcert -install
 mkdir -p ~/.shopify/hydrogen/certs
 mkcert \
-  -cert-file ~/.shopify/hydrogen/certs/localtest.me.pem \
-  -key-file ~/.shopify/hydrogen/certs/localtest.me-key.pem \
-  localtest.me
+  -cert-file ~/.shopify/hydrogen/certs/local.tryhydrogen.dev.pem \
+  -key-file ~/.shopify/hydrogen/certs/local.tryhydrogen.dev-key.pem \
+  local.tryhydrogen.dev
 ```
 
 Pass `certPath` and `keyPath` to use another location. Certificate generation is intentionally separate from the plugin.
@@ -105,7 +105,7 @@ export default defineConfig({
 Vinxi also needs its bind target and port on startup:
 
 ```sh
-VITE_LOCAL_HTTPS=1 HOST=localtest.me vinxi dev --port 5173
+VITE_LOCAL_HTTPS=1 HOST=local.tryhydrogen.dev vinxi dev --port 5173
 ```
 
 ## Next.js
@@ -113,7 +113,7 @@ VITE_LOCAL_HTTPS=1 HOST=localtest.me vinxi dev --port 5173
 Next.js provisions its own trusted certificate:
 
 ```sh
-next dev --experimental-https --hostname localtest.me --port 5173
+next dev --experimental-https --hostname local.tryhydrogen.dev --port 5173
 ```
 
 ## Shopify Admin
@@ -121,9 +121,9 @@ next dev --experimental-https --hostname localtest.me --port 5173
 In the Hydrogen or Headless sales channel, open the storefront's **Customer Account API settings** and configure:
 
 ```text
-Callback URI(s):       https://localtest.me:5173/account/authorize
-JavaScript origin(s):  https://localtest.me
-Logout URI:            https://localtest.me:5173
+Callback URI(s):       https://local.tryhydrogen.dev:5173/account/authorize
+JavaScript origin(s):  https://local.tryhydrogen.dev
+Logout URI:            https://local.tryhydrogen.dev:5173
 ```
 
 The JavaScript origin intentionally has no port. Shopify's server-side validation rejects JavaScript origins containing a port.

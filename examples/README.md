@@ -29,7 +29,7 @@ From the repository root:
 - `pnpm dev` — run all workspace examples and templates in parallel.
 - `pnpm dev:hub` — run the examples with automatically allocated ports and open the browser hub with status, previews, and logs.
 - `pnpm --filter @shopify/hydrogen-example-<name> dev` — run one example.
-- `pnpm https:setup` then `pnpm --filter @shopify/hydrogen-example-<name> https:dev` — run an account-enabled example on `https://localtest.me:5173` when it provides an `https:dev` script. The Hydrogen example uses `--customer-account-push` instead of local certificates.
+- `pnpm https:setup` then `pnpm --filter @shopify/hydrogen-example-<name> https:dev` — run an account-enabled example on `https://local.tryhydrogen.dev:5173` when it provides an `https:dev` script. The Hydrogen example uses `--customer-account-push` instead of local certificates.
 
 Local HTTPS requires `mkcert`. On macOS:
 
@@ -38,9 +38,9 @@ brew install mkcert
 pnpm https:setup
 ```
 
-This installs the local certificate authority and creates trusted `localtest.me` certificates under `.cert/` so Customer Account OAuth can redirect to `https://localtest.me:5173/account/authorize`.
+This installs the local certificate authority and creates trusted `local.tryhydrogen.dev` certificates under `~/.shopify/hydrogen/certs/` so Customer Account OAuth can redirect to `https://local.tryhydrogen.dev:5173/account/authorize`.
 
-The Next.js template provisions its own development certificate and does not use the repository certificates.
+The Next.js template provisions its own development certificate and does not use the Hydrogen certificates.
 
 ## What examples are
 

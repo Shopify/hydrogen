@@ -20,7 +20,7 @@ pnpm dev
 
 Open <http://localhost:3000>.
 
-Customer Accounts require an HTTPS origin because Shopify OAuth rejects `http`. Run the HTTPS development server and open <https://localtest.me:5173>:
+Customer Accounts require an HTTPS origin because Shopify OAuth rejects `http`. Run the HTTPS development server and open <https://local.tryhydrogen.dev:5173>:
 
 ```sh
 pnpm https:dev

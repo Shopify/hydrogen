@@ -56,7 +56,7 @@ Customer Account OAuth requires trusted local HTTPS. Follow the bundled `hydroge
 npm run https:dev
 ```
 
-Open <https://localtest.me:5173>.
+Open <https://local.tryhydrogen.dev:5173>.
 
 Mode is **auto-detected**: when a `PRIVATE_STOREFRONT_API_TOKEN` is present the
 app talks to the real store (`PUBLIC_STORE_DOMAIN`, falling back to the default in

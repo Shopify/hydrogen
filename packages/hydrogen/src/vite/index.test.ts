@@ -134,10 +134,42 @@ describe("localHttps", () => {
     expect(message).toContain(keyPath);
     expect(message).toContain("brew install mkcert");
     expect(message).toContain("mkcert -install");
-    expect(message).toContain(`mkdir -p '${directory}' '${directory}'`);
+    expect(message).toContain(`mkdir -p '${directory}'`);
+    expect(message).not.toContain(`mkdir -p '${directory}' '${directory}'`);
     expect(message).toContain(
       `mkcert -cert-file '${certPath}' -key-file '${keyPath}' 'custom.test'`,
     );
+  });
+
+  it("warns once when Vite creates multiple plugin instances", () => {
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+
+    for (let index = 0; index < 2; index += 1) {
+      const plugin = localHttps({
+        enabled: true,
+        host: "custom.test",
+        certPath,
+        keyPath,
+      });
+      const config = getHook(plugin.config, "config");
+      expect(config({} as any, {} as any)).toBeUndefined();
+    }
+
+    expect(warn).toHaveBeenCalledOnce();
+  });
+
+  it("warns for distinct hosts that share missing certificate paths", () => {
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+
+    for (const host of ["first.test", "second.test"]) {
+      const plugin = localHttps({ enabled: true, host, certPath, keyPath });
+      const config = getHook(plugin.config, "config");
+      expect(config({} as any, {} as any)).toBeUndefined();
+    }
+
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(String(warn.mock.calls[0]?.[0])).toContain("'first.test'");
+    expect(String(warn.mock.calls[1]?.[0])).toContain("'second.test'");
   });
 
   it("sets forwarded headers without replacing existing values", () => {
@@ -255,6 +287,38 @@ describe("localHttps", () => {
     expect(message).toContain("Logout URI:                  https://custom.test:4321");
   });
 
+  it("logs the port the server actually bound instead of the configured port", () => {
+    fs.writeFileSync(certPath, "certificate");
+    fs.writeFileSync(keyPath, "private-key");
+    const { info, listening, middleware } = configurePlugin(
+      { certPath, keyPath },
+      { port: 4_321, boundPort: 4_000 },
+    );
+
+    listening();
+
+    const message = String(info.mock.calls[0]?.[0]);
+    expect(message).toContain("https://custom.test:4000/account/authorize");
+    expect(message).not.toContain("custom.test:4321");
+
+    const request: { headers: Record<string, string | undefined> } = { headers: {} };
+    middleware(request, createResponse().value, vi.fn());
+    expect(request.headers["x-forwarded-host"]).toBe("custom.test:4000");
+  });
+
+  it("logs Customer Account settings once across Vite server instances", () => {
+    fs.writeFileSync(certPath, "certificate");
+    fs.writeFileSync(keyPath, "private-key");
+    const first = configurePlugin({ certPath, keyPath }, { port: 4_322 });
+    const second = configurePlugin({ certPath, keyPath }, { port: 4_322 });
+
+    first.listening();
+    second.listening();
+
+    expect(first.info).toHaveBeenCalledOnce();
+    expect(second.info).not.toHaveBeenCalled();
+  });
+
   it("logs settings immediately when Vite has no HTTP server", () => {
     fs.writeFileSync(certPath, "certificate");
     fs.writeFileSync(keyPath, "private-key");
@@ -271,7 +335,10 @@ describe("localHttps", () => {
     expect(info).toHaveBeenCalledOnce();
   });
 
-  function configurePlugin(paths: { certPath: string; keyPath: string }) {
+  function configurePlugin(
+    paths: { certPath: string; keyPath: string },
+    options: { port?: number; boundPort?: number } = {},
+  ) {
     let middleware:
       | ((request: any, response: ServerResponse, next: () => void) => void)
       | undefined;
@@ -280,7 +347,7 @@ describe("localHttps", () => {
     const plugin = localHttps({
       enabled: true,
       host: "custom.test",
-      port: 4_321,
+      port: options.port ?? 4_321,
       ...paths,
     });
     const configureServer = getHook(plugin.configureServer, "configureServer");
@@ -293,6 +360,7 @@ describe("localHttps", () => {
       },
       config: { logger: { info } },
       httpServer: {
+        address: () => (options.boundPort ? { port: options.boundPort } : null),
         once(event: string, listener: () => void) {
           expect(event).toBe("listening");
           listening = listener;
@@ -363,7 +431,7 @@ describe("localHttpsDevServer", () => {
 
   it("looks for default certificates in the Hydrogen home directory", () => {
     const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
-    const host = `missing-${process.pid}.localtest.me`;
+    const host = `missing-${process.pid}.local.tryhydrogen.dev`;
 
     expect(localHttpsDevServer({ enabled: true, host })).toBeUndefined();
 

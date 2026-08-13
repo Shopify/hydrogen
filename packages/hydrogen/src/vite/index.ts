@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import type { Plugin, ViteDevServer } from "vite";
 
 export const LOCAL_HTTPS_DEFAULTS = {
-  host: "localtest.me",
+  host: "local.tryhydrogen.dev",
   port: 5_173,
 } as const;
 
@@ -24,6 +24,8 @@ const HTTP1_ONLY_RESPONSE_HEADERS = new Set([
 ]);
 // Keep this synchronized with CUSTOMER_ACCOUNT_AUTHORIZE_PATH in customer-account/session.ts.
 const CUSTOMER_ACCOUNT_AUTHORIZE_PATH = "/account/authorize";
+const emittedMissingCertificateWarnings = new Set<string>();
+const loggedCustomerAccountSettings = new Set<string>();
 
 export type LocalHttpsOptions = {
   enabled: boolean;
@@ -125,9 +127,13 @@ function checkCertificateFiles(settings: LocalHttpsSettings) {
   const missingPaths = [settings.certPath, settings.keyPath].filter((path) => !existsSync(path));
   if (missingPaths.length === 0) return true;
 
-  process.emitWarning(formatMissingCertificateWarning(settings, missingPaths), {
-    type: "HydrogenLocalHttpsWarning",
-  });
+  const warning = formatMissingCertificateWarning(settings, missingPaths);
+  if (!emittedMissingCertificateWarnings.has(warning)) {
+    emittedMissingCertificateWarnings.add(warning);
+    process.emitWarning(warning, {
+      type: "HydrogenLocalHttpsWarning",
+    });
+  }
   return false;
 }
 
@@ -135,8 +141,7 @@ function formatMissingCertificateWarning(
   { certPath, host, keyPath }: LocalHttpsSettings,
   missingPaths: string[],
 ) {
-  const certDirectory = dirname(certPath);
-  const keyDirectory = dirname(keyPath);
+  const certificateDirectories = [...new Set([dirname(certPath), dirname(keyPath)])];
 
   return [
     "Local HTTPS is disabled because certificate files are missing:",
@@ -149,7 +154,7 @@ function formatMissingCertificateWarning(
     "Install and configure mkcert, then generate the certificate:",
     "  macOS: brew install mkcert",
     "  mkcert -install",
-    `  mkdir -p ${shellQuote(certDirectory)} ${shellQuote(keyDirectory)}`,
+    `  mkdir -p ${certificateDirectories.map(shellQuote).join(" ")}`,
     `  mkcert -cert-file ${shellQuote(certPath)} -key-file ${shellQuote(keyPath)} ${shellQuote(host)}`,
   ].join("\n");
 }
@@ -159,16 +164,28 @@ function shellQuote(value: string) {
 }
 
 function configureLocalHttpsServer(server: ViteDevServer, settings: LocalHttpsSettings) {
+  // The configured port is only a fallback: frameworks that own the listener
+  // (or auto-incremented ports) can bind somewhere else, and the Customer
+  // Account URLs registered in admin must match the port actually served.
+  const resolveBoundPort = () => {
+    const address = server.httpServer?.address();
+    return address && typeof address === "object" ? address.port : settings.port;
+  };
+
   server.middlewares.use((request, response, next) => {
     request.headers["x-forwarded-host"] ??=
-      request.headers.host ?? `${settings.host}:${settings.port}`;
+      request.headers.host ?? `${settings.host}:${resolveBoundPort()}`;
     request.headers["x-forwarded-proto"] ??= "https";
     stripHttp1OnlyResponseHeaders(response);
     next();
   });
 
   const logSettings = () => {
-    server.config.logger.info(formatCustomerAccountSettings(settings));
+    const port = resolveBoundPort();
+    const settingsKey = `${settings.host}:${port}`;
+    if (loggedCustomerAccountSettings.has(settingsKey)) return;
+    loggedCustomerAccountSettings.add(settingsKey);
+    server.config.logger.info(formatCustomerAccountSettings({ host: settings.host, port }));
   };
 
   if (server.httpServer) {
@@ -178,7 +195,7 @@ function configureLocalHttpsServer(server: ViteDevServer, settings: LocalHttpsSe
   }
 }
 
-function formatCustomerAccountSettings({ host, port }: LocalHttpsSettings) {
+function formatCustomerAccountSettings({ host, port }: Pick<LocalHttpsSettings, "host" | "port">) {
   const origin = `https://${host}`;
   const portfulOrigin = `${origin}:${port}`;
 
