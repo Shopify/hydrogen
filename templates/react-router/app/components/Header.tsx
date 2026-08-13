@@ -9,6 +9,7 @@ import {
   subscribeCartDrawerOpen,
 } from "~/lib/cart-drawer";
 import { content, cartIconLabel, cartItemCount } from "~/lib/content";
+import { useHydrated } from "~/lib/use-hydrated";
 
 import { PredictiveSearchModal } from "./PredictiveSearchModal";
 
@@ -41,11 +42,9 @@ export function Header({
     () => false,
   );
 
-  const [hasHydrated, setHasHydrated] = useState(false);
+  const hasHydrated = useHydrated();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
-  useEffect(() => setHasHydrated(true), []);
 
   const cartLabel = cartIconLabel(totalQuantity);
   const countDisplay = totalQuantity > 99 ? "99+" : String(totalQuantity);
