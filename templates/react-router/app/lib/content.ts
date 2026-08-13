@@ -1,7 +1,3 @@
-/**
- * Copy strings transcribed from `examples/core/content.json`. Centralized so
- * the React Router example uses the same verified copy as the other examples.
- */
 export const content = {
   announcement: {
     label: "Announcement",
