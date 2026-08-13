@@ -12,7 +12,6 @@ import {
   SDK_VARIANT_HEADER,
   SDK_VARIANT_SOURCE_HEADER,
   SDK_VERSION_HEADER,
-  SHOPIFY_CLIENT_IP_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
   STOREFRONT_ACCESS_TOKEN_HEADER,
@@ -58,7 +57,6 @@ const REQUEST_IDENTITY_HEADERS = new Set([
   "cookie",
   REQUEST_GROUP_ID_HEADER.toLowerCase(),
   STOREFRONT_BUYER_IP_HEADER.toLowerCase(),
-  SHOPIFY_CLIENT_IP_HEADER.toLowerCase(),
   SHOPIFY_UNIQUE_TOKEN_HEADER.toLowerCase(),
   SHOPIFY_VISIT_TOKEN_HEADER.toLowerCase(),
   SHOPIFY_STOREFRONT_Y_HEADER.toLowerCase(),
@@ -176,7 +174,6 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       throw new TypeError("requestContext.buyerIp is required for private Storefront API clients");
     }
     requestHeaders.set(STOREFRONT_BUYER_IP_HEADER, buyerIp);
-    requestHeaders.set(SHOPIFY_CLIENT_IP_HEADER, buyerIp);
   }
 
   async function graphql(
