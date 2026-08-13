@@ -9,6 +9,7 @@ import type { MetaFunction } from "react-router";
 import { Breadcrumbs } from "~/components/Breadcrumbs";
 import { ProductCard } from "~/components/ProductCard";
 import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
+import { defaultI18n } from "~/lib/config";
 import { content } from "~/lib/content";
 import { FilterGroup } from "~/lib/filters";
 import { PRODUCT_CARD_FRAGMENT } from "~/lib/fragments";
@@ -187,7 +188,7 @@ function SearchPage({ loaderData }: SearchPageProps) {
   const state = useCollection();
   const { formProps } = useCollectionForm();
   const isLoading = state.status === "loading";
-  const currencyCode = products[0]?.priceRange.minVariantPrice.currencyCode ?? "USD";
+  const currencyCode = products[0]?.priceRange.minVariantPrice.currencyCode ?? defaultI18n.currency;
   const [searchParams] = useSearchParams();
 
   return (

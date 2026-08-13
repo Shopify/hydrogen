@@ -109,14 +109,13 @@ export function PriceRangeFilter({
   filter: VisualAvailableFilter;
   activeFilters: ProductFilter[];
   disabled?: boolean;
-  currencyCode?: string;
+  currencyCode: string;
 }) {
   const { min, max } = activePriceRange(activeFilters);
-  const currency = currencyCode ?? "USD";
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="type-body-sm text-on-surface mb-1 font-medium">
-        {filter.label} ({currency})
+        {filter.label} ({currencyCode})
       </legend>
       <div className="flex items-center gap-2">
         <label className="flex flex-1 items-center gap-1 text-sm">
@@ -179,7 +178,7 @@ export function FilterGroup({
   activeFilters: ProductFilter[];
   disabled?: boolean;
   countPending?: boolean;
-  currencyCode?: string;
+  currencyCode: string;
 }) {
   if (filter.type === "PRICE_RANGE") {
     return (

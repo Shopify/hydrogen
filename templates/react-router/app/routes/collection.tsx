@@ -23,6 +23,7 @@ import { Breadcrumbs } from "~/components/Breadcrumbs";
 import { NotFound } from "~/components/NotFound";
 import { ProductCard } from "~/components/ProductCard";
 import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
+import { defaultI18n } from "~/lib/config";
 import { mergeProductWindow, type ProductWindow } from "~/lib/collection-pagination";
 import { content } from "~/lib/content";
 import { FilterGroup } from "~/lib/filters";
@@ -275,7 +276,8 @@ function CollectionPage({
   const isLoadingMore = pagination.state !== "idle";
   const currentBrowseSearch = serializeCollectionParams(state).toString();
   const isBrowsePending = isLoading || currentBrowseSearch !== browseSearch;
-  const currencyCode = productWindow.products[0]?.priceRange.minVariantPrice.currencyCode ?? "USD";
+  const currencyCode =
+    productWindow.products[0]?.priceRange.minVariantPrice.currencyCode ?? defaultI18n.currency;
 
   useEffect(() => {
     setProductWindow({ products, pageInfo });
@@ -592,7 +594,7 @@ function ActiveFilterChips({
   );
 }
 
-function describeFilter(filter: ProductFilter, currencyCode = "USD"): string {
+function describeFilter(filter: ProductFilter, currencyCode: string): string {
   if (filter.available !== undefined) return filter.available ? "In stock" : "Out of stock";
   if (filter.productType) return filter.productType;
   if (filter.productVendor) return filter.productVendor;
