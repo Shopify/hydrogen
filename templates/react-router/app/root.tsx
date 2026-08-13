@@ -115,7 +115,8 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       </head>
       <body className="bg-surface text-on-surface font-body flex min-h-svh flex-col antialiased">
         {children}
-        <shopify-chat />
+        {/* The Inbox embed sets its own attributes on this element before hydration. */}
+        <shopify-chat suppressHydrationWarning />
         <ScrollRestoration />
         <Scripts />
       </body>
