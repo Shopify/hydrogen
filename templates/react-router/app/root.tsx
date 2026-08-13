@@ -14,7 +14,6 @@ import {
 import { AnalyticsTracker } from "~/components/AnalyticsTracker";
 import { CartAnalyticsTracker } from "~/components/CartAnalyticsTracker";
 import { CartDrawer } from "~/components/CartDrawer";
-import { ConsentBanner } from "~/components/ConsentBanner";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
 import { NotFound } from "~/components/NotFound";
@@ -133,7 +132,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <Footer shopName={loaderData.shopName} />
 
       <CartDrawer />
-      <ConsentBanner />
       <AnalyticsTracker />
       <CartAnalyticsTracker />
     </CartProvider>

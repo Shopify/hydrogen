@@ -13,8 +13,9 @@ export const defaultI18n = {
   currency: "USD",
 } as const;
 
+// Use Shopify's default consent banner and Customer Privacy behavior.
 export const analyticsConsent = {
-  mode: "custom-banner",
+  mode: "default-banner",
 } as const;
 
 export const defaultShop = {
