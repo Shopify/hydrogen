@@ -4,6 +4,17 @@ export const SHOPIFY_API_PROXY_RE = /^\/__shopify(?:\/|$)/;
 export const MCP_RE = /^\/api\/mcp$/;
 export const CHECKOUT_RE = /^\/checkout$/;
 export const CART_PERMALINK_RE = /^\/cart\/\d+:\d+(?:,\d+:\d+)*$/;
+
+/**
+ * Returns whether Hydrogen owns the pathname as a document-level server handoff.
+ *
+ * Keep this aligned with the routes intercepted before framework routing. API and protocol
+ * interceptors are intentionally excluded because they are not browser navigation destinations.
+ */
+export function isHydrogenServerHandoffPath(pathname: string): boolean {
+  return CHECKOUT_RE.test(pathname) || CART_PERMALINK_RE.test(pathname);
+}
+
 export const AGENT_BUYER_CLAIMS_RE =
   /^(?:\/[a-z]{2}(?:-[a-z]{2})?)?\/agent\/(?:handoff|buyer-claims)(?:\.[^/.]+)?\/?$/i;
 export const AJAX_CART_RE =

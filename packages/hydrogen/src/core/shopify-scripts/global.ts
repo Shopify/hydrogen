@@ -5,7 +5,7 @@ import {
   resolveStandardRouteUrl,
   type ShopifyRouteTemplates,
 } from "../standard-routes/index";
-import { SHOPIFY_API_PROXY_PREFIX } from "../url";
+import { SHOPIFY_API_PROXY_PREFIX, isHydrogenServerHandoffPath } from "../url";
 import initializeShopifyGlobal from "./global-script" with { type: "script" };
 import type { ShopifyScriptsI18n } from "./types";
 import type { ShopifyScriptsShop } from "./types";
@@ -80,10 +80,32 @@ export function configureShopifyRouting({
   shopify.routes.match = (url) => matchStandardRouteUrl(getRouteOptions(url));
   shopify.routes.resolve = (url) => resolveStandardRouteUrl(getRouteOptions(url));
 
-  const navigateTo = navigate ?? ((url: string) => window.location.assign(url));
-  shopify.routes.navigate = (url) => navigateTo(shopify.routes?.resolve?.(url) ?? url);
+  const navigateTo = navigate ?? documentNavigate;
+  shopify.routes.navigate = (url) => {
+    if (shouldHandoff(url)) {
+      return documentNavigate(url);
+    }
+
+    return navigateTo(shopify.routes?.resolve?.(url) ?? url);
+  };
   // Deprecated, kept for temporary backwards compat with WebMCP
   shopify.navigate = shopify.routes.navigate;
+}
+
+function documentNavigate(url: string): void {
+  window.location.assign(url);
+}
+
+function shouldHandoff(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url, window.location.href);
+
+    return (
+      parsedUrl.origin === window.location.origin && isHydrogenServerHandoffPath(parsedUrl.pathname)
+    );
+  } catch {
+    return false;
+  }
 }
 
 function getShopifyRoutesRoot(pathPrefix: I18nConfig["pathPrefix"]): string {

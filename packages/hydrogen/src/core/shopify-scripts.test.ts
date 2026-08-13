@@ -178,6 +178,55 @@ describe("shopify scripts", () => {
     expect(navigate).toHaveBeenCalledWith("/fr-ca/p/snowboard?variant=1#reviews");
   });
 
+  it("uses document navigation for checkout instead of the supplied navigator", async () => {
+    const navigate = vi.fn();
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+
+    await initializeShopifyScripts({ navigate, routes: emptyRouteTemplates, webMcp: false });
+
+    window.Shopify?.routes.navigate?.("/checkout");
+
+    expect(assign).toHaveBeenCalledWith("/checkout");
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("preserves checkout search parameters and hash during document navigation", async () => {
+    const navigate = vi.fn();
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+
+    await initializeShopifyScripts({ navigate, routes: emptyRouteTemplates, webMcp: false });
+
+    window.Shopify?.routes.navigate?.("/checkout?discount=SAVE10#payment");
+
+    expect(assign).toHaveBeenCalledWith("/checkout?discount=SAVE10#payment");
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("uses document navigation for cart permalinks", async () => {
+    const navigate = vi.fn();
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+
+    await initializeShopifyScripts({ navigate, routes: emptyRouteTemplates, webMcp: false });
+
+    window.Shopify?.routes.navigate?.("/cart/123:2,456:1?discount=SAVE10#cart");
+
+    expect(assign).toHaveBeenCalledWith("/cart/123:2,456:1?discount=SAVE10#cart");
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("keeps the cart page SPA-navigable and resolves its custom route", async () => {
+    const navigate = vi.fn();
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+    const routeTemplates = createShopifyRouteTemplates({ cart: "/bag" });
+
+    await initializeShopifyScripts({ navigate, routes: routeTemplates, webMcp: false });
+
+    window.Shopify?.routes.navigate?.("/cart?discount=SAVE10#items");
+
+    expect(navigate).toHaveBeenCalledWith("/bag?discount=SAVE10#items");
+    expect(assign).not.toHaveBeenCalled();
+  });
+
   it("sets Shopify standard route resolver from route templates", async () => {
     const routeTemplates = createShopifyRouteTemplates({
       product: "/p/:productHandle",
