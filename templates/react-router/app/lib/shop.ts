@@ -15,7 +15,9 @@
 
 export const storefrontConfig = {
   storeDomain: "hydrogen-preview.myshopify.com", // ← default; or set PUBLIC_STORE_DOMAIN
-  i18n: { country: "US", language: "EN" },
+  // Currency is a startup fallback. The root loader replaces it with the
+  // active market currency returned by Storefront API localization.
+  i18n: { country: "US", language: "EN", currency: "USD" },
 } as const;
 
 // Real store iff a private Storefront API token is available; otherwise the

@@ -3,7 +3,7 @@ type StorefrontConfigShape = {
   publicStorefrontToken: string;
 };
 
-type I18nShape = { country: "US"; language: "EN"; currency: "USD" };
+type I18nShape = { country: "US"; language: "EN"; currency: string };
 
 type ShopifyScriptsShopShape = {
   shopId: string;
@@ -33,6 +33,7 @@ export const customerAccountConfig = {
 export const defaultI18n = {
   country: "US",
   language: "EN",
+  // Used only if Storefront API localization cannot resolve the active market.
   currency: "USD",
 } satisfies I18nShape;
 

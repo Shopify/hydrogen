@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { describe, expect, it, afterEach, beforeEach, vi } from "vitest";
 
+import { configureLogging, resetLoggingForTests } from "./logging";
 import { SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT } from "./shopify-scripts/constants";
 import {
   getShopifyScriptTags,
@@ -20,7 +21,7 @@ import {
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
 } from "./shopify-scripts/index";
 import { createShopifyRouteTemplates } from "./standard-routes/index";
-import { assert } from "./test-utils";
+import { assert, createTestLogger } from "./test-utils";
 import { loadScript } from "./utils/load-script";
 
 vi.mock("./utils/load-script", () => ({
@@ -41,9 +42,14 @@ const TEST_SHOP = {
   storefrontId: TEST_STOREFRONT_ID,
   myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
 };
+const TEST_I18N = { country: "US", language: "EN", currency: "USD" } as const;
 
 describe("shopify scripts", () => {
   const emptyRouteTemplates = createShopifyRouteTemplates({});
+
+  afterEach(() => {
+    resetLoggingForTests();
+  });
 
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -331,7 +337,7 @@ describe("shopify scripts", () => {
   it("builds script tag descriptors for the Shopify runtime", () => {
     const descriptors = getShopifyScriptTags({
       debug: { standardEventsInspector: true },
-      i18n: { country: "US", language: "EN" },
+      i18n: TEST_I18N,
       nonce: "test-nonce",
       shop: TEST_SHOP,
     });
@@ -543,6 +549,7 @@ describe("shopify scripts", () => {
 
   it("preserves an explicitly empty nonce on nonce-capable scripts", () => {
     const descriptors = getShopifyScriptTags({
+      i18n: TEST_I18N,
       debug: { standardEventsInspector: true },
       nonce: "",
       shop: TEST_SHOP,
@@ -554,7 +561,7 @@ describe("shopify scripts", () => {
   });
 
   it("does not include WebMCP in SSR descriptors", () => {
-    const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
+    const descriptors = getShopifyScriptTags({ i18n: TEST_I18N, shop: TEST_SHOP });
 
     expect(descriptors.scripts).toHaveLength(8);
     expect(descriptors.scripts).not.toContainEqual(
@@ -573,6 +580,7 @@ describe("shopify scripts", () => {
 
   it("includes the async Inbox module when enabled", () => {
     const descriptors = getShopifyScriptTags({
+      i18n: TEST_I18N,
       nonce: "test-nonce",
       shop: TEST_SHOP,
       inbox: true,
@@ -610,8 +618,49 @@ describe("shopify scripts", () => {
     );
   });
 
+  it("warns when Shopify analytics is enabled without a currency", () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
+    // @ts-expect-error Intentionally omits currency to validate the JS-consumer warning.
+    getShopifyScriptTags({
+      i18n: { country: "US", language: "EN" },
+      shop: TEST_SHOP,
+    });
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      "shopify analytics is enabled without i18n.currency; analytics events fail until window.Shopify.currency.active is set",
+      { scope: "shopify-scripts" },
+    );
+  });
+
+  it.each(["", "   "])("warns when the currency is blank (%j)", (currency) => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
+    getShopifyScriptTags({
+      i18n: { country: "US", language: "EN", currency },
+      shop: TEST_SHOP,
+    });
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      "shopify analytics is enabled without i18n.currency; analytics events fail until window.Shopify.currency.active is set",
+      { scope: "shopify-scripts" },
+    );
+  });
+
+  it("does not warn about currency when Shopify analytics is disabled", () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
+    getShopifyScriptTags({ shop: TEST_SHOP, shopifyAnalytics: false });
+
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
   it("includes PerfKit when configured", () => {
     const descriptors = getShopifyScriptTags({
+      i18n: TEST_I18N,
       shop: {
         shopId: TEST_SHOP_GID,
         storefrontId: TEST_STOREFRONT_ID,
@@ -635,6 +684,7 @@ describe("shopify scripts", () => {
     });
     expect(getPerfKitBridgeScript(descriptors.scripts)?.innerHTML).toContain("perfkit-spa-bridge");
     const renderedTags = renderShopifyScriptTags({
+      i18n: TEST_I18N,
       shop: {
         shopId: TEST_SHOP_ID,
         storefrontId: TEST_STOREFRONT_ID,
@@ -647,6 +697,7 @@ describe("shopify scripts", () => {
 
   it("accepts numeric PerfKit shop IDs", () => {
     const descriptors = getShopifyScriptTags({
+      i18n: TEST_I18N,
       shop: {
         shopId: TEST_SHOP_ID,
         storefrontId: TEST_STOREFRONT_ID,
@@ -684,6 +735,7 @@ describe("shopify scripts", () => {
 
   it("skips PerfKit when the shop ID has no numeric segment", () => {
     const descriptors = getShopifyScriptTags({
+      i18n: TEST_I18N,
       shop: {
         shopId: "gid://shopify/Shop/not-a-number",
         storefrontId: TEST_STOREFRONT_ID,
@@ -704,6 +756,7 @@ describe("shopify scripts", () => {
     setDocumentReadyState("loading");
     const addDestination = vi.fn();
     const descriptors = getShopifyScriptTags({
+      i18n: TEST_I18N,
       shop: {
         shopId: TEST_SHOP_ID,
         storefrontId: TEST_STOREFRONT_ID,
@@ -732,6 +785,7 @@ describe("shopify scripts", () => {
       setPageType: vi.fn(),
     };
     const descriptors = getShopifyScriptTags({
+      i18n: TEST_I18N,
       shop: {
         shopId: TEST_SHOP_ID,
         storefrontId: TEST_STOREFRONT_ID,
@@ -765,7 +819,7 @@ describe("shopify scripts", () => {
   });
 
   it("returns a new ordered tag array each time", () => {
-    const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
+    const descriptors = getShopifyScriptTags({ i18n: TEST_I18N, shop: TEST_SHOP });
     const firstTags = descriptors.tags;
     const secondTags = descriptors.tags;
 
@@ -804,7 +858,7 @@ describe("shopify scripts", () => {
   it("renders all Shopify script tags to an HTML array", () => {
     const htmlTags = renderShopifyScriptTags({
       debug: { standardEventsInspector: true },
-      i18n: { country: "US", language: "EN" },
+      i18n: TEST_I18N,
       nonce: "test-nonce",
       shop: TEST_SHOP,
     });

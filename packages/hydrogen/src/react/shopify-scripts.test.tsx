@@ -36,6 +36,7 @@ const TEST_SHOP = {
   storefrontId: TEST_STOREFRONT_ID,
   myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
 };
+const TEST_I18N = { country: "US", language: "EN", currency: "USD" } as const;
 const CONSENT = {
   mode: "default-banner" as const,
 };
@@ -72,7 +73,10 @@ async function hydrateShopifyScripts(serverHtml: string, nonce: string) {
 
   let root: Root | undefined;
   await act(async () => {
-    root = hydrateRoot(container, createElement(ShopifyScripts, { nonce, shop: TEST_SHOP }));
+    root = hydrateRoot(
+      container,
+      createElement(ShopifyScripts, { i18n: TEST_I18N, nonce, shop: TEST_SHOP }),
+    );
   });
   assert(root, "Expected ShopifyScripts hydration to create a React root");
 
@@ -93,7 +97,7 @@ describe("ShopifyScripts", () => {
     const html = renderToStaticMarkup(
       createElement(ShopifyScripts, {
         debug: { standardEventsInspector: true },
-        i18n: { country: "US", language: "EN" },
+        i18n: TEST_I18N,
         nonce: "test-nonce",
         routes: routeTemplates,
         shop: TEST_SHOP,
@@ -137,7 +141,7 @@ describe("ShopifyScripts", () => {
 
   it("suppresses hydration warnings caused by concealed script nonces", async () => {
     const html = renderToString(
-      createElement(ShopifyScripts, { nonce: "test-nonce", shop: TEST_SHOP }),
+      createElement(ShopifyScripts, { i18n: TEST_I18N, nonce: "test-nonce", shop: TEST_SHOP }),
     );
     concealScriptNonceAttributes();
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -159,7 +163,7 @@ describe("ShopifyScripts", () => {
       tags: [script],
     });
     const html = renderToString(
-      createElement(ShopifyScripts, { nonce: "test-nonce", shop: TEST_SHOP }),
+      createElement(ShopifyScripts, { i18n: TEST_I18N, nonce: "test-nonce", shop: TEST_SHOP }),
     ).replace('data-test="expected"', 'data-test="unexpected"');
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -171,7 +175,7 @@ describe("ShopifyScripts", () => {
 
   it("hydrates an explicitly empty nonce against a concealed server nonce", async () => {
     const html = renderToString(
-      createElement(ShopifyScripts, { nonce: "test-nonce", shop: TEST_SHOP }),
+      createElement(ShopifyScripts, { i18n: TEST_I18N, nonce: "test-nonce", shop: TEST_SHOP }),
     );
     concealScriptNonceAttributes();
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -185,6 +189,7 @@ describe("ShopifyScripts", () => {
   it("always renders standard scripts", () => {
     const html = renderToStaticMarkup(
       createElement(ShopifyScripts, {
+        i18n: TEST_I18N,
         routes: emptyRouteTemplates,
         shop: TEST_SHOP,
       }),
@@ -207,7 +212,7 @@ describe("ShopifyScripts", () => {
   it("preserves Shopify script ordering during React SSR", () => {
     const html = renderToStaticMarkup(
       createElement(ShopifyScripts, {
-        i18n: { country: "US", language: "EN", currency: "USD" },
+        i18n: TEST_I18N,
         shop: TEST_SHOP,
       }),
     );
@@ -233,7 +238,7 @@ describe("ShopifyScripts", () => {
 
   it("renders consent scripts during SSR when consent is provided", () => {
     const html = renderToStaticMarkup(
-      createElement(ShopifyScripts, { consent: CONSENT, shop: TEST_SHOP }),
+      createElement(ShopifyScripts, { consent: CONSENT, i18n: TEST_I18N, shop: TEST_SHOP }),
     );
 
     expect(html).toContain(`id="shopify-consent"`);
@@ -246,6 +251,7 @@ describe("ShopifyScripts", () => {
   it("accepts disabled WebMCP without rendering SSR scripts", () => {
     const html = renderToStaticMarkup(
       createElement(ShopifyScripts, {
+        i18n: TEST_I18N,
         routes: emptyRouteTemplates,
         shop: TEST_SHOP,
         webMcp: false,
@@ -270,6 +276,7 @@ describe("ShopifyScripts", () => {
     const { rerender } = render(
       createElement(ShopifyScripts, {
         consent: CONSENT,
+        i18n: TEST_I18N,
         navigate,
         routes: routeTemplates,
         shop: TEST_SHOP,
@@ -299,6 +306,7 @@ describe("ShopifyScripts", () => {
     rerender(
       createElement(ShopifyScripts, {
         consent: { ...CONSENT, mode: "no-banner" },
+        i18n: TEST_I18N,
         navigate: vi.fn(),
         routes: routeTemplates,
         shop: TEST_SHOP,

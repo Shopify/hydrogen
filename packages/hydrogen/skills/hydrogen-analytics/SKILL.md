@@ -19,7 +19,7 @@ Prerequisite: analytics depends on the same-origin SFAPI proxy (see `hydrogen-re
 
 ## Core Pattern
 
-Render Shopify runtime scripts once from the app root/document head with the same resolved market used by Storefront API requests. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass the `shop` object matching the `ShopifyScriptsShop` type, and `i18n` matching the `ShopifyScriptsI18n` type and serialize them into ShopifyScripts. — declare them as constants with type annotations to keep errors located close to the source of writing. The analytics bus is created by default; pass `analytics` only for optional bus configuration such as `customData`. Do not pass market `country` or `language` through analytics consent config.
+Render Shopify runtime scripts once from the app root/document head with the same resolved market used by Storefront API requests. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass the `shop` object matching the `ShopifyScriptsShop` type, and `i18n` matching the `ShopifyScriptsI18nWithCurrency` type and serialize them into ShopifyScripts. — declare them as constants with type annotations to keep errors located close to the source of writing. The analytics bus is created by default; pass `analytics` only for optional bus configuration such as `customData`. Do not pass market `country` or `language` through analytics consent config.
 
 Read one browser-lazy singleton from the Shopify global created by `ShopifyScripts`:
 
@@ -43,7 +43,12 @@ export function getAnalytics(): StorefrontAnalytics | null {
 export { trackCartAnalytics };
 ```
 
-Read `shop` and `i18n` values on the server and pass them to `ShopifyScripts`. Do not read env APIs in browser modules.
+Read `shop` and `i18n` values on the server and pass them to `ShopifyScripts`. For analytics-enabled storefronts,
+provide `i18n.currency` during initial script rendering so `window.Shopify.currency.active` exists before consent can
+replay buffered events. Prefer the configured market currency when it is authoritative; otherwise query
+`localization.country.currency.isoCode` under the same Storefront API `@inContext(country:, language:)` values used by
+the request. Keep an explicit failure/mock fallback. Do not use `shop.paymentSettings.currencyCode`, which is the shop
+currency rather than necessarily the active market's presentment currency. Do not read env APIs in browser modules.
 
 In the ShopifyScripts `analytics` config, `channel` is optional and defaults to `"hydrogen"`. The `"hydrogen"` channel is the one that requires `storefrontId` — it is pulled from the ShopifyScripts `shop` config into analytics payloads. Headless storefronts pass `channel: "headless"` in the ShopifyScripts `analytics` config; the analytics payload then omits `storefrontId`, but `shop.storefrontId` itself is still required (pass `"0"` when the app has no storefront ID).
 
@@ -58,7 +63,7 @@ Publish these from route/page boundaries:
 - `CART_VIEWED` when the full cart page or cart drawer is viewed.
 - Wire cart tracking once per cart store lifecycle with `trackCartAnalytics(cartStore)` — React apps use the `useCartAnalytics()` hook from `@shopify/hydrogen/react` and Vue apps use the `useCartAnalytics()` composable from `@shopify/hydrogen/vue`; both call it with the provider's cart store and clean up on unmount. The tracker subscribes to the cart store itself, skips pending/revalidating/note updates, publishes cart delta events on confirmed cart changes, and returns an unsubscribe function. Call it from a client-only effect (`useEffect` / `onMounted`), never at cart-store creation time — it throws when `window.Shopify.analytics` is missing (SSR). Do not manually publish cart delta events.
 
-The bus defaults `shop` from the top-level `shop` config passed to ShopifyScripts; pass `shop` in an event payload only when intentionally overriding that configured value. Shopify analytics reads language and currency from `window.Shopify.locale` and `window.Shopify.currency.active`.
+The bus defaults `shop` from the top-level `shop` config passed to ShopifyScripts; pass `shop` in an event payload only when intentionally overriding that configured value. Shopify analytics reads language and currency from `window.Shopify.locale` and `window.Shopify.currency.active`. Cart tracking may synchronize the currency after cart data arrives, but it is not initial currency setup.
 
 Required product analytics fields include Shopify Product GID, ProductVariant GID when available, title, price, vendor, quantity, and variant title.
 
@@ -78,3 +83,4 @@ Required product analytics fields include Shopify Product GID, ProductVariant GI
 - Confirmed cart data changes flow through `trackCartAnalytics(cartStore)` (React/Vue bindings: `useCartAnalytics()`), and the cart query includes `updatedAt`.
 - Consent-denied visitors do not deliver destination events.
 - No browser module reads private or server-only env variables.
+- Before and after consent, `window.Shopify.currency.active` matches the resolved market without requiring a cart mutation.

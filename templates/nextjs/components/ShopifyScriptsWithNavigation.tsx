@@ -1,26 +1,32 @@
 "use client";
 
+import type { ShopifyScriptsI18nWithCurrency } from "@shopify/hydrogen";
 import { ShopifyScripts, type ShopifyScriptsProps } from "@shopify/hydrogen/react";
 import { useRouter } from "next/navigation";
 
-import { analyticsConsent, defaultI18n } from "@/lib/config";
+import { analyticsConsent } from "@/lib/config";
 import { routeTemplates } from "@/lib/route-templates";
 
 /**
- * `ShopifyScripts` navigation wrapper (`hydrogen-analytics` / `references/react.md`
- * + `hydrogen-setup` / `references/analytics.md`). The root layout is a server
- * component and cannot call `useRouter`, so `ShopifyScripts` (which needs a
- * `navigate` callback) must live in a client component. Rendered once in the
- * root layout with the resolved market `i18n` (single-market example →
- * `defaultI18n`) and server-resolved shop metadata.
+ * `ShopifyScripts` navigation wrapper. The root layout is a server component
+ * and cannot call `useRouter`, so `ShopifyScripts` (which needs a `navigate`
+ * callback) must live in a client component. The layout assembles the resolved
+ * `i18n` (with server-fetched currency) and passes it here as a complete object.
  */
 type ShopConfig = NonNullable<ShopifyScriptsProps["shop"]>;
+type I18nConfig = ShopifyScriptsI18nWithCurrency;
 
-export function ShopifyScriptsWithNavigation({ shop }: { shop: ShopConfig }) {
+export function ShopifyScriptsWithNavigation({
+  shop,
+  i18n,
+}: {
+  shop: ShopConfig;
+  i18n: I18nConfig;
+}) {
   const router = useRouter();
   return (
     <ShopifyScripts
-      i18n={defaultI18n}
+      i18n={i18n}
       shop={shop}
       consent={analyticsConsent}
       navigate={(url: string) => router.push(url)}

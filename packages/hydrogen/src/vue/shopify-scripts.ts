@@ -86,11 +86,13 @@ export const ShopifyScripts = defineComponent({
     });
 
     return () =>
-      getShopifyScriptTags(props).tags.map(({ tagName, attributes, innerHTML }) =>
-        h(tagName, {
-          ...attributes,
-          ...(innerHTML ? { innerHTML } : {}),
-        }),
+      // oxlint-disable-next-line @typescript-eslint/consistent-type-assertions -- Vue runtime props are flat and cannot express the union tying shopifyAnalytics to a required i18n.currency; getShopifyScriptTags warns at runtime when currency is missing
+      getShopifyScriptTags(props as ShopifyScriptTagsOptions).tags.map(
+        ({ tagName, attributes, innerHTML }) =>
+          h(tagName, {
+            ...attributes,
+            ...(innerHTML ? { innerHTML } : {}),
+          }),
       );
   },
 });

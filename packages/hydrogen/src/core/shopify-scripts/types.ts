@@ -17,6 +17,16 @@ export type ShopifyScriptsI18n = Pick<I18nConfig, "country" | "language"> &
     currency?: string;
   };
 
+export type ShopifyScriptsI18nWithCurrency = ShopifyScriptsI18n & {
+  /**
+   * Active currency code, exposed as `window.Shopify.currency.active`. Required when Shopify
+   * analytics is enabled: product events carry prices, and a price without a currency is
+   * meaningless. Product pages can be viewed before the cart initializes, so the currency cannot
+   * be sourced from the cart.
+   */
+  currency: string;
+};
+
 // DOM types expose element properties such as `crossOrigin`, but these descriptors represent
 // serialized HTML attributes such as `crossorigin` so they work outside React. Attribute values are
 // kept narrow where JSX runtimes define stricter unions for serialized HTML attributes.
@@ -74,20 +84,34 @@ export type ShopifyScriptsShop = {
   myshopifyDomain: string;
 };
 
-export type ShopifyScriptTagsOptions = {
+type ShopifyScriptTagsBaseOptions = {
   analytics?: ShopifyScriptsAnalyticsConfig;
   consent?: ConsentConfig;
   debug?: {
     /** Loads Shopify's standard events inspector in development builds. */
     standardEventsInspector?: boolean;
   };
-  i18n?: ShopifyScriptsI18n;
   /** Loads Inbox. Render `<shopify-chat>` where you want the chat UI to appear. */
   inbox?: boolean;
   nonce?: string;
   shop: ShopifyScriptsShop;
-  shopifyAnalytics?: boolean;
 };
+
+// Discriminated on `shopifyAnalytics` so enabling Shopify analytics (the default) requires
+// `i18n.currency` at compile time instead of failing at runtime in the analytics script.
+export type ShopifyScriptTagsOptions =
+  | (ShopifyScriptTagsBaseOptions & {
+      i18n: ShopifyScriptsI18nWithCurrency;
+      /**
+       * Shopify analytics is enabled by default and requires `i18n.currency`. Accepts any
+       * boolean so runtime-computed flags type-check; currency is present either way.
+       */
+      shopifyAnalytics?: boolean;
+    })
+  | (ShopifyScriptTagsBaseOptions & {
+      i18n?: ShopifyScriptsI18n;
+      shopifyAnalytics: false;
+    });
 
 export type ShopifyRoutesOptions = {
   navigate?: ShopifyGlobal["routes"]["navigate"];

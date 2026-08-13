@@ -29,6 +29,9 @@ import appStyles from "~/styles/app.css?url";
 import resetStyles from "~/styles/reset.css?url";
 
 const FALLBACK_STOREFRONT_ID = "0";
+// Shopify analytics requires a currency for product events; used until the
+// Storefront API localization currency is available.
+const FALLBACK_ANALYTICS_CURRENCY = "USD";
 
 export type RootLoader = typeof loader;
 
@@ -81,7 +84,7 @@ export async function loader(args: Route.LoaderArgs) {
     country: storefront.i18n.country,
     language: storefront.i18n.language,
     pathPrefix: storefront.i18n.pathPrefix,
-    ...(analyticsCurrency ? { currency: analyticsCurrency } : {}),
+    currency: analyticsCurrency ?? FALLBACK_ANALYTICS_CURRENCY,
   };
 
   return {
