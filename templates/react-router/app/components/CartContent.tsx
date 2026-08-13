@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { useCart, useCartForm } from "~/lib/cart";
+import { useCartForm, useSuspenseCart } from "~/lib/cart";
 import { content } from "~/lib/content";
 import { formatPrice } from "~/lib/money";
 
@@ -18,10 +18,9 @@ import { CartLineItem } from "./CartLineItem";
  * "save note" button was non-functional and the entry point is gone.
  */
 export function CartContent() {
-  const cart = useCart((state) => state.data);
-  const loading = useCart((state) => state.loading);
-  const pending = useCart((state) => state.pending);
-  const networkErrors = useCart((state) => state.errors.network);
+  const cart = useSuspenseCart((state) => state.data);
+  const pending = useSuspenseCart((state) => state.pending);
+  const networkErrors = useSuspenseCart((state) => state.errors.network);
   const isPending = pending.lines.size > 0 || pending.discountCodes.size > 0 || pending.note;
   const lines = cart.lines.nodes;
   const totalQuantity = cart.totalQuantity;
@@ -55,14 +54,6 @@ export function CartContent() {
       target?.focus();
     }, 0);
   };
-
-  if (loading) {
-    return (
-      <div className="divide-border divide-y" aria-busy="true">
-        <p className="text-on-surface-secondary py-8 text-center text-sm">Loading cart…</p>
-      </div>
-    );
-  }
 
   const isEmpty = totalQuantity === 0 || lines.length === 0;
 

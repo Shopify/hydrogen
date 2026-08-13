@@ -1,9 +1,9 @@
-import { useEffect, useEffectEvent } from "react";
+import { Suspense, useEffect, useEffectEvent } from "react";
 import type { MetaFunction } from "react-router";
 
 import { CartContent } from "~/components/CartContent";
 import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
-import { useCart } from "~/lib/cart";
+import { useSuspenseCart } from "~/lib/cart";
 import { content } from "~/lib/content";
 import { shopNameFromMatches, shopTitle, siteOriginFromMatches } from "~/lib/meta";
 import { canonicalUrl } from "~/lib/site";
@@ -23,9 +23,29 @@ export const meta: MetaFunction = ({ matches }) => {
 };
 
 export default function CartRoute(_: Route.ComponentProps) {
-  const totalQuantity = useCart((state) => state.data.totalQuantity);
-  const checkoutUrl = useCart((state) => state.data.checkoutUrl);
-  const cart = useCart((state) => state.data);
+  return (
+    <div className="max-w-page px-margin mx-auto w-full py-8">
+      <h1 className="type-display mb-8">{content.cart.title}</h1>
+
+      <div className="mx-auto max-w-2xl">
+        <Suspense
+          fallback={
+            <p role="status" className="text-on-surface-secondary py-8 text-center text-sm">
+              Loading cart…
+            </p>
+          }
+        >
+          <CartPageContent />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
+
+function CartPageContent() {
+  const totalQuantity = useSuspenseCart((state) => state.data.totalQuantity);
+  const checkoutUrl = useSuspenseCart((state) => state.data.checkoutUrl);
+  const cart = useSuspenseCart((state) => state.data);
   const isEmpty = totalQuantity === 0;
 
   const publishCartViewed = useEffectEvent(() => {
@@ -41,23 +61,19 @@ export default function CartRoute(_: Route.ComponentProps) {
   }, [cart.id]);
 
   return (
-    <div className="max-w-page px-margin mx-auto w-full py-8">
-      <h1 className="type-display mb-8">{content.cart.title}</h1>
+    <>
+      <CartContent />
 
-      <div className="mx-auto max-w-2xl">
-        <CartContent />
-
-        {!isEmpty && checkoutUrl ? (
-          <div className="border-border mt-6 border-t pt-4">
-            <a
-              href={checkoutUrl}
-              className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 w-full items-center justify-center px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-            >
-              {content.cart.checkout}
-            </a>
-          </div>
-        ) : null}
-      </div>
-    </div>
+      {!isEmpty && checkoutUrl ? (
+        <div className="border-border mt-6 border-t pt-4">
+          <a
+            href={checkoutUrl}
+            className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 w-full items-center justify-center px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            {content.cart.checkout}
+          </a>
+        </div>
+      ) : null}
+    </>
   );
 }

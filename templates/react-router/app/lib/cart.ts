@@ -8,4 +8,5 @@ import type { cartHandlers } from "./cart-handlers";
  * `initialData` — see `hydrogen-cart-ui` / `references/react.md`. Do not unwrap
  * to `data.cart`: `{cart: null}` tells the client the server already checked.
  */
-export const { CartProvider, useCart, useCartForm } = createCartComponents<typeof cartHandlers>();
+export const { CartProvider, useCart, useSuspenseCart, useCartForm } =
+  createCartComponents<typeof cartHandlers>();

@@ -1,7 +1,14 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
+import {
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type MouseEvent,
+} from "react";
 import { Link } from "react-router";
 
-import { useCart } from "~/lib/cart";
+import { useSuspenseCart } from "~/lib/cart";
 import {
   openCartDrawer,
   CART_DRAWER_ID,
@@ -35,19 +42,9 @@ export function Header({
   isLoggedIn: boolean;
   shopName: string;
 }) {
-  const totalQuantity = useCart((state) => state.data.totalQuantity);
-  const cartDrawerOpen = useSyncExternalStore(
-    subscribeCartDrawerOpen,
-    getCartDrawerOpen,
-    () => false,
-  );
-
   const hasHydrated = useHydrated();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
-  const cartLabel = cartIconLabel(totalQuantity);
-  const countDisplay = totalQuantity > 99 ? "99+" : String(totalQuantity);
 
   return (
     <header className="border-border bg-surface sticky top-0 z-40 border-b">
@@ -161,20 +158,9 @@ export function Header({
             </Link>
           ) : null}
 
-          <a
-            href="/cart"
-            onClick={openCartDrawerFromLink}
-            aria-controls={hasHydrated ? CART_DRAWER_ID : undefined}
-            aria-haspopup={hasHydrated ? "dialog" : undefined}
-            aria-expanded={hasHydrated ? cartDrawerOpen : undefined}
-            className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded bg-transparent p-0 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
-            aria-label={cartLabel}
-          >
-            <CartIcon count={totalQuantity} display={countDisplay} />
-          </a>
-          <span aria-live="polite" aria-atomic="true" className="sr-only">
-            {cartItemCount(totalQuantity)}
-          </span>
+          <Suspense fallback={<CartTriggerLink count={0} label={content.cart.title} />}>
+            <CartTrigger />
+          </Suspense>
         </div>
       </div>
 
@@ -182,6 +168,66 @@ export function Header({
 
       <PredictiveSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
+  );
+}
+
+/**
+ * Cart trigger + item-count live region. Suspends on the deferred cart seed so
+ * the server HTML and the hydration render agree on the badge count; the
+ * Suspense fallback renders the same `/cart` link without a count.
+ */
+function CartTrigger() {
+  const totalQuantity = useSuspenseCart((state) => state.data.totalQuantity);
+  const hasHydrated = useHydrated();
+  const cartDrawerOpen = useSyncExternalStore(
+    subscribeCartDrawerOpen,
+    getCartDrawerOpen,
+    () => false,
+  );
+
+  return (
+    <>
+      <CartTriggerLink
+        count={totalQuantity}
+        label={cartIconLabel(totalQuantity)}
+        ariaControls={hasHydrated ? CART_DRAWER_ID : undefined}
+        ariaHasPopup={hasHydrated ? "dialog" : undefined}
+        ariaExpanded={hasHydrated ? cartDrawerOpen : undefined}
+      />
+      <span aria-live="polite" aria-atomic="true" className="sr-only">
+        {cartItemCount(totalQuantity)}
+      </span>
+    </>
+  );
+}
+
+function CartTriggerLink({
+  count,
+  label,
+  ariaControls,
+  ariaHasPopup,
+  ariaExpanded,
+}: {
+  count: number;
+  label: string;
+  ariaControls?: string;
+  ariaHasPopup?: "dialog";
+  ariaExpanded?: boolean;
+}) {
+  const countDisplay = count > 99 ? "99+" : String(count);
+
+  return (
+    <a
+      href="/cart"
+      onClick={openCartDrawerFromLink}
+      aria-controls={ariaControls}
+      aria-haspopup={ariaHasPopup}
+      aria-expanded={ariaExpanded}
+      className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded bg-transparent p-0 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
+      aria-label={label}
+    >
+      <CartIcon count={count} display={countDisplay} />
+    </a>
   );
 }
 
