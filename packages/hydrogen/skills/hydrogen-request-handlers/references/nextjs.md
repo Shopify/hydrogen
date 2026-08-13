@@ -6,9 +6,9 @@ Next splits Hydrogen routing across `proxy.ts` and `app/not-found.tsx`.
 
 `proxy.ts` can short-circuit before routing, so put `handleShopifyRoutes` there. In Next 16+, the file is `proxy.ts` and the exported function is named `proxy`; older Next projects may use `middleware.ts` with an exported `middleware` function. It cannot inspect the routed response, so forward the original URL to not-found UI.
 
-Resolve `buyerIp` from the app's trusted deployment headers before creating the private client. Use the buyer-IP guidance from `hydrogen-storefront-client`.
+The scaffold defaults to a public client; `NEXT_PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` from the app's trusted deployment headers per the buyer-IP guidance from `hydrogen-storefront-client`.
 
-This shape assumes app-owned server-only helpers for `getBuyerIp`, `customerSession`, and `createSessionManager`. Do not import those names from Hydrogen.
+This shape assumes app-owned server-only helpers for `customerSession` and `createSessionManager`. Do not import those names from Hydrogen.
 
 ```ts
 import {
@@ -24,18 +24,16 @@ const cartHandlers = createCartServerHandlers();
 const customerAccountHandlers = createCustomerAccountServerHandlers({ customerSession });
 
 export async function proxy(request: NextRequest) {
-  const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
-    buyerIp,
   });
   const storefrontClient = createStorefrontClient({
-    type: "private",
+    type: "public",
     requestContext,
     config: {
       storeDomain: process.env.NEXT_PUBLIC_STORE_DOMAIN!,
-      privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
+      publicStorefrontToken: process.env.NEXT_PUBLIC_STOREFRONT_API_TOKEN,
     },
   });
   const sessionManager = await createSessionManager(request);
@@ -113,7 +111,7 @@ With `cacheComponents: true`, keep request-time work in an async child under `<S
 
 ## Storefront Client
 
-In server components, use a cached server-only factory that reads `headers()` and creates a private request-scoped client. In `proxy.ts`, use the actual `NextRequest` so URL, signal, and forwarded headers are preserved. `requestContext.getForwardedRequestHeaders()` carries the original URL through `x-storefront-url` for `not-found.tsx`.
+In server components, use a cached server-only factory that reads `headers()` and creates a request-scoped client (public by default). In `proxy.ts`, use the actual `NextRequest` so URL, signal, and forwarded headers are preserved. `requestContext.getForwardedRequestHeaders()` carries the original URL through `x-storefront-url` for `not-found.tsx`.
 
 When a Server Component or layout reads Customer Account session state under Cache Components, put that read below an explicit dynamic boundary (`connection()` + `<Suspense>`). Do not rely on static route-segment config that Cache Components rejects.
 

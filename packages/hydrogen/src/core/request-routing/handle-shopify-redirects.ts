@@ -1,4 +1,4 @@
-import type { PrivateStorefrontClient } from "../../client";
+import type { StorefrontClient } from "../../client";
 import { getLogger } from "../logging";
 import type { ShopifyRouteTemplates } from "../standard-routes/index";
 import { handleAdminRedirect } from "./interceptors/admin-redirect";
@@ -11,7 +11,7 @@ const log = getLogger("redirects");
 
 export type RedirectOptions = {
   request: Request;
-  storefrontClient: PrivateStorefrontClient;
+  storefrontClient: StorefrontClient;
   routeTemplates: ShopifyRouteTemplates;
 };
 
