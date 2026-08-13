@@ -4,6 +4,7 @@ import { handleShopifyApiProxy } from "./interceptors/api-proxy";
 import { handleCheckoutRedirect } from "./interceptors/checkout";
 import { handleMcpProxy } from "./interceptors/mcp-proxy";
 import { handleSfapiProxy } from "./interceptors/sfapi-proxy";
+import { handleWellKnownProxy } from "./interceptors/well-known";
 import { handleShopifyRouteHandlers } from "./registered-routes";
 import type { HydrogenRouteHandler, HydrogenRouteInterceptor } from "./route-types";
 import { safeApplyResponseHeaders } from "./safe-apply-response-headers";
@@ -13,6 +14,7 @@ const SHOPIFY_ROUTE_INTERCEPTORS = [
   handleSfapiProxy,
   handleShopifyRouteHandlers,
   handleCheckoutRedirect,
+  handleWellKnownProxy,
   handleMcpProxy,
   handleAgentProxy,
   handleAjaxApi,
