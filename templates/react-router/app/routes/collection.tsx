@@ -271,7 +271,6 @@ function CollectionPage({
   const productWindowRef = useRef(productWindow);
   const addedProductRef = useRef<HTMLAnchorElement>(null);
   productWindowRef.current = productWindow;
-  const hasAvailableFilters = availableFilters.length > 0;
   const isLoading = state.status === "loading";
   const isLoadingMore = pagination.state !== "idle";
   const currentBrowseSearch = serializeCollectionParams(state).toString();
@@ -351,16 +350,14 @@ function CollectionPage({
         {...formProps()}
         method="get"
         action={collectionPath}
-        className={hasAvailableFilters ? "lg:grid lg:grid-cols-[240px_1fr] lg:gap-8" : undefined}
+        className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
       >
-        {hasAvailableFilters ? (
-          <FilterSidebar
-            availableFilters={availableFilters}
-            activeFilters={state.filters}
-            countPending={isLoading}
-            currencyCode={currencyCode}
-          />
-        ) : null}
+        <FilterSidebar
+          availableFilters={availableFilters}
+          activeFilters={state.filters}
+          countPending={isLoading}
+          currencyCode={currencyCode}
+        />
 
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-4">
@@ -375,13 +372,6 @@ function CollectionPage({
             </p>
             <div className="flex items-center gap-2">
               <SortSelect />
-              {!hasAvailableFilters ? (
-                <noscript>
-                  <button type="submit" className="rounded-button button-primary h-11 px-4">
-                    {content.collection.applySort}
-                  </button>
-                </noscript>
-              ) : null}
             </div>
           </div>
 

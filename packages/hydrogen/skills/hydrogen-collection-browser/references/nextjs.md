@@ -93,6 +93,33 @@ function filterValueInputParamEntries(input: string): Array<{ name: string; valu
 
 This helper is only an adapter from Storefront API `FilterValue.input` to Hydrogen's serializer. Do not replace it with an app-owned filter mapping table.
 
+## Pagination
+
+Render pagination as native cursor links; the server page re-queries at the cursor and renders that page's products:
+
+```tsx
+function LoadMore({
+  pageInfo,
+  collectionPath,
+  onNavigate,
+}: {
+  pageInfo: PageInfo;
+  collectionPath: string;
+  onNavigate: () => void;
+}) {
+  if (!pageInfo.hasNextPage) return null;
+  const href = `${collectionPath}?after=${encodeURIComponent(pageInfo.endCursor ?? "")}`;
+
+  return (
+    <Link href={href} onClick={onNavigate}>
+      Load more
+    </Link>
+  );
+}
+```
+
+Pass `onNavigate={() => router.refresh()}` so the React Server Component payload catches up with the changed `searchParams` (see the `router.refresh()` note above). Use a `before` cursor link for "Load previous" when `hasPreviousPage` is true. Each cursor URL stays shareable: opening or reloading it server-renders that page with its available previous/next links, and the plain anchor remains the no-JS fallback.
+
 ## Search Pages
 
 Use the same component with a discriminated `mode`:

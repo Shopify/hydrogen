@@ -1,11 +1,13 @@
-# React And React Router
+# React
+
+Shared React binding used by every React framework. Route-level wiring (loaders, navigation, hydrated pagination) is framework-specific: see `react-router.md` and `nextjs.md`.
 
 ## Contents
 
-- Loader
+- Server Data
 - Provider
 - Browse Form
-- Progressive Pagination
+- Pagination
 - Filters
 - Search Pages
 
@@ -47,51 +49,34 @@ const SEARCH_SORT_OPTIONS = [
 ];
 ```
 
-## Loader
+## Server Data
 
-In a route loader, parse the current URL and query the Storefront API with the parsed browse state:
+On the server, parse the request URL and query the Storefront API with the parsed browse state. This is plain server JavaScript — no framework types:
 
 ```ts
-export async function loader({ context, params, request }: Route.LoaderArgs) {
-  const storefrontClient = context.get(storefrontClientContext);
+async function queryCollectionBrowse(request: Request, storefrontClient: StorefrontClient, handle: string) {
   const url = new URL(request.url);
   const browse = parseCollectionParams(url.searchParams);
   const browseSearch = serializeCollectionParams(browse).toString();
   const dataSearch = url.searchParams.toString();
-  const isPaginationRequest = url.searchParams.get("_pagination") === "1";
   const before = url.searchParams.get("before") || undefined;
   const after = before ? undefined : url.searchParams.get("after") || undefined;
 
-  const queryResult = await storefrontClient
-    .graphql(COLLECTION_QUERY, {
-      variables: {
-        handle: params.handle,
-        first: before ? undefined : 24,
-        last: before ? 24 : undefined,
-        before,
-        after,
-        filters:
-          browse.filters.length > 0 ? (browse.filters as StorefrontApiProductFilter[]) : undefined,
-        sortKey: browse.sortKey,
-        reverse: browse.reverse || undefined,
-      },
-    })
-    .catch((error: unknown) => {
-      if (isPaginationRequest) return null;
-      throw error;
-    });
+  const { data, errors } = await storefrontClient.graphql(COLLECTION_QUERY, {
+    variables: {
+      handle,
+      first: before ? undefined : 24,
+      last: before ? 24 : undefined,
+      before,
+      after,
+      filters:
+        browse.filters.length > 0 ? (browse.filters as StorefrontApiProductFilter[]) : undefined,
+      sortKey: browse.sortKey,
+      reverse: browse.reverse || undefined,
+    },
+  });
 
-  if (!queryResult || queryResult.errors) {
-    if (isPaginationRequest) return paginationErrorLoaderData(browseSearch, dataSearch);
-    throw new Response("Collection query failed", { status: 500 });
-  }
-
-  const { data } = queryResult;
-
-  if (!data?.collection) {
-    if (isPaginationRequest) return paginationErrorLoaderData(browseSearch, dataSearch);
-    throw new Response("Collection not found", { status: 404 });
-  }
+  if (errors || !data?.collection) return null;
 
   return {
     collection: data.collection,
@@ -100,56 +85,34 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     availableFilters: data.collection.products.filters,
     browseSearch,
     dataSearch,
-    paginationError: false as const,
-  };
-}
-
-function paginationErrorLoaderData(browseSearch: string, dataSearch: string) {
-  return {
-    collection: null,
-    products: [],
-    pageInfo: null,
-    availableFilters: [],
-    browseSearch,
-    dataSearch,
-    paginationError: true as const,
   };
 }
 ```
+
+The framework route handler calls this and turns `null` into its own not-found or error response (see the framework references).
 
 Keep `dataSearch` exactly aligned with the query used for the server data. Query `startCursor`, `endCursor`, `hasPreviousPage`, and `hasNextPage` in `pageInfo`.
 
 ## Provider
 
-Wrap the browse UI in `CollectionProvider` and let it own filter/sort intent:
+Wrap the browse UI in `CollectionProvider` and let it own filter/sort intent. The provider contract is framework-neutral:
+
+- `data.handle`: the collection handle (or `search:${term}` for search pages).
+- `data.dataSearch`: the exact search string used for the loaded server data.
+- `urlSearch`: the live browser URL search string; it can be ahead of `dataSearch` during transitions.
+- `onChange(search)`: navigate to the new search string with the framework's client router — replace history when params already exist, and preserve the current scroll position.
 
 ```tsx
-export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
-  if (loaderData.paginationError || !loaderData.collection || !loaderData.pageInfo) {
-    throw new Response("Collection query failed", { status: 500 });
-  }
-
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-
-  return (
-    <CollectionProvider
-      data={{ handle: loaderData.collection.handle, dataSearch: loaderData.dataSearch }}
-      urlSearch={searchParams.toString()}
-      onChange={(search) =>
-        navigate(
-          { search },
-          {
-            replace: searchParams.size > 0,
-            preventScrollReset: true,
-          },
-        )
-      }
-    >
-      <CollectionPage {...loaderData} />
-    </CollectionProvider>
-  );
-}
+<CollectionProvider
+  data={{ handle, dataSearch }}
+  urlSearch={urlSearch}
+  onChange={(search) => {
+    // Navigate with the framework's client router (see react-router.md / nextjs.md):
+    // replace history when params already exist, preserve scroll position.
+  }}
+>
+  <CollectionPage {...serverData} />
+</CollectionProvider>
 ```
 
 ## Browse Form
@@ -160,18 +123,15 @@ Inside a collection browse UI:
 function CollectionPage({ availableFilters, products }: Props) {
   const state = useCollection();
   const { formProps } = useCollectionForm();
-  const hasAvailableFilters = availableFilters.length > 0;
   const isLoading = state.status === "loading";
 
   return (
     <form {...formProps()} method="get" action={collectionPath} className="browse">
-      {hasAvailableFilters ? (
-        <FilterSidebar
-          availableFilters={availableFilters}
-          activeFilters={state.filters}
-          countPending={isLoading}
-        />
-      ) : null}
+      <FilterSidebar
+        availableFilters={availableFilters}
+        activeFilters={state.filters}
+        countPending={isLoading}
+      />
       <div>
         <label>
           Sort by
@@ -187,11 +147,6 @@ function CollectionPage({ availableFilters, products }: Props) {
             ))}
           </select>
         </label>
-        {!hasAvailableFilters ? (
-          <noscript>
-            <button type="submit">Apply sort</button>
-          </noscript>
-        ) : null}
         <ProductGrid products={products} pending={isLoading} />
       </div>
     </form>
@@ -217,7 +172,7 @@ function requestFormSubmit(event: React.ChangeEvent<HTMLInputElement | HTMLSelec
 
 Pass `method="get"` and an explicit `action={collectionPath}` (the current `/collections/:handle` route URL) literally — `formProps()` only wires the submit handler (see the SKILL.md UI rule). Render the filter sidebar, sorting, product grid, and pagination within this browse form so every browse control participates in the same GET submission.
 
-Place a `noscript` submit button labeled "Apply filters" immediately after the filter sidebar heading. When no filters are available and the sidebar is omitted, render a `noscript` "Apply sort" submit button beside the sort control.
+Render the filter sidebar unconditionally — an empty filter list is fine. Place a `noscript` submit button labeled "Apply filters" immediately after the filter sidebar heading; it doubles as the no-JS submit control for sorting.
 
 This structure preserves no-JS filtering and sorting while keeping the form focused on browse controls.
 
@@ -229,76 +184,9 @@ Use a persistent, visually hidden status region to announce that product and fil
 
 Keep the collection sort select enabled and visually unchanged while loading; its options and selected value remain current while product data refreshes.
 
-## Progressive Pagination
+## Pagination
 
-Query both cursor directions and all four page boundaries. Use `first` plus `after` for forward pages, and `last` plus `before` for previous pages. Return a normalized `browseSearch` containing only serialized filters and sort; use it as the accumulated product window's reset identity.
-
-Render the "Load previous" anchor immediately before the results list and the "Load more" anchor after it. Enhance ordinary hydrated clicks with `useFetcher<typeof loader>().load(href)`. Forward pages append products and advance `endCursor` plus `hasNextPage`; previous pages prepend products and advance `startCursor` plus `hasPreviousPage`. Deduplicate by product ID.
-
-After merging a successful page, push its cursor URL with React Router's `navigate(..., {defaultShouldRevalidate: false, preventScrollReset: true})`. With React Router's default revalidation behavior, the URL changes without rerunning the loader or replacing the accumulated window. A route-level `shouldRevalidate` should return its supplied default for this pagination navigation. A reload or shared link starts at that cursor and renders the available previous/next links.
-
-After each successful load, focus the first added product link. Keep a persistent showing-count live region so assistive technology also announces the larger product count. While filters or sorting are pending, pause pagination controls until the loader's `browseSearch` matches the live serialized browse state.
-
-```tsx
-const pagination = useFetcher<typeof loader>();
-const navigate = useNavigate();
-const [productWindow, setProductWindow] = useState(() => ({ products, pageInfo }));
-
-useEffect(() => {
-  const page = pagination.data;
-  if (
-    !page ||
-    page.browseSearch !== loaderBrowseSearch ||
-    page.browseSearch !== currentBrowseSearch
-  ) {
-    return;
-  }
-
-  if (page.paginationError) {
-    setPaginationError(true);
-    return;
-  }
-
-  const isPrevious = new URLSearchParams(page.dataSearch).has("before");
-
-  setProductWindow((current) => ({
-    products: mergeUniqueProducts(current.products, page.products, isPrevious),
-    pageInfo: isPrevious
-      ? {
-          ...current.pageInfo,
-          startCursor: page.pageInfo.startCursor,
-          hasPreviousPage: page.pageInfo.hasPreviousPage,
-        }
-      : {
-          ...current.pageInfo,
-          endCursor: page.pageInfo.endCursor,
-          hasNextPage: page.pageInfo.hasNextPage,
-        },
-  }));
-
-  const shareableParams = new URLSearchParams(page.dataSearch);
-  shareableParams.delete("_pagination");
-  void navigate(
-    { search: `?${shareableParams.toString()}` },
-    { defaultShouldRevalidate: false, preventScrollReset: true },
-  );
-}, [currentBrowseSearch, loaderBrowseSearch, navigate, pagination.data]);
-
-<a
-  href={nextPageUrl}
-  onClick={(event) => {
-    if (!isPlainLeftClick(event)) return;
-    event.preventDefault();
-    if (pagination.state === "idle") pagination.load(`${nextPageUrl}&_pagination=1`);
-  }}
->
-  {pagination.state === "idle" ? "Load more" : "Loading products..."}
-</a>;
-```
-
-Set the collection page component's `key` from the loader's `browseSearch` so a completed filter or sort navigation creates a fresh product window. Rebase the window when authoritative loader products change under the same browse identity. Compare fetcher data against the live serialized browse state before merging so an older pagination response cannot add products after the buyer changes filters or sorting.
-
-For enhanced pagination requests, return a structured pagination error from the loader. Keep existing products rendered, announce the inline error with `role="alert"`, and preserve the cursor anchor as the retry control. Native anchor navigations continue to use the route's normal error boundary.
+Render pagination as native GET links carrying `before` or `after` cursors, per the SKILL.md UI rules. The hydrated enhancement is framework-specific: `react-router.md` documents an accumulated product window driven by `useFetcher`, and `nextjs.md` documents cursor links with a server refresh.
 
 ## Filters
 
@@ -358,15 +246,11 @@ function ActiveFilterChip({ collectionPath, filter, state }: Props) {
   const removal = getFilterRemovalUrl(currentParams, filter);
   const href = removal === "?" ? collectionPath : `${collectionPath}${removal}`;
 
-  return (
-    <Link to={href} preventScrollReset>
-      {describeFilter(filter)}
-    </Link>
-  );
+  return <a href={href}>{describeFilter(filter)}</a>;
 }
 ```
 
-Use `preventScrollReset` on both active-filter chips and the clear-filter link so client navigation keeps the buyer's place in the product grid. `Link` still renders an anchor for the non-JavaScript fallback.
+Render chips and the clear-filter link as real anchors for the non-JavaScript fallback. When hydrated, use the framework's scroll-preserving client navigation (see the framework references) so removal keeps the buyer's place in the product grid.
 
 When passing `browse.filters` into a `gql()` query variable typed from Storefront API introspection, match the app's established pattern. The Hydrogen examples cast the parsed filters to the generated Storefront API `ProductFilter` type at the query variable boundary:
 
@@ -388,8 +272,10 @@ Use the same binding with a synthetic handle:
 ```tsx
 <CollectionProvider
   data={{ handle: `search:${term}`, dataSearch }}
-  urlSearch={searchParams.toString()}
-  onChange={(search) => navigate({ search }, { replace: searchParams.size > 0 })}
+  urlSearch={urlSearch}
+  onChange={(search) => {
+    // Same navigation contract as the Provider section.
+  }}
 >
   <input type="hidden" name="q" value={term} />
 </CollectionProvider>

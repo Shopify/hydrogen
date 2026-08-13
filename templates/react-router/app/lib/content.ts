@@ -81,7 +81,6 @@ export const content = {
     filters: "Filters",
     filter: "Filter",
     applyFilters: "Apply filters",
-    applySort: "Apply sort",
     showResults: "Show results",
     clearAll: "Clear all",
     activeFilters: "Active filters",
