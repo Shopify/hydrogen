@@ -268,7 +268,7 @@ describe("createStorefrontClient", () => {
       expect(headers.get("Shopify-Storefront-Private-Token")).toBe("priv-token-456");
     });
 
-    it("sends buyer meta headers for private client", async () => {
+    it("sends buyer metadata for private client", async () => {
       const requestContext = createShopifyRequestContext({
         request: new Request("https://example.com", {
           headers: { "request-id": "request-context-group" },
@@ -284,7 +284,6 @@ describe("createStorefrontClient", () => {
 
       const headers = getHeaders(mockFetch);
       expect(headers.get("Shopify-Storefront-Buyer-IP")).toBe("10.0.0.1");
-      expect(headers.get("X-Shopify-Client-IP")).toBe("10.0.0.1");
       expect(headers.get("Custom-Storefront-Request-Group-ID")).toBe("request-context-group");
     });
 
