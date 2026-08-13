@@ -1,8 +1,8 @@
 # Next.js App Router
 
-## Dynamic pages (trusted buyer context)
+## Dynamic pages
 
-Next.js server components don't receive a `Request` object, but private clients need a request-derived buyer IP. The pattern: a server-only cached factory that reads `headers()`, creates a request context from those headers, resolves buyer IP from trusted request data, and creates a private client for that RSC request.
+Next.js server components don't receive a `Request` object. The pattern: a server-only cached factory that reads `headers()`, creates a request context from those headers, and creates a request-scoped client for that RSC request. The scaffold defaults to a public client; `NEXT_PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance (e.g. from trusted `x-forwarded-for` data).
 
 ```ts
 // lib/storefront.ts
@@ -13,25 +13,19 @@ import {
   createShopifyRequestContext,
 } from "@shopify/hydrogen";
 
-const FIRST_FORWARDED_FOR_VALUE_INDEX = 0;
-
 export const getStorefrontClient = cache(async () => {
   const requestHeaders = await headers();
-  const forwardedForValues = requestHeaders.get("x-forwarded-for")?.split(",");
-  const buyerIp = forwardedForValues?.[FIRST_FORWARDED_FOR_VALUE_INDEX]?.trim();
-  if (!buyerIp) throw new Error("buyer IP is required for private SFAPI clients");
   const requestContext = createShopifyRequestContext({
     request: { headers: requestHeaders },
     i18n: { country: "US", language: "EN" },
-    buyerIp,
   });
 
   return createStorefrontClient({
-    type: "private",
+    type: "public",
     requestContext,
     config: {
       storeDomain: process.env.NEXT_PUBLIC_STORE_DOMAIN!,
-      privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
+      publicStorefrontToken: process.env.NEXT_PUBLIC_STOREFRONT_API_TOKEN,
     },
   });
 });
@@ -58,7 +52,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
 }
 ```
 
-The private client is created inside the request path because `buyerIp` and `requestContext` are static on the client. Calling `headers()` makes this page dynamic. Route handlers and proxy files receive the actual `Request`; pass that request and the trusted `buyerIp` to `createShopifyRequestContext({ request, i18n, buyerIp })` there so the request URL and `request.signal` are preserved.
+The client is created inside the request path because `requestContext` is static on the client. Calling `headers()` makes this page dynamic. Route handlers and proxy files receive the actual `Request`; pass that request to `createShopifyRequestContext({ request, i18n })` there so the request URL and `request.signal` are preserved. When upgrading to a private client, also pass the trusted `buyerIp` (`createShopifyRequestContext({ request, i18n, buyerIp })`).
 
 ## Static pages (no buyer IP)
 
@@ -112,7 +106,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ han
 }
 ```
 
-This component never touches request-time APIs (`headers()`, `cookies()`, `searchParams`). With Cache Components, wrap catalog reads in explicit `"use cache"` functions and choose a `cacheLife` / `cacheTag`; do not use route-segment `revalidate`. All requests share one throttle bucket - fine for pages that serve the same data to every visitor. Use a per-request `private` client from `getStorefrontClient()` when you need per-buyer isolation or personalized data.
+This component never touches request-time APIs (`headers()`, `cookies()`, `searchParams`). With Cache Components, wrap catalog reads in explicit `"use cache"` functions and choose a `cacheLife` / `cacheTag`; do not use route-segment `revalidate`. All requests share one throttle bucket - fine for pages that serve the same data to every visitor. Use a per-request client from `getStorefrontClient()` (upgraded to `private`) when you need per-buyer isolation or personalized data.
 
 ## `use cache` does not serialize `URLSearchParams`
 

@@ -1,13 +1,13 @@
 # React Router 7
 
-Middleware creates a per-request private client with buyer IP already resolved from trusted headers. `requestContext` carries request lifecycle headers and captures SFAPI response headers so middleware can merge them into the final response.
+Middleware creates a per-request public client. `requestContext` carries request lifecycle headers and captures SFAPI response headers so middleware can merge them into the final response. `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance.
 
 ```ts
 // app/storefront.context.ts
 import { createContext } from "react-router";
-import type { RequestScopedPrivateStorefrontClient } from "@shopify/hydrogen";
+import type { StorefrontClient } from "@shopify/hydrogen";
 
-export const storefrontContext = createContext<RequestScopedPrivateStorefrontClient>();
+export const storefrontContext = createContext<StorefrontClient>();
 ```
 
 This `createContext` is React Router's request context for passing values from middleware to loaders; it is not React's component `createContext`.
@@ -25,20 +25,17 @@ export const storefrontMiddleware: Route.MiddlewareFunction = async (
   { request, context },
   next,
 ) => {
-  const buyerIp = request.headers.get("cf-connecting-ip");
-  if (!buyerIp) throw new Error("cf-connecting-ip is required for private SFAPI clients");
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
-    buyerIp,
   });
 
   const client = createStorefrontClient({
-    type: "private",
+    type: "public",
     requestContext,
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
-      privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
+      publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,
     },
   });
 
@@ -81,4 +78,4 @@ export async function loader({ context, params }: Route.LoaderArgs) {
 }
 ```
 
-Because `buyerIp` and `requestContext` are resolved in the middleware, loaders don't need to pass `request` to `graphql()` — the client is ready to use directly from context. The request context captures SFAPI response headers, and the middleware merges them after `next()` returns so `Set-Cookie` and other headers propagate to the browser without each loader handling them.
+Because `requestContext` is created in the middleware, loaders don't need to pass `request` to `graphql()` — the client is ready to use directly from context. The request context captures SFAPI response headers, and the middleware merges them after `next()` returns so `Set-Cookie` and other headers propagate to the browser without each loader handling them.
