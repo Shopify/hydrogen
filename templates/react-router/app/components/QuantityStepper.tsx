@@ -1,9 +1,10 @@
 import { useRef } from "react";
 
 /**
- * Shared plus/minus quantity stepper — used by the PDP add-to-cart form and the
- * cart line-item form so both surfaces share one control (per feedback: same
- * picker on the product page as in the cart).
+ * Plus/minus quantity stepper for the PDP add-to-cart form. The product form
+ * `register` only accepts `merchandiseId`/`quantity`/`optionValue`/`addToCart`,
+ * so unlike the cart line form (which registers `increase`/`decrease` submit
+ * intents) the PDP needs local +/- buttons around its quantity input.
  *
  * Progressive enhancement: the number `<input>` is the no-JS baseline (a real,
  * editable, submittable field). The `–`/`+` buttons are `type="button"` UI
