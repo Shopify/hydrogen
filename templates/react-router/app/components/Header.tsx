@@ -12,15 +12,6 @@ import { content, cartIconLabel, cartItemCount } from "~/lib/content";
 
 import { PredictiveSearchModal } from "./PredictiveSearchModal";
 
-/** Maps a header nav item to its route. "Collections" -> the collections
- * index; the category items -> their collection PLP. */
-const navItemHref: Record<(typeof content.header.navItems)[number], string> = {
-  Collections: "/collections",
-  Men: "/collections/men",
-  Women: "/collections/women",
-  Accessories: "/collections/accessories",
-};
-
 /**
  * Site header — shared chrome (`navbar.md`, `notes/cart.md`,
  * `notes/predictive-search.md`). Server-rendered nav. The cart trigger is a real
@@ -37,11 +28,11 @@ const navItemHref: Record<(typeof content.header.navItems)[number], string> = {
 export function Header({
   accountEnabled,
   isLoggedIn,
-  shopName = "CORE",
+  shopName,
 }: {
   accountEnabled: boolean;
   isLoggedIn: boolean;
-  shopName?: string;
+  shopName: string;
 }) {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
   const cartDrawerOpen = useSyncExternalStore(
@@ -99,15 +90,12 @@ export function Header({
           aria-label={content.header.navigation}
           className="mx-8 hidden min-w-0 flex-1 items-center gap-8 md:flex"
         >
-          {content.header.navItems.map((item) => (
-            <Link
-              key={item}
-              to={navItemHref[item]}
-              className="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
-            >
-              {item}
-            </Link>
-          ))}
+          <Link
+            to="/collections"
+            className="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
+          >
+            {content.header.collections}
+          </Link>
         </nav>
 
         <div className="flex items-center gap-0">
@@ -266,17 +254,15 @@ function MobileNavDialog({ open, onClose }: { open: boolean; onClose: () => void
         <div className="flex-1 overflow-y-auto p-4">
           <nav aria-label={content.header.mobileNavigation}>
             <ul role="list" className="flex flex-col">
-              {content.header.navItems.map((item) => (
-                <li key={item}>
-                  <Link
-                    to={navItemHref[item]}
-                    onClick={onClose}
-                    className="text-on-surface flex items-center rounded-sm py-3 text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
-                  >
-                    {item}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link
+                  to="/collections"
+                  onClick={onClose}
+                  className="text-on-surface flex items-center rounded-sm py-3 text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
+                >
+                  {content.header.collections}
+                </Link>
+              </li>
             </ul>
           </nav>
         </div>

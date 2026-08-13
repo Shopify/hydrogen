@@ -1,3 +1,4 @@
+import { Cache, gql } from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import {
   Links,
@@ -34,6 +35,20 @@ import appStyles from "./app.css?url";
 // Root middleware — the single Hydrogen request lifecycle entry point.
 export const middleware: Route.MiddlewareFunction[] = [storefrontMiddleware];
 
+const LAYOUT_QUERY = gql(`
+  query Layout {
+    shop {
+      name
+    }
+    collections(first: 3) {
+      nodes {
+        handle
+        title
+      }
+    }
+  }
+`);
+
 export const links: Route.LinksFunction = () => [
   { rel: "stylesheet", href: appStyles },
   { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -52,6 +67,8 @@ export async function loader({ context }: Route.LoaderArgs) {
       return { cart: null };
     });
 
+  const layoutPromise = storefrontClient.graphql(LAYOUT_QUERY, { cache: Cache.long() });
+
   const accountEnabled = customerAccount?.available ?? false;
   const isLoggedIn = customerAccount?.available
     ? await customerAccount.session.isLoggedIn(
@@ -60,11 +77,17 @@ export async function loader({ context }: Route.LoaderArgs) {
       )
     : false;
 
+  const layoutResult = await layoutPromise;
+  if (layoutResult.errors || !layoutResult.data?.shop) {
+    throw new Response("Shop query failed", { status: 500 });
+  }
+
   return {
     cartData: await cartPromise,
     accountEnabled,
     isLoggedIn,
-    shopName: "CORE",
+    shopName: layoutResult.data.shop.name,
+    navCollections: layoutResult.data.collections.nodes,
     shop: getShop(env),
     siteOrigin: getSiteOrigin(env),
   };
@@ -129,7 +152,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Outlet />
       </main>
 
-      <Footer shopName={loaderData.shopName} />
+      <Footer shopName={loaderData.shopName} collections={loaderData.navCollections} />
 
       <CartDrawer />
       <AnalyticsTracker />

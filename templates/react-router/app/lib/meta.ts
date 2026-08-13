@@ -3,11 +3,11 @@ import { DEFAULT_SITE_ORIGIN } from "./site";
 type RootRouteData = { shopName?: string; siteOrigin?: string };
 
 export function shopNameFromMatches(matches: unknown): string {
-  return rootDataFromMatches(matches)?.shopName ?? "CORE";
+  return rootDataFromMatches(matches)?.shopName ?? "";
 }
 
 export function shopTitle(pageTitle: string, shopName: string): string {
-  return `${pageTitle} — ${shopName}`;
+  return shopName ? `${pageTitle} — ${shopName}` : pageTitle;
 }
 
 export function siteOriginFromMatches(matches: unknown): string {

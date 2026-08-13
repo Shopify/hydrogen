@@ -5,7 +5,13 @@ import { content } from "~/lib/content";
 const footerLinkClass =
   "min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors";
 
-export function Footer({ shopName = "CORE" }: { shopName?: string }) {
+export function Footer({
+  shopName,
+  collections,
+}: {
+  shopName: string;
+  collections: ReadonlyArray<{ handle: string; title: string }>;
+}) {
   return (
     <footer className="max-w-page px-margin mx-auto w-full">
       <div className="border-border grid grid-cols-1 gap-8 border-t py-12 text-sm md:grid-cols-2 lg:grid-cols-4">
@@ -25,24 +31,16 @@ export function Footer({ shopName = "CORE" }: { shopName?: string }) {
           <ul role="list" className="flex flex-col gap-2">
             <li>
               <Link to="/collections" className={footerLinkClass}>
-                Collections
+                {content.header.collections}
               </Link>
             </li>
-            <li>
-              <Link to="/collections/men" className={footerLinkClass}>
-                Men
-              </Link>
-            </li>
-            <li>
-              <Link to="/collections/women" className={footerLinkClass}>
-                Women
-              </Link>
-            </li>
-            <li>
-              <Link to="/collections/accessories" className={footerLinkClass}>
-                Accessories
-              </Link>
-            </li>
+            {collections.map((collection) => (
+              <li key={collection.handle}>
+                <Link to={`/collections/${collection.handle}`} className={footerLinkClass}>
+                  {collection.title}
+                </Link>
+              </li>
+            ))}
           </ul>
         </nav>
         <nav aria-labelledby="footer-customer-care-heading">

@@ -21,7 +21,7 @@ export const content = {
     menu: "Menu",
     navigation: "Main navigation",
     mobileNavigation: "Mobile navigation",
-    navItems: ["Collections", "Men", "Women", "Accessories"] as const,
+    collections: "Collections",
   },
   footer: {
     quickLinks: "Quick links",
