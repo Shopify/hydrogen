@@ -256,7 +256,7 @@ Pass `cache` directly to `createStorefrontClient`'s `config` — the client wrap
 
 Ship a `.env.example` (committed, blank) and a gitignored `.env`. Keep the authoritative env list in
 `templates/react-router/.env.example`; do not duplicate it in prose. The required real-store input is a private
-Storefront API token, while Customer Accounts are optional and require their own account/session env vars.
+Storefront API token. Customer Accounts are part of the template and require their own account/session env vars.
 
 ```sh
 PRIVATE_STOREFRONT_API_TOKEN=""

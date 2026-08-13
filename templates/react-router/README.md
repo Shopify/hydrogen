@@ -58,7 +58,7 @@ A linked Oxygen storefront injects `PUBLIC_STORE_DOMAIN` and `PRIVATE_STOREFRONT
 
 ## Customer Accounts
 
-Customer Accounts are optional and disabled until the template is using a real store and all account values are present:
+Customer Accounts are part of the template. They stay disabled until the template is using a real store and all account values are present:
 
 ```bash
 PUBLIC_STORE_DOMAIN=<your-shop>.myshopify.com
