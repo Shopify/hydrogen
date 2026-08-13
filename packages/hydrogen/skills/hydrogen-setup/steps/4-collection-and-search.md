@@ -5,7 +5,7 @@ Invoke the `hydrogen-collection-browser` skill when adding collection routes, se
 ## Continue when
 
 - [ ] Filtering and sorting update the URL without scroll reset when hydrated.
-- [ ] All stale numeric result metadata shows pending opacity while collection filter controls remain interactive (for example, result totals and available-item counts).
+- [ ] All stale numeric result metadata shows pending styles while collection filter controls remain interactive (for example, result totals and available-item counts).
 - [ ] The collection sort select remains interactive and visually unchanged while loading.
 - [ ] Reloading the filtered URL server-renders the same filtered state.
 - [ ] With JavaScript disabled, checking filters and submitting the form loads the filtered URL.

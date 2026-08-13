@@ -45,7 +45,7 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 - Provide a native submit control for every auto-submitting browse form so filtering and sorting remain usable without JavaScript.
 - For collection routes, render pagination as native GET links carrying `before` or `after` cursors. Place "Load previous" immediately before the results list and "Load more" after it. After hydrated pagination succeeds, push the cursor URL into browser history while preserving the accumulated products. This keeps each cursor URL shareable: opening or reloading it starts at that cursor and exposes the available previous/next links. Preserve native navigation for JavaScript-disabled and modified-click flows. Apply the framework reference's hydrated enhancement when one is provided.
 - Start every filter or sort change from the first page. Hydrogen's collection reconciler clears `before` and `after` during hydrated browse changes. Native GET forms use the base collection/search route as their explicit `action` and submit filter/sort controls without cursor fields.
-- Keep all collection filter controls interactive while browse data is loading. Fade stale numeric result metadata, including the displayed result count and each filter value's available-item count, until fresh data arrives.
+- Keep all collection filter controls interactive while browse data is loading. Apply pending styles to stale numeric result metadata, including the displayed result count and each filter value's available-item count, until fresh data arrives.
 - Keep the collection sort select interactive and visually unchanged while browse data is loading.
 - Show stale products with a pending visual state while `state.status === "loading"`; do not replace the grid with a skeleton.
 - Serialize active filter chips from `serializeCollectionParams(state)` and remove filters with `getFilterRemovalUrl(...)`.
@@ -83,7 +83,7 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 - Successful hydrated pagination pushes the current `before` or `after` cursor into a shareable browser URL.
 - Direct cursor URLs render a link to the previous page when `hasPreviousPage` is true.
 - Filter and sort changes clear `before` and `after`.
-- All stale numeric result metadata shows pending opacity while collection filter controls remain interactive (for example, result totals and available-item counts).
+- All stale numeric result metadata shows pending styles while collection filter controls remain interactive (for example, result totals and available-item counts).
 - The collection sort select remains interactive and visually unchanged while loading.
 - Active filter chips remove only one filter, preserve unrelated params, and do not reset scroll when hydrated.
 - Search filters preserve `q`.

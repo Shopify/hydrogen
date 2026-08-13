@@ -178,7 +178,7 @@ This structure preserves no-JS filtering and sorting while keeping the form focu
 
 Use uncontrolled form controls. When a route needs to remount checkboxes after external navigation, put `key={serializeCollectionParams({ filters: state.filters, sortKey: undefined, reverse: false }).toString()}` on the filter subtree (for search, include the term in the key) — keyed by serialized **filter state**, not the live URL. The URL clears before the `CollectionProvider` reconciler settles `state.filters`, so a URL-keyed remount bakes in stale `defaultChecked`. This resets checkbox DOM state without coupling active filter chips to the form remount.
 
-Keep all collection filter controls enabled while `state.status === "loading"`. Fade numeric metadata that describes the pending results, including the displayed result count and the available-item count beside each filter value. Pass the loading state as a separate `countPending` prop for filter counts.
+Keep all collection filter controls enabled while `state.status === "loading"`. Apply pending styles to numeric metadata that describes the pending results, including the displayed result count and the available-item count beside each filter value. Pass the loading state as a separate `countPending` prop for filter counts.
 
 Use a persistent, visually hidden status region to announce that product and filter counts are updating. The refreshed displayed count remains a polite live region.
 
