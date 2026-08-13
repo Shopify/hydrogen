@@ -2,14 +2,16 @@
 
 ## Contents
 
-- SSR with buyer isolation
+- SSR
 - Forwarding response headers
 - Static pages (no buyer IP)
 - Footguns
 
 SvelteKit's `handle` hook in `hooks.server.ts` runs on every server request and receives an `event` object with the full `Request`, cookies, and client address. Use `event.locals` to pass the storefront client to `load` functions.
 
-## SSR with trusted buyer context
+## SSR
+
+The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports) — read it through `$env/dynamic/public`, since `$env/static/public` fails the build for unset vars. Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` (e.g. from `event.getClientAddress()`) per the `hydrogen-storefront-client` buyer-IP guidance.
 
 ```ts
 // src/hooks.server.ts
@@ -18,22 +20,20 @@ import {
   createStorefrontClient,
   createShopifyRequestContext,
 } from "@shopify/hydrogen";
-import { PRIVATE_STOREFRONT_API_TOKEN } from "$env/static/private";
+import { env } from "$env/dynamic/public";
 import { PUBLIC_STORE_DOMAIN } from "$env/static/public";
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const buyerIp = event.getClientAddress();
   const requestContext = createShopifyRequestContext({
     request: event.request,
     i18n: { country: "US", language: "EN" },
-    buyerIp,
   });
   const client = createStorefrontClient({
-    type: "private",
+    type: "public",
     requestContext,
     config: {
       storeDomain: PUBLIC_STORE_DOMAIN,
-      privateStorefrontToken: PRIVATE_STOREFRONT_API_TOKEN,
+      publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
     },
   });
 
@@ -47,12 +47,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 ```ts
 // src/app.d.ts — type the locals object
-import type { RequestScopedPrivateStorefrontClient } from "@shopify/hydrogen";
+import type { StorefrontClient } from "@shopify/hydrogen";
 
 declare global {
   namespace App {
     interface Locals {
-      storefront: RequestScopedPrivateStorefrontClient;
+      storefront: StorefrontClient;
     }
   }
 }
@@ -87,23 +87,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 ```ts
 // src/hooks.server.ts — response header propagation
-import { PRIVATE_STOREFRONT_API_TOKEN } from "$env/static/private";
+import { env } from "$env/dynamic/public";
 import { PUBLIC_STORE_DOMAIN } from "$env/static/public";
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const buyerIp = event.getClientAddress();
   const requestContext = createShopifyRequestContext({
     request: event.request,
     i18n: { country: "US", language: "EN" },
-    buyerIp,
   });
 
   const client = createStorefrontClient({
-    type: "private",
+    type: "public",
     requestContext,
     config: {
       storeDomain: PUBLIC_STORE_DOMAIN,
-      privateStorefrontToken: PRIVATE_STOREFRONT_API_TOKEN,
+      publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
     },
   });
 
@@ -167,5 +165,5 @@ export const load: PageServerLoad = async ({ params }) => {
 
 ## Footguns
 
-- **`event.getClientAddress()` needs proxy config** — behind a reverse proxy, the raw address is the proxy's IP, not the buyer's. Set the `ADDRESS_HEADER` env var (e.g. `ADDRESS_HEADER=X-Forwarded-For`) and `XFF_DEPTH` to the number of trusted proxies so SvelteKit reads the correct IP from the right end of the header.
+- **`event.getClientAddress()` needs proxy config** — relevant when upgrading to a private client that resolves `buyerIp` from it. Behind a reverse proxy, the raw address is the proxy's IP, not the buyer's. Set the `ADDRESS_HEADER` env var (e.g. `ADDRESS_HEADER=X-Forwarded-For`) and `XFF_DEPTH` to the number of trusted proxies so SvelteKit reads the correct IP from the right end of the header.
 - **`filterSerializedResponseHeaders` is unrelated** — this option on `resolve()` controls which headers from SvelteKit's internal `fetch()` calls are serialized into the HTML for client-side hydration. It does not affect the actual HTTP response headers. Don't confuse it with forwarding SFAPI headers.
