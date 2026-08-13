@@ -57,6 +57,22 @@ export type ComposedSource<
 > = FragmentSources<Fragments> extends "" ? Source : `${Source}\n${FragmentSources<Fragments>}`;
 
 type StorefrontGql = {
+  // Composes an already-declared document with additional fragments. Declared
+  // before the raw-source overloads so branded documents recover their literal
+  // source through SourceOf instead of binding Source to the branded type,
+  // which would degrade ComposedSource and kill inference.
+  <
+    const Document extends AnyStorefrontQueryString,
+    const Fragments extends readonly AnyStorefrontQueryString[],
+    const DocumentSource extends string = ComposedSource<SourceOf<Document>, Fragments>,
+  >(
+    document: Document,
+    fragments: Fragments,
+  ): StorefrontQueryString<
+    InferResult<DocumentSource>,
+    InferVariables<DocumentSource>,
+    DocumentSource
+  >;
   <const Source extends string>(
     source: Source,
   ): StorefrontQueryString<InferResult<Source>, InferVariables<Source>, Source>;
