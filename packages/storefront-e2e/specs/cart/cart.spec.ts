@@ -255,7 +255,12 @@ async function openCartOverlayFor(page: Page, productTitle: string): Promise<Loc
   const line = cartOverlayLineFor(page, productTitle);
   if (await line.isVisible().catch(() => false)) return line;
 
-  await page.getByRole("button", { name: CART_CONTROL_NAME }).first().click();
+  // The cart trigger may be a <button> (Next.js template) or a progressively
+  // enhanced /cart <a> (React Router template, per the hydrogen-cart-drawer skill).
+  const trigger = page
+    .getByRole("button", { name: CART_CONTROL_NAME })
+    .or(page.getByRole("link", { name: CART_CONTROL_NAME }));
+  await trigger.first().click();
   return line;
 }
 
