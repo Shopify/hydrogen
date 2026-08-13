@@ -3445,6 +3445,50 @@ describe("add-to-cart optimistic updates", () => {
   const VARIANT_123 = "gid://shopify/ProductVariant/123";
   const VARIANT_456 = "gid://shopify/ProductVariant/456";
 
+  it("prepends multiple optimistic lines in server order", async () => {
+    store.hydrate(
+      makeCartState({
+        lines: [makeLine({ id: "line-existing", quantity: 1 })],
+        totalQuantity: 1,
+      }),
+    );
+
+    const externalPromise = mockUpdateCart(
+      {
+        lines: [
+          { merchandiseId: VARIANT_123, quantity: 1 },
+          { merchandiseId: VARIANT_456, quantity: 2 },
+        ],
+      },
+      withProducts(productDetail(VARIANT_123), productDetail(VARIANT_456)),
+    );
+
+    expect(getCartLines(store.getState().data).map((line) => line.id)).toEqual([
+      `optimistic:${VARIANT_456}`,
+      `optimistic:${VARIANT_123}`,
+      "line-existing",
+    ]);
+
+    resolveUpdate(
+      0,
+      serverResult({
+        totalQuantity: 4,
+        lines: [
+          lineWithMerchandise("line-456", 2, VARIANT_456),
+          lineWithMerchandise("line-123", 1, VARIANT_123),
+          makeLine({ id: "line-existing", quantity: 1 }),
+        ],
+      }),
+    );
+    await externalPromise;
+
+    expect(getCartLines(store.getState().data).map((line) => line.id)).toEqual([
+      "line-456",
+      "line-123",
+      "line-existing",
+    ]);
+  });
+
   it("matching merchandiseId: optimistically increments quantity and marks pending", async () => {
     store.hydrate(
       makeCartState({
@@ -3625,9 +3669,9 @@ describe("add-to-cart optimistic updates", () => {
       withProducts(productDetail(VARIANT_456)),
     );
 
-    expect(getCartLines(store.getState().data)).toHaveLength(2);
-    expect(getCartLines(store.getState().data)[0].quantity).toBe(5);
-    expect(getCartLines(store.getState().data).find((l) => l.id === optimisticId)).toBeDefined();
+    const optimisticLines = getCartLines(store.getState().data);
+    expect(optimisticLines.map((line) => line.id)).toEqual([optimisticId, "line-1"]);
+    expect(optimisticLines[1].quantity).toBe(5);
     expect(store.getState().data.totalQuantity).toBe(6);
     expect(store.getState().pending.lines).toContain("line-1");
     expect(store.getState().pending.lines).toContain(optimisticId);
@@ -3680,7 +3724,7 @@ describe("add-to-cart optimistic updates", () => {
       withProducts(productDetail(VARIANT_456)),
     );
 
-    expect(getCartLines(store.getState().data)[0].quantity).toBe(5);
+    expect(getCartLines(store.getState().data).find((l) => l.id === "line-1")?.quantity).toBe(5);
     expect(getCartLines(store.getState().data).find((l) => l.id === optimisticId)).toBeDefined();
     expect(store.getState().data.totalQuantity).toBe(6);
 

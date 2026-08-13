@@ -868,7 +868,7 @@ function withAdditionMerchandise(
   return { ...line, merchandise: merchandise as unknown as CartLine["merchandise"] };
 }
 
-function replaceOrAppendLine(
+function replaceOrPrependLine(
   lines: CartLine[],
   previous: CartLine | undefined,
   next: CartLine,
@@ -877,7 +877,7 @@ function replaceOrAppendLine(
   if (lines.some((line) => line.id === next.id)) {
     return lines.map((line) => (line.id === next.id ? next : line));
   }
-  return [...lines, next];
+  return [next, ...lines];
 }
 
 function mergeAddResponseLines(
@@ -905,7 +905,7 @@ function mergeAddResponseLines(
     const previous =
       findLineForAddition(lines, addition) ?? lines.find((line) => line.id === serverLine.id);
     const next = withAdditionMerchandise(serverLine, addition, payload.products);
-    lines = replaceOrAppendLine(lines, previous, mergeServerLine(previous, next));
+    lines = replaceOrPrependLine(lines, previous, mergeServerLine(previous, next));
   }
 
   return lines;
@@ -1006,7 +1006,6 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
           currencyCode: "",
         };
         lines = [
-          ...lines,
           {
             id: optimisticLineId(addition),
             quantity: addition.quantity,
@@ -1022,6 +1021,7 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
               compareAtAmountPerQuantity: null,
             },
           },
+          ...lines,
         ];
         linesChanged = true;
       }
