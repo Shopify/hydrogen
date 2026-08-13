@@ -201,7 +201,8 @@ export function Header({
 function openCartDrawerFromLink(event: MouseEvent<HTMLAnchorElement>) {
   if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
     return;
-  if (openCartDrawer()) event.preventDefault();
+  event.preventDefault();
+  openCartDrawer();
 }
 
 function CartIcon({ count, display }: { count: number; display: string }) {

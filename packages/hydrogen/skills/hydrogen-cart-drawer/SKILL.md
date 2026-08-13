@@ -81,7 +81,7 @@ Use a primitive library only when the app already depends on one for dialog-like
 
 ### Opening the drawer
 
-Always render the cart trigger as a real `/cart` link so SSR and no-JS navigation reach the full cart page. After hydration, enhance normal activation to open the drawer instead of navigating. Preserve native link behavior for modified activation, new tabs, or when the drawer cannot open. This is the same progressive-enhancement pattern used by client-side routers.
+Always render the cart trigger as a real `/cart` link so SSR and no-JS navigation reach the full cart page. After hydration, enhance normal activation to open the drawer instead of navigating. Preserve native link behavior for modified activation and new tabs. This is the same progressive-enhancement pattern used by client-side routers.
 
 Keep the drawer as hydrated progressive enhancement. Do not make the drawer itself the fallback route; the `/cart` page is that full-page fallback.
 
@@ -101,14 +101,8 @@ function getCartDrawer() {
 
 export function openCartDrawer() {
   const drawer = getCartDrawer();
-  if (!drawer) return false;
-  if (drawer.open) return true;
-  try {
-    drawer.showModal();
-    return true;
-  } catch {
-    return false;
-  }
+  if (!drawer || drawer.open) return;
+  drawer.showModal();
 }
 
 export function closeCartDrawer() {
@@ -120,9 +114,7 @@ function configureOpenCartActionNow() {
   if (!openCart) return false;
 
   openCart.configure({
-    handler: async () => {
-      openCartDrawer();
-    },
+    handler: async () => openCartDrawer(),
   });
   openCartActionConfigured = true;
   return true;
@@ -173,12 +165,12 @@ function CartDrawer() {
 
 The drawer opens from three surfaces. The cart trigger is the canonical one; the other two reuse the same helper.
 
-**1. The cart trigger.** Keep link semantics before and after hydration. Once hydrated, intercept only unmodified, same-context activation, and prevent navigation only when `openCartDrawer()` succeeds. Native link behavior remains the fallback. When enhancement is active, add `aria-haspopup="dialog"`, `aria-controls`, and `aria-expanded`; keep `aria-expanded` synchronized with the drawer's open state.
+**1. The cart trigger.** Keep link semantics before and after hydration. Once hydrated, intercept only unmodified, same-context activation: prevent navigation and call `openCartDrawer()`. Modified activation (new tab, download, etc.) keeps native link behavior. When enhancement is active, add `aria-haspopup="dialog"`, `aria-controls`, and `aria-expanded`; keep `aria-expanded` synchronized with the drawer's open state.
 
 ```text
 without enhancement: <a href="/cart">Cart</a> -> navigate to /cart
 with enhancement:    <a href="/cart">Cart</a> -> open the drawer for normal activation
-guard:               prevent navigation only after the drawer opens successfully
+guard:               modified activation (new tab, etc.) keeps native navigation
 ```
 
 **2. `window.Shopify.actions.openCart()`** — the Standard Action for programmatic opening, so external code (Standard Actions tools, agents, third-party components) can open the drawer. Register the same stable DOM helper as the `openCart` handler (see §8 for the handler-permanence caveat).
