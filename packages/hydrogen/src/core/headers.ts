@@ -126,7 +126,10 @@ export const AJAX_API_REQUEST_HEADER_ALLOWLIST = defineHeaderList(
   "x-requested-with",
 );
 
-export const SHOPIFY_API_PROXY_REQUEST_HEADER_DENYLIST = defineHeaderList(
+// Hop-by-hop headers must not be forwarded by proxies. `host` and
+// `content-length` are also removed so fetch can derive them for the upstream
+// request. See https://www.rfc-editor.org/rfc/rfc9110.html#section-7.6.1
+export const PROXY_REQUEST_HEADER_DENYLIST = defineHeaderList(
   "cf-connecting-ip",
   "connection",
   "content-length",
