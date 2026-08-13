@@ -78,20 +78,36 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
 type HeroCollection = Route.ComponentProps["loaderData"]["featuredCollections"][number];
 
+type HeroImageData = { url: string; altText?: string | null };
+
+function HeroImage({ image }: { image: HeroImageData | null }) {
+  if (!image) return null;
+
+  // The hero is the LCP image (notes/home.md): eager + high fetch priority.
+  // Width-descriptor srcset + `sizes="100vw"` (F12); DPR `srcSetFor` is not
+  // used here because `sizes` is a no-op for 1x/2x descriptors.
+  const srcSet = [480, 1024, 2000]
+    .map((width) => `${shopifyImageUrl(image.url, { width })} ${width}w`)
+    .join(", ");
+
+  return (
+    <img
+      src={shopifyImageUrl(image.url, { width: 2000 })}
+      srcSet={srcSet}
+      sizes="100vw"
+      alt={image.altText ?? ""}
+      className="h-full w-full object-cover"
+      loading="eager"
+      fetchPriority="high"
+    />
+  );
+}
+
 function Hero({ collection }: { collection: HeroCollection | undefined }) {
   const heading = collection?.title ?? content.home.hero.heading;
   const subtitle = collection?.description || content.home.hero.subtitle;
   const shopHref = collection ? `/collections/${collection.handle}` : "/collections";
   const image = collection?.image ?? collection?.products.nodes[0]?.featuredImage ?? null;
-
-  // The hero is the LCP image (notes/home.md): eager + high fetch priority.
-  // Width-descriptor srcset + `sizes="100vw"` (F12); DPR `srcSetFor` is not
-  // used here because `sizes` is a no-op for 1x/2x descriptors.
-  const heroSrcSet = image
-    ? [480, 1024, 2000]
-        .map((width) => `${shopifyImageUrl(image.url, { width })} ${width}w`)
-        .join(", ")
-    : undefined;
 
   return (
     <section className="max-w-page px-margin mx-auto w-full">
@@ -100,17 +116,7 @@ function Hero({ collection }: { collection: HeroCollection | undefined }) {
         aria-labelledby="hero-heading"
       >
         <div className="bg-surface-secondary absolute inset-0">
-          {image ? (
-            <img
-              src={shopifyImageUrl(image.url, { width: 2000 })}
-              srcSet={heroSrcSet}
-              sizes="100vw"
-              alt={image.altText ?? ""}
-              className="h-full w-full object-cover"
-              loading="eager"
-              fetchPriority="high"
-            />
-          ) : null}
+          <HeroImage image={image} />
         </div>
         <div className="overlay-dark pointer-events-none absolute inset-0" />
         <div className="max-w-page px-margin text-interactive-text min-h-hero relative z-10 mx-auto flex flex-col items-start justify-end p-8 pb-12">
