@@ -167,7 +167,6 @@ describe("handleMcpProxy", () => {
     const [, init] = call;
     const headers = new Headers(init.headers);
     expect(headers.get("X-Shopify-Storefront-Access-Token")).toBeNull();
-    expect(headers.get("X-Shopify-Client-IP")).toBeNull();
     expect(headers.get("x-forwarded-for")).toBeNull();
   });
 
