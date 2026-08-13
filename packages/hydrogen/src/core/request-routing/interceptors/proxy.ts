@@ -14,7 +14,9 @@ type ProxyHeaderOptions = (
 type ProxyDescriptor = {
   headers: ProxyHeaderOptions;
   match: RegExp;
+  methods?: readonly string[];
   formatError?: (message: string) => unknown;
+  redirect?: RequestRedirect;
   scope: string;
   timeoutMs?: number;
   rewritePathname?: (pathname: string) => string;
@@ -27,6 +29,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
   return (url, options) => {
     const { request, storefrontClient } = options;
     if (!descriptor.match.test(url.pathname)) return null;
+    if (descriptor.methods && !descriptor.methods.includes(request.method)) return null;
 
     let upstreamUrl: URL;
     let init: RequestInit & { duplex?: "half" };
@@ -42,7 +45,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
         body: request.body,
         headers: forwardedHeaders,
         signal: AbortSignal.timeout(descriptor.timeoutMs ?? PROXY_TIMEOUT_MS),
-        redirect: "manual",
+        redirect: descriptor.redirect ?? "manual",
       };
 
       // Node's fetch requires this when forwarding a streaming request body.
