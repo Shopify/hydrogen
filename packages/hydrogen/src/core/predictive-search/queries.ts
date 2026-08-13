@@ -6,12 +6,6 @@ import {
 } from "../../graphql";
 import type { InferResult, InferVariables } from "../../graphql";
 
-const HYDROGEN_PRODUCT_FRAGMENT_NAME = "HydrogenPredictiveSearchProductFragment";
-const HYDROGEN_COLLECTION_FRAGMENT_NAME = "HydrogenPredictiveSearchCollectionFragment";
-const HYDROGEN_PAGE_FRAGMENT_NAME = "HydrogenPredictiveSearchPageFragment";
-const HYDROGEN_ARTICLE_FRAGMENT_NAME = "HydrogenPredictiveSearchArticleFragment";
-const HYDROGEN_QUERY_FRAGMENT_NAME = "HydrogenPredictiveSearchQueryFragment";
-
 const PRODUCT_FRAGMENT_NAME = "PredictiveSearchProductFragment";
 const COLLECTION_FRAGMENT_NAME = "PredictiveSearchCollectionFragment";
 const PAGE_FRAGMENT_NAME = "PredictiveSearchPageFragment";
@@ -60,7 +54,10 @@ const QUERY_CONTRACT = {
   typeName: QUERY_TYPE_NAME,
 } as const satisfies FragmentContract;
 
-const PREDICTIVE_SEARCH_QUERY_SOURCE = `
+// Spreads the consumer-overridable fragments (e.g. PredictiveSearchProductFragment),
+// which only exist at runtime, so it cannot be declared with `gql()` here. It stays
+// a raw source composed with the resolved fragments in `makePredictiveSearchQueries`.
+const PREDICTIVE_SEARCH_QUERY_SOURCE = /* GraphQL */ `
   query PredictiveSearch(
     $country: CountryCode
     $language: LanguageCode
@@ -72,36 +69,36 @@ const PREDICTIVE_SEARCH_QUERY_SOURCE = `
     $unavailableProducts: SearchUnavailableProductsType
   ) @inContext(country: $country, language: $language) {
     predictiveSearch(
-      limit: $limit,
-      limitScope: $limitScope,
-      query: $term,
-      types: $types,
-      searchableFields: $searchableFields,
-      unavailableProducts: $unavailableProducts,
+      limit: $limit
+      limitScope: $limitScope
+      query: $term
+      types: $types
+      searchableFields: $searchableFields
+      unavailableProducts: $unavailableProducts
     ) {
       articles {
-        ...${HYDROGEN_ARTICLE_FRAGMENT_NAME}
-        ...${ARTICLE_FRAGMENT_NAME}
+        ...HydrogenPredictiveSearchArticleFragment
+        ...PredictiveSearchArticleFragment
       }
       collections {
-        ...${HYDROGEN_COLLECTION_FRAGMENT_NAME}
-        ...${COLLECTION_FRAGMENT_NAME}
+        ...HydrogenPredictiveSearchCollectionFragment
+        ...PredictiveSearchCollectionFragment
       }
       pages {
-        ...${HYDROGEN_PAGE_FRAGMENT_NAME}
-        ...${PAGE_FRAGMENT_NAME}
+        ...HydrogenPredictiveSearchPageFragment
+        ...PredictiveSearchPageFragment
       }
       products {
-        ...${HYDROGEN_PRODUCT_FRAGMENT_NAME}
-        ...${PRODUCT_FRAGMENT_NAME}
+        ...HydrogenPredictiveSearchProductFragment
+        ...PredictiveSearchProductFragment
       }
       queries {
-        ...${HYDROGEN_QUERY_FRAGMENT_NAME}
-        ...${QUERY_FRAGMENT_NAME}
+        ...HydrogenPredictiveSearchQueryFragment
+        ...PredictiveSearchQueryFragment
       }
     }
   }
-` as const;
+`;
 
 const HYDROGEN_PRODUCT_FRAGMENT = gql(`
   fragment HydrogenPredictiveSearchProductFragment on Product {
