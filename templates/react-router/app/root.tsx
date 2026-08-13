@@ -32,7 +32,6 @@ import type { Route } from "./+types/root";
 
 import appStyles from "./app.css?url";
 
-// Root middleware — the single Hydrogen request lifecycle entry point.
 export const middleware: Route.MiddlewareFunction[] = [storefrontMiddleware];
 
 const LAYOUT_QUERY = gql(`
@@ -83,7 +82,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   }
 
   return {
-    cartData: await cartPromise,
+    cartData: cartPromise,
     accountEnabled,
     isLoggedIn,
     shopName: layoutResult.data.shop.name,
