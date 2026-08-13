@@ -24,13 +24,6 @@ export const meta: MetaFunction = ({ matches }) => {
   return [{ title: shopTitle("Account", shopNameFromMatches(matches)) }];
 };
 
-/**
- * `/account` — the Customer Accounts core surface. Shows the signed-in
- * customer's name + email, or a login panel. `/account/login`,
- * `/account/logout`, `/account/refresh`, and `/account/authorize` are
- * handler-intercepted in the root middleware (no route files); this is the
- * only framework route under `/account`.
- */
 export async function loader({ context, request }: Route.LoaderArgs) {
   const customerAccount = context.get(customerAccountContext);
 
@@ -84,7 +77,7 @@ export default function AccountRoute({ loaderData }: Route.ComponentProps) {
       </p>
 
       {!available ? (
-        <MockShopNotice />
+        <UnavailableCustomerAccountsNotice />
       ) : (
         <>
           {error ? <CustomerAccountError message={error} /> : null}
@@ -99,13 +92,13 @@ export default function AccountRoute({ loaderData }: Route.ComponentProps) {
   );
 }
 
-function MockShopNotice() {
+function UnavailableCustomerAccountsNotice() {
   return (
     <section
       className="bg-surface border-border mt-8 rounded border p-8"
-      aria-labelledby="mock-shop-notice-heading"
+      aria-labelledby="unavailable-customer-accounts-heading"
     >
-      <h2 id="mock-shop-notice-heading" className="type-heading-sm">
+      <h2 id="unavailable-customer-accounts-heading" className="type-heading-sm">
         Customer Accounts require a real store
       </h2>
       <p className="type-body text-on-surface-secondary mt-3 max-w-xl">
