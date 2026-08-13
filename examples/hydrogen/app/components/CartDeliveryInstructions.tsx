@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { useCart } from "~/lib/cart";
+import { cartHandlers } from "~/lib/cart-handlers";
 
 // Cart metafields are server-only: the Storefront cart ajax API (Standard
 // Actions) does not support them, so this form bypasses the optimistic cart
@@ -18,7 +19,7 @@ import { useCart } from "~/lib/cart";
 // https://shopify.dev/docs/apps/build/metafields/use-metafield-capabilities#cart-to-order-copyable
 // Without the definition, saving to the cart still works but nothing is
 // copied to the order.
-const CART_ENDPOINT = "/api/cart";
+const CART_ENDPOINT = cartHandlers.post.pathname;
 const DELIVERY_INSTRUCTIONS_NAMESPACE = "custom";
 const DELIVERY_INSTRUCTIONS_KEY = "delivery_instructions";
 const DELIVERY_INSTRUCTIONS_METAFIELD_KEY = `${DELIVERY_INSTRUCTIONS_NAMESPACE}.${DELIVERY_INSTRUCTIONS_KEY}`;

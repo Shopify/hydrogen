@@ -1,3 +1,4 @@
+import type { CartInputMetafieldInput } from "../../graphql/generated/storefront-api-types";
 import { normalizeCartId } from "./cookie";
 
 export type CartLineAddInput = {
@@ -14,11 +15,7 @@ export type CartLineUpdateInput = {
   sellingPlanId?: string;
 };
 
-export type CartMetafieldInput = {
-  key: string;
-  type: string;
-  value: string;
-};
+export type CartMetafieldInput = CartInputMetafieldInput;
 
 export type CartAction =
   | { intent: "add"; lines: CartLineAddInput[] }
