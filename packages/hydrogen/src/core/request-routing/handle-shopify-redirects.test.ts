@@ -26,6 +26,16 @@ function createPrivateStorefrontClient(request: Request, i18n: I18nConfig = DEFA
   });
 }
 
+function createTokenlessPublicStorefrontClient(request: Request, i18n: I18nConfig = DEFAULT_I18N) {
+  return createStorefrontClient({
+    type: "public",
+    requestContext: createShopifyRequestContext({ request, i18n }),
+    config: {
+      storeDomain: defaultConfig.storeDomain,
+    },
+  });
+}
+
 function redirectOptions(
   request: Request,
   options: Partial<Parameters<typeof handleShopifyRedirects>[0]> = {},
@@ -95,6 +105,31 @@ describe("handleShopifyRedirects", () => {
     expect(result.headers.get("location")).toBe("/new-page");
     expect(result.headers.get("server-timing")).toBe("shopify;dur=10");
     expect(result.headers.getSetCookie()).toEqual(["tracking=1; Path=/; Secure"]);
+  });
+
+  it("returns URL redirect using a tokenless public client", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          data: {
+            urlRedirects: {
+              edges: [{ node: { target: "/new-page" } }],
+            },
+          },
+        }),
+      ),
+    );
+
+    const request = new Request("https://my-app.com/old-page");
+    const result = await handleShopifyRedirects(
+      redirectOptions(request, {
+        storefrontClient: createTokenlessPublicStorefrontClient(request),
+      }),
+    );
+
+    assert(result, "expected URL redirect response");
+    expect(result.status).toBe(301);
+    expect(result.headers.get("location")).toBe("/new-page");
   });
 
   it("uses a query param redirect without querying the Storefront API", async () => {
