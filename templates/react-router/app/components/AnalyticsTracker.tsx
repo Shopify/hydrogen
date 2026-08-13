@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router";
 
-import { AnalyticsEvent, addAnalyticsConsoleDestination, getAnalytics } from "../lib/analytics";
+import { AnalyticsEvent, getAnalytics } from "../lib/analytics";
 
 /**
  * Root analytics tracker (`hydrogen-analytics` / `references/react.md`).
@@ -12,13 +12,6 @@ import { AnalyticsEvent, addAnalyticsConsoleDestination, getAnalytics } from "..
 export function AnalyticsTracker() {
   const location = useLocation();
   const pageKey = `${location.pathname}?${location.search}`;
-
-  useEffect(() => {
-    const cleanup = addAnalyticsConsoleDestination();
-    return () => {
-      cleanup?.();
-    };
-  }, []);
 
   useEffect(() => {
     const analytics = getAnalytics();

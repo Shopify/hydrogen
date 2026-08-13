@@ -7,30 +7,4 @@ export function getAnalytics() {
   return window.Shopify?.analytics ?? null;
 }
 
-export function addAnalyticsConsoleDestination(): (() => void) | null {
-  const analytics = getAnalytics();
-  if (!analytics) return null;
 
-  return analytics.addDestination({
-    name: "example-console-logger",
-    setup({ subscribe }) {
-      const events = [
-        AnalyticsEvent.PAGE_VIEWED,
-        AnalyticsEvent.PRODUCT_VIEWED,
-        AnalyticsEvent.COLLECTION_VIEWED,
-        AnalyticsEvent.CART_VIEWED,
-        AnalyticsEvent.SEARCH_VIEWED,
-      ] as const;
-      const unsubscribers = events.map((event) =>
-        subscribe(event, (payload) => {
-          // eslint-disable-next-line no-console
-          console.log(`[analytics] ${event}`, payload);
-        }),
-      );
-
-      return () => {
-        for (const unsubscribe of unsubscribers) unsubscribe();
-      };
-    },
-  });
-}
