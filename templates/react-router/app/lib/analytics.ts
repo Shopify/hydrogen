@@ -6,5 +6,3 @@ export function getAnalytics() {
   if (typeof window === "undefined") return null;
   return window.Shopify?.analytics ?? null;
 }
-
-

@@ -212,5 +212,3 @@ function CartLinePrice({
     </p>
   );
 }
-
-
