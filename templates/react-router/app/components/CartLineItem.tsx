@@ -1,4 +1,4 @@
-import type { SubmitEvent } from "react";
+import type { Ref } from "react";
 
 import { useCart, useCartForm } from "~/lib/cart";
 import { shopifyImageUrl } from "~/lib/image";
@@ -21,7 +21,15 @@ type CartLine = CartState["data"]["lines"]["nodes"][number];
  * `register("quantity", { value, interactive: true })`. Increase/decrease/remove
  * are additional submit controls, not replacements.
  */
-export function CartLineItem({ line }: { line: CartLine }) {
+export function CartLineItem({
+  line,
+  removeControlRef,
+  onRemoveSubmit,
+}: {
+  line: CartLine;
+  removeControlRef: Ref<HTMLButtonElement>;
+  onRemoveSubmit: () => void;
+}) {
   const { formProps, register } = useCartForm();
   const pendingLines = useCart((state) => state.pending.lines);
   const isPending = pendingLines.has(line.id);
@@ -88,16 +96,16 @@ export function CartLineItem({ line }: { line: CartLine }) {
 
       <form
         {...formProps({
-          afterSubmit: scheduleRemovalFocus,
+          afterSubmit: onRemoveSubmit,
         })}
       >
         <input type="hidden" {...register("lineId", { value: line.id })} />
         <button
           type="submit"
           {...register("remove")}
+          ref={removeControlRef}
           className="button-icon self-start rounded"
           aria-label={`Remove: ${productTitle}`}
-          data-cart-line-control
         >
           <img
             src="/icons/icon-trash.svg"
@@ -205,25 +213,4 @@ function CartLinePrice({
   );
 }
 
-function scheduleRemovalFocus(event: SubmitEvent<HTMLFormElement>): void {
-  const form = event.target;
-  if (!(form instanceof HTMLFormElement)) return;
 
-  const item = form.closest("li");
-  const scope = form.closest("dialog[open]") ?? form.closest("main") ?? document;
-  const next = findCartLineControl(item?.nextElementSibling ?? null);
-  const previous = findCartLineControl(item?.previousElementSibling ?? null);
-
-  window.setTimeout(() => {
-    const target =
-      (next?.isConnected ? next : null) ??
-      (previous?.isConnected ? previous : null) ??
-      scope.querySelector<HTMLElement>("[data-cart-empty]") ??
-      scope.querySelector<HTMLElement>("[data-cart-heading]");
-    target?.focus();
-  }, 0);
-}
-
-function findCartLineControl(element: Element | null): HTMLElement | null {
-  return element?.querySelector<HTMLElement>("[data-cart-line-control]") ?? null;
-}

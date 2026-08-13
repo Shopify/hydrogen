@@ -29,12 +29,7 @@ export function CartDrawer() {
       <div className="flex h-full flex-col">
         <div className="flex shrink-0 items-center py-2 ps-4 pe-2">
           <div className="flex flex-1 items-center gap-2">
-            <h2
-              id="cart-drawer-title"
-              className="text-on-surface text-lg font-medium"
-              data-cart-heading
-              tabIndex={-1}
-            >
+            <h2 id="cart-drawer-title" className="text-on-surface text-lg font-medium">
               {content.cart.title}{" "}
               <span className="text-on-surface-secondary text-sm font-normal">
                 {totalQuantity} {totalQuantity === 1 ? "item" : "items"}

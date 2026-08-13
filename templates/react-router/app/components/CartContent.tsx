@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useCart, useCartForm } from "~/lib/cart";
 import { content } from "~/lib/content";
@@ -30,6 +30,32 @@ export function CartContent() {
 
   const { formProps, register } = useCartForm();
 
+  /* Removal focus management: when a line's "Remove" button submits, the
+     focused button unmounts with the line and focus would drop to <body>.
+     Each line registers its remove button in `removeControls`; after a
+     removal we focus the next line's control, else the previous line's,
+     else the empty-cart message. */
+  const removeControls = useRef(new Map<string, HTMLButtonElement>());
+  const emptyStateRef = useRef<HTMLDivElement>(null);
+
+  const focusAfterRemoval = (lineId: string) => {
+    const ids = lines.map((line) => line.id);
+    const index = ids.indexOf(lineId);
+    const nextId = index === -1 ? undefined : ids[index + 1];
+    const previousId = index === -1 ? undefined : ids[index - 1];
+
+    window.setTimeout(() => {
+      const controls = removeControls.current;
+      const next = nextId ? controls.get(nextId) : undefined;
+      const previous = previousId ? controls.get(previousId) : undefined;
+      const target =
+        (next?.isConnected ? next : null) ??
+        (previous?.isConnected ? previous : null) ??
+        emptyStateRef.current;
+      target?.focus();
+    }, 0);
+  };
+
   if (loading) {
     return (
       <div className="divide-border divide-y" aria-busy="true">
@@ -45,9 +71,9 @@ export function CartContent() {
       <CartStatus isPending={isPending} networkErrors={networkErrors} />
       {isEmpty ? (
         <div
+          ref={emptyStateRef}
           className="flex flex-col items-center gap-2 py-12 text-center"
           aria-busy={isPending}
-          data-cart-empty
           tabIndex={-1}
         >
           <p className="type-body-sm text-on-surface font-medium">{content.cart.empty}</p>
@@ -58,7 +84,14 @@ export function CartContent() {
           <ul role="list" className="divide-border min-h-0 flex-1 divide-y overflow-y-auto">
             {lines.map((line) => (
               <li key={line.id}>
-                <CartLineItem line={line} />
+                <CartLineItem
+                  line={line}
+                  removeControlRef={(element) => {
+                    if (element) removeControls.current.set(line.id, element);
+                    else removeControls.current.delete(line.id);
+                  }}
+                  onRemoveSubmit={() => focusAfterRemoval(line.id)}
+                />
               </li>
             ))}
           </ul>
