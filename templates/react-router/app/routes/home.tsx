@@ -5,6 +5,7 @@ import { CollectionCard } from "~/components/CollectionCard";
 import { ProductCard } from "~/components/ProductCard";
 import { content } from "~/lib/content";
 import { PRODUCT_CARD_FRAGMENT, COLLECTION_CARD_FRAGMENT } from "~/lib/fragments";
+import { shopifyImageUrl } from "~/lib/image";
 import { shopNameFromMatches, shopTitle, siteOriginFromMatches } from "~/lib/meta";
 import { canonicalUrl } from "~/lib/site";
 import { storefrontClientContext } from "~/lib/storefront-context";
@@ -68,22 +69,29 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <Hero />
+      <Hero collection={collections[0]} />
       <BestSellers products={products} />
       <ShopByCategory collections={collections} />
     </>
   );
 }
 
-function Hero() {
+type HeroCollection = Route.ComponentProps["loaderData"]["featuredCollections"][number];
+
+function Hero({ collection }: { collection: HeroCollection | undefined }) {
+  const heading = collection?.title ?? content.home.hero.heading;
+  const subtitle = collection?.description || content.home.hero.subtitle;
+  const shopHref = collection ? `/collections/${collection.handle}` : "/collections";
+  const image = collection?.image ?? collection?.products.nodes[0]?.featuredImage ?? null;
+
   // The hero is the LCP image (notes/home.md): eager + high fetch priority.
-  // Unsplash is a third-party host, so it passes through `shopifyImageUrl`
-  // unchanged — build a width-descriptor srcset directly from its `w=` param
-  // and pair it with `sizes="100vw"` (F12). DPR `srcSetFor` is not used here:
-  // `sizes` is a no-op for 1x/2x descriptors.
-  const heroBaseUrl =
-    "https://images.unsplash.com/photo-1653398597732-37fc919284dd?auto=format&fit=crop&q=80";
-  const heroSrcSet = `${heroBaseUrl}&w=480 480w, ${heroBaseUrl}&w=1024 1024w, ${heroBaseUrl}&w=2000 2000w`;
+  // Width-descriptor srcset + `sizes="100vw"` (F12); DPR `srcSetFor` is not
+  // used here because `sizes` is a no-op for 1x/2x descriptors.
+  const heroSrcSet = image
+    ? [480, 1024, 2000]
+        .map((width) => `${shopifyImageUrl(image.url, { width })} ${width}w`)
+        .join(", ")
+    : undefined;
 
   return (
     <section className="max-w-page px-margin mx-auto w-full">
@@ -92,25 +100,27 @@ function Hero() {
         aria-labelledby="hero-heading"
       >
         <div className="bg-surface-secondary absolute inset-0">
-          <img
-            src={`${heroBaseUrl}&w=2000`}
-            srcSet={heroSrcSet}
-            sizes="100vw"
-            alt="A white chair beside a white wall"
-            className="h-full w-full object-cover"
-            loading="eager"
-            fetchPriority="high"
-          />
+          {image ? (
+            <img
+              src={shopifyImageUrl(image.url, { width: 2000 })}
+              srcSet={heroSrcSet}
+              sizes="100vw"
+              alt={image.altText ?? ""}
+              className="h-full w-full object-cover"
+              loading="eager"
+              fetchPriority="high"
+            />
+          ) : null}
         </div>
         <div className="overlay-dark pointer-events-none absolute inset-0" />
         <div className="max-w-page px-margin text-interactive-text min-h-hero relative z-10 mx-auto flex flex-col items-start justify-end p-8 pb-12">
           <h1 id="hero-heading" className="type-display mb-3 max-w-2xl">
-            {content.home.hero.heading}
+            {heading}
           </h1>
-          <p className="type-body-lg mb-6 max-w-prose opacity-90">{content.home.hero.subtitle}</p>
+          <p className="type-body-lg mb-6 max-w-prose opacity-90">{subtitle}</p>
           <div className="flex flex-wrap items-center gap-3">
             <a
-              href="/collections"
+              href={shopHref}
               className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 items-center justify-center gap-2 px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               {content.home.hero.primaryCta}
