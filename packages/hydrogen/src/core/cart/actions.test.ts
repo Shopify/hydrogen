@@ -149,7 +149,7 @@ describe("parseCartRequest", () => {
     });
   });
 
-  describe("JSON — discount and note payloads", () => {
+  describe("JSON — cart metadata payloads", () => {
     it("parses discountCodes array as discount-update", async () => {
       const { action } = await parseCartRequest(jsonRequest({ discountCodes: ["SAVE10", "BOGO"] }));
       expect(action).toEqual({
@@ -169,6 +169,27 @@ describe("parseCartRequest", () => {
     it("parses empty note string as note-update", async () => {
       const { action } = await parseCartRequest(jsonRequest({ note: "" }));
       expect(action).toEqual({ intent: "note-update", note: "" });
+    });
+
+    it("parses attributes as a full attributes-update", async () => {
+      const { action } = await parseCartRequest(
+        jsonRequest({ attributes: [{ key: "gift-message", value: "Happy birthday!" }] }),
+      );
+      expect(action).toEqual({
+        intent: "attributes-update",
+        attributes: [{ key: "gift-message", value: "Happy birthday!" }],
+      });
+    });
+
+    it("allows an empty attributes array to clear cart attributes", async () => {
+      const { action } = await parseCartRequest(jsonRequest({ attributes: [] }));
+      expect(action).toEqual({ intent: "attributes-update", attributes: [] });
+    });
+
+    it("rejects invalid attribute entries", async () => {
+      await expect(
+        parseCartRequest(jsonRequest({ attributes: [{ key: "gift-message", value: null }] })),
+      ).rejects.toThrow('Expected "attributes[0].value" to be a string.');
     });
   });
 
@@ -549,6 +570,41 @@ describe("parseCartRequest", () => {
       await expect(parseCartRequest(formRequest({ intent: "note-update" }))).rejects.toThrow(
         /note/i,
       );
+    });
+  });
+
+  describe("FormData — attributes intent", () => {
+    it("parses attribute values with their encoded keys", async () => {
+      const body = new URLSearchParams([
+        ["intent", "attributes-update"],
+        ["attributes.gift-message", "Happy birthday!"],
+        ["attributes.delivery-date", "Friday"],
+      ]);
+      const request = new Request("http://localhost/api/cart", {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body,
+      });
+
+      const { action } = await parseCartRequest(request);
+      expect(action).toEqual({
+        intent: "attributes-update",
+        attributes: [
+          { key: "gift-message", value: "Happy birthday!" },
+          { key: "delivery-date", value: "Friday" },
+        ],
+      });
+    });
+
+    it("allows no fields to clear all attributes", async () => {
+      const { action } = await parseCartRequest(formRequest({ intent: "attributes-update" }));
+      expect(action).toEqual({ intent: "attributes-update", attributes: [] });
+    });
+
+    it("rejects an empty encoded attribute key", async () => {
+      await expect(
+        parseCartRequest(formRequest({ intent: "attributes-update", "attributes.": "value" })),
+      ).rejects.toThrow(/not to be empty/);
     });
   });
 

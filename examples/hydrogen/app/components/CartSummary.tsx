@@ -2,7 +2,7 @@ import type { CartData, MoneyV2 } from "@shopify/hydrogen";
 import { useId } from "react";
 
 import type { CartLayout } from "~/components/CartMain";
-import { useCartForm } from "~/lib/cart";
+import { useCart, useCartForm } from "~/lib/cart";
 import { formatMoney } from "~/lib/money";
 
 type CartSummaryProps = {
@@ -32,8 +32,64 @@ export function CartSummary({ cart, layout, totalsPending }: CartSummaryProps) {
         discountsHeadingId={discountsHeadingId}
         discountCodeInputId={discountCodeInputId}
       />
+      <CartGiftMessage attributes={cart.attributes} />
       <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
     </div>
+  );
+}
+
+const GIFT_MESSAGE_ATTRIBUTE = "gift-message";
+
+function CartGiftMessage({ attributes }: { attributes: CartData["attributes"] }) {
+  const { formProps, register } = useCartForm();
+  const attributesPending = useCart((state) => state.pending.attributes);
+  const giftMessageErrors = useCart((state) => state.errors.attributes.get(GIFT_MESSAGE_ATTRIBUTE));
+  const giftMessageId = useId();
+  const giftMessageErrorId = useId();
+  const giftMessage = attributes.find(({ key }) => key === GIFT_MESSAGE_ATTRIBUTE)?.value ?? "";
+  const preservedAttributes = attributes.filter(({ key }) => key !== GIFT_MESSAGE_ATTRIBUTE);
+  const giftMessageErrorMessages = [
+    ...(giftMessageErrors?.userErrors ?? []),
+    ...(giftMessageErrors?.warnings ?? []),
+  ];
+
+  return (
+    <form {...formProps()} className="cart-attribute">
+      {preservedAttributes.map(({ key, value }) => (
+        <input
+          key={key}
+          type="hidden"
+          {...register("attributeValue", { key, value: value ?? "" })}
+        />
+      ))}
+      <label htmlFor={giftMessageId}>Gift message</label>
+      <textarea
+        id={giftMessageId}
+        rows={3}
+        {...register("attributeValue", {
+          key: GIFT_MESSAGE_ATTRIBUTE,
+          defaultValue: giftMessage,
+        })}
+        aria-describedby={giftMessageErrorMessages.length > 0 ? giftMessageErrorId : undefined}
+        aria-invalid={(giftMessageErrors?.userErrors.length ?? 0) > 0 || undefined}
+        placeholder="Add a message for the recipient"
+      />
+      {giftMessageErrorMessages.length > 0 ? (
+        <div id={giftMessageErrorId} role="alert">
+          {giftMessageErrorMessages.map(({ message }, index) => (
+            <p key={`${message}-${index}`}>{message}</p>
+          ))}
+        </div>
+      ) : null}
+      <button
+        type="submit"
+        {...register("attributes-update")}
+        disabled={attributesPending}
+        aria-busy={attributesPending}
+      >
+        {attributesPending ? "Saving…" : "Save message"}
+      </button>
+    </form>
   );
 }
 

@@ -2,9 +2,10 @@
 name: hydrogen-cart-ui
 description: >
   Behavioral guide for building cart UI with @shopify/hydrogen: line items,
-  quantity and remove controls, optimistic updates, discount and note inputs,
-  and the full-page /cart fallback. Use when writing, modifying, or reviewing cart
-  line-item UI, quantity/remove controls, or cart mutation forms. Framework agnostic.
+  quantity and remove controls, optimistic updates, discount, note, and cart
+  attribute inputs, and the full-page /cart fallback. Use when writing,
+  modifying, or reviewing cart line-item UI, quantity/remove controls, or cart
+  mutation forms. Framework agnostic.
 ---
 
 # Cart Primitive
@@ -29,17 +30,18 @@ When creating a full cart page, use the app's existing route convention when pre
 
 ## How the store works
 
-The store holds a `CartState` and notifies subscribers when it changes. `state.readyPromise` is present while an applicable full-cart load is pending and resolves after the resulting state is published. Mutations flow through Shopify Standard Actions — the store listens for `shopify:cart:lines-update`, `shopify:cart:discount-update`, and `shopify:cart:note-update` DOM events. Each event carries a `promise` that resolves with the server response.
+The store holds a `CartState` and notifies subscribers when it changes. `state.readyPromise` is present while an applicable full-cart load is pending and resolves after the resulting state is published. Mutations flow through Shopify Standard Actions — the store listens for `shopify:cart:lines-update`, `shopify:cart:discount-update`, `shopify:cart:note-update`, and `shopify:cart:attributes-update` DOM events. Each event carries a `promise` that resolves with the server response.
 
 On mutation:
+
 1. The store applies an **optimistic projection** over its settled state, so the UI-visible state changes immediately.
-2. The affected entity is added to `pending` — a set of in-flight line IDs, discount codes, or a note boolean.
+2. The affected entity is added to `pending` — a set of in-flight line IDs or discount codes, or a note/attributes boolean.
 3. When the promise resolves, the store folds that transaction into settled state and reapplies remaining projections. Overlapping mutations discard ambiguous response snapshots, then coalesce one authoritative cart refresh after the burst settles.
 4. On failure, the store removes only the failed projection, preserves unrelated work, and clears the matching pending entry.
 
 When overlapping mutations make response snapshots ambiguous, the store sets `state.revalidating` to `true`. It starts one authoritative refresh after those mutations settle and clears the flag when the refresh completes or fails. Until then, server-derived values such as costs remain at their last trustworthy value. A refresh failure preserves the locally reconciled cart and appears in `errors.network`.
 
-The store supersedes keyed mutations for the same line, discount batch, or note. Relative additions remain independent so every submitted quantity reaches the server; their projections are reconciled together without disabling controls.
+The store supersedes keyed mutations for the same line, discount batch, note, or complete attribute list. Relative additions remain independent so every submitted quantity reaches the server; their projections are reconciled together without disabling controls.
 
 ## Stable selectors
 
@@ -74,6 +76,7 @@ const messages = deriveFromErrors(errors, () => {
 - `pending.discountCodes` — `Set<string>` of discount codes being applied or removed.
 - `pending.cost` — `true` when pending line or discount mutations can leave totals stale.
 - `pending.note` — `boolean` indicating whether a note save is in flight.
+- `pending.attributes` — `boolean` indicating whether a complete attribute-list update is in flight.
 
 Any value whose entity is in a pending set is **optimistic and unconfirmed**. The UI must treat it differently from confirmed values.
 
@@ -86,9 +89,10 @@ Any value whose entity is in a pending set is **optimistic and unconfirmed**. Th
 - `errors.lines` — `Map<string, CartErrorGroup>` keyed by line ID.
 - `errors.discountCodes` — `Map<string, CartErrorGroup>` keyed by discount code string.
 - `errors.note` — `CartErrorGroup` for note-related errors.
+- `errors.attributes` — `Map<string, CartErrorGroup>` keyed by attribute key.
 - `errors.cart` — `CartErrorGroup` for cart-level errors not attributable to a specific entity.
 - `errors.network` — `CartNetworkEntry[]` for transport failures (timeouts, HTTP errors).
-- `errors.lastUpdatedAt` — timestamp of the most recent error update across any scope. Per-scope timestamps also exist (`linesUpdatedAt`, `discountCodesUpdatedAt`, etc.).
+- `errors.lastUpdatedAt` — timestamp of the most recent error update across any scope. Per-scope timestamps also exist (`linesUpdatedAt`, `discountCodesUpdatedAt`, `attributesUpdatedAt`, etc.).
 
 Each `CartErrorGroup` contains `{ userErrors: CartUserError[], warnings: CartWarning[] }`.
 
@@ -105,7 +109,7 @@ Errors survive unrelated cart work and clear when a new mutation begins for the 
 
 ### Optimistic interactions
 
-- **NEVER disable interactive controls during pending state.** Increase, decrease, remove, apply, and remove-discount controls must always be interactive. The store's abort-controller pattern makes concurrent mutations safe — a new click supersedes the in-flight request. Disabling for a non-pending reason is fine — for example, the decrease control may be disabled when the quantity is already `<= 1`.
+- **Keep rapid-action controls interactive during pending state.** Increase, decrease, remove, apply, and remove-discount controls must remain interactive. The store's abort-controller pattern makes concurrent mutations safe — a new click supersedes the in-flight request. A save-style editor, such as a gift-message attribute form, may disable its own submit button while its scoped mutation is pending when duplicate saves provide no value. Disabling for a non-pending reason is also fine — for example, the decrease control may be disabled when the quantity is already `<= 1`.
 - **Inventory-aware set-quantity clamping is opt-in.** The default cart query does not request `ProductVariant.quantityAvailable` because that field requires the `unauthenticated_read_product_inventory` Storefront API scope. If a cart UI needs the entered quantity to clamp to sellable inventory before submission, add `quantityAvailable` to the app's custom cart fragment and enable the Hydrogen channel's product inventory permission (`unauthenticated_read_product_inventory`). Without that field, let Shopify validate inventory and surface the returned line error.
 - **NEVER show a spinner or skeleton where a stale value would do.** The user already sees a quantity and a price. Replacing confirmed-looking content with a loading state is a regression. Show the previous value with a visual indicator that it's unconfirmed.
 - **ALWAYS visually indicate unconfirmed data.** Any value whose entity is in a `pending` set must look visually distinct from confirmed values. Reduced opacity is the reference pattern — the stale text acts as a spatial placeholder (like a skeleton), not as readable content. Rules of contrast can be disregarded because the pending value is a signal, not content the user needs to read.
@@ -125,12 +129,21 @@ Errors survive unrelated cart work and clear when a new mutation begins for the 
 - **Allow users to click the save button even when the draft matches the stored note** (nothing to save), but prevent any action. This enables progressive enhancement and prevents frustration.
 - **Show a pending indicator** while the note mutation is pending.
 
+### Cart attribute editing
+
+- **Treat an attribute update as complete-list replacement.** `attributes-update` sends the full next attribute list; attributes omitted from the submission are removed. When editing one attribute, explicitly include every unrelated existing attribute as a hidden keyed `attributeValue` field. Submit no attribute fields to clear all attributes.
+- **Keep each key attached to its value.** Pass the attribute key to every `register("attributeValue", {key, ...})` call. The generated `attributes.<key>` field name encodes that key, so the server never relies on parallel field positions. Storefront API mutation inputs require string values, so normalize a nullable returned value deliberately (usually to `""`) before resubmitting it.
+- **Use the register contract exactly.** Call `register("attributeValue", {key, ...})` rather than spelling its generated `attributes.<key>` field name by hand. The submit intent is kebab-case (`attributes-update`) because action intents follow the existing `discount-apply`, `discount-remove`, and `note-update` convention.
+- **Maintain a local draft** for an editable attribute when the UI can remain mounted across server responses. Only sync confirmed attribute data into that draft while `pending.attributes` is `false`, so a response does not clobber typing that happened during the request.
+- **Show scoped pending and errors.** Use `pending.attributes` for the save state and display entries from `errors.attributes` next to the editor for the matching key. A save-style submit button may be disabled until the attribute promise settles.
+
 ### Form structure
 
 - **Each line item is its own form.** This gives each line its own identity input and its own submit buttons. A single form containing multiple lines creates ambiguity about which line an action targets.
 - **Each line item form must preserve the progressive-enhancement shape.** The rendered structure will vary by framework and design system, but every line item quantity form needs the same Hydrogen contract: `register("set")`, `register("lineId", { value: line.id })`, and a real editable quantity input using `register("quantity", { value: line.quantity, interactive: true })`. Increase, decrease, and remove buttons are additional submit controls, not replacements for the set intent or the quantity input.
 - **The `set` control is a hidden submit button, not a hidden input.** `register("set")` already returns `{ type: "submit", hidden: true }`; render it on a `<button>`. Do not swap it for `<input type="hidden">` — that removes the submit button, so pressing Enter in the quantity input no longer submits the set action.
 - **Each discount "remove" button is its own form** — separate from the "apply" form. The apply form needs input validation (empty/duplicate prevention); each remove form is a single action.
+- **Attribute forms submit keyed values.** Render one `register("attributeValue", {key, value})` control for every attribute in the complete next list, then submit with `register("attributes-update")`.
 
 ### Loading
 
@@ -167,22 +180,31 @@ Errors survive unrelated cart work and clear when a new mutation begins for the 
 15. **No-op save** — When the draft matches the stored note, clicking on save does nothing (but can still be clicked).
 16. **Server sync without clobber** — After save completes, the local draft updates to match the server response — but only when `pending.note` is `false`, preserving any typing the user did in the meantime.
 
+### Cart attributes
+
+17. **Save attribute** — Edit an attribute and submit. The optimistic value appears immediately, `pending.attributes` is `true`, and the editor shows a saving state until confirmation.
+18. **Preserve unrelated attributes** — Saving one attribute includes all unrelated existing key/value pairs; those attributes remain after the server response.
+19. **Clear attributes** — Submitting an empty attribute list removes every cart attribute.
+20. **Failure rollback** — If the update fails, the complete attribute list returns to the last confirmed baseline.
+21. **Attribute-scoped error** — An error for a key appears next to that key's editor and marks its input invalid.
+22. **No draft clobber** — Typing that occurs while an attribute save is pending is not overwritten by the confirming response.
+
 ### Error banner
 
-17. **Network error** — When a mutation fails due to a transport error, a banner appears with the error message and a dismiss control.
-18. **Cart-level error** — Errors not attributable to a line, code, or note appear in the banner.
-19. **Orphaned line error** — If a line no longer exists in `state.data.lines.nodes` but `errors.lines` has an entry for its ID, that error appears in the banner.
-20. **Dismiss and re-trigger** — Dismissing the banner hides it. A subsequent error (with a newer `lastUpdatedAt`) re-shows it.
+23. **Network error** — When a mutation fails due to a transport error, a banner appears with the error message and a dismiss control.
+24. **Cart-level error** — Errors not attributable to a line, code, note, or attribute appear in the banner.
+25. **Orphaned line error** — If a line no longer exists in `state.data.lines.nodes` but `errors.lines` has an entry for its ID, that error appears in the banner.
+26. **Dismiss and re-trigger** — Dismissing the banner hides it. A subsequent error (with a newer `lastUpdatedAt`) re-shows it.
 
 ### Totals
 
-21. **Pending totals** — While any line or discount mutation is in-flight, subtotal and total appear in their pending visual state. The amounts shown are the last server-confirmed values — never client-computed.
-22. **Settled totals** — After an ordinary mutation settles, totals display the latest server values. Overlapping mutation bursts retain pending styling and the last trustworthy amounts while one authoritative cart refresh is in flight.
+27. **Pending totals** — While any line or discount mutation is in-flight, subtotal and total appear in their pending visual state. The amounts shown are the last server-confirmed values — never client-computed.
+28. **Settled totals** — After an ordinary mutation settles, totals display the latest server values. Overlapping mutation bursts retain pending styling and the last trustworthy amounts while one authoritative cart refresh is in flight.
 
 ### Loading
 
-23. **Initial load** — Before the cart is fetched, show skeleton placeholders.
-24. **Empty cart** — After fetch completes with zero lines, show empty state.
+29. **Initial load** — Before the cart is fetched, show skeleton placeholders.
+30. **Empty cart** — After fetch completes with zero lines, show empty state.
 
 ---
 

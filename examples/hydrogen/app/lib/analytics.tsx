@@ -199,5 +199,5 @@ function hasPendingCartWork(cart: AnalyticsCartInput) {
   if (!cart.pending) return false;
   const hasPendingCost =
     cart.pending.cost ?? (cart.pending.lines.size > 0 || cart.pending.discountCodes.size > 0);
-  return hasPendingCost || cart.pending.note;
+  return hasPendingCost || cart.pending.note || cart.pending.attributes;
 }

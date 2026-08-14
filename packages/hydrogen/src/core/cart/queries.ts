@@ -29,6 +29,10 @@ const HYDROGEN_CART_FRAGMENT = gql(`
     checkoutUrl
     totalQuantity
     note
+    attributes {
+      key
+      value
+    }
     cost {
       subtotalAmount {
         amount
@@ -257,6 +261,28 @@ const CART_NOTE_UPDATE_MUTATION = gql(
   [HYDROGEN_CART_FRAGMENT],
 );
 
+const CART_ATTRIBUTES_UPDATE_MUTATION = gql(
+  `mutation CartAttributesUpdate($cartId: ID!, $attributes: [AttributeInput!]!, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
+      cart {
+        ...HydrogenCartFragment
+      }
+      userErrors {
+        code
+        field
+        message
+      }
+      warnings {
+        code
+        message
+        target
+      }
+    }
+  }`,
+  [HYDROGEN_CART_FRAGMENT],
+);
+
 // The custom variants spread the consumer's `CartFragment`, which only exists
 // at runtime. Its spread is interpolated on purpose: the gql.tada plugin skips
 // documents containing interpolations instead of flagging an unknown fragment,
@@ -411,6 +437,29 @@ const CUSTOM_CART_NOTE_UPDATE_MUTATION = gql(
   [HYDROGEN_CART_FRAGMENT],
 );
 
+const CUSTOM_CART_ATTRIBUTES_UPDATE_MUTATION = gql(
+  `mutation CartAttributesUpdate($cartId: ID!, $attributes: [AttributeInput!]!, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
+      cart {
+        ...HydrogenCartFragment
+        ...${CART_FRAGMENT_NAME}
+      }
+      userErrors {
+        code
+        field
+        message
+      }
+      warnings {
+        code
+        message
+        target
+      }
+    }
+  }`,
+  [HYDROGEN_CART_FRAGMENT],
+);
+
 const DEFAULT_CART_QUERIES = {
   cart: CART_QUERY,
   cartCreate: CART_CREATE_MUTATION,
@@ -419,6 +468,7 @@ const DEFAULT_CART_QUERIES = {
   cartLinesRemove: CART_LINES_REMOVE_MUTATION,
   cartDiscountCodesUpdate: CART_DISCOUNT_CODES_UPDATE_MUTATION,
   cartNoteUpdate: CART_NOTE_UPDATE_MUTATION,
+  cartAttributesUpdate: CART_ATTRIBUTES_UPDATE_MUTATION,
 } as const;
 
 type DefaultCartQueries = typeof DEFAULT_CART_QUERIES;
@@ -451,6 +501,10 @@ type CartQueriesForFragment<TCartFragment extends CartFragmentDocument> = {
     TCartFragment
   >;
   readonly cartNoteUpdate: CustomQueryFor<typeof CUSTOM_CART_NOTE_UPDATE_MUTATION, TCartFragment>;
+  readonly cartAttributesUpdate: CustomQueryFor<
+    typeof CUSTOM_CART_ATTRIBUTES_UPDATE_MUTATION,
+    TCartFragment
+  >;
 };
 
 type CartDataFromCartQuery<TQuery extends AnyStorefrontQueryString> =
@@ -528,6 +582,8 @@ function createCartQueries<const TCartFragment extends CartFragmentDocument>(
 
   const cartNoteUpdate = gql(CUSTOM_CART_NOTE_UPDATE_MUTATION, fragments);
 
+  const cartAttributesUpdate = gql(CUSTOM_CART_ATTRIBUTES_UPDATE_MUTATION, fragments);
+
   return {
     cart,
     cartCreate,
@@ -536,6 +592,7 @@ function createCartQueries<const TCartFragment extends CartFragmentDocument>(
     cartLinesRemove,
     cartDiscountCodesUpdate,
     cartNoteUpdate,
+    cartAttributesUpdate,
   } as const;
 }
 

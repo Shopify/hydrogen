@@ -642,7 +642,13 @@ describe("useCart pending state", () => {
     const mockStore = createMockStore();
     mockStore.setState(
       makeCartState({
-        pending: { lines: new Set(["line-1"]), note: false, discountCodes: new Set(), cost: true },
+        pending: {
+          lines: new Set(["line-1"]),
+          note: false,
+          attributes: false,
+          discountCodes: new Set(),
+          cost: true,
+        },
       }),
     );
     vi.mocked(createCartStore).mockImplementation(() => mockStore);
@@ -664,7 +670,13 @@ describe("useCart pending state", () => {
     const mockStore = createMockStore();
     mockStore.setState(
       makeCartState({
-        pending: { lines: new Set(), note: true, discountCodes: new Set(), cost: false },
+        pending: {
+          lines: new Set(),
+          note: true,
+          attributes: false,
+          discountCodes: new Set(),
+          cost: false,
+        },
       }),
     );
     vi.mocked(createCartStore).mockImplementation(() => mockStore);
@@ -682,7 +694,13 @@ describe("useCart pending state", () => {
     const mockStore = createMockStore();
     mockStore.setState(
       makeCartState({
-        pending: { lines: new Set(), note: false, discountCodes: new Set(["SAVE10"]), cost: true },
+        pending: {
+          lines: new Set(),
+          note: false,
+          attributes: false,
+          discountCodes: new Set(["SAVE10"]),
+          cost: true,
+        },
       }),
     );
     vi.mocked(createCartStore).mockImplementation(() => mockStore);
@@ -704,7 +722,13 @@ describe("useCart pending state", () => {
     const mockStore = createMockStore();
     mockStore.setState(
       makeCartState({
-        pending: { lines: new Set(), note: false, discountCodes: new Set(), cost: true },
+        pending: {
+          lines: new Set(),
+          note: false,
+          attributes: false,
+          discountCodes: new Set(),
+          cost: true,
+        },
       }),
     );
     vi.mocked(createCartStore).mockImplementation(() => mockStore);

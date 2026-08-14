@@ -9,7 +9,7 @@
 // any sibling example. @shopify/hydrogen's own analytics globals augment the
 // `Shopify` interface declared here (see its src/core/analytics/globals.d.ts).
 //
-// version: ea315691e9819723879605d727a20fde6bdda314
+// version: 977e4f914dd2b3eca85ad01dee81c2c96eb1b2e5
 export interface Price {
   amount: string;
   currencyCode: string;
@@ -56,6 +56,10 @@ export interface ActionFunction<P, R, Meta extends object = {}, O = void> {
 }
 export type UpdateCartUserError = CartMutationUserError;
 export type UpdateCartWarning = CartMutationWarning;
+export interface CartAttributeInput {
+  key: string;
+  value: string;
+}
 export interface StorefrontCartLinesConnection {
   nodes: CartLine[];
 }
@@ -72,7 +76,11 @@ export type UpdateCartEventTargetMeta =
       action: CartUpdateAction;
     }
   | {
-      type: "shopify:cart:note-update" | "shopify:cart:discount-update" | "shopify:cart:error";
+      type:
+        | "shopify:cart:note-update"
+        | "shopify:cart:attributes-update"
+        | "shopify:cart:discount-update"
+        | "shopify:cart:error";
     };
 export interface EventTargetConfigurationMeta {
   /**
@@ -94,10 +102,8 @@ export interface CartLineInput {
   merchandiseId?: string;
   /** Set to 0 to remove. */
   quantity: number;
-  attributes?: Array<{
-    key: string;
-    value: string;
-  }>;
+  /** Line item-level custom attributes */
+  attributes?: CartAttributeInput[];
   /** Selling plan GID or raw selling plan id. */
   sellingPlanId?: string;
 }
@@ -107,6 +113,8 @@ export interface UpdateCartPayload {
   lines?: CartLineInput[];
   note?: string;
   discountCodes?: string[];
+  /** Cart-level custom attributes */
+  attributes?: CartAttributeInput[];
 }
 export interface UpdateCartResult {
   cart: StorefrontCartSummary;
@@ -160,6 +168,9 @@ declare global {
     actions?: typeof actions;
     country?: string;
     locale?: string;
+    theme?: {
+      theme_store_id?: number | null;
+    };
   }
   interface Window {
     Shopify?: Shopify & {
