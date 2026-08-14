@@ -52,7 +52,6 @@ describe("shopify scripts", () => {
     delete (window as any).Shopify;
     delete (document as any).modelContext;
     delete (navigator as any).modelContext;
-    delete (window as any).PerfKit;
     Reflect.deleteProperty(window, Symbol.for("shopify.webmcp.registered"));
     document.head.innerHTML = "";
     setDocumentReadyState("complete");
@@ -430,11 +429,6 @@ describe("shopify scripts", () => {
           "data-resource-timing-sampling-rate": TEST_RESOURCE_TIMING_SAMPLING_RATE,
         },
       },
-      {
-        tagName: "script",
-        attributes: { id: "shopify-perfkit-spa-bridge", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining("perfkit-spa-bridge"),
-      },
     ]);
     expect(descriptors.links).toEqual([
       {
@@ -532,11 +526,6 @@ describe("shopify scripts", () => {
           "data-resource-timing-sampling-rate": TEST_RESOURCE_TIMING_SAMPLING_RATE,
         },
       },
-      {
-        tagName: "script",
-        attributes: { id: "shopify-perfkit-spa-bridge", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining("perfkit-spa-bridge"),
-      },
     ]);
     expect(descriptors.scripts[0]?.innerHTML).not.toContain('"templates"');
   });
@@ -547,7 +536,7 @@ describe("shopify scripts", () => {
       nonce: "",
       shop: TEST_SHOP,
     });
-    expect(descriptors.scripts).toHaveLength(9);
+    expect(descriptors.scripts).toHaveLength(8);
     for (const { attributes } of descriptors.scripts) {
       expect(attributes).toHaveProperty("nonce", "");
     }
@@ -556,7 +545,7 @@ describe("shopify scripts", () => {
   it("does not include WebMCP in SSR descriptors", () => {
     const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
 
-    expect(descriptors.scripts).toHaveLength(8);
+    expect(descriptors.scripts).toHaveLength(7);
     expect(descriptors.scripts).not.toContainEqual(
       expect.objectContaining({
         attributes: expect.objectContaining({
@@ -633,7 +622,6 @@ describe("shopify scripts", () => {
         src: SHOPIFY_PERF_KIT_SCRIPT,
       },
     });
-    expect(getPerfKitBridgeScript(descriptors.scripts)?.innerHTML).toContain("perfkit-spa-bridge");
     const renderedTags = renderShopifyScriptTags({
       shop: {
         shopId: TEST_SHOP_ID,
@@ -700,70 +688,6 @@ describe("shopify scripts", () => {
     );
   });
 
-  it("registers the PerfKit SPA bridge when the analytics bus is available at DOMContentLoaded", () => {
-    setDocumentReadyState("loading");
-    const addDestination = vi.fn();
-    const descriptors = getShopifyScriptTags({
-      shop: {
-        shopId: TEST_SHOP_ID,
-        storefrontId: TEST_STOREFRONT_ID,
-        myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
-      },
-    });
-    const bridgeScript = getPerfKitBridgeScript(descriptors.scripts);
-    assert(bridgeScript?.innerHTML, "Expected ShopifyScripts to include the PerfKit bridge script");
-
-    (0, eval)(bridgeScript.innerHTML);
-    expect(addDestination).not.toHaveBeenCalled();
-
-    (window as any).Shopify = { analytics: { addDestination } };
-    document.dispatchEvent(new Event("DOMContentLoaded"));
-
-    expect(addDestination).toHaveBeenCalledOnce();
-    expect(addDestination.mock.calls[0]?.[0]?.name).toBe("perfkit-spa-bridge");
-  });
-
-  it("forwards bridged analytics events to PerfKit", () => {
-    const addDestination = vi.fn();
-    const subscriptions = new Map<string, (payload: unknown) => void>();
-    (window as any).Shopify = { analytics: { addDestination } };
-    (window as any).PerfKit = {
-      navigate: vi.fn(),
-      setPageType: vi.fn(),
-    };
-    const descriptors = getShopifyScriptTags({
-      shop: {
-        shopId: TEST_SHOP_ID,
-        storefrontId: TEST_STOREFRONT_ID,
-        myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
-      },
-    });
-    const bridgeScript = getPerfKitBridgeScript(descriptors.scripts);
-    assert(bridgeScript?.innerHTML, "Expected ShopifyScripts to include the PerfKit bridge script");
-
-    (0, eval)(bridgeScript.innerHTML);
-    const destination = addDestination.mock.calls[0]?.[0];
-    assert(destination, "Expected the bridge to register a destination");
-    destination.setup({
-      subscribe: (event: string, callback: (payload: unknown) => void) => {
-        subscriptions.set(event, callback);
-        return vi.fn();
-      },
-    });
-
-    subscriptions.get("page_viewed")?.({});
-    subscriptions.get("product_viewed")?.({});
-    subscriptions.get("collection_viewed")?.({});
-    subscriptions.get("search_viewed")?.({});
-    subscriptions.get("cart_viewed")?.({});
-
-    expect(window.PerfKit?.navigate).toHaveBeenCalledOnce();
-    expect(window.PerfKit?.setPageType).toHaveBeenNthCalledWith(1, "product");
-    expect(window.PerfKit?.setPageType).toHaveBeenNthCalledWith(2, "collection");
-    expect(window.PerfKit?.setPageType).toHaveBeenNthCalledWith(3, "search");
-    expect(window.PerfKit?.setPageType).toHaveBeenNthCalledWith(4, "cart");
-  });
-
   it("returns a new ordered tag array each time", () => {
     const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
     const firstTags = descriptors.tags;
@@ -810,7 +734,7 @@ describe("shopify scripts", () => {
     });
     const html = htmlTags.join("\n");
 
-    expect(htmlTags).toHaveLength(12);
+    expect(htmlTags).toHaveLength(11);
     expect(html).toContain('<script id="shopify-global-bootstrap" nonce="test-nonce">');
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
@@ -832,10 +756,6 @@ describe("shopify scripts", () => {
     );
   });
 });
-
-function getPerfKitBridgeScript(scripts: ReturnType<typeof getShopifyScriptTags>["scripts"]) {
-  return scripts.find((script) => script.innerHTML?.includes("perfkit-spa-bridge"));
-}
 
 function setDocumentReadyState(readyState: DocumentReadyState) {
   Object.defineProperty(document, "readyState", {
