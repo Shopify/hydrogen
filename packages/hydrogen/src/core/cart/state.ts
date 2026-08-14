@@ -133,7 +133,13 @@ export interface CartState<TData extends CartData = CartData> {
 }
 
 export function createEmptyPending(): CartPending {
-  return { lines: new Set(), note: false, attributes: false, discountCodes: new Set(), cost: false };
+  return {
+    lines: new Set(),
+    note: false,
+    attributes: false,
+    discountCodes: new Set(),
+    cost: false,
+  };
 }
 
 export function createEmptyErrorGroup(): CartErrorGroup {

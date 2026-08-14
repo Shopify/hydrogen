@@ -32,6 +32,7 @@ export type {
   CartLineMerchandise,
   CartCost,
   DiscountCode,
+  Attribute,
 } from "./state";
 export {
   EMPTY_CART_DATA,

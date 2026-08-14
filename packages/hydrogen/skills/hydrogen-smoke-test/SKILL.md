@@ -172,7 +172,7 @@ Expected: a redirect whose `location` header points at Shopify's hosted login, n
 - Quantity Enter key submits a set action.
 - Rapid quantity clicks settle to the final expected quantity.
 - Line, discount, note, attribute, network, and cart-level errors appear in the right scope.
-- Saving one cart attribute submits the complete next list, preserves unrelated attributes, and shows a saving state while `pending.attributes` is true. Submitting no attribute pairs clears the list.
+- Saving one cart attribute submits the complete next list, preserves unrelated attributes, and shows a saving state while `pending.attributes` is true. Submitting no attribute fields clears the list.
 - Totals are server-provided and visually pending during cart mutations.
 
 ## Collection And Search

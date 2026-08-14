@@ -43,26 +43,44 @@ const GIFT_MESSAGE_ATTRIBUTE = "gift-message";
 function CartGiftMessage({ attributes }: { attributes: CartData["attributes"] }) {
   const { formProps, register } = useCartForm();
   const attributesPending = useCart((state) => state.pending.attributes);
+  const giftMessageErrors = useCart((state) => state.errors.attributes.get(GIFT_MESSAGE_ATTRIBUTE));
   const giftMessageId = useId();
+  const giftMessageErrorId = useId();
   const giftMessage = attributes.find(({ key }) => key === GIFT_MESSAGE_ATTRIBUTE)?.value ?? "";
   const preservedAttributes = attributes.filter(({ key }) => key !== GIFT_MESSAGE_ATTRIBUTE);
+  const giftMessageErrorMessages = [
+    ...(giftMessageErrors?.userErrors ?? []),
+    ...(giftMessageErrors?.warnings ?? []),
+  ];
 
   return (
     <form {...formProps()} className="cart-attribute">
       {preservedAttributes.map(({ key, value }) => (
-        <div key={key}>
-          <input type="hidden" {...register("attributeKey", { value: key })} />
-          <input type="hidden" {...register("attributeValue", { value: value ?? "" })} />
-        </div>
+        <input
+          key={key}
+          type="hidden"
+          {...register("attributeValue", { key, value: value ?? "" })}
+        />
       ))}
-      <input type="hidden" {...register("attributeKey", { value: GIFT_MESSAGE_ATTRIBUTE })} />
       <label htmlFor={giftMessageId}>Gift message</label>
       <textarea
         id={giftMessageId}
         rows={3}
-        {...register("attributeValue", { defaultValue: giftMessage })}
+        {...register("attributeValue", {
+          key: GIFT_MESSAGE_ATTRIBUTE,
+          defaultValue: giftMessage,
+        })}
+        aria-describedby={giftMessageErrorMessages.length > 0 ? giftMessageErrorId : undefined}
+        aria-invalid={(giftMessageErrors?.userErrors.length ?? 0) > 0 || undefined}
         placeholder="Add a message for the recipient"
       />
+      {giftMessageErrorMessages.length > 0 ? (
+        <div id={giftMessageErrorId} role="alert">
+          {giftMessageErrorMessages.map(({ message }, index) => (
+            <p key={`${message}-${index}`}>{message}</p>
+          ))}
+        </div>
+      ) : null}
       <button
         type="submit"
         {...register("attributes-update")}

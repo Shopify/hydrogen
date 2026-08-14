@@ -216,7 +216,7 @@ Important React form fields:
 - `register("increase")`, `register("decrease")`, and `register("remove")` create line item controls.
 - `register("discountCode", { defaultValue: "" })`, `register("discountCode", { value: code })`, `register("discount-apply")`, and `register("discount-remove")` create discount forms.
 - `register("note")` and `register("note-update")` create note forms.
-- Repeated `register("attributeKey", { value: key })` and `register("attributeValue", { value })` controls define the complete next cart attribute list; `register("attributes-update")` submits it. Preserve unrelated attributes explicitly because omitted attributes are removed.
+- Repeated `register("attributeValue", { key, value })` controls define the complete next cart attribute list; `register("attributes-update")` submits it. Preserve unrelated attributes explicitly because omitted attributes are removed.
 
 A save-style attribute editor can use the scoped pending boolean to prevent duplicate saves while the promise resolves:
 
@@ -229,13 +229,21 @@ function GiftMessage({ attributes }: { attributes: Array<{ key: string; value: s
   return (
     <form {...formProps()}>
       {attributes.filter((attribute) => attribute.key !== key).map((attribute) => (
-        <Fragment key={attribute.key}>
-          <input type="hidden" {...register("attributeKey", { value: attribute.key })} />
-          <input type="hidden" {...register("attributeValue", { value: attribute.value ?? "" })} />
-        </Fragment>
+        <input
+          key={attribute.key}
+          type="hidden"
+          {...register("attributeValue", {
+            key: attribute.key,
+            value: attribute.value ?? "",
+          })}
+        />
       ))}
-      <input type="hidden" {...register("attributeKey", { value: key })} />
-      <textarea {...register("attributeValue", { defaultValue: attributes.find((attribute) => attribute.key === key)?.value ?? "" })} />
+      <textarea
+        {...register("attributeValue", {
+          key,
+          defaultValue: attributes.find((attribute) => attribute.key === key)?.value ?? "",
+        })}
+      />
       <button type="submit" {...register("attributes-update")} disabled={pending} aria-busy={pending}>
         {pending ? "Saving…" : "Save message"}
       </button>
@@ -244,7 +252,7 @@ function GiftMessage({ attributes }: { attributes: Array<{ key: string; value: s
 }
 ```
 
-Import `Fragment` from React for this example, or use a keyed wrapper element. If the cart page and drawer can render together, also give the textarea a `useId()`-generated ID instead of a hard-coded document ID.
+If the cart page and drawer can render together, give the textarea a `useId()`-generated ID instead of a hard-coded document ID.
 
 Each line item still gets its own form; the binding removes boilerplate, not the form identity requirement.
 

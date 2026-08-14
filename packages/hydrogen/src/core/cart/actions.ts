@@ -1,4 +1,5 @@
 import { normalizeCartId } from "./cookie";
+import { getCartAttributeFormEntries } from "./form";
 
 export type CartAttributeInput = { key: string; value: string };
 
@@ -183,7 +184,7 @@ function extractOptionalLineFields(
 //   Update qty:     server does the math — form sends current qty, server increments/decrements
 //   Remove line:    explicit intent field (can't express "quantity=0 means remove" implicitly)
 //   Discount bulk:  no FormData equivalent — forms handle one code at a time
-//   Cart attributes: parallel attributeKey/attributeValue fields preserve the ordered list
+//   Cart attributes: attributes.<key> fields preserve each key/value relationship
 //   Selling plan:   add only — no way to change selling plan on existing line via form
 //
 // Design decisions:
@@ -300,18 +301,9 @@ function parseNoteIntent(form: FormData): CartAction {
 }
 
 function parseAttributesIntent(form: FormData): CartAction {
-  const keys = form.getAll("attributeKey");
-  const values = form.getAll("attributeValue");
-
-  if (keys.length !== values.length) {
-    throw new CartActionError(
-      'Intent "attributes-update" requires one "attributeValue" field for every "attributeKey" field.',
-    );
-  }
-
   return {
     intent: "attributes-update",
-    attributes: parseAttributes(keys.map((key, index) => ({ key, value: values[index] }))),
+    attributes: parseAttributes(getCartAttributeFormEntries(form)),
   };
 }
 

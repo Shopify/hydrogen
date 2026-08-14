@@ -722,7 +722,13 @@ describe("useCart pending state", () => {
     const mockStore = createMockStore();
     mockStore.setState(
       makeCartState({
-        pending: { lines: new Set(), note: false, discountCodes: new Set(), cost: true },
+        pending: {
+          lines: new Set(),
+          note: false,
+          attributes: false,
+          discountCodes: new Set(),
+          cost: true,
+        },
       }),
     );
     vi.mocked(createCartStore).mockImplementation(() => mockStore);

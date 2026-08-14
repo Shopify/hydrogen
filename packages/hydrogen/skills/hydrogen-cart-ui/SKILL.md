@@ -131,9 +131,9 @@ Errors survive unrelated cart work and clear when a new mutation begins for the 
 
 ### Cart attribute editing
 
-- **Treat an attribute update as complete-list replacement.** `attributes-update` sends the full next attribute list; attributes omitted from the submission are removed. When editing one attribute, explicitly include every unrelated existing attribute as repeated hidden `attributeKey` / `attributeValue` pairs. Submit no pairs to clear all attributes.
-- **Keep keys and values paired and ordered.** Each `attributeKey` must have a corresponding `attributeValue`. Storefront API mutation inputs require string values, so normalize a nullable returned value deliberately (usually to `""`) before resubmitting it.
-- **Use the register contract exactly.** Field names are camelCase (`attributeKey`, `attributeValue`) because they name payload properties. The submit intent is kebab-case (`attributes-update`) because action intents follow the existing `discount-apply`, `discount-remove`, and `note-update` convention.
+- **Treat an attribute update as complete-list replacement.** `attributes-update` sends the full next attribute list; attributes omitted from the submission are removed. When editing one attribute, explicitly include every unrelated existing attribute as a hidden keyed `attributeValue` field. Submit no attribute fields to clear all attributes.
+- **Keep each key attached to its value.** Pass the attribute key to every `register("attributeValue", {key, ...})` call. The generated `attributes.<key>` field name encodes that key, so the server never relies on parallel field positions. Storefront API mutation inputs require string values, so normalize a nullable returned value deliberately (usually to `""`) before resubmitting it.
+- **Use the register contract exactly.** Call `register("attributeValue", {key, ...})` rather than spelling its generated `attributes.<key>` field name by hand. The submit intent is kebab-case (`attributes-update`) because action intents follow the existing `discount-apply`, `discount-remove`, and `note-update` convention.
 - **Maintain a local draft** for an editable attribute when the UI can remain mounted across server responses. Only sync confirmed attribute data into that draft while `pending.attributes` is `false`, so a response does not clobber typing that happened during the request.
 - **Show scoped pending and errors.** Use `pending.attributes` for the save state and display entries from `errors.attributes` next to the editor for the matching key. A save-style submit button may be disabled until the attribute promise settles.
 
@@ -143,7 +143,7 @@ Errors survive unrelated cart work and clear when a new mutation begins for the 
 - **Each line item form must preserve the progressive-enhancement shape.** The rendered structure will vary by framework and design system, but every line item quantity form needs the same Hydrogen contract: `register("set")`, `register("lineId", { value: line.id })`, and a real editable quantity input using `register("quantity", { value: line.quantity, interactive: true })`. Increase, decrease, and remove buttons are additional submit controls, not replacements for the set intent or the quantity input.
 - **The `set` control is a hidden submit button, not a hidden input.** `register("set")` already returns `{ type: "submit", hidden: true }`; render it on a `<button>`. Do not swap it for `<input type="hidden">` — that removes the submit button, so pressing Enter in the quantity input no longer submits the set action.
 - **Each discount "remove" button is its own form** — separate from the "apply" form. The apply form needs input validation (empty/duplicate prevention); each remove form is a single action.
-- **Attribute forms submit repeated pairs.** Render one `register("attributeKey", {value})` and one `register("attributeValue", {value})` control for every attribute in the complete next list, then submit with `register("attributes-update")`.
+- **Attribute forms submit keyed values.** Render one `register("attributeValue", {key, value})` control for every attribute in the complete next list, then submit with `register("attributes-update")`.
 
 ### Loading
 

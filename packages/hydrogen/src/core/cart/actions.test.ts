@@ -574,13 +574,11 @@ describe("parseCartRequest", () => {
   });
 
   describe("FormData — attributes intent", () => {
-    it("pairs repeated attribute keys and values", async () => {
+    it("parses attribute values with their encoded keys", async () => {
       const body = new URLSearchParams([
         ["intent", "attributes-update"],
-        ["attributeKey", "gift-message"],
-        ["attributeValue", "Happy birthday!"],
-        ["attributeKey", "delivery-date"],
-        ["attributeValue", "Friday"],
+        ["attributes.gift-message", "Happy birthday!"],
+        ["attributes.delivery-date", "Friday"],
       ]);
       const request = new Request("http://localhost/api/cart", {
         method: "POST",
@@ -603,12 +601,10 @@ describe("parseCartRequest", () => {
       expect(action).toEqual({ intent: "attributes-update", attributes: [] });
     });
 
-    it("rejects mismatched attribute fields", async () => {
+    it("rejects an empty encoded attribute key", async () => {
       await expect(
-        parseCartRequest(
-          formRequest({ intent: "attributes-update", attributeKey: "gift-message" }),
-        ),
-      ).rejects.toThrow(/one "attributeValue"/);
+        parseCartRequest(formRequest({ intent: "attributes-update", "attributes.": "value" })),
+      ).rejects.toThrow(/not to be empty/);
     });
   });
 

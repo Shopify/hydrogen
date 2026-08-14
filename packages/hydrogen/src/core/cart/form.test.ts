@@ -60,15 +60,22 @@ describe("createCartFormRegister", () => {
       expect(result).toEqual({ name: "note", defaultValue: "gift wrap" });
     });
 
-    it("attribute fields return repeatable key and value names", () => {
-      expect(register("attributeKey", { value: "gift-message" })).toEqual({
-        name: "attributeKey",
-        value: "gift-message",
-      });
-      expect(register("attributeValue", { defaultValue: "Happy birthday!" })).toEqual({
-        name: "attributeValue",
+    it("attribute values encode their key in the field name", () => {
+      expect(
+        register("attributeValue", {
+          key: "gift-message",
+          defaultValue: "Happy birthday!",
+        }),
+      ).toEqual({
+        name: "attributes.gift-message",
         defaultValue: "Happy birthday!",
       });
+    });
+
+    it("rejects an empty attribute key", () => {
+      expect(() => register("attributeValue", { key: "", value: "Happy birthday!" })).toThrow(
+        /non-empty "key"/,
+      );
     });
 
     it("sellingPlanId returns name and value", () => {
