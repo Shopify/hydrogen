@@ -55,7 +55,7 @@ The bus is **browser-only effective** and is created by ShopifyScripts in the br
 What the bus does for you out of the box:
 
 - Sends `page_viewed`, `product_viewed`, `collection_viewed`, `search_viewed`, and `product_added_to_cart` events to Monorail (`https://monorail-edge.shopifysvc.com/unstable/produce_batch`) using the customer-tracking schema.
-- Exposes itself on `window.Shopify.analytics` so Shopify runtime scripts can attach browser-only integrations such as PerfKit SPA navigation.
+- Exposes itself on `window.Shopify.analytics` so Shopify runtime scripts can attach browser-only analytics integrations.
 
 What it does **not** do:
 
