@@ -1,12 +1,12 @@
 import { DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
-import type { ShopifyRequestContext } from "../core/headers";
+import type { ShopifyRequestContext } from "../core/request-context";
 import {
   createCallableRouteHandler,
   type CallableRouteHandler,
   type ShopifyRouteErrorResult,
   type ShopifyRouteRedirectResult,
   type ShopifyRouteSessionManager,
-} from "../core/route-handlers";
+} from "../core/request-routing/registered-routes";
 import { CustomerAccountApiError, CustomerAccountOAuthError } from "./errors";
 
 export const CUSTOMER_ACCOUNT_AUTHORIZE_PATH = "/account/authorize" as const;

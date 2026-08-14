@@ -44,7 +44,6 @@ export default {
         config: {
           storeDomain: env.PUBLIC_STORE_DOMAIN,
           privateStorefrontToken: getPrivateStorefrontToken(env),
-          buyerIp,
         },
       });
       const customerSessionManager = await createCustomerSessionManager(
@@ -66,14 +65,14 @@ export default {
         postLogoutRedirectUri: "/",
       });
 
-      const shopifyRoute = await handleShopifyRoutes({
+      const shopifyRoute = handleShopifyRoutes({
         request: publicRequest,
         requestContext: shopifyRequestContext,
         sessionManager: customerSessionManager,
         storefrontClient,
         handlers: [cartHandlers, predictiveSearchHandlers, customerAccountHandlers],
       });
-      if (shopifyRoute) return shopifyRoute;
+      if (shopifyRoute) return await shopifyRoute;
 
       const routerContext = await createHydrogenRouterContext(
         publicRequest,
@@ -121,9 +120,8 @@ export default {
           routeTemplates,
           storefrontClient,
         });
-        if (redirect) {
-          return finalizeHydrogenResponse(redirect, routerContext, shopifyRequestContext);
-        }
+
+        if (redirect) return redirect;
       }
 
       return response;
@@ -168,7 +166,6 @@ async function finalizeHydrogenResponse(
     mutableResponse.headers,
   );
   shopifyRequestContext.applyResponseHeaders(mutableResponse.headers);
-  mutableResponse.headers.append("powered-by", "Shopify, Hydrogen");
 
   return mutableResponse;
 }

@@ -32,12 +32,14 @@ When creating a full cart page, use the app's existing route convention when pre
 The store holds a `CartState` and notifies subscribers when it changes. `state.readyPromise` is present while an applicable full-cart load is pending and resolves after the resulting state is published. Mutations flow through Shopify Standard Actions — the store listens for `shopify:cart:lines-update`, `shopify:cart:discount-update`, and `shopify:cart:note-update` DOM events. Each event carries a `promise` that resolves with the server response.
 
 On mutation:
-1. The store applies an **optimistic update** — the UI-visible state changes immediately.
+1. The store applies an **optimistic projection** over its settled state, so the UI-visible state changes immediately.
 2. The affected entity is added to `pending` — a set of in-flight line IDs, discount codes, or a note boolean.
-3. When the promise resolves, the store **reconciles** optimistic state with server truth and clears the pending entry.
-4. On failure, the store **rolls back** to a captured baseline and clears the pending entry.
+3. When the promise resolves, the store folds that transaction into settled state and reapplies remaining projections. Overlapping mutations discard ambiguous response snapshots, then coalesce one authoritative cart refresh after the burst settles.
+4. On failure, the store removes only the failed projection, preserves unrelated work, and clears the matching pending entry.
 
-The store manages one abort controller per line ID, one per discount batch, and one for the note. A new mutation for the same entity aborts the in-flight one — this is what makes rapid clicks safe without disabling controls.
+When overlapping mutations make response snapshots ambiguous, the store sets `state.revalidating` to `true`. It starts one authoritative refresh after those mutations settle and clears the flag when the refresh completes or fails. Until then, server-derived values such as costs remain at their last trustworthy value. A refresh failure preserves the locally reconciled cart and appears in `errors.network`.
+
+The store supersedes keyed mutations for the same line, discount batch, or note. Relative additions remain independent so every submitted quantity reaches the server; their projections are reconciled together without disabling controls.
 
 ## Stable selectors
 
@@ -70,9 +72,12 @@ const messages = deriveFromErrors(errors, () => {
 
 - `pending.lines` — `Set<string>` of line IDs with mutations in flight.
 - `pending.discountCodes` — `Set<string>` of discount codes being applied or removed.
+- `pending.cost` — `true` when pending line or discount mutations can leave totals stale.
 - `pending.note` — `boolean` indicating whether a note save is in flight.
 
 Any value whose entity is in a pending set is **optimistic and unconfirmed**. The UI must treat it differently from confirmed values.
+
+`state.revalidating` is `true` while the store refreshes authoritative cart-wide fields after overlapping mutations. Treat totals as unconfirmed and suppress cart analytics while it is true.
 
 ## Error state
 
@@ -86,6 +91,8 @@ Any value whose entity is in a pending set is **optimistic and unconfirmed**. Th
 - `errors.lastUpdatedAt` — timestamp of the most recent error update across any scope. Per-scope timestamps also exist (`linesUpdatedAt`, `discountCodesUpdatedAt`, etc.).
 
 Each `CartErrorGroup` contains `{ userErrors: CartUserError[], warnings: CartWarning[] }`.
+
+Errors survive unrelated cart work and clear when a new mutation begins for the same key.
 
 ---
 
@@ -170,7 +177,7 @@ Each `CartErrorGroup` contains `{ userErrors: CartUserError[], warnings: CartWar
 ### Totals
 
 21. **Pending totals** — While any line or discount mutation is in-flight, subtotal and total appear in their pending visual state. The amounts shown are the last server-confirmed values — never client-computed.
-22. **Settled totals** — When all pending sets are empty, totals display normally with the latest server values.
+22. **Settled totals** — After an ordinary mutation settles, totals display the latest server values. Overlapping mutation bursts retain pending styling and the last trustworthy amounts while one authoritative cart refresh is in flight.
 
 ### Loading
 

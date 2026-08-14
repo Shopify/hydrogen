@@ -61,6 +61,11 @@ const requestContext = createShopifyRequestContext({
   request: { headers: new Headers() },
   i18n: { country: "US", language: "EN", pathPrefix: "" },
 });
+const buyerRequestContext = createShopifyRequestContext({
+  request: { headers: new Headers() },
+  i18n: { country: "US", language: "EN", pathPrefix: "" },
+  buyerIp: "1.2.3.4",
+});
 `;
 
 describe("createStorefrontClient editor autocomplete", () => {
@@ -94,13 +99,13 @@ const storefrontClient = createStorefrontClient({
     const completions = getCompletionsAt(`${SCRATCH_PRELUDE}
 const storefrontClient = createStorefrontClient({
   type: "private",
-  requestContext,
+  requestContext: buyerRequestContext,
   config: { ${CURSOR} },
 });
 `);
 
     expect(completions).toContain("privateStorefrontToken");
-    expect(completions).toContain("buyerIp");
+    expect(completions).not.toContain("buyerIp");
     expect(completions).not.toContain("publicStorefrontToken");
   });
 });

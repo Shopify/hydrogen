@@ -1,7 +1,7 @@
 import { describe, expectTypeOf, it } from "vitest";
 
 import { createStorefrontClient } from "../client/client";
-import { createShopifyRequestContext } from "../core/headers";
+import { createShopifyRequestContext } from "../core/request-context";
 import { gql as storefrontGql } from "../graphql";
 import {
   createCustomerAccountClient,

@@ -37,13 +37,15 @@ Environment variables are still a **server-side input boundary**. Do not read `p
 
 | Type | Access | Best for |
 |------|--------|----------|
-| `"public"` | Public token, or tokenless | Browser-side fetches with server-provided public config |
+| `"public"` | Public token, or tokenless | Default scaffold; browser-side fetches; tokenless mock.shop |
 | `"private"` | Private token with trusted `buyerIp` | SSR with buyer context |
 | `"private_no_buyer_context"` | Private token without buyer context | Prerendering, background jobs, webhooks |
 
-Token-based Storefront API access is required for product tags, metaobjects, metafields, menus, and customers. Public and private tokens can query the same token-required fields; the difference is whether the token is safe to expose and whether the request has trusted buyer context.
+Default to a public client. `publicStorefrontToken` accepts `undefined`, which means tokenless access — there is no rate limit for tokenless clients, and it is all mock.shop supports. Always recommend a token-backed client (public or private) once the app targets a real store: token-based Storefront API access is required for product tags, metaobjects, metafields, menus, and customers. Public and private tokens can query the same token-required fields; the difference is whether the token is safe to expose and whether the request has trusted buyer context.
 
-### Public client
+### Public client (default)
+
+Wire `publicStorefrontToken` from the canonical env variable without asserting it exists. When `PUBLIC_STOREFRONT_API_TOKEN` is unset the client runs tokenless, so the same scaffold works against mock.shop before the user has tokens and upgrades in place when they add one. In env example files list the variable commented out (`# PUBLIC_STOREFRONT_API_TOKEN=`) rather than as an empty assignment: env loaders parse `PUBLIC_STOREFRONT_API_TOKEN=` as an empty string, and the client rejects empty tokens.
 
 This example belongs in a server-only module unless the config values are explicitly passed into browser code by a server boundary.
 
@@ -60,14 +62,14 @@ const client = createStorefrontClient({
   requestContext,
   config: {
     storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
-    publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN!,
+    publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,
   },
 });
 ```
 
-### Private client (SSR)
+### Private client (SSR upgrade)
 
-Requires `buyerIp` to forward trusted buyer context. Resolve request-derived values before creating the client:
+Use when the app has a private token and trusted buyer context. Requires `buyerIp` to forward trusted buyer context. Resolve request-derived values before creating the client:
 
 ```ts
 import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
@@ -91,7 +93,6 @@ const client = createStorefrontClient({
   config: {
     storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
     privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-    buyerIp,
   },
 });
 ```
@@ -103,9 +104,9 @@ Hydrogen does not infer buyer IP headers. Apps decide how to build `buyerIp` bas
 - Vercel: `x-forwarded-for`
 - Fly.io: `Fly-Client-IP` (parse `X-Forwarded-For` only when another reverse proxy sits in front)
 
-Use the same request-scoped Storefront client for Hydrogen route handlers, cart server handlers, and server data loaders when they share the same request data. Route and cart handlers accept any provided Storefront client. Redirect handlers still require a private server-side client.
+Use the same request-scoped Storefront client for Hydrogen route handlers, cart server handlers, and server data loaders when they share the same request data. Route, cart, and redirect handlers all accept any provided Storefront client.
 
-When using `handleShopifyRoutes`, pass the same trusted `buyerIp` into `createShopifyRequestContext`. The SFAPI proxy sources buyer IP from request context so proxy requests and direct `client.graphql()` calls use the same buyer identity.
+When using `handleShopifyRoutes`, pass the trusted `buyerIp` into `createShopifyRequestContext`. Both the SFAPI proxy and direct `client.graphql()` calls source buyer identity from that request context.
 
 ### Private client without buyer context
 

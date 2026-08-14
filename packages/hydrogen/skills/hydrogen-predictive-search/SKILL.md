@@ -44,10 +44,12 @@ Use `getPredictiveSearchItemUrl()` for predictive result links. It infers Hydrog
 import { getPredictiveSearchItemUrl } from "@shopify/hydrogen";
 
 const productHref = getPredictiveSearchItemUrl(product, { routes: routeTemplates, term });
-const querySuggestionHref = getPredictiveSearchItemUrl(querySuggestion);
+const querySuggestionHref = getPredictiveSearchItemUrl(querySuggestion, {
+  routes: routeTemplates,
+});
 ```
 
-Pass `{term}` for resource items such as products, collections, pages, and articles. These items do not contain the shopper's typed search text, but the destination URL needs it for attribution. Do not pass `{term}` for `SearchQuerySuggestion` items; the helper uses `querySuggestion.text` automatically. Pass `{searchPath}` for query suggestions only when the full search page is not `/search`.
+Pass `{term}` for resource items such as products, collections, pages, and articles. These items do not contain the shopper's typed search text, but the destination URL needs it for attribution. Do not pass `{term}` for `SearchQuerySuggestion` items; the helper uses `querySuggestion.text` automatically. Pass `{routes: routeTemplates}` so query suggestions honor a custom `search` route. Pass `{searchPath}` only when the suggestion link intentionally differs from the shared search route; it takes precedence when provided.
 
 If the storefront uses custom Shopify resource paths, use the local `hydrogen-routing` skill before wiring predictive search result URLs. Do not create predictive-search-only URL callbacks.
 

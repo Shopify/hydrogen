@@ -15,13 +15,18 @@ export type ShopifyScriptsProps = ShopifyScriptTagsOptions & {
   webMcp?: boolean;
 };
 
+type CompletePropOptions<T> = {
+  [K in keyof T]-?: unknown;
+};
+
 const i18nProp: PropType<ShopifyScriptsI18n> = Object;
 const navigateProp: PropType<NonNullable<ShopifyRoutesOptions["navigate"]>> | null = null;
 const routesProp: PropType<NonNullable<ShopifyRoutesOptions["routes"]>> | null = null;
 const shopProp: PropType<ShopifyScriptsShop> = Object;
 const consentProp: PropType<ShopifyScriptTagsOptions["consent"]> = Object;
 const analyticsProp: PropType<ShopifyScriptTagsOptions["analytics"]> = Object;
-const inboxProp: PropType<ShopifyScriptTagsOptions["inbox"]> = [Boolean, Object];
+const debugProp: PropType<ShopifyScriptTagsOptions["debug"]> = Object;
+const inboxProp: PropType<ShopifyScriptTagsOptions["inbox"]> = Boolean;
 
 export const ShopifyScripts = defineComponent({
   name: "ShopifyScripts",
@@ -50,6 +55,10 @@ export const ShopifyScripts = defineComponent({
       type: analyticsProp,
       default: undefined,
     },
+    debug: {
+      type: debugProp,
+      default: undefined,
+    },
     webMcp: {
       type: Boolean,
       default: undefined,
@@ -58,11 +67,15 @@ export const ShopifyScripts = defineComponent({
       type: inboxProp,
       default: undefined,
     },
+    shopifyAnalytics: {
+      type: Boolean,
+      default: undefined,
+    },
     shop: {
       type: shopProp,
-      required: true,
+      required: true as const,
     },
-  },
+  } satisfies CompletePropOptions<ShopifyScriptsProps>,
   setup(props) {
     onMounted(() => {
       void initializeShopifyScripts({
@@ -73,14 +86,7 @@ export const ShopifyScripts = defineComponent({
     });
 
     return () =>
-      getShopifyScriptTags({
-        analytics: props.analytics,
-        consent: props.consent,
-        i18n: props.i18n,
-        nonce: props.nonce,
-        shop: props.shop,
-        inbox: props.inbox ?? undefined,
-      }).tags.map(({ tagName, attributes, innerHTML }) =>
+      getShopifyScriptTags(props).tags.map(({ tagName, attributes, innerHTML }) =>
         h(tagName, {
           ...attributes,
           ...(innerHTML ? { innerHTML } : {}),

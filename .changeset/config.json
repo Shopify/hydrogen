@@ -7,6 +7,12 @@
   "access": "public",
   "baseBranch": "preview",
   "updateInternalDependencies": "patch",
-  "ignore": ["@shopify/hydrogen-example-*", "hydrogen", "@shopify/storefront-e2e"],
+  "ignore": [
+    "@shopify/hydrogen-example-*",
+    "@shopify/hydrogen-template-nextjs",
+    "@shopify/hydrogen-template-react-router",
+    "hydrogen",
+    "@shopify/storefront-e2e"
+  ],
   "format": false
 }

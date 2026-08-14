@@ -2,14 +2,14 @@
 
 Nuxt needs separate server and client Storefront clients:
 
-- Server requests use a request-scoped private client created in Nitro middleware.
+- Server requests use a request-scoped public client created in Nitro middleware.
 - Browser refetches use a public client whose `fetch` routes through the same-origin Hydrogen SFAPI proxy.
 
 Use the `hydrogen-request-handlers` skill when wiring middleware, response-header propagation, and 404 redirects.
 
 ## Server Client
 
-Create the private client in server middleware where Nuxt exposes the incoming request:
+Create the client in server middleware where Nuxt exposes the incoming request. `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance:
 
 ```ts
 import {
@@ -20,31 +20,28 @@ import {
 
 export default defineEventHandler((event) => {
   const request = toWebRequest(event);
-  const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
-    buyerIp,
   });
 
-  event.context.storefrontClient = createPrivateStorefrontClient(requestContext, buyerIp);
+  event.context.storefrontClient = createPublicStorefrontClient(requestContext);
   event.context.shopifyRequestContext = requestContext;
 });
 
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContext, buyerIp: string) {
+function createPublicStorefrontClient(requestContext: ShopifyRequestContext) {
   return createStorefrontClient({
-    type: "private",
+    type: "public",
     requestContext,
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
-      privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-      buyerIp,
+      publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,
     },
   });
 }
 ```
 
-Use a project helper for `getBuyerIp`. Do not infer buyer IP from untrusted headers unless the deployment's proxy chain is known.
+When upgrading to a private client, use a project helper for `getBuyerIp`. Do not infer buyer IP from untrusted headers unless the deployment's proxy chain is known.
 
 ## Server Injection
 
@@ -105,7 +102,7 @@ export default defineNuxtPlugin(() => {
 
 ## Query Usage
 
-In server pages, prefer the injected private client:
+In server pages, prefer the injected server client:
 
 ```ts
 const { $storefrontClient } = useNuxtApp();

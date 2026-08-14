@@ -372,7 +372,7 @@ function ColorSwatchFacet({ filter, state }: { filter: BrowseFilter; state: Coll
     const color = swatch?.color;
     const style = {
       ...(color ? { "--filter-swatch-color": color } : {}),
-      ...(imageUrl ? { backgroundImage: `url(${imageUrl})` } : {}),
+      ...(imageUrl ? { backgroundImage: `url("${imageUrl}")` } : {}),
     } as CSSProperties;
 
     return (

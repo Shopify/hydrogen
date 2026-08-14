@@ -1,15 +1,16 @@
 import type { GraphQLFormattedError, StorefrontClient } from "../../client";
 import type { AnyStorefrontQueryString } from "../../graphql";
-import { createProxyResponseHeaders } from "../interceptors/proxy";
+import { applyPrivateResponseCacheHeaders } from "../headers";
 import { getLogger } from "../logging";
+import { createProxyResponseHeaders } from "../request-routing/interceptors/proxy";
 import type {
   CallableRouteHandler,
   ShopifyRouteError,
   ShopifyRouteErrorResult,
   ShopifyRouteJsonResult,
   ShopifyRouteRedirectResult,
-} from "../route-handlers";
-import { createCallableRouteHandler } from "../route-handlers";
+} from "../request-routing/registered-routes";
+import { createCallableRouteHandler } from "../request-routing/registered-routes";
 import { parseCartRequest } from "./actions";
 import type { CartAction, CartLineAddInput } from "./actions";
 import { getCartIdFromCookie, createCartCookie } from "./cookie";
@@ -23,10 +24,10 @@ import {
 import type { CartData } from "./state";
 const log = getLogger("cart-api");
 
-export const CART_API_PATH = "/api/cart" as const;
-export const CART_GET_METHOD = "GET" as const;
-export const CART_POST_METHOD = "POST" as const;
-export const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
+const CART_API_PATH = "/api/cart" as const;
+const CART_GET_METHOD = "GET" as const;
+const CART_POST_METHOD = "POST" as const;
+const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
 export type CartGetData<TCart = CartData> = {
   cart: TCart | null;
@@ -98,7 +99,7 @@ export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
   CartGetHandlerResult<THandlers>
 >;
 
-export type CreateCartServerHandlersOptions<
+type CreateCartServerHandlersOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
 > = CreateCartQueriesOptions<TCartFragment>;
 
@@ -142,6 +143,7 @@ async function handleGet(
   logCartErrors(result.errors);
   const data = { cart: result.cart, ...(result.errors && { errors: result.errors }) };
   const headers = createProxyResponseHeaders(result.headers);
+  applyPrivateResponseCacheHeaders(headers);
 
   return {
     type: "json",

@@ -113,6 +113,23 @@ describe("predictive search URL helper types", () => {
     expectTypeOf(url).toBeString();
   });
 
+  it("accepts route templates for query suggestions", () => {
+    const query = {
+      __typename: "SearchQuerySuggestion",
+      text: "snowboard",
+      styledText: "<b>snow</b>board",
+      trackingParameters: null,
+    } satisfies PredictiveSearchQueryItem;
+    const routeTemplates = createShopifyRouteTemplates({ search: "/find" });
+
+    const url = getPredictiveSearchItemUrl(query, {
+      pathPrefix: "/fr-ca",
+      routes: routeTemplates,
+    });
+
+    expectTypeOf(url).toBeString();
+  });
+
   it("requires route templates and a search term for resource items", () => {
     const product = {
       __typename: "Product",

@@ -4,14 +4,14 @@ import type {
   SearchUnavailableProductsType,
   SearchableField,
 } from "../../graphql/generated/storefront-api-types";
-import { createProxyResponseHeaders } from "../interceptors/proxy";
+import { createProxyResponseHeaders } from "../request-routing/interceptors/proxy";
 import type {
   CallableRouteHandler,
   ShopifyRouteError,
   ShopifyRouteErrorResult,
   ShopifyRouteJsonResult,
-} from "../route-handlers";
-import { createCallableRouteHandler } from "../route-handlers";
+} from "../request-routing/registered-routes";
+import { createCallableRouteHandler } from "../request-routing/registered-routes";
 import { PREDICTIVE_SEARCH_API_PATH, PREDICTIVE_SEARCH_GET_METHOD } from "./constants";
 import {
   makePredictiveSearchQueries,
@@ -28,9 +28,7 @@ import {
   type QueryPredictiveSearchOptions,
 } from "./search";
 
-export const predictiveSearchServerHandlersQuery: unique symbol = Symbol(
-  "hydrogen.predictiveSearchQuery",
-);
+const predictiveSearchServerHandlersQuery: unique symbol = Symbol("hydrogen.predictiveSearchQuery");
 
 const VALID_LIMIT_SCOPES: readonly PredictiveSearchLimitScope[] = ["ALL", "EACH"];
 const VALID_PREDICTIVE_SEARCH_TYPES: readonly PredictiveSearchType[] = [
@@ -62,25 +60,24 @@ type PredictiveSearchHandlerContext = {
   storefrontClient: QueryPredictiveSearchOptions["storefrontClient"];
 };
 
-export type PredictiveSearchGetData<TData = PredictiveSearchDataForOptions<{}>> = TData;
-export type PredictiveSearchGetResult<TData = PredictiveSearchDataForOptions<{}>> =
+type PredictiveSearchGetData<TData = PredictiveSearchDataForOptions<{}>> = TData;
+type PredictiveSearchGetResult<TData = PredictiveSearchDataForOptions<{}>> =
   | ShopifyRouteJsonResult<PredictiveSearchGetData<TData>>
   | ShopifyRouteErrorResult<PredictiveSearchError>;
 
-export type PredictiveSearchErrorCode = "invalid_predictive_search_request";
-export type PredictiveSearchError = ShopifyRouteError & {
+type PredictiveSearchErrorCode = "invalid_predictive_search_request";
+type PredictiveSearchError = ShopifyRouteError & {
   code: PredictiveSearchErrorCode;
 };
 
-export type PredictiveSearchGetHandler<TData = PredictiveSearchDataForOptions<{}>> =
-  CallableRouteHandler<
-    PredictiveSearchHandlerContext,
-    PredictiveSearchGetResult<TData>,
-    string,
-    typeof PREDICTIVE_SEARCH_GET_METHOD
-  >;
+type PredictiveSearchGetHandler<TData = PredictiveSearchDataForOptions<{}>> = CallableRouteHandler<
+  PredictiveSearchHandlerContext,
+  PredictiveSearchGetResult<TData>,
+  string,
+  typeof PREDICTIVE_SEARCH_GET_METHOD
+>;
 
-export type PredictiveSearchServerHandlers<
+type PredictiveSearchServerHandlers<
   TOptions extends CreatePredictiveSearchServerHandlersOptions = {},
   TData = PredictiveSearchDataForOptions<TOptions>,
 > = {

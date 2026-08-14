@@ -2,9 +2,9 @@
 
 SolidStart uses Vinxi (Nitro under the hood) and provides middleware via `createMiddleware`. Server-side data fetching happens in `query()` functions marked with `"use server"`, where `getRequestEvent()` gives access to the request.
 
-## SSR with trusted buyer context
+## SSR
 
-The middleware creates the client per-request and attaches it to `event.locals`. Server functions retrieve it via `getRequestEvent()`.
+The middleware creates the client per-request and attaches it to `event.locals`. Server functions retrieve it via `getRequestEvent()`. The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance.
 
 ```ts
 // src/middleware.ts
@@ -16,21 +16,17 @@ import {
 
 export default createMiddleware({
   onRequest: (event) => {
-    const buyerIp = event.request.headers.get("cf-connecting-ip");
-    if (!buyerIp) throw new Error("cf-connecting-ip is required for private SFAPI clients");
     const requestContext = createShopifyRequestContext({
       request: event.request,
       i18n: { country: "US", language: "EN" },
-      buyerIp,
     });
 
     const client = createStorefrontClient({
-      type: "private",
+      type: "public",
       requestContext,
       config: {
         storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
-        privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-        buyerIp,
+        publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,
       },
     });
 
@@ -42,14 +38,14 @@ export default createMiddleware({
 ```ts
 // src/lib/storefront.ts — helper to retrieve the client in server functions
 import { getRequestEvent } from "solid-js/web";
-import type { RequestScopedPrivateStorefrontClient } from "@shopify/hydrogen";
+import type { StorefrontClient } from "@shopify/hydrogen";
 
-export function getStorefront(): RequestScopedPrivateStorefrontClient {
+export function getStorefront(): StorefrontClient {
   const event = getRequestEvent();
   if (!event?.locals?.storefront) {
     throw new Error("Storefront client not found — is the middleware registered?");
   }
-  return event.locals.storefront as RequestScopedPrivateStorefrontClient;
+  return event.locals.storefront as StorefrontClient;
 }
 ```
 
@@ -105,21 +101,17 @@ import {
 
 export default createMiddleware({
   onRequest: (event) => {
-    const buyerIp = event.request.headers.get("cf-connecting-ip");
-    if (!buyerIp) throw new Error("cf-connecting-ip is required for private SFAPI clients");
     const requestContext = createShopifyRequestContext({
       request: event.request,
       i18n: { country: "US", language: "EN" },
-      buyerIp,
     });
 
     const client = createStorefrontClient({
-      type: "private",
+      type: "public",
       requestContext,
       config: {
         storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
-        privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-        buyerIp,
+        publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,
       },
     });
 
@@ -136,4 +128,4 @@ export default createMiddleware({
 
 - **`"use server"` boundary is mandatory** — `getRequestEvent()` only works inside a `"use server"` function. Calling it outside (e.g. in a component body) returns `undefined` and the storefront client lookup silently fails.
 - **`event.nativeEvent` breaks tree-shaking** — accessing the underlying H3 event from Vinxi pulls in the entire H3 runtime. Only use it in server-only files if you need Nitro-specific features.
-- **No built-in `getClientAddress()`** — unlike SvelteKit, SolidStart doesn't have a convenience method for the client IP. Do not trust generic proxy headers unless your deployment strips or overwrites them; build `buyerIp` from request data your deployment controls.
+- **No built-in `getClientAddress()`** — relevant when upgrading to a private client: unlike SvelteKit, SolidStart doesn't have a convenience method for the client IP. Do not trust generic proxy headers unless your deployment strips or overwrites them; build `buyerIp` from request data your deployment controls.

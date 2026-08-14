@@ -1,6 +1,6 @@
 import type { ShopifyStandardActions } from "../vendor/standard-actions";
 import type { StorefrontAnalytics } from "./core/analytics/types";
-import type { I18nConfig } from "./core/headers";
+import type { I18nConfig } from "./core/request-context";
 import type { ShopifyStandardRouteMatch } from "./core/standard-routes/index";
 
 export type ShopifyGlobal = {
@@ -37,11 +37,18 @@ export type ShopifyGlobal = {
     shouldShowBanner: () => boolean;
   };
   locale: Lowercase<I18nConfig["language"]> | string;
+  /** @deprecated Use `Shopify.routes.navigate` instead. */
   navigate?: (url: string) => void | Promise<void>;
   routes: {
     root: string;
+    /** @internal */
+    apiProxyPrefix?: string;
+    /** @internal */
     match?: (url: string) => ShopifyStandardRouteMatch | null;
+    /** @internal */
     resolve?: (url: string) => string;
+    /** @internal */
+    navigate?: (url: string) => void | Promise<void>;
     [key: string]: unknown;
   };
   /** The shop's permanent `*.myshopify.com` domain. */

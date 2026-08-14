@@ -13,7 +13,7 @@ export function getPerfKitScript(
 ): ShopifyScriptDescriptor | undefined {
   if (!shop.storefrontId) return;
 
-  const shopId = normalizeShopifyShopId(shop.shopId);
+  const shopId = parseNumericShopId(shop.shopId);
   if (!shopId) return;
 
   return {
@@ -33,7 +33,7 @@ export function getPerfKitScript(
   };
 }
 
-function normalizeShopifyShopId(shopId: ShopifyScriptsShop["shopId"]): string | undefined {
+function parseNumericShopId(shopId: ShopifyScriptsShop["shopId"]): string | undefined {
   const parsedShopId = shopId.split("/").pop();
   if (!parsedShopId) return;
 

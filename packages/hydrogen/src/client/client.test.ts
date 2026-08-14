@@ -2,7 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import type { CacheInstance } from "../core";
 import { Cache } from "../core/cache";
-import { createShopifyRequestContext, type ShopifyRequestContext } from "../core/headers";
+import {
+  createShopifyRequestContext,
+  type ShopifyRequestContext,
+  type ShopifyRequestContextWithBuyerIp,
+} from "../core/request-context";
 import { assert } from "../core/test-utils";
 import { gql } from "../graphql";
 import { createStorefrontClient } from "./client";
@@ -238,6 +242,7 @@ describe("createStorefrontClient", () => {
       expect(headers.get("X-Shopify-UniqueToken")).toBe("unique-token");
       expect(headers.get("X-Shopify-VisitToken")).toBe("visit-token");
       expect(headers.get("Custom-Storefront-Request-Group-ID")).toBeTruthy();
+      expect(headers.get("Sec-Shopify-Storefront-Origin")).toBe("https://example.com");
     });
 
     it("sends private access token header", async () => {
@@ -251,38 +256,40 @@ describe("createStorefrontClient", () => {
       expect(headers.get("Shopify-Storefront-Private-Token")).toBe("priv-token-456");
     });
 
-    it("sends buyer meta headers for private client", async () => {
-      const requestContext = createTestRequestContext(
-        new Request("https://example.com", {
+    it("sends buyer metadata for private client", async () => {
+      const requestContext = createShopifyRequestContext({
+        request: new Request("https://example.com", {
           headers: { "request-id": "request-context-group" },
         }),
-      );
+        i18n: DEFAULT_I18N,
+        buyerIp: "10.0.0.1",
+      });
       const client = createPrivateClient({
         fetch: mockFetch,
-        buyerIp: "10.0.0.1",
         requestContext,
       });
       await client.graphql(SHOP_QUERY);
 
       const headers = getHeaders(mockFetch);
       expect(headers.get("Shopify-Storefront-Buyer-IP")).toBe("10.0.0.1");
-      expect(headers.get("X-Shopify-Client-IP")).toBe("10.0.0.1");
       expect(headers.get("Custom-Storefront-Request-Group-ID")).toBe("request-context-group");
     });
 
-    it("rejects mismatched request context and private client buyer IP", () => {
-      const requestContext = createShopifyRequestContext({
-        request: new Request("https://example.com"),
-        i18n: DEFAULT_I18N,
-        buyerIp: "10.0.0.1",
-      });
+    it("requires buyer IP on the private client request context at runtime", () => {
+      const createInvalidClient = () =>
+        createStorefrontClient({
+          type: "private",
+          requestContext: createTestRequestContext() as ShopifyRequestContextWithBuyerIp,
+          config: {
+            storeDomain: "test.myshopify.com",
+            privateStorefrontToken: "test-priv-token",
+          },
+        });
 
-      expect(() =>
-        createPrivateClient({
-          buyerIp: "10.0.0.2",
-          requestContext,
-        }),
-      ).toThrow("requestContext.buyerIp must match private Storefront API client buyerIp");
+      expect(createInvalidClient).toThrow(TypeError);
+      expect(createInvalidClient).toThrow(
+        "requestContext.buyerIp is required for private Storefront API clients",
+      );
     });
 
     it("omits buyer meta headers for private client without buyer context", async () => {
@@ -796,7 +803,7 @@ describe("createStorefrontClient", () => {
 
     it("forwards requestContext signal to fetch", async () => {
       const controller = new AbortController();
-      const requestContext = createTestRequestContext(
+      const requestContext = createBuyerTestRequestContext(
         new Request("http://localhost", {
           signal: controller.signal,
         }),
@@ -850,7 +857,7 @@ describe("createStorefrontClient", () => {
     it("throws AbortError when requestContext signal is already aborted", async () => {
       const controller = new AbortController();
       controller.abort();
-      const requestContext = createTestRequestContext(
+      const requestContext = createBuyerTestRequestContext(
         new Request("http://localhost", {
           signal: controller.signal,
         }),
@@ -880,7 +887,7 @@ describe("createStorefrontClient", () => {
       const client = createPrivateClient({
         fetch: mockFetch,
         defaultTimeoutInMs: 0,
-        requestContext: createTestRequestContext(
+        requestContext: createBuyerTestRequestContext(
           new Request("http://localhost", {
             signal: controller.signal,
           }),
@@ -911,6 +918,17 @@ function createTestRequestContext(
   i18n: I18nConfig = DEFAULT_I18N,
 ): ShopifyRequestContext {
   return createShopifyRequestContext({ request: input, i18n });
+}
+
+function createBuyerTestRequestContext(
+  input: StorefrontRequestInput = { headers: new Headers() },
+  i18n: I18nConfig = DEFAULT_I18N,
+): ShopifyRequestContextWithBuyerIp {
+  return createShopifyRequestContext({
+    request: input,
+    i18n,
+    buyerIp: "127.0.0.1",
+  });
 }
 
 function createPublicClient(
@@ -945,19 +963,23 @@ function createPrivateClient(
     privateStorefrontToken?: string;
     fetch?: typeof globalThis.fetch;
     cache?: CacheInstance;
-    buyerIp?: string;
-    requestContext?: ShopifyRequestContext;
+    requestContext?: ShopifyRequestContextWithBuyerIp;
     defaultTimeoutInMs?: number;
   } = {},
 ): StorefrontClient {
   return createStorefrontClient({
     type: "private",
-    requestContext: overrides.requestContext ?? createTestRequestContext(),
+    requestContext:
+      overrides.requestContext ??
+      createShopifyRequestContext({
+        request: { headers: new Headers() },
+        i18n: DEFAULT_I18N,
+        buyerIp: "127.0.0.1",
+      }),
     config: {
       storeDomain: overrides.storeDomain ?? "test.myshopify.com",
       apiVersion: overrides.apiVersion,
       privateStorefrontToken: overrides.privateStorefrontToken ?? "test-priv-token",
-      buyerIp: overrides.buyerIp ?? "127.0.0.1",
       fetch: overrides.fetch,
       cache: overrides.cache,
       defaultTimeoutInMs: overrides.defaultTimeoutInMs,

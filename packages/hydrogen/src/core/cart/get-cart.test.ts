@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 
 import type { RequestScopedPrivateStorefrontClient } from "../../client";
 import { gql } from "../../graphql";
-import { createShopifyRequestContext } from "../headers";
+import { createShopifyRequestContext } from "../request-context";
 import { assert } from "../test-utils";
 import { getCart, getCartId } from "./get-cart";
 import { cartQueries, makeCartQueries } from "./queries";
@@ -45,6 +45,8 @@ type MockStorefrontClientOptions = {
   rejectWith?: Error;
 };
 
+const DEFAULT_BUYER_IP = "127.0.0.1";
+
 function mockStorefrontClient(
   data: unknown,
   options: MockStorefrontClientOptions = {},
@@ -62,6 +64,7 @@ function mockStorefrontClient(
     requestContext: createShopifyRequestContext({
       request: options.request ?? new Request("https://shop.example.com/"),
       i18n: { country: "US", language: "EN" },
+      buyerIp: DEFAULT_BUYER_IP,
     }),
     graphql: options.rejectWith
       ? vi.fn().mockRejectedValue(options.rejectWith)

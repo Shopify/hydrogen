@@ -9,6 +9,7 @@ import {
   SHOPIFY_INBOX_SCRIPT,
   SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
+  SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
 } from "./constants";
 import { getShopifyGlobalBootstrapScript } from "./global";
@@ -58,6 +59,7 @@ export type {
 export function getShopifyScriptTags({
   analytics,
   consent,
+  debug,
   i18n,
   nonce,
   shop,
@@ -109,6 +111,19 @@ export function getShopifyScriptTags({
       },
     },
   ];
+
+  if (__DEV__ && debug?.standardEventsInspector) {
+    scripts.push({
+      tagName: "script",
+      attributes: {
+        id: "shopify-standard-events-inspector",
+        defer: true,
+        crossorigin: "anonymous",
+        ...nonceAttributes,
+        src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,
+      },
+    });
+  }
 
   if (inbox) {
     scripts.push({

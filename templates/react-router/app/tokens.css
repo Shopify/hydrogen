@@ -702,50 +702,6 @@
     border-radius: var(--radius-sm);
   }
 
-  /* Privacy / cookie consent banner. A bottom-anchored surface card that
-     bundles background + foreground + border + elevation + spacing from the
-     EXISTING tokens (surface/on-surface/border + --shadow-lg + --spacing-*),
-     exactly like .nav-dropdown-inner or the drawer utilities pair their own
-     surface treatment. Reads as a centered bottom bar on desktop and stacks on
-     mobile. BEHAVIOR — show/hide, persisting choice, and wiring Shopify
-     Customer Privacy / analytics consent — is the skill's job, not core's. */
-  .consent-banner {
-    position: fixed;
-    inset-inline: 0;
-    inset-block-end: 0;
-    z-index: 60;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    width: min(calc(100% - 2 * var(--spacing-margin)), var(--spacing-page));
-    margin-inline: auto;
-    margin-block-end: var(--spacing-margin);
-    padding: 1.25rem;
-    background: var(--color-surface);
-    color: var(--color-on-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-  }
-  .consent-banner-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  @media (min-width: 48rem) {
-    .consent-banner {
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1.5rem;
-    }
-    .consent-banner-actions {
-      flex-direction: row;
-      flex-shrink: 0;
-      align-items: center;
-    }
-  }
-
   .remove-icon-top,
   .remove-icon-bottom {
     transition: transform 125ms ease-in-out;

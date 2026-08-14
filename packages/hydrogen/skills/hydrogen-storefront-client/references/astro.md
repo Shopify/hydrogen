@@ -2,9 +2,9 @@
 
 Astro pages run their frontmatter on the server, so `Astro.request` and `Astro.clientAddress` are available — but only on **server-rendered** pages. Prerendered pages have no request at all.
 
-## SSR with trusted buyer context
+## SSR
 
-Use `Astro.locals` to pass the storefront client from middleware to pages. The middleware creates the client once per request with buyer IP resolved from `Astro.clientAddress`.
+Use `Astro.locals` to pass the storefront client from middleware to pages. The middleware creates the client once per request. The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` (e.g. from `Astro.clientAddress`) per the `hydrogen-storefront-client` buyer-IP guidance.
 
 ```ts
 // src/middleware.ts
@@ -15,19 +15,16 @@ import {
 } from "@shopify/hydrogen";
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  const buyerIp = context.clientAddress;
   const requestContext = createShopifyRequestContext({
     request: context.request,
     i18n: { country: "US", language: "EN" },
-    buyerIp,
   });
   const client = createStorefrontClient({
-    type: "private",
+    type: "public",
     requestContext,
     config: {
       storeDomain: import.meta.env.PUBLIC_STORE_DOMAIN,
-      privateStorefrontToken: import.meta.env.PRIVATE_STOREFRONT_API_TOKEN,
-      buyerIp,
+      publicStorefrontToken: import.meta.env.PUBLIC_STOREFRONT_API_TOKEN,
     },
   });
 
@@ -41,11 +38,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 ```ts
 // src/env.d.ts — type the locals object
-import type { RequestScopedPrivateStorefrontClient } from "@shopify/hydrogen";
+import type { StorefrontClient } from "@shopify/hydrogen";
 
 declare namespace App {
   interface Locals {
-    storefront: RequestScopedPrivateStorefrontClient;
+    storefront: StorefrontClient;
   }
 }
 ```
@@ -69,7 +66,7 @@ const { data } = await Astro.locals.storefront.graphql(PRODUCT_QUERY, {
 <h1>{data?.product?.title}</h1>
 ```
 
-This requires `output: "server"` in `astro.config.mjs` (all pages SSR by default). Individual pages that don't need buyer IP can opt into static prerendering with `export const prerender = true`.
+This requires `output: "server"` in `astro.config.mjs` (all pages SSR by default). Individual pages that don't need request-time data can opt into static prerendering with `export const prerender = true`.
 
 ## Static pages (no buyer IP)
 

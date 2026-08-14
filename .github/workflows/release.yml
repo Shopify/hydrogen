@@ -72,3 +72,135 @@ jobs:
           # Satisfies the action's npmrc check without configuring a real
           # token; publishing authenticates via OIDC trusted publishing
           NPM_TOKEN: ""
+
+  compile-preview-templates:
+    name: Compile Preview Templates
+    needs: preview-release
+    if: needs.preview-release.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # Keep the write token unavailable while installing and building template dependencies.
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: package.json
+          registry-url: "https://registry.npmjs.org"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve published Hydrogen version
+        id: version
+        env:
+          PUBLISHED_PACKAGES: ${{ needs.preview-release.outputs.publishedPackages }}
+        run: |
+          version=$(node scripts/preview-template-dist.ts resolve)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for the published package
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          for attempt in $(seq 1 24); do
+            resolved_version=$(npm view "@shopify/hydrogen@$VERSION" version 2>/dev/null || true)
+            if [ "$resolved_version" = "$VERSION" ]; then
+              echo "Found @shopify/hydrogen@$VERSION"
+              exit 0
+            fi
+            echo "Waiting for @shopify/hydrogen@$VERSION ($attempt/24)"
+            sleep 5
+          done
+          echo "@shopify/hydrogen@$VERSION was not available after 120 seconds"
+          exit 1
+
+      - name: Prepare preview templates
+        run: pnpm prepare:preview-dist "${{ steps.version.outputs.version }}"
+
+      - name: Stage standalone templates
+        run: |
+          dist_root="$RUNNER_TEMP/preview-template-dist"
+          rm -rf "$dist_root"
+          mkdir -p "$dist_root"
+          tar \
+            --exclude='*/node_modules' \
+            --exclude='*/dist' \
+            --exclude='*/.next' \
+            --exclude='*/.turbo' \
+            --exclude='*/.react-router' \
+            --exclude='*/.env' \
+            -C templates -cf - react-router nextjs | tar -C "$dist_root" -xf -
+          echo "DIST_ROOT=$dist_root" >> "$GITHUB_ENV"
+
+      - name: Generate React Router lockfile
+        run: |
+          cd "$DIST_ROOT/react-router"
+          npm_version=$(node -p "require('./package.json').packageManager.split('@').at(-1)")
+          npx --yes "npm@$npm_version" install --package-lock-only --ignore-scripts --no-audit --no-fund
+          cp package-lock.json "$GITHUB_WORKSPACE/templates/react-router/package-lock.json"
+
+      - name: Generate Next.js lockfile
+        run: |
+          cd "$DIST_ROOT/nextjs"
+          pnpm install --lockfile-only --ignore-workspace --ignore-scripts
+          cp pnpm-lock.yaml "$GITHUB_WORKSPACE/templates/nextjs/pnpm-lock.yaml"
+
+      - name: Validate preview templates
+        run: pnpm validate:preview-dist "${{ steps.version.outputs.version }}"
+
+      - name: Test standalone templates
+        run: |
+          (
+            cd "$DIST_ROOT/react-router"
+            npm_version=$(node -p "require('./package.json').packageManager.split('@').at(-1)")
+            npx --yes "npm@$npm_version" ci --no-audit --no-fund
+            npm run build
+          )
+
+          (
+            cd "$DIST_ROOT/nextjs"
+            pnpm install --frozen-lockfile --ignore-workspace
+            pnpm run build
+          )
+
+      - name: Update dist-preview
+        env:
+          DIST_PUSH_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          git add -u
+          git add templates/react-router/.agents/skills templates/nextjs/.agents/skills
+          git add --force templates/react-router/package-lock.json templates/nextjs/pnpm-lock.yaml
+          git diff --cached --check -- templates/react-router/package.json templates/nextjs/package.json
+
+          unexpected_paths=$(git diff --cached --name-only | grep -Ev '^templates/(react-router/(\.agents/skills/.*|package\.json|package-lock\.json)|nextjs/(\.agents/skills/.*|package\.json|pnpm-lock\.yaml))$' || true)
+          if [ -n "$unexpected_paths" ]; then
+            echo "Unexpected compiled changes:"
+            echo "$unexpected_paths"
+            exit 1
+          fi
+          git status --short
+
+          export GIT_AUTHOR_NAME="Hydrogen Bot"
+          export GIT_AUTHOR_EMAIL="hydrogen@shopify.com"
+          export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
+          export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
+
+          tree=$(git write-tree)
+          commit=$(printf 'Update preview templates for @shopify/hydrogen@%s\n\nSource: %s\n' "$VERSION" "$SOURCE_SHA" | git commit-tree "$tree")
+          auth=$(printf 'x-access-token:%s' "$DIST_PUSH_TOKEN" | base64 | tr -d '\n')
+          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $auth" \
+            push origin "$commit:refs/heads/dist-preview" --force

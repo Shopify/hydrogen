@@ -44,7 +44,7 @@ The fastest way to get started is to deploy a starter template. If you'd rather 
 
 ### Deploy a starter template
 
-Pick the template that matches your framework. Each one comes ready to deploy to a managed host.
+Pick the template that matches your framework. Each one comes ready to deploy to a managed host. The deploy links use compiled templates from `dist-preview`, with the exact published Hydrogen version, standalone lockfiles, and packaged skills.
 
 **React Router** — Hydrogen + Oxygen
 
@@ -52,7 +52,7 @@ Pick the template that matches your framework. Each one comes ready to deploy to
 
 **Next.js** — Hydrogen + Vercel
 
-<a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fpreview%2Ftemplates%2Fnextjs"><img alt="Deploy with Vercel" src="https://vercel.com/button" width="129" height="40"></a>
+<a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fdist-preview%2Ftemplates%2Fnextjs"><img alt="Deploy with Vercel" src="https://vercel.com/button" width="129" height="40"></a>
 
 ### Set up in your own project
 
@@ -82,13 +82,13 @@ It picks up the installed skills and wires commerce into your app:
 Hydrogen skills detected — setting up your storefront.
 
   ✓ Detected Next.js (App Router)
-  ✓ Storefront API client            app/lib/storefront.ts
+  ✓ Storefront API client            lib/storefront.ts
   ✓ Request handlers (cart, SFAPI)   proxy.ts
   ✓ Home, collection & product pages app/…
-  ✓ Cart drawer + line‑item forms    app/components/…
-  ✓ First‑party analytics + consent  app/lib/analytics.ts
+  ✓ Cart drawer + line‑item forms    components/…
+  ✓ First‑party analytics + consent  lib/analytics.ts
 
-Set PUBLIC_STORE_DOMAIN and PRIVATE_STOREFRONT_API_TOKEN, then run your dev server.
+Set NEXT_PUBLIC_STORE_DOMAIN and PRIVATE_STOREFRONT_API_TOKEN, then run your dev server.
 ```
 
 You'll need Storefront API access for the store you're connecting — create one and manage credentials through the [Headless channel](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/manage-headless-channels).
@@ -99,6 +99,8 @@ Below is the kind of code the skills produce.
 
 **A typed Storefront API client** — works anywhere you can `fetch`:
 
+Implement `getBuyerIp` using trusted request data exposed by your deployment platform.
+
 ```ts
 import {
   createShopifyRequestContext,
@@ -106,14 +108,17 @@ import {
   gql,
 } from "@shopify/hydrogen";
 
+const buyerIp = getBuyerIp(request.headers);
+
 const storefront = createStorefrontClient({
   type: "private",
   requestContext: createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
+    buyerIp,
   }),
   config: {
-    storeDomain: process.env.PUBLIC_STORE_DOMAIN,
+    storeDomain: process.env.NEXT_PUBLIC_STORE_DOMAIN,
     privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN,
   },
 });
@@ -201,22 +206,19 @@ The [`examples/`](./examples) directory ports the same storefront across framewo
 
 | Example | Stack |
 | --- | --- |
-| `nextjs/` | Next.js 16 (App Router) |
-| `react-router/` | React Router v7, server loaders |
-| `hydrogen/` | Hydrogen + Oxygen‑style request context |
-| `poc/sveltekit/` | SvelteKit 2 + Svelte 5 (runes) |
-| `poc/astro/` | Astro 6 SSR |
-| `poc/solid-start/` | SolidStart v1 |
-| `poc/nuxt/` | Nuxt 3 |
-| `poc/nuxt-binding/` | Nuxt 3 on Hydrogen's Vue bindings |
+| `astro/` | Astro 6 SSR |
+| `hydrogen/` | Hydrogen + Oxygen-style request context |
+| `nuxt/` | Nuxt 3 on Hydrogen's Vue bindings |
+| `solid-start/` | SolidStart v1 |
+| `sveltekit/` | SvelteKit 2 + Svelte 5 |
 
-> **These are proof‑of‑concepts, not starter kits.** They exist to validate the API across frameworks and surface integration friction — they aren't templates we version or distribute; the starters we do distribute live in [`templates/`](./templates). The canonical path to a real storefront is **agent skills + docs**, generating code tailored to your store, framework, and requirements.
+> **These are development examples, not starter kits.** They exist to validate the API across frameworks and surface integration friction. The starters we version and distribute live in [`templates/`](./templates). The canonical path to a real storefront is **agent skills + docs**, generating code tailored to your store, framework, and requirements.
 
 Run them all from the repo root:
 
 ```bash
 pnpm install
-pnpm dev        # every example in parallel
+pnpm dev        # every workspace example and template in parallel
 ```
 
 ## Repository layout
@@ -224,7 +226,7 @@ pnpm dev        # every example in parallel
 ```
 packages/hydrogen/   the @shopify/hydrogen toolkit + packaged skills
 templates/           deployable starter templates (React Router, Next.js)
-examples/            framework ports (proof-of-concepts)
+examples/            framework development examples
 scripts/             repository automation
 skills/              agent skills for working in this repo
 ```

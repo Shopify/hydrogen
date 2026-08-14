@@ -1,14 +1,15 @@
 import { describe, it } from "vitest";
 
 import { createStorefrontClient } from "../../client";
-import { handleShopifyRoutes } from "../handle-shopify-routes";
-import { createShopifyRequestContext } from "../headers";
+import { handleShopifyRoutes } from "../request-routing/handle-shopify-routes";
+import { createShopifyRequestContext } from "../request-context";
 import { createCartServerHandlers } from "./server-handlers";
 
 const i18n = { country: "US", language: "EN" } as const;
 const requestContext = createShopifyRequestContext({
   request: new Request("https://shop.example.com"),
   i18n,
+  buyerIp: "203.0.113.10",
 });
 const sessionManager = {
   getSessionOrigin: () => "https://shop.example.com",
@@ -26,7 +27,6 @@ describe("createCartServerHandlers type tests", () => {
       config: {
         storeDomain: "shop.example.com",
         privateStorefrontToken: "private-token",
-        buyerIp: "203.0.113.10",
       },
     });
 

@@ -1,21 +1,33 @@
 import type { ShopifyRouteTemplates, StandardRouteName, StandardRouteParamName } from "./types";
 
-export const STANDARD_ROUTE_PARAM_NAMES = [
+type DefaultStandardRoutes = {
+  [Route in StandardRouteName]: readonly [
+    NonNullable<ShopifyRouteTemplates[Route]>,
+    ...NonNullable<ShopifyRouteTemplates[Route]>[],
+  ];
+};
+
+const STANDARD_ROUTE_PARAM_NAMES = [
   "articleHandle",
   "blogHandle",
   "collectionHandle",
   "pageHandle",
+  "policyHandle",
   "productHandle",
 ] as const satisfies readonly StandardRouteParamName[];
 
 export const DEFAULT_STANDARD_ROUTES = {
-  product: "/products/:productHandle",
-  collection: "/collections/:collectionHandle",
-  page: "/pages/:pageHandle",
-  blog: "/blogs/:blogHandle",
-  article: "/blogs/:blogHandle/:articleHandle",
-  productInCollection: "/collections/:collectionHandle/products/:productHandle",
-} as const satisfies Required<ShopifyRouteTemplates>;
+  product: ["/products/:productHandle"],
+  collection: ["/collections/:collectionHandle"],
+  collectionList: ["/collections", "/products"],
+  page: ["/pages/:pageHandle"],
+  policy: ["/policies/:policyHandle"],
+  blog: ["/blogs/:blogHandle"],
+  article: ["/blogs/:blogHandle/:articleHandle"],
+  productInCollection: ["/collections/:collectionHandle/products/:productHandle"],
+  cart: ["/cart"],
+  search: ["/search"],
+} as const satisfies DefaultStandardRoutes;
 
 export function isStandardRouteParamName(name: string): name is StandardRouteParamName {
   return STANDARD_ROUTE_PARAM_NAMES.some((paramName) => paramName === name);

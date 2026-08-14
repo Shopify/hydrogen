@@ -1,77 +1,97 @@
-# Next.js storefront example
+# Next.js Hydrogen Storefront
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fpreview%2Ftemplates%2Fnextjs)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fdist-preview%2Ftemplates%2Fnextjs)
 
-A Next.js 16 App Router storefront built on [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen) for the Node.js runtime and Vercel. It's a standalone starting point you can clone and build your store on top of — five storefront pages on a shared layout, with a real cart, analytics, and a consent banner wired up.
+A Next.js 16 App Router storefront starter built on [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen) for Vercel.
 
-## Pages
+It includes home, collections, product pages, search, cart, customer accounts, sitemap, robots, Shopify analytics, and a consent banner. With no private token it falls back to `mock.shop` so the app can render before you connect a store.
 
-- `/` — home (editorial hero, best sellers, shop by category)
-- `/products/:handle` — product detail (gallery, variants, add to cart)
-- `/collections` — all collections
-- `/collections/:handle` — collection with filters, sort, and pagination
-- `/search` — product search with the same filtering
-- `/cart` — cart (also the no-JS fallback for the cart drawer)
+## Requirements
 
-## What it demonstrates
+- Node.js 24+
+- pnpm
 
-- Next.js App Router with Server Components as the data path; each page owns its GraphQL query (typed via `gql.tada`).
-- A real cart: storefront client + request handlers + `/api/cart` + an accessible cart drawer wired to Shopify Standard Actions.
-- A shared layout (header with mobile nav, footer, announcement bar).
-- Analytics + a consent banner.
-- The design tokens in `app/tokens.css` and SVG icons in `public/icons/`.
+## Run Locally
 
-## Run it
-
-```bash
+```sh
 pnpm install
 pnpm dev
 ```
 
-**Zero-config demo** — with no environment variables, the app falls back to `mock.shop` (a public mock Storefront API, no account or token needed). `MOCK_SHOP=1` also forces the mock data source explicitly:
+Open <http://localhost:3000>.
 
-```bash
-MOCK_SHOP=1 pnpm dev
+## Environment Variables
+
+Copy `.env.example` to `.env` when you are ready to connect a real store:
+
+```sh
+cp .env.example .env
 ```
 
-**Against a real store** — set your store domain and a **private** Storefront API token, then run normally:
+Server-only values:
 
-```bash
-cp .env.example .env   # set PUBLIC_STORE_DOMAIN + PRIVATE_STOREFRONT_API_TOKEN
-pnpm dev
+- `PRIVATE_STOREFRONT_API_TOKEN`: private Storefront API token for your store.
+- `SESSION_SECRET`: random secret with at least 32 characters, used for Customer Account sessions.
+- `SITE_ORIGIN`: canonical storefront origin for metadata, for example `https://your-store.com`.
+
+Generate a session secret with:
+
+```sh
+node -e "console.log(crypto.randomBytes(32).toString('base64url'))"
 ```
 
-Mode is **auto-detected**: when a `PRIVATE_STOREFRONT_API_TOKEN` is present the app talks to the real store (`PUBLIC_STORE_DOMAIN`, falling back to the default in `app/lib/shop.ts`); with none it falls back to the `mock.shop` demo, so a fresh local run or deploy always renders. `MOCK_SHOP=1` forces mock. (`mock.shop` and the Hydrogen Preview store are different data sources.)
+Public values:
 
-Useful commands:
+- `NEXT_PUBLIC_STORE_DOMAIN`: your `myshopify.com` domain.
+- `NEXT_PUBLIC_STOREFRONT_API_TOKEN`: public Storefront API token, used only by browser-safe clients.
+- `NEXT_PUBLIC_SHOP_ID`: numeric Shopify shop ID for analytics and Customer Accounts.
+- `NEXT_PUBLIC_STOREFRONT_ID`: Hydrogen storefront ID for analytics.
+- `NEXT_PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID`: Customer Account API client ID.
+
+If `PRIVATE_STOREFRONT_API_TOKEN` is unset, the app uses `mock.shop`. If you set a private token, you must also set `NEXT_PUBLIC_STORE_DOMAIN`.
+
+## Scripts
 
 | Script | Does |
 | --- | --- |
 | `pnpm dev` | Start the Next.js dev server. |
-| `pnpm build` | Build the production Next.js app. |
+| `pnpm build` | Build the production app. |
 | `pnpm start` | Start the production server after `pnpm build`. |
 | `pnpm lint` | Run ESLint. |
 | `pnpm typecheck` | Run TypeScript and Hydrogen GraphQL checks. |
+
+## Pages
+
+- `/`: home with hero, featured products, and featured collections.
+- `/collections`: all collections.
+- `/collections/:handle`: collection page with filters, sort, pagination, and active filter chips.
+- `/products/:handle`: product page with gallery, URL-synced variants, add to cart, Shop Pay, and related products.
+- `/search`: storefront search with filters, sort, pagination, and predictive search.
+- `/cart`: cart page and no-JS fallback for the cart drawer.
+- `/account`: Customer Account OAuth page for real stores.
+- `/sitemap.xml`: product and collection sitemap.
+- `/robots.txt`: crawler rules for the storefront.
 
 ## Deploy to Vercel
 
 The fastest path is one click:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fpreview%2Ftemplates%2Fnextjs)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fdist-preview%2Ftemplates%2Fnextjs)
 
-1. Click **Deploy with Vercel** above. Vercel clones this template into a new repository on your own Git provider (GitHub, GitLab, or Bitbucket).
-2. Keep the auto-detected Next.js settings (`next build`; no `vercel.json` needed).
-3. Deploy. The first build renders immediately with no environment variables, because the storefront falls back to `mock.shop`.
-4. Connect your store: add `PUBLIC_STORE_DOMAIN` and `PRIVATE_STOREFRONT_API_TOKEN` under **Project Settings → Environment Variables**, then redeploy.
+1. Click **Deploy with Vercel** above. Vercel clones this template into a new repository on your Git provider.
+2. Keep the auto-detected Next.js settings.
+3. Deploy. The app renders with `mock.shop` until you add store env vars.
+4. Connect your store in **Project Settings -> Environment Variables**, then redeploy.
 
-Prefer to wire it up yourself? Push this project to a Git provider, import it in Vercel, keep the detected Next.js settings, and deploy — the same auto-detection and `mock.shop` fallback apply. Vercel runs this storefront on the Node.js runtime that Next.js auto-detects.
+Prefer to wire it up yourself? Push this project to a Git provider, import it in Vercel, keep the detected Next.js settings, and deploy.
 
-## Where to start
+## Where to Start
 
-- Swap the store in `app/lib/shop.ts` + `.env` (or Vercel environment variables).
-- Pages live in `app/`; shared UI in `app/components/`; data/query helpers in `app/lib/`.
-- The design is yours to change — `app/tokens.css` holds the design tokens; the components use them via semantic classes.
+- Pages live in `app/`.
+- Shared UI lives in `components/`.
+- Storefront, cart, Customer Account, analytics, and query helpers live in `lib/`.
+- Global styling lives in `app/globals.css`.
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+MIT. See [LICENSE](./LICENSE).

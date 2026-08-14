@@ -19,7 +19,7 @@ Nuxt needs three pieces:
 
 Create `server/middleware/shopify.ts`:
 
-Resolve `buyerIp` from the app's trusted deployment headers before creating the private client. Use the buyer-IP guidance from `hydrogen-storefront-client`.
+The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` from the app's trusted deployment headers per the buyer-IP guidance from `hydrogen-storefront-client`.
 
 Create an app-owned request-scoped `sessionManager` before `handleShopifyRoutes`.
 
@@ -36,40 +36,39 @@ const cartHandlers = createCartServerHandlers();
 
 export default defineEventHandler(async (event) => {
   const request = toWebRequest(event);
-  const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
-    buyerIp,
   });
   const sessionManager = await createSessionManager(request);
-  const storefrontClient = createPrivateStorefrontClient(requestContext, buyerIp);
+  const storefrontClient = createPublicStorefrontClient(requestContext);
 
-  const shopifyRoute = await handleShopifyRoutes({
+  const shopifyRoute = handleShopifyRoutes({
     request,
     requestContext,
     sessionManager,
     storefrontClient,
     handlers: [cartHandlers],
   });
-  if (shopifyRoute) return sendWebResponse(event, shopifyRoute);
+  if (shopifyRoute) return sendWebResponse(event, await shopifyRoute);
 
   event.context.shopifyRequestContext = requestContext;
   event.context.storefrontClient = storefrontClient;
 });
 
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContext, buyerIp: string) {
+function createPublicStorefrontClient(requestContext: ShopifyRequestContext) {
   return createStorefrontClient({
-    type: "private",
+    type: "public",
     requestContext,
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
-      privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-      buyerIp,
+      publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,
     },
   });
 }
 ```
+
+This middleware awaits a matched promise because `sendWebResponse` needs the resolved `Response`; rejected promises continue through Nitro's request error handling. Do not attach an inline `.catch()` unless this route intentionally needs handling that differs from the app's normal error boundary.
 
 Use project-owned helpers for env access. Do not expose the private token to client plugins.
 
@@ -163,8 +162,10 @@ if (import.meta.server && props.error.statusCode === 404) {
     const storefrontClient = event.context.storefrontClient;
     if (!storefrontClient) throw new Error("Storefront client was not created.");
     const redirect = await handleShopifyRedirects({ request, routeTemplates, storefrontClient });
-    const location = redirect?.headers.get("location");
-    if (location) await navigateTo(location, { redirectCode: redirect!.status as 301 | 302 });
+    if (redirect) {
+      const location = redirect.headers.get("location");
+      if (location) await navigateTo(location, { redirectCode: redirect.status as 301 | 302 });
+    }
   }
 }
 </script>

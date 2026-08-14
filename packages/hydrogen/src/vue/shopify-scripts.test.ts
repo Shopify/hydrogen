@@ -42,18 +42,20 @@ describe("ShopifyScripts", () => {
     });
     const html = await renderToString(
       h(ShopifyScripts, {
+        debug: { standardEventsInspector: true },
         i18n: { country: "US", language: "EN" },
         nonce: "test-nonce",
         routes: routeTemplates,
         shop: TEST_SHOP,
         inbox: true,
+        shopifyAnalytics: false,
       }),
     );
 
     expect(html).toContain('nonce="test-nonce"');
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/"}');
+    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
     expect(html).toContain(`"shop":"${TEST_MYSHOPIFY_DOMAIN}"`);
     expect(html).not.toContain('"templates"');
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_CDN_ORIGIN}">`);
@@ -61,9 +63,11 @@ describe("ShopifyScripts", () => {
     expect(html).toContain(
       `<script id="shopify-standard-actions" type="module" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}"></script>`,
     );
+    expect(html).toContain("shopify-standard-events-inspector");
     expect(html).toContain(
       `<script id="shopify-inbox" type="module" async crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_INBOX_SCRIPT}"></script>`,
     );
+    expect(html).not.toContain(`id="shopify-storefront-analytics"`);
     expect(html).not.toContain("<shopify-chat");
     expect(html).toContain(`id="shopify-perfkit"`);
     expect(html).toContain(`async`);
@@ -93,7 +97,7 @@ describe("ShopifyScripts", () => {
     expect(html).not.toContain(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT);
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/"}');
+    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
     expect(html).not.toContain('"templates"');
   });
 
@@ -130,14 +134,15 @@ describe("ShopifyScripts", () => {
     });
 
     await vi.waitFor(() => {
-      expect(window.Shopify?.navigate).toEqual(expect.any(Function));
+      expect(window.Shopify?.routes.navigate).toEqual(expect.any(Function));
       expect(window.Shopify?.routes.match?.("/p/snowboard")).toEqual({
         route: "product",
+        pageTemplateName: "product",
         params: { productHandle: "snowboard" },
       });
       expect(window.Shopify?.routes.resolve?.("/products/snowboard")).toBe("/p/snowboard");
     });
-    window.Shopify?.navigate?.("/products/snowboard");
+    window.Shopify?.routes.navigate?.("/products/snowboard");
     expect(navigate).toHaveBeenCalledWith("/p/snowboard");
     expect(initializeShopifyScripts).toHaveBeenCalledWith({
       navigate,

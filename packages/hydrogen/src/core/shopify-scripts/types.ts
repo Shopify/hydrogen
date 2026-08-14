@@ -4,7 +4,7 @@ import type {
   ShopAnalyticsChannel,
   StorefrontAnalyticsConfig,
 } from "../analytics/types";
-import type { I18nConfig } from "../headers";
+import type { I18nConfig } from "../request-context";
 import type { ShopifyRouteTemplates } from "../standard-routes/index";
 
 export type ShopifyScriptsAnalyticsConfig = {
@@ -30,6 +30,7 @@ export type ShopifyScriptTagAttributes = ShopifyDataAttributes &
   Partial<{
     async: boolean;
     crossorigin: ShopifyCrossOrigin;
+    defer: boolean;
     id: string;
     nonce: string;
     src: string;
@@ -76,6 +77,10 @@ export type ShopifyScriptsShop = {
 export type ShopifyScriptTagsOptions = {
   analytics?: ShopifyScriptsAnalyticsConfig;
   consent?: ConsentConfig;
+  debug?: {
+    /** Loads Shopify's standard events inspector in development builds. */
+    standardEventsInspector?: boolean;
+  };
   i18n?: ShopifyScriptsI18n;
   /** Loads Inbox. Render `<shopify-chat>` where you want the chat UI to appear. */
   inbox?: boolean;
@@ -85,7 +90,7 @@ export type ShopifyScriptTagsOptions = {
 };
 
 export type ShopifyRoutesOptions = {
-  navigate?: ShopifyGlobal["navigate"];
+  navigate?: ShopifyGlobal["routes"]["navigate"];
   routes?: ShopifyRouteTemplates;
 };
 

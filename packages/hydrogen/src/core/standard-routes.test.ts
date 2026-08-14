@@ -6,6 +6,7 @@ import {
   matchStandardRouteUrl,
   resolveStandardRouteUrl,
 } from "./standard-routes/index";
+import { normalizePathPrefix, prependPathPrefix } from "./standard-routes/path";
 
 describe("standard routes", () => {
   it("builds default Shopify standard routes", () => {
@@ -20,12 +21,22 @@ describe("standard routes", () => {
         productHandle: "snowboard",
       }),
     ).toBe("/collections/winter/products/snowboard");
+    expect(getStandardRoute(routeTemplates, "cart", {})).toBe("/cart");
+    expect(getStandardRoute(routeTemplates, "collectionList", {})).toBe("/collections");
+    expect(getStandardRoute(routeTemplates, "policy", { policyHandle: "privacy-policy" })).toBe(
+      "/policies/privacy-policy",
+    );
+    expect(getStandardRoute(routeTemplates, "search", {})).toBe("/search");
   });
 
   it("builds configured standard routes", () => {
     const routeTemplates = createShopifyRouteTemplates({
       article: "/journal/:blogHandle/:articleHandle",
+      cart: "/basket",
+      collectionList: "/catalog",
+      policy: "/legal/:policyHandle",
       product: "/p/:productHandle",
+      search: "/find",
     });
 
     expect(
@@ -39,6 +50,12 @@ describe("standard routes", () => {
     expect(getStandardRoute(routeTemplates, "collection", { collectionHandle: "winter" })).toBe(
       "/collections/winter",
     );
+    expect(getStandardRoute(routeTemplates, "cart", {})).toBe("/basket");
+    expect(getStandardRoute(routeTemplates, "collectionList", {})).toBe("/catalog");
+    expect(getStandardRoute(routeTemplates, "policy", { policyHandle: "refund-policy" })).toBe(
+      "/legal/refund-policy",
+    );
+    expect(getStandardRoute(routeTemplates, "search", {})).toBe("/find");
   });
 
   it("resolves standard route URLs to configured route templates", () => {
@@ -62,6 +79,7 @@ describe("standard routes", () => {
 
     expect(matchStandardRouteUrl({ routeTemplates, url: "/p/snow board?variant=1" })).toEqual({
       route: "product",
+      pageTemplateName: "product",
       params: { productHandle: "snow board" },
     });
     expect(
@@ -71,6 +89,7 @@ describe("standard routes", () => {
       }),
     ).toEqual({
       route: "article",
+      pageTemplateName: "article",
       params: { blogHandle: "news", articleHandle: "waxing guide" },
     });
   });
@@ -82,12 +101,127 @@ describe("standard routes", () => {
 
     expect(matchStandardRouteUrl({ routeTemplates, url: "/products/snowboard" })).toEqual({
       route: "product",
+      pageTemplateName: "product",
       params: { productHandle: "snowboard" },
     });
     expect(matchStandardRouteUrl({ routeTemplates, url: "/collections/winter" })).toEqual({
       route: "collection",
+      pageTemplateName: "collection",
       params: { collectionHandle: "winter" },
     });
+  });
+
+  it("prefers Shopify default route identities over overlapping configured templates", () => {
+    const routeTemplates = createShopifyRouteTemplates({
+      policy: "/pages/:policyHandle",
+      productInCollection: "/products/:productHandle",
+    });
+
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/pages/privacy-policy" })).toEqual({
+      route: "page",
+      pageTemplateName: "page",
+      params: { pageHandle: "privacy-policy" },
+    });
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/products/snowboard" })).toEqual({
+      route: "product",
+      pageTemplateName: "product",
+      params: { productHandle: "snowboard" },
+    });
+  });
+
+  it("matches the root as the index route", () => {
+    const routeTemplates = createShopifyRouteTemplates({ collectionList: "/" });
+
+    expect(resolveStandardRouteUrl({ routeTemplates, url: "/collections" })).toBe("/");
+
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/" })).toEqual({
+      route: "index",
+      pageTemplateName: "index",
+      params: {},
+    });
+    expect(
+      matchStandardRouteUrl({
+        pathPrefix: "/fr-ca/",
+        routeTemplates,
+        url: "/fr-ca/",
+      }),
+    ).toEqual({ route: "index", pageTemplateName: "index", params: {} });
+  });
+
+  it.each([
+    {
+      url: "/cart",
+      expected: { route: "cart", pageTemplateName: "cart", params: {} },
+    },
+    {
+      url: "/search?q=snowboard",
+      expected: { route: "search", pageTemplateName: "search", params: {} },
+    },
+    {
+      url: "/collections",
+      expected: {
+        route: "collectionList",
+        pageTemplateName: "list-collections",
+        params: {},
+      },
+    },
+    {
+      url: "/products",
+      expected: {
+        route: "collectionList",
+        pageTemplateName: "list-collections",
+        params: {},
+      },
+    },
+    {
+      url: "/policies/privacy-policy",
+      expected: {
+        route: "policy",
+        pageTemplateName: "policy",
+        params: { policyHandle: "privacy-policy" },
+      },
+    },
+  ] as const)("matches the Liquid page template for $url", ({ url, expected }) => {
+    const routeTemplates = createShopifyRouteTemplates({});
+
+    expect(matchStandardRouteUrl({ routeTemplates, url })).toEqual(expected);
+  });
+
+  it("matches configured storefront utility routes", () => {
+    const routeTemplates = createShopifyRouteTemplates({
+      cart: "/basket",
+      collectionList: "/catalog",
+      policy: "/legal/:policyHandle",
+      search: "/find",
+    });
+
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/basket" })).toEqual({
+      route: "cart",
+      pageTemplateName: "cart",
+      params: {},
+    });
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/catalog" })).toEqual({
+      route: "collectionList",
+      pageTemplateName: "list-collections",
+      params: {},
+    });
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/legal/terms-of-service" })).toEqual({
+      route: "policy",
+      pageTemplateName: "policy",
+      params: { policyHandle: "terms-of-service" },
+    });
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/find?q=snowboard" })).toEqual({
+      route: "search",
+      pageTemplateName: "search",
+      params: {},
+    });
+  });
+
+  it("resolves canonical and legacy collection-listing routes", () => {
+    const routeTemplates = createShopifyRouteTemplates({ collectionList: "/catalog" });
+
+    expect(resolveStandardRouteUrl({ routeTemplates, url: "/collections" })).toBe("/catalog");
+    expect(resolveStandardRouteUrl({ routeTemplates, url: "/products" })).toBe("/catalog");
   });
 
   it("resolves standard route URLs with an i18n path prefix", () => {
@@ -117,6 +251,7 @@ describe("standard routes", () => {
       }),
     ).toEqual({
       route: "productInCollection",
+      pageTemplateName: "product",
       params: { collectionHandle: "winter", productHandle: "snowboard" },
     });
   });
@@ -138,12 +273,19 @@ describe("standard routes", () => {
     ).toBe("https://cdn.example/products/snowboard");
   });
 
+  it("normalizes path prefixes with surrounding whitespace", () => {
+    expect(normalizePathPrefix(" /fr-ca/ ")).toBe("/fr-ca");
+    expect(normalizePathPrefix("  ")).toBe("");
+    expect(normalizePathPrefix(undefined)).toBe("");
+    expect(prependPathPrefix("/products", " /fr-ca/ ")).toBe("/fr-ca/products");
+  });
+
   it("does not match external or unknown URLs", () => {
     const routeTemplates = createShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
 
-    expect(matchStandardRouteUrl({ routeTemplates, url: "/search?q=snow" })).toBeNull();
+    expect(matchStandardRouteUrl({ routeTemplates, url: "/unknown?q=snow" })).toBeNull();
     expect(
       matchStandardRouteUrl({
         baseUrl: "https://shop.example",

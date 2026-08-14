@@ -14,7 +14,23 @@ This reference covers React Router, SvelteKit, Astro, SolidStart, and unknown se
 
 Use this when one server hook can both return a `Response` before routing and inspect the resolved response status after routing. SvelteKit and Astro fit this shape.
 
-Resolve `buyerIp` with the app's trusted deployment header before creating the private client. Use the buyer-IP guidance from `hydrogen-storefront-client`.
+The example lets the framework handle rejected route promises, so it returns a matched promise directly. If the app instead wraps the request lifecycle in a `try/catch` that creates an error `Response`, await only after the truthy check so that boundary also catches a matched route rejection:
+
+```ts
+try {
+  const shopifyRoute = handleShopifyRoutes(options);
+  if (shopifyRoute) return await shopifyRoute;
+
+  // Continue framework routing.
+} catch (error) {
+  logger.error(error);
+  return new Response("Unexpected error", { status: 500 });
+}
+```
+
+Prefer this over adding `.catch()` only to the returned promise: the request-level boundary also handles synchronous setup and validation errors.
+
+The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance.
 
 ```ts
 import {
@@ -30,24 +46,21 @@ const cartHandlers = createCartServerHandlers();
 const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
 
 export async function handleRequest(request: Request, next: () => Promise<Response>) {
-  const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
-    buyerIp,
   });
   const sessionManager = await createSessionManager(request);
   const storefrontClient = createStorefrontClient({
-    type: "private",
+    type: "public",
     requestContext,
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
-      privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-      buyerIp,
+      publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,
     },
   });
 
-  const shopifyRoute = await handleShopifyRoutes({
+  const shopifyRoute = handleShopifyRoutes({
     request,
     requestContext,
     sessionManager,
@@ -59,10 +72,7 @@ export async function handleRequest(request: Request, next: () => Promise<Respon
   const response = await next();
   if (response.status === 404) {
     const redirect = await handleShopifyRedirects({ request, routeTemplates, storefrontClient });
-    if (redirect) {
-      storefrontClient.requestContext.applyResponseHeaders(redirect.headers);
-      return redirect;
-    }
+    if (redirect) return redirect;
   }
 
   storefrontClient.requestContext.applyResponseHeaders(response.headers);
@@ -77,7 +87,7 @@ React Router framework mode needs:
 - Verify `future.v8_middleware: true` is set in `react-router.config.ts`.
 - A final splat route such as `route("*", "routes/catchall.tsx")`.
 - Root-route middleware that creates the Storefront client, runs Hydrogen routes, stores the client in context, and applies response headers after `next()`.
-- Trusted buyer-IP resolution before `createStorefrontClient`; use the buyer-IP guidance from `hydrogen-storefront-client`.
+- A public Storefront client by default; when upgrading to `type: "private"`, resolve trusted `buyerIp` before `createStorefrontClient` per the buyer-IP guidance from `hydrogen-storefront-client`.
 
 ```tsx
 import {
@@ -94,24 +104,21 @@ const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ context, request }, next) => {
-    const buyerIp = getBuyerIp(request.headers);
     const requestContext = createShopifyRequestContext({
       request,
       i18n: { country: "US", language: "EN" },
-      buyerIp,
     });
     const sessionManager = await createSessionManager(request);
     const storefrontClient = createStorefrontClient({
-      type: "private",
+      type: "public",
       requestContext,
       config: {
         storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
-        privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
-        buyerIp,
+        publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,
       },
     });
 
-    const shopifyRoute = await handleShopifyRoutes({
+    const shopifyRoute = handleShopifyRoutes({
       request,
       requestContext,
       sessionManager,
@@ -125,10 +132,7 @@ export const middleware: Route.MiddlewareFunction[] = [
     const response = await next();
     if (response.status === 404) {
       const redirect = await handleShopifyRedirects({ request, routeTemplates, storefrontClient });
-      if (redirect) {
-        storefrontClient.requestContext.applyResponseHeaders(redirect.headers);
-        return redirect;
-      }
+      if (redirect) return redirect;
     }
     storefrontClient.requestContext.applyResponseHeaders(response.headers);
     return response;
@@ -143,7 +147,7 @@ SolidStart middleware can short-circuit before routing, but cannot reliably obse
 In middleware, create an app-owned request-scoped `sessionManager` before calling `handleShopifyRoutes`:
 
 ```ts
-const shopifyRoute = await handleShopifyRoutes({
+const shopifyRoute = handleShopifyRoutes({
   request: event.request,
   requestContext,
   sessionManager,

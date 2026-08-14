@@ -5,12 +5,15 @@ import type {
 } from "gql.tada";
 
 import type { CacheInstance, WaitUntil } from "../core/cache/run-with-cache";
-import type { ShopifyRequestContext } from "../core/headers";
+import type {
+  ShopifyRequestContext,
+  ShopifyRequestContextWithBuyerIp,
+} from "../core/request-context";
 import type { AnyStorefrontQueryString, SourceOf, StorefrontQueryString } from "../graphql";
 import type { InferResult, InferVariables } from "../graphql";
 import type { InferOperationKind } from "../graphql/type-resolver";
 
-export type { I18nConfig } from "../core/headers";
+export type { I18nConfig } from "../core/request-context";
 
 type DocLike = TadaDocumentNode<any, any> | AnyStorefrontQueryString;
 type InferredDoc<T extends string> = StorefrontQueryString<InferResult<T>, InferVariables<T>, T>;
@@ -88,7 +91,7 @@ export interface PublicClientOptions<
 /**
  * Private client — uses a private Storefront Access Token.
  *
- * `buyerIp` must be resolved before creating the client.
+ * `buyerIp` must be resolved on the request context before creating the client.
  *
  * Best for: SSR/server-side requests where you control the fetch
  * layer and can forward trusted buyer context.
@@ -100,7 +103,6 @@ export interface PrivateClientOptions<
 > extends CommonOptions {
   fetch?: Fetch;
   privateStorefrontToken: string;
-  buyerIp: string;
 }
 
 /**
@@ -140,7 +142,7 @@ export type CreateStorefrontClientArgs<
     }
   | {
       type: "private" & Type;
-      requestContext: RequestContext;
+      requestContext: RequestContext & ShopifyRequestContextWithBuyerIp;
       config: PrivateClientOptions<AnyFetch | undefined> & { cache?: CacheConfig };
     }
   | {
@@ -218,11 +220,11 @@ export type PublicStorefrontClient<
 
 export type PrivateStorefrontClient<
   Extra extends Record<string, unknown> = {},
-  RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
+  RequestContext extends ShopifyRequestContextWithBuyerIp = ShopifyRequestContextWithBuyerIp,
 > = StorefrontClient<Extra, "private", RequestContext>;
 
 export type RequestScopedPrivateStorefrontClient<Extra extends Record<string, unknown> = {}> =
-  PrivateStorefrontClient<Extra, ShopifyRequestContext>;
+  PrivateStorefrontClient<Extra, ShopifyRequestContextWithBuyerIp>;
 
 export type PrivateNoBuyerContextStorefrontClient<
   Extra extends Record<string, unknown> = {},

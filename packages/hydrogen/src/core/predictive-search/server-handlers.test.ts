@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
-import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../handle-shopify-routes";
-import { createShopifyRequestContext } from "../headers";
+import { createShopifyRequestContext } from "../request-context";
+import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../request-routing/handle-shopify-routes";
 import { assert } from "../test-utils";
 import { DEFAULT_PREDICTIVE_SEARCH_LIMIT, getEmptyPredictiveSearchResult } from "./search";
 import { createPredictiveSearchServerHandlers } from "./server-handlers";
@@ -49,11 +49,14 @@ function createPredictiveSearchRequest(search = "?q=snow"): Request {
 function createPrivateStorefrontClient(request: Request) {
   return createStorefrontClient({
     type: "private",
-    requestContext: createShopifyRequestContext({ request, i18n: DEFAULT_I18N }),
+    requestContext: createShopifyRequestContext({
+      request,
+      i18n: DEFAULT_I18N,
+      buyerIp: "127.0.0.1",
+    }),
     config: {
       storeDomain: "https://test-store.myshopify.com",
       privateStorefrontToken: "test-private-token",
-      buyerIp: "127.0.0.1",
     },
   });
 }

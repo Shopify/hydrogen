@@ -7,8 +7,11 @@ import type { CacheInstance } from "../core/cache/run-with-cache";
 import type { CachingStrategy } from "../core/cache/strategies";
 import { DEFAULT_TIMEOUT_IN_MS, STOREFRONT_API_VERSION } from "../core/constants";
 import {
+  HYDROGEN_VERSION_HEADER,
   REQUEST_GROUP_ID_HEADER,
-  SHOPIFY_CLIENT_IP_HEADER,
+  SDK_VARIANT_HEADER,
+  SDK_VARIANT_SOURCE_HEADER,
+  SDK_VERSION_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
   STOREFRONT_ACCESS_TOKEN_HEADER,
@@ -16,9 +19,8 @@ import {
   STOREFRONT_PRIVATE_TOKEN_HEADER,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
-  type I18nConfig,
-  type ShopifyRequestContext,
 } from "../core/headers";
+import type { I18nConfig, ShopifyRequestContext } from "../core/request-context";
 import { normalizeStoreDomain } from "../core/url";
 import type { AnyStorefrontQueryString } from "../graphql";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";
@@ -39,10 +41,6 @@ type ResolvedStorefrontFetch = (
   cacheOptions: FetchCacheOptions | undefined,
 ) => Promise<Response>;
 
-const SDK_VARIANT_HEADER = "X-SDK-Variant";
-const SDK_VARIANT_SOURCE_HEADER = "X-SDK-Variant-Source";
-const SDK_VERSION_HEADER = "X-SDK-Version";
-const HYDROGEN_VERSION_HEADER = "X-Hydrogen-Version";
 const COUNTRY_VAR_RE = /\$country\s*:/;
 const LANGUAGE_VAR_RE = /\$language\s*:/;
 const REQUEST_CACHE_KEY_HEADERS = new Set([
@@ -59,7 +57,6 @@ const REQUEST_IDENTITY_HEADERS = new Set([
   "cookie",
   REQUEST_GROUP_ID_HEADER.toLowerCase(),
   STOREFRONT_BUYER_IP_HEADER.toLowerCase(),
-  SHOPIFY_CLIENT_IP_HEADER.toLowerCase(),
   SHOPIFY_UNIQUE_TOKEN_HEADER.toLowerCase(),
   SHOPIFY_VISIT_TOKEN_HEADER.toLowerCase(),
   SHOPIFY_STOREFRONT_Y_HEADER.toLowerCase(),
@@ -139,10 +136,6 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
 
   const staticHeaders: Record<string, string> = {
     "content-type": "application/json",
-    [SDK_VARIANT_HEADER]: "hydrogen",
-    [SDK_VARIANT_SOURCE_HEADER]: "kit",
-    [SDK_VERSION_HEADER]: STOREFRONT_API_VERSION,
-    [HYDROGEN_VERSION_HEADER]: __HYDROGEN_VERSION__,
   };
 
   switch (clientType) {
@@ -172,22 +165,15 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
   }
 
   const i18n = requestContext.i18n;
-  const requestHeaders = requestContext.getSubrequestHeaders();
-  for (const [name, value] of Object.entries(staticHeaders)) {
-    requestHeaders.set(name, value);
-  }
+  const requestHeaders = new Headers(staticHeaders);
+  requestContext.applyStorefrontRequestHeaders(requestHeaders);
 
   if (clientType === "private") {
-    const { buyerIp } = config;
+    const { buyerIp } = requestContext;
     if (!buyerIp) {
-      throw new Error("buyerIp is required for private Storefront API clients");
+      throw new TypeError("requestContext.buyerIp is required for private Storefront API clients");
     }
-    if (requestContext.buyerIp && requestContext.buyerIp !== buyerIp) {
-      throw new Error("requestContext.buyerIp must match private Storefront API client buyerIp");
-    }
-    const trustedBuyerIp = requestContext.buyerIp ?? buyerIp;
-    requestHeaders.set(STOREFRONT_BUYER_IP_HEADER, trustedBuyerIp);
-    requestHeaders.set(SHOPIFY_CLIENT_IP_HEADER, trustedBuyerIp);
+    requestHeaders.set(STOREFRONT_BUYER_IP_HEADER, buyerIp);
   }
 
   async function graphql(
