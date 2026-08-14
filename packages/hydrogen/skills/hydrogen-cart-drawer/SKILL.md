@@ -28,13 +28,13 @@ The drawer has three layout zones (header / body / footer):
 
 1. **Header** — title, close button, and error banner (if any cart errors exist). Always visible, never scrolls.
 2. **Body** — line items only. This is the only zone that scrolls when content overflows.
-3. **Footer** — discount codes, order note, totals, and checkout button. Always visible (pinned to bottom), never scrolls.
+3. **Footer** — discount codes, order note and/or cart attribute editors, totals, and checkout button. Always visible (pinned to bottom), never scrolls.
 
 **Empty state**: When the cart has no items, the body shows an empty message ("Your cart is empty") and the footer is hidden entirely — no totals, no discounts, no notes, no checkout button.
 
 The drawer is a `<dialog>` (or primitive library equivalent) rendered once in the root layout. The storefront must also have a `/cart` route that renders a full cart page — this is the fallback route when the drawer is unavailable. The drawer is the progressively-enhanced experience that layers on top after hydration.
 
-The full `/cart` page shares the same content components (line items, discounts, note, totals, checkout) but uses a page layout instead of the fixed header/body/footer zones.
+The full `/cart` page shares the same content components (line items, discounts, note, attributes, totals, checkout) but uses a page layout instead of the fixed header/body/footer zones.
 
 The drawer's line item forms must use the same Hydrogen line-item form contract as the `/cart` page — see `hydrogen-cart-ui` ("Form structure"). The layout may differ by framework and design system; the form contract must not.
 

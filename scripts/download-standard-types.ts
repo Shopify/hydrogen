@@ -30,12 +30,13 @@ async function downloadFile(url: string): Promise<string> {
 function normalizeStandardActionsTypes(file: string, source: string): string {
   if (file !== "standard-actions.d.ts") return source;
 
+  // Hydrogen owns a richer ShopifyGlobal declaration in src/globals.ts, so
+  // retain the action type but omit the CDN file's overlapping ambient global.
   return source
-    .replace("Shopify: Shopify & {", "Shopify?: Shopify & {")
     .replace("cart: CartSummary;", "cart: CartSummary | null;")
     .replace(
-      "declare global {",
-      "export type ShopifyStandardActions = typeof actions;\ndeclare global {",
+      /\ndeclare global \{[\s\S]*?\n\}\n\nexport \{\};/,
+      "\nexport type ShopifyStandardActions = typeof actions;\n\nexport {};",
     );
 }
 

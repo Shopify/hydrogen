@@ -41,6 +41,7 @@ const MOCK_CART: CartData = {
     checkoutChargeAmount: { amount: "30.00", currencyCode: "USD" },
   },
   note: "",
+  attributes: [],
   lines: {
     nodes: [
       {

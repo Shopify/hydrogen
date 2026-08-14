@@ -128,6 +128,8 @@ const lines = useCart((state) => state.data.lines.nodes);
 const pendingLines = useCart((state) => state.pending.lines);
 const totalsPending = useCart((state) => state.pending.cost === true || state.revalidating === true);
 const lineErrors = useCart((state) => state.errors.lines);
+const attributesPending = useCart((state) => state.pending.attributes);
+const attributeErrors = useCart((state) => state.errors.attributes);
 </script>
 
 <template>
@@ -180,6 +182,7 @@ Important Vue form fields:
 - `register("increase")`, `register("decrease")`, and `register("remove")` create line item controls.
 - `register("discountCode", { defaultValue: "" })`, `register("discountCode", { value: code })`, `register("discount-apply")`, and `register("discount-remove")` create discount forms.
 - `register("note")` and `register("note-update")` create note forms.
+- Repeated `register("attributeValue", { key, value })` controls define the complete next cart attribute list; `register("attributes-update")` submits it. Preserve unrelated attributes explicitly because omitted attributes are removed. Use `pending.attributes` for a scoped saving state.
 
 Each line item still gets its own form; the binding removes boilerplate, not the form identity requirement.
 
