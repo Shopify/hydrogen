@@ -4,12 +4,16 @@ import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { checkGraphQL } from "./gql";
+import { setupLocalHttps } from "./https";
 import { setupHydrogen } from "./setup";
 
 const CLI_ARGUMENTS_INDEX = 2;
 const FAILURE_EXIT_CODE = 1;
 
+// Longer command paths must come before their prefixes: matching is
+// first-match-wins on path prefixes, so `setup https` must precede `setup`.
 const COMMANDS = [
+  { path: ["setup", "https"], run: async (_args: string[]) => setupLocalHttps() },
   { path: ["setup"], run: async (_args: string[]) => setupHydrogen() },
   { path: ["gql", "check"], run: async (args: string[]) => checkGraphQL({ args }) },
 ] as const;
