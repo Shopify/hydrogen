@@ -51,9 +51,7 @@ describe("buildProductSelectionSearchParams", () => {
   });
 
   it("removes stale variant and option params from base while preserving the rest", () => {
-    const base = new URLSearchParams(
-      "variant=123&Color=Blue&Material=Wool&ref=campaign",
-    );
+    const base = new URLSearchParams("variant=123&Color=Blue&Material=Wool&ref=campaign");
 
     const params = buildProductSelectionSearchParams({
       selectedOptions: SELECTED_OPTIONS,

@@ -1,5 +1,4 @@
 import { getLogger } from "../logging";
-import { VARIANT_SEARCH_PARAM } from "./url";
 import type {
   ProductInput,
   ProductOptionValueFrom,
@@ -9,6 +8,7 @@ import type {
   VariantOptionState,
   VariantOptionValueState,
 } from "./state";
+import { VARIANT_SEARCH_PARAM } from "./url";
 
 const log = getLogger("product");
 

@@ -7,9 +7,7 @@ import { toFetchQuery } from "~/utils/fetch-query";
 const route = useRoute();
 const router = useRouter();
 const handle = computed(() => route.params.handle as string);
-const selectedOptionsKey = computed(() =>
-  queryToSearchParams(route.query).toString(),
-);
+const selectedOptionsKey = computed(() => queryToSearchParams(route.query).toString());
 const productApiPath = computed(() => `/api/products/${encodeURIComponent(handle.value)}` as const);
 
 const { data } = await useFetch(() => productApiPath.value, {

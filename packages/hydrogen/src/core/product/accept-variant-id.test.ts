@@ -30,7 +30,11 @@ function createContext({
   const request = new Request(url, { method });
   const context = {
     request,
-    storefrontClient: { graphql, i18n, storeUrl: "https://shop.myshopify.com" } as unknown as StorefrontClient,
+    storefrontClient: {
+      graphql,
+      i18n,
+      storeUrl: "https://shop.myshopify.com",
+    } as unknown as StorefrontClient,
   } as ShopifyRouteHandlerContext;
 
   return { context, graphql, url: new URL(url) };
@@ -193,10 +197,7 @@ describe("acceptProductVariantId", () => {
       graphql,
     });
 
-    await Promise.all([
-      handler(first.url, first.context),
-      handler(second.url, second.context),
-    ]);
+    await Promise.all([handler(first.url, first.context), handler(second.url, second.context)]);
 
     expect(graphql).toHaveBeenCalledOnce();
   });

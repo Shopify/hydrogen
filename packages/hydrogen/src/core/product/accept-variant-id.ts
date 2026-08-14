@@ -3,11 +3,18 @@ import { StorefrontApiError, StorefrontTimeoutError } from "../../client/errors"
 import { gql } from "../../graphql";
 import type { CachingStrategy } from "../cache";
 import { getLogger } from "../logging";
-import type { ShopifyRouteHandlerResult, ShopifyRouteMatchHandler } from "../request-routing/route-types";
+import type {
+  ShopifyRouteHandlerResult,
+  ShopifyRouteMatchHandler,
+} from "../request-routing/route-types";
 import { getStandardRoute } from "../standard-routes/build";
 import { matchStandardRouteUrl } from "../standard-routes/match";
 import type { ShopifyRouteTemplates } from "../standard-routes/types";
-import { buildProductSelectionSearchParams, parseVariantSearchParam, VARIANT_SEARCH_PARAM } from "./url";
+import {
+  buildProductSelectionSearchParams,
+  parseVariantSearchParam,
+  VARIANT_SEARCH_PARAM,
+} from "./url";
 
 const log = getLogger("product");
 
