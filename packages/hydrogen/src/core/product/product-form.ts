@@ -331,7 +331,10 @@ function buildAddToCartDetail<TProduct extends ProductInput>(
       {
         id: selectedVariant.id,
         title: selectedVariant.title,
-        product: selectedVariant.product ? { title: selectedVariant.product.title } : undefined,
+        product: selectedVariant.product
+          ? { title: selectedVariant.product.title, handle: selectedVariant.product.handle }
+          : undefined,
+        selectedOptions: selectedVariant.selectedOptions,
         image: selectedVariant.image,
         price: selectedVariant.price,
       },
