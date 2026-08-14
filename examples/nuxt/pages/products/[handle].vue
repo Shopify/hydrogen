@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { buildProductSelectionSearchParams } from "@shopify/hydrogen";
+
 import { ProductProvider, type ProductVariantData } from "~/storefront/product";
 import { toFetchQuery } from "~/utils/fetch-query";
 
@@ -6,7 +8,7 @@ const route = useRoute();
 const router = useRouter();
 const handle = computed(() => route.params.handle as string);
 const selectedOptionsKey = computed(() =>
-  new URLSearchParams(route.query as Record<string, string>).toString(),
+  queryToSearchParams(route.query).toString(),
 );
 const productApiPath = computed(() => `/api/products/${encodeURIComponent(handle.value)}` as const);
 
@@ -47,9 +49,37 @@ function handleSelect(result: {
 }
 
 function variantQuery(nextSelectedOptions: { name: string; value: string }[]) {
-  const query = { ...route.query };
-  for (const option of product.value.options) delete query[option.name];
-  for (const option of nextSelectedOptions) query[option.name] = option.value;
+  const params = buildProductSelectionSearchParams({
+    selectedOptions: nextSelectedOptions,
+    optionNames: product.value.options.map((option) => option.name),
+    base: queryToSearchParams(route.query),
+  });
+  return searchParamsToQuery(params);
+}
+
+function queryToSearchParams(query: typeof route.query) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    const values = Array.isArray(value) ? value : [value];
+    for (const item of values) {
+      if (item !== null && item !== undefined) params.append(key, item);
+    }
+  }
+  return params;
+}
+
+function searchParamsToQuery(params: URLSearchParams) {
+  const query: Record<string, string | string[]> = {};
+  for (const [key, value] of params) {
+    const current = query[key];
+    if (current === undefined) {
+      query[key] = value;
+    } else if (Array.isArray(current)) {
+      current.push(value);
+    } else {
+      query[key] = [current, value];
+    }
+  }
   return query;
 }
 </script>

@@ -5,7 +5,7 @@ import {
   STOREFRONT_CACHE_MAX_ENTRIES,
   createStorefrontCacheAdapter,
 } from "@shared/storefront-cache";
-import { handleShopifyRoutes } from "@shopify/hydrogen";
+import { acceptProductVariantId, Cache, handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createCartServerHandlers,
   createStorefrontClient,
@@ -21,6 +21,7 @@ import {
   createRequestCustomerAccountClient,
   customerSessionHandlers,
 } from "./lib/customer-account";
+import { routeTemplates } from "./lib/route-templates";
 
 const PRIVATE_NO_STORE_CACHE_CONTROL = "private, no-store";
 
@@ -52,7 +53,11 @@ export default createMiddleware({
         requestContext,
         sessionManager,
         storefrontClient,
-        handlers: [cartHandlers, customerSessionHandlers],
+        handlers: [
+          acceptProductVariantId({ routeTemplates, cache: Cache.long() }),
+          cartHandlers,
+          customerSessionHandlers,
+        ],
       });
       if (shopifyRoute) return shopifyRoute;
 

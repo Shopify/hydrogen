@@ -1,6 +1,10 @@
 "use client";
 
-import { canAddToCart, type SelectedOption } from "@shopify/hydrogen";
+import {
+  buildProductSelectionSearchParams,
+  canAddToCart,
+  type SelectedOption,
+} from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -323,9 +327,11 @@ function variantUrl(
   handle = product.handle,
   base: URLSearchParams | ReturnType<typeof useSearchParams> = new URLSearchParams(),
 ): string {
-  const params = new URLSearchParams(base);
-  for (const option of product.options) params.delete(option.name);
-  for (const option of selectedOptions) params.set(option.name, option.value);
+  const params = buildProductSelectionSearchParams({
+    selectedOptions,
+    optionNames: product.options.map((option) => option.name),
+    base: new URLSearchParams(base),
+  });
   const query = params.toString();
   return `/products/${handle}${query ? `?${query}` : ""}`;
 }

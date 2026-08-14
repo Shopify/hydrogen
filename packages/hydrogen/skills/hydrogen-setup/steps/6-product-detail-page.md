@@ -31,6 +31,8 @@ const selectedOptions = getSelectedProductOptions({
 
 Passing `allowedOptionNames: []` filters out every option.
 
+The `variant` search param is reserved for Liquid-style numeric variant ids and is never treated as an option name. Register `acceptProductVariantId({ routeTemplates })` in `handleShopifyRoutes` `handlers` (see the local `hydrogen-request-handlers` skill) so `?variant=<id>` product links redirect to the canonical option-params URL before this loader runs.
+
 ### Minimum product query
 
 Extend and adjust fields as the UI needs them.
@@ -290,6 +292,7 @@ Wrap the page (or purchase panel) in `ProductProvider`. Sync the URL from `onSel
 
 ```vue
 <script setup lang="ts">
+import { buildProductSelectionSearchParams } from "@shopify/hydrogen";
 import { ProductProvider, type ProductData } from "~/storefront/product";
 
 const props = defineProps<{ product: ProductData }>();
@@ -302,11 +305,12 @@ function handleSelect(result: {
 }) {
   const targetHandle =
     result.selectedVariant?.product?.handle ?? props.product.handle;
-  const query = { ...route.query };
-  for (const option of props.product.options) delete query[option.name];
-  for (const option of result.selectedOptions) {
-    query[option.name] = option.value;
-  }
+  const params = buildProductSelectionSearchParams({
+    selectedOptions: result.selectedOptions,
+    optionNames: props.product.options.map((option) => option.name),
+    base: new URLSearchParams(route.query as Record<string, string>),
+  });
+  const query = Object.fromEntries(params);
   router.replace({ path: `/products/${targetHandle}`, query });
 }
 </script>

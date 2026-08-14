@@ -25,6 +25,7 @@ Create an app-owned request-scoped `sessionManager` before `handleShopifyRoutes`
 
 ```ts
 import {
+  acceptProductVariantId,
   createCartServerHandlers,
   createStorefrontClient,
   createShopifyRequestContext,
@@ -48,7 +49,7 @@ export default defineEventHandler(async (event) => {
     requestContext,
     sessionManager,
     storefrontClient,
-    handlers: [cartHandlers],
+    handlers: [acceptProductVariantId({ routeTemplates }), cartHandlers],
   });
   if (shopifyRoute) return sendWebResponse(event, await shopifyRoute);
 

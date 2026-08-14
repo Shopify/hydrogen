@@ -1,4 +1,9 @@
-import { handleShopifyRedirects, handleShopifyRoutes, gql } from "@shopify/hydrogen";
+import {
+  acceptProductVariantId,
+  handleShopifyRedirects,
+  handleShopifyRoutes,
+  gql,
+} from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import type { ReactNode } from "react";
 import {
@@ -59,7 +64,7 @@ export const middleware: Route.MiddlewareFunction[] = [
       requestContext,
       sessionManager,
       storefrontClient,
-      handlers: [cartHandlers],
+      handlers: [acceptProductVariantId({ routeTemplates }), cartHandlers],
     });
 
     if (shopifyRoute) return shopifyRoute;

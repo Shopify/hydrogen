@@ -12,6 +12,7 @@ This shape assumes app-owned server-only helpers for `customerSession` and `crea
 
 ```ts
 import {
+  acceptProductVariantId,
   createCartServerHandlers,
   createShopifyRequestContext,
   createStorefrontClient,
@@ -46,7 +47,7 @@ export async function proxy(request: NextRequest) {
     requestContext,
     sessionManager,
     storefrontClient,
-    handlers: [cartHandlers, customerAccountHandlers],
+    handlers: [acceptProductVariantId({ routeTemplates }), cartHandlers, customerAccountHandlers],
   });
   if (shopifyRoute) return shopifyRoute;
 

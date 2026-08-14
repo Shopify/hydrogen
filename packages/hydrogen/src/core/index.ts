@@ -12,7 +12,9 @@ export type {
   ShopifyRouteHandlerContext,
   ShopifyRouteHandlerGroup,
   ShopifyRouteHandlerResult,
+  ShopifyRouteHandlers,
   ShopifyRouteJsonResult,
+  ShopifyRouteMatchHandler,
   ShopifyRouteRedirectResult,
 } from "./request-routing/registered-routes";
 export { createStorefrontClient } from "../client/client";
@@ -185,6 +187,8 @@ export type {
   ValidProductSelectionResult,
   VariantSelectionResult,
 } from "./product";
+export { acceptProductVariantId, buildProductSelectionSearchParams } from "./product";
+export type { AcceptProductVariantIdOptions, ProductSelectionLinkStyle } from "./product";
 export { getSelectedProductOptions } from "./product";
 export type {
   ProductInput,

@@ -14,6 +14,10 @@ export type {
   VariantSelectionResult,
 } from "./product-form";
 export { getSelectedProductOptions } from "./options";
+export { acceptProductVariantId } from "./accept-variant-id";
+export type { AcceptProductVariantIdOptions } from "./accept-variant-id";
+export { buildProductSelectionSearchParams } from "./url";
+export type { ProductSelectionLinkStyle } from "./url";
 export { createProductFormRegister } from "./form";
 export type {
   ProductAddToCartProps,

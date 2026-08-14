@@ -3,7 +3,9 @@ import type {
   HydrogenRouteInterceptor,
   ShopifyRouteHandler,
   ShopifyRouteHandlerContext,
+  ShopifyRouteHandlerGroup,
   ShopifyRouteHandlerResult,
+  ShopifyRouteMatchHandler,
 } from "./route-types";
 
 export type {
@@ -14,7 +16,9 @@ export type {
   ShopifyRouteHandlerContext,
   ShopifyRouteHandlerGroup,
   ShopifyRouteHandlerResult,
+  ShopifyRouteHandlers,
   ShopifyRouteJsonResult,
+  ShopifyRouteMatchHandler,
   ShopifyRouteRedirectResult,
   ShopifyRouteSessionManager,
 } from "./route-types";
@@ -52,7 +56,20 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   url,
   { request, sessionManager, storefrontClient, requestContext, handlers = [] },
 ) => {
-  const routeHandlers = handlers.flatMap((group) => Object.values(group));
+  const context = { request, sessionManager, storefrontClient, requestContext };
+
+  for (const entry of handlers) {
+    if (!isMatchHandler(entry)) continue;
+
+    const resultPromise = entry(url, context);
+    if (resultPromise) {
+      return resultPromise.then((result) => createShopifyRouteResponse(result, request));
+    }
+  }
+
+  const routeHandlers = handlers
+    .filter((entry): entry is ShopifyRouteHandlerGroup => !isMatchHandler(entry))
+    .flatMap((group) => Object.values(group));
   if (routeHandlers.length === 0) return null;
 
   const pathMatches = routeHandlers.filter((entry) => entry.pathname === url.pathname);
@@ -64,17 +81,21 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
       new Response("Method Not Allowed", { status: HTTP_METHOD_NOT_ALLOWED_STATUS }),
     );
 
-  return match({ request, sessionManager, storefrontClient, requestContext }).then((result) =>
-    createShopifyRouteResponse(result, request),
-  );
+  return match(context).then((result) => createShopifyRouteResponse(result, request));
 };
+
+function isMatchHandler(
+  entry: ShopifyRouteHandlerGroup | ShopifyRouteMatchHandler,
+): entry is ShopifyRouteMatchHandler {
+  return typeof entry === "function";
+}
 
 function createShopifyRouteResponse(result: ShopifyRouteHandlerResult, request: Request): Response {
   if (result.type === "redirect") {
     const headers = new Headers(result.headers);
     headers.set("location", resolveRedirectLocation(result.location, request));
     return new Response(null, {
-      status: HTTP_SEE_OTHER_STATUS,
+      status: result.status ?? HTTP_SEE_OTHER_STATUS,
       headers,
     });
   }

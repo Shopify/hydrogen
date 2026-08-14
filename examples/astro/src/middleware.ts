@@ -6,6 +6,8 @@ import {
   createStorefrontCacheAdapter,
 } from "@shared/storefront-cache";
 import {
+  acceptProductVariantId,
+  Cache,
   createCartServerHandlers,
   createStorefrontClient,
   createShopifyRequestContext,
@@ -40,7 +42,11 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
     requestContext,
     sessionManager,
     storefrontClient,
-    handlers: [cartHandlers, customerSessionHandlers],
+    handlers: [
+      acceptProductVariantId({ routeTemplates, cache: Cache.long() }),
+      cartHandlers,
+      customerSessionHandlers,
+    ],
   });
   if (shopifyRoute) return shopifyRoute;
 

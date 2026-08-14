@@ -1,4 +1,5 @@
 import {
+  acceptProductVariantId,
   createShopifyRequestContext,
   createStorefrontClient,
   handleShopifyRoutes,
@@ -14,6 +15,7 @@ import {
 } from "@/lib/customer-account";
 import { getCustomerSessionHandlers } from "@/lib/customer-session-handlers";
 import { predictiveSearchHandlers } from "@/lib/predictive-search-handlers";
+import { routeTemplates } from "@/lib/route-templates";
 import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/storefront-config";
 
 /**
@@ -59,6 +61,7 @@ export async function proxy(request: NextRequest) {
     ? await createCustomerSessionManager(request)
     : createEphemeralSessionManager(request);
   const handlers = [
+    acceptProductVariantId({ routeTemplates }),
     cartHandlers,
     predictiveSearchHandlers,
     ...(customerAccountsAvailable ? [getCustomerSessionHandlers()] : []),
