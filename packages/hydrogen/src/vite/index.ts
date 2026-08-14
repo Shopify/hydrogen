@@ -4,7 +4,9 @@ import { homedir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { Plugin, ViteDevServer } from "vite";
+import type { ConfigEnv, Plugin, ViteDevServer } from "vite";
+
+import { provisionCertificates } from "./mkcert";
 
 export const LOCAL_HTTPS_DEFAULTS = {
   host: "local.tryhydrogen.dev",
@@ -49,7 +51,11 @@ export function localHttps(options: LocalHttpsOptions): Plugin {
 
   return {
     name: "hydrogen-local-https",
-    config() {
+    async config(_config: unknown, env: ConfigEnv) {
+      if (settings && env.command === "serve" && !env.isPreview) {
+        certificatesAvailable = await ensureCertificateFiles(settings);
+      }
+
       if (!isActive() || !settings) return;
 
       return {
@@ -95,6 +101,29 @@ export function localHttpsDevServer(options: LocalHttpsOptions) {
   };
 }
 
+export type ProvisionLocalHttpsOptions = Omit<LocalHttpsOptions, "enabled" | "port">;
+
+/**
+ * Downloads a pinned, checksum-verified mkcert release and generates the
+ * trusted local certificate files when they do not exist yet. The Vite plugin
+ * runs this automatically on `vite dev`; call it directly for frameworks that
+ * read certificate paths before Vite starts (Nuxt, SolidStart) or from setup
+ * scripts such as `hydrogen setup https`.
+ */
+export async function provisionLocalHttps(options: ProvisionLocalHttpsOptions = {}) {
+  const settings = resolveLocalHttpsSettings({ enabled: true, ...options });
+
+  if (!certificateFilesExist(settings)) {
+    await provisionCertificates(settings);
+  }
+
+  return {
+    host: settings.host,
+    certPath: settings.certPath,
+    keyPath: settings.keyPath,
+  };
+}
+
 type LocalHttpsSettings = {
   host: string;
   port: number;
@@ -123,11 +152,45 @@ function resolveCertificatePath(path: string | URL) {
   return isAbsolute(path) ? path : resolve(path);
 }
 
-function checkCertificateFiles(settings: LocalHttpsSettings) {
+function certificateFilesExist(settings: LocalHttpsSettings) {
+  return existsSync(settings.certPath) && existsSync(settings.keyPath);
+}
+
+async function ensureCertificateFiles(settings: LocalHttpsSettings): Promise<boolean> {
+  if (certificateFilesExist(settings)) return true;
+
+  // Installing the mkcert certificate authority needs an interactive trust
+  // prompt on first run (sudo on macOS/Linux, a GUI dialog on Windows), which
+  // hangs or fails on CI runners. Explicit `hydrogen setup https` runs remain
+  // available there.
+  if (isContinuousIntegration()) {
+    return checkCertificateFiles(
+      settings,
+      "Automatic certificate provisioning is skipped in CI environments (the CI environment variable is set).",
+    );
+  }
+
+  try {
+    await provisionCertificates(settings);
+    return true;
+  } catch (error) {
+    return checkCertificateFiles(
+      settings,
+      `Automatic certificate provisioning failed:\n  ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+function isContinuousIntegration() {
+  const ci = process.env.CI;
+  return ci !== undefined && ci !== "" && ci !== "false" && ci !== "0";
+}
+
+function checkCertificateFiles(settings: LocalHttpsSettings, provisioningNote?: string) {
   const missingPaths = [settings.certPath, settings.keyPath].filter((path) => !existsSync(path));
   if (missingPaths.length === 0) return true;
 
-  const warning = formatMissingCertificateWarning(settings, missingPaths);
+  const warning = formatMissingCertificateWarning(settings, missingPaths, provisioningNote);
   if (!emittedMissingCertificateWarnings.has(warning)) {
     emittedMissingCertificateWarnings.add(warning);
     process.emitWarning(warning, {
@@ -140,18 +203,24 @@ function checkCertificateFiles(settings: LocalHttpsSettings) {
 function formatMissingCertificateWarning(
   { certPath, host, keyPath }: LocalHttpsSettings,
   missingPaths: string[],
+  provisioningNote?: string,
 ) {
   const certificateDirectories = [...new Set([dirname(certPath), dirname(keyPath)])];
+  const provisioningFailure = provisioningNote === undefined ? [] : ["", provisioningNote];
 
   return [
     "Local HTTPS is disabled because certificate files are missing:",
     ...missingPaths.map((path) => `  ${path}`),
+    ...provisioningFailure,
     "",
     "Expected certificate files:",
     `  Certificate: ${certPath}`,
     `  Private key: ${keyPath}`,
     "",
-    "Install and configure mkcert, then generate the certificate:",
+    "Run the automatic setup:",
+    "  npx hydrogen setup https",
+    "",
+    "Or install and configure mkcert, then generate the certificate:",
     "  macOS: brew install mkcert",
     "  mkcert -install",
     `  mkdir -p ${certificateDirectories.map(shellQuote).join(" ")}`,

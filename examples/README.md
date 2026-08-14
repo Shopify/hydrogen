@@ -31,14 +31,13 @@ From the repository root:
 - `pnpm --filter @shopify/hydrogen-example-<name> dev` — run one example.
 - `pnpm https:setup` then `pnpm --filter @shopify/hydrogen-example-<name> https:dev` — run an account-enabled example on `https://local.tryhydrogen.dev:5173` when it provides an `https:dev` script. The Hydrogen example uses `--customer-account-push` instead of local certificates.
 
-Local HTTPS requires `mkcert`. On macOS:
+Local HTTPS certificates are provisioned automatically the first time an `https:dev` script starts, or explicitly with:
 
 ```sh
-brew install mkcert
 pnpm https:setup
 ```
 
-This installs the local certificate authority and creates trusted `local.tryhydrogen.dev` certificates under `~/.shopify/hydrogen/certs/` so Customer Account OAuth can redirect to `https://local.tryhydrogen.dev:5173/account/authorize`.
+Both download a pinned, checksum-verified [mkcert](https://github.com/FiloSottile/mkcert) release, install the local certificate authority (this may prompt for your password), and create trusted `local.tryhydrogen.dev` certificates under `~/.shopify/hydrogen/certs/` so Customer Account OAuth can redirect to `https://local.tryhydrogen.dev:5173/account/authorize`.
 
 The Next.js template provisions its own development certificate and does not use the Hydrogen certificates.
 
