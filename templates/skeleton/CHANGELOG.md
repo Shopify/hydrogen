@@ -1,5 +1,14 @@
 # skeleton
 
+## 2026.4.6
+
+### Patch Changes
+
+- Recommend the Shopify AI Toolkit in newly scaffolded storefronts. ([#3887](https://github.com/Shopify/hydrogen/pull/3887)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Updated dependencies [[`10356c92fc1d4335244db7304cc6cdd47ba5c892`](https://github.com/Shopify/hydrogen/commit/10356c92fc1d4335244db7304cc6cdd47ba5c892), [`f15667f98826650f3904597b61b5dcb5f8b51c0a`](https://github.com/Shopify/hydrogen/commit/f15667f98826650f3904597b61b5dcb5f8b51c0a)]:
+  - @shopify/hydrogen@2026.4.5
+
 ## 2026.4.5
 
 ### Patch Changes
