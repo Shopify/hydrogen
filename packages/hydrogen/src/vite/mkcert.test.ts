@@ -95,6 +95,21 @@ describe("downloadVerified", () => {
     expect(fs.existsSync(destination)).toBe(false);
   });
 
+  it("names the operation and URL when the download times out", async () => {
+    const fetchMock = vi.fn(async () => {
+      throw new DOMException("The operation was aborted due to timeout", "TimeoutError");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      downloadVerified({
+        url: "https://example.test/mkcert",
+        sha256: "a".repeat(64),
+        destination,
+      }),
+    ).rejects.toThrow("mkcert download timed out after 60s: https://example.test/mkcert");
+  });
+
   it("throws on a failed download response", async () => {
     stubFetch(new Response(null, { status: 404 }));
 
