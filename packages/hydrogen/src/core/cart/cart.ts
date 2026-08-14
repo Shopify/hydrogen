@@ -6,6 +6,8 @@ import type {
   UpdateCartResult,
 } from "../../../vendor/standard-actions";
 import type {
+  CartAttributesUpdateEvent,
+  CartAttributesUpdateResult,
   CartDiscountUpdateEvent,
   CartDiscountUpdateResult,
   CartLinesUpdateEvent,
@@ -20,6 +22,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts/index";
+import { getCartAttributeFormEntries } from "./form";
 import { DEFAULT_MINIMUM_QUANTITY, sanitizeQuantity } from "./quantity";
 import type {
   CartCost,
@@ -44,6 +47,7 @@ interface CartResponse extends CartData {
 
 type CartMutationResult =
   | UpdateCartResult
+  | CartAttributesUpdateResult
   | CartLinesUpdateResult
   | CartDiscountUpdateResult
   | CartNoteUpdateResult;
@@ -66,6 +70,7 @@ const LINE_KEY_PREFIX = "line:";
 const MERCHANDISE_KEY_PREFIX = "merchandise:";
 const DISCOUNT_KEY_PREFIX = "discount:";
 const NOTE_KEY = "note";
+const ATTRIBUTES_KEY = "attributes";
 const DISCOUNT_CODES_KEY = "discount-codes";
 const REVALIDATION_ERROR_KEY = "cart-revalidation";
 const TRANSACTION_EVENT_TOKEN_KEY = "__shopifyHydrogenCartTransaction";
@@ -136,6 +141,10 @@ type SetDiscountCodesPayload = {
 
 type SetNotePayload = {
   note: string;
+};
+
+type SetAttributesPayload = {
+  attributes: Array<{ key: string; value: string }>;
 };
 
 type TransactionDefinition<TPayload> = {
@@ -287,6 +296,7 @@ type CartEventHandlers = {
   lines: EventListener;
   discount: EventListener;
   note: EventListener;
+  attributes: EventListener;
 };
 
 let configuredCartEndpoint: string | null = null;
@@ -461,22 +471,23 @@ function reuseVisibleReferences(previous: CartState, next: CartState): CartState
   const pendingDiscountCodes = sameSet(previous.pending.discountCodes, next.pending.discountCodes)
     ? previous.pending.discountCodes
     : next.pending.discountCodes;
-  const pending = {
+  const nextPending = {
     lines: pendingLines,
     note: next.pending.note,
+    attributes: next.pending.attributes,
     discountCodes: pendingDiscountCodes,
     cost: next.pending.cost,
   };
+  const pending = shallowEqualRecord(previous.pending, nextPending)
+    ? previous.pending
+    : nextPending;
 
   if (
     previous.data === data &&
     previous.loading === next.loading &&
     previous.revalidating === next.revalidating &&
     previous.errors === next.errors &&
-    previous.pending.lines === pending.lines &&
-    previous.pending.note === pending.note &&
-    previous.pending.discountCodes === pending.discountCodes &&
-    previous.pending.cost === pending.cost
+    previous.pending === pending
   ) {
     return previous;
   }
@@ -488,11 +499,13 @@ function derivePending(state: CartState, transactions: PendingTransaction[]): Ca
   const lines = new Set<string>();
   const discountCodes = new Set<string>();
   let note = false;
+  let attributes = false;
   let cost = false;
 
   for (const transaction of transactions) {
     for (const key of transaction.pendingKeys) {
       if (key === NOTE_KEY) note = true;
+      if (key === ATTRIBUTES_KEY) attributes = true;
       if (key.startsWith(LINE_KEY_PREFIX)) {
         lines.add(key.slice(LINE_KEY_PREFIX.length));
         cost = true;
@@ -509,7 +522,7 @@ function derivePending(state: CartState, transactions: PendingTransaction[]): Ca
     }
   }
 
-  return { lines, note, discountCodes, cost };
+  return { lines, note, attributes, discountCodes, cost };
 }
 
 function projectVisibleState(store: CartStoreContext): CartState {
@@ -684,6 +697,23 @@ function groupDiscountErrors(
   return { discountCodes: codes, cart };
 }
 
+function groupAttributeErrors(
+  failure: CartActionFailure | undefined,
+  attributes: CartData["attributes"],
+): { attributes: Map<string, CartErrorGroup>; cart: CartErrorGroup } {
+  const attributeErrors = new Map<string, CartErrorGroup>();
+  const cart = createEmptyErrorGroup();
+
+  for (const error of failure?.userErrors ?? []) {
+    const attributeIndex = findFieldIndex(error.field, "attributes");
+    const key = attributeIndex === undefined ? undefined : attributes[attributeIndex]?.key;
+    const group = key ? getErrorGroup(attributeErrors, key) : cart;
+    group.userErrors.push(toCartUserError(error));
+  }
+  for (const warning of failure?.warnings ?? []) cart.warnings.push(toCartWarning(warning));
+  return { attributes: attributeErrors, cart };
+}
+
 function toCartErrorGroup(failure: CartActionFailure | undefined): CartErrorGroup {
   return {
     userErrors: (failure?.userErrors ?? []).map(toCartUserError),
@@ -777,6 +807,27 @@ function projectNoteErrors(
       ...state.errors,
       note: toCartErrorGroup(failure),
       noteUpdatedAt: timestampMs,
+      lastUpdatedAt: timestampMs,
+    },
+  };
+}
+
+function projectAttributeErrors(
+  state: CartState,
+  failure: CartActionFailure | undefined,
+  attributes: CartData["attributes"],
+  timestampMs: number,
+): CartState {
+  if (!failure) return state;
+  const grouped = groupAttributeErrors(failure, attributes);
+  return {
+    ...state,
+    errors: {
+      ...state.errors,
+      attributes: new Map([...state.errors.attributes, ...grouped.attributes]),
+      cart: mergeErrorGroups(state.errors.cart, grouped.cart),
+      attributesUpdatedAt: timestampMs,
+      cartUpdatedAt: timestampMs,
       lastUpdatedAt: timestampMs,
     },
   };
@@ -1164,6 +1215,25 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       return { ...state, data: { ...state.data, note: payload.note } };
     },
     getSignalKeys: () => NOTE_KEY,
+  },
+  set_attributes: {
+    payload: {} as SetAttributesPayload,
+    transport: (payload, signal, updateCart) =>
+      updateCart({ attributes: payload.attributes }, { signal }),
+    projectPayload: (state, payload) => ({
+      ...state,
+      data: { ...state.data, attributes: payload.attributes },
+    }),
+    projectPromise: (state, result, payload, addError) => {
+      if (hasProjectedErrors(result)) {
+        addError((current, timestampMs) =>
+          projectAttributeErrors(current, result, payload.attributes, timestampMs),
+        );
+      }
+      if (!result.cart || (result.userErrors?.length ?? 0) > 0) return state;
+      return { ...state, data: { ...state.data, attributes: payload.attributes } };
+    },
+    getSignalKeys: () => ATTRIBUTES_KEY,
   },
 });
 
@@ -1775,6 +1845,17 @@ function handleNoteEvent(store: CartStoreContext, event: CartNoteUpdateEvent): v
   );
 }
 
+function handleAttributesEvent(store: CartStoreContext, event: CartAttributesUpdateEvent): void {
+  enqueueTransaction(
+    store,
+    "set_attributes",
+    { attributes: event.attributes },
+    event.promise,
+    undefined,
+    getTransactionEventToken(event.detail),
+  );
+}
+
 function connectCartStore(store: CartStoreContext, handlers: CartEventHandlers): boolean {
   if (typeof document === "undefined") return false;
   if (store.lifecycleController.signal.aborted) store.lifecycleController = new AbortController();
@@ -1785,6 +1866,7 @@ function connectCartStore(store: CartStoreContext, handlers: CartEventHandlers):
   document.addEventListener("shopify:cart:lines-update", handlers.lines);
   document.addEventListener("shopify:cart:discount-update", handlers.discount);
   document.addEventListener("shopify:cart:note-update", handlers.note);
+  document.addEventListener("shopify:cart:attributes-update", handlers.attributes);
   void getShopifyStandardActions().catch(() => {});
   return true;
 }
@@ -1822,6 +1904,7 @@ function destroyCartStore(store: CartStoreContext, handlers: CartEventHandlers):
     document.removeEventListener("shopify:cart:lines-update", handlers.lines);
     document.removeEventListener("shopify:cart:discount-update", handlers.discount);
     document.removeEventListener("shopify:cart:note-update", handlers.note);
+    document.removeEventListener("shopify:cart:attributes-update", handlers.attributes);
   }
   connectedCartStores.delete(store);
   detachCartConsentListenerIfIdle();
@@ -2022,6 +2105,8 @@ export function createCartStore<TData extends CartData = CartData>(
     discount: ((event: Event) =>
       handleDiscountEvent(store, event as CartDiscountUpdateEvent)) as EventListener,
     note: ((event: Event) => handleNoteEvent(store, event as CartNoteUpdateEvent)) as EventListener,
+    attributes: ((event: Event) =>
+      handleAttributesEvent(store, event as CartAttributesUpdateEvent)) as EventListener,
   };
   if (asyncInitialData) {
     loadCartInStore(
@@ -2157,6 +2242,13 @@ async function handleFormSubmitInStore(
     const note = (formData.get("note") as string) ?? "";
     return dispatchTransaction(store, "set_note", { note });
   }
+  if (intent === "attributes-update") {
+    const attributes = getCartAttributeFormEntries(formData).map(({ key, value }) => ({
+      key,
+      value: String(value),
+    }));
+    return dispatchTransaction(store, "set_attributes", { attributes });
+  }
   throw new Error(`Unknown cart form intent: "${intent}"`);
 }
 
@@ -2281,6 +2373,7 @@ function fetchCartData(cartId?: string | null): Promise<CartData | null> {
           ...cart,
           checkoutUrl: cart.checkoutUrl ?? null,
           note: extractNoteFromCart(cart),
+          attributes: cart.attributes ?? [],
         }
       : null,
   );
