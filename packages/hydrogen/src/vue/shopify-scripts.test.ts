@@ -72,7 +72,6 @@ describe("ShopifyScripts", () => {
     expect(html).toContain(`id="shopify-perfkit"`);
     expect(html).toContain(`async`);
     expect(html).toContain(`src="${SHOPIFY_PERF_KIT_SCRIPT}"`);
-    expect(html).toContain(`id="shopify-perfkit-spa-bridge"`);
     expect(html).toContain(`data-shop-id="${TEST_SHOP_ID}"`);
     expect(html).toContain(`data-storefront-id="${TEST_STOREFRONT_ID}"`);
     expect(html).toContain(

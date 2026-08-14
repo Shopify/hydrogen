@@ -72,7 +72,6 @@ describe("setupStorefrontAnalytics", () => {
     installLocalStorageShim();
     localStorage.clear();
     window.history.replaceState({}, "", "/");
-    delete (window as any).PerfKit;
     delete (window as any).Shopify;
     delete (window as any).privacyBanner;
   });
