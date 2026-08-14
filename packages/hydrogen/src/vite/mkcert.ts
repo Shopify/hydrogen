@@ -76,14 +76,25 @@ export async function downloadVerified(options: {
   sha256: string;
   destination: string;
 }): Promise<void> {
-  const response = await fetch(options.url, {
-    signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
-  });
-  if (!response.ok) {
-    throw new Error(`mkcert download failed with status ${response.status}: ${options.url}`);
-  }
+  let bytes: Uint8Array;
+  try {
+    const response = await fetch(options.url, {
+      signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      throw new Error(`mkcert download failed with status ${response.status}: ${options.url}`);
+    }
 
-  const bytes = new Uint8Array(await response.arrayBuffer());
+    bytes = new Uint8Array(await response.arrayBuffer());
+  } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw new Error(
+        `mkcert download timed out after ${DOWNLOAD_TIMEOUT_MS / 1_000}s: ${options.url}`,
+        { cause: error },
+      );
+    }
+    throw error;
+  }
   const digest = sha256Hex(bytes);
   if (digest !== options.sha256) {
     throw new Error(
