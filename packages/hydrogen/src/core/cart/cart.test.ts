@@ -3609,7 +3609,13 @@ describe("add-to-cart optimistic updates", () => {
 
     const externalPromise = mockUpdateCart(
       { lines: [{ merchandiseId: VARIANT_456, quantity: 1 }] },
-      withProducts(productDetail(VARIANT_456, { price: { amount: "10", currencyCode: "USD" } })),
+      withProducts(
+        productDetail(VARIANT_456, {
+          product: { title: "T-Shirt", handle: "t-shirt" },
+          selectedOptions: [{ name: "Size", value: "Small" }],
+          price: { amount: "10", currencyCode: "USD" },
+        }),
+      ),
     );
 
     expect(getCartLines(store.getState().data)).toHaveLength(2);
@@ -3617,6 +3623,8 @@ describe("add-to-cart optimistic updates", () => {
     assert(optimisticLine, "expected optimistic line to exist");
     expect(optimisticLine.quantity).toBe(1);
     expect(optimisticLine.merchandise?.product.title).toBe("T-Shirt");
+    expect(optimisticLine.merchandise?.product.handle).toBe("t-shirt");
+    expect(optimisticLine.merchandise?.selectedOptions).toEqual([{ name: "Size", value: "Small" }]);
     expect(optimisticLine.cost.totalAmount.amount).toBe("10");
     expect(store.getState().pending.lines).toContain(optimisticId);
     expect(store.getState().data.totalQuantity).toBe(4);
