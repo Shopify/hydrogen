@@ -5,9 +5,15 @@ import { chmod, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises"
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
-import { getLogger } from "../core/logging";
+import { consoleLogger, getLogger } from "../core/logging";
 
 const log = getLogger("local-https");
+
+// Step confirmations print unprefixed on purpose: they are terminal output for
+// an interactive provisioning flow, not subsystem log entries.
+function confirm(message: string) {
+  consoleLogger.info(`☑️ ${message}`);
+}
 
 // mkcert is pinned to an exact release and verified against SHA-256 checksums
 // so that a compromised or replaced "latest" release can never execute.
@@ -117,27 +123,36 @@ async function ensureMkcertBinary(): Promise<string> {
     return binaryPath;
   }
 
-  log.info(`downloading mkcert ${MKCERT_VERSION}`, { url: binary.url });
+  log.info(`downloading mkcert ${MKCERT_VERSION}…`);
   await downloadVerified({ url: binary.url, sha256: binary.sha256, destination: binaryPath });
+  confirm(`mkcert ${MKCERT_VERSION} downloaded`);
 
   return binaryPath;
 }
 
-function runMkcert(binaryPath: string, args: string[]): Promise<void> {
+function runMkcert(binaryPath: string, args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
-    // Inherited stdio keeps trust-store password prompts visible and usable.
-    const child = spawn(binaryPath, args, { stdio: "inherit" });
+    // stdin stays inherited so sudo can prompt on the terminal (sudo talks to
+    // the tty directly, not to the piped streams). mkcert's verbose output is
+    // captured instead of shown, and surfaced only when the command fails.
+    const child = spawn(binaryPath, args, { stdio: ["inherit", "pipe", "pipe"] });
+
+    let output = "";
+    const collect = (chunk: Buffer) => {
+      output += chunk.toString();
+    };
+    child.stdout?.on("data", collect);
+    child.stderr?.on("data", collect);
 
     child.on("error", reject);
     child.on("close", (code, signal) => {
       if (code === SUCCESS_EXIT_CODE) {
-        resolve();
+        resolve(output);
         return;
       }
 
-      reject(
-        new Error(signal ? `mkcert was killed by ${signal}` : `mkcert exited with code ${code}`),
-      );
+      const reason = signal ? `mkcert was killed by ${signal}` : `mkcert exited with code ${code}`;
+      reject(new Error(output.trim() === "" ? reason : `${reason}\n${output.trim()}`));
     });
   });
 }
@@ -154,10 +169,8 @@ export async function provisionCertificates(settings: ProvisionSettings): Promis
   await mkdir(dirname(settings.certPath), { recursive: true });
   await mkdir(dirname(settings.keyPath), { recursive: true });
 
-  log.info("generating a trusted local certificate; mkcert may prompt for your password", {
-    host: settings.host,
-  });
-  await runMkcert(binaryPath, [
+  log.info("generating a trusted local certificate; mkcert may prompt for your password.");
+  const mkcertOutput = await runMkcert(binaryPath, [
     "-install",
     "-cert-file",
     settings.certPath,
@@ -165,14 +178,17 @@ export async function provisionCertificates(settings: ProvisionSettings): Promis
     settings.keyPath,
     settings.host,
   ]);
+  confirm(
+    mkcertOutput.includes("The local CA is already installed")
+      ? "The local CA is already installed in the system trust store"
+      : "The local CA is now installed in the system trust store",
+  );
+  confirm(`Created a new certificate for "${settings.host}"`);
 
+  log.info("verifying certificates…");
   const missingPaths = [settings.certPath, settings.keyPath].filter((path) => !existsSync(path));
   if (missingPaths.length > 0) {
     throw new Error(`mkcert did not create the expected files: ${missingPaths.join(", ")}`);
   }
-
-  log.info("local https certificates ready; restart the dev server if it started without https", {
-    certPath: settings.certPath,
-    keyPath: settings.keyPath,
-  });
+  confirm("local https certificates ready");
 }
