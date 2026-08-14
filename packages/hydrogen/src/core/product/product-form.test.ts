@@ -1392,7 +1392,8 @@ describe("createProductFormStore", () => {
           {
             id: "v-red",
             title: "Red",
-            product: { title: undefined },
+            product: { title: undefined, handle: "shirt" },
+            selectedOptions: [{ name: "Color", value: "Red" }],
             image: undefined,
             price: { amount: "10.00", currencyCode: "USD" },
           },
@@ -1429,7 +1430,8 @@ describe("createProductFormStore", () => {
           {
             id: "v-red",
             title: "Red",
-            product: { title: "Cozy Shirt" },
+            product: { title: "Cozy Shirt", handle: "shirt" },
+            selectedOptions: [{ name: "Color", value: "Red" }],
             image: { url: "https://cdn.example.com/shirt.jpg", altText: "Red shirt" },
             price: { amount: "10.00", currencyCode: "USD" },
           },
