@@ -1,4 +1,4 @@
-import { storefrontConfig } from "./config";
+import { shop, storefrontConfig } from "./config";
 import { getOptionalPrivateStorefrontToken } from "./env";
 
 /**
@@ -23,6 +23,7 @@ const SESSION_SECRET_MIN_LENGTH = 32;
 export type ResolvedStorefrontConfig = {
   storeDomain: string;
   privateStorefrontToken: string;
+  storefrontId?: string;
 };
 
 let mockShopFallbackWarned = false;
@@ -70,5 +71,9 @@ export function resolveStorefrontConfig(): ResolvedStorefrontConfig {
       "NEXT_PUBLIC_STORE_DOMAIN is required when PRIVATE_STOREFRONT_API_TOKEN is set.",
     );
   }
-  return { storeDomain, privateStorefrontToken };
+  return {
+    storeDomain,
+    privateStorefrontToken,
+    storefrontId: shop.storefrontId || undefined,
+  };
 }

@@ -8,6 +8,7 @@ export const SDK_VARIANT_SOURCE_HEADER = "X-SDK-Variant-Source";
 export const SDK_VERSION_HEADER = "X-SDK-Version";
 export const SHOPIFY_CHAT_FRAME_ORIGIN_HEADER = "Sec-Shopify-Chat-Frame-Origin";
 export const SHOPIFY_STOREFRONT_ORIGIN_HEADER = "Sec-Shopify-Storefront-Origin";
+export const STOREFRONT_ID_HEADER = "Shopify-Storefront-Id";
 export const SHOPIFY_STOREFRONT_S_HEADER = "Shopify-Storefront-S";
 export const SHOPIFY_STOREFRONT_Y_HEADER = "Shopify-Storefront-Y";
 export const SHOPIFY_UNIQUE_TOKEN_HEADER = "X-Shopify-UniqueToken";
@@ -58,6 +59,7 @@ export type ShopifyHeaderName =
   | typeof SHOPIFY_VISIT_TOKEN_HEADER
   | typeof STOREFRONT_ACCESS_TOKEN_HEADER
   | typeof STOREFRONT_BUYER_IP_HEADER
+  | typeof STOREFRONT_ID_HEADER
   | typeof STOREFRONT_PRIVATE_TOKEN_HEADER
   | typeof STOREFRONT_URL_HEADER;
 
