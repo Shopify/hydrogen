@@ -1286,6 +1286,42 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(variables.buyerIdentity).toEqual({ customerAccessToken: null });
   });
 
+  it("expires the cart cookie when detach fails after a definitive refresh rejection", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("invalid", { status: 401 }));
+    const customerSession = createSession({ fetch: fetchMock });
+    const sessionManager = new TestSessionManager(
+      validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
+    );
+    const storefrontFetch = vi.fn().mockResolvedValue(new Response("boom", { status: 500 }));
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=/account`, {
+      headers: { cookie: CART_COOKIE },
+    });
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
+    expect(response?.headers.getSetCookie()).toEqual(["session=1", EXPIRED_CART_COOKIE]);
+    expect(sessionManager.data?.tokens).toBeUndefined();
+    expect(logger.error).toHaveBeenCalledWith("cart buyer identity sync failed", {
+      scope: "customer-account",
+      route: "refresh",
+      error: expect.anything(),
+    });
+  });
+
   it("passes through unrelated routes", async () => {
     const request = new Request(`${ORIGIN}/products`);
 

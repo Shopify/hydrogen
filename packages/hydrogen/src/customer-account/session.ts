@@ -480,6 +480,17 @@ export function createCustomerSession({
   return customerSession;
 }
 
+export async function getCustomerSessionRefreshResult(
+  customerSession: CustomerSession,
+  sessionManager: WritableCustomerSessionManager,
+  requestContext: ShopifyRequestContext,
+  options: RequestOriginOptions = {},
+): Promise<TokenRefreshResult | undefined> {
+  return customerSessionInternals
+    .get(customerSession)
+    ?.getOrRefreshAccessToken(sessionManager, requestContext, options);
+}
+
 /**
  * Creates Customer Account server handlers (`/account/login`, `/account/authorize`,
  * `/account/refresh`, `/account/logout`) for `handleShopifyRoutes`. The handlers
@@ -696,11 +707,21 @@ async function handleRefreshRoute(
   );
   // Transient refresh failures keep the refreshable session, so the cart's
   // identity is left untouched; a definitive outcome attaches or detaches it.
+  let detachFailed = false;
   if (refreshResult.status !== "transient") {
-    await syncCartBuyerIdentity(cartSync, context, refreshResult.accessToken ?? null, "refresh");
+    const customerAccessToken = refreshResult.accessToken ?? null;
+    const syncSucceeded = await syncCartBuyerIdentity(
+      cartSync,
+      context,
+      customerAccessToken,
+      "refresh",
+    );
+    detachFailed = customerAccessToken === null && !syncSucceeded;
   }
 
-  return refreshRedirectResult(request, origin, await commitSession(sessionManager));
+  const headers = new Headers(await commitSession(sessionManager));
+  if (detachFailed) headers.append("set-cookie", cartSync.expiredCartCookie);
+  return refreshRedirectResult(request, origin, headers);
 }
 
 function refreshRedirectResult(

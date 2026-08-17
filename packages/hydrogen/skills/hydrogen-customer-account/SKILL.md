@@ -56,11 +56,11 @@ const customerAccountHandlers = createCustomerAccountServerHandlers({
 
 With this wiring, Hydrogen owns the whole loop:
 
-- New carts are created with the current customer's buyer identity, and authenticated cart reads mark checkout URLs with `logged_in=true` (from the cart handlers' `customerSession` option).
+- New carts are created with the current customer's buyer identity when the session has a usable access token or successfully refreshed access token, and authenticated cart reads mark checkout URLs with `logged_in=true` (from the cart handlers' `customerSession` option).
 - Authorization and refresh attach the customer to the cart from the request's cart cookie; a definitive refresh rejection detaches it. Transient refresh failures leave the cart untouched.
 - Logout detaches the customer from the cart.
 
-Sync is best-effort: a failed cart mutation never blocks the route's redirect — it is logged, and the next refresh retries. If the detach during logout fails, the handler expires the cart cookie so a shared device never keeps a cart bound to the previous customer.
+Sync is best-effort: a failed cart mutation never blocks the route's redirect. Attach failures are logged and can be retried by a later refresh. If detach fails during logout or definitive refresh rejection, the handler expires the cart cookie so a shared device never keeps a cart bound to the previous customer.
 
 `cartServerHandlers` requires both handler groups to share the `customerSession` returned by `createCustomerSession`; TypeScript rejects cart handlers created without `customerSession`.
 
