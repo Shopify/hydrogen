@@ -3,9 +3,8 @@ import type {
   HydrogenRouteInterceptor,
   ShopifyRouteHandler,
   ShopifyRouteHandlerContext,
-  ShopifyRouteHandlerGroup,
   ShopifyRouteHandlerResult,
-  ShopifyRouteMatchHandler,
+  ShopifyRedirectStatus,
 } from "./route-types";
 
 export type {
@@ -16,10 +15,9 @@ export type {
   ShopifyRouteHandlerContext,
   ShopifyRouteHandlerGroup,
   ShopifyRouteHandlerResult,
-  ShopifyRouteHandlers,
   ShopifyRouteJsonResult,
-  ShopifyRouteMatchHandler,
   ShopifyRouteRedirectResult,
+  ShopifyRedirectStatus,
   ShopifyRouteSessionManager,
 } from "./route-types";
 
@@ -27,6 +25,9 @@ const HTTP_OK_STATUS = 200;
 const HTTP_SEE_OTHER_STATUS = 303;
 const HTTP_METHOD_NOT_ALLOWED_STATUS = 405;
 const HTTP_BAD_REQUEST_STATUS = 400;
+const VALID_REDIRECT_STATUSES = [
+  301, 302, 303, 307, 308,
+] as const satisfies readonly ShopifyRedirectStatus[];
 
 export function createShopifyRouteHandler<
   const TPathname extends string,
@@ -57,19 +58,7 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   { request, sessionManager, storefrontClient, requestContext, handlers = [] },
 ) => {
   const context = { request, sessionManager, storefrontClient, requestContext };
-
-  for (const entry of handlers) {
-    if (!isMatchHandler(entry)) continue;
-
-    const resultPromise = entry(url, context);
-    if (resultPromise) {
-      return resultPromise.then((result) => createShopifyRouteResponse(result, request));
-    }
-  }
-
-  const routeHandlers = handlers
-    .filter((entry): entry is ShopifyRouteHandlerGroup => !isMatchHandler(entry))
-    .flatMap((group) => Object.values(group));
+  const routeHandlers = handlers.flatMap((group) => Object.values(group));
   if (routeHandlers.length === 0) return null;
 
   const pathMatches = routeHandlers.filter((entry) => entry.pathname === url.pathname);
@@ -84,18 +73,12 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   return match(context).then((result) => createShopifyRouteResponse(result, request));
 };
 
-function isMatchHandler(
-  entry: ShopifyRouteHandlerGroup | ShopifyRouteMatchHandler,
-): entry is ShopifyRouteMatchHandler {
-  return typeof entry === "function";
-}
-
 function createShopifyRouteResponse(result: ShopifyRouteHandlerResult, request: Request): Response {
   if (result.type === "redirect") {
     const headers = new Headers(result.headers);
     headers.set("location", resolveRedirectLocation(result.location, request));
     return new Response(null, {
-      status: result.status ?? HTTP_SEE_OTHER_STATUS,
+      status: getRedirectStatus(result.status),
       headers,
     });
   }
@@ -115,6 +98,17 @@ function createShopifyRouteResponse(result: ShopifyRouteHandlerResult, request: 
     status: HTTP_OK_STATUS,
     headers,
   });
+}
+
+function getRedirectStatus(status: ShopifyRedirectStatus | undefined): ShopifyRedirectStatus {
+  const redirectStatus = status ?? HTTP_SEE_OTHER_STATUS;
+  if (VALID_REDIRECT_STATUSES.some((validStatus) => validStatus === redirectStatus)) {
+    return redirectStatus;
+  }
+
+  throw new Error(
+    `Invalid Shopify route redirect status ${redirectStatus}. Expected one of: ${VALID_REDIRECT_STATUSES.join(", ")}.`,
+  );
 }
 
 function resolveRedirectLocation(location: string, request: Request): string {

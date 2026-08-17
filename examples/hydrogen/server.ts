@@ -1,7 +1,6 @@
 import { getBuyerIp } from "@shared/buyer-ip";
 import { getPrivateStorefrontToken } from "@shared/private-env";
 import {
-  acceptProductVariantId,
   createPredictiveSearchServerHandlers,
   createShopifyRequestContext,
   handleShopifyRedirects,
@@ -71,12 +70,8 @@ export default {
         requestContext: shopifyRequestContext,
         sessionManager: customerSessionManager,
         storefrontClient,
-        handlers: [
-          acceptProductVariantId({ routeTemplates, pathPrefix: i18n.pathPrefix }),
-          cartHandlers,
-          predictiveSearchHandlers,
-          customerAccountHandlers,
-        ],
+        routeTemplates,
+        handlers: [cartHandlers, predictiveSearchHandlers, customerAccountHandlers],
       });
       if (shopifyRoute) return await shopifyRoute;
 

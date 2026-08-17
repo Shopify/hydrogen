@@ -34,7 +34,6 @@ The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be u
 
 ```ts
 import {
-  acceptProductVariantId,
   createCartServerHandlers,
   createPredictiveSearchServerHandlers,
   createStorefrontClient,
@@ -66,7 +65,8 @@ export async function handleRequest(request: Request, next: () => Promise<Respon
     requestContext,
     sessionManager,
     storefrontClient,
-    handlers: [acceptProductVariantId({ routeTemplates }), cartHandlers, predictiveSearchHandlers],
+    routeTemplates,
+    handlers: [cartHandlers, predictiveSearchHandlers],
   });
   if (shopifyRoute) return shopifyRoute;
 
@@ -92,7 +92,6 @@ React Router framework mode needs:
 
 ```tsx
 import {
-  acceptProductVariantId,
   createCartServerHandlers,
   createPredictiveSearchServerHandlers,
   createStorefrontClient,
@@ -125,7 +124,8 @@ export const middleware: Route.MiddlewareFunction[] = [
       requestContext,
       sessionManager,
       storefrontClient,
-      handlers: [acceptProductVariantId({ routeTemplates }), cartHandlers, predictiveSearchHandlers],
+      routeTemplates,
+      handlers: [cartHandlers, predictiveSearchHandlers],
     });
     if (shopifyRoute) return shopifyRoute;
 
@@ -154,7 +154,8 @@ const shopifyRoute = handleShopifyRoutes({
   requestContext,
   sessionManager,
   storefrontClient,
-  handlers: [acceptProductVariantId({ routeTemplates }), cartHandlers, predictiveSearchHandlers],
+  routeTemplates,
+  handlers: [cartHandlers, predictiveSearchHandlers],
 });
 if (shopifyRoute) return shopifyRoute;
 ```

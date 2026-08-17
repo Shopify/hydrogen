@@ -8,12 +8,7 @@ import {
   STOREFRONT_CACHE_MAX_ENTRIES,
   createStorefrontCacheAdapter,
 } from "@shared/storefront-cache";
-import {
-  acceptProductVariantId,
-  Cache,
-  handleShopifyRedirects,
-  handleShopifyRoutes,
-} from "@shopify/hydrogen";
+import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createCartServerHandlers,
   createStorefrontClient,
@@ -44,11 +39,8 @@ export const handle: Handle = async ({ event, resolve }) => {
     requestContext,
     sessionManager,
     storefrontClient,
-    handlers: [
-      acceptProductVariantId({ routeTemplates, cache: Cache.long() }),
-      cartHandlers,
-      customerSessionHandlers,
-    ],
+    routeTemplates,
+    handlers: [cartHandlers, customerSessionHandlers],
   });
   if (shopifyRoute) return shopifyRoute;
 

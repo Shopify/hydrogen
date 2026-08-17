@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
 import { createCartServerHandlers } from "../cart/server-handlers";
-import { acceptProductVariantId } from "../product/accept-variant-id";
 import { createShopifyRequestContext } from "../request-context";
 import { assert } from "../test-utils";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "./handle-shopify-routes";
@@ -293,6 +292,19 @@ describe("handleShopifyRoutes", () => {
     expect(result?.headers.get("location")).toBe("https://my-app.com/account?login=failed");
   });
 
+  it("throws for invalid registered handler redirect statuses", async () => {
+    const request = new Request("https://my-app.com/custom");
+    const handler = createShopifyRouteHandler("/custom", "GET", async () => ({
+      type: "redirect" as const,
+      status: 304 as never,
+      location: "/account?login=failed",
+    }));
+
+    await expect(handleShopifyRoutes({ request, handlers: [{ custom: handler }] })).rejects.toThrow(
+      "Invalid Shopify route redirect status 304",
+    );
+  });
+
   it("preserves registered handler absolute redirect Location headers", async () => {
     const request = new Request("https://my-app.com/custom");
     const handler = createShopifyRouteHandler("/custom", "GET", async () => ({
@@ -349,7 +361,7 @@ describe("handleShopifyRoutes", () => {
     expect(headers.get("X-Shopify-Storefront-Access-Token")).toBeNull();
   });
 
-  it("dispatches match handlers from the handlers array with their redirect status", async () => {
+  it("handles variant id product redirects before registered handlers", async () => {
     mockFetch.mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -366,41 +378,13 @@ describe("handleShopifyRoutes", () => {
 
     const result = await handleShopifyRoutes({
       request: new Request("https://my-app.com/products/snowboard?variant=42"),
-      handlers: [acceptProductVariantId({ routeTemplates: {} }), createCartServerHandlers()],
+      routeTemplates: {},
+      handlers: [createCartServerHandlers()],
     });
 
     assert(result, "expected a redirect response");
     expect(result.status).toBe(302);
     expect(result.headers.get("location")).toBe("https://my-app.com/products/snowboard?Color=Red");
-  });
-
-  it("falls through to exact-path handlers when no match handler claims the request", async () => {
-    const matchHandler = vi.fn().mockReturnValue(null);
-    const request = new Request("https://my-app.com/custom");
-    const handler = createShopifyRouteHandler("/custom", "GET", async () => ({
-      type: "json" as const,
-      data: { ok: true },
-    }));
-
-    const result = await handleShopifyRoutes({
-      request,
-      handlers: [matchHandler, { custom: handler }],
-    });
-
-    expect(matchHandler).toHaveBeenCalledOnce();
-    expect(result?.status).toBe(200);
-  });
-
-  it("returns null synchronously when neither match handlers nor exact-path handlers claim the request", () => {
-    const matchHandler = vi.fn().mockReturnValue(null);
-
-    const result = handleShopifyRoutes({
-      request: new Request("https://my-app.com/products/snowboard"),
-      handlers: [matchHandler],
-    });
-
-    expect(result).toBeNull();
-    expect(matchHandler).toHaveBeenCalledOnce();
   });
 
   it("returns null synchronously for non-matching URLs", () => {

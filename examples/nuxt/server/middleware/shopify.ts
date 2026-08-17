@@ -1,7 +1,7 @@
 import { getBuyerIp } from "@shared/buyer-ip";
 import { defaultI18n, storefrontConfig } from "@shared/config";
 import { getPrivateStorefrontToken } from "@shared/private-env";
-import { acceptProductVariantId, handleShopifyRoutes } from "@shopify/hydrogen";
+import { handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createStorefrontClient,
   createShopifyRequestContext,
@@ -34,12 +34,8 @@ export default defineEventHandler(async (event) => {
     requestContext,
     sessionManager,
     storefrontClient,
-    handlers: [
-      acceptProductVariantId({ routeTemplates }),
-      cartHandlers,
-      predictiveSearchHandlers,
-      customerSessionHandlers,
-    ],
+    routeTemplates,
+    handlers: [cartHandlers, predictiveSearchHandlers, customerSessionHandlers],
   });
   if (shopifyRoute) {
     return sendWebResponse(event, await shopifyRoute);

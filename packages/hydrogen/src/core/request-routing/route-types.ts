@@ -1,5 +1,6 @@
 import type { StorefrontClient } from "../../client";
 import type { ShopifyRequestContext } from "../request-context";
+import type { ShopifyRouteTemplates } from "../standard-routes/types";
 
 type Awaitable<T> = T | Promise<T>;
 
@@ -24,11 +25,13 @@ export type ShopifyRouteJsonResult<TData = unknown> = {
   headers?: HeadersInit;
 };
 
+export type ShopifyRedirectStatus = 301 | 302 | 303 | 307 | 308;
+
 export type ShopifyRouteRedirectResult = {
   type: "redirect";
   location: string;
   /** HTTP redirect status. Defaults to 303 (See Other). */
-  status?: number;
+  status?: ShopifyRedirectStatus;
   headers?: HeadersInit;
 };
 
@@ -66,27 +69,9 @@ export type ShopifyRouteHandler<
 
 export type ShopifyRouteHandlerGroup = Record<string, ShopifyRouteHandler>;
 
-/**
- * A route handler that decides its own match from the request URL instead of an exact
- * pathname, e.g. `acceptProductVariantId` matching any product page URL.
- *
- * Must decide synchronously: return `null` to pass the request through to the framework
- * (preserving the `handleShopifyRoutes` fast path), or a promise doing the actual work.
- * Unlike exact-pathname handlers, a match handler never produces `405 Method Not Allowed`;
- * requests it does not claim always fall through.
- *
- * Dispatch order: match handlers run before every exact-pathname handler group, regardless
- * of their position in the `handlers` array. Multiple match handlers run in array order.
- */
-export type ShopifyRouteMatchHandler = (
-  url: URL,
-  context: ShopifyRouteHandlerContext,
-) => null | Promise<ShopifyRouteHandlerResult>;
-
-export type ShopifyRouteHandlers = ShopifyRouteHandlerGroup | ShopifyRouteMatchHandler;
-
 export type HydrogenRoutesOptions = ShopifyRouteHandlerContext & {
-  handlers?: readonly ShopifyRouteHandlers[];
+  routeTemplates?: ShopifyRouteTemplates;
+  handlers?: readonly ShopifyRouteHandlerGroup[];
 };
 
 export type HydrogenRouteHandler<TExtraOptions extends object = object> = (

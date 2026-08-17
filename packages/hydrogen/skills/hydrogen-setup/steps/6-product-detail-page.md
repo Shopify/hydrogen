@@ -31,7 +31,7 @@ const selectedOptions = getSelectedProductOptions({
 
 Passing `allowedOptionNames: []` filters out every option.
 
-The `variant` search param is reserved for Liquid-style numeric variant ids and is never treated as an option name. Register `acceptProductVariantId({ routeTemplates })` in `handleShopifyRoutes` `handlers` (see the local `hydrogen-request-handlers` skill) so `?variant=<id>` product links redirect to the canonical option-params URL before this loader runs.
+The `variant` search param is reserved for Liquid-style numeric variant ids and is never treated as an option name. Pass `routeTemplates` to `handleShopifyRoutes` (see the local `hydrogen-request-handlers` skill) so `?variant=<id>` product links redirect to the canonical option-params URL before this loader runs.
 
 ### Minimum product query
 

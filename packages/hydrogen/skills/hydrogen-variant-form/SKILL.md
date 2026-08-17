@@ -120,7 +120,7 @@ Provider bindings should hydrate automatically when the product's semantic ident
 
 Pass `allowedOptionNames` to filter search params to only known product option names, avoiding unrelated query parameters. Passing an empty array filters out every option.
 
-The `variant` param is reserved for Liquid-style numeric variant ids and is never treated as an option name. Server-side, `acceptProductVariantId` (see the local `hydrogen-request-handlers` skill) redirects `?variant=<id>` product URLs to their canonical option-params URL before the loader runs; when both `variant` and option params are present, the variant wins.
+The `variant` param is reserved for Liquid-style numeric variant ids and is never treated as an option name. Server-side, `handleShopifyRoutes({ routeTemplates })` (see the local `hydrogen-request-handlers` skill) redirects `?variant=<id>` product URLs to their canonical option-params URL before the loader runs; when both `variant` and option params are present, the variant wins.
 
 ## Building selection URLs
 

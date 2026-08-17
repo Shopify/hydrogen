@@ -1,5 +1,4 @@
 import {
-  acceptProductVariantId,
   createShopifyRequestContext,
   createStorefrontClient,
   handleShopifyRoutes,
@@ -61,7 +60,6 @@ export async function proxy(request: NextRequest) {
     ? await createCustomerSessionManager(request)
     : createEphemeralSessionManager(request);
   const handlers = [
-    acceptProductVariantId({ routeTemplates }),
     cartHandlers,
     predictiveSearchHandlers,
     ...(customerAccountsAvailable ? [getCustomerSessionHandlers()] : []),
@@ -72,10 +70,11 @@ export async function proxy(request: NextRequest) {
     requestContext,
     sessionManager,
     storefrontClient,
+    routeTemplates,
     handlers,
   });
   if (shopifyRoute) {
-    // Hydrogen-owned route (cart/predictive-search/SFAPI proxy/admin).
+    // Matched Hydrogen-owned route.
     // `handleShopifyRoutes` already applies SFAPI response headers onto the
     // short-circuited response internally, so no `applyResponseHeaders` here.
     return shopifyRoute;

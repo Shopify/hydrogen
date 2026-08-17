@@ -27,9 +27,8 @@ type EncodedVariantConstraint = {
  * Each query parameter is treated as an option name/value pair
  * (e.g. `?Color=Red&Size=M` → `[{name:"Color",value:"Red"},{name:"Size",value:"M"}]`).
  *
- * The `variant` param is reserved for numeric variant ids (Liquid parity; see
- * `acceptProductVariantId`) and is never treated as an option name, even when
- * listed in `allowedOptionNames`.
+ * The `variant` param is reserved for numeric variant ids (Liquid parity) and is
+ * never treated as an option name, even when listed in `allowedOptionNames`.
  *
  * When `allowedOptionNames` is provided, the search params are filtered to only
  * entries whose decoded param name exactly matches a product option name.
