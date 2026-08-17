@@ -10,11 +10,13 @@ describe("ShopPayButton SSR", () => {
       createElement(ShopPayButton, {
         variants: [{ id: "gid://shopify/ProductVariant/123", quantity: 2 }],
         paymentOption: "shop_pay_installments",
+        nonce: "nonce-1",
       }),
     );
 
     expect(html).toContain("<hydrogen-shop-pay-button");
     expect(html).toContain('<template shadowrootmode="open">');
+    expect(html).toContain('<style nonce="nonce-1">');
     expect(html).toContain('href="/cart/123:2?payment=shop_pay_installments&amp;source=hydrogen"');
     expect(html).toContain('aria-label="Buy with Shop Pay"');
     expect(html).toContain(".shop-pay-button[aria-disabled=true]{opacity:.5");

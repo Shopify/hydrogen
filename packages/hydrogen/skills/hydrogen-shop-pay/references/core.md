@@ -17,7 +17,9 @@ logo. Pick by integration shape:
   templates or frameworks with raw-HTML rendering (`{@html}`, `v-html`,
   `innerHTML`). Server output includes a declarative shadow root and needs no
   client JavaScript. Browser calls register the custom element and return an
-  empty host that creates its shadow root when connected.
+  empty host that creates its shadow root when connected; use
+  `createShopPayButton` instead for client-created strict-CSP buttons that need
+  a `nonce`.
 - `createShopPayButton(options)` returns a detached self-contained
   `<hydrogen-shop-pay-button>` with an imperative shadow root. Use it for
   imperative DOM UIs.
@@ -35,6 +37,8 @@ container.append(button);
 The open shadow root can be inspected with browser developer tools, but page CSS
 cannot select its internal anchor or logo. The supported style controls are
 `width` and `borderRadius`; do not treat the open root as a styling API.
+Pass `nonce` when the storefront's Content Security Policy requires nonces for
+inline `<style>` elements.
 
 For cart checkout buttons, omit `variants`; the button links to the same-origin
 `/checkout` path and `handleShopifyRoutes` redirects it to the current cart's
@@ -56,4 +60,5 @@ container.append(button);
 - `disabled` renders the button without an `href` and with `aria-disabled="true"`.
 - `accessibilityLabel` sets the accessible name for the logo-only button, which otherwise defaults to English. Localize words around the brand, but never translate `Shop Pay` itself.
 - `channel` is optional. Set it to `headless` or `hydrogen` only when checkout needs explicit attribution to the sales channel that issued the Storefront API token.
+- `nonce` is optional. It is applied to the shadow root's `<style>` element for strict Content Security Policies in server output, `createShopPayButton`, and framework bindings.
 - Pass `checkoutUrl` when the app does not route same-origin checkout paths through `handleShopifyRoutes`.

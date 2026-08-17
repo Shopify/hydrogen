@@ -1,7 +1,6 @@
 import { defineComponent, h } from "vue";
 
 import {
-  defineShopPayButton,
   getShopPayButtonDeclarativeShadowDomHtml,
   getShopPayButtonElementAttributes,
   initializeShopPayButtonElement,
@@ -12,7 +11,6 @@ import {
 export type ShopPayButtonProps = ShopPayButtonOptions;
 
 const canUseDom = typeof document !== "undefined";
-if (canUseDom) defineShopPayButton();
 
 export const ShopPayButton = defineComponent(
   (props: ShopPayButtonProps) => {
@@ -41,6 +39,7 @@ export const ShopPayButton = defineComponent(
       paymentOption: null,
       source: String,
       sourceToken: String,
+      nonce: String,
       disabled: Boolean,
       width: String,
       borderRadius: String,

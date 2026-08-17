@@ -60,6 +60,10 @@ type ShopPayButtonBaseOptions = {
    */
   sourceToken?: string;
   /**
+   * Content Security Policy nonce applied to the shadow root's inline style.
+   */
+  nonce?: string;
+  /**
    * Sales channel that issued the Storefront API token. Omit it unless checkout
    * needs explicit `"headless"` or `"hydrogen"` attribution.
    */
@@ -236,7 +240,7 @@ export function getShopPayButtonAnchorAttributes(
 }
 
 export function getShopPayButtonElementContentHtml(options: ShopPayButtonOptions): string {
-  return `<style>${SHOP_PAY_BUTTON_STYLES}</style><a ${serializeAttributes(getShopPayButtonAnchorAttributes(options))}>${getShopPayButtonContentHtml()}</a>`;
+  return `<style${getShopPayButtonStyleNonceAttribute(options)}>${SHOP_PAY_BUTTON_STYLES}</style><a ${serializeAttributes(getShopPayButtonAnchorAttributes(options))}>${getShopPayButtonContentHtml()}</a>`;
 }
 
 export function getShopPayButtonDeclarativeShadowDomHtml(options: ShopPayButtonOptions): string {
@@ -388,6 +392,11 @@ function renderShopPayButtonShadowRoot(
     style = shadowRoot.ownerDocument.createElement("style");
     shadowRoot.prepend(style);
   }
+
+  const nextNonce = hasContent(options.nonce) ? options.nonce.trim() : undefined;
+  const nonceChanged = nextNonce !== undefined && style.nonce !== nextNonce;
+  if (nextNonce) style.nonce = nextNonce;
+  if (nonceChanged) style.textContent = "";
   if (style.textContent !== SHOP_PAY_BUTTON_STYLES) style.textContent = SHOP_PAY_BUTTON_STYLES;
 
   let anchor = shadowRoot.querySelector("a");
@@ -465,6 +474,10 @@ function escapeAttribute(value: string): string {
 
 function getShopPayAccessibilityLabel(label: string | undefined): string {
   return hasContent(label) ? label.trim() : DEFAULT_ACCESSIBILITY_LABEL;
+}
+
+function getShopPayButtonStyleNonceAttribute(options: Pick<ShopPayButtonOptions, "nonce">): string {
+  return hasContent(options.nonce) ? ` nonce="${escapeAttribute(options.nonce.trim())}"` : "";
 }
 
 function hasContent(value: string | undefined): value is string {

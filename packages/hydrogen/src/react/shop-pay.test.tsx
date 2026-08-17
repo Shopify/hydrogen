@@ -12,6 +12,7 @@ describe("ShopPayButton", () => {
     expectTypeOf<
       "borderRadius" extends keyof ShopPayButtonProps ? true : false
     >().toEqualTypeOf<true>();
+    expectTypeOf<"nonce" extends keyof ShopPayButtonProps ? true : false>().toEqualTypeOf<true>();
     expectTypeOf<
       "className" extends keyof ShopPayButtonProps ? true : false
     >().toEqualTypeOf<false>();
@@ -49,7 +50,7 @@ describe("ShopPayButton", () => {
 
   it("renders the accessible label, logo, and styles", () => {
     const { container } = render(
-      createElement(ShopPayButton, { accessibilityLabel: "Shop Payで購入" }),
+      createElement(ShopPayButton, { accessibilityLabel: "Shop Payで購入", nonce: "nonce-1" }),
     );
 
     const anchor = getAnchor(container);
@@ -57,7 +58,8 @@ describe("ShopPayButton", () => {
     expect(anchor.querySelector("svg.shop-pay-button__logo")).not.toBeNull();
     const shadowRoot = anchor.getRootNode();
     if (!(shadowRoot instanceof ShadowRoot)) throw new Error("expected a shadow root");
-    expect(shadowRoot.querySelector("style")).not.toBeNull();
+    expect(shadowRoot.querySelector("style")?.nonce).toBe("nonce-1");
+    expect(customElements.get("hydrogen-shop-pay-button")).toBeUndefined();
   });
 
   it("maps borderRadius to the anchor style", () => {

@@ -42,7 +42,7 @@ describe("ShopPayButton", () => {
 
   it("renders the accessible label, logo, and styles", () => {
     const wrapper = mount(ShopPayButton, {
-      props: { accessibilityLabel: "Shop Pay से खरीदें" },
+      props: { accessibilityLabel: "Shop Pay से खरीदें", nonce: "nonce-1" },
     });
 
     const anchor = getAnchor(wrapper);
@@ -50,7 +50,8 @@ describe("ShopPayButton", () => {
     expect(anchor.querySelector("svg.shop-pay-button__logo")).not.toBeNull();
     const shadowRoot = anchor.getRootNode();
     if (!(shadowRoot instanceof ShadowRoot)) throw new Error("expected a shadow root");
-    expect(shadowRoot.querySelector("style")).not.toBeNull();
+    expect(shadowRoot.querySelector("style")?.nonce).toBe("nonce-1");
+    expect(customElements.get("hydrogen-shop-pay-button")).toBeUndefined();
   });
 
   it("renders a disabled button without an href", () => {

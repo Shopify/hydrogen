@@ -33,4 +33,5 @@ wrapper. The shadow root protects the branded internal styles.
 Size with `width`/`border-radius`. Extra `class` and `style` attributes are
 intentionally not forwarded into the shadow root. Pass `accessibility-label`
 when the storefront language is not English. Localize words around the brand,
-but never translate `Shop Pay` itself.
+but never translate `Shop Pay` itself. Pass `nonce` when the storefront's
+Content Security Policy requires nonces for inline `<style>` elements.

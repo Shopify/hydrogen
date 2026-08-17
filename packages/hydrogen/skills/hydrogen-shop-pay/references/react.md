@@ -43,4 +43,6 @@ and upgrades client-created instances without hydration errors.
 Size with `width`/`borderRadius`. `className` and `style` are intentionally not
 supported because page CSS cannot reach the internal anchor. Pass
 `accessibilityLabel` when the storefront language is not English. Localize words
-around the brand, but never translate `Shop Pay` itself.
+around the brand, but never translate `Shop Pay` itself. Pass `nonce` when the
+storefront's Content Security Policy requires nonces for inline `<style>`
+elements.

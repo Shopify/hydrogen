@@ -5,6 +5,7 @@ import { assert } from "../test-utils";
 import {
   createShopPayButton,
   getShopPayButtonUrl,
+  initializeShopPayButtonElement,
   renderShopPayButton,
   SHOP_PAY_BUTTON_TAG_NAME,
   type ShopPayButtonOptions,
@@ -237,5 +238,24 @@ describe("createShopPayButton", () => {
     expect(first.id).toBe("shop-pay");
     expect(first.dataset.testid).toBe("shop-pay");
     expect(document.head.querySelectorAll("style")).toHaveLength(0);
+  });
+
+  it("applies a CSP nonce to client-created styles", () => {
+    const element = createShopPayButton({ nonce: "nonce-1" });
+
+    expect(element.hasAttribute("nonce")).toBe(false);
+    expect(element.shadowRoot?.querySelector("style")?.nonce).toBe("nonce-1");
+  });
+
+  it("re-applies styles after a CSP nonce is provided", () => {
+    const element = createShopPayButton({});
+    const style = element.shadowRoot?.querySelector("style");
+    assert(style, "expected a shadow-root style");
+    expect(style.nonce).toBeUndefined();
+
+    initializeShopPayButtonElement(element, { nonce: "nonce-1" });
+
+    expect(style.nonce).toBe("nonce-1");
+    expect(style.textContent).toContain("background-color:#5433eb");
   });
 });
