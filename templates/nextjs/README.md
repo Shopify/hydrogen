@@ -23,10 +23,12 @@ Open <http://localhost:3000>.
 Customer Accounts require an HTTPS origin because Shopify OAuth rejects `http`. Run the HTTPS development server and open <https://local.tryhydrogen.dev:5173>:
 
 ```sh
-pnpm https:dev
+pnpm dev:https
 ```
 
 Next.js provisions and reuses a trusted development certificate under `certificates/`. On first run, it may prompt to install the local certificate authority.
+
+Next.js does not use Hydrogen's Vite plugin, so configure the Customer Account callback, JavaScript origin, and logout URLs manually. The bundled `hydrogen-local-https` skill lists the exact values.
 
 ## Environment Variables
 
@@ -63,7 +65,7 @@ If `PRIVATE_STOREFRONT_API_TOKEN` is unset, the app uses `mock.shop`. If you set
 | Script | Does |
 | --- | --- |
 | `pnpm dev` | Start the Next.js dev server. |
-| `pnpm https:dev` | Start the Next.js dev server with trusted local HTTPS. |
+| `pnpm dev:https` | Start the Next.js dev server with trusted local HTTPS. |
 | `pnpm build` | Build the production app. |
 | `pnpm start` | Start the production server after `pnpm build`. |
 | `pnpm lint` | Run ESLint. |

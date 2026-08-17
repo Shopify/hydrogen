@@ -262,6 +262,9 @@ importers:
 
   packages/hydrogen:
     dependencies:
+      cross-spawn:
+        specifier: 7.0.6
+        version: 7.0.6
       gql.tada:
         specifier: 1.9.2
         version: 1.9.2(graphql@16.13.2)(typescript@5.9.3)
@@ -281,6 +284,9 @@ importers:
       '@testing-library/react':
         specifier: ^16.3.2
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@types/cross-spawn':
+        specifier: 6.0.6
+        version: 6.0.6
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
@@ -4306,6 +4312,9 @@ packages:
 
   '@types/cookie@0.6.0':
     resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==, tarball: https://registry.npmjs.org/@types/cookie/-/cookie-0.6.0.tgz}
+
+  '@types/cross-spawn@6.0.6':
+    resolution: {integrity: sha512-fXRhhUkG4H3TQk5dBhQ7m/JDdSNHKwR2BBia62lhwEIq9xGiQKLxd6LymNhn47SjXhsUEPmxi+PKw2OkW4LLjA==, tarball: https://registry.npmjs.org/@types/cross-spawn/-/cross-spawn-6.0.6.tgz}
 
   '@types/debug@4.1.13':
     resolution: {integrity: sha512-KSVgmQmzMwPlmtljOomayoR89W4FynCAi3E8PPs7vmDVPe84hT+vGPKkJfThkmXs0x0jAaa9U8uW8bbfyS2fWw==, tarball: https://registry.npmjs.org/@types/debug/-/debug-4.1.13.tgz}
@@ -13890,6 +13899,10 @@ snapshots:
       assertion-error: 2.0.1
 
   '@types/cookie@0.6.0': {}
+
+  '@types/cross-spawn@6.0.6':
+    dependencies:
+      '@types/node': 25.8.0
 
   '@types/debug@4.1.13':
     dependencies:

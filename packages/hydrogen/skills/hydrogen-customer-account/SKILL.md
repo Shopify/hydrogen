@@ -75,4 +75,4 @@ The same `@shopify/hydrogen/ts-plugin` and `hydrogen gql check` setup from the `
 
 ## Local OAuth
 
-Customer Account OAuth needs a public HTTPS callback origin. For local examples, use a trusted local HTTPS hostname and register the exact `/account/authorize` callback URL in the Customer Account app configuration.
+Customer Account OAuth needs a public HTTPS origin. For local development, follow the `hydrogen-local-https` skill; its Vite plugin provisions a trusted certificate and pushes the callback, JavaScript origin, and logout URLs through Shopify CLI outside CI.

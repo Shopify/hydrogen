@@ -28,7 +28,7 @@ import { localHttps } from "@shopify/hydrogen/vite";
 import { defineConfig } from "vite";
 
 const httpsOptions = {
-  enabled: process.env.VITE_LOCAL_HTTPS === "1",
+  enabled: process.env.npm_lifecycle_event === "dev:https",
 };
 
 export default defineConfig({
@@ -36,7 +36,7 @@ export default defineConfig({
 });
 ```
 
-Start Vite with `VITE_LOCAL_HTTPS=1 vite dev`. A normal `vite dev` remains plain HTTP.
+Add a `"dev:https": "vite dev"` package script and run it through the project's package manager. The normal `dev` script remains plain HTTP.
 
 ## Astro
 
@@ -46,7 +46,7 @@ Astro needs its own host and port in addition to the Vite plugin:
 import { LOCAL_HTTPS_DEFAULTS, localHttps } from "@shopify/hydrogen/vite";
 import { defineConfig } from "astro/config";
 
-const enabled = process.env.VITE_LOCAL_HTTPS === "1";
+const enabled = process.env.npm_lifecycle_event === "dev:https";
 const httpsOptions = { enabled };
 
 export default defineConfig({
@@ -68,7 +68,7 @@ import type { NuxtConfig } from "nuxt/schema";
 type VitePlugin = NonNullable<NonNullable<NuxtConfig["vite"]>["plugins"]>[number];
 
 const httpsOptions = {
-  enabled: process.env.VITE_LOCAL_HTTPS === "1",
+  enabled: process.env.npm_lifecycle_event === "dev:https",
 };
 
 export default defineNuxtConfig({
@@ -88,7 +88,7 @@ import { defineConfig } from "@solidjs/start/config";
 import { localHttps, localHttpsDevServer } from "@shopify/hydrogen/vite";
 
 const httpsOptions = {
-  enabled: process.env.VITE_LOCAL_HTTPS === "1",
+  enabled: process.env.npm_lifecycle_event === "dev:https",
 };
 const devServer = localHttpsDevServer(httpsOptions);
 
@@ -101,7 +101,7 @@ export default defineConfig({
 Vinxi also needs its bind target and port on startup:
 
 ```sh
-VITE_LOCAL_HTTPS=1 HOST=local.tryhydrogen.dev vinxi dev --port 5173
+npm run dev:https
 ```
 
 ## Next.js
@@ -113,6 +113,14 @@ next dev --experimental-https --hostname local.tryhydrogen.dev --port 5173
 ```
 
 ## Shopify Admin
+
+Outside CI, the `localHttps` Vite plugin uses the installed Shopify CLI to update Customer Account API settings when the server starts. Shopify CLI must include `@shopify/cli-hydrogen` 13.0.4 or later. If the project is not linked to a Hydrogen storefront, Shopify CLI starts the interactive linking flow before it pushes the callback, JavaScript origin, and logout URLs.
+
+The plugin skips Shopify CLI in CI. It also falls back without stopping the development server when Shopify CLI is missing or outdated, linking is cancelled, or the settings cannot be pushed. In these cases, configure the values printed in the terminal manually.
+
+Next.js does not use the Vite plugin, so configure its values manually too.
+
+### Manual Configuration
 
 In the Hydrogen or Headless sales channel, open the storefront's **Customer Account API settings** and configure:
 

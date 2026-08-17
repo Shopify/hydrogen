@@ -3,7 +3,7 @@ import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
-const enabled = process.env.VITE_LOCAL_HTTPS === "1";
+const enabled = process.env.npm_lifecycle_event === "dev:https";
 const httpsOptions = { enabled };
 
 export default defineConfig({

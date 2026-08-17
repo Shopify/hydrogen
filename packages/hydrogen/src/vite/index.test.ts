@@ -397,6 +397,7 @@ describe("localHttps", () => {
   });
 
   it("logs derived Customer Account settings when the server starts listening", () => {
+    vi.stubEnv("CI", "true");
     fs.writeFileSync(certPath, "certificate");
     fs.writeFileSync(keyPath, "private-key");
     const { info, listening } = configurePlugin({ certPath, keyPath });
@@ -412,6 +413,7 @@ describe("localHttps", () => {
   });
 
   it("logs the port the server actually bound instead of the configured port", () => {
+    vi.stubEnv("CI", "true");
     fs.writeFileSync(certPath, "certificate");
     fs.writeFileSync(keyPath, "private-key");
     const { info, listening, middleware } = configurePlugin(
@@ -431,6 +433,7 @@ describe("localHttps", () => {
   });
 
   it("logs Customer Account settings once across Vite server instances", () => {
+    vi.stubEnv("CI", "true");
     fs.writeFileSync(certPath, "certificate");
     fs.writeFileSync(keyPath, "private-key");
     const first = configurePlugin({ certPath, keyPath }, { port: 4_322 });
@@ -444,6 +447,7 @@ describe("localHttps", () => {
   });
 
   it("logs settings immediately when Vite has no HTTP server", () => {
+    vi.stubEnv("CI", "true");
     fs.writeFileSync(certPath, "certificate");
     fs.writeFileSync(keyPath, "private-key");
     const info = vi.fn();
@@ -452,7 +456,7 @@ describe("localHttps", () => {
 
     configureServer({
       middlewares: { use: vi.fn() },
-      config: { logger: { info } },
+      config: { logger: { info, warn: vi.fn() }, root: directory },
       httpServer: null,
     } as any);
 
@@ -468,6 +472,7 @@ describe("localHttps", () => {
       | undefined;
     let listening: (() => void) | undefined;
     const info = vi.fn();
+    const warn = vi.fn();
     const plugin = localHttps({
       enabled: true,
       host: "custom.test",
@@ -482,7 +487,7 @@ describe("localHttps", () => {
           middleware = handler;
         },
       },
-      config: { logger: { info } },
+      config: { logger: { info, warn }, root: directory },
       httpServer: {
         address: () => (options.boundPort ? { port: options.boundPort } : null),
         once(event: string, listener: () => void) {

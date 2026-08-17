@@ -29,15 +29,17 @@ From the repository root:
 - `pnpm dev` — run all workspace examples and templates in parallel.
 - `pnpm dev:hub` — run the examples with automatically allocated ports and open the browser hub with status, previews, and logs.
 - `pnpm --filter @shopify/hydrogen-example-<name> dev` — run one example.
-- `pnpm https:setup` then `pnpm --filter @shopify/hydrogen-example-<name> https:dev` — run an account-enabled example on `https://local.tryhydrogen.dev:5173` when it provides an `https:dev` script. The Hydrogen example uses `--customer-account-push` instead of local certificates.
+- `pnpm --filter @shopify/hydrogen-example-<name> dev:https` — run an account-enabled example on `https://local.tryhydrogen.dev:5173` when it provides a `dev:https` script. Nuxt and SolidStart require the one-time `pnpm https:setup` prerequisite because they read certificate paths before Vite starts. The Hydrogen example uses `--customer-account-push` instead of local certificates.
 
-Local HTTPS certificates are provisioned automatically the first time an `https:dev` script starts, or explicitly with:
+Local HTTPS certificates are provisioned automatically the first time a `dev:https` script starts, or explicitly with:
 
 ```sh
 pnpm https:setup
 ```
 
 Both download a pinned, checksum-verified [mkcert](https://github.com/FiloSottile/mkcert) release, install the local certificate authority (this may prompt for your password), and create trusted `local.tryhydrogen.dev` certificates under `~/.shopify/hydrogen/certs/` so Customer Account OAuth can redirect to `https://local.tryhydrogen.dev:5173/account/authorize`.
+
+Outside CI, the local HTTPS plugin also uses Shopify CLI to link an unlinked Hydrogen storefront and push the Customer Account callback, JavaScript origin, and logout URLs. It prints the values for manual configuration when automatic setup is unavailable.
 
 The Next.js template provisions its own development certificate and does not use the Hydrogen certificates.
 

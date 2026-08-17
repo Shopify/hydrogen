@@ -69,7 +69,7 @@ const isLoggedIn = await customerSession.isLoggedIn(
 );
 ```
 
-Customer Account OAuth methods require a public HTTPS origin. The writable session manager should expose the request origin; explicit `origin` options are only needed as overrides. For local development, use a tunnel or trusted local HTTPS through `localHttps` from `@shopify/hydrogen/vite`, and pass the framework's canonical request URL rather than an untrusted forwarded host.
+Customer Account OAuth methods require a public HTTPS origin. The writable session manager should expose the request origin; explicit `origin` options are only needed as overrides. For local development, use a tunnel or trusted local HTTPS through `localHttps` from `@shopify/hydrogen/vite`, which provisions certificates and uses Shopify CLI to push Customer Account URLs outside CI. Pass the framework's canonical request URL rather than an untrusted forwarded host.
 
 Use `createCustomerAccountServerHandlers({customerSession})` with `handleShopifyRoutes` to install the default `GET /account/login`, `GET /account/authorize`, `GET /account/refresh`, and `POST /account/logout` handlers. Pass the same request-scoped `requestContext` and `sessionManager` into `handleShopifyRoutes` once alongside the `storefrontClient`. Session managers can be read-only for `isLoggedIn()` / `getAccessToken()` and writable for `getOrRefreshAccessToken()`, `prepareLoginUrl()`, `handleOAuthCallback()`, `logout()`, and registered account handlers. `isLoggedIn()` is a read-only UI/session-presence check: it returns true for a usable access token or a refresh token that can attempt to restore one later. `getAccessToken()` still returns only a currently usable access token and never refreshes.
 

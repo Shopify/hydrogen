@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "https:dev": "VITE_LOCAL_HTTPS=1 vite dev",
+    "dev:https": "vite dev",
     "build": "vite build",
     "start": "node --env-file-if-exists=.env build",
     "prepare": "svelte-kit sync || echo ''",

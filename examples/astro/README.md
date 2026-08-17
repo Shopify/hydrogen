@@ -37,12 +37,13 @@ Port of the canonical `examples/core` design to [Astro](https://astro.build/) ru
 
 The account flow uses `createCustomerSession` and `createCustomerAccountServerHandlers` from `@shopify/hydrogen/customer-account`, Customer Account values from `examples/shared/config.ts`, and an encrypted HttpOnly `__Host-` cookie adapter from `examples/shared/customer-session.ts`.
 
-Customer Account OAuth requires a public HTTPS origin. To test locally without a tunnel, register `https://local.tryhydrogen.dev:5173/account/authorize` as the callback URI and run:
+Customer Account OAuth requires a public HTTPS origin. To test locally without a tunnel, run:
 
 ```sh
-pnpm https:setup
-pnpm --filter @shopify/hydrogen-example-astro https:dev
+pnpm --filter @shopify/hydrogen-example-astro dev:https
 ```
+
+The local HTTPS plugin provisions the certificate, links an unlinked Hydrogen storefront, and pushes the Customer Account callback, JavaScript origin, and logout URLs. If automatic setup is unavailable, it prints the values for manual configuration.
 
 ## Run
 

@@ -2,7 +2,7 @@ import { localHttps, localHttpsDevServer } from "@shopify/hydrogen/vite";
 import { defineConfig } from "@solidjs/start/config";
 import tailwindcss from "@tailwindcss/vite";
 
-const enabled = process.env.VITE_LOCAL_HTTPS === "1";
+const enabled = process.env.npm_lifecycle_event === "dev:https";
 const httpsOptions = { enabled };
 const devServer = localHttpsDevServer(httpsOptions);
 

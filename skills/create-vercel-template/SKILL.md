@@ -28,7 +28,7 @@ Next.js on Vercel runs on the Node/serverless runtime, so `process.env` works an
    - no `@shared/*` imports
    - no `examples/shared/*` runtime dependency
    - no `localCdnAssets` (drop the turbopack rule from `next.config.ts`)
-   - keep the Next.js `https:dev` script for local Customer Account OAuth
+   - keep the Next.js `dev:https` script for local Customer Account OAuth
    - no `catalog:` dependency ranges in the final template package
    - use `@shopify/hydrogen: workspace:*` in this repository so template E2E exercises the package under development
      (see "Hydrogen dependency" below). Do not use repo-local `file:` dependencies or vendored package tarballs.
@@ -70,7 +70,7 @@ must expose the template's required APIs, subpaths, TypeScript plugin, and schem
 - Keep `"packageManager": "pnpm@10.33.0"` so the eventual standalone distribution uses the intended manager.
 - Do not add `@vercel/functions` unless the app reintroduces an explicit Storefront cache adapter; the current Next template uses Next Cache Components (`"use cache"`, `cacheLife`, `cacheTag`).
 - Replace `typescript: catalog:` with a real npm range (e.g. `^5.9.3`).
-- Keep the `https:dev` script alongside `dev`, `build`, `start`, `lint`, and `typecheck`.
+- Keep the `dev:https` script alongside `dev`, `build`, `start`, `lint`, and `typecheck`.
 - Deploy uses the Vercel CLI, not a build dependency: document `npx vercel` / `npx vercel --prod` (optionally add a
   `"deploy": "vercel --prod"` script and tell the user to have the Vercel CLI available).
 
@@ -277,7 +277,7 @@ repository root, which is not a deployable Next.js project.
 Before finishing:
 
 1. Install with `CI=true` from the repository root.
-2. Run `rg -n "@shared/|examples/shared|localCdnAssets|localHttps|lru-cache|catalog:|file:" templates/<name> -g '!pnpm-lock.yaml' -g '!node_modules'` — expect no matches. (`process.env` and `workspace:*` are expected in the source Next.js template.)
+2. Run `rg -n "@shared/|examples/shared|localCdnAssets|localHttps|lru-cache|catalog:|file:" templates/<name> -g '!pnpm-lock.yaml' -g '!node_modules' -g '!.agents/**'` — expect no matches. (`process.env` and `workspace:*` are expected in the source Next.js template.)
 3. Run the template lint and typecheck (`eslint`, then `tsc --noEmit && hydrogen gql check --fail-on-warn`). Note: the GraphQL check passes without
    emitting the `*-graphql-env.d.ts` files on disk (they're gitignored, generated on demand) — that is expected.
 4. Run `next build`. The source build can infer the repository workspace root; the standalone distribution should infer the template directory after installing its generated lockfile.
