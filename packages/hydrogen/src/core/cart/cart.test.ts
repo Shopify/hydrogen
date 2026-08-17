@@ -242,6 +242,16 @@ function createStandardActionsMock({ dispatchEvents = true } = {}) {
         },
       );
       document.dispatchEvent(event);
+    } else if (dispatchEvents && payload.attributes !== undefined) {
+      const event = Object.assign(
+        new Event("shopify:cart:attributes-update", { bubbles: true, cancelable: true }),
+        {
+          attributes: payload.attributes,
+          promise: eventDeferred.promise,
+          detail: (options as any)?.event?.detail,
+        },
+      );
+      document.dispatchEvent(event);
     }
 
     if (options?.signal) {
@@ -342,6 +352,7 @@ describe("createCartStore", () => {
     expect(state.pending).toEqual({
       lines: new Set(),
       note: false,
+      attributes: false,
       discountCodes: new Set(),
       cost: false,
     });
@@ -819,14 +830,14 @@ describe("CartStore lifecycle", () => {
 
       expect(
         addSpy.mock.calls.filter(([eventName]) => String(eventName).startsWith("shopify:cart:")),
-      ).toHaveLength(3);
+      ).toHaveLength(4);
 
       localStore.destroy();
       localStore.destroy();
 
       expect(
         removeSpy.mock.calls.filter(([eventName]) => String(eventName).startsWith("shopify:cart:")),
-      ).toHaveLength(3);
+      ).toHaveLength(4);
     } finally {
       localStore.destroy();
       addSpy.mockRestore();
@@ -2345,6 +2356,136 @@ describe("CartStore.handleFormSubmit — error handling", () => {
     expect(errors.network).toEqual([]);
   });
 
+  it("optimistically updates cart attributes from a form and reconciles the result", async () => {
+    store.hydrate(
+      makeCartState({
+        id: "gid://shopify/Cart/attributes-success",
+        attributes: [{ key: "gift-message", value: "Old" }],
+      }),
+    );
+    expect(store.getState().data.attributes).toEqual([{ key: "gift-message", value: "Old" }]);
+    const event = submitForm(
+      { "attributes.gift-message": "Happy birthday!" },
+      "intent",
+      "attributes-update",
+    );
+    const promise = store.handleFormSubmit(event);
+    await nextTick();
+
+    expect(mockUpdateCart).toHaveBeenCalledWith(
+      { attributes: [{ key: "gift-message", value: "Happy birthday!" }] },
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+    expect(store.getState().data.attributes).toEqual([
+      { key: "gift-message", value: "Happy birthday!" },
+    ]);
+    expect(store.getState().pending.attributes).toBe(true);
+
+    // Resolved standard-event carts intentionally omit attributes; the
+    // event's top-level attributes describe the resulting state.
+    resolveUpdate(0, serverResult());
+    await promise;
+
+    expect(store.getState().pending.attributes).toBe(false);
+    expect(store.getState().data.attributes).toEqual([
+      { key: "gift-message", value: "Happy birthday!" },
+    ]);
+  });
+
+  it("restores baseline attributes when the result resolves with userErrors", async () => {
+    store.hydrate(
+      makeCartState({
+        id: "gid://shopify/Cart/attributes-user-errors",
+        attributes: [{ key: "gift-message", value: "Old" }],
+      }),
+    );
+    const event = submitForm({ "attributes.gift-message": "New" }, "intent", "attributes-update");
+    const promise = store.handleFormSubmit(event);
+    await nextTick();
+
+    expect(store.getState().data.attributes).toEqual([{ key: "gift-message", value: "New" }]);
+
+    resolveUpdate(0, {
+      ...serverResult(),
+      userErrors: [
+        {
+          code: "INVALID",
+          message: "Invalid gift message",
+          field: ["attributes", "0"],
+        },
+      ],
+    });
+    await promise;
+
+    const state = store.getState();
+    expect(state.data.attributes).toEqual([{ key: "gift-message", value: "Old" }]);
+    expect(state.pending.attributes).toBe(false);
+    expect(state.errors.attributes.get("gift-message")?.userErrors).toEqual([
+      {
+        code: "INVALID",
+        message: "Invalid gift message",
+        field: ["attributes", "0"],
+      },
+    ]);
+  });
+
+  it("preserves attributes when other cart mutations resolve", async () => {
+    store.hydrate(
+      makeCartState({
+        id: "gid://shopify/Cart/attributes-preserved",
+        attributes: [{ key: "gift-message", value: "Keep me" }],
+      }),
+    );
+    const event = submitForm({ note: "new note" }, "intent", "note-update");
+    const promise = store.handleFormSubmit(event);
+    await nextTick();
+
+    // Resolved standard-event carts omit attributes entirely.
+    resolveUpdate(0, serverResult());
+    await promise;
+
+    expect(store.getState().data.note).toBe("new note");
+    expect(store.getState().data.attributes).toEqual([{ key: "gift-message", value: "Keep me" }]);
+  });
+
+  it("rolls back rejected attributes and scopes errors by attribute key", async () => {
+    store.hydrate(
+      makeCartState({
+        id: "gid://shopify/Cart/attributes-failure",
+        attributes: [{ key: "gift-message", value: "Old" }],
+      }),
+    );
+    expect(store.getState().data.attributes).toEqual([{ key: "gift-message", value: "Old" }]);
+    const event = submitForm({ "attributes.gift-message": "New" }, "intent", "attributes-update");
+    const promise = store.handleFormSubmit(event);
+    await nextTick();
+
+    rejectUpdate(
+      0,
+      cartActionError({
+        userErrors: [
+          {
+            code: "INVALID",
+            message: "Invalid gift message",
+            field: ["attributes", "0"],
+          },
+        ],
+      }),
+    );
+    await expect(promise).rejects.toThrow("Cart action failed");
+
+    const state = store.getState();
+    expect(state.data.attributes).toEqual([{ key: "gift-message", value: "Old" }]);
+    expect(state.pending.attributes).toBe(false);
+    expect(state.errors.attributes.get("gift-message")?.userErrors).toEqual([
+      {
+        code: "INVALID",
+        message: "Invalid gift message",
+        field: ["attributes", "0"],
+      },
+    ]);
+  });
+
   it("routes note business errors to errors.network", async () => {
     store.hydrate(makeCartState({ note: "old note" }));
     const event = submitForm({ note: "new note" }, "intent", "note-update");
@@ -3445,6 +3586,50 @@ describe("add-to-cart optimistic updates", () => {
   const VARIANT_123 = "gid://shopify/ProductVariant/123";
   const VARIANT_456 = "gid://shopify/ProductVariant/456";
 
+  it("prepends multiple optimistic lines in server order", async () => {
+    store.hydrate(
+      makeCartState({
+        lines: [makeLine({ id: "line-existing", quantity: 1 })],
+        totalQuantity: 1,
+      }),
+    );
+
+    const externalPromise = mockUpdateCart(
+      {
+        lines: [
+          { merchandiseId: VARIANT_123, quantity: 1 },
+          { merchandiseId: VARIANT_456, quantity: 2 },
+        ],
+      },
+      withProducts(productDetail(VARIANT_123), productDetail(VARIANT_456)),
+    );
+
+    expect(getCartLines(store.getState().data).map((line) => line.id)).toEqual([
+      `optimistic:${VARIANT_456}`,
+      `optimistic:${VARIANT_123}`,
+      "line-existing",
+    ]);
+
+    resolveUpdate(
+      0,
+      serverResult({
+        totalQuantity: 4,
+        lines: [
+          lineWithMerchandise("line-456", 2, VARIANT_456),
+          lineWithMerchandise("line-123", 1, VARIANT_123),
+          makeLine({ id: "line-existing", quantity: 1 }),
+        ],
+      }),
+    );
+    await externalPromise;
+
+    expect(getCartLines(store.getState().data).map((line) => line.id)).toEqual([
+      "line-456",
+      "line-123",
+      "line-existing",
+    ]);
+  });
+
   it("matching merchandiseId: optimistically increments quantity and marks pending", async () => {
     store.hydrate(
       makeCartState({
@@ -3565,7 +3750,13 @@ describe("add-to-cart optimistic updates", () => {
 
     const externalPromise = mockUpdateCart(
       { lines: [{ merchandiseId: VARIANT_456, quantity: 1 }] },
-      withProducts(productDetail(VARIANT_456, { price: { amount: "10", currencyCode: "USD" } })),
+      withProducts(
+        productDetail(VARIANT_456, {
+          product: { title: "T-Shirt", handle: "t-shirt" },
+          selectedOptions: [{ name: "Size", value: "Small" }],
+          price: { amount: "10", currencyCode: "USD" },
+        }),
+      ),
     );
 
     expect(getCartLines(store.getState().data)).toHaveLength(2);
@@ -3573,6 +3764,8 @@ describe("add-to-cart optimistic updates", () => {
     assert(optimisticLine, "expected optimistic line to exist");
     expect(optimisticLine.quantity).toBe(1);
     expect(optimisticLine.merchandise?.product.title).toBe("T-Shirt");
+    expect(optimisticLine.merchandise?.product.handle).toBe("t-shirt");
+    expect(optimisticLine.merchandise?.selectedOptions).toEqual([{ name: "Size", value: "Small" }]);
     expect(optimisticLine.cost.totalAmount.amount).toBe("10");
     expect(store.getState().pending.lines).toContain(optimisticId);
     expect(store.getState().data.totalQuantity).toBe(4);
@@ -3625,9 +3818,9 @@ describe("add-to-cart optimistic updates", () => {
       withProducts(productDetail(VARIANT_456)),
     );
 
-    expect(getCartLines(store.getState().data)).toHaveLength(2);
-    expect(getCartLines(store.getState().data)[0].quantity).toBe(5);
-    expect(getCartLines(store.getState().data).find((l) => l.id === optimisticId)).toBeDefined();
+    const optimisticLines = getCartLines(store.getState().data);
+    expect(optimisticLines.map((line) => line.id)).toEqual([optimisticId, "line-1"]);
+    expect(optimisticLines[1].quantity).toBe(5);
     expect(store.getState().data.totalQuantity).toBe(6);
     expect(store.getState().pending.lines).toContain("line-1");
     expect(store.getState().pending.lines).toContain(optimisticId);
@@ -3680,7 +3873,7 @@ describe("add-to-cart optimistic updates", () => {
       withProducts(productDetail(VARIANT_456)),
     );
 
-    expect(getCartLines(store.getState().data)[0].quantity).toBe(5);
+    expect(getCartLines(store.getState().data).find((l) => l.id === "line-1")?.quantity).toBe(5);
     expect(getCartLines(store.getState().data).find((l) => l.id === optimisticId)).toBeDefined();
     expect(store.getState().data.totalQuantity).toBe(6);
 

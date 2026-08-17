@@ -142,6 +142,7 @@ function createCartDataFromAnalyticsCart(cart: AnalyticsCart): CartData {
     totalQuantity: lines.reduce((total, line) => total + line.quantity, 0),
     updatedAt: cart.updatedAt,
     note: "",
+    attributes: [],
     discountCodes: [],
     cost: {
       subtotalAmount: {

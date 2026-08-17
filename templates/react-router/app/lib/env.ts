@@ -5,6 +5,7 @@ export type Env = {
   PRIVATE_STOREFRONT_API_TOKEN?: string;
   PUBLIC_CHECKOUT_DOMAIN?: string;
   PUBLIC_STORE_DOMAIN?: string;
+  PUBLIC_STOREFRONT_ID?: string;
 };
 
 export const envContext = createContext<Env>();

@@ -19,7 +19,7 @@ Nuxt needs three pieces:
 
 Create `server/middleware/shopify.ts`:
 
-Resolve `buyerIp` from the app's trusted deployment headers before creating the private client. Use the buyer-IP guidance from `hydrogen-storefront-client`.
+The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` from the app's trusted deployment headers per the buyer-IP guidance from `hydrogen-storefront-client`.
 
 Create an app-owned request-scoped `sessionManager` before `handleShopifyRoutes`.
 
@@ -29,21 +29,19 @@ import {
   createStorefrontClient,
   createShopifyRequestContext,
   handleShopifyRoutes,
-  type ShopifyRequestContextWithBuyerIp,
+  type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 
 const cartHandlers = createCartServerHandlers();
 
 export default defineEventHandler(async (event) => {
   const request = toWebRequest(event);
-  const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
-    buyerIp,
   });
   const sessionManager = await createSessionManager(request);
-  const storefrontClient = createPrivateStorefrontClient(requestContext);
+  const storefrontClient = createPublicStorefrontClient(requestContext);
 
   const shopifyRoute = handleShopifyRoutes({
     request,
@@ -58,13 +56,13 @@ export default defineEventHandler(async (event) => {
   event.context.storefrontClient = storefrontClient;
 });
 
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
+function createPublicStorefrontClient(requestContext: ShopifyRequestContext) {
   return createStorefrontClient({
-    type: "private",
+    type: "public",
     requestContext,
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
-      privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
+      publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,
     },
   });
 }

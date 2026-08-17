@@ -207,7 +207,7 @@ describe("createCartServerHandlers", () => {
       if (result.type !== "error") throw new Error("expected error result");
       expect(result.error).toEqual({
         code: "invalid_cart_request",
-        message: 'Request body must contain "lines", "discountCodes", or "note".',
+        message: 'Request body must contain "lines", "discountCodes", "attributes", or "note".',
       });
       expect("status" in result).toBe(false);
     });
@@ -645,6 +645,30 @@ describe("createCartServerHandlers", () => {
     });
   });
 
+  describe("POST — JSON attributes", () => {
+    it("calls cartAttributesUpdate for attributes-update", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartAttributesUpdate: { cart: MOCK_CART, userErrors: [] } }),
+      );
+
+      const result = await handleCartRequest(
+        createJsonPostRequest(
+          { attributes: [{ key: "gift-message", value: "Happy birthday!" }] },
+          "cart=123",
+        ),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      const body = await result.json();
+      expect(body.userErrors).toEqual([]);
+      const [, init] = mockFetch.mock.calls[0];
+      expect(JSON.parse(init.body).variables.attributes).toEqual([
+        { key: "gift-message", value: "Happy birthday!" },
+      ]);
+    });
+  });
+
   describe("POST — JSON error handling", () => {
     it("returns 400 for invalid request body", async () => {
       const result = await handleCartRequest(createJsonPostRequest({}), defaultConfig);
@@ -653,7 +677,7 @@ describe("createCartServerHandlers", () => {
       const body = await result.json();
       expect(body.error).toEqual({
         code: "invalid_cart_request",
-        message: 'Request body must contain "lines", "discountCodes", or "note".',
+        message: 'Request body must contain "lines", "discountCodes", "attributes", or "note".',
       });
     });
 

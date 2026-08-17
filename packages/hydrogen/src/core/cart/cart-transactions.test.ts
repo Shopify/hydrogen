@@ -265,15 +265,15 @@ describe("transaction cart store", () => {
     transportDeferreds[0].resolve(serverResult([lineA]));
     await removeLine;
     expect(store.getState().data.lines.nodes.map((line) => line.id)).toEqual([
-      "line-a",
       "optimistic:variant-c",
+      "line-a",
     ]);
 
-    addition.resolve(serverResult([lineA, lineB, lineC]));
+    addition.resolve(serverResult([lineC, lineA, lineB]));
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(store.getState().data.lines.nodes.map((line) => line.id)).toEqual(["line-a", "line-c"]);
+    expect(store.getState().data.lines.nodes.map((line) => line.id)).toEqual(["line-c", "line-a"]);
   });
 
   it("matches add projections by selling plan", async () => {
@@ -289,20 +289,20 @@ describe("transaction cart store", () => {
       addition,
     );
     expect(store.getState().data.lines.nodes).toEqual([
-      makeLine("line-plan-a", 1, merchandiseId, planA),
       makeLine(`optimistic:${merchandiseId}:${planB}`, 1, merchandiseId, planB),
+      makeLine("line-plan-a", 1, merchandiseId, planA),
     ]);
 
     addition.resolve(
       serverResult([
-        makeLine("line-plan-a", 1, merchandiseId, planA),
         makeLine("line-plan-b", 1, merchandiseId, planB),
+        makeLine("line-plan-a", 1, merchandiseId, planA),
       ]),
     );
     await Promise.resolve();
     expect(store.getState().data.lines.nodes).toEqual([
-      makeLine("line-plan-a", 1, merchandiseId, planA),
       makeLine("line-plan-b", 1, merchandiseId, planB),
+      makeLine("line-plan-a", 1, merchandiseId, planA),
     ]);
 
     dispatchAdd(
@@ -310,7 +310,9 @@ describe("transaction cart store", () => {
       [product(merchandiseId)],
       createDeferred<unknown>(),
     );
-    expect(store.getState().data.lines.nodes[0].quantity).toBe(2);
+    expect(
+      store.getState().data.lines.nodes.find((line) => line.id === "line-plan-a")?.quantity,
+    ).toBe(2);
   });
 
   it("matches add projections by attributes", async () => {
@@ -325,23 +327,23 @@ describe("transaction cart store", () => {
       [product(merchandiseId)],
       addition,
     );
-    expect(store.getState().data.lines.nodes[0].quantity).toBe(1);
-    const optimisticLine = store.getState().data.lines.nodes[1];
+    expect(store.getState().data.lines.nodes[1].quantity).toBe(1);
+    const optimisticLine = store.getState().data.lines.nodes[0];
     expect(optimisticLine.id.startsWith(`optimistic:${merchandiseId}:`)).toBe(true);
     expect(optimisticLine.id).not.toContain("gift");
     expect(optimisticLine).toMatchObject({ quantity: 1, attributes: regularAttributes });
 
     addition.resolve(
       serverResult([
-        makeLine("line-gift", 1, merchandiseId, undefined, giftAttributes),
         makeLine("line-regular", 1, merchandiseId, undefined, regularAttributes),
+        makeLine("line-gift", 1, merchandiseId, undefined, giftAttributes),
       ]),
     );
     await Promise.resolve();
 
     expect(store.getState().data.lines.nodes).toEqual([
-      makeLine("line-gift", 1, merchandiseId, undefined, giftAttributes),
       makeLine("line-regular", 1, merchandiseId, undefined, regularAttributes),
+      makeLine("line-gift", 1, merchandiseId, undefined, giftAttributes),
     ]);
   });
 
@@ -366,11 +368,11 @@ describe("transaction cart store", () => {
     const addition = createDeferred<unknown>();
     dispatchAdd([{ merchandiseId: "variant-b", quantity: 1 }], [product("variant-b")], addition);
 
-    addition.resolve(serverResult([makeMinimalLine("line-a", 1), makeMinimalLine("line-b", 1)]));
+    addition.resolve(serverResult([makeMinimalLine("line-b", 1), makeMinimalLine("line-a", 1)]));
     await Promise.resolve();
 
-    expect(store.getState().data.lines.nodes.map((line) => line.id)).toEqual(["line-a", "line-b"]);
-    expect(store.getState().data.lines.nodes[1].merchandise?.id).toBe("variant-b");
+    expect(store.getState().data.lines.nodes.map((line) => line.id)).toEqual(["line-b", "line-a"]);
+    expect(store.getState().data.lines.nodes[0].merchandise?.id).toBe("variant-b");
   });
 
   it("does not let one keyed line abort an unrelated line", async () => {
