@@ -99,7 +99,12 @@ describe("Shopify page view events", () => {
         ? {
             route: "productInCollection" as const,
             pageTemplateName: "product" as const,
-            params: { productHandle: "snowboard" },
+            params: { collectionHandle: "winter", productHandle: "snowboard" },
+            standardPathname: "/collections/winter/products/snowboard",
+            templates: {
+              standard: "/collections/:collectionHandle/products/:productHandle",
+              custom: "/collections/:collectionHandle/products/:productHandle",
+            },
           }
         : null,
     );

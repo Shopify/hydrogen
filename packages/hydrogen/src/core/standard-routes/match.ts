@@ -1,3 +1,4 @@
+import { buildStandardRouteTarget } from "./build";
 import { DEFAULT_STANDARD_ROUTES, isStandardRouteName, isStandardRouteParamName } from "./defaults";
 import { parseSameOriginUrl, stripI18nPathPrefix, stripTrailingSlash } from "./path";
 import type {
@@ -32,16 +33,42 @@ export function matchStandardRouteUrl({
   if (!parsedUrl) return null;
 
   const pathname = stripI18nPathPrefix(stripTrailingSlash(parsedUrl.pathname), pathPrefix);
-  if (pathname === "/") return { route: "index", pageTemplateName: "index", params: {} };
+  if (pathname === "/") {
+    return addStandardRouteContext(
+      { route: "index", pageTemplateName: "index", params: {} },
+      pathPrefix,
+      routeTemplates,
+    );
+  }
 
-  return (
+  const match =
     matchStandardRouteTemplates(
       parsedUrl.pathname,
       pathPrefix,
       (route) => DEFAULT_STANDARD_ROUTES[route],
     ) ??
-    matchStandardRouteTemplates(parsedUrl.pathname, pathPrefix, (route) => [routeTemplates[route]])
-  );
+    matchStandardRouteTemplates(parsedUrl.pathname, pathPrefix, (route) => [routeTemplates[route]]);
+
+  return match ? addStandardRouteContext(match, pathPrefix, routeTemplates) : null;
+}
+
+function addStandardRouteContext(
+  match: Pick<ShopifyStandardRouteMatch, "pageTemplateName" | "params" | "route">,
+  pathPrefix: string | undefined,
+  routeTemplates: ShopifyRouteTemplates,
+): ShopifyStandardRouteMatch {
+  const standardTemplate = match.route === "index" ? "/" : DEFAULT_STANDARD_ROUTES[match.route][0];
+  const customTemplate =
+    match.route === "index" ? standardTemplate : (routeTemplates[match.route] ?? standardTemplate);
+
+  return {
+    ...match,
+    standardPathname: buildStandardRouteTarget(standardTemplate, match.params, pathPrefix),
+    templates: {
+      standard: standardTemplate,
+      custom: customTemplate,
+    },
+  };
 }
 
 /**
@@ -55,7 +82,10 @@ export function matchStandardRouteTemplates(
   pathname: string,
   pathPrefix: string | undefined,
   getTemplatesForRoute: (route: StandardRouteName) => ReadonlyArray<string | undefined>,
-): ShopifyStandardRouteMatch<StandardRouteName> | null {
+): Pick<
+  ShopifyStandardRouteMatch<StandardRouteName>,
+  "pageTemplateName" | "params" | "route"
+> | null {
   const normalizedPathname = stripI18nPathPrefix(stripTrailingSlash(pathname), pathPrefix);
 
   for (const route in DEFAULT_STANDARD_ROUTES) {
