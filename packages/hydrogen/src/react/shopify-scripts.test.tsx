@@ -283,6 +283,11 @@ describe("ShopifyScripts", () => {
         route: "product",
         pageTemplateName: "product",
         params: { productHandle: "snowboard" },
+        standardPathname: "/products/snowboard",
+        templates: {
+          standard: "/products/:productHandle",
+          custom: "/p/:productHandle",
+        },
       });
       expect(window.Shopify?.routes.resolve?.("/products/snowboard")).toBe("/p/snowboard");
     });
