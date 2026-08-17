@@ -73,7 +73,7 @@ export function localHttps(options: LocalHttpsOptions): LocalHttpsPlugin {
   };
 
   const getDevServerConfig = () => {
-    if (!settings) return;
+    if (!settings || !checkCertificateFiles(settings)) return;
 
     getCertificateFiles();
 

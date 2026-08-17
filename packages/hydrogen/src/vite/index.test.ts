@@ -521,6 +521,7 @@ describe("localHttps", () => {
 
 describe("localHttps plugin API", () => {
   beforeEach(() => {
+    fsCalls.existsSync.mockClear();
     fsCalls.readFileSync.mockClear();
   });
 
@@ -554,21 +555,28 @@ describe("localHttps plugin API", () => {
     }
   });
 
-  it("throws through dev server config when a certificate is missing", () => {
+  it("warns and returns undefined when a certificate is missing", () => {
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
     const certPath = join(tmpdir(), "missing-cert.pem");
     const keyPath = join(tmpdir(), "missing-key.pem");
     const plugin = localHttps({ enabled: true, host: "custom.test", certPath, keyPath });
 
-    const message = captureErrorMessage(() => plugin.api.getDevServerConfig());
+    expect(plugin.api.getDevServerConfig()).toBeUndefined();
+    expect(warn).toHaveBeenCalledOnce();
+
+    const message = String(warn.mock.calls[0]?.[0]);
     expect(message).toContain(certPath);
     expect(message).toContain(keyPath);
   });
 
   it("looks for default certificates in the Hydrogen home directory", () => {
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
     const host = `missing-${process.pid}.local.tryhydrogen.dev`;
     const plugin = localHttps({ enabled: true, host });
 
-    const message = captureErrorMessage(() => plugin.api.getDevServerConfig());
+    expect(plugin.api.getDevServerConfig()).toBeUndefined();
+
+    const message = String(warn.mock.calls[0]?.[0]);
     expect(message).toContain(join(homedir(), ".shopify", "hydrogen", "certs", `${host}.pem`));
     expect(message).toContain(join(homedir(), ".shopify", "hydrogen", "certs", `${host}-key.pem`));
   });
