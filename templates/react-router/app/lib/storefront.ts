@@ -47,6 +47,7 @@ export function createRequestStorefrontClient(
     config: {
       storeDomain,
       privateStorefrontToken,
+      storefrontId: usingMockShop ? undefined : env.PUBLIC_STOREFRONT_ID,
     },
   });
 }

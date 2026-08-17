@@ -32,7 +32,7 @@ export const getStorefrontClient = cache(
       buyerIp,
     });
 
-    const { storeDomain, privateStorefrontToken } = resolveStorefrontConfig();
+    const { storeDomain, privateStorefrontToken, storefrontId } = resolveStorefrontConfig();
 
     return createStorefrontClient({
       type: "private",
@@ -40,6 +40,7 @@ export const getStorefrontClient = cache(
       config: {
         storeDomain,
         privateStorefrontToken,
+        storefrontId,
       },
     });
   },

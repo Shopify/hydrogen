@@ -22,7 +22,7 @@ const requestContext = createShopifyRequestContext({
   i18n: DEFAULT_MARKET,
 });
 
-const { storeDomain, privateStorefrontToken } = resolveStorefrontConfig();
+const { storeDomain, privateStorefrontToken, storefrontId } = resolveStorefrontConfig();
 
 export const staticStorefrontClient = createStorefrontClient({
   type: "private_no_buyer_context",
@@ -30,5 +30,6 @@ export const staticStorefrontClient = createStorefrontClient({
   config: {
     storeDomain,
     privateStorefrontToken,
+    storefrontId,
   },
 });
