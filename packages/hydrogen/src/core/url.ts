@@ -6,6 +6,7 @@ export const CHECKOUT_RE = /^\/checkout$/;
 export const CART_PERMALINK_RE = /^\/cart\/\d+:\d+(?:,\d+:\d+)*$/;
 export const AGENT_BUYER_CLAIMS_RE =
   /^(?:\/[a-z]{2}(?:-[a-z]{2})?)?\/agent\/(?:handoff|buyer-claims)(?:\.[^/.]+)?\/?$/i;
+export const WELL_KNOWN_RE = /^\/\.well-known\/(?:apple-developer-merchantid-domain-association)$/;
 export const AJAX_CART_RE =
   /^(?:\/[a-z]{2}(?:-[a-z]{2})?)?\/cart(?:\.(?:js|json)|\/(?:add|update|change|clear)(?:\.(?:js|json))?)$/i;
 
