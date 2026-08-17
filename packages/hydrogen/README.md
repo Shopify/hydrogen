@@ -69,7 +69,7 @@ const isLoggedIn = await customerSession.isLoggedIn(
 );
 ```
 
-Customer Account OAuth methods require a public HTTPS origin. The writable session manager should expose the request origin; explicit `origin` options are only needed as overrides. For local development, use a tunnel or trusted local HTTPS through `localHttps` from `@shopify/hydrogen/vite`, and pass the framework's canonical request URL rather than an untrusted forwarded host.
+Customer Account OAuth methods require a public HTTPS origin. The writable session manager should expose the request origin; explicit `origin` options are only needed as overrides. For local development, use a tunnel or trusted local HTTPS through `localHttps` from `@shopify/hydrogen/vite`, which provisions certificates and uses Shopify CLI to push Customer Account URLs outside CI. Pass the framework's canonical request URL rather than an untrusted forwarded host.
 
 Pass `customerSession` to `createCartServerHandlers({customerSession})` to associate newly created carts with the current customer when the session has a usable access token or successfully refreshed access token, and mark checkout URLs in authenticated cart GET responses with `logged_in=true`.
 
