@@ -214,6 +214,23 @@ describe("shopify scripts", () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
+  it.each([
+    "/account/login?return_to=%2Faccount#login",
+    "/account/authorize?code=code-123&state=state-123#callback",
+    "/account/logout#logout",
+    "/account/refresh?return_to=%2Faccount#refresh",
+  ])("uses document navigation for Customer Account handoff %s", async (url) => {
+    const navigate = vi.fn();
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+
+    await initializeShopifyScripts({ navigate, routes: emptyRouteTemplates, webMcp: false });
+
+    window.Shopify?.routes.navigate?.(url);
+
+    expect(assign).toHaveBeenCalledWith(url);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it("keeps the cart page SPA-navigable and resolves its custom route", async () => {
     const navigate = vi.fn();
     const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
