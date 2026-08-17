@@ -47,14 +47,14 @@ export default createMiddleware({
       const sessionManager = await createCustomerSessionManager(event.request);
       const customerAccountClient = createRequestCustomerAccountClient(requestContext);
 
-      const kitRoute = await handleShopifyRoutes({
+      const shopifyRoute = handleShopifyRoutes({
         request: event.request,
         requestContext,
         sessionManager,
         storefrontClient,
         handlers: [cartHandlers, customerSessionHandlers],
       });
-      if (kitRoute) return kitRoute;
+      if (shopifyRoute) return shopifyRoute;
 
       event.locals.shopifyRequestContext = requestContext;
       event.locals.storefrontClient = storefrontClient;

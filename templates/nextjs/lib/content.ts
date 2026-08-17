@@ -40,6 +40,12 @@ export const content = {
     itemRemoved: "Item removed from cart",
     updated: "Cart updated",
     updateError: "Could not update cart. Please try again.",
+    giftMessage: {
+      label: "Gift message",
+      placeholder: "Add a message for the recipient",
+      save: "Save message",
+      saving: "Saving…",
+    },
     iconLabel: {
       one: "Cart (1 item)",
       other: "Cart ({{ count }} items)",
@@ -124,14 +130,6 @@ export const content = {
     bestSellers: "Best sellers",
     shopByCategory: "Shop by category",
     viewAll: "View all",
-  },
-  consent: {
-    label: "Cookie consent",
-    message: "We use cookies to improve your experience, analyze traffic, and personalize content.",
-    privacyPolicy: "Privacy Policy",
-    acceptAll: "Accept all",
-    decline: "Decline",
-    managePreferences: "Manage preferences",
   },
 } as const;
 

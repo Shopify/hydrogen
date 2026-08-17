@@ -15,14 +15,15 @@ import {
   type ShopifyRouteRedirectResult,
   type ShopifyRouteSessionManager,
 } from "../core/request-routing/registered-routes";
+import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
 import { CustomerAccountApiError, CustomerAccountOAuthError } from "./errors";
 
 const log = getLogger("customer-account");
 
-export const CUSTOMER_ACCOUNT_AUTHORIZE_PATH = "/account/authorize" as const;
-export const CUSTOMER_ACCOUNT_LOGIN_PATH = "/account/login" as const;
-export const CUSTOMER_ACCOUNT_LOGOUT_PATH = "/account/logout" as const;
-export const CUSTOMER_ACCOUNT_REFRESH_PATH = "/account/refresh" as const;
+export const CUSTOMER_ACCOUNT_AUTHORIZE_PATH = CUSTOMER_ACCOUNT_PATHS.authorize;
+export const CUSTOMER_ACCOUNT_LOGIN_PATH = CUSTOMER_ACCOUNT_PATHS.login;
+export const CUSTOMER_ACCOUNT_LOGOUT_PATH = CUSTOMER_ACCOUNT_PATHS.logout;
+export const CUSTOMER_ACCOUNT_REFRESH_PATH = CUSTOMER_ACCOUNT_PATHS.refresh;
 
 const CUSTOMER_ACCOUNT_SESSION_KEY = "customerAccount";
 const DEFAULT_LOGIN_RETURN_TO_PATH = "/account";

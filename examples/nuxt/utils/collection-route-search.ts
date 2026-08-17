@@ -5,11 +5,11 @@ import type { RouteLocationNormalizedLoaded } from "vue-router";
  *
  * Do not build this from `route.query` — Vue Router nests keys that contain `.`
  * (e.g. `filter.v.option.color`), so URLSearchParams(route.query) disagrees with
- * the serialized string the collection store uses for settle.
+ * the serialized string CollectionProvider uses for settle.
  *
  * On the client, prefer `window.location.search` over `route.fullPath`: after
  * `navigateTo`, the address bar updates before Vue Router's reactive `route`
- * catches up. The collection store only clears loading when `dataSearch` and
+ * catches up. CollectionProvider only clears loading when `dataSearch` and
  * `urlSearch` match — a stale `route` snapshot leaves filters stuck loading.
  */
 export function collectionRouteSearch(route: RouteLocationNormalizedLoaded): string {
@@ -24,7 +24,7 @@ export function collectionRouteSearch(route: RouteLocationNormalizedLoaded): str
     }
     // Clearing the last filter: location.search is already "" but route.fullPath
     // can still carry the old query for a tick — falling through would disagree
-    // with dataSearch="" and the collection store would never call settle().
+    // with dataSearch="" and CollectionProvider would never call settle().
     return "";
   }
 

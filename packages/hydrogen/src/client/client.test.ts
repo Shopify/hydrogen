@@ -227,6 +227,18 @@ describe("createStorefrontClient", () => {
       expect(headers.get("X-Shopify-Storefront-Access-Token")).toBe("pub-token-123");
     });
 
+    it("sends the configured storefront ID header", async () => {
+      const client = createPublicClient({
+        storefrontId: "1000014875",
+        fetch: mockFetch,
+      });
+      await client.graphql(SHOP_QUERY);
+
+      const headers = getHeaders(mockFetch);
+      expect(headers.get("Shopify-Storefront-Id")).toBe("1000014875");
+      expect(client.storefrontId).toBe("1000014875");
+    });
+
     it("sends request context headers", async () => {
       const requestContext = createTestRequestContext(
         new Request("https://example.com", {
@@ -256,7 +268,7 @@ describe("createStorefrontClient", () => {
       expect(headers.get("Shopify-Storefront-Private-Token")).toBe("priv-token-456");
     });
 
-    it("sends buyer meta headers for private client", async () => {
+    it("sends buyer metadata for private client", async () => {
       const requestContext = createShopifyRequestContext({
         request: new Request("https://example.com", {
           headers: { "request-id": "request-context-group" },
@@ -272,7 +284,6 @@ describe("createStorefrontClient", () => {
 
       const headers = getHeaders(mockFetch);
       expect(headers.get("Shopify-Storefront-Buyer-IP")).toBe("10.0.0.1");
-      expect(headers.get("X-Shopify-Client-IP")).toBe("10.0.0.1");
       expect(headers.get("Custom-Storefront-Request-Group-ID")).toBe("request-context-group");
     });
 
@@ -937,6 +948,7 @@ function createPublicClient(
     storeDomain?: string;
     apiVersion?: string;
     publicStorefrontToken?: string;
+    storefrontId?: string;
     fetch?: typeof globalThis.fetch;
     cache?: CacheInstance;
     requestContext?: ShopifyRequestContext;
@@ -950,6 +962,7 @@ function createPublicClient(
       storeDomain: overrides.storeDomain ?? "test.myshopify.com",
       apiVersion: overrides.apiVersion,
       publicStorefrontToken: overrides.publicStorefrontToken ?? "test-pub-token",
+      storefrontId: overrides.storefrontId,
       fetch: overrides.fetch,
       cache: overrides.cache,
       defaultTimeoutInMs: overrides.defaultTimeoutInMs,

@@ -183,7 +183,7 @@ function toAnalyticsCart(state: CartState): AnalyticsCart | null {
 
 function hasPendingCartWork({ pending, revalidating }: CartState): boolean {
   const hasPendingCost = pending.cost ?? (pending.lines.size > 0 || pending.discountCodes.size > 0);
-  return revalidating === true || hasPendingCost || pending.note;
+  return revalidating === true || hasPendingCost || pending.note || pending.attributes;
 }
 
 function getCartUpdatedAt(cart: CartData): string {

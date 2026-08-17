@@ -162,10 +162,9 @@ NEXT_PUBLIC_STOREFRONT_ID=""
 NEXT_PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID=""
 ```
 
-To smoke-test against the demo store in this repo, obtain a real `PRIVATE_STOREFRONT_API_TOKEN` with
-`node scripts/decrypt-example-secrets.ts` (needs the ejson key locally). It may exit non-zero if an unrelated example
-fails, but it still writes `examples/nextjs/.env` — read `PRIVATE_STOREFRONT_API_TOKEN` from there (same key name the
-template expects) and copy it into the template `.env`.
+To smoke-test against the demo store in this repo, run `pnpm run examples:secrets:decrypt` from the repository root
+(needs the ejson key locally). It writes a gitignored `templates/nextjs/.env` containing the private token, public
+store identity, and local Customer Account session configuration required by the template.
 
 ## Shared code migration
 

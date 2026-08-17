@@ -60,6 +60,24 @@ describe("createCartFormRegister", () => {
       expect(result).toEqual({ name: "note", defaultValue: "gift wrap" });
     });
 
+    it("attribute values encode their key in the field name", () => {
+      expect(
+        register("attributeValue", {
+          key: "gift-message",
+          defaultValue: "Happy birthday!",
+        }),
+      ).toEqual({
+        name: "attributes.gift-message",
+        defaultValue: "Happy birthday!",
+      });
+    });
+
+    it("rejects an empty attribute key", () => {
+      expect(() => register("attributeValue", { key: "", value: "Happy birthday!" })).toThrow(
+        /non-empty "key"/,
+      );
+    });
+
     it("sellingPlanId returns name and value", () => {
       const result = register("sellingPlanId", {
         value: "gid://shopify/SellingPlan/1",
@@ -103,6 +121,13 @@ describe("createCartFormRegister", () => {
       expect(register("note-update")).toEqual({
         name: "intent",
         value: "note-update",
+      });
+    });
+
+    it("attributes-update returns intent", () => {
+      expect(register("attributes-update")).toEqual({
+        name: "intent",
+        value: "attributes-update",
       });
     });
 

@@ -30,7 +30,7 @@ try {
 
 Prefer this over adding `.catch()` only to the returned promise: the request-level boundary also handles synchronous setup and validation errors.
 
-Resolve `buyerIp` with the app's trusted deployment header before creating the private client. Use the buyer-IP guidance from `hydrogen-storefront-client`.
+The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance.
 
 ```ts
 import {
@@ -46,19 +46,17 @@ const cartHandlers = createCartServerHandlers();
 const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
 
 export async function handleRequest(request: Request, next: () => Promise<Response>) {
-  const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
-    buyerIp,
   });
   const sessionManager = await createSessionManager(request);
   const storefrontClient = createStorefrontClient({
-    type: "private",
+    type: "public",
     requestContext,
     config: {
       storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
-      privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
+      publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,
     },
   });
 
@@ -74,10 +72,7 @@ export async function handleRequest(request: Request, next: () => Promise<Respon
   const response = await next();
   if (response.status === 404) {
     const redirect = await handleShopifyRedirects({ request, routeTemplates, storefrontClient });
-    if (redirect) {
-      storefrontClient.requestContext.applyResponseHeaders(redirect.headers);
-      return redirect;
-    }
+    if (redirect) return redirect;
   }
 
   storefrontClient.requestContext.applyResponseHeaders(response.headers);
@@ -92,7 +87,7 @@ React Router framework mode needs:
 - Verify `future.v8_middleware: true` is set in `react-router.config.ts`.
 - A final splat route such as `route("*", "routes/catchall.tsx")`.
 - Root-route middleware that creates the Storefront client, runs Hydrogen routes, stores the client in context, and applies response headers after `next()`.
-- Trusted buyer-IP resolution before `createStorefrontClient`; use the buyer-IP guidance from `hydrogen-storefront-client`.
+- A public Storefront client by default; when upgrading to `type: "private"`, resolve trusted `buyerIp` before `createStorefrontClient` per the buyer-IP guidance from `hydrogen-storefront-client`.
 
 ```tsx
 import {
@@ -109,19 +104,17 @@ const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ context, request }, next) => {
-    const buyerIp = getBuyerIp(request.headers);
     const requestContext = createShopifyRequestContext({
       request,
       i18n: { country: "US", language: "EN" },
-      buyerIp,
     });
     const sessionManager = await createSessionManager(request);
     const storefrontClient = createStorefrontClient({
-      type: "private",
+      type: "public",
       requestContext,
       config: {
         storeDomain: process.env.PUBLIC_STORE_DOMAIN!,
-        privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN!,
+        publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,
       },
     });
 
@@ -139,10 +132,7 @@ export const middleware: Route.MiddlewareFunction[] = [
     const response = await next();
     if (response.status === 404) {
       const redirect = await handleShopifyRedirects({ request, routeTemplates, storefrontClient });
-      if (redirect) {
-        storefrontClient.requestContext.applyResponseHeaders(redirect.headers);
-        return redirect;
-      }
+      if (redirect) return redirect;
     }
     storefrontClient.requestContext.applyResponseHeaders(response.headers);
     return response;

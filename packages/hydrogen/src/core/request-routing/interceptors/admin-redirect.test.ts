@@ -36,10 +36,10 @@ function redirectOptions(
 }
 
 describe("handleAdminRedirect", () => {
-  it("redirects /admin to the configured Storefront client URL", async () => {
+  it("redirects /admin to the configured Storefront client URL", () => {
     const request = new Request("https://my-app.com/admin");
     const storefrontClient = mockStorefrontClient();
-    const result = await handleAdminRedirect(redirectOptions(request, storefrontClient));
+    const result = handleAdminRedirect(redirectOptions(request, storefrontClient));
 
     assert(result, "expected admin redirect response");
     expect(result.status).toBe(301);
@@ -47,18 +47,18 @@ describe("handleAdminRedirect", () => {
     expect(storefrontClient.graphql).not.toHaveBeenCalled();
   });
 
-  it("returns null for non-admin paths", async () => {
+  it("returns null for non-admin paths", () => {
     const storefrontClient = mockStorefrontClient();
-    const result = await handleAdminRedirect(
+    const result = handleAdminRedirect(
       redirectOptions(new Request("https://my-app.com/products"), storefrontClient),
     );
     expect(result).toBeNull();
     expect(storefrontClient.graphql).not.toHaveBeenCalled();
   });
 
-  it("does not match /admin/something", async () => {
+  it("does not match /admin/something", () => {
     const storefrontClient = mockStorefrontClient();
-    const result = await handleAdminRedirect(
+    const result = handleAdminRedirect(
       redirectOptions(new Request("https://my-app.com/admin/products"), storefrontClient),
     );
     expect(result).toBeNull();

@@ -52,7 +52,6 @@ describe("shopify scripts", () => {
     delete (window as any).Shopify;
     delete (document as any).modelContext;
     delete (navigator as any).modelContext;
-    delete (window as any).PerfKit;
     Reflect.deleteProperty(window, Symbol.for("shopify.webmcp.registered"));
     document.head.innerHTML = "";
     setDocumentReadyState("complete");
@@ -88,12 +87,12 @@ describe("shopify scripts", () => {
     window.Shopify?.navigate?.("/products/snowboard");
 
     expect(navigate).toHaveBeenCalledWith("/products/snowboard");
-    expect(window.Shopify?.routes.match?.("/products/snowboard")).toEqual({
+    expect(window.Shopify?.routes.match?.("/products/snowboard")).toMatchObject({
       route: "product",
       pageTemplateName: "product",
       params: { productHandle: "snowboard" },
     });
-    expect(window.Shopify?.routes.match?.("/")).toEqual({
+    expect(window.Shopify?.routes.match?.("/")).toMatchObject({
       route: "index",
       pageTemplateName: "index",
       params: {},
@@ -104,27 +103,27 @@ describe("shopify scripts", () => {
   it("sets default Shopify route hooks when route templates are omitted", async () => {
     await initializeShopifyScripts({ webMcp: false });
 
-    expect(window.Shopify?.routes.match?.("/products/snowboard")).toEqual({
+    expect(window.Shopify?.routes.match?.("/products/snowboard")).toMatchObject({
       route: "product",
       pageTemplateName: "product",
       params: { productHandle: "snowboard" },
     });
-    expect(window.Shopify?.routes.match?.("/cart")).toEqual({
+    expect(window.Shopify?.routes.match?.("/cart")).toMatchObject({
       route: "cart",
       pageTemplateName: "cart",
       params: {},
     });
-    expect(window.Shopify?.routes.match?.("/products")).toEqual({
+    expect(window.Shopify?.routes.match?.("/products")).toMatchObject({
       route: "collectionList",
       pageTemplateName: "list-collections",
       params: {},
     });
-    expect(window.Shopify?.routes.match?.("/policies/privacy-policy")).toEqual({
+    expect(window.Shopify?.routes.match?.("/policies/privacy-policy")).toMatchObject({
       route: "policy",
       pageTemplateName: "policy",
       params: { policyHandle: "privacy-policy" },
     });
-    expect(window.Shopify?.routes.match?.("/search?q=snowboard")).toEqual({
+    expect(window.Shopify?.routes.match?.("/search?q=snowboard")).toMatchObject({
       route: "search",
       pageTemplateName: "search",
       params: {},
@@ -178,6 +177,72 @@ describe("shopify scripts", () => {
     expect(navigate).toHaveBeenCalledWith("/fr-ca/p/snowboard?variant=1#reviews");
   });
 
+  it("uses document navigation for checkout instead of the supplied navigator", async () => {
+    const navigate = vi.fn();
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+
+    await initializeShopifyScripts({ navigate, routes: emptyRouteTemplates, webMcp: false });
+
+    window.Shopify?.routes.navigate?.("/checkout");
+
+    expect(assign).toHaveBeenCalledWith("/checkout");
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("preserves checkout search parameters and hash during document navigation", async () => {
+    const navigate = vi.fn();
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+
+    await initializeShopifyScripts({ navigate, routes: emptyRouteTemplates, webMcp: false });
+
+    window.Shopify?.routes.navigate?.("/checkout?discount=SAVE10#payment");
+
+    expect(assign).toHaveBeenCalledWith("/checkout?discount=SAVE10#payment");
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("uses document navigation for cart permalinks", async () => {
+    const navigate = vi.fn();
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+
+    await initializeShopifyScripts({ navigate, routes: emptyRouteTemplates, webMcp: false });
+
+    window.Shopify?.routes.navigate?.("/cart/123:2,456:1?discount=SAVE10#cart");
+
+    expect(assign).toHaveBeenCalledWith("/cart/123:2,456:1?discount=SAVE10#cart");
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    "/account/login?return_to=%2Faccount#login",
+    "/account/authorize?code=code-123&state=state-123#callback",
+    "/account/logout#logout",
+    "/account/refresh?return_to=%2Faccount#refresh",
+  ])("uses document navigation for Customer Account handoff %s", async (url) => {
+    const navigate = vi.fn();
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+
+    await initializeShopifyScripts({ navigate, routes: emptyRouteTemplates, webMcp: false });
+
+    window.Shopify?.routes.navigate?.(url);
+
+    expect(assign).toHaveBeenCalledWith(url);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("keeps the cart page SPA-navigable and resolves its custom route", async () => {
+    const navigate = vi.fn();
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+    const routeTemplates = createShopifyRouteTemplates({ cart: "/bag" });
+
+    await initializeShopifyScripts({ navigate, routes: routeTemplates, webMcp: false });
+
+    window.Shopify?.routes.navigate?.("/cart?discount=SAVE10#items");
+
+    expect(navigate).toHaveBeenCalledWith("/bag?discount=SAVE10#items");
+    expect(assign).not.toHaveBeenCalled();
+  });
+
   it("sets Shopify standard route resolver from route templates", async () => {
     const routeTemplates = createShopifyRouteTemplates({
       product: "/p/:productHandle",
@@ -197,6 +262,11 @@ describe("shopify scripts", () => {
       route: "product",
       pageTemplateName: "product",
       params: { productHandle: "snowboard" },
+      standardPathname: "/fr-ca/products/snowboard",
+      templates: {
+        standard: "/products/:productHandle",
+        custom: "/p/:productHandle",
+      },
     });
     expect(
       (window.Shopify?.routes as Record<string, unknown> | undefined)?.templates,
@@ -430,11 +500,6 @@ describe("shopify scripts", () => {
           "data-resource-timing-sampling-rate": TEST_RESOURCE_TIMING_SAMPLING_RATE,
         },
       },
-      {
-        tagName: "script",
-        attributes: { id: "shopify-perfkit-spa-bridge", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining("perfkit-spa-bridge"),
-      },
     ]);
     expect(descriptors.links).toEqual([
       {
@@ -532,11 +597,6 @@ describe("shopify scripts", () => {
           "data-resource-timing-sampling-rate": TEST_RESOURCE_TIMING_SAMPLING_RATE,
         },
       },
-      {
-        tagName: "script",
-        attributes: { id: "shopify-perfkit-spa-bridge", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining("perfkit-spa-bridge"),
-      },
     ]);
     expect(descriptors.scripts[0]?.innerHTML).not.toContain('"templates"');
   });
@@ -547,7 +607,7 @@ describe("shopify scripts", () => {
       nonce: "",
       shop: TEST_SHOP,
     });
-    expect(descriptors.scripts).toHaveLength(9);
+    expect(descriptors.scripts).toHaveLength(8);
     for (const { attributes } of descriptors.scripts) {
       expect(attributes).toHaveProperty("nonce", "");
     }
@@ -556,7 +616,7 @@ describe("shopify scripts", () => {
   it("does not include WebMCP in SSR descriptors", () => {
     const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
 
-    expect(descriptors.scripts).toHaveLength(8);
+    expect(descriptors.scripts).toHaveLength(7);
     expect(descriptors.scripts).not.toContainEqual(
       expect.objectContaining({
         attributes: expect.objectContaining({
@@ -633,7 +693,6 @@ describe("shopify scripts", () => {
         src: SHOPIFY_PERF_KIT_SCRIPT,
       },
     });
-    expect(getPerfKitBridgeScript(descriptors.scripts)?.innerHTML).toContain("perfkit-spa-bridge");
     const renderedTags = renderShopifyScriptTags({
       shop: {
         shopId: TEST_SHOP_ID,
@@ -700,70 +759,6 @@ describe("shopify scripts", () => {
     );
   });
 
-  it("registers the PerfKit SPA bridge when the analytics bus is available at DOMContentLoaded", () => {
-    setDocumentReadyState("loading");
-    const addDestination = vi.fn();
-    const descriptors = getShopifyScriptTags({
-      shop: {
-        shopId: TEST_SHOP_ID,
-        storefrontId: TEST_STOREFRONT_ID,
-        myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
-      },
-    });
-    const bridgeScript = getPerfKitBridgeScript(descriptors.scripts);
-    assert(bridgeScript?.innerHTML, "Expected ShopifyScripts to include the PerfKit bridge script");
-
-    (0, eval)(bridgeScript.innerHTML);
-    expect(addDestination).not.toHaveBeenCalled();
-
-    (window as any).Shopify = { analytics: { addDestination } };
-    document.dispatchEvent(new Event("DOMContentLoaded"));
-
-    expect(addDestination).toHaveBeenCalledOnce();
-    expect(addDestination.mock.calls[0]?.[0]?.name).toBe("perfkit-spa-bridge");
-  });
-
-  it("forwards bridged analytics events to PerfKit", () => {
-    const addDestination = vi.fn();
-    const subscriptions = new Map<string, (payload: unknown) => void>();
-    (window as any).Shopify = { analytics: { addDestination } };
-    (window as any).PerfKit = {
-      navigate: vi.fn(),
-      setPageType: vi.fn(),
-    };
-    const descriptors = getShopifyScriptTags({
-      shop: {
-        shopId: TEST_SHOP_ID,
-        storefrontId: TEST_STOREFRONT_ID,
-        myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
-      },
-    });
-    const bridgeScript = getPerfKitBridgeScript(descriptors.scripts);
-    assert(bridgeScript?.innerHTML, "Expected ShopifyScripts to include the PerfKit bridge script");
-
-    (0, eval)(bridgeScript.innerHTML);
-    const destination = addDestination.mock.calls[0]?.[0];
-    assert(destination, "Expected the bridge to register a destination");
-    destination.setup({
-      subscribe: (event: string, callback: (payload: unknown) => void) => {
-        subscriptions.set(event, callback);
-        return vi.fn();
-      },
-    });
-
-    subscriptions.get("page_viewed")?.({});
-    subscriptions.get("product_viewed")?.({});
-    subscriptions.get("collection_viewed")?.({});
-    subscriptions.get("search_viewed")?.({});
-    subscriptions.get("cart_viewed")?.({});
-
-    expect(window.PerfKit?.navigate).toHaveBeenCalledOnce();
-    expect(window.PerfKit?.setPageType).toHaveBeenNthCalledWith(1, "product");
-    expect(window.PerfKit?.setPageType).toHaveBeenNthCalledWith(2, "collection");
-    expect(window.PerfKit?.setPageType).toHaveBeenNthCalledWith(3, "search");
-    expect(window.PerfKit?.setPageType).toHaveBeenNthCalledWith(4, "cart");
-  });
-
   it("returns a new ordered tag array each time", () => {
     const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
     const firstTags = descriptors.tags;
@@ -810,7 +805,7 @@ describe("shopify scripts", () => {
     });
     const html = htmlTags.join("\n");
 
-    expect(htmlTags).toHaveLength(12);
+    expect(htmlTags).toHaveLength(11);
     expect(html).toContain('<script id="shopify-global-bootstrap" nonce="test-nonce">');
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
@@ -832,10 +827,6 @@ describe("shopify scripts", () => {
     );
   });
 });
-
-function getPerfKitBridgeScript(scripts: ReturnType<typeof getShopifyScriptTags>["scripts"]) {
-  return scripts.find((script) => script.innerHTML?.includes("perfkit-spa-bridge"));
-}
 
 function setDocumentReadyState(readyState: DocumentReadyState) {
   Object.defineProperty(document, "readyState", {

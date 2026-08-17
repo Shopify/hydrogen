@@ -9,7 +9,12 @@ export { createCartFormRegister } from "./form";
 export type { CartFormRegister, QuantityInputAttributes, SetButtonAttributes } from "./form";
 export { attachQuantityInput } from "./attach-quantity-input";
 export { parseCartRequest } from "./actions";
-export type { CartAction, CartLineAddInput, CartLineUpdateInput } from "./actions";
+export type {
+  CartAction,
+  CartAttributeInput,
+  CartLineAddInput,
+  CartLineUpdateInput,
+} from "./actions";
 export { cartQueries } from "./queries";
 export { createCartCookie } from "./cookie";
 export type {
@@ -27,6 +32,7 @@ export type {
   CartLineMerchandise,
   CartCost,
   DiscountCode,
+  Attribute,
 } from "./state";
 export {
   EMPTY_CART_DATA,

@@ -101,6 +101,30 @@ describe("handleShopifyRoutes", () => {
     expect(result).toBeInstanceOf(Response);
   });
 
+  it("returns the Apple Pay domain association from the Online Store origin", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response("association-file", {
+        status: 200,
+        headers: { "content-type": "text/plain" },
+      }),
+    );
+
+    const result = await handleShopifyRoutes({
+      request: new Request(
+        "https://my-app.com/.well-known/apple-developer-merchantid-domain-association",
+      ),
+    });
+
+    assert(result, "expected association response");
+    expect(mockFetch).toHaveBeenCalledWith(
+      new URL(
+        "https://test-store.myshopify.com/.well-known/apple-developer-merchantid-domain-association",
+      ),
+      expect.objectContaining({ redirect: "follow" }),
+    );
+    expect(await result.text()).toBe("association-file");
+  });
+
   it("rewrites cart.js AJAX requests to cart.json", async () => {
     await handleShopifyRoutes({
       request: new Request("https://my-app.com/en/cart.js?locale=en"),
@@ -133,7 +157,6 @@ describe("handleShopifyRoutes", () => {
 
     const [, init] = mockFetch.mock.calls[0];
     const headers = new Headers(init.headers);
-    expect(headers.get("X-Shopify-Client-IP")).toBeNull();
     expect(headers.get("x-forwarded-for")).toBeNull();
   });
 

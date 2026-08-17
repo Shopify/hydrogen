@@ -33,9 +33,12 @@ Use these canonical environment variable names throughout the app (kept in sync 
 
 If the framework requires a prefix to expose client-side variables, preserve the canonical suffix and add only the required framework prefix. Never expose `PRIVATE_STOREFRONT_API_TOKEN` to the client.
 
+List `PUBLIC_STOREFRONT_API_TOKEN` in the app's env example file as a commented-out entry (`# PUBLIC_STOREFRONT_API_TOKEN=`). The Storefront client accepts `undefined` as tokenless access, which is all mock.shop supports, so the scaffold works before the user has tokens and upgrades in place when they add one. Do not write an uncommented empty assignment (`PUBLIC_STOREFRONT_API_TOKEN=`): env loaders parse that as an empty string, and the client rejects empty tokens. Recommend filling it in (or switching to a private client) once the app targets a real store.
+
 ### Continue when
 
 - [ ] Env vars follow the canonical names (plus any required framework prefix)
+- [ ] `PUBLIC_STOREFRONT_API_TOKEN` is listed commented-out in the env example until the user provides a token
 - [ ] `PRIVATE_STOREFRONT_API_TOKEN` is not exposed to the client
 
 ## Keep Environment Access Server-Side
@@ -64,7 +67,7 @@ Invoke the `hydrogen-storefront-client` skill to wire the Storefront API client 
 
 ## Install API Route Handlers
 
-Invoke the `hydrogen-request-handlers` skill to wire `handleShopifyRoutes` before routing, `handleShopifyRedirects` after a 404 or in the framework's catch-all route, and request-context response-header propagation.
+Invoke the `hydrogen-request-handlers` skill to wire `handleShopifyRoutes` before routing, `handleShopifyRedirects` after a 404 or in the framework's catch-all route, and request-context response-header propagation for custom and framework responses.
 
 ### Continue when
 

@@ -40,7 +40,7 @@ export async function proxy(request: NextRequest) {
     buyerIp,
   });
 
-  const { storeDomain, privateStorefrontToken } = resolveStorefrontConfig();
+  const { storeDomain, privateStorefrontToken, storefrontId } = resolveStorefrontConfig();
 
   const storefrontClient = createStorefrontClient({
     type: "private",
@@ -48,6 +48,7 @@ export async function proxy(request: NextRequest) {
     config: {
       storeDomain,
       privateStorefrontToken,
+      storefrontId,
     },
   });
 
@@ -63,7 +64,7 @@ export async function proxy(request: NextRequest) {
     ...(customerAccountsAvailable ? [getCustomerSessionHandlers()] : []),
   ];
 
-  const shopifyRoute = await handleShopifyRoutes({
+  const shopifyRoute = handleShopifyRoutes({
     request,
     requestContext,
     sessionManager,

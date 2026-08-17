@@ -118,6 +118,11 @@ describe("cart query result types", () => {
     type R = ResultOf<typeof cartQueries.cartNoteUpdate>;
     expectTypeOf<R>().toHaveProperty("cartNoteUpdate");
   });
+
+  it("cartAttributesUpdate returns cartAttributesUpdate", () => {
+    type R = ResultOf<typeof cartQueries.cartAttributesUpdate>;
+    expectTypeOf<R>().toHaveProperty("cartAttributesUpdate");
+  });
 });
 
 describe("cart query variable types", () => {
@@ -162,6 +167,12 @@ describe("cart query variable types", () => {
     type V = VariablesOf<typeof cartQueries.cartNoteUpdate>;
     expectTypeOf<V>().toHaveProperty("cartId");
     expectTypeOf<V>().toHaveProperty("note");
+  });
+
+  it("cartAttributesUpdate requires cartId and attributes", () => {
+    type V = VariablesOf<typeof cartQueries.cartAttributesUpdate>;
+    expectTypeOf<V>().toHaveProperty("cartId");
+    expectTypeOf<V>().toHaveProperty("attributes");
   });
 });
 

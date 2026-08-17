@@ -1,4 +1,4 @@
-import type { PrivateStorefrontClient } from "../../../client";
+import type { StorefrontClient } from "../../../client";
 import {
   getStandardRouteTarget,
   isStandardRouteSelfRedirect,
@@ -6,15 +6,15 @@ import {
 } from "../../standard-routes/index";
 import { createRedirectLocation, createRedirectResponse } from "./url-redirects";
 
-export async function handleStandardRouteRedirects({
+export function handleStandardRouteRedirects({
   request,
   storefrontClient,
   routeTemplates,
 }: {
   request: Request;
-  storefrontClient: PrivateStorefrontClient;
+  storefrontClient: StorefrontClient;
   routeTemplates: ShopifyRouteTemplates;
-}): Promise<Response | null> {
+}): Response | null {
   const url = new URL(request.url);
   const target = getStandardRouteTarget({
     pathname: url.pathname,

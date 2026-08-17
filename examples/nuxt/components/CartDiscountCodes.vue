@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { DiscountCode } from "@shopify/hydrogen";
-
 import { useCart, useCartForm } from "~/storefront/cart";
 
 const discountCodes = useCart((s) => s.data.discountCodes);
@@ -16,7 +14,7 @@ function validateDiscountApply(e: Event) {
     return;
   }
   const isDuplicate = discountCodes.value.some(
-    (dc: DiscountCode) => dc.code.toLowerCase() === code.toLowerCase(),
+    (dc) => dc.code.toLowerCase() === code.toLowerCase(),
   );
   if (isDuplicate) {
     e.preventDefault();

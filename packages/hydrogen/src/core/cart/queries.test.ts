@@ -44,6 +44,14 @@ describe("cartQueries", () => {
     }
   });
 
+  it("includes cart attributes in the minimum payload and exposes their mutation", () => {
+    for (const query of Object.values(cartQueries)) {
+      expect(query).toContain("attributes");
+    }
+    expect(cartQueries.cartAttributesUpdate).toContain("cartAttributesUpdate");
+    expect(cartQueries.cartAttributesUpdate).toContain("$attributes: [AttributeInput!]!");
+  });
+
   it("adds custom cart fields to every cart document without removing the minimum payload", () => {
     const customQueries = makeCartQueries({ fragment: customCartFragment });
 

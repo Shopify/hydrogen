@@ -26,6 +26,16 @@ function createPrivateStorefrontClient(request: Request, i18n: I18nConfig = DEFA
   });
 }
 
+function createTokenlessPublicStorefrontClient(request: Request, i18n: I18nConfig = DEFAULT_I18N) {
+  return createStorefrontClient({
+    type: "public",
+    requestContext: createShopifyRequestContext({ request, i18n }),
+    config: {
+      storeDomain: defaultConfig.storeDomain,
+    },
+  });
+}
+
 function redirectOptions(
   request: Request,
   options: Partial<Parameters<typeof handleShopifyRedirects>[0]> = {},
@@ -72,6 +82,32 @@ describe("handleShopifyRedirects", () => {
   });
 
   it("returns URL redirect from Storefront API", async () => {
+    const responseHeaders = new Headers({ "server-timing": "shopify;dur=10" });
+    responseHeaders.append("set-cookie", "tracking=1; Path=/; Secure");
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          data: {
+            urlRedirects: {
+              edges: [{ node: { target: "/new-page" } }],
+            },
+          },
+        }),
+        { headers: responseHeaders },
+      ),
+    );
+
+    const request = new Request("https://my-app.com/old-page");
+    const result = await handleShopifyRedirects(redirectOptions(request));
+
+    assert(result, "expected URL redirect response");
+    expect(result.status).toBe(301);
+    expect(result.headers.get("location")).toBe("/new-page");
+    expect(result.headers.get("server-timing")).toBe("shopify;dur=10");
+    expect(result.headers.getSetCookie()).toEqual(["tracking=1; Path=/; Secure"]);
+  });
+
+  it("returns URL redirect using a tokenless public client", async () => {
     mockFetch.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
@@ -85,19 +121,24 @@ describe("handleShopifyRedirects", () => {
     );
 
     const request = new Request("https://my-app.com/old-page");
-    const result = await handleShopifyRedirects(redirectOptions(request));
+    const result = await handleShopifyRedirects(
+      redirectOptions(request, {
+        storefrontClient: createTokenlessPublicStorefrontClient(request),
+      }),
+    );
 
     assert(result, "expected URL redirect response");
     expect(result.status).toBe(301);
     expect(result.headers.get("location")).toBe("/new-page");
   });
 
-  it("falls through to query param redirect", async () => {
+  it("uses a query param redirect without querying the Storefront API", async () => {
     const request = new Request("https://my-app.com/some-page?return_to=/dashboard");
     const result = await handleShopifyRedirects(redirectOptions(request));
 
     assert(result, "expected query param redirect response");
     expect(result.headers.get("location")).toBe("/dashboard");
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("redirects standard resource routes using configured templates", async () => {

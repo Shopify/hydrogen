@@ -12,7 +12,6 @@
     "dev:next": "turbo run dev --filter=@shopify/hydrogen-template-nextjs...",
     "dev:astro": "turbo run dev --filter=@shopify/hydrogen-example-astro...",
     "dev:nuxt": "turbo run dev --filter=@shopify/hydrogen-example-nuxt...",
-    "dev:nuxt-binding": "turbo run dev --filter=@shopify/hydrogen-example-nuxt-binding...",
     "dev:solid": "turbo run dev --filter=@shopify/hydrogen-example-solid-start...",
     "dev:svelte": "turbo run dev --filter=@shopify/hydrogen-example-sveltekit...",
     "dev:hydrogen": "pnpm --dir examples/hydrogen dev",
