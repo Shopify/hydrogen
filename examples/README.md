@@ -35,6 +35,8 @@ The local HTTPS plugin provisions certificates automatically the first time a `d
 
 Nuxt and SolidStart may need the command restarted once after first-run provisioning so their outer dev servers can load the certificate files.
 
+Outside CI, the local HTTPS plugin also uses Shopify CLI to link an unlinked Hydrogen storefront and push the Customer Account callback, JavaScript origin, and logout URLs. It prints the values for manual configuration when automatic setup is unavailable.
+
 The Next.js template provisions its own development certificate and does not use the Hydrogen certificates.
 
 ## What examples are
