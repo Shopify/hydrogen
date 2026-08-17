@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
-import { STOREFRONT_BUYER_IP_HEADER, STOREFRONT_PRIVATE_TOKEN_HEADER } from "../../headers";
+import {
+  STOREFRONT_BUYER_IP_HEADER,
+  STOREFRONT_ID_HEADER,
+  STOREFRONT_PRIVATE_TOKEN_HEADER,
+} from "../../headers";
 import { configureLogging, resetLoggingForTests } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
 import { assert, createTestLogger } from "../../test-utils";
@@ -20,7 +24,12 @@ function createRequest(
   });
 }
 
-function handleSfapiProxy(request: Request, storeUrl = defaultStoreUrl, buyerIp = defaultBuyerIp) {
+function handleSfapiProxy(
+  request: Request,
+  storeUrl = defaultStoreUrl,
+  buyerIp = defaultBuyerIp,
+  storefrontId?: string,
+) {
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
@@ -35,6 +44,7 @@ function handleSfapiProxy(request: Request, storeUrl = defaultStoreUrl, buyerIp 
       i18n: { country: "US", language: "EN", pathPrefix: "" },
       storeUrl,
       apiUrl: `${storeUrl}/api/2026-04/graphql.json`,
+      storefrontId,
       requestContext,
       graphql: vi.fn(),
     },
@@ -268,6 +278,25 @@ describe("handleSfapiProxy", () => {
     const [, init] = call;
     const headers = new Headers(init.headers);
     expect(headers.get(STOREFRONT_PRIVATE_TOKEN_HEADER)).toBe(privateToken);
+  });
+
+  it("uses the configured storefront ID instead of a browser-supplied value", async () => {
+    const configuredStorefrontId = "1000014875";
+
+    await handleSfapiProxy(
+      createRequest("/api/2025-01/graphql.json", {
+        headers: { [STOREFRONT_ID_HEADER]: "untrusted-browser-value" },
+      }),
+      defaultStoreUrl,
+      defaultBuyerIp,
+      configuredStorefrontId,
+    );
+
+    const call = mockFetch.mock.calls[0];
+    assert(call, "expected fetch to be called");
+    const [, init] = call;
+    const headers = new Headers(init.headers);
+    expect(headers.get(STOREFRONT_ID_HEADER)).toBe(configuredStorefrontId);
   });
 
   it("uses the request context buyer IP instead of browser-supplied buyer IP", async () => {

@@ -57,6 +57,11 @@ export interface GraphQLFormattedError {
 type CommonOptions = {
   storeDomain: string;
   /**
+   * Identifies the Hydrogen storefront making Storefront API requests so Shopify can attribute
+   * cart analytics to the correct storefront.
+   */
+  storefrontId?: string;
+  /**
    * Storefront API version used in the GraphQL endpoint path (`/api/<version>/graphql.json`).
    * Defaults to the version baked into the package. To send some queries to a different endpoint
    * version (e.g. `unstable`), create a second `createStorefrontClient` instance with that
@@ -210,6 +215,7 @@ export type StorefrontClient<
   ) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>;
   apiUrl: string;
   storeUrl: string;
+  storefrontId?: string;
   requestContext: RequestContext;
 };
 

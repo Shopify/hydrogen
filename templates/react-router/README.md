@@ -42,11 +42,11 @@ cp .env.example .env
 npm run dev
 ```
 
-**Against a real store** — set your store domain and a **private** Storefront API
-token, then run normally:
+**Against a real store** — set your store domain, storefront ID, and a **private**
+Storefront API token, then run normally:
 
 ```bash
-cp .env.example .env   # set PUBLIC_STORE_DOMAIN + PRIVATE_STOREFRONT_API_TOKEN
+cp .env.example .env   # set PUBLIC_STORE_DOMAIN + PUBLIC_STOREFRONT_ID + PRIVATE_STOREFRONT_API_TOKEN
 npm run dev               # Vite/Mini Oxygen loads .env into the worker environment
 ```
 

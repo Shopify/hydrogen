@@ -173,6 +173,7 @@ describe('type tests', () => {
         config: {
           storeDomain: 'test.myshopify.com',
           publicStorefrontToken: 'pub-token',
+          storefrontId: '1000014875',
           fetch: globalThis.fetch,
           defaultTimeoutInMs: 5000,
         },
@@ -186,6 +187,7 @@ describe('type tests', () => {
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
+          storefrontId: '1000014875',
           fetch: globalThis.fetch,
           defaultTimeoutInMs: 5000,
         },
@@ -199,6 +201,7 @@ describe('type tests', () => {
         config: {
           storeDomain: 'test.myshopify.com',
           privateStorefrontToken: 'priv-token',
+          storefrontId: '1000014875',
           fetch: globalThis.fetch,
           defaultTimeoutInMs: 5000,
         },

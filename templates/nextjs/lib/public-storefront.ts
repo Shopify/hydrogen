@@ -1,6 +1,6 @@
 import { createShopifyRequestContext, createStorefrontClient } from "@shopify/hydrogen";
 
-import { defaultI18n, storefrontConfig } from "./config";
+import { defaultI18n, shop, storefrontConfig } from "./config";
 
 /**
  * Browser-safe public Storefront client (`hydrogen-storefront-client` /
@@ -43,5 +43,6 @@ export const publicStorefrontClient = createStorefrontClient({
   config: {
     storeDomain: storefrontConfig.storeDomain,
     publicStorefrontToken: storefrontConfig.publicStorefrontToken ?? "",
+    storefrontId: shop.storefrontId,
   },
 });

@@ -120,6 +120,7 @@ function getTemplateEnvFileTargets(): EnvFileTarget[] {
   return [
     createEnvFileTarget(resolve(templatesDir, "react-router"), {
       PUBLIC_STORE_DOMAIN: storefrontConfig.storeDomain,
+      PUBLIC_STOREFRONT_ID: shop.storefrontId,
     }),
     createEnvFileTarget(resolve(templatesDir, "nextjs"), {
       SESSION_SECRET: customerAccountConfig.sessionSecret,
