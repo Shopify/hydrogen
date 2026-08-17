@@ -247,6 +247,9 @@ export type {
   QueryPredictiveSearchOptions,
 } from "./predictive-search";
 
+export { getLocalizedPath } from "./localization";
+export type { GetLocalizedPathOptions } from "./localization";
+
 export { formatMoney } from "./money";
 export { flattenConnection } from "./analytics/utils/flatten-connection";
 export type { FormatMoneyOptions, FormattedMoney, FormattedMoneyRange, MoneyV2 } from "./money";
