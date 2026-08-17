@@ -50,7 +50,18 @@ cp .env.example .env   # set PUBLIC_STORE_DOMAIN + PRIVATE_STOREFRONT_API_TOKEN
 npm run dev               # Vite/Mini Oxygen loads .env into the worker environment
 ```
 
-Customer Account OAuth requires trusted local HTTPS. Follow the bundled `hydrogen-local-https` skill to create the default certificates, then run:
+Customer Account OAuth requires trusted local HTTPS. Install [mkcert](https://github.com/FiloSottile/mkcert), then create the default `local.tryhydrogen.dev` certificates:
+
+```bash
+mkcert -install
+mkdir -p ~/.shopify/hydrogen/certs
+mkcert \
+  -cert-file ~/.shopify/hydrogen/certs/local.tryhydrogen.dev.pem \
+  -key-file ~/.shopify/hydrogen/certs/local.tryhydrogen.dev-key.pem \
+  local.tryhydrogen.dev
+```
+
+Then run:
 
 ```bash
 npm run https:dev

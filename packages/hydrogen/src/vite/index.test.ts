@@ -5,11 +5,10 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { localHttps, localHttpsDevServer } from ".";
+import { localHttps } from ".";
 import { assert } from "../core/test-utils";
 
 const fsCalls = vi.hoisted(() => ({
-  existsSync: vi.fn(),
   readFileSync: vi.fn(),
 }));
 
@@ -18,10 +17,6 @@ vi.mock("node:fs", async (importOriginal) => {
 
   return {
     ...actual,
-    existsSync(...args: any[]) {
-      fsCalls.existsSync(...args);
-      return (actual.existsSync as any)(...args);
-    },
     readFileSync(...args: any[]) {
       fsCalls.readFileSync(...args);
       return (actual.readFileSync as any)(...args);
@@ -54,7 +49,6 @@ describe("localHttps", () => {
   let keyPath: string;
 
   beforeEach(() => {
-    fsCalls.existsSync.mockClear();
     fsCalls.readFileSync.mockClear();
     directory = fs.mkdtempSync(join(tmpdir(), "hydrogen-local-https-"));
     certPath = join(directory, "custom.test.pem");
@@ -75,8 +69,8 @@ describe("localHttps", () => {
 
     expect(config({} as any, {} as any)).toBeUndefined();
     expect(configureServer({ middlewares: { use } } as any)).toBeUndefined();
+    expect(plugin.api.getDevServerConfig()).toBeUndefined();
     expect(use).not.toHaveBeenCalled();
-    expect(fsCalls.existsSync).not.toHaveBeenCalled();
     expect(fsCalls.readFileSync).not.toHaveBeenCalled();
   });
 
@@ -93,6 +87,11 @@ describe("localHttps", () => {
 
     const config = getHook(plugin.config, "config");
 
+    expect(plugin.api.getDevServerConfig()).toEqual({
+      host: "custom.test",
+      port: 4_321,
+      https: { cert: certPath, key: keyPath },
+    });
     expect(config({} as any, {} as any)).toEqual({
       server: {
         allowedHosts: ["custom.test"],
@@ -110,10 +109,10 @@ describe("localHttps", () => {
         },
       },
     });
+    expect(fsCalls.readFileSync).toHaveBeenCalledTimes(2);
   });
 
-  it("warns and leaves Vite unconfigured when certificate files are missing", () => {
-    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+  it("throws a setup error when certificate files are missing", () => {
     const plugin = localHttps({
       enabled: true,
       host: "custom.test",
@@ -121,17 +120,11 @@ describe("localHttps", () => {
       keyPath,
     });
     const config = getHook(plugin.config, "config");
-    const configureServer = getHook(plugin.configureServer, "configureServer");
-    const use = vi.fn();
 
-    expect(config({} as any, {} as any)).toBeUndefined();
-    expect(configureServer({ middlewares: { use } } as any)).toBeUndefined();
-    expect(use).not.toHaveBeenCalled();
-    expect(warn).toHaveBeenCalledOnce();
-
-    const message = String(warn.mock.calls[0]?.[0]);
+    const message = captureErrorMessage(() => config({} as any, {} as any));
     expect(message).toContain(certPath);
     expect(message).toContain(keyPath);
+    expect(message).toContain("Local HTTPS requires a readable certificate file");
     expect(message).toContain("brew install mkcert");
     expect(message).toContain("mkcert -install");
     expect(message).toContain(`mkdir -p '${directory}'`);
@@ -141,35 +134,19 @@ describe("localHttps", () => {
     );
   });
 
-  it("warns once when Vite creates multiple plugin instances", () => {
-    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+  it("throws a setup error when certificate files are unreadable", () => {
+    fs.writeFileSync(certPath, "certificate");
+    fs.writeFileSync(keyPath, "private-key");
+    fsCalls.readFileSync.mockImplementationOnce(() => {
+      throw new Error("permission denied");
+    });
 
-    for (let index = 0; index < 2; index += 1) {
-      const plugin = localHttps({
-        enabled: true,
-        host: "custom.test",
-        certPath,
-        keyPath,
-      });
-      const config = getHook(plugin.config, "config");
-      expect(config({} as any, {} as any)).toBeUndefined();
-    }
+    const plugin = localHttps({ enabled: true, host: "custom.test", certPath, keyPath });
+    const config = getHook(plugin.config, "config");
 
-    expect(warn).toHaveBeenCalledOnce();
-  });
-
-  it("warns for distinct hosts that share missing certificate paths", () => {
-    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
-
-    for (const host of ["first.test", "second.test"]) {
-      const plugin = localHttps({ enabled: true, host, certPath, keyPath });
-      const config = getHook(plugin.config, "config");
-      expect(config({} as any, {} as any)).toBeUndefined();
-    }
-
-    expect(warn).toHaveBeenCalledTimes(2);
-    expect(String(warn.mock.calls[0]?.[0])).toContain("'first.test'");
-    expect(String(warn.mock.calls[1]?.[0])).toContain("'second.test'");
+    const message = captureErrorMessage(() => config({} as any, {} as any));
+    expect(message).toContain("permission denied");
+    expect(message).toContain(certPath);
   });
 
   it("sets forwarded headers without replacing existing values", () => {
@@ -374,9 +351,8 @@ describe("localHttps", () => {
   }
 });
 
-describe("localHttpsDevServer", () => {
+describe("localHttps plugin API", () => {
   beforeEach(() => {
-    fsCalls.existsSync.mockClear();
     fsCalls.readFileSync.mockClear();
   });
 
@@ -384,13 +360,7 @@ describe("localHttpsDevServer", () => {
     vi.restoreAllMocks();
   });
 
-  it("returns undefined without file-system access when disabled", () => {
-    expect(localHttpsDevServer({ enabled: false })).toBeUndefined();
-    expect(fsCalls.existsSync).not.toHaveBeenCalled();
-    expect(fsCalls.readFileSync).not.toHaveBeenCalled();
-  });
-
-  it("returns absolute certificate paths when enabled", () => {
+  it("returns dev server config when enabled", () => {
     const directory = fs.mkdtempSync(join(tmpdir(), "hydrogen-local-https-dev-server-"));
     const certPath = join(directory, "custom.test.pem");
     const keyPath = join(directory, "custom.test-key.pem");
@@ -398,15 +368,15 @@ describe("localHttpsDevServer", () => {
     fs.writeFileSync(keyPath, "private-key");
 
     try {
-      expect(
-        localHttpsDevServer({
-          enabled: true,
-          host: "custom.test",
-          port: 4_321,
-          certPath,
-          keyPath,
-        }),
-      ).toEqual({
+      const plugin = localHttps({
+        enabled: true,
+        host: "custom.test",
+        port: 4_321,
+        certPath,
+        keyPath,
+      });
+
+      expect(plugin.api.getDevServerConfig()).toEqual({
         host: "custom.test",
         port: 4_321,
         https: { cert: certPath, key: keyPath },
@@ -416,30 +386,36 @@ describe("localHttpsDevServer", () => {
     }
   });
 
-  it("warns and returns undefined when a certificate is missing", () => {
-    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+  it("throws through dev server config when a certificate is missing", () => {
     const certPath = join(tmpdir(), "missing-cert.pem");
     const keyPath = join(tmpdir(), "missing-key.pem");
+    const plugin = localHttps({ enabled: true, host: "custom.test", certPath, keyPath });
 
-    expect(
-      localHttpsDevServer({ enabled: true, host: "custom.test", certPath, keyPath }),
-    ).toBeUndefined();
-    expect(warn).toHaveBeenCalledOnce();
-    expect(String(warn.mock.calls[0]?.[0])).toContain(certPath);
-    expect(String(warn.mock.calls[0]?.[0])).toContain(keyPath);
+    const message = captureErrorMessage(() => plugin.api.getDevServerConfig());
+    expect(message).toContain(certPath);
+    expect(message).toContain(keyPath);
   });
 
   it("looks for default certificates in the Hydrogen home directory", () => {
-    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
     const host = `missing-${process.pid}.local.tryhydrogen.dev`;
+    const plugin = localHttps({ enabled: true, host });
 
-    expect(localHttpsDevServer({ enabled: true, host })).toBeUndefined();
-
-    const message = String(warn.mock.calls[0]?.[0]);
+    const message = captureErrorMessage(() => plugin.api.getDevServerConfig());
     expect(message).toContain(join(homedir(), ".shopify", "hydrogen", "certs", `${host}.pem`));
     expect(message).toContain(join(homedir(), ".shopify", "hydrogen", "certs", `${host}-key.pem`));
   });
 });
+
+function captureErrorMessage(run: () => unknown) {
+  try {
+    run();
+  } catch (error) {
+    if (!(error instanceof Error)) throw error;
+    return error.message;
+  }
+
+  throw new Error("Expected function to throw");
+}
 
 function createResponse() {
   const writeHead = vi.fn(function (this: ServerResponse) {

@@ -32,7 +32,7 @@ import { localHttps } from "@shopify/hydrogen/vite";
 import { defineConfig } from "vite";
 
 const httpsOptions = {
-  enabled: process.env.VITE_LOCAL_HTTPS === "1",
+  enabled: process.env.npm_lifecycle_event === "https:dev" || process.env.VITE_LOCAL_HTTPS === "1",
 };
 
 export default defineConfig({
@@ -40,7 +40,16 @@ export default defineConfig({
 });
 ```
 
-Start Vite with `VITE_LOCAL_HTTPS=1 vite dev`. A normal `vite dev` remains plain HTTP.
+Start Vite through an `https:dev` package script. A normal `vite dev` remains plain HTTP.
+
+```json
+{
+  "scripts": {
+    "dev": "vite dev",
+    "https:dev": "vite dev"
+  }
+}
+```
 
 ## Astro
 
@@ -50,7 +59,7 @@ Astro needs its own host and port in addition to the Vite plugin:
 import { LOCAL_HTTPS_DEFAULTS, localHttps } from "@shopify/hydrogen/vite";
 import { defineConfig } from "astro/config";
 
-const enabled = process.env.VITE_LOCAL_HTTPS === "1";
+const enabled = process.env.npm_lifecycle_event === "https:dev" || process.env.VITE_LOCAL_HTTPS === "1";
 const httpsOptions = { enabled };
 
 export default defineConfig({
@@ -66,19 +75,20 @@ export default defineConfig({
 Nitro terminates TLS, so provide certificate paths to both Nitro and Vite:
 
 ```ts
-import { localHttps, localHttpsDevServer } from "@shopify/hydrogen/vite";
+import { localHttps } from "@shopify/hydrogen/vite";
 import type { NuxtConfig } from "nuxt/schema";
 
 type VitePlugin = NonNullable<NonNullable<NuxtConfig["vite"]>["plugins"]>[number];
 
 const httpsOptions = {
-  enabled: process.env.VITE_LOCAL_HTTPS === "1",
+  enabled: process.env.npm_lifecycle_event === "https:dev" || process.env.VITE_LOCAL_HTTPS === "1",
 };
+const httpsPlugin = localHttps(httpsOptions);
 
 export default defineNuxtConfig({
-  devServer: localHttpsDevServer(httpsOptions),
+  devServer: httpsPlugin.api.getDevServerConfig(),
   vite: {
-    plugins: [localHttps(httpsOptions) as VitePlugin],
+    plugins: [httpsPlugin as VitePlugin],
   },
 });
 ```
@@ -89,23 +99,28 @@ Vinxi terminates TLS outside Vite:
 
 ```ts
 import { defineConfig } from "@solidjs/start/config";
-import { localHttps, localHttpsDevServer } from "@shopify/hydrogen/vite";
+import { localHttps } from "@shopify/hydrogen/vite";
 
 const httpsOptions = {
-  enabled: process.env.VITE_LOCAL_HTTPS === "1",
+  enabled: process.env.npm_lifecycle_event === "https:dev" || process.env.VITE_LOCAL_HTTPS === "1",
 };
-const devServer = localHttpsDevServer(httpsOptions);
+const httpsPlugin = localHttps(httpsOptions);
+const devServer = httpsPlugin.api.getDevServerConfig();
 
 export default defineConfig({
   server: { https: devServer?.https },
-  vite: { plugins: [localHttps(httpsOptions)] },
+  vite: { plugins: [httpsPlugin] },
 });
 ```
 
 Vinxi also needs its bind target and port on startup:
 
-```sh
-VITE_LOCAL_HTTPS=1 HOST=local.tryhydrogen.dev vinxi dev --port 5173
+```json
+{
+  "scripts": {
+    "https:dev": "vinxi dev --host local.tryhydrogen.dev --port 5173"
+  }
+}
 ```
 
 ## Next.js
