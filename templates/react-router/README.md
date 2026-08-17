@@ -62,7 +62,9 @@ Customer Account OAuth requires trusted local HTTPS. Run:
 npm run dev:https
 ```
 
-The local HTTPS plugin provisions and reuses a trusted certificate under `~/.shopify/hydrogen/certs/`. On first run, it may prompt to install the local certificate authority. Open <https://local.tryhydrogen.dev:5173>.
+Open <https://local.tryhydrogen.dev:5173>.
+
+The local HTTPS plugin provisions and reuses a trusted certificate under `~/.shopify/hydrogen/certs/` (on first run, it may prompt to install the local certificate authority), links an unlinked Hydrogen storefront, and pushes the Customer Account callback, JavaScript origin, and logout URLs. See the `hydrogen-local-https` skill for CI and manual fallback behavior.
 
 Mode is **auto-detected**: when a `PRIVATE_STOREFRONT_API_TOKEN` is present the
 app talks to the real store (`PUBLIC_STORE_DOMAIN`, falling back to the default in
