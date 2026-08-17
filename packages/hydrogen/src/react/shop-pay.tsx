@@ -1,17 +1,27 @@
 import { createElement, type ReactElement } from "react";
 
 import {
-  getShopPayButtonElementContentHtml,
+  defineShopPayButton,
+  getShopPayButtonDeclarativeShadowDomHtml,
+  getShopPayButtonElementAttributes,
   SHOP_PAY_BUTTON_TAG_NAME,
   type ShopPayButtonOptions,
 } from "../core/shop-pay/shop-pay";
 
 export type ShopPayButtonProps = ShopPayButtonOptions;
 
+const canUseDom = typeof document !== "undefined";
+if (canUseDom) defineShopPayButton();
+
 export function ShopPayButton(options: ShopPayButtonProps): ReactElement {
   return createElement(SHOP_PAY_BUTTON_TAG_NAME, {
-    dangerouslySetInnerHTML: {
-      __html: getShopPayButtonElementContentHtml(options),
-    },
+    ...getShopPayButtonElementAttributes(options),
+    ...(canUseDom
+      ? {}
+      : {
+          dangerouslySetInnerHTML: {
+            __html: getShopPayButtonDeclarativeShadowDomHtml(options),
+          },
+        }),
   });
 }

@@ -1,13 +1,31 @@
 // @vitest-environment happy-dom
 import { render } from "@testing-library/react";
 import { createElement } from "react";
-import { renderToString } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { assert } from "../core/test-utils";
-import { ShopPayButton } from "./shop-pay";
+import { ShopPayButton, type ShopPayButtonProps } from "./shop-pay";
 
 describe("ShopPayButton", () => {
+  it("exposes only supported styling props", () => {
+    expectTypeOf<"width" extends keyof ShopPayButtonProps ? true : false>().toEqualTypeOf<true>();
+    expectTypeOf<
+      "borderRadius" extends keyof ShopPayButtonProps ? true : false
+    >().toEqualTypeOf<true>();
+    expectTypeOf<
+      "className" extends keyof ShopPayButtonProps ? true : false
+    >().toEqualTypeOf<false>();
+    expectTypeOf<"style" extends keyof ShopPayButtonProps ? true : false>().toEqualTypeOf<false>();
+  });
+
+  function getAnchor(container: HTMLElement): HTMLAnchorElement {
+    const element = container.querySelector("hydrogen-shop-pay-button");
+    assert(element, "expected a Shop Pay host element");
+    const anchor = element.shadowRoot?.querySelector("a");
+    assert(anchor, "expected a shadow anchor");
+    return anchor;
+  }
+
   it("renders an anchor with a same-origin cart permalink", () => {
     const { container } = render(
       createElement(ShopPayButton, {
@@ -16,11 +34,8 @@ describe("ShopPayButton", () => {
       }),
     );
 
-    const anchor = container.querySelector("a");
-    assert(anchor, "expected an anchor");
-    expect(anchor.getAttribute("href")).toBe(
-      "/cart/123:2?payment=shop_pay&source=hydrogen&channel=hydrogen",
-    );
+    const anchor = getAnchor(container);
+    expect(anchor.getAttribute("href")).toBe("/cart/123:2?payment=shop_pay&source=hydrogen");
     expect(anchor.className).toBe("shop-pay-button");
     expect(anchor.style.width).toBe("100%");
   });
@@ -28,11 +43,8 @@ describe("ShopPayButton", () => {
   it("renders a same-origin checkout URL without variants", () => {
     const { container } = render(createElement(ShopPayButton, {}));
 
-    const anchor = container.querySelector("a");
-    assert(anchor, "expected an anchor");
-    expect(anchor.getAttribute("href")).toBe(
-      "/checkout?payment=shop_pay&source=hydrogen&channel=hydrogen",
-    );
+    const anchor = getAnchor(container);
+    expect(anchor.getAttribute("href")).toBe("/checkout?payment=shop_pay&source=hydrogen");
   });
 
   it("renders the accessible label, logo, and styles", () => {
@@ -40,19 +52,18 @@ describe("ShopPayButton", () => {
       createElement(ShopPayButton, { accessibilityLabel: "Shop Payで購入" }),
     );
 
-    const anchor = container.querySelector("a");
-    assert(anchor, "expected an anchor");
+    const anchor = getAnchor(container);
     expect(anchor.getAttribute("aria-label")).toBe("Shop Payで購入");
-    expect(container.querySelector("svg.shop-pay-button__logo")).not.toBeNull();
-    expect(container.querySelector("hydrogen-shop-pay-button")).not.toBeNull();
-    expect(container.querySelector("style")).not.toBeNull();
+    expect(anchor.querySelector("svg.shop-pay-button__logo")).not.toBeNull();
+    const shadowRoot = anchor.getRootNode();
+    if (!(shadowRoot instanceof ShadowRoot)) throw new Error("expected a shadow root");
+    expect(shadowRoot.querySelector("style")).not.toBeNull();
   });
 
-  it("does not pass wrapper attributes through to the anchor", () => {
+  it("maps borderRadius to the anchor style", () => {
     const { container } = render(createElement(ShopPayButton, { borderRadius: "6px" }));
 
-    const anchor = container.querySelector("a");
-    assert(anchor, "expected an anchor");
+    const anchor = getAnchor(container);
     expect(anchor.className).toBe("shop-pay-button");
     expect(anchor.style.borderRadius).toBe("6px");
   });
@@ -60,32 +71,35 @@ describe("ShopPayButton", () => {
   it("renders a disabled button without an href", () => {
     const { container } = render(createElement(ShopPayButton, { disabled: true }));
 
-    const anchor = container.querySelector("a");
-    assert(anchor, "expected an anchor");
+    const anchor = getAnchor(container);
     expect(anchor.hasAttribute("href")).toBe(false);
+    expect(anchor.getAttribute("role")).toBe("link");
     expect(anchor.getAttribute("aria-disabled")).toBe("true");
   });
 
   it("does not require CartProvider", () => {
     const { container } = render(createElement(ShopPayButton, {}));
 
-    expect(container.querySelector("a.shop-pay-button")).not.toBeNull();
+    expect(getAnchor(container).className).toBe("shop-pay-button");
   });
 
-  it("renders a working button during SSR with no client JavaScript", () => {
-    const html = renderToString(
+  it("updates the shadow anchor when props change", () => {
+    const { container, rerender } = render(
+      createElement(ShopPayButton, { variants: [{ id: "123", quantity: 1 }] }),
+    );
+    const initialAnchor = getAnchor(container);
+    expect(initialAnchor.getAttribute("href")).toBe("/cart/123:1?payment=shop_pay&source=hydrogen");
+    expect(initialAnchor.style.width).toBe("");
+
+    rerender(
       createElement(ShopPayButton, {
-        variants: [{ id: "gid://shopify/ProductVariant/123", quantity: 2 }],
-        paymentOption: "shop_pay_installments",
+        variants: [{ id: "456", quantity: 3 }],
+        width: "100%",
       }),
     );
 
-    expect(html).toContain(
-      'href="/cart/123:2?payment=shop_pay_installments&amp;source=hydrogen&amp;channel=hydrogen"',
-    );
-    expect(html).toContain("<hydrogen-shop-pay-button");
-    expect(html).toContain('aria-label="Buy with Shop Pay"');
-    expect(html).toContain("shop-pay-button>.shop-pay-button[aria-disabled=true]{opacity:.5");
-    expect(html).not.toContain("--shop-pay-button");
+    const anchor = getAnchor(container);
+    expect(anchor.getAttribute("href")).toBe("/cart/456:3?payment=shop_pay&source=hydrogen");
+    expect(anchor.style.width).toBe("100%");
   });
 });

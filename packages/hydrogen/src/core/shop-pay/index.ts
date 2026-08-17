@@ -1,5 +1,6 @@
 export {
   createShopPayButton,
+  defineShopPayButton,
   getShopPayButtonUrl,
   renderShopPayButton,
   SHOP_PAY_BUTTON_TAG_NAME,

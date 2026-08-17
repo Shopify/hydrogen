@@ -2,25 +2,32 @@ import { normalizeStoreDomain } from "../url";
 import { parseGid } from "../utils/parse-gid";
 
 const DEFAULT_SOURCE = "hydrogen";
-const CHANNEL = "hydrogen";
 const DEFAULT_ACCESSIBILITY_LABEL = "Buy with Shop Pay";
 const ERROR_PREFIX = "[hydrogen:error:ShopPay]";
+const CAN_USE_DOM = typeof document !== "undefined";
 export const SHOP_PAY_BUTTON_TAG_NAME = "hydrogen-shop-pay-button";
 export const SHOP_PAY_BUTTON_CLASS_NAME = "shop-pay-button";
+const SHOP_PAY_BUTTON_OBSERVED_ATTRIBUTES = [
+  "accessibility-label",
+  "border-radius",
+  "channel",
+  "checkout-url",
+  "disabled",
+  "payment-option",
+  "source",
+  "source-token",
+  "variants",
+  "width",
+] as const;
 
-/**
- * Button styles matching the hosted shop-js pay button: fixed brand colors,
- * hover state, focus ring, and disabled state. Selectors avoid quotes because
- * some server renderers (Vue) entity-escape `<style>` text children.
- */
+/** Button styles matching the hosted shop-js pay button. */
 export const SHOP_PAY_BUTTON_STYLES =
-  `${SHOP_PAY_BUTTON_TAG_NAME}{display:block}` +
-  `${SHOP_PAY_BUTTON_TAG_NAME}>.${SHOP_PAY_BUTTON_CLASS_NAME}{position:relative;display:flex;align-items:center;box-sizing:border-box;margin:0;padding:10px 16px;overflow:visible;width:260px;border:none;border-radius:12px;background-color:#5433eb;color:#fff;cursor:pointer;text-decoration:none;transition:all .15s cubic-bezier(.4,0,.2,1)}` +
-  `${SHOP_PAY_BUTTON_TAG_NAME}>.${SHOP_PAY_BUTTON_CLASS_NAME}:hover{background-color:#4524db}` +
-  `${SHOP_PAY_BUTTON_TAG_NAME}>.${SHOP_PAY_BUTTON_CLASS_NAME}:focus-visible{outline:none;box-shadow:0 0 0 3px #9c83f8}` +
-  `${SHOP_PAY_BUTTON_TAG_NAME}>.${SHOP_PAY_BUTTON_CLASS_NAME}[aria-disabled=true]{opacity:.5;pointer-events:none;cursor:default}` +
-  `${SHOP_PAY_BUTTON_TAG_NAME} .${SHOP_PAY_BUTTON_CLASS_NAME}__logo{position:relative;display:inline-block;margin:0 auto;width:88px;height:auto}` +
-  `${SHOP_PAY_BUTTON_TAG_NAME} .${SHOP_PAY_BUTTON_CLASS_NAME}__text{margin:0 auto;font-family:inherit;font-size:16px;font-weight:500;line-height:22px;letter-spacing:-.5px}`;
+  `:host{display:block}` +
+  `.${SHOP_PAY_BUTTON_CLASS_NAME}{position:relative;display:flex;align-items:center;box-sizing:border-box;margin:0;padding:10px 16px;overflow:visible;width:260px;border:none;border-radius:12px;background-color:#5433eb;color:#fff;cursor:pointer;text-decoration:none;transition:all .15s cubic-bezier(.4,0,.2,1)}` +
+  `.${SHOP_PAY_BUTTON_CLASS_NAME}:hover{background-color:#4524db}` +
+  `.${SHOP_PAY_BUTTON_CLASS_NAME}:focus-visible{outline:none;box-shadow:0 0 0 3px #9c83f8}` +
+  `.${SHOP_PAY_BUTTON_CLASS_NAME}[aria-disabled=true]{opacity:.5;pointer-events:none;cursor:default}` +
+  `.${SHOP_PAY_BUTTON_CLASS_NAME}__logo{position:relative;display:inline-block;margin:0 auto;width:88px;height:auto}`;
 
 const SHOP_PAY_LOGO_SVG =
   `<svg class="${SHOP_PAY_BUTTON_CLASS_NAME}__logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 99 25" aria-hidden="true" focusable="false">` +
@@ -53,6 +60,11 @@ type ShopPayButtonBaseOptions = {
    */
   sourceToken?: string;
   /**
+   * Sales channel that issued the Storefront API token. Omit it unless checkout
+   * needs explicit `"headless"` or `"hydrogen"` attribution.
+   */
+  channel?: "headless" | "hydrogen";
+  /**
    * Disables the button. Disabled buttons render without an `href` and include
    * `aria-disabled="true"`.
    */
@@ -68,8 +80,7 @@ type ShopPayButtonBaseOptions = {
    */
   borderRadius?: string;
   /**
-   * Localized accessible label for the Shop Pay logo, or for custom button text
-   * that needs an explicit accessible name. Logo-only buttons default to `"Buy with Shop Pay"`.
+   * Localized accessible label for the Shop Pay logo. Defaults to `"Buy with Shop Pay"`.
    * Never translate the brand name `"Shop Pay"`; keep it in Latin script in every locale.
    *
    * @example English
@@ -85,11 +96,6 @@ type ShopPayButtonBaseOptions = {
    * `"الشراء باستخدام Shop Pay"`
    */
   accessibilityLabel?: string;
-  /**
-   * Replaces the Shop Pay logo with visible text. Without `accessibilityLabel`,
-   * this visible text names the button.
-   */
-  buttonText?: string;
 };
 
 type ShopPayVariantWithQuantity = {
@@ -143,7 +149,10 @@ export function getShopPayButtonUrl(options: ShopPayButtonOptions): string | nul
  * binding.
  */
 export function renderShopPayButton(options: ShopPayButtonOptions): string {
-  return `<${SHOP_PAY_BUTTON_TAG_NAME}>${getShopPayButtonElementContentHtml(options)}</${SHOP_PAY_BUTTON_TAG_NAME}>`;
+  defineShopPayButton();
+  const attributes = serializeAttributes(getShopPayButtonElementAttributes(options));
+  const content = CAN_USE_DOM ? "" : getShopPayButtonDeclarativeShadowDomHtml(options);
+  return `<${SHOP_PAY_BUTTON_TAG_NAME}${attributes ? ` ${attributes}` : ""}>${content}</${SHOP_PAY_BUTTON_TAG_NAME}>`;
 }
 
 /**
@@ -151,20 +160,60 @@ export function renderShopPayButton(options: ShopPayButtonOptions): string {
  * carries the button styles with it.
  */
 export function createShopPayButton(options: ShopPayButtonOptions): HTMLElement {
-  const template = document.createElement("template");
-  template.innerHTML = renderShopPayButton(options);
-  const element = template.content.querySelector(SHOP_PAY_BUTTON_TAG_NAME);
-  if (!(element instanceof HTMLElement)) {
-    throw shopPayError("Shop Pay button markup failed to parse.");
-  }
+  defineShopPayButton();
+  const element = document.createElement(SHOP_PAY_BUTTON_TAG_NAME);
+  initializeShopPayButtonElement(element, options);
 
   return element;
 }
 
-/**
- * Anchor attributes for framework bindings that render the button natively.
- * Disabled buttons get `aria-disabled` instead of an `href`.
- */
+export function initializeShopPayButtonElement(
+  element: HTMLElement,
+  options: ShopPayButtonOptions,
+): void {
+  syncShopPayButtonElementAttributes(element, getShopPayButtonElementAttributes(options));
+
+  const shadowRoot = element.shadowRoot ?? element.attachShadow({ mode: "open" });
+  const template = element.querySelector("template[shadowrootmode]");
+
+  if (template instanceof HTMLTemplateElement) {
+    shadowRoot.append(template.content.cloneNode(true));
+    template.remove();
+  }
+
+  renderShopPayButtonShadowRoot(shadowRoot, options);
+}
+
+export function defineShopPayButton(): void {
+  if (
+    typeof customElements === "undefined" ||
+    typeof HTMLElement === "undefined" ||
+    customElements.get(SHOP_PAY_BUTTON_TAG_NAME)
+  ) {
+    return;
+  }
+
+  customElements.define(
+    SHOP_PAY_BUTTON_TAG_NAME,
+    class extends HTMLElement {
+      #connected = false;
+
+      static observedAttributes = SHOP_PAY_BUTTON_OBSERVED_ATTRIBUTES;
+
+      connectedCallback(): void {
+        this.#connected = true;
+        initializeShopPayButtonElement(this, getShopPayButtonOptions(this));
+      }
+
+      attributeChangedCallback(): void {
+        if (!this.#connected || !this.shadowRoot) return;
+        renderShopPayButtonShadowRoot(this.shadowRoot, getShopPayButtonOptions(this));
+      }
+    },
+  );
+}
+
+/** Anchor attributes shared by server and browser shadow-root rendering. */
 export function getShopPayButtonAnchorAttributes(
   options: ShopPayButtonOptions,
 ): Record<string, string> {
@@ -174,37 +223,55 @@ export function getShopPayButtonAnchorAttributes(
   if (href) {
     attributes.href = href;
   } else {
+    attributes.role = "link";
     attributes["aria-disabled"] = "true";
   }
 
   const style = serializeStyleProperties(getShopPayButtonStyleProperties(options));
   if (style) attributes.style = style;
 
-  if (!hasContent(options.buttonText) || hasContent(options.accessibilityLabel)) {
-    attributes["aria-label"] = getShopPayAccessibilityLabel(options.accessibilityLabel);
-  }
+  attributes["aria-label"] = getShopPayAccessibilityLabel(options.accessibilityLabel);
 
   return attributes;
 }
 
 export function getShopPayButtonElementContentHtml(options: ShopPayButtonOptions): string {
-  const attributes = Object.entries(getShopPayButtonAnchorAttributes(options))
-    .map(([name, value]) => `${name}="${escapeAttribute(value)}"`)
-    .join(" ");
-
-  return `<style>${SHOP_PAY_BUTTON_STYLES}</style><a ${attributes}>${getShopPayButtonContentHtml(options)}</a>`;
+  return `<style>${SHOP_PAY_BUTTON_STYLES}</style><a ${serializeAttributes(getShopPayButtonAnchorAttributes(options))}>${getShopPayButtonContentHtml()}</a>`;
 }
 
-/**
- * Inner HTML for framework bindings that render the anchor natively: the Shop
- * Pay logo or custom button text.
- */
-export function getShopPayButtonContentHtml(
-  options: Pick<ShopPayButtonOptions, "buttonText">,
-): string {
-  return hasContent(options.buttonText)
-    ? `<span class="${SHOP_PAY_BUTTON_CLASS_NAME}__text">${escapeText(options.buttonText.trim())}</span>`
-    : SHOP_PAY_LOGO_SVG;
+export function getShopPayButtonDeclarativeShadowDomHtml(options: ShopPayButtonOptions): string {
+  return `<template shadowrootmode="open">${getShopPayButtonElementContentHtml(options)}</template>`;
+}
+
+export function getShopPayButtonElementAttributes(
+  options: ShopPayButtonOptions,
+): Record<string, string> {
+  const attributes: Record<string, string> = {};
+  const variants = getShopPayVariants(options);
+
+  if (hasContent(options.accessibilityLabel)) {
+    attributes["accessibility-label"] = options.accessibilityLabel.trim();
+  }
+  if (hasContent(options.borderRadius)) {
+    attributes["border-radius"] = normalizeCssValue("borderRadius", options.borderRadius);
+  }
+  if (options.channel) attributes.channel = options.channel;
+  if (options.checkoutUrl !== undefined) attributes["checkout-url"] = options.checkoutUrl;
+  if (options.disabled) attributes.disabled = "";
+  if (options.paymentOption) attributes["payment-option"] = options.paymentOption;
+  if (options.source !== undefined) attributes.source = options.source;
+  if (options.sourceToken !== undefined) attributes["source-token"] = options.sourceToken;
+  if (variants) attributes.variants = variants;
+  if (hasContent(options.width)) {
+    attributes.width = normalizeCssValue("width", options.width);
+  }
+
+  return attributes;
+}
+
+/** Inner HTML for the shadow root's anchor. */
+export function getShopPayButtonContentHtml(): string {
+  return SHOP_PAY_LOGO_SVG;
 }
 
 function getShopPayButtonStyleProperties(
@@ -212,8 +279,10 @@ function getShopPayButtonStyleProperties(
 ): Record<string, string> {
   const style: Record<string, string> = {};
 
-  if (hasContent(options.width)) style.width = options.width.trim();
-  if (hasContent(options.borderRadius)) style.borderRadius = options.borderRadius.trim();
+  if (hasContent(options.width)) style.width = normalizeCssValue("width", options.width);
+  if (hasContent(options.borderRadius)) {
+    style.borderRadius = normalizeCssValue("borderRadius", options.borderRadius);
+  }
 
   return style;
 }
@@ -225,7 +294,7 @@ function getShopPaySearchParams(options: ShopPayButtonOptions): URLSearchParams 
   const source = options.source ?? DEFAULT_SOURCE;
   if (source) params.set("source", source);
   if (options.sourceToken) params.set("source_token", options.sourceToken);
-  params.set("channel", CHANNEL);
+  if (options.channel) params.set("channel", options.channel);
 
   return params;
 }
@@ -253,32 +322,16 @@ function parseCheckoutUrl(checkoutUrl: string): URL {
 }
 
 function getShopPayVariants(options: ShopPayButtonOptions): string | undefined {
-  const variantsInput = options.variants as readonly ShopPayVariant[] | undefined;
+  const variantsInput: readonly ShopPayVariant[] | undefined = options.variants;
 
   if (!Array.isArray(variantsInput) || variantsInput.length === 0) return undefined;
 
-  const firstVariant = variantsInput[0];
-
-  if (typeof firstVariant === "string") {
-    if (!variantsInput.every((variant) => typeof variant === "string")) {
-      throw shopPayError(
-        "Shop Pay variants must be either variant IDs or objects with an id and quantity.",
-      );
-    }
-
-    const variantIds = variantsInput as readonly string[];
-    return variantIds.map((id) => `${normalizeVariantId(id)}:1`).join(",");
+  if (variantsInput.every(isVariantId)) {
+    return variantsInput.map((id) => `${normalizeVariantId(id)}:1`).join(",");
   }
 
-  if (isVariantWithQuantity(firstVariant)) {
-    if (!variantsInput.every(isVariantWithQuantity)) {
-      throw shopPayError(
-        "Shop Pay variants must be either variant IDs or objects with an id and quantity.",
-      );
-    }
-
-    const variantsWithQuantities = variantsInput as readonly ShopPayVariantWithQuantity[];
-    return variantsWithQuantities
+  if (variantsInput.every(isVariantWithQuantity)) {
+    return variantsInput
       .map(({ id, quantity }) => {
         return `${normalizeVariantId(id)}:${normalizeQuantity(quantity)}`;
       })
@@ -288,6 +341,87 @@ function getShopPayVariants(options: ShopPayButtonOptions): string | undefined {
   throw shopPayError(
     "Shop Pay variants must be either variant IDs or objects with an id and quantity.",
   );
+}
+
+function isVariantId(variant: ShopPayVariant): variant is string {
+  return typeof variant === "string";
+}
+
+function getShopPayButtonOptions(element: HTMLElement): ShopPayButtonOptions {
+  return {
+    accessibilityLabel: element.getAttribute("accessibility-label") ?? undefined,
+    borderRadius: element.getAttribute("border-radius") ?? undefined,
+    channel: parseChannel(element.getAttribute("channel")),
+    checkoutUrl: element.getAttribute("checkout-url") ?? undefined,
+    disabled: element.hasAttribute("disabled"),
+    paymentOption: parsePaymentOption(element.getAttribute("payment-option")),
+    source: element.getAttribute("source") ?? undefined,
+    sourceToken: element.getAttribute("source-token") ?? undefined,
+    variants: parseVariantsAttribute(element.getAttribute("variants")),
+    width: element.getAttribute("width") ?? undefined,
+  };
+}
+
+function parseVariantsAttribute(value: string | null): ShopPayVariants | undefined {
+  if (!value) return undefined;
+
+  return value.split(",").map((entry) => {
+    const [id = "", quantity] = entry.split(":");
+    return { id, quantity: quantity === undefined ? undefined : Number(quantity) };
+  });
+}
+
+function parsePaymentOption(value: string | null): ShopPayButtonOptions["paymentOption"] {
+  return value === "shop_pay" || value === "shop_pay_installments" ? value : undefined;
+}
+
+function parseChannel(value: string | null): ShopPayButtonOptions["channel"] {
+  return value === "headless" || value === "hydrogen" ? value : undefined;
+}
+
+function renderShopPayButtonShadowRoot(
+  shadowRoot: ShadowRoot,
+  options: ShopPayButtonOptions,
+): void {
+  let style = shadowRoot.querySelector("style");
+  if (!(style instanceof HTMLStyleElement)) {
+    style = shadowRoot.ownerDocument.createElement("style");
+    shadowRoot.prepend(style);
+  }
+  if (style.textContent !== SHOP_PAY_BUTTON_STYLES) style.textContent = SHOP_PAY_BUTTON_STYLES;
+
+  let anchor = shadowRoot.querySelector("a");
+  if (!(anchor instanceof HTMLAnchorElement)) {
+    anchor = shadowRoot.ownerDocument.createElement("a");
+    shadowRoot.append(anchor);
+  }
+
+  syncAttributes(anchor, getShopPayButtonAnchorAttributes(options));
+  const content = getShopPayButtonContentHtml();
+  if (anchor.innerHTML !== content) anchor.innerHTML = content;
+}
+
+function syncAttributes(element: Element, attributes: Record<string, string>): void {
+  for (const name of element.getAttributeNames()) {
+    if (!(name in attributes)) element.removeAttribute(name);
+  }
+
+  for (const [name, value] of Object.entries(attributes)) {
+    if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+  }
+}
+
+function syncShopPayButtonElementAttributes(
+  element: Element,
+  attributes: Record<string, string>,
+): void {
+  for (const name of SHOP_PAY_BUTTON_OBSERVED_ATTRIBUTES) {
+    if (!(name in attributes)) element.removeAttribute(name);
+  }
+
+  for (const [name, value] of Object.entries(attributes)) {
+    if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+  }
 }
 
 function isVariantWithQuantity(
@@ -335,6 +469,20 @@ function getShopPayAccessibilityLabel(label: string | undefined): string {
 
 function hasContent(value: string | undefined): value is string {
   return typeof value === "string" && value.trim() !== "";
+}
+
+function normalizeCssValue(name: "width" | "borderRadius", value: string): string {
+  const normalized = value.trim();
+  if (/[;{}]/.test(normalized)) {
+    throw shopPayError(`Shop Pay ${name} must be a single CSS value.`);
+  }
+  return normalized;
+}
+
+function serializeAttributes(attributes: Record<string, string>): string {
+  return Object.entries(attributes)
+    .map(([name, value]) => `${name}="${escapeAttribute(value)}"`)
+    .join(" ");
 }
 
 function serializeStyleProperties(style: Record<string, string>): string {

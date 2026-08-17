@@ -26,10 +26,11 @@ Render only when a variant is resolved:
 />
 ```
 
-The component renders a self-contained `<hydrogen-shop-pay-button>` element, so it works
-with Nuxt server rendering and needs no client-only wrapper.
+The component server-renders a `<hydrogen-shop-pay-button>` with a declarative
+shadow root, so it works with Nuxt server rendering and needs no client-only
+wrapper. The shadow root protects the branded internal styles.
 
-Size with `width`/`border-radius` props; extra attributes (including `class` and
-`style`) fall through to the inner anchor. Pass `accessibility-label` when the
-storefront language is not English. Localize words around the brand, but never
-translate `Shop Pay` itself.
+Size with `width`/`border-radius`. Extra `class` and `style` attributes are
+intentionally not forwarded into the shadow root. Pass `accessibility-label`
+when the storefront language is not English. Localize words around the brand,
+but never translate `Shop Pay` itself.

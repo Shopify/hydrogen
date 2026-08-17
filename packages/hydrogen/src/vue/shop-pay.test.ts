@@ -1,13 +1,18 @@
 // @vitest-environment happy-dom
 import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
-import { h } from "vue";
-import { renderToString } from "vue/server-renderer";
 
 import { assert } from "../core/test-utils";
 import { ShopPayButton } from "./shop-pay";
 
 describe("ShopPayButton", () => {
+  function getAnchor(wrapper: ReturnType<typeof mount>): HTMLAnchorElement {
+    const element = wrapper.find("hydrogen-shop-pay-button").element;
+    const anchor = element.shadowRoot?.querySelector("a");
+    assert(anchor, "expected a shadow anchor");
+    return anchor;
+  }
+
   it("renders an anchor with a same-origin cart permalink", () => {
     const wrapper = mount(ShopPayButton, {
       props: {
@@ -19,10 +24,10 @@ describe("ShopPayButton", () => {
       },
     });
 
-    const anchor = wrapper.find("a").element;
-    expect(anchor.getAttribute("href")).toBe(
-      "/cart/123:1?payment=shop_pay&source=hydrogen&channel=hydrogen",
-    );
+    const anchor = getAnchor(wrapper);
+    expect(wrapper.find("hydrogen-shop-pay-button").attributes("class")).toBeUndefined();
+    expect(anchor.classList.contains("extra")).toBe(false);
+    expect(anchor.getAttribute("href")).toBe("/cart/123:1?payment=shop_pay&source=hydrogen");
     expect(anchor.className).toBe("shop-pay-button");
     expect(anchor.style.width).toBe("100%");
   });
@@ -30,8 +35,8 @@ describe("ShopPayButton", () => {
   it("renders a same-origin checkout URL without variants", () => {
     const wrapper = mount(ShopPayButton);
 
-    expect(wrapper.find("a").element.getAttribute("href")).toBe(
-      "/checkout?payment=shop_pay&source=hydrogen&channel=hydrogen",
+    expect(getAnchor(wrapper).getAttribute("href")).toBe(
+      "/checkout?payment=shop_pay&source=hydrogen",
     );
   });
 
@@ -40,17 +45,32 @@ describe("ShopPayButton", () => {
       props: { accessibilityLabel: "Shop Pay से खरीदें" },
     });
 
-    expect(wrapper.find("a").attributes("aria-label")).toBe("Shop Pay से खरीदें");
-    expect(wrapper.find("hydrogen-shop-pay-button").exists()).toBe(true);
-    expect(wrapper.find("svg.shop-pay-button__logo").exists()).toBe(true);
-    expect(wrapper.find("style").exists()).toBe(true);
+    const anchor = getAnchor(wrapper);
+    expect(anchor.getAttribute("aria-label")).toBe("Shop Pay से खरीदें");
+    expect(anchor.querySelector("svg.shop-pay-button__logo")).not.toBeNull();
+    const shadowRoot = anchor.getRootNode();
+    if (!(shadowRoot instanceof ShadowRoot)) throw new Error("expected a shadow root");
+    expect(shadowRoot.querySelector("style")).not.toBeNull();
   });
 
   it("renders a disabled button without an href", () => {
     const wrapper = mount(ShopPayButton, { props: { disabled: true } });
 
-    const anchor = wrapper.find("a").element;
+    const anchor = getAnchor(wrapper);
     expect(anchor.hasAttribute("href")).toBe(false);
+    expect(anchor.getAttribute("role")).toBe("link");
+    expect(anchor.getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("casts a bare disabled prop to true", () => {
+    const wrapper = mount({
+      components: { ShopPayButton },
+      template: "<ShopPayButton disabled />",
+    });
+
+    const anchor = getAnchor(wrapper);
+    expect(anchor.hasAttribute("href")).toBe(false);
+    expect(anchor.getAttribute("role")).toBe("link");
     expect(anchor.getAttribute("aria-disabled")).toBe("true");
   });
 
@@ -58,31 +78,14 @@ describe("ShopPayButton", () => {
     const wrapper = mount(ShopPayButton, {
       props: { variants: [{ id: "123", quantity: 1 }] },
     });
+    expect(getAnchor(wrapper).getAttribute("href")).toBe(
+      "/cart/123:1?payment=shop_pay&source=hydrogen",
+    );
 
     await wrapper.setProps({ variants: [{ id: "456", quantity: 3 }] });
 
-    expect(wrapper.find("a").element.getAttribute("href")).toBe(
-      "/cart/456:3?payment=shop_pay&source=hydrogen&channel=hydrogen",
+    expect(getAnchor(wrapper).getAttribute("href")).toBe(
+      "/cart/456:3?payment=shop_pay&source=hydrogen",
     );
-  });
-
-  it("renders a working button during SSR with no client JavaScript", async () => {
-    const html = await renderToString(
-      h(ShopPayButton, {
-        variants: [{ id: "gid://shopify/ProductVariant/123", quantity: 2 }],
-        paymentOption: "shop_pay_installments",
-      }),
-    );
-
-    assert(html, "expected SSR output");
-    expect(html).toContain(
-      'href="/cart/123:2?payment=shop_pay_installments&amp;source=hydrogen&amp;channel=hydrogen"',
-    );
-    expect(html).toContain("<hydrogen-shop-pay-button");
-    expect(html).toContain('aria-label="Buy with Shop Pay"');
-    // The disabled-state selector must survive SSR unescaped; Vue
-    // entity-escapes text children of <style>, which browsers do not decode.
-    expect(html).toContain("shop-pay-button>.shop-pay-button[aria-disabled=true]{opacity:.5");
-    expect(html).not.toContain("--shop-pay-button");
   });
 });

@@ -9,17 +9,18 @@ import {
 } from "@shopify/hydrogen";
 ```
 
-Both helpers render the same markup: a self-contained `<hydrogen-shop-pay-button>` element
-with its own styles and an anchor containing the Shop Pay logo. Pick by
-integration shape:
+Both helpers create a self-contained `<hydrogen-shop-pay-button>` with an open
+shadow root containing the protected styles and an anchor with the Shop Pay
+logo. Pick by integration shape:
 
 - `renderShopPayButton(options)` returns an HTML string. Use it in server
   templates or frameworks with raw-HTML rendering (`{@html}`, `v-html`,
-  `innerHTML`). The output needs no client JavaScript. Each render carries the
-  button styles so it works standalone; duplication across multiple buttons on a
-  page is harmless.
+  `innerHTML`). Server output includes a declarative shadow root and needs no
+  client JavaScript. Browser calls register the custom element and return an
+  empty host that creates its shadow root when connected.
 - `createShopPayButton(options)` returns a detached self-contained
-  `<hydrogen-shop-pay-button>` element. Use it for imperative DOM UIs.
+  `<hydrogen-shop-pay-button>` with an imperative shadow root. Use it for
+  imperative DOM UIs.
 
 For product buy buttons, pass variants:
 
@@ -31,8 +32,9 @@ const button = createShopPayButton({
 container.append(button);
 ```
 
-The element is not registered as a custom element. It is just a wrapper carrying
-the styles and anchor HTML.
+The open shadow root can be inspected with browser developer tools, but page CSS
+cannot select its internal anchor or logo. The supported style controls are
+`width` and `borderRadius`; do not treat the open root as a styling API.
 
 For cart checkout buttons, omit `variants`; the button links to the same-origin
 `/checkout` path and `handleShopifyRoutes` redirects it to the current cart's
@@ -52,5 +54,6 @@ container.append(button);
 - Mixed variant formats are invalid: use all strings or all `{ id, quantity }` objects.
 - Cart checkout mode omits `variants`; the current cart checks out.
 - `disabled` renders the button without an `href` and with `aria-disabled="true"`.
-- `accessibilityLabel` sets the accessible name for logo-only buttons, which otherwise default to English. If `buttonText` is present and `accessibilityLabel` is omitted, the visible text names the button. Localize words around the brand, but never translate `Shop Pay` itself.
-- `checkoutUrl` is only for rendering the button outside the storefront origin.
+- `accessibilityLabel` sets the accessible name for the logo-only button, which otherwise defaults to English. Localize words around the brand, but never translate `Shop Pay` itself.
+- `channel` is optional. Set it to `headless` or `hydrogen` only when checkout needs explicit attribution to the sales channel that issued the Storefront API token.
+- Pass `checkoutUrl` when the app does not route same-origin checkout paths through `handleShopifyRoutes`.

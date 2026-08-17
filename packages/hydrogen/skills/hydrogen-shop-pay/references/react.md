@@ -36,10 +36,11 @@ function AddToCart({ product }: { product: ProductData }) {
 }
 ```
 
-`ShopPayButton` renders a self-contained `<hydrogen-shop-pay-button>` element with no
-hooks, so it server-renders as a working button — including in React Server
-Components — with no `"use client"` requirement of its own.
+`ShopPayButton` server-renders a `<hydrogen-shop-pay-button>` with a declarative
+shadow root. The shadow root preserves the branded styles before JavaScript runs
+and upgrades client-created instances without hydration errors.
 
-Size with `width`/`borderRadius` props; `className` and `style` merge onto the
-inner anchor. Pass `accessibilityLabel` when the storefront language is not English.
-Localize words around the brand, but never translate `Shop Pay` itself.
+Size with `width`/`borderRadius`. `className` and `style` are intentionally not
+supported because page CSS cannot reach the internal anchor. Pass
+`accessibilityLabel` when the storefront language is not English. Localize words
+around the brand, but never translate `Shop Pay` itself.
