@@ -125,7 +125,12 @@ export type StandardRouteOptions = Pick<I18nConfig, "pathPrefix">;
 export type ShopifyStandardRouteMatch<
   TRoute extends ShopifyStandardRouteName = ShopifyStandardRouteName,
 > = {
+  standardPathname: string;
   params: StandardRouteParams;
   route: TRoute;
   pageTemplateName: ShopifyPageTemplateName<TRoute>;
+  templates: {
+    standard: string;
+    custom: string;
+  };
 };
