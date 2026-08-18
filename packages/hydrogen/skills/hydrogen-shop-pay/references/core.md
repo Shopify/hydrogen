@@ -24,12 +24,6 @@ logo. Pick by integration shape:
   `<hydrogen-shop-pay-button>` with an imperative shadow root. Use it for
   imperative DOM UIs.
 
-Framework bindings that must render the host element themselves can combine
-`getShopPayButtonElementAttributes(options)` with
-`getShopPayButtonDeclarativeShadowDomHtml(options)`, then call
-`defineShopPayButton()` in the browser. Prefer `renderShopPayButton` unless the
-framework requires direct control of the host element.
-
 For product buy buttons, pass variants:
 
 ```ts

@@ -128,6 +128,7 @@ describe("renderShopPayButton", () => {
     expect(document.body.querySelector(SHOP_PAY_BUTTON_TAG_NAME)).not.toBeNull();
     expect(anchor.getAttribute("href")).toBe("/cart/123:1?payment=shop_pay&source=hydrogen");
     expect(anchor.getAttribute("class")).toBe("shop-pay-button");
+    expect(anchor.getAttribute("target")).toBe("_self");
   });
 
   it("renders the default accessible label and the Shop Pay logo", () => {

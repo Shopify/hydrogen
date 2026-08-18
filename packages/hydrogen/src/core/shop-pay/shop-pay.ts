@@ -223,7 +223,10 @@ export function defineShopPayButton(): void {
 export function getShopPayButtonAnchorAttributes(
   options: ShopPayButtonOptions,
 ): Record<string, string> {
-  const attributes: Record<string, string> = { class: SHOP_PAY_BUTTON_CLASS_NAME };
+  const attributes: Record<string, string> = {
+    class: SHOP_PAY_BUTTON_CLASS_NAME,
+    target: "_self",
+  };
 
   const href = getShopPayButtonUrl(options);
   if (href) {
@@ -245,12 +248,10 @@ export function getShopPayButtonElementContentHtml(options: ShopPayButtonOptions
   return `<style${getShopPayButtonStyleNonceAttribute(options)}>${SHOP_PAY_BUTTON_STYLES}</style><a ${serializeAttributes(getShopPayButtonAnchorAttributes(options))}>${getShopPayButtonContentHtml()}</a>`;
 }
 
-/** Declarative shadow DOM content for framework bindings that render the host separately. */
 export function getShopPayButtonDeclarativeShadowDomHtml(options: ShopPayButtonOptions): string {
   return `<template shadowrootmode="open" shadowroot="open">${getShopPayButtonElementContentHtml(options)}</template>`;
 }
 
-/** Host attributes for framework bindings that render the Shop Pay custom element. */
 export function getShopPayButtonElementAttributes(
   options: ShopPayButtonOptions,
 ): Record<string, string> {
