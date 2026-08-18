@@ -11,7 +11,7 @@ on:
 
 concurrency:
   # Hardcoded so a workflow_dispatch from any ref queues behind preview
-  # releases instead of racing their force-push to dist-preview
+  # releases instead of racing their update to dist-preview
   group: release-preview
   # Queue runs instead of cancelling: a cancel that lands between npm
   # publish and tag creation strands state a rerun cannot rebuild
@@ -217,8 +217,10 @@ jobs:
           export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
           export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
 
+          # Preserve dist-preview history so branch protection accepts the update.
+          git fetch origin dist-preview
           tree=$(git write-tree)
-          commit=$(printf 'Update preview templates for @shopify/hydrogen@%s\n\nSource: %s\n' "$VERSION" "$SOURCE_SHA" | git commit-tree "$tree")
+          commit=$(printf 'Update preview templates for @shopify/hydrogen@%s\n\nSource: %s\n' "$VERSION" "$SOURCE_SHA" | git commit-tree "$tree" -p FETCH_HEAD)
           auth=$(printf 'x-access-token:%s' "$DIST_PUSH_TOKEN" | base64 | tr -d '\n')
           git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $auth" \
-            push origin "$commit:refs/heads/dist-preview" --force
+            push origin "$commit:refs/heads/dist-preview"
