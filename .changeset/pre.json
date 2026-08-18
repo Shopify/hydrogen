@@ -1,5 +1,34 @@
 {
   "mode": "pre",
   "tag": "preview",
-  "changesets": []
+  "changesets": [
+    "breezy-pandas-repeat",
+    "calm-cats-context",
+    "calm-ravens-navigate",
+    "calm-routes-match",
+    "calm-routes-proxy",
+    "cart-customer-session-sync",
+    "cart-transaction-model",
+    "clean-proxies-connect",
+    "fast-routes-match",
+    "final-routes-respond",
+    "flat-shop-pay-button",
+    "fresh-pages-navigate",
+    "fuzzy-wolves-signal",
+    "gql-declared-documents",
+    "hard-navigations-handoff",
+    "hydrogen-error-reporting-policy",
+    "local-https-vite-plugin",
+    "more-standard-route-templates",
+    "optimistic-cart-order",
+    "quiet-dogs-listen",
+    "redirects-any-client",
+    "storefront-id-analytics",
+    "template-source-path",
+    "tidy-donuts-clean",
+    "vue-shopify-scripts-optional-routes",
+    "vue-shopify-scripts-props",
+    "vue-use-cart-analytics",
+    "well-known-proxy"
+  ]
 }
