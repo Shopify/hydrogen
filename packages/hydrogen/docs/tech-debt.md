@@ -17,6 +17,19 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 
 ---
 
+## Shop Pay button custom styles are not strict-CSP compatible
+
+**Status:** Open
+**Added:** 2026-08-18
+
+**What:** The Shop Pay button's `nonce` option authorizes its shadow-root `<style>`, but custom `width` and `borderRadius` values are rendered on the anchor's `style` attribute. A strict `style-src` policy can block those attributes even when the `<style>` nonce is valid.
+
+**Why it matters:** Storefronts with strict CSP can render the branded default button, but their requested width or border radius may not apply.
+
+**Done when:** Custom dimensions are applied without runtime style attributes, or the public API and docs explicitly state that `width` and `borderRadius` require CSP support for inline style attributes.
+
+---
+
 ## Shop Pay button checkout params are limited
 
 **Status:** Open
