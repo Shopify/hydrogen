@@ -29,7 +29,7 @@ Before writing UI, check whether this skill has a reference file for the app's f
 - Disable Shop Pay whenever the add-to-cart button is disabled or a product/cart mutation is pending.
 - Omit `channel` unless the integration needs explicit `headless` or `hydrogen` checkout attribution and knows which sales channel issued its Storefront API token.
 - Omit `checkoutUrl` when the app routes same-origin checkout paths through `handleShopifyRoutes`. Otherwise pass the cart checkout URL.
-- Pass `nonce` only when the storefront's Content Security Policy requires nonces for inline `<style>` elements.
+- Pass `nonce` only when the storefront's Content Security Policy requires nonces for inline `<style>` elements. The nonce authorizes the shadow-root stylesheet, not the `style` attribute used by `width` and `borderRadius`; strict policies must allow inline style attributes for those custom dimensions.
 - Keep Shop Pay near the primary purchase action, and keep its disabled state aligned with `canAddToCart(...)`.
 - Size with `width` and `borderRadius`; arbitrary `className` and `style` overrides are intentionally not supported because the branded button is isolated inside its shadow root. Pass `accessibilityLabel` when the storefront language is not English, and never translate the `Shop Pay` brand name.
 

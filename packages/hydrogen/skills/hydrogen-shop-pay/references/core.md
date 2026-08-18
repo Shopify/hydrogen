@@ -44,7 +44,9 @@ The open shadow root can be inspected with browser developer tools, but page CSS
 cannot select its internal anchor or logo. The supported style controls are
 `width` and `borderRadius`; do not treat the open root as a styling API.
 Pass `nonce` when the storefront's Content Security Policy requires nonces for
-inline `<style>` elements.
+inline `<style>` elements. The nonce does not authorize the `style` attribute
+used by `width` and `borderRadius`; strict policies must allow inline style
+attributes for those custom dimensions.
 
 For cart checkout buttons, omit `variants`; the button links to the same-origin
 `/checkout` path and `handleShopifyRoutes` redirects it to the current cart's

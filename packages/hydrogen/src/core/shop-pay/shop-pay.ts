@@ -189,6 +189,7 @@ export function initializeShopPayButtonElement(
   renderShopPayButtonShadowRoot(shadowRoot, options);
 }
 
+/** Registers the Shop Pay custom element. No-ops during SSR or when already registered. */
 export function defineShopPayButton(): void {
   if (
     typeof customElements === "undefined" ||
@@ -244,10 +245,12 @@ export function getShopPayButtonElementContentHtml(options: ShopPayButtonOptions
   return `<style${getShopPayButtonStyleNonceAttribute(options)}>${SHOP_PAY_BUTTON_STYLES}</style><a ${serializeAttributes(getShopPayButtonAnchorAttributes(options))}>${getShopPayButtonContentHtml()}</a>`;
 }
 
+/** Declarative shadow DOM content for framework bindings that render the host separately. */
 export function getShopPayButtonDeclarativeShadowDomHtml(options: ShopPayButtonOptions): string {
   return `<template shadowrootmode="open" shadowroot="open">${getShopPayButtonElementContentHtml(options)}</template>`;
 }
 
+/** Host attributes for framework bindings that render the Shop Pay custom element. */
 export function getShopPayButtonElementAttributes(
   options: ShopPayButtonOptions,
 ): Record<string, string> {

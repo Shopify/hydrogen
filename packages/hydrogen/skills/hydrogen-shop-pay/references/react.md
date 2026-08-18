@@ -45,4 +45,6 @@ supported because page CSS cannot reach the internal anchor. Pass
 `accessibilityLabel` when the storefront language is not English. Localize words
 around the brand, but never translate `Shop Pay` itself. Pass `nonce` when the
 storefront's Content Security Policy requires nonces for inline `<style>`
-elements.
+elements. The nonce does not authorize the `style` attribute used by `width` and
+`borderRadius`; strict policies must allow inline style attributes for those
+custom dimensions.
