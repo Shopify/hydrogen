@@ -1,8 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createStorefrontClient } from "../client/client";
+import { createCartServerHandlers } from "../core/cart/server-handlers";
+import { configureLogging, resetLoggingForTests } from "../core/logging";
 import { createShopifyRequestContext } from "../core/request-context";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../core/request-routing/handle-shopify-routes";
+import { createTestLogger } from "../core/test-utils";
 import {
   createCustomerAccountServerHandlers,
   createCustomerSession,
@@ -11,6 +14,7 @@ import {
   CUSTOMER_ACCOUNT_LOGOUT_PATH,
   CUSTOMER_ACCOUNT_REFRESH_PATH,
   CustomerAccountOAuthError,
+  type CustomerSession,
   type WritableCustomerSessionManager,
 } from "./index";
 
@@ -35,6 +39,10 @@ const EXPIRY_BUFFER_IN_MS = 120_000;
 const REFRESHED_EXPIRES_AT = NOW_IN_MS + ONE_HOUR_IN_MS - EXPIRY_BUFFER_IN_MS;
 const UNICODE_OVERSIZED_RETURN_TO_CHARACTER_COUNT = 500;
 const ID_TOKEN = createIdToken("expected-nonce");
+const CART_ID_TOKEN = "cart-id-1";
+const CART_GID = `gid://shopify/Cart/${CART_ID_TOKEN}`;
+const CART_COOKIE = `cart=${CART_ID_TOKEN}`;
+const EXPIRED_CART_COOKIE = "cart=; Path=/; SameSite=Lax; Max-Age=0";
 
 type CustomerAccountSessionData = {
   tokens?: {
@@ -184,7 +192,7 @@ function createRequestContext(request = new Request(ORIGIN)) {
   });
 }
 
-function createPrivateStorefrontClient(request: Request) {
+function createPrivateStorefrontClient(request: Request, fetch?: typeof globalThis.fetch) {
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
@@ -196,6 +204,7 @@ function createPrivateStorefrontClient(request: Request) {
     config: {
       storeDomain: "test-store.myshopify.com",
       privateStorefrontToken: "test-private-token",
+      fetch,
     },
   });
 }
@@ -206,14 +215,28 @@ function handleShopifyRoutes(
     "requestContext" | "storefrontClient"
   > & {
     requestContext?: Parameters<typeof handleShopifyRoutesImpl>[0]["requestContext"];
+    storefrontFetch?: typeof globalThis.fetch;
   },
 ) {
-  const storefrontClient = createPrivateStorefrontClient(options.request);
+  const { storefrontFetch, ...routeOptions } = options;
+  const storefrontClient = createPrivateStorefrontClient(options.request, storefrontFetch);
   return handleShopifyRoutesImpl({
-    ...options,
+    ...routeOptions,
     requestContext: options.requestContext ?? storefrontClient.requestContext,
     storefrontClient,
   });
+}
+
+function cartMutationResponse(userErrors: Array<{ message: string }> = []) {
+  return new Response(
+    JSON.stringify({ data: { cartBuyerIdentityUpdate: { cart: { id: CART_GID }, userErrors } } }),
+    { status: 200, headers: { "content-type": "application/json" } },
+  );
+}
+
+function getCartMutationVariables(storefrontFetch: ReturnType<typeof vi.fn>) {
+  const [, init] = storefrontFetch.mock.calls[0];
+  return JSON.parse(String((init as RequestInit).body)).variables as Record<string, unknown>;
 }
 
 describe("createCustomerSession", () => {
@@ -625,6 +648,10 @@ describe("createCustomerAccountServerHandlers", () => {
     vi.setSystemTime(NOW_IN_MS);
   });
 
+  afterEach(() => {
+    resetLoggingForTests();
+  });
+
   it("exposes literal route metadata", () => {
     const handlers = createCustomerAccountServerHandlers({
       customerSession: createSession(),
@@ -638,6 +665,32 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(handlers.logout.method).toBe("POST");
     expect(handlers.refresh.pathname).toBe(CUSTOMER_ACCOUNT_REFRESH_PATH);
     expect(handlers.refresh.method).toBe("GET");
+  });
+
+  it("rejects cart server handlers created without a customer session", () => {
+    expect(() =>
+      Reflect.apply(createCustomerAccountServerHandlers, undefined, [
+        { customerSession: createSession(), cartServerHandlers: createCartServerHandlers() },
+      ]),
+    ).toThrow(
+      "cartServerHandlers must be created by createCartServerHandlers with the customerSession option.",
+    );
+  });
+
+  it("rejects custom customer sessions with cart buyer identity sync", () => {
+    const brandedSession = createSession();
+    const customerSession: CustomerSession = { ...brandedSession };
+
+    expect(() =>
+      Reflect.apply(createCustomerAccountServerHandlers, undefined, [
+        {
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession: brandedSession }),
+        },
+      ]),
+    ).toThrow(
+      "Cart buyer identity sync requires the customerSession returned by createCustomerSession.",
+    );
   });
 
   it("starts login, commits pending state, and redirects to Shopify", async () => {
@@ -736,6 +789,94 @@ describe("createCustomerAccountServerHandlers", () => {
     );
     expect(response?.headers.get("set-cookie")).toBe("session=1");
     expect(sessionManager.data).toBeUndefined();
+  });
+
+  it("detaches cart buyer identity during logout", async () => {
+    const customerSession = createSession();
+    const sessionManager = new TestSessionManager(validSessionData());
+    const storefrontFetch = vi.fn().mockResolvedValue(cartMutationResponse());
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
+      method: "POST",
+      headers: { origin: ORIGIN, cookie: CART_COOKIE },
+    });
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(response?.headers.get("location")).toContain(`${AUTH_BASE_URL}/logout`);
+    expect(response?.headers.getSetCookie()).toEqual(["session=1"]);
+    const variables = getCartMutationVariables(storefrontFetch);
+    expect(variables.cartId).toBe(CART_GID);
+    expect(variables.buyerIdentity).toEqual({ customerAccessToken: null });
+  });
+
+  it("skips cart buyer identity sync during logout without a cart cookie", async () => {
+    const customerSession = createSession();
+    const sessionManager = new TestSessionManager(validSessionData());
+    const storefrontFetch = vi.fn();
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
+      method: "POST",
+      headers: { origin: ORIGIN },
+    });
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(storefrontFetch).not.toHaveBeenCalled();
+  });
+
+  it("completes the logout redirect and expires the cart cookie when detach fails", async () => {
+    const customerSession = createSession();
+    const sessionManager = new TestSessionManager(validSessionData());
+    const storefrontFetch = vi.fn().mockResolvedValue(new Response("boom", { status: 500 }));
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
+      method: "POST",
+      headers: { origin: ORIGIN, cookie: CART_COOKIE },
+    });
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(response?.headers.get("location")).toContain(`${AUTH_BASE_URL}/logout`);
+    expect(response?.headers.getSetCookie()).toEqual(["session=1", EXPIRED_CART_COOKIE]);
+    expect(sessionManager.data).toBeUndefined();
+    expect(logger.error).toHaveBeenCalledWith("cart buyer identity sync failed", {
+      scope: "customer-account",
+      route: "logout",
+      error: expect.anything(),
+    });
   });
 
   it("uses same-origin logout return_to when provided", async () => {
@@ -906,6 +1047,90 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(response?.status).toBe(303);
     expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
     expect(response?.headers.get("set-cookie")).toBe("session=1");
+    expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
+  });
+
+  it("supports authorization on custom customer sessions", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(tokenResponse({ id_token: ID_TOKEN }));
+    const customerSession: CustomerSession = { ...createSession({ fetch: fetchMock }) };
+    const sessionManager = new TestSessionManager({ pendingLogin: validPendingLogin() });
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+    );
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      handlers: [createCustomerAccountServerHandlers({ customerSession })],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
+  });
+
+  it("attaches cart buyer identity after authorization", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(tokenResponse({ id_token: ID_TOKEN }));
+    const customerSession = createSession({ fetch: fetchMock });
+    const sessionManager = new TestSessionManager({ pendingLogin: validPendingLogin() });
+    const storefrontFetch = vi.fn().mockResolvedValue(cartMutationResponse());
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+      { headers: { cookie: CART_COOKIE } },
+    );
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
+    const variables = getCartMutationVariables(storefrontFetch);
+    expect(variables.cartId).toBe(CART_GID);
+    expect(variables.buyerIdentity).toEqual({ customerAccessToken: NEW_ACCESS_TOKEN });
+    expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
+  });
+
+  it("completes the authorization redirect when cart sync fails", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(tokenResponse({ id_token: ID_TOKEN }));
+    const customerSession = createSession({ fetch: fetchMock });
+    const sessionManager = new TestSessionManager({ pendingLogin: validPendingLogin() });
+    const storefrontFetch = vi.fn().mockResolvedValue(new Response("boom", { status: 500 }));
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+      { headers: { cookie: CART_COOKIE } },
+    );
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
+    expect(response?.headers.getSetCookie()).toEqual(["session=1"]);
+    expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
+    expect(logger.error).toHaveBeenCalledWith("cart buyer identity sync failed", {
+      scope: "customer-account",
+      route: "authorize",
+      error: expect.anything(),
+    });
   });
 
   it("refreshes tokens, commits session headers, and redirects", async () => {
@@ -929,6 +1154,172 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
     expect(response?.headers.get("set-cookie")).toBe("session=1");
     expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
+  });
+
+  it("supports refresh on custom customer sessions", async () => {
+    const fetchMock = vi.fn();
+    const customerSession: CustomerSession = { ...createSession({ fetch: fetchMock }) };
+    const sessionManager = new TestSessionManager(validSessionData());
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=/account`);
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      handlers: [createCustomerAccountServerHandlers({ customerSession })],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("attaches cart buyer identity after a token refresh", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(tokenResponse());
+    const customerSession = createSession({ fetch: fetchMock });
+    const sessionManager = new TestSessionManager(
+      validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
+    );
+    const storefrontFetch = vi.fn().mockResolvedValue(cartMutationResponse());
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=/account`, {
+      headers: { cookie: CART_COOKIE },
+    });
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
+    const variables = getCartMutationVariables(storefrontFetch);
+    expect(variables.cartId).toBe(CART_GID);
+    expect(variables.buyerIdentity).toEqual({ customerAccessToken: NEW_ACCESS_TOKEN });
+  });
+
+  it("attaches cart buyer identity when the existing token is still usable", async () => {
+    const fetchMock = vi.fn();
+    const customerSession = createSession({ fetch: fetchMock });
+    const sessionManager = new TestSessionManager(validSessionData());
+    const storefrontFetch = vi.fn().mockResolvedValue(cartMutationResponse());
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=/account`, {
+      headers: { cookie: CART_COOKIE },
+    });
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(fetchMock).not.toHaveBeenCalled();
+    const variables = getCartMutationVariables(storefrontFetch);
+    expect(variables.buyerIdentity).toEqual({ customerAccessToken: ACCESS_TOKEN });
+  });
+
+  it("leaves cart buyer identity untouched on transient refresh failures", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("try later", { status: 503 }));
+    const customerSession = createSession({ fetch: fetchMock });
+    const sessionManager = new TestSessionManager(
+      validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
+    );
+    const storefrontFetch = vi.fn();
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=/account`, {
+      headers: { cookie: CART_COOKIE },
+    });
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(storefrontFetch).not.toHaveBeenCalled();
+    expect(sessionManager.data?.tokens?.refreshToken).toBe(REFRESH_TOKEN);
+  });
+
+  it("detaches cart buyer identity after a definitive refresh rejection", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("invalid", { status: 401 }));
+    const customerSession = createSession({ fetch: fetchMock });
+    const sessionManager = new TestSessionManager(
+      validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
+    );
+    const storefrontFetch = vi.fn().mockResolvedValue(cartMutationResponse());
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=/account`, {
+      headers: { cookie: CART_COOKIE },
+    });
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(sessionManager.data?.tokens).toBeUndefined();
+    const variables = getCartMutationVariables(storefrontFetch);
+    expect(variables.buyerIdentity).toEqual({ customerAccessToken: null });
+  });
+
+  it("expires the cart cookie when detach fails after a definitive refresh rejection", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("invalid", { status: 401 }));
+    const customerSession = createSession({ fetch: fetchMock });
+    const sessionManager = new TestSessionManager(
+      validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
+    );
+    const storefrontFetch = vi.fn().mockResolvedValue(new Response("boom", { status: 500 }));
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=/account`, {
+      headers: { cookie: CART_COOKIE },
+    });
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+
+    expect(response?.status).toBe(303);
+    expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
+    expect(response?.headers.getSetCookie()).toEqual(["session=1", EXPIRED_CART_COOKIE]);
+    expect(sessionManager.data?.tokens).toBeUndefined();
+    expect(logger.error).toHaveBeenCalledWith("cart buyer identity sync failed", {
+      scope: "customer-account",
+      route: "refresh",
+      error: expect.anything(),
+    });
   });
 
   it("passes through unrelated routes", async () => {
