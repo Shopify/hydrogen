@@ -39,7 +39,7 @@ Port of the canonical `examples/core` design to [SvelteKit 2](https://svelte.dev
 
 The account flow uses `createCustomerSession` and `createCustomerAccountServerHandlers` from `@shopify/hydrogen/customer-account`, Customer Account values from `examples/shared/config.ts`, and an encrypted HttpOnly `__Host-` cookie adapter from `examples/shared/customer-session.ts`.
 
-Customer Account OAuth requires a public HTTPS origin. To test locally without a tunnel, register `https://localtest.me:5173/account/authorize` as the callback URI and run:
+Customer Account OAuth requires a public HTTPS origin. To test locally without a tunnel, register `https://local.tryhydrogen.dev:5173/account/authorize` as the callback URI and run:
 
 ```sh
 pnpm https:setup

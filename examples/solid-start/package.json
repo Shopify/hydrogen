@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "HOST=localhost vinxi dev",
-    "https:dev": "VITE_LOCAL_HTTPS=1 HOST=localtest.me vinxi dev --port 5173",
+    "https:dev": "vinxi dev --host local.tryhydrogen.dev --port 5173",
     "build": "vinxi build",
     "start": "HOST=localhost vinxi start",
     "typecheck": "tsc"

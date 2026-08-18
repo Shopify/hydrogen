@@ -16,7 +16,8 @@ When designing or adjusting APIs for the `hydrogen` package, closely follow the 
 
 ## Local HTTPS for Examples
 
-- Account-enabled framework examples use `https://localtest.me:5173` for Customer Account OAuth callback testing.
+- Account-enabled framework examples use `https://local.tryhydrogen.dev:5173` for Customer Account OAuth callback testing.
 - On macOS, install `mkcert` with Homebrew before running those examples: `brew install mkcert`.
-- From the repository root, run `pnpm https:setup` once to trust the local certificate authority and create the `localtest.me` certificates under `.cert/`.
+- Vite-based examples consume Hydrogen's default certificates. From the repository root, run `pnpm https:setup` once to trust the local certificate authority and create them under `~/.shopify/hydrogen/certs/`.
+- The Next.js example provisions its own certificate. The Hydrogen example uses the Shopify CLI tunnel flow.
 - After setup, run the relevant example with `pnpm --filter @shopify/hydrogen-example-<name> https:dev` when that example provides the script.

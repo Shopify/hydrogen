@@ -50,6 +50,25 @@ cp .env.example .env   # set PUBLIC_STORE_DOMAIN + PUBLIC_STOREFRONT_ID + PRIVAT
 npm run dev               # Vite/Mini Oxygen loads .env into the worker environment
 ```
 
+Customer Account OAuth requires trusted local HTTPS. Install [mkcert](https://github.com/FiloSottile/mkcert), then create the default `local.tryhydrogen.dev` certificates:
+
+```bash
+mkcert -install
+mkdir -p ~/.shopify/hydrogen/certs
+mkcert \
+  -cert-file ~/.shopify/hydrogen/certs/local.tryhydrogen.dev.pem \
+  -key-file ~/.shopify/hydrogen/certs/local.tryhydrogen.dev-key.pem \
+  local.tryhydrogen.dev
+```
+
+Then run:
+
+```bash
+npm run https:dev
+```
+
+Open <https://local.tryhydrogen.dev:5173>.
+
 Mode is **auto-detected**: when a `PRIVATE_STOREFRONT_API_TOKEN` is present the
 app talks to the real store (`PUBLIC_STORE_DOMAIN`, falling back to the default in
 `app/lib/shop.ts`); with none it falls back to the `mock.shop` demo, so a fresh
@@ -63,6 +82,7 @@ automatically** — the deployed site connects to your store with no extra confi
 | Script | Does |
 | --- | --- |
 | `npm run dev` | Start the Vite dev server with Mini Oxygen. |
+| `npm run https:dev` | Start the Vite dev server with trusted local HTTPS. |
 | `npm run build` | Production React Router build for Oxygen. |
 | `npm run preview` | Build and preview locally with Vite and Mini Oxygen. |
 | `npm run deploy` | Deploy to Oxygen with the Shopify CLI. |

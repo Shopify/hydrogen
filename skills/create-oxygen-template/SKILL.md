@@ -27,7 +27,7 @@ Maintain `templates/react-router` as the canonical source for a professional sta
    - no `@shared/*` imports
    - no `examples/shared/*` runtime dependency
    - no `localCdnAssets`
-   - no local HTTPS Vite plugin
+   - keep the Hydrogen local HTTPS Vite plugin and `https:dev` script, using its portable default certificate paths
    - no `@shopify/hydrogen-classic`
    - no Hydrogen Vite plugin from classic Hydrogen
    - no `@react-router/node`, `@react-router/serve`, or `react-router-serve` unless the template intentionally supports a Node server path
