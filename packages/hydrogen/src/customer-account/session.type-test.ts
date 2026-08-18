@@ -1,5 +1,6 @@
 import { describe, expectTypeOf, it } from "vitest";
 
+import { createCartServerHandlers } from "../core/cart/server-handlers";
 import { createShopifyRequestContext } from "../core/request-context";
 import type { ShopifyRouteHandlerGroup } from "../core/request-routing/registered-routes";
 import {
@@ -10,7 +11,10 @@ import {
   CUSTOMER_ACCOUNT_LOGOUT_PATH,
   CUSTOMER_ACCOUNT_REFRESH_PATH,
   type Awaitable,
+  type CreateCustomerAccountServerHandlersOptions,
   type CustomerAccountServerHandlers,
+  type CustomerAccountServerHandlersWithCartSync,
+  type CustomerSession,
   type ReadonlyCustomerSessionManager,
   type WritableCustomerSessionManager,
 } from "./index";
@@ -19,6 +23,7 @@ const customerSession = createCustomerSession({
   shopId: "123456789",
   customerAccountApiClientId: "shp_test-client-id",
 });
+const cartServerHandlers = createCartServerHandlers({ customerSession });
 
 const readonlySessionManager: ReadonlyCustomerSessionManager = {
   getSessionItem(_key: string) {
@@ -96,12 +101,39 @@ describe("Customer Account session type boundary", () => {
   });
 
   it("returns handlers compatible with handleShopifyRoutes", () => {
-    const handlers = createCustomerAccountServerHandlers({
+    const handlers = createCustomerAccountServerHandlers({ customerSession });
+    const handlersWithCartSync = createCustomerAccountServerHandlers({
       customerSession,
+      cartServerHandlers,
+    });
+    const options: CreateCustomerAccountServerHandlersOptions = {
+      customerSession,
+      cartServerHandlers,
+    };
+    const handlersFromAnnotatedOptions = createCustomerAccountServerHandlers(options);
+    const unbrandedSession: CustomerSession = customerSession;
+    const rejectedCalls = () => {
+      // @ts-expect-error cart buyer identity sync requires a session created by createCustomerSession
+      createCustomerAccountServerHandlers({
+        customerSession: unbrandedSession,
+        cartServerHandlers,
+      });
+      // @ts-expect-error cart handlers without customerSession cannot synchronize buyer identity
+      createCustomerAccountServerHandlers({ customerSession, cartServerHandlers: createCartServerHandlers() });
+    };
+    expectTypeOf(rejectedCalls).toBeFunction();
+    const unbrandedHandlers = createCustomerAccountServerHandlers({
+      customerSession: unbrandedSession,
     });
 
     expectTypeOf(handlers).toMatchTypeOf<CustomerAccountServerHandlers>();
     expectTypeOf(handlers).toMatchTypeOf<ShopifyRouteHandlerGroup>();
+    expectTypeOf(handlersWithCartSync).toMatchTypeOf<CustomerAccountServerHandlersWithCartSync>();
+    expectTypeOf(handlersWithCartSync).toMatchTypeOf<ShopifyRouteHandlerGroup>();
+    expectTypeOf(handlersFromAnnotatedOptions).toMatchTypeOf<
+      CustomerAccountServerHandlersWithCartSync
+    >();
+    expectTypeOf(unbrandedHandlers).toMatchTypeOf<CustomerAccountServerHandlers>();
     expectTypeOf(handlers.authorize).toHaveProperty("pathname").toEqualTypeOf<
       typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH
     >();
