@@ -1,3 +1,10 @@
+import {
+  CUSTOMER_ACCOUNT_AUTHORIZE_PATH,
+  CUSTOMER_ACCOUNT_LOGIN_PATH,
+  CUSTOMER_ACCOUNT_LOGOUT_PATH,
+  CUSTOMER_ACCOUNT_REFRESH_PATH,
+} from "../customer-account/paths";
+
 export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
 export const SHOPIFY_API_PROXY_PREFIX = "/__shopify";
 export const SHOPIFY_API_PROXY_RE = /^\/__shopify(?:\/|$)/;
@@ -5,10 +12,10 @@ export const MCP_RE = /^\/api\/mcp$/;
 export const CHECKOUT_RE = /^\/checkout$/;
 export const CART_PERMALINK_RE = /^\/cart\/\d+:\d+(?:,\d+:\d+)*$/;
 export const CUSTOMER_ACCOUNT_PATHS = {
-  authorize: "/account/authorize",
-  login: "/account/login",
-  logout: "/account/logout",
-  refresh: "/account/refresh",
+  authorize: CUSTOMER_ACCOUNT_AUTHORIZE_PATH,
+  login: CUSTOMER_ACCOUNT_LOGIN_PATH,
+  logout: CUSTOMER_ACCOUNT_LOGOUT_PATH,
+  refresh: CUSTOMER_ACCOUNT_REFRESH_PATH,
 } as const;
 
 const CUSTOMER_ACCOUNT_HANDOFF_PATHS: ReadonlySet<string> = new Set(
