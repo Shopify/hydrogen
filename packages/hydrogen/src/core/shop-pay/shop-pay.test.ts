@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { assert } from "../test-utils";
 import {
@@ -243,7 +243,20 @@ describe("createShopPayButton", () => {
   it("applies a CSP nonce to client-created styles", () => {
     const element = createShopPayButton({ nonce: "nonce-1" });
 
-    expect(element.hasAttribute("nonce")).toBe(false);
+    expect(element.getAttribute("nonce")).toBe("nonce-1");
+    expect(element.shadowRoot?.querySelector("style")?.nonce).toBe("nonce-1");
+  });
+
+  it("reads a concealed CSP nonce from the host property", () => {
+    const element = document.createElement(SHOP_PAY_BUTTON_TAG_NAME);
+    element.nonce = "nonce-1";
+    const getAttribute = element.getAttribute.bind(element);
+    vi.spyOn(element, "getAttribute").mockImplementation((name) => {
+      return name === "nonce" ? "" : getAttribute(name);
+    });
+
+    document.body.append(element);
+
     expect(element.shadowRoot?.querySelector("style")?.nonce).toBe("nonce-1");
   });
 
@@ -257,5 +270,14 @@ describe("createShopPayButton", () => {
 
     expect(style.nonce).toBe("nonce-1");
     expect(style.textContent).toContain("background-color:#5433eb");
+  });
+
+  it("removes the CSP nonce when the host attribute is removed", () => {
+    const element = createShopPayButton({ nonce: "nonce-1" });
+    document.body.append(element);
+
+    element.removeAttribute("nonce");
+
+    expect(element.shadowRoot?.querySelector("style")?.hasAttribute("nonce")).toBe(false);
   });
 });

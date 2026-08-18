@@ -15,7 +15,7 @@ afterEach(() => vi.restoreAllMocks());
 
 describe("ShopPayButton hydration", () => {
   it("preserves the server-rendered shadow root without hydration errors", async () => {
-    const options = { variants: [{ id: "123", quantity: 2 }] };
+    const options = { variants: [{ id: "123", quantity: 2 }], nonce: "nonce-1" };
     const container = document.createElement("div");
     const element = document.createElement("hydrogen-shop-pay-button");
     for (const [name, value] of Object.entries(getShopPayButtonElementAttributes(options))) {
@@ -42,6 +42,7 @@ describe("ShopPayButton hydration", () => {
 
     expect(element.shadowRoot).toBe(shadowRoot);
     expect(shadowRoot.querySelector("a")).toBe(anchor);
+    expect(shadowRoot.querySelector("style")?.nonce).toBe("nonce-1");
     expect(onRecoverableError).not.toHaveBeenCalled();
     expect(consoleError).not.toHaveBeenCalled();
     expect(consoleWarn).not.toHaveBeenCalled();

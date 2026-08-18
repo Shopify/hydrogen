@@ -59,7 +59,7 @@ describe("ShopPayButton", () => {
     const shadowRoot = anchor.getRootNode();
     if (!(shadowRoot instanceof ShadowRoot)) throw new Error("expected a shadow root");
     expect(shadowRoot.querySelector("style")?.nonce).toBe("nonce-1");
-    expect(customElements.get("hydrogen-shop-pay-button")).toBeUndefined();
+    expect(customElements.get("hydrogen-shop-pay-button")).toBeDefined();
   });
 
   it("maps borderRadius to the anchor style", () => {

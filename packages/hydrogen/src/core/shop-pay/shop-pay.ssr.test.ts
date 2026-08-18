@@ -6,7 +6,9 @@ describe("renderShopPayButton SSR", () => {
   it("renders a declarative shadow root for zero-JavaScript styling", () => {
     const html = renderShopPayButton({ variants: ["123"], width: "100%", nonce: "nonce-1" });
 
-    expect(html).toContain('<hydrogen-shop-pay-button variants="123:1" width="100%">');
+    expect(html).toContain(
+      '<hydrogen-shop-pay-button nonce="nonce-1" variants="123:1" width="100%">',
+    );
     expect(html).toContain('<template shadowrootmode="open" shadowroot="open">');
     expect(html).toContain('<style nonce="nonce-1">:host{display:block}');
     expect(html).toContain("background-color:#5433eb");

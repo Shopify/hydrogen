@@ -1,9 +1,13 @@
 // @vitest-environment happy-dom
 import { mount } from "@vue/test-utils";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { assert } from "../core/test-utils";
 import { ShopPayButton } from "./shop-pay";
+
+afterEach(() => {
+  document.body.innerHTML = "";
+});
 
 describe("ShopPayButton", () => {
   function getAnchor(wrapper: ReturnType<typeof mount>): HTMLAnchorElement {
@@ -22,6 +26,7 @@ describe("ShopPayButton", () => {
       attrs: {
         class: "extra",
       },
+      attachTo: document.body,
     });
 
     const anchor = getAnchor(wrapper);
@@ -33,7 +38,7 @@ describe("ShopPayButton", () => {
   });
 
   it("renders a same-origin checkout URL without variants", () => {
-    const wrapper = mount(ShopPayButton);
+    const wrapper = mount(ShopPayButton, { attachTo: document.body });
 
     expect(getAnchor(wrapper).getAttribute("href")).toBe(
       "/checkout?payment=shop_pay&source=hydrogen",
@@ -43,6 +48,7 @@ describe("ShopPayButton", () => {
   it("renders the accessible label, logo, and styles", () => {
     const wrapper = mount(ShopPayButton, {
       props: { accessibilityLabel: "Shop Pay से खरीदें", nonce: "nonce-1" },
+      attachTo: document.body,
     });
 
     const anchor = getAnchor(wrapper);
@@ -51,11 +57,14 @@ describe("ShopPayButton", () => {
     const shadowRoot = anchor.getRootNode();
     if (!(shadowRoot instanceof ShadowRoot)) throw new Error("expected a shadow root");
     expect(shadowRoot.querySelector("style")?.nonce).toBe("nonce-1");
-    expect(customElements.get("hydrogen-shop-pay-button")).toBeUndefined();
+    expect(customElements.get("hydrogen-shop-pay-button")).toBeDefined();
   });
 
   it("renders a disabled button without an href", () => {
-    const wrapper = mount(ShopPayButton, { props: { disabled: true } });
+    const wrapper = mount(ShopPayButton, {
+      props: { disabled: true },
+      attachTo: document.body,
+    });
 
     const anchor = getAnchor(wrapper);
     expect(anchor.hasAttribute("href")).toBe(false);
@@ -64,10 +73,13 @@ describe("ShopPayButton", () => {
   });
 
   it("casts a bare disabled prop to true", () => {
-    const wrapper = mount({
-      components: { ShopPayButton },
-      template: "<ShopPayButton disabled />",
-    });
+    const wrapper = mount(
+      {
+        components: { ShopPayButton },
+        template: "<ShopPayButton disabled />",
+      },
+      { attachTo: document.body },
+    );
 
     const anchor = getAnchor(wrapper);
     expect(anchor.hasAttribute("href")).toBe(false);
@@ -78,6 +90,7 @@ describe("ShopPayButton", () => {
   it("updates the permalink when variants change", async () => {
     const wrapper = mount(ShopPayButton, {
       props: { variants: [{ id: "123", quantity: 1 }] },
+      attachTo: document.body,
     });
     expect(getAnchor(wrapper).getAttribute("href")).toBe(
       "/cart/123:1?payment=shop_pay&source=hydrogen",

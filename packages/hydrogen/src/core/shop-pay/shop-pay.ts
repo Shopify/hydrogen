@@ -13,6 +13,7 @@ const SHOP_PAY_BUTTON_OBSERVED_ATTRIBUTES = [
   "channel",
   "checkout-url",
   "disabled",
+  "nonce",
   "payment-option",
   "source",
   "source-token",
@@ -262,6 +263,7 @@ export function getShopPayButtonElementAttributes(
   if (options.channel) attributes.channel = options.channel;
   if (options.checkoutUrl !== undefined) attributes["checkout-url"] = options.checkoutUrl;
   if (options.disabled) attributes.disabled = "";
+  if (hasContent(options.nonce)) attributes.nonce = options.nonce.trim();
   if (options.paymentOption) attributes["payment-option"] = options.paymentOption;
   if (options.source !== undefined) attributes.source = options.source;
   if (options.sourceToken !== undefined) attributes["source-token"] = options.sourceToken;
@@ -358,6 +360,7 @@ function getShopPayButtonOptions(element: HTMLElement): ShopPayButtonOptions {
     channel: parseChannel(element.getAttribute("channel")),
     checkoutUrl: element.getAttribute("checkout-url") ?? undefined,
     disabled: element.hasAttribute("disabled"),
+    nonce: element.nonce || element.getAttribute("nonce") || undefined,
     paymentOption: parsePaymentOption(element.getAttribute("payment-option")),
     source: element.getAttribute("source") ?? undefined,
     sourceToken: element.getAttribute("source-token") ?? undefined,
@@ -394,8 +397,12 @@ function renderShopPayButtonShadowRoot(
   }
 
   const nextNonce = hasContent(options.nonce) ? options.nonce.trim() : undefined;
-  const nonceChanged = nextNonce !== undefined && style.nonce !== nextNonce;
-  if (nextNonce) style.nonce = nextNonce;
+  const nonceChanged = (style.nonce || undefined) !== nextNonce;
+  if (nextNonce) {
+    style.nonce = nextNonce;
+  } else {
+    style.removeAttribute("nonce");
+  }
   if (nonceChanged) style.textContent = "";
   if (style.textContent !== SHOP_PAY_BUTTON_STYLES) style.textContent = SHOP_PAY_BUTTON_STYLES;
 

@@ -1,9 +1,9 @@
 import { defineComponent, h } from "vue";
 
 import {
+  defineShopPayButton,
   getShopPayButtonDeclarativeShadowDomHtml,
   getShopPayButtonElementAttributes,
-  initializeShopPayButtonElement,
   SHOP_PAY_BUTTON_TAG_NAME,
   type ShopPayButtonOptions,
 } from "../core/shop-pay/shop-pay";
@@ -15,18 +15,14 @@ type CompletePropOptions<T> = {
 };
 
 const canUseDom = typeof document !== "undefined";
+defineShopPayButton();
 
 export const ShopPayButton = defineComponent(
   (props: ShopPayButtonProps) => {
     return () => {
       const attributes = getShopPayButtonElementAttributes(props);
       return canUseDom
-        ? h(SHOP_PAY_BUTTON_TAG_NAME, {
-            ...attributes,
-            ref: (element: unknown) => {
-              if (element instanceof HTMLElement) initializeShopPayButtonElement(element, props);
-            },
-          })
+        ? h(SHOP_PAY_BUTTON_TAG_NAME, attributes)
         : h(SHOP_PAY_BUTTON_TAG_NAME, {
             ...attributes,
             innerHTML: getShopPayButtonDeclarativeShadowDomHtml(props),
