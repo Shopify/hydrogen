@@ -331,10 +331,11 @@ function buildVariables(
 ): Record<string, unknown> {
   const variables: Record<string, unknown> = { ...userVariables };
 
-  if (COUNTRY_VAR_RE.test(queryText)) {
+  // Injection is a default, not an override: explicitly passed variables always win.
+  if (COUNTRY_VAR_RE.test(queryText) && variables.country === undefined) {
     variables.country = resolvedI18n.country;
   }
-  if (LANGUAGE_VAR_RE.test(queryText)) {
+  if (LANGUAGE_VAR_RE.test(queryText) && variables.language === undefined) {
     variables.language = resolvedI18n.language;
   }
 
