@@ -247,8 +247,13 @@ export type {
   QueryPredictiveSearchOptions,
 } from "./predictive-search";
 
-export { getLocalizedPath } from "./localization";
-export type { GetLocalizedPathOptions } from "./localization";
+export { getLocalizedPath, matchLocaleFromRequest } from "./localization";
+export type {
+  GetLocalizedPathOptions,
+  MatchLocaleFromRequestOptions,
+  MatchedLocale,
+  SupportedLocale,
+} from "./localization";
 
 export { formatMoney } from "./money";
 export { flattenConnection } from "./analytics/utils/flatten-connection";

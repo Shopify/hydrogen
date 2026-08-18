@@ -1,2 +1,7 @@
-export { getLocalizedPath } from "./locale-matching";
-export type { GetLocalizedPathOptions } from "./locale-matching";
+export { getLocalizedPath, matchLocaleFromRequest } from "./locale-matching";
+export type {
+  GetLocalizedPathOptions,
+  MatchLocaleFromRequestOptions,
+  MatchedLocale,
+  SupportedLocale,
+} from "./locale-matching";
