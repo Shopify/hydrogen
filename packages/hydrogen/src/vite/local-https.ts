@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import type { Plugin, ViteDevServer } from "vite";
 
-import { CUSTOMER_ACCOUNT_AUTHORIZE_PATH } from "../customer-account/paths";
+import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
 
 export const LOCAL_HTTPS_DEFAULTS = {
   host: "local.tryhydrogen.dev",
@@ -238,7 +238,7 @@ function formatCustomerAccountSettings({ host, port }: Pick<LocalHttpsSettings, 
     "",
     "Customer Account API — make sure these values are configured for your storefront:",
     "",
-    `  Callback URI(s) (required):  ${portfulOrigin}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}`,
+    `  Callback URI(s) (required):  ${portfulOrigin}${CUSTOMER_ACCOUNT_PATHS.authorize}`,
     // Shopify's server-side validation rejects JavaScript origins containing a port.
     `  JavaScript origin(s):        ${origin}`,
     `  Logout URI:                  ${portfulOrigin}`,

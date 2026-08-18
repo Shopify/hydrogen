@@ -15,6 +15,7 @@ import {
   type ShopifyRouteRedirectResult,
   type ShopifyRouteSessionManager,
 } from "../core/request-routing/registered-routes";
+import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
 import { CustomerAccountApiError, CustomerAccountOAuthError } from "./errors";
 
 const log = getLogger("customer-account");
