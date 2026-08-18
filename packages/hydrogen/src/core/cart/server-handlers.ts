@@ -1,7 +1,14 @@
 import type { GraphQLFormattedError, StorefrontClient } from "../../client";
+import type {
+  CustomerSession,
+  ReadonlyCustomerSessionManager,
+  WritableCustomerSessionManager,
+} from "../../customer-account/session";
+import { getCustomerSessionRefreshResult } from "../../customer-account/session";
 import type { AnyStorefrontQueryString } from "../../graphql";
 import { applyPrivateResponseCacheHeaders } from "../headers";
 import { getLogger } from "../logging";
+import type { ShopifyRequestContext } from "../request-context";
 import { createProxyResponseHeaders } from "../request-routing/interceptors/proxy";
 import type {
   CallableRouteHandler,
@@ -13,12 +20,19 @@ import type {
 import { createCallableRouteHandler } from "../request-routing/registered-routes";
 import { parseCartRequest } from "./actions";
 import type { CartAction, CartLineAddInput } from "./actions";
-import { getCartIdFromCookie, createCartCookie } from "./cookie";
+import {
+  cartBuyerIdentitySync,
+  type CartBuyerIdentitySync,
+  type CartBuyerIdentitySyncContext,
+} from "./buyer-identity-sync";
+import { getCartIdFromCookie, createCartCookie, createExpiredCartCookie } from "./cookie";
 import { getCart, getCartId, type CartDataFromQuery } from "./get-cart";
 import {
+  cartBuyerIdentityUpdateMutation,
   cartQueries,
   makeCartQueries,
   type CartDataForOptions,
+  type CartQueriesForOptions,
   type CreateCartQueriesOptions,
 } from "./queries";
 import type { CartData } from "./state";
@@ -27,6 +41,8 @@ const log = getLogger("cart-api");
 const CART_API_PATH = "/api/cart" as const;
 const CART_GET_METHOD = "GET" as const;
 const CART_POST_METHOD = "POST" as const;
+const CART_MUTATION_FAILED_STATUS = 500;
+const CART_MUTATION_FAILED_MESSAGE = "Cart mutation failed. Please try again.";
 const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
 export type CartGetData<TCart = CartData> = {
@@ -35,7 +51,7 @@ export type CartGetData<TCart = CartData> = {
 };
 
 export type CartGetResult<TCart = CartData> = ShopifyRouteJsonResult<CartGetData<TCart>>;
-export type CartErrorCode = "invalid_cart_request" | "missing_cart";
+export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_mutation_failed";
 export type CartError = ShopifyRouteError & {
   code: CartErrorCode;
 };
@@ -43,6 +59,15 @@ export type CartPostResult =
   | ShopifyRouteJsonResult<Record<string, unknown>>
   | ShopifyRouteRedirectResult
   | ShopifyRouteErrorResult<CartError>;
+
+type CartCustomerAccessTokenResult = {
+  accessToken?: string;
+  commitSession: boolean;
+};
+
+type ParsedCartRequestResult =
+  | { type: "action"; action: CartAction; bodyCartId: string | null }
+  | { type: "response"; response: CartPostResult };
 
 type CartGetHandlerContext = {
   storefrontClient: StorefrontClient;
@@ -54,19 +79,30 @@ type CartPostHandlerContext = {
   storefrontClient: StorefrontClient;
 };
 
-export type CartGetHandler<TCart = CartData> = CallableRouteHandler<
-  CartGetHandlerContext,
+type CartCustomerSessionReadContext = {
+  sessionManager: ReadonlyCustomerSessionManager;
+  requestContext: ShopifyRequestContext;
+};
+
+type CartCustomerSessionWriteContext = {
+  sessionManager: WritableCustomerSessionManager;
+  requestContext: ShopifyRequestContext;
+};
+
+type CartCustomerSession = CustomerSession;
+
+export type CartGetHandler<
+  TCart = CartData,
+  TContext extends CartGetHandlerContext = CartGetHandlerContext,
+> = CallableRouteHandler<
+  TContext,
   CartGetResult<TCart>,
   typeof CART_API_PATH,
   typeof CART_GET_METHOD
 >;
 
-export type CartPostHandler = CallableRouteHandler<
-  CartPostHandlerContext,
-  CartPostResult,
-  typeof CART_API_PATH,
-  typeof CART_POST_METHOD
->;
+export type CartPostHandler<TContext extends CartPostHandlerContext = CartPostHandlerContext> =
+  CallableRouteHandler<TContext, CartPostResult, typeof CART_API_PATH, typeof CART_POST_METHOD>;
 
 export type CartServerHandlers<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
@@ -75,6 +111,16 @@ export type CartServerHandlers<
   readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;
   get: CartGetHandler<TCart>;
   post: CartPostHandler;
+};
+
+export type CartServerHandlersWithCustomerSession<
+  TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
+  TCart extends CartData = CartDataFromQuery<TCartQuery>,
+> = {
+  readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;
+  readonly [cartBuyerIdentitySync]: CartBuyerIdentitySync;
+  get: CartGetHandler<TCart, CartGetHandlerContext & CartCustomerSessionReadContext>;
+  post: CartPostHandler<CartPostHandlerContext & CartCustomerSessionWriteContext>;
 };
 
 type AsyncHandlerResult<THandler> = THandler extends (
@@ -99,49 +145,96 @@ export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
   CartGetHandlerResult<THandlers>
 >;
 
-type CreateCartServerHandlersOptions<
+export type CreateCartServerHandlersOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
-> = CreateCartQueriesOptions<TCartFragment>;
+> = {
+  readonly fragment?: TCartFragment;
+} & ({ readonly customerSession: CartCustomerSession } | { readonly customerSession?: undefined });
+
+type CartServerHandlersForOptions<TOptions> = TOptions extends {
+  readonly customerSession: CartCustomerSession;
+}
+  ? CartServerHandlersWithCustomerSession<
+      CartQueriesForOptions<TOptions>["cart"],
+      CartDataForOptions<TOptions>
+    >
+  : CartServerHandlers<CartQueriesForOptions<TOptions>["cart"], CartDataForOptions<TOptions>>;
 
 export function createCartServerHandlers(): CartServerHandlers<typeof cartQueries.cart>;
 export function createCartServerHandlers<const TOptions extends CreateCartServerHandlersOptions>(
   options: TOptions,
-): CartServerHandlers<AnyStorefrontQueryString, CartDataForOptions<TOptions>>;
+): CartServerHandlersForOptions<TOptions>;
 export function createCartServerHandlers(
   options?: CreateCartServerHandlersOptions,
-): CartServerHandlers {
-  const queries = options
-    ? makeCartQueries(options as CreateCartServerHandlersOptions<AnyStorefrontQueryString>)
+): CartServerHandlers | CartServerHandlersWithCustomerSession {
+  const queries = options?.fragment
+    ? makeCartQueries({ fragment: options.fragment } as CreateCartQueriesOptions)
     : cartQueries;
   const runtimeQueries = queries as RuntimeCartQueries;
+  const customerSession = options?.customerSession;
 
   const handlers = {
     get: createCallableRouteHandler(
       CART_API_PATH,
       CART_GET_METHOD,
-      (context: CartGetHandlerContext) => handleGet(context, runtimeQueries),
+      (context: CartGetHandlerContext & Partial<CartCustomerSessionReadContext>) =>
+        handleGet(context, runtimeQueries, customerSession),
     ),
     post: createCallableRouteHandler(
       CART_API_PATH,
       CART_POST_METHOD,
-      (context: CartPostHandlerContext) => handlePost(context, runtimeQueries),
+      (context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>) =>
+        handlePost(context, runtimeQueries, customerSession),
     ),
-  } as CartServerHandlers;
+  };
 
   Object.defineProperty(handlers, cartServerHandlersCartQuery, { value: queries.cart });
-  return handlers;
+  if (customerSession) {
+    // Symbol-keyed and non-enumerable so the capability never registers as a
+    // route in handleShopifyRoutes and stays uncallable outside Hydrogen wiring.
+    Object.defineProperty(handlers, cartBuyerIdentitySync, {
+      value: createCartBuyerIdentitySync(),
+    });
+  }
+  return handlers as CartServerHandlers | CartServerHandlersWithCustomerSession;
+}
+
+function createCartBuyerIdentitySync(): CartBuyerIdentitySync {
+  return {
+    updateBuyerIdentity: updateCartBuyerIdentity,
+    expiredCartCookie: createExpiredCartCookie(),
+  };
+}
+
+async function updateCartBuyerIdentity(
+  context: CartBuyerIdentitySyncContext,
+  customerAccessToken: string | null,
+): Promise<void> {
+  const cartId = getCartIdFromCookie(context.request);
+  if (!cartId) return;
+
+  const result = await context.storefrontClient.graphql(cartBuyerIdentityUpdateMutation, {
+    variables: { cartId, buyerIdentity: { customerAccessToken } },
+  });
+  const { userErrors } = assertMutationData(result, "cartBuyerIdentityUpdate");
+  if (userErrors.length > 0) {
+    throw new Error(userErrors.map(({ message }) => message).join("\n"));
+  }
 }
 
 type RuntimeCartQueries = typeof cartQueries;
 
 async function handleGet(
-  { request, storefrontClient }: CartGetHandlerContext,
+  context: CartGetHandlerContext & Partial<CartCustomerSessionReadContext>,
   queries: RuntimeCartQueries,
+  customerSession?: CartCustomerSession,
 ): Promise<CartGetResult> {
+  const { request, storefrontClient } = context;
   const cartIdSource = request ?? storefrontClient.requestContext;
   const result = await getCart(getCartId(cartIdSource), storefrontClient, queries.cart);
   logCartErrors(result.errors);
-  const data = { cart: result.cart, ...(result.errors && { errors: result.errors }) };
+  const cart = await addLoggedInCheckoutParam(result.cart, context, customerSession);
+  const data = { cart, ...(result.errors && { errors: result.errors }) };
   const headers = createProxyResponseHeaders(result.headers);
   applyPrivateResponseCacheHeaders(headers);
 
@@ -158,32 +251,49 @@ function logCartErrors(errors: CartGetData["errors"]): void {
 }
 
 async function handlePost(
-  context: CartPostHandlerContext,
+  context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>,
   queries: RuntimeCartQueries,
+  customerSession?: CartCustomerSession,
 ): Promise<CartPostResult> {
   const { request, storefrontClient } = context;
   const isFormRequest = !request.headers.get("content-type")?.includes("application/json");
   const redirectTarget = safeRedirectTarget(request);
 
-  let action: CartAction;
-  let bodyCartId: string | null;
-  try {
-    ({ action, cartId: bodyCartId } = await parseCartRequest(request));
-  } catch (error) {
-    if (isFormRequest) return redirectResult(redirectTarget);
-    return errorResult("invalid_cart_request", getErrorMessage(error, "Bad Request"));
-  }
+  const parsedCartRequest = await parseCartAction(request, isFormRequest, redirectTarget);
+  if (parsedCartRequest.type === "response") return parsedCartRequest.response;
 
   const cookieCartId = getCartIdFromCookie(request);
-  const cartId = bodyCartId ?? cookieCartId;
+  const cartId = parsedCartRequest.bodyCartId ?? cookieCartId;
+  const missingCartResponse = getMissingCartResponse(
+    parsedCartRequest.action,
+    cartId,
+    isFormRequest,
+    redirectTarget,
+  );
+  if (missingCartResponse) return missingCartResponse;
 
-  if (action.intent !== "add" && !cartId) {
-    if (isFormRequest) return redirectResult(redirectTarget);
-    return errorResult("missing_cart", "No cart exists. Add an item first.");
-  }
+  const { action } = parsedCartRequest;
+  const customerAccess = await getCartCreateCustomerAccess(
+    parsedCartRequest.action,
+    cartId,
+    context,
+    customerSession,
+  );
+  const customerSessionHeaders = customerAccess.commitSession
+    ? await getCustomerSessionHeaders(context)
+    : undefined;
+  const result = await executeCartMutation(
+    action,
+    cartId,
+    storefrontClient,
+    queries,
+    customerAccess.accessToken,
+    customerSessionHeaders,
+  );
+  if (result.type !== "mutation") return result.response;
 
-  const result = await executeMutation(action, cartId, storefrontClient, queries);
   const headers = createProxyResponseHeaders(result.headers);
+  appendHeaders(headers, customerSessionHeaders);
 
   // Only persist carts the browser already owns, including newly-created carts.
   if (cartId === cookieCartId && result.cartId !== null && result.cartId !== cookieCartId) {
@@ -192,6 +302,83 @@ async function handlePost(
 
   if (isFormRequest) return redirectResult(redirectTarget, headers);
   return jsonResult(result.data, headers);
+}
+
+async function parseCartAction(
+  request: Request,
+  isFormRequest: boolean,
+  redirectTarget: string,
+): Promise<ParsedCartRequestResult> {
+  try {
+    const { action, cartId: bodyCartId } = await parseCartRequest(request);
+    return { type: "action", action, bodyCartId };
+  } catch (error) {
+    if (isFormRequest) return { type: "response", response: redirectResult(redirectTarget) };
+    return {
+      type: "response",
+      response: errorResult("invalid_cart_request", getErrorMessage(error, "Bad Request")),
+    };
+  }
+}
+
+function getMissingCartResponse(
+  action: CartAction,
+  cartId: string | null,
+  isFormRequest: boolean,
+  redirectTarget: string,
+): CartPostResult | undefined {
+  if (action.intent === "add" || cartId) return undefined;
+  if (isFormRequest) return redirectResult(redirectTarget);
+  return errorResult("missing_cart", "No cart exists. Add an item first.");
+}
+
+async function executeCartMutation(
+  action: CartAction,
+  cartId: string | null,
+  storefrontClient: StorefrontClient,
+  queries: RuntimeCartQueries,
+  customerAccessToken: string | undefined,
+  customerSessionHeaders: Headers | undefined,
+): Promise<
+  ({ type: "mutation" } & MutationResult) | { type: "response"; response: CartPostResult }
+> {
+  try {
+    return {
+      type: "mutation",
+      ...(await executeMutation(action, cartId, storefrontClient, queries, customerAccessToken)),
+    };
+  } catch (error) {
+    if (!customerSessionHeaders) throw error;
+    log.error("cart mutation failed", { error });
+    return {
+      type: "response",
+      response: errorResult(
+        "cart_mutation_failed",
+        CART_MUTATION_FAILED_MESSAGE,
+        customerSessionHeaders,
+        CART_MUTATION_FAILED_STATUS,
+      ),
+    };
+  }
+}
+
+async function getCustomerSessionHeaders(
+  context: Partial<CartCustomerSessionWriteContext>,
+): Promise<Headers | undefined> {
+  assertCustomerSessionWriteContext(context);
+  const sessionHeaders = await context.sessionManager.commit?.();
+  if (!sessionHeaders) return undefined;
+  return new Headers(sessionHeaders);
+}
+
+function appendHeaders(headers: Headers, headersToAppend: Headers | undefined) {
+  if (!headersToAppend) return;
+  for (const [key, value] of headersToAppend) {
+    if (key !== "set-cookie") headers.append(key, value);
+  }
+  for (const setCookie of headersToAppend.getSetCookie()) {
+    headers.append("set-cookie", setCookie);
+  }
 }
 
 function safeRedirectTarget(request: Request): string {
@@ -261,9 +448,10 @@ async function executeMutation(
   cartId: string | null,
   storefront: CartMutationClient,
   queries: RuntimeCartQueries,
+  customerAccessToken?: string,
 ): Promise<MutationResult> {
   if (action.intent === "add") {
-    return executeAdd(action.lines, cartId, storefront, queries);
+    return executeAdd(action.lines, cartId, storefront, queries, customerAccessToken);
   }
 
   if (!cartId) {
@@ -322,6 +510,7 @@ async function executeAdd(
   cartId: string | null,
   storefront: CartMutationClient,
   queries: RuntimeCartQueries,
+  customerAccessToken?: string,
 ): Promise<MutationResult> {
   if (cartId) {
     const result = await storefront.graphql(queries.cartLinesAdd, {
@@ -332,10 +521,97 @@ async function executeAdd(
   }
 
   const result = await storefront.graphql(queries.cartCreate, {
-    variables: { input: { lines } },
+    variables: {
+      input: {
+        lines,
+        ...(customerAccessToken && { buyerIdentity: { customerAccessToken } }),
+      },
+    },
   });
   const { cart, userErrors, warnings } = assertMutationData(result, "cartCreate");
   return createMutationResult(cart, userErrors, warnings, result.headers);
+}
+
+async function getCartCreateCustomerAccess(
+  action: CartAction,
+  cartId: string | null,
+  context: Partial<CartCustomerSessionWriteContext>,
+  customerSession?: CartCustomerSession,
+): Promise<CartCustomerAccessTokenResult> {
+  if (action.intent !== "add" || cartId || !customerSession) {
+    return { commitSession: false };
+  }
+
+  assertCustomerSessionWriteContext(context);
+  const accessToken = await customerSession.getAccessToken(
+    context.sessionManager,
+    context.requestContext,
+  );
+  if (accessToken) return { accessToken, commitSession: false };
+
+  const isLoggedIn = await customerSession.isLoggedIn(
+    context.sessionManager,
+    context.requestContext,
+  );
+  if (!isLoggedIn) return { commitSession: false };
+
+  const refreshResult = await getCustomerSessionRefreshResult(
+    customerSession,
+    context.sessionManager,
+    context.requestContext,
+  );
+  if (refreshResult) {
+    return {
+      accessToken: refreshResult.accessToken,
+      commitSession: refreshResult.status !== "transient",
+    };
+  }
+
+  const refreshedAccessToken = await customerSession.getOrRefreshAccessToken(
+    context.sessionManager,
+    context.requestContext,
+  );
+  return {
+    accessToken: refreshedAccessToken,
+    commitSession: true,
+  };
+}
+
+async function addLoggedInCheckoutParam<TCart extends CartData>(
+  cart: TCart | null,
+  context: Partial<CartCustomerSessionReadContext>,
+  customerSession?: CartCustomerSession,
+): Promise<TCart | null> {
+  if (!cart || !customerSession) return cart;
+  assertCustomerSessionReadContext(context);
+  if (!(await customerSession.isLoggedIn(context.sessionManager, context.requestContext)))
+    return cart;
+  if (!cart.checkoutUrl) return cart;
+
+  const checkoutUrl = new URL(cart.checkoutUrl);
+  checkoutUrl.searchParams.set("logged_in", "true");
+  return { ...cart, checkoutUrl: checkoutUrl.toString() };
+}
+
+function assertCustomerSessionContext(
+  context: Partial<CartCustomerSessionReadContext | CartCustomerSessionWriteContext>,
+): void {
+  if (context.sessionManager && context.requestContext) return;
+  throw new Error(
+    "Cart handlers configured with customerSession require sessionManager and requestContext.",
+  );
+}
+
+function assertCustomerSessionReadContext(
+  context: Partial<CartCustomerSessionReadContext>,
+): asserts context is CartCustomerSessionReadContext {
+  assertCustomerSessionContext(context);
+}
+
+function assertCustomerSessionWriteContext(
+  context: Partial<CartCustomerSessionWriteContext>,
+): asserts context is CartCustomerSessionWriteContext {
+  assertCustomerSessionContext(context);
 }
 
 async function executeDiscountModify(
@@ -372,8 +648,18 @@ function redirectResult(location: string, headers: HeadersInit = {}): ShopifyRou
   return { type: "redirect", location, headers };
 }
 
-function errorResult(code: CartErrorCode, message: string): ShopifyRouteErrorResult<CartError> {
-  return { type: "error", error: { code, message } };
+function errorResult(
+  code: CartErrorCode,
+  message: string,
+  headers?: HeadersInit,
+  status?: number,
+): ShopifyRouteErrorResult<CartError> {
+  return {
+    type: "error",
+    error: { code, message },
+    ...(headers && { headers }),
+    ...(status !== undefined && { status }),
+  };
 }
 
 function getErrorMessage(error: unknown, fallback: string): string {

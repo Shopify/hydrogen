@@ -34,6 +34,7 @@ export type {
   CreateCustomerAccountServerHandlersOptions,
   CreateCustomerSessionOptions,
   CustomerAccountServerHandlers,
+  CustomerAccountServerHandlersWithCartSync,
   CustomerSession,
   LogoutOptions,
   PrepareLoginUrlOptions,
