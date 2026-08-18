@@ -217,7 +217,6 @@
 		{#if formState.selectedVariant}
 			<ShopPayButton
 				variants={[{ id: formState.selectedVariant.id, quantity }]}
-				channel="headless"
 				disabled={!addable || pending}
 				width="100%"
 				borderRadius="9999px"

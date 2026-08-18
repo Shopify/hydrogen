@@ -19,7 +19,7 @@ Pick the mechanism from the failure class. Never double-report (throw AND log th
 | Programming errors | Throw a typed error synchronously. | Bad arguments, invariant violations. |
 | Request-scoped failures with a caller | Throw a typed error; the caller decides retry/render. | `StorefrontApiError`, `CustomerAccountApiError`, `CartActionError`, `CartNetworkError`. |
 | Server handlers with internal recovery | Catch failures, log via the scoped logger, return a structured error `Response`. | Cart server handler catches a network failure and returns `500` with a JSON error body. |
-| Background browser failures | Scoped logger at `error` level. | Script loads (Shop Pay), background cart loads, analytics publish failures. |
+| Background browser failures | Scoped logger at `error` level. | Runtime script loads, background cart loads, analytics publish failures. |
 | Misuse / degradation | Scoped logger at `warn` level. | Mock shop detected, analytics destination misconfigured, deprecated option passed. |
 | Buyer-visible user errors | Reactive state only — never logged. | Cart `userErrors` surfaced to the UI; the user corrects and retries. |
 

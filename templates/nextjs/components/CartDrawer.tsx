@@ -1,5 +1,6 @@
 "use client";
 
+import { ShopPayButton } from "@shopify/hydrogen/react";
 import { Suspense } from "react";
 
 import { useSuspenseCart } from "@/lib/cart";
@@ -72,7 +73,8 @@ function CartDrawerInner() {
       </div>
 
       {!isEmpty && checkoutUrl ? (
-        <div className="border-border shrink-0 border-t p-4">
+        <div className="border-border grid shrink-0 gap-3 border-t p-4">
+          <ShopPayButton width="100%" borderRadius="8px" />
           <a
             href={checkoutUrl}
             className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 w-full items-center justify-center gap-2 px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"

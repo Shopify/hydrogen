@@ -27,7 +27,9 @@ const e2eWorkerEntry = process.env.HYDROGEN_E2E_ENTRY;
 const e2eEnvVars = process.env.HYDROGEN_E2E_ENV_VARS;
 const e2eOxygenOptions = {
   ...(e2eWorkerEntry ? { entry: e2eWorkerEntry } : {}),
-  ...(e2eEnvVars ? { env: JSON.parse(e2eEnvVars) as Record<string, string> } : {}),
+  ...(e2eEnvVars
+    ? { env: JSON.parse(e2eEnvVars) as Record<string, string> }
+    : { env: process.env as Record<string, string> }),
 };
 
 export default defineConfig({

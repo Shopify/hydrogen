@@ -245,7 +245,6 @@ export function ProductPurchasePanel(props: { product: ProductData }) {
           {(selectedVariant) => (
             <ShopPayButton
               variants={[{ id: selectedVariant().id, quantity: quantity() }]}
-              channel="headless"
               disabled={!addable() || pending()}
               width="100%"
               borderRadius="9999px"

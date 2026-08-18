@@ -1,99 +1,49 @@
-import { defineComponent, h, onMounted, shallowRef, type PropType } from "vue";
+import { defineComponent, h } from "vue";
 
-import { getLogger } from "../core/logging";
 import {
-  getShopPayButtonAttributes,
-  getShopPayButtonStyleProperties,
-  handleShopPayCheckoutClick,
-  loadShopJs,
+  defineShopPayButton,
+  getShopPayButtonDeclarativeShadowDomHtml,
+  getShopPayButtonElementAttributes,
   SHOP_PAY_BUTTON_TAG_NAME,
   type ShopPayButtonOptions,
-} from "../core/shop-pay";
-import { DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT } from "../core/shop-pay/shop-pay";
+} from "../core/shop-pay/shop-pay";
 
-const log = getLogger("shop-pay");
+export type ShopPayButtonProps = ShopPayButtonOptions;
 
-export type ShopPayButtonProps = Omit<ShopPayButtonOptions, "checkoutUrl"> & {
-  loadScript?: boolean;
+type CompletePropOptions<T> = {
+  [K in keyof T]-?: unknown;
 };
 
-export const ShopPayButton = defineComponent({
-  name: "ShopPayButton",
-  inheritAttrs: false,
-  props: {
-    variants: {
-      type: Array as PropType<ShopPayButtonOptions["variants"]>,
-      default: undefined,
-    },
-    paymentOption: {
-      type: String as PropType<ShopPayButtonOptions["paymentOption"]>,
-      default: undefined,
-    },
-    source: {
-      type: String,
-      default: undefined,
-    },
-    sourceToken: {
-      type: String,
-      default: undefined,
-    },
-    channel: {
-      type: String as PropType<ShopPayButtonOptions["channel"]>,
-      default: undefined,
-    },
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    width: {
-      type: String,
-      default: undefined,
-    },
-    borderRadius: {
-      type: String,
-      default: undefined,
-    },
-    loadScript: {
-      type: Boolean,
-      default: true,
-    },
-  },
-  setup(props, { attrs }) {
-    const storefrontUrl = shallowRef<string>();
+const canUseDom = typeof document !== "undefined";
+defineShopPayButton();
 
-    onMounted(() => {
-      storefrontUrl.value = window.location.origin;
-      if (!props.loadScript) return;
-      loadShopJs().catch((error: unknown) => {
-        log.error("shop-js failed to load", { error });
-      });
-    });
-
+export const ShopPayButton = defineComponent(
+  (props: ShopPayButtonProps) => {
     return () => {
-      const style = getShopPayButtonStyleProperties(props);
-      const { style: wrapperStyle, ...elementAttrs } = attrs;
-      const effectiveProps = {
-        ...props,
-        checkoutUrl: storefrontUrl.value,
-      };
-      const element = h(SHOP_PAY_BUTTON_TAG_NAME, {
-        ...elementAttrs,
-        ...getShopPayButtonAttributes(effectiveProps),
-        ...(__DEV__
-          ? {
-              onClickCapture: (event: MouseEvent) => {
-                handleShopPayCheckoutClick(event, effectiveProps);
-              },
-            }
-          : {}),
-        ...(Object.keys(style).length > 0 ? { style } : {}),
-      });
-
-      return h(
-        "div",
-        { style: [{ minHeight: DEFAULT_SHOP_PAY_BUTTON_MIN_HEIGHT }, wrapperStyle] },
-        element,
-      );
+      const attributes = getShopPayButtonElementAttributes(props);
+      return canUseDom
+        ? h(SHOP_PAY_BUTTON_TAG_NAME, attributes)
+        : h(SHOP_PAY_BUTTON_TAG_NAME, {
+            ...attributes,
+            innerHTML: getShopPayButtonDeclarativeShadowDomHtml(props),
+          });
     };
   },
-});
+  {
+    name: "ShopPayButton",
+    inheritAttrs: false,
+    props: {
+      variants: null,
+      channel: null,
+      checkoutUrl: String,
+      paymentOption: null,
+      source: String,
+      sourceToken: String,
+      nonce: String,
+      disabled: Boolean,
+      width: String,
+      borderRadius: String,
+      accessibilityLabel: String,
+    } satisfies CompletePropOptions<ShopPayButtonProps>,
+  },
+);

@@ -25,10 +25,10 @@ function AddToCart({ product }: { product: ProductData }) {
       {selectedVariant ? (
         <ShopPayButton
           variants={[{ id: selectedVariant.id, quantity }]}
-          channel="hydrogen"
           disabled={!addable || pending}
           width="100%"
           borderRadius="9999px"
+          accessibilityLabel="Shop Payで購入"
         />
       ) : null}
     </>
@@ -36,8 +36,15 @@ function AddToCart({ product }: { product: ProductData }) {
 }
 ```
 
-`ShopPayButton` is a client-only component because it reads `window.location.origin` after mount and loads Shop JS. In Next.js, put it in a `"use client"` component.
+`ShopPayButton` server-renders a `<hydrogen-shop-pay-button>` with a declarative
+shadow root. The shadow root preserves the branded styles before JavaScript runs
+and upgrades client-created instances without hydration errors.
 
-Hydrogen reserves space around the custom element while it hydrates. Use wrapper `style` only when it needs a different reservation; do not pass `height`.
-
-Use `loadScript={false}` only when the app already loads the Shop Pay loader globally.
+Size with `width`/`borderRadius`. `className` and `style` are intentionally not
+supported because page CSS cannot reach the internal anchor. Pass
+`accessibilityLabel` when the storefront language is not English. Localize words
+around the brand, but never translate `Shop Pay` itself. Pass `nonce` when the
+storefront's Content Security Policy requires nonces for inline `<style>`
+elements. The nonce does not authorize the `style` attribute used by `width` and
+`borderRadius`; strict policies must allow inline style attributes for those
+custom dimensions.
