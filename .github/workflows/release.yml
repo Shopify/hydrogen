@@ -31,7 +31,7 @@ jobs:
       TURBO_TELEMETRY_DISABLED: "1"
     outputs:
       published: ${{ steps.changesets.outputs.published }}
-      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
+      publishedPackages: ${{ steps.changesets.outputs.published-packages }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -66,17 +66,18 @@ jobs:
 
       - name: Create preview release PR or publish
         id: changesets
-        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1.7.0
+        # v2 of the action is required for changesets v3: it detects published
+        # packages through the CHANGESETS_OUTPUT file instead of parsing the
+        # "New tag:" stdout lines that v3 no longer prints. With v1.7.0 the
+        # `published` output stayed "false" after a successful npm publish,
+        # which skipped compile-preview-templates and the tag/release push
+        uses: changesets/action@198f833dd7d863100ea6e28967bc9a9fdefadb0a # v2.1.0
         with:
-          version: pnpm changeset version
-          publish: pnpm changeset publish
-          commit: "[ci] preview release"
-          title: "[ci] preview release"
-        env:
-          GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
-          # Satisfies the action's npmrc check without configuring a real
-          # token; publishing authenticates via OIDC trusted publishing
-          NPM_TOKEN: ""
+          version-script: pnpm changeset version
+          publish-script: pnpm changeset publish
+          commit-message: "[ci] preview release"
+          pr-title: "[ci] preview release"
+          github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
 
   compile-preview-templates:
     name: Compile Preview Templates
