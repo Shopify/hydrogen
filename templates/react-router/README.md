@@ -11,11 +11,11 @@ analytics, and a consent banner wired up.
 ## Pages
 
 - `/` — home (editorial hero, best sellers, shop by category)
-- `/products/:handle` — product detail (gallery, variants, add to cart)
+- `/products/:handle` — product detail (gallery, variants, add to cart, Shop Pay)
 - `/collections` — all collections
 - `/collections/:handle` — collection with filters, sort, and pagination
 - `/search` — product search with the same filtering
-- `/cart` — cart (also the no-JS fallback for the cart drawer)
+- `/cart` — cart with Shop Pay (also the no-JS fallback for the cart drawer)
 
 ## What it demonstrates
 

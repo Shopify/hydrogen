@@ -640,7 +640,6 @@ function AddToCart({
         <div className="mt-3">
           <ShopPayButton
             variants={[{ id: selectedVariant.id, quantity }]}
-            channel="hydrogen"
             disabled={!addable || pending}
             width="100%"
             borderRadius="8px"

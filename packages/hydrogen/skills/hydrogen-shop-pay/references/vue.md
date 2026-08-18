@@ -19,15 +19,21 @@ Render only when a variant is resolved:
 <ShopPayButton
   v-if="form.selectedVariant"
   :variants="[{ id: form.selectedVariant.id, quantity }]"
-  channel="hydrogen"
   :disabled="!addable || form.pending.value"
   width="100%"
   border-radius="9999px"
+  accessibility-label="Shop Pay से खरीदें"
 />
 ```
 
-In Nuxt, this component should render in a client-capable component. The Vue binding sets the checkout URL and loads Shop JS in `onMounted`.
+The component server-renders a `<hydrogen-shop-pay-button>` with a declarative
+shadow root, so it works with Nuxt server rendering and needs no client-only
+wrapper. The shadow root protects the branded internal styles.
 
-Hydrogen reserves space around the custom element while it hydrates. Use wrapper `style` only when it needs a different reservation; do not pass `height`.
-
-Use `:load-script="false"` only when another component/script already loads Shop JS.
+Size with `width`/`border-radius`. Extra `class` and `style` attributes are
+intentionally not forwarded into the shadow root. Pass `accessibility-label`
+when the storefront language is not English. Localize words around the brand,
+but never translate `Shop Pay` itself. Pass `nonce` when the storefront's
+Content Security Policy requires nonces for inline `<style>` elements. The nonce
+does not authorize the `style` attribute used by `width` and `border-radius`;
+strict policies must allow inline style attributes for those custom dimensions.

@@ -122,16 +122,13 @@
         "packages/hydrogen/src/core/money/format.ts",
         "packages/hydrogen/src/core/observable.ts",
         "packages/hydrogen/src/core/product/product-form.ts",
-        "packages/hydrogen/src/core/shop-pay/shop-pay.ts",
         "packages/hydrogen/src/react/cart.tsx",
         "packages/hydrogen/src/react/collection.tsx",
         "packages/hydrogen/src/react/predictive-search.tsx",
-        "packages/hydrogen/src/react/shop-pay.tsx",
         "packages/hydrogen/src/vue/cart.ts",
         "packages/hydrogen/src/vue/collection.ts",
         "packages/hydrogen/src/vue/predictive-search.ts",
-        "packages/hydrogen/src/vue/product.ts",
-        "packages/hydrogen/src/vue/shop-pay.ts"
+        "packages/hydrogen/src/vue/product.ts"
       ],
       "rules": {
         "@typescript-eslint/consistent-type-assertions": "off"
