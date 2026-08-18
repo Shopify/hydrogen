@@ -17,8 +17,11 @@ function createSessionManager(localeValue: unknown) {
   };
 }
 
+/** Browser document navigations send `Accept: text/html`. */
 function requestFor(path: string): Request {
-  return new Request(`https://store.example${path}`);
+  return new Request(`https://store.example${path}`, {
+    headers: { accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" },
+  });
 }
 
 afterEach(() => {
@@ -52,6 +55,50 @@ describe("getLocaleRedirect", () => {
     });
 
     expect(response?.headers.get("location")).toBe("/fr-ca");
+  });
+
+  it("never redirects non-navigation methods — a 302 would drop a POST body", async () => {
+    const formPost = new Request("https://store.example/newsletter", {
+      method: "POST",
+      body: new URLSearchParams({ email: "buyer@example.com" }),
+    });
+
+    const response = await getLocaleRedirect(formPost, {
+      i18n: DEFAULT_I18N,
+      sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
+    });
+
+    expect(response).toBeNull();
+  });
+
+  it("redirects HEAD requests like GET", async () => {
+    const response = await getLocaleRedirect(
+      new Request("https://store.example/products", {
+        method: "HEAD",
+        headers: { accept: "text/html" },
+      }),
+      {
+        i18n: DEFAULT_I18N,
+        sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
+      },
+    );
+
+    expect(response?.status).toBe(302);
+  });
+
+  it("never redirects requests that do not accept HTML (fetch, data, JSON callers)", async () => {
+    for (const accept of [undefined, "*/*", "application/json"]) {
+      const clientFetch = new Request("https://store.example/api/data", {
+        headers: accept ? { accept } : {},
+      });
+
+      const response = await getLocaleRedirect(clientFetch, {
+        i18n: DEFAULT_I18N,
+        sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
+      });
+
+      expect(response).toBeNull();
+    }
   });
 
   it("never redirects prefixed URLs — the URL always wins", async () => {
