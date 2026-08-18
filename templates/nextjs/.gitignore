@@ -4,6 +4,7 @@
 # next.js
 /.next/
 /out/
+/certificates/
 
 # production
 /build

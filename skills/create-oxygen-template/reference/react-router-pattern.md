@@ -100,7 +100,7 @@ export default defineConfig({
 });
 ```
 
-Do not add `localCdnAssets`, local HTTPS plugins, `hydrogen()` from classic Hydrogen, or `allowedHosts` unless separately requested.
+Keep the Hydrogen `localHttps` plugin when Customer Account support is enabled. Do not add `localCdnAssets`, `hydrogen()` from classic Hydrogen, or separate `allowedHosts` configuration unless requested.
 
 Keep the `build.assetsInlineLimit: 0` and `ssr.optimizeDeps.include` interop settings unless a successful Worker build and MiniOxygen runtime test proves they are unnecessary. They prevent common CJS/ESM runtime failures in the Oxygen runtime such as `module is not defined` / `require is not defined`. Use plain `oxygen()`; MiniOxygen auto-loads `.env` into the Worker via its own `loadEnv` fallback when no `env` option is provided.
 
@@ -300,7 +300,8 @@ Replace each `@shared/*` import with template-local code:
 - encrypted customer session -> copy into `app/lib/customer-session.ts` if Customer Account remains enabled (it is
   already Web-Crypto based and Oxygen-safe)
 - storefront cache adapter -> remove if replacing LRU with Oxygen `caches.open`
-- local HTTPS/CDN helpers -> do not copy
+- local CDN helpers -> do not copy
+- legacy local HTTPS helpers -> replace with `localHttps` from `@shopify/hydrogen/vite`, using its portable default certificate paths
 
 Additionally, keep `lib/route-templates.ts` unchanged — `routeTemplates` is required by `handleShopifyRedirects({routeTemplates})`, `<ShopifyScripts routes={routeTemplates}>`, and `getPredictiveSearchItemUrl(product, {routes: routeTemplates, …})`.
 

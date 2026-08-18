@@ -1,22 +1,20 @@
+import { localHttps } from "@shopify/hydrogen/vite";
 import { defineConfig } from "@solidjs/start/config";
 import tailwindcss from "@tailwindcss/vite";
 
-import {
-  localHttpsDevServerConfig,
-  localHttpsPlugin,
-  localHttpsServerConfig,
-} from "../shared/local-https-vite";
-
-const localHttpsDevServer = localHttpsDevServerConfig();
+const enabled =
+  process.env.VITE_LOCAL_HTTPS === "1" || process.env.npm_lifecycle_event === "https:dev";
+const httpsOptions = { enabled };
+const httpsPlugin = localHttps(httpsOptions);
+const devServer = httpsPlugin.api.getDevServerConfig();
 
 export default defineConfig({
   middleware: "src/middleware.ts",
   server: {
-    https: localHttpsDevServer?.https,
+    https: devServer?.https,
   },
   vite: {
-    plugins: [localHttpsPlugin(), tailwindcss()],
-    server: localHttpsServerConfig(),
+    plugins: [httpsPlugin, tailwindcss()],
     resolve: {
       alias: {
         "@shared": new URL("../shared", import.meta.url).pathname,
