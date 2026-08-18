@@ -258,6 +258,7 @@ export {
   fetchLocalization,
   getLocaleRedirect,
   getLocalizedPath,
+  getSupportedCountries,
   localizationQueries,
   makeLocalizationQueries,
   matchLocaleFromRequest,

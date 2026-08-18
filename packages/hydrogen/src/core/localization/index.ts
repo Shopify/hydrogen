@@ -15,7 +15,7 @@ export type {
   LocalizationGetResult,
   LocalizationPostResult,
 } from "./server-handlers";
-export { fetchLocalization, queryLocalization } from "./get-localization";
+export { fetchLocalization, getSupportedCountries, queryLocalization } from "./get-localization";
 export type {
   LocalizationData,
   LocalizationDataForOptions,

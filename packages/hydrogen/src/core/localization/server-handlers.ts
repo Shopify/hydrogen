@@ -23,7 +23,12 @@ import {
   LOCALIZATION_REDIRECT_TO_FIELD,
   LOCALIZATION_SESSION_KEY,
 } from "./constants";
-import { fetchLocalization, type LocalizationDataForOptions } from "./get-localization";
+import {
+  fetchLocalization,
+  getSupportedCountries,
+  groupLanguagesByCountry,
+  type LocalizationDataForOptions,
+} from "./get-localization";
 import type { MatchedLocale, SupportedLocale } from "./locale-matching";
 import {
   getLocalePathPrefix,
@@ -209,9 +214,8 @@ function parseLanguageCode(value: string | null): ShopifyLanguageCode | undefine
 }
 
 /**
- * Narrows the live country list to the configured `supportedLocales` so the selector can never
- * offer a locale the router won't serve, warning when the merchant's Markets config has grown
- * beyond the configured list (drift detection).
+ * Applies the shared `getSupportedCountries` intersection, warning when the merchant's Markets
+ * config has grown beyond the configured list (drift detection).
  */
 function filterSupportedCountries(
   liveCountries: LiveCountry[],
@@ -220,7 +224,6 @@ function filterSupportedCountries(
   if (!supportedLocales) return liveCountries;
 
   const supportedLanguagesByCountry = groupLanguagesByCountry(supportedLocales);
-
   const driftedCountries = liveCountries
     .map((country) => country.isoCode)
     .filter((isoCode) => !supportedLanguagesByCountry.has(isoCode));
@@ -230,30 +233,7 @@ function filterSupportedCountries(
     });
   }
 
-  return liveCountries.flatMap((country) => {
-    const supportedLanguages = supportedLanguagesByCountry.get(country.isoCode);
-    if (!supportedLanguages) return [];
-    return [
-      {
-        ...country,
-        availableLanguages: country.availableLanguages.filter((language) =>
-          supportedLanguages.has(language.isoCode),
-        ),
-      },
-    ];
-  });
-}
-
-function groupLanguagesByCountry(
-  supportedLocales: readonly SupportedLocale[],
-): Map<string, Set<string>> {
-  const languagesByCountry = new Map<string, Set<string>>();
-  for (const locale of supportedLocales) {
-    const languages = languagesByCountry.get(locale.country) ?? new Set();
-    languages.add(locale.language);
-    languagesByCountry.set(locale.country, languages);
-  }
-  return languagesByCountry;
+  return getSupportedCountries(liveCountries, supportedLocales);
 }
 
 class LocalizationValidationError extends Error {}

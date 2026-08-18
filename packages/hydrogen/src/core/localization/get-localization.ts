@@ -1,6 +1,7 @@
 import type { GraphQLFormattedError, StorefrontClient } from "../../client";
 import type { AnyStorefrontQueryString, StorefrontQueryString } from "../../graphql";
 import type { ShopifyCountryCode, ShopifyLanguageCode } from "../request-context";
+import type { SupportedLocale } from "./locale-matching";
 import {
   localizationQueries,
   type CreateLocalizationQueriesOptions,
@@ -106,4 +107,50 @@ export async function fetchLocalization<
 
 function formatGraphQLErrors(errors: GraphQLFormattedError[]): string {
   return errors.map(({ message }) => message).join(", ");
+}
+
+type CountryShape = {
+  isoCode: string;
+  availableLanguages: Array<{ isoCode: string }>;
+};
+
+/**
+ * Narrows live `availableCountries` to the configured `supportedLocales` (pair-wise: both the
+ * country and its languages), so a selector can never offer a locale the router won't serve.
+ * Use wherever localization data reaches a selector — SSR loaders and the GET handler apply
+ * the same intersection. Without `supportedLocales` (permissive mode) the list is unchanged.
+ */
+export function getSupportedCountries<TCountry extends CountryShape>(
+  availableCountries: readonly TCountry[],
+  supportedLocales?: readonly SupportedLocale[],
+): TCountry[] {
+  if (!supportedLocales) return [...availableCountries];
+
+  const languagesByCountry = groupLanguagesByCountry(supportedLocales);
+
+  return availableCountries.flatMap((country) => {
+    const supportedLanguages = languagesByCountry.get(country.isoCode);
+    if (!supportedLanguages) return [];
+    return [
+      {
+        ...country,
+        availableLanguages: country.availableLanguages.filter((language) =>
+          supportedLanguages.has(language.isoCode),
+        ),
+      },
+    ];
+  });
+}
+
+/** Module-internal: shared with the server handlers' drift detection. */
+export function groupLanguagesByCountry(
+  supportedLocales: readonly SupportedLocale[],
+): Map<string, Set<string>> {
+  const languagesByCountry = new Map<string, Set<string>>();
+  for (const locale of supportedLocales) {
+    const languages = languagesByCountry.get(locale.country) ?? new Set();
+    languages.add(locale.language);
+    languagesByCountry.set(locale.country, languages);
+  }
+  return languagesByCountry;
 }

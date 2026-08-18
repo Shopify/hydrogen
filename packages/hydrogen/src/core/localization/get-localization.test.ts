@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { StorefrontClient } from "../../client";
-import { fetchLocalization, queryLocalization } from "./get-localization";
+import { fetchLocalization, getSupportedCountries, queryLocalization } from "./get-localization";
 import { localizationQueries, makeLocalizationQueries } from "./queries";
 
 const MOCK_LOCALIZATION = {
@@ -116,6 +116,32 @@ describe("queryLocalization", () => {
     await expect(queryLocalization({ storefrontClient: client })).rejects.toThrow(
       /No localization data/,
     );
+  });
+});
+
+describe("getSupportedCountries", () => {
+  it("returns the list unchanged without supportedLocales (permissive mode)", () => {
+    const countries = MOCK_LOCALIZATION.availableCountries;
+
+    expect(getSupportedCountries(countries)).toEqual(countries);
+  });
+
+  it("intersects countries and their languages pair-wise", () => {
+    const filtered = getSupportedCountries(MOCK_LOCALIZATION.availableCountries, [
+      { country: "CA", language: "FR" },
+    ]);
+
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]?.isoCode).toBe("CA");
+    expect(filtered[0]?.availableLanguages.map(({ isoCode }) => isoCode)).toEqual(["FR"]);
+  });
+
+  it("drops countries with no supported pair", () => {
+    const filtered = getSupportedCountries(MOCK_LOCALIZATION.availableCountries, [
+      { country: "US", language: "EN" },
+    ]);
+
+    expect(filtered).toEqual([]);
   });
 });
 
