@@ -417,8 +417,8 @@ importers:
         specifier: 4.6.0
         version: 4.6.0
       '@shopify/mini-oxygen':
-        specifier: 4.2.0
-        version: 4.2.0(vite@8.0.10(@types/node@22.19.17)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))
+        specifier: 4.2.2
+        version: 4.2.2(vite@8.0.10(@types/node@22.19.17)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))
       '@shopify/oxygen-workers-types':
         specifier: ^4.1.6
         version: 4.2.0
@@ -4030,8 +4030,8 @@ packages:
       vite:
         optional: true
 
-  '@shopify/mini-oxygen@4.2.0':
-    resolution: {integrity: sha512-hViJ+9J3KDsQjH5qLrQwJEtZkKbzc/HOhWE+Z/zSuHVn6YD1ITkkp0g6pqoJ3aFoR1OqvRji0oZAHTNCgyNlqA==}
+  '@shopify/mini-oxygen@4.2.2':
+    resolution: {integrity: sha512-XSGz/525678w1VbYXRV4JfF6gtL8nWiFGyCNk+/L3f36LrThRHxCtqufzAbFcaG4G8wSQ/s9XpBfgAo99utXzA==}
     engines: {node: ^22 || ^24}
     peerDependencies:
       vite: ^6.2.1 || ^7.0.0 || ^8.0.0
@@ -13565,7 +13565,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@shopify/mini-oxygen@4.2.0(vite@8.0.10(@types/node@22.19.17)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))':
+  '@shopify/mini-oxygen@4.2.2(vite@8.0.10(@types/node@22.19.17)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))':
     dependencies:
       '@mjackson/node-fetch-server': 0.7.0
       body-parser: 1.20.4
