@@ -1,49 +1,66 @@
 # Core Helpers
 
-Use core helpers when not using React bindings:
+Use core helpers when not using the React or Vue bindings:
 
 ```ts
 import {
   createShopPayButton,
-  getShopPayButtonAttributes,
-  loadShopJs,
+  renderShopPayButton,
 } from "@shopify/hydrogen";
 ```
 
-Load Shop JS before relying on the custom element.
+Both helpers create a self-contained `<hydrogen-shop-pay-button>` with an open
+shadow root containing the protected styles and an anchor with the Shop Pay
+logo. Pick by integration shape:
+
+- `renderShopPayButton(options)` returns an HTML string. Use it in server
+  templates or frameworks with raw-HTML rendering (`{@html}`, `v-html`,
+  `innerHTML`). Server output includes a declarative shadow root and needs no
+  client JavaScript. Browser calls register the custom element and return an
+  empty host that creates its shadow root when connected; use
+  `createShopPayButton` instead for client-created strict-CSP buttons that need
+  a `nonce`.
+- `createShopPayButton(options)` returns a detached self-contained
+  `<hydrogen-shop-pay-button>` with an imperative shadow root. Use it for
+  imperative DOM UIs.
 
 For product buy buttons, pass variants:
 
 ```ts
-await loadShopJs();
 const button = createShopPayButton({
   variants: [{ id: selectedVariant.id, quantity: 1 }],
-  channel: "hydrogen",
   width: "100%",
 });
 container.append(button);
 ```
 
-For cart checkout buttons, pass the checkout URL from cart state and omit variants:
+The open shadow root can be inspected with browser developer tools, but page CSS
+cannot select its internal anchor or logo. The supported style controls are
+`width` and `borderRadius`; do not treat the open root as a styling API.
+Pass `nonce` when the storefront's Content Security Policy requires nonces for
+inline `<style>` elements. The nonce does not authorize the `style` attribute
+used by `width` and `borderRadius`; strict policies must allow inline style
+attributes for those custom dimensions.
+
+For cart checkout buttons, omit `variants`; the button links to the same-origin
+`/checkout` path and `handleShopifyRoutes` redirects it to the current cart's
+checkout:
 
 ```ts
-await loadShopJs();
 const button = createShopPayButton({
-  checkoutUrl: cart.checkoutUrl,
-  channel: "hydrogen",
   width: "100%",
 });
 container.append(button);
 ```
-
-For server-rendered markup, render the custom element attributes from `getShopPayButtonAttributes(...)` and load Shop JS on the client.
-
-When wiring core helpers directly, put the custom element in a wrapper that reserves vertical space while Shop JS hydrates. This prevents layout shift when the button loads. The logo button currently renders at roughly 42px tall, but treat that as an estimate rather than a stable API. If you need a richer loading state, render a skeleton in the wrapper until the custom element is ready.
 
 ## Validation Rules
 
 - Variant IDs must be Shopify ProductVariant GIDs or bare numeric variant IDs.
 - Quantities must be positive integers.
 - Mixed variant formats are invalid: use all strings or all `{ id, quantity }` objects.
-- Cart checkout mode omits `variants` and uses the current cart's `checkoutUrl`.
-- `disabled` suppresses checkout URL generation.
+- Cart checkout mode omits `variants`; the current cart checks out.
+- `disabled` renders the button without an `href` and with `aria-disabled="true"`.
+- `accessibilityLabel` sets the accessible name for the logo-only button, which otherwise defaults to English. Localize words around the brand, but never translate `Shop Pay` itself.
+- `channel` is optional. Set it to `headless` or `hydrogen` only when checkout needs explicit attribution to the sales channel that issued the Storefront API token.
+- `nonce` is optional. It is applied to the shadow root's `<style>` element for strict Content Security Policies in server output, `createShopPayButton`, and framework bindings.
+- Pass `checkoutUrl` when the app does not route same-origin checkout paths through `handleShopifyRoutes`.

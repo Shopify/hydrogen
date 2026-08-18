@@ -1,3 +1,4 @@
+import { ShopPayButton } from "@shopify/hydrogen/react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
@@ -219,12 +220,15 @@ function CartFooter() {
           Taxes and shipping calculated at checkout
         </p>
         {cart.checkoutUrl ? (
-          <a
-            href={cart.checkoutUrl}
-            className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 w-full items-center justify-center gap-2 px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
-          >
-            Checkout
-          </a>
+          <>
+            <ShopPayButton width="100%" borderRadius="8px" />
+            <a
+              href={cart.checkoutUrl}
+              className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 w-full items-center justify-center gap-2 px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+            >
+              Checkout
+            </a>
+          </>
         ) : null}
       </div>
     </div>

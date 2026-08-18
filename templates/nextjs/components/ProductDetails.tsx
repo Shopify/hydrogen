@@ -274,7 +274,6 @@ function ProductPage({ product }: { product: ProductData }) {
           {selectedVariant ? (
             <ShopPayButton
               variants={[{ id: selectedVariant.id, quantity: 1 }]}
-              channel="hydrogen"
               disabled={!addable}
               width="100%"
               borderRadius="0.5rem"

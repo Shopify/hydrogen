@@ -81,7 +81,6 @@ const addable = computed(() => canAddToCart(props.product, form.options));
     <ShopPayButton
       v-if="form.selectedVariant"
       :variants="[{ id: form.selectedVariant.id, quantity }]"
-      channel="headless"
       :disabled="!addable || form.pending.value"
       width="100%"
       border-radius="9999px"
