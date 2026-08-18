@@ -37,8 +37,11 @@ export function Header({ header, i18n, isLoggedIn, localization, publicStoreDoma
         primaryDomainUrl={header.shop.primaryDomain.url}
         publicStoreDomain={publicStoreDomain}
       />
-      <CountrySelector localization={localization} i18n={i18n} />
-      <HeaderCtas isLoggedIn={isLoggedIn} pathPrefix={i18n.pathPrefix} />
+      <HeaderCtas
+        isLoggedIn={isLoggedIn}
+        pathPrefix={i18n.pathPrefix}
+        countrySelector={<CountrySelector localization={localization} i18n={i18n} />}
+      />
     </header>
   );
 }
@@ -95,13 +98,15 @@ export function HeaderMenu({
 function HeaderCtas({
   isLoggedIn,
   pathPrefix,
-}: Pick<HeaderProps, "isLoggedIn"> & { pathPrefix: string }) {
+  countrySelector,
+}: Pick<HeaderProps, "isLoggedIn"> & { pathPrefix: string; countrySelector: React.ReactNode }) {
   const accountPath = `${pathPrefix}/account`;
   const loginPath = `/account/login?return_to=${encodeURIComponent(accountPath)}`;
 
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
+      {countrySelector}
       <Suspense fallback={<a href={loginPath}>Sign in</a>}>
         <Await resolve={isLoggedIn} errorElement={<a href={loginPath}>Sign in</a>}>
           {(isLoggedIn) =>
