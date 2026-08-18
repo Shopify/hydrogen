@@ -1,5 +1,6 @@
 import type { GraphQLFormattedError, StorefrontClient } from "../../client";
 import type { AnyStorefrontQueryString, StorefrontQueryString } from "../../graphql";
+import type { ShopifyCountryCode, ShopifyLanguageCode } from "../request-context";
 import {
   localizationQueries,
   type CreateLocalizationQueriesOptions,
@@ -28,6 +29,10 @@ export type QueryLocalizationOptions<
 > = {
   storefrontClient: Pick<StorefrontClient, "graphql">;
   query?: TQuery;
+  /** Overrides the request context's `@inContext` country for translated fields. */
+  country?: ShopifyCountryCode;
+  /** Overrides the request context's `@inContext` language for translated fields. */
+  language?: ShopifyLanguageCode;
   signal?: AbortSignal;
 };
 
@@ -42,9 +47,14 @@ type LocalizationQueryResult<TLocalization> = {
   headers: Headers;
 };
 
+type LocalizationVariables = {
+  country?: ShopifyCountryCode;
+  language?: ShopifyLanguageCode;
+};
+
 type LocalizationGraphql<TLocalization> = (
   query: AnyStorefrontQueryString,
-  options: { signal?: AbortSignal },
+  options: { variables?: LocalizationVariables; signal?: AbortSignal },
 ) => Promise<LocalizationQueryResult<TLocalization>>;
 
 /**
@@ -66,12 +76,21 @@ export async function fetchLocalization<
 >({
   storefrontClient,
   query,
+  country,
+  language,
   signal,
 }: QueryLocalizationOptions<TQuery>): Promise<FetchLocalizationResult<TQuery>> {
   const document = query ?? localizationQueries.localization;
   const graphql = storefrontClient.graphql as LocalizationGraphql<LocalizationForQuery<TQuery>>;
 
-  const result = await graphql(document, signal ? { signal } : {});
+  const variables: LocalizationVariables = {
+    ...(country && { country }),
+    ...(language && { language }),
+  };
+  const result = await graphql(document, {
+    ...(Object.keys(variables).length > 0 && { variables }),
+    ...(signal && { signal }),
+  });
 
   if (result.errors) {
     throw new Error(`Shopify API errors: ${formatGraphQLErrors(result.errors)}`);

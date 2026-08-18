@@ -248,7 +248,13 @@ export type {
 } from "./predictive-search";
 
 export {
+  DEFAULT_LOCALIZATION_CACHE_CONTROL,
+  LOCALIZATION_API_PATH,
+  LOCALIZATION_COUNTRY_FIELD,
+  LOCALIZATION_LANGUAGE_FIELD,
+  LOCALIZATION_REDIRECT_TO_FIELD,
   LOCALIZATION_SESSION_KEY,
+  createLocalizationServerHandlers,
   fetchLocalization,
   getLocaleRedirect,
   getLocalizedPath,
@@ -259,13 +265,19 @@ export {
 } from "./localization";
 export type {
   CreateLocalizationQueriesOptions,
+  CreateLocalizationServerHandlersOptions,
   GetLocaleRedirectOptions,
   GetLocalizedPathOptions,
   LocaleSessionManager,
   LocalizationData,
   LocalizationDataForOptions,
   LocalizationDataForQuery,
+  LocalizationError,
+  LocalizationErrorCode,
   LocalizationFragments,
+  LocalizationGetData,
+  LocalizationGetResult,
+  LocalizationPostResult,
   MatchLocaleFromRequestOptions,
   MatchedLocale,
   QueryLocalizationOptions,

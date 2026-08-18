@@ -35,7 +35,14 @@ export function matchLocaleFromRequest(
   request: Request,
   options: MatchLocaleFromRequestOptions,
 ): MatchedLocale {
-  const { pathname } = new URL(request.url);
+  return matchLocalePathname(new URL(request.url).pathname, options);
+}
+
+/** Module-internal: pathname-level matching shared with the server handlers. */
+export function matchLocalePathname(
+  pathname: string,
+  options: MatchLocaleFromRequestOptions,
+): MatchedLocale {
   const candidateSegment = getFirstPathSegment(pathname);
 
   const locale = options.supportedLocales

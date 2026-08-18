@@ -160,6 +160,7 @@
         "packages/hydrogen/src/core/cart/queries.ts",
         "packages/hydrogen/src/core/localization/get-localization.ts",
         "packages/hydrogen/src/core/localization/queries.ts",
+        "packages/hydrogen/src/core/localization/server-handlers.ts",
         "packages/hydrogen/src/core/predictive-search/queries.ts",
         "packages/hydrogen/src/core/predictive-search/search.ts",
         "packages/hydrogen/src/core/collection/reconciler.ts",

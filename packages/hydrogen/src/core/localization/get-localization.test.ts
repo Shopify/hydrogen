@@ -69,6 +69,25 @@ describe("queryLocalization", () => {
     expect(graphql).toHaveBeenCalledWith(customQueries.localization, expect.any(Object));
   });
 
+  it("passes explicit locale overrides as @inContext variables", async () => {
+    const { client, graphql } = mockStorefrontClient({ localization: MOCK_LOCALIZATION });
+
+    await queryLocalization({ storefrontClient: client, country: "CA", language: "FR" });
+
+    expect(graphql).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ variables: { country: "CA", language: "FR" } }),
+    );
+  });
+
+  it("omits the variables object when no locale overrides are provided", async () => {
+    const { client, graphql } = mockStorefrontClient({ localization: MOCK_LOCALIZATION });
+
+    await queryLocalization({ storefrontClient: client });
+
+    expect(graphql).toHaveBeenCalledWith(expect.anything(), {});
+  });
+
   it("forwards the abort signal", async () => {
     const { client, graphql } = mockStorefrontClient({ localization: MOCK_LOCALIZATION });
     const controller = new AbortController();
