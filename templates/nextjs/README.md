@@ -67,7 +67,7 @@ If `PRIVATE_STOREFRONT_API_TOKEN` is unset, the app uses `mock.shop`. If you set
 - `/collections/:handle`: collection page with filters, sort, pagination, and active filter chips.
 - `/products/:handle`: product page with gallery, URL-synced variants, add to cart, Shop Pay, and related products.
 - `/search`: storefront search with filters, sort, pagination, and predictive search.
-- `/cart`: cart page and no-JS fallback for the cart drawer.
+- `/cart`: cart page with Shop Pay and no-JS fallback for the cart drawer.
 - `/account`: Customer Account OAuth page for real stores.
 - `/sitemap.xml`: product and collection sitemap.
 - `/robots.txt`: crawler rules for the storefront.
