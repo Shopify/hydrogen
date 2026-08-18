@@ -1,4 +1,5 @@
-import type { I18nConfig } from "../request-context";
+import { SHOPIFY_COUNTRY_CODES, SHOPIFY_LANGUAGE_CODES } from "../../graphql/generated/iso-codes";
+import type { I18nConfig, ShopifyCountryCode, ShopifyLanguageCode } from "../request-context";
 import {
   normalizePathPrefix,
   prependPathPrefix,
@@ -14,8 +15,11 @@ export type MatchedLocale = SupportedLocale & { pathPrefix: string };
 export type MatchLocaleFromRequestOptions = {
   /** Locale served at unprefixed paths. Its own prefix never matches — one canonical URL per page. */
   defaultLocale: SupportedLocale;
-  /** Locales the app serves under `/{language}-{country}` prefixes (strict mode). */
-  supportedLocales: readonly SupportedLocale[];
+  /**
+   * Locales the app serves under `/{language}-{country}` prefixes (strict mode). When omitted,
+   * any prefix built from valid Shopify country/language codes matches (permissive mode).
+   */
+  supportedLocales?: readonly SupportedLocale[];
 };
 
 /**
@@ -32,16 +36,51 @@ export function matchLocaleFromRequest(
   options: MatchLocaleFromRequestOptions,
 ): MatchedLocale {
   const { pathname } = new URL(request.url);
-  const candidatePrefix = `/${getFirstPathSegment(pathname)}`;
+  const candidateSegment = getFirstPathSegment(pathname);
 
-  for (const locale of options.supportedLocales) {
-    if (isSameLocale(locale, options.defaultLocale)) continue;
+  const locale = options.supportedLocales
+    ? findSupportedLocale(candidateSegment, options.supportedLocales)
+    : parseLocaleSegment(candidateSegment);
 
-    const pathPrefix = getLocalePathPrefix(locale);
-    if (pathPrefix === candidatePrefix) return { ...locale, pathPrefix };
+  if (!locale || isSameLocale(locale, options.defaultLocale)) {
+    return { ...options.defaultLocale, pathPrefix: "" };
   }
 
-  return { ...options.defaultLocale, pathPrefix: "" };
+  return { ...locale, pathPrefix: getLocalePathPrefix(locale) };
+}
+
+function findSupportedLocale(
+  candidateSegment: string,
+  supportedLocales: readonly SupportedLocale[],
+): SupportedLocale | null {
+  const candidatePrefix = `/${candidateSegment}`;
+  return supportedLocales.find((locale) => getLocalePathPrefix(locale) === candidatePrefix) ?? null;
+}
+
+/**
+ * Parses a path segment as `{language}-{country}` against the universal Shopify code sets.
+ * Hyphenated language variants map back to underscore codes (`pt-br-br` → `PT_BR` + `BR`).
+ */
+function parseLocaleSegment(segment: string): SupportedLocale | null {
+  const separatorIndex = segment.lastIndexOf("-");
+  if (separatorIndex === -1) return null;
+
+  const language = segment.slice(0, separatorIndex).replaceAll("-", "_").toUpperCase();
+  const country = segment.slice(separatorIndex + 1).toUpperCase();
+  if (!isShopifyLanguageCode(language) || !isShopifyCountryCode(country)) return null;
+
+  return { country, language };
+}
+
+const COUNTRY_CODE_SET: ReadonlySet<string> = new Set(SHOPIFY_COUNTRY_CODES);
+const LANGUAGE_CODE_SET: ReadonlySet<string> = new Set(SHOPIFY_LANGUAGE_CODES);
+
+function isShopifyCountryCode(value: string): value is ShopifyCountryCode {
+  return COUNTRY_CODE_SET.has(value);
+}
+
+function isShopifyLanguageCode(value: string): value is ShopifyLanguageCode {
+  return LANGUAGE_CODE_SET.has(value);
 }
 
 function getFirstPathSegment(pathname: string): string {

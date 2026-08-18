@@ -84,6 +84,70 @@ describe("matchLocaleFromRequest", () => {
     expect(matchPath("/fr-ca/products", []).pathPrefix).toBe("");
   });
 
+  describe("permissive mode (no supportedLocales)", () => {
+    function matchPathPermissive(path: string) {
+      return matchLocaleFromRequest(new Request(`https://store.example${path}`), {
+        defaultLocale: DEFAULT_LOCALE,
+      });
+    }
+
+    it("matches any valid ISO pair, even ones no list mentions", () => {
+      expect(matchPathPermissive("/de-de/products")).toEqual({
+        country: "DE",
+        language: "DE",
+        pathPrefix: "/de-de",
+      });
+    });
+
+    it("matches case-insensitively with a canonical lowercase prefix", () => {
+      expect(matchPathPermissive("/FR-CA/products").pathPrefix).toBe("/fr-ca");
+    });
+
+    it("parses underscore language codes from hyphenated prefixes", () => {
+      expect(matchPathPermissive("/pt-br-br/products")).toEqual({
+        country: "BR",
+        language: "PT_BR",
+        pathPrefix: "/pt-br-br",
+      });
+      expect(matchPathPermissive("/pt-br/products")).toEqual({
+        country: "BR",
+        language: "PT",
+        pathPrefix: "/pt-br",
+      });
+    });
+
+    it("rejects prefixes with an unknown country code", () => {
+      expect(matchPathPermissive("/fr-qq/products").pathPrefix).toBe("");
+      expect(matchPathPermissive("/fr-cassis/products").pathPrefix).toBe("");
+    });
+
+    it("rejects prefixes with an unknown language code", () => {
+      expect(matchPathPermissive("/qq-ca/products").pathPrefix).toBe("");
+      expect(matchPathPermissive("/a-b-c-d/products").pathPrefix).toBe("");
+    });
+
+    it("rejects segments without a separator", () => {
+      expect(matchPathPermissive("/products").pathPrefix).toBe("");
+    });
+
+    it("serves the default locale only unprefixed", () => {
+      expect(matchPathPermissive("/en-us/products")).toEqual({
+        country: "US",
+        language: "EN",
+        pathPrefix: "",
+      });
+    });
+
+    it("round-trips with getLocalizedPath", () => {
+      const matched = matchPathPermissive("/de-de/products");
+      const localizedPath = getLocalizedPath("/collections/all", {
+        fromPathPrefix: "",
+        toPathPrefix: matched.pathPrefix,
+      });
+      expect(matchPathPermissive(localizedPath)).toEqual(matched);
+    });
+  });
+
   it("round-trips with getLocalizedPath for every supported locale", () => {
     for (const locale of SUPPORTED_LOCALES) {
       const pathPrefix = localePrefixFixture(locale);

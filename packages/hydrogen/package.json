@@ -90,7 +90,7 @@
     "test:watch": "pnpm run build && vitest",
     "test:types": "pnpm run build && vitest --typecheck --run",
     "codegen": "graphql-codegen --config codegen.ts && gql.tada generate-output --tsconfig tsconfig.codegen.json",
-    "postcodegen": "node scripts/postprocess-tada-env.ts && oxfmt src/graphql/generated/*.d.ts src/graphql/generated/*.json"
+    "postcodegen": "node scripts/postprocess-tada-env.ts && node scripts/generate-iso-codes.ts && oxfmt src/graphql/generated/*.d.ts src/graphql/generated/*.json src/graphql/generated/iso-codes.ts"
   },
   "dependencies": {
     "gql.tada": "1.9.2"
