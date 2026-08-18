@@ -3,7 +3,8 @@ name: hydrogen-customer-account
 description: >
   Customer Account API setup for Hydrogen storefronts. Use when wiring customer
   sessions, login/logout/OAuth route handlers, account profile, order history,
-  account-gated UI, or Customer Account GraphQL queries.
+  account-gated UI, cart buyer identity sync, or Customer Account
+  GraphQL queries.
 ---
 
 # Customer Account API
@@ -35,7 +36,35 @@ This makes the dangerous path harder to hold wrong: TypeScript rejects `customer
 
 ## Route Wiring
 
-Register `createCustomerAccountServerHandlers({ customerSession })` with the app's `handleShopifyRoutes` setup. These handlers own:
+Register `createCustomerAccountServerHandlers({ customerSession })` with the app's `handleShopifyRoutes` setup.
+
+## Cart Buyer Identity Sync
+
+To keep the browser cart's buyer identity in step with the customer session, create the cart handlers with the same `customerSession` and pass them to the Customer Account handlers:
+
+```ts
+import { createCartServerHandlers } from "@shopify/hydrogen";
+import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
+
+const cartHandlers = createCartServerHandlers({ customerSession });
+
+const customerAccountHandlers = createCustomerAccountServerHandlers({
+  customerSession,
+  cartServerHandlers: cartHandlers,
+});
+```
+
+With this wiring, Hydrogen owns the whole loop:
+
+- New carts are created with the current customer's buyer identity when the session has a usable access token or successfully refreshed access token, and authenticated cart reads mark checkout URLs with `logged_in=true` (from the cart handlers' `customerSession` option).
+- Authorization and refresh attach the customer to the cart from the request's cart cookie; a definitive refresh rejection detaches it. Transient refresh failures leave the cart untouched.
+- Logout detaches the customer from the cart.
+
+Sync is best-effort: a failed cart mutation never blocks the route's redirect. Attach failures are logged and can be retried by a later refresh. If detach fails during logout or definitive refresh rejection, the handler expires the cart cookie so a shared device never keeps a cart bound to the previous customer.
+
+`cartServerHandlers` requires both handler groups to share the `customerSession` returned by `createCustomerSession`; TypeScript rejects cart handlers created without `customerSession`.
+
+The Customer Account handlers own:
 
 - `GET /account/login`
 - `GET /account/authorize`

@@ -53,5 +53,7 @@ export type {
   CartPostHandler,
   CartPostResult,
   CartServerHandlers,
+  CartServerHandlersWithCustomerSession,
+  CreateCartServerHandlersOptions,
 } from "./server-handlers";
 export { sanitizeQuantity, DEFAULT_MINIMUM_QUANTITY, NO_QUANTITY_LIMIT } from "./quantity";
