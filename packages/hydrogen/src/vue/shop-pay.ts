@@ -10,6 +10,10 @@ import {
 
 export type ShopPayButtonProps = ShopPayButtonOptions;
 
+type CompletePropOptions<T> = {
+  [K in keyof T]-?: unknown;
+};
+
 const canUseDom = typeof document !== "undefined";
 
 export const ShopPayButton = defineComponent(
@@ -44,6 +48,6 @@ export const ShopPayButton = defineComponent(
       width: String,
       borderRadius: String,
       accessibilityLabel: String,
-    },
+    } satisfies CompletePropOptions<ShopPayButtonProps>,
   },
 );
