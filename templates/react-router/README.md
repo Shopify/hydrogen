@@ -1,6 +1,6 @@
 # Hydrogen React Router template
 
-[![Deploy to Oxygen](https://raw.githubusercontent.com/Shopify/hydrogen/preview/.github/images/deploy-to-oxygen.svg)](https://admin.shopify.com/hydrogen/new?template=react-router)
+[![Deploy to Oxygen](../../.github/images/deploy-to-oxygen.svg)](https://admin.shopify.com/hydrogen/new?template=react-router)
 
 A React Router 7 (framework mode, SSR) storefront built on
 [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen) and the
