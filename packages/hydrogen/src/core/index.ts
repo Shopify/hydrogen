@@ -247,11 +247,19 @@ export type {
   QueryPredictiveSearchOptions,
 } from "./predictive-search";
 
-export { getLocalizedPath, matchLocaleFromRequest } from "./localization";
+export {
+  LOCALIZATION_SESSION_KEY,
+  getLocaleRedirect,
+  getLocalizedPath,
+  matchLocaleFromRequest,
+} from "./localization";
 export type {
+  GetLocaleRedirectOptions,
   GetLocalizedPathOptions,
+  LocaleSessionManager,
   MatchLocaleFromRequestOptions,
   MatchedLocale,
+  ResolveLocaleUrl,
   SupportedLocale,
 } from "./localization";
 

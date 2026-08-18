@@ -75,11 +75,11 @@ function parseLocaleSegment(segment: string): SupportedLocale | null {
 const COUNTRY_CODE_SET: ReadonlySet<string> = new Set(SHOPIFY_COUNTRY_CODES);
 const LANGUAGE_CODE_SET: ReadonlySet<string> = new Set(SHOPIFY_LANGUAGE_CODES);
 
-function isShopifyCountryCode(value: string): value is ShopifyCountryCode {
+export function isShopifyCountryCode(value: string): value is ShopifyCountryCode {
   return COUNTRY_CODE_SET.has(value);
 }
 
-function isShopifyLanguageCode(value: string): value is ShopifyLanguageCode {
+export function isShopifyLanguageCode(value: string): value is ShopifyLanguageCode {
   return LANGUAGE_CODE_SET.has(value);
 }
 
@@ -88,7 +88,8 @@ function getFirstPathSegment(pathname: string): string {
   return firstSegment.toLowerCase();
 }
 
-function isSameLocale(a: SupportedLocale, b: SupportedLocale): boolean {
+/** Module-internal: shared by the redirect helper and server handlers, not public API. */
+export function isSameLocale(a: SupportedLocale, b: SupportedLocale): boolean {
   return a.country === b.country && a.language === b.language;
 }
 
@@ -96,7 +97,7 @@ function isSameLocale(a: SupportedLocale, b: SupportedLocale): boolean {
  * Canonical path prefix for a locale: `/{language}-{country}`, lowercase. Underscore language
  * codes (e.g. `PT_BR`) canonicalize to hyphens (`/pt-br-br`) to match web URL conventions.
  */
-function getLocalePathPrefix(locale: SupportedLocale): string {
+export function getLocalePathPrefix(locale: SupportedLocale): string {
   return `/${locale.language}-${locale.country}`.toLowerCase().replace(/_/g, "-");
 }
 
