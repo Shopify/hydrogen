@@ -7,6 +7,7 @@
     "build": "react-router build",
     "deploy": "shopify hydrogen deploy --assets-dir dist/client --worker-dir dist/server",
     "dev": "vite dev",
+    "https:dev": "vite dev",
     "preview": "react-router build && vite preview",
     "typecheck": "react-router typegen && tsc && hydrogen gql check --fail-on-warn"
   },
@@ -20,7 +21,7 @@
   "devDependencies": {
     "@react-router/dev": "7.15.1",
     "@shopify/cli": "4.6.0",
-    "@shopify/mini-oxygen": "4.2.0",
+    "@shopify/mini-oxygen": "4.2.2",
     "@shopify/oxygen-workers-types": "^4.1.6",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^22",
