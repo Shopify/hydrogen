@@ -20,8 +20,11 @@ import {
 import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
 import { NextResponse, type NextRequest } from "next/server";
 
-const cartHandlers = createCartServerHandlers();
-const customerAccountHandlers = createCustomerAccountServerHandlers({ customerSession });
+const cartHandlers = createCartServerHandlers({ customerSession });
+const customerAccountHandlers = createCustomerAccountServerHandlers({
+  customerSession,
+  cartServerHandlers: cartHandlers,
+});
 
 export async function proxy(request: NextRequest) {
   const requestContext = createShopifyRequestContext({
@@ -117,7 +120,7 @@ When a Server Component or layout reads Customer Account session state under Cac
 
 ## Customer Account API
 
-Register `createCustomerAccountServerHandlers({ customerSession })` with `handleShopifyRoutes`; do not create separate Next Route Handlers for the default login, authorize, refresh, or logout flow. The registered handlers own `GET /account/login`, `GET /account/authorize`, `GET /account/refresh`, and `POST /account/logout` — see `createCustomerAccountServerHandlers` for the response contract. Link to `/account/login` and submit `/account/logout` with plain `<a>`/`<form>`, not `next/link` — those handlers return raw external redirects.
+Register the Customer Account handlers shown above with `handleShopifyRoutes`; do not create separate Next Route Handlers for the default login, authorize, refresh, or logout flow. The registered handlers own `GET /account/login`, `GET /account/authorize`, `GET /account/refresh`, and `POST /account/logout` — see `createCustomerAccountServerHandlers` for the response contract. Link to `/account/login` and submit `/account/logout` with plain `<a>`/`<form>`, not `next/link` — those handlers return raw external redirects.
 
 Because `proxy.ts` returns before RSC render begins, a session mutation made during render cannot be committed — which is why account pages read with `getAccessToken()` and delegate refresh to the registered `/account/refresh` handler.
 
