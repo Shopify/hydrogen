@@ -244,7 +244,7 @@ export function getShopPayButtonElementContentHtml(options: ShopPayButtonOptions
 }
 
 export function getShopPayButtonDeclarativeShadowDomHtml(options: ShopPayButtonOptions): string {
-  return `<template shadowrootmode="open">${getShopPayButtonElementContentHtml(options)}</template>`;
+  return `<template shadowrootmode="open" shadowroot="open">${getShopPayButtonElementContentHtml(options)}</template>`;
 }
 
 export function getShopPayButtonElementAttributes(
