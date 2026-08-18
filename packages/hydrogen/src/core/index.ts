@@ -249,16 +249,26 @@ export type {
 
 export {
   LOCALIZATION_SESSION_KEY,
+  fetchLocalization,
   getLocaleRedirect,
   getLocalizedPath,
+  localizationQueries,
+  makeLocalizationQueries,
   matchLocaleFromRequest,
+  queryLocalization,
 } from "./localization";
 export type {
+  CreateLocalizationQueriesOptions,
   GetLocaleRedirectOptions,
   GetLocalizedPathOptions,
   LocaleSessionManager,
+  LocalizationData,
+  LocalizationDataForOptions,
+  LocalizationDataForQuery,
+  LocalizationFragments,
   MatchLocaleFromRequestOptions,
   MatchedLocale,
+  QueryLocalizationOptions,
   ResolveLocaleUrl,
   SupportedLocale,
 } from "./localization";

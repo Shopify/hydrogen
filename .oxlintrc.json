@@ -158,6 +158,8 @@
         "packages/hydrogen/src/core/shopify-scripts/utils/tracking-values.ts",
         "packages/hydrogen/src/core/cart/actions.ts",
         "packages/hydrogen/src/core/cart/queries.ts",
+        "packages/hydrogen/src/core/localization/get-localization.ts",
+        "packages/hydrogen/src/core/localization/queries.ts",
         "packages/hydrogen/src/core/predictive-search/queries.ts",
         "packages/hydrogen/src/core/predictive-search/search.ts",
         "packages/hydrogen/src/core/collection/reconciler.ts",
