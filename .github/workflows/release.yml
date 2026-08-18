@@ -5,9 +5,14 @@ name: Release
 on:
   push:
     branches: [preview]
+  # Manually recompile the preview templates for the version already
+  # published from the selected ref, without publishing anything to npm
+  workflow_dispatch:
 
 concurrency:
-  group: release-${{ github.ref_name }}
+  # Hardcoded so a workflow_dispatch from any ref queues behind preview
+  # releases instead of racing their force-push to dist-preview
+  group: release-preview
   # Queue runs instead of cancelling: a cancel that lands between npm
   # publish and tag creation strands state a rerun cannot rebuild
   cancel-in-progress: false
@@ -16,7 +21,7 @@ jobs:
   preview-release:
     name: Preview Release
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'shopify'
+    if: github.event_name == 'push' && github.repository_owner == 'shopify'
     permissions:
       contents: write # push the version branch and create git tags
       pull-requests: write # open and update the version PR
@@ -76,7 +81,12 @@ jobs:
   compile-preview-templates:
     name: Compile Preview Templates
     needs: preview-release
-    if: needs.preview-release.outputs.published == 'true'
+    # `!cancelled()` lets this run on workflow_dispatch, where preview-release
+    # is skipped and would otherwise skip every job that needs it
+    if: >-
+      !cancelled() &&
+      github.repository_owner == 'shopify' &&
+      (needs.preview-release.outputs.published == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -106,8 +116,15 @@ jobs:
         id: version
         env:
           PUBLISHED_PACKAGES: ${{ needs.preview-release.outputs.publishedPackages }}
+        # On workflow_dispatch there is no publish output, so read the version
+        # from the checked-out ref instead; the prepare and validate steps
+        # assert it is a published 2026.10.0-preview.<n> version either way
         run: |
-          version=$(node scripts/preview-template-dist.ts resolve)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version=$(node -p "require('./packages/hydrogen/package.json').version")
+          else
+            version=$(node scripts/preview-template-dist.ts resolve)
+          fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Wait for the published package
