@@ -1,35 +1,9 @@
 <script lang="ts">
 	import { renderShopPayButton, type ShopPayButtonOptions } from '@shopify/hydrogen';
 
-	let {
-		variants,
-		channel,
-		checkoutUrl,
-		paymentOption,
-		source,
-		sourceToken,
-		nonce,
-		disabled = false,
-		width,
-		borderRadius,
-		accessibilityLabel
-	}: ShopPayButtonOptions = $props();
+	let props: ShopPayButtonOptions = $props();
 
-	const html = $derived(
-		renderShopPayButton({
-			variants,
-			channel,
-			checkoutUrl,
-			paymentOption,
-			source,
-			sourceToken,
-			nonce,
-			disabled,
-			width,
-			borderRadius,
-			accessibilityLabel
-		})
-	);
+	const html = $derived(renderShopPayButton(props));
 </script>
 
 <!-- Trusted markup produced by @shopify/hydrogen; user inputs are escaped by renderShopPayButton. -->
