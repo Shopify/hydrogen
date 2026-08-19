@@ -115,6 +115,50 @@ describe("getLocaleRedirect", () => {
     }
   });
 
+  it("trusts Sec-Fetch-Mode: navigate even without an HTML accept header", async () => {
+    const navigation = new Request("https://store.example/products", {
+      headers: { "sec-fetch-mode": "navigate" },
+    });
+
+    const response = await getLocaleRedirect(navigation, {
+      config: CONFIG,
+      i18n: DEFAULT_I18N,
+      sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
+    });
+
+    expect(response?.status).toBe(302);
+  });
+
+  it("falls back to the accept header when a proxy hop rewrites Sec-Fetch-Mode to cors", async () => {
+    const proxiedNavigation = new Request("https://store.example/products", {
+      headers: { "sec-fetch-mode": "cors", accept: "text/html" },
+    });
+
+    const response = await getLocaleRedirect(proxiedNavigation, {
+      config: CONFIG,
+      i18n: DEFAULT_I18N,
+      sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
+    });
+
+    expect(response?.status).toBe(302);
+  });
+
+  it("never lets Sec-Fetch-Mode: navigate override the method guard", async () => {
+    const formPost = new Request("https://store.example/newsletter", {
+      method: "POST",
+      headers: { "sec-fetch-mode": "navigate", accept: "text/html" },
+      body: new URLSearchParams({ email: "buyer@example.com" }),
+    });
+
+    const response = await getLocaleRedirect(formPost, {
+      config: CONFIG,
+      i18n: DEFAULT_I18N,
+      sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
+    });
+
+    expect(response).toBeNull();
+  });
+
   it("ignores a well-formed session locale the config no longer serves", async () => {
     const response = await getLocaleRedirect(requestFor("/products"), {
       config: CONFIG,

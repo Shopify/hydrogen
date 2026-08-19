@@ -34,6 +34,8 @@ const LOCALE_REDIRECT_CACHE_CONTROL = "private, no-store";
 const NAVIGATION_METHODS = new Set(["GET", "HEAD"]);
 const ACCEPT_HEADER = "accept";
 const NAVIGATION_ACCEPT_VALUE = "text/html";
+const SEC_FETCH_MODE_HEADER = "sec-fetch-mode";
+const SEC_FETCH_MODE_NAVIGATE = "navigate";
 
 const log = getLogger("localization");
 
@@ -80,12 +82,14 @@ export async function getLocaleRedirect(
  * JSON endpoints) must never be relocated by a display preference: a 302 turns a POST into a
  * GET and drops its body, and fetch callers expect the URL they asked for.
  *
- * Navigations are detected via `Accept: text/html`, which browsers send for document requests
- * and `fetch()` callers do not. `Sec-Fetch-Mode` is deliberately not used: it is a forbidden
- * header that fetch-based proxy hops (dev servers, edge runtimes) silently rewrite to `cors`.
+ * `Sec-Fetch-Mode: navigate` is trusted when present — it is a forbidden header page scripts
+ * cannot spoof. It cannot be *required*, though: fetch-based proxy hops (dev servers, edge
+ * runtimes) silently rewrite it to `cors`, so its absence falls back to `Accept: text/html`,
+ * which browsers send for document requests, survives proxies, and `fetch()` callers do not.
  */
 function isNavigationRequest(request: Request): boolean {
   if (!NAVIGATION_METHODS.has(request.method)) return false;
+  if (request.headers.get(SEC_FETCH_MODE_HEADER) === SEC_FETCH_MODE_NAVIGATE) return true;
 
   return request.headers.get(ACCEPT_HEADER)?.includes(NAVIGATION_ACCEPT_VALUE) ?? false;
 }
