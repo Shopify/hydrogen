@@ -16,13 +16,11 @@ import * as serverBuild from "virtual:react-router/server-build";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { createHydrogenRouterContext } from "~/lib/context";
 import { createCustomerAccountContext, createCustomerSessionManager } from "~/lib/customer-account";
-import { getLocaleFromRequest, SUPPORTED_LOCALES } from "~/lib/i18n";
+import { getLocaleFromRequest, LOCALIZATION_CONFIG } from "~/lib/i18n";
 import { routeTemplates } from "~/lib/route-templates";
 
 const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
-const localizationHandlers = createLocalizationServerHandlers({
-  supportedLocales: SUPPORTED_LOCALES,
-});
+const localizationHandlers = createLocalizationServerHandlers(LOCALIZATION_CONFIG);
 const HTTPS_PROTOCOL = "https:";
 const FORWARDED_PROTO_HEADER = "x-forwarded-proto";
 const FORWARDED_HOST_HEADER = "x-forwarded-host";
@@ -90,6 +88,7 @@ export default {
        * POST handler). Prefixed URLs always win and are never redirected.
        */
       const localeRedirect = await getLocaleRedirect(publicRequest, {
+        config: LOCALIZATION_CONFIG,
         i18n,
         sessionManager: customerSessionManager,
       });

@@ -3,11 +3,19 @@ import { afterEach, describe, expect, it } from "vitest";
 import { configureLogging, resetLoggingForTests } from "../logging";
 import { createTestLogger } from "../test-utils";
 import { LOCALIZATION_SESSION_KEY } from "./constants";
-import type { MatchedLocale } from "./locale-matching";
+import type { LocalizationConfig, MatchedLocale } from "./locale-matching";
 import { getLocaleRedirect } from "./locale-redirect";
 
 const DEFAULT_I18N: MatchedLocale = { country: "US", language: "EN", pathPrefix: "" };
 const FR_CA_SESSION_LOCALE = { country: "CA", language: "FR" };
+const CONFIG: LocalizationConfig = {
+  defaultLocale: { country: "US", language: "EN" },
+  supportedLocales: [
+    { country: "US", language: "EN" },
+    { country: "CA", language: "EN" },
+    { country: "CA", language: "FR" },
+  ],
+};
 
 function createSessionManager(localeValue: unknown) {
   return {
@@ -31,6 +39,7 @@ afterEach(() => {
 describe("getLocaleRedirect", () => {
   it("redirects an unprefixed request to the session locale's prefixed URL", async () => {
     const response = await getLocaleRedirect(requestFor("/collections/shoes?sort=price"), {
+      config: CONFIG,
       i18n: DEFAULT_I18N,
       sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
     });
@@ -41,6 +50,7 @@ describe("getLocaleRedirect", () => {
 
   it("marks redirects as uncacheable by shared caches", async () => {
     const response = await getLocaleRedirect(requestFor("/"), {
+      config: CONFIG,
       i18n: DEFAULT_I18N,
       sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
     });
@@ -50,6 +60,7 @@ describe("getLocaleRedirect", () => {
 
   it("redirects the root path without a trailing slash", async () => {
     const response = await getLocaleRedirect(requestFor("/"), {
+      config: CONFIG,
       i18n: DEFAULT_I18N,
       sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
     });
@@ -64,6 +75,7 @@ describe("getLocaleRedirect", () => {
     });
 
     const response = await getLocaleRedirect(formPost, {
+      config: CONFIG,
       i18n: DEFAULT_I18N,
       sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
     });
@@ -78,6 +90,7 @@ describe("getLocaleRedirect", () => {
         headers: { accept: "text/html" },
       }),
       {
+        config: CONFIG,
         i18n: DEFAULT_I18N,
         sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
       },
@@ -93,6 +106,7 @@ describe("getLocaleRedirect", () => {
       });
 
       const response = await getLocaleRedirect(clientFetch, {
+        config: CONFIG,
         i18n: DEFAULT_I18N,
         sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
       });
@@ -101,8 +115,29 @@ describe("getLocaleRedirect", () => {
     }
   });
 
+  it("ignores a well-formed session locale the config no longer serves", async () => {
+    const response = await getLocaleRedirect(requestFor("/products"), {
+      config: CONFIG,
+      i18n: DEFAULT_I18N,
+      sessionManager: createSessionManager({ country: "DE", language: "DE" }),
+    });
+
+    expect(response).toBeNull();
+  });
+
+  it('redirects any valid session locale when supportedLocales is "all"', async () => {
+    const response = await getLocaleRedirect(requestFor("/products"), {
+      config: { ...CONFIG, supportedLocales: "all" },
+      i18n: DEFAULT_I18N,
+      sessionManager: createSessionManager({ country: "DE", language: "DE" }),
+    });
+
+    expect(response?.headers.get("location")).toBe("/de-de/products");
+  });
+
   it("never redirects prefixed URLs — the URL always wins", async () => {
     const response = await getLocaleRedirect(requestFor("/en-ca/products"), {
+      config: CONFIG,
       i18n: { country: "CA", language: "EN", pathPrefix: "/en-ca" },
       sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
     });
@@ -112,6 +147,7 @@ describe("getLocaleRedirect", () => {
 
   it("returns null when the session has no locale", async () => {
     const response = await getLocaleRedirect(requestFor("/products"), {
+      config: CONFIG,
       i18n: DEFAULT_I18N,
       sessionManager: createSessionManager(undefined),
     });
@@ -121,6 +157,7 @@ describe("getLocaleRedirect", () => {
 
   it("returns null when the session locale matches the resolved default", async () => {
     const response = await getLocaleRedirect(requestFor("/products"), {
+      config: CONFIG,
       i18n: DEFAULT_I18N,
       sessionManager: createSessionManager({ country: "US", language: "EN" }),
     });
@@ -130,6 +167,7 @@ describe("getLocaleRedirect", () => {
 
   it("supports async session managers", async () => {
     const response = await getLocaleRedirect(requestFor("/products"), {
+      config: CONFIG,
       i18n: DEFAULT_I18N,
       sessionManager: {
         getSessionItem: () => Promise.resolve(FR_CA_SESSION_LOCALE),
@@ -141,6 +179,7 @@ describe("getLocaleRedirect", () => {
 
   it("uses resolveLocaleUrl when provided", async () => {
     const response = await getLocaleRedirect(requestFor("/products?a=1"), {
+      config: CONFIG,
       i18n: DEFAULT_I18N,
       sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
       resolveLocaleUrl: ({ locale, path }) =>
@@ -160,6 +199,7 @@ describe("getLocaleRedirect", () => {
     configureLogging({ logger });
 
     const response = await getLocaleRedirect(requestFor("/products"), {
+      config: CONFIG,
       i18n: DEFAULT_I18N,
       sessionManager: createSessionManager(localeValue),
     });
@@ -177,6 +217,7 @@ describe("getLocaleRedirect", () => {
     const sessionReadError = new Error("decryption failed");
 
     const response = await getLocaleRedirect(requestFor("/products"), {
+      config: CONFIG,
       i18n: DEFAULT_I18N,
       sessionManager: {
         getSessionItem: () => {

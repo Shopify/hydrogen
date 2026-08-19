@@ -9,7 +9,13 @@ import {
   LOCALIZATION_API_PATH,
   LOCALIZATION_SESSION_KEY,
 } from "./constants";
+import type { LocalizationConfig } from "./locale-matching";
 import { createLocalizationServerHandlers } from "./server-handlers";
+
+const HANDLER_CONFIG: LocalizationConfig = {
+  defaultLocale: { country: "US", language: "EN" },
+  supportedLocales: "all",
+};
 
 const LIVE_LOCALIZATION = {
   country: {
@@ -91,10 +97,6 @@ function mockSessionManager(
   };
 }
 
-const DEFAULT_REQUEST_CONTEXT = {
-  i18n: { country: "US", language: "EN", pathPrefix: "" },
-};
-
 function getRequest(search = "") {
   return new Request(`https://store.example${LOCALIZATION_API_PATH}${search}`);
 }
@@ -116,7 +118,6 @@ function postContext(request: Request, overrides: PostContextOverrides = {}) {
   return {
     request,
     storefrontClient: overrides.client ?? mockStorefrontClient().client,
-    requestContext: DEFAULT_REQUEST_CONTEXT,
     sessionManager: overrides.sessionManager ?? mockSessionManager(),
   };
 }
@@ -127,7 +128,7 @@ afterEach(() => {
 
 describe("createLocalizationServerHandlers", () => {
   it("registers both handlers on the default path", () => {
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     expect(handlers.get.pathname).toBe(LOCALIZATION_API_PATH);
     expect(handlers.get.method).toBe("GET");
@@ -136,7 +137,7 @@ describe("createLocalizationServerHandlers", () => {
   });
 
   it("supports a custom path", () => {
-    const handlers = createLocalizationServerHandlers({ path: "/api/locale" });
+    const handlers = createLocalizationServerHandlers({ ...HANDLER_CONFIG, path: "/api/locale" });
 
     expect(handlers.get.pathname).toBe("/api/locale");
     expect(handlers.post.pathname).toBe("/api/locale");
@@ -146,7 +147,7 @@ describe("createLocalizationServerHandlers", () => {
 describe("localization GET handler", () => {
   it("returns a locale-anonymous payload of available countries and market", async () => {
     const { client } = mockStorefrontClient();
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.get({ request: getRequest(), storefrontClient: client });
 
@@ -162,7 +163,7 @@ describe("localization GET handler", () => {
 
   it("applies the default public cache policy", async () => {
     const { client } = mockStorefrontClient();
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.get({ request: getRequest(), storefrontClient: client });
 
@@ -174,7 +175,10 @@ describe("localization GET handler", () => {
 
   it("supports a custom cache policy", async () => {
     const { client } = mockStorefrontClient();
-    const handlers = createLocalizationServerHandlers({ cacheControl: "public, max-age=60" });
+    const handlers = createLocalizationServerHandlers({
+      ...HANDLER_CONFIG,
+      cacheControl: "public, max-age=60",
+    });
 
     const result = await handlers.get({ request: getRequest(), storefrontClient: client });
 
@@ -184,7 +188,7 @@ describe("localization GET handler", () => {
 
   it("forwards locale query params to @inContext variables", async () => {
     const { client, graphql } = mockStorefrontClient();
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     await handlers.get({
       request: getRequest("?country=ca&language=fr"),
@@ -199,7 +203,7 @@ describe("localization GET handler", () => {
 
   it("rejects invalid locale query params", async () => {
     const { client } = mockStorefrontClient();
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.get({
       request: getRequest("?country=narnia"),
@@ -214,6 +218,7 @@ describe("localization GET handler", () => {
   it("intersects available countries and languages with supportedLocales", async () => {
     const { client } = mockStorefrontClient();
     const handlers = createLocalizationServerHandlers({
+      ...HANDLER_CONFIG,
       supportedLocales: [
         { country: "US", language: "EN" },
         { country: "CA", language: "FR" },
@@ -234,6 +239,7 @@ describe("localization GET handler", () => {
     configureLogging({ logger });
     const { client } = mockStorefrontClient();
     const handlers = createLocalizationServerHandlers({
+      ...HANDLER_CONFIG,
       supportedLocales: [{ country: "US", language: "EN" }],
     });
 
@@ -247,7 +253,7 @@ describe("localization GET handler", () => {
 
   it("returns a structured error when the localization query fails", async () => {
     const { client } = mockStorefrontClient({ errors: [{ message: "boom" }] });
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.get({ request: getRequest(), storefrontClient: client });
 
@@ -260,7 +266,7 @@ describe("localization GET handler", () => {
 
 describe("localization POST handler", () => {
   it("redirects to the localized equivalent of redirectTo", async () => {
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(
       postContext(
@@ -279,7 +285,7 @@ describe("localization POST handler", () => {
   });
 
   it("strips the source locale prefix from redirectTo before applying the target", async () => {
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(
       postContext(
@@ -291,7 +297,7 @@ describe("localization POST handler", () => {
   });
 
   it("redirects to the unprefixed path when the target is the default locale", async () => {
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(
       postContext(postRequest({ country: "US", redirectTo: "/fr-ca/products/snowboard" })),
@@ -301,7 +307,7 @@ describe("localization POST handler", () => {
   });
 
   it("falls back to the root for cross-origin redirectTo values", async () => {
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(
       postContext(
@@ -313,7 +319,7 @@ describe("localization POST handler", () => {
   });
 
   it("keeps the redirectTo language when language is omitted", async () => {
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(
       postContext(postRequest({ country: "CA", redirectTo: "/fr-ca/products" })),
@@ -324,7 +330,7 @@ describe("localization POST handler", () => {
   });
 
   it("falls back to the country's first available language when the current one is unavailable", async () => {
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(
       postContext(postRequest({ country: "DE", redirectTo: "/fr-ca/products" })),
@@ -335,7 +341,7 @@ describe("localization POST handler", () => {
 
   it("writes the selection to the session and merges commit headers", async () => {
     const sessionManager = mockSessionManager();
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(
       postContext(postRequest({ country: "CA", language: "FR" }), { sessionManager }),
@@ -357,7 +363,7 @@ describe("localization POST handler", () => {
         throw new Error("session unavailable");
       }),
     });
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(
       postContext(postRequest({ country: "CA", language: "FR" }), { sessionManager }),
@@ -372,7 +378,7 @@ describe("localization POST handler", () => {
 
   it("updates the cart buyer identity when a cart cookie exists", async () => {
     const { client, graphql } = mockStorefrontClient();
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     await handlers.post(
       postContext(postRequest({ country: "CA", language: "FR" }, { cookie: "cart=abc123" }), {
@@ -390,7 +396,7 @@ describe("localization POST handler", () => {
 
   it("skips the cart mutation when no cart cookie exists", async () => {
     const { client, graphql } = mockStorefrontClient();
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     await handlers.post(postContext(postRequest({ country: "CA", language: "FR" }), { client }));
 
@@ -404,7 +410,7 @@ describe("localization POST handler", () => {
     const logger = createTestLogger();
     configureLogging({ logger });
     const { client } = mockStorefrontClient({ cartError: new Error("cart offline") });
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(
       postContext(postRequest({ country: "CA", language: "FR" }, { cookie: "cart=abc123" }), {
@@ -423,7 +429,7 @@ describe("localization POST handler", () => {
     const logger = createTestLogger();
     configureLogging({ logger });
     const { client } = mockStorefrontClient({ cartUserErrors: [{ message: "invalid cart" }] });
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(
       postContext(postRequest({ country: "CA", language: "FR" }, { cookie: "cart=abc123" }), {
@@ -436,7 +442,7 @@ describe("localization POST handler", () => {
   });
 
   it("rejects a missing country field", async () => {
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(postContext(postRequest({ language: "FR" })));
 
@@ -446,7 +452,7 @@ describe("localization POST handler", () => {
   });
 
   it("rejects an unknown country code", async () => {
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(postContext(postRequest({ country: "QQ" })));
 
@@ -454,7 +460,7 @@ describe("localization POST handler", () => {
   });
 
   it("rejects a country the live markets data does not offer", async () => {
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(postContext(postRequest({ country: "JP" })));
 
@@ -464,7 +470,7 @@ describe("localization POST handler", () => {
   });
 
   it("rejects a language the target country does not offer", async () => {
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(postContext(postRequest({ country: "DE", language: "FR" })));
 
@@ -473,6 +479,7 @@ describe("localization POST handler", () => {
 
   it("rejects locales outside supportedLocales in strict mode", async () => {
     const handlers = createLocalizationServerHandlers({
+      ...HANDLER_CONFIG,
       supportedLocales: [
         { country: "US", language: "EN" },
         { country: "CA", language: "EN" },
@@ -485,7 +492,7 @@ describe("localization POST handler", () => {
   });
 
   it("rejects unparservable form bodies", async () => {
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
     const request = new Request(`https://store.example${LOCALIZATION_API_PATH}`, {
       method: "POST",
       body: JSON.stringify({ country: "CA" }),
@@ -499,7 +506,7 @@ describe("localization POST handler", () => {
 
   it("returns a structured failure when the live validation query fails", async () => {
     const { client } = mockStorefrontClient({ errors: [{ message: "boom" }] });
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(
       postContext(postRequest({ country: "CA", language: "FR" }), { client }),
@@ -512,7 +519,7 @@ describe("localization POST handler", () => {
   });
 
   it("accepts lowercase submitted codes", async () => {
-    const handlers = createLocalizationServerHandlers();
+    const handlers = createLocalizationServerHandlers(HANDLER_CONFIG);
 
     const result = await handlers.post(
       postContext(postRequest({ country: "ca", language: "fr", redirectTo: "/products" })),

@@ -1,13 +1,14 @@
 import { getLogger } from "../logging";
 import type { ShopifyRouteSessionManager } from "../request-routing/registered-routes";
 import { LOCALIZATION_SESSION_KEY } from "./constants";
-import type { MatchedLocale, SupportedLocale } from "./locale-matching";
+import type { LocalizationConfig, MatchedLocale, SupportedLocale } from "./locale-matching";
 import {
   getLocalePathPrefix,
   getLocalizedPath,
   isSameLocale,
   isShopifyCountryCode,
   isShopifyLanguageCode,
+  isSupportedLocale,
 } from "./locale-matching";
 
 /** Only session reads are needed; writes stay with the POST handler. */
@@ -17,6 +18,8 @@ export type LocaleSessionManager = Pick<ShopifyRouteSessionManager, "getSessionI
 export type ResolveLocaleUrl = (input: { locale: MatchedLocale; path: string }) => URL;
 
 export type GetLocaleRedirectOptions = {
+  /** The same config passed to `matchLocaleFromRequest`; stale session locales are ignored. */
+  config: LocalizationConfig;
   /** Locale resolved from the URL by `matchLocaleFromRequest`. */
   i18n: MatchedLocale;
   sessionManager: LocaleSessionManager;
@@ -52,6 +55,9 @@ export async function getLocaleRedirect(
 
   const sessionLocale = await readSessionLocale(options.sessionManager);
   if (!sessionLocale || isSameLocale(sessionLocale, options.i18n)) return null;
+  // A session locale the config no longer serves (e.g. a removed market) is simply ignored;
+  // redirecting to its prefix would land on a URL the router resolves as the default locale.
+  if (!isSupportedLocale(sessionLocale, options.config.supportedLocales)) return null;
 
   const url = new URL(request.url);
   const location = buildLocaleLocation(

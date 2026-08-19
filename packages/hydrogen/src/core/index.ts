@@ -262,6 +262,7 @@ export {
   localizationQueries,
   makeLocalizationQueries,
   matchLocaleFromRequest,
+  matchLocalePathname,
   queryLocalization,
 } from "./localization";
 export type {
@@ -277,9 +278,9 @@ export type {
   LocalizationErrorCode,
   LocalizationFragments,
   LocalizationGetData,
+  LocalizationConfig,
   LocalizationGetResult,
   LocalizationPostResult,
-  MatchLocaleFromRequestOptions,
   MatchedLocale,
   QueryLocalizationOptions,
   ResolveLocaleUrl,

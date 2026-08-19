@@ -1,7 +1,7 @@
 import type { GraphQLFormattedError, StorefrontClient } from "../../client";
 import type { AnyStorefrontQueryString, StorefrontQueryString } from "../../graphql";
 import type { ShopifyCountryCode, ShopifyLanguageCode } from "../request-context";
-import type { SupportedLocale } from "./locale-matching";
+import type { LocalizationConfig, SupportedLocale } from "./locale-matching";
 import {
   localizationQueries,
   type CreateLocalizationQueriesOptions,
@@ -118,13 +118,14 @@ type CountryShape = {
  * Narrows live `availableCountries` to the configured `supportedLocales` (pair-wise: both the
  * country and its languages), so a selector can never offer a locale the router won't serve.
  * Use wherever localization data reaches a selector — SSR loaders and the GET handler apply
- * the same intersection. Without `supportedLocales` (permissive mode) the list is unchanged.
+ * the same intersection. With `"all"` (permissive mode) the list is unchanged: Markets data
+ * already is the source of truth.
  */
 export function getSupportedCountries<TCountry extends CountryShape>(
   availableCountries: readonly TCountry[],
-  supportedLocales?: readonly SupportedLocale[],
+  supportedLocales: LocalizationConfig["supportedLocales"],
 ): TCountry[] {
-  if (!supportedLocales) return [...availableCountries];
+  if (supportedLocales === "all") return [...availableCountries];
 
   const languagesByCountry = groupLanguagesByCountry(supportedLocales);
 

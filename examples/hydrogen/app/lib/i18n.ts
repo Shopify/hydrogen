@@ -1,30 +1,29 @@
 import { matchLocaleFromRequest } from "@shopify/hydrogen";
-import type { MatchedLocale, SupportedLocale } from "@shopify/hydrogen";
+import type { LocalizationConfig, MatchedLocale } from "@shopify/hydrogen";
 
 export type I18nLocale = MatchedLocale;
 
-/** Locale served at unprefixed paths. Changing it re-homes the whole URL space — deploy-worthy. */
-export const DEFAULT_LOCALE: SupportedLocale = { country: "US", language: "EN" };
-
 /**
- * The locales this storefront serves under `/{language}-{country}` prefixes (strict mode).
- * Shared with the localization server handlers so the selector can never offer a locale the
- * router won't serve. Omit `supportedLocales` everywhere for permissive mode instead (any
- * valid ISO pair matches, driven live by Shopify Markets).
+ * Single source of truth for the storefront's locales, shared by URL matching, the
+ * localization endpoints, and the selector data so they can never disagree.
+ *
+ * `defaultLocale` is served at unprefixed paths; changing it re-homes the whole URL space —
+ * deploy-worthy. Use `supportedLocales: "all"` instead of a list to route any Markets-backed
+ * locale without a deploy (canonical/hreflang tags become the app's responsibility).
  */
-export const SUPPORTED_LOCALES: readonly SupportedLocale[] = [
-  DEFAULT_LOCALE,
-  { country: "CA", language: "EN" },
-  { country: "CA", language: "FR" },
-];
+export const LOCALIZATION_CONFIG: LocalizationConfig = {
+  defaultLocale: { country: "US", language: "EN" },
+  supportedLocales: [
+    { country: "US", language: "EN" },
+    { country: "CA", language: "EN" },
+    { country: "CA", language: "FR" },
+  ],
+};
 
 const REACT_ROUTER_DATA_SUFFIX_RE = /\.data$/;
 
 export function getLocaleFromRequest(request: Request): I18nLocale {
-  return matchLocaleFromRequest(normalizeDataRequest(request), {
-    defaultLocale: DEFAULT_LOCALE,
-    supportedLocales: SUPPORTED_LOCALES,
-  });
+  return matchLocaleFromRequest(normalizeDataRequest(request), LOCALIZATION_CONFIG);
 }
 
 /**

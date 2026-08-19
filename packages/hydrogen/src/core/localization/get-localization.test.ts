@@ -120,10 +120,10 @@ describe("queryLocalization", () => {
 });
 
 describe("getSupportedCountries", () => {
-  it("returns the list unchanged without supportedLocales (permissive mode)", () => {
+  it('returns the list unchanged for "all" (permissive mode)', () => {
     const countries = MOCK_LOCALIZATION.availableCountries;
 
-    expect(getSupportedCountries(countries)).toEqual(countries);
+    expect(getSupportedCountries(countries, "all")).toEqual(countries);
   });
 
   it("intersects countries and their languages pair-wise", () => {

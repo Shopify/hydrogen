@@ -12,14 +12,21 @@ export type SupportedLocale = Pick<I18nConfig, "country" | "language">;
 /** A resolved locale, ready to feed `createShopifyRequestContext({i18n})`. */
 export type MatchedLocale = SupportedLocale & { pathPrefix: string };
 
-export type MatchLocaleFromRequestOptions = {
+/**
+ * The single localization config shared by URL matching, the server handlers, and selector
+ * data filtering, so routing and the selector can never disagree about which locales exist.
+ */
+export type LocalizationConfig = {
   /** Locale served at unprefixed paths. Its own prefix never matches — one canonical URL per page. */
   defaultLocale: SupportedLocale;
   /**
-   * Locales the app serves under `/{language}-{country}` prefixes (strict mode). When omitted,
-   * any prefix built from valid Shopify country/language codes matches (permissive mode).
+   * Locales served under `/{language}-{country}` prefixes. Pass the explicit list this
+   * storefront serves, or `"all"` to accept any valid Shopify country/language pair — an
+   * opt-in for Markets-driven stores that must route new markets without a deploy. `"all"`
+   * makes every code pair a routable URL variant, so canonical/hreflang tags become the
+   * app's responsibility.
    */
-  supportedLocales?: readonly SupportedLocale[];
+  supportedLocales: readonly SupportedLocale[] | "all";
 };
 
 /**
@@ -33,24 +40,26 @@ export type MatchLocaleFromRequestOptions = {
  */
 export function matchLocaleFromRequest(
   request: Request,
-  options: MatchLocaleFromRequestOptions,
+  config: LocalizationConfig,
 ): MatchedLocale {
-  return matchLocalePathname(new URL(request.url).pathname, options);
+  return matchLocalePathname(new URL(request.url).pathname, config);
 }
 
-/** Module-internal: pathname-level matching shared with the server handlers. */
-export function matchLocalePathname(
-  pathname: string,
-  options: MatchLocaleFromRequestOptions,
-): MatchedLocale {
+/**
+ * Pathname-level matching for callers that hold a path rather than a `Request` — resolving
+ * the locale of a form's redirect target, a link, or a stored path. Same contract as
+ * `matchLocaleFromRequest`.
+ */
+export function matchLocalePathname(pathname: string, config: LocalizationConfig): MatchedLocale {
   const candidateSegment = getFirstPathSegment(pathname);
 
-  const locale = options.supportedLocales
-    ? findSupportedLocale(candidateSegment, options.supportedLocales)
-    : parseLocaleSegment(candidateSegment);
+  const locale =
+    config.supportedLocales === "all"
+      ? parseLocaleSegment(candidateSegment)
+      : findSupportedLocale(candidateSegment, config.supportedLocales);
 
-  if (!locale || isSameLocale(locale, options.defaultLocale)) {
-    return { ...options.defaultLocale, pathPrefix: "" };
+  if (!locale || isSameLocale(locale, config.defaultLocale)) {
+    return { ...config.defaultLocale, pathPrefix: "" };
   }
 
   return { ...locale, pathPrefix: getLocalePathPrefix(locale) };
@@ -98,6 +107,15 @@ function getFirstPathSegment(pathname: string): string {
 /** Module-internal: shared by the redirect helper and server handlers, not public API. */
 export function isSameLocale(a: SupportedLocale, b: SupportedLocale): boolean {
   return a.country === b.country && a.language === b.language;
+}
+
+/** Module-internal: whether the config allows a locale. `"all"` allows any valid pair. */
+export function isSupportedLocale(
+  locale: SupportedLocale,
+  supportedLocales: LocalizationConfig["supportedLocales"],
+): boolean {
+  if (supportedLocales === "all") return true;
+  return supportedLocales.some((supported) => isSameLocale(supported, locale));
 }
 
 /**

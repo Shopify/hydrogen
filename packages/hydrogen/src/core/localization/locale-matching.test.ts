@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getLocalizedPath, matchLocaleFromRequest } from "./locale-matching";
+import { getLocalizedPath, matchLocaleFromRequest, matchLocalePathname } from "./locale-matching";
 import type { SupportedLocale } from "./locale-matching";
 
 const DEFAULT_LOCALE: SupportedLocale = { country: "US", language: "EN" };
@@ -84,10 +84,11 @@ describe("matchLocaleFromRequest", () => {
     expect(matchPath("/fr-ca/products", []).pathPrefix).toBe("");
   });
 
-  describe("permissive mode (no supportedLocales)", () => {
+  describe('permissive mode (supportedLocales: "all")', () => {
     function matchPathPermissive(path: string) {
       return matchLocaleFromRequest(new Request(`https://store.example${path}`), {
         defaultLocale: DEFAULT_LOCALE,
+        supportedLocales: "all",
       });
     }
 
@@ -166,6 +167,17 @@ function localePrefixFixture(locale: SupportedLocale): string {
     locale.country === DEFAULT_LOCALE.country && locale.language === DEFAULT_LOCALE.language;
   return isDefault ? "" : `/${locale.language}-${locale.country}`.toLowerCase();
 }
+
+describe("matchLocalePathname", () => {
+  it("matches bare paths without a Request, same contract as matchLocaleFromRequest", () => {
+    expect(
+      matchLocalePathname("/fr-ca/products?sort=price", {
+        defaultLocale: DEFAULT_LOCALE,
+        supportedLocales: SUPPORTED_LOCALES,
+      }),
+    ).toEqual({ country: "CA", language: "FR", pathPrefix: "/fr-ca" });
+  });
+});
 
 describe("getLocalizedPath", () => {
   it("swaps one locale prefix for another", () => {

@@ -24,7 +24,7 @@ import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { useNonce } from "~/lib/csp";
 import { FOOTER_QUERY, HEADER_QUERY, type HeaderQuery } from "~/lib/fragments";
-import { SUPPORTED_LOCALES } from "~/lib/i18n";
+import { LOCALIZATION_CONFIG } from "~/lib/i18n";
 import { routeTemplates } from "~/lib/route-templates";
 
 import type { Route } from "./+types/root";
@@ -128,7 +128,7 @@ async function loadCriticalData(args: Route.LoaderArgs) {
     // locale the router won't serve.
     availableCountries: getSupportedCountries(
       localizationData.localization.availableCountries,
-      SUPPORTED_LOCALES,
+      LOCALIZATION_CONFIG.supportedLocales,
     ),
   };
 

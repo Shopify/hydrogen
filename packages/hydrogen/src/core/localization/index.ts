@@ -24,7 +24,7 @@ export type {
 } from "./get-localization";
 export { localizationQueries, makeLocalizationQueries } from "./queries";
 export type { CreateLocalizationQueriesOptions, LocalizationFragments } from "./queries";
-export { getLocalizedPath, matchLocaleFromRequest } from "./locale-matching";
+export { getLocalizedPath, matchLocaleFromRequest, matchLocalePathname } from "./locale-matching";
 export { getLocaleRedirect } from "./locale-redirect";
 export type {
   GetLocaleRedirectOptions,
@@ -33,7 +33,7 @@ export type {
 } from "./locale-redirect";
 export type {
   GetLocalizedPathOptions,
-  MatchLocaleFromRequestOptions,
+  LocalizationConfig,
   MatchedLocale,
   SupportedLocale,
 } from "./locale-matching";

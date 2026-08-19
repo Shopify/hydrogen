@@ -29,7 +29,7 @@ import {
   groupLanguagesByCountry,
   type LocalizationDataForOptions,
 } from "./get-localization";
-import type { MatchedLocale, SupportedLocale } from "./locale-matching";
+import type { LocalizationConfig, MatchedLocale, SupportedLocale } from "./locale-matching";
 import {
   getLocalePathPrefix,
   getLocalizedPath,
@@ -73,11 +73,6 @@ type LocalizationGetHandlerContext = {
 };
 
 type LocalizationPostHandlerContext = LocalizationGetHandlerContext & {
-  /**
-   * The endpoint lives at an unprefixed path, so its resolved i18n *is* the app's default
-   * locale — no separate defaultLocale option is needed.
-   */
-  requestContext: { i18n: SupportedLocale };
   sessionManager: ShopifyRouteSessionManager;
 };
 
@@ -96,27 +91,27 @@ type LocalizationPostHandler = CallableRouteHandler<
 >;
 
 type LocalizationServerHandlers<
-  TOptions extends CreateLocalizationServerHandlersOptions = {},
+  TOptions extends CreateLocalizationServerHandlersOptions =
+    CreateLocalizationServerHandlersOptions,
   TData = LocalizationDataForOptions<TOptions>,
 > = {
   get: LocalizationGetHandler<TData>;
   post: LocalizationPostHandler;
 };
 
-export type CreateLocalizationServerHandlersOptions = CreateLocalizationQueriesOptions & {
-  path?: string;
-  /** Cache-Control for the GET endpoint. Defaults to `DEFAULT_LOCALIZATION_CACHE_CONTROL`. */
-  cacheControl?: string;
-  /** Same list passed to `matchLocaleFromRequest` (strict mode); omit for permissive mode. */
-  supportedLocales?: readonly SupportedLocale[];
-};
+/** The shared `LocalizationConfig` is required: pass the same object given to URL matching. */
+export type CreateLocalizationServerHandlersOptions = CreateLocalizationQueriesOptions &
+  LocalizationConfig & {
+    path?: string;
+    /** Cache-Control for the GET endpoint. Defaults to `DEFAULT_LOCALIZATION_CACHE_CONTROL`. */
+    cacheControl?: string;
+  };
 
-export function createLocalizationServerHandlers(): LocalizationServerHandlers;
 export function createLocalizationServerHandlers<
   const TOptions extends CreateLocalizationServerHandlersOptions,
 >(options: TOptions): LocalizationServerHandlers<TOptions>;
 export function createLocalizationServerHandlers(
-  options: CreateLocalizationServerHandlersOptions = {},
+  options: CreateLocalizationServerHandlersOptions,
 ): LocalizationServerHandlers<CreateLocalizationServerHandlersOptions> {
   const queries = options.fragments ? makeLocalizationQueries(options) : localizationQueries;
   const path = options.path ?? LOCALIZATION_API_PATH;
@@ -219,9 +214,9 @@ function parseLanguageCode(value: string | null): ShopifyLanguageCode | undefine
  */
 function filterSupportedCountries(
   liveCountries: LiveCountry[],
-  supportedLocales: readonly SupportedLocale[] | undefined,
+  supportedLocales: LocalizationConfig["supportedLocales"],
 ): LiveCountry[] {
-  if (!supportedLocales) return liveCountries;
+  if (supportedLocales === "all") return liveCountries;
 
   const supportedLanguagesByCountry = groupLanguagesByCountry(supportedLocales);
   const driftedCountries = liveCountries
@@ -256,14 +251,10 @@ async function handlePost(
     return invalidRequestResult(getErrorMessage(error, "Invalid localization request"));
   }
 
-  const defaultLocale: SupportedLocale = {
-    country: context.requestContext.i18n.country,
-    language: context.requestContext.i18n.language,
-  };
   const redirectPath = sanitizeRedirectPath(submission.redirectTo, context.request.url);
   const sourceLocale = matchLocalePathname(redirectPath, {
-    defaultLocale,
-    ...(options.supportedLocales && { supportedLocales: options.supportedLocales }),
+    defaultLocale: options.defaultLocale,
+    supportedLocales: options.supportedLocales,
   });
 
   let targetLocale: SupportedLocale;
@@ -279,7 +270,12 @@ async function handlePost(
 
   return {
     type: "redirect",
-    location: buildRedirectLocation(redirectPath, sourceLocale, targetLocale, defaultLocale),
+    location: buildRedirectLocation(
+      redirectPath,
+      sourceLocale,
+      targetLocale,
+      options.defaultLocale,
+    ),
     ...(sessionHeaders && { headers: sessionHeaders }),
   };
 }
@@ -368,12 +364,12 @@ async function resolveTargetLocale(
   return { country: submission.country, language };
 }
 
-/** `undefined` means unrestricted (permissive mode); an empty set means the country is excluded. */
+/** `undefined` means unrestricted (`"all"`); an empty set means the country is excluded. */
 function supportedLanguagesFor(
   country: ShopifyCountryCode,
-  supportedLocales: readonly SupportedLocale[] | undefined,
+  supportedLocales: LocalizationConfig["supportedLocales"],
 ): Set<string> | undefined {
-  if (!supportedLocales) return undefined;
+  if (supportedLocales === "all") return undefined;
   return groupLanguagesByCountry(supportedLocales).get(country) ?? new Set();
 }
 
