@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import type { ConfigEnv, Plugin, ViteDevServer } from "vite";
 
 import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
+import { confirmCertificateInstallation } from "./certificate-prompt";
 import { provisionCertificates } from "./mkcert";
 
 export const LOCAL_HTTPS_DEFAULTS = {
@@ -197,6 +198,13 @@ async function ensureCertificateFiles(settings: LocalHttpsSettings): Promise<boo
     return checkCertificateFiles(
       settings,
       "Automatic certificate provisioning is skipped in CI environments (the CI environment variable is set).",
+    );
+  }
+
+  if (!(await confirmCertificateInstallation(settings.host))) {
+    return checkCertificateFiles(
+      settings,
+      "Automatic certificate provisioning requires confirmation in an interactive terminal.",
     );
   }
 

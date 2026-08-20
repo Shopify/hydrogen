@@ -17,6 +17,14 @@ const mkcertCalls = vi.hoisted(() => ({
   provisionCertificates: vi.fn(),
 }));
 
+const promptCalls = vi.hoisted(() => ({
+  confirmCertificateInstallation: vi.fn(),
+}));
+
+vi.mock("./certificate-prompt", () => ({
+  confirmCertificateInstallation: promptCalls.confirmCertificateInstallation,
+}));
+
 vi.mock("./mkcert", () => ({
   provisionCertificates: mkcertCalls.provisionCertificates,
 }));
@@ -65,6 +73,7 @@ describe("localHttps", () => {
     fsCalls.existsSync.mockClear();
     fsCalls.readFileSync.mockClear();
     mkcertCalls.provisionCertificates.mockReset();
+    promptCalls.confirmCertificateInstallation.mockReset().mockResolvedValue(true);
     vi.stubEnv("CI", "");
     directory = fs.mkdtempSync(join(tmpdir(), "hydrogen-local-https-"));
     certPath = join(directory, "custom.test.pem");
@@ -89,6 +98,7 @@ describe("localHttps", () => {
     expect(plugin.api.getDevServerConfig()).toBeUndefined();
     expect(use).not.toHaveBeenCalled();
     expect(mkcertCalls.provisionCertificates).not.toHaveBeenCalled();
+    expect(promptCalls.confirmCertificateInstallation).not.toHaveBeenCalled();
     expect(fsCalls.existsSync).not.toHaveBeenCalled();
     expect(fsCalls.readFileSync).not.toHaveBeenCalled();
   });
@@ -228,6 +238,7 @@ describe("localHttps", () => {
     expect(mkcertCalls.provisionCertificates).toHaveBeenCalledWith(
       expect.objectContaining({ host: "custom.test", certPath, keyPath }),
     );
+    expect(promptCalls.confirmCertificateInstallation).toHaveBeenCalledWith("custom.test");
     expect(result).toMatchObject({
       server: {
         https: {
@@ -239,6 +250,21 @@ describe("localHttps", () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
+  it("does not provision when certificate installation is declined", async () => {
+    promptCalls.confirmCertificateInstallation.mockResolvedValue(false);
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+    const plugin = localHttps({ enabled: true, host: "custom.test", certPath, keyPath });
+    const config = getHook(plugin.config, "config");
+
+    expect(await config({} as any, { command: "serve" } as any)).toBeUndefined();
+
+    expect(mkcertCalls.provisionCertificates).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledOnce();
+    expect(String(warn.mock.calls[0]?.[0])).toContain(
+      "requires confirmation in an interactive terminal",
+    );
+  });
+
   it("skips provisioning when certificate files already exist", async () => {
     fs.writeFileSync(certPath, "certificate");
     fs.writeFileSync(keyPath, "private-key");
@@ -248,6 +274,7 @@ describe("localHttps", () => {
     await config({} as any, { command: "serve" } as any);
 
     expect(mkcertCalls.provisionCertificates).not.toHaveBeenCalled();
+    expect(promptCalls.confirmCertificateInstallation).not.toHaveBeenCalled();
   });
 
   it("falls back to a warning when provisioning fails", async () => {
