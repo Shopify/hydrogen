@@ -278,6 +278,7 @@ function applyStorefrontRequestHeaders(context: Context, headers: Headers): void
     headers.set(SHOPIFY_STOREFRONT_ORIGIN_HEADER, context.storefrontOrigin);
   } else headers.delete(SHOPIFY_STOREFRONT_ORIGIN_HEADER);
 
+  // Some Storefront API consumers still rely on these headers instead of cookies.
   if (context.uniqueToken) headers.set(SHOPIFY_UNIQUE_TOKEN_HEADER, context.uniqueToken);
   if (context.visitToken) headers.set(SHOPIFY_VISIT_TOKEN_HEADER, context.visitToken);
   if (context.legacyTokens && context.uniqueToken) {
