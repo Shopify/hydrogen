@@ -9,6 +9,7 @@ import type {
 import { STOREFRONT_API_VERSION } from "./constants";
 import {
   applyPrivateResponseCacheHeaders,
+  CONSENT_MANAGEMENT_HEADER,
   HYDROGEN_VERSION_HEADER,
   REQUEST_GROUP_ID_HEADER,
   SDK_VARIANT_HEADER,
@@ -23,6 +24,13 @@ import {
   STOREFRONT_URL_HEADER,
 } from "./headers";
 import { normalizePathPrefix } from "./standard-routes/path";
+
+const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
+const SHOPIFY_COOKIES = new Set([
+  SHOPIFY_ESSENTIAL_COOKIE,
+  "_shopify_analytics",
+  "_shopify_marketing",
+]);
 
 type StorefrontRequest = Pick<Request, "headers"> &
   Partial<Pick<Request, "method" | "signal" | "url">>;
@@ -144,6 +152,9 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
 
   const i18n = normalizeI18n(input.i18n);
   const cookie = request.headers.get("cookie") || undefined;
+  const hasEssentialCookie = hasCookie(cookie, SHOPIFY_ESSENTIAL_COOKIE);
+  const hasShopifyCookie = Array.from(SHOPIFY_COOKIES).some((name) => hasCookie(cookie, name));
+  const isConsentManagementRequest = request.headers.get(CONSENT_MANAGEMENT_HEADER) === "1";
   const url = request.url ?? request.headers.get(STOREFRONT_URL_HEADER) ?? undefined;
   const storefrontOrigin = getUrlOrigin(url);
   const context = {
@@ -169,7 +180,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     | undefined;
   let personalizedResponseReason: string | undefined;
 
-  if (!cookie || !/\b_shopify_(analytics|marketing)=/.test(cookie)) {
+  if (!hasShopifyCookie) {
     const legacyUniqueToken = cookie?.match(/\b_shopify_y=([^;]+)/)?.[1];
     const legacyVisitToken = cookie?.match(/\b_shopify_s=([^;]+)/)?.[1];
     const headerUniqueToken = request.headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER) ?? undefined;
@@ -208,11 +219,22 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     applyResponseHeaders(headers) {
       headers.set("powered-by", "Shopify, Hydrogen");
 
-      if (capturedSubrequestHeaders) {
-        const existingSetCookies = headers.getSetCookie();
+      const isDocumentResponse =
+        context.documentRequest || (headers.get("content-type")?.startsWith("text/html") ?? false);
+      const mayReturnShopifyCookies =
+        !isDocumentResponse && (hasEssentialCookie || isConsentManagementRequest);
+      const returnsCapturedHeaders =
+        mayReturnShopifyCookies &&
+        Boolean(
+          capturedSubrequestHeaders?.serverTiming || capturedSubrequestHeaders?.setCookie.length,
+        );
+
+      if (capturedSubrequestHeaders && mayReturnShopifyCookies) {
+        const existingSetCookies = new Set(headers.getSetCookie());
         for (const value of capturedSubrequestHeaders.setCookie) {
-          if (existingSetCookies.includes(value)) continue;
+          if (existingSetCookies.has(value)) continue;
           headers.append("set-cookie", value);
+          existingSetCookies.add(value);
         }
         const existingServerTiming = headers.get(SERVER_TIMING_HEADER) ?? "";
         if (
@@ -223,7 +245,13 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
         }
       }
 
-      if (personalizedResponseReason) {
+      if (!mayReturnShopifyCookies) removeShopifySetCookies(headers);
+
+      if (
+        personalizedResponseReason ||
+        returnsCapturedHeaders ||
+        headers.getSetCookie().some(isShopifySetCookie)
+      ) {
         applyPrivateResponseCacheHeaders(headers);
       }
     },
@@ -276,6 +304,26 @@ function isDocumentRequest(request: StorefrontRequest): boolean {
   if (destination === "document") return true;
 
   return request.headers.get("accept")?.includes("text/html") ?? false;
+}
+
+function hasCookie(cookieHeader: string | undefined, name: string): boolean {
+  return (
+    cookieHeader?.split(";").some((cookie) => cookie.trimStart().startsWith(`${name}=`)) ?? false
+  );
+}
+
+function isShopifySetCookie(value: string): boolean {
+  const name = value.match(/^\s*([^=;\s]+)\s*=/)?.[1];
+  return name !== undefined && SHOPIFY_COOKIES.has(name);
+}
+
+function removeShopifySetCookies(headers: Headers): void {
+  const setCookies = headers.getSetCookie();
+  const filtered = setCookies.filter((value) => !isShopifySetCookie(value));
+  if (filtered.length === setCookies.length) return;
+
+  headers.delete("set-cookie");
+  for (const value of filtered) headers.append("set-cookie", value);
 }
 
 function hasServerTimingValue(existing: string, next: string): boolean {

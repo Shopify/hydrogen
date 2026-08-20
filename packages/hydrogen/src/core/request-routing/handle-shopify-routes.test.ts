@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
 import { createCartServerHandlers } from "../cart/server-handlers";
+import { CONSENT_MANAGEMENT_HEADER } from "../headers";
 import { createShopifyRequestContext } from "../request-context";
 import { assert } from "../test-utils";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "./handle-shopify-routes";
@@ -90,6 +91,47 @@ describe("handleShopifyRoutes", () => {
 
     expect(result).not.toBeNull();
     expect(result).toBeInstanceOf(Response);
+  });
+
+  it("strips Shopify cookies from cold non-consent SFAPI proxy responses", async () => {
+    const upstreamHeaders = new Headers();
+    upstreamHeaders.append("set-cookie", "_shopify_essential=cold; Path=/; Secure; HttpOnly");
+    upstreamHeaders.append("set-cookie", "app_session=preserved; Path=/; Secure; HttpOnly");
+    mockFetch.mockResolvedValueOnce(new Response("{}", { headers: upstreamHeaders }));
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/api/unstable/graphql.json", {
+        method: "POST",
+        body: "{}",
+      }),
+    });
+
+    expect(result?.headers.getSetCookie()).toEqual([
+      "app_session=preserved; Path=/; Secure; HttpOnly",
+    ]);
+  });
+
+  it("returns Shopify cookies from marked consent-management proxy responses", async () => {
+    const upstreamHeaders = new Headers();
+    upstreamHeaders.append(
+      "set-cookie",
+      "_shopify_essential=established; Path=/; Secure; HttpOnly",
+    );
+    mockFetch.mockResolvedValueOnce(new Response("{}", { headers: upstreamHeaders }));
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/api/unstable/graphql.json", {
+        method: "POST",
+        body: "{}",
+        headers: { [CONSENT_MANAGEMENT_HEADER]: "1" },
+      }),
+    });
+
+    expect(result?.headers.getSetCookie()).toEqual([
+      "_shopify_essential=established; Path=/; Secure; HttpOnly",
+    ]);
+    const [, init] = mockFetch.mock.calls[0];
+    expect(new Headers(init.headers).has(CONSENT_MANAGEMENT_HEADER)).toBe(false);
   });
 
   it("returns Response for Shopify API proxy requests", async () => {

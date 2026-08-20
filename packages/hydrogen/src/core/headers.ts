@@ -1,4 +1,5 @@
 export const CACHE_CONTROL_HEADER = "Cache-Control";
+export const CONSENT_MANAGEMENT_HEADER = "Shopify-Storefront-Consent-Management";
 export const HYDROGEN_VERSION_HEADER = "X-Hydrogen-Version";
 export const SERVER_TIMING_HEADER = "Server-Timing";
 export const SURROGATE_CONTROL_HEADER = "Surrogate-Control";
@@ -46,6 +47,7 @@ export type StandardHeaderName =
   | "x-requested-with";
 
 export type ShopifyHeaderName =
+  | typeof CONSENT_MANAGEMENT_HEADER
   | typeof HYDROGEN_VERSION_HEADER
   | typeof REQUEST_GROUP_ID_HEADER
   | typeof SDK_VARIANT_HEADER
