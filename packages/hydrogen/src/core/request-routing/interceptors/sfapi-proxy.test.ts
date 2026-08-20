@@ -424,7 +424,7 @@ describe("handleSfapiProxy", () => {
     expect(text).toBe('{"data":{"shop":{"name":"Test"}}}');
   });
 
-  it("captures SFAPI Server-Timing for gated replay and forwards set-cookie headers", async () => {
+  it("captures SFAPI response state for gated replay", async () => {
     const headers = new Headers({
       "content-type": "application/json",
       "server-timing": '_y;desc="unique", _s;desc="visit"',
@@ -446,10 +446,7 @@ describe("handleSfapiProxy", () => {
 
     assert(result, "expected proxy to return a response");
     expect(result.headers.get("server-timing")).toBeNull();
-    expect(result.headers.getSetCookie()).toEqual([
-      "_shopify_y=unique; Path=/; Secure",
-      "_shopify_s=visit; Path=/; Secure",
-    ]);
+    expect(result.headers.getSetCookie()).toEqual([]);
   });
 
   it("drops body-specific upstream response headers", async () => {

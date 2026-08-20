@@ -93,7 +93,7 @@ describe("handleShopifyRoutes", () => {
     expect(result).toBeInstanceOf(Response);
   });
 
-  it("strips Shopify cookies from cold non-consent SFAPI proxy responses", async () => {
+  it("strips upstream cookies from cold non-consent SFAPI proxy responses", async () => {
     const upstreamHeaders = new Headers();
     upstreamHeaders.append("set-cookie", "_shopify_essential=cold; Path=/; Secure; HttpOnly");
     upstreamHeaders.append("set-cookie", "app_session=preserved; Path=/; Secure; HttpOnly");
@@ -106,9 +106,7 @@ describe("handleShopifyRoutes", () => {
       }),
     });
 
-    expect(result?.headers.getSetCookie()).toEqual([
-      "app_session=preserved; Path=/; Secure; HttpOnly",
-    ]);
+    expect(result?.headers.getSetCookie()).toEqual([]);
   });
 
   it("strips Server-Timing from cold non-consent SFAPI proxy responses", async () => {
