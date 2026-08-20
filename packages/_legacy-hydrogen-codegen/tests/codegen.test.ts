@@ -4,7 +4,12 @@ import path from "node:path";
 import { executeCodegen } from "@graphql-codegen/cli";
 import { describe, it, expect } from "vitest";
 
-import { preset, getSchema, pluckConfig } from "../src/index.js";
+import { preset, pluckConfig } from "../src/index.js";
+
+const storefrontSchema = path.resolve(
+  __dirname,
+  "../../hydrogen/src/graphql/generated/storefront.schema.json",
+);
 
 describe("Hydrogen Codegen", async () => {
   const getCodegenOptions = (fixture: string, output = "out.d.ts") => ({
@@ -12,7 +17,7 @@ describe("Hydrogen Codegen", async () => {
     generates: {
       [output]: {
         preset,
-        schema: getSchema("storefront"),
+        schema: storefrontSchema,
         documents: path.join(__dirname, `fixtures/${fixture}`),
       },
     },

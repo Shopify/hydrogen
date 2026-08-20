@@ -42,7 +42,6 @@
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.3",
     "@graphql-codegen/plugin-helpers": "^5.1.0",
-    "@shopify/hydrogen": "workspace:*",
     "@types/node": "^25.8.0",
     "cross-env": "^7.0.3",
     "dts-bundle-generator": "^9.5.1",

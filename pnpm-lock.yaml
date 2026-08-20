@@ -272,9 +272,6 @@ importers:
       '@graphql-codegen/plugin-helpers':
         specifier: ^5.1.0
         version: 5.1.1(graphql@16.13.2)
-      '@shopify/hydrogen':
-        specifier: workspace:*
-        version: link:../hydrogen
       '@types/node':
         specifier: ^25.8.0
         version: 25.8.0
