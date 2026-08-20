@@ -111,6 +111,51 @@ describe("handleShopifyRoutes", () => {
     ]);
   });
 
+  it("strips Server-Timing from cold non-consent SFAPI proxy responses", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response("{}", { headers: { "server-timing": "db;dur=2, _y;desc=unique" } }),
+    );
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/api/unstable/graphql.json", {
+        method: "POST",
+        body: "{}",
+      }),
+    });
+
+    expect(result?.headers.has("server-timing")).toBe(false);
+  });
+
+  it("returns Server-Timing from marked consent-management proxy responses", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response("{}", { headers: { "server-timing": "db;dur=2, _y;desc=unique" } }),
+    );
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/api/unstable/graphql.json", {
+        method: "POST",
+        body: "{}",
+        headers: { [CONSENT_MANAGEMENT_HEADER]: "1" },
+      }),
+    });
+
+    expect(result?.headers.get("server-timing")).toBe("db;dur=2, _y;desc=unique");
+  });
+
+  it("strips Server-Timing from cacheable SFAPI proxy responses", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response("{}", { headers: { "server-timing": "db;dur=2, _y;desc=unique" } }),
+    );
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/api/unstable/graphql.json", {
+        headers: { cookie: "_shopify_essential=established" },
+      }),
+    });
+
+    expect(result?.headers.has("server-timing")).toBe(false);
+  });
+
   it("returns Shopify cookies from marked consent-management proxy responses", async () => {
     const upstreamHeaders = new Headers();
     upstreamHeaders.append(

@@ -16,6 +16,7 @@ type ProxyDescriptor = {
   match: RegExp;
   methods?: readonly string[];
   formatError?: (message: string) => unknown;
+  prepareResponseHeaders?: (headers: Headers, options: HydrogenRoutesOptions, url: URL) => void;
   redirect?: RequestRedirect;
   scope: string;
   timeoutMs?: number;
@@ -56,14 +57,16 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
     }
 
     return fetch(upstreamUrl, init)
-      .then(
-        (upstreamResponse) =>
-          new Response(upstreamResponse.body, {
-            status: upstreamResponse.status,
-            statusText: upstreamResponse.statusText,
-            headers: createProxyResponseHeaders(upstreamResponse.headers),
-          }),
-      )
+      .then((upstreamResponse) => {
+        const headers = createProxyResponseHeaders(upstreamResponse.headers);
+        descriptor.prepareResponseHeaders?.(headers, options, url);
+
+        return new Response(upstreamResponse.body, {
+          status: upstreamResponse.status,
+          statusText: upstreamResponse.statusText,
+          headers,
+        });
+      })
       .catch((error) => {
         log.error("request failed", { error });
         return createProxyErrorResponse(error, 502, formatError);

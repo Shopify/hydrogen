@@ -424,7 +424,7 @@ describe("handleSfapiProxy", () => {
     expect(text).toBe('{"data":{"shop":{"name":"Test"}}}');
   });
 
-  it("forwards SFAPI server-timing and set-cookie response headers", async () => {
+  it("captures SFAPI Server-Timing for gated replay and forwards set-cookie headers", async () => {
     const headers = new Headers({
       "content-type": "application/json",
       "server-timing": '_y;desc="unique", _s;desc="visit"',
@@ -445,7 +445,7 @@ describe("handleSfapiProxy", () => {
     );
 
     assert(result, "expected proxy to return a response");
-    expect(result.headers.get("server-timing")).toBe('_y;desc="unique", _s;desc="visit"');
+    expect(result.headers.get("server-timing")).toBeNull();
     expect(result.headers.getSetCookie()).toEqual([
       "_shopify_y=unique; Path=/; Secure",
       "_shopify_s=visit; Path=/; Secure",
@@ -474,7 +474,7 @@ describe("handleSfapiProxy", () => {
     expect(result.headers.get("content-encoding")).toBeNull();
     expect(result.headers.get("content-length")).toBeNull();
     expect(result.headers.get("content-type")).toBe("application/json");
-    expect(result.headers.get("server-timing")).toBe('_y;desc="unique"');
+    expect(result.headers.get("server-timing")).toBeNull();
   });
 
   it("returns 502 on upstream fetch failure", async () => {
