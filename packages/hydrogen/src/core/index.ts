@@ -247,6 +247,46 @@ export type {
   QueryPredictiveSearchOptions,
 } from "./predictive-search";
 
+export {
+  DEFAULT_LOCALIZATION_CACHE_CONTROL,
+  LOCALIZATION_API_PATH,
+  LOCALIZATION_COUNTRY_FIELD,
+  LOCALIZATION_LANGUAGE_FIELD,
+  LOCALIZATION_REDIRECT_TO_FIELD,
+  LOCALIZATION_SESSION_KEY,
+  createLocalizationServerHandlers,
+  fetchLocalization,
+  getLocaleRedirect,
+  getLocalizedPath,
+  getSupportedCountries,
+  localizationQueries,
+  makeLocalizationQueries,
+  matchLocaleFromRequest,
+  matchLocalePathname,
+  queryLocalization,
+} from "./localization";
+export type {
+  CreateLocalizationQueriesOptions,
+  CreateLocalizationServerHandlersOptions,
+  GetLocaleRedirectOptions,
+  GetLocalizedPathOptions,
+  LocaleSessionManager,
+  LocalizationData,
+  LocalizationDataForOptions,
+  LocalizationDataForQuery,
+  LocalizationError,
+  LocalizationErrorCode,
+  LocalizationFragments,
+  LocalizationGetData,
+  LocalizationConfig,
+  LocalizationGetResult,
+  LocalizationPostResult,
+  MatchedLocale,
+  QueryLocalizationOptions,
+  ResolveLocaleUrl,
+  SupportedLocale,
+} from "./localization";
+
 export { formatMoney } from "./money";
 export { flattenConnection } from "./analytics/utils/flatten-connection";
 export type { FormatMoneyOptions, FormattedMoney, FormattedMoneyRange, MoneyV2 } from "./money";

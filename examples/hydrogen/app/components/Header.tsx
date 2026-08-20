@@ -1,22 +1,30 @@
-import { AnalyticsEvent, type CartData, type CartPending } from "@shopify/hydrogen";
+import {
+  AnalyticsEvent,
+  type CartData,
+  type CartPending,
+  type LocalizationData,
+} from "@shopify/hydrogen";
 import { Suspense } from "react";
 import { Await, NavLink } from "react-router";
 
 import { useAside } from "~/components/Aside";
+import { CountrySelector } from "~/components/CountrySelector";
 import { toAnalyticsCart, useAnalytics } from "~/lib/analytics";
 import { useCart } from "~/lib/cart";
 import type { HeaderQuery } from "~/lib/fragments";
+import type { I18nLocale } from "~/lib/i18n";
 
 interface HeaderProps {
   header: HeaderQuery;
+  i18n: I18nLocale;
   isLoggedIn: Promise<boolean>;
-  pathPrefix: string;
+  localization: LocalizationData;
   publicStoreDomain: string;
 }
 
 type Viewport = "desktop" | "mobile";
 
-export function Header({ header, isLoggedIn, pathPrefix, publicStoreDomain }: HeaderProps) {
+export function Header({ header, i18n, isLoggedIn, localization, publicStoreDomain }: HeaderProps) {
   const { shop, menu } = header;
   return (
     <header className="header">
@@ -29,7 +37,11 @@ export function Header({ header, isLoggedIn, pathPrefix, publicStoreDomain }: He
         primaryDomainUrl={header.shop.primaryDomain.url}
         publicStoreDomain={publicStoreDomain}
       />
-      <HeaderCtas isLoggedIn={isLoggedIn} pathPrefix={pathPrefix} />
+      <HeaderCtas
+        isLoggedIn={isLoggedIn}
+        pathPrefix={i18n.pathPrefix}
+        countrySelector={<CountrySelector localization={localization} i18n={i18n} />}
+      />
     </header>
   );
 }
@@ -83,13 +95,18 @@ export function HeaderMenu({
   );
 }
 
-function HeaderCtas({ isLoggedIn, pathPrefix }: Pick<HeaderProps, "isLoggedIn" | "pathPrefix">) {
+function HeaderCtas({
+  isLoggedIn,
+  pathPrefix,
+  countrySelector,
+}: Pick<HeaderProps, "isLoggedIn"> & { pathPrefix: string; countrySelector: React.ReactNode }) {
   const accountPath = `${pathPrefix}/account`;
   const loginPath = `/account/login?return_to=${encodeURIComponent(accountPath)}`;
 
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
+      {countrySelector}
       <Suspense fallback={<a href={loginPath}>Sign in</a>}>
         <Await resolve={isLoggedIn} errorElement={<a href={loginPath}>Sign in</a>}>
           {(isLoggedIn) =>

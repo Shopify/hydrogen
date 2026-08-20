@@ -1,4 +1,9 @@
-import { Cache, type ConsentConfig } from "@shopify/hydrogen";
+import {
+  Cache,
+  getSupportedCountries,
+  localizationQueries,
+  type ConsentConfig,
+} from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import {
   Outlet,
@@ -19,6 +24,7 @@ import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { useNonce } from "~/lib/csp";
 import { FOOTER_QUERY, HEADER_QUERY, type HeaderQuery } from "~/lib/fragments";
+import { LOCALIZATION_CONFIG } from "~/lib/i18n";
 import { routeTemplates } from "~/lib/route-templates";
 
 import type { Route } from "./+types/root";
@@ -104,7 +110,7 @@ async function loadCriticalData(args: Route.LoaderArgs) {
   const { context } = args;
   const { storefront } = context;
 
-  const [header, cartData] = await Promise.all([
+  const [header, cartData, localizationData] = await Promise.all([
     storefront.query(HEADER_QUERY, {
       cache: Cache.long(),
       variables: {
@@ -112,9 +118,21 @@ async function loadCriticalData(args: Route.LoaderArgs) {
       },
     }),
     cartHandlers.get({ storefrontClient: storefront }).then(({ data }) => data),
+    // Country/language lists for the selector; cached because Markets config rarely changes.
+    storefront.query(localizationQueries.localization, { cache: Cache.long() }),
   ]);
 
-  return { cartData, header };
+  const localization = {
+    ...localizationData.localization,
+    // Same intersection the localization endpoints apply: the selector must never offer a
+    // locale the router won't serve.
+    availableCountries: getSupportedCountries(
+      localizationData.localization.availableCountries,
+      LOCALIZATION_CONFIG.supportedLocales,
+    ),
+  };
+
+  return { cartData, header, localization };
 }
 
 function getAnalyticsCurrency(header: HeaderQuery): string | null {

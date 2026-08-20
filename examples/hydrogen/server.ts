@@ -1,8 +1,10 @@
 import { getBuyerIp } from "@shared/buyer-ip";
 import { getPrivateStorefrontToken } from "@shared/private-env";
 import {
+  createLocalizationServerHandlers,
   createPredictiveSearchServerHandlers,
   createShopifyRequestContext,
+  getLocaleRedirect,
   handleShopifyRedirects,
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
@@ -14,10 +16,11 @@ import * as serverBuild from "virtual:react-router/server-build";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { createHydrogenRouterContext } from "~/lib/context";
 import { createCustomerAccountContext, createCustomerSessionManager } from "~/lib/customer-account";
-import { getLocaleFromRequest } from "~/lib/i18n";
+import { getLocaleFromRequest, LOCALIZATION_CONFIG } from "~/lib/i18n";
 import { routeTemplates } from "~/lib/route-templates";
 
 const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
+const localizationHandlers = createLocalizationServerHandlers(LOCALIZATION_CONFIG);
 const HTTPS_PROTOCOL = "https:";
 const FORWARDED_PROTO_HEADER = "x-forwarded-proto";
 const FORWARDED_HOST_HEADER = "x-forwarded-host";
@@ -70,9 +73,26 @@ export default {
         requestContext: shopifyRequestContext,
         sessionManager: customerSessionManager,
         storefrontClient,
-        handlers: [cartHandlers, predictiveSearchHandlers, customerAccountHandlers],
+        handlers: [
+          cartHandlers,
+          predictiveSearchHandlers,
+          customerAccountHandlers,
+          localizationHandlers,
+        ],
       });
       if (shopifyRoute) return await shopifyRoute;
+
+      /**
+       * Returning buyers navigating to an unprefixed URL are redirected to the locale they
+       * previously picked in the country selector (stored in the session by the localization
+       * POST handler). Prefixed URLs always win and are never redirected.
+       */
+      const localeRedirect = await getLocaleRedirect(publicRequest, {
+        config: LOCALIZATION_CONFIG,
+        i18n,
+        sessionManager: customerSessionManager,
+      });
+      if (localeRedirect) return localeRedirect;
 
       const routerContext = await createHydrogenRouterContext(
         publicRequest,

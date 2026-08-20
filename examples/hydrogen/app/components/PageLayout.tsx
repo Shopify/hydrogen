@@ -1,3 +1,4 @@
+import type { LocalizationData } from "@shopify/hydrogen";
 import { PredictiveSearchProvider } from "@shopify/hydrogen/react";
 import { Await, Link } from "react-router";
 
@@ -8,14 +9,16 @@ import { Header, HeaderMenu } from "~/components/Header";
 import { getSearchPageUrl, SearchFormPredictive } from "~/components/SearchFormPredictive";
 import { SearchResultsPredictive } from "~/components/SearchResultsPredictive";
 import type { FooterQuery, HeaderQuery } from "~/lib/fragments";
+import type { I18nLocale } from "~/lib/i18n";
 
 const PREDICTIVE_SEARCH_LIMIT = 5;
 
 interface PageLayoutProps {
   footer: Promise<FooterQuery | null>;
   header: HeaderQuery;
-  i18n: { pathPrefix: string };
+  i18n: I18nLocale;
   isLoggedIn: Promise<boolean>;
+  localization: LocalizationData;
   publicStoreDomain: string;
   children?: React.ReactNode;
 }
@@ -26,6 +29,7 @@ export function PageLayout({
   header,
   i18n,
   isLoggedIn,
+  localization,
   publicStoreDomain,
 }: PageLayoutProps) {
   return (
@@ -36,8 +40,9 @@ export function PageLayout({
       {header && (
         <Header
           header={header}
+          i18n={i18n}
           isLoggedIn={isLoggedIn}
-          pathPrefix={i18n.pathPrefix}
+          localization={localization}
           publicStoreDomain={publicStoreDomain}
         />
       )}

@@ -367,6 +367,19 @@ describe("createStorefrontClient", () => {
       });
     });
 
+    it("lets explicit country and language variables win over auto-injection", async () => {
+      const client = createPublicClient({
+        fetch: mockFetch,
+      });
+      await client.graphql(LOCALIZED_QUERY, { variables: { country: "CA", language: "FR" } });
+
+      const body = getBody(mockFetch);
+      expect(body.variables).toMatchObject({
+        country: "CA",
+        language: "FR",
+      });
+    });
+
     it("does not inject i18n variables when not declared in query", async () => {
       const client = createPublicClient({
         fetch: mockFetch,
