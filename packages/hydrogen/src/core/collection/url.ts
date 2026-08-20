@@ -14,6 +14,7 @@ export interface CollectionParams {
 
 const SORT_BY_DESCENDING_SUFFIX = "-descending";
 const SORT_BY_ASCENDING_SUFFIX = "-ascending";
+const PAGINATION_CURSOR_PARAMS: readonly string[] = ["before", "after"];
 
 const SORT_KEY_TO_SORT_BY: Record<string, string> = {
   BEST_SELLING: "best-selling",
@@ -97,7 +98,9 @@ export function normalizeCollectionSearch(search: string): string {
 
 /**
  * Merges store-owned params from `state` into `existing`, preserving
- * non-store keys (e.g. `grid`, `view`) already present in the URL.
+ * unrelated keys (e.g. `grid`, `view`) already present in the URL. Collection
+ * pagination cursors (`before`, `after`) are cleared so changed browse intent
+ * starts from the first page.
  */
 export function mergeCollectionParams(
   existing: URLSearchParams,
@@ -110,6 +113,8 @@ export function mergeCollectionParams(
       merged.delete(key);
     }
   }
+
+  clearPaginationCursors(merged);
 
   for (const [key, value] of serializeCollectionParams(state)) {
     merged.append(key, value);
@@ -147,12 +152,14 @@ export function collectionParamsMatchState(
 /**
  * Builds a URL query string with the given filter removed from the current params.
  *
+ * Clears pagination cursors so the changed filter state starts from its first page.
  * Returns `"?"` when removing the filter leaves no params. Useful for
  * rendering "remove filter" links without updating store state.
  */
 export function getFilterRemovalUrl(currentParams: URLSearchParams, filter: ProductFilter): string {
   const result = new URLSearchParams(currentParams);
   removeFilterParams(result, filter);
+  clearPaginationCursors(result);
   const serialized = result.toString();
   return serialized ? `?${serialized}` : "?";
 }
@@ -385,6 +392,12 @@ function serializeFilter(params: URLSearchParams, filter: ProductFilter): void {
 function removeFilterParams(params: URLSearchParams, filter: ProductFilter): void {
   for (const { key, value } of getFilterParamEntries(filter)) {
     removeParamValue(params, key, value);
+  }
+}
+
+function clearPaginationCursors(params: URLSearchParams): void {
+  for (const key of PAGINATION_CURSOR_PARAMS) {
+    params.delete(key);
   }
 }
 

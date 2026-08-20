@@ -44,6 +44,7 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 - Use `formProps()` on the browse form: spread it, then add the literal `method="get"` and `action`. On hydrated changes, call `form.requestSubmit()` for **checkboxes and `<select>`**. For **text/number inputs (price min/max)** use `onBlur` + `onKeyDown` Enter instead — `onChange` fires per keystroke and would submit the GET form (and re-query Storefront) on every character.
 - Render a `noscript` submit button for filter sidebars that auto-submit when hydrated.
 - Render "load more" / pagination as a GET link (the framework's link component) carrying the next-page cursor (e.g. `?after=<endCursor>`), so it works without JavaScript. Hydration may upgrade it to append-in-place; the bare link must still load the next page server-side (it replaces the page rather than appending when JS is off).
+- Clear both `before` and `after` whenever filters or sorting change so the new browse state starts from its first page.
 - Show stale products with a pending visual state while `state.status === "loading"`; do not replace the grid with a skeleton.
 - Serialize active filter chips from `serializeCollectionParams(state)` and remove filters with `getFilterRemovalUrl(...)`.
 - Use `isFilterInputActive(state.filters, value.input)` to mark checked filter inputs.
