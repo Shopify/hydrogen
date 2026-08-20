@@ -541,6 +541,15 @@ describe("getFilterRemovalUrl", () => {
     expect(result.get("view")).toBe("grid");
   });
 
+  it.each(["before", "after"])("clears the %s pagination cursor", (cursor) => {
+    const current = params(`${cursor}=page&filter.p.tag=men&view=grid`);
+    const url = getFilterRemovalUrl(current, { tag: "men" });
+    const result = new URLSearchParams(url.slice(1));
+
+    expect(result.has(cursor)).toBe(false);
+    expect(result.get("view")).toBe("grid");
+  });
+
   it("returns bare ? when all params removed", () => {
     const current = params("filter.p.tag=men");
     const url = getFilterRemovalUrl(current, { tag: "men" });
@@ -719,6 +728,30 @@ describe("mergeCollectionParams", () => {
     expect(merged.get("filter.p.tag")).toBe("women");
     expect(merged.get("sort_by")).toBe("title-descending");
     expect(merged.getAll("filter.p.tag")).not.toContain("men");
+  });
+
+  it("clears the forward cursor when filters change", () => {
+    const merged = mergeCollectionParams(new URLSearchParams("after=next&grid=3"), {
+      filters: [{ tag: "women" }],
+      sortKey: undefined,
+      reverse: false,
+    });
+
+    expect(merged.get("grid")).toBe("3");
+    expect(merged.get("filter.p.tag")).toBe("women");
+    expect(merged.has("after")).toBe(false);
+  });
+
+  it("clears the backward cursor when sorting changes", () => {
+    const merged = mergeCollectionParams(new URLSearchParams("before=previous&grid=3"), {
+      filters: [],
+      sortKey: "TITLE",
+      reverse: true,
+    });
+
+    expect(merged.get("grid")).toBe("3");
+    expect(merged.get("sort_by")).toBe("title-descending");
+    expect(merged.has("before")).toBe(false);
   });
 });
 
