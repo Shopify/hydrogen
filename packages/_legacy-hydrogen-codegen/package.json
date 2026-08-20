@@ -1,0 +1,55 @@
+{
+  "name": "@shopify/hydrogen-codegen",
+  "version": "0.3.3",
+  "description": "A codegen plugin and preset for generating TypeScript types from GraphQL queries in a `d.ts` file.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/hydrogen.git",
+    "directory": "packages/_legacy-hydrogen-codegen"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "dist/cjs/index.cjs",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "require": "./dist/cjs/index.cjs",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/esm/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "@shopify:registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup --clean",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --typecheck",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --typecheck"
+  },
+  "dependencies": {
+    "@shopify/graphql-codegen": "^0.1.0"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.3",
+    "@graphql-codegen/plugin-helpers": "^5.1.0",
+    "@shopify/hydrogen": "workspace:*",
+    "@types/node": "^25.8.0",
+    "cross-env": "^7.0.3",
+    "dts-bundle-generator": "^9.5.1",
+    "tinyrainbow": "^1.2.0",
+    "tsup": "^8.4.0",
+    "type-fest": "^4.33.0",
+    "typescript": "catalog:",
+    "vitest": "^3.2.4"
+  }
+}

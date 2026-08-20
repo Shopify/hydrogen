@@ -64,7 +64,14 @@
   },
   "overrides": [
     {
-      "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.type-test.ts", "**/e2e/**"],
+      "files": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.test-d.ts",
+        "**/*.spec.ts",
+        "**/*.type-test.ts",
+        "**/e2e/**"
+      ],
       "rules": {
         "complexity": "off",
         "max-depth": "off",
@@ -74,10 +81,19 @@
       }
     },
     {
+      "files": ["**/*.test-d.ts"],
+      "rules": {
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unnecessary-type-constraint": "off",
+        "unicorn/consistent-function-scoping": "off"
+      }
+    },
+    {
       "files": [
         "packages/hydrogen/src/graphql/graphql.ts",
         "packages/hydrogen/src/graphql/type-resolver.ts",
-        "packages/hydrogen/src/client/types.ts"
+        "packages/hydrogen/src/client/types.ts",
+        "packages/_legacy-hydrogen-codegen/src/preset.ts"
       ],
       "rules": {
         "@typescript-eslint/consistent-type-assertions": "off",
