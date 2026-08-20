@@ -6,10 +6,12 @@ const commandCalls = vi.hoisted(() => ({
   checkGraphQL: vi.fn(async () => {}),
   installLocalHttpsCertificates: vi.fn(async () => {}),
   setupHydrogen: vi.fn(async () => {}),
+  uninstallLocalHttpsCertificates: vi.fn(async () => {}),
 }));
 
 vi.mock("../certs", () => ({
   installLocalHttpsCertificates: commandCalls.installLocalHttpsCertificates,
+  uninstallLocalHttpsCertificates: commandCalls.uninstallLocalHttpsCertificates,
 }));
 vi.mock("../gql", () => ({ checkGraphQL: commandCalls.checkGraphQL }));
 vi.mock("../setup", () => ({ setupHydrogen: commandCalls.setupHydrogen }));
@@ -32,6 +34,12 @@ describe("runCli", () => {
 
     expect(commandCalls.installLocalHttpsCertificates).toHaveBeenCalledOnce();
     expect(commandCalls.setupHydrogen).not.toHaveBeenCalled();
+  });
+
+  it("dispatches certs uninstall with trailing arguments", () => {
+    runWithArguments(["certs", "uninstall", "--remove-ca"]);
+
+    expect(commandCalls.uninstallLocalHttpsCertificates).toHaveBeenCalledWith(["--remove-ca"]);
   });
 
   it("dispatches setup to the skills setup", () => {

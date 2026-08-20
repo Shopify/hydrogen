@@ -3,7 +3,7 @@
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { installLocalHttpsCertificates } from "./certs";
+import { installLocalHttpsCertificates, uninstallLocalHttpsCertificates } from "./certs";
 import { checkGraphQL } from "./gql";
 import { setupHydrogen } from "./setup";
 
@@ -12,6 +12,10 @@ const FAILURE_EXIT_CODE = 1;
 
 const COMMANDS = [
   { path: ["certs", "install"], run: async (_args: string[]) => installLocalHttpsCertificates() },
+  {
+    path: ["certs", "uninstall"],
+    run: async (args: string[]) => uninstallLocalHttpsCertificates(args),
+  },
   { path: ["setup"], run: async (_args: string[]) => setupHydrogen() },
   { path: ["gql", "check"], run: async (args: string[]) => checkGraphQL({ args }) },
 ] as const;

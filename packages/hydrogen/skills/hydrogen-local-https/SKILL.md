@@ -17,6 +17,8 @@ The `localHttps` Vite plugin provisions missing certificates automatically when 
 npx hydrogen certs install
 ```
 
+Remove Hydrogen's generated certificate files and cached mkcert binary with `npx hydrogen certs uninstall`. This leaves mkcert's shared local certificate authority trusted because other projects may use it. Pass `--remove-ca` to remove that shared CA from the system trust stores too.
+
 Pass `certPath` and `keyPath` to use another location. When automatic download is unavailable for a platform, install mkcert manually and generate the files at the paths the warning prints.
 
 The plugin skips automatic provisioning when the `CI` environment variable is set, because installing the certificate authority needs an interactive trust prompt. Run `npx hydrogen certs install` explicitly when a CI job genuinely needs local HTTPS.

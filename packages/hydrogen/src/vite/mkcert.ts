@@ -203,3 +203,11 @@ export async function provisionCertificates(settings: ProvisionSettings): Promis
   }
   confirm("local https certificates ready");
 }
+
+export async function uninstallCertificateAuthority(): Promise<void> {
+  const binaryPath = await ensureMkcertBinary();
+
+  log.info("removing the local certificate authority; mkcert may prompt for your password.");
+  await runMkcert(binaryPath, ["-uninstall"]);
+  confirm("The local CA was removed from the system trust stores");
+}
