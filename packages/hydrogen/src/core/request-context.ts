@@ -147,6 +147,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     throw new Error("buyerIp must be non-empty when provided");
   }
 
+  const requestMethod = request.method?.toUpperCase();
   const i18n = normalizeI18n(input.i18n);
   const cookieHeader = request.headers.get("cookie") || undefined;
   const inboundCookies = parseCookieHeader(cookieHeader);
@@ -217,17 +218,21 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     applyResponseHeaders(headers) {
       headers.set("powered-by", "Shopify, Hydrogen");
 
+      // Documents may be shared or streamed, so they must not carry buyer-specific state.
       const isDocumentResponse =
         context.documentRequest || (headers.get("content-type")?.startsWith("text/html") ?? false);
-      const mayReturnShopifyCookies =
-        !isDocumentResponse && (hasEssentialCookie || isConsentManagementRequest);
-      const returnsCapturedHeaders =
-        mayReturnShopifyCookies &&
-        Boolean(
-          capturedSubrequestHeaders?.serverTiming || capturedSubrequestHeaders?.setCookie.length,
-        );
 
-      if (capturedSubrequestHeaders && mayReturnShopifyCookies) {
+      // Keep GET and HEAD responses cacheable, and fail closed when the request method is unknown.
+      // Cold sessions may only be established by the explicitly marked consent request.
+      const mayReturnShopifyState =
+        requestMethod !== undefined &&
+        requestMethod !== "GET" &&
+        requestMethod !== "HEAD" &&
+        !isDocumentResponse &&
+        (hasEssentialCookie || isConsentManagementRequest);
+
+      // Replay state captured from the first fresh Storefront API subrequest when allowed.
+      if (capturedSubrequestHeaders && mayReturnShopifyState) {
         const existingSetCookies = new Set(headers.getSetCookie());
         for (const value of capturedSubrequestHeaders.setCookie) {
           if (existingSetCookies.has(value)) continue;
@@ -243,7 +248,15 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
         }
       }
 
-      if (!mayReturnShopifyCookies) removeShopifySetCookies(headers);
+      // Apply the same policy to Shopify cookies already present on the app response.
+      if (!mayReturnShopifyState) removeShopifySetCookies(headers);
+
+      // Responses containing buyer-specific or replayed state must not enter shared caches.
+      const returnsCapturedHeaders =
+        mayReturnShopifyState &&
+        Boolean(
+          capturedSubrequestHeaders?.serverTiming || capturedSubrequestHeaders?.setCookie.length,
+        );
 
       if (
         personalizedResponseReason ||
