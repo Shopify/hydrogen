@@ -134,10 +134,10 @@ const PRODUCT_QUERY = gql(
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Product · CORE" },
+    { title: "Product" },
     {
       name: "description",
-      content: "Shop the CORE product detail page.",
+      content: "View product details.",
     },
   ];
 }

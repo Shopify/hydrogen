@@ -5,7 +5,7 @@
 A React Router 7 (framework mode, SSR) storefront built on
 [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen) and the
 Oxygen runtime through Vite and Mini Oxygen. It's a starting point you can clone
-and build your store on top of — five pages on a shared layout, with a real cart,
+and build your store on top of, with a shared layout, a real cart,
 analytics, and a consent banner wired up.
 
 ## Pages
@@ -15,7 +15,8 @@ analytics, and a consent banner wired up.
 - `/collections` — all collections
 - `/collections/:handle` — collection with filters, sort, and pagination
 - `/search` — product search with the same filtering
-- `/cart` — cart with Shop Pay (also the no-JS fallback for the cart drawer)
+- `/cart` — cart with Shop Pay
+- `/account` — optional Customer Account login and identity
 
 ## What it demonstrates
 
@@ -37,18 +38,18 @@ npm install
 account or token needed):
 
 ```bash
-cp .env.example .env
-# uncomment MOCK_SHOP=1 in .env
 npm run dev
 ```
 
 **Against a real store** — set your store domain, storefront ID, and a **private**
-Storefront API token, then run normally:
+Storefront API token, then run normally. `.env.example` is the complete environment reference.
 
 ```bash
-cp .env.example .env   # set PUBLIC_STORE_DOMAIN + PUBLIC_STOREFRONT_ID + PRIVATE_STOREFRONT_API_TOKEN
-npm run dev               # Vite/Mini Oxygen loads .env into the worker environment
+cp .env.example .env
+npm run dev
 ```
+
+Customer Accounts are enabled for real stores when the account values documented in `.env.example` are present. Generate a session secret with `openssl rand -hex 32`.
 
 Customer Account OAuth requires trusted local HTTPS. Run:
 
@@ -58,13 +59,13 @@ npm run dev:https
 
 The local HTTPS plugin provisions and reuses a trusted certificate under `~/.shopify/hydrogen/certs/`. On first run, it may prompt to install the local certificate authority. Open <https://local.tryhydrogen.dev:5173>.
 
-Mode is **auto-detected**: when a `PRIVATE_STOREFRONT_API_TOKEN` is present the
-app talks to the real store (`PUBLIC_STORE_DOMAIN`, falling back to the default in
-`app/lib/shop.ts`); with none it falls back to the `mock.shop` demo, so a fresh
-deploy always renders. **On Oxygen, a linked storefront injects these env vars
-automatically** — the deployed site connects to your store with no extra config
-(and shows the `mock.shop` demo until it's linked). `MOCK_SHOP=1` forces mock.
-(`mock.shop` and the Hydrogen Preview store are different data sources.)
+The HTTPS dev server prints the exact Customer Account callback URI, JavaScript
+origin, and logout URI to register for the storefront in Shopify admin.
+
+Mode is **auto-detected**: a private Storefront API token selects real-store mode;
+without one, the app uses mock.shop. Real-store identity is all-or-nothing, so
+incomplete variables fail with an actionable configuration error. `MOCK_SHOP=1`
+forces the mock explicitly.
 
 ## Scripts
 
@@ -79,7 +80,7 @@ automatically** — the deployed site connects to your store with no extra confi
 
 ## Where to start
 
-- Swap the store in `app/lib/shop.ts` + `.env`.
+- Configure a real store in `.env`.
 - Routes live in `app/routes/`; shared UI in `app/components/`; data/query helpers
   in `app/lib/`.
 - The design is yours to change — `app/tokens.css` holds the design tokens; the

@@ -1,4 +1,6 @@
-export function createRequestSessionManager(request: Request) {
+import type { WritableCustomerSessionManager } from "@shopify/hydrogen/customer-account";
+
+export function createRequestSessionManager(request: Request): WritableCustomerSessionManager {
   const data = new Map<string, unknown>();
   const origin = new URL(request.url).origin;
 

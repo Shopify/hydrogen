@@ -31,6 +31,7 @@ Use Vite/React Router scripts, not Hydrogen CLI dev/build scripts:
 {
   "scripts": {
     "dev": "vite dev",
+    "https:dev": "vite dev",
     "build": "react-router build",
     "preview": "react-router build && vite preview",
     "typecheck": "react-router typegen && tsc --noEmit && hydrogen gql check --fail-on-warn",
@@ -38,6 +39,8 @@ Use Vite/React Router scripts, not Hydrogen CLI dev/build scripts:
   }
 }
 ```
+
+Keep `https:setup` exactly aligned with `templates/react-router/package.json`; it owns the mkcert output paths consumed by `localHttps`.
 
 Remove Node-server scripts such as `start: react-router-serve ...` unless explicitly requested.
 
@@ -58,22 +61,35 @@ Dependencies:
 - **`@shopify/mini-oxygen`: pin `^4.2.0`** — its `oxygen()` plugin adds `configurePreviewServer`, which `vite preview`
   needs to run the Worker.
 - Add `"engines": {"node": "^22 || ^24"}`.
-- Replace `catalog:` ranges with npm-compatible semver ranges. Keep `@types/node` in `devDependencies` (build tooling
-  such as `vite.config.ts` needs it) even though it is dropped from the app tsconfig `types` (see "Env and types").
+- Replace `catalog:` ranges with npm-compatible semver ranges. Keep `@types/node` in `devDependencies` and `node` in
+  the app tsconfig `types` while build tooling such as `vite.config.ts` belongs to the project.
 - Choose other package versions at implementation time; prefer the versions already present in the example's package files.
 
 ## vite.config.ts
 
-Use MiniOxygen and React Router only, plus framework-neutral plugins the template genuinely needs:
+Use MiniOxygen and React Router, the Hydrogen local HTTPS plugin, and framework-neutral plugins the template genuinely needs:
 
 ```ts
 import {reactRouter} from "@react-router/dev/vite";
+import {localHttps} from "@shopify/hydrogen/vite";
 import {oxygen} from "@shopify/mini-oxygen/vite";
 import tailwindcss from "@tailwindcss/vite";
 import {defineConfig} from "vite";
 
+const oxygenPlugins = oxygen();
+const oxygenPlugin = oxygenPlugins.find((plugin) => plugin.name === "oxygen:main");
+
+if (!oxygenPlugin?.api) throw new Error("MiniOxygen plugin API is unavailable.");
+
+// Keep the checked-in compatibility-date override while preview releases can
+// infer a future date. Remove it when MiniOxygen no longer needs the guard.
+oxygenPlugin.api.registerPluginOptions({compatibilityDate: "2026-04-01"});
+
+const httpsEnabled =
+  process.env.VITE_LOCAL_HTTPS === "1" || process.env.npm_lifecycle_event === "https:dev";
+
 export default defineConfig({
-  plugins: [tailwindcss(), oxygen(), reactRouter()],
+  plugins: [localHttps({enabled: httpsEnabled}), tailwindcss(), ...oxygenPlugins, reactRouter()],
   resolve: {
     tsconfigPaths: true,
   },
@@ -100,7 +116,7 @@ export default defineConfig({
 });
 ```
 
-Keep the Hydrogen `localHttps` plugin when Customer Account support is enabled. Do not add `localCdnAssets`, `hydrogen()` from classic Hydrogen, or separate `allowedHosts` configuration unless requested.
+Keep the Hydrogen `localHttps` plugin when Customer Account support is enabled. Do not add `localCdnAssets` or `hydrogen()` from classic Hydrogen. Preserve an existing `allowedHosts` entry when the template uses it for Hydrogen preview hosts; otherwise let `localHttps` configure its own host.
 
 Keep the `build.assetsInlineLimit: 0` and `ssr.optimizeDeps.include` interop settings unless a successful Worker build and MiniOxygen runtime test proves they are unnecessary. They prevent common CJS/ESM runtime failures in the Oxygen runtime such as `module is not defined` / `require is not defined`. Use plain `oxygen()`; MiniOxygen auto-loads `.env` into the Worker via its own `loadEnv` fallback when no `env` option is provided.
 
@@ -131,9 +147,10 @@ Add a Worker module entrypoint that creates the React Router request handler dir
 import {createRequestHandler} from "react-router";
 import * as serverBuild from "virtual:react-router/server-build";
 
+const handleRequest = createRequestHandler(serverBuild, import.meta.env.MODE);
+
 export default {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
-    const handleRequest = createRequestHandler(serverBuild, import.meta.env.MODE);
     const context = await createAppLoadContext(request, env, executionContext);
 
     return handleRequest(request, context);
@@ -253,16 +270,10 @@ Pass `cache` directly to `createStorefrontClient`'s `config` — the client wrap
 
 ## Env and types
 
-Ship a `.env.example` (committed, blank) and a gitignored `.env`. Only the two real secrets are required; everything
-else public lives in `app/lib/config.ts` (see config split). To smoke-test against the demo store in this repo, run
-`pnpm run examples:secrets:decrypt` from the repository root (needs the ejson key locally). It writes the private token
-and store domain to the gitignored `templates/react-router/.env`.
-
-```sh
-SESSION_SECRET="replace-with-a-long-random-secret-32+"
-PRIVATE_STOREFRONT_API_TOKEN=""
-# PUBLIC_STORE_DOMAIN="your-shop.myshopify.com"   # optional override of app/lib/config.ts
-```
+Ship a committed `.env.example` and a gitignored `.env`. With no private Storefront API token, the template uses
+mock.shop. Once a private token is present, require the complete real-store identity instead of mixing it with demo
+defaults. Keep `.env.example` as the exhaustive variable reference; README prose and this reference should point to
+it rather than copy a list that can drift.
 
 Add or update TypeScript declarations so the Worker env is typed:
 
@@ -271,12 +282,10 @@ Add or update TypeScript declarations so the Worker env is typed:
 /// <reference types="react-router" />
 /// <reference types="vite/client" />
 
+import type {Env as AppEnv} from "./app/lib/env";
+
 declare global {
-  interface Env {
-    SESSION_SECRET: string;
-    PRIVATE_STOREFRONT_API_TOKEN: string;
-    PUBLIC_STORE_DOMAIN?: string;
-  }
+  interface Env extends AppEnv {}
 }
 
 export {};
@@ -284,9 +293,9 @@ export {};
 
 Add typed React Router contexts for Worker values the app needs, such as `env`, `cache`, and `waitUntil`. Use `createContext<T>()`/`RouterContextProvider` consistently so middleware and loaders do not reach for globals or `process.env`.
 
-Do not replace `tsconfig.json` wholesale. Keep `types` set to `["@shopify/oxygen-workers-types", "react-router", "vite/client"]` without `node`. Under `verbatimModuleSyntax`, any binding used only in a type position must use `import type`. Example: `defaultI18n` in `app/lib/storefront.ts` is used only as `typeof defaultI18n`, so it must be `import type {defaultI18n}`.
+Do not replace `tsconfig.json` wholesale. Keep `types` aligned with the checked-in template, including `node` while `vite.config.ts` belongs to the project. Under `verbatimModuleSyntax`, any binding used only in a type position must use `import type`. Worker runtime files must still avoid Node APIs.
 
-Keep `@types/node` in `devDependencies` (build tooling needs it at runtime); it is just not in the app `types` array.
+Keep `@types/node` in `devDependencies` and `node` in the app `types` array so shared build-tool configuration typechecks.
 
 Keep `hydrogen gql check --fail-on-warn` in `typecheck` and preserve the `@shopify/hydrogen/ts-plugin` entry. Hydrogen packages both schemas and their gql.tada tooling.
 
@@ -294,9 +303,8 @@ Keep `hydrogen gql check --fail-on-warn` in `typecheck` and preserve the `@shopi
 
 Replace each `@shared/*` import with template-local code:
 
-- config constants -> local `app/lib/config.ts` (see config split below)
-- private token lookup -> local `app/lib/env.ts`
-- buyer IP helper -> local `app/lib/buyer-ip.ts` (replace `process.env.NODE_ENV` with `import.meta.env.PROD`)
+- runtime configuration and private token resolution -> local `app/lib/shop.ts`
+- buyer IP helper -> local request middleware such as `app/lib/storefront.ts` (use `import.meta.env` instead of `process.env`)
 - encrypted customer session -> copy into `app/lib/customer-session.ts` if Customer Account remains enabled (it is
   already Web-Crypto based and Oxygen-safe)
 - storefront cache adapter -> remove if replacing LRU with Oxygen `caches.open`
@@ -305,15 +313,12 @@ Replace each `@shared/*` import with template-local code:
 
 Additionally, keep `lib/route-templates.ts` unchanged — `routeTemplates` is required by `handleShopifyRedirects({routeTemplates})`, `<ShopifyScripts routes={routeTemplates}>`, and `getPredictiveSearchItemUrl(product, {routes: routeTemplates, …})`.
 
-**Config split (public vs secret).** Do not try to make everything env-driven — `ShopifyScripts` (in the root
-`Layout`) and analytics run on the CLIENT, where the Worker `env` is not available. Split it:
+**Runtime configuration.** Resolve mock/real mode once per request in middleware. No private token means mock.shop;
+once a private token is present, require the real store domain and storefront ID. Customer Accounts are disabled when
+all account values are absent and rejected as misconfigured when only some are present.
 
-- Public identity -> bundled `app/lib/config.ts` (store domain, public Storefront token, shop/storefront IDs,
-  Customer Account client ID, `defaultI18n`, `analyticsShop`, `analyticsConsent`). These are non-secret and safe in the
-  client bundle; default them to the demo store so the template runs out of the box.
-- Real secrets -> Worker `env`, read on the server only: `SESSION_SECRET`, `PRIVATE_STOREFRONT_API_TOKEN`, plus an
-  optional `PUBLIC_STORE_DOMAIN` override. Read them in root middleware, not at module scope.
-
-This avoids a fragile loader->client refactor and keeps every feature working. Note this applies beyond root middleware: route modules also import public identity (e.g. `analyticsShop`) on the client, so keeping it as a bundled `config.ts` constant — rather than something read from `env` — is what makes those client imports work.
+Pass the resolved public Shopify Scripts and analytics identity through root loader data. Do not import Worker `env`
+from client modules, and do not silently fall back to another store's identity in real-store mode. Keep static locale
+and consent defaults in a bundled config module because they are not store credentials.
 
 Keep Customer Account, cart, search, analytics, and other example features unless the user explicitly asks to remove them.

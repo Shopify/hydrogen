@@ -3,13 +3,13 @@ import { Link } from "react-router";
 const linkClass =
   "min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors";
 
-export function Footer() {
+export function Footer({ shopName }: { shopName: string }) {
   return (
     <footer className="max-w-page px-margin mx-auto w-full">
       <div className="border-border grid grid-cols-1 gap-8 border-t py-12 text-sm md:grid-cols-2 lg:grid-cols-4">
         <div>
-          <h2 className="type-body-sm text-on-surface mb-4 font-medium">CORE</h2>
-          <p className="text-on-surface-secondary">&copy; 2026 CORE</p>
+          <h2 className="type-body-sm text-on-surface mb-4 font-medium">{shopName}</h2>
+          <p className="text-on-surface-secondary">&copy; 2026 {shopName}</p>
         </div>
         <nav aria-labelledby="footer-quick-links-heading">
           <h2
@@ -50,9 +50,9 @@ export function Footer() {
               </Link>
             </li>
             <li>
-              <a href="#" className={linkClass}>
+              <Link to="/account" reloadDocument className={linkClass}>
                 Account
-              </a>
+              </Link>
             </li>
           </ul>
         </nav>

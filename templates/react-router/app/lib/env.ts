@@ -1,11 +1,11 @@
+import type { CacheInstance } from "@shopify/hydrogen";
 import { createContext } from "react-router";
 
-export type Env = {
-  MOCK_SHOP?: string;
-  PRIVATE_STOREFRONT_API_TOKEN?: string;
-  PUBLIC_CHECKOUT_DOMAIN?: string;
-  PUBLIC_STORE_DOMAIN?: string;
-  PUBLIC_STOREFRONT_ID?: string;
-};
+import type { RuntimeConfig, RuntimeEnv } from "./shop";
+
+export type Env = RuntimeEnv;
 
 export const envContext = createContext<Env>();
+export const cacheContext = createContext<CacheInstance>();
+export const runtimeConfigContext = createContext<RuntimeConfig>();
+export const waitUntilContext = createContext<ExecutionContext["waitUntil"]>();

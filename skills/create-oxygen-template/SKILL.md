@@ -138,52 +138,31 @@ Rewrite the README for a starter project, not for the monorepo example. Include:
 - required env vars and `.env` setup
 - `npm install`
 - `npm run dev`
+- `npm run https:setup` and `npm run https:dev` for Customer Account OAuth
 - `npm run build`
 - `npm run preview`
 - `npm run deploy`
-- a "Deploy to Oxygen" section with the one-click button (see "Deploy button")
+- the canonical Deploy to Oxygen button (see "Deploy button")
 - a brief note that it runs on Oxygen/MiniOxygen through Vite
 
 Remove example-comparison tables, monorepo-only commands, and references to `examples/shared`.
 
 ### Deploy button
 
-The README MUST lead with a **Deploy to Oxygen** button. It is the canonical one-click entry point for an Oxygen
-starter; the manual `npm run deploy` (`shopify hydrogen deploy`) flow is a secondary fallback, not the primary path.
-Add it in TWO places, using this exact markup (an absolute raw image URL pinned to the `preview` branch — the
-template ships into users' repos, so it cannot rely on a relative path to the repo's `.github/images/` asset):
+The README MUST lead with the canonical button used by the source template:
 
-1. **At the very top of the README**, immediately under the `#` title line:
+```markdown
+[![Deploy to Oxygen](../../.github/images/deploy-to-oxygen.svg)](https://admin.shopify.com/hydrogen/new?template=react-router)
+```
 
-   ```html
-   <a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src="https://raw.githubusercontent.com/Shopify/hydrogen/preview/.github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
-   ```
-
-2. **In the "Deploy to Oxygen" section**, leading with the button and the one-click flow, then the manual
-   `npm run deploy` fallback. Use this shape:
-
-   ```markdown
-   ## Deploy to Oxygen
-
-   <a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src="https://raw.githubusercontent.com/Shopify/hydrogen/preview/.github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
-
-   The fastest way to deploy is the button above — it creates a new Oxygen project from this template and links it to your Shopify store.
-
-   When you deploy from the command line with `npm run deploy`, a linked storefront injects your env vars (`PUBLIC_STORE_DOMAIN`, `PRIVATE_STOREFRONT_API_TOKEN`, `SESSION_SECRET`) automatically, so the deployed site connects to your store with no extra config.
-   ```
-
-The button's `template=react-router` query param and the image URL's `preview` branch path are fixed — keep them
-exactly. Do NOT swap the image `src` for a relative path to a local `.github/images/` file: the template is cloned
-into the user's own repo, which does not contain that asset. (The SVG itself lives at
-`.github/images/deploy-to-oxygen.svg` in the `Shopify/hydrogen` repo on `preview`; the absolute raw URL references it
-in place, so the template does not need to ship a copy.)
+Keep the `template=react-router` query parameter and source-repository image path aligned with the current template.
 
 ## Validation
 
 Before finishing:
 
 1. Install with `CI=true` (see Prerequisites).
-2. Run `rg -n "@shared/|examples/shared|localCdnAssets|localHttps|hydrogen-classic|@react-router/node|@react-router/serve|lru-cache|catalog:|process\\.env|file:./shopify-hydrogen" templates/<name> -g '!pnpm-lock.yaml' -g '!package-lock.json' -g '!node_modules'`. Exclude `pnpm-lock.yaml`, `package-lock.json`, and `node_modules` — lockfiles can legitimately list transitive `@react-router/node`, `@react-router/serve`, and `lru-cache` even after the template drops them as direct deps; scanning them produces false positives.
+2. Run `rg -n "@shared/|examples/shared|localCdnAssets|hydrogen-classic|@react-router/node|@react-router/serve|lru-cache|catalog:|file:./shopify-hydrogen" templates/<name> -g '!pnpm-lock.yaml' -g '!package-lock.json' -g '!node_modules'`. Then scan `app/**` and `server.ts` separately for `process.env`; build configuration such as `vite.config.ts` may use it. Exclude lockfiles and `node_modules` because they can legitimately list removed packages transitively.
 3. Run the template typecheck (`react-router typegen && tsc --noEmit && hydrogen gql check --fail-on-warn`).
 4. Run the template build. Confirm it creates `dist/client`, `dist/server`, and `dist/server/index.js`.
 5. Run `node_modules/.bin/shopify hydrogen deploy --help` from the template directory. Confirm it lists
@@ -191,7 +170,7 @@ Before finishing:
    authentication instead of reporting `Nonexistent flags`.
 6. **Actually drive both runtimes, don't just check that a server starts** (static assets can serve even when the Worker isn't exercised):
    - `npm run dev`: request `/`, a product, a collection, `/search`, `/account`, `/cart` — expect HTTP 200 and live data.
-   - `npm run preview` (= `react-router build && vite preview`, requires MiniOxygen `>= 4.2.0`): same requests through the built Worker. Confirm `.env` is loaded (root routes need real env, or they 500).
+   - `npm run preview` (= `react-router build && vite preview`, requires MiniOxygen `>= 4.2.0`): same requests through the built Worker. Verify both no-env mock mode and complete real-store configuration.
 7. For distribution validation, copy the template to a temporary directory, replace `workspace:*` with the version
    selected by the `preview` dist-tag, generate `package-lock.json`, and verify Hydrogen resolves to a registry tarball
    with integrity. Leave the source template lockfile-free.

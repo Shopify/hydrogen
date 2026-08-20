@@ -1,83 +1,116 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// Store configuration.
-//
-// Mode is auto-detected per request (see `shouldUseMockShop` below):
-//   • Real store — used automatically whenever a PRIVATE Storefront API token is
-//     present. On Oxygen, a linked storefront injects PRIVATE_STOREFRONT_API_TOKEN
-//     and PUBLIC_STORE_DOMAIN; for local real-store dev set them in `.env`.
-//   • mock.shop — the tokenless fallback used when no token is present (so a
-//     fresh deploy always renders), and forced explicitly by MOCK_SHOP=1.
-//
-// `storeDomain` below is the default used only when PUBLIC_STORE_DOMAIN is unset.
-// It points at Shopify's public Hydrogen Preview store as an EXAMPLE — replace it
-// or set PUBLIC_STORE_DOMAIN. (mock.shop is a different data source.)
-// ─────────────────────────────────────────────────────────────────────────────
+import type { ShopAnalytics } from "@shopify/hydrogen";
 
-export const storefrontConfig = {
-  storeDomain: "hydrogen-preview.myshopify.com", // ← default; or set PUBLIC_STORE_DOMAIN
-  i18n: { country: "US", language: "EN" },
-} as const;
+const MOCK_SHOP_DOMAIN = "mock.shop";
+const MOCK_SHOP_PRIVATE_TOKEN = "mock-private-token";
+const MOCK_STOREFRONT_ID = "1000014875";
+const SHOP_ID_PATTERN = /^\d+$/;
 
-// Real store iff a private Storefront API token is available; otherwise the
-// tokenless mock.shop demo. MOCK_SHOP=1 forces mock (used by the gate + as the
-// zero-config default).
-export function shouldUseMockShop(
-  env: Pick<Env, "MOCK_SHOP" | "PRIVATE_STOREFRONT_API_TOKEN">,
-): boolean {
-  return env.MOCK_SHOP === "1" || !env.PRIVATE_STOREFRONT_API_TOKEN;
-}
+export const defaultI18n = { country: "US", language: "EN" } as const;
 
-// Store domain for real-store mode: prefer the worker env (Oxygen injects
-// PUBLIC_STORE_DOMAIN for a linked storefront), else the configured default.
-export function getStoreDomain(env: Pick<Env, "PUBLIC_STORE_DOMAIN">): string {
-  return env.PUBLIC_STORE_DOMAIN || storefrontConfig.storeDomain;
-}
-
-// Analytics shop identity. `shopId` is a real Shopify Shop GID.
-export const analyticsShop = {
-  shopId: "gid://shopify/Shop/55145660472", // ← replace with your Shop GID
-  channel: "hydrogen",
-  storefrontId: "1000014875", // ← replace with your storefront id
-} as const;
-
-export const shop = {
-  shopId: analyticsShop.shopId,
-  storefrontId: analyticsShop.storefrontId,
-  myshopifyDomain: storefrontConfig.storeDomain,
-} as const;
-
-// Use Shopify's default consent banner and Customer Privacy behavior.
 export const analyticsConsent = {
   mode: "default-banner",
-  country: "US",
-  language: "EN",
 } as const;
 
-// Private Storefront API token for SSR requests. Read from the worker environment
-// so a standalone clone supplies it via .env / Oxygen bindings. Never commit a
-// real token.
-export function getPrivateStorefrontToken(env: Pick<Env, "PRIVATE_STOREFRONT_API_TOKEN">): string {
-  const token = env.PRIVATE_STOREFRONT_API_TOKEN;
-  if (!token) {
-    throw new Error(
-      "PRIVATE_STOREFRONT_API_TOKEN is required for SSR requests against a real store. " +
-        "Set it in your environment (see .env.example), or run with MOCK_SHOP=1 for the tokenless mock.shop demo.",
-    );
+export type RuntimeEnv = {
+  CUSTOMER_ACCOUNT_SESSION_SECRET?: string;
+  MOCK_SHOP?: string;
+  PRIVATE_STOREFRONT_API_TOKEN?: string;
+  PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID?: string;
+  PUBLIC_STORE_DOMAIN?: string;
+  PUBLIC_STOREFRONT_ID?: string;
+  SHOP_ID?: string;
+};
+
+export type CustomerAccountConfig = {
+  customerAccountApiClientId: string;
+  sessionSecret: string;
+  shopId: string;
+};
+
+export type RuntimeConfig = {
+  customerAccount?: CustomerAccountConfig;
+  enableAnalyticsTestTap: boolean;
+  privateStorefrontToken: string;
+  storeDomain: string;
+  storefrontId?: string;
+  usingMockShop: boolean;
+};
+
+export function resolveRuntimeConfig(env: RuntimeEnv): RuntimeConfig {
+  const privateStorefrontToken = getEnvValue(env, "PRIVATE_STOREFRONT_API_TOKEN");
+  if (env.MOCK_SHOP === "1" || !privateStorefrontToken) {
+    return {
+      enableAnalyticsTestTap: env.MOCK_SHOP === "1",
+      privateStorefrontToken: MOCK_SHOP_PRIVATE_TOKEN,
+      storeDomain: MOCK_SHOP_DOMAIN,
+      usingMockShop: true,
+    };
   }
-  return token;
+
+  return {
+    customerAccount: resolveCustomerAccountConfig(env),
+    enableAnalyticsTestTap: false,
+    privateStorefrontToken,
+    storeDomain: requireEnvValue(env, "PUBLIC_STORE_DOMAIN"),
+    storefrontId: requireEnvValue(env, "PUBLIC_STOREFRONT_ID"),
+    usingMockShop: false,
+  };
 }
 
-// Buyer IP for private Storefront clients (Shopify uses it for bot/abuse
-// signals). Returns the first trusted forwarded IP; falls back to localhost in
-// development and throws in production when none is present.
-const BUYER_IP_HEADERS = ["oxygen-buyer-ip", "cf-connecting-ip", "x-forwarded-for"] as const;
-export const DEVELOPMENT_BUYER_IP = "127.0.0.1";
+export function createShopIdentity(
+  config: RuntimeConfig,
+  shop: { id: string; name: string },
+): {
+  analytics: ShopAnalytics;
+  scripts: { myshopifyDomain: string; shopId: string; storefrontId: string };
+} {
+  const storefrontId = config.storefrontId ?? MOCK_STOREFRONT_ID;
+  return {
+    analytics: {
+      channel: "hydrogen",
+      shopId: shop.id,
+      storefrontId,
+    },
+    scripts: {
+      myshopifyDomain: config.storeDomain,
+      shopId: shop.id,
+      storefrontId,
+    },
+  };
+}
 
-export function getBuyerIp(headers: Pick<Headers, "get">): string {
-  for (const header of BUYER_IP_HEADERS) {
-    const ip = headers.get(header)?.split(",")[0]?.trim();
-    if (ip) return ip;
+export function assertCustomerAccountShop(config: RuntimeConfig, shopId: string): void {
+  if (!config.customerAccount) return;
+  if (shopId === `gid://shopify/Shop/${config.customerAccount.shopId}`) return;
+  throw new Error("Customer Account shop configuration does not match the storefront.");
+}
+
+function resolveCustomerAccountConfig(env: RuntimeEnv): CustomerAccountConfig | undefined {
+  const customerAccountApiClientId = getEnvValue(env, "PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID");
+  const sessionSecret = getEnvValue(env, "CUSTOMER_ACCOUNT_SESSION_SECRET");
+  const shopId = getEnvValue(env, "SHOP_ID");
+  const configuredValues = [customerAccountApiClientId, sessionSecret, shopId].filter(Boolean);
+
+  if (configuredValues.length === 0) return;
+  if (!customerAccountApiClientId || !sessionSecret || !shopId) {
+    throw new Error(
+      "Customer Accounts require SHOP_ID, PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID, and CUSTOMER_ACCOUNT_SESSION_SECRET together.",
+    );
   }
-  if (process.env.NODE_ENV !== "production") return DEVELOPMENT_BUYER_IP;
-  throw new Error(`${BUYER_IP_HEADERS.join(", ")} is required for private Storefront API clients`);
+  if (!SHOP_ID_PATTERN.test(shopId)) {
+    throw new Error("SHOP_ID must contain only digits.");
+  }
+
+  return { customerAccountApiClientId, sessionSecret, shopId };
+}
+
+function requireEnvValue(env: RuntimeEnv, key: keyof RuntimeEnv): string {
+  const value = getEnvValue(env, key);
+  if (value) return value;
+  throw new Error(`${key} is required when PRIVATE_STOREFRONT_API_TOKEN is set.`);
+}
+
+function getEnvValue(env: RuntimeEnv, key: keyof RuntimeEnv): string | undefined {
+  const value = env[key];
+  return typeof value === "string" && value.length > 0 ? value : undefined;
 }

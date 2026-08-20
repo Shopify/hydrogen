@@ -8,10 +8,10 @@ import type { Route } from "./+types/collections";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Collections · CORE" },
+    { title: "Collections" },
     {
       name: "description",
-      content: "Browse all CORE collections.",
+      content: "Browse all collections.",
     },
   ];
 }
