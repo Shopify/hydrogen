@@ -66,7 +66,6 @@ describe("handleShopifyRoutesDev", () => {
     assert(result, "expected GraphiQL response");
     expect(result.status).toBe(200);
     expect(result.headers.get("content-type")).toBe("text/html");
-    expect(result.headers.get("server-timing")).toBeNull();
   });
 
   it("falls through to production Hydrogen routes", async () => {

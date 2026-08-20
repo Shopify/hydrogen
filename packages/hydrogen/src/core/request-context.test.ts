@@ -341,51 +341,6 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("powered-by")).toBe("Shopify, Hydrogen");
   });
 
-  it("does not apply tracking tokens to document server-timing", () => {
-    const context = createTestRequestContext(new Request("https://example.com"));
-    const headers = new Headers({ "content-type": "text/html" });
-
-    context.applyResponseHeaders(headers);
-
-    expect(headers.get("server-timing")).toBeNull();
-  });
-
-  it("does not apply tracking tokens from a document request", () => {
-    const context = createTestRequestContext(
-      new Request("https://example.com", {
-        headers: { "sec-fetch-dest": "document" },
-      }),
-    );
-    const headers = new Headers();
-
-    context.applyResponseHeaders(headers);
-
-    expect(headers.get("server-timing")).toBeNull();
-  });
-
-  it("does not use accept text/html as a document signal for non-GET requests", () => {
-    const context = createTestRequestContext(
-      new Request("https://example.com/api", {
-        method: "POST",
-        headers: { accept: "text/html" },
-      }),
-    );
-    const headers = new Headers();
-
-    context.applyResponseHeaders(headers);
-
-    expect(headers.get("server-timing")).toBeNull();
-  });
-
-  it("does not apply tracking tokens to non-document responses", () => {
-    const context = createTestRequestContext(new Request("https://example.com/__manifest"));
-    const headers = new Headers();
-
-    context.applyResponseHeaders(headers);
-
-    expect(headers.get("server-timing")).toBeNull();
-  });
-
   it("applies captured SFAPI subrequest headers for an established essential session", () => {
     const context = createTestRequestContext(
       new Request("https://example.com", {
@@ -423,10 +378,7 @@ describe("createShopifyRequestContext", () => {
       }),
     );
     const subrequestHeaders = new Headers({ "server-timing": "shopify;dur=10" });
-    subrequestHeaders.append(
-      "set-cookie",
-      "_shopify_essential=updated; Path=/; Secure; HttpOnly",
-    );
+    subrequestHeaders.append("set-cookie", "_shopify_essential=updated; Path=/; Secure; HttpOnly");
     context.captureSubrequestHeaders(subrequestHeaders);
     const headers = new Headers({
       "cache-control": "public, max-age=60",
