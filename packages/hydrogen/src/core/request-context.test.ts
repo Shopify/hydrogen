@@ -163,15 +163,19 @@ describe("createShopifyRequestContext", () => {
     expect(result.visitToken).toBeUndefined();
   });
 
-  it("does not create fallback tokens when the Shopify essential cookie is present", () => {
+  it("reuses legacy tracking cookies when only the Shopify essential cookie is present", () => {
     const result = createTestRequestContext(
       new Request("https://example.com", {
-        headers: { cookie: "_shopify_essential=declined-session" },
+        headers: {
+          cookie:
+            "_shopify_essential=declined-session; _shopify_y=unique-token; _shopify_s=visit-token",
+        },
       }),
     );
 
-    expect(result.uniqueToken).toBeUndefined();
-    expect(result.visitToken).toBeUndefined();
+    expect(result.uniqueToken).toBe("unique-token");
+    expect(result.visitToken).toBe("visit-token");
+    expect(result.legacyTokens).toBe(true);
   });
 
   it("reuses legacy Shopify tracking cookies when present", () => {

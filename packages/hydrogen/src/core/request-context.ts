@@ -26,11 +26,8 @@ import {
 import { normalizePathPrefix } from "./standard-routes/path";
 
 const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
-const SHOPIFY_COOKIES = new Set([
-  SHOPIFY_ESSENTIAL_COOKIE,
-  "_shopify_analytics",
-  "_shopify_marketing",
-]);
+const SHOPIFY_TRACKING_COOKIES = ["_shopify_analytics", "_shopify_marketing"];
+const SHOPIFY_COOKIES = new Set([SHOPIFY_ESSENTIAL_COOKIE, ...SHOPIFY_TRACKING_COOKIES]);
 
 type StorefrontRequest = Pick<Request, "headers"> &
   Partial<Pick<Request, "method" | "signal" | "url">>;
@@ -151,14 +148,15 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
   }
 
   const i18n = normalizeI18n(input.i18n);
-  const cookie = request.headers.get("cookie") || undefined;
-  const hasEssentialCookie = hasCookie(cookie, SHOPIFY_ESSENTIAL_COOKIE);
-  const hasShopifyCookie = Array.from(SHOPIFY_COOKIES).some((name) => hasCookie(cookie, name));
+  const cookieHeader = request.headers.get("cookie") || undefined;
+  const inboundCookies = parseCookieHeader(cookieHeader);
+  const hasEssentialCookie = inboundCookies.has(SHOPIFY_ESSENTIAL_COOKIE);
+  const hasTrackingCookie = SHOPIFY_TRACKING_COOKIES.some((name) => inboundCookies.has(name));
   const isConsentManagementRequest = request.headers.get(CONSENT_MANAGEMENT_HEADER) === "1";
   const url = request.url ?? request.headers.get(STOREFRONT_URL_HEADER) ?? undefined;
   const storefrontOrigin = getUrlOrigin(url);
   const context = {
-    ...(cookie && { cookie }),
+    ...(cookieHeader && { cookie: cookieHeader }),
     i18n,
     ...(url && { url }),
     ...(storefrontOrigin && { storefrontOrigin }),
@@ -180,9 +178,9 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     | undefined;
   let personalizedResponseReason: string | undefined;
 
-  if (!hasShopifyCookie) {
-    const legacyUniqueToken = cookie?.match(/\b_shopify_y=([^;]+)/)?.[1];
-    const legacyVisitToken = cookie?.match(/\b_shopify_s=([^;]+)/)?.[1];
+  if (!hasTrackingCookie) {
+    const legacyUniqueToken = inboundCookies.get("_shopify_y");
+    const legacyVisitToken = inboundCookies.get("_shopify_s");
     const headerUniqueToken = request.headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER) ?? undefined;
     const headerVisitToken = request.headers.get(SHOPIFY_VISIT_TOKEN_HEADER) ?? undefined;
 
@@ -307,10 +305,19 @@ function isDocumentRequest(request: StorefrontRequest): boolean {
   return request.headers.get("accept")?.includes("text/html") ?? false;
 }
 
-function hasCookie(cookieHeader: string | undefined, name: string): boolean {
-  return (
-    cookieHeader?.split(";").some((cookie) => cookie.trimStart().startsWith(`${name}=`)) ?? false
-  );
+function parseCookieHeader(cookieHeader: string | undefined): Map<string, string> {
+  const cookies = new Map<string, string>();
+  if (!cookieHeader) return cookies;
+
+  for (const cookie of cookieHeader.split(";")) {
+    const separator = cookie.indexOf("=");
+    if (separator < 0) continue;
+
+    const name = cookie.slice(0, separator).trim();
+    if (!cookies.has(name)) cookies.set(name, cookie.slice(separator + 1));
+  }
+
+  return cookies;
 }
 
 function isShopifySetCookie(value: string): boolean {
