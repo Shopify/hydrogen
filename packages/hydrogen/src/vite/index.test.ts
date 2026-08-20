@@ -161,7 +161,7 @@ describe("localHttps", () => {
     const message = String(warn.mock.calls[0]?.[0]);
     expect(message).toContain(certPath);
     expect(message).toContain(keyPath);
-    expect(message).toContain("npx hydrogen setup https");
+    expect(message).toContain("npx hydrogen certs install");
     expect(message).toContain("brew install mkcert");
     expect(message).toContain("mkcert -install");
     expect(message).toContain(`mkdir -p '${directory}'`);
@@ -289,7 +289,7 @@ describe("localHttps", () => {
     const message = String(warn.mock.calls[0]?.[0]);
     expect(message).toContain("Automatic certificate provisioning failed:");
     expect(message).toContain("download blocked");
-    expect(message).toContain("npx hydrogen setup https");
+    expect(message).toContain("npx hydrogen certs install");
   });
 
   it("does not provision during builds", async () => {
@@ -315,7 +315,7 @@ describe("localHttps", () => {
     expect(warn).toHaveBeenCalledOnce();
     const message = String(warn.mock.calls[0]?.[0]);
     expect(message).toContain("skipped in CI environments");
-    expect(message).toContain("npx hydrogen setup https");
+    expect(message).toContain("npx hydrogen certs install");
   });
 
   it("provisions when CI is explicitly disabled", async () => {

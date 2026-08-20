@@ -4,12 +4,14 @@ import { runCli } from "../index";
 
 const commandCalls = vi.hoisted(() => ({
   checkGraphQL: vi.fn(async () => {}),
+  installLocalHttpsCertificates: vi.fn(async () => {}),
   setupHydrogen: vi.fn(async () => {}),
-  setupLocalHttps: vi.fn(async () => {}),
 }));
 
+vi.mock("../certs", () => ({
+  installLocalHttpsCertificates: commandCalls.installLocalHttpsCertificates,
+}));
 vi.mock("../gql", () => ({ checkGraphQL: commandCalls.checkGraphQL }));
-vi.mock("../https", () => ({ setupLocalHttps: commandCalls.setupLocalHttps }));
 vi.mock("../setup", () => ({ setupHydrogen: commandCalls.setupHydrogen }));
 
 const originalArgv = process.argv;
@@ -25,10 +27,10 @@ describe("runCli", () => {
     vi.clearAllMocks();
   });
 
-  it("dispatches setup https to the local HTTPS setup, not the skills setup", () => {
-    runWithArguments(["setup", "https"]);
+  it("dispatches certs install to local HTTPS installation", () => {
+    runWithArguments(["certs", "install"]);
 
-    expect(commandCalls.setupLocalHttps).toHaveBeenCalledOnce();
+    expect(commandCalls.installLocalHttpsCertificates).toHaveBeenCalledOnce();
     expect(commandCalls.setupHydrogen).not.toHaveBeenCalled();
   });
 
@@ -36,7 +38,7 @@ describe("runCli", () => {
     runWithArguments(["setup"]);
 
     expect(commandCalls.setupHydrogen).toHaveBeenCalledOnce();
-    expect(commandCalls.setupLocalHttps).not.toHaveBeenCalled();
+    expect(commandCalls.installLocalHttpsCertificates).not.toHaveBeenCalled();
   });
 
   it("dispatches gql check with trailing arguments", () => {

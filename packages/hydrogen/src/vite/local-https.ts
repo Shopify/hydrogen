@@ -254,7 +254,7 @@ function formatMissingCertificateWarning(
     `  Private key: ${keyPath}`,
     "",
     "Run the automatic setup:",
-    "  npx hydrogen setup https",
+    "  npx hydrogen certs install",
     "",
     "Or install and configure mkcert, then generate the certificate:",
     "  macOS: brew install mkcert",

@@ -16,7 +16,7 @@
     "dev:svelte": "turbo run dev --filter=@shopify/hydrogen-example-sveltekit...",
     "dev:hydrogen": "pnpm --dir examples/hydrogen dev",
     "dev:hub": "node scripts/examples-dev.ts",
-    "https:setup": "turbo run build --filter=@shopify/hydrogen && node packages/hydrogen/bin/hydrogen.mjs setup https",
+    "https:setup": "turbo run build --filter=@shopify/hydrogen && node packages/hydrogen/bin/hydrogen.mjs certs install",
     "download:standard-types": "node scripts/download-standard-types.ts",
     "prepare:preview-dist": "node scripts/preview-template-dist.ts prepare",
     "validate:preview-dist": "node scripts/preview-template-dist.ts validate",

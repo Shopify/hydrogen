@@ -1,6 +1,6 @@
 import { provisionLocalHttps } from "../vite";
 
-export async function setupLocalHttps(): Promise<void> {
+export async function installLocalHttpsCertificates(): Promise<void> {
   const { host, certPath, keyPath } = await provisionLocalHttps();
 
   console.log(`Local HTTPS is ready for https://${host}`);
