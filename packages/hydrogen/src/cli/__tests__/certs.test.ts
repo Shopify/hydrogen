@@ -6,7 +6,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { uninstallLocalHttpsCertificates } from "../certs";
 
 const fsCalls = vi.hoisted(() => ({ rm: vi.fn(async () => {}) }));
-const mkcertCalls = vi.hoisted(() => ({ uninstallCertificateAuthority: vi.fn(async () => {}) }));
+const mkcertCalls = vi.hoisted(() => ({
+  resolveMkcertBinary: vi.fn((): { assetName: string } | undefined => ({
+    assetName: "mkcert-pinned-platform",
+  })),
+  uninstallCertificateAuthority: vi.fn(async () => {}),
+}));
 
 vi.mock("node:fs/promises", async (importOriginal) => ({
   ...(await importOriginal<typeof import("node:fs/promises")>()),
@@ -14,12 +19,14 @@ vi.mock("node:fs/promises", async (importOriginal) => ({
 }));
 
 vi.mock("../../vite/mkcert", () => ({
+  resolveMkcertBinary: mkcertCalls.resolveMkcertBinary,
   uninstallCertificateAuthority: mkcertCalls.uninstallCertificateAuthority,
 }));
 
 describe("uninstallLocalHttpsCertificates", () => {
   beforeEach(() => {
     fsCalls.rm.mockClear();
+    mkcertCalls.resolveMkcertBinary.mockClear();
     mkcertCalls.uninstallCertificateAuthority.mockClear();
   });
 
@@ -36,8 +43,9 @@ describe("uninstallLocalHttpsCertificates", () => {
     expect(fsCalls.rm.mock.calls).toEqual([
       [join(hydrogenDirectory, "certs", "local.tryhydrogen.dev.pem"), { force: true }],
       [join(hydrogenDirectory, "certs", "local.tryhydrogen.dev-key.pem"), { force: true }],
-      [join(hydrogenDirectory, "mkcert"), { recursive: true, force: true }],
+      [join(hydrogenDirectory, "mkcert", "mkcert-pinned-platform"), { force: true }],
     ]);
+    expect(mkcertCalls.resolveMkcertBinary).toHaveBeenCalledWith(process.platform, process.arch);
     expect(mkcertCalls.uninstallCertificateAuthority).not.toHaveBeenCalled();
     expect(log).toHaveBeenCalledWith(
       "The shared mkcert CA remains trusted. Pass --remove-ca to remove it.",
@@ -52,6 +60,19 @@ describe("uninstallLocalHttpsCertificates", () => {
 
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("other projects"));
     expect(mkcertCalls.uninstallCertificateAuthority).toHaveBeenCalledOnce();
+  });
+
+  it("does not remove another mkcert binary on an unsupported platform", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    mkcertCalls.resolveMkcertBinary.mockReturnValueOnce(undefined);
+    const certificateDirectory = join(homedir(), ".shopify", "hydrogen", "certs");
+
+    await uninstallLocalHttpsCertificates();
+
+    expect(fsCalls.rm.mock.calls).toEqual([
+      [join(certificateDirectory, "local.tryhydrogen.dev.pem"), { force: true }],
+      [join(certificateDirectory, "local.tryhydrogen.dev-key.pem"), { force: true }],
+    ]);
   });
 
   it("rejects unknown arguments without removing anything", async () => {
