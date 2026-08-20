@@ -298,7 +298,7 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get(SHOPIFY_STOREFRONT_S_HEADER)).toBe("visit-token");
   });
 
-  it("applies tracking tokens as server-timing", () => {
+  it("does not apply legacy tracking tokens to document server-timing", () => {
     const context = createTestRequestContext(
       new Request("https://example.com", {
         headers: {
@@ -313,9 +313,7 @@ describe("createShopifyRequestContext", () => {
 
     context.applyResponseHeaders(headers);
 
-    expect(headers.get("server-timing")).toBe(
-      "existing;dur=1, _y;desc=unique-token, _s;desc=visit-token",
-    );
+    expect(headers.get("server-timing")).toBe("existing;dur=1");
   });
 
   it("applies the Hydrogen powered-by header", () => {
@@ -327,16 +325,16 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("powered-by")).toBe("Shopify, Hydrogen");
   });
 
-  it("applies generated tracking tokens as server-timing when cookies are missing", () => {
+  it("does not apply generated tracking tokens to document server-timing", () => {
     const context = createTestRequestContext(new Request("https://example.com"));
     const headers = new Headers({ "content-type": "text/html" });
 
     context.applyResponseHeaders(headers);
 
-    expect(headers.get("server-timing")).toMatch(/^_y;desc=[0-9a-f-]+, _s;desc=[0-9a-f-]+$/);
+    expect(headers.get("server-timing")).toBeNull();
   });
 
-  it("applies generated tracking tokens from a document request before response content-type is known", () => {
+  it("does not apply generated tracking tokens from a document request", () => {
     const context = createTestRequestContext(
       new Request("https://example.com", {
         headers: { "sec-fetch-dest": "document" },
@@ -346,7 +344,7 @@ describe("createShopifyRequestContext", () => {
 
     context.applyResponseHeaders(headers);
 
-    expect(headers.get("server-timing")).toMatch(/^_y;desc=[0-9a-f-]+, _s;desc=[0-9a-f-]+$/);
+    expect(headers.get("server-timing")).toBeNull();
   });
 
   it("does not use accept text/html as a document signal for non-GET requests", () => {

@@ -24,9 +24,6 @@ import {
 } from "./headers";
 import { normalizePathPrefix } from "./standard-routes/path";
 
-const UNIQUE_TOKEN_MARKER = "_y";
-const VISIT_TOKEN_MARKER = "_s";
-
 type StorefrontRequest = Pick<Request, "headers"> &
   Partial<Pick<Request, "method" | "signal" | "url">>;
 
@@ -229,18 +226,6 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       if (personalizedResponseReason) {
         applyPrivateResponseCacheHeaders(headers);
       }
-
-      // Generated fallback tokens are only for document navigation bootstrap.
-      const isHtmlResponse = headers.get("content-type")?.startsWith("text/html") ?? false;
-      if (!isHtmlResponse && !context.documentRequest) return;
-
-      const existing = headers.get(SERVER_TIMING_HEADER) ?? "";
-      if (context.uniqueToken && !hasServerTimingMetric(existing, UNIQUE_TOKEN_MARKER)) {
-        headers.append(SERVER_TIMING_HEADER, `${UNIQUE_TOKEN_MARKER};desc=${context.uniqueToken}`);
-      }
-      if (context.visitToken && !hasServerTimingMetric(existing, VISIT_TOKEN_MARKER)) {
-        headers.append(SERVER_TIMING_HEADER, `${VISIT_TOKEN_MARKER};desc=${context.visitToken}`);
-      }
     },
   } as ShopifyRequestContext<I18n>;
 }
@@ -291,10 +276,6 @@ function isDocumentRequest(request: StorefrontRequest): boolean {
   if (destination === "document") return true;
 
   return request.headers.get("accept")?.includes("text/html") ?? false;
-}
-
-function hasServerTimingMetric(value: string, name: string): boolean {
-  return value.split(",").some((part) => part.trim().startsWith(`${name};`));
 }
 
 function hasServerTimingValue(existing: string, next: string): boolean {
