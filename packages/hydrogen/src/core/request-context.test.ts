@@ -33,7 +33,7 @@ describe("createShopifyRequestContext", () => {
     ).toThrow("i18n with country and language is required");
   });
 
-  it("creates stable tracking tokens from a request", () => {
+  it("does not generate tracking tokens from a request", () => {
     const request = new Request("https://example.com/products/snowboard");
 
     const result = createTestRequestContext(request);
@@ -41,8 +41,8 @@ describe("createShopifyRequestContext", () => {
     expect(result.url).toBe("https://example.com/products/snowboard");
     expect(result.storefrontOrigin).toBe("https://example.com");
     expect(result.requestGroupId).toBeTruthy();
-    expect(result.uniqueToken).toBeTruthy();
-    expect(result.visitToken).toBeTruthy();
+    expect(result.uniqueToken).toBeUndefined();
+    expect(result.visitToken).toBeUndefined();
   });
 
   it("keeps a reference to the request signal", () => {
@@ -151,7 +151,7 @@ describe("createShopifyRequestContext", () => {
     expect(result.i18n.pathPrefix).toBe("/fr-ca");
   });
 
-  it("does not create fallback tokens when modern Shopify analytics cookies are present", () => {
+  it("does not create tracking tokens when modern Shopify analytics cookies are present", () => {
     const result = createTestRequestContext(
       new Request("https://example.com", {
         headers: { cookie: "_shopify_analytics=1; _shopify_marketing=1" },
@@ -341,7 +341,7 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("powered-by")).toBe("Shopify, Hydrogen");
   });
 
-  it("does not apply generated tracking tokens to document server-timing", () => {
+  it("does not apply tracking tokens to document server-timing", () => {
     const context = createTestRequestContext(new Request("https://example.com"));
     const headers = new Headers({ "content-type": "text/html" });
 
@@ -350,7 +350,7 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("server-timing")).toBeNull();
   });
 
-  it("does not apply generated tracking tokens from a document request", () => {
+  it("does not apply tracking tokens from a document request", () => {
     const context = createTestRequestContext(
       new Request("https://example.com", {
         headers: { "sec-fetch-dest": "document" },
@@ -377,7 +377,7 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("server-timing")).toBeNull();
   });
 
-  it("does not apply fallback tracking tokens to non-document responses", () => {
+  it("does not apply tracking tokens to non-document responses", () => {
     const context = createTestRequestContext(new Request("https://example.com/__manifest"));
     const headers = new Headers();
 

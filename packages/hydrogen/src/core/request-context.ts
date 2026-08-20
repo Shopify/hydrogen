@@ -187,8 +187,8 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
 
     if (legacyUniqueToken || legacyVisitToken) context.legacyTokens = true;
 
-    context.uniqueToken = legacyUniqueToken ?? headerUniqueToken ?? crypto.randomUUID();
-    context.visitToken = legacyVisitToken ?? headerVisitToken ?? crypto.randomUUID();
+    context.uniqueToken = legacyUniqueToken ?? headerUniqueToken;
+    context.visitToken = legacyVisitToken ?? headerVisitToken;
   }
 
   return {
