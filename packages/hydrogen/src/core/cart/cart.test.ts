@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { CartActionError } from "../../../vendor/standard-actions";
 import { configureLogging, resetLoggingForTests } from "../logging";
 import {
+  CONSENT_TRACKING_API_LOADED_EVENT,
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts";
@@ -3083,7 +3084,41 @@ describe("CartStore.fetch", () => {
     expect(store.getState().data.totalQuantity).toBe(4);
   });
 
-  it("revalidates checkoutUrl when connected carts observe consent collection", async () => {
+  it.each([CONSENT_TRACKING_API_LOADED_EVENT, VISITOR_CONSENT_COLLECTED_EVENT])(
+    "revalidates checkoutUrl when connected carts observe %s",
+    async (consentEvent) => {
+      store.hydrate(
+        makeCartState({
+          id: "gid://shopify/Cart/abc",
+          checkoutUrl: "https://example.com/checkouts/old?_shopify_y=old",
+          totalQuantity: 1,
+        }),
+      );
+      mockGetCart.mockResolvedValue({
+        cart: {
+          id: "gid://shopify/Cart/abc",
+          checkoutUrl: "https://example.com/checkouts/new?_shopify_y=new",
+          totalQuantity: 1,
+          cost: { totalAmount: { amount: "10.00", currencyCode: "USD" } },
+          lines: { nodes: [makeLine({ id: "line-1" })] },
+          discountCodes: [],
+        },
+      });
+
+      document.dispatchEvent(new CustomEvent(consentEvent));
+
+      await vi.waitFor(() => {
+        expect(store.getState().data.checkoutUrl).toBe(
+          "https://example.com/checkouts/new?_shopify_y=new",
+        );
+      });
+    },
+  );
+
+  it("revalidates checkoutUrl when consent became ready before the cart connected", async () => {
+    store.destroy();
+    (window as any).Shopify.customerPrivacy = { consentStatus: "loaded" };
+    store = createCartStore();
     store.hydrate(
       makeCartState({
         id: "gid://shopify/Cart/abc",
@@ -3102,7 +3137,7 @@ describe("CartStore.fetch", () => {
       },
     });
 
-    document.dispatchEvent(new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT));
+    store.connect();
 
     await vi.waitFor(() => {
       expect(store.getState().data.checkoutUrl).toBe(
@@ -3121,6 +3156,7 @@ describe("CartStore.fetch", () => {
     );
 
     store.destroy();
+    document.dispatchEvent(new CustomEvent(CONSENT_TRACKING_API_LOADED_EVENT));
     document.dispatchEvent(new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT));
 
     expect(mockGetCart).not.toHaveBeenCalled();

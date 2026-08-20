@@ -15,4 +15,5 @@ export const SHOPIFY_PRIVACY_BANNER_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/shopifycloud
 export const SHOPIFY_CONSENT_SCRIPT_ID = "shopify-consent";
 export const SHOPIFY_PERF_KIT_SCRIPT_ID = "shopify-perfkit";
 
+export const CONSENT_TRACKING_API_LOADED_EVENT = "consentTrackingApiLoaded";
 export const VISITOR_CONSENT_COLLECTED_EVENT = "visitorConsentCollected";

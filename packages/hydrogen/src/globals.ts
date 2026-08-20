@@ -22,9 +22,11 @@ export type ShopifyGlobal = {
   customerPrivacy: {
     config?: {
       isHeadless?: boolean;
+      asyncConsent?: boolean;
+      asyncVisitorState?: boolean;
       consentDomain?: string;
     };
-    consentStatus?: "pending" | "loaded";
+    consentStatus?: "loading" | "loaded";
     currentVisitorConsent: () => Record<string, unknown>;
     preferencesProcessingAllowed: () => boolean;
     saleOfDataAllowed: () => boolean;

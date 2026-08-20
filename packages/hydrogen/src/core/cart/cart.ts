@@ -19,6 +19,7 @@ import type { CartErrorCode, CartWarningCode } from "../../graphql/generated/sto
 import { getLogger } from "../logging";
 import { createObservable } from "../observable";
 import {
+  CONSENT_TRACKING_API_LOADED_EVENT,
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts/index";
@@ -1912,19 +1913,24 @@ function destroyCartStore(store: CartStoreContext, handlers: CartEventHandlers):
   publishVisibleState(store);
 }
 
-function handleVisitorConsentCollected(): void {
+function handleConsentStateChanged(): void {
   revalidateConnectedCartCheckoutUrls();
 }
 
 function attachCartConsentListener(): void {
   if (cartConsentListenerAttached) return;
-  document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, handleVisitorConsentCollected);
+  document.addEventListener(CONSENT_TRACKING_API_LOADED_EVENT, handleConsentStateChanged);
+  document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, handleConsentStateChanged);
   cartConsentListenerAttached = true;
+  if (window.Shopify?.customerPrivacy?.consentStatus === "loaded") {
+    revalidateConnectedCartCheckoutUrls();
+  }
 }
 
 function detachCartConsentListenerIfIdle(): void {
   if (!cartConsentListenerAttached || connectedCartStores.size > 0) return;
-  document.removeEventListener(VISITOR_CONSENT_COLLECTED_EVENT, handleVisitorConsentCollected);
+  document.removeEventListener(CONSENT_TRACKING_API_LOADED_EVENT, handleConsentStateChanged);
+  document.removeEventListener(VISITOR_CONSENT_COLLECTED_EVENT, handleConsentStateChanged);
   cartConsentListenerAttached = false;
 }
 

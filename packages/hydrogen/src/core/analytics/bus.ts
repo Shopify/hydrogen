@@ -1,5 +1,8 @@
 import { consoleLogger } from "../logging";
-import { VISITOR_CONSENT_COLLECTED_EVENT } from "../shopify-scripts/constants";
+import {
+  CONSENT_TRACKING_API_LOADED_EVENT,
+  VISITOR_CONSENT_COLLECTED_EVENT,
+} from "../shopify-scripts/constants";
 import { getShopifyGlobal } from "../shopify-scripts/global";
 import { isObjectRecord } from "../utils/record";
 import { createDestinationManager } from "./destination-manager";
@@ -98,14 +101,14 @@ function hasNoConsentInteraction(currentVisitorConsent: unknown): boolean {
   );
 }
 
-// Only Shopify's privacy-banner has a known pre-interaction initial event:
+// Only Shopify's privacy-banner has known pre-interaction initial state:
 // it may call setTrackingConsent once to hydrate consent state, then again
 // after the shopper accepts or declines. Custom banners also may call
 // setTrackingConsent later, but Hydrogen does not own or observe their UI
 // lifecycle, so their initial event must be treated as actionable consent.
-function shouldWaitForDefaultBannerInteraction(): boolean {
+function shouldWaitForDefaultBannerInteraction(usesDefaultBanner: boolean): boolean {
   try {
-    if (!isObjectRecord(window.privacyBanner)) return false;
+    if (!usesDefaultBanner && !isObjectRecord(window.privacyBanner)) return false;
 
     const privacy = window.Shopify?.customerPrivacy;
     const shouldShowBanner = privacy?.shouldShowBanner;
@@ -140,6 +143,7 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
   }
 
   const { consent, customData } = options;
+  const usesDefaultBanner = consent?.mode === "default-banner";
 
   const shop = normalizeShopAnalytics(options.shop);
   let destroyed = false;
@@ -217,39 +221,38 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
   function initConsentReplay() {
     if (typeof document === "undefined") return;
 
-    const replay = (event: Event) => {
+    const replayInitialConsent = () => {
       if (destroyed) return;
 
-      const detail = (event as CustomEvent<{ source?: string }>).detail;
-      const source = detail?.source;
-      // The consent bootstrap temporarily annotates source until consent-tracking-api
-      // owns it. If privacy-banner is present and visible, the initial event only
+      // If privacy-banner is present and visible, initial readiness only
       // hydrates consent state; replay waits for the later interaction event.
       const shouldWaitForBannerInteraction =
-        source === "initial" && shouldWaitForDefaultBannerInteraction();
+        shouldWaitForDefaultBannerInteraction(usesDefaultBanner);
 
       waitingForDefaultBannerInteraction = shouldWaitForBannerInteraction;
 
-      if (shouldWaitForBannerInteraction) {
-        return;
-      }
+      if (shouldWaitForBannerInteraction) return;
 
-      const clearWhenBlocked = source !== "initial";
-
-      /**
-       * Replay behavior depends on the consent event phase and the current
-       * tracking permission:
-       * - default-banner initial + banner required: keep waiting for the user's interaction.
-       * - initial + allowed: replay buffered events.
-       * - interaction + allowed: replay buffered events.
-       * - interaction + denied: drop the buffer and stop recording until allowed.
-       */
-      destinationManager.replay(clearWhenBlocked);
+      destinationManager.replay();
     };
 
-    document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, replay);
+    const replayConsentEvent = () => {
+      if (destroyed) return;
+
+      waitingForDefaultBannerInteraction = false;
+
+      /**
+       * Interaction events replay when allowed. When denied, clear the buffer
+       * and stop recording until a later interaction grants consent.
+       */
+      destinationManager.replay(true);
+    };
+
+    document.addEventListener(CONSENT_TRACKING_API_LOADED_EVENT, replayInitialConsent);
+    document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, replayConsentEvent);
     cleanupConsentReplay = () => {
-      document.removeEventListener(VISITOR_CONSENT_COLLECTED_EVENT, replay);
+      document.removeEventListener(CONSENT_TRACKING_API_LOADED_EVENT, replayInitialConsent);
+      document.removeEventListener(VISITOR_CONSENT_COLLECTED_EVENT, replayConsentEvent);
     };
   }
 
