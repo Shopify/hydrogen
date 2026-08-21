@@ -49,5 +49,5 @@ Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-wit
 For local account testing, use the Customer Account push flow:
 
 ```bash
-pnpm --dir examples/hydrogen https:dev
+pnpm --dir examples/hydrogen dev:https
 ```

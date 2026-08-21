@@ -5,7 +5,7 @@ import type { NuxtConfig } from "nuxt/schema";
 type VitePlugin = NonNullable<NonNullable<NuxtConfig["vite"]>["plugins"]>[number];
 
 const enabled =
-  process.env.VITE_LOCAL_HTTPS === "1" || process.env.npm_lifecycle_event === "https:dev";
+  process.env.VITE_LOCAL_HTTPS === "1" || process.env.npm_lifecycle_event === "dev:https";
 const httpsOptions = { enabled };
 const httpsPlugin = localHttps(httpsOptions);
 

@@ -7,7 +7,7 @@
   "scripts": {
     "build": "shopify hydrogen build --no-lockfile-check",
     "dev": "react-router dev",
-    "https:dev": "shopify hydrogen dev --customer-account-push",
+    "dev:https": "shopify hydrogen dev --customer-account-push",
     "preview": "shopify hydrogen preview --build",
     "typecheck": "react-router typegen && tsc --noEmit",
     "e2e": "playwright test",
