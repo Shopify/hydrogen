@@ -438,8 +438,7 @@ describe("setupStorefrontAnalytics", () => {
         customerPrivacy: {
           consentStatus: "loading",
           analyticsProcessingAllowed: () => true,
-          currentVisitorConsent: () => ({ analytics: "", marketing: "", preferences: "" }),
-          shouldShowBanner: () => true,
+          shouldShowGDPRBanner: () => true,
         },
       };
       (window as any).privacyBanner = {};
@@ -473,8 +472,7 @@ describe("setupStorefrontAnalytics", () => {
         customerPrivacy: {
           consentStatus: "loading",
           analyticsProcessingAllowed: () => true,
-          currentVisitorConsent: () => ({ analytics: "", marketing: "", preferences: "" }),
-          shouldShowBanner: () => true,
+          shouldShowGDPRBanner: () => true,
         },
       };
 
@@ -500,8 +498,7 @@ describe("setupStorefrontAnalytics", () => {
         customerPrivacy: {
           consentStatus: "loading",
           analyticsProcessingAllowed: () => true,
-          currentVisitorConsent: () => ({ analytics: "", marketing: "", preferences: "" }),
-          shouldShowBanner: () => true,
+          shouldShowGDPRBanner: () => true,
         },
       };
       (window as any).privacyBanner = {};
@@ -528,8 +525,7 @@ describe("setupStorefrontAnalytics", () => {
         customerPrivacy: {
           consentStatus: "loading",
           analyticsProcessingAllowed: () => true,
-          currentVisitorConsent: () => ({ analytics: "", marketing: "", preferences: "" }),
-          shouldShowBanner: () => true,
+          shouldShowGDPRBanner: () => true,
         },
       };
 
@@ -558,8 +554,7 @@ describe("setupStorefrontAnalytics", () => {
         customerPrivacy: {
           consentStatus: "loading",
           analyticsProcessingAllowed: () => true,
-          currentVisitorConsent: () => ({ analytics: "", marketing: "", preferences: "" }),
-          shouldShowBanner: () => false,
+          shouldShowGDPRBanner: () => false,
         },
       };
       (window as any).privacyBanner = {};
@@ -589,8 +584,7 @@ describe("setupStorefrontAnalytics", () => {
         customerPrivacy: {
           consentStatus: "loading",
           analyticsProcessingAllowed: () => true,
-          currentVisitorConsent: () => ({ analytics: "yes", marketing: "yes", preferences: "yes" }),
-          shouldShowBanner: () => true,
+          shouldShowGDPRBanner: () => false,
         },
       };
       (window as any).privacyBanner = {};

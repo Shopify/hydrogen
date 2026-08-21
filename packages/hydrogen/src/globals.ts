@@ -37,6 +37,7 @@ export type ShopifyGlobal = {
       callback: (data: { error: string } | undefined) => void,
     ) => void | Promise<unknown>;
     shouldShowBanner: () => boolean;
+    shouldShowGDPRBanner: () => boolean;
   };
   locale: Lowercase<I18nConfig["language"]> | string;
   /** @deprecated Use `Shopify.routes.navigate` instead. */

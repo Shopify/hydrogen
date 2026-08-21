@@ -90,17 +90,6 @@ function warnUnsupportedAnalyticsEvent(event: unknown): void {
   consoleLogger.warn(`unsupported analytics event "${String(event)}"`, { scope: "analytics" });
 }
 
-function hasNoConsentInteraction(currentVisitorConsent: unknown): boolean {
-  // Mirrors the privacy-banner GDPR requirement: the initial event is only
-  // pre-interaction while all purpose values are still unset.
-  return (
-    !isObjectRecord(currentVisitorConsent) ||
-    (currentVisitorConsent.analytics === "" &&
-      currentVisitorConsent.marketing === "" &&
-      currentVisitorConsent.preferences === "")
-  );
-}
-
 // Only Shopify's privacy-banner has known pre-interaction initial state:
 // it may call setTrackingConsent once to hydrate consent state, then again
 // after the shopper accepts or declines. Custom banners also may call
@@ -111,10 +100,9 @@ function shouldWaitForDefaultBannerInteraction(usesDefaultBanner: boolean): bool
     if (!usesDefaultBanner && !isObjectRecord(window.privacyBanner)) return false;
 
     const privacy = window.Shopify?.customerPrivacy;
-    const shouldShowBanner = privacy?.shouldShowBanner;
-    if (typeof shouldShowBanner !== "function") return true;
+    if (typeof privacy?.shouldShowGDPRBanner !== "function") return true;
 
-    return shouldShowBanner() && hasNoConsentInteraction(privacy?.currentVisitorConsent?.());
+    return privacy.shouldShowGDPRBanner();
   } catch {
     return true;
   }
