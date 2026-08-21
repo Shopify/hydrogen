@@ -32,6 +32,8 @@ Prefer this over adding `.catch()` only to the returned promise: the request-lev
 
 The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance.
 
+This shape assumes app-owned `getBuyerIp`, `createSessionManager`, and `routeTemplates` values.
+
 ```ts
 import {
   createCartServerHandlers,

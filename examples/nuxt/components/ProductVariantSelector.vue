@@ -45,14 +45,14 @@ function queryToSearchParams(query: typeof route.query) {
   for (const [key, value] of Object.entries(query)) {
     const values = Array.isArray(value) ? value : [value];
     for (const item of values) {
-      if (item !== null && item !== undefined) params.append(key, item);
+      params.append(key, item ?? "");
     }
   }
   return params;
 }
 
 function searchParamsToQuery(params: URLSearchParams) {
-  const query: Record<string, string | string[]> = {};
+  const query: Record<string, string | string[]> = Object.create(null);
   for (const [key, value] of params) {
     const current = query[key];
     if (current === undefined) {

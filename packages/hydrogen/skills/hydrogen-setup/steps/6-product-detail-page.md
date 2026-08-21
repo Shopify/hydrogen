@@ -308,10 +308,32 @@ function handleSelect(result: {
   const params = buildProductSelectionSearchParams({
     selectedOptions: result.selectedOptions,
     optionNames: props.product.options.map((option) => option.name),
-    base: new URLSearchParams(route.query as Record<string, string>),
+    base: queryToSearchParams(route.query),
   });
-  const query = Object.fromEntries(params);
+  const query = searchParamsToQuery(params);
   router.replace({ path: `/products/${targetHandle}`, query });
+}
+
+function queryToSearchParams(query: typeof route.query) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    const values = Array.isArray(value) ? value : [value];
+    for (const item of values) {
+      params.append(key, item ?? "");
+    }
+  }
+  return params;
+}
+
+function searchParamsToQuery(params: URLSearchParams) {
+  const query: Record<string, string | string[]> = Object.create(null);
+  for (const [key, value] of params) {
+    const current = query[key];
+    if (current === undefined) query[key] = value;
+    else if (Array.isArray(current)) current.push(value);
+    else query[key] = [current, value];
+  }
+  return query;
 }
 </script>
 

@@ -76,7 +76,7 @@ Same-product option values are GET links (`NuxtLink`) so selection degrades with
 </NuxtLink>
 ```
 
-Build route query objects with `buildProductSelectionSearchParams`, passing the product option names as `optionNames` and the current route query as `base`. This preserves non-option params while removing stale option params and the reserved `variant` param.
+Build route query objects with `buildProductSelectionSearchParams`, passing the product option names as `optionNames`. Convert Nuxt's current route query to `URLSearchParams` for `base` by appending every scalar or array value, then convert the returned params back to a Nuxt query object while preserving repeated keys. This preserves non-option params while removing stale option params and the reserved `variant` param.
 
 ## Add To Cart
 

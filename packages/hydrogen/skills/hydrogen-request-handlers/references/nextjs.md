@@ -8,7 +8,7 @@ Next splits Hydrogen routing across `proxy.ts` and `app/not-found.tsx`.
 
 The scaffold defaults to a public client; `NEXT_PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` from the app's trusted deployment headers per the buyer-IP guidance from `hydrogen-storefront-client`.
 
-This shape assumes app-owned server-only helpers for `customerSession` and `createSessionManager`. Do not import those names from Hydrogen.
+This shape assumes app-owned server-only helpers and values for `customerSession`, `createSessionManager`, and `routeTemplates`. Do not import those names from Hydrogen.
 
 ```ts
 import {
