@@ -66,6 +66,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
       .then((upstreamResponse) => {
         const headers = createProxyResponseHeaders(upstreamResponse.headers);
         descriptor.responseHeaders?.prepare?.(headers, options, url);
+        options.requestContext.consumeStorefrontResponseHeaders(headers);
 
         return new Response(upstreamResponse.body, {
           status: upstreamResponse.status,

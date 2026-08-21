@@ -138,6 +138,9 @@ describe("handleShopifyRoutes", () => {
     });
 
     expect(result?.headers.get("server-timing")).toBe("db;dur=2, _y;desc=unique");
+    expect(result?.headers.get("cache-control")).toBe(
+      "private, no-store, max-age=0, must-revalidate",
+    );
   });
 
   it("strips Server-Timing from cacheable SFAPI proxy responses", async () => {

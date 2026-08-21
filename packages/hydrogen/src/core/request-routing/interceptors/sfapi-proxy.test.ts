@@ -424,7 +424,7 @@ describe("handleSfapiProxy", () => {
     expect(text).toBe('{"data":{"shop":{"name":"Test"}}}');
   });
 
-  it("captures SFAPI response state for gated replay", async () => {
+  it("consumes upstream response state for gated replay", async () => {
     const headers = new Headers({
       "content-type": "application/json",
       "server-timing": '_y;desc="unique", _s;desc="visit"',

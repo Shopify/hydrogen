@@ -1,6 +1,5 @@
 import {
   SFAPI_REQUEST_HEADER_ALLOWLIST,
-  SERVER_TIMING_HEADER,
   STOREFRONT_BUYER_IP_HEADER,
   STOREFRONT_ID_HEADER,
 } from "../../headers";
@@ -28,15 +27,6 @@ export const handleSfapiProxy = createProxyInterceptor({
           "requestContext.buyerIp is required for private Storefront API proxy requests",
         );
       }
-    },
-  },
-  responseHeaders: {
-    prepare: (headers, { requestContext }) => {
-      // Route upstream state through the request-context gate instead of returning
-      // it directly from proxy responses.
-      requestContext.captureSubrequestHeaders(headers);
-      headers.delete("set-cookie");
-      headers.delete(SERVER_TIMING_HEADER);
     },
   },
   scope: "sfapi-proxy",
