@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "https:dev": "astro dev",
+    "dev:https": "astro dev",
     "build": "astro build",
     "start": "node ./dist/server/entry.mjs",
     "typecheck": "astro check"
