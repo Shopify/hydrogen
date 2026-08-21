@@ -41,6 +41,8 @@ On mutation:
 
 When overlapping mutations make response snapshots ambiguous, the store sets `state.revalidating` to `true`. It starts one authoritative refresh after those mutations settle and clears the flag when the refresh completes or fails. Until then, server-derived values such as costs remain at their last trustworthy value. A refresh failure preserves the locally reconciled cart and appears in `errors.network`.
 
+App-owned cart mutations outside Standard Actions do not emit the events the store normally observes. After such a mutation succeeds, call `CartStore.refresh()` directly or use the framework binding's `useCartActions().refresh()`. The refresh waits for active optimistic work, reconciles custom fragment fields from the configured cart endpoint, and is a no-op when no cart exists. Do not call it after ordinary Hydrogen cart forms; their Standard Actions events already synchronize the store.
+
 The store supersedes keyed mutations for the same line, discount batch, note, or complete attribute list. Relative additions remain independent so every submitted quantity reaches the server; their projections are reconciled together without disabling controls.
 
 ## Stable selectors
@@ -205,6 +207,10 @@ Errors survive unrelated cart work and clear when a new mutation begins for the 
 
 29. **Initial load** — Before the cart is fetched, show skeleton placeholders.
 30. **Empty cart** — After fetch completes with zero lines, show empty state.
+
+### Out-of-band mutations
+
+31. **Refresh custom data** — After an app-owned cart mutation succeeds, request a cart refresh. Every cart consumer receives the updated custom fragment data, `revalidating` represents the refresh, and a refresh failure preserves the confirmed cart while appearing in `errors.network`.
 
 ---
 

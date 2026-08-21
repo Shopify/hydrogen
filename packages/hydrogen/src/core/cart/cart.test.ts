@@ -2869,6 +2869,110 @@ describe("CartStore.handleFormSubmit — timeout", () => {
   });
 });
 
+describe("CartStore.refresh", () => {
+  it("refreshes custom fields on the existing cart", async () => {
+    store.hydrate(
+      makeCartState({
+        metafields: [{ key: "custom.instructions", value: "Front door" }],
+      }),
+    );
+    mockGetCart.mockResolvedValueOnce({
+      cart: makeCartState({
+        metafields: [{ key: "custom.instructions", value: "Back door" }],
+      }),
+    });
+
+    store.refresh();
+
+    expect(store.getState().revalidating).toBe(true);
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeUndefined());
+    expect(store.getState().data.metafields).toEqual([
+      { key: "custom.instructions", value: "Back door" },
+    ]);
+  });
+
+  it("uses the configured cart endpoint", async () => {
+    store.hydrate(makeCartState({ note: "before refresh" }));
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        cart: makeCartState({ note: "after refresh" }),
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    configureCartEndpoint("/api/cart");
+
+    store.refresh();
+
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeUndefined());
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/cart",
+      expect.objectContaining({ cache: "no-store", signal: expect.any(AbortSignal) }),
+    );
+    expect(store.getState().data.note).toBe("after refresh");
+  });
+
+  it("is a no-op when no cart exists", async () => {
+    store.refresh();
+    await nextTick();
+
+    expect(mockGetCart).not.toHaveBeenCalled();
+    expect(store.getState().revalidating).toBeUndefined();
+  });
+
+  it("waits for an active mutation before refreshing", async () => {
+    const line = makeLine({ id: "line-1", quantity: 1 });
+    store.hydrate(makeCartState({ lines: [line], totalQuantity: 1 }));
+    mockGetCart.mockResolvedValueOnce({
+      cart: makeCartState({ lines: [line], totalQuantity: 1 }),
+    });
+
+    const mutation = store.handleFormSubmit(submitForm({ lineId: "line-1" }, "intent", "increase"));
+    await nextTick();
+
+    store.refresh();
+
+    expect(store.getState().revalidating).toBe(true);
+    expect(mockGetCart).not.toHaveBeenCalled();
+
+    resolveUpdate(0, serverResult({ totalQuantity: 2 }));
+    await mutation;
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeUndefined());
+  });
+
+  it("does not apply an aborted refresh response", async () => {
+    const firstRefresh = createDeferred<{ cart: CartData }>();
+    const secondRefresh = createDeferred<{ cart: CartData }>();
+    store.hydrate(makeCartState({ note: "current" }));
+    mockGetCart
+      .mockReturnValueOnce(firstRefresh.promise)
+      .mockReturnValueOnce(secondRefresh.promise);
+
+    store.refresh();
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+    store.refresh();
+
+    firstRefresh.resolve({ cart: makeCartState({ note: "stale" }) });
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(2));
+    expect(store.getState().data.note).toBe("current");
+
+    secondRefresh.resolve({ cart: makeCartState({ note: "fresh" }) });
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeUndefined());
+    expect(store.getState().data.note).toBe("fresh");
+  });
+
+  it("surfaces refresh failures without replacing cart data", async () => {
+    store.hydrate(makeCartState({ note: "keep me" }));
+    mockGetCart.mockRejectedValueOnce(new Error("refresh failed"));
+
+    store.refresh();
+
+    await vi.waitFor(() => expect(store.getState().errors.network).toHaveLength(1));
+    expect(store.getState().data.note).toBe("keep me");
+    expect(store.getState().revalidating).toBeUndefined();
+  });
+});
+
 describe("CartStore.fetch", () => {
   it("reuses an in-flight fetch while state is unchanged", async () => {
     const deferred = createDeferred<{ cart: CartData }>();

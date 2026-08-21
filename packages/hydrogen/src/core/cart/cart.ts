@@ -101,6 +101,7 @@ export type CartStore = {
   getState(): CartState;
   subscribe(listener: (state: CartState) => void): () => void;
   fetch(): Promise<void>;
+  refresh(): void;
   reset(): void;
   handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;
 };
@@ -730,7 +731,9 @@ function createNetworkEntry(error: unknown): CartNetworkEntry {
   if (error instanceof CartNetworkError) {
     return { message: error.message, status: error.status };
   }
-  return { message: error instanceof Error ? error.message : "Cart update failed" };
+  return {
+    message: error instanceof Error ? error.message : "Cart update failed",
+  };
 }
 
 function mergeErrorGroups(left: CartErrorGroup, right: CartErrorGroup): CartErrorGroup {
@@ -916,7 +919,10 @@ function withAdditionMerchandise(
   const product = products.find((candidate) => candidate.id === addition.merchandiseId);
   if (!product) return line;
   const { price: _price, ...merchandise } = product;
-  return { ...line, merchandise: merchandise as unknown as CartLine["merchandise"] };
+  return {
+    ...line,
+    merchandise: merchandise as unknown as CartLine["merchandise"],
+  };
 }
 
 function replaceOrPrependLine(
@@ -1079,7 +1085,10 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
 
       const addedQuantity = payload.lines.reduce((total, line) => total + line.quantity, 0);
       const data = setLines(
-        { ...state.data, totalQuantity: state.data.totalQuantity + addedQuantity },
+        {
+          ...state.data,
+          totalQuantity: state.data.totalQuantity + addedQuantity,
+        },
         linesChanged ? lines : getLines(state.data),
       );
       return { ...state, data };
@@ -1189,7 +1198,10 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       if (options.mergeServerCart) {
         return { ...state, data: mergeAuthoritativeCartData(state.data, cart) };
       }
-      return { ...state, data: { ...state.data, discountCodes: cart.discountCodes } };
+      return {
+        ...state,
+        data: { ...state.data, discountCodes: cart.discountCodes },
+      };
     },
     getSignalKeys: () => DISCOUNT_CODES_KEY,
     getPendingKeys: (state, payload) => {
@@ -1231,7 +1243,10 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
         );
       }
       if (!result.cart || (result.userErrors?.length ?? 0) > 0) return state;
-      return { ...state, data: { ...state.data, attributes: payload.attributes } };
+      return {
+        ...state,
+        data: { ...state.data, attributes: payload.attributes },
+      };
     },
     getSignalKeys: () => ATTRIBUTES_KEY,
   },
@@ -1377,7 +1392,11 @@ function trimPendingTransaction<TType extends TransactionType>(
     );
     if (!trimmed) return undefined;
     remaining = trimmed;
-    nextIdentity = { ...identity, pendingKeys: undefined, errorKeys: undefined };
+    nextIdentity = {
+      ...identity,
+      pendingKeys: undefined,
+      errorKeys: undefined,
+    };
   }
   return createPendingTransaction(
     store,
@@ -1553,6 +1572,10 @@ function markOverlappingTransactionForRevalidation(
   }
   transaction.requiresRevalidation = true;
   for (const pending of store.transactions) pending.requiresRevalidation = true;
+  requestCartRevalidation(store);
+}
+
+function requestCartRevalidation(store: CartStoreContext): void {
   store.revalidation.requested = true;
   store.revalidation.visible = true;
   store.revalidation.active?.controller.abort();
@@ -1584,7 +1607,10 @@ function withTransactionEventToken(
       ...options,
       event: {
         ...options?.event,
-        detail: { ...options?.event?.detail, [TRANSACTION_EVENT_TOKEN_KEY]: token },
+        detail: {
+          ...options?.event?.detail,
+          [TRANSACTION_EVENT_TOKEN_KEY]: token,
+        },
       },
     });
 }
@@ -2131,6 +2157,7 @@ export function createCartStore<TData extends CartData = CartData>(
     getState: () => store.observable.state,
     subscribe: (listener) => store.observable.subscribe(listener),
     fetch: () => loadCartInStore(store),
+    refresh: () => refreshCartInStore(store),
     reset: () => resetCartStore(store),
     handleFormSubmit: (event, eventDetail) =>
       handleFormSubmitInStore(store, handlers, event, eventDetail),
@@ -2317,7 +2344,9 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
     };
 
     if (typeof document !== "undefined" && document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", configure, { once: true });
+      document.addEventListener("DOMContentLoaded", configure, {
+        once: true,
+      });
       return;
     }
     configure();
@@ -2412,6 +2441,7 @@ function isCurrentCartRevalidationRequest(
   request: ActiveCartRevalidation,
 ): boolean {
   return (
+    !request.controller.signal.aborted &&
     store.revalidation.active === request &&
     store.generation === request.generation &&
     store.mutationRevision === request.mutationRevision &&
@@ -2426,6 +2456,13 @@ function isCurrentCartRevalidation(
   cart: CartData,
 ): boolean {
   return isCurrentCartRevalidationRequest(store, request) && cart.id === request.cartId;
+}
+
+function refreshCartInStore(store: CartStoreContext): void {
+  if (!store.settled.data.id) return;
+  requestCartRevalidation(store);
+  publishVisibleState(store);
+  revalidateCartWhenIdle(store);
 }
 
 function revalidateCartWhenIdle(store: CartStoreContext): void {
@@ -2490,7 +2527,10 @@ async function refreshCheckoutUrl(store: CartStoreContext): Promise<void> {
   if (!cart || (current.data.id && current.data.id !== cart.id)) return;
   const checkoutUrl = cart.checkoutUrl ?? null;
   if (current.data.checkoutUrl === checkoutUrl) return;
-  store.settled = { ...store.settled, data: { ...store.settled.data, checkoutUrl } };
+  store.settled = {
+    ...store.settled,
+    data: { ...store.settled.data, checkoutUrl },
+  };
   publishVisibleState(store);
 }
 

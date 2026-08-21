@@ -60,10 +60,14 @@ type TypedCartProvider<TData extends CartData> = {
   new (): { $props: { initialData?: CartInitialData<TData> } };
 };
 
+/** Actions for reconciling cart state after updates outside Standard Actions. */
+export type CartActions = Pick<CartStore, "refresh">;
+
 type TypedCartComponents<TData extends CartData> = {
   CartProvider: TypedCartProvider<TData>;
   useCart: TypedUseCart<TData>;
   useOptionalCart: TypedUseOptionalCart<TData>;
+  useCartActions: typeof useCartActions;
   useCartForm: typeof useCartForm;
 };
 
@@ -132,6 +136,12 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
   const store = useCartStore("useCart");
   const resolve = selector ?? ((state: CartState<TData>) => state as unknown as S);
   return useCartSelector(store, resolve, isEqual) as Readonly<ShallowRef<S>>;
+}
+
+/** Returns actions that operate on the shared cart store. */
+export function useCartActions(): CartActions {
+  const store = useCartStore("useCartActions");
+  return { refresh: store.refresh };
 }
 
 export function useCartAnalytics(): void {
@@ -239,6 +249,7 @@ export function createCartComponents<THandlers>(): TypedCartComponents<
     CartProvider: TypedCartProvider,
     useCart: useTypedCart,
     useOptionalCart: useTypedOptionalCart,
+    useCartActions,
     useCartForm,
   };
 }

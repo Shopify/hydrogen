@@ -48,6 +48,9 @@ type TypedCartProviderProps<TData extends CartData> = {
 type CartInitialData<TData extends CartData = CartData> =
   CreateCartStoreOptions<TData>["initialData"];
 
+/** Actions for reconciling cart state after updates outside Standard Actions. */
+export type CartActions = Pick<CartStore, "refresh">;
+
 type TypedCartComponents<TData extends CartData> = {
   CartProvider: (props: TypedCartProviderProps<TData>) => ReactNode;
   useCart: <S>(selector: (state: CartState<TData>) => S, isEqual?: (a: S, b: S) => boolean) => S;
@@ -59,6 +62,7 @@ type TypedCartComponents<TData extends CartData> = {
     selector: (state: CartState<TData>) => S,
     isEqual?: (a: S, b: S) => boolean,
   ) => S | undefined;
+  useCartActions: typeof useCartActions;
   useCartForm: typeof useCartForm;
 };
 
@@ -103,13 +107,14 @@ export function createCartComponents<THandlers>(): TypedCartComponents<
     useCart: useTypedCart,
     useSuspenseCart,
     useOptionalCart: useTypedOptionalCart,
+    useCartActions,
     useCartForm,
   } as const;
 }
 
-export function useCartStore(): CartStore {
+export function useCartStore(hookName = "useCart"): CartStore {
   const store = useContext(CartContext);
-  if (!store) throw new Error("useCart must be used inside <CartProvider>.");
+  if (!store) throw new Error(`${hookName} must be used inside <CartProvider>.`);
   return store;
 }
 
@@ -144,6 +149,13 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 ): S {
   const store = useCartStore();
   return useCartSelector(store, selector, isEqual) as S;
+}
+
+/** Returns actions that operate on the shared cart store. */
+export function useCartActions(): CartActions {
+  const store = useCartStore("useCartActions");
+
+  return useMemo(() => ({ refresh: store.refresh }), [store]);
 }
 
 export function useCartAnalytics(): void {
