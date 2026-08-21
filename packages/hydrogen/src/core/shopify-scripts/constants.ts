@@ -9,8 +9,8 @@ export const SHOPIFY_INBOX_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/web-compon
 export const SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/analytics/shopify.js`;
 
 export const SHOPIFY_PERF_KIT_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/shopifycloud/perf-kit/shopify-perf-kit-spa.min.js?v2`;
-export const SHOPIFY_CONSENT_API_SCRIPT = "/consent-tracking-api.js";
-export const SHOPIFY_PRIVACY_BANNER_SCRIPT = "/storefront-banner.js";
+export const SHOPIFY_CONSENT_API_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/shopifycloud/consent-tracking-api/v0.2/consent-tracking-api.js`;
+export const SHOPIFY_PRIVACY_BANNER_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/shopifycloud/privacy-banner/storefront-banner.js`;
 
 export const SHOPIFY_CONSENT_SCRIPT_ID = "shopify-consent";
 export const SHOPIFY_PERF_KIT_SCRIPT_ID = "shopify-perfkit";
