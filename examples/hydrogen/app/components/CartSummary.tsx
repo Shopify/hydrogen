@@ -1,6 +1,7 @@
 import type { CartData, MoneyV2 } from "@shopify/hydrogen";
 import { useId } from "react";
 
+import { CartDeliveryInstructions } from "~/components/CartDeliveryInstructions";
 import type { CartLayout } from "~/components/CartMain";
 import { useCart, useCartForm } from "~/lib/cart";
 import { formatMoney } from "~/lib/money";
@@ -33,6 +34,7 @@ export function CartSummary({ cart, layout, totalsPending }: CartSummaryProps) {
         discountCodeInputId={discountCodeInputId}
       />
       <CartGiftMessage attributes={cart.attributes} />
+      <CartDeliveryInstructions />
       <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
     </div>
   );

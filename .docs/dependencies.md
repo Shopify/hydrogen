@@ -11,6 +11,16 @@ When changing the cart store's public surface (`CartStore`, React/Vue `createCar
 - `packages/hydrogen/skills/hydrogen-cart-ui/references/react.md`
 - `packages/hydrogen/skills/hydrogen-cart-ui/references/vue.md`
 
+## Hydrogen Cart Metafields
+
+When changing the cart metafields pattern (app-owned metafield route, custom `CartFragment` reads, or the mutate-then-`refresh()` flow), update these together:
+
+- `examples/hydrogen/app/lib/cart-metafields.ts` (app-owned route)
+- `examples/hydrogen/app/lib/cart-handlers.ts` (`CartFragment` reads)
+- `examples/hydrogen/app/components/CartDeliveryInstructions.tsx` (client)
+- `packages/hydrogen/skills/hydrogen-cart-metafields/SKILL.md`
+- `packages/hydrogen/skills/hydrogen-cart-ui/SKILL.md` (cross-reference)
+
 ## Hydrogen Local HTTPS
 
 When changing `@shopify/hydrogen/vite` local HTTPS behaviour, update these together:

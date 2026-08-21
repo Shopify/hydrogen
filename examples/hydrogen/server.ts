@@ -12,6 +12,7 @@ import { createRequestHandler } from "react-router";
 import * as serverBuild from "virtual:react-router/server-build";
 
 import { cartHandlers } from "~/lib/cart-handlers";
+import { cartMetafieldHandlers } from "~/lib/cart-metafields";
 import { createHydrogenRouterContext } from "~/lib/context";
 import { createCustomerAccountContext, createCustomerSessionManager } from "~/lib/customer-account";
 import { getLocaleFromRequest } from "~/lib/i18n";
@@ -71,7 +72,12 @@ export default {
         sessionManager: customerSessionManager,
         storefrontClient,
         routeTemplates,
-        handlers: [cartHandlers, predictiveSearchHandlers, customerAccountHandlers],
+        handlers: [
+          cartHandlers,
+          cartMetafieldHandlers,
+          predictiveSearchHandlers,
+          customerAccountHandlers,
+        ],
       });
       if (shopifyRoute) return await shopifyRoute;
 
