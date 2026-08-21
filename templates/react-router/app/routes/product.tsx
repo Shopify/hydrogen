@@ -1,4 +1,5 @@
 import {
+  buildProductSelectionSearchParams,
   canAddToCart,
   getSelectedProductOptions,
   gql,
@@ -190,9 +191,11 @@ function variantUrl(
   handle = product.handle,
   base: URLSearchParams = new URLSearchParams(),
 ) {
-  const params = new URLSearchParams(base);
-  for (const option of product.options) params.delete(option.name);
-  for (const option of selectedOptions) params.set(option.name, option.value);
+  const params = buildProductSelectionSearchParams({
+    selectedOptions,
+    optionNames: product.options.map((option) => option.name),
+    base,
+  });
   const query = params.toString();
   return `/products/${handle}${query ? `?${query}` : ""}`;
 }

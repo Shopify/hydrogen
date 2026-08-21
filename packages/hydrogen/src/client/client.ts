@@ -63,8 +63,23 @@ const REQUEST_IDENTITY_HEADERS = new Set([
   SHOPIFY_STOREFRONT_Y_HEADER.toLowerCase(),
   SHOPIFY_STOREFRONT_S_HEADER.toLowerCase(),
 ]);
+const CACHE_ENABLED_GRAPHQL_CLIENTS = new WeakSet<StorefrontClient["graphql"]>();
+const SHOULD_CACHE_RESULT = Symbol();
+
+type ShouldCacheResult = (body: object) => boolean;
 
 class StorefrontCacheConfigError extends Error {}
+
+export function withStorefrontClientCache<TOptions extends object>(
+  client: Pick<StorefrontClient, "graphql">,
+  options: TOptions,
+  strategy: CachingStrategy,
+  shouldCacheResult?: ShouldCacheResult,
+): TOptions {
+  if (!CACHE_ENABLED_GRAPHQL_CLIENTS.has(client.graphql)) return options;
+
+  return { ...options, cache: strategy, [SHOULD_CACHE_RESULT]: shouldCacheResult };
+}
 
 /**
  * Creates a type-safe Storefront API client.
@@ -188,6 +203,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       variables?: Record<string, unknown>;
       signal?: AbortSignal;
       cache?: CachingStrategy;
+      [SHOULD_CACHE_RESULT]?: ShouldCacheResult;
     };
 
     const queryText = typeof doc === "string" ? doc : (doc as unknown as string);
@@ -241,7 +257,13 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
         signal: externalSignals.length > 0 ? AbortSignal.any(externalSignals) : undefined,
       };
 
-      const cacheOptions = createStorefrontCacheOptions(apiUrl, init, queryText, opts.cache);
+      const cacheOptions = createStorefrontCacheOptions(
+        apiUrl,
+        init,
+        queryText,
+        opts.cache,
+        opts[SHOULD_CACHE_RESULT],
+      );
       const response = await (resolvedFetch as ResolvedStorefrontFetch)(apiUrl, init, cacheOptions);
 
       responseHeaders = response.headers;
@@ -313,7 +335,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
     };
   }
 
-  return {
+  const client: StorefrontClient = {
     type: clientType,
     i18n,
     graphql: graphql as StorefrontClient["graphql"],
@@ -322,6 +344,10 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
     storefrontId: config.storefrontId,
     requestContext,
   };
+
+  if (config.cache) CACHE_ENABLED_GRAPHQL_CLIENTS.add(client.graphql);
+
+  return client;
 }
 
 function buildVariables(
@@ -348,6 +374,7 @@ function createStorefrontCacheOptions(
   init: PlainRequestInit,
   queryText: string,
   strategy: CachingStrategy | undefined,
+  shouldCacheResult: ShouldCacheResult | undefined,
 ): FetchCacheOptions | undefined {
   if (!strategy) return undefined;
 
@@ -362,9 +389,11 @@ function createStorefrontCacheOptions(
       if (!json) return false;
 
       const body = await json().catch(() => undefined);
-      return (
-        typeof body === "object" && body != null && !Array.isArray(body) && !("errors" in body)
-      );
+      if (typeof body !== "object" || body == null || Array.isArray(body) || "errors" in body) {
+        return false;
+      }
+
+      return shouldCacheResult?.(body) ?? true;
     },
   };
 }

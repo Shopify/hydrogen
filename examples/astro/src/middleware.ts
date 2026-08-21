@@ -40,6 +40,7 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
     requestContext,
     sessionManager,
     storefrontClient,
+    routeTemplates,
     handlers: [cartHandlers, customerSessionHandlers],
   });
   if (shopifyRoute) return shopifyRoute;

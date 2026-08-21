@@ -292,6 +292,19 @@ describe("handleShopifyRoutes", () => {
     expect(result?.headers.get("location")).toBe("https://my-app.com/account?login=failed");
   });
 
+  it("throws for invalid registered handler redirect statuses", async () => {
+    const request = new Request("https://my-app.com/custom");
+    const handler = createShopifyRouteHandler("/custom", "GET", async () => ({
+      type: "redirect" as const,
+      status: 304 as never,
+      location: "/account?login=failed",
+    }));
+
+    await expect(handleShopifyRoutes({ request, handlers: [{ custom: handler }] })).rejects.toThrow(
+      "Invalid Shopify route redirect status 304",
+    );
+  });
+
   it("preserves registered handler absolute redirect Location headers", async () => {
     const request = new Request("https://my-app.com/custom");
     const handler = createShopifyRouteHandler("/custom", "GET", async () => ({
@@ -346,6 +359,32 @@ describe("handleShopifyRoutes", () => {
     expect(headers.get("Shopify-Storefront-Private-Token")).toBe("test-private-token");
     expect(headers.get("Shopify-Storefront-Buyer-IP")).toBe("10.0.0.2");
     expect(headers.get("X-Shopify-Storefront-Access-Token")).toBeNull();
+  });
+
+  it("handles variant id product redirects before registered handlers", async () => {
+    mockFetch.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: {
+            node: {
+              selectedOptions: [{ name: "Color", value: "Red" }],
+              product: { handle: "snowboard" },
+            },
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/products/snowboard?variant=42"),
+      routeTemplates: {},
+      handlers: [createCartServerHandlers()],
+    });
+
+    assert(result, "expected a redirect response");
+    expect(result.status).toBe(302);
+    expect(result.headers.get("location")).toBe("https://my-app.com/products/snowboard?Color=Red");
   });
 
   it("returns null synchronously for non-matching URLs", () => {

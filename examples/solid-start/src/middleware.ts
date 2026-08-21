@@ -21,6 +21,7 @@ import {
   createRequestCustomerAccountClient,
   customerSessionHandlers,
 } from "./lib/customer-account";
+import { routeTemplates } from "./lib/route-templates";
 
 const PRIVATE_NO_STORE_CACHE_CONTROL = "private, no-store";
 
@@ -52,6 +53,7 @@ export default createMiddleware({
         requestContext,
         sessionManager,
         storefrontClient,
+        routeTemplates,
         handlers: [cartHandlers, customerSessionHandlers],
       });
       if (shopifyRoute) return shopifyRoute;

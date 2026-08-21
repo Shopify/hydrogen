@@ -3,8 +3,8 @@ name: hydrogen-routing
 description: >
   Guide for Hydrogen route templates and Shopify storefront URL routing. Use when
   adding, modifying, or reviewing createShopifyRouteTemplates, routeTemplates,
-  custom Shopify resource or utility-page paths, standard route redirects,
-  ShopifyScripts routes, or predictive search result URLs.
+  custom Shopify resource or utility-page paths, handleShopifyRoutes,
+  standard route redirects, ShopifyScripts routes, or predictive search result URLs.
 ---
 
 # Hydrogen Routing
@@ -64,6 +64,21 @@ Supported placeholders are `:productHandle`, `:collectionHandle`, `:pageHandle`,
 ## Required Consumers
 
 Pass the same `routeTemplates` object to all relevant Hydrogen primitives, even when it is empty.
+
+### Shopify Routes
+
+Pass `routeTemplates` to `handleShopifyRoutes()` before framework routing so Liquid-style `?variant=<id>` product URLs are recognized at the app's product path:
+
+```ts
+const shopifyRoute = handleShopifyRoutes({
+  request,
+  requestContext,
+  sessionManager,
+  storefrontClient,
+  routeTemplates,
+  handlers: [cartHandlers],
+});
+```
 
 ### Redirects
 
@@ -129,6 +144,7 @@ createShopifyRouteTemplates({
 
 Hydrogen applies `i18n.pathPrefix` separately:
 
+- `handleShopifyRoutes()` reads it from `requestContext.i18n.pathPrefix` for product `?variant=` redirects.
 - `handleShopifyRedirects()` reads it from `storefrontClient.requestContext.i18n.pathPrefix`.
 - `ShopifyScripts` receives it through the `i18n` prop or option.
 - `getPredictiveSearchItemUrl()` receives it through `pathPrefix`.
@@ -139,7 +155,7 @@ Hydrogen applies `i18n.pathPrefix` separately:
 - Inspect the app's actual route files before adding a template key.
 - Create one `routeTemplates` manifest, even when it is empty.
 - Add only keys whose Shopify route is rendered at a non-standard pathname.
-- Reuse one `routeTemplates` object across redirects, ShopifyScripts, and predictive search.
+- Reuse one `routeTemplates` object across Shopify routes, redirects, ShopifyScripts, and predictive search.
 - Keep route templates serializable. Use strings, not callback functions.
 - Do not query Shopify to verify resource existence before redirecting a standard route. Redirect to the app route and let that route handle missing resources.
 - Do not include query strings or hashes in route templates. Consumers preserve or append query parameters separately.
@@ -148,6 +164,7 @@ Hydrogen applies `i18n.pathPrefix` separately:
 ## Anti-patterns
 
 - Passing route templates to `handleShopifyRedirects()` but not `ShopifyScripts`.
+- Passing route templates to `handleShopifyRedirects()` but not `handleShopifyRoutes()`.
 - Hard-coding predictive search links separately from `routeTemplates`.
 - Creating different template objects for different Hydrogen routing consumers.
 - Using callback URL builders for standard Shopify resources when a route template can describe the URL shape.
