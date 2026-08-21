@@ -9,7 +9,7 @@ import { createProxyInterceptor } from "./proxy";
 
 export const handleSfapiProxy = createProxyInterceptor({
   match: SFAPI_RE,
-  headers: {
+  requestHeaders: {
     allow: SFAPI_REQUEST_HEADER_ALLOWLIST,
     prepare: (headers, { requestContext, storefrontClient }) => {
       headers.delete(STOREFRONT_ID_HEADER);
@@ -30,12 +30,14 @@ export const handleSfapiProxy = createProxyInterceptor({
       }
     },
   },
-  prepareResponseHeaders: (headers, { requestContext }) => {
-    // Route upstream state through the request-context gate instead of returning
-    // it directly from proxy responses.
-    requestContext.captureSubrequestHeaders(headers);
-    headers.delete("set-cookie");
-    headers.delete(SERVER_TIMING_HEADER);
+  responseHeaders: {
+    prepare: (headers, { requestContext }) => {
+      // Route upstream state through the request-context gate instead of returning
+      // it directly from proxy responses.
+      requestContext.captureSubrequestHeaders(headers);
+      headers.delete("set-cookie");
+      headers.delete(SERVER_TIMING_HEADER);
+    },
   },
   scope: "sfapi-proxy",
 });

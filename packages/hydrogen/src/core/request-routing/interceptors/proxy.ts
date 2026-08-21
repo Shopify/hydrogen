@@ -4,23 +4,29 @@ import type { HydrogenRouteInterceptor, HydrogenRoutesOptions } from "../route-t
 
 const PROXY_TIMEOUT_MS = 30_000;
 
-type ProxyHeaderOptions = (
+type PrepareHeaders = (headers: Headers, options: HydrogenRoutesOptions, url: URL) => void;
+
+type ProxyRequestHeaderOptions = (
   | { allow: readonly string[]; deny?: never }
   | { allow?: never; deny: readonly string[] }
 ) & {
-  prepare?: (headers: Headers, options: HydrogenRoutesOptions, url: URL) => void;
+  prepare?: PrepareHeaders;
+};
+
+type ProxyResponseHeaderOptions = {
+  prepare?: PrepareHeaders;
 };
 
 type ProxyDescriptor = {
-  headers: ProxyHeaderOptions;
   match: RegExp;
   methods?: readonly string[];
   formatError?: (message: string) => unknown;
-  prepareResponseHeaders?: (headers: Headers, options: HydrogenRoutesOptions, url: URL) => void;
   redirect?: RequestRedirect;
   scope: string;
   timeoutMs?: number;
   rewritePathname?: (pathname: string) => string;
+  requestHeaders: ProxyRequestHeaderOptions;
+  responseHeaders?: ProxyResponseHeaderOptions;
 };
 
 export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRouteInterceptor {
@@ -39,7 +45,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
       upstreamUrl = new URL(upstreamPathname + url.search, storefrontClient.storeUrl);
       const forwardedHeaders = createProxyRequestHeaders(descriptor, request);
       options.requestContext.applyStorefrontRequestHeaders(forwardedHeaders);
-      descriptor.headers.prepare?.(forwardedHeaders, options, url);
+      descriptor.requestHeaders.prepare?.(forwardedHeaders, options, url);
 
       init = {
         method: request.method,
@@ -59,7 +65,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
     return fetch(upstreamUrl, init)
       .then((upstreamResponse) => {
         const headers = createProxyResponseHeaders(upstreamResponse.headers);
-        descriptor.prepareResponseHeaders?.(headers, options, url);
+        descriptor.responseHeaders?.prepare?.(headers, options, url);
 
         return new Response(upstreamResponse.body, {
           status: upstreamResponse.status,
@@ -91,7 +97,7 @@ function createProxyErrorResponse(
 }
 
 function createProxyRequestHeaders(descriptor: ProxyDescriptor, request: Request): Headers {
-  const { allow, deny } = descriptor.headers;
+  const { allow, deny } = descriptor.requestHeaders;
   const headers = allow
     ? new Headers(extractHeaders((key) => request.headers.get(key), allow))
     : new Headers(request.headers);
