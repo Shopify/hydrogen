@@ -4,6 +4,7 @@ import type {
   ShopifyRouteHandler,
   ShopifyRouteHandlerContext,
   ShopifyRouteHandlerResult,
+  ShopifyRedirectStatus,
 } from "./route-types";
 
 export type {
@@ -16,6 +17,7 @@ export type {
   ShopifyRouteHandlerResult,
   ShopifyRouteJsonResult,
   ShopifyRouteRedirectResult,
+  ShopifyRedirectStatus,
   ShopifyRouteSessionManager,
 } from "./route-types";
 
@@ -23,6 +25,9 @@ const HTTP_OK_STATUS = 200;
 const HTTP_SEE_OTHER_STATUS = 303;
 const HTTP_METHOD_NOT_ALLOWED_STATUS = 405;
 const HTTP_BAD_REQUEST_STATUS = 400;
+const VALID_REDIRECT_STATUSES = [
+  301, 302, 303, 307, 308,
+] as const satisfies readonly ShopifyRedirectStatus[];
 
 export function createShopifyRouteHandler<
   const TPathname extends string,
@@ -52,6 +57,7 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   url,
   { request, sessionManager, storefrontClient, requestContext, handlers = [] },
 ) => {
+  const context = { request, sessionManager, storefrontClient, requestContext };
   const routeHandlers = handlers.flatMap((group) => Object.values(group));
   if (routeHandlers.length === 0) return null;
 
@@ -64,9 +70,7 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
       new Response("Method Not Allowed", { status: HTTP_METHOD_NOT_ALLOWED_STATUS }),
     );
 
-  return match({ request, sessionManager, storefrontClient, requestContext }).then((result) =>
-    createShopifyRouteResponse(result, request),
-  );
+  return match(context).then((result) => createShopifyRouteResponse(result, request));
 };
 
 function createShopifyRouteResponse(result: ShopifyRouteHandlerResult, request: Request): Response {
@@ -74,7 +78,7 @@ function createShopifyRouteResponse(result: ShopifyRouteHandlerResult, request: 
     const headers = new Headers(result.headers);
     headers.set("location", resolveRedirectLocation(result.location, request));
     return new Response(null, {
-      status: HTTP_SEE_OTHER_STATUS,
+      status: getRedirectStatus(result.status),
       headers,
     });
   }
@@ -94,6 +98,17 @@ function createShopifyRouteResponse(result: ShopifyRouteHandlerResult, request: 
     status: HTTP_OK_STATUS,
     headers,
   });
+}
+
+function getRedirectStatus(status: ShopifyRedirectStatus | undefined): ShopifyRedirectStatus {
+  const redirectStatus = status ?? HTTP_SEE_OTHER_STATUS;
+  if (VALID_REDIRECT_STATUSES.some((validStatus) => validStatus === redirectStatus)) {
+    return redirectStatus;
+  }
+
+  throw new Error(
+    `Invalid Shopify route redirect status ${redirectStatus}. Expected one of: ${VALID_REDIRECT_STATUSES.join(", ")}.`,
+  );
 }
 
 function resolveRedirectLocation(location: string, request: Request): string {

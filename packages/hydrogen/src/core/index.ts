@@ -14,6 +14,7 @@ export type {
   ShopifyRouteHandlerResult,
   ShopifyRouteJsonResult,
   ShopifyRouteRedirectResult,
+  ShopifyRedirectStatus,
 } from "./request-routing/registered-routes";
 export { createStorefrontClient } from "../client/client";
 export { createShopifyRequestContext } from "./request-context";
@@ -185,6 +186,8 @@ export type {
   ValidProductSelectionResult,
   VariantSelectionResult,
 } from "./product";
+export { buildProductSelectionSearchParams } from "./product";
+export type { ProductSelectionLinkStyle } from "./product";
 export { getSelectedProductOptions } from "./product";
 export type {
   ProductInput,

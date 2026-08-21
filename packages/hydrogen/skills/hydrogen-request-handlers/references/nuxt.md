@@ -21,7 +21,7 @@ Create `server/middleware/shopify.ts`:
 
 The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` from the app's trusted deployment headers per the buyer-IP guidance from `hydrogen-storefront-client`.
 
-Create an app-owned request-scoped `sessionManager` before `handleShopifyRoutes`.
+Create app-owned `sessionManager` and `routeTemplates` values before `handleShopifyRoutes`; the session manager must be request-scoped.
 
 ```ts
 import {
@@ -48,6 +48,7 @@ export default defineEventHandler(async (event) => {
     requestContext,
     sessionManager,
     storefrontClient,
+    routeTemplates,
     handlers: [cartHandlers],
   });
   if (shopifyRoute) return sendWebResponse(event, await shopifyRoute);

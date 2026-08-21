@@ -30,4 +30,17 @@ describe("getSelectedProductOptions", () => {
 
     expect(getSelectedProductOptions({ searchParams: params, allowedOptionNames: [] })).toEqual([]);
   });
+
+  it("never treats the reserved variant param as an option", () => {
+    const params = new URLSearchParams();
+    params.set("variant", "41820371452004");
+    params.set("Size", "M");
+
+    expect(getSelectedProductOptions({ searchParams: params })).toEqual([
+      { name: "Size", value: "M" },
+    ]);
+    expect(
+      getSelectedProductOptions({ searchParams: params, allowedOptionNames: ["variant", "Size"] }),
+    ).toEqual([{ name: "Size", value: "M" }]);
+  });
 });

@@ -23,6 +23,7 @@ export default {
       }
 
       const routerContext = new RouterContextProvider();
+      routerContext.cache = await caches.open("hydrogen-v1");
       routerContext.set(envContext, env);
       routerContext.env = env;
       routerContext.waitUntil = executionContext.waitUntil.bind(executionContext);

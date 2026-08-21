@@ -1,4 +1,5 @@
 import {
+  type CacheInstance,
   createShopifyRequestContext,
   createStorefrontClient,
   type RequestScopedPrivateStorefrontClient,
@@ -27,6 +28,8 @@ function getMockBuyerIp(headers: Pick<Headers, "get">): string {
 export function createRequestStorefrontClient(
   request: Request,
   env: Env,
+  cache: CacheInstance,
+  waitUntil: ExecutionContext["waitUntil"],
 ): RequestScopedPrivateStorefrontClient {
   const usingMockShop = shouldUseMockShop(env);
   const buyerIp = usingMockShop ? getMockBuyerIp(request.headers) : getBuyerIp(request.headers);
@@ -48,6 +51,8 @@ export function createRequestStorefrontClient(
       storeDomain,
       privateStorefrontToken,
       storefrontId: usingMockShop ? undefined : env.PUBLIC_STOREFRONT_ID,
+      cache,
+      waitUntil,
     },
   });
 }

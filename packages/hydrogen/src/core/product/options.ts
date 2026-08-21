@@ -8,6 +8,7 @@ import type {
   VariantOptionState,
   VariantOptionValueState,
 } from "./state";
+import { VARIANT_SEARCH_PARAM } from "./url";
 
 const log = getLogger("product");
 
@@ -25,6 +26,9 @@ type EncodedVariantConstraint = {
  *
  * Each query parameter is treated as an option name/value pair
  * (e.g. `?Color=Red&Size=M` → `[{name:"Color",value:"Red"},{name:"Size",value:"M"}]`).
+ *
+ * The `variant` param is reserved for numeric variant ids (Liquid parity) and is
+ * never treated as an option name, even when listed in `allowedOptionNames`.
  *
  * When `allowedOptionNames` is provided, the search params are filtered to only
  * entries whose decoded param name exactly matches a product option name.
@@ -58,6 +62,7 @@ export function getSelectedProductOptions({
   const selectedOptions: SelectedOption[] = [];
 
   for (const [name, value] of searchParams.entries()) {
+    if (name === VARIANT_SEARCH_PARAM) continue;
     if (allowedOptionNameSet && !allowedOptionNameSet.has(name)) continue;
     selectedOptions.push({ name, value });
   }
