@@ -101,6 +101,10 @@ export type CartStore = {
   getState(): CartState;
   subscribe(listener: (state: CartState) => void): () => void;
   fetch(): Promise<void>;
+  /**
+   * Reconciles the cart after an out-of-band mutation: revalidates the current
+   * cart, or loads one when none is present yet (e.g. just created server-side).
+   */
   refresh(): void;
   reset(): void;
   handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;
@@ -2459,7 +2463,16 @@ function isCurrentCartRevalidation(
 }
 
 function refreshCartInStore(store: CartStoreContext): void {
-  if (!store.settled.data.id) return;
+  // With no local cart, an out-of-band mutation may have just created one
+  // server-side (e.g. cartCreate writing the cart cookie). A same-cart
+  // revalidation would have nothing to target, so discover the cart with a
+  // full load instead of no-oping.
+  if (!store.settled.data.id) {
+    void loadCartInStore(store).catch((error: unknown) =>
+      log.error("cart refresh load failed", { error }),
+    );
+    return;
+  }
   requestCartRevalidation(store);
   publishVisibleState(store);
   revalidateCartWhenIdle(store);

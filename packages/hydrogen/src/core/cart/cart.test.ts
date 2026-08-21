@@ -2911,12 +2911,15 @@ describe("CartStore.refresh", () => {
     expect(store.getState().data.note).toBe("after refresh");
   });
 
-  it("is a no-op when no cart exists", async () => {
-    store.refresh();
-    await nextTick();
+  it("loads the cart when none exists yet (e.g. created out of band)", async () => {
+    mockGetCart.mockResolvedValueOnce({
+      cart: makeCartState({ id: "gid://shopify/Cart/created", totalQuantity: 1 }),
+    });
 
-    expect(mockGetCart).not.toHaveBeenCalled();
-    expect(store.getState().revalidating).toBeUndefined();
+    store.refresh();
+
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(store.getState().data.id).toBe("gid://shopify/Cart/created"));
   });
 
   it("waits for an active mutation before refreshing", async () => {

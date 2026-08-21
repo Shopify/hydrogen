@@ -161,7 +161,7 @@ async function save() {
 </template>
 ```
 
-`refresh()` is non-blocking. Read `state.revalidating` for progress and `state.errors.network` for failures. It waits for active optimistic mutations and does nothing when no cart exists. Do not call it after `useCartForm()` submissions because their Standard Actions events already synchronize the store.
+`refresh()` is non-blocking. Read `state.revalidating` for progress and `state.errors.network` for failures. It waits for active optimistic mutations, and loads the cart when none exists yet (e.g. one just created server-side). Do not call it after `useCartForm()` submissions because their Standard Actions events already synchronize the store.
 
 ## Mutating Cart State
 
