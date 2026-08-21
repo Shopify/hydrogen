@@ -9,7 +9,9 @@ export function Footer({ shopName }: { shopName: string }) {
       <div className="border-border grid grid-cols-1 gap-8 border-t py-12 text-sm md:grid-cols-2 lg:grid-cols-4">
         <div>
           <h2 className="type-body-sm text-on-surface mb-4 font-medium">{shopName}</h2>
-          <p className="text-on-surface-secondary">&copy; 2026 {shopName}</p>
+          <p className="text-on-surface-secondary">
+            &copy; {new Date().getUTCFullYear()} {shopName}
+          </p>
         </div>
         <nav aria-labelledby="footer-quick-links-heading">
           <h2
