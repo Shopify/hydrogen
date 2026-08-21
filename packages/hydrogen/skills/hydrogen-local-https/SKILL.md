@@ -30,7 +30,7 @@ import { localHttps } from "@shopify/hydrogen/vite";
 import { defineConfig } from "vite";
 
 const httpsOptions = {
-  enabled: process.env.npm_lifecycle_event === "https:dev" || process.env.VITE_LOCAL_HTTPS === "1",
+  enabled: process.env.npm_lifecycle_event === "dev:https" || process.env.VITE_LOCAL_HTTPS === "1",
 };
 
 export default defineConfig({
@@ -38,13 +38,13 @@ export default defineConfig({
 });
 ```
 
-Start Vite through an `https:dev` package script. A normal `vite dev` remains plain HTTP.
+Start Vite through a `dev:https` package script. A normal `vite dev` remains plain HTTP.
 
 ```json
 {
   "scripts": {
     "dev": "vite dev",
-    "https:dev": "vite dev"
+    "dev:https": "vite dev"
   }
 }
 ```
@@ -57,7 +57,7 @@ Astro needs its own host and port in addition to the Vite plugin:
 import { LOCAL_HTTPS_DEFAULTS, localHttps } from "@shopify/hydrogen/vite";
 import { defineConfig } from "astro/config";
 
-const enabled = process.env.npm_lifecycle_event === "https:dev" || process.env.VITE_LOCAL_HTTPS === "1";
+const enabled = process.env.npm_lifecycle_event === "dev:https" || process.env.VITE_LOCAL_HTTPS === "1";
 const httpsOptions = { enabled };
 
 export default defineConfig({
@@ -79,7 +79,7 @@ import type { NuxtConfig } from "nuxt/schema";
 type VitePlugin = NonNullable<NonNullable<NuxtConfig["vite"]>["plugins"]>[number];
 
 const httpsOptions = {
-  enabled: process.env.npm_lifecycle_event === "https:dev" || process.env.VITE_LOCAL_HTTPS === "1",
+  enabled: process.env.npm_lifecycle_event === "dev:https" || process.env.VITE_LOCAL_HTTPS === "1",
 };
 const httpsPlugin = localHttps(httpsOptions);
 
@@ -100,7 +100,7 @@ import { defineConfig } from "@solidjs/start/config";
 import { localHttps } from "@shopify/hydrogen/vite";
 
 const httpsOptions = {
-  enabled: process.env.npm_lifecycle_event === "https:dev" || process.env.VITE_LOCAL_HTTPS === "1",
+  enabled: process.env.npm_lifecycle_event === "dev:https" || process.env.VITE_LOCAL_HTTPS === "1",
 };
 const httpsPlugin = localHttps(httpsOptions);
 const devServer = httpsPlugin.api.getDevServerConfig();
@@ -116,7 +116,7 @@ Vinxi also needs its bind target and port on startup:
 ```json
 {
   "scripts": {
-    "https:dev": "vinxi dev --host local.tryhydrogen.dev --port 5173"
+    "dev:https": "vinxi dev --host local.tryhydrogen.dev --port 5173"
   }
 }
 ```

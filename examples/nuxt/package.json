@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
-    "https:dev": "nuxt dev",
+    "dev:https": "nuxt dev",
     "build": "nuxt build",
     "start": "node .output/server/index.mjs",
     "typecheck": "nuxt typecheck"

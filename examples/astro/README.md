@@ -40,8 +40,7 @@ The account flow uses `createCustomerSession` and `createCustomerAccountServerHa
 Customer Account OAuth requires a public HTTPS origin. To test locally without a tunnel, register `https://local.tryhydrogen.dev:5173/account/authorize` as the callback URI and run:
 
 ```sh
-pnpm https:setup
-pnpm --filter @shopify/hydrogen-example-astro https:dev
+pnpm --filter @shopify/hydrogen-example-astro dev:https
 ```
 
 ## Run
