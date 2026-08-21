@@ -1,4 +1,4 @@
-import type { SelectedOption } from "@shopify/hydrogen";
+import { buildProductSelectionSearchParams, type SelectedOption } from "@shopify/hydrogen";
 import { useMemo } from "react";
 import { useLocation } from "react-router";
 
@@ -29,19 +29,17 @@ export function getVariantUrl({
   selectedOptions?: SelectedOption[];
 }) {
   const match = /(\/[a-zA-Z]{2}-[a-zA-Z]{2}\/)/g.exec(pathname);
-  const isLocalePathname = match && match.length > 0;
+  const localePrefix = match?.[0] ?? "/";
 
-  const path = isLocalePathname ? `${match![0]}products/${handle}` : `/products/${handle}`;
+  const path = `${localePrefix}products/${handle}`;
 
-  optionNames?.forEach((name) => {
-    searchParams.delete(name);
+  const params = buildProductSelectionSearchParams({
+    selectedOptions: selectedOptions ?? [],
+    optionNames: optionNames ?? [],
+    base: searchParams,
   });
 
-  selectedOptions?.forEach((option) => {
-    searchParams.set(option.name, option.value);
-  });
+  const searchString = params.toString();
 
-  const searchString = searchParams.toString();
-
-  return path + (searchString ? "?" + searchParams.toString() : "");
+  return path + (searchString ? "?" + searchString : "");
 }

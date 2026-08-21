@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { buildProductSelectionSearchParams } from "@shopify/hydrogen";
+
 import type { ProductData } from "~/storefront/product";
 import { useProductForm } from "~/storefront/product";
 
@@ -30,9 +32,37 @@ function variantRoute(selectedOptions: { name: string; value: string }[], handle
 }
 
 function variantQuery(selectedOptions: { name: string; value: string }[]) {
-  const query = { ...route.query };
-  for (const option of props.product.options) delete query[option.name];
-  for (const option of selectedOptions) query[option.name] = option.value;
+  const params = buildProductSelectionSearchParams({
+    selectedOptions,
+    optionNames: props.product.options.map((option) => option.name),
+    base: queryToSearchParams(route.query),
+  });
+  return searchParamsToQuery(params);
+}
+
+function queryToSearchParams(query: typeof route.query) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    const values = Array.isArray(value) ? value : [value];
+    for (const item of values) {
+      params.append(key, item ?? "");
+    }
+  }
+  return params;
+}
+
+function searchParamsToQuery(params: URLSearchParams) {
+  const query: Record<string, string | string[]> = Object.create(null);
+  for (const [key, value] of params) {
+    const current = query[key];
+    if (current === undefined) {
+      query[key] = value;
+    } else if (Array.isArray(current)) {
+      current.push(value);
+    } else {
+      query[key] = [current, value];
+    }
+  }
   return query;
 }
 </script>

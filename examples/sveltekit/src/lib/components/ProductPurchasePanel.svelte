@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import {
+		buildProductSelectionSearchParams,
 		canAddToCart,
 		createProductFormRegister,
 		createProductFormStore
@@ -76,9 +77,11 @@
 	}
 
 	function variantSearch(selectedOptions: { name: string; value: string }[]) {
-		const params = new URLSearchParams(currentSearch);
-		for (const option of product.options) params.delete(option.name);
-		for (const option of selectedOptions) params.set(option.name, option.value);
+		const params = buildProductSelectionSearchParams({
+			selectedOptions,
+			optionNames: product.options.map((option) => option.name),
+			base: new URLSearchParams(currentSearch)
+		});
 		const search = params.toString();
 		return search ? `?${search}` : '';
 	}

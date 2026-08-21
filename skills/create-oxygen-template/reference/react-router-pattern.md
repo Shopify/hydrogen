@@ -152,7 +152,7 @@ async function createAppLoadContext(
   executionContext: ExecutionContext,
 ) {
   const waitUntil = executionContext.waitUntil.bind(executionContext);
-  const cache = await caches.open("hydrogen");
+  const cache = await caches.open("hydrogen-v1");
   const context = new RouterContextProvider();
 
   context.set(envContext, env);
@@ -234,7 +234,7 @@ Oxygen is a Worker runtime. Do not create request-specific Shopify objects at mo
 - `createCustomerAccountClient(...)`
 - customer session managers
 - cart, predictive search, and customer account route handling inputs
-- `caches.open("hydrogen")` handles used with request-specific `waitUntil`
+- `caches.open("hydrogen-v1")` handles used with request-specific `waitUntil`
 
 Module scope is only appropriate for pure constants and stateless handler factories that do not capture request/env/session data. When in doubt, keep the object request-scoped until MiniOxygen runtime validation proves otherwise.
 
@@ -245,7 +245,7 @@ Keep request-time values in context instead of imported shared constants. Root m
 Hydrogen primitives that use cached fetches must receive an Oxygen-compatible cache created in the request flow:
 
 ```ts
-const cache = await caches.open("hydrogen");
+const cache = await caches.open("hydrogen-v1");
 const waitUntil = executionContext.waitUntil.bind(executionContext);
 ```
 

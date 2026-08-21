@@ -120,6 +120,23 @@ Provider bindings should hydrate automatically when the product's semantic ident
 
 Pass `allowedOptionNames` to filter search params to only known product option names, avoiding unrelated query parameters. Passing an empty array filters out every option.
 
+The `variant` param is reserved for Liquid-style numeric variant ids and is never treated as an option name. Server-side, `handleShopifyRoutes({ routeTemplates })` (see the local `hydrogen-request-handlers` skill) redirects `?variant=<id>` product URLs to their canonical option-params URL before the loader runs; when both `variant` and option params are present, the variant wins.
+
+## Building selection URLs
+
+`buildProductSelectionSearchParams({ style?, selectedOptions, variant?, optionNames, base? })` builds the search params for a selection link. It always removes the reserved `variant` param and every param named in `optionNames`/`selectedOptions` from `base` before writing the new selection, preserving unrelated params (`?ref=campaign`). Compose it with the app's product pathname:
+
+```ts
+const params = buildProductSelectionSearchParams({
+  selectedOptions: result.selectedOptions,
+  optionNames: product.options.map((option) => option.name),
+  base: new URLSearchParams(location.search),
+});
+const url = `/products/${handle}${params.size ? `?${params}` : ""}`;
+```
+
+Pass `style: "variant"` with a resolved `variant` to emit a shareable `?variant=<numeric id>` link instead of option params. When no variant is resolved (partial selection), the variant style falls back to option params — a variant link is not constructible. Prefer option-params links for in-app navigation; `?variant=` links cost a server redirect on landing.
+
 ---
 
 ## Rules
@@ -146,7 +163,7 @@ Pass `allowedOptionNames` to filter search params to only known product option n
 
 - **ALWAYS check `value.handle` against the current `product.handle`.** If they differ, the option value points to a different product in a combined listing. The UI must navigate to that product (full page navigation or a link component), not call `selectOption`.
 - **Use the framework's client-side link component for cross-product values when one exists.** Use the app's idiomatic navigation primitive. Use a raw `<a>` only when that is the app's established routing convention.
-- **Preserve non-option query params on combined-listing links.** When constructing the URL for a combined-listing link, carry forward existing search params (e.g. `?ref=campaign`) and replace only the option params. Two-pass URL construction: delete all option params first, then set the new ones — this prevents stale params when combined-listing products have different option names.
+- **Preserve non-option query params on combined-listing links.** When constructing the URL for a combined-listing link, carry forward existing search params (e.g. `?ref=campaign`) and replace only the option params. Use `buildProductSelectionSearchParams` with the current product's option names as `optionNames` — it deletes all option params (and any stale `variant` param) first, then sets the new ones, preventing stale params when combined-listing products have different option names.
 - **Ignore selected options that are not in the current product option matrix.** Divergent combined-listing child products can have different option names. A stale `Color=Black` param must not constrain a child product whose options are `Size` and `Mount`.
 
 ### Price display
