@@ -8,7 +8,7 @@
     "test": "pnpm run test:unit",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "test:unit": "vitest run src"
+    "test:unit": "vitest run src/runtime-config.test.ts"
   },
   "dependencies": {
     "@shopify/hydrogen": "workspace:*"

@@ -40,8 +40,6 @@ Use Vite/React Router scripts, not Hydrogen CLI dev/build scripts:
 }
 ```
 
-Keep `https:setup` exactly aligned with `templates/react-router/package.json`; it owns the mkcert output paths consumed by `localHttps`.
-
 Remove Node-server scripts such as `start: react-router-serve ...` unless explicitly requested.
 
 Dependencies:

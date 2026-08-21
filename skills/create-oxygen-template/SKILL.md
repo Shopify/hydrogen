@@ -138,7 +138,7 @@ Rewrite the README for a starter project, not for the monorepo example. Include:
 - required env vars and `.env` setup
 - `npm install`
 - `npm run dev`
-- `npm run https:setup` and `npm run https:dev` for Customer Account OAuth
+- `npm run https:dev` for Customer Account OAuth; Hydrogen prompts to provision its certificate on first startup
 - `npm run build`
 - `npm run preview`
 - `npm run deploy`
