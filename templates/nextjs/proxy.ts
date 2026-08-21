@@ -1,9 +1,11 @@
 import {
+  type CacheInstance,
   createShopifyRequestContext,
   createStorefrontClient,
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
-import { NextResponse, type NextRequest } from "next/server";
+import { getCache } from "@vercel/functions";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 
 import { getBuyerIp } from "@/lib/buyer-ip";
 import { cartHandlers } from "@/lib/cart-handlers";
@@ -33,7 +35,7 @@ import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/stor
  * shared `resolveStorefrontConfig()` falls back to `mock.shop` + its well-known
  * `mock-private-token` so the example runs with zero secrets.
  */
-export async function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest, event: NextFetchEvent) {
   const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
@@ -42,6 +44,12 @@ export async function proxy(request: NextRequest) {
   });
 
   const { storeDomain, privateStorefrontToken, storefrontId } = resolveStorefrontConfig();
+  const cache: CacheInstance | undefined = process.env.VERCEL
+    ? getCache({
+        namespace: "hydrogen-v1",
+        keyHashFunction: (key) => key,
+      })
+    : undefined;
 
   const storefrontClient = createStorefrontClient({
     type: "private",
@@ -50,6 +58,8 @@ export async function proxy(request: NextRequest) {
       storeDomain,
       privateStorefrontToken,
       storefrontId,
+      cache,
+      waitUntil: event.waitUntil.bind(event),
     },
   });
 

@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { StorefrontClient } from "../../client";
+import { createStorefrontClient, type StorefrontClient } from "../../client";
 import { StorefrontApiError } from "../../client/errors";
+import { Cache } from "../cache";
 import { configureLogging, resetLoggingForTests } from "../logging";
 import { createShopifyRequestContext, type I18nConfig } from "../request-context";
 import type { HydrogenRoutesOptions } from "../request-routing/route-types";
@@ -67,6 +68,39 @@ function createTestSessionManager() {
   };
 }
 
+function createCacheEnabledContext(node: typeof VARIANT_NODE | null) {
+  const values = new Map<string, unknown>();
+  const cache = {
+    get: vi.fn((key: string) => values.get(key)),
+    set: vi.fn((key: string, value: unknown) => {
+      values.set(key, value);
+    }),
+  };
+  const request = new Request("https://shop.com/products/snowboard?variant=42");
+  const requestContext = createShopifyRequestContext({ request, i18n: DEFAULT_I18N });
+  const storefrontClient = createStorefrontClient({
+    type: "public",
+    requestContext,
+    config: {
+      storeDomain: "shop.myshopify.com",
+      cache,
+      fetch: vi.fn().mockResolvedValue(Response.json({ data: { node } })),
+    },
+  });
+
+  return {
+    cache,
+    options: {
+      request,
+      requestContext,
+      storefrontClient,
+      sessionManager: createTestSessionManager(),
+      routeTemplates: {},
+    } satisfies HydrogenRoutesOptions,
+    url: new URL(request.url),
+  };
+}
+
 async function run(options: Parameters<typeof createContext>[0]) {
   const { options: routeOptions, url, graphql } = createContext(options);
   const result = handleProductVariantId(url, routeOptions);
@@ -109,6 +143,26 @@ describe("handleProductVariantId", () => {
     expect(graphql).toHaveBeenCalledWith(expect.anything(), {
       variables: { id: "gid://shopify/ProductVariant/41820371452004" },
     });
+  });
+
+  it("uses the long cache strategy when the storefront client has a cache adapter", async () => {
+    const { cache, options, url } = createCacheEnabledContext(VARIANT_NODE);
+
+    await handleProductVariantId(url, options);
+
+    expect(cache.set).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ strategy: Cache.long() }),
+      expect.any(Object),
+    );
+  });
+
+  it("does not cache unresolved variants", async () => {
+    const { cache, options, url } = createCacheEnabledContext(null);
+
+    await handleProductVariantId(url, options);
+
+    expect(cache.set).not.toHaveBeenCalled();
   });
 
   it("prefers the variant over option params already in the URL", async () => {

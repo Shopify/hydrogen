@@ -50,7 +50,12 @@ export const links: Route.LinksFunction = () => [
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ context, request }, next) => {
     const env = context.get(envContext);
-    const storefrontClient = createRequestStorefrontClient(request, env);
+    const storefrontClient = createRequestStorefrontClient(
+      request,
+      env,
+      context.cache,
+      context.waitUntil,
+    );
     const requestContext = storefrontClient.requestContext;
     const sessionManager = createRequestSessionManager(request);
 

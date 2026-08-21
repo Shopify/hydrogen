@@ -1,6 +1,8 @@
 import type { StorefrontClient } from "../../client";
+import { withStorefrontClientCache } from "../../client/client";
 import { StorefrontApiError } from "../../client/errors";
 import { gql } from "../../graphql";
+import { Cache } from "../cache";
 import { getLogger } from "../logging";
 import type { HydrogenRouteInterceptor } from "../request-routing/route-types";
 import { getStandardRoute } from "../standard-routes/build";
@@ -125,9 +127,15 @@ async function queryVariantSelectedOptions(
   variantId: string,
 ): Promise<SelectedOptionsVariant | null> {
   try {
-    const result = await storefrontClient.graphql(VARIANT_SELECTED_OPTIONS_QUERY, {
-      variables: { id: variantId },
-    });
+    const result = await storefrontClient.graphql(
+      VARIANT_SELECTED_OPTIONS_QUERY,
+      withStorefrontClientCache(
+        storefrontClient,
+        { variables: { id: variantId } },
+        Cache.long(),
+        hasResolvedVariant,
+      ),
+    );
 
     if (result.errors) {
       log.error("variant id redirect lookup failed", { errors: result.errors, variantId });
@@ -145,6 +153,11 @@ async function queryVariantSelectedOptions(
   }
 
   return null;
+}
+
+function hasResolvedVariant(body: object): boolean {
+  if (!("data" in body) || typeof body.data !== "object" || body.data == null) return false;
+  return "node" in body.data && body.data.node != null;
 }
 
 function isSameHandle(variantProductHandle: string, requestedHandle: string | undefined): boolean {
