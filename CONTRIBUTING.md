@@ -4,7 +4,7 @@
 
 **Requirements:**
 
-- Node.js version 16.14.0 or higher
+- Node.js version 22.0.0 or higher
 
 Run the following commands to get started working on Hydrogen.
 
@@ -12,7 +12,7 @@ Run the following commands to get started working on Hydrogen.
 | ----------------------------------------------- | --------------------------------------------- |
 | `git clone git@github.com:Shopify/hydrogen.git` | Clones the repo to your local computer        |
 | `pnpm install`                                  | Installs the dependencies with `pnpm`         |
-| `ppnpm run dev`                                  | Runs the `dev` command in all packages        |
+| `pnpm run dev`                                   | Runs the `dev` command in all packages        |
 | `pnpm run build`                                | `build`s packages for production distribution |
 
 ### Shopify Contributors
