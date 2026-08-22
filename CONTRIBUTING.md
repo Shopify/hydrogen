@@ -4,7 +4,7 @@
 
 **Requirements:**
 
-- Node.js version 22.0.0 or higher
+- Node.js version 22 or 24
 
 Run the following commands to get started working on Hydrogen.
 
