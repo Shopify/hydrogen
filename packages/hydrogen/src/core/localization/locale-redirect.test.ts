@@ -115,9 +115,9 @@ describe("getLocaleRedirect", () => {
     }
   });
 
-  it("trusts Sec-Fetch-Mode: navigate even without an HTML accept header", async () => {
+  it("trusts a top-level document navigation even without an HTML accept header", async () => {
     const navigation = new Request("https://store.example/products", {
-      headers: { "sec-fetch-mode": "navigate" },
+      headers: { "sec-fetch-dest": "document", "sec-fetch-mode": "navigate" },
     });
 
     const response = await getLocaleRedirect(navigation, {
@@ -129,9 +129,23 @@ describe("getLocaleRedirect", () => {
     expect(response?.status).toBe(302);
   });
 
-  it("falls back to the accept header when a proxy hop rewrites Sec-Fetch-Mode to cors", async () => {
+  it("never redirects an embedded iframe navigation (navigate mode but iframe dest)", async () => {
+    const iframeNavigation = new Request("https://store.example/products", {
+      headers: { "sec-fetch-dest": "iframe", "sec-fetch-mode": "navigate" },
+    });
+
+    const response = await getLocaleRedirect(iframeNavigation, {
+      config: CONFIG,
+      i18n: DEFAULT_I18N,
+      sessionManager: createSessionManager(FR_CA_SESSION_LOCALE),
+    });
+
+    expect(response).toBeNull();
+  });
+
+  it("falls back to the accept header when a proxy hop rewrites the Sec-Fetch headers", async () => {
     const proxiedNavigation = new Request("https://store.example/products", {
-      headers: { "sec-fetch-mode": "cors", accept: "text/html" },
+      headers: { "sec-fetch-dest": "empty", "sec-fetch-mode": "cors", accept: "text/html" },
     });
 
     const response = await getLocaleRedirect(proxiedNavigation, {
@@ -143,10 +157,14 @@ describe("getLocaleRedirect", () => {
     expect(response?.status).toBe(302);
   });
 
-  it("never lets Sec-Fetch-Mode: navigate override the method guard", async () => {
+  it("never lets a document navigation override the method guard", async () => {
     const formPost = new Request("https://store.example/newsletter", {
       method: "POST",
-      headers: { "sec-fetch-mode": "navigate", accept: "text/html" },
+      headers: {
+        "sec-fetch-dest": "document",
+        "sec-fetch-mode": "navigate",
+        accept: "text/html",
+      },
       body: new URLSearchParams({ email: "buyer@example.com" }),
     });
 

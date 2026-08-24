@@ -36,6 +36,8 @@ const ACCEPT_HEADER = "accept";
 const NAVIGATION_ACCEPT_VALUE = "text/html";
 const SEC_FETCH_MODE_HEADER = "sec-fetch-mode";
 const SEC_FETCH_MODE_NAVIGATE = "navigate";
+const SEC_FETCH_DEST_HEADER = "sec-fetch-dest";
+const SEC_FETCH_DEST_DOCUMENT = "document";
 
 const log = getLogger("localization");
 
@@ -78,20 +80,33 @@ export async function getLocaleRedirect(
 }
 
 /**
- * True for buyer page navigations only. Form posts and client `fetch()` calls (data loads,
- * JSON endpoints) must never be relocated by a display preference: a 302 turns a POST into a
- * GET and drops its body, and fetch callers expect the URL they asked for.
+ * True for top-level buyer page navigations only. Form posts and client `fetch()` calls (data
+ * loads, JSON endpoints) must never be relocated by a display preference: a 302 turns a POST
+ * into a GET and drops its body, and fetch callers expect the URL they asked for.
  *
- * `Sec-Fetch-Mode: navigate` is trusted when present — it is a forbidden header page scripts
- * cannot spoof. It cannot be *required*, though: fetch-based proxy hops (dev servers, edge
- * runtimes) silently rewrite it to `cors`, so its absence falls back to `Accept: text/html`,
- * which browsers send for document requests, survives proxies, and `fetch()` callers do not.
+ * The trusted positive signal is `Sec-Fetch-Dest: document` *and* `Sec-Fetch-Mode: navigate`
+ * together — both are forbidden headers page scripts cannot spoof. Requiring both narrows the
+ * broad `navigate` mode (which also covers iframe/embed navigations) down to the top-level
+ * document the buyer actually sees, so an embedded storefront frame is never relocated.
+ *
+ * The signal cannot be *required*, though: older browsers omit the `Sec-Fetch-*` headers and
+ * fetch-based proxy hops (dev servers, edge runtimes) rewrite them, so its absence falls back
+ * to `Accept: text/html`, which browsers send for document requests, survives proxies, and
+ * `fetch()`/JSON callers do not.
  */
 function isNavigationRequest(request: Request): boolean {
   if (!NAVIGATION_METHODS.has(request.method)) return false;
-  if (request.headers.get(SEC_FETCH_MODE_HEADER) === SEC_FETCH_MODE_NAVIGATE) return true;
+  if (isTopLevelDocumentRequest(request.headers)) return true;
 
   return request.headers.get(ACCEPT_HEADER)?.includes(NAVIGATION_ACCEPT_VALUE) ?? false;
+}
+
+/** A top-level document navigation: `Sec-Fetch-Dest: document` implies `Sec-Fetch-Mode: navigate`. */
+function isTopLevelDocumentRequest(headers: Headers): boolean {
+  return (
+    headers.get(SEC_FETCH_DEST_HEADER) === SEC_FETCH_DEST_DOCUMENT &&
+    headers.get(SEC_FETCH_MODE_HEADER) === SEC_FETCH_MODE_NAVIGATE
+  );
 }
 
 function buildLocaleLocation(
