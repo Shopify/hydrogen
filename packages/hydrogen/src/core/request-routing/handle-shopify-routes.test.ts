@@ -146,6 +146,20 @@ describe("handleShopifyRoutes", () => {
     expect(result).not.toBeNull();
   });
 
+  it("returns Response for UCP MCP proxy requests", async () => {
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/api/ucp/mcp", {
+        method: "POST",
+        body: "{}",
+      }),
+    });
+
+    assert(result, "expected UCP MCP response");
+    expect(result.headers.get("cache-control")).toBe(
+      "private, no-store, max-age=0, must-revalidate",
+    );
+  });
+
   it("does not infer buyer IP headers for proxy requests", async () => {
     await handleShopifyRoutes({
       request: new Request("https://my-app.com/api/mcp", {

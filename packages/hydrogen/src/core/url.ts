@@ -2,6 +2,7 @@ export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
 export const SHOPIFY_API_PROXY_PREFIX = "/__shopify";
 export const SHOPIFY_API_PROXY_RE = /^\/__shopify(?:\/|$)/;
 export const MCP_RE = /^\/api\/mcp$/;
+export const UCP_MCP_RE = /^\/api\/ucp\/mcp$/;
 export const CHECKOUT_RE = /^\/checkout$/;
 export const CART_PERMALINK_RE = /^\/cart\/\d+:\d+(?:,\d+:\d+)*$/;
 export const CUSTOMER_ACCOUNT_PATHS = {
