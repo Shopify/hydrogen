@@ -36,14 +36,11 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
     try {
       const upstreamPathname = descriptor.rewritePathname?.(url.pathname) ?? url.pathname;
       upstreamUrl = new URL(upstreamPathname + url.search, storefrontClient.storeUrl);
-      const forwardedHeaders = createProxyRequestHeaders(descriptor, request);
-      options.requestContext.applyStorefrontRequestHeaders(forwardedHeaders);
-      descriptor.headers.prepare?.(forwardedHeaders, options, url);
 
       init = {
         method: request.method,
         body: request.body,
-        headers: forwardedHeaders,
+        headers: createProxyRequestHeaders(descriptor, options, url),
         signal: AbortSignal.timeout(descriptor.timeoutMs ?? PROXY_TIMEOUT_MS),
         redirect: descriptor.redirect ?? "manual",
       };
@@ -87,12 +84,22 @@ function createProxyErrorResponse(
   });
 }
 
-function createProxyRequestHeaders(descriptor: ProxyDescriptor, request: Request): Headers {
-  const { allow, deny } = descriptor.headers;
+function createProxyRequestHeaders(
+  descriptor: ProxyDescriptor,
+  options: HydrogenRoutesOptions,
+  url: URL,
+): Headers {
+  const { request, requestContext } = options;
+  const { allow, deny, prepare } = descriptor.headers;
   const headers = allow
     ? new Headers(extractHeaders((key) => request.headers.get(key), allow))
     : new Headers(request.headers);
+
+  requestContext.applyStorefrontRequestHeaders(headers);
+
   for (const header of deny ?? []) headers.delete(header);
+  prepare?.(headers, options, url);
+
   return headers;
 }
 
