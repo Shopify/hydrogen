@@ -64,4 +64,24 @@ describe("createProxyInterceptor", () => {
     expect(headers.get("x-prepared")).toBe("true");
     expect(prepare).toHaveBeenCalledOnce();
   });
+
+  it("returns the allowed methods when the request method is unsupported", async () => {
+    const handleProxy = createProxyInterceptor({
+      match: /^\/proxy$/,
+      methods: ["POST", "DELETE"],
+      headers: { deny: [] },
+      scope: "test-proxy",
+    });
+    const mockFetch = vi.fn();
+    vi.stubGlobal("fetch", mockFetch);
+    const request = new Request("https://my-app.com/proxy", { method: "GET" });
+
+    const response = await handleProxy(new URL(request.url), createOptions(request));
+
+    assert(response, "expected a response");
+    expect(response.status).toBe(405);
+    expect(response.headers.get("allow")).toBe("POST, DELETE");
+    expect(await response.text()).toBe("Method Not Allowed");
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 });

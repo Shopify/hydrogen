@@ -29,7 +29,15 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
   return (url, options) => {
     const { request, storefrontClient } = options;
     if (!descriptor.match.test(url.pathname)) return null;
-    if (descriptor.methods && !descriptor.methods.includes(request.method)) return null;
+    if (descriptor.methods && !descriptor.methods.includes(request.method)) {
+      // Resource exists, but the method is not allowed:
+      return Promise.resolve(
+        new Response("Method Not Allowed", {
+          status: 405,
+          headers: { allow: descriptor.methods.join(", ") },
+        }),
+      );
+    }
 
     let upstreamUrl: URL;
     let init: RequestInit & { duplex?: "half" };
