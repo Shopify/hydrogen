@@ -238,6 +238,10 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
 
     document.addEventListener(CONSENT_TRACKING_API_LOADED_EVENT, replayInitialConsent);
     document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, replayConsentEvent);
+
+    // Catch up if consent became ready before this listener attached.
+    if (window.Shopify?.customerPrivacy?.consentStatus === "loaded") replayInitialConsent();
+
     cleanupConsentReplay = () => {
       document.removeEventListener(CONSENT_TRACKING_API_LOADED_EVENT, replayInitialConsent);
       document.removeEventListener(VISITOR_CONSENT_COLLECTED_EVENT, replayConsentEvent);

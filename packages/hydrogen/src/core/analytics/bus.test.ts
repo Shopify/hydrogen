@@ -493,6 +493,39 @@ describe("setupStorefrontAnalytics", () => {
       expect(destination).not.toHaveBeenCalled();
     });
 
+    it("catches up on initial readiness that fired before the bus attached", async () => {
+      // Consent is already loaded and the readiness event has passed, so the bus
+      // must reconcile the default-banner gate on setup instead of missing it.
+      (window as any).Shopify = {
+        customerPrivacy: {
+          consentStatus: "loaded",
+          analyticsProcessingAllowed: () => true,
+          shouldShowGDPRBanner: () => true,
+        },
+      };
+
+      const bus = createTestBus({ consent: { ...CONSENT_DATA, mode: "default-banner" } });
+      const destination = vi.fn();
+
+      bus.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", destination);
+        },
+      });
+      bus.publish("page_viewed", { url: "/missed-readiness", shop: SHOP_DATA });
+
+      // Without the catch-up the pre-interaction gate would stay open and leak this event.
+      expect(destination).not.toHaveBeenCalled();
+
+      document.dispatchEvent(new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT));
+
+      expect(destination).toHaveBeenCalledOnce();
+      expect(destination).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/missed-readiness" }),
+      );
+    });
+
     it("waits for interaction when privacy-banner is present without explicit mode", async () => {
       (window as any).Shopify = {
         customerPrivacy: {
