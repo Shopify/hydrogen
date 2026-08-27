@@ -8,7 +8,7 @@ import { createProxyInterceptor } from "./proxy";
  */
 export const handleWellKnownProxy = createProxyInterceptor({
   match: WELL_KNOWN_RE,
-  headers: { deny: PROXY_REQUEST_HEADER_DENYLIST },
+  requestHeaders: { deny: PROXY_REQUEST_HEADER_DENYLIST },
   redirect: "follow",
   scope: "well-known-proxy",
 });
