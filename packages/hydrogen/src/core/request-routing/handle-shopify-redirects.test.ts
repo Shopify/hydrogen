@@ -97,14 +97,16 @@ describe("handleShopifyRedirects", () => {
       ),
     );
 
-    const request = new Request("https://my-app.com/old-page");
+    const request = new Request("https://my-app.com/old-page", {
+      headers: { "sec-fetch-dest": "document" },
+    });
     const result = await handleShopifyRedirects(redirectOptions(request));
 
     assert(result, "expected URL redirect response");
     expect(result.status).toBe(301);
     expect(result.headers.get("location")).toBe("/new-page");
-    expect(result.headers.get("server-timing")).toBe("shopify;dur=10");
-    expect(result.headers.getSetCookie()).toEqual(["tracking=1; Path=/; Secure"]);
+    expect(result.headers.get("server-timing")).toBeNull();
+    expect(result.headers.getSetCookie()).toEqual([]);
   });
 
   it("returns URL redirect using a tokenless public client", async () => {

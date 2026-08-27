@@ -146,6 +146,20 @@ describe("handleShopifyApiProxy", () => {
     expect(headers.get("x-custom-header")).toBe("custom-value");
   });
 
+  it("consumes upstream state from SFR responses", async () => {
+    const headers = new Headers({ "server-timing": '_y;desc="unique"' });
+    headers.append("set-cookie", "future_cookie=value; Path=/; Secure");
+    mockFetch.mockResolvedValueOnce(new Response("ok", { headers }));
+
+    const result = await handleShopifyApiProxy(
+      new Request("https://my-app.com/__shopify/events", { method: "POST" }),
+    );
+
+    assert(result, "expected proxy to return a response");
+    expect(result.headers.getSetCookie()).toEqual([]);
+    expect(result.headers.get("server-timing")).toBeNull();
+  });
+
   it.each([
     "cf-connecting-ip",
     "connection",
