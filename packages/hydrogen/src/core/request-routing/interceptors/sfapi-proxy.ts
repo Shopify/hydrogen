@@ -8,7 +8,7 @@ import { createProxyInterceptor } from "./proxy";
 
 export const handleSfapiProxy = createProxyInterceptor({
   match: SFAPI_RE,
-  headers: {
+  requestHeaders: {
     allow: SFAPI_REQUEST_HEADER_ALLOWLIST,
     prepare: (headers, { requestContext, storefrontClient }) => {
       headers.delete(STOREFRONT_ID_HEADER);
