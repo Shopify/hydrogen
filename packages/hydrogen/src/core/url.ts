@@ -31,6 +31,7 @@ export function isHydrogenServerHandoffPath(pathname: string): boolean {
 
 export const AGENT_BUYER_CLAIMS_RE =
   /^(?:\/[a-z]{2}(?:-[a-z]{2})?)?\/agent\/(?:handoff|buyer-claims)(?:\.[^/.]+)?\/?$/i;
+export const UCP_RE = /^\/\.well-known\/ucp$/;
 export const WELL_KNOWN_RE = /^\/\.well-known\/(?:apple-developer-merchantid-domain-association)$/;
 export const AJAX_CART_RE =
   /^(?:\/[a-z]{2}(?:-[a-z]{2})?)?\/cart(?:\.(?:js|json)|\/(?:add|update|change|clear)(?:\.(?:js|json))?)$/i;

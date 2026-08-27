@@ -189,6 +189,38 @@ describe("handleShopifyRoutes", () => {
     expect(result).toBeInstanceOf(Response);
   });
 
+  it("returns the UCP business profile from the Online Store origin", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response('{"ucp":{"version":"2026-01-11"}}', {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+          "set-cookie": "shopper=secret",
+        },
+      }),
+    );
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/.well-known/ucp", {
+        headers: { accept: "text/html", cookie: "shopper=secret" },
+      }),
+    });
+
+    assert(result, "expected UCP response");
+    const ucpCall = mockFetch.mock.calls[0];
+    assert(ucpCall, "expected fetch to be called");
+    const [ucpUrl, ucpInit] = ucpCall;
+    expect(ucpUrl.href).toBe("https://test-store.myshopify.com/.well-known/ucp");
+    expect(ucpInit.redirect).toBe("manual");
+    expect([...new Headers(ucpInit.headers)]).toEqual([["accept", "application/json"]]);
+    expect(result.headers.get("cache-control")).toBe(
+      "public, max-age=60, s-maxage=60, stale-while-revalidate=300, stale-if-error=86400",
+    );
+    expect(result.headers.get("set-cookie")).toBeNull();
+    expect(result.headers.get("server-timing")).toBeNull();
+    expect(result.headers.get("powered-by")).toBe("Shopify, Hydrogen");
+  });
+
   it("returns the Apple Pay domain association from the Online Store origin", async () => {
     mockFetch.mockResolvedValueOnce(
       new Response("association-file", {
