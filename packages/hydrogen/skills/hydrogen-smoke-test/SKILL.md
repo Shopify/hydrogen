@@ -58,6 +58,7 @@ Cart:
 
 Collection and search:
 - [ ] Collection filters and sort update the URL and product grid
+- [ ] Checkbox filters and price min/max controls both render, apply, and persist after reload
 - [ ] Reloading a filtered URL server-renders the same filter/sort state
 - [ ] Active filter chips remove one filter and preserve unrelated params
 - [ ] Search filters preserve q
@@ -178,6 +179,7 @@ Expected: a redirect whose `location` header points at Shopify's hosted login, n
 ## Collection And Search
 
 - Collection filters and sort update the URL and product grid.
+- Checkbox filters and price min/max controls both render, apply, and persist after reload.
 - Reloading a filtered URL server-renders the same filter/sort state.
 - Active filter chips remove one filter and preserve unrelated params.
 - Search filters preserve `q`.

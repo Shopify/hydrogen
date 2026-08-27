@@ -145,13 +145,69 @@ function requestFormSubmit(event: React.ChangeEvent<HTMLInputElement | HTMLSelec
 
 Pass `method="get"` and an explicit `action={collectionPath}` (the current `/collections/:handle` or `/search` route URL) literally — `formProps()` only wires the submit handler (see the SKILL.md UI rule).
 
-Use uncontrolled form controls. When a route needs to remount checkboxes after external navigation, put `key={serializeCollectionParams({ filters: state.filters, sortKey: undefined, reverse: false }).toString()}` on the filter subtree (for search, include the term in the key) — keyed by serialized **filter state**, not the live URL. The URL clears before the `CollectionProvider` reconciler settles `state.filters`, so a URL-keyed remount bakes in stale `defaultChecked`. This resets checkbox DOM state without coupling active filter chips to the form remount.
+Use uncontrolled form controls. When a route needs to remount them after external navigation, put `key={serializeCollectionParams({ filters: state.filters, sortKey: undefined, reverse: false }).toString()}` on the filter subtree (for search, include the term in the key) — keyed by serialized **filter state**, not the live URL. The URL clears before the `CollectionProvider` reconciler settles `state.filters`, so a URL-keyed remount bakes in stale defaults. This resets checkbox and price-input DOM state without coupling active filter chips to the form remount.
 
 ## Filters
 
-For each Storefront `FilterValue`, treat `value.input` as the canonical JSON-encoded `ProductFilter`. Convert it to checkbox params by parsing the JSON, wrapping it in the minimal collection state shape, and calling `serializeCollectionParams(...)`. Use Hydrogen helpers for active checks:
+Choose the control at the filter-group level. `PRICE_RANGE` uses min/max number inputs; `LIST` and `BOOLEAN` use checkboxes. Do not use the number of serialized entries to choose the control—a price value serializes to both `gte` and `lte`.
 
 ```tsx
+function FilterGroup({
+  activeFilters,
+  filter,
+}: {
+  activeFilters: ProductFilter[];
+  filter: AvailableFilter;
+}) {
+  if (filter.type === "PRICE_RANGE") {
+    return <PriceRangeInput activeFilters={activeFilters} />;
+  }
+
+  return filter.values.map((value) => (
+    <CheckboxFilterValue
+      key={value.id}
+      activeFilters={activeFilters}
+      filter={filter}
+      value={value}
+    />
+  ));
+}
+
+function PriceRangeInput({ activeFilters }: { activeFilters: ProductFilter[] }) {
+  const price = activeFilters.find((filter) => filter.price)?.price;
+  return (
+    <>
+      <PriceInput name="filter.v.price.gte" defaultValue={price?.min} label="Minimum price" />
+      <PriceInput name="filter.v.price.lte" defaultValue={price?.max} label="Maximum price" />
+    </>
+  );
+}
+
+function PriceInput({ name, defaultValue, label }: { name: string; defaultValue?: number; label: string }) {
+  const initialValue = defaultValue == null ? "" : String(defaultValue);
+  return (
+    <input
+      type="number"
+      name={name}
+      defaultValue={defaultValue}
+      aria-label={label}
+      min="0"
+      step="any"
+      onBlur={(event) => {
+        if (event.currentTarget.value !== initialValue) {
+          event.currentTarget.form?.requestSubmit();
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          event.currentTarget.blur();
+        }
+      }}
+    />
+  );
+}
+
 function filterValueInputParamEntries(input: string): Array<{ name: string; value: string }> {
   let filter: ProductFilter;
   try {
@@ -166,7 +222,15 @@ function filterValueInputParamEntries(input: string): Array<{ name: string; valu
   );
 }
 
-function FilterValueInput({ activeFilters, filter, value }: Props) {
+function CheckboxFilterValue({
+  activeFilters,
+  filter,
+  value,
+}: {
+  activeFilters: ProductFilter[];
+  filter: AvailableFilter;
+  value: AvailableFilter["values"][number];
+}) {
   const entries = filterValueInputParamEntries(value.input);
   if (entries.length !== 1) return null;
 
@@ -189,7 +253,7 @@ function FilterValueInput({ activeFilters, filter, value }: Props) {
 }
 ```
 
-`filterValueInputParamEntries` is app glue code, not a Hydrogen export. Its body should stay this thin: `JSON.parse(value.input)` plus `serializeCollectionParams(...)`. Do not replace it with a custom mapping table for availability, product type, vendor, tags, options, metafields, or price. The app should not create its own `ProductFilter` from `filter.id`, `filter.label`, `filter.type`, `value.id`, or display labels; those are UI metadata, not the Storefront API filter contract.
+Use `filter.type` only to choose the control shape. For checkbox values, keep `filterValueInputParamEntries` as thin app glue: `JSON.parse(value.input)` plus `serializeCollectionParams(...)`. Do not derive checkbox params from IDs, labels, or filter types.
 
 For active chips, use parsed active `ProductFilter` values from collection state:
 

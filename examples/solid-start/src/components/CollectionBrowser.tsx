@@ -64,6 +64,12 @@ function visibleValues(filter: AvailableFilter) {
   return filter.values.filter((value) => value.count > 0);
 }
 
+function visibleFilters(filters: AvailableFilter[]) {
+  return filters.filter(
+    (filter) => filter.type === "PRICE_RANGE" || visibleValues(filter).length > 0,
+  );
+}
+
 export function CollectionBrowser(props: {
   title: string;
   description: string | null;
@@ -149,6 +155,10 @@ export function CollectionBrowser(props: {
     checkbox.form?.requestSubmit();
   }
 
+  function activePriceValue(bound: "min" | "max") {
+    return state().filters.find((filter) => filter.price)?.price?.[bound] ?? "";
+  }
+
   function isMutuallyExclusive(filter: AvailableFilter): boolean {
     return (
       filter.type === "BOOLEAN" ||
@@ -205,48 +215,97 @@ export function CollectionBrowser(props: {
           <aside class="hidden w-60 shrink-0 md:block">
             <h2 class="text-sm font-semibold tracking-wider text-black/50 uppercase">Filters</h2>
             <div class="mt-6 space-y-8">
-              <For each={props.availableFilters}>
+              <For each={visibleFilters(props.availableFilters)}>
                 {(filter) => (
-                  <Show when={visibleValues(filter).length > 0}>
-                    <fieldset disabled={isLoading()} class={isLoading() ? "opacity-60" : undefined}>
-                      <legend class="text-sm font-semibold">{filter.label}</legend>
-                      <div class="mt-3 space-y-2">
-                        <For each={visibleValues(filter)}>
-                          {(value) => {
-                            const entry = filterInputToParamEntries(value.input)[0];
-                            return (
-                              <Show when={entry}>
-                                {(filterEntry) => (
-                                  <label class="flex cursor-pointer items-center gap-2 text-sm">
-                                    <input
-                                      type="checkbox"
-                                      name={filterEntry().name}
-                                      value={filterEntry().value}
-                                      checked={isFilterInputActive(state().filters, value.input)}
-                                      class="h-4 w-4 rounded border-black/20 disabled:cursor-not-allowed"
-                                      onChange={(event) => onFilterChange(event, filter)}
-                                    />
-                                    <span
-                                      class={
-                                        isFilterInputActive(state().filters, value.input)
-                                          ? "font-medium"
-                                          : ""
-                                      }
-                                    >
-                                      {value.label}
-                                    </span>
-                                    <span class="ml-auto text-xs text-black/40">
-                                      ({value.count})
-                                    </span>
-                                  </label>
-                                )}
-                              </Show>
-                            );
+                  <fieldset disabled={isLoading()} class={isLoading() ? "opacity-60" : undefined}>
+                    <legend class="text-sm font-semibold">{filter.label}</legend>
+                    <Show
+                      when={filter.type === "PRICE_RANGE"}
+                      fallback={
+                        <div class="mt-3 space-y-2">
+                          <For each={visibleValues(filter)}>
+                            {(value) => {
+                              const entry = filterInputToParamEntries(value.input)[0];
+                              return (
+                                <Show when={entry}>
+                                  {(filterEntry) => (
+                                    <label class="flex cursor-pointer items-center gap-2 text-sm">
+                                      <input
+                                        type="checkbox"
+                                        name={filterEntry().name}
+                                        value={filterEntry().value}
+                                        checked={isFilterInputActive(state().filters, value.input)}
+                                        class="h-4 w-4 rounded border-black/20 disabled:cursor-not-allowed"
+                                        onChange={(event) => onFilterChange(event, filter)}
+                                      />
+                                      <span
+                                        class={
+                                          isFilterInputActive(state().filters, value.input)
+                                            ? "font-medium"
+                                            : ""
+                                        }
+                                      >
+                                        {value.label}
+                                      </span>
+                                      <span class="ml-auto text-xs text-black/40">
+                                        ({value.count})
+                                      </span>
+                                    </label>
+                                  )}
+                                </Show>
+                              );
+                            }}
+                          </For>
+                        </div>
+                      }
+                    >
+                      <div class="mt-3 flex items-center gap-2">
+                        <input
+                          type="number"
+                          name="filter.v.price.gte"
+                          min="0"
+                          step="any"
+                          placeholder="Min"
+                          aria-label="Minimum price"
+                          value={activePriceValue("min")}
+                          class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
+                          onBlur={(event) => {
+                            if (event.currentTarget.value !== String(activePriceValue("min"))) {
+                              event.currentTarget.form?.requestSubmit();
+                            }
                           }}
-                        </For>
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                              event.preventDefault();
+                              event.currentTarget.blur();
+                            }
+                          }}
+                        />
+                        <span class="text-sm text-black/40">to</span>
+                        <input
+                          type="number"
+                          name="filter.v.price.lte"
+                          min="0"
+                          step="any"
+                          placeholder="Max"
+                          aria-label="Maximum price"
+                          value={activePriceValue("max")}
+                          class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
+                          onBlur={(event) => {
+                            if (event.currentTarget.value !== String(activePriceValue("max"))) {
+                              event.currentTarget.form?.requestSubmit();
+                            }
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                              event.preventDefault();
+                              event.currentTarget.blur();
+                            }
+                          }}
+                        />
                       </div>
-                    </fieldset>
-                  </Show>
+                    </Show>
+                  </fieldset>
                 )}
               </For>
             </div>

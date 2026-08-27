@@ -116,6 +116,21 @@
 		checkbox.form?.requestSubmit();
 	}
 
+	function activePriceValue(bound: 'min' | 'max') {
+		return $browseState.filters.find((filter) => filter.price)?.price?.[bound] ?? '';
+	}
+
+	function onPriceBlur(event: FocusEvent, bound: 'min' | 'max') {
+		const input = event.target as HTMLInputElement;
+		if (input.value !== String(activePriceValue(bound))) input.form?.requestSubmit();
+	}
+
+	function onPriceKeydown(event: KeyboardEvent) {
+		if (event.key !== 'Enter') return;
+		event.preventDefault();
+		(event.target as HTMLInputElement).blur();
+	}
+
 	function uncheckSiblings(checkbox: HTMLInputElement) {
 		const form = checkbox.form;
 		if (!form) return;
@@ -177,6 +192,12 @@
 	function visibleValues(filter: AvailableFilter) {
 		return filter.values.filter((value) => value.count > 0);
 	}
+
+	function visibleFilters(filters: AvailableFilter[]) {
+		return filters.filter(
+			(filter) => filter.type === 'PRICE_RANGE' || visibleValues(filter).length > 0
+		);
+	}
 </script>
 
 <main class="mx-auto max-w-[1480px] px-6 py-16 md:py-20">
@@ -195,10 +216,38 @@
 			<aside class="hidden w-60 shrink-0 md:block">
 				<h2 class="text-sm font-semibold tracking-wider text-black/50 uppercase">Filters</h2>
 				<div class="mt-6 space-y-8">
-					{#each availableFilters as filter (filter.id)}
-						{#if visibleValues(filter).length > 0}
-							<fieldset disabled={isLoading} class={isLoading ? 'opacity-60' : undefined}>
-								<legend class="text-sm font-semibold">{filter.label}</legend>
+					{#each visibleFilters(availableFilters) as filter (filter.id)}
+						<fieldset disabled={isLoading} class={isLoading ? 'opacity-60' : undefined}>
+							<legend class="text-sm font-semibold">{filter.label}</legend>
+							{#if filter.type === 'PRICE_RANGE'}
+								<div class="mt-3 flex items-center gap-2">
+									<input
+										type="number"
+										name="filter.v.price.gte"
+										min="0"
+										step="any"
+										placeholder="Min"
+										aria-label="Minimum price"
+										value={activePriceValue('min')}
+										class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
+										onblur={(event) => onPriceBlur(event, 'min')}
+										onkeydown={onPriceKeydown}
+									/>
+									<span class="text-sm text-black/40">to</span>
+									<input
+										type="number"
+										name="filter.v.price.lte"
+										min="0"
+										step="any"
+										placeholder="Max"
+										aria-label="Maximum price"
+										value={activePriceValue('max')}
+										class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
+										onblur={(event) => onPriceBlur(event, 'max')}
+										onkeydown={onPriceKeydown}
+									/>
+								</div>
+							{:else if visibleValues(filter).length > 0}
 								<div class="mt-3 space-y-2">
 									{#each visibleValues(filter) as value (value.id)}
 										{@const entry = filterInputToParamEntries(value.input)[0]}
@@ -220,8 +269,8 @@
 										{/if}
 									{/each}
 								</div>
-							</fieldset>
-						{/if}
+							{/if}
+						</fieldset>
 					{/each}
 				</div>
 				<noscript>
