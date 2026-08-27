@@ -207,13 +207,12 @@ describe("handleShopifyRoutes", () => {
     });
 
     assert(result, "expected UCP response");
-    expect(mockFetch).toHaveBeenCalledWith(
-      new URL("https://test-store.myshopify.com/.well-known/ucp"),
-      expect.objectContaining({
-        headers: { accept: "application/json" },
-        redirect: "manual",
-      }),
-    );
+    const ucpCall = mockFetch.mock.calls[0];
+    assert(ucpCall, "expected fetch to be called");
+    const [ucpUrl, ucpInit] = ucpCall;
+    expect(ucpUrl.href).toBe("https://test-store.myshopify.com/.well-known/ucp");
+    expect(ucpInit.redirect).toBe("manual");
+    expect([...new Headers(ucpInit.headers)]).toEqual([["accept", "application/json"]]);
     expect(result.headers.get("cache-control")).toBe(
       "public, max-age=60, s-maxage=60, stale-while-revalidate=300, stale-if-error=86400",
     );
