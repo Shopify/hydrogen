@@ -4,7 +4,8 @@ description: >
   Guide for wiring Hydrogen request handlers in server frameworks. Use when
   adding, modifying, or reviewing handleShopifyRoutes, handleShopifyRedirects,
   SFAPI proxy routes, cart, predictive search, and Customer Account server handlers,
-  checkout redirects, cart permalinks, AJAX cart proxy routes, /admin redirects, Storefront URL redirects,
+  UCP business profiles, checkout redirects, cart permalinks, AJAX cart proxy routes,
+  /admin redirects, Storefront URL redirects,
   requestContext response-header propagation, or framework middleware,
   not-found, and catch-all integration.
 ---
@@ -27,7 +28,13 @@ Request
   -> framework 404 page
 ```
 
-`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/agent/*`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product URLs, and app-registered handler groups such as `createCartServerHandlers()` or `createCustomerAccountServerHandlers()`.
+`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, `/.well-known/ucp`, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/agent/*`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product URLs, and app-registered handler groups such as `createCartServerHandlers()` or `createCustomerAccountServerHandlers()`.
+
+## UCP Business Profile
+
+`GET /.well-known/ucp` serves Shopify's managed UCP business profile from the headless storefront origin. Hydrogen fetches the profile without shopper cookies or authorization, preserves Shopify's status and validation headers, and applies edge-first caching only to successful responses. Upstream errors and unpublished profiles are returned with `Cache-Control: no-store`.
+
+Serve the storefront over HTTPS and wire `handleShopifyRoutes` before framework routing so the profile is available without an app-owned route. Return the matched response directly without adding session headers or applying request-context headers again.
 
 ## Variant Id Redirects
 
@@ -96,12 +103,13 @@ import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-
 
 Run the app in dev and production modes, then check:
 
-1. `POST /api/{api-version}/graphql.json` returns Storefront API JSON, not the app 404.
-2. `GET /api/cart` returns cart handler JSON when cart handlers are registered. With no cart id, the body is `{cart: null}` and no Storefront API cart lookup is made.
-3. `GET /api/predictive-search?q=snow` returns predictive search JSON when predictive search handlers are registered.
-4. `GET /account/login`, `GET /account/authorize`, `GET /account/refresh`, and `POST /account/logout` are handled before the app router when Customer Account handlers are registered.
-5. `GET /admin` returns a redirect to the shop admin URL.
-6. An unknown path returns the framework 404 when no Shopify redirect exists.
-7. `GET /products/{handle}?variant={numeric id}` returns a 302 to the option-params URL when `routeTemplates` is passed to `handleShopifyRoutes`; `?variant=garbage` falls through to the product page.
-8. Cart, predictive search, Customer Account, and SFAPI responses preserve `Set-Cookie` and `Server-Timing` headers where the framework exposes them.
-9. Authenticated Customer Account responses do not preserve public or CDN cache-control headers.
+1. `GET /.well-known/ucp` returns Shopify's UCP business profile with a public cache policy and no shopper cookies.
+2. `POST /api/{api-version}/graphql.json` returns Storefront API JSON, not the app 404.
+3. `GET /api/cart` returns cart handler JSON when cart handlers are registered. With no cart id, the body is `{cart: null}` and no Storefront API cart lookup is made.
+4. `GET /api/predictive-search?q=snow` returns predictive search JSON when predictive search handlers are registered.
+5. `GET /account/login`, `GET /account/authorize`, `GET /account/refresh`, and `POST /account/logout` are handled before the app router when Customer Account handlers are registered.
+6. `GET /admin` returns a redirect to the shop admin URL.
+7. An unknown path returns the framework 404 when no Shopify redirect exists.
+8. `GET /products/{handle}?variant={numeric id}` returns a 302 to the option-params URL when `routeTemplates` is passed to `handleShopifyRoutes`; `?variant=garbage` falls through to the product page.
+9. Cart, predictive search, Customer Account, and SFAPI responses preserve `Set-Cookie` and `Server-Timing` headers where the framework exposes them.
+10. Authenticated Customer Account responses do not preserve public or CDN cache-control headers.
