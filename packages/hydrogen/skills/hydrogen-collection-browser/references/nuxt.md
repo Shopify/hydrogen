@@ -95,7 +95,7 @@ const isLoading = computed(() => state.value.status === "loading");
 </template>
 ```
 
-Apply form helper props with `v-bind`. Use `@change="event.target.form?.requestSubmit()"` for filters and sort controls.
+Apply form helper props with `v-bind`. Branch on `filter.type`: render min/max number inputs for `PRICE_RANGE`, and value checkboxes for `LIST` and `BOOLEAN`. Submit price inputs on blur only when the value changed; let Enter blur the input.
 
 ## Search Pages
 

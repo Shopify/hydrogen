@@ -51,6 +51,21 @@ function onFilterChange(event: Event, filter: AvailableFilter) {
   checkbox.form?.requestSubmit();
 }
 
+function activePriceValue(bound: "min" | "max") {
+  return state.value.filters.find((filter) => filter.price)?.price?.[bound] ?? "";
+}
+
+function onPriceBlur(event: FocusEvent, bound: "min" | "max") {
+  const input = event.target as HTMLInputElement;
+  if (input.value !== String(activePriceValue(bound))) input.form?.requestSubmit();
+}
+
+function onPriceKeydown(event: KeyboardEvent) {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  (event.target as HTMLInputElement).blur();
+}
+
 function uncheckSiblings(checkbox: HTMLInputElement) {
   const form = checkbox.form;
   if (!form) return;
@@ -112,6 +127,12 @@ function filterRemovalHref(filter: ProductFilter): string {
 function visibleValues(filter: AvailableFilter) {
   return filter.values.filter((v) => v.count > 0);
 }
+
+function visibleFilters(filters: AvailableFilter[]) {
+  return filters.filter(
+    (filter) => filter.type === "PRICE_RANGE" || visibleValues(filter).length > 0,
+  );
+}
 </script>
 
 <template>
@@ -162,36 +183,59 @@ function visibleValues(filter: AvailableFilter) {
         <h2 class="text-sm font-semibold tracking-wider text-black/50 uppercase">Filters</h2>
         <div class="mt-6 space-y-8">
           <fieldset
-            v-for="filter in availableFilters"
+            v-for="filter in visibleFilters(availableFilters)"
             :key="filter.id"
             :disabled="isLoading"
             :class="isLoading ? 'opacity-60' : undefined"
           >
-            <template v-if="visibleValues(filter).length > 0">
-              <legend class="text-sm font-semibold">{{ filter.label }}</legend>
-              <div class="mt-3 space-y-2">
-                <label
-                  v-for="value in visibleValues(filter)"
-                  :key="value.id"
-                  class="flex cursor-pointer items-center gap-2 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    :name="filterInputToParamEntries(value.input)[0]?.name"
-                    :value="filterInputToParamEntries(value.input)[0]?.value"
-                    :checked="isFilterInputActive(state.filters, value.input)"
-                    class="h-4 w-4 rounded border-black/20 disabled:cursor-not-allowed"
-                    @change="onFilterChange($event, filter)"
-                  />
-                  <span
-                    :class="isFilterInputActive(state.filters, value.input) ? 'font-medium' : ''"
-                  >
-                    {{ value.label }}
-                  </span>
-                  <span class="ml-auto text-xs text-black/40">({{ value.count }})</span>
-                </label>
-              </div>
-            </template>
+            <legend class="text-sm font-semibold">{{ filter.label }}</legend>
+            <div v-if="filter.type === 'PRICE_RANGE'" class="mt-3 flex items-center gap-2">
+              <input
+                type="number"
+                name="filter.v.price.gte"
+                min="0"
+                step="any"
+                placeholder="Min"
+                aria-label="Minimum price"
+                :value="activePriceValue('min')"
+                class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
+                @blur="onPriceBlur($event, 'min')"
+                @keydown="onPriceKeydown"
+              />
+              <span class="text-sm text-black/40">to</span>
+              <input
+                type="number"
+                name="filter.v.price.lte"
+                min="0"
+                step="any"
+                placeholder="Max"
+                aria-label="Maximum price"
+                :value="activePriceValue('max')"
+                class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
+                @blur="onPriceBlur($event, 'max')"
+                @keydown="onPriceKeydown"
+              />
+            </div>
+            <div v-else-if="visibleValues(filter).length > 0" class="mt-3 space-y-2">
+              <label
+                v-for="value in visibleValues(filter)"
+                :key="value.id"
+                class="flex cursor-pointer items-center gap-2 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  :name="filterInputToParamEntries(value.input)[0]?.name"
+                  :value="filterInputToParamEntries(value.input)[0]?.value"
+                  :checked="isFilterInputActive(state.filters, value.input)"
+                  class="h-4 w-4 rounded border-black/20 disabled:cursor-not-allowed"
+                  @change="onFilterChange($event, filter)"
+                />
+                <span :class="isFilterInputActive(state.filters, value.input) ? 'font-medium' : ''">
+                  {{ value.label }}
+                </span>
+                <span class="ml-auto text-xs text-black/40">({{ value.count }})</span>
+              </label>
+            </div>
           </fieldset>
         </div>
         <noscript>
