@@ -70,6 +70,7 @@ export default {
         requestContext: shopifyRequestContext,
         sessionManager: customerSessionManager,
         storefrontClient,
+        routeTemplates,
         handlers: [cartHandlers, predictiveSearchHandlers, customerAccountHandlers],
       });
       if (shopifyRoute) return await shopifyRoute;

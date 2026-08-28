@@ -9,21 +9,19 @@ description: >
 
 Customer Account login, logout, and OAuth callbacks require an HTTPS, non-`localhost` origin that exactly matches the URLs registered in Shopify admin. `local.tryhydrogen.dev` is a Shopify-owned domain that resolves publicly to `127.0.0.1`, so it provides a stable local hostname.
 
-## Vite Certificate Setup
+## Certificates
 
-Vite-based frameworks need manual certificates until automatic provisioning is available. Install and trust [mkcert](https://github.com/FiloSottile/mkcert), then create the default certificate files:
+The `localHttps` Vite plugin provisions missing certificates automatically when `vite dev` starts: it downloads a pinned, checksum-verified [mkcert](https://github.com/FiloSottile/mkcert) release, installs the local certificate authority (this may prompt for your password), and generates the certificate files under `~/.shopify/hydrogen/certs/`. To provision ahead of time — or for frameworks that read certificate paths before Vite starts (Nuxt, SolidStart) — run:
 
 ```sh
-brew install mkcert
-mkcert -install
-mkdir -p ~/.shopify/hydrogen/certs
-mkcert \
-  -cert-file ~/.shopify/hydrogen/certs/local.tryhydrogen.dev.pem \
-  -key-file ~/.shopify/hydrogen/certs/local.tryhydrogen.dev-key.pem \
-  local.tryhydrogen.dev
+npx hydrogen certs install
 ```
 
-Pass `certPath` and `keyPath` to use another location. Certificate generation is intentionally separate from the plugin.
+Remove Hydrogen's generated certificate files and cached mkcert binary with `npx hydrogen certs uninstall`. This leaves mkcert's shared local certificate authority trusted because other projects may use it. Pass `--remove-ca` to remove that shared CA from the system trust stores too.
+
+Pass `certPath` and `keyPath` to use another location. When automatic download is unavailable for a platform, install mkcert manually and generate the files at the paths the warning prints.
+
+The plugin skips automatic provisioning when the `CI` environment variable is set, because installing the certificate authority needs an interactive trust prompt. Run `npx hydrogen certs install` explicitly when a CI job genuinely needs local HTTPS.
 
 ## Vite
 
@@ -32,7 +30,7 @@ import { localHttps } from "@shopify/hydrogen/vite";
 import { defineConfig } from "vite";
 
 const httpsOptions = {
-  enabled: process.env.npm_lifecycle_event === "https:dev" || process.env.VITE_LOCAL_HTTPS === "1",
+  enabled: process.env.npm_lifecycle_event === "dev:https" || process.env.VITE_LOCAL_HTTPS === "1",
 };
 
 export default defineConfig({
@@ -40,13 +38,13 @@ export default defineConfig({
 });
 ```
 
-Start Vite through an `https:dev` package script. A normal `vite dev` remains plain HTTP.
+Start Vite through a `dev:https` package script. A normal `vite dev` remains plain HTTP.
 
 ```json
 {
   "scripts": {
     "dev": "vite dev",
-    "https:dev": "vite dev"
+    "dev:https": "vite dev"
   }
 }
 ```
@@ -59,7 +57,7 @@ Astro needs its own host and port in addition to the Vite plugin:
 import { LOCAL_HTTPS_DEFAULTS, localHttps } from "@shopify/hydrogen/vite";
 import { defineConfig } from "astro/config";
 
-const enabled = process.env.npm_lifecycle_event === "https:dev" || process.env.VITE_LOCAL_HTTPS === "1";
+const enabled = process.env.npm_lifecycle_event === "dev:https" || process.env.VITE_LOCAL_HTTPS === "1";
 const httpsOptions = { enabled };
 
 export default defineConfig({
@@ -72,7 +70,7 @@ export default defineConfig({
 
 ## Nuxt
 
-Nitro terminates TLS, so provide certificate paths to both Nitro and Vite:
+Nitro terminates TLS, so provide certificate paths to both Nitro and Vite. Nitro reads the paths when the config is evaluated, so provision certificates with `npx hydrogen certs install` (or restart once after the plugin provisions them):
 
 ```ts
 import { localHttps } from "@shopify/hydrogen/vite";
@@ -81,7 +79,7 @@ import type { NuxtConfig } from "nuxt/schema";
 type VitePlugin = NonNullable<NonNullable<NuxtConfig["vite"]>["plugins"]>[number];
 
 const httpsOptions = {
-  enabled: process.env.npm_lifecycle_event === "https:dev" || process.env.VITE_LOCAL_HTTPS === "1",
+  enabled: process.env.npm_lifecycle_event === "dev:https" || process.env.VITE_LOCAL_HTTPS === "1",
 };
 const httpsPlugin = localHttps(httpsOptions);
 
@@ -95,14 +93,14 @@ export default defineNuxtConfig({
 
 ## SolidStart/Vinxi
 
-Vinxi terminates TLS outside Vite:
+Vinxi terminates TLS outside Vite and reads certificate paths when the config is evaluated, so provision certificates with `npx hydrogen certs install` (or restart once after the plugin provisions them):
 
 ```ts
 import { defineConfig } from "@solidjs/start/config";
 import { localHttps } from "@shopify/hydrogen/vite";
 
 const httpsOptions = {
-  enabled: process.env.npm_lifecycle_event === "https:dev" || process.env.VITE_LOCAL_HTTPS === "1",
+  enabled: process.env.npm_lifecycle_event === "dev:https" || process.env.VITE_LOCAL_HTTPS === "1",
 };
 const httpsPlugin = localHttps(httpsOptions);
 const devServer = httpsPlugin.api.getDevServerConfig();
@@ -118,7 +116,7 @@ Vinxi also needs its bind target and port on startup:
 ```json
 {
   "scripts": {
-    "https:dev": "vinxi dev --host local.tryhydrogen.dev --port 5173"
+    "dev:https": "vinxi dev --host local.tryhydrogen.dev --port 5173"
   }
 }
 ```

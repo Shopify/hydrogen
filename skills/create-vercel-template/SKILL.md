@@ -28,7 +28,7 @@ Next.js on Vercel runs on the Node/serverless runtime, so `process.env` works an
    - no `@shared/*` imports
    - no `examples/shared/*` runtime dependency
    - no `localCdnAssets` (drop the turbopack rule from `next.config.ts`)
-   - keep the Next.js `https:dev` script for local Customer Account OAuth
+   - keep the Next.js `dev:https` script for local Customer Account OAuth
    - no `catalog:` dependency ranges in the final template package
    - use `@shopify/hydrogen: workspace:*` in this repository so template E2E exercises the package under development
      (see "Hydrogen dependency" below). Do not use repo-local `file:` dependencies or vendored package tarballs.
@@ -68,9 +68,9 @@ must expose the template's required APIs, subpaths, TypeScript plugin, and schem
 - Keep `next`, `react`, `react-dom`, `@shopify/hydrogen` (`workspace:*`), `tailwindcss` /
   `@tailwindcss/postcss`, `eslint`, `eslint-config-next`.
 - Keep `"packageManager": "pnpm@10.33.0"` so the eventual standalone distribution uses the intended manager.
-- Do not add `@vercel/functions` unless the app reintroduces an explicit Storefront cache adapter; the current Next template uses Next Cache Components (`"use cache"`, `cacheLife`, `cacheTag`).
+- Keep `@vercel/functions` for the Storefront client's Vercel Runtime Cache adapter in `proxy.ts`.
 - Replace `typescript: catalog:` with a real npm range (e.g. `^5.9.3`).
-- Keep the `https:dev` script alongside `dev`, `build`, `start`, `lint`, and `typecheck`.
+- Keep the `dev:https` script alongside `dev`, `build`, `start`, `lint`, and `typecheck`.
 - Deploy uses the Vercel CLI, not a build dependency: document `npx vercel` / `npx vercel --prod` (optionally add a
   `"deploy": "vercel --prod"` script and tell the user to have the Vercel CLI available).
 
@@ -188,7 +188,7 @@ Additionally, keep `lib/route-templates.ts` unchanged — it is not `@shared/*`.
 
 ## Caching
 
-Do not ship an in-memory LRU cache. The current template uses Next-native cache points: `"use cache"`, `cacheLife`, and `cacheTag`. Under `cacheComponents: true`, `app/layout.tsx` is a static shell wrapping the per-request `AppShell` (cart seed + chrome) in `<Suspense>`; `AppShell` calls `connection()` for dynamic request data. Route-segment configs like `export const dynamic`/`fetchCache`/`revalidate` are NOT used because Cache Components rejects them.
+Do not ship an in-memory LRU cache. Page data uses Next-native cache points: `"use cache"`, `cacheLife`, and `cacheTag`. The Storefront client created in `proxy.ts` uses Vercel Runtime Cache from `getCache()` for Hydrogen-owned subrequests and passes `NextFetchEvent.waitUntil` for background writes. Under `cacheComponents: true`, `app/layout.tsx` is a static shell wrapping the per-request `AppShell` (cart seed + chrome) in `<Suspense>`; `AppShell` calls `connection()` for dynamic request data. Route-segment configs like `export const dynamic`/`fetchCache`/`revalidate` are NOT used because Cache Components rejects them.
 
 Verify the app still renders live data after the swap (see "Validation").
 

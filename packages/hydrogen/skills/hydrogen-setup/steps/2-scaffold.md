@@ -10,7 +10,7 @@ Preserve the app's existing route shape when present. When there is no establish
 - `/products/{handle}` for product detail. Use plural `products`, not `/product`.
 - `/cart` for the full cart page.
 
-Hydrogen-owned handlers are not page routes: `/api/cart`, `/api/{api-version}/graphql.json`, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/agent/*`, `/graphiql` in development, `/admin` redirects, and Storefront URL redirects belong in the `hydrogen-request-handlers` wiring.
+Hydrogen-owned handlers are not page routes: `/api/cart`, `/api/{api-version}/graphql.json`, the generic `/__shopify/*` API proxy, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product redirects, `/admin` redirects, and Storefront URL redirects belong in the `hydrogen-request-handlers` wiring.
 
 Invoke the `hydrogen-routing` skill and create the shared route template manifest for Shopify resources such as products, collections, pages, blogs, or articles.
 

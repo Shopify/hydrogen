@@ -8,7 +8,7 @@ export const rewriteShopifyJsPathname = (pathname: string): string =>
 
 export const handleAjaxApi = createProxyInterceptor({
   match: AJAX_CART_RE,
-  headers: { allow: AJAX_API_REQUEST_HEADER_ALLOWLIST },
+  requestHeaders: { allow: AJAX_API_REQUEST_HEADER_ALLOWLIST },
   rewritePathname: rewriteShopifyJsPathname,
   scope: "ajax-api",
 });

@@ -1,4 +1,9 @@
-import { canAddToCart, createProductFormRegister, createProductFormStore } from "@shopify/hydrogen";
+import {
+  buildProductSelectionSearchParams,
+  canAddToCart,
+  createProductFormRegister,
+  createProductFormStore,
+} from "@shopify/hydrogen";
 import { useLocation, useNavigate } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from "solid-js";
 
@@ -69,9 +74,11 @@ export function ProductPurchasePanel(props: { product: ProductData }) {
   }
 
   function variantSearch(selectedOptions: { name: string; value: string }[]) {
-    const params = new URLSearchParams(location.search);
-    for (const option of props.product.options) params.delete(option.name);
-    for (const option of selectedOptions) params.set(option.name, option.value);
+    const params = buildProductSelectionSearchParams({
+      selectedOptions,
+      optionNames: props.product.options.map((option) => option.name),
+      base: new URLSearchParams(location.search),
+    });
     const search = params.toString();
     return search ? `?${search}` : "";
   }

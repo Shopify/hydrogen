@@ -45,7 +45,7 @@ describe("createProxyInterceptor", () => {
     });
     const handleProxy = createProxyInterceptor({
       match: /^\/proxy$/,
-      headers: { deny: ["cookie"], prepare },
+      requestHeaders: { deny: ["cookie"], prepare },
       scope: "test-proxy",
     });
     const mockFetch = vi.fn().mockResolvedValue(new Response());
@@ -69,7 +69,7 @@ describe("createProxyInterceptor", () => {
     const handleProxy = createProxyInterceptor({
       match: /^\/proxy$/,
       methods: ["POST", "DELETE"],
-      headers: { deny: [] },
+      requestHeaders: { deny: [] },
       scope: "test-proxy",
     });
     const mockFetch = vi.fn();

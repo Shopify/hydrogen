@@ -41,7 +41,8 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 
 - Use the framework binding when a matching reference exists. Otherwise, use the core store directly. Do not hand-roll browse state with component state.
 - The browse form must carry both `method="get"` **and** an explicit `action` (the collection/search route URL, e.g. `action="/collections/shoes"` or the search route) so filters and sort degrade to a real GET submit without JavaScript. `formProps()` only wires the submit handler — it does not set `method` or `action` — so render both literally; the helper cannot infer the route.
-- Use `formProps()` on the browse form: spread it, then add the literal `method="get"` and `action`. On hydrated changes, call `form.requestSubmit()` for **checkboxes and `<select>`**. For **text/number inputs (price min/max)** use `onBlur` + `onKeyDown` Enter instead — `onChange` fires per keystroke and would submit the GET form (and re-query Storefront) on every character.
+- Choose controls at the filter-group level: `PRICE_RANGE` renders min/max number inputs; `LIST` and `BOOLEAN` render value checkboxes. A price value serializes to two params, so never use the number of serialized entries to decide whether to render the group. Use the fixed `filter.v.price.gte` and `filter.v.price.lte` names for range inputs; continue deriving checkbox names and values from `value.input`.
+- Use `formProps()` on the browse form: spread it, then add the literal `method="get"` and `action`. Submit checkboxes and `<select>` controls on change. Submit price inputs on blur only when the value changed, and let Enter blur the input. Never submit on every keystroke.
 - Render a `noscript` submit button for filter sidebars that auto-submit when hydrated.
 - Render "load more" / pagination as a GET link (the framework's link component) carrying the next-page cursor (e.g. `?after=<endCursor>`), so it works without JavaScript. Hydration may upgrade it to append-in-place; the bare link must still load the next page server-side (it replaces the page rather than appending when JS is off).
 - Clear both `before` and `after` whenever filters or sorting change so the new browse state starts from its first page.
@@ -73,6 +74,7 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 ## Verify
 
 - Filtering and sorting update the URL without scroll reset when hydrated.
+- Checkbox filters and `PRICE_RANGE` min/max controls both render, apply, and persist after reloading the URL.
 - Reloading the filtered URL server-renders the same filtered state.
 - With JavaScript disabled, checking filters and submitting the form loads the filtered URL.
 - With JavaScript disabled, the load-more / pagination link loads the next page server-side.

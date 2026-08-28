@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "https:dev": "next dev --experimental-https --hostname local.tryhydrogen.dev --port 5173",
+    "dev:https": "next dev --experimental-https --hostname local.tryhydrogen.dev --port 5173",
     "build": "next build --debug-prerender",
     "start": "next start",
     "lint": "eslint",
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@shopify/hydrogen": "workspace:*",
+    "@vercel/functions": "^3.9.3",
     "isbot": "^5",
     "next": "16.2.9",
     "react": "^19.2.4",

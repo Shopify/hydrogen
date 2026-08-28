@@ -39,6 +39,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     requestContext,
     sessionManager,
     storefrontClient,
+    routeTemplates,
     handlers: [cartHandlers, customerSessionHandlers],
   });
   if (shopifyRoute) return shopifyRoute;

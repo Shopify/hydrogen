@@ -12,7 +12,7 @@ const JSON_RPC_INTERNAL_ERROR = -32603;
 const proxyUcpMcpRequest = createProxyInterceptor({
   match: UCP_MCP_RE,
   methods: ["POST"],
-  headers: { deny: PROXY_REQUEST_HEADER_DENYLIST },
+  requestHeaders: { deny: PROXY_REQUEST_HEADER_DENYLIST },
   formatError: (message) => ({
     jsonrpc: "2.0",
     error: { code: JSON_RPC_INTERNAL_ERROR, message },
@@ -24,8 +24,10 @@ const proxyUcpMcpRequest = createProxyInterceptor({
 export const handleUcpMcpProxy: HydrogenRouteInterceptor = (url, options) => {
   if (!UCP_MCP_RE.test(url.pathname)) return null;
 
-  // TODO: Move this into a `responseHeaders` cache policy after
-  // https://github.com/Shopify/hydrogen/pull/3960 lands.
   options.requestContext.markResponseAsPersonalized("ucp request");
+  // UCP MCP is a sanctioned session-establishing endpoint: let the store's
+  // session cookie return on a cold agent request, staying within the response
+  // state gating rather than bypassing it.
+  options.requestContext.markResponseAsSessionEstablishing("ucp request");
   return proxyUcpMcpRequest(url, options);
 };

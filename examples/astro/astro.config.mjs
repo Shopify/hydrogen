@@ -5,7 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 
 const enabled =
-  process.env.VITE_LOCAL_HTTPS === "1" || process.env.npm_lifecycle_event === "https:dev";
+  process.env.VITE_LOCAL_HTTPS === "1" || process.env.npm_lifecycle_event === "dev:https";
 const httpsOptions = { enabled };
 
 export default defineConfig({

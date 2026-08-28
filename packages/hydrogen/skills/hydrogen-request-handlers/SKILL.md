@@ -27,13 +27,28 @@ Request
   -> framework 404 page
 ```
 
-`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/agent/*`, `/graphiql` in development, and app-registered handler groups such as `createCartServerHandlers()` or `createCustomerAccountServerHandlers()`.
+`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, the generic `/__shopify/*` API proxy, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product URLs, and app-registered handler groups such as `createCartServerHandlers()` or `createCustomerAccountServerHandlers()`.
+
+## Variant Id Redirects
+
+```ts
+const shopifyRoute = handleShopifyRoutes({
+  request,
+  requestContext,
+  sessionManager,
+  storefrontClient,
+  routeTemplates,
+  handlers: [cartHandlers],
+});
+```
+
+Pass `routeTemplates` to `handleShopifyRoutes` so product `?variant=` links can be recognized before framework routing. `pathPrefix` is inferred from `requestContext.i18n.pathPrefix`, so localized product URLs stay in the localized tree.
 
 `handleShopifyRedirects` is a post-routing 404 check for `/admin`, configured standard route redirects, Storefront URL redirects, and same-origin query-param redirects. Do not run it on every request.
 
 ## Standard Route Redirects
 
-Use the local `hydrogen-routing` skill to create the shared `routeTemplates` manifest. This request-handler skill only wires that object into `handleShopifyRedirects` after the app router returns a 404.
+Use the local `hydrogen-routing` skill to create the shared `routeTemplates` manifest. Wire that object into both `handleShopifyRoutes` before routing and `handleShopifyRedirects` after the app router returns a 404.
 
 ```ts
 const redirect = await handleShopifyRedirects({
@@ -54,6 +69,7 @@ const redirect = await handleShopifyRedirects({
 - If the app has a request-level `try/catch` that converts errors into a `Response`, use `return await shopifyRoute` inside that boundary so rejected route promises reach the same error handling as synchronous setup failures. If the framework owns request error handling, return `shopifyRoute` directly. Do not add an inline `.catch()` unless the matched route intentionally needs different error handling.
 - Pass `request` and `storefrontClient` into `handleShopifyRedirects`; it does not receive a session manager.
 - Pass registered handler groups explicitly, for example `handlers: [cartHandlers, customerAccountHandlers]`.
+- Pass `routeTemplates` into `handleShopifyRoutes` so Liquid-parity `?variant=` product links resolve to canonical option params instead of passing through as ordinary product-page requests.
 - `handleShopifyRoutes` and `handleShopifyRedirects` apply request-context response headers before returning matched Shopify responses. Return those responses directly without calling `requestContext.applyResponseHeaders()` again.
 - Link and submit to Customer Account routes (`/account/login`, `/account/authorize`, `/account/refresh`, `/account/logout`) with plain HTML `<a>`/`<form>`, never the framework's client-side navigation component (`<Form>`/`<Link>` in React Router, `next/link` in Next.js, `NuxtLink` in Nuxt). The login and logout handlers return raw HTTP redirects to external Shopify URLs, which client-nav cannot process.
 - Apps authoring Customer Account API documents use the same packed Hydrogen TypeScript plugin as Storefront API documents. Add `@shopify/hydrogen/ts-plugin` to `tsconfig.json` `compilerOptions.plugins` and chain `hydrogen gql check` into a package script. Applies to every framework.
@@ -86,5 +102,6 @@ Run the app in dev and production modes, then check:
 4. `GET /account/login`, `GET /account/authorize`, `GET /account/refresh`, and `POST /account/logout` are handled before the app router when Customer Account handlers are registered.
 5. `GET /admin` returns a redirect to the shop admin URL.
 6. An unknown path returns the framework 404 when no Shopify redirect exists.
-7. Cart, predictive search, Customer Account, and SFAPI responses preserve `Set-Cookie` and `Server-Timing` headers where the framework exposes them.
-8. Authenticated Customer Account responses do not preserve public or CDN cache-control headers.
+7. `GET /products/{handle}?variant={numeric id}` returns a 302 to the option-params URL when `routeTemplates` is passed to `handleShopifyRoutes`; `?variant=garbage` falls through to the product page.
+8. Cart, predictive search, Customer Account, and SFAPI responses preserve `Set-Cookie` and `Server-Timing` headers where the framework exposes them.
+9. Authenticated Customer Account responses do not preserve public or CDN cache-control headers.

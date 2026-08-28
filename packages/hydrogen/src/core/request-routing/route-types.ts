@@ -1,5 +1,6 @@
 import type { StorefrontClient } from "../../client";
 import type { ShopifyRequestContext } from "../request-context";
+import type { ShopifyRouteTemplates } from "../standard-routes/types";
 
 type Awaitable<T> = T | Promise<T>;
 
@@ -24,9 +25,13 @@ export type ShopifyRouteJsonResult<TData = unknown> = {
   headers?: HeadersInit;
 };
 
+export type ShopifyRedirectStatus = 301 | 302 | 303 | 307 | 308;
+
 export type ShopifyRouteRedirectResult = {
   type: "redirect";
   location: string;
+  /** HTTP redirect status. Defaults to 303 (See Other). */
+  status?: ShopifyRedirectStatus;
   headers?: HeadersInit;
 };
 
@@ -65,6 +70,7 @@ export type ShopifyRouteHandler<
 export type ShopifyRouteHandlerGroup = Record<string, ShopifyRouteHandler>;
 
 export type HydrogenRoutesOptions = ShopifyRouteHandlerContext & {
+  routeTemplates?: ShopifyRouteTemplates;
   handlers?: readonly ShopifyRouteHandlerGroup[];
 };
 

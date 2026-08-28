@@ -5,6 +5,7 @@ Invoke the `hydrogen-collection-browser` skill when adding collection routes, se
 ## Continue when
 
 - [ ] Filtering and sorting update the URL without scroll reset when hydrated.
+- [ ] Checkbox filters and price min/max controls both render, apply, and persist after reloading the URL.
 - [ ] Reloading the filtered URL server-renders the same filtered state.
 - [ ] With JavaScript disabled, checking filters and submitting the form loads the filtered URL.
 - [ ] With JavaScript disabled, the load-more / pagination link loads the next page server-side.

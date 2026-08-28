@@ -165,15 +165,19 @@ Render same-product option values as GET links (`next/link`) so variant selectio
 Cross-product combined-listing values point at a different `value.handle` and navigate to that product. Prefer `next/link`; if using a button for cross-product navigation, keep it clearly outside the add-to-cart form and call `router.replace(...)`. Both use the same URL helper:
 
 ```tsx
+import { buildProductSelectionSearchParams, type SelectedOption } from "@shopify/hydrogen";
+
 function variantUrl(
   product: { handle: string; options: Array<{ name: string }> },
   selectedOptions: SelectedOption[],
   handle = product.handle,
   base: URLSearchParams | ReturnType<typeof useSearchParams> = new URLSearchParams(),
 ) {
-  const params = new URLSearchParams(base);
-  for (const option of product.options) params.delete(option.name);
-  for (const option of selectedOptions) params.set(option.name, option.value);
+  const params = buildProductSelectionSearchParams({
+    selectedOptions,
+    optionNames: product.options.map((option) => option.name),
+    base: new URLSearchParams(base),
+  });
   const query = params.toString();
   return `/products/${handle}${query ? `?${query}` : ""}`;
 }

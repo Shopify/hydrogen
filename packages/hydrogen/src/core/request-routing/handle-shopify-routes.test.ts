@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
 import { createCartServerHandlers } from "../cart/server-handlers";
+import { CONSENT_MANAGEMENT_HEADER } from "../headers";
 import { createShopifyRequestContext } from "../request-context";
 import { assert } from "../test-utils";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "./handle-shopify-routes";
@@ -92,6 +93,93 @@ describe("handleShopifyRoutes", () => {
     expect(result).toBeInstanceOf(Response);
   });
 
+  it("strips upstream cookies from cold non-consent SFAPI proxy responses", async () => {
+    const upstreamHeaders = new Headers();
+    upstreamHeaders.append("set-cookie", "_shopify_essential=cold; Path=/; Secure; HttpOnly");
+    upstreamHeaders.append("set-cookie", "app_session=preserved; Path=/; Secure; HttpOnly");
+    mockFetch.mockResolvedValueOnce(new Response("{}", { headers: upstreamHeaders }));
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/api/unstable/graphql.json", {
+        method: "POST",
+        body: "{}",
+      }),
+    });
+
+    expect(result?.headers.getSetCookie()).toEqual([]);
+  });
+
+  it("strips Server-Timing from cold non-consent SFAPI proxy responses", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response("{}", { headers: { "server-timing": "db;dur=2, _y;desc=unique" } }),
+    );
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/api/unstable/graphql.json", {
+        method: "POST",
+        body: "{}",
+      }),
+    });
+
+    expect(result?.headers.has("server-timing")).toBe(false);
+  });
+
+  it("returns Server-Timing from marked consent-management proxy responses", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response("{}", { headers: { "server-timing": "db;dur=2, _y;desc=unique" } }),
+    );
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/api/unstable/graphql.json", {
+        method: "POST",
+        body: "{}",
+        headers: { [CONSENT_MANAGEMENT_HEADER]: "1" },
+      }),
+    });
+
+    expect(result?.headers.get("server-timing")).toBe("db;dur=2, _y;desc=unique");
+    expect(result?.headers.get("cache-control")).toBe(
+      "private, no-store, max-age=0, must-revalidate",
+    );
+  });
+
+  it("strips Server-Timing from cacheable SFAPI proxy responses", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response("{}", { headers: { "server-timing": "db;dur=2, _y;desc=unique" } }),
+    );
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/api/unstable/graphql.json", {
+        headers: { cookie: "_shopify_essential=established" },
+      }),
+    });
+
+    expect(result?.headers.has("server-timing")).toBe(false);
+  });
+
+  it("returns Shopify cookies from marked consent-management proxy responses", async () => {
+    const upstreamHeaders = new Headers();
+    upstreamHeaders.append(
+      "set-cookie",
+      "_shopify_essential=established; Path=/; Secure; HttpOnly",
+    );
+    mockFetch.mockResolvedValueOnce(new Response("{}", { headers: upstreamHeaders }));
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/api/unstable/graphql.json", {
+        method: "POST",
+        body: "{}",
+        headers: { [CONSENT_MANAGEMENT_HEADER]: "1" },
+      }),
+    });
+
+    expect(result?.headers.getSetCookie()).toEqual([
+      "_shopify_essential=established; Path=/; Secure; HttpOnly",
+    ]);
+    const [, init] = mockFetch.mock.calls[0];
+    expect(new Headers(init.headers).has(CONSENT_MANAGEMENT_HEADER)).toBe(false);
+  });
+
   it("returns Response for Shopify API proxy requests", async () => {
     const result = await handleShopifyRoutes({
       request: new Request("https://my-app.com/__shopify/apps/inbox/config.json"),
@@ -158,6 +246,26 @@ describe("handleShopifyRoutes", () => {
     expect(result.headers.get("cache-control")).toBe(
       "private, no-store, max-age=0, must-revalidate",
     );
+  });
+
+  it("returns Shopify cookies from cold UCP MCP requests (session establishing)", async () => {
+    const upstreamHeaders = new Headers();
+    upstreamHeaders.append(
+      "set-cookie",
+      "_shopify_essential=established; Path=/; Secure; HttpOnly",
+    );
+    mockFetch.mockResolvedValueOnce(new Response("{}", { headers: upstreamHeaders }));
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/api/ucp/mcp", {
+        method: "POST",
+        body: "{}",
+      }),
+    });
+
+    expect(result?.headers.getSetCookie()).toEqual([
+      "_shopify_essential=established; Path=/; Secure; HttpOnly",
+    ]);
   });
 
   it("does not infer buyer IP headers for proxy requests", async () => {
@@ -306,6 +414,19 @@ describe("handleShopifyRoutes", () => {
     expect(result?.headers.get("location")).toBe("https://my-app.com/account?login=failed");
   });
 
+  it("throws for invalid registered handler redirect statuses", async () => {
+    const request = new Request("https://my-app.com/custom");
+    const handler = createShopifyRouteHandler("/custom", "GET", async () => ({
+      type: "redirect" as const,
+      status: 304 as never,
+      location: "/account?login=failed",
+    }));
+
+    await expect(handleShopifyRoutes({ request, handlers: [{ custom: handler }] })).rejects.toThrow(
+      "Invalid Shopify route redirect status 304",
+    );
+  });
+
   it("preserves registered handler absolute redirect Location headers", async () => {
     const request = new Request("https://my-app.com/custom");
     const handler = createShopifyRouteHandler("/custom", "GET", async () => ({
@@ -360,6 +481,32 @@ describe("handleShopifyRoutes", () => {
     expect(headers.get("Shopify-Storefront-Private-Token")).toBe("test-private-token");
     expect(headers.get("Shopify-Storefront-Buyer-IP")).toBe("10.0.0.2");
     expect(headers.get("X-Shopify-Storefront-Access-Token")).toBeNull();
+  });
+
+  it("handles variant id product redirects before registered handlers", async () => {
+    mockFetch.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: {
+            node: {
+              selectedOptions: [{ name: "Color", value: "Red" }],
+              product: { handle: "snowboard" },
+            },
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/products/snowboard?variant=42"),
+      routeTemplates: {},
+      handlers: [createCartServerHandlers()],
+    });
+
+    assert(result, "expected a redirect response");
+    expect(result.status).toBe(302);
+    expect(result.headers.get("location")).toBe("https://my-app.com/products/snowboard?Color=Red");
   });
 
   it("returns null synchronously for non-matching URLs", () => {

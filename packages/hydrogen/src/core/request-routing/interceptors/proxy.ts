@@ -7,15 +7,20 @@ const PROXY_TIMEOUT_MS = 30_000;
 // Proxy errors are transient and may be buyer-specific: never cache them.
 const PROXY_ERROR_CACHE_CONTROL = "no-store";
 
-type ProxyHeaderOptions = (
+type PrepareHeaders = (headers: Headers, options: HydrogenRoutesOptions, url: URL) => void;
+
+type ProxyRequestHeaderOptions = (
   | { allow: readonly string[]; deny?: never }
   | { allow?: never; deny: readonly string[] }
 ) & {
-  prepare?: (headers: Headers, options: HydrogenRoutesOptions, url: URL) => void;
+  prepare?: PrepareHeaders;
+};
+
+type ProxyResponseHeaderOptions = {
+  prepare?: PrepareHeaders;
 };
 
 type ProxyDescriptor = {
-  headers: ProxyHeaderOptions;
   match: RegExp;
   methods?: readonly string[];
   formatError?: (message: string) => unknown;
@@ -23,6 +28,8 @@ type ProxyDescriptor = {
   scope: string;
   timeoutMs?: number;
   rewritePathname?: (pathname: string) => string;
+  requestHeaders: ProxyRequestHeaderOptions;
+  responseHeaders?: ProxyResponseHeaderOptions;
 };
 
 export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRouteInterceptor {
@@ -68,14 +75,17 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
     }
 
     return fetch(upstreamUrl, init)
-      .then(
-        (upstreamResponse) =>
-          new Response(upstreamResponse.body, {
-            status: upstreamResponse.status,
-            statusText: upstreamResponse.statusText,
-            headers: createProxyResponseHeaders(upstreamResponse.headers),
-          }),
-      )
+      .then((upstreamResponse) => {
+        const headers = createProxyResponseHeaders(upstreamResponse.headers);
+        descriptor.responseHeaders?.prepare?.(headers, options, url);
+        options.requestContext.consumeStorefrontResponseHeaders(headers);
+
+        return new Response(upstreamResponse.body, {
+          status: upstreamResponse.status,
+          statusText: upstreamResponse.statusText,
+          headers,
+        });
+      })
       .catch((error) => {
         log.error("request failed", { error });
         return createProxyErrorResponse(error, 502, formatError);
@@ -108,7 +118,7 @@ function createProxyRequestHeaders(
   url: URL,
 ): Headers {
   const { request, requestContext } = options;
-  const { allow, deny, prepare } = descriptor.headers;
+  const { allow, deny, prepare } = descriptor.requestHeaders;
   const headers = allow
     ? new Headers(extractHeaders((key) => request.headers.get(key), allow))
     : new Headers(request.headers);

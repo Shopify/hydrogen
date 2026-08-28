@@ -5,11 +5,28 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { localHttps } from ".";
+import { localHttps, provisionLocalHttps } from ".";
 import { assert } from "../core/test-utils";
 
 const fsCalls = vi.hoisted(() => ({
+  existsSync: vi.fn(),
   readFileSync: vi.fn(),
+}));
+
+const mkcertCalls = vi.hoisted(() => ({
+  provisionCertificates: vi.fn(),
+}));
+
+const promptCalls = vi.hoisted(() => ({
+  confirmCertificateInstallation: vi.fn(),
+}));
+
+vi.mock("./certificate-prompt", () => ({
+  confirmCertificateInstallation: promptCalls.confirmCertificateInstallation,
+}));
+
+vi.mock("./mkcert", () => ({
+  provisionCertificates: mkcertCalls.provisionCertificates,
 }));
 
 vi.mock("node:fs", async (importOriginal) => {
@@ -17,6 +34,10 @@ vi.mock("node:fs", async (importOriginal) => {
 
   return {
     ...actual,
+    existsSync(...args: any[]) {
+      fsCalls.existsSync(...args);
+      return (actual.existsSync as any)(...args);
+    },
     readFileSync(...args: any[]) {
       fsCalls.readFileSync(...args);
       return (actual.readFileSync as any)(...args);
@@ -49,7 +70,11 @@ describe("localHttps", () => {
   let keyPath: string;
 
   beforeEach(() => {
+    fsCalls.existsSync.mockClear();
     fsCalls.readFileSync.mockClear();
+    mkcertCalls.provisionCertificates.mockReset();
+    promptCalls.confirmCertificateInstallation.mockReset().mockResolvedValue(true);
+    vi.stubEnv("CI", "");
     directory = fs.mkdtempSync(join(tmpdir(), "hydrogen-local-https-"));
     certPath = join(directory, "custom.test.pem");
     keyPath = join(directory, "custom.test-key.pem");
@@ -57,24 +82,28 @@ describe("localHttps", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
     fs.rmSync(directory, { recursive: true, force: true });
   });
 
-  it("has no side effects when disabled", () => {
+  it("has no side effects when disabled", async () => {
     const use = vi.fn();
     const plugin = localHttps({ enabled: false });
 
     const config = getHook(plugin.config, "config");
     const configureServer = getHook(plugin.configureServer, "configureServer");
 
-    expect(config({} as any, {} as any)).toBeUndefined();
+    expect(await config({} as any, { command: "serve" } as any)).toBeUndefined();
     expect(configureServer({ middlewares: { use } } as any)).toBeUndefined();
     expect(plugin.api.getDevServerConfig()).toBeUndefined();
     expect(use).not.toHaveBeenCalled();
+    expect(mkcertCalls.provisionCertificates).not.toHaveBeenCalled();
+    expect(promptCalls.confirmCertificateInstallation).not.toHaveBeenCalled();
+    expect(fsCalls.existsSync).not.toHaveBeenCalled();
     expect(fsCalls.readFileSync).not.toHaveBeenCalled();
   });
 
-  it("returns complete Vite server configuration from certificate files", () => {
+  it("returns complete Vite server configuration from certificate files", async () => {
     fs.writeFileSync(certPath, "certificate");
     fs.writeFileSync(keyPath, "private-key");
     const plugin = localHttps({
@@ -92,7 +121,7 @@ describe("localHttps", () => {
       port: 4_321,
       https: { cert: certPath, key: keyPath },
     });
-    expect(config({} as any, {} as any)).toEqual({
+    expect(await config({} as any, {} as any)).toEqual({
       server: {
         allowedHosts: ["custom.test"],
         host: "custom.test",
@@ -112,7 +141,8 @@ describe("localHttps", () => {
     expect(fsCalls.readFileSync).toHaveBeenCalledTimes(2);
   });
 
-  it("throws a setup error when certificate files are missing", () => {
+  it("warns and leaves Vite unconfigured when certificate files are missing", async () => {
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
     const plugin = localHttps({
       enabled: true,
       host: "custom.test",
@@ -120,11 +150,18 @@ describe("localHttps", () => {
       keyPath,
     });
     const config = getHook(plugin.config, "config");
+    const configureServer = getHook(plugin.configureServer, "configureServer");
+    const use = vi.fn();
 
-    const message = captureErrorMessage(() => config({} as any, {} as any));
+    expect(await config({} as any, {} as any)).toBeUndefined();
+    expect(configureServer({ middlewares: { use } } as any)).toBeUndefined();
+    expect(use).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledOnce();
+
+    const message = String(warn.mock.calls[0]?.[0]);
     expect(message).toContain(certPath);
     expect(message).toContain(keyPath);
-    expect(message).toContain("Local HTTPS requires a readable certificate file");
+    expect(message).toContain("npx hydrogen certs install");
     expect(message).toContain("brew install mkcert");
     expect(message).toContain("mkcert -install");
     expect(message).toContain(`mkdir -p '${directory}'`);
@@ -142,11 +179,169 @@ describe("localHttps", () => {
     });
 
     const plugin = localHttps({ enabled: true, host: "custom.test", certPath, keyPath });
-    const config = getHook(plugin.config, "config");
 
-    const message = captureErrorMessage(() => config({} as any, {} as any));
+    const message = captureErrorMessage(() => plugin.api.getDevServerConfig());
     expect(message).toContain("permission denied");
     expect(message).toContain(certPath);
+  });
+
+  it("warns once when Vite creates multiple plugin instances", async () => {
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+
+    for (let index = 0; index < 2; index += 1) {
+      const plugin = localHttps({
+        enabled: true,
+        host: "custom.test",
+        certPath,
+        keyPath,
+      });
+      const config = getHook(plugin.config, "config");
+      expect(await config({} as any, {} as any)).toBeUndefined();
+    }
+
+    expect(warn).toHaveBeenCalledOnce();
+  });
+
+  it("warns for distinct hosts that share missing certificate paths", async () => {
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+
+    for (const host of ["first.test", "second.test"]) {
+      const plugin = localHttps({ enabled: true, host, certPath, keyPath });
+      const config = getHook(plugin.config, "config");
+      expect(await config({} as any, {} as any)).toBeUndefined();
+    }
+
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(String(warn.mock.calls[0]?.[0])).toContain("'first.test'");
+    expect(String(warn.mock.calls[1]?.[0])).toContain("'second.test'");
+  });
+
+  it("provisions missing certificates when Vite serves", async () => {
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+    mkcertCalls.provisionCertificates.mockImplementation(
+      async (settings: { certPath: string; keyPath: string }) => {
+        fs.writeFileSync(settings.certPath, "certificate");
+        fs.writeFileSync(settings.keyPath, "private-key");
+      },
+    );
+    const plugin = localHttps({
+      enabled: true,
+      host: "custom.test",
+      port: 4_321,
+      certPath,
+      keyPath,
+    });
+    const config = getHook(plugin.config, "config");
+
+    const result = await config({} as any, { command: "serve" } as any);
+
+    expect(mkcertCalls.provisionCertificates).toHaveBeenCalledWith(
+      expect.objectContaining({ host: "custom.test", certPath, keyPath }),
+    );
+    expect(promptCalls.confirmCertificateInstallation).toHaveBeenCalledWith("custom.test");
+    expect(result).toMatchObject({
+      server: {
+        https: {
+          cert: Buffer.from("certificate"),
+          key: Buffer.from("private-key"),
+        },
+      },
+    });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("does not provision when certificate installation is declined", async () => {
+    promptCalls.confirmCertificateInstallation.mockResolvedValue(false);
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+    const plugin = localHttps({ enabled: true, host: "custom.test", certPath, keyPath });
+    const config = getHook(plugin.config, "config");
+
+    expect(await config({} as any, { command: "serve" } as any)).toBeUndefined();
+
+    expect(mkcertCalls.provisionCertificates).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledOnce();
+    expect(String(warn.mock.calls[0]?.[0])).toContain(
+      "requires confirmation in an interactive terminal",
+    );
+  });
+
+  it("skips provisioning when certificate files already exist", async () => {
+    fs.writeFileSync(certPath, "certificate");
+    fs.writeFileSync(keyPath, "private-key");
+    const plugin = localHttps({ enabled: true, host: "custom.test", certPath, keyPath });
+    const config = getHook(plugin.config, "config");
+
+    await config({} as any, { command: "serve" } as any);
+
+    expect(mkcertCalls.provisionCertificates).not.toHaveBeenCalled();
+    expect(promptCalls.confirmCertificateInstallation).not.toHaveBeenCalled();
+  });
+
+  it("falls back to a warning when provisioning fails", async () => {
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+    mkcertCalls.provisionCertificates.mockRejectedValue(new Error("download blocked"));
+    const plugin = localHttps({ enabled: true, host: "custom.test", certPath, keyPath });
+    const config = getHook(plugin.config, "config");
+
+    expect(await config({} as any, { command: "serve" } as any)).toBeUndefined();
+    expect(warn).toHaveBeenCalledOnce();
+
+    const message = String(warn.mock.calls[0]?.[0]);
+    expect(message).toContain("Automatic certificate provisioning failed:");
+    expect(message).toContain("download blocked");
+    expect(message).toContain("npx hydrogen certs install");
+  });
+
+  it("does not provision during builds", async () => {
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+    const plugin = localHttps({ enabled: true, host: "custom.test", certPath, keyPath });
+    const config = getHook(plugin.config, "config");
+
+    expect(await config({} as any, { command: "build" } as any)).toBeUndefined();
+
+    expect(mkcertCalls.provisionCertificates).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledOnce();
+  });
+
+  it("does not provision in CI environments and says so in the warning", async () => {
+    vi.stubEnv("CI", "true");
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+    const plugin = localHttps({ enabled: true, host: "custom.test", certPath, keyPath });
+    const config = getHook(plugin.config, "config");
+
+    expect(await config({} as any, { command: "serve" } as any)).toBeUndefined();
+
+    expect(mkcertCalls.provisionCertificates).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledOnce();
+    const message = String(warn.mock.calls[0]?.[0]);
+    expect(message).toContain("skipped in CI environments");
+    expect(message).toContain("npx hydrogen certs install");
+  });
+
+  it("provisions when CI is explicitly disabled", async () => {
+    vi.stubEnv("CI", "false");
+    mkcertCalls.provisionCertificates.mockImplementation(
+      async (settings: { certPath: string; keyPath: string }) => {
+        fs.writeFileSync(settings.certPath, "certificate");
+        fs.writeFileSync(settings.keyPath, "private-key");
+      },
+    );
+    const plugin = localHttps({ enabled: true, host: "custom.test", certPath, keyPath });
+    const config = getHook(plugin.config, "config");
+
+    await config({} as any, { command: "serve" } as any);
+
+    expect(mkcertCalls.provisionCertificates).toHaveBeenCalledOnce();
+  });
+
+  it("does not provision during vite preview", async () => {
+    vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+    const plugin = localHttps({ enabled: true, host: "custom.test", certPath, keyPath });
+    const config = getHook(plugin.config, "config");
+
+    await config({} as any, { command: "serve", isPreview: true } as any);
+
+    expect(mkcertCalls.provisionCertificates).not.toHaveBeenCalled();
   });
 
   it("sets forwarded headers without replacing existing values", () => {
@@ -353,6 +548,7 @@ describe("localHttps", () => {
 
 describe("localHttps plugin API", () => {
   beforeEach(() => {
+    fsCalls.existsSync.mockClear();
     fsCalls.readFileSync.mockClear();
   });
 
@@ -386,21 +582,28 @@ describe("localHttps plugin API", () => {
     }
   });
 
-  it("throws through dev server config when a certificate is missing", () => {
+  it("warns and returns undefined when a certificate is missing", () => {
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
     const certPath = join(tmpdir(), "missing-cert.pem");
     const keyPath = join(tmpdir(), "missing-key.pem");
     const plugin = localHttps({ enabled: true, host: "custom.test", certPath, keyPath });
 
-    const message = captureErrorMessage(() => plugin.api.getDevServerConfig());
+    expect(plugin.api.getDevServerConfig()).toBeUndefined();
+    expect(warn).toHaveBeenCalledOnce();
+
+    const message = String(warn.mock.calls[0]?.[0]);
     expect(message).toContain(certPath);
     expect(message).toContain(keyPath);
   });
 
   it("looks for default certificates in the Hydrogen home directory", () => {
+    const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
     const host = `missing-${process.pid}.local.tryhydrogen.dev`;
     const plugin = localHttps({ enabled: true, host });
 
-    const message = captureErrorMessage(() => plugin.api.getDevServerConfig());
+    expect(plugin.api.getDevServerConfig()).toBeUndefined();
+
+    const message = String(warn.mock.calls[0]?.[0]);
     expect(message).toContain(join(homedir(), ".shopify", "hydrogen", "certs", `${host}.pem`));
     expect(message).toContain(join(homedir(), ".shopify", "hydrogen", "certs", `${host}-key.pem`));
   });
@@ -416,6 +619,56 @@ function captureErrorMessage(run: () => unknown) {
 
   throw new Error("Expected function to throw");
 }
+
+describe("provisionLocalHttps", () => {
+  let directory: string;
+  let certPath: string;
+  let keyPath: string;
+
+  beforeEach(() => {
+    mkcertCalls.provisionCertificates.mockReset();
+    directory = fs.mkdtempSync(join(tmpdir(), "hydrogen-provision-local-https-"));
+    certPath = join(directory, "custom.test.pem");
+    keyPath = join(directory, "custom.test-key.pem");
+  });
+
+  afterEach(() => {
+    fs.rmSync(directory, { recursive: true, force: true });
+  });
+
+  it("provisions missing certificates and returns the resolved paths", async () => {
+    mkcertCalls.provisionCertificates.mockResolvedValue(undefined);
+
+    const result = await provisionLocalHttps({ host: "custom.test", certPath, keyPath });
+
+    expect(mkcertCalls.provisionCertificates).toHaveBeenCalledWith(
+      expect.objectContaining({ host: "custom.test", certPath, keyPath }),
+    );
+    expect(result).toEqual({ host: "custom.test", certPath, keyPath });
+  });
+
+  it("skips provisioning when certificate files already exist", async () => {
+    fs.writeFileSync(certPath, "certificate");
+    fs.writeFileSync(keyPath, "private-key");
+
+    const result = await provisionLocalHttps({ host: "custom.test", certPath, keyPath });
+
+    expect(mkcertCalls.provisionCertificates).not.toHaveBeenCalled();
+    expect(result).toEqual({ host: "custom.test", certPath, keyPath });
+  });
+
+  it("resolves default certificate paths from the host", async () => {
+    mkcertCalls.provisionCertificates.mockResolvedValue(undefined);
+    const host = `provision-${process.pid}.local.tryhydrogen.dev`;
+
+    const result = await provisionLocalHttps({ host });
+
+    expect(result.certPath).toBe(join(homedir(), ".shopify", "hydrogen", "certs", `${host}.pem`));
+    expect(result.keyPath).toBe(
+      join(homedir(), ".shopify", "hydrogen", "certs", `${host}-key.pem`),
+    );
+  });
+});
 
 function createResponse() {
   const writeHead = vi.fn(function (this: ServerResponse) {

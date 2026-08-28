@@ -15,6 +15,7 @@ import {
   customerSessionHandlers,
 } from "../../storefront/customer-account";
 import { predictiveSearchHandlers } from "../../storefront/predictive-search-handlers";
+import { routeTemplates } from "../../utils/route-templates";
 
 export default defineEventHandler(async (event) => {
   const request = toWebRequest(event);
@@ -33,6 +34,7 @@ export default defineEventHandler(async (event) => {
     requestContext,
     sessionManager,
     storefrontClient,
+    routeTemplates,
     handlers: [cartHandlers, predictiveSearchHandlers, customerSessionHandlers],
   });
   if (shopifyRoute) {

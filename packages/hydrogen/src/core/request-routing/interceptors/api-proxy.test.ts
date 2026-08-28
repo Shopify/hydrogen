@@ -55,12 +55,12 @@ describe("handleShopifyApiProxy", () => {
 
   it("removes the prefix and forwards the path and search params to SFR", async () => {
     await handleShopifyApiProxy(
-      new Request("https://my-app.com/__shopify/apps/inbox/config.json?locale=en"),
+      new Request("https://my-app.com/__shopify/agent/buyer-claims?locale=en"),
     );
 
     const call = mockFetch.mock.calls[0];
     assert(call, "expected fetch to be called");
-    expect(call[0].href).toBe("https://test-store.myshopify.com/apps/inbox/config.json?locale=en");
+    expect(call[0].href).toBe("https://test-store.myshopify.com/agent/buyer-claims?locale=en");
   });
 
   it("forwards the prefix root to the SFR root", async () => {
@@ -144,6 +144,20 @@ describe("handleShopifyApiProxy", () => {
     expect(headers.get(SHOPIFY_STOREFRONT_ORIGIN_HEADER)).toBe("https://my-app.com");
     expect(headers.get("sec-fetch-site")).toBe("same-origin");
     expect(headers.get("x-custom-header")).toBe("custom-value");
+  });
+
+  it("consumes upstream state from SFR responses", async () => {
+    const headers = new Headers({ "server-timing": '_y;desc="unique"' });
+    headers.append("set-cookie", "future_cookie=value; Path=/; Secure");
+    mockFetch.mockResolvedValueOnce(new Response("ok", { headers }));
+
+    const result = await handleShopifyApiProxy(
+      new Request("https://my-app.com/__shopify/events", { method: "POST" }),
+    );
+
+    assert(result, "expected proxy to return a response");
+    expect(result.headers.getSetCookie()).toEqual([]);
+    expect(result.headers.get("server-timing")).toBeNull();
   });
 
   it.each([

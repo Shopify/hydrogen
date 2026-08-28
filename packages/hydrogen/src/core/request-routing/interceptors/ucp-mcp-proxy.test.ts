@@ -189,7 +189,7 @@ describe("handleUcpMcpProxy", () => {
     expect(headers.get("x-real-ip")).toBe("1.2.3.4");
   });
 
-  it("forwards upstream cookies to the caller", async () => {
+  it("captures upstream Shopify cookies for gated replay", async () => {
     mockFetch.mockResolvedValueOnce(
       new Response('{"jsonrpc":"2.0","id":1,"result":{}}', {
         headers: {
@@ -201,9 +201,10 @@ describe("handleUcpMcpProxy", () => {
     const response = await handleUcpMcpProxy(createRequest("/api/ucp/mcp"));
 
     assert(response, "expected a response");
-    expect(response.headers.get("set-cookie")).toBe(
-      "_shopify_essential=updated; Path=/; HttpOnly; Secure; SameSite=Lax",
-    );
+    // The interceptor strips Shopify state; handleShopifyRoutes replays it onto
+    // the final response via the session-establishing gate. See the end-to-end
+    // coverage in handle-shopify-routes.test.ts.
+    expect(response.headers.get("set-cookie")).toBeNull();
   });
 
   it("applies Hydrogen request-context headers", async () => {
