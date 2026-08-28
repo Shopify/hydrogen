@@ -81,7 +81,9 @@ describe("createProxyInterceptor", () => {
     assert(response, "expected a response");
     expect(response.status).toBe(405);
     expect(response.headers.get("allow")).toBe("POST, DELETE");
-    expect(await response.text()).toBe("Method Not Allowed");
+    expect(response.headers.get("content-type")).toBe("application/json");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.json()).toEqual({ error: "Method Not Allowed" });
     expect(mockFetch).not.toHaveBeenCalled();
   });
 });

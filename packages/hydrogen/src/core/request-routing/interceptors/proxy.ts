@@ -4,6 +4,9 @@ import type { HydrogenRouteInterceptor, HydrogenRoutesOptions } from "../route-t
 
 const PROXY_TIMEOUT_MS = 30_000;
 
+// Proxy errors are transient and may be buyer-specific: never cache them.
+const PROXY_ERROR_CACHE_CONTROL = "no-store";
+
 type ProxyHeaderOptions = (
   | { allow: readonly string[]; deny?: never }
   | { allow?: never; deny: readonly string[] }
@@ -30,11 +33,15 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
     const { request, storefrontClient } = options;
     if (!descriptor.match.test(url.pathname)) return null;
     if (descriptor.methods && !descriptor.methods.includes(request.method)) {
-      // Resource exists, but the method is not allowed:
+      // Method not allowed. Shape the body via formatError, like other errors.
       return Promise.resolve(
-        new Response("Method Not Allowed", {
+        new Response(JSON.stringify(formatError("Method Not Allowed")), {
           status: 405,
-          headers: { allow: descriptor.methods.join(", ") },
+          headers: {
+            allow: descriptor.methods.join(", "),
+            "content-type": "application/json",
+            "cache-control": PROXY_ERROR_CACHE_CONTROL,
+          },
         }),
       );
     }
@@ -88,7 +95,10 @@ function createProxyErrorResponse(
   const message = error instanceof Error ? error.message : "Internal proxy error";
   return new Response(JSON.stringify(formatError(message)), {
     status,
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      "cache-control": PROXY_ERROR_CACHE_CONTROL,
+    },
   });
 }
 

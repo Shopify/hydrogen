@@ -82,6 +82,11 @@ describe("handleUcpMcpProxy", () => {
     assert(response, "expected a response");
     expect(response.status).toBe(405);
     expect(response.headers.get("allow")).toBe("POST");
+    expect(await response.json()).toEqual({
+      jsonrpc: "2.0",
+      error: { code: -32603, message: "Method Not Allowed" },
+      id: null,
+    });
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
@@ -222,6 +227,7 @@ describe("handleUcpMcpProxy", () => {
 
     assert(response, "expected an error response");
     expect(response.status).toBe(502);
+    expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await response.json()).toEqual({
       jsonrpc: "2.0",
       error: { code: -32603, message: "Connection refused" },
