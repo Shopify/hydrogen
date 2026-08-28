@@ -55,12 +55,12 @@ describe("handleShopifyApiProxy", () => {
 
   it("removes the prefix and forwards the path and search params to SFR", async () => {
     await handleShopifyApiProxy(
-      new Request("https://my-app.com/__shopify/apps/inbox/config.json?locale=en"),
+      new Request("https://my-app.com/__shopify/agent/buyer-claims?locale=en"),
     );
 
     const call = mockFetch.mock.calls[0];
     assert(call, "expected fetch to be called");
-    expect(call[0].href).toBe("https://test-store.myshopify.com/apps/inbox/config.json?locale=en");
+    expect(call[0].href).toBe("https://test-store.myshopify.com/agent/buyer-claims?locale=en");
   });
 
   it("forwards the prefix root to the SFR root", async () => {
