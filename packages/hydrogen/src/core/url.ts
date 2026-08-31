@@ -29,8 +29,6 @@ export function isHydrogenServerHandoffPath(pathname: string): boolean {
   );
 }
 
-export const AGENT_BUYER_CLAIMS_RE =
-  /^(?:\/[a-z]{2}(?:-[a-z]{2})?)?\/agent\/(?:handoff|buyer-claims)(?:\.[^/.]+)?\/?$/i;
 /**
  * Allowlisted `.well-known` resources proxied to the Online Store origin:
  * - `apple-developer-merchantid-domain-association` — Apple Pay domain verification.

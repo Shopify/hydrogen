@@ -1,5 +1,4 @@
 import { handleProductVariantId } from "../product/accept-variant-id";
-import { handleAgentProxy } from "./interceptors/agent-proxy";
 import { handleAjaxApi } from "./interceptors/ajax-api";
 import { handleShopifyApiProxy } from "./interceptors/api-proxy";
 import { handleCheckoutRedirect } from "./interceptors/checkout";
@@ -18,7 +17,6 @@ const SHOPIFY_ROUTE_INTERCEPTORS = [
   handleCheckoutRedirect,
   handleWellKnownProxy,
   handleMcpProxy,
-  handleAgentProxy,
   handleAjaxApi,
 ] satisfies readonly HydrogenRouteInterceptor[];
 

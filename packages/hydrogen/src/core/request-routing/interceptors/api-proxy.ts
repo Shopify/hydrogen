@@ -5,7 +5,7 @@ import { createProxyInterceptor } from "./proxy";
 
 export const handleShopifyApiProxy = createProxyInterceptor({
   match: SHOPIFY_API_PROXY_RE,
-  headers: { deny: PROXY_REQUEST_HEADER_DENYLIST },
+  requestHeaders: { deny: PROXY_REQUEST_HEADER_DENYLIST },
   rewritePathname: (pathname) => {
     const upstreamPathname =
       "/" + pathname.slice(SHOPIFY_API_PROXY_PREFIX.length).replace(/^\/+/, "");

@@ -139,7 +139,7 @@ describe("handleWellKnownProxy", () => {
     expect(headers.get("Sec-Shopify-Storefront-Origin")).toBe("https://headless.example");
   });
 
-  it("preserves upstream response headers", async () => {
+  it("preserves upstream response metadata while consuming cookies", async () => {
     const result = await handleWellKnownProxy(
       new Request(`https://headless.example${ASSOCIATION_PATH}`),
     );
@@ -147,7 +147,7 @@ describe("handleWellKnownProxy", () => {
     assert(result, "expected association response");
     expect(result.headers.get("content-type")).toBe("text/plain");
     expect(result.headers.get("cache-control")).toBe("public, max-age=3600");
-    expect(result.headers.get("set-cookie")).toBe("upstream-cookie=secret");
+    expect(result.headers.getSetCookie()).toEqual([]);
     expect(result.headers.get("x-upstream-internal")).toBe("secret");
   });
 
