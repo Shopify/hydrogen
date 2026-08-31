@@ -7,6 +7,7 @@ import { handleWellKnownProxy as handleWellKnownProxyImpl } from "./well-known";
 
 const STORE_URL = "https://test-store.myshopify.com";
 const ASSOCIATION_PATH = "/.well-known/apple-developer-merchantid-domain-association";
+const FEC_PRODUCE_PATH = "/.well-known/shopify/fec/produce";
 
 function handleWellKnownProxy(request: Request) {
   const requestContext = createShopifyRequestContext({
@@ -70,11 +71,32 @@ describe("handleWellKnownProxy", () => {
     expect(await result.text()).toBe("association-file");
   });
 
+  it("proxies the Frontend Event Collector ingress path to the Online Store origin", async () => {
+    const result = await handleWellKnownProxy(
+      new Request(`https://headless.example${FEC_PRODUCE_PATH}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ events: [] }),
+      }),
+    );
+
+    assert(result, "expected FEC ingress response");
+    const call = mockFetch.mock.calls[0];
+    assert(call, "expected fetch to be called");
+    const [url, init] = call;
+    expect(url.href).toBe(`${STORE_URL}${FEC_PRODUCE_PATH}`);
+    expect(init.method).toBe("POST");
+  });
+
   it("does not shadow similar well-known paths", async () => {
     for (const path of [
       `${ASSOCIATION_PATH}/`,
       `${ASSOCIATION_PATH}.txt`,
       "/.well-known/other-association",
+      `${FEC_PRODUCE_PATH}/`,
+      `${FEC_PRODUCE_PATH}.json`,
+      "/.well-known/shopify/fec",
+      "/.well-known/shopify/fec/consume",
     ]) {
       const result = await handleWellKnownProxy(new Request(`https://headless.example${path}`));
       expect(result, `expected ${path} not to be proxied`).toBeNull();
