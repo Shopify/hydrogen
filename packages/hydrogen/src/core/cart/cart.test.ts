@@ -2922,6 +2922,79 @@ describe("CartStore.refresh", () => {
     await vi.waitFor(() => expect(store.getState().data.id).toBe("gid://shopify/Cart/created"));
   });
 
+  it("reports revalidating progress without suspending while discovering a cart", async () => {
+    const discovery = createDeferred<{ cart: CartData }>();
+    mockGetCart.mockReturnValueOnce(discovery.promise);
+
+    store.refresh();
+
+    // Progress shows, but no readyPromise (must not suspend useSuspenseCart).
+    expect(store.getState().revalidating).toBe(true);
+    expect(store.getState().readyPromise).toBeUndefined();
+    expect(store.getState().data.id).toBeNull();
+
+    discovery.resolve({
+      cart: makeCartState({ id: "gid://shopify/Cart/created", totalQuantity: 1 }),
+    });
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeUndefined());
+    expect(store.getState().readyPromise).toBeUndefined();
+    expect(store.getState().data.id).toBe("gid://shopify/Cart/created");
+  });
+
+  it("treats a null discovery result as no cart yet, not an error", async () => {
+    mockGetCart.mockResolvedValueOnce({ cart: null });
+
+    store.refresh();
+
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeUndefined());
+    expect(store.getState().errors.network).toHaveLength(0);
+    expect(store.getState().data.id).toBeNull();
+  });
+
+  it("surfaces network failures during discovery instead of only logging", async () => {
+    mockGetCart.mockRejectedValueOnce(new Error("discovery failed"));
+
+    store.refresh();
+
+    await vi.waitFor(() => expect(store.getState().errors.network).toHaveLength(1));
+    expect(store.getState().revalidating).toBeUndefined();
+    expect(store.getState().data.id).toBeNull();
+  });
+
+  it("during an initial add, waits for cart creation then revalidates instead of discarding it", async () => {
+    const cartId = "gid://shopify/Cart/created";
+    const event = submitForm(
+      { merchandiseId: "gid://shopify/ProductVariant/1", quantity: "1" },
+      "intent",
+      "add",
+    );
+    const mutation = store.handleFormSubmit(event);
+    await nextTick();
+
+    // Refresh mid-creation: the queue must wait, not observe pre-creation state.
+    store.refresh();
+    expect(store.getState().revalidating).toBe(true);
+    expect(store.getState().readyPromise).toBeUndefined();
+    expect(mockGetCart).not.toHaveBeenCalled();
+
+    // After settlement the requested reconciliation runs and is not lost.
+    mockGetCart.mockResolvedValueOnce({
+      cart: makeCartState({
+        id: cartId,
+        totalQuantity: 1,
+        metafields: [{ key: "custom.instructions", value: "Back door" }],
+      }),
+    });
+    resolveUpdate(0, serverResult({ id: cartId, totalQuantity: 1 }));
+    await mutation;
+
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeUndefined());
+    expect(store.getState().data.metafields).toEqual([
+      { key: "custom.instructions", value: "Back door" },
+    ]);
+  });
+
   it("waits for an active mutation before refreshing", async () => {
     const line = makeLine({ id: "line-1", quantity: 1 });
     store.hydrate(makeCartState({ lines: [line], totalQuantity: 1 }));

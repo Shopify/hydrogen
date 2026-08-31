@@ -223,7 +223,8 @@ type ActiveCartLoad = {
 };
 
 type ActiveCartRevalidation = {
-  cartId: string;
+  // Null for a discovery load (no local cart to target).
+  cartId: string | null;
   controller: AbortController;
   generation: number;
   mutationRevision: number;
@@ -2399,8 +2400,8 @@ async function fetchCart(
   return { cart: result.cart };
 }
 
-function fetchCartData(cartId?: string | null): Promise<CartData | null> {
-  return fetchCart(cartId).then(({ cart }) =>
+function fetchCartData(cartId?: string | null, signal?: AbortSignal): Promise<CartData | null> {
+  return fetchCart(cartId, signal).then(({ cart }) =>
     cart
       ? {
           ...cart,
@@ -2454,25 +2455,42 @@ function isCurrentCartRevalidationRequest(
   );
 }
 
-function isCurrentCartRevalidation(
+// Merges authoritative fields for a same-cart revalidation, or adopts a
+// discovered cart when the refresh had no cart id.
+function applyCartRevalidation(
   store: CartStoreContext,
   request: ActiveCartRevalidation,
-  cart: CartData,
-): boolean {
-  return isCurrentCartRevalidationRequest(store, request) && cart.id === request.cartId;
+  cart: CartData | null,
+): void {
+  if (!isCurrentCartRevalidationRequest(store, request)) return;
+
+  if (request.cartId === null) {
+    // A null result isn't an error (an out-of-band creation hasn't propagated
+    // yet); adopt the cart once it appears. hydrateCartInStore resets
+    // revalidation state.
+    if (cart) {
+      hydrateCartInStore(store, cart);
+      return;
+    }
+    store.revalidation.visible = false;
+    publishVisibleState(store);
+    return;
+  }
+
+  if (!cart) throw new Error(CART_REVALIDATION_ERROR_MESSAGE);
+  if (cart.id !== request.cartId) return;
+  store.settled = {
+    ...store.settled,
+    data: mergeAuthoritativeCartData(store.settled.data, cart),
+  };
+  store.revalidation.visible = false;
+  publishVisibleState(store);
 }
 
 function refreshCartInStore(store: CartStoreContext): void {
-  // With no local cart, an out-of-band mutation may have just created one
-  // server-side (e.g. cartCreate writing the cart cookie). A same-cart
-  // revalidation would have nothing to target, so discover the cart with a
-  // full load instead of no-oping.
-  if (!store.settled.data.id) {
-    void loadCartInStore(store).catch((error: unknown) =>
-      log.error("cart refresh load failed", { error }),
-    );
-    return;
-  }
+  // Reconcile through the queue so the refresh stays non-blocking. With no cart
+  // id, revalidateCartWhenIdle waits for in-flight work then discovers a cart
+  // created out of band.
   requestCartRevalidation(store);
   publishVisibleState(store);
   revalidateCartWhenIdle(store);
@@ -2488,30 +2506,19 @@ function revalidateCartWhenIdle(store: CartStoreContext): void {
     return;
   }
 
-  const cartId = store.settled.data.id;
-  if (!cartId) {
-    store.revalidation.requested = false;
-    store.revalidation.visible = false;
-    publishVisibleState(store);
-    return;
-  }
-
   store.revalidation.requested = false;
   clearProjectedErrors(store, [REVALIDATION_ERROR_KEY]);
   publishVisibleState(store);
+
+  // No cart id: discover one with a full-cart load instead of revalidating.
+  const cartId = store.settled.data.id;
   const controller = new AbortController();
   let request: ActiveCartRevalidation;
-  const promise = fetchCartRevalidationData(cartId, controller.signal)
-    .then((cart) => {
-      if (!cart) throw new Error(CART_REVALIDATION_ERROR_MESSAGE);
-      if (!isCurrentCartRevalidation(store, request, cart)) return;
-      store.settled = {
-        ...store.settled,
-        data: mergeAuthoritativeCartData(store.settled.data, cart),
-      };
-      store.revalidation.visible = false;
-      publishVisibleState(store);
-    })
+  const revalidationFetch = cartId
+    ? fetchCartRevalidationData(cartId, controller.signal)
+    : fetchCartData(null, controller.signal);
+  const promise = revalidationFetch
+    .then((cart) => applyCartRevalidation(store, request, cart))
     .catch((error: unknown) => {
       if (isAbortError(error) || !isCurrentCartRevalidationRequest(store, request)) return;
       store.revalidation.visible = false;
