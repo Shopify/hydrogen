@@ -2478,7 +2478,14 @@ function applyCartRevalidation(
   }
 
   if (!cart) throw new Error(CART_REVALIDATION_ERROR_MESSAGE);
-  if (cart.id !== request.cartId) return;
+  if (cart.id !== request.cartId) {
+    // A configured endpoint resolves the cart from its cookie, which an external
+    // operation can swap for a different cart. Treat the response as an
+    // authoritative replacement; hydrateCartInStore adopts it and clears
+    // revalidation state so clients don't stay stuck with revalidating: true.
+    hydrateCartInStore(store, cart);
+    return;
+  }
   store.settled = {
     ...store.settled,
     data: mergeAuthoritativeCartData(store.settled.data, cart),
@@ -2488,6 +2495,15 @@ function applyCartRevalidation(
 }
 
 function refreshCartInStore(store: CartStoreContext): void {
+  // Publishing over an in-flight initial load invalidates it (the ready state
+  // carries the load's identity), which would discard the fetched cart. Wait
+  // for the load to settle, then reconcile against whatever cart it produced.
+  const activeCartLoad = store.activeCartLoad;
+  if (activeCartLoad) {
+    const runAfterLoad = () => refreshCartInStore(store);
+    activeCartLoad.promise.then(runAfterLoad, runAfterLoad);
+    return;
+  }
   // Reconcile through the queue so the refresh stays non-blocking. With no cart
   // id, revalidateCartWhenIdle waits for in-flight work then discovers a cart
   // created out of band.

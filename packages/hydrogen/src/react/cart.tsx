@@ -151,7 +151,6 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
   return useCartSelector(store, selector, isEqual) as S;
 }
 
-/** Returns actions that operate on the shared cart store. */
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
 

@@ -138,7 +138,6 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
   return useCartSelector(store, resolve, isEqual) as Readonly<ShallowRef<S>>;
 }
 
-/** Returns actions that operate on the shared cart store. */
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
   return { refresh: store.refresh };
