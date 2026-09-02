@@ -37,8 +37,8 @@ test("prepares manifests and synchronizes skills", () => {
     const nextjsLock = join(repoRoot, "templates", "nextjs", "pnpm-lock.yaml");
     writeFile(reactRouterLock, "stale");
     writeFile(nextjsLock, "stale");
-    writeFile(join(repoRoot, "templates", "react-router", "__test__", "shop.test.mjs"), "test");
-    writeFile(join(repoRoot, "templates", "nextjs", "__test__", "url-params.test.mjs"), "test");
+    writeFile(join(repoRoot, "templates", "react-router", "__test__", "shop.test.ts"), "test");
+    writeFile(join(repoRoot, "templates", "nextjs", "__test__", "url-params.test.ts"), "test");
     writeFile(
       join(repoRoot, "templates", "react-router", ".agents", "skills", "stale", "SKILL.md"),
       "stale",
