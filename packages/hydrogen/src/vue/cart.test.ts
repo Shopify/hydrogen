@@ -16,6 +16,7 @@ import {
   CartProvider,
   configureCartEndpoint,
   useCart,
+  useCartActions,
   useCartAnalytics,
   useCartForm,
   useOptionalCart,
@@ -97,6 +98,7 @@ function createMockStore(initialState: MockInitialData = { ...EMPTY_CART_STATE }
       };
     }),
     fetch: vi.fn(() => Promise.resolve()),
+    refresh: vi.fn(),
     reset: vi.fn(),
     handleFormSubmit: vi.fn(() => Promise.resolve()),
     setState(next: CartState) {
@@ -134,6 +136,30 @@ beforeEach(() => {
   vi.mocked(createCartStore).mockImplementation((options) => createMockStore(options?.initialData));
   configureCartEndpoint("/api/cart");
   delete (window as { Shopify?: unknown }).Shopify;
+});
+
+describe("useCartActions", () => {
+  it("refreshes the cart store", () => {
+    const actions = mountWithConsumer(() => ({
+      exposed: useCartActions(),
+      render: () => null,
+    }));
+
+    actions.refresh();
+
+    expect(latestStore.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws a composable-specific error outside CartProvider", () => {
+    const Consumer = defineComponent({
+      setup() {
+        useCartActions();
+        return () => null;
+      },
+    });
+
+    expect(() => mount(Consumer)).toThrow("useCartActions must be used inside a <CartProvider>.");
+  });
 });
 
 describe("useCartAnalytics", () => {

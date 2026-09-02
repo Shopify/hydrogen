@@ -17,6 +17,7 @@ import {
   configureCartEndpoint,
   createCartComponents,
   useCart,
+  useCartActions,
   useCartForm,
   useOptionalCart,
 } from "./cart";
@@ -123,6 +124,7 @@ function createMockStore(initialData?: MockInitialData): MockCartStore {
       };
     }),
     fetch: vi.fn(() => Promise.resolve()),
+    refresh: vi.fn(),
     reset: vi.fn(),
     handleFormSubmit: vi.fn(() => Promise.resolve()),
     setReadyPromise(readyPromise: Promise<void> | undefined) {
@@ -195,6 +197,35 @@ describe("CartProvider", () => {
     expect(createCartStore).toHaveBeenCalledWith({ initialData: undefined });
     expect(latestStore.connect).toHaveBeenCalledTimes(1);
     expect(latestStore.fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("useCartActions", () => {
+  it("refreshes the cart store", () => {
+    let actions: ReturnType<typeof useCartActions> | undefined;
+
+    function Consumer() {
+      actions = useCartActions();
+      return null;
+    }
+
+    render(createElement(CartProvider, null, createElement(Consumer)));
+    assert(actions, "Expected cart actions to be available");
+
+    actions.refresh();
+
+    expect(latestStore.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws a hook-specific error outside CartProvider", () => {
+    function Consumer() {
+      useCartActions();
+      return null;
+    }
+
+    expect(() => render(createElement(Consumer))).toThrow(
+      "useCartActions must be used inside <CartProvider>",
+    );
   });
 });
 
