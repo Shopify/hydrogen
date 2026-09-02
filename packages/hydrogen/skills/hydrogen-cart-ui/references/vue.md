@@ -5,6 +5,7 @@
 - Root Setup
 - Custom Cart Fields
 - Reading Cart State
+- Refreshing Cart State
 - Mutating Cart State
 - Pending Helpers
 
@@ -23,7 +24,7 @@ import { createCartComponents } from "@shopify/hydrogen/vue";
 
 import type { cartHandlers } from "./cart-handlers";
 
-export const { CartProvider, useCart, useCartForm } =
+export const { CartProvider, useCart, useCartActions, useCartForm } =
   createCartComponents<typeof cartHandlers>();
 ```
 
@@ -78,7 +79,7 @@ import { createCartComponents } from "@shopify/hydrogen/vue";
 
 import type { cartHandlers } from "./cart-handlers";
 
-export const { CartProvider, useCart, useCartForm } =
+export const { CartProvider, useCart, useCartActions, useCartForm } =
   createCartComponents<typeof cartHandlers>();
 ```
 
@@ -138,6 +139,29 @@ const attributeErrors = useCart((state) => state.errors.attributes);
 ```
 
 Use this for the navbar cart count, cart line list, totals, pending state, and scoped errors. Do not mirror selected cart state into local refs; the store already publishes updates.
+
+## Refreshing Cart State
+
+Use `useCartActions().refresh()` after an app-owned cart mutation that bypasses Standard Actions. This refetches the current cart through the configured cart endpoint, so custom fields selected by `CartFragment` update for every `useCart()` consumer.
+
+```vue
+<script setup lang="ts">
+import { useCartActions } from "~/lib/cart";
+
+const { refresh } = useCartActions();
+
+async function save() {
+  await saveCustomCartData();
+  refresh();
+}
+</script>
+
+<template>
+  <button type="button" @click="save">Save custom cart data</button>
+</template>
+```
+
+`refresh()` is non-blocking. Read `state.revalidating` for progress and `state.errors.network` for failures. It waits for active optimistic mutations, and loads the cart when none exists yet (e.g. one just created server-side). Do not call it after `useCartForm()` submissions because their Standard Actions events already synchronize the store.
 
 ## Mutating Cart State
 

@@ -387,6 +387,7 @@ function createMockCartStore(initialState?: CartStateOverrides): CartStore & {
     getState: () => observable.state,
     subscribe: (listener: (state: CartState) => void) => observable.subscribe(listener),
     fetch: vi.fn(() => Promise.resolve()),
+    refresh: vi.fn(),
     reset: vi.fn(),
     handleFormSubmit: vi.fn(() => Promise.resolve()),
     _setState: (next) => observable.setState(next),
