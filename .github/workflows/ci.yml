@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [preview]
+  pull_request:
+    branches: [preview]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, Format, Typecheck, Test, Build
+    runs-on: ubuntu-latest
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format check
+        run: pnpm run format:check
+
+      - name: Ensure prerelease mode
+        # Catch a deleted or exited pre.json at PR time; without it the
+        # release job publishes a plain version to the latest dist-tag
+        run: jq -e '.mode == "pre" and .tag == "preview"' .changeset/pre.json
+
+      - name: Changesets check
+        run: node scripts/assert-no-major-changesets.ts
+
+      - name: Lint
+        run: pnpm run lint:ci
+
+      - name: Build packages
+        run: pnpm run build
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Test
+        run: pnpm run test

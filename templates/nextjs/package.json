@@ -1,0 +1,35 @@
+{
+  "name": "@shopify/hydrogen-template-nextjs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "dev:https": "next dev --experimental-https --hostname local.tryhydrogen.dev --port 5173",
+    "build": "next build --debug-prerender",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit && hydrogen gql check --fail-on-warn"
+  },
+  "dependencies": {
+    "@shopify/hydrogen": "2026.10.0-preview.2",
+    "@vercel/functions": "^3.9.3",
+    "isbot": "^5",
+    "next": "16.2.9",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.4",
+    "@types/node": "^25.8.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.9",
+    "gql.tada": "1.9.2",
+    "graphql": "^16.13.2",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

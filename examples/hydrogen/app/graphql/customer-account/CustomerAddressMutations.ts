@@ -1,0 +1,66 @@
+import * as CAAPI from "@shopify/hydrogen/customer-account";
+
+// NOTE: https://shopify.dev/docs/api/customer/latest/mutations/customerAddressUpdate
+export const UPDATE_ADDRESS_MUTATION = CAAPI.gql(`
+  mutation customerAddressUpdate(
+    $address: CustomerAddressInput!
+    $addressId: ID!
+    $defaultAddress: Boolean
+    $language: LanguageCode
+ ) @inContext(language: $language) {
+    customerAddressUpdate(
+      address: $address
+      addressId: $addressId
+      defaultAddress: $defaultAddress
+    ) {
+      customerAddress {
+        id
+      }
+      userErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`);
+
+// NOTE: https://shopify.dev/docs/api/customer/latest/mutations/customerAddressDelete
+export const DELETE_ADDRESS_MUTATION = CAAPI.gql(`
+  mutation customerAddressDelete(
+    $addressId: ID!
+    $language: LanguageCode
+  ) @inContext(language: $language) {
+    customerAddressDelete(addressId: $addressId) {
+      deletedAddressId
+      userErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`);
+
+// NOTE: https://shopify.dev/docs/api/customer/latest/mutations/customerAddressCreate
+export const CREATE_ADDRESS_MUTATION = CAAPI.gql(`
+  mutation customerAddressCreate(
+    $address: CustomerAddressInput!
+    $defaultAddress: Boolean
+    $language: LanguageCode
+  ) @inContext(language: $language) {
+    customerAddressCreate(
+      address: $address
+      defaultAddress: $defaultAddress
+    ) {
+      customerAddress {
+        id
+      }
+      userErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`);

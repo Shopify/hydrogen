@@ -1,0 +1,205 @@
+import type { CartErrorCode, CartWarningCode } from "../../graphql/generated/storefront-api-types";
+
+export interface Money {
+  amount: string;
+  currencyCode: string;
+}
+
+export interface CartCost {
+  subtotalAmount: Money;
+  totalAmount: Money;
+  checkoutChargeAmount: Money;
+}
+
+export interface CartLineCost {
+  totalAmount: Money;
+  subtotalAmount: Money;
+  amountPerQuantity: Money;
+  compareAtAmountPerQuantity: Money | null;
+}
+
+export interface CartLineMerchandise {
+  id: string;
+  title?: string;
+  selectedOptions?: Array<{ name: string; value: string }>;
+  product: {
+    title: string;
+    handle?: string;
+    [key: string]: unknown;
+  };
+  image?: {
+    id?: string | null;
+    url: string;
+    altText?: string | null;
+    width?: number | null;
+    height?: number | null;
+    [key: string]: unknown;
+  } | null;
+  quantityAvailable?: number | null;
+  [key: string]: unknown;
+}
+
+export interface CartLine {
+  id: string;
+  quantity: number;
+  attributes?: Attribute[];
+  cost: CartLineCost;
+  merchandise?: CartLineMerchandise;
+  sellingPlanAllocation?: { sellingPlan: { id: string } } | null;
+  parentRelationship?: { parent: { id: string } } | null;
+  lineComponents?: CartLine[];
+}
+
+export interface CartLineConnection {
+  nodes: CartLine[];
+  [key: string]: unknown;
+}
+
+export interface DiscountCode {
+  code: string;
+  applicable: boolean;
+}
+
+export interface CartUserError {
+  code: CartErrorCode | null;
+  message: string;
+  field?: string[];
+}
+
+export interface CartWarning {
+  code: CartWarningCode;
+  message: string;
+}
+
+export interface CartErrorGroup {
+  userErrors: CartUserError[];
+  warnings: CartWarning[];
+}
+
+export interface CartNetworkEntry {
+  message: string;
+  status?: number;
+}
+
+export interface Attribute {
+  key: string;
+  value: string | null;
+}
+
+export interface CartPending {
+  lines: Set<string>;
+  note: boolean;
+  attributes: boolean;
+  discountCodes: Set<string>;
+  cost?: boolean;
+}
+
+export interface CartErrorState {
+  cart: CartErrorGroup;
+  lines: Map<string, CartErrorGroup>;
+  note: CartErrorGroup;
+  attributes: Map<string, CartErrorGroup>;
+  discountCodes: Map<string, CartErrorGroup>;
+  network: CartNetworkEntry[];
+  lastUpdatedAt: number;
+  cartUpdatedAt: number;
+  linesUpdatedAt: number;
+  noteUpdatedAt: number;
+  attributesUpdatedAt: number;
+  discountCodesUpdatedAt: number;
+  networkUpdatedAt: number;
+}
+
+export interface CartData {
+  id: string | null;
+  checkoutUrl?: string | null;
+  totalQuantity: number;
+  cost: CartCost;
+  note?: string | null;
+  attributes: Attribute[];
+  lines: CartLineConnection;
+  discountCodes: DiscountCode[];
+  [key: string]: unknown;
+}
+
+export interface CartState<TData extends CartData = CartData> {
+  data: TData;
+  loading: boolean;
+  /** Non-rejecting signal that resolves when the current full-cart load settles or is invalidated. */
+  readonly readyPromise?: PromiseLike<void>;
+  pending: CartPending;
+  revalidating?: boolean;
+  errors: CartErrorState;
+}
+
+export function createEmptyPending(): CartPending {
+  return {
+    lines: new Set(),
+    note: false,
+    attributes: false,
+    discountCodes: new Set(),
+    cost: false,
+  };
+}
+
+export function createEmptyErrorGroup(): CartErrorGroup {
+  return { userErrors: [], warnings: [] };
+}
+
+export function createEmptyCartErrors(): CartErrorState {
+  return {
+    cart: createEmptyErrorGroup(),
+    lines: new Map(),
+    note: createEmptyErrorGroup(),
+    attributes: new Map(),
+    discountCodes: new Map(),
+    network: [],
+    lastUpdatedAt: 0,
+    cartUpdatedAt: 0,
+    linesUpdatedAt: 0,
+    noteUpdatedAt: 0,
+    attributesUpdatedAt: 0,
+    discountCodesUpdatedAt: 0,
+    networkUpdatedAt: 0,
+  };
+}
+
+export const EMPTY_CART_DATA: CartData = Object.freeze({
+  id: null,
+  checkoutUrl: null,
+  totalQuantity: 0,
+  cost: Object.freeze({
+    subtotalAmount: Object.freeze({ amount: "0", currencyCode: "" }),
+    totalAmount: Object.freeze({ amount: "0", currencyCode: "" }),
+    checkoutChargeAmount: Object.freeze({ amount: "0", currencyCode: "" }),
+  }),
+  note: "",
+  attributes: [] as Attribute[],
+  lines: Object.freeze({ nodes: [] as CartLine[] }),
+  discountCodes: [] as DiscountCode[],
+});
+
+export function createCartState<TData extends CartData>(
+  data: TData,
+  { loading = false }: { loading?: boolean } = {},
+): CartState<TData> {
+  return {
+    data,
+    loading,
+    pending: createEmptyPending(),
+    errors: createEmptyCartErrors(),
+  };
+}
+
+export function createEmptyCartState({ loading = true }: { loading?: boolean } = {}): CartState {
+  return createCartState(
+    {
+      ...EMPTY_CART_DATA,
+      lines: { nodes: [] },
+      discountCodes: [],
+    },
+    { loading },
+  );
+}
+
+export const EMPTY_CART_STATE: CartState = createEmptyCartState();

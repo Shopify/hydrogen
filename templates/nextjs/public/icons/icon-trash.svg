@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="var(--icon-stroke-width)" stroke-linecap="round" stroke-linejoin="round">
+  <g class="remove-icon-top">
+    <polyline points="2.5 5 4.17 5 17.5 5"/>
+    <path d="M7.5 5V3.33a.83.83 0 0 1 .83-.83h3.34a.83.83 0 0 1 .83.83V5"/>
+  </g>
+  <g class="remove-icon-bottom">
+    <path d="M15.83 5l-.83 11.67a1.67 1.67 0 0 1-1.67 1.66H6.67a1.67 1.67 0 0 1-1.67-1.66L4.17 5"/>
+    <path d="M8.33 9.17v5M11.67 9.17v5"/>
+  </g>
+</svg>
