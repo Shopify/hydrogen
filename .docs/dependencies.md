@@ -15,7 +15,7 @@ When changing the cart store's public surface (`CartStore`, React/Vue `createCar
 
 When changing the cart metafields pattern (app-owned metafield route, custom `CartFragment` reads, or the mutate-then-`refresh()` flow), update these together:
 
-- `examples/hydrogen/app/lib/cart-metafields.ts` (app-owned route)
+- `examples/hydrogen/app/lib/cart-metafields.server.ts` (app-owned route)
 - `examples/hydrogen/app/lib/cart-handlers.ts` (`CartFragment` reads)
 - `examples/hydrogen/app/components/CartDeliveryInstructions.tsx` (client)
 - `packages/hydrogen/skills/hydrogen-cart-metafields/SKILL.md`

@@ -9,6 +9,8 @@ import {
   type ShopifyRouteHandlerResult,
 } from "@shopify/hydrogen";
 
+import { CART_METAFIELDS_PATH } from "~/lib/cart-metafields-path";
+
 // App-owned cart metafield endpoint.
 //
 // Cart metafields are not part of Standard Actions (the cart ajax API), so they
@@ -24,7 +26,9 @@ import {
 // The mutation and the re-sync are intentionally decoupled: this route returns
 // only the mutation's `userErrors`, never a refetched cart. A failed re-sync is
 // therefore reported as a soft cart-refresh error, never as a failed save.
-export const CART_METAFIELDS_PATH = "/api/cart/metafields";
+//
+// The route path is defined in the client-safe cart-metafields-path module so
+// the client form can reference it without importing this server-only module.
 
 const HTTP_BAD_GATEWAY_STATUS = 502;
 

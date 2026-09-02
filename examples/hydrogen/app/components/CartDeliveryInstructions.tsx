@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { useCart, useCartActions } from "~/lib/cart";
-import { CART_METAFIELDS_PATH } from "~/lib/cart-metafields";
+import { CART_METAFIELDS_PATH } from "~/lib/cart-metafields-path";
 
 // Cart metafields are server-only: the Storefront cart ajax API (Standard
 // Actions) does not support them, so this form posts JSON directly to the
