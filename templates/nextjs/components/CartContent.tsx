@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { useCart, useCartForm } from "@/lib/cart";
+import { useCart, useCartForm, useSuspenseCart } from "@/lib/cart";
 import { content } from "@/lib/content";
 import { formatPrice } from "@/lib/money";
 
@@ -15,8 +15,7 @@ export function CartContent() {
   const pendingRemovalDiscountCode = useRef<string | null>(null);
   const discountInputRef = useRef<HTMLInputElement>(null);
   const emptyCartRef = useRef<HTMLDivElement>(null);
-  const cart = useCart((state) => state.data);
-  const loading = useCart((state) => state.loading);
+  const cart = useSuspenseCart((state) => state.data);
   const pending = useCart((state) => state.pending);
   const networkErrors = useCart((state) => state.errors.network);
   const isPending = pending.lines.size > 0 || pending.note || pending.discountCodes.size > 0;
@@ -53,14 +52,6 @@ export function CartContent() {
       discountInputRef.current?.focus();
     }
   }, [discountCodes]);
-
-  if (loading) {
-    return (
-      <div className="divide-border divide-y" aria-busy="true">
-        <p className="text-on-surface-secondary py-8 text-center text-sm">Loading cart…</p>
-      </div>
-    );
-  }
 
   const isEmpty = totalQuantity === 0 || lines.length === 0;
 
@@ -211,11 +202,13 @@ function CartStatus({
 }
 
 function useCartStatusMessage(isPending: boolean, hasNetworkErrors: boolean): string {
-  const [sawPending, setSawPending] = useState(false);
+  const [previousPending, setPreviousPending] = useState(isPending);
+  const [sawPending, setSawPending] = useState(isPending);
 
-  useEffect(() => {
+  if (previousPending !== isPending) {
+    setPreviousPending(isPending);
     if (isPending) setSawPending(true);
-  }, [isPending]);
+  }
 
   if (isPending) return "Updating cart totals";
   if (sawPending && !hasNetworkErrors) return "Cart totals updated";

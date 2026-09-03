@@ -444,6 +444,43 @@ describe("useSuspenseCart", () => {
     expect(screen.getByTestId("fallback").textContent).toBe("Loading");
   });
 
+  it("renders live cart data after the initial readyPromise settles", async () => {
+    const deferred = createDeferred<void>();
+    const typedCart = createCartComponents<{
+      get: () => Promise<{ data: { cart: CartData } }>;
+    }>();
+    const mockStore = createMockStore();
+    mockStore.setReadyPromise(deferred.promise);
+    vi.mocked(createCartStore).mockImplementation(() => mockStore);
+
+    function Consumer() {
+      const qty = typedCart.useSuspenseCart((s) => s.data.totalQuantity);
+      return createElement("span", { "data-testid": "qty" }, qty);
+    }
+
+    render(
+      createElement(
+        CartProvider,
+        null,
+        createElement(
+          Suspense,
+          { fallback: createElement("span", { "data-testid": "fallback" }, "Loading") },
+          createElement(Consumer),
+        ),
+      ),
+    );
+
+    expect(screen.getByTestId("fallback").textContent).toBe("Loading");
+
+    await act(async () => {
+      mockStore.setState(makeCartState({ totalQuantity: 8 }));
+      deferred.resolve();
+      await deferred.promise;
+    });
+
+    expect(screen.getByTestId("qty").textContent).toBe("8");
+  });
+
   it("returns selected cart state when no readyPromise is visible", () => {
     const typedCart = createCartComponents<{
       get: () => Promise<{ data: { cart: CartData } }>;
