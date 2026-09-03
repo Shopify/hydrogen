@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { SFAPI_RE, MCP_RE, normalizeStoreDomain } from "./url";
+import { SFAPI_RE, MCP_RE, UCP_MCP_RE, normalizeStoreDomain } from "./url";
 
 describe("SFAPI_RE", () => {
   it("matches valid SFAPI paths", () => {
@@ -34,6 +34,19 @@ describe("MCP_RE", () => {
     expect(MCP_RE.test("/api/mcps")).toBe(false);
     expect(MCP_RE.test("/api/mc")).toBe(false);
   });
+});
+
+describe("UCP_MCP_RE", () => {
+  it("matches exact /api/ucp/mcp", () => {
+    expect(UCP_MCP_RE.test("/api/ucp/mcp")).toBe(true);
+  });
+
+  it.each(["/api/ucp/mcp/", "/api/ucp/mcp/foo", "/api/ucp/mcps", "/api/mcp"])(
+    "does not match %s",
+    (pathname) => {
+      expect(UCP_MCP_RE.test(pathname)).toBe(false);
+    },
+  );
 });
 
 describe("normalizeStoreDomain", () => {
