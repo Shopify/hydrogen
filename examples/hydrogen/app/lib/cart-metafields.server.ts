@@ -76,43 +76,45 @@ class CartMetafieldRequestError extends Error {}
 // Hand-rolled validation mirrors the core cart action parser's style rather than
 // pulling a schema library into the example. Swap in Zod here if the app already
 // depends on it.
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function parseCartMetafieldRequest(body: unknown): CartMetafieldRequest {
-  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+  if (!isRecord(body)) {
     throw new CartMetafieldRequestError("Request body must be a JSON object.");
   }
-  const record = body as Record<string, unknown>;
 
-  if ("deleteMetafield" in record) {
-    const key = record.deleteMetafield;
+  if ("deleteMetafield" in body) {
+    const key = body.deleteMetafield;
     if (typeof key !== "string" || key === "") {
       throw new CartMetafieldRequestError('"deleteMetafield" must be a non-empty metafield key.');
     }
     return { intent: "delete", key };
   }
 
-  if ("metafields" in record && Array.isArray(record.metafields)) {
-    if (record.metafields.length === 0) {
+  if ("metafields" in body && Array.isArray(body.metafields)) {
+    if (body.metafields.length === 0) {
       throw new CartMetafieldRequestError('"metafields" must not be empty.');
     }
-    return { intent: "set", metafields: record.metafields.map(parseMetafieldEntry) };
+    return { intent: "set", metafields: body.metafields.map(parseMetafieldEntry) };
   }
 
   throw new CartMetafieldRequestError('Body must contain "metafields" or "deleteMetafield".');
 }
 
 function parseMetafieldEntry(raw: unknown): CartMetafieldInput {
-  if (typeof raw !== "object" || raw === null) {
+  if (!isRecord(raw)) {
     throw new CartMetafieldRequestError("Each metafield must be an object.");
   }
-  const entry = raw as Record<string, unknown>;
   if (
-    typeof entry.key !== "string" ||
-    typeof entry.type !== "string" ||
-    typeof entry.value !== "string"
+    typeof raw.key !== "string" ||
+    typeof raw.type !== "string" ||
+    typeof raw.value !== "string"
   ) {
     throw new CartMetafieldRequestError('Each metafield needs string "key", "type", and "value".');
   }
-  return { key: entry.key, type: entry.type, value: entry.value };
+  return { key: raw.key, type: raw.type, value: raw.value };
 }
 
 function requestError(message: string): ShopifyRouteErrorResult {
@@ -129,6 +131,32 @@ function storefrontError(message = "Storefront request failed."): ShopifyRouteEr
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+type StorefrontClient = ShopifyRouteHandlerContext["storefrontClient"];
+
+async function deleteCartMetafield(
+  storefrontClient: StorefrontClient,
+  cartId: string,
+  key: string,
+): Promise<ShopifyRouteHandlerResult> {
+  const result = await storefrontClient.graphql(CART_METAFIELD_DELETE_MUTATION, {
+    variables: { input: { ownerId: cartId, key } },
+  });
+  if (result.errors || !result.data) return storefrontError(result.errors?.[0]?.message);
+  return { type: "json", data: { userErrors: result.data.cartMetafieldDelete?.userErrors ?? [] } };
+}
+
+async function setCartMetafields(
+  storefrontClient: StorefrontClient,
+  cartId: string,
+  metafields: CartMetafieldInput[],
+): Promise<ShopifyRouteHandlerResult> {
+  const result = await storefrontClient.graphql(CART_METAFIELDS_SET_MUTATION, {
+    variables: { metafields: metafields.map((metafield) => ({ ...metafield, ownerId: cartId })) },
+  });
+  if (result.errors || !result.data) return storefrontError(result.errors?.[0]?.message);
+  return { type: "json", data: { userErrors: result.data.cartMetafieldsSet?.userErrors ?? [] } };
 }
 
 async function handleCartMetafieldsPost(
@@ -152,24 +180,9 @@ async function handleCartMetafieldsPost(
     return { type: "error", error: { code: "missing_cart", message: "No cart exists." } };
   }
 
-  if (parsed.intent === "delete") {
-    const result = await storefrontClient.graphql(CART_METAFIELD_DELETE_MUTATION, {
-      variables: { input: { ownerId: cartId, key: parsed.key } },
-    });
-    if (result.errors || !result.data) return storefrontError(result.errors?.[0]?.message);
-    return {
-      type: "json",
-      data: { userErrors: result.data.cartMetafieldDelete?.userErrors ?? [] },
-    };
-  }
-
-  const result = await storefrontClient.graphql(CART_METAFIELDS_SET_MUTATION, {
-    variables: {
-      metafields: parsed.metafields.map((metafield) => ({ ...metafield, ownerId: cartId })),
-    },
-  });
-  if (result.errors || !result.data) return storefrontError(result.errors?.[0]?.message);
-  return { type: "json", data: { userErrors: result.data.cartMetafieldsSet?.userErrors ?? [] } };
+  return parsed.intent === "delete"
+    ? deleteCartMetafield(storefrontClient, cartId, parsed.key)
+    : setCartMetafields(storefrontClient, cartId, parsed.metafields);
 }
 
 export const cartMetafieldHandlers = {

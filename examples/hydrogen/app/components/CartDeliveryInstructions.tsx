@@ -29,10 +29,24 @@ const DELIVERY_INSTRUCTIONS_METAFIELD_TYPE = "multi_line_text_field";
 // below turns into a recoverable error state.
 const SAVE_REQUEST_TIMEOUT_IN_MILLISECONDS = 10_000;
 
-type CartMetafieldResponse = {
-  userErrors?: Array<{ message: string }>;
-  error?: { message: string };
-};
+// The mutation route replies with { userErrors } on success, or { error } with a
+// non-2xx status on failure. response.json() is unknown, so narrow it with a
+// guard rather than trusting a cast.
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readResponseErrorMessage(payload: unknown): string | undefined {
+  if (!isRecord(payload)) return undefined;
+  if (isRecord(payload.error) && typeof payload.error.message === "string") {
+    return payload.error.message;
+  }
+  const firstUserError = Array.isArray(payload.userErrors) ? payload.userErrors[0] : undefined;
+  if (isRecord(firstUserError) && typeof firstUserError.message === "string") {
+    return firstUserError.message;
+  }
+  return undefined;
+}
 
 type SaveState = { status: "idle" | "saving" | "saved" } | { status: "error"; message: string };
 
@@ -60,8 +74,7 @@ export function CartDeliveryInstructions() {
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(SAVE_REQUEST_TIMEOUT_IN_MILLISECONDS),
       });
-      const result = (await response.json()) as CartMetafieldResponse;
-      const errorMessage = result.error?.message ?? result.userErrors?.[0]?.message;
+      const errorMessage = readResponseErrorMessage(await response.json());
       if (!response.ok || errorMessage) {
         setSaveState({ status: "error", message: errorMessage ?? "Something went wrong." });
         return;
