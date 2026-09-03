@@ -14,10 +14,21 @@ import { getOptionalPrivateStorefrontToken } from "./env";
  * to the public mock.shop endpoint using its well-known `mock-private-token`.
  * With a real private token present, `NEXT_PUBLIC_STORE_DOMAIN` must identify
  * the store.
+ *
+ * mock.shop is a catalog of fictional stores, not one store. The default store at
+ * `mock.shop` sells apparel basics; every other store lives on its own host
+ * (pets.mock.shop, ...) and is listed at https://mock.shop/llms.txt. Setting
+ * `NEXT_PUBLIC_STORE_DOMAIN` to one of those hosts selects that catalog and keeps
+ * the app in mock mode.
  */
 
 export const MOCK_SHOP_DOMAIN = "mock.shop";
 export const MOCK_SHOP_PRIVATE_TOKEN = "mock-private-token";
+
+export function isMockShopDomain(domain: string): boolean {
+  return domain === MOCK_SHOP_DOMAIN || domain.endsWith(`.${MOCK_SHOP_DOMAIN}`);
+}
+
 const SESSION_SECRET_MIN_LENGTH = 32;
 
 export type ResolvedStorefrontConfig = {
@@ -37,7 +48,7 @@ let mockShopFallbackWarned = false;
 export function isCustomerAccountsAvailable(): boolean {
   const { storeDomain } = resolveStorefrontConfig();
   return (
-    storeDomain !== MOCK_SHOP_DOMAIN &&
+    !isMockShopDomain(storeDomain) &&
     Boolean(process.env.NEXT_PUBLIC_SHOP_ID) &&
     Boolean(process.env.NEXT_PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID) &&
     Boolean(process.env.SITE_ORIGIN) &&
@@ -49,23 +60,25 @@ export function isCustomerAccountsAvailable(): boolean {
 
 export function resolveStorefrontConfig(): ResolvedStorefrontConfig {
   const privateStorefrontToken = getOptionalPrivateStorefrontToken();
+  const configuredDomain = storefrontConfig.storeDomain;
 
-  if (!privateStorefrontToken) {
+  if (!privateStorefrontToken || isMockShopDomain(configuredDomain)) {
+    const storeDomain = isMockShopDomain(configuredDomain) ? configuredDomain : MOCK_SHOP_DOMAIN;
     if (!mockShopFallbackWarned) {
       mockShopFallbackWarned = true;
       console.warn(
-        `[hydrogen-template-nextjs] No PRIVATE_STOREFRONT_API_TOKEN found — ` +
-          `running against mock.shop (${MOCK_SHOP_DOMAIN}). Set ` +
+        `[hydrogen-template-nextjs] Running against mock.shop (${storeDomain}). ` +
+          `Other mock stores are listed at https://mock.shop/llms.txt. Set ` +
           `PRIVATE_STOREFRONT_API_TOKEN and NEXT_PUBLIC_STORE_DOMAIN to hit a real store.`,
       );
     }
     return {
-      storeDomain: MOCK_SHOP_DOMAIN,
+      storeDomain,
       privateStorefrontToken: MOCK_SHOP_PRIVATE_TOKEN,
     };
   }
 
-  const storeDomain = storefrontConfig.storeDomain;
+  const storeDomain = configuredDomain;
   if (!storeDomain) {
     throw new Error(
       "NEXT_PUBLIC_STORE_DOMAIN is required when PRIVATE_STOREFRONT_API_TOKEN is set.",
