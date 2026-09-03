@@ -9,8 +9,9 @@ import { CART_METAFIELDS_PATH } from "~/lib/cart-metafields-path";
 // app-owned /api/cart/metafields route instead of going through the optimistic
 // cart store. On success it calls refresh() so the store re-reads the cart
 // (with the metafield selected by the custom CartFragment in cart-handlers.ts)
-// and every useCart() consumer updates. refresh() also loads the cart when none
-// existed yet, so setting instructions before adding a product still shows them.
+// and every useCart() consumer updates. The route only mutates an existing cart,
+// and this form renders inside the cart summary (after items are added), so a
+// cart is always present when saving.
 //
 // To copy the instructions onto the order at checkout, the store must define a
 // `custom.delivery_instructions` metafield with the cart-to-order copyable

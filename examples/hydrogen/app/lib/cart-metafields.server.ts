@@ -1,6 +1,4 @@
 import {
-  cartQueries,
-  createCartCookie,
   createShopifyRouteHandler,
   getCartId,
   gql,
@@ -146,11 +144,15 @@ async function handleCartMetafieldsPost(
   }
 
   const cartId = getCartId(request);
+  // This route mutates an existing cart; it never creates one. Creating a cart
+  // here would let two empty-cart writes each call cartCreate and race — the last
+  // Set-Cookie wins, orphaning one cart and silently dropping its write. Callers
+  // add a line item first (the UI only shows this form once the cart has items).
+  if (!cartId) {
+    return { type: "error", error: { code: "missing_cart", message: "No cart exists." } };
+  }
 
   if (parsed.intent === "delete") {
-    if (!cartId)
-      return { type: "error", error: { code: "missing_cart", message: "No cart exists." } };
-
     const result = await storefrontClient.graphql(CART_METAFIELD_DELETE_MUTATION, {
       variables: { input: { ownerId: cartId, key: parsed.key } },
     });
@@ -158,26 +160,6 @@ async function handleCartMetafieldsPost(
     return {
       type: "json",
       data: { userErrors: result.data.cartMetafieldDelete?.userErrors ?? [] },
-    };
-  }
-
-  // No cart yet: preserve legacy cartCreate-with-metafields behavior by creating
-  // the cart carrying the metafields, then persisting its id in the cart cookie.
-  // The client seeds the store afterwards via refresh(), which loads the cart
-  // when none is present locally.
-  if (!cartId) {
-    const result = await storefrontClient.graphql(cartQueries.cartCreate, {
-      variables: { input: { metafields: parsed.metafields } },
-    });
-    if (result.errors || !result.data) return storefrontError(result.errors?.[0]?.message);
-
-    const createdCartId = result.data.cartCreate?.cart?.id ?? null;
-    const headers = new Headers();
-    if (createdCartId) headers.append("set-cookie", createCartCookie(createdCartId));
-    return {
-      type: "json",
-      data: { userErrors: result.data.cartCreate?.userErrors ?? [] },
-      headers,
     };
   }
 
