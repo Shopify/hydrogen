@@ -102,6 +102,12 @@ type ShopifyRequestContextBase = {
    * @internal
    */
   markResponseAsPersonalized(reason: string): void;
+  /**
+   * Mark this request as a sanctioned session-establishing endpoint (like the
+   * consent flow), permitting Shopify state to return even on a cold session.
+   * @internal
+   */
+  markResponseAsSessionEstablishing(reason: string): void;
 
   // -- Public fields --
   i18n: NormalizedI18nConfig;
@@ -183,6 +189,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       }
     | undefined;
   let personalizedResponseReason: string | undefined;
+  let sessionEstablishingReason: string | undefined;
 
   const captureSubrequestHeaders = (headers: Headers): void => {
     // Capture this the first time we get a fresh response to increase the
@@ -229,6 +236,9 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     markResponseAsPersonalized(reason) {
       personalizedResponseReason ??= reason;
     },
+    markResponseAsSessionEstablishing(reason) {
+      sessionEstablishingReason ??= reason;
+    },
     applyResponseHeaders(headers) {
       headers.set("powered-by", "Shopify, Hydrogen");
 
@@ -243,7 +253,9 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
         requestMethod !== "GET" &&
         requestMethod !== "HEAD" &&
         !isDocumentResponse &&
-        (hasEssentialCookie || isConsentManagementRequest);
+        (hasEssentialCookie ||
+          isConsentManagementRequest ||
+          sessionEstablishingReason !== undefined);
 
       // Replay state captured from fresh SFAPI and proxy responses when allowed.
       if (capturedSubrequestHeaders && mayReturnShopifyState) {
