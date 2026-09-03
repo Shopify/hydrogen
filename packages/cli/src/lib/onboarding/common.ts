@@ -292,6 +292,7 @@ type Project = {
   name: string;
   directory: string;
   storefrontTitle?: string;
+  mockShop?: boolean;
 };
 
 /**
@@ -715,6 +716,15 @@ export async function renderProjectReady(
                       .filter(Boolean)
                       .join(' && '),
                   },
+                ],
+                project.mockShop && [
+                  'This project reads the default mock.shop store. Pick another mock store at',
+                  {link: {url: 'https://mock.shop/llms.txt'}},
+                  'and set',
+                  {command: 'PUBLIC_STORE_DOMAIN'},
+                  'in `.env` to its host, or run',
+                  {command: `${cliCommand} link`},
+                  'to connect your Shopify store.',
                 ],
               ].filter((step): step is string[] => Boolean(step)),
             },

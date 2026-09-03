@@ -39,7 +39,8 @@ export default class Init extends Command {
     }),
     ...commonFlags.installDeps,
     'mock-shop': Flags.boolean({
-      description: 'Use mock.shop as the data source for the storefront.',
+      description:
+        'Use mock.shop as the data source for the storefront. mock.shop hosts many mock stores (see https://mock.shop/llms.txt); set PUBLIC_STORE_DOMAIN to a store host to use one of them.',
       env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
     }),
     ...commonFlags.styling,

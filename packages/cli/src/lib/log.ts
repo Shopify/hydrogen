@@ -325,7 +325,8 @@ export function enhanceH2Logs(options: {
         stringArg.includes('defaulting to mock.shop')
       ) {
         // This message comes from hydrogen-react. Let's enhance it:
-        stringArg += '\nRun `h2 link` to link your store.';
+        stringArg +=
+          '\nRun `h2 link` to link your store, or set PUBLIC_STORE_DOMAIN to another mock store from https://mock.shop/llms.txt.';
       }
 
       const [, type, scope, message] =

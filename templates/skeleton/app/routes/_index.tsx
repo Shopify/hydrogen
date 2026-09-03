@@ -33,8 +33,12 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
     // Add other queries here, so that they are loaded in parallel
   ]);
 
+  const storeDomain = context.env.PUBLIC_STORE_DOMAIN;
+
   return {
-    isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
+    // A mock.shop store on its own host (e.g. pets.mock.shop) is still mock data.
+    isShopLinked:
+      Boolean(storeDomain) && !/(^|\.)mock\.shop$/.test(storeDomain),
     featuredCollection: collections.nodes[0],
   };
 }

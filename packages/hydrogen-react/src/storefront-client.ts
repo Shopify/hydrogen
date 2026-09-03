@@ -38,7 +38,7 @@ export function createStorefrontClient({
     if (__HYDROGEN_DEV__) {
       storeDomain = MOCK_SHOP_DOMAIN;
       warnOnce(
-        `storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`,
+        `storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN} (its default store; other mock stores are listed at https://mock.shop/llms.txt)`,
         'info',
       );
     } else {

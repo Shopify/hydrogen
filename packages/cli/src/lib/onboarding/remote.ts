@@ -141,9 +141,11 @@ export async function setupRemoteTemplate(
     headline: `Your project will display inventory from ${
       options.template.endsWith(DEMO_STORE_REPO)
         ? 'the Hydrogen Demo Store'
-        : 'Mock.shop'
+        : 'the default mock.shop store'
     }.`,
-    body: `To connect this project to your Shopify store’s inventory, update \`${project.name}/.env\` with your store ID and Storefront API key.`,
+    body: options.template.endsWith(DEMO_STORE_REPO)
+      ? `To connect this project to your Shopify store’s inventory, update \`${project.name}/.env\` with your store ID and Storefront API key.`
+      : `mock.shop hosts many mock stores: set \`PUBLIC_STORE_DOMAIN\` in \`${project.name}/.env\` to a store host from https://mock.shop/llms.txt to use one of them. To connect this project to your Shopify store’s inventory, update the same file with your store ID and Storefront API key.`,
   });
 
   return {

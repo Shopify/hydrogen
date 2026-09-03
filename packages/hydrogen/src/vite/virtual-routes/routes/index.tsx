@@ -93,6 +93,23 @@ export default function Index() {
             <p>
               You&rsquo;re seeing this because you have not yet configured your
               storefront token. <br />
+              {isMockShop ? (
+                <>
+                  <br />
+                  This storefront is reading the default mock.shop store. Other
+                  mock stores are listed at{` `}
+                  <a
+                    target="_blank"
+                    rel="norefferer noopener"
+                    href="https://mock.shop/llms.txt"
+                  >
+                    mock.shop/llms.txt
+                  </a>
+                  ; set <code>PUBLIC_STORE_DOMAIN</code> to one of their hosts
+                  to use it.
+                  <br />
+                </>
+              ) : null}
               <br /> To link your store,{` `}
               run{' '}
               <code>

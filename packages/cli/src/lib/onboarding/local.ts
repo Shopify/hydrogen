@@ -52,7 +52,7 @@ export async function setupLocalStarterTemplate(
         choices: [
           {
             label:
-              'Use sample data from mock.shop (You can connect a Shopify account later)',
+              'Use sample data from mock.shop, a directory of mock stores (You can connect a Shopify account later)',
             value: 'mock',
           },
           {label: 'Link your Shopify account', value: 'link'},
@@ -74,7 +74,10 @@ export async function setupLocalStarterTemplate(
 
   if (!project) return;
 
-  if (templateAction === 'mock') project.storefrontTitle = 'Mock.shop';
+  if (templateAction === 'mock') {
+    project.storefrontTitle = 'mock.shop';
+    project.mockShop = true;
+  }
 
   const abort = createAbortHandler(controller, project);
 

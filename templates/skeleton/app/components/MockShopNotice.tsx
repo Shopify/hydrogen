@@ -11,6 +11,13 @@ export function MockShopNotice() {
           this project yet.
         </p>
         <p>
+          These products come from the default mock.shop store. Other mock
+          stores are listed at{' '}
+          <a href="https://mock.shop/llms.txt">mock.shop/llms.txt</a>; set{' '}
+          <code>PUBLIC_STORE_DOMAIN</code> in <code>.env</code> to one of their
+          hosts to use it.
+        </p>
+        <p>
           Link a store by running <code>npx shopify hydrogen link</code> in your
           terminal.
         </p>
