@@ -7,7 +7,7 @@ export function MockShopNotice() {
           You&rsquo;re seeing mock.shop products because no store is connected to this project yet.
         </p>
         <p>
-          mock.shop is many stores. Browse the directory at{" "}
+          mock.shop contains more than 100 sample stores. Browse the directory at{" "}
           <a href="https://mock.shop/llms.txt" target="_blank" rel="noreferrer noopener">
             mock.shop/llms.txt
           </a>{" "}
