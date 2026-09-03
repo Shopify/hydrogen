@@ -5,6 +5,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const HYDROGEN_PACKAGE = "@shopify/hydrogen";
+const SOURCE_ONLY_TEST_DIRECTORY = "__test__";
 const PUBLISHED_PREVIEW_VERSION = /^2026\.10\.0-preview\.[1-9]\d*$/;
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const defaultRepoRoot = resolve(scriptDir, "..");
@@ -102,6 +103,7 @@ export function preparePreviewTemplateDist(options: PreviewDistOptions): void {
     dependencies[HYDROGEN_PACKAGE] = version;
     packageJson.packageManager = template.distributionPackageManager;
     writeJsonObject(packageJsonPath, packageJson);
+    rmSync(join(templateRoot, SOURCE_ONLY_TEST_DIRECTORY), { recursive: true, force: true });
     rmSync(join(templateRoot, template.lockfile), { force: true });
     log(`Prepared ${template.name} for ${HYDROGEN_PACKAGE}@${version}.`);
   }
@@ -128,6 +130,9 @@ export function validatePreviewTemplateDist(options: PreviewDistOptions): void {
       throw new Error(
         `${template.name} does not use ${template.distributionPackageManager} for distribution.`,
       );
+    }
+    if (existsSync(join(templateRoot, SOURCE_ONLY_TEST_DIRECTORY))) {
+      throw new Error(`${template.name} distribution contains source-only tests.`);
     }
   }
 
