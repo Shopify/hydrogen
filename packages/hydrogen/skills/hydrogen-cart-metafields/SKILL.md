@@ -14,7 +14,7 @@ Cart metafields store custom data on the cart (for example delivery instructions
 Because of that, **do not add metafields to the core cart action/intent model.** Compose three pieces Hydrogen already provides:
 
 1. **Read** — a custom `CartFragment` on `createCartServerHandlers`, so metafields appear in cart state.
-2. **Write** — an app-owned route (`createShopifyRouteHandler`) calling `cartMetafieldsSet` / `cartMetafieldDelete` (and `cartCreate` when no cart exists yet).
+2. **Write** — an app-owned route (`createShopifyRouteHandler`) calling `cartMetafieldsSet` / `cartMetafieldDelete`.
 3. **Re-sync** — `useCartActions().refresh()` after a successful write.
 
 See `hydrogen-cart-ui` for cart state, `refresh()`, and form patterns, and `hydrogen-request-handlers` for registering the custom route.
@@ -70,23 +70,18 @@ async function handleCartMetafieldsPost({ request, storefrontClient }) {
   const body = parseRequest(await request.json()); // validate at the boundary
   const cartId = getCartId(request); // read the owner from the cookie, never the client body
 
+  // Mutate an existing cart only; never create one here. Two concurrent empty-cart
+  // writes would each call cartCreate and race — the last Set-Cookie wins,
+  // orphaning one cart and dropping its write.
+  if (!cartId) {
+    return { type: "error", error: { code: "missing_cart", message: "No cart exists." } };
+  }
+
   if (body.intent === "delete") {
-    if (!cartId) return { type: "error", error: { code: "missing_cart", message: "No cart exists." } };
     const result = await storefrontClient.graphql(CART_METAFIELD_DELETE_MUTATION, {
       variables: { input: { ownerId: cartId, key: body.key } },
     });
     return { type: "json", data: { userErrors: result.data?.cartMetafieldDelete?.userErrors ?? [] } };
-  }
-
-  // No cart yet: create one carrying the metafields, then persist its id in the cookie.
-  if (!cartId) {
-    const result = await storefrontClient.graphql(cartQueries.cartCreate, {
-      variables: { input: { metafields: body.metafields } },
-    });
-    const createdCartId = result.data?.cartCreate?.cart?.id ?? null;
-    const headers = new Headers();
-    if (createdCartId) headers.append("set-cookie", createCartCookie(createdCartId));
-    return { type: "json", data: { userErrors: result.data?.cartCreate?.userErrors ?? [] }, headers };
   }
 
   const result = await storefrontClient.graphql(CART_METAFIELDS_SET_MUTATION, {
@@ -97,8 +92,8 @@ async function handleCartMetafieldsPost({ request, storefrontClient }) {
 ```
 
 - **Existing cart** → `cartMetafieldsSet` with `ownerId` = the cart id from `getCartId(request)`.
-- **No cart yet** → `cartCreate` with the metafields, then persist the new cart id with `createCartCookie`. This preserves legacy `cartCreate`-with-metafields behavior (set data before a product is added).
-- **Delete** → a single key via `cartMetafieldDelete`. The Storefront API deletes one metafield per call, so keep the contract single-key. Deletion needs an existing cart.
+- **No cart** → reject with a `missing_cart` error. Do **not** call `cartCreate` here: two concurrent empty-cart writes would each create a cart and race on the cookie, orphaning one and dropping its write. Require callers to add a line first.
+- **Delete** → a single key via `cartMetafieldDelete`. The Storefront API deletes one metafield per call, so keep the contract single-key.
 
 ## Re-syncing the store
 
@@ -110,7 +105,7 @@ const { refresh } = useCartActions();
 refresh();
 ```
 
-`refresh()` reconciles the `CartFragment` fields for an existing cart, and **loads** the cart when none was present locally (e.g. right after `cartCreate`), so one call covers both flows. Never call `refresh()` after ordinary Hydrogen cart forms — their Standard Actions events already synchronize the store.
+`refresh()` reconciles the `CartFragment` fields for the cart after a write. Never call `refresh()` after ordinary Hydrogen cart forms — their Standard Actions events already synchronize the store.
 
 ## Copying to the order
 
@@ -125,13 +120,14 @@ Without the definition the cart write still succeeds, but nothing is copied to t
 - **Mutation returns `userErrors` only.** Never refetch and return the cart in the same request.
 - **Re-sync with `refresh()`** after success. Treat a refresh failure as a soft error (`errors.network`), not a failed save.
 - **Inject `ownerId` server-side** from the cart cookie (`getCartId`). Never trust a client-supplied `ownerId`.
+- **Require an existing cart.** Reject writes when no cart cookie is present; never call `cartCreate` in this route — it races on the cookie.
 - **Validate the request body** at the route boundary before calling the Storefront API.
 - **Delete is single-key**, matching `cartMetafieldDelete`.
 
-## Reference implementation
+## Putting it together
 
-`examples/hydrogen`:
+Three pieces in your app, each owning one concern:
 
-- `app/lib/cart-handlers.ts` — `CartFragment` for reads.
-- `app/lib/cart-metafields.ts` — app-owned `POST /api/cart/metafields` route.
-- `app/components/CartDeliveryInstructions.tsx` — read via `useCart`, write via the route, then `refresh()`.
+1. **Cart handlers** — add the `CartFragment` (see *Reading metafields*) so the values load into cart state.
+2. **Metafields route** — an app-owned `POST` handler (see *Writing metafields*) that runs `cartMetafieldsSet` / `cartMetafieldDelete` and returns only `userErrors`.
+3. **Your component** — read with `useCart`, write via the route, then call `refresh()` on success (see *Re-syncing the store*).
