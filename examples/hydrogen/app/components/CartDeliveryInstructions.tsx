@@ -24,6 +24,11 @@ const DELIVERY_INSTRUCTIONS_KEY = "delivery_instructions";
 const DELIVERY_INSTRUCTIONS_METAFIELD_KEY = `${DELIVERY_INSTRUCTIONS_NAMESPACE}.${DELIVERY_INSTRUCTIONS_KEY}`;
 const DELIVERY_INSTRUCTIONS_METAFIELD_TYPE = "multi_line_text_field";
 
+// Bound the save request so a hung connection can't leave the form stuck on
+// "Saving…". On timeout the fetch rejects with a TimeoutError, which the catch
+// below turns into a recoverable error state.
+const SAVE_REQUEST_TIMEOUT_IN_MILLISECONDS = 10_000;
+
 type CartMetafieldResponse = {
   userErrors?: Array<{ message: string }>;
   error?: { message: string };
@@ -50,6 +55,7 @@ export function CartDeliveryInstructions() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(SAVE_REQUEST_TIMEOUT_IN_MILLISECONDS),
       });
       const result = (await response.json()) as CartMetafieldResponse;
       const errorMessage = result.error?.message ?? result.userErrors?.[0]?.message;
@@ -60,8 +66,12 @@ export function CartDeliveryInstructions() {
       setSaveState({ status: "saved" });
       // Re-sync the cart store so the saved metafield shows for every consumer.
       refresh();
-    } catch {
-      setSaveState({ status: "error", message: "Network error. Please try again." });
+    } catch (error) {
+      const timedOut = error instanceof DOMException && error.name === "TimeoutError";
+      setSaveState({
+        status: "error",
+        message: timedOut ? "Timed out. Please try again." : "Network error. Please try again.",
+      });
     }
   }
 
