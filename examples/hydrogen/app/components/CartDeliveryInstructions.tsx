@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { FormEvent } from "react";
 
 import { useCart, useCartActions } from "~/lib/cart";
@@ -47,6 +47,9 @@ export function CartDeliveryInstructions() {
   );
   const { refresh } = useCartActions();
   const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
+  const headingId = useId();
+  const instructionsId = useId();
+  const errorId = useId();
 
   async function submitToCartMetafields(body: Record<string, unknown>) {
     setSaveState({ status: "saving" });
@@ -101,20 +104,29 @@ export function CartDeliveryInstructions() {
   }
 
   const isSaving = saveState.status === "saving";
+  const errorMessage = saveState.status === "error" ? saveState.message : null;
 
   return (
-    <section aria-label="Delivery instructions">
-      <h5>Delivery instructions</h5>
+    <section aria-labelledby={headingId}>
+      <h5 id={headingId}>Delivery instructions</h5>
       <form onSubmit={handleSave}>
+        <label htmlFor={instructionsId}>Delivery instructions</label>
         <textarea
+          id={instructionsId}
           name="instructions"
           rows={3}
           defaultValue={savedInstructions}
           key={savedInstructions}
           disabled={isSaving}
           placeholder="e.g. Leave the package at the back door"
-          aria-label="Delivery instructions"
+          aria-invalid={errorMessage ? true : undefined}
+          aria-describedby={errorMessage ? errorId : undefined}
         />
+        {errorMessage ? (
+          <p id={errorId} role="alert">
+            {errorMessage}
+          </p>
+        ) : null}
         <button type="submit" disabled={isSaving}>
           {isSaving ? "Saving…" : "Save instructions"}
         </button>
@@ -124,10 +136,7 @@ export function CartDeliveryInstructions() {
           </button>
         ) : null}
       </form>
-      <p role="status">
-        {saveState.status === "saved" ? "Saved." : null}
-        {saveState.status === "error" ? saveState.message : null}
-      </p>
+      <p role="status">{saveState.status === "saved" ? "Saved." : null}</p>
     </section>
   );
 }
