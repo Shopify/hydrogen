@@ -204,7 +204,7 @@ jobs:
           git add --force templates/react-router/package-lock.json templates/nextjs/pnpm-lock.yaml
           git diff --cached --check -- templates/react-router/package.json templates/nextjs/package.json
 
-          unexpected_paths=$(git diff --cached --name-only | grep -Ev '^templates/(react-router/(\.agents/skills/.*|package\.json|package-lock\.json)|nextjs/(\.agents/skills/.*|package\.json|pnpm-lock\.yaml))$' || true)
+          unexpected_paths=$(git diff --cached --name-only | grep -Ev '^templates/(react-router/(\.agents/skills/.*|__test__/.*|package\.json|package-lock\.json)|nextjs/(\.agents/skills/.*|__test__/.*|package\.json|pnpm-lock\.yaml))$' || true)
           if [ -n "$unexpected_paths" ]; then
             echo "Unexpected compiled changes:"
             echo "$unexpected_paths"

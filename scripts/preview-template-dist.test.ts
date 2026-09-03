@@ -37,6 +37,8 @@ test("prepares manifests and synchronizes skills", () => {
     const nextjsLock = join(repoRoot, "templates", "nextjs", "pnpm-lock.yaml");
     writeFile(reactRouterLock, "stale");
     writeFile(nextjsLock, "stale");
+    writeFile(join(repoRoot, "templates", "react-router", "__test__", "shop.test.ts"), "test");
+    writeFile(join(repoRoot, "templates", "nextjs", "__test__", "url-params.test.ts"), "test");
     writeFile(
       join(repoRoot, "templates", "react-router", ".agents", "skills", "stale", "SKILL.md"),
       "stale",
@@ -50,6 +52,8 @@ test("prepares manifests and synchronizes skills", () => {
     assert.equal(readPackageManager(repoRoot, "nextjs"), "pnpm@10.33.0");
     assert.equal(existsSync(reactRouterLock), false);
     assert.equal(existsSync(nextjsLock), false);
+    assert.equal(existsSync(join(repoRoot, "templates", "react-router", "__test__")), false);
+    assert.equal(existsSync(join(repoRoot, "templates", "nextjs", "__test__")), false);
     assert.equal(
       readFileSync(
         join(
@@ -100,6 +104,18 @@ test("validates compiled manifests", () => {
 
     assert.doesNotThrow(() =>
       validatePreviewTemplateDist({ repoRoot, version: VERSION, log: () => {} }),
+    );
+  });
+});
+
+test("rejects source-only tests in compiled templates", () => {
+  withFixture((repoRoot) => {
+    preparePreviewTemplateDist({ repoRoot, version: VERSION, log: () => {} });
+    writeFile(join(repoRoot, "templates", "nextjs", "__test__", "unexpected.test.ts"), "test");
+
+    assert.throws(
+      () => validatePreviewTemplateDist({ repoRoot, version: VERSION, log: () => {} }),
+      /distribution contains source-only tests/,
     );
   });
 });
