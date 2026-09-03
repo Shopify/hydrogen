@@ -1,14 +1,9 @@
-import type { AnalyticsCart, ConsentConfig, ShopAnalytics } from "@shopify/hydrogen";
+import type { AnalyticsCart } from "@shopify/hydrogen";
 import { useCartAnalytics } from "@shopify/hydrogen/react";
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router";
 
-import {
-  AnalyticsEvent,
-  configureAnalytics,
-  getAnalytics,
-  getAnalyticsShop,
-} from "~/lib/analytics";
+import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
 
 type AnalyticsTapWindow = Window & {
   __analyticsEvents?: Array<{ event: string; payload: Record<string, unknown> }>;
@@ -25,21 +20,12 @@ const TAP_EVENTS = [
   AnalyticsEvent.PRODUCT_REMOVED_FROM_CART,
 ] as const;
 
-export function AnalyticsTracker({
-  shop,
-  consent,
-  enableTestTap,
-}: {
-  shop: ShopAnalytics;
-  consent: ConsentConfig;
-  enableTestTap: boolean;
-}) {
+export function AnalyticsTracker({ enableTestTap }: { enableTestTap: boolean }) {
   const location = useLocation();
   const pageKey = `${location.pathname}${location.search}`;
   const tapConfigured = useRef(false);
 
   useEffect(() => {
-    configureAnalytics(shop, consent);
     const analytics = getAnalytics();
     if (!analytics) return;
 
@@ -54,11 +40,8 @@ export function AnalyticsTracker({
       }
     }
 
-    analytics.publish(AnalyticsEvent.PAGE_VIEWED, {
-      url: window.location.href,
-      shop,
-    });
-  }, [pageKey, shop, consent, enableTestTap]);
+    analytics.publish(AnalyticsEvent.PAGE_VIEWED);
+  }, [pageKey, enableTestTap]);
 
   return null;
 }
@@ -135,7 +118,5 @@ export function publishCartViewed(cart: unknown) {
   if (!analytics) return;
   analytics.publish(AnalyticsEvent.CART_VIEWED, {
     cart: toAnalyticsCart(cart),
-    url: window.location.href,
-    shop: getAnalyticsShop(),
   });
 }

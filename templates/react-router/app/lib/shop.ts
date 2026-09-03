@@ -33,24 +33,16 @@ export function getStoreDomain(env: Pick<Env, "PUBLIC_STORE_DOMAIN">): string {
   return env.PUBLIC_STORE_DOMAIN || storefrontConfig.storeDomain;
 }
 
-// Analytics shop identity. `shopId` is a real Shopify Shop GID.
-export const analyticsShop = {
-  shopId: "gid://shopify/Shop/55145660472", // ← replace with your Shop GID
-  channel: "hydrogen",
-  storefrontId: "1000014875", // ← replace with your storefront id
-} as const;
-
+// Shopify runtime identity. `shopId` is a real Shopify Shop GID.
 export const shop = {
-  shopId: analyticsShop.shopId,
-  storefrontId: analyticsShop.storefrontId,
+  shopId: "gid://shopify/Shop/55145660472", // ← replace with your Shop GID
+  storefrontId: "1000014875", // ← replace with your storefront id
   myshopifyDomain: storefrontConfig.storeDomain,
 } as const;
 
 // Use Shopify's default consent banner and Customer Privacy behavior.
 export const analyticsConsent = {
   mode: "default-banner",
-  country: "US",
-  language: "EN",
 } as const;
 
 // Private Storefront API token for SSR requests. Read from the worker environment

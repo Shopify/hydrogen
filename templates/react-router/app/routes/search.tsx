@@ -13,7 +13,7 @@ import {
   useLoadMore,
 } from "~/components/CollectionBrowse";
 import { ProductCard } from "~/components/ProductCard";
-import { AnalyticsEvent, getAnalytics, getAnalyticsShop } from "~/lib/analytics";
+import { AnalyticsEvent, getAnalytics } from "~/lib/analytics";
 import { loadSearchPage, type SearchPageData } from "~/lib/search";
 import { storefrontClientContext } from "~/lib/storefront";
 
@@ -48,14 +48,11 @@ function SearchViewedTracker({
     if (!searchTerm) return;
 
     const analytics = getAnalytics();
-    const shop = getAnalyticsShop();
-    if (!analytics || !shop) return;
+    if (!analytics) return;
 
     analytics.publish(AnalyticsEvent.SEARCH_VIEWED, {
       searchTerm,
       searchResults: { totalCount },
-      url: window.location.href,
-      shop,
     });
   }, [searchTerm, totalCount]);
 
