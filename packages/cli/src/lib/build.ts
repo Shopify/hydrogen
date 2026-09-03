@@ -5,8 +5,16 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {dirname, joinPath} from '@shopify/cli-kit/node/path';
 import {execAsync} from './process.js';
 
-// Avoid using fileURLToPath here to prevent backslashes nightmare on Windows
-const monorepoPackagesPath = new URL('../../..', import.meta.url).pathname;
+// Avoid using fileURLToPath here to prevent backslashes nightmare on Windows.
+// URL pathnames are percent-encoded, so decode to support directories that
+// contain spaces or other reserved characters.
+export function decodedPathname(url: URL) {
+  return decodeURIComponent(url.pathname);
+}
+
+const monorepoPackagesPath = decodedPathname(
+  new URL('../../..', import.meta.url),
+);
 
 // Check if we're in the Hydrogen monorepo by checking the path structure
 // This was the original logic before PR #3074 that worked for over a year
