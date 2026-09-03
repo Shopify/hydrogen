@@ -31,6 +31,7 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
     ...original,
     renderConfirmationPrompt: vi.fn(),
     renderSelectPrompt: vi.fn(),
+    renderAutocompletePrompt: vi.fn(),
     renderTextPrompt: vi.fn(),
     renderTasks: vi.fn(async (args) => {
       await original.renderTasks(args);

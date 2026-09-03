@@ -23,6 +23,26 @@ describe('local templates', () => {
     outputMock.clear();
   });
 
+  it('writes the chosen mock.shop store to .env', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      await setupTemplate({
+        path: tmpDir,
+        git: false,
+        language: 'ts',
+        mockShop: true,
+        mockShopStore: 'pets',
+      });
+
+      await expect(readFile(`${tmpDir}/.env`)).resolves.toMatch(
+        'PUBLIC_STORE_DOMAIN="pets.mock.shop"',
+      );
+
+      const output = outputMock.info();
+      expect(output).toMatch('pets.mock.shop');
+      expect(output).toMatch('To switch');
+    });
+  });
+
   it('creates basic projects', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await setupTemplate({

@@ -82,6 +82,16 @@ describe('init', () => {
     });
   });
 
+  it('turns on mock.shop when a mock.shop store is chosen', async () => {
+    vi.mocked(setupTemplate).mockResolvedValueOnce(undefined);
+
+    await runInit({mockShopStore: 'pets', installDeps: false});
+
+    expect(setupTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({mockShop: true, mockShopStore: 'pets'}),
+    );
+  });
+
   describe('project validity', () => {
     let tmpDir: string;
 

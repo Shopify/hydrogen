@@ -72,6 +72,7 @@ export type InitOptions = {
   template?: string;
   language?: Language;
   mockShop?: boolean;
+  mockShopStore?: string;
   styling?: StylingChoice;
   i18n?: I18nChoice;
   token?: string;
@@ -293,6 +294,7 @@ type Project = {
   directory: string;
   storefrontTitle?: string;
   mockShop?: boolean;
+  mockShopStore?: string;
 };
 
 /**
@@ -717,15 +719,26 @@ export async function renderProjectReady(
                       .join(' && '),
                   },
                 ],
-                project.mockShop && [
-                  'This project reads the default mock.shop store. Pick another mock store at',
-                  {link: {url: 'https://mock.shop/llms.txt'}},
-                  'and set',
-                  {command: 'PUBLIC_STORE_DOMAIN'},
-                  'in `.env` to its host, or run',
-                  {command: `${cliCommand} link`},
-                  'to connect your Shopify store.',
-                ],
+                project.mockShop &&
+                  (project.mockShopStore
+                    ? [
+                        `This project reads ${project.mockShopStore}. To switch, set`,
+                        {command: 'PUBLIC_STORE_DOMAIN'},
+                        'in `.env` to another store from',
+                        {link: {url: 'https://mock.shop/llms.txt'}},
+                        'or run',
+                        {command: `${cliCommand} link`},
+                        'to connect your Shopify store.',
+                      ]
+                    : [
+                        'This project reads the default mock.shop store. Pick another mock store at',
+                        {link: {url: 'https://mock.shop/llms.txt'}},
+                        'and set',
+                        {command: 'PUBLIC_STORE_DOMAIN'},
+                        'in `.env` to its host, or run',
+                        {command: `${cliCommand} link`},
+                        'to connect your Shopify store.',
+                      ]),
               ].filter((step): step is string[] => Boolean(step)),
             },
           },

@@ -43,6 +43,11 @@ export default class Init extends Command {
         'Use mock.shop as the data source for the storefront. mock.shop hosts many mock stores (see https://mock.shop/llms.txt); set PUBLIC_STORE_DOMAIN to a store host to use one of them.',
       env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
     }),
+    'mock-shop-store': Flags.string({
+      description:
+        'The mock.shop store to read, by subdomain or host (for example `pets` or `pets.mock.shop`). Pick one at https://mock.shop/llms.txt. Implies --mock-shop.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_SHOP_STORE',
+    }),
     ...commonFlags.styling,
     ...commonFlags.markets,
     ...commonFlags.shortcut,
@@ -113,6 +118,10 @@ export async function runInit(
    * Nullish coalescing assignment means you can still override individual options by flag:
    * $ h2 init --quickstart --language ts --no-install-deps
    */
+  if (options.mockShopStore) {
+    options.mockShop = true;
+  }
+
   if (options.quickstart) {
     options.i18n ??= 'none';
     options.installDeps ??= true;

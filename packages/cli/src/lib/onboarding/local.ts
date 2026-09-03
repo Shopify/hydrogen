@@ -1,8 +1,16 @@
 import {cp as copyWithFilter} from 'node:fs/promises';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
+import {terminalSupportsPrompting} from '@shopify/cli-kit/node/system';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
+import {
+  MOCK_SHOP_APEX,
+  MOCK_SHOP_DIRECTORY_URL,
+  fetchMockShopStores,
+  normalizeMockShopStore,
+  type MockShopStore,
+} from '../mock-shop.js';
 import {hyphenate} from '@shopify/cli-kit/common/string';
 import colors from '@shopify/cli-kit/node/colors';
 import {
@@ -10,6 +18,7 @@ import {
   renderSelectPrompt,
   renderConfirmationPrompt,
   renderTasks,
+  renderAutocompletePrompt,
 } from '@shopify/cli-kit/node/ui';
 import {
   createAbortHandler,
@@ -66,6 +75,11 @@ export async function setupLocalStarterTemplate(
       ? await handleStorefrontLink(controller)
       : undefined;
 
+  const mockShopStore =
+    templateAction === 'mock'
+      ? await handleMockShopStore(options, controller)
+      : undefined;
+
   const project = await handleProjectLocation({
     ...options,
     storefrontInfo,
@@ -75,8 +89,13 @@ export async function setupLocalStarterTemplate(
   if (!project) return;
 
   if (templateAction === 'mock') {
-    project.storefrontTitle = 'mock.shop';
+    project.storefrontTitle = !mockShopStore
+      ? 'mock.shop'
+      : mockShopStore.name === mockShopStore.host
+        ? mockShopStore.host
+        : `${mockShopStore.name} (${mockShopStore.host})`;
     project.mockShop = true;
+    project.mockShopStore = mockShopStore?.host;
   }
 
   const abort = createAbortHandler(controller, project);
@@ -189,7 +208,12 @@ export async function setupLocalStarterTemplate(
           joinPath(project.directory, '.env'),
           envLeadingComment +
             '\n' +
-            [['SESSION_SECRET', 'foobar']]
+            [
+              ['SESSION_SECRET', 'foobar'],
+              ...(mockShopStore
+                ? [['PUBLIC_STORE_DOMAIN', mockShopStore.host]]
+                : []),
+            ]
               .map(([key, value]) => `${key}="${value}"`)
               .join('\n') +
             '\n',
@@ -411,4 +435,61 @@ function maybeInjectCliHydrogen(pkgJsonContent: string) {
   }
 
   return pkgJsonContent;
+}
+
+/**
+ * Resolves which mock.shop store a mock project reads. `--mock-shop-store`
+ * decides without a prompt; otherwise an interactive run gets to pick from
+ * the live directory. Quickstart and non-interactive runs keep the default
+ * store, and a directory that cannot be fetched is treated the same way.
+ */
+async function handleMockShopStore(
+  options: InitOptions,
+  controller: AbortController,
+): Promise<MockShopStore | undefined> {
+  if (options.mockShopStore) {
+    const host = normalizeMockShopStore(options.mockShopStore);
+    return host === MOCK_SHOP_APEX
+      ? undefined
+      : {host, name: host, summary: ''};
+  }
+
+  if (options.quickstart || !terminalSupportsPrompting()) return undefined;
+
+  const stores = await fetchMockShopStores();
+  const named = stores.filter((store) => store.host !== MOCK_SHOP_APEX);
+  if (named.length === 0) return undefined;
+
+  const defaultChoice = {
+    label: 'Default store (apparel basics)',
+    value: MOCK_SHOP_APEX,
+  };
+  const choices = [
+    defaultChoice,
+    ...named.map((store) => ({
+      label: store.name,
+      value: store.host,
+      helperText: store.summary.slice(0, 80),
+    })),
+  ];
+
+  const host = await renderAutocompletePrompt<string>({
+    message: `Pick a mock.shop store to build against (${named.length} available, see ${MOCK_SHOP_DIRECTORY_URL})`,
+    choices,
+    search: async (term) => {
+      const needle = term.toLowerCase();
+      return {
+        data: choices.filter((choice) =>
+          `${choice.label} ${'helperText' in choice ? choice.helperText : ''}`
+            .toLowerCase()
+            .includes(needle),
+        ),
+      };
+    },
+    abortSignal: controller.signal,
+  });
+
+  return host === MOCK_SHOP_APEX
+    ? undefined
+    : named.find((store) => store.host === host);
 }

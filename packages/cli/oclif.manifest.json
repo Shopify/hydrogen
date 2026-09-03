@@ -1066,6 +1066,14 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "mock-shop-store": {
+          "description": "The mock.shop store to read, by subdomain or host (for example `pets` or `pets.mock.shop`). Pick one at https://mock.shop/llms.txt. Implies --mock-shop.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_MOCK_SHOP_STORE",
+          "name": "mock-shop-store",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "styling": {
           "description": "Sets the styling strategy to use. One of `tailwind`, `vanilla-extract`, `css-modules`, `postcss`, `none`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_STYLING",
