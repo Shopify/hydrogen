@@ -42,6 +42,12 @@ cp .env.example .env
 npm run dev
 ```
 
+`mock.shop` is a catalog of fictional stores, each on its own host. The default at
+`mock.shop` sells apparel basics; the directory at
+[mock.shop/llms.txt](https://mock.shop/llms.txt) lists every other store with what it
+sells. To build against one of them, set `PUBLIC_STORE_DOMAIN` to its host (for
+example `pets.mock.shop`) and leave the token empty.
+
 **Against a real store** — set your store domain, storefront ID, and a **private**
 Storefront API token, then run normally:
 
@@ -63,7 +69,8 @@ app talks to the real store (`PUBLIC_STORE_DOMAIN`, falling back to the default 
 `app/lib/shop.ts`); with none it falls back to the `mock.shop` demo, so a fresh
 deploy always renders. **On Oxygen, a linked storefront injects these env vars
 automatically** — the deployed site connects to your store with no extra config
-(and shows the `mock.shop` demo until it's linked). `MOCK_SHOP=1` forces mock.
+(and shows the `mock.shop` demo until it's linked). `MOCK_SHOP=1` forces mock, and so
+does a `mock.shop` host in `PUBLIC_STORE_DOMAIN`.
 (`mock.shop` and the Hydrogen Preview store are different data sources.)
 
 ## Scripts
