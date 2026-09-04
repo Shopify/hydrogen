@@ -22,9 +22,11 @@ export type ShopifyGlobal = {
   customerPrivacy: {
     config?: {
       isHeadless?: boolean;
+      asyncConsent?: boolean;
+      asyncVisitorState?: boolean;
       consentDomain?: string;
     };
-    consentStatus?: "pending" | "loaded";
+    consentStatus?: "loading" | "loaded";
     currentVisitorConsent: () => Record<string, unknown>;
     preferencesProcessingAllowed: () => boolean;
     saleOfDataAllowed: () => boolean;
@@ -35,6 +37,7 @@ export type ShopifyGlobal = {
       callback: (data: { error: string } | undefined) => void,
     ) => void | Promise<unknown>;
     shouldShowBanner: () => boolean;
+    shouldShowGDPRBanner: () => boolean;
   };
   locale: Lowercase<I18nConfig["language"]> | string;
   /** @deprecated Use `Shopify.routes.navigate` instead. */

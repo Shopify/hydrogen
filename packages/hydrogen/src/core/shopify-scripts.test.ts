@@ -457,6 +457,11 @@ describe("shopify scripts", () => {
       },
       {
         tagName: "script",
+        attributes: { id: "shopify-analytics-bus", nonce: "test-nonce" },
+        innerHTML: expect.stringContaining("Analytics bus already initialized"),
+      },
+      {
+        tagName: "script",
         attributes: {
           id: "shopify-consent",
           async: true,
@@ -464,16 +469,6 @@ describe("shopify scripts", () => {
           nonce: "test-nonce",
           src: SHOPIFY_CONSENT_API_SCRIPT,
         },
-      },
-      {
-        tagName: "script",
-        attributes: { id: "shopify-consent-bootstrap", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining("visitorConsentCollected"),
-      },
-      {
-        tagName: "script",
-        attributes: { id: "shopify-analytics-bus", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining("Analytics bus already initialized"),
       },
       {
         tagName: "script",
@@ -554,6 +549,11 @@ describe("shopify scripts", () => {
       },
       {
         tagName: "script",
+        attributes: { id: "shopify-analytics-bus", nonce: "test-nonce" },
+        innerHTML: expect.stringContaining("Analytics bus already initialized"),
+      },
+      {
+        tagName: "script",
         attributes: {
           id: "shopify-consent",
           async: true,
@@ -561,16 +561,6 @@ describe("shopify scripts", () => {
           nonce: "test-nonce",
           src: SHOPIFY_CONSENT_API_SCRIPT,
         },
-      },
-      {
-        tagName: "script",
-        attributes: { id: "shopify-consent-bootstrap", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining("visitorConsentCollected"),
-      },
-      {
-        tagName: "script",
-        attributes: { id: "shopify-analytics-bus", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining("Analytics bus already initialized"),
       },
       {
         tagName: "script",
@@ -607,7 +597,7 @@ describe("shopify scripts", () => {
       nonce: "",
       shop: TEST_SHOP,
     });
-    expect(descriptors.scripts).toHaveLength(8);
+    expect(descriptors.scripts).toHaveLength(7);
     for (const { attributes } of descriptors.scripts) {
       expect(attributes).toHaveProperty("nonce", "");
     }
@@ -616,7 +606,7 @@ describe("shopify scripts", () => {
   it("does not include WebMCP in SSR descriptors", () => {
     const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
 
-    expect(descriptors.scripts).toHaveLength(7);
+    expect(descriptors.scripts).toHaveLength(6);
     expect(descriptors.scripts).not.toContainEqual(
       expect.objectContaining({
         attributes: expect.objectContaining({
@@ -805,7 +795,7 @@ describe("shopify scripts", () => {
     });
     const html = htmlTags.join("\n");
 
-    expect(htmlTags).toHaveLength(11);
+    expect(htmlTags).toHaveLength(10);
     expect(html).toContain('<script id="shopify-global-bootstrap" nonce="test-nonce">');
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
