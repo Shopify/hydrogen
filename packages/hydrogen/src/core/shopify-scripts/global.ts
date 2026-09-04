@@ -17,7 +17,6 @@ export type ShopifyGlobalConfig = {
   locale: Lowercase<I18nConfig["language"]>;
   customerPrivacy: {
     config: NonNullable<ShopifyGlobal["customerPrivacy"]["config"]>;
-    consentStatus: NonNullable<ShopifyGlobal["customerPrivacy"]["consentStatus"]>;
   };
   routes: {
     root: string;
@@ -146,8 +145,9 @@ export function getShopifyGlobalBootstrapScript({
     customerPrivacy: {
       config: {
         isHeadless: true,
+        asyncConsent: true,
+        asyncVisitorState: true,
       },
-      consentStatus: "pending",
     },
   };
 

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
 
-import { SHOPIFY_CONSENT_SCRIPT_ID } from "./constants";
+import { CONSENT_TRACKING_API_LOADED_EVENT, SHOPIFY_CONSENT_SCRIPT_ID } from "./constants";
 import {
   getShopifyGlobalBootstrapScript,
   getShopifyScriptTags,
@@ -21,8 +21,9 @@ describe("consent script tags", () => {
   it("renders the standalone consent API as an async script when consent is omitted", () => {
     const { scripts } = getShopifyScriptTags({ shop: SHOP });
 
-    expect(scripts[0].innerHTML).toContain('"consentStatus":"pending"');
-    expect(scripts[0].innerHTML).toContain('"config":{"isHeadless":true}');
+    expect(scripts[0].innerHTML).toContain(
+      '"config":{"isHeadless":true,"asyncConsent":true,"asyncVisitorState":true}',
+    );
     expect(scripts[0].innerHTML).toContain("consentDomain=window.location.host");
     expect(scripts).toContainEqual(
       expect.objectContaining({
@@ -77,21 +78,20 @@ describe("consent script tags", () => {
     );
   });
 
-  it("bootstraps customer privacy config before consent scripts", () => {
+  it("installs consent readiness listeners before loading the consent script", () => {
     const { scripts } = getShopifyScriptTags({ consent: CONSENT, shop: SHOP });
+    const analyticsBusIndex = scripts.findIndex(
+      (script) => script.attributes?.id === "shopify-analytics-bus",
+    );
     const consentApiIndex = scripts.findIndex(
       (script) => script.attributes?.id === SHOPIFY_CONSENT_SCRIPT_ID,
     );
-    const consentBootstrapScript = scripts.find(
-      (script) => script.attributes?.id === "shopify-consent-bootstrap",
-    );
 
-    expect(scripts[0].innerHTML).toContain('"consentStatus":"pending"');
+    expect(scripts[0].innerHTML).toContain('"asyncConsent":true,"asyncVisitorState":true');
     expect(scripts[0].innerHTML).toContain("consentDomain=window.location.host");
-    expect(consentApiIndex).toBeGreaterThan(0);
-    expect(consentBootstrapScript?.innerHTML).toContain(
-      `"scriptId":"${SHOPIFY_CONSENT_SCRIPT_ID}"`,
-    );
+    expect(analyticsBusIndex).toBeGreaterThan(0);
+    expect(scripts[analyticsBusIndex].innerHTML).toContain(CONSENT_TRACKING_API_LOADED_EVENT);
+    expect(consentApiIndex).toBeGreaterThan(analyticsBusIndex);
   });
 
   it("sets consentDomain to the current host", () => {
@@ -102,9 +102,11 @@ describe("consent script tags", () => {
 
     expect(window.Shopify?.customerPrivacy?.config).toEqual({
       isHeadless: true,
+      asyncConsent: true,
+      asyncVisitorState: true,
       consentDomain: window.location.host,
     });
-    expect(window.Shopify?.customerPrivacy?.consentStatus).toBe("pending");
+    expect(window.Shopify?.customerPrivacy?.consentStatus).toBeUndefined();
   });
 
   it("renders consent tags to HTML", () => {
