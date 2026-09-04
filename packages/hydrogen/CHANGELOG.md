@@ -1,5 +1,15 @@
 # @shopify/hydrogen
 
+## 2026.10.0-preview.3
+
+### Minor Changes
+
+- 54a1e7e: Proxy caller-authenticated UCP MCP requests from `/api/ucp/mcp` to the configured Shopify store.
+
+### Patch Changes
+
+- d8f8476: Add the `hydrogen-cart-metafields` skill: a behavioral guide for reading and writing cart metafields (custom cart data such as delivery instructions) through a custom `CartFragment`, an app-owned mutation route, and `useCartActions().refresh()`.
+
 ## 2026.10.0-preview.2
 
 ### Minor Changes
