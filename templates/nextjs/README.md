@@ -28,6 +28,8 @@ pnpm dev:https
 
 Next.js provisions and reuses a trusted development certificate under `certificates/`. On first run, it may prompt to install the local certificate authority.
 
+Next.js does not use Hydrogen's Vite plugin, so configure the Customer Account callback, JavaScript origin, and logout URLs manually. The `hydrogen-local-https` skill lists the exact values.
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` when you are ready to connect a real store:

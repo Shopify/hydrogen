@@ -47,6 +47,8 @@ pnpm --filter @shopify/hydrogen-example-solid-start dev:https
 
 On the first run, restart the command after the Vite plugin provisions the certificate so Vinxi can load it.
 
+When the server starts, the local HTTPS plugin links an unlinked Hydrogen storefront and pushes the Customer Account callback, JavaScript origin, and logout URLs. If automatic setup is unavailable, it prints the values for manual configuration.
+
 ## Run
 
 ```sh

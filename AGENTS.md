@@ -18,5 +18,6 @@ When designing or adjusting APIs for the `hydrogen` package, closely follow the 
 
 - Account-enabled framework examples use `https://local.tryhydrogen.dev:5173` for Customer Account OAuth callback testing.
 - Vite-based examples consume Hydrogen's default certificates. Certificates are provisioned automatically on `dev:https` startup. This downloads a pinned, checksum-verified mkcert release, trusts the local certificate authority, and creates the certificates under `~/.shopify/hydrogen/certs/`. Nuxt and SolidStart may need one restart after first-run provisioning so their outer dev servers can load the certificate files.
+- Outside CI, the local HTTPS plugin uses Shopify CLI to link an unlinked Hydrogen storefront and push the Customer Account callback, JavaScript origin, and logout URLs. Failures fall back to printing the values for manual configuration.
 - The Next.js example provisions its own certificate. The Hydrogen example uses the Shopify CLI tunnel flow.
 - Run the relevant example with `pnpm --filter @shopify/hydrogen-example-<name> dev:https` when that example provides the script.

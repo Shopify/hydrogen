@@ -6,8 +6,12 @@ import { fileURLToPath } from "node:url";
 
 import type { ConfigEnv, Plugin, ViteDevServer } from "vite";
 
-import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
 import { confirmCertificateInstallation } from "./certificate-prompt";
+import {
+  configureCustomerAccountUrls,
+  isContinuousIntegration,
+  resolveCustomerAccountUrls,
+} from "./customer-account";
 import { provisionCertificates } from "./mkcert";
 
 export const LOCAL_HTTPS_DEFAULTS = {
@@ -27,7 +31,7 @@ const HTTP1_ONLY_RESPONSE_HEADERS = new Set([
   "upgrade",
 ]);
 const emittedMissingCertificateWarnings = new Set<string>();
-const loggedCustomerAccountSettings = new Set<string>();
+const startedCustomerAccountSetups = new Set<string>();
 
 /** Options for Hydrogen's local HTTPS Vite plugin. */
 export type LocalHttpsOptions = {
@@ -219,11 +223,6 @@ async function ensureCertificateFiles(settings: LocalHttpsSettings): Promise<boo
   }
 }
 
-function isContinuousIntegration() {
-  const ci = process.env.CI;
-  return ci !== undefined && ci !== "" && ci !== "false" && ci !== "0";
-}
-
 function checkCertificateFiles(settings: LocalHttpsSettings, provisioningNote?: string) {
   const missingPaths = [settings.certPath, settings.keyPath].filter((path) => !existsSync(path));
   if (missingPaths.length === 0) return true;
@@ -326,35 +325,24 @@ function configureLocalHttpsServer(server: ViteDevServer, settings: LocalHttpsSe
     next();
   });
 
-  const logSettings = () => {
+  const configureCustomerAccounts = () => {
     const port = resolveBoundPort();
-    const settingsKey = `${settings.host}:${port}`;
-    if (loggedCustomerAccountSettings.has(settingsKey)) return;
-    loggedCustomerAccountSettings.add(settingsKey);
-    server.config.logger.info(formatCustomerAccountSettings({ host: settings.host, port }));
+    const settingsKey = `${server.config.root}:${settings.host}:${port}`;
+    if (startedCustomerAccountSetups.has(settingsKey)) return;
+    startedCustomerAccountSetups.add(settingsKey);
+
+    void configureCustomerAccountUrls({
+      logger: server.config.logger,
+      root: server.config.root,
+      urls: resolveCustomerAccountUrls(settings.host, port),
+    });
   };
 
   if (server.httpServer) {
-    server.httpServer.once("listening", logSettings);
+    server.httpServer.once("listening", configureCustomerAccounts);
   } else {
-    logSettings();
+    configureCustomerAccounts();
   }
-}
-
-function formatCustomerAccountSettings({ host, port }: Pick<LocalHttpsSettings, "host" | "port">) {
-  const origin = `https://${host}`;
-  const portfulOrigin = `${origin}:${port}`;
-
-  return [
-    "",
-    "Customer Account API — make sure these values are configured for your storefront:",
-    "",
-    `  Callback URI(s) (required):  ${portfulOrigin}${CUSTOMER_ACCOUNT_PATHS.authorize}`,
-    // Shopify's server-side validation rejects JavaScript origins containing a port.
-    `  JavaScript origin(s):        ${origin}`,
-    `  Logout URI:                  ${portfulOrigin}`,
-    "",
-  ].join("\n");
 }
 
 function stripHttp1OnlyResponseHeaders(response: ServerResponse) {
