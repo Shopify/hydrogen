@@ -2,12 +2,7 @@
   "mode": "pre",
   "tag": "preview",
   "changesets": [
-    "accept-variant-id",
-    "bright-agents-proxy",
-    "calm-carts-refresh",
-    "clean-cursors-paginate",
-    "fair-prices-render",
-    "fec-produce-well-known",
-    "quick-plums-develop"
+    "cart-metafields-skill",
+    "ucp-mcp-proxy"
   ]
 }
