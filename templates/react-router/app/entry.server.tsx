@@ -14,7 +14,12 @@ export default async function handleRequest(
     {
       signal: request.signal,
       onError(error) {
-        console.error(error);
+        console.error(
+          "[hydrogen-template-react-router] render failed",
+          error instanceof Error
+            ? { message: error.message, name: error.name }
+            : { message: "Unknown error", name: "Error" },
+        );
         responseStatusCode = 500;
       },
     },

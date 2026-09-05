@@ -21,10 +21,10 @@ import type { Route } from "./+types/search";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Search · CORE" },
+    { title: "Search" },
     {
       name: "description",
-      content: "Search products at CORE.",
+      content: "Search products.",
     },
   ];
 }

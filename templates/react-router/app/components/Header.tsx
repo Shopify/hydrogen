@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { useCart } from "~/lib/cart";
 import { CART_DRAWER_ID, openDialogFallback } from "~/lib/cart-drawer";
 
-import { MobileNav, MobileNavTrigger, type NavCollection } from "./MobileNav";
+import { MobileNav, MobileNavTrigger } from "./MobileNav";
 
 function cartCountLabel(count: number) {
   return count === 1 ? "Cart (1 item)" : `Cart (${count} items)`;
@@ -17,7 +17,15 @@ function displayCount(count: number) {
   return count > 99 ? "99+" : String(count);
 }
 
-export function Header({ navCollections }: { navCollections: NavCollection[] }) {
+export function Header({
+  accountAvailable,
+  isLoggedIn,
+  shopName,
+}: {
+  accountAvailable: boolean;
+  isLoggedIn: boolean;
+  shopName: string;
+}) {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
 
   return (
@@ -32,9 +40,10 @@ export function Header({ navCollections }: { navCollections: NavCollection[] }) 
           </div>
           <Link
             to="/"
-            className="text-on-surface focus-visible:outline-accent inline-flex items-center rounded-sm text-lg font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="text-on-surface focus-visible:outline-accent inline-flex max-w-40 items-center truncate rounded-sm text-lg font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            title={shopName}
           >
-            CORE
+            {shopName}
           </Link>
         </div>
 
@@ -43,15 +52,12 @@ export function Header({ navCollections }: { navCollections: NavCollection[] }) 
           className="mx-8 hidden min-w-0 flex-1 items-center gap-8 md:flex"
           data-desktop-nav
         >
-          {navCollections.map((collection) => (
-            <Link
-              key={collection.handle}
-              to={`/collections/${collection.handle}`}
-              className="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
-            >
-              {collection.title}
-            </Link>
-          ))}
+          <Link
+            to="/collections"
+            className="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
+          >
+            Collections
+          </Link>
         </nav>
 
         <div className="flex items-center gap-0">
@@ -62,13 +68,14 @@ export function Header({ navCollections }: { navCollections: NavCollection[] }) 
           >
             <img src="/icons/icon-search.svg" alt="" className="size-5" aria-hidden="true" />
           </Link>
-          <a
-            href="#"
+          <Link
+            to="/account"
+            reloadDocument
             className="text-on-surface focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
-            aria-label="Account"
+            aria-label={accountAvailable && !isLoggedIn ? "Log in" : "Account"}
           >
             <img src="/icons/icon-user.svg" alt="" className="size-5" aria-hidden="true" />
-          </a>
+          </Link>
           <button
             type="button"
             commandfor={CART_DRAWER_ID}
@@ -97,7 +104,7 @@ export function Header({ navCollections }: { navCollections: NavCollection[] }) 
           </span>
         </div>
       </div>
-      <MobileNav collections={navCollections} />
+      <MobileNav />
     </header>
   );
 }

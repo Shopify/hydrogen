@@ -49,7 +49,9 @@ export function AnalyticsTracker({
       win.__analyticsEvents ??= [];
       for (const event of TAP_EVENTS) {
         analytics.subscribe(event, (payload) => {
-          win.__analyticsEvents?.push({ event, payload: payload as Record<string, unknown> });
+          const events = win.__analyticsEvents;
+          if (!events) return;
+          events.push({ event, payload: payload as Record<string, unknown> });
         });
       }
     }

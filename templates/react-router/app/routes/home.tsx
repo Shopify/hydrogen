@@ -42,10 +42,10 @@ const HOME_QUERY = gql(
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Home · CORE" },
+    { title: "Home" },
     {
       name: "description",
-      content: "Shop best sellers and featured categories at CORE.",
+      content: "Shop best sellers and featured categories.",
     },
   ];
 }

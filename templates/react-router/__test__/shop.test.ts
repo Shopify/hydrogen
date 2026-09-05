@@ -1,13 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { shouldUseMockShop } from "../app/lib/shop.ts";
+import { resolveRuntimeConfig } from "../app/lib/shop.ts";
 
-test("uses a real store only when credentials exist and mock mode is not forced", () => {
-  assert.equal(shouldUseMockShop({}), true);
-  assert.equal(shouldUseMockShop({ PRIVATE_STOREFRONT_API_TOKEN: "private-token" }), false);
+test("resolves mock and real storefront configuration", () => {
+  assert.equal(resolveRuntimeConfig({}).usingMockShop, true);
   assert.equal(
-    shouldUseMockShop({ MOCK_SHOP: "1", PRIVATE_STOREFRONT_API_TOKEN: "private-token" }),
+    resolveRuntimeConfig({ MOCK_SHOP: "1", PRIVATE_STOREFRONT_API_TOKEN: "private-token" })
+      .usingMockShop,
     true,
+  );
+  assert.equal(
+    resolveRuntimeConfig({
+      PRIVATE_STOREFRONT_API_TOKEN: "private-token",
+      PUBLIC_STORE_DOMAIN: "example.myshopify.com",
+      PUBLIC_STOREFRONT_ID: "storefront-id",
+    }).usingMockShop,
+    false,
   );
 });

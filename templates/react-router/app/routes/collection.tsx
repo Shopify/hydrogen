@@ -21,10 +21,10 @@ import type { Route } from "./+types/collection";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Collection · CORE" },
+    { title: "Collection" },
     {
       name: "description",
-      content: "Shop the CORE collection page.",
+      content: "Shop this collection.",
     },
   ];
 }

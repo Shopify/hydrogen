@@ -9,7 +9,7 @@ import { formatPrice } from "~/lib/money";
 import type { Route } from "./+types/cart";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Cart · CORE" }];
+  return [{ title: "Cart" }];
 }
 
 export default function CartRoute() {
