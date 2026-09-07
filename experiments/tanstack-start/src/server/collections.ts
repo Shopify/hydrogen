@@ -6,7 +6,7 @@ import { collectionPath } from "~/lib/route-templates";
 
 import { toStorefrontProductFilters } from "./filters";
 import { throwNotFoundOrRedirect } from "./not-found";
-import { storefrontFn } from "./storefront-fn";
+import { requireData, storefrontFn } from "./storefront-fn";
 import { handleAndSearchInput, searchInput } from "./validators";
 
 export const COLLECTIONS_PAGE_SIZE = 12;
@@ -104,15 +104,15 @@ export const getCollections = storefrontFn
   .handler(async ({ context, data }) => {
     const { storefrontClient } = context;
     const params = new URLSearchParams(data.search);
-    const { data: result } = await storefrontClient.graphql(COLLECTIONS_QUERY, {
-      variables: { first: COLLECTIONS_PAGE_SIZE, after: params.get("after") || null },
-    });
+    const result = requireData(
+      await storefrontClient.graphql(COLLECTIONS_QUERY, {
+        variables: { first: COLLECTIONS_PAGE_SIZE, after: params.get("after") || null },
+      }),
+      "CollectionsList",
+    );
 
     return {
-      collections: result?.collections ?? {
-        nodes: [],
-        pageInfo: { hasNextPage: false, endCursor: null },
-      },
+      collections: result.collections,
       origin: new URL(context.request.url).origin,
     };
   });
@@ -133,9 +133,12 @@ export const getCollection = storefrontFn
       reverse: browse.reverse || undefined,
     };
 
-    const { data: result } = await storefrontClient.graphql(COLLECTION_QUERY, { variables });
+    const result = requireData(
+      await storefrontClient.graphql(COLLECTION_QUERY, { variables }),
+      "CollectionPage",
+    );
 
-    if (!result?.collection) {
+    if (!result.collection) {
       return throwNotFoundOrRedirect(context, collectionPath(data.handle), data.search);
     }
 

@@ -4,7 +4,7 @@ import { gql } from "@shopify/hydrogen";
 import type { StripIndexSignatures } from "~/lib/serializable";
 
 import { cartHandlers } from "./cart-handlers";
-import { storefrontFn } from "./storefront-fn";
+import { requireData, storefrontFn } from "./storefront-fn";
 
 const NAV_COLLECTIONS_QUERY = gql(HEADER_COLLECTIONS_QUERY);
 
@@ -27,6 +27,8 @@ export const getRootData = storefrontFn.handler(async ({ context }) => {
 
   return {
     cartData,
-    navCollections: normalizeHeaderCollections(navResult.data?.collections.nodes),
+    navCollections: normalizeHeaderCollections(
+      requireData(navResult, "NavCollections").collections.nodes,
+    ),
   };
 });

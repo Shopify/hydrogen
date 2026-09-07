@@ -149,11 +149,6 @@
         "templates/react-router/app/routes/collection.tsx",
         "templates/react-router/app/routes/product.tsx",
         "templates/react-router/app/routes/search.tsx",
-        "experiments/tanstack-start/src/components/CartDrawer.tsx",
-        "experiments/tanstack-start/src/components/CollectionBrowse.tsx",
-        "experiments/tanstack-start/src/components/CollectionCard.tsx",
-        "experiments/tanstack-start/src/components/ProductCard.tsx",
-        "experiments/tanstack-start/src/routes/products.$handle.tsx",
         "templates/nextjs/components/CollectionBrowser.tsx",
         "templates/nextjs/components/ProductDetails.tsx",
         "templates/nextjs/components/ProductCard.tsx",
@@ -177,6 +172,23 @@
         "complexity": "off",
         "max-depth": "off",
         "@typescript-eslint/consistent-type-assertions": "off"
+      }
+    },
+    {
+      "files": [
+        // Verbatim ports of the React Router template's storefront UI (which
+        // carries the same complexity exemption above). Kept in lockstep with
+        // the source so diffs between the two stay reviewable. Type assertions
+        // are deliberately NOT exempted here.
+        "experiments/tanstack-start/src/components/CartDrawer.tsx",
+        "experiments/tanstack-start/src/components/CollectionBrowse.tsx",
+        "experiments/tanstack-start/src/components/CollectionCard.tsx",
+        "experiments/tanstack-start/src/components/ProductCard.tsx",
+        "experiments/tanstack-start/src/routes/products.$handle.tsx"
+      ],
+      "rules": {
+        "complexity": "off",
+        "max-depth": "off"
       }
     },
     {

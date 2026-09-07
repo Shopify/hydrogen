@@ -3,7 +3,7 @@ import { gql } from "@shopify/hydrogen";
 import { COLLECTION_CARD_FRAGMENT } from "~/components/CollectionCard";
 import { PRODUCT_CARD_FRAGMENT } from "~/components/ProductCard";
 
-import { storefrontFn } from "./storefront-fn";
+import { requireData, storefrontFn } from "./storefront-fn";
 
 const HOME_QUERY = gql(
   `
@@ -25,10 +25,10 @@ const HOME_QUERY = gql(
 
 export const getHome = storefrontFn.handler(async ({ context }) => {
   const { storefrontClient } = context;
-  const { data } = await storefrontClient.graphql(HOME_QUERY);
+  const data = requireData(await storefrontClient.graphql(HOME_QUERY), "Home");
 
   return {
-    featuredProducts: data?.products.nodes ?? [],
-    featuredCollections: data?.collections.nodes ?? [],
+    featuredProducts: data.products.nodes,
+    featuredCollections: data.collections.nodes,
   };
 });

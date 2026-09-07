@@ -4,7 +4,7 @@ import { PRODUCT_CARD_FRAGMENT } from "~/components/ProductCard";
 import { productPath } from "~/lib/route-templates";
 
 import { throwNotFoundOrRedirect } from "./not-found";
-import { storefrontFn } from "./storefront-fn";
+import { requireData, storefrontFn } from "./storefront-fn";
 import { handleAndSearchInput, handleInput } from "./validators";
 
 const PRODUCT_VARIANT_FRAGMENT = gql(`
@@ -139,26 +139,28 @@ export const getProduct = storefrontFn
     const selectedOptions = getSelectedProductOptions({
       searchParams: new URLSearchParams(data.search),
     });
-    const { data: result } = await storefrontClient.graphql(PRODUCT_QUERY, {
-      variables: { handle: data.handle, selectedOptions },
-    });
+    const result = requireData(
+      await storefrontClient.graphql(PRODUCT_QUERY, {
+        variables: { handle: data.handle, selectedOptions },
+      }),
+      "ProductPage",
+    );
 
-    if (!result?.product) {
+    if (!result.product) {
       return throwNotFoundOrRedirect(context, productPath(data.handle), data.search);
     }
 
-    return result.product;
+    return { product: result.product, origin: new URL(context.request.url).origin };
   });
 
 export const getRelatedProducts = storefrontFn
   .validator(handleInput)
   .handler(async ({ context, data }) => {
     const { storefrontClient } = context;
-    const { data: result } = await storefrontClient.graphql(RELATED_PRODUCTS_QUERY, {
-      variables: { first: 5 },
-    });
+    const result = requireData(
+      await storefrontClient.graphql(RELATED_PRODUCTS_QUERY, { variables: { first: 5 } }),
+      "RelatedProducts",
+    );
 
-    return (result?.products.nodes ?? [])
-      .filter((product) => product.handle !== data.handle)
-      .slice(0, 4);
+    return result.products.nodes.filter((product) => product.handle !== data.handle).slice(0, 4);
   });

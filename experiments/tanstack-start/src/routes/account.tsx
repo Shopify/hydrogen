@@ -9,6 +9,8 @@ export const Route = createFileRoute("/account")({
   // Session state changes outside the router (login/logout are full-page
   // redirects handled by Hydrogen), so never serve this from the loader cache.
   staleTime: 0,
+  // Intent preloading would hit the Customer Account API on every hover.
+  preload: false,
   loader: ({ location }) => getAccount({ data: { search: location.searchStr } }),
   head: () => ({
     meta: [{ title: "Account · CORE" }, { name: "robots", content: "noindex" }],

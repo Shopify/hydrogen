@@ -3,7 +3,7 @@ import { gql, parseCollectionParams, type StorefrontApi } from "@shopify/hydroge
 import { PRODUCT_CARD_FRAGMENT } from "~/components/ProductCard";
 
 import { toStorefrontProductFilters } from "./filters";
-import { storefrontFn } from "./storefront-fn";
+import { requireData, storefrontFn } from "./storefront-fn";
 import { searchInput } from "./validators";
 
 export const SEARCH_PAGE_SIZE = 9;
@@ -135,9 +135,10 @@ export const getSearch = storefrontFn
       reverse: sortKey === "PRICE" ? browse.reverse || undefined : undefined,
     };
 
-    const { data: result } = await storefrontClient.graphql(SEARCH_QUERY, { variables });
-
-    if (!result?.search) throw new Error("Search is unavailable right now.");
+    const result = requireData(
+      await storefrontClient.graphql(SEARCH_QUERY, { variables }),
+      "SearchPage",
+    );
 
     return {
       performed: true,

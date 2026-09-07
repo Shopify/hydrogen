@@ -19,14 +19,16 @@ export const Route = createFileRoute("/products/$handle")({
   validateSearch: toStorefrontSearch,
   loaderDeps: ({ search }) => search,
   loader: async ({ params, location }) => {
-    // Related products stream in after the product itself.
+    // Related products stream in after the product itself. They are
+    // nice-to-have, so failures resolve to an empty list: a rejected deferred
+    // promise must never become an unhandled rejection when `getProduct` throws.
     const relatedProducts: Promise<ProductCardData[]> = getRelatedProducts({
       data: { handle: params.handle },
-    });
-    const product = await getProduct({
+    }).catch(() => []);
+    const { product, origin } = await getProduct({
       data: { handle: params.handle, search: location.searchStr },
     });
-    return { product, relatedProducts };
+    return { product, relatedProducts, origin };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -611,11 +613,49 @@ function ProductInfo({
   );
 }
 
-function ProductPageContent({ product }: { product: ProductData }) {
+function ProductJsonLd({
+  product,
+  selectedVariant,
+  origin,
+}: {
+  product: ProductData;
+  selectedVariant: ProductVariant | null;
+  origin: string;
+}) {
+  const images = useGalleryImages(product, selectedVariant);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: product.description || undefined,
+    image: images.map((image) => image.url),
+    offers: selectedVariant
+      ? {
+          "@type": "Offer",
+          price: selectedVariant.price.amount,
+          priceCurrency: selectedVariant.price.currencyCode,
+          availability: selectedVariant.availableForSale
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+          url: `${origin}/products/${product.handle}`,
+        }
+      : {
+          "@type": "AggregateOffer",
+          priceCurrency: product.priceRange.minVariantPrice.currencyCode,
+          lowPrice: product.priceRange.minVariantPrice.amount,
+          highPrice: product.priceRange.maxVariantPrice.amount,
+        },
+  };
+
+  return <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>;
+}
+
+function ProductPageContent({ product, origin }: { product: ProductData; origin: string }) {
   const { selectedVariant } = useProductForm();
 
   return (
     <section className="max-w-page px-margin mx-auto w-full pb-4">
+      <ProductJsonLd product={product} selectedVariant={selectedVariant} origin={origin} />
       <div className="product-grid mb-16 grid grid-cols-1 gap-6 md:gap-12">
         <ProductGallery product={product} selectedVariant={selectedVariant} />
         <ProductInfo product={product} selectedVariant={selectedVariant} />
@@ -654,7 +694,7 @@ function RelatedProducts({ products }: { products: readonly ProductCardData[] })
 }
 
 function ProductPage() {
-  const { product, relatedProducts } = Route.useLoaderData();
+  const { product, relatedProducts, origin } = Route.useLoaderData();
   const navigate = useNavigate();
   const searchStr = useLocation({ select: (location) => location.searchStr });
 
@@ -679,7 +719,7 @@ function ProductPage() {
     >
       <ProductViewedTracker product={product} />
       <main className="flex-1" id="main-content" tabIndex={-1}>
-        <ProductPageContent product={product} />
+        <ProductPageContent product={product} origin={origin} />
         <Suspense fallback={null}>
           <Await promise={relatedProducts}>
             {(products) => <RelatedProducts products={products} />}

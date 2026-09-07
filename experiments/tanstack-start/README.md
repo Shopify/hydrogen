@@ -41,9 +41,11 @@ pnpm run experiments:secrets:decrypt   # writes PRIVATE_STOREFRONT_API_TOKEN int
 pnpm dev:tanstack                  # or: pnpm --filter @shopify/hydrogen-experiment-tanstack-start dev
 ```
 
-`pnpm build` emits `dist/client` and a fetch-style server entry at `dist/server/server.js`; `pnpm start` serves it with [`srvx`](https://srvx.h3.dev) (`--prod` sets `NODE_ENV=production`, so requests need a forwarded buyer IP header like any deployment behind a proxy). Nitro is intentionally not used, see below.
+Inside `experiments/tanstack-start/` (or via `pnpm --filter @shopify/hydrogen-experiment-tanstack-start <script>` from the root):
 
-`pnpm typecheck` runs `tsr generate && tsc`, so a fresh clone typechecks without a prior `dev`/`build`. `src/routeTree.gen.ts` is gitignored.
+- `pnpm build` emits `dist/client` and a fetch-style server entry at `dist/server/server.js`.
+- `pnpm start` serves that build with [`srvx`](https://srvx.h3.dev). `--prod` sets `NODE_ENV=production`, so requests need a forwarded buyer IP header (`x-forwarded-for`, `cf-connecting-ip`, or `oxygen-buyer-ip`) like any deployment behind a proxy. Nitro is intentionally not used, see below.
+- `pnpm typecheck` runs `tsr generate && tsc`, so a fresh clone typechecks without a prior `dev`/`build`. `src/routeTree.gen.ts` is gitignored. `tsr generate` currently prints a harmless Node warning about `replaceRouteChunk` (upstream `@tanstack/router-cli`).
 
 ## Customer Account setup
 
@@ -62,7 +64,7 @@ Friction surfaced while building this port. Candidates for the SDK, docs, or ski
 - **`CartData` index signatures vs. TanStack's serializable-return check.** Hydrogen's cart types keep `[key: string]: unknown` so custom fragments can add fields; Start's `createServerFn` type-checks return values for serializability and rejects `unknown`. `src/lib/serializable.ts` strips the index signatures structurally (no assertion). An SDK-provided "wire" type for cart data would remove the need.
 - **`parseCollectionParams` output is not assignable to the Storefront API `ProductFilter` input.** Hydrogen's `ProductFilter` (Standard Events contract) has optional metafield/option `value`s and a `taxonomyMetafield` without `namespace`; the API input requires them. `src/server/filters.ts` drops filters the API would reject. The React Router template casts instead.
 - **No public `getStandardRoute`.** Server functions need to rebuild storefront paths from their params to resolve redirects; `src/lib/route-templates.ts` hand-rolls `productPath()` and friends because the helper that knows the route templates is internal.
-- **Redirect lookups are uncached.** Every miss costs one `urlRedirects` Storefront API query; a `cache:` strategy on `handleShopifyRedirects` would help 404 storms.
+- **Redirect lookups are uncached.** Every miss costs one `urlRedirects` Storefront API query; a `cache:` strategy on `handleShopifyRedirects` would help 404 storms. Relatedly, Storefront API errors arrive as HTTP 200 with `errors` — `requireData` in `src/server/storefront-fn.ts` surfaces them as errors so a throttled API does not read as "not found" and trigger a redirect lookup on top.
 - **Form POSTs to Hydrogen handlers sit outside Start's CSRF middleware.** `createCsrfMiddleware` is scoped to server functions; `/api/cart` and `/account/logout` are served before routing by `handleShopifyRoutes`.
 
 ## Notes for TanStack Start

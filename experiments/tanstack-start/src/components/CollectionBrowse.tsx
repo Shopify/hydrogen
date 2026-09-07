@@ -101,13 +101,20 @@ function currentSortValue(state: CollectionState): string | undefined {
   return state.sortKey ? getSortByValue(state.sortKey, state.reverse) : undefined;
 }
 
-function filterValueInputParamEntries(input: string): Array<{ name: string; value: string }> {
-  let filter: ProductFilter;
+// Shopify's filter `input` is the JSON of a single `ProductFilter`; anything
+// else is treated as "no filter" rather than trusted.
+function parseFilterInput(input: string): ProductFilter | null {
   try {
-    filter = JSON.parse(input) as ProductFilter;
+    const parsed: unknown = JSON.parse(input);
+    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed) ? parsed : null;
   } catch {
-    return [];
+    return null;
   }
+}
+
+function filterValueInputParamEntries(input: string): Array<{ name: string; value: string }> {
+  const filter = parseFilterInput(input);
+  if (!filter) return [];
 
   return Array.from(
     serializeCollectionParams({ filters: [filter], sortKey: undefined, reverse: false }),
@@ -360,7 +367,7 @@ function ColorSwatchFacet({ filter, state }: { filter: BrowseFilter; state: Coll
     const style = {
       ...(color ? { "--filter-swatch-color": color } : {}),
       ...(imageUrl ? { backgroundImage: `url("${imageUrl}")` } : {}),
-    } as CSSProperties;
+    } satisfies CSSProperties;
 
     return (
       <li key={value.id}>
@@ -636,6 +643,7 @@ export function useLoadMore<T>(
   useEffect(() => {
     setNodes(initialNodes);
     setPageInfo(initialPageInfo);
+    setIsLoading(false);
     requestedSearch.current = null;
   }, [dataSearch, initialNodes, initialPageInfo]);
 

@@ -17,3 +17,22 @@ export const storefrontFn = createServerFn({ method: "GET" }).middleware([
 ]);
 
 export type ShopifyServerContext = (typeof shopifyRequestMiddleware)["~types"]["serverContext"];
+
+type GraphqlResult<TData> = {
+  data?: TData | null;
+  errors?: ReadonlyArray<{ message: string }> | null;
+};
+
+/**
+ * Storefront API errors (throttling, access denied, malformed queries) arrive
+ * as HTTP 200 with `errors` and `data: null`. Treating that as "not found"
+ * would turn an API incident into 404s plus extra redirect lookups, so surface
+ * it as an error; callers only see `data` when the query actually succeeded.
+ */
+export function requireData<TData>(result: GraphqlResult<TData>, label: string): TData {
+  if (result.errors?.length) {
+    throw new Error(`Storefront API error in ${label}: ${result.errors[0].message}`);
+  }
+  if (result.data == null) throw new Error(`Storefront API returned no data for ${label}.`);
+  return result.data;
+}
