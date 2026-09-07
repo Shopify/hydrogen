@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -163,9 +163,11 @@ function assertHydrogenPackageVersion(repoRoot: string, version: string): void {
   }
 }
 
+const SKILL_HARNESS_DIRECTORIES = [".claude", ".agents"];
+
 /**
- * Template sources never carry skill copies, so start from an empty
- * `.agents/skills` and let the same sync that consumers run stamp each skill with
+ * Template sources never carry skill copies, so start from empty harness skill
+ * directories and let the same sync that consumers run stamp each skill with
  * version and hash metadata. That keeps `hydrogen skills sync` working after
  * a template is deployed and upgraded.
  */
@@ -175,9 +177,9 @@ function syncTemplateSkills(
   log: (message: string) => void,
 ): void {
   for (const templateRoot of templateRoots) {
-    const agentsRoot = join(templateRoot, ".agents");
-    rmSync(join(agentsRoot, "skills"), { recursive: true, force: true });
-    mkdirSync(agentsRoot, { recursive: true });
+    for (const harness of SKILL_HARNESS_DIRECTORIES) {
+      rmSync(join(templateRoot, harness, "skills"), { recursive: true, force: true });
+    }
     syncSkills({ cwd: templateRoot, packageRoot, log });
   }
 }

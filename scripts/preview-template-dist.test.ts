@@ -76,6 +76,21 @@ test("prepares manifests and synchronizes skills", () => {
       existsSync(join(repoRoot, "templates", "react-router", ".agents", "skills", "stale")),
       false,
     );
+    assert.equal(
+      readFileSync(
+        join(
+          repoRoot,
+          "templates",
+          "react-router",
+          ".claude",
+          "skills",
+          "hydrogen-setup",
+          "SKILL.md",
+        ),
+        "utf8",
+      ),
+      syncedSkill,
+    );
   });
 });
 

@@ -10,7 +10,7 @@ Run the setup CLI in a storefront project.
 npx @shopify/hydrogen setup
 ```
 
-The setup command installs `@shopify/hydrogen` into the local project using the detected package manager, then syncs the packaged skills into local agent skill directories (`.claude/skills`, `.agents/skills`, or both, matching whichever directories already exist; `.agents/skills` is created when neither does).
+The setup command installs `@shopify/hydrogen` into the local project using the detected package manager, then syncs the packaged skills into both `.claude/skills` (read by Claude Code) and `.agents/skills` (read by Codex, Cursor, and OpenCode). Both are always written so the project never has to declare which agents it uses.
 
 ## Keeping skills in sync
 

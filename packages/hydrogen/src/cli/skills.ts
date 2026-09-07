@@ -75,13 +75,18 @@ type PlannedSkill =
   | (PlannedSkillBase & { action: "remove" })
   | (PlannedSkillBase & { action: "skip" });
 
-export interface SyncSkillsResult {
-  destinationRoots: string[];
+export interface SyncSkillsRootResult {
+  root: string;
   added: number;
   updated: number;
   unchanged: number;
   removed: number;
   skipped: string[];
+}
+
+export interface SyncSkillsResult {
+  version: string;
+  roots: SyncSkillsRootResult[];
 }
 
 export interface SyncSkillsOptions {
@@ -125,23 +130,19 @@ function readPackageVersion(packageRoot: string): string {
   return parsed.version;
 }
 
+/**
+ * Every harness dir is written unconditionally: Claude Code reads `.claude/skills`,
+ * while Codex, Cursor, and OpenCode read `.agents/skills`. Writing both means no
+ * project has to declare which agents it uses.
+ */
 function getSkillsDestinationRoots(appRoot: string): string[] {
-  const destinationRoots: string[] = [];
-  const claudeDirectory = join(appRoot, CLAUDE_DIRECTORY_NAME);
-  if (existsSync(claudeDirectory)) {
-    assertDirectory(claudeDirectory, `${CLAUDE_DIRECTORY_NAME} exists but is not a directory.`);
-    destinationRoots.push(join(claudeDirectory, SKILLS_DIRECTORY_NAME));
-  }
-
-  const agentsDirectory = join(appRoot, AGENTS_DIRECTORY_NAME);
-  if (existsSync(agentsDirectory)) {
-    assertDirectory(agentsDirectory, `${AGENTS_DIRECTORY_NAME} exists but is not a directory.`);
-    destinationRoots.push(join(agentsDirectory, SKILLS_DIRECTORY_NAME));
-  }
-
-  return destinationRoots.length > 0
-    ? destinationRoots
-    : [join(appRoot, AGENTS_DIRECTORY_NAME, SKILLS_DIRECTORY_NAME)];
+  return [CLAUDE_DIRECTORY_NAME, AGENTS_DIRECTORY_NAME].map((harnessDirectory) => {
+    const harnessPath = join(appRoot, harnessDirectory);
+    if (existsSync(harnessPath)) {
+      assertDirectory(harnessPath, `${harnessDirectory} exists but is not a directory.`);
+    }
+    return join(harnessPath, SKILLS_DIRECTORY_NAME);
+  });
 }
 
 function listDirectoryNames(root: string): string[] {
@@ -291,7 +292,7 @@ function planDestination(
   destinationRoot: string,
   shippedSkills: Map<string, ShippedSkill>,
   force: boolean,
-): { planned: PlannedSkill[]; conflicts: string[] } {
+): { destinationRoot: string; planned: PlannedSkill[]; conflicts: string[] } {
   const planned: PlannedSkill[] = [];
   const conflicts: string[] = [];
 
@@ -317,7 +318,7 @@ function planDestination(
     if (action) planned.push({ action, skillName, destinationRoot });
   }
 
-  return { planned, conflicts };
+  return { destinationRoot, planned, conflicts };
 }
 
 /**
@@ -335,9 +336,9 @@ function installSkill(destinationRoot: string, skillRoot: string, shipped: Shipp
   renameSync(stagingRoot, skillRoot);
 }
 
-function executePlan(destinationRoots: string[], planned: PlannedSkill[]): SyncSkillsResult {
-  const result: SyncSkillsResult = {
-    destinationRoots,
+function executePlan(destinationRoot: string, planned: PlannedSkill[]): SyncSkillsRootResult {
+  const result: SyncSkillsRootResult = {
+    root: destinationRoot,
     added: 0,
     updated: 0,
     unchanged: 0,
@@ -346,7 +347,7 @@ function executePlan(destinationRoots: string[], planned: PlannedSkill[]): SyncS
   };
 
   for (const skill of planned) {
-    const skillRoot = join(skill.destinationRoot, skill.skillName);
+    const skillRoot = join(destinationRoot, skill.skillName);
     switch (skill.action) {
       case "skip":
         result.skipped.push(skillRoot);
@@ -359,11 +360,11 @@ function executePlan(destinationRoots: string[], planned: PlannedSkill[]): SyncS
         result.removed += 1;
         break;
       case "add":
-        installSkill(skill.destinationRoot, skillRoot, skill.shipped);
+        installSkill(destinationRoot, skillRoot, skill.shipped);
         result.added += 1;
         break;
       case "update":
-        installSkill(skill.destinationRoot, skillRoot, skill.shipped);
+        installSkill(destinationRoot, skillRoot, skill.shipped);
         result.updated += 1;
         break;
     }
@@ -409,19 +410,19 @@ export function syncSkills(options: SyncSkillsOptions = {}): SyncSkillsResult {
     );
   }
 
-  const result = executePlan(
-    destinationRoots,
-    plans.flatMap((plan) => plan.planned),
-  );
-
-  log(
-    `Synced Hydrogen ${version} skills to ${destinationRoots.join(", ")}: ${result.added} added, ${result.updated} updated, ${result.unchanged} unchanged, ${result.removed} removed.`,
-  );
-  if (result.skipped.length > 0) {
+  const roots = plans.map((plan) => executePlan(plan.destinationRoot, plan.planned));
+  for (const root of roots) {
     log(
-      `Skipped ${result.skipped.length} locally modified skill(s): ${result.skipped.join(", ")}. Rerun with --force to overwrite.`,
+      `Synced Hydrogen ${version} skills to ${root.root}: ${root.added} added, ${root.updated} updated, ${root.unchanged} unchanged, ${root.removed} removed.`,
     );
   }
 
-  return result;
+  const skipped = roots.flatMap((root) => root.skipped);
+  if (skipped.length > 0) {
+    log(
+      `Skipped ${skipped.length} locally modified skill(s): ${skipped.join(", ")}. Rerun with --force to overwrite.`,
+    );
+  }
+
+  return { version, roots };
 }

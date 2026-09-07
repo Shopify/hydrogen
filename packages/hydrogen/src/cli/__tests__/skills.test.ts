@@ -15,7 +15,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { assert } from "../../core/test-utils";
 import { isObjectRecord } from "../../core/utils/record";
-import { syncSkills } from "../skills";
+import { syncSkills, type SyncSkillsResult, type SyncSkillsRootResult } from "../skills";
 
 const REAL_SKILLS_ROOT = join(import.meta.dirname, "../../../skills");
 
@@ -97,6 +97,15 @@ function sync(appRoot: string, packageRoot: string, args: string[] = []) {
   return syncSkills({ cwd: appRoot, packageRoot, args, log: vi.fn() });
 }
 
+function rootResult(result: SyncSkillsResult, harness: string): SyncSkillsRootResult {
+  const root = result.roots.find((candidate) => candidate.root.endsWith(join(harness, "skills")));
+  assert(root, `No result for ${harness}`);
+  return root;
+}
+
+const agents = (result: SyncSkillsResult) => rootResult(result, ".agents");
+const claude = (result: SyncSkillsResult) => rootResult(result, ".claude");
+
 describe("syncSkills", () => {
   it("copies skills and records source, version, and hash in frontmatter metadata", () => {
     const appRoot = createAppRoot();
@@ -105,7 +114,16 @@ describe("syncSkills", () => {
     const result = sync(appRoot, packageRoot);
 
     const content = readSkill(appRoot, "hydrogen-cart-ui");
-    expect(result).toMatchObject({ added: 1, updated: 0, removed: 0, skipped: [] });
+    expect(result.version).toBe("2026.1.0");
+    expect(result.roots.map((root) => root.root)).toEqual([
+      join(appRoot, ".claude/skills"),
+      join(appRoot, ".agents/skills"),
+    ]);
+    expect(agents(result)).toMatchObject({ added: 1, updated: 0, removed: 0, skipped: [] });
+    expect(claude(result)).toMatchObject({ added: 1, updated: 0, removed: 0, skipped: [] });
+    expect(readFileSync(join(appRoot, ".claude/skills/hydrogen-cart-ui/SKILL.md"), "utf8")).toBe(
+      content,
+    );
     expect(content).toMatch(
       /^---\nname: hydrogen-cart-ui\ndescription: >\n {2}Test skill\.\nmetadata:\n {2}source: "@shopify\/hydrogen"\n {2}version: "2026\.1\.0"\n {2}hash: "sha256:[0-9a-f]{64}"\n---\nCart\.\n$/,
     );
@@ -120,7 +138,13 @@ describe("syncSkills", () => {
 
     const result = sync(appRoot, packageRoot);
 
-    expect(result).toMatchObject({ added: 0, updated: 0, unchanged: 1, removed: 0, skipped: [] });
+    expect(agents(result)).toMatchObject({
+      added: 0,
+      updated: 0,
+      unchanged: 1,
+      removed: 0,
+      skipped: [],
+    });
     expect(statSync(skillFile).mtimeMs).toBe(before);
   });
 
@@ -131,7 +155,7 @@ describe("syncSkills", () => {
     const result = sync(appRoot, createPackageRoot("2026.2.0", { "hydrogen-cart-ui": "New.\n" }));
 
     const content = readSkill(appRoot, "hydrogen-cart-ui");
-    expect(result).toMatchObject({ added: 0, updated: 1, removed: 0 });
+    expect(agents(result)).toMatchObject({ added: 0, updated: 1, removed: 0 });
     expect(content).toContain("New.");
     expect(readMetadata(content).version).toBe("2026.2.0");
   });
@@ -144,14 +168,14 @@ describe("syncSkills", () => {
     const newPackageRoot = createPackageRoot("2026.2.0", { "hydrogen-cart-ui": "New.\n" });
 
     const skipped = sync(appRoot, newPackageRoot);
-    expect(skipped).toMatchObject({
+    expect(agents(skipped)).toMatchObject({
       updated: 0,
       skipped: [join(appRoot, ".agents/skills/hydrogen-cart-ui")],
     });
     expect(readSkill(appRoot, "hydrogen-cart-ui")).toContain("My local note.");
 
     const forced = sync(appRoot, newPackageRoot, ["--force"]);
-    expect(forced).toMatchObject({ updated: 1, skipped: [] });
+    expect(agents(forced)).toMatchObject({ updated: 1, skipped: [] });
     expect(readSkill(appRoot, "hydrogen-cart-ui")).toContain("New.");
     expect(readSkill(appRoot, "hydrogen-cart-ui")).not.toContain("My local note.");
   });
@@ -165,7 +189,7 @@ describe("syncSkills", () => {
 
     const result = sync(appRoot, packageRoot, ["--force"]);
 
-    expect(result).toMatchObject({ updated: 1, unchanged: 0, skipped: [] });
+    expect(agents(result)).toMatchObject({ updated: 1, unchanged: 0, skipped: [] });
     expect(readSkill(appRoot, "hydrogen-cart-ui")).not.toContain("My local note.");
   });
 
@@ -175,7 +199,7 @@ describe("syncSkills", () => {
 
     const result = sync(appRoot, createPackageRoot("2026.2.0", { "hydrogen-cart-ui": "Cart.\n" }));
 
-    expect(result).toMatchObject({ updated: 1, unchanged: 0 });
+    expect(agents(result)).toMatchObject({ updated: 1, unchanged: 0 });
     expect(readMetadata(readSkill(appRoot, "hydrogen-cart-ui")).version).toBe("2026.2.0");
   });
 
@@ -187,7 +211,7 @@ describe("syncSkills", () => {
 
     const result = sync(appRoot, packageRoot);
 
-    expect(result).toMatchObject({ unchanged: 1, skipped: [] });
+    expect(agents(result)).toMatchObject({ unchanged: 1, skipped: [] });
   });
 
   it("rejects a shipped skill without frontmatter before writing anything", () => {
@@ -214,7 +238,8 @@ describe("syncSkills", () => {
 
     const result = sync(appRoot, packageRoot);
 
-    expect(result.skipped).toHaveLength(1);
+    expect(agents(result).skipped).toHaveLength(1);
+    expect(claude(result).skipped).toHaveLength(0);
   });
 
   it("treats CRLF line endings as unmodified", () => {
@@ -226,7 +251,7 @@ describe("syncSkills", () => {
 
     const result = sync(appRoot, packageRoot);
 
-    expect(result).toMatchObject({ unchanged: 1, skipped: [] });
+    expect(agents(result)).toMatchObject({ unchanged: 1, skipped: [] });
   });
 
   it("removes managed skills the package no longer ships and leaves unmanaged skills alone", () => {
@@ -236,7 +261,7 @@ describe("syncSkills", () => {
 
     const result = sync(appRoot, createPackageRoot("2026.2.0", { "hydrogen-cart-ui": "Cart.\n" }));
 
-    expect(result).toMatchObject({ added: 1, updated: 0, removed: 1, skipped: [] });
+    expect(agents(result)).toMatchObject({ added: 1, updated: 0, removed: 1, skipped: [] });
     expect(readdirSync(join(appRoot, ".agents/skills")).toSorted()).toEqual([
       "hydrogen-cart-ui",
       "my-own-skill",
@@ -250,13 +275,16 @@ describe("syncSkills", () => {
     writeFileSync(skillFile, readFileSync(skillFile, "utf8") + "Kept.\n");
     const newPackageRoot = createPackageRoot("2026.2.0");
 
-    expect(sync(appRoot, newPackageRoot)).toMatchObject({
+    expect(agents(sync(appRoot, newPackageRoot))).toMatchObject({
       removed: 0,
       skipped: [join(appRoot, ".agents/skills/hydrogen-legacy")],
     });
     expect(existsSync(skillFile)).toBe(true);
 
-    expect(sync(appRoot, newPackageRoot, ["--force"])).toMatchObject({ removed: 1, skipped: [] });
+    expect(agents(sync(appRoot, newPackageRoot, ["--force"]))).toMatchObject({
+      removed: 1,
+      skipped: [],
+    });
     expect(existsSync(skillFile)).toBe(false);
   });
 
@@ -274,7 +302,7 @@ describe("syncSkills", () => {
     expect(existsSync(join(appRoot, ".agents/skills/hydrogen-setup"))).toBe(false);
     expect(readSkill(appRoot, "hydrogen-cart-ui")).toContain("Handwritten.");
 
-    expect(sync(appRoot, packageRoot, ["--force"])).toMatchObject({ added: 1, updated: 1 });
+    expect(agents(sync(appRoot, packageRoot, ["--force"]))).toMatchObject({ added: 1, updated: 1 });
     expect(readSkill(appRoot, "hydrogen-cart-ui")).toContain("Cart.");
   });
 
@@ -286,7 +314,7 @@ describe("syncSkills", () => {
 
     const result = sync(appRoot, packageRoot);
 
-    expect(result).toMatchObject({ unchanged: 1, removed: 1 });
+    expect(agents(result)).toMatchObject({ unchanged: 1, removed: 1 });
     expect(readdirSync(join(appRoot, ".agents/skills"))).toEqual(["hydrogen-cart-ui"]);
   });
 
@@ -297,7 +325,7 @@ describe("syncSkills", () => {
 
     const result = sync(appRoot, createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" }));
 
-    expect(result).toMatchObject({ updated: 1 });
+    expect(agents(result)).toMatchObject({ updated: 1 });
     expect(existsSync(join(appRoot, ".agents/skills/hydrogen-cart-ui/references/react.md"))).toBe(
       false,
     );
@@ -319,7 +347,7 @@ describe("syncSkills", () => {
 
       const result = syncSkills({ cwd: appRoot, log: vi.fn() });
 
-      expect(result.added).toBe(1);
+      expect(agents(result).added).toBe(1);
       expect(readMetadata(readSkill(appRoot, "hydrogen-local")).version).toBe("3.0.0");
     });
 
@@ -332,7 +360,7 @@ describe("syncSkills", () => {
 
       const result = syncSkills({ cwd: appRoot, log: vi.fn() });
 
-      expect(result.added).toBe(1);
+      expect(agents(result).added).toBe(1);
       expect(readMetadata(readSkill(appRoot, "hydrogen-hoisted")).version).toBe("4.0.0");
       expect(existsSync(join(repoRoot, ".agents"))).toBe(false);
     });
@@ -347,7 +375,7 @@ describe("syncSkills", () => {
 
       const result = syncSkills({ cwd: appRoot, log: vi.fn() });
 
-      expect(result.added).toBe(1);
+      expect(agents(result).added).toBe(1);
       expect(readMetadata(readSkill(appRoot, "hydrogen-nested")).version).toBe("5.0.0");
     });
 
@@ -364,7 +392,7 @@ describe("syncSkills", () => {
 
       const result = syncSkills({ cwd: appRoot, log: vi.fn() });
 
-      expect(result.added).toBe(1);
+      expect(agents(result).added).toBe(1);
       expect(readMetadata(readSkill(appRoot, "hydrogen-store")).version).toBe("6.0.0");
     });
 
@@ -374,7 +402,7 @@ describe("syncSkills", () => {
 
       const result = syncSkills({ cwd: appRoot, log: vi.fn() });
 
-      expect(result.added).toBe(readdirSync(REAL_SKILLS_ROOT).length);
+      expect(agents(result).added).toBe(readdirSync(REAL_SKILLS_ROOT).length);
       expect(readMetadata(readSkill(appRoot, "hydrogen-setup")).version).toBe(
         readRealPackageVersion(),
       );
@@ -391,7 +419,7 @@ describe("syncSkills", () => {
     });
 
     const shipped = readdirSync(REAL_SKILLS_ROOT).toSorted();
-    expect(result.added).toBe(shipped.length);
+    expect(agents(result).added).toBe(shipped.length);
     expect(readdirSync(join(appRoot, ".agents/skills")).toSorted()).toEqual(shipped);
     for (const skillName of shipped) {
       readMetadata(readSkill(appRoot, skillName));
