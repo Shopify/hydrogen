@@ -134,6 +134,50 @@ describe("syncSkills", () => {
     expect(readSkill(appRoot, "hydrogen-cart-ui")).not.toContain("My local note.");
   });
 
+  it("overwrites a locally modified skill with --force even when the version is unchanged", () => {
+    const appRoot = createAppRoot();
+    const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
+    sync(appRoot, packageRoot);
+    const skillFile = join(appRoot, ".agents/skills/hydrogen-cart-ui/SKILL.md");
+    writeFileSync(skillFile, readFileSync(skillFile, "utf8") + "My local note.\n");
+
+    const result = sync(appRoot, packageRoot, ["--force"]);
+
+    expect(result).toMatchObject({ updated: 1, unchanged: 0, skipped: [] });
+    expect(readSkill(appRoot, "hydrogen-cart-ui")).not.toContain("My local note.");
+  });
+
+  it("refreshes the recorded version when content is identical across versions", () => {
+    const appRoot = createAppRoot();
+    sync(appRoot, createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" }));
+
+    const result = sync(appRoot, createPackageRoot("2026.2.0", { "hydrogen-cart-ui": "Cart.\n" }));
+
+    expect(result).toMatchObject({ updated: 1, unchanged: 0 });
+    expect(readMetadata(readSkill(appRoot, "hydrogen-cart-ui")).version).toBe("2026.2.0");
+  });
+
+  it("ignores operating system junk files when checking for modifications", () => {
+    const appRoot = createAppRoot();
+    const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
+    sync(appRoot, packageRoot);
+    writeFileSync(join(appRoot, ".agents/skills/hydrogen-cart-ui/.DS_Store"), "finder");
+
+    const result = sync(appRoot, packageRoot);
+
+    expect(result).toMatchObject({ unchanged: 1, skipped: [] });
+  });
+
+  it("rejects a shipped skill without frontmatter before writing anything", () => {
+    const appRoot = createAppRoot();
+    const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-setup": "Setup.\n" });
+    mkdirSync(join(packageRoot, "skills/hydrogen-broken"));
+    writeFileSync(join(packageRoot, "skills/hydrogen-broken/SKILL.md"), "No frontmatter.\n");
+
+    expect(() => sync(appRoot, packageRoot)).toThrow("has no frontmatter");
+    expect(existsSync(join(appRoot, ".agents/skills/hydrogen-setup"))).toBe(false);
+  });
+
   it("detects modifications to files other than SKILL.md", () => {
     const appRoot = createAppRoot();
     const packageRoot = createPackageRoot("2026.1.0");

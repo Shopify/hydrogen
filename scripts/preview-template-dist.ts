@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+
+import { syncSkills } from "../packages/hydrogen/src/cli/skills.ts";
 
 const HYDROGEN_PACKAGE = "@shopify/hydrogen";
 const SOURCE_ONLY_TEST_DIRECTORY = "__test__";
@@ -92,9 +94,9 @@ export function preparePreviewTemplateDist(options: PreviewDistOptions): void {
     return { dependencies, packageJson, packageJsonPath, template, templateRoot };
   });
 
-  copyTemplateSkills(
-    join(repoRoot, "packages", "hydrogen", "skills"),
-    templates.map(({ directory }) => join(repoRoot, "templates", directory, ".agents", "skills")),
+  syncTemplateSkills(
+    join(repoRoot, "packages", "hydrogen"),
+    templates.map(({ directory }) => join(repoRoot, "templates", directory)),
     log,
   );
 
@@ -161,16 +163,22 @@ function assertHydrogenPackageVersion(repoRoot: string, version: string): void {
   }
 }
 
-function copyTemplateSkills(
-  sourceRoot: string,
-  targets: string[],
+/**
+ * Template sources never carry skill copies, so start from an empty
+ * `.agents/skills` and let the same sync consumers run stamp each skill with
+ * version and hash metadata. That keeps `hydrogen skills sync` working after
+ * a template is deployed and upgraded.
+ */
+function syncTemplateSkills(
+  packageRoot: string,
+  templateRoots: string[],
   log: (message: string) => void,
 ): void {
-  for (const target of targets) {
-    rmSync(target, { recursive: true, force: true });
-    mkdirSync(dirname(target), { recursive: true });
-    cpSync(sourceRoot, target, { recursive: true });
-    log(`Copied ${relative(process.cwd(), sourceRoot)} -> ${relative(process.cwd(), target)}`);
+  for (const templateRoot of templateRoots) {
+    const agentsRoot = join(templateRoot, ".agents");
+    rmSync(join(agentsRoot, "skills"), { recursive: true, force: true });
+    mkdirSync(agentsRoot, { recursive: true });
+    syncSkills({ cwd: templateRoot, packageRoot, log });
   }
 }
 

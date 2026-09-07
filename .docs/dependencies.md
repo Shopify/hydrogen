@@ -32,4 +32,13 @@ When changing `@shopify/hydrogen/vite` local HTTPS behaviour, update these toget
 - `templates/react-router/vite.config.ts`
 - framework example `dev:https` scripts and configs under `examples/*`
 
-`scripts/preview-template-dist.ts` copies `packages/hydrogen/skills` into template `.agents/skills` when preparing the dist branch, so template source directories should not duplicate those generated skill copies.
+`scripts/preview-template-dist.ts` syncs `packages/hydrogen/skills` into template `.agents/skills` when preparing the dist branch, so template source directories should not duplicate those generated skill copies.
+
+## Hydrogen Skills Sync
+
+When changing how synced skills are stamped or verified (the frontmatter `metadata` block with `source`, `version`, and `hash`, or the overwrite/skip/remove rules), update these together:
+
+- `packages/hydrogen/src/cli/skills.ts` (single writer and reader of the metadata block)
+- `scripts/preview-template-dist.ts` (imports `syncSkills` so template copies carry the same metadata)
+- `packages/hydrogen/README.md` ("Keeping skills in sync")
+- root `README.md` ("Set up in your own project")

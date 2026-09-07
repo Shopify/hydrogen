@@ -10,7 +10,7 @@ Run the setup CLI in a storefront project.
 npx @shopify/hydrogen setup
 ```
 
-The setup command installs `@shopify/hydrogen` into the local project using the detected package manager, then syncs the packaged skills into local agent skill directories (`.claude/skills`, `.agents/skills`, or both, matching whichever directories already exist).
+The setup command installs `@shopify/hydrogen` into the local project using the detected package manager, then syncs the packaged skills into local agent skill directories (`.claude/skills`, `.agents/skills`, or both, matching whichever directories already exist; `.agents/skills` is created when neither does).
 
 ## Keeping skills in sync
 
@@ -20,7 +20,16 @@ Skills describe the API of the installed Hydrogen version, so resync them after 
 npx @shopify/hydrogen skills sync
 ```
 
-Each synced `SKILL.md` records the package version and a content hash in its frontmatter `metadata`. The sync overwrites skills you have not edited, adds new ones, and removes skills the installed version no longer ships. Skills you have edited locally are left in place and reported; pass `--force` to overwrite them. Skill directories that Hydrogen did not create and that collide with a packaged skill name stop the sync before anything is written, again unless `--force` is passed.
+Each synced `SKILL.md` records the package version and a content hash in its frontmatter `metadata`. On every run, per skill:
+
+- unchanged content and version: left untouched
+- shipped skill you have not edited: overwritten with the installed version
+- shipped skill missing locally: added
+- previously synced skill the installed version no longer ships: removed
+- skill you have edited locally: kept and reported
+- directory Hydrogen did not create that collides with a shipped skill name: the sync stops before writing anything
+
+`--force` discards local state in favour of the package: it overwrites edited and colliding skills and removes edited stale ones.
 
 ## GraphQL Tooling
 

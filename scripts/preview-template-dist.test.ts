@@ -54,20 +54,27 @@ test("prepares manifests and synchronizes skills", () => {
     assert.equal(existsSync(nextjsLock), false);
     assert.equal(existsSync(join(repoRoot, "templates", "react-router", "__test__")), false);
     assert.equal(existsSync(join(repoRoot, "templates", "nextjs", "__test__")), false);
-    assert.equal(
-      readFileSync(
-        join(
-          repoRoot,
-          "templates",
-          "react-router",
-          ".agents",
-          "skills",
-          "hydrogen-setup",
-          "SKILL.md",
-        ),
-        "utf8",
+    const syncedSkill = readFileSync(
+      join(
+        repoRoot,
+        "templates",
+        "react-router",
+        ".agents",
+        "skills",
+        "hydrogen-setup",
+        "SKILL.md",
       ),
-      "current skill",
+      "utf8",
+    );
+    assert.match(syncedSkill, /current skill/);
+    assert.match(syncedSkill, /^ {2}source: "@shopify\/hydrogen"$/m);
+    assert.match(
+      syncedSkill,
+      new RegExp(`^ {2}version: "${VERSION.replaceAll(".", "\\.")}"$`, "m"),
+    );
+    assert.equal(
+      existsSync(join(repoRoot, "templates", "react-router", ".agents", "skills", "stale")),
+      false,
     );
   });
 });
@@ -130,7 +137,7 @@ function withFixture(run: (repoRoot: string) => void): void {
     });
     writeFile(
       join(repoRoot, "packages", "hydrogen", "skills", "hydrogen-setup", "SKILL.md"),
-      "current skill",
+      "---\nname: hydrogen-setup\n---\ncurrent skill\n",
     );
     writeTemplatePackage(repoRoot, "react-router", "pnpm@10.33.0");
     writeTemplatePackage(repoRoot, "nextjs", "pnpm@10.33.0");
