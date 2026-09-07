@@ -18,6 +18,7 @@ function createPackageRoot(skillNames: string[]): string {
   const packageRoot = createTempDirectory();
   const skillsPath = join(packageRoot, "skills");
   mkdirSync(skillsPath, { recursive: true });
+  writeJson(join(packageRoot, "package.json"), { name: "@shopify/hydrogen", version: "1.0.0" });
 
   for (const skillName of skillNames) {
     const skillPath = join(skillsPath, skillName);
@@ -208,7 +209,7 @@ describe("setupHydrogen", () => {
     expect(existsSync(join(appRoot, ".agents/skills/npx-copy/SKILL.md"))).toBe(false);
   });
 
-  it("fails before copying when a complete destination skill already exists", async () => {
+  it("fails before copying when an unmanaged destination skill already exists", async () => {
     const appRoot = createTempDirectory();
     const packageRoot = createPackageRoot(["hydrogen-setup", "hydrogen-cart-ui"]);
     const runCommand = createRunCommandSpy();
@@ -228,12 +229,12 @@ describe("setupHydrogen", () => {
         log: vi.fn(),
         env: {},
       }),
-    ).rejects.toThrow("Skill directories already exist");
+    ).rejects.toThrow("Skill directories exist that Hydrogen did not create");
 
     expect(existsSync(join(appRoot, ".agents/skills/hydrogen-setup"))).toBe(false);
   });
 
-  it("fails before copying to any destination when one destination has a conflicting skill", async () => {
+  it("fails before copying to any destination when one destination has an unmanaged skill", async () => {
     const appRoot = createTempDirectory();
     const packageRoot = createPackageRoot(["hydrogen-setup", "hydrogen-cart-ui"]);
     const runCommand = createRunCommandSpy();
@@ -253,7 +254,7 @@ describe("setupHydrogen", () => {
         log: vi.fn(),
         env: {},
       }),
-    ).rejects.toThrow("Skill directories already exist");
+    ).rejects.toThrow("Skill directories exist that Hydrogen did not create");
 
     expect(existsSync(join(appRoot, ".agents/skills/hydrogen-setup"))).toBe(false);
   });
