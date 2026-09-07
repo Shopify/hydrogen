@@ -5,13 +5,13 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
-  realpathSync,
   renameSync,
   rmSync,
   statSync,
   writeFileSync,
 } from "node:fs";
-import { join, relative, sep } from "node:path";
+import { createRequire } from "node:module";
+import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
@@ -25,7 +25,6 @@ const SKILLS_DIRECTORY_NAME = "skills";
 const SKILL_FILE_NAME = "SKILL.md";
 const CLAUDE_DIRECTORY_NAME = ".claude";
 const AGENTS_DIRECTORY_NAME = ".agents";
-const NODE_MODULES_DIRECTORY_NAME = "node_modules";
 const PACKAGE_JSON_FILE_NAME = "package.json";
 const HASH_ALGORITHM = "sha256";
 const STAGING_SUFFIX = ".hydrogen-sync";
@@ -102,12 +101,18 @@ function getPackageRoot(): string {
   return fileURLToPath(new URL(PACKAGE_ROOT_FROM_CLI_MODULE, import.meta.url));
 }
 
-function getLocalPackageRoot(appRoot: string): string | undefined {
-  const localPackageRoot = join(appRoot, NODE_MODULES_DIRECTORY_NAME, PACKAGE_NAME);
-  if (!existsSync(localPackageRoot)) return undefined;
-  assertDirectory(localPackageRoot, `${localPackageRoot} exists but is not a directory.`);
-
-  return realpathSync(localPackageRoot);
+/**
+ * Resolves the Hydrogen the app actually depends on, walking up parent
+ * node_modules the way Node itself would. This finds hoisted installs in
+ * monorepos, which a plain `<appRoot>/node_modules` lookup misses.
+ */
+function getInstalledPackageRoot(appRoot: string): string | undefined {
+  const require = createRequire(join(appRoot, PACKAGE_JSON_FILE_NAME));
+  try {
+    return dirname(require.resolve(`${PACKAGE_NAME}/${PACKAGE_JSON_FILE_NAME}`));
+  } catch {
+    return undefined;
+  }
 }
 
 function readPackageVersion(packageRoot: string): string {
@@ -381,7 +386,7 @@ export function syncSkills(options: SyncSkillsOptions = {}): SyncSkillsResult {
   const appRoot = options.cwd ?? process.cwd();
   const log = options.log ?? console.log;
   const { force } = parseSyncArgs(options.args ?? []);
-  const packageRoot = options.packageRoot ?? getLocalPackageRoot(appRoot) ?? getPackageRoot();
+  const packageRoot = options.packageRoot ?? getInstalledPackageRoot(appRoot) ?? getPackageRoot();
   const sourceSkillsRoot = join(packageRoot, SKILLS_DIRECTORY_NAME);
   assertDirectory(sourceSkillsRoot, `No packaged skills found at ${sourceSkillsRoot}.`);
 

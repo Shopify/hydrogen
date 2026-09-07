@@ -5,6 +5,7 @@ import {
   readdirSync,
   readFileSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -13,6 +14,7 @@ import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
 import { assert } from "../../core/test-utils";
+import { isObjectRecord } from "../../core/utils/record";
 import { syncSkills } from "../skills";
 
 const REAL_SKILLS_ROOT = join(import.meta.dirname, "../../../skills");
@@ -40,9 +42,8 @@ function writeSkill(
   }
 }
 
-function createPackageRoot(version: string, skills: Record<string, string> = {}): string {
-  const packageRoot = createTempDirectory();
-  mkdirSync(join(packageRoot, "skills"));
+function writePackage(packageRoot: string, version: string, skills: Record<string, string>): void {
+  mkdirSync(join(packageRoot, "skills"), { recursive: true });
   writeFileSync(
     join(packageRoot, "package.json"),
     JSON.stringify({ name: "@shopify/hydrogen", version }),
@@ -50,7 +51,28 @@ function createPackageRoot(version: string, skills: Record<string, string> = {})
   for (const [skillName, body] of Object.entries(skills)) {
     writeSkill(join(packageRoot, "skills"), skillName, body);
   }
+}
+
+function createPackageRoot(version: string, skills: Record<string, string> = {}): string {
+  const packageRoot = createTempDirectory();
+  writePackage(packageRoot, version, skills);
   return packageRoot;
+}
+
+function installPackage(root: string, version: string, skills: Record<string, string>): string {
+  const packageRoot = join(root, "node_modules/@shopify/hydrogen");
+  writePackage(packageRoot, version, skills);
+  return packageRoot;
+}
+
+function readRealPackageVersion(): string {
+  const parsed: unknown = JSON.parse(
+    readFileSync(join(REAL_SKILLS_ROOT, "../package.json"), "utf8"),
+  );
+  const version =
+    isObjectRecord(parsed) && typeof parsed.version === "string" ? parsed.version : undefined;
+  assert(version, "No package version");
+  return version;
 }
 
 function createAppRoot(): string {
@@ -287,6 +309,76 @@ describe("syncSkills", () => {
     const packageRoot = createPackageRoot("2026.1.0");
 
     expect(() => sync(appRoot, packageRoot, ["--yolo"])).toThrow();
+  });
+
+  describe("package resolution", () => {
+    it("uses the package installed in the app's own node_modules", () => {
+      const appRoot = createAppRoot();
+      writeFileSync(join(appRoot, "package.json"), "{}");
+      installPackage(appRoot, "3.0.0", { "hydrogen-local": "Local.\n" });
+
+      const result = syncSkills({ cwd: appRoot, log: vi.fn() });
+
+      expect(result.added).toBe(1);
+      expect(readMetadata(readSkill(appRoot, "hydrogen-local")).version).toBe("3.0.0");
+    });
+
+    it("finds a hoisted install when the app lives inside a monorepo", () => {
+      const repoRoot = createTempDirectory();
+      installPackage(repoRoot, "4.0.0", { "hydrogen-hoisted": "Hoisted.\n" });
+      const appRoot = join(repoRoot, "apps/storefront");
+      mkdirSync(join(appRoot, ".agents"), { recursive: true });
+      writeFileSync(join(appRoot, "package.json"), "{}");
+
+      const result = syncSkills({ cwd: appRoot, log: vi.fn() });
+
+      expect(result.added).toBe(1);
+      expect(readMetadata(readSkill(appRoot, "hydrogen-hoisted")).version).toBe("4.0.0");
+      expect(existsSync(join(repoRoot, ".agents"))).toBe(false);
+    });
+
+    it("prefers the app's own install over a hoisted one", () => {
+      const repoRoot = createTempDirectory();
+      installPackage(repoRoot, "4.0.0", { "hydrogen-hoisted": "Hoisted.\n" });
+      const appRoot = join(repoRoot, "apps/storefront");
+      mkdirSync(join(appRoot, ".agents"), { recursive: true });
+      writeFileSync(join(appRoot, "package.json"), "{}");
+      installPackage(appRoot, "5.0.0", { "hydrogen-nested": "Nested.\n" });
+
+      const result = syncSkills({ cwd: appRoot, log: vi.fn() });
+
+      expect(result.added).toBe(1);
+      expect(readMetadata(readSkill(appRoot, "hydrogen-nested")).version).toBe("5.0.0");
+    });
+
+    it("follows a pnpm-style symlinked install to the store", () => {
+      const appRoot = createAppRoot();
+      writeFileSync(join(appRoot, "package.json"), "{}");
+      const storeRoot = join(
+        appRoot,
+        "node_modules/.pnpm/@shopify+hydrogen@6.0.0/node_modules/@shopify/hydrogen",
+      );
+      writePackage(storeRoot, "6.0.0", { "hydrogen-store": "Store.\n" });
+      mkdirSync(join(appRoot, "node_modules/@shopify"), { recursive: true });
+      symlinkSync(storeRoot, join(appRoot, "node_modules/@shopify/hydrogen"), "dir");
+
+      const result = syncSkills({ cwd: appRoot, log: vi.fn() });
+
+      expect(result.added).toBe(1);
+      expect(readMetadata(readSkill(appRoot, "hydrogen-store")).version).toBe("6.0.0");
+    });
+
+    it("falls back to the running CLI's own package when nothing is installed", () => {
+      const appRoot = createAppRoot();
+      writeFileSync(join(appRoot, "package.json"), "{}");
+
+      const result = syncSkills({ cwd: appRoot, log: vi.fn() });
+
+      expect(result.added).toBe(readdirSync(REAL_SKILLS_ROOT).length);
+      expect(readMetadata(readSkill(appRoot, "hydrogen-setup")).version).toBe(
+        readRealPackageVersion(),
+      );
+    });
   });
 
   it("syncs every skill shipped in this package", () => {
