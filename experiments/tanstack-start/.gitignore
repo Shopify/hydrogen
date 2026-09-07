@@ -1,0 +1,7 @@
+node_modules/
+.output/
+dist/
+.nitro/
+.tanstack/
+src/routeTree.gen.ts
+.env

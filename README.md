@@ -211,6 +211,7 @@ The [`experiments/`](./experiments) directory ports the same storefront across f
 | `nuxt/` | Nuxt 3 on Hydrogen's Vue bindings |
 | `solid-start/` | SolidStart v1 |
 | `sveltekit/` | SvelteKit 2 + Svelte 5 |
+| `tanstack-start/` | TanStack Start (React 19) |
 
 > **These are development experiments, not starter kits.** They exist to validate the API across frameworks and surface integration friction. The starters we version and distribute live in [`templates/`](./templates). The canonical path to a real storefront is **agent skills + docs**, generating code tailored to your store, framework, and requirements.
 

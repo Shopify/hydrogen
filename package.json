@@ -14,6 +14,7 @@
     "dev:nuxt": "turbo run dev --filter=@shopify/hydrogen-experiment-nuxt...",
     "dev:solid": "turbo run dev --filter=@shopify/hydrogen-experiment-solid-start...",
     "dev:svelte": "turbo run dev --filter=@shopify/hydrogen-experiment-sveltekit...",
+    "dev:tanstack": "turbo run dev --filter=@shopify/hydrogen-experiment-tanstack-start...",
     "dev:hydrogen": "pnpm --dir experiments/hydrogen dev",
     "dev:hub": "node scripts/experiments-dev.ts",
     "download:standard-types": "node scripts/download-standard-types.ts",

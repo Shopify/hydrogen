@@ -8,6 +8,7 @@ These projects are development experiments for exercising Hydrogen across framew
 - `nuxt/` — Nuxt 3 using Hydrogen's Vue binding layer.
 - `solid-start/` — SolidStart v1 with `query`, `createAsync`, and signal-driven product state.
 - `sveltekit/` — SvelteKit 2 and Svelte 5 with server `load`.
+- `tanstack-start/` — TanStack Start (React 19) with a global request middleware, server functions as the data path, and server routes.
 - `hydrogen/` — mirror of the Hydrogen Skeleton template, kept for parity with Hydrogen classic and its E2E suite.
 
 Shared infrastructure:
@@ -36,6 +37,7 @@ The local HTTPS plugin provisions certificates automatically the first time a `d
 Per-project HTTPS quirks:
 
 - Nuxt and SolidStart may need the command restarted once after first-run provisioning so their outer dev servers can load the certificate files.
+- TanStack Start runs on Vite's own dev server and needs no restart.
 - The Next.js template provisions its own development certificate and does not use the Hydrogen certificates.
 
 ## What experiments are
