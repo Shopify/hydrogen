@@ -8,6 +8,8 @@ import { syncSkills } from "../packages/hydrogen/src/cli/skills.ts";
 
 const HYDROGEN_PACKAGE = "@shopify/hydrogen";
 const SOURCE_ONLY_TEST_DIRECTORY = "__test__";
+// Module-level consts must precede the runCli() call below, which runs at import time.
+const SKILL_HARNESS_DIRECTORIES = [".claude", ".agents"];
 const PUBLISHED_PREVIEW_VERSION = /^2026\.10\.0-preview\.[1-9]\d*$/;
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const defaultRepoRoot = resolve(scriptDir, "..");
@@ -162,8 +164,6 @@ function assertHydrogenPackageVersion(repoRoot: string, version: string): void {
     );
   }
 }
-
-const SKILL_HARNESS_DIRECTORIES = [".claude", ".agents"];
 
 /**
  * Template sources never carry skill copies, so start from empty harness skill
