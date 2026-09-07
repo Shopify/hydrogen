@@ -165,7 +165,7 @@ function assertHydrogenPackageVersion(repoRoot: string, version: string): void {
 
 /**
  * Template sources never carry skill copies, so start from an empty
- * `.agents/skills` and let the same sync consumers run stamp each skill with
+ * `.agents/skills` and let the same sync that consumers run stamp each skill with
  * version and hash metadata. That keeps `hydrogen skills sync` working after
  * a template is deployed and upgraded.
  */

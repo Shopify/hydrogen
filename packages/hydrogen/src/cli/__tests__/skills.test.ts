@@ -256,6 +256,18 @@ describe("syncSkills", () => {
     expect(readSkill(appRoot, "hydrogen-cart-ui")).toContain("Cart.");
   });
 
+  it("removes a staging directory left behind by an interrupted run", () => {
+    const appRoot = createAppRoot();
+    const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
+    sync(appRoot, packageRoot);
+    writeSkill(join(appRoot, ".agents/skills"), "hydrogen-cart-ui.hydrogen-sync", "Half copied.\n");
+
+    const result = sync(appRoot, packageRoot);
+
+    expect(result).toMatchObject({ unchanged: 1, removed: 1 });
+    expect(readdirSync(join(appRoot, ".agents/skills"))).toEqual(["hydrogen-cart-ui"]);
+  });
+
   it("repairs a partial skill directory without SKILL.md", () => {
     const appRoot = createAppRoot();
     mkdirSync(join(appRoot, ".agents/skills/hydrogen-cart-ui/references"), { recursive: true });

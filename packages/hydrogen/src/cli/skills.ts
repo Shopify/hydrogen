@@ -15,6 +15,8 @@ import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
+// Explicit extension: scripts/preview-template-dist.ts runs this module under
+// plain `node` type stripping, which cannot resolve extensionless imports.
 import { isObjectRecord } from "../core/utils/record.ts";
 
 const PACKAGE_NAME = "@shopify/hydrogen";
@@ -299,6 +301,12 @@ function planDestination(
 
   for (const skillName of listDirectoryNames(destinationRoot)) {
     if (shippedSkills.has(skillName)) continue;
+
+    // A staging directory left by an interrupted run is ours regardless of content.
+    if (skillName.endsWith(STAGING_SUFFIX)) {
+      planned.push({ action: "remove", skillName, destinationRoot });
+      continue;
+    }
 
     const action = decideStaleAction(readDestinationState(join(destinationRoot, skillName)), force);
     if (action) planned.push({ action, skillName, destinationRoot });
