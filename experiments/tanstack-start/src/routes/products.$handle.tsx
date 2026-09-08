@@ -288,8 +288,109 @@ function InventoryHint({ selectedVariant }: { selectedVariant: ProductVariant | 
   );
 }
 
+type OptionValueView = ReturnType<typeof useProductForm>["options"][number]["values"][number];
+
+const SWATCH_CONTROL_CLASS =
+  "min-h-touch-target min-w-touch-target relative inline-flex cursor-pointer items-center justify-center motion-safe:transition-transform motion-safe:active:scale-[0.93]";
+const PILL_CONTROL_CLASS =
+  "option-pill focus-visible:outline-accent motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]";
+
+function SwatchContent({ value, swatch }: { value: OptionValueView; swatch?: SwatchValue }) {
+  const style = swatch?.imageUrl
+    ? { backgroundImage: `url("${swatch.imageUrl}")` }
+    : { backgroundColor: swatch?.color ?? undefined };
+
+  return (
+    <>
+      <span
+        className={`swatch-md border-border relative inline-flex items-center justify-center overflow-hidden rounded-full border-2 ring-offset-2 ${value.selected ? "border-interactive" : ""}`}
+        style={style}
+      >
+        {value.selected ? <span className="swatch-scrim absolute inset-0" /> : null}
+        {value.available ? null : (
+          <svg
+            className="absolute inset-0 h-full w-full"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            aria-hidden="true"
+          >
+            <line x1="4" y1="4" x2="20" y2="20" />
+          </svg>
+        )}
+      </span>
+      <span className="sr-only">{soldOutLabel(value)}</span>
+    </>
+  );
+}
+
+function soldOutLabel(value: OptionValueView) {
+  return value.available ? value.name : `${value.name} (Sold out)`;
+}
+
+// A value on another product navigates there (the variant lives on a
+// different handle); a value on this product is a form control that updates
+// the selection in place.
+function OptionValueControl({
+  product,
+  optionName,
+  value,
+  renderSwatch,
+  swatch,
+  isColorOption,
+  baseParams,
+}: {
+  product: ProductData;
+  optionName: string;
+  value: OptionValueView;
+  renderSwatch: boolean;
+  swatch: SwatchValue | undefined;
+  isColorOption: boolean;
+  baseParams: URLSearchParams;
+}) {
+  const { register } = useProductForm();
+  const shared = {
+    className: `${renderSwatch ? SWATCH_CONTROL_CLASS : PILL_CONTROL_CLASS} ${value.available ? "" : "opacity-50"}`,
+    "aria-label": renderSwatch ? value.name : undefined,
+    "aria-pressed": value.selected,
+    "data-testid": isColorOption ? "color-swatch" : undefined,
+  };
+  const content = renderSwatch ? (
+    <SwatchContent value={value} swatch={swatch} />
+  ) : (
+    soldOutLabel(value)
+  );
+
+  if (value.handle !== product.handle) {
+    const target = variantTarget(product, value.selectedOptions, value.handle, baseParams);
+    return (
+      <Link
+        to="/products/$handle"
+        params={{ handle: target.handle }}
+        search={target.search}
+        resetScroll={false}
+        {...shared}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      {...register("optionValue", { optionName, value: value.name })}
+      disabled={!value.exists}
+      {...shared}
+    >
+      {content}
+    </button>
+  );
+}
+
 function VariantOptions({ product }: { product: ProductData }) {
-  const { options, register } = useProductForm();
+  const { options } = useProductForm();
   const swatches = useMemo(() => buildSwatchLookup(product), [product]);
   const searchStr = useLocation({ select: (location) => location.searchStr });
   const baseParams = useMemo(() => new URLSearchParams(searchStr), [searchStr]);
@@ -308,122 +409,18 @@ function VariantOptions({ product }: { product: ProductData }) {
               {selectedValue ? `: ${selectedValue}` : ""}
             </legend>
             <div className="flex flex-wrap gap-2" role="group" aria-label={option.name}>
-              {option.values.map((variantOption) => {
-                const valueName = variantOption.name;
-                const registered = register("optionValue", {
-                  optionName: option.name,
-                  value: valueName,
-                });
-                const isCrossProduct = variantOption.handle !== product.handle;
-                const linkTarget = variantTarget(
-                  product,
-                  variantOption.selectedOptions,
-                  variantOption.handle,
-                  baseParams,
-                );
-
-                if (renderSwatches) {
-                  const swatch = swatches.get(`${option.name}:${valueName}`);
-                  const swatchStyle = swatch?.imageUrl
-                    ? { backgroundImage: `url("${swatch.imageUrl}")` }
-                    : { backgroundColor: swatch?.color ?? undefined };
-                  const content = (
-                    <>
-                      <span
-                        className={`swatch-md border-border relative inline-flex items-center justify-center overflow-hidden rounded-full border-2 ring-offset-2 ${variantOption.selected ? "border-interactive" : ""}`}
-                        style={swatchStyle}
-                      >
-                        {variantOption.selected ? (
-                          <span className="swatch-scrim absolute inset-0" />
-                        ) : null}
-                        {!variantOption.available ? (
-                          <svg
-                            className="absolute inset-0 h-full w-full"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            aria-hidden="true"
-                          >
-                            <line x1="4" y1="4" x2="20" y2="20" />
-                          </svg>
-                        ) : null}
-                      </span>
-                      <span className="sr-only">
-                        {valueName}
-                        {!variantOption.available ? " (Sold out)" : ""}
-                      </span>
-                    </>
-                  );
-
-                  if (isCrossProduct) {
-                    return (
-                      <Link
-                        key={valueName}
-                        to="/products/$handle"
-                        params={{ handle: linkTarget.handle }}
-                        search={linkTarget.search}
-                        resetScroll={false}
-                        className={`min-h-touch-target min-w-touch-target relative inline-flex cursor-pointer items-center justify-center motion-safe:transition-transform motion-safe:active:scale-[0.93] ${!variantOption.available ? "opacity-50" : ""}`}
-                        aria-label={valueName}
-                        aria-pressed={variantOption.selected}
-                        data-testid={isColorOption ? "color-swatch" : undefined}
-                      >
-                        {content}
-                      </Link>
-                    );
-                  }
-
-                  return (
-                    <button
-                      key={valueName}
-                      type="button"
-                      {...registered}
-                      className={`min-h-touch-target min-w-touch-target relative inline-flex cursor-pointer items-center justify-center motion-safe:transition-transform motion-safe:active:scale-[0.93] ${!variantOption.available ? "opacity-50" : ""}`}
-                      aria-label={valueName}
-                      aria-pressed={variantOption.selected}
-                      disabled={!variantOption.exists}
-                      data-testid={isColorOption ? "color-swatch" : undefined}
-                    >
-                      {content}
-                    </button>
-                  );
-                }
-
-                const pillClass = `option-pill focus-visible:outline-accent motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] ${!variantOption.available ? "opacity-50" : ""}`;
-                const label = `${valueName}${!variantOption.available ? " (Sold out)" : ""}`;
-
-                if (isCrossProduct) {
-                  return (
-                    <Link
-                      key={valueName}
-                      to="/products/$handle"
-                      params={{ handle: linkTarget.handle }}
-                      search={linkTarget.search}
-                      resetScroll={false}
-                      className={pillClass}
-                      aria-pressed={variantOption.selected}
-                      data-testid={isColorOption ? "color-swatch" : undefined}
-                    >
-                      {label}
-                    </Link>
-                  );
-                }
-
-                return (
-                  <button
-                    key={valueName}
-                    type="button"
-                    {...registered}
-                    className={pillClass}
-                    aria-pressed={variantOption.selected}
-                    disabled={!variantOption.exists}
-                    data-testid={isColorOption ? "color-swatch" : undefined}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
+              {option.values.map((value) => (
+                <OptionValueControl
+                  key={value.name}
+                  product={product}
+                  optionName={option.name}
+                  value={value}
+                  renderSwatch={renderSwatches}
+                  swatch={swatches.get(`${option.name}:${value.name}`)}
+                  isColorOption={isColorOption}
+                  baseParams={baseParams}
+                />
+              ))}
             </div>
           </fieldset>
         );

@@ -61,18 +61,45 @@ function productCountText(collection: CollectionCardData, productCount?: number)
   return `${count} ${count === 1 ? "product" : "products"}`;
 }
 
+type CardImage = {
+  url: string;
+  altText: string;
+  width: number | undefined;
+  height: number | undefined;
+};
+
+// The collection's own image carries dimensions; the first product's featured
+// image is only a visual stand-in, so it never claims a width/height.
+function cardImage(
+  collection: CollectionCardData,
+  useProductImageFallback: boolean,
+): CardImage | null {
+  const own = collection.image;
+  if (own) {
+    return {
+      url: own.url,
+      altText: own.altText ?? collection.title,
+      width: own.width ?? undefined,
+      height: own.height ?? undefined,
+    };
+  }
+  const fallback = useProductImageFallback ? collection.products.nodes[0]?.featuredImage : null;
+  if (!fallback) return null;
+  return {
+    url: fallback.url,
+    altText: fallback.altText ?? collection.title,
+    width: undefined,
+    height: undefined,
+  };
+}
+
 export function CollectionCard({
   collection,
   priority = false,
   productCount,
   useProductImageFallback = true,
 }: CollectionCardProps) {
-  const fallbackImage = useProductImageFallback
-    ? (collection.products.nodes[0]?.featuredImage ?? null)
-    : null;
-  const image = collection.image ?? fallbackImage;
-  const imageWidth = collection.image?.width ?? undefined;
-  const imageHeight = collection.image?.height ?? undefined;
+  const image = cardImage(collection, useProductImageFallback);
 
   return (
     <article
@@ -85,9 +112,9 @@ export function CollectionCard({
           <div className="h-full w-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04]">
             <img
               src={image.url}
-              alt={image.altText ?? collection.title}
-              width={imageWidth}
-              height={imageHeight}
+              alt={image.altText}
+              width={image.width}
+              height={image.height}
               className="h-full w-full object-cover"
               loading={priority ? "eager" : "lazy"}
               fetchPriority={priority ? "high" : "auto"}

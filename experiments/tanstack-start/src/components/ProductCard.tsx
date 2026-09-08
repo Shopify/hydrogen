@@ -49,14 +49,54 @@ type ProductCardProps = {
   priority?: boolean;
 };
 
+type ProductCardPricing = {
+  price: ProductCardData["priceRange"]["minVariantPrice"];
+  compareAt: ProductCardData["compareAtPriceRange"]["minVariantPrice"];
+  onSale: boolean;
+};
+
+function ProductCardBadge({
+  availableForSale,
+  onSale,
+}: {
+  availableForSale: boolean;
+  onSale: boolean;
+}) {
+  const shared = "absolute start-2 top-2 inline-flex items-center rounded-full font-medium";
+  if (!availableForSale) return <span className={`badge-soldout ${shared}`}>Sold out</span>;
+  if (onSale) return <span className={`badge-sale ${shared}`}>Sale</span>;
+  return null;
+}
+
+function ProductCardPrice({ price, compareAt, onSale }: ProductCardPricing) {
+  if (!onSale) {
+    return (
+      <span className="text-on-surface font-medium">
+        <span className="sr-only">Price: </span>
+        {formatPrice(price)}
+      </span>
+    );
+  }
+  return (
+    <>
+      <span className="text-sale font-medium">
+        <span className="sr-only">Sale price: </span>
+        {formatPrice(price)}
+      </span>
+      <s className="text-compare text-sm">
+        <span className="sr-only">Regular price: </span>
+        {formatPrice(compareAt)}
+      </s>
+    </>
+  );
+}
+
 export function ProductCard({ product, priority = false }: ProductCardProps) {
-  const primaryImage = product.featuredImage ?? product.images.nodes[0] ?? null;
-  const hoverImage = product.images.nodes[1] ?? null;
+  const primaryImage = product.featuredImage ?? product.images.nodes[0];
+  const hoverImage = product.images.nodes[1];
   const price = product.priceRange.minVariantPrice;
   const compareAt = product.compareAtPriceRange.minVariantPrice;
   const onSale = compareMoney(compareAt, price) > 0;
-  const badge = !product.availableForSale ? "Sold out" : onSale ? "Sale" : null;
-  const badgeClass = !product.availableForSale ? "badge-soldout" : "badge-sale";
 
   return (
     <article
@@ -86,13 +126,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             />
           </div>
         ) : null}
-        {badge ? (
-          <span
-            className={`${badgeClass} absolute start-2 top-2 inline-flex items-center rounded-full font-medium`}
-          >
-            {badge}
-          </span>
-        ) : null}
+        <ProductCardBadge availableForSale={product.availableForSale} onSale={onSale} />
       </div>
       <div className="flex flex-col gap-0.5 text-left">
         <h3 className="type-body-sm text-on-surface line-clamp-2 font-medium">
@@ -105,23 +139,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           </Link>
         </h3>
         <div className="inline-flex flex-wrap items-baseline gap-2 text-sm">
-          {onSale ? (
-            <>
-              <span className="text-sale font-medium">
-                <span className="sr-only">Sale price: </span>
-                {formatPrice(price)}
-              </span>
-              <s className="text-compare text-sm">
-                <span className="sr-only">Regular price: </span>
-                {formatPrice(compareAt)}
-              </s>
-            </>
-          ) : (
-            <span className="text-on-surface font-medium">
-              <span className="sr-only">Price: </span>
-              {formatPrice(price)}
-            </span>
-          )}
+          <ProductCardPrice price={price} compareAt={compareAt} onSale={onSale} />
         </div>
       </div>
     </article>

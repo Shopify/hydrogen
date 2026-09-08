@@ -147,26 +147,41 @@ function money(amount: number, currencyCode: string): MoneyV2 {
   return { amount: String(amount), currencyCode };
 }
 
-function describeFilter(filter: ProductFilter, currencyCode: string): string {
-  if (filter.available != null) return filter.available ? "In stock" : "Out of stock";
+function describePriceFilter(
+  price: NonNullable<ProductFilter["price"]>,
+  currencyCode: string,
+): string | undefined {
+  const { min, max } = price;
+  if (min != null && max != null) {
+    return `${formatPrice(money(min, currencyCode))} – ${formatPrice(money(max, currencyCode))}`;
+  }
+  if (min != null) return `From ${formatPrice(money(min, currencyCode))}`;
+  if (max != null) return `Up to ${formatPrice(money(max, currencyCode))}`;
+  return undefined;
+}
+
+// Filters whose single field is already the display string.
+function describePlainFilter(filter: ProductFilter): string | undefined {
   if (filter.productType) return filter.productType;
   if (filter.productVendor) return filter.productVendor;
   if (filter.tag) return filter.tag;
+  if (filter.taxonomyMetafield) return filter.taxonomyMetafield.value;
+  if (filter.category) return filter.category.id;
+  return undefined;
+}
+
+// Filters that pair a key with an optional value; the key is the fallback label.
+function describeKeyedFilter(filter: ProductFilter): string | undefined {
   if (filter.variantOption) return filter.variantOption.value ?? filter.variantOption.name;
   if (filter.productMetafield) return filter.productMetafield.value ?? filter.productMetafield.key;
   if (filter.variantMetafield) return filter.variantMetafield.value ?? filter.variantMetafield.key;
-  if (filter.taxonomyMetafield) return filter.taxonomyMetafield.value;
-  if (filter.category) return filter.category.id;
-  if (filter.price) {
-    const min = filter.price.min;
-    const max = filter.price.max;
-    if (min != null && max != null) {
-      return `${formatPrice(money(min, currencyCode))} – ${formatPrice(money(max, currencyCode))}`;
-    }
-    if (min != null) return `From ${formatPrice(money(min, currencyCode))}`;
-    if (max != null) return `Up to ${formatPrice(money(max, currencyCode))}`;
-  }
-  return "Filter";
+  return undefined;
+}
+
+function describeFilter(filter: ProductFilter, currencyCode: string): string {
+  if (filter.available != null) return filter.available ? "In stock" : "Out of stock";
+  if (filter.price) return describePriceFilter(filter.price, currencyCode) ?? "Filter";
+  return describePlainFilter(filter) ?? describeKeyedFilter(filter) ?? "Filter";
 }
 
 function activeValueCount(filter: BrowseFilter, state: CollectionState): number {
