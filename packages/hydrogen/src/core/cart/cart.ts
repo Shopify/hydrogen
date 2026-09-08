@@ -1533,6 +1533,9 @@ function enqueueTransaction<TType extends TransactionType>(
   );
   if (expectedEventIndex !== -1) {
     store.expectedEvents.splice(expectedEventIndex, 1);
+    // The action's return promise is authoritative; this correlated event promise can reject
+    // separately when the request is cancelled and must still have an observer.
+    promise.then(NOOP, NOOP);
     return;
   }
   if (store.observedPromises.has(promise)) return;
