@@ -10,5 +10,5 @@ Until a store is connected, this project reads [mock.shop](https://mock.shop): a
 
 - The directory at https://mock.shop/llms.txt lists every store with what it sells and its API URL. The default, `mock.shop` itself, is apparel basics.
 - To build against a different store, set `PUBLIC_STORE_DOMAIN` in `.env` to that store's host (for example `pets.mock.shop`) and leave `PRIVATE_STOREFRONT_API_TOKEN` empty. Each store describes its own catalog at `https://<store>.mock.shop/llms.txt`.
-- Carts work; checkout doesn't, and the Customer Account API isn't available.
+- Carts work; checkout is mocked (no payment, no real order), and the Customer Account API isn't available.
 - To connect a real store, set `PUBLIC_STORE_DOMAIN`, `PUBLIC_STOREFRONT_ID`, and `PRIVATE_STOREFRONT_API_TOKEN` in `.env` (see `.env.example`). On Oxygen, a linked storefront injects them for you.
