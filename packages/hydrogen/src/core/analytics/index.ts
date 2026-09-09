@@ -23,6 +23,7 @@ export type {
   ShopAnalytics,
   StorefrontAnalyticsConfig,
   StorefrontAnalyticsDestination,
+  StorefrontAnalyticsDestinationConsent,
   StorefrontAnalyticsDestinationEventContext,
   StorefrontAnalyticsDestinationSetupContext,
 } from "./types";

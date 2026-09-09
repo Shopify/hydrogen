@@ -24,6 +24,7 @@ type DestinationCallback = (
 type DestinationRecord = {
   name: string;
   context: StorefrontAnalyticsDestinationEventContext;
+  essential: boolean;
   cleanup?: () => void;
   subscriptions: Map<string, Set<DestinationCallback>>;
   nextReplaySequence: number;
@@ -68,6 +69,10 @@ type DestinationManagerDeps = {
  * Destinations subscribe to events during setup and receive live delivery when
  * `canTrack()` returns true. Events published while blocked are buffered and
  * replayed once tracking is allowed.
+ *
+ * PROTOTYPE: destinations registered with `consent: "essential"` skip the
+ * `canTrack()` gate entirely (live and replay). They still lose history once
+ * a declined interaction clears the buffer and stops recording.
  */
 export function createDestinationManager(deps: DestinationManagerDeps) {
   let nextReplaySequence = 0;
@@ -83,7 +88,20 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
    *   replay buffer and stops recording until tracking is allowed again.
    */
   function replay(clearWhenBlocked = false): void {
-    if (!deps.canTrack()) {
+    const canTrack = deps.canTrack();
+
+    // Essential destinations catch up on buffered events even while tracking
+    // is blocked, so a late-registered essential destination still sees the
+    // page view that happened before it attached.
+    for (const destination of destinations) {
+      if (!canTrack && !destination.essential) continue;
+      for (const entry of replayBuffer) {
+        if (entry.sequence < destination.nextReplaySequence) continue;
+        deliverDestinationEvent(destination, entry);
+      }
+    }
+
+    if (!canTrack) {
       if (clearWhenBlocked) {
         replayBuffer.length = 0;
         shouldRecordReplay = false;
@@ -92,12 +110,6 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
     }
 
     shouldRecordReplay = true;
-    for (const destination of destinations) {
-      for (const entry of replayBuffer) {
-        if (entry.sequence < destination.nextReplaySequence) continue;
-        deliverDestinationEvent(destination, entry);
-      }
-    }
   }
 
   /**
@@ -126,6 +138,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
         getTrackingValues: () =>
           deps.canTrack() ? getTrackingValues(tag) : { uniqueToken: "", visitToken: "" },
       },
+      essential: destination.consent === "essential",
       subscriptions: new Map(),
       nextReplaySequence: 0,
     };
@@ -233,10 +246,10 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
       }
     }
 
-    if (deps.canTrack()) {
-      for (const destination of destinations) {
-        deliverDestinationEvent(destination, replayEntry);
-      }
+    const canTrack = deps.canTrack();
+    for (const destination of destinations) {
+      if (!canTrack && !destination.essential) continue;
+      deliverDestinationEvent(destination, replayEntry);
     }
   }
 

@@ -385,6 +385,20 @@ export type StorefrontAnalyticsDestinationSetupContext = {
 };
 
 /**
+ * PROTOTYPE: Consent purpose a destination requires before it receives events.
+ *
+ * - `"analytics"` (default): delivered only when Customer Privacy reports
+ *   analytics processing is allowed. Events published before consent are
+ *   buffered and replayed once granted.
+ * - `"essential"`: delivered regardless of consent state, including before
+ *   Customer Privacy loads and after the shopper declines. Only use for
+ *   first-party processing the merchant has classified as strictly necessary
+ *   (equivalent to a Liquid custom pixel with permission "Not required").
+ *   The merchant, not Hydrogen, owns that classification.
+ */
+export type StorefrontAnalyticsDestinationConsent = "analytics" | "essential";
+
+/**
  * An analytics integration that receives events once consent allows tracking.
  *
  * Subscribe to events in the setup function. After consent allows tracking, the destination
@@ -396,6 +410,8 @@ export type StorefrontAnalyticsDestinationSetupContext = {
 export type StorefrontAnalyticsDestination = {
   /** A unique name. The bus warns and ignores a destination that reuses the name of an active destination. */
   name: string;
+  /** PROTOTYPE: The consent purpose the destination requires. Defaults to `"analytics"`. */
+  consent?: StorefrontAnalyticsDestinationConsent;
   /**
    * Runs as soon as you add the destination, which can happen before the customer consents.
    * Subscribe to events through the context. Don't load third-party scripts or set cookies in
