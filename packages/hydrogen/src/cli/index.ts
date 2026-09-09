@@ -17,7 +17,7 @@ const COMMANDS = [
     path: ["certs", "uninstall"],
     run: async (args: string[]) => uninstallLocalHttpsCertificates(args),
   },
-  { path: ["setup"], run: async (_args: string[]) => setupHydrogen() },
+  { path: ["setup"], run: async (args: string[]) => setupHydrogen({ args }) },
   {
     path: ["skills", "sync"],
     run: async (args: string[]) => {

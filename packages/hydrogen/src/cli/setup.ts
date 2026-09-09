@@ -40,6 +40,8 @@ export type RunCommand = (
 ) => Promise<void>;
 
 interface SetupHydrogenOptions {
+  /** Forwarded to `skills sync`, so `hydrogen setup --force` overwrites like `hydrogen skills sync --force`. */
+  args?: string[];
   cwd?: string;
   packageRoot?: string;
   env?: Record<string, string | undefined>;
@@ -147,5 +149,5 @@ export async function setupHydrogen(options: SetupHydrogenOptions = {}): Promise
     await installHydrogen(appRoot, packageManager, runCommand);
   }
 
-  syncSkills({ cwd: appRoot, packageRoot: options.packageRoot, log });
+  syncSkills({ args: options.args, cwd: appRoot, packageRoot: options.packageRoot, log });
 }

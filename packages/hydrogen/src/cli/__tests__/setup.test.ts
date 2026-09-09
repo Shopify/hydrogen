@@ -210,6 +210,29 @@ describe("setupHydrogen", () => {
     expect(existsSync(join(appRoot, ".agents/skills/hydrogen-setup"))).toBe(false);
   });
 
+  it("forwards --force to skills sync so unmanaged skills are overwritten", async () => {
+    const appRoot = createTempDirectory();
+    const packageRoot = createPackageRoot(["hydrogen-cart-ui"]);
+    const skillFile = join(appRoot, ".agents/skills/hydrogen-cart-ui/SKILL.md");
+
+    mkdirSync(join(appRoot, ".agents/skills/hydrogen-cart-ui"), { recursive: true });
+    writeFileSync(skillFile, "existing skill");
+    writeJson(join(appRoot, "package.json"), {
+      dependencies: { "@shopify/hydrogen": "^1.0.0" },
+    });
+
+    await setupHydrogen({
+      args: ["--force"],
+      cwd: appRoot,
+      packageRoot,
+      runCommand: createRunCommandSpy(),
+      log: vi.fn(),
+      env: {},
+    });
+
+    expect(readFileSync(skillFile, "utf8")).toContain("name: hydrogen-cart-ui");
+  });
+
   it("fails before copying to any destination when one destination has an unmanaged skill", async () => {
     const appRoot = createTempDirectory();
     const packageRoot = createPackageRoot(["hydrogen-setup", "hydrogen-cart-ui"]);
