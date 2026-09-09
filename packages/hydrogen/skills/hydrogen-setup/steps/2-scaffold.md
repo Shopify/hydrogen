@@ -30,7 +30,7 @@ The packaged skills describe the installed Hydrogen version. Chain `hydrogen ski
 }
 ```
 
-Keep the framework's own dev command exactly as it was; only prefix it. Do not add the plain `hydrogen skills check` (error mode) to `dev`; that belongs in CI, where a stale skill copy should fail the build.
+Keep the framework's own dev command exactly as it was; only prefix it. Apply the same prefix to any sibling dev script such as `dev:https`. Do not add the plain `hydrogen skills check` (error mode) to `dev`; that belongs in CI, where a stale skill copy should fail the build.
 
 ### Continue when
 
