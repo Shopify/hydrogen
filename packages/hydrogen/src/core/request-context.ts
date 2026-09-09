@@ -15,7 +15,7 @@ import {
   SHOPIFY_VISIT_TOKEN_HEADER,
   STOREFRONT_URL_HEADER,
 } from "./headers";
-import { matchLocaleFromUrl, resolveSupportedLocale } from "./i18n/match";
+import { matchLocale, resolveSupportedLocale } from "./i18n/match";
 import type {
   ShopifyCountryCode,
   ShopifyI18n,
@@ -173,9 +173,7 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
   const isConsentManagementRequest = request.headers.get(CONSENT_MANAGEMENT_HEADER) === "1";
   const url = request.url ?? request.headers.get(STOREFRONT_URL_HEADER) ?? undefined;
   const storefrontOrigin = getUrlOrigin(url);
-  const locale = input.locale
-    ? resolveSupportedLocale(input.locale, i18n)
-    : matchLocaleFromUrl(url ?? "", i18n);
+  const locale = input.locale ? resolveSupportedLocale(input.locale, i18n) : matchLocale(url, i18n);
   const context = {
     ...(cookieHeader && { cookie: cookieHeader }),
     i18n,

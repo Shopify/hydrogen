@@ -182,7 +182,7 @@ export function getAlternateLinks(currentUrl: string, currentLocale: ShopifyLoca
 
 - `getLocalizedHref(href, { i18n, locale })` rewrites an href to the same page in another locale. Under pathname routing it returns a path with any existing locale prefix replaced; under domain routing it returns an absolute `https:` URL on the target hostname; with no routing it returns the input unchanged. It throws when `locale` is not defined in `i18n`.
 - `getSupportedLocales(i18n)` returns every locale the definition can resolve to, default first, keeping `pathSegment` / `hostname` and any extra fields.
-- `matchLocaleFromRequest(request, i18n)` and `matchLocaleFromUrl(url, i18n)` expose the same resolution the request context uses, for sitemaps or tests that hold a URL but no request context.
+- `matchLocale(request | url, i18n)` exposes the same resolution the request context uses, for sitemaps or tests that hold a URL but no request context.
 
 Persist an explicit buyer choice by redirecting to `getLocalizedHref(...)`; do not resolve the locale from a cookie on the server.
 
@@ -217,7 +217,7 @@ Read the relevant reference before applying the generic `Request` examples in fr
 Test locale resolution with plain `Request` objects against the definition. You do not need a framework test harness.
 
 ```ts
-import { matchLocaleFromRequest } from "@shopify/hydrogen";
+import { matchLocale } from "@shopify/hydrogen";
 import { describe, expect, it } from "vitest";
 
 import { i18n } from "./i18n";
@@ -226,7 +226,7 @@ describe("i18n", () => {
   it("resolves a prefixed locale", () => {
     const request = new Request("https://example.com/fr-ca/products/shirt");
 
-    expect(matchLocaleFromRequest(request, i18n)).toEqual({
+    expect(matchLocale(request, i18n)).toEqual({
       language: "FR",
       country: "CA",
       pathPrefix: "/fr-ca",
@@ -236,7 +236,7 @@ describe("i18n", () => {
   it("falls back to the default locale for unknown prefixes", () => {
     const request = new Request("https://example.com/xx/products/shirt");
 
-    expect(matchLocaleFromRequest(request, i18n).pathPrefix).toBe("");
+    expect(matchLocale(request, i18n).pathPrefix).toBe("");
   });
 });
 ```

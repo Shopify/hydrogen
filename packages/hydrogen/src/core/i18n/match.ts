@@ -1,4 +1,5 @@
-import { formatLocale, getLocalePathSegment, getSupportedLocales, isSameLocale } from "./define";
+import { getSupportedLocales } from "./define";
+import { formatLocale, getLocaleHostname, getLocalePathSegment, isSameLocale } from "./locale";
 import type {
   ShopifyDomainLocale,
   ShopifyI18n,
@@ -7,42 +8,36 @@ import type {
   ShopifyPathnameLocale,
 } from "./types";
 
+/** Anything the locale can be matched from: a `Request`, a `URL`, or a URL string. */
+export type LocaleMatchSource = Pick<Request, "url"> | URL | string;
+
 /**
- * Resolves the locale of a request from its URL according to the definition's routing.
+ * Resolves the locale of a request URL according to the definition's routing.
  *
  * Pure and synchronous: the URL is the only input, so the same URL always resolves to the same
- * locale. Unknown prefixes or hostnames resolve to `defaultLocale`.
+ * locale. Unknown prefixes or hostnames, and unparsable or missing URLs, resolve to
+ * `defaultLocale`.
  *
- * Framework-specific URL shapes are matched as-is. Only the first path segment (pathname routing)
- * or the hostname (domain routing) is read, so suffixes like React Router's `.data` do not affect
- * the result.
+ * Only the first path segment (pathname routing) or the hostname (domain routing) is read, so
+ * framework suffixes such as React Router's `.data` do not affect the result.
  */
-export function matchLocaleFromRequest<const TI18n extends ShopifyI18n>(
-  request: Pick<Request, "url">,
+export function matchLocale<const TI18n extends ShopifyI18n>(
+  source: LocaleMatchSource | undefined,
   i18n: TI18n,
 ): ShopifyMatchedLocale<TI18n>;
-export function matchLocaleFromRequest(
-  request: Pick<Request, "url">,
+export function matchLocale(
+  source: LocaleMatchSource | undefined,
   i18n: ShopifyI18n,
 ): ShopifyMatchedLocale {
-  return matchLocaleFromUrl(request.url, i18n);
-}
-
-/** Same contract as `matchLocaleFromRequest` for callers holding a URL rather than a `Request`. */
-export function matchLocaleFromUrl<const TI18n extends ShopifyI18n>(
-  url: URL | string,
-  i18n: TI18n,
-): ShopifyMatchedLocale<TI18n>;
-export function matchLocaleFromUrl(url: URL | string, i18n: ShopifyI18n): ShopifyMatchedLocale {
   const routing = i18n.routing;
   if (!routing) return toDefaultMatchedLocale(i18n);
 
-  const parsedUrl = typeof url === "string" ? parseUrl(url) : url;
-  if (!parsedUrl) return toDefaultMatchedLocale(i18n);
+  const url = toUrl(source);
+  if (!url) return toDefaultMatchedLocale(i18n);
 
   switch (routing.type) {
     case "pathname": {
-      const segment = getFirstPathSegment(parsedUrl.pathname);
+      const segment = getFirstPathSegment(url.pathname);
       const locale =
         segment === ""
           ? undefined
@@ -50,10 +45,8 @@ export function matchLocaleFromUrl(url: URL | string, i18n: ShopifyI18n): Shopif
       return locale ? toPathnameMatchedLocale(locale) : toDefaultMatchedLocale(i18n);
     }
     case "domain": {
-      const hostname = parsedUrl.hostname.toLowerCase();
-      const locale = routing.locales.find(
-        (candidate) => candidate.hostname.toLowerCase() === hostname,
-      );
+      const hostname = url.hostname.toLowerCase();
+      const locale = routing.locales.find((candidate) => getLocaleHostname(candidate) === hostname);
       return locale ? toDomainMatchedLocale(locale) : toDefaultMatchedLocale(i18n);
     }
     default:
@@ -64,10 +57,10 @@ export function matchLocaleFromUrl(url: URL | string, i18n: ShopifyI18n): Shopif
 
 /**
  * Resolves an explicitly chosen locale against the definition, for callers that already know the
- * locale (static rendering, tests) and must not derive it from a URL.
+ * locale (static rendering, locale switchers) and must not derive it from a URL.
  *
  * @throws when `locale` is not one of the definition's supported locales, so a stale or mistyped
- * override fails fast instead of silently producing an unroutable request context.
+ * choice fails fast instead of silently producing an unroutable URL or request context.
  */
 export function resolveSupportedLocale<const TI18n extends ShopifyI18n>(
   locale: ShopifyLocale,
@@ -104,30 +97,23 @@ export function resolveSupportedLocale(
 }
 
 function toDefaultMatchedLocale(i18n: ShopifyI18n): ShopifyMatchedLocale {
-  // Under domain routing the default locale entry carries a hostname; drop it like other entries.
+  // Under domain routing the default locale's entry carries its hostname; prefer it.
   const entry =
     i18n.routing?.type === "domain"
       ? (i18n.routing.locales.find((candidate) => isSameLocale(candidate, i18n.defaultLocale)) ??
         i18n.defaultLocale)
       : i18n.defaultLocale;
 
-  return stripRoutingKeys(entry, "");
+  return { ...entry, pathPrefix: "" };
 }
 
 function toPathnameMatchedLocale(locale: ShopifyPathnameLocale): ShopifyMatchedLocale {
-  return stripRoutingKeys(locale, `/${getLocalePathSegment(locale)}`);
+  const { pathSegment: _pathSegment, ...rest } = locale;
+  return { ...rest, pathPrefix: `/${getLocalePathSegment(locale)}` };
 }
 
 function toDomainMatchedLocale(locale: ShopifyDomainLocale): ShopifyMatchedLocale {
-  return stripRoutingKeys(locale, "");
-}
-
-function stripRoutingKeys(
-  locale: ShopifyLocale & { pathSegment?: string; hostname?: string },
-  pathPrefix: string,
-): ShopifyMatchedLocale {
-  const { pathSegment: _pathSegment, hostname: _hostname, ...rest } = locale;
-  return { ...rest, pathPrefix };
+  return { ...locale, pathPrefix: "" };
 }
 
 function getFirstPathSegment(pathname: string): string {
@@ -135,7 +121,11 @@ function getFirstPathSegment(pathname: string): string {
   return segment.toLowerCase();
 }
 
-function parseUrl(url: string): URL | null {
+function toUrl(source: LocaleMatchSource | undefined): URL | null {
+  if (source === undefined) return null;
+  if (source instanceof URL) return source;
+
+  const url = typeof source === "string" ? source : source.url;
   try {
     return new URL(url);
   } catch {

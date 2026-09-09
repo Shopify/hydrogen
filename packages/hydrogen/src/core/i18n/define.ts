@@ -1,3 +1,4 @@
+import { formatLocale, getLocaleHostname, getLocalePathSegment, isSameLocale } from "./locale";
 import type {
   ShopifyDomainLocale,
   ShopifyI18n,
@@ -93,23 +94,6 @@ export function getSupportedLocales(i18n: ShopifyI18n): ShopifySupportedLocale[]
   return [i18n.defaultLocale, ...routing.locales];
 }
 
-export function isSameLocale(a: ShopifyLocale, b: ShopifyLocale): boolean {
-  return a.language === b.language && a.country === b.country;
-}
-
-/** `/{language}-{country}` derived from the locale unless `pathSegment` overrides it. */
-export function getLocalePathSegment(locale: ShopifyPathnameLocale): string {
-  return (locale.pathSegment ?? deriveLocalePathSegment(locale)).toLowerCase();
-}
-
-function deriveLocalePathSegment(locale: ShopifyLocale): string {
-  return `${locale.language.replaceAll("_", "-")}-${locale.country}`.toLowerCase();
-}
-
-export function formatLocale(locale: ShopifyLocale): string {
-  return `${locale.language}-${locale.country}`;
-}
-
 function assertLocale(locale: ShopifyLocale | undefined, label: string): void {
   if (!locale?.language || !locale?.country) {
     throw new Error(`defineShopifyI18n: ${label} requires both "language" and "country".`);
@@ -182,7 +166,7 @@ function validateDomainLocales(
       );
     }
 
-    const normalizedHostname = hostname.toLowerCase();
+    const normalizedHostname = getLocaleHostname(locale);
     const collision = seenHostnames.get(normalizedHostname);
     if (collision) {
       throw new Error(

@@ -6,11 +6,11 @@ export {
   getLocalizedHref,
   getSupportedLocales,
   isSameLocale,
-  matchLocaleFromRequest,
-  matchLocaleFromUrl,
+  matchLocale,
 } from "./i18n/index";
 export type {
   GetLocalizedHrefOptions,
+  LocaleMatchSource,
   ShopifyCountryCode,
   ShopifyDomainLocale,
   ShopifyI18n,
