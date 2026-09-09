@@ -10,7 +10,26 @@ Run the setup CLI in a storefront project.
 npx @shopify/hydrogen setup
 ```
 
-The setup command installs `@shopify/hydrogen` into the local project using the detected package manager, then copies the packaged skills into local agent skill directories.
+The setup command installs `@shopify/hydrogen` into the local project using the detected package manager, then syncs the packaged skills into both `.claude/skills` (read by Claude Code) and `.agents/skills` (read by Codex, Cursor, and OpenCode). Both are always written so the project never has to declare which agents it uses.
+
+## Keeping skills in sync
+
+Skills describe the API of the installed Hydrogen version, so resync them after every upgrade:
+
+```bash
+npx @shopify/hydrogen skills sync
+```
+
+Each synced `SKILL.md` records the package version and a content hash in its frontmatter `metadata`. On every run, per skill:
+
+- unchanged content and version: left untouched
+- shipped skill you have not edited: overwritten with the installed version
+- shipped skill missing locally: added
+- previously synced skill the installed version no longer ships: removed; if you edited it, you are asked first (kept with a warning when there is no terminal to ask, such as CI)
+- skill you have edited locally: kept, and reported only when a newer version is waiting
+- directory Hydrogen did not create that collides with a shipped skill name: the sync stops before writing anything
+
+`--force` discards local state in favour of the package: it overwrites edited and colliding skills and removes edited stale ones.
 
 ## GraphQL Tooling
 

@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+
+import { syncSkills } from "../packages/hydrogen/src/cli/skills.ts";
 
 const HYDROGEN_PACKAGE = "@shopify/hydrogen";
 const SOURCE_ONLY_TEST_DIRECTORY = "__test__";
+// Module-level consts must precede the runCli() call below, which runs at import time.
+const SKILL_HARNESS_DIRECTORIES = [".claude", ".agents"];
 const PUBLISHED_PREVIEW_VERSION = /^2026\.10\.0-preview\.[1-9]\d*$/;
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const defaultRepoRoot = resolve(scriptDir, "..");
@@ -32,7 +36,7 @@ interface PreviewDistOptions {
 }
 
 if (isDirectInvocation()) {
-  runCli();
+  void runCli();
 }
 
 export function resolvePublishedHydrogenVersion(publishedPackagesJson: string): string {
@@ -68,7 +72,7 @@ export function resolvePublishedHydrogenVersion(publishedPackagesJson: string): 
   return versions[0];
 }
 
-export function preparePreviewTemplateDist(options: PreviewDistOptions): void {
+export async function preparePreviewTemplateDist(options: PreviewDistOptions): Promise<void> {
   const repoRoot = options.repoRoot ?? defaultRepoRoot;
   const log = options.log ?? console.log;
   const version = options.version;
@@ -92,9 +96,9 @@ export function preparePreviewTemplateDist(options: PreviewDistOptions): void {
     return { dependencies, packageJson, packageJsonPath, template, templateRoot };
   });
 
-  copyTemplateSkills(
-    join(repoRoot, "packages", "hydrogen", "skills"),
-    templates.map(({ directory }) => join(repoRoot, "templates", directory, ".agents", "skills")),
+  await syncTemplateSkills(
+    join(repoRoot, "packages", "hydrogen"),
+    templates.map(({ directory }) => join(repoRoot, "templates", directory)),
     log,
   );
 
@@ -161,16 +165,22 @@ function assertHydrogenPackageVersion(repoRoot: string, version: string): void {
   }
 }
 
-function copyTemplateSkills(
-  sourceRoot: string,
-  targets: string[],
+/**
+ * Template sources never carry skill copies, so start from empty harness skill
+ * directories and let the same sync that consumers run stamp each skill with
+ * version and hash metadata. That keeps `hydrogen skills sync` working after
+ * a template is deployed and upgraded.
+ */
+async function syncTemplateSkills(
+  packageRoot: string,
+  templateRoots: string[],
   log: (message: string) => void,
-): void {
-  for (const target of targets) {
-    rmSync(target, { recursive: true, force: true });
-    mkdirSync(dirname(target), { recursive: true });
-    cpSync(sourceRoot, target, { recursive: true });
-    log(`Copied ${relative(process.cwd(), sourceRoot)} -> ${relative(process.cwd(), target)}`);
+): Promise<void> {
+  for (const templateRoot of templateRoots) {
+    for (const harness of SKILL_HARNESS_DIRECTORIES) {
+      rmSync(join(templateRoot, harness, "skills"), { recursive: true, force: true });
+    }
+    await syncSkills({ cwd: templateRoot, packageRoot, log });
   }
 }
 
@@ -204,7 +214,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function runCli(): void {
+async function runCli(): Promise<void> {
   const [command, version] = process.argv.slice(2);
 
   try {
@@ -215,7 +225,7 @@ function runCli(): void {
       return;
     }
     if (command === "prepare" && version) {
-      preparePreviewTemplateDist({ version });
+      await preparePreviewTemplateDist({ version });
       return;
     }
     if (command === "validate" && version) {
