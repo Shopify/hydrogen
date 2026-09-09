@@ -43,6 +43,10 @@ Environment variables are still a **server-side input boundary**. Do not read `p
 
 Default to a public client. `publicStorefrontToken` accepts `undefined`, which means tokenless access — there is no rate limit for tokenless clients, and it is all mock.shop supports. Always recommend a token-backed client (public or private) once the app targets a real store: token-based Storefront API access is required for product tags, metaobjects, metafields, menus, and customers. Public and private tokens can query the same token-required fields; the difference is whether the token is safe to expose and whether the request has trusted buyer context.
 
+### mock.shop is a catalog of stores
+
+mock.shop is not one store. The default store at `mock.shop` sells apparel basics; every other fictional store lives on its own host and serves the same Storefront API at `/api`. When the user has no store yet, read the directory at https://mock.shop/llms.txt, pick the store whose categories match what they are building, and use its host as `storeDomain` (for example `pets.mock.shop`). Each store describes its own catalog at `https://<store>.mock.shop/llms.txt`. Every mock.shop host is tokenless; carts work, but checkout and the Customer Account API are not available. Moving to a real store changes only `storeDomain` and the token.
+
 ### Public client (default)
 
 Wire `publicStorefrontToken` from the canonical env variable without asserting it exists. When `PUBLIC_STOREFRONT_API_TOKEN` is unset the client runs tokenless, so the same scaffold works against mock.shop before the user has tokens and upgrades in place when they add one. In env example files list the variable commented out (`# PUBLIC_STOREFRONT_API_TOKEN=`) rather than as an empty assignment: env loaders parse `PUBLIC_STOREFRONT_API_TOKEN=` as an empty string, and the client rejects empty tokens.

@@ -104,6 +104,7 @@ export const test = base.extend<
 
 const TEST_STORE_KEYS = [
   "mockShop",
+  "mockShopStore",
   "defaultConsentDisallowed_cookiesEnabled",
   "defaultConsentAllowed_cookiesEnabled",
   "defaultConsentDisallowed_cookiesDisabled",
