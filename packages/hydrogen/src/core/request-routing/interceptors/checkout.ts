@@ -84,7 +84,13 @@ async function getCartRedirectUrl(
 
 function getCartPermalinkOrigin(storeUrl: string): string {
   const url = new URL(storeUrl);
-  return url.hostname === "mock.shop" ? MOCK_SHOP_CART_PERMALINK_ORIGIN : url.origin;
+  return isMockShopHost(url.hostname) ? MOCK_SHOP_CART_PERMALINK_ORIGIN : url.origin;
+}
+
+// mock.shop serves many stores, each on its own host (pets.mock.shop, ...), and
+// none of them renders cart permalinks, so every mock host hands off to the demo store.
+function isMockShopHost(hostname: string): boolean {
+  return hostname === "mock.shop" || hostname.endsWith(".mock.shop");
 }
 
 function mergeSearchParams(target: URL, source: URLSearchParams): void {
