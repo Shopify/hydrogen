@@ -287,9 +287,11 @@ function decideShippedAction(
     case "managed": {
       const current =
         state.metadata.hash === shipped.hash && state.metadata.version === shipped.version;
-      if (!state.modified && current) return "unchanged";
-      if (!state.modified || force) return "update";
-      return "skip";
+      if (!state.modified) return current ? "unchanged" : "update";
+      if (force) return "update";
+      // A local edit of the current version has nothing new to pull, so there
+      // is nothing to report; only nag when an update is actually waiting.
+      return current ? "unchanged" : "skip";
     }
   }
 }

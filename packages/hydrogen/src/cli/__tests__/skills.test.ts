@@ -180,6 +180,21 @@ describe("syncSkills", () => {
     expect(readSkill(appRoot, "hydrogen-cart-ui")).not.toContain("My local note.");
   });
 
+  it("leaves a locally modified skill alone without nagging when nothing new ships", () => {
+    const appRoot = createAppRoot();
+    const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
+    sync(appRoot, packageRoot);
+    const skillFile = join(appRoot, ".agents/skills/hydrogen-cart-ui/SKILL.md");
+    writeFileSync(skillFile, readFileSync(skillFile, "utf8") + "My local note.\n");
+    const log = vi.fn();
+
+    const result = syncSkills({ cwd: appRoot, packageRoot, log });
+
+    expect(agents(result)).toMatchObject({ updated: 0, unchanged: 1, skipped: [] });
+    expect(readSkill(appRoot, "hydrogen-cart-ui")).toContain("My local note.");
+    expect(log.mock.calls.flat().join("\n")).not.toContain("Skipped");
+  });
+
   it("overwrites a locally modified skill with --force even when the version is unchanged", () => {
     const appRoot = createAppRoot();
     const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
@@ -235,8 +250,12 @@ describe("syncSkills", () => {
       join(appRoot, ".agents/skills/hydrogen-cart-ui/references/react.md"),
       "Edited.\n",
     );
+    const newPackageRoot = createPackageRoot("2026.2.0");
+    writeSkill(join(newPackageRoot, "skills"), "hydrogen-cart-ui", "Cart.\n", {
+      "references/react.md": "Newer React notes.\n",
+    });
 
-    const result = sync(appRoot, packageRoot);
+    const result = sync(appRoot, newPackageRoot);
 
     expect(agents(result).skipped).toHaveLength(1);
     expect(claude(result).skipped).toHaveLength(0);
