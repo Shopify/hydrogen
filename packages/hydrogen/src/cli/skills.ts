@@ -543,16 +543,12 @@ export function getSkillsSyncStatus(
 
 const SYNC_COMMAND = "npx @shopify/hydrogen skills sync";
 
-function describePending(status: SkillsSyncStatus): string | undefined {
-  const { pending } = status;
-  const parts = [
-    pending.update > 0 && `${pending.update} to update`,
-    pending.add > 0 && `${pending.add} new`,
-    pending.remove > 0 && `${pending.remove} removed upstream`,
-  ].filter((part): part is string => typeof part === "string");
-
-  if (parts.length === 0) return undefined;
-  return `Hydrogen skills are out of date with @shopify/hydrogen ${status.version} (${parts.join(", ")}). Run \`${SYNC_COMMAND}\`.`;
+/** A plain sync clears everything except local edits, which only `--force` resets. */
+function describeNextStep(pending: SkillsSyncStatus["pending"]): string {
+  const syncClears = pending.add + pending.update + pending.remove > 0;
+  if (pending.modified === 0) return `Run \`${SYNC_COMMAND}\`.`;
+  if (!syncClears) return `Run \`${SYNC_COMMAND} --force\` to reset them.`;
+  return `Run \`${SYNC_COMMAND}\`, or \`${SYNC_COMMAND} --force\` to also reset the locally modified ones.`;
 }
 
 /** Explains why a status is not up to date, or returns undefined when nothing needs doing. */
@@ -561,14 +557,16 @@ export function describeSkillsSyncStatus(status: SkillsSyncStatus): string | und
     return `Hydrogen skills cannot be synced: ${status.conflicts.join(", ")} were not created by Hydrogen. Remove them or run \`${SYNC_COMMAND} --force\`.`;
   }
 
-  const pendingMessage = describePending(status);
-  if (pendingMessage) return pendingMessage;
+  const { pending } = status;
+  const parts = [
+    pending.update > 0 && `${pending.update} to update`,
+    pending.add > 0 && `${pending.add} new`,
+    pending.remove > 0 && `${pending.remove} removed upstream`,
+    pending.modified > 0 && `${pending.modified} locally modified`,
+  ].filter((part): part is string => typeof part === "string");
+  if (parts.length === 0) return undefined;
 
-  if (status.pending.modified > 0) {
-    return `${status.pending.modified} locally modified Hydrogen skill(s) are behind @shopify/hydrogen ${status.version}. Run \`${SYNC_COMMAND} --force\` to reset them.`;
-  }
-
-  return undefined;
+  return `Hydrogen skills are out of date with @shopify/hydrogen ${status.version} (${parts.join(", ")}). ${describeNextStep(pending)}`;
 }
 
 const CHECK_MODES = ["error", "warn"] as const;

@@ -680,12 +680,23 @@ describe("syncSkills", () => {
     });
 
     it("points at --force when only locally modified skills are behind", () => {
-      const message = describeSkillsSyncStatus(
-        statusFixture({ pending: { add: 0, update: 0, remove: 0, modified: 2 } }),
+      expect(
+        describeSkillsSyncStatus(
+          statusFixture({ pending: { add: 0, update: 0, remove: 0, modified: 2 } }),
+        ),
+      ).toBe(
+        "Hydrogen skills are out of date with @shopify/hydrogen 2026.2.0 (2 locally modified). Run `npx @shopify/hydrogen skills sync --force` to reset them.",
       );
+    });
 
-      expect(message).toContain("2 locally modified");
-      expect(message).toContain("skills sync --force");
+    it("reports locally modified skills alongside other pending changes", () => {
+      expect(
+        describeSkillsSyncStatus(
+          statusFixture({ pending: { add: 1, update: 3, remove: 0, modified: 2 } }),
+        ),
+      ).toBe(
+        "Hydrogen skills are out of date with @shopify/hydrogen 2026.2.0 (3 to update, 1 new, 2 locally modified). Run `npx @shopify/hydrogen skills sync`, or `npx @shopify/hydrogen skills sync --force` to also reset the locally modified ones.",
+      );
     });
 
     it("explains collisions", () => {
