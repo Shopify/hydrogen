@@ -332,6 +332,17 @@ describe("syncSkills", () => {
     expect(readSkill(appRoot, "hydrogen-cart-ui")).toContain("Cart.");
   });
 
+  it("fails clearly when a harness skills path exists but is not a directory", () => {
+    const appRoot = createAppRoot();
+    writeFileSync(join(appRoot, ".agents/skills"), "not a directory");
+    const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
+
+    expect(() => sync(appRoot, packageRoot)).toThrow(
+      `${join(".agents", "skills")} exists but is not a directory.`,
+    );
+    expect(existsSync(join(appRoot, ".claude/skills"))).toBe(false);
+  });
+
   it("rejects unknown arguments", () => {
     const appRoot = createAppRoot();
     const packageRoot = createPackageRoot("2026.1.0");

@@ -102,6 +102,12 @@ function assertDirectory(directoryPath: string, message: string): void {
   }
 }
 
+function assertDirectoryIfPresent(directoryPath: string, label: string): void {
+  if (existsSync(directoryPath)) {
+    assertDirectory(directoryPath, `${label} exists but is not a directory.`);
+  }
+}
+
 function getPackageRoot(): string {
   return fileURLToPath(new URL(PACKAGE_ROOT_FROM_CLI_MODULE, import.meta.url));
 }
@@ -137,11 +143,10 @@ function readPackageVersion(packageRoot: string): string {
  */
 function getSkillsDestinationRoots(appRoot: string): string[] {
   return [CLAUDE_DIRECTORY_NAME, AGENTS_DIRECTORY_NAME].map((harnessDirectory) => {
-    const harnessPath = join(appRoot, harnessDirectory);
-    if (existsSync(harnessPath)) {
-      assertDirectory(harnessPath, `${harnessDirectory} exists but is not a directory.`);
-    }
-    return join(harnessPath, SKILLS_DIRECTORY_NAME);
+    const skillsDirectory = join(harnessDirectory, SKILLS_DIRECTORY_NAME);
+    assertDirectoryIfPresent(join(appRoot, harnessDirectory), harnessDirectory);
+    assertDirectoryIfPresent(join(appRoot, skillsDirectory), skillsDirectory);
+    return join(appRoot, skillsDirectory);
   });
 }
 
