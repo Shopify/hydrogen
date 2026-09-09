@@ -27,7 +27,6 @@ The framework projects are built from the `core/` design source. They exist to a
 From the repository root:
 
 - `pnpm dev` — run all workspace experiments and templates in parallel.
-- `pnpm dev:hub` — run the experiments with automatically allocated ports and open the browser hub with status, previews, and logs.
 - `pnpm --filter @shopify/hydrogen-experiment-<name> dev` — run one project.
 - `pnpm --filter @shopify/hydrogen-experiment-<name> dev:https` — run an account-enabled project on `https://local.tryhydrogen.dev:5173` when it provides a `dev:https` script. The Hydrogen project uses `--customer-account-push` instead of local certificates.
 
