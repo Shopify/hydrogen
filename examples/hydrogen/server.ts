@@ -15,7 +15,7 @@ import { cartHandlers } from "~/lib/cart-handlers";
 import { cartMetafieldHandlers } from "~/lib/cart-metafields.server";
 import { createHydrogenRouterContext } from "~/lib/context";
 import { createCustomerAccountContext, createCustomerSessionManager } from "~/lib/customer-account";
-import { getLocaleFromRequest } from "~/lib/i18n";
+import { i18n } from "~/lib/i18n";
 import { routeTemplates } from "~/lib/route-templates";
 
 const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
@@ -31,7 +31,6 @@ export default {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext): Promise<Response> {
     try {
       const publicRequest = createPublicRequest(request);
-      const i18n = getLocaleFromRequest(publicRequest);
       const buyerIp = getBuyerIp(request.headers);
 
       const shopifyRequestContext = createShopifyRequestContext({

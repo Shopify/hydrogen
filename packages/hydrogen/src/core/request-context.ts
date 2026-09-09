@@ -1,11 +1,3 @@
-import type {
-  CountryCode as CustomerAccountCountryCode,
-  LanguageCode as CustomerAccountLanguageCode,
-} from "../graphql/generated/customer-account-api-types";
-import type {
-  CountryCode as StorefrontCountryCode,
-  LanguageCode as StorefrontLanguageCode,
-} from "../graphql/generated/storefront-api-types";
 import { STOREFRONT_API_VERSION } from "./constants";
 import {
   applyPrivateResponseCacheHeaders,
@@ -23,7 +15,16 @@ import {
   SHOPIFY_VISIT_TOKEN_HEADER,
   STOREFRONT_URL_HEADER,
 } from "./headers";
-import { normalizePathPrefix } from "./standard-routes/path";
+import { matchLocaleFromUrl, resolveSupportedLocale } from "./i18n/match";
+import type {
+  ShopifyCountryCode,
+  ShopifyI18n,
+  ShopifyLanguageCode,
+  ShopifyLocale,
+  ShopifyMatchedLocale,
+} from "./i18n/types";
+
+export type { ShopifyCountryCode, ShopifyLanguageCode } from "./i18n/types";
 
 const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
 const SHOPIFY_TRACKING_COOKIES = ["_shopify_analytics", "_shopify_marketing"];
@@ -32,30 +33,31 @@ const SHOPIFY_COOKIES = new Set([SHOPIFY_ESSENTIAL_COOKIE, ...SHOPIFY_TRACKING_C
 type StorefrontRequest = Pick<Request, "headers"> &
   Partial<Pick<Request, "method" | "signal" | "url">>;
 
-export type ShopifyLanguageCode = Extract<StorefrontLanguageCode, CustomerAccountLanguageCode>;
-export type ShopifyCountryCode = Extract<StorefrontCountryCode, CustomerAccountCountryCode>;
-
-export type I18nConfig = {
-  language: ShopifyLanguageCode;
-  country: ShopifyCountryCode;
-  /** Optional app route prefix for localized paths, for example "/es-es". */
+/**
+ * A locale plus the URL path prefix it is served under. This is the shape of
+ * `requestContext.locale` and of the `i18n` prop accepted by `ShopifyScripts`.
+ */
+export type I18nConfig = ShopifyLocale & {
+  /** App route prefix for localized paths, for example "/es-es". Empty for the default locale. */
   pathPrefix?: string;
 };
 
-type NormalizedI18nConfig<I18n extends I18nConfig = I18nConfig> = Omit<I18n, "pathPrefix"> & {
-  pathPrefix: string;
-};
-
-type ShopifyRequestContextInputBase<I18n extends I18nConfig = I18nConfig> = {
+type ShopifyRequestContextInputBase<TI18n extends ShopifyI18n = ShopifyI18n> = {
   request: StorefrontRequest;
-  i18n: I18n;
+  /** Module-scope definition from `defineShopifyI18n`. */
+  i18n: TI18n;
+  /**
+   * Skip URL matching and use this locale. Must be one of the definition's supported locales.
+   * Intended for contexts without a meaningful request URL, such as static rendering.
+   */
+  locale?: ShopifyLocale;
 };
 
-type ShopifyRequestContextInput<I18n extends I18nConfig = I18nConfig> =
-  ShopifyRequestContextInputBase<I18n> & { buyerIp?: never };
+type ShopifyRequestContextInput<TI18n extends ShopifyI18n = ShopifyI18n> =
+  ShopifyRequestContextInputBase<TI18n> & { buyerIp?: never };
 
-type ShopifyRequestContextWithBuyerIpInput<I18n extends I18nConfig = I18nConfig> =
-  ShopifyRequestContextInputBase<I18n> & { buyerIp: string };
+type ShopifyRequestContextWithBuyerIpInput<TI18n extends ShopifyI18n = ShopifyI18n> =
+  ShopifyRequestContextInputBase<TI18n> & { buyerIp: string };
 
 type ShopifyRequestContextBase = {
   // -- Private fields --
@@ -110,22 +112,24 @@ type ShopifyRequestContextBase = {
   markResponseAsSessionEstablishing(reason: string): void;
 
   // -- Public fields --
-  i18n: NormalizedI18nConfig;
   /** Return incoming request headers plus request lifecycle headers for proxy/origin handoff. */
   getForwardedRequestHeaders(): Headers;
   /** Apply important response headers for the correct functioning of Hydrogen storefronts. */
   applyResponseHeaders(headers: Headers): void;
 };
 
-export type ShopifyRequestContext<I18n extends I18nConfig = I18nConfig> =
+export type ShopifyRequestContext<TI18n extends ShopifyI18n = ShopifyI18n> =
   ShopifyRequestContextBase & {
-    i18n: NormalizedI18nConfig<I18n>;
+    /** The storefront's i18n definition, as passed to `createShopifyRequestContext`. */
+    i18n: TI18n;
+    /** The locale resolved for this request, with the path prefix it is served under. */
+    locale: ShopifyMatchedLocale<TI18n>;
   };
 
-export type ShopifyRequestContextWithBuyerIp<I18n extends I18nConfig = I18nConfig> =
-  ShopifyRequestContext<I18n> & { readonly buyerIp: string };
+export type ShopifyRequestContextWithBuyerIp<TI18n extends ShopifyI18n = ShopifyI18n> =
+  ShopifyRequestContext<TI18n> & { readonly buyerIp: string };
 
-type Context<I18n extends I18nConfig = I18nConfig> = {
+type Context<TI18n extends ShopifyI18n = ShopifyI18n> = {
   cookie?: string;
   uniqueToken?: string;
   visitToken?: string;
@@ -135,23 +139,26 @@ type Context<I18n extends I18nConfig = I18nConfig> = {
   signal?: AbortSignal;
   url?: string;
   storefrontOrigin?: string;
-  i18n: NormalizedI18nConfig<I18n>;
+  i18n: TI18n;
+  locale: ShopifyMatchedLocale<TI18n>;
   documentRequest?: boolean;
 };
 
-export function createShopifyRequestContext<const I18n extends I18nConfig>(
-  input: ShopifyRequestContextWithBuyerIpInput<I18n>,
-): ShopifyRequestContextWithBuyerIp<I18n>;
-export function createShopifyRequestContext<const I18n extends I18nConfig>(
-  input: ShopifyRequestContextInput<I18n>,
-): ShopifyRequestContext<I18n>;
-export function createShopifyRequestContext<const I18n extends I18nConfig>(
-  input: ShopifyRequestContextInputBase<I18n> & { buyerIp?: string },
-): ShopifyRequestContext<I18n> {
-  const { request } = input;
+export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
+  input: ShopifyRequestContextWithBuyerIpInput<TI18n>,
+): ShopifyRequestContextWithBuyerIp<TI18n>;
+export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
+  input: ShopifyRequestContextInput<TI18n>,
+): ShopifyRequestContext<TI18n>;
+export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
+  input: ShopifyRequestContextInputBase<TI18n> & { buyerIp?: string },
+): ShopifyRequestContext<TI18n> {
+  const { request, i18n } = input;
 
-  if (!input.i18n?.country || !input.i18n?.language) {
-    throw new Error("i18n with country and language is required for Shopify request contexts.");
+  if (!i18n?.defaultLocale?.country || !i18n?.defaultLocale?.language) {
+    throw new Error(
+      "i18n from defineShopifyI18n (with a defaultLocale) is required for Shopify request contexts.",
+    );
   }
 
   if (input.buyerIp !== undefined && !input.buyerIp) {
@@ -159,7 +166,6 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
   }
 
   const requestMethod = request.method?.toUpperCase();
-  const i18n = normalizeI18n(input.i18n);
   const cookieHeader = request.headers.get("cookie") || undefined;
   const inboundCookies = parseCookieHeader(cookieHeader);
   const hasEssentialCookie = inboundCookies.has(SHOPIFY_ESSENTIAL_COOKIE);
@@ -167,9 +173,13 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
   const isConsentManagementRequest = request.headers.get(CONSENT_MANAGEMENT_HEADER) === "1";
   const url = request.url ?? request.headers.get(STOREFRONT_URL_HEADER) ?? undefined;
   const storefrontOrigin = getUrlOrigin(url);
+  const locale = input.locale
+    ? resolveSupportedLocale(input.locale, i18n)
+    : matchLocaleFromUrl(url ?? "", i18n);
   const context = {
     ...(cookieHeader && { cookie: cookieHeader }),
     i18n,
+    locale,
     ...(url && { url }),
     ...(storefrontOrigin && { storefrontOrigin }),
     ...(input.buyerIp && { buyerIp: input.buyerIp }),
@@ -180,7 +190,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       crypto.randomUUID(),
     ...(isDocumentRequest(request) && { documentRequest: true }),
     ...(request.signal && { signal: request.signal }),
-  } as Context<I18n>;
+  } as Context<TI18n>;
 
   let capturedSubrequestHeaders:
     | {
@@ -298,14 +308,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
         applyPrivateResponseCacheHeaders(headers);
       }
     },
-  } as ShopifyRequestContext<I18n>;
-}
-
-function normalizeI18n<I18n extends I18nConfig>(i18n: I18n): NormalizedI18nConfig<I18n> {
-  return {
-    ...i18n,
-    pathPrefix: normalizePathPrefix(i18n.pathPrefix),
-  } as NormalizedI18nConfig<I18n>;
+  } as ShopifyRequestContext<TI18n>;
 }
 
 function applyStorefrontRequestHeaders(context: Context, headers: Headers): void {

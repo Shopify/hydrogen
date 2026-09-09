@@ -2,7 +2,7 @@ import { env } from "$env/dynamic/private";
 import { createCustomerSessionManager, customerSessionHandlers } from "$lib/customer-account";
 import { routeTemplates } from "$lib/route-templates";
 import { getBuyerIp } from "@shared/buyer-ip";
-import { defaultI18n, storefrontConfig } from "@shared/config";
+import { i18n, storefrontConfig } from "@shared/config";
 import { getPrivateStorefrontToken } from "@shared/private-env";
 import {
   STOREFRONT_CACHE_MAX_ENTRIES,
@@ -28,7 +28,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   const buyerIp = getBuyerIp(event.request.headers);
   const requestContext = createShopifyRequestContext({
     request: event.request,
-    i18n: defaultI18n,
+    i18n,
     buyerIp,
   });
   const storefrontClient = createPrivateStorefrontClient(requestContext);

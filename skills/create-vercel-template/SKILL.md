@@ -137,8 +137,14 @@ middleware is not a React Server Component boundary, so `server-only` would brea
     customerAccountApiClientId: process.env.NEXT_PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID || "",
   };
   const publicStorefrontId = process.env.NEXT_PUBLIC_STOREFRONT_ID || "";
-  // defaultI18n, shop, analyticsShop, analyticsConsent derive from the above.
+  // Single-locale storefront; add `routing` to serve more locales.
+  export const i18n = defineShopifyI18n({ defaultLocale: { language: "EN", country: "US" } });
+  // defaultI18n (ShopifyScripts locale + currency), shop, analyticsShop, analyticsConsent derive from the above.
   ```
+
+  `i18n` is passed to every `createShopifyRequestContext` call. `proxy.ts` and the per-request `lib/storefront.ts`
+  client resolve the locale from the request URL / forwarded `x-storefront-url`; the module-scope `lib/storefront-static.ts`
+  client has no URL and pins `locale: i18n.defaultLocale`. There is no `lib/markets.ts`.
 
   The store identity lives entirely in env vars — none of it is baked into source. `NEXT_PUBLIC_STORE_DOMAIN` is required
   only when `PRIVATE_STOREFRONT_API_TOKEN` is set; with no private token, the resolver falls back to `mock.shop`.

@@ -32,7 +32,7 @@ function handleSfapiProxy(
 ) {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
     buyerIp,
   });
   return handleSfapiProxyImpl(new URL(request.url), {
@@ -41,7 +41,8 @@ function handleSfapiProxy(
     sessionManager: createTestSessionManager(request),
     storefrontClient: {
       type: "private",
-      i18n: { country: "US", language: "EN", pathPrefix: "" },
+      i18n: { defaultLocale: { country: "US", language: "EN" } },
+      locale: { country: "US", language: "EN", pathPrefix: "" },
       storeUrl,
       apiUrl: `${storeUrl}/api/2026-04/graphql.json`,
       storefrontId,
@@ -60,15 +61,16 @@ function handleSfapiProxyWithClientType(
   const requestContext = buyerIp
     ? createShopifyRequestContext({
         request,
-        i18n: { country: "US", language: "EN" },
+        i18n: { defaultLocale: { country: "US", language: "EN" } },
         buyerIp,
       })
     : createShopifyRequestContext({
         request,
-        i18n: { country: "US", language: "EN" },
+        i18n: { defaultLocale: { country: "US", language: "EN" } },
       });
   const clientBase = {
-    i18n: { country: "US", language: "EN", pathPrefix: "" } as const,
+    i18n: { defaultLocale: { country: "US", language: "EN" } } as const,
+    locale: { country: "US", language: "EN", pathPrefix: "" } as const,
     storeUrl,
     apiUrl: `${storeUrl}/api/2026-04/graphql.json`,
     requestContext,
@@ -89,7 +91,7 @@ function handleSfapiProxyWithClientType(
 function handlePrivateSfapiProxyWithoutBuyerContext(request: Request, storeUrl = defaultStoreUrl) {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
   });
   return handleSfapiProxyImpl(new URL(request.url), {
     request,
@@ -97,7 +99,8 @@ function handlePrivateSfapiProxyWithoutBuyerContext(request: Request, storeUrl =
     sessionManager: createTestSessionManager(request),
     storefrontClient: {
       type: "private",
-      i18n: { country: "US", language: "EN", pathPrefix: "" },
+      i18n: { defaultLocale: { country: "US", language: "EN" } },
+      locale: { country: "US", language: "EN", pathPrefix: "" },
       storeUrl,
       apiUrl: `${storeUrl}/api/2026-04/graphql.json`,
       requestContext,

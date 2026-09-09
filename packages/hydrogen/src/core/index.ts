@@ -1,6 +1,26 @@
 export type { RedirectOptions } from "./request-routing/handle-shopify-redirects";
 export { defineShopifyRouteTemplates } from "./standard-routes/index";
 export type { ShopifyRouteTemplates } from "./standard-routes/index";
+export {
+  defineShopifyI18n,
+  getLocalizedHref,
+  getSupportedLocales,
+  isSameLocale,
+  matchLocaleFromRequest,
+  matchLocaleFromUrl,
+} from "./i18n/index";
+export type {
+  GetLocalizedHrefOptions,
+  ShopifyCountryCode,
+  ShopifyDomainLocale,
+  ShopifyI18n,
+  ShopifyI18nRouting,
+  ShopifyLanguageCode,
+  ShopifyLocale,
+  ShopifyMatchedLocale,
+  ShopifyPathnameLocale,
+  ShopifySupportedLocale,
+} from "./i18n/index";
 export { handleShopifyRedirects } from "./request-routing/handle-shopify-redirects";
 export { handleShopifyRoutes } from "./request-routing/handle-shopify-routes";
 export { createShopifyRouteHandler } from "./request-routing/registered-routes";

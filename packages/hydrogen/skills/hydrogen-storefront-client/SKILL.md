@@ -53,12 +53,27 @@ Wire `publicStorefrontToken` from the canonical env variable without asserting i
 
 This example belongs in a server-only module unless the config values are explicitly passed into browser code by a server boundary.
 
+Every request context takes the storefront's i18n definition. Declare it once at module scope with `defineShopifyI18n` and import it wherever a request context is created:
+
+```ts
+// lib/i18n.ts
+import { defineShopifyI18n } from "@shopify/hydrogen";
+
+// Single-locale storefront. Add `routing` to serve more locales by path prefix or hostname;
+// see the hydrogen-markets skill.
+export const i18n = defineShopifyI18n({
+  defaultLocale: { language: "EN", country: "US" },
+});
+```
+
 ```ts
 import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
+import { i18n } from "./lib/i18n";
 
 const requestContext = createShopifyRequestContext({
   request: { headers: new Headers() },
-  i18n: { country: "US", language: "EN" },
+  i18n,
+  locale: i18n.defaultLocale,
 });
 
 const client = createStorefrontClient({
@@ -73,10 +88,11 @@ const client = createStorefrontClient({
 
 ### Private client (SSR upgrade)
 
-Use when the app has a private token and trusted buyer context. Requires `buyerIp` to forward trusted buyer context. Resolve request-derived values before creating the client:
+Use when the app has a private token and trusted buyer context. Requires `buyerIp` to forward trusted buyer context. Resolve request-derived values before creating the client. With a real `Request`, the locale is matched from `request.url` against the definition, so no `locale` override is needed:
 
 ```ts
 import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
+import { i18n } from "./lib/i18n";
 
 function getBuyerIp(headers: Headers) {
   const buyerIp = headers.get("oxygen-buyer-ip");
@@ -87,7 +103,7 @@ function getBuyerIp(headers: Headers) {
 const buyerIp = getBuyerIp(request.headers);
 const requestContext = createShopifyRequestContext({
   request,
-  i18n: getLocaleFromRequest(request),
+  i18n,
   buyerIp,
 });
 
@@ -114,12 +130,13 @@ When using `handleShopifyRoutes`, pass the trusted `buyerIp` into `createShopify
 
 ### Private client without buyer context
 
-For queries not on behalf of a specific buyer (pre-rendering, static site generation). No buyer IP is forwarded.
+For queries not on behalf of a specific buyer (pre-rendering, static site generation). No buyer IP is forwarded. There is no request URL to match a locale from, so pin one with `locale`; it must be a locale the definition contains or the request context throws.
 
 ```ts
 const requestContext = createShopifyRequestContext({
   request: { headers: new Headers() },
-  i18n: { country: "US", language: "EN" },
+  i18n,
+  locale: i18n.defaultLocale,
 });
 
 const client = createStorefrontClient({
@@ -232,7 +249,7 @@ export type ProductCardData =
 
 ### Variables and i18n auto-injection
 
-`$country` and `$language` variables are auto-injected from `requestContext.i18n` when declared in the query. Static clients still create a request context, usually with empty headers plus the resolved locale. You only pass the variables you own:
+`$country` and `$language` variables are auto-injected from `requestContext.locale` when declared in the query. `requestContext.i18n` is the whole definition; `requestContext.locale` is the `{ language, country, pathPrefix }` resolved for this request, also exposed as `client.locale`. Static clients still create a request context, usually with empty headers plus an explicit `locale`. You only pass the variables you own:
 
 ```ts
 const PRODUCTS = gql(`
@@ -301,7 +318,7 @@ const client = createStorefrontClient({
   type: "public",
     requestContext: createShopifyRequestContext({
       request: { headers: new Headers() },
-      i18n: { country: "US", language: "EN" },
+      i18n: defineShopifyI18n({ defaultLocale: { language: "EN", country: "US" } }),
     }),
   config: {
     storeDomain: "test.myshopify.com",
@@ -317,7 +334,8 @@ const client = createStorefrontClient({
 
 - **Private tokens throw in browser** — a `typeof document !== "undefined"` guard fires at construction.
 - **Env APIs are server-only** — examples that use `process.env` belong in server-only modules. Browser bundles may leave `process.env` undefined, inline stale build-time values, or accidentally expose config. Pass safe public values through server data when browser code needs them.
-- **Module-scope only for request-independent clients** — static public clients and `private_no_buyer_context` clients can be module-scoped when their `requestContext` uses static headers and static `i18n`. Private per-buyer clients and clients with a real incoming request context must be created per request.
+- **Module-scope only for request-independent clients** — static public clients and `private_no_buyer_context` clients can be module-scoped when their `requestContext` uses static headers and an explicit `locale`. Private per-buyer clients and clients with a real incoming request context must be created per request.
+- **`define*` vs `create*`** — `defineShopifyI18n` and `defineShopifyRouteTemplates` return module-scope, serializable configuration that server and client code can both import. `createShopifyRequestContext` and `createStorefrontClient` return stateful objects tied to a request or a token; keep them out of shared config modules.
 
 ---
 

@@ -1,13 +1,14 @@
 import "server-only";
 import { createShopifyRequestContext, createStorefrontClient } from "@shopify/hydrogen";
 
-import { DEFAULT_MARKET } from "./markets";
+import { i18n } from "./config";
 import { resolveStorefrontConfig } from "./storefront-config";
 
 /**
  * Shared-rate-limit private Storefront client for **all catalog reads**.
  * Module-scoped: one client for the process, no `headers()`
- * → no buyer IP, shared throttle bucket. Single-market example → `DEFAULT_MARKET`.
+ * → no buyer IP, shared throttle bucket, and no request URL to resolve a locale
+ * from, so the default locale is pinned explicitly.
  *
  * Catalog pages (home, collections index, collection PLP, product, search,
  * sitemap, related products, shop analytics GID) fetch through this client.
@@ -19,7 +20,8 @@ import { resolveStorefrontConfig } from "./storefront-config";
  */
 const requestContext = createShopifyRequestContext({
   request: { headers: new Headers() },
-  i18n: DEFAULT_MARKET,
+  i18n,
+  locale: i18n.defaultLocale,
 });
 
 const { storeDomain, privateStorefrontToken, storefrontId } = resolveStorefrontConfig();

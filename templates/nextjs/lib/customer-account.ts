@@ -3,7 +3,7 @@ import { createShopifyRequestContext } from "@shopify/hydrogen";
 import { createCustomerSession } from "@shopify/hydrogen/customer-account";
 import { headers } from "next/headers";
 
-import { customerAccountConfig, defaultI18n } from "./config";
+import { customerAccountConfig, i18n } from "./config";
 import { EncryptedCookieCustomerSession } from "./customer-session";
 import { getSessionSecret } from "./env";
 import { SITE_ORIGIN } from "./site";
@@ -67,7 +67,7 @@ async function createCustomerRequestContext(pathname = "/account") {
   const request = await createCurrentRequest(pathname);
   return {
     request,
-    requestContext: createShopifyRequestContext({ request, i18n: defaultI18n }),
+    requestContext: createShopifyRequestContext({ request, i18n }),
     sessionManager: await createCustomerSessionManager(request),
   };
 }

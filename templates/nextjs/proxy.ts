@@ -9,7 +9,7 @@ import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server
 
 import { getBuyerIp } from "@/lib/buyer-ip";
 import { cartHandlers } from "@/lib/cart-handlers";
-import { defaultI18n } from "@/lib/config";
+import { i18n } from "@/lib/config";
 import {
   createCustomerSessionManager,
   createEphemeralSessionManager,
@@ -28,7 +28,7 @@ import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/stor
  *
  * The original request URL is forwarded to Server Components via
  * `requestContext.getForwardedRequestHeaders()` (carries `x-storefront-url` for
- * `not-found.tsx` and `getMarketFromHeaders`). SFAPI response headers are merged
+ * `not-found.tsx` and locale resolution in `lib/storefront.ts`). SFAPI response headers are merged
  * onto the forwarded response via `requestContext.applyResponseHeaders`.
  *
  * mock.shop fallback: when no `PRIVATE_STOREFRONT_API_TOKEN` is present, the
@@ -39,7 +39,7 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
   const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: defaultI18n,
+    i18n,
     buyerIp,
   });
 

@@ -12,7 +12,7 @@ type TestStorefrontConfig = {
   storeDomain: string;
 };
 
-const DEFAULT_I18N = { country: "US", language: "EN" } as const;
+const DEFAULT_I18N = { defaultLocale: { country: "US", language: "EN" } } as const;
 const DEFAULT_BUYER_IP = "127.0.0.1";
 
 const defaultConfig: TestStorefrontConfig = {
@@ -370,6 +370,59 @@ describe("handleShopifyRoutes", () => {
     await expect(result?.json()).resolves.toEqual({
       error: { code: "invalid_custom_request", message: "Invalid custom request" },
     });
+  });
+
+  it("matches registered handlers under the request's locale path prefix", async () => {
+    const i18n = {
+      defaultLocale: { country: "US", language: "EN" },
+      routing: { type: "pathname", locales: [{ country: "CA", language: "FR" }] },
+    } as const;
+    const request = new Request("https://my-app.com/fr-ca/custom");
+    const storefrontClient = createStorefrontClient({
+      type: "private",
+      requestContext: createShopifyRequestContext({ request, i18n, buyerIp: DEFAULT_BUYER_IP }),
+      config: { storeDomain: defaultConfig.storeDomain, privateStorefrontToken: "test-token" },
+    });
+    const handler = createShopifyRouteHandler("/custom", "GET", async (handlerContext) => ({
+      type: "json" as const,
+      data: { locale: handlerContext.requestContext.locale },
+    }));
+
+    const result = await handleShopifyRoutes({
+      request,
+      storefrontClient,
+      handlers: [{ custom: handler }],
+    });
+
+    expect(result?.status).toBe(200);
+    await expect(result?.json()).resolves.toEqual({
+      locale: { country: "CA", language: "FR", pathPrefix: "/fr-ca" },
+    });
+  });
+
+  it("does not match registered handlers under a prefix the request does not carry", async () => {
+    const i18n = {
+      defaultLocale: { country: "US", language: "EN" },
+      routing: { type: "pathname", locales: [{ country: "CA", language: "FR" }] },
+    } as const;
+    const request = new Request("https://my-app.com/custom");
+    const storefrontClient = createStorefrontClient({
+      type: "private",
+      requestContext: createShopifyRequestContext({ request, i18n, buyerIp: DEFAULT_BUYER_IP }),
+      config: { storeDomain: defaultConfig.storeDomain, privateStorefrontToken: "test-token" },
+    });
+    const handler = createShopifyRouteHandler("/fr-ca/custom", "GET", async () => ({
+      type: "json" as const,
+      data: { ok: true },
+    }));
+
+    const result = handleShopifyRoutes({
+      request,
+      storefrontClient,
+      handlers: [{ custom: handler }],
+    });
+
+    expect(result).toBeNull();
   });
 
   it("applies request-context response headers to registered route responses", async () => {

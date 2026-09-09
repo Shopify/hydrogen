@@ -1,3 +1,5 @@
+import { defineShopifyI18n } from "@shopify/hydrogen";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Store configuration.
 //
@@ -18,8 +20,13 @@
 
 export const storefrontConfig = {
   storeDomain: "hydrogen-preview.myshopify.com", // ← default; or set PUBLIC_STORE_DOMAIN
-  i18n: { country: "US", language: "EN" },
 } as const;
+
+// Single-locale storefront: every request resolves to the default locale. Add
+// `routing` here to serve more locales by path prefix or hostname.
+export const i18n = defineShopifyI18n({
+  defaultLocale: { country: "US", language: "EN" },
+});
 
 // Real store iff a private Storefront API token is available and the store isn't
 // a mock.shop host; otherwise the tokenless mock.shop demo. MOCK_SHOP=1 forces
