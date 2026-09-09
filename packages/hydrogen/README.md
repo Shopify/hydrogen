@@ -31,6 +31,18 @@ Each synced `SKILL.md` records the package version and a content hash in its fro
 
 `--force` discards local state in favour of the package: it overwrites edited and colliding skills and removes edited stale ones.
 
+Gate CI on the same comparison. The command exits non-zero when a sync would change anything, or when skills were never synced:
+
+```bash
+npx @shopify/hydrogen skills check
+```
+
+For dev scripts, `--mode=warn` prints the same message and exits zero so the next command still runs, and prints nothing at all when skills are current:
+
+```json
+{ "scripts": { "dev": "hydrogen skills check --mode=warn && vite dev" } }
+```
+
 ## GraphQL Tooling
 
 Enable Storefront and Customer Account API editor diagnostics with Hydrogen's packed TypeScript plugin:
