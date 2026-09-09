@@ -162,6 +162,8 @@ describe("matchLocale", () => {
       ["https://example.com/products/x", { ...EN_US, pathPrefix: "" }],
       ["https://example.com/fr-ca", { ...FR_CA, pathPrefix: "/fr-ca" }],
       ["https://example.com/FR-CA/products/x.data", { ...FR_CA, pathPrefix: "/fr-ca" }],
+      // Framework suffixes on the locale segment itself are the caller's job to normalize.
+      ["https://example.com/fr-ca.data", { ...EN_US, pathPrefix: "" }],
       ["https://example.com/br/products/x", { ...PT_BR, currency: "BRL", pathPrefix: "/br" }],
       ["https://example.com/pt-br-br/products/x", { ...EN_US, pathPrefix: "" }],
       ["https://example.com/en-us/products/x", { ...EN_US, pathPrefix: "" }],
