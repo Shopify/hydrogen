@@ -18,6 +18,7 @@ function createPackageRoot(skillNames: string[]): string {
   const packageRoot = createTempDirectory();
   const skillsPath = join(packageRoot, "skills");
   mkdirSync(skillsPath, { recursive: true });
+  writeJson(join(packageRoot, "package.json"), { name: "@shopify/hydrogen", version: "1.0.0" });
 
   for (const skillName of skillNames) {
     const skillPath = join(skillsPath, skillName);
@@ -37,7 +38,7 @@ function createRunCommandSpy(): RunCommand & { calls: Array<[string, string[], {
 }
 
 describe("setupHydrogen", () => {
-  it("installs Hydrogen with the packageManager field and copies skills to .agents", async () => {
+  it("installs Hydrogen with the packageManager field and copies skills to both harness directories", async () => {
     const appRoot = createTempDirectory();
     const packageRoot = createPackageRoot([
       "hydrogen-setup",
@@ -62,11 +63,13 @@ describe("setupHydrogen", () => {
     expect(runCommand.calls).toEqual([
       ["pnpm", ["add", "@shopify/hydrogen@preview"], { cwd: appRoot }],
     ]);
-    expect(existsSync(join(appRoot, ".agents/skills/hydrogen-setup/SKILL.md"))).toBe(true);
-    expect(existsSync(join(appRoot, ".agents/skills/hydrogen-cart-ui/SKILL.md"))).toBe(true);
-    expect(existsSync(join(appRoot, ".agents/skills/hydrogen-storefront-client/SKILL.md"))).toBe(
-      true,
-    );
+    for (const harness of [".claude", ".agents"]) {
+      expect(existsSync(join(appRoot, harness, "skills/hydrogen-setup/SKILL.md"))).toBe(true);
+      expect(existsSync(join(appRoot, harness, "skills/hydrogen-cart-ui/SKILL.md"))).toBe(true);
+      expect(existsSync(join(appRoot, harness, "skills/hydrogen-storefront-client/SKILL.md"))).toBe(
+        true,
+      );
+    }
   });
 
   it("detects pnpm from its lockfile", async () => {
@@ -114,12 +117,11 @@ describe("setupHydrogen", () => {
     ]);
   });
 
-  it("skips installation when Hydrogen is already installed and copies to .claude", async () => {
+  it("skips installation when Hydrogen is already installed", async () => {
     const appRoot = createTempDirectory();
     const packageRoot = createPackageRoot(["hydrogen-setup"]);
     const runCommand = createRunCommandSpy();
 
-    mkdirSync(join(appRoot, ".claude"));
     writeJson(join(appRoot, "package.json"), {
       dependencies: { "@shopify/hydrogen": "^1.0.0" },
     });
@@ -136,52 +138,27 @@ describe("setupHydrogen", () => {
     expect(readFileSync(join(appRoot, ".claude/skills/hydrogen-setup/SKILL.md"), "utf8")).toContain(
       "hydrogen-setup",
     );
+  });
+
+  it("fails when a harness path exists but is not a directory", async () => {
+    const appRoot = createTempDirectory();
+    const packageRoot = createPackageRoot(["hydrogen-setup"]);
+
+    writeFileSync(join(appRoot, ".claude"), "not a directory");
+    writeJson(join(appRoot, "package.json"), {
+      dependencies: { "@shopify/hydrogen": "^1.0.0" },
+    });
+
+    await expect(
+      setupHydrogen({
+        cwd: appRoot,
+        packageRoot,
+        runCommand: createRunCommandSpy(),
+        log: vi.fn(),
+        env: {},
+      }),
+    ).rejects.toThrow(".claude exists but is not a directory");
     expect(existsSync(join(appRoot, ".agents"))).toBe(false);
-  });
-
-  it("copies skills to both .claude and .agents when both directories exist", async () => {
-    const appRoot = createTempDirectory();
-    const packageRoot = createPackageRoot(["hydrogen-setup"]);
-    const runCommand = createRunCommandSpy();
-
-    mkdirSync(join(appRoot, ".claude"));
-    mkdirSync(join(appRoot, ".agents"));
-    writeJson(join(appRoot, "package.json"), {
-      dependencies: { "@shopify/hydrogen": "^1.0.0" },
-    });
-
-    await setupHydrogen({
-      cwd: appRoot,
-      packageRoot,
-      runCommand,
-      log: vi.fn(),
-      env: {},
-    });
-
-    expect(existsSync(join(appRoot, ".claude/skills/hydrogen-setup/SKILL.md"))).toBe(true);
-    expect(existsSync(join(appRoot, ".agents/skills/hydrogen-setup/SKILL.md"))).toBe(true);
-  });
-
-  it("copies skills to .agents when only .agents exists", async () => {
-    const appRoot = createTempDirectory();
-    const packageRoot = createPackageRoot(["hydrogen-setup"]);
-    const runCommand = createRunCommandSpy();
-
-    mkdirSync(join(appRoot, ".agents"));
-    writeJson(join(appRoot, "package.json"), {
-      dependencies: { "@shopify/hydrogen": "^1.0.0" },
-    });
-
-    await setupHydrogen({
-      cwd: appRoot,
-      packageRoot,
-      runCommand,
-      log: vi.fn(),
-      env: {},
-    });
-
-    expect(existsSync(join(appRoot, ".agents/skills/hydrogen-setup/SKILL.md"))).toBe(true);
-    expect(existsSync(join(appRoot, ".claude"))).toBe(false);
   });
 
   it("copies skills from the local installed package when available", async () => {
@@ -208,7 +185,7 @@ describe("setupHydrogen", () => {
     expect(existsSync(join(appRoot, ".agents/skills/npx-copy/SKILL.md"))).toBe(false);
   });
 
-  it("fails before copying when a complete destination skill already exists", async () => {
+  it("fails before copying when an unmanaged destination skill already exists", async () => {
     const appRoot = createTempDirectory();
     const packageRoot = createPackageRoot(["hydrogen-setup", "hydrogen-cart-ui"]);
     const runCommand = createRunCommandSpy();
@@ -228,12 +205,35 @@ describe("setupHydrogen", () => {
         log: vi.fn(),
         env: {},
       }),
-    ).rejects.toThrow("Skill directories already exist");
+    ).rejects.toThrow("Skill directories exist that Hydrogen did not create");
 
     expect(existsSync(join(appRoot, ".agents/skills/hydrogen-setup"))).toBe(false);
   });
 
-  it("fails before copying to any destination when one destination has a conflicting skill", async () => {
+  it("forwards --force to skills sync so unmanaged skills are overwritten", async () => {
+    const appRoot = createTempDirectory();
+    const packageRoot = createPackageRoot(["hydrogen-cart-ui"]);
+    const skillFile = join(appRoot, ".agents/skills/hydrogen-cart-ui/SKILL.md");
+
+    mkdirSync(join(appRoot, ".agents/skills/hydrogen-cart-ui"), { recursive: true });
+    writeFileSync(skillFile, "existing skill");
+    writeJson(join(appRoot, "package.json"), {
+      dependencies: { "@shopify/hydrogen": "^1.0.0" },
+    });
+
+    await setupHydrogen({
+      args: ["--force"],
+      cwd: appRoot,
+      packageRoot,
+      runCommand: createRunCommandSpy(),
+      log: vi.fn(),
+      env: {},
+    });
+
+    expect(readFileSync(skillFile, "utf8")).toContain("name: hydrogen-cart-ui");
+  });
+
+  it("fails before copying to any destination when one destination has an unmanaged skill", async () => {
     const appRoot = createTempDirectory();
     const packageRoot = createPackageRoot(["hydrogen-setup", "hydrogen-cart-ui"]);
     const runCommand = createRunCommandSpy();
@@ -253,7 +253,7 @@ describe("setupHydrogen", () => {
         log: vi.fn(),
         env: {},
       }),
-    ).rejects.toThrow("Skill directories already exist");
+    ).rejects.toThrow("Skill directories exist that Hydrogen did not create");
 
     expect(existsSync(join(appRoot, ".agents/skills/hydrogen-setup"))).toBe(false);
   });
@@ -286,10 +286,12 @@ describe("setupHydrogen", () => {
       env: {},
     });
 
-    expect(existsSync(join(appRoot, ".agents/skills/hydrogen-setup/SKILL.md"))).toBe(true);
-    expect(existsSync(join(appRoot, ".agents/skills/hydrogen-cart-ui/SKILL.md"))).toBe(true);
-    expect(existsSync(join(appRoot, ".agents/skills/hydrogen-storefront-client/SKILL.md"))).toBe(
-      true,
-    );
+    for (const harness of [".claude", ".agents"]) {
+      expect(existsSync(join(appRoot, harness, "skills/hydrogen-setup/SKILL.md"))).toBe(true);
+      expect(existsSync(join(appRoot, harness, "skills/hydrogen-cart-ui/SKILL.md"))).toBe(true);
+      expect(existsSync(join(appRoot, harness, "skills/hydrogen-storefront-client/SKILL.md"))).toBe(
+        true,
+      );
+    }
   });
 });

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { installLocalHttpsCertificates, uninstallLocalHttpsCertificates } from "./certs";
 import { checkGraphQL } from "./gql";
 import { setupHydrogen } from "./setup";
+import { syncSkills } from "./skills";
 
 const CLI_ARGUMENTS_INDEX = 2;
 const FAILURE_EXIT_CODE = 1;
@@ -16,7 +17,13 @@ const COMMANDS = [
     path: ["certs", "uninstall"],
     run: async (args: string[]) => uninstallLocalHttpsCertificates(args),
   },
-  { path: ["setup"], run: async (_args: string[]) => setupHydrogen() },
+  { path: ["setup"], run: async (args: string[]) => setupHydrogen({ args }) },
+  {
+    path: ["skills", "sync"],
+    run: async (args: string[]) => {
+      await syncSkills({ args });
+    },
+  },
   { path: ["gql", "check"], run: async (args: string[]) => checkGraphQL({ args }) },
 ] as const;
 

@@ -1,26 +1,12 @@
 import { spawn } from "node:child_process";
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  realpathSync,
-  rmSync,
-  statSync,
-} from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 
 import { isObjectRecord } from "../core/utils/record";
+import { syncSkills } from "./skills";
 
 const PACKAGE_NAME = "@shopify/hydrogen";
 const PACKAGE_INSTALL_SPEC = `${PACKAGE_NAME}@preview`;
-const PACKAGE_ROOT_FROM_CLI_MODULE = "../../";
-const SKILLS_DIRECTORY_NAME = "skills";
-const CLAUDE_DIRECTORY_NAME = ".claude";
-const AGENTS_DIRECTORY_NAME = ".agents";
-const NODE_MODULES_DIRECTORY_NAME = "node_modules";
 const PACKAGE_JSON_FILE_NAME = "package.json";
 const SUCCESS_EXIT_CODE = 0;
 
@@ -54,6 +40,8 @@ export type RunCommand = (
 ) => Promise<void>;
 
 interface SetupHydrogenOptions {
+  /** Forwarded to `skills sync`, so `hydrogen setup --force` overwrites like `hydrogen skills sync --force`. */
+  args?: string[];
   cwd?: string;
   packageRoot?: string;
   env?: Record<string, string | undefined>;
@@ -132,99 +120,6 @@ async function installHydrogen(
   await runCommand(packageManager, [...INSTALL_ARGS[packageManager]], { cwd: appRoot });
 }
 
-function assertDirectory(directoryPath: string, message: string): void {
-  if (!existsSync(directoryPath) || !statSync(directoryPath).isDirectory()) {
-    throw new Error(message);
-  }
-}
-
-function getSkillsDestinationRoots(appRoot: string): string[] {
-  const destinationRoots: string[] = [];
-  const claudeDirectory = join(appRoot, CLAUDE_DIRECTORY_NAME);
-  if (existsSync(claudeDirectory)) {
-    assertDirectory(claudeDirectory, `${CLAUDE_DIRECTORY_NAME} exists but is not a directory.`);
-    destinationRoots.push(join(claudeDirectory, SKILLS_DIRECTORY_NAME));
-  }
-
-  const agentsDirectory = join(appRoot, AGENTS_DIRECTORY_NAME);
-  if (existsSync(agentsDirectory)) {
-    assertDirectory(agentsDirectory, `${AGENTS_DIRECTORY_NAME} exists but is not a directory.`);
-    destinationRoots.push(join(agentsDirectory, SKILLS_DIRECTORY_NAME));
-  }
-
-  return destinationRoots.length > 0
-    ? destinationRoots
-    : [join(appRoot, AGENTS_DIRECTORY_NAME, SKILLS_DIRECTORY_NAME)];
-}
-
-function getSkillNames(sourceSkillsRoot: string): string[] {
-  assertDirectory(sourceSkillsRoot, `No packaged skills found at ${sourceSkillsRoot}.`);
-
-  return readdirSync(sourceSkillsRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name);
-}
-
-function findConflictingSkills(destinationRoot: string, skillNames: string[]): string[] {
-  return skillNames.filter((skillName) => existsSync(join(destinationRoot, skillName, "SKILL.md")));
-}
-
-function removeIncompleteSkills(destinationRoot: string, skillNames: string[]): void {
-  for (const skillName of skillNames) {
-    const destinationPath = join(destinationRoot, skillName);
-    if (!existsSync(destinationPath)) continue;
-    if (existsSync(join(destinationPath, "SKILL.md"))) continue;
-    rmSync(destinationPath, { recursive: true, force: true });
-  }
-}
-
-function copySkills(
-  packageRoot: string,
-  appRoot: string,
-): { destinationRoots: string[]; copiedCount: number } {
-  const sourceSkillsRoot = join(packageRoot, SKILLS_DIRECTORY_NAME);
-  const destinationRoots = getSkillsDestinationRoots(appRoot);
-  const skillNames = getSkillNames(sourceSkillsRoot);
-  const conflictingSkills = destinationRoots.flatMap((destinationRoot) =>
-    findConflictingSkills(destinationRoot, skillNames).map((skillName) =>
-      join(destinationRoot, skillName),
-    ),
-  );
-
-  if (conflictingSkills.length > 0) {
-    throw new Error(
-      `Skill directories already exist: ${conflictingSkills.join(", ")}. Remove them and rerun setup.`,
-    );
-  }
-
-  for (const destinationRoot of destinationRoots) {
-    removeIncompleteSkills(destinationRoot, skillNames);
-    mkdirSync(destinationRoot, { recursive: true });
-
-    for (const skillName of skillNames) {
-      cpSync(join(sourceSkillsRoot, skillName), join(destinationRoot, skillName), {
-        recursive: true,
-        errorOnExist: true,
-        force: false,
-      });
-    }
-  }
-
-  return { destinationRoots, copiedCount: skillNames.length * destinationRoots.length };
-}
-
-function getPackageRoot(): string {
-  return fileURLToPath(new URL(PACKAGE_ROOT_FROM_CLI_MODULE, import.meta.url));
-}
-
-function getLocalPackageRoot(appRoot: string): string | undefined {
-  const localPackageRoot = join(appRoot, NODE_MODULES_DIRECTORY_NAME, PACKAGE_NAME);
-  if (!existsSync(localPackageRoot)) return undefined;
-  assertDirectory(localPackageRoot, `${localPackageRoot} exists but is not a directory.`);
-
-  return realpathSync(localPackageRoot);
-}
-
 function spawnRunCommand(command: string, args: string[], options: { cwd: string }): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { cwd: options.cwd, stdio: "inherit" });
@@ -254,7 +149,5 @@ export async function setupHydrogen(options: SetupHydrogenOptions = {}): Promise
     await installHydrogen(appRoot, packageManager, runCommand);
   }
 
-  const packageRoot = options.packageRoot ?? getLocalPackageRoot(appRoot) ?? getPackageRoot();
-  const result = copySkills(packageRoot, appRoot);
-  log(`Copied ${result.copiedCount} Hydrogen skills to ${result.destinationRoots.join(", ")}.`);
+  await syncSkills({ args: options.args, cwd: appRoot, packageRoot: options.packageRoot, log });
 }
