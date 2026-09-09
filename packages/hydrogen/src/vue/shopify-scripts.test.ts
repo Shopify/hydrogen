@@ -17,7 +17,7 @@ import {
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
 } from "../core/shopify-scripts";
 import * as shopifyScriptsCore from "../core/shopify-scripts";
-import { createShopifyRouteTemplates } from "../core/standard-routes/index";
+import { defineShopifyRouteTemplates } from "../core/standard-routes/index";
 import type { ShopifyGlobal } from "../globals";
 import { ShopifyScripts } from "./shopify-scripts";
 
@@ -42,7 +42,7 @@ const CONSENT = {
 
 describe("ShopifyScripts", () => {
   it("renders Shopify storefront runtime scripts during SSR", async () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     const html = await renderToString(
@@ -124,7 +124,7 @@ describe("ShopifyScripts", () => {
   it("initializes browser script behavior once with initial props", async () => {
     const initializeShopifyScripts = vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts");
     const navigate = vi.fn();
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     (window as any).Shopify = {

@@ -2,7 +2,7 @@
 name: hydrogen-routing
 description: >
   Guide for Hydrogen route templates and Shopify storefront URL routing. Use when
-  adding, modifying, or reviewing createShopifyRouteTemplates, routeTemplates,
+  adding, modifying, or reviewing defineShopifyRouteTemplates, routeTemplates,
   custom Shopify resource or utility-page paths, handleShopifyRoutes,
   standard route redirects, ShopifyScripts routes, or predictive search result URLs.
 ---
@@ -22,9 +22,9 @@ Only add template keys for Shopify standard routes the app actually handles or i
 Create one `routeTemplates` object and pass the same object to every Hydrogen primitive that builds, redirects, or exposes Shopify storefront URLs:
 
 ```ts
-import { createShopifyRouteTemplates } from "@shopify/hydrogen";
+import { defineShopifyRouteTemplates } from "@shopify/hydrogen";
 
-export const routeTemplates = createShopifyRouteTemplates({
+export const routeTemplates = defineShopifyRouteTemplates({
   product: "/p/:productHandle",
   collection: "/c/:collectionHandle",
   article: "/journal/:blogHandle/:articleHandle",
@@ -39,7 +39,7 @@ If the app currently uses Shopify's default resource paths, create an empty mani
 ```ts
 // Shopify standard storefront routes are currently handled at their default paths.
 // Add entries here if the app changes to custom Shopify resource or utility-page paths.
-export const routeTemplates = createShopifyRouteTemplates({});
+export const routeTemplates = defineShopifyRouteTemplates({});
 ```
 
 Each key is a Shopify standard route identity. Each value is the app's custom pathname template for that identity. Templates must start with `/` and include the required named placeholders for that key. Add a key only when the app handles that route at a non-standard pathname, or when the app intentionally canonicalizes a standard Shopify variant such as `productInCollection`.
@@ -129,7 +129,7 @@ For query suggestions, pass the same route templates so a custom `search` route 
 Do not include locale or market prefixes in route template values. Keep templates resource-relative:
 
 ```ts
-createShopifyRouteTemplates({
+defineShopifyRouteTemplates({
   product: "/p/:productHandle",
 });
 ```
@@ -137,7 +137,7 @@ createShopifyRouteTemplates({
 not:
 
 ```ts
-createShopifyRouteTemplates({
+defineShopifyRouteTemplates({
   product: "/en-us/p/:productHandle",
 });
 ```
