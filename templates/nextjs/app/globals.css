@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 /*
-  Storefront Kit examples core tokens.
-  Transcribed from examples/core/tokens.css — the single source of truth for
+  Storefront Kit experiments core tokens.
+  Transcribed from experiments/core/tokens.css — the single source of truth for
   styling. The full token set, semantic component classes, and utilities are
-  inlined here so the React Router example's components can rely on the same
-  cross-example class anchors (button-primary, badge-sale, type-display,
+  inlined here so the template's components can rely on the same
+  cross-project class anchors (button-primary, badge-sale, type-display,
   overlay-dark, drawer-right, dialog-center, etc.).
 */
 

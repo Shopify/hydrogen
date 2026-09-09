@@ -202,9 +202,9 @@ Browse them in [`packages/hydrogen/skills`](./packages/hydrogen/skills).
 
 React and Vue ship with packaged bindings today; vanilla JavaScript uses the core directly. Every other framework uses the same core primitives too — and because the core only needs `fetch`, it runs on any JavaScript runtime: Oxygen, Node, Vercel, Cloudflare Workers, or Deno.
 
-The [`examples/`](./examples) directory ports the same storefront across frameworks, so you can see how the primitives fit. Every port is built from `core/`, a frozen framework‑agnostic design source, on top of the shared request helpers in `shared/`:
+The [`experiments/`](./experiments) directory ports the same storefront across frameworks, so you can see how the primitives fit. Every port is built from `core/`, a frozen framework‑agnostic design source, on top of the shared request helpers in `shared/`:
 
-| Example | Stack |
+| Project | Stack |
 | --- | --- |
 | `astro/` | Astro 6 SSR |
 | `hydrogen/` | Hydrogen + Oxygen-style request context |
@@ -212,13 +212,13 @@ The [`examples/`](./examples) directory ports the same storefront across framewo
 | `solid-start/` | SolidStart v1 |
 | `sveltekit/` | SvelteKit 2 + Svelte 5 |
 
-> **These are development examples, not starter kits.** They exist to validate the API across frameworks and surface integration friction. The starters we version and distribute live in [`templates/`](./templates). The canonical path to a real storefront is **agent skills + docs**, generating code tailored to your store, framework, and requirements.
+> **These are development experiments, not starter kits.** They exist to validate the API across frameworks and surface integration friction. The starters we version and distribute live in [`templates/`](./templates). The canonical path to a real storefront is **agent skills + docs**, generating code tailored to your store, framework, and requirements.
 
 Run them all from the repo root:
 
 ```bash
 pnpm install
-pnpm dev        # every workspace example and template in parallel
+pnpm dev        # every workspace experiment and template in parallel
 ```
 
 ## Repository layout
@@ -226,7 +226,7 @@ pnpm dev        # every workspace example and template in parallel
 ```
 packages/hydrogen/   the @shopify/hydrogen toolkit + packaged skills
 templates/           deployable starter templates (React Router, Next.js)
-examples/            framework development examples
+experiments/             framework development experiments
 scripts/             repository automation
 skills/              agent skills for working in this repo
 ```

@@ -1,6 +1,6 @@
 /**
  * Default storefront copy. Centralized so
- * the React Router example uses the same verified copy as the other examples.
+ * the React Router template uses the same verified copy as the experiments.
  */
 export const content = {
   announcement: {

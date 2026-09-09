@@ -8,7 +8,7 @@
   "baseBranch": "preview",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "@shopify/hydrogen-example-*",
+    "@shopify/hydrogen-experiment-*",
     "@shopify/hydrogen-template-nextjs",
     "@shopify/hydrogen-template-react-router",
     "hydrogen",

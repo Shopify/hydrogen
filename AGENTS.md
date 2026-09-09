@@ -14,9 +14,9 @@ When designing or adjusting APIs for the `hydrogen` package, closely follow the 
 - Non-null assertions (`!`) are still forbidden in tests. Use an assertion helper instead so failures include a useful message.
 - In Hydrogen package tests, import `assert` from `packages/hydrogen/src/core/test-utils.ts` rather than using `!`.
 
-## Local HTTPS for Examples
+## Local HTTPS for Experiments
 
-- Account-enabled framework examples use `https://local.tryhydrogen.dev:5173` for Customer Account OAuth callback testing.
-- Vite-based examples consume Hydrogen's default certificates. Certificates are provisioned automatically on `dev:https` startup. This downloads a pinned, checksum-verified mkcert release, trusts the local certificate authority, and creates the certificates under `~/.shopify/hydrogen/certs/`. Nuxt and SolidStart may need one restart after first-run provisioning so their outer dev servers can load the certificate files.
-- The Next.js example provisions its own certificate. The Hydrogen example uses the Shopify CLI tunnel flow.
-- Run the relevant example with `pnpm --filter @shopify/hydrogen-example-<name> dev:https` when that example provides the script.
+- Account-enabled framework experiments use `https://local.tryhydrogen.dev:5173` for Customer Account OAuth callback testing.
+- Vite-based projects consume Hydrogen's default certificates. Certificates are provisioned automatically on `dev:https` startup. This downloads a pinned, checksum-verified mkcert release, trusts the local certificate authority, and creates the certificates under `~/.shopify/hydrogen/certs/`. Per-project quirks (for example which projects need a restart after first-run provisioning) live in [`experiments/README.md`](./experiments/README.md).
+- The Next.js template provisions its own certificate. The Hydrogen experiment uses the Shopify CLI tunnel flow.
+- Run the relevant project with `pnpm --filter @shopify/hydrogen-experiment-<name> dev:https` when that project provides the script.

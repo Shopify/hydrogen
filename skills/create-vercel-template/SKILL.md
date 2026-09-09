@@ -12,7 +12,7 @@ description: >
 
 Maintain `templates/nextjs` as the canonical source for a Next.js App Router starter that deploys to Vercel. Keep the app decoupled from monorepo-only shared code and development-only plugins while using the workspace Hydrogen package for local integration coverage.
 
-Next.js on Vercel runs on the Node/serverless runtime, so `process.env` works and there is no worker entrypoint, Vite plugin, or SSR/client entry rework. The core work is decoupling from `@shared/*`, preserving the example behavior, and fixing deps/config/docs for a standalone starter.
+Next.js on Vercel runs on the Node/serverless runtime, so `process.env` works and there is no worker entrypoint, Vite plugin, or SSR/client entry rework. The core work is decoupling from `@shared/*`, preserving the experiment behavior, and fixing deps/config/docs for a standalone starter.
 
 ## Workflow
 
@@ -26,7 +26,7 @@ Next.js on Vercel runs on the Node/serverless runtime, so `process.env` works an
 2. Preserve app features and route behavior unless the user explicitly asks to simplify.
 3. Remove monorepo-only coupling:
    - no `@shared/*` imports
-   - no `examples/shared/*` runtime dependency
+   - no `experiments/shared/*` runtime dependency
    - no `localCdnAssets` (drop the turbopack rule from `next.config.ts`)
    - keep the Next.js `dev:https` script for local Customer Account OAuth
    - no `catalog:` dependency ranges in the final template package
@@ -162,7 +162,7 @@ NEXT_PUBLIC_STOREFRONT_ID=""
 NEXT_PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID=""
 ```
 
-To smoke-test against the demo store in this repo, run `pnpm run examples:secrets:decrypt` from the repository root
+To smoke-test against the demo store in this repo, run `pnpm run experiments:secrets:decrypt` from the repository root
 (needs the ejson key locally). It writes a gitignored `templates/nextjs/.env` containing the private token, public
 store identity, and local Customer Account session configuration required by the template.
 
@@ -229,12 +229,12 @@ Do not maintain copied skill directories under `.agents` or `.claude`.
 
 ## README
 
-Rewrite the README for a Vercel Next.js starter, not the monorepo example. Include: what it is; prerequisites; env-var
+Rewrite the README for a Vercel Next.js starter, not the monorepo experiment. Include: what it is; prerequisites; env-var
 setup split into server-only values (`SESSION_SECRET`, `PRIVATE_STOREFRONT_API_TOKEN`, `SITE_ORIGIN`) and
 `NEXT_PUBLIC_*` public-identity values, noting that env vars are only required for real-store mode; `pnpm install` / `pnpm dev` /
 `pnpm build` / `pnpm start`; a "Deploy to Vercel" section with the one-click button (see "Deploy button"); and a note
-that it targets Vercel and reads secrets from environment variables. Remove example-comparison tables, monorepo-only
-commands, `examples/shared` references, and the example's `AGENTS.md`/`CLAUDE.md`.
+that it targets Vercel and reads secrets from environment variables. Remove experiment-comparison tables, monorepo-only
+commands, `experiments/shared` references, and the experiment's `AGENTS.md`/`CLAUDE.md`.
 
 ### Deploy button
 
@@ -277,7 +277,7 @@ repository root, which is not a deployable Next.js project.
 Before finishing:
 
 1. Install with `CI=true` from the repository root.
-2. Run `rg -n "@shared/|examples/shared|localCdnAssets|localHttps|lru-cache|catalog:|file:" templates/<name> -g '!pnpm-lock.yaml' -g '!node_modules'` — expect no matches. (`process.env` and `workspace:*` are expected in the source Next.js template.)
+2. Run `rg -n "@shared/|experiments/shared|localCdnAssets|localHttps|lru-cache|catalog:|file:" templates/<name> -g '!pnpm-lock.yaml' -g '!node_modules'` — expect no matches. (`process.env` and `workspace:*` are expected in the source Next.js template.)
 3. Run the template lint and typecheck (`eslint`, then `tsc --noEmit && hydrogen gql check --fail-on-warn`). Note: the GraphQL check passes without
    emitting the `*-graphql-env.d.ts` files on disk (they're gitignored, generated on demand) — that is expected.
 4. Run `next build`. The source build can infer the repository workspace root; the standalone distribution should infer the template directory after installing its generated lockfile.
