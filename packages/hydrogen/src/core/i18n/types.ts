@@ -81,12 +81,13 @@ export type ShopifySupportedLocale<TI18n extends ShopifyI18n = ShopifyI18n> =
   | RoutingLocaleEntry<TI18n>;
 
 /**
- * A locale resolved for one request. Routing keys are replaced by the derived `pathPrefix`
- * (`""` for the default locale and for domain routing), which is what URL builders consume.
+ * A locale resolved for one request. `pathSegment` is replaced by the derived `pathPrefix`
+ * (`""` for the default locale and under domain routing), which is what URL builders consume.
+ * Domain-routed locales keep their `hostname` so canonical and `hreflang` URLs can be built.
  */
 export type ShopifyMatchedLocale<TI18n extends ShopifyI18n = ShopifyI18n> = DistributiveOmit<
   ShopifySupportedLocale<TI18n>,
-  "pathSegment" | "hostname"
+  "pathSegment"
 > & {
   pathPrefix: string;
 };

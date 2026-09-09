@@ -1,13 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  defineShopifyI18n,
-  getLocalizedHref,
-  getSupportedLocales,
-  matchLocaleFromRequest,
-  matchLocaleFromUrl,
-  resolveSupportedLocale,
-} from "./index";
+import { defineShopifyI18n, getLocalizedHref, getSupportedLocales, matchLocale } from "./index";
+import { resolveSupportedLocale } from "./match";
 
 const EN_US = { language: "EN", country: "US" } as const;
 const FR_CA = { language: "FR", country: "CA" } as const;
@@ -154,11 +148,12 @@ describe("getSupportedLocales", () => {
   });
 });
 
-describe("matchLocaleFromRequest", () => {
+describe("matchLocale", () => {
   it("always resolves the default without routing", () => {
-    expect(
-      matchLocaleFromRequest(new Request("https://example.com/fr-ca/products/x"), singleLocale),
-    ).toEqual({ ...EN_US, pathPrefix: "" });
+    expect(matchLocale(new Request("https://example.com/fr-ca/products/x"), singleLocale)).toEqual({
+      ...EN_US,
+      pathPrefix: "",
+    });
   });
 
   describe("pathname routing", () => {
@@ -172,32 +167,49 @@ describe("matchLocaleFromRequest", () => {
       ["https://example.com/en-us/products/x", { ...EN_US, pathPrefix: "" }],
       ["https://example.com/fr-ca-products/x", { ...EN_US, pathPrefix: "" }],
     ])("resolves %s", (url, expected) => {
-      expect(matchLocaleFromRequest(new Request(url), pathnameI18n)).toEqual(expected);
+      expect(matchLocale(new Request(url), pathnameI18n)).toEqual(expected);
     });
 
     it("drops the routing key from the matched locale", () => {
-      const matched = matchLocaleFromUrl("https://example.com/br", pathnameI18n);
+      const matched = matchLocale("https://example.com/br", pathnameI18n);
       expect(matched).not.toHaveProperty("pathSegment");
     });
   });
 
   describe("domain routing", () => {
     it.each([
-      ["https://example.com/products/x", { ...EN_US, pathPrefix: "" }],
-      ["https://fr.example.ca:5173/products/x", { ...FR_CA, pathPrefix: "" }],
-      ["https://FR.EXAMPLE.CA/fr-ca/products/x", { ...FR_CA, pathPrefix: "" }],
-      ["http://localhost:3000/products/x", { ...EN_US, pathPrefix: "" }],
+      ["https://example.com/products/x", { ...EN_US, hostname: "example.com", pathPrefix: "" }],
+      [
+        "https://fr.example.ca:5173/products/x",
+        { ...FR_CA, hostname: "FR.example.ca", pathPrefix: "" },
+      ],
+      [
+        "https://FR.EXAMPLE.CA/fr-ca/products/x",
+        { ...FR_CA, hostname: "FR.example.ca", pathPrefix: "" },
+      ],
+      ["http://localhost:3000/products/x", { ...EN_US, hostname: "example.com", pathPrefix: "" }],
     ])("resolves %s", (url, expected) => {
-      expect(matchLocaleFromUrl(url, domainI18n)).toEqual(expected);
+      expect(matchLocale(url, domainI18n)).toEqual(expected);
     });
 
-    it("drops the hostname from the matched locale", () => {
-      expect(matchLocaleFromUrl("https://example.com/", domainI18n)).not.toHaveProperty("hostname");
+    it("keeps the hostname on the matched locale for canonical URLs", () => {
+      expect(matchLocale("https://example.com/", domainI18n)).toHaveProperty(
+        "hostname",
+        "example.com",
+      );
     });
   });
 
-  it("falls back to the default for unparsable URLs", () => {
-    expect(matchLocaleFromUrl("not a url", pathnameI18n)).toEqual({ ...EN_US, pathPrefix: "" });
+  it("falls back to the default for unparsable or missing URLs", () => {
+    expect(matchLocale("not a url", pathnameI18n)).toEqual({ ...EN_US, pathPrefix: "" });
+    expect(matchLocale(undefined, pathnameI18n)).toEqual({ ...EN_US, pathPrefix: "" });
+  });
+
+  it("accepts a URL instance", () => {
+    expect(matchLocale(new URL("https://example.com/fr-ca/x"), pathnameI18n)).toEqual({
+      ...FR_CA,
+      pathPrefix: "/fr-ca",
+    });
   });
 });
 
@@ -214,8 +226,12 @@ describe("resolveSupportedLocale", () => {
     });
   });
 
-  it("resolves a domain locale without a prefix or hostname", () => {
-    expect(resolveSupportedLocale(FR_CA, domainI18n)).toEqual({ ...FR_CA, pathPrefix: "" });
+  it("resolves a domain locale with its hostname and no prefix", () => {
+    expect(resolveSupportedLocale(FR_CA, domainI18n)).toEqual({
+      ...FR_CA,
+      hostname: "FR.example.ca",
+      pathPrefix: "",
+    });
   });
 
   it("throws for locales outside the definition", () => {
@@ -239,7 +255,8 @@ describe("getLocalizedHref", () => {
       ["/fr-ca/products/x", PT_BR, "/br/products/x"],
       ["/FR-CA/products/x", EN_US, "/products/x"],
       ["/fr-ca", EN_US, "/"],
-      ["/", FR_CA, "/fr-ca/"],
+      ["/fr-ca/", EN_US, "/"],
+      ["/", FR_CA, "/fr-ca"],
       ["/en-us/products/x", FR_CA, "/fr-ca/en-us/products/x"],
     ])("rewrites %s to %o", (href, locale, expected) => {
       expect(getLocalizedHref(href, { i18n: pathnameI18n, locale })).toBe(expected);

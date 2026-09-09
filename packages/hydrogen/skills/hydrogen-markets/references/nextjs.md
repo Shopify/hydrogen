@@ -110,7 +110,7 @@ export const staticStorefrontClient = createStorefrontClient({
 
 ## Path-Prefix Routes
 
-With `type: "pathname"`, model the prefix as a route segment such as `app/[locale]/products/[handle]/page.tsx` so the router can render the localized tree. Resolve the locale from the segment with `matchLocaleFromUrl` rather than a second lookup table, then create a static client for that locale:
+With `type: "pathname"`, model the prefix as a route segment such as `app/[locale]/products/[handle]/page.tsx` so the router can render the localized tree. Resolve the locale from the segment with `matchLocale` rather than a second lookup table, then create a static client for that locale:
 
 ```ts
 // lib/static-storefront.ts
@@ -118,13 +118,13 @@ import "server-only";
 import {
   createStorefrontClient,
   createShopifyRequestContext,
-  matchLocaleFromUrl,
+  matchLocale,
 } from "@shopify/hydrogen";
 
 import { i18n } from "./config";
 
 export function createStaticStorefrontClient(localeParam: string) {
-  const locale = matchLocaleFromUrl(`https://shopify.local/${localeParam}/`, i18n);
+  const locale = matchLocale(`https://shopify.local/${localeParam}/`, i18n);
   const requestContext = createShopifyRequestContext({
     request: { headers: new Headers() },
     i18n,

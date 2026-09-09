@@ -1,5 +1,5 @@
-import { isAbsoluteUrl } from "../standard-routes/path";
-import { formatLocale, getLocalePathSegment, getSupportedLocales, isSameLocale } from "./define";
+import { isAbsoluteUrl, stripI18nPathPrefix } from "../standard-routes/path";
+import { matchLocale, resolveSupportedLocale } from "./match";
 import type { ShopifyI18n, ShopifyLocale } from "./types";
 
 const RELATIVE_URL_BASE = "https://shopify.local";
@@ -30,28 +30,28 @@ export function getLocalizedHref(href: string, { i18n, locale }: GetLocalizedHre
 
   const absolute = isAbsoluteUrl(href);
   const url = new URL(href, RELATIVE_URL_BASE);
+  const target = resolveSupportedLocale(locale, i18n);
 
   switch (routing.type) {
     case "pathname": {
-      const target = isSameLocale(locale, i18n.defaultLocale)
-        ? undefined
-        : routing.locales.find((candidate) => isSameLocale(candidate, locale));
-      if (!target && !isSameLocale(locale, i18n.defaultLocale))
-        throw unsupportedLocale(locale, i18n);
-
-      const knownSegments = routing.locales.map(getLocalePathSegment);
-      const unprefixedPathname = stripLocaleSegment(url.pathname, knownSegments);
-      url.pathname = target
-        ? `/${getLocalePathSegment(target)}${unprefixedPathname}`
-        : unprefixedPathname;
+      const current = matchLocale(url, i18n);
+      const unprefixedPathname = stripI18nPathPrefix(url.pathname, current.pathPrefix);
+      // Keep the locale root free of a trailing slash so `/fr-ca` stays the one canonical URL.
+      url.pathname =
+        unprefixedPathname === "/"
+          ? target.pathPrefix || "/"
+          : `${target.pathPrefix}${unprefixedPathname}`;
 
       return absolute ? url.toString() : `${url.pathname}${url.search}${url.hash}`;
     }
     case "domain": {
-      const target = routing.locales.find((candidate) => isSameLocale(candidate, locale));
-      if (!target) throw unsupportedLocale(locale, i18n);
-
-      url.hostname = target.hostname.toLowerCase();
+      // Define-time validation guarantees every domain-routed locale carries a hostname.
+      if (!("hostname" in target) || typeof target.hostname !== "string") {
+        throw new Error(
+          `getLocalizedHref: locale ${target.language}-${target.country} has no hostname under domain routing.`,
+        );
+      }
+      url.hostname = target.hostname;
       url.port = "";
       if (!absolute) url.protocol = "https:";
 
@@ -61,18 +61,4 @@ export function getLocalizedHref(href: string, { i18n, locale }: GetLocalizedHre
       routing satisfies never;
       return href;
   }
-}
-
-function stripLocaleSegment(pathname: string, knownSegments: readonly string[]): string {
-  const [segment = "", ...rest] = pathname.replace(/^\/+/, "").split("/");
-  if (segment === "" || !knownSegments.includes(segment.toLowerCase())) return pathname;
-
-  return `/${rest.join("/")}`;
-}
-
-function unsupportedLocale(locale: ShopifyLocale, i18n: ShopifyI18n): Error {
-  const supported = getSupportedLocales(i18n).map(formatLocale).join(", ");
-  return new Error(
-    `getLocalizedHref: locale ${formatLocale(locale)} is not defined in this storefront's i18n. Supported locales: ${supported}.`,
-  );
 }

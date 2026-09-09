@@ -1,7 +1,9 @@
-export { defineShopifyI18n, getSupportedLocales, isSameLocale } from "./define";
+export { defineShopifyI18n, getSupportedLocales } from "./define";
 export { getLocalizedHref } from "./href";
 export type { GetLocalizedHrefOptions } from "./href";
-export { matchLocaleFromRequest, matchLocaleFromUrl, resolveSupportedLocale } from "./match";
+export { isSameLocale } from "./locale";
+export { matchLocale } from "./match";
+export type { LocaleMatchSource } from "./match";
 export type {
   ShopifyCountryCode,
   ShopifyDomainLocale,
