@@ -222,7 +222,7 @@ describe("setupHydrogen", () => {
     });
 
     await setupHydrogen({
-      args: ["--force"],
+      force: true,
       cwd: appRoot,
       packageRoot,
       runCommand: createRunCommandSpy(),
