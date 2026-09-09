@@ -149,5 +149,5 @@ export async function setupHydrogen(options: SetupHydrogenOptions = {}): Promise
     await installHydrogen(appRoot, packageManager, runCommand);
   }
 
-  syncSkills({ args: options.args, cwd: appRoot, packageRoot: options.packageRoot, log });
+  await syncSkills({ args: options.args, cwd: appRoot, packageRoot: options.packageRoot, log });
 }

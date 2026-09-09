@@ -31,8 +31,8 @@ test("rejects missing, old, and unpublished preview versions", () => {
   assert.throws(() => assertPublishedPreviewVersion("2026.10.0-preview.0"), /published/);
 });
 
-test("prepares manifests and synchronizes skills", () => {
-  withFixture((repoRoot) => {
+test("prepares manifests and synchronizes skills", async () => {
+  await withFixture(async (repoRoot) => {
     const reactRouterLock = join(repoRoot, "templates", "react-router", "package-lock.json");
     const nextjsLock = join(repoRoot, "templates", "nextjs", "pnpm-lock.yaml");
     writeFile(reactRouterLock, "stale");
@@ -44,7 +44,7 @@ test("prepares manifests and synchronizes skills", () => {
       "stale",
     );
 
-    preparePreviewTemplateDist({ repoRoot, version: VERSION, log: () => {} });
+    await preparePreviewTemplateDist({ repoRoot, version: VERSION, log: () => {} });
 
     assert.equal(readHydrogenDependency(repoRoot, "react-router"), VERSION);
     assert.equal(readHydrogenDependency(repoRoot, "nextjs"), VERSION);
@@ -94,8 +94,8 @@ test("prepares manifests and synchronizes skills", () => {
   });
 });
 
-test("fails preflight without partially preparing templates", () => {
-  withFixture((repoRoot) => {
+test("fails preflight without partially preparing templates", async () => {
+  await withFixture(async (repoRoot) => {
     const reactRouterLock = join(repoRoot, "templates", "react-router", "package-lock.json");
     writeFile(reactRouterLock, "keep me");
     writeFile(
@@ -104,8 +104,8 @@ test("fails preflight without partially preparing templates", () => {
     );
     writeTemplatePackage(repoRoot, "nextjs", "pnpm@10.33.0", "preview");
 
-    assert.throws(
-      () => preparePreviewTemplateDist({ repoRoot, version: VERSION, log: () => {} }),
+    await assert.rejects(
+      preparePreviewTemplateDist({ repoRoot, version: VERSION, log: () => {} }),
       /must use workspace/,
     );
     assert.equal(readHydrogenDependency(repoRoot, "react-router"), "workspace:*");
@@ -120,9 +120,9 @@ test("fails preflight without partially preparing templates", () => {
   });
 });
 
-test("validates compiled manifests", () => {
-  withFixture((repoRoot) => {
-    preparePreviewTemplateDist({ repoRoot, version: VERSION, log: () => {} });
+test("validates compiled manifests", async () => {
+  await withFixture(async (repoRoot) => {
+    await preparePreviewTemplateDist({ repoRoot, version: VERSION, log: () => {} });
 
     assert.doesNotThrow(() =>
       validatePreviewTemplateDist({ repoRoot, version: VERSION, log: () => {} }),
@@ -130,9 +130,9 @@ test("validates compiled manifests", () => {
   });
 });
 
-test("rejects source-only tests in compiled templates", () => {
-  withFixture((repoRoot) => {
-    preparePreviewTemplateDist({ repoRoot, version: VERSION, log: () => {} });
+test("rejects source-only tests in compiled templates", async () => {
+  await withFixture(async (repoRoot) => {
+    await preparePreviewTemplateDist({ repoRoot, version: VERSION, log: () => {} });
     writeFile(join(repoRoot, "templates", "nextjs", "__test__", "unexpected.test.ts"), "test");
 
     assert.throws(
@@ -142,7 +142,7 @@ test("rejects source-only tests in compiled templates", () => {
   });
 });
 
-function withFixture(run: (repoRoot: string) => void): void {
+async function withFixture(run: (repoRoot: string) => Promise<void>): Promise<void> {
   const repoRoot = mkdtempSync(join(tmpdir(), "preview-template-dist-"));
 
   try {
@@ -156,7 +156,7 @@ function withFixture(run: (repoRoot: string) => void): void {
     );
     writeTemplatePackage(repoRoot, "react-router", "pnpm@10.33.0");
     writeTemplatePackage(repoRoot, "nextjs", "pnpm@10.33.0");
-    run(repoRoot);
+    await run(repoRoot);
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
   }

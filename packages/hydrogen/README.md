@@ -25,7 +25,7 @@ Each synced `SKILL.md` records the package version and a content hash in its fro
 - unchanged content and version: left untouched
 - shipped skill you have not edited: overwritten with the installed version
 - shipped skill missing locally: added
-- previously synced skill the installed version no longer ships: removed
+- previously synced skill the installed version no longer ships: removed; if you edited it, you are asked first (kept with a warning when there is no terminal to ask, such as CI)
 - skill you have edited locally: kept, and reported only when a newer version is waiting
 - directory Hydrogen did not create that collides with a shipped skill name: the sync stops before writing anything
 

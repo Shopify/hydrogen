@@ -12,6 +12,7 @@ import {
 } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative, sep } from "node:path";
+import { createInterface } from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
@@ -70,7 +71,8 @@ type DestinationState =
   | { kind: "managed"; metadata: SkillMetadata; modified: boolean };
 
 type InstallAction = "add" | "update";
-type SkillAction = InstallAction | "unchanged" | "remove" | "skip";
+/** `skip` holds back a shipped update; `keep` retains an edited skill the package no longer ships. */
+type SkillAction = InstallAction | "unchanged" | "remove" | "skip" | "keep";
 
 interface PlannedSkillBase {
   skillName: string;
@@ -79,9 +81,15 @@ interface PlannedSkillBase {
 
 type PlannedSkill =
   | (PlannedSkillBase & { action: InstallAction; shipped: ShippedSkill })
-  | (PlannedSkillBase & { action: "unchanged" })
-  | (PlannedSkillBase & { action: "remove" })
-  | (PlannedSkillBase & { action: "skip" });
+  | (PlannedSkillBase & { action: Exclude<SkillAction, InstallAction> });
+
+interface DestinationPlan {
+  destinationRoot: string;
+  planned: PlannedSkill[];
+  conflicts: string[];
+  /** Locally edited skills the package no longer ships; removal needs consent. */
+  orphans: string[];
+}
 
 export interface SyncSkillsRootResult {
   root: string;
@@ -89,7 +97,10 @@ export interface SyncSkillsRootResult {
   updated: number;
   unchanged: number;
   removed: number;
+  /** Locally edited skills holding back a newer shipped version. */
   skipped: string[];
+  /** Locally edited skills the package no longer ships, left in place. */
+  kept: string[];
 }
 
 export interface SyncSkillsResult {
@@ -102,6 +113,12 @@ export interface SyncSkillsOptions {
   cwd?: string;
   packageRoot?: string;
   log?: (message: string) => void;
+  /**
+   * Asked once per locally edited skill the package no longer ships; resolve
+   * `true` to remove it. Defaults to a terminal prompt, and to keeping the
+   * skill when there is no TTY or `CI` is set.
+   */
+  confirm?: (question: string) => Promise<boolean>;
 }
 
 function assertDirectory(directoryPath: string, message: string): void {
@@ -296,22 +313,24 @@ function decideShippedAction(
   }
 }
 
+/** Returns undefined when the stale directory is user content that must not be touched. */
 function decideStaleAction(
   state: DestinationState,
   force: boolean,
-): Extract<SkillAction, "remove" | "skip"> | undefined {
+): "remove" | "orphan" | undefined {
   if (state.kind !== "managed") return undefined;
 
-  return !state.modified || force ? "remove" : "skip";
+  return !state.modified || force ? "remove" : "orphan";
 }
 
 function planDestination(
   destinationRoot: string,
   shippedSkills: Map<string, ShippedSkill>,
   force: boolean,
-): { destinationRoot: string; planned: PlannedSkill[]; conflicts: string[] } {
+): DestinationPlan {
   const planned: PlannedSkill[] = [];
   const conflicts: string[] = [];
+  const orphans: string[] = [];
 
   for (const [skillName, shipped] of shippedSkills) {
     const skillRoot = join(destinationRoot, skillName);
@@ -332,10 +351,53 @@ function planDestination(
     }
 
     const action = decideStaleAction(readDestinationState(join(destinationRoot, skillName)), force);
-    if (action) planned.push({ action, skillName, destinationRoot });
+    if (action === "orphan") orphans.push(skillName);
+    else if (action) planned.push({ action, skillName, destinationRoot });
   }
 
-  return { destinationRoot, planned, conflicts };
+  return { destinationRoot, planned, conflicts, orphans };
+}
+
+/**
+ * Asks once per skill name rather than once per harness directory, since both
+ * copies came from the same shipped skill and the answer applies to both.
+ */
+async function planOrphans(
+  plans: DestinationPlan[],
+  version: string,
+  confirm: (question: string) => Promise<boolean>,
+): Promise<void> {
+  const orphanNames = new Set(plans.flatMap((plan) => plan.orphans));
+  for (const skillName of orphanNames) {
+    const remove = await confirm(
+      `Skill ${skillName} was edited locally and Hydrogen ${version} no longer ships it. Remove it?`,
+    );
+    const action = remove ? "remove" : "keep";
+    for (const plan of plans) {
+      if (plan.orphans.includes(skillName)) {
+        plan.planned.push({ action, skillName, destinationRoot: plan.destinationRoot });
+      }
+    }
+  }
+}
+
+function canPromptInTerminal(): boolean {
+  return Boolean(process.stdin.isTTY && process.stdout.isTTY) && !process.env.CI;
+}
+
+async function confirmInTerminal(question: string): Promise<boolean> {
+  const readline = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = (await readline.question(`${question} [Y/n] `)).trim().toLowerCase();
+    return answer === "" || answer === "y" || answer === "yes";
+  } finally {
+    readline.close();
+  }
+}
+
+/** Never removes user edits without an answer, so no TTY means keep. */
+function confirmByDefault(question: string): Promise<boolean> {
+  return canPromptInTerminal() ? confirmInTerminal(question) : Promise.resolve(false);
 }
 
 /**
@@ -361,6 +423,7 @@ function executePlan(destinationRoot: string, planned: PlannedSkill[]): SyncSkil
     unchanged: 0,
     removed: 0,
     skipped: [],
+    kept: [],
   };
 
   for (const skill of planned) {
@@ -368,6 +431,9 @@ function executePlan(destinationRoot: string, planned: PlannedSkill[]): SyncSkil
     switch (skill.action) {
       case "skip":
         result.skipped.push(skillRoot);
+        break;
+      case "keep":
+        result.kept.push(skillRoot);
         break;
       case "unchanged":
         result.unchanged += 1;
@@ -400,9 +466,10 @@ function parseSyncArgs(args: string[]): { force: boolean } {
   return { force: values.force };
 }
 
-export function syncSkills(options: SyncSkillsOptions = {}): SyncSkillsResult {
+export async function syncSkills(options: SyncSkillsOptions = {}): Promise<SyncSkillsResult> {
   const appRoot = options.cwd ?? process.cwd();
   const log = options.log ?? console.log;
+  const confirm = options.confirm ?? confirmByDefault;
   const { force } = parseSyncArgs(options.args ?? []);
   const packageRoot = options.packageRoot ?? getInstalledPackageRoot(appRoot) ?? getPackageRoot();
   const sourceSkillsRoot = join(packageRoot, SKILLS_DIRECTORY_NAME);
@@ -427,6 +494,10 @@ export function syncSkills(options: SyncSkillsOptions = {}): SyncSkillsResult {
     );
   }
 
+  // Prompt only once the run is known to be conflict-free, so nobody answers
+  // questions for a sync that then refuses to write.
+  await planOrphans(plans, version, confirm);
+
   const roots = plans.map((plan) => executePlan(plan.destinationRoot, plan.planned));
   for (const root of roots) {
     log(
@@ -438,6 +509,19 @@ export function syncSkills(options: SyncSkillsOptions = {}): SyncSkillsResult {
   if (skipped.length > 0) {
     log(
       `Skipped ${skipped.length} locally modified skill(s): ${skipped.join(", ")}. Rerun with --force to overwrite.`,
+    );
+  }
+
+  const kept = roots.flatMap((root) => root.kept);
+  if (kept.length > 0) {
+    log(
+      [
+        "",
+        `WARNING: Hydrogen ${version} no longer ships these skills, but they were edited locally so they were kept:`,
+        ...kept.map((skillRoot) => `  - ${skillRoot}`),
+        "Delete them yourself, or rerun with --force to remove them.",
+        "",
+      ].join("\n"),
     );
   }
 

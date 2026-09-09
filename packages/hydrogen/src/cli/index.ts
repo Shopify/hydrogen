@@ -21,7 +21,7 @@ const COMMANDS = [
   {
     path: ["skills", "sync"],
     run: async (args: string[]) => {
-      syncSkills({ args });
+      await syncSkills({ args });
     },
   },
   { path: ["gql", "check"], run: async (args: string[]) => checkGraphQL({ args }) },

@@ -36,7 +36,7 @@ interface PreviewDistOptions {
 }
 
 if (isDirectInvocation()) {
-  runCli();
+  void runCli();
 }
 
 export function resolvePublishedHydrogenVersion(publishedPackagesJson: string): string {
@@ -72,7 +72,7 @@ export function resolvePublishedHydrogenVersion(publishedPackagesJson: string): 
   return versions[0];
 }
 
-export function preparePreviewTemplateDist(options: PreviewDistOptions): void {
+export async function preparePreviewTemplateDist(options: PreviewDistOptions): Promise<void> {
   const repoRoot = options.repoRoot ?? defaultRepoRoot;
   const log = options.log ?? console.log;
   const version = options.version;
@@ -96,7 +96,7 @@ export function preparePreviewTemplateDist(options: PreviewDistOptions): void {
     return { dependencies, packageJson, packageJsonPath, template, templateRoot };
   });
 
-  syncTemplateSkills(
+  await syncTemplateSkills(
     join(repoRoot, "packages", "hydrogen"),
     templates.map(({ directory }) => join(repoRoot, "templates", directory)),
     log,
@@ -171,16 +171,16 @@ function assertHydrogenPackageVersion(repoRoot: string, version: string): void {
  * version and hash metadata. That keeps `hydrogen skills sync` working after
  * a template is deployed and upgraded.
  */
-function syncTemplateSkills(
+async function syncTemplateSkills(
   packageRoot: string,
   templateRoots: string[],
   log: (message: string) => void,
-): void {
+): Promise<void> {
   for (const templateRoot of templateRoots) {
     for (const harness of SKILL_HARNESS_DIRECTORIES) {
       rmSync(join(templateRoot, harness, "skills"), { recursive: true, force: true });
     }
-    syncSkills({ cwd: templateRoot, packageRoot, log });
+    await syncSkills({ cwd: templateRoot, packageRoot, log });
   }
 }
 
@@ -214,7 +214,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function runCli(): void {
+async function runCli(): Promise<void> {
   const [command, version] = process.argv.slice(2);
 
   try {
@@ -225,7 +225,7 @@ function runCli(): void {
       return;
     }
     if (command === "prepare" && version) {
-      preparePreviewTemplateDist({ version });
+      await preparePreviewTemplateDist({ version });
       return;
     }
     if (command === "validate" && version) {
