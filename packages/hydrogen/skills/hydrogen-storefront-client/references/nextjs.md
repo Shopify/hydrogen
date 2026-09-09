@@ -4,6 +4,8 @@
 
 Next.js server components don't receive a `Request` object. The pattern: a server-only cached factory that reads `headers()`, creates a request context from those headers, and creates a request-scoped client for that RSC request. The scaffold defaults to a public client; `NEXT_PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance (e.g. from trusted `x-forwarded-for` data).
 
+`i18n` is the module-scope `defineShopifyI18n` definition from `lib/config.ts` (see `SKILL.md`). With headers-only requests the locale is matched from the `x-storefront-url` header that `proxy.ts` forwards via `requestContext.getForwardedRequestHeaders()`.
+
 ```ts
 // lib/storefront.ts
 import { headers } from "next/headers";
@@ -12,12 +14,13 @@ import {
   createStorefrontClient,
   createShopifyRequestContext,
 } from "@shopify/hydrogen";
+import { i18n } from "@/lib/config";
 
 export const getStorefrontClient = cache(async () => {
   const requestHeaders = await headers();
   const requestContext = createShopifyRequestContext({
     request: { headers: requestHeaders },
-    i18n: { country: "US", language: "EN" },
+    i18n,
   });
 
   return createStorefrontClient({
@@ -56,15 +59,17 @@ The client is created inside the request path because `requestContext` is static
 
 ## Static pages (no buyer IP)
 
-Pages that don't need buyer context — product listings, collection grids, marketing pages — can use `private_no_buyer_context` with a static request context. Because the component never calls `headers()`, `cookies()`, or reads `searchParams`, Next.js treats it as statically renderable and caches it at build time or via ISR.
+Pages that don't need buyer context — product listings, collection grids, marketing pages — can use `private_no_buyer_context` with a static request context. Because the component never calls `headers()`, `cookies()`, or reads `searchParams`, Next.js treats it as statically renderable and caches it at build time or via ISR. There is no request URL here, so pin `locale` explicitly.
 
 ```ts
 // lib/storefront-static.ts - private client, no buyer context
 import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
+import { i18n } from "@/lib/config";
 
 const requestContext = createShopifyRequestContext({
   request: { headers: new Headers() },
-  i18n: { country: "US", language: "EN" },
+  i18n,
+  locale: i18n.defaultLocale,
 });
 
 export const staticStorefrontClient = createStorefrontClient({

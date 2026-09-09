@@ -1,12 +1,13 @@
 import "server-only";
-import { DEFAULT_MARKET } from "./markets";
+import { i18n } from "./config";
 import { createStaticStorefrontClient } from "./storefront-client";
 import { resolveStorefrontConfig } from "./storefront-config";
 
 /**
  * Shared-rate-limit Storefront client for **all catalog reads**.
  * Module-scoped: one client for the process, no `headers()`
- * → no buyer IP, shared throttle bucket. Single-market example → `DEFAULT_MARKET`.
+ * → no buyer IP, shared throttle bucket, and no request URL to resolve a locale
+ * from, so the default locale is pinned explicitly.
  * Private (no buyer context) against a real store; tokenless public on mock.shop.
  *
  * Catalog pages (home, collections index, collection PLP, product, search,
@@ -20,5 +21,6 @@ import { resolveStorefrontConfig } from "./storefront-config";
 export const staticStorefrontClient = createStaticStorefrontClient({
   config: resolveStorefrontConfig(),
   request: { headers: new Headers() },
-  i18n: DEFAULT_MARKET,
+  i18n,
+  locale: i18n.defaultLocale,
 });

@@ -188,14 +188,14 @@ async function expectedCodeChallenge(codeVerifier: string) {
 function createRequestContext(request = new Request(ORIGIN)) {
   return createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
   });
 }
 
 function createPrivateStorefrontClient(request: Request, fetch?: typeof globalThis.fetch) {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
     buyerIp: "127.0.0.1",
   });
   return createStorefrontClient({

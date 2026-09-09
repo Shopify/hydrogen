@@ -7,7 +7,8 @@ import { assert } from "../../test-utils";
 import type { RedirectOptions } from "../handle-shopify-redirects";
 import { handleAdminRedirect } from "./admin-redirect";
 
-const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
+const DEFAULT_LOCALE = { country: "US", language: "EN" } as const;
+const DEFAULT_I18N = { defaultLocale: DEFAULT_LOCALE } as const;
 const DEFAULT_BUYER_IP = "127.0.0.1";
 const DEFAULT_ROUTE_TEMPLATES = defineShopifyRouteTemplates({});
 
@@ -17,6 +18,7 @@ function mockStorefrontClient(
   return {
     type: "private",
     i18n: DEFAULT_I18N,
+    locale: { ...DEFAULT_LOCALE, pathPrefix: "" },
     storeUrl,
     apiUrl: "https://test-store.myshopify.com/api/2026-04/graphql.json",
     graphql: vi.fn().mockRejectedValue(new Error("/admin redirect should not query SFAPI")),

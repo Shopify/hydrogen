@@ -1,3 +1,5 @@
+import { defineShopifyI18n } from "@shopify/hydrogen";
+
 type StorefrontConfigShape = {
   storeDomain: string;
   publicStorefrontToken: string;
@@ -30,9 +32,14 @@ export const customerAccountConfig = {
   customerAccountApiClientId: process.env.NEXT_PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID || "",
 } satisfies CustomerAccountConfigShape;
 
+/** Single-locale storefront: every request resolves to the default locale. */
+export const i18n = defineShopifyI18n({
+  defaultLocale: { country: "US", language: "EN" },
+});
+
+/** Locale plus display currency for `ShopifyScripts`. */
 export const defaultI18n = {
-  country: "US",
-  language: "EN",
+  ...i18n.defaultLocale,
   currency: "USD",
 } satisfies I18nShape;
 

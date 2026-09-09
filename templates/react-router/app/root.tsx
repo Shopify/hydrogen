@@ -21,7 +21,7 @@ import { createRequestCustomerAccount, customerAccountContext } from "~/lib/cust
 import { envContext } from "~/lib/env";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
-import { analyticsConsent, analyticsShop, shop, storefrontConfig } from "~/lib/shop";
+import { analyticsConsent, analyticsShop, i18n, shop } from "~/lib/shop";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -121,7 +121,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <ShopifyScripts
-          i18n={storefrontConfig.i18n}
+          i18n={i18n.defaultLocale}
           shop={shop}
           consent={analyticsConsent}
           navigate={navigate}

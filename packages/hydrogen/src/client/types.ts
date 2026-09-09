@@ -208,7 +208,10 @@ export type StorefrontClient<
   RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
 > = {
   type: Type;
+  /** The storefront's i18n definition. */
   i18n: RequestContext["i18n"];
+  /** The locale resolved for this request; drives `@inContext` variable injection. */
+  locale: RequestContext["locale"];
   graphql: <const Doc extends DocLike | string>(
     doc: Doc,
     ...options: GqlRestParam<ResolveDoc<Doc>, Extra>

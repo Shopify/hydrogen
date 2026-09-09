@@ -59,11 +59,11 @@ const SCRATCH_PRELUDE = `import { createStorefrontClient, createShopifyRequestCo
 
 const requestContext = createShopifyRequestContext({
   request: { headers: new Headers() },
-  i18n: { country: "US", language: "EN", pathPrefix: "" },
+  i18n: { defaultLocale: { country: "US", language: "EN" } },
 });
 const buyerRequestContext = createShopifyRequestContext({
   request: { headers: new Headers() },
-  i18n: { country: "US", language: "EN", pathPrefix: "" },
+  i18n: { defaultLocale: { country: "US", language: "EN" } },
   buyerIp: "1.2.3.4",
 });
 `;

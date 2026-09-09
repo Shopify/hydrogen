@@ -1,11 +1,9 @@
 import type { LoaderFunctionArgs } from "react-router";
 
 export async function loader({ params, context }: LoaderFunctionArgs) {
-  const { language, country } = context.storefront.i18n;
-
-  if (params.locale && params.locale.toLowerCase() !== `${language}-${country}`.toLowerCase()) {
-    // If the locale URL param is defined, yet we are still at the default locale
-    // then the locale param must be invalid, send to the 404 page
+  // The `$locale` segment matched something the i18n definition does not recognize (the default
+  // locale is served unprefixed, so `/en-us/...` lands here too). One canonical URL per page.
+  if (params.locale && !context.storefront.locale.pathPrefix) {
     throw new Response(null, { status: 404 });
   }
 
