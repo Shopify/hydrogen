@@ -12,7 +12,7 @@ const EXPIRED_COOKIE_DATE = "Thu, 01 Jan 1970 00:00:00 GMT";
 type SessionRecord = Record<string, unknown>;
 
 /**
- * Portable encrypted cookie session for these examples. Production apps should
+ * Portable encrypted cookie session for this template. Production apps should
  * prefer opaque server-side session storage when their framework offers it.
  */
 export class EncryptedCookieCustomerSession {

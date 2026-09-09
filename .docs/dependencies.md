@@ -15,9 +15,9 @@ When changing the cart store's public surface (`CartStore`, React/Vue `createCar
 
 When changing the cart metafields pattern (app-owned metafield route, custom `CartFragment` reads, or the mutate-then-`refresh()` flow), update these together:
 
-- `examples/hydrogen/app/lib/cart-metafields.server.ts` (app-owned route)
-- `examples/hydrogen/app/lib/cart-handlers.ts` (`CartFragment` reads)
-- `examples/hydrogen/app/components/CartDeliveryInstructions.tsx` (client)
+- `experiments/hydrogen/app/lib/cart-metafields.server.ts` (app-owned route)
+- `experiments/hydrogen/app/lib/cart-handlers.ts` (`CartFragment` reads)
+- `experiments/hydrogen/app/components/CartDeliveryInstructions.tsx` (client)
 - `packages/hydrogen/skills/hydrogen-cart-metafields/SKILL.md`
 - `packages/hydrogen/skills/hydrogen-cart-ui/SKILL.md` (cross-reference)
 
@@ -30,6 +30,8 @@ When changing `@shopify/hydrogen/vite` local HTTPS behaviour, update these toget
 - `templates/react-router/README.md`
 - `templates/react-router/package.json`
 - `templates/react-router/vite.config.ts`
-- framework example `dev:https` scripts and configs under `examples/*`
+- framework experiment `dev:https` scripts and configs under `experiments/*`
+- `experiments/README.md` (per-project HTTPS quirks)
+- `AGENTS.md` ("Local HTTPS for Experiments")
 
 `scripts/preview-template-dist.ts` copies `packages/hydrogen/skills` into template `.agents/skills` when preparing the dist branch, so template source directories should not duplicate those generated skill copies.

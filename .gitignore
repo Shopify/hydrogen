@@ -4,7 +4,7 @@ dist/
 .env
 .env.*
 !.env.example
-!examples/hydrogen/e2e/envs/.env.*
+!experiments/hydrogen/e2e/envs/.env.*
 .cert/
 *.log
 .DS_Store
@@ -16,11 +16,11 @@ e2e-run-logs
 # Local working notes (issue/feedback tracking logs, not committed).
 notes/
 tsconfig.tsbuildinfo
-examples/**/customer-account-graphql-env.d.ts
-examples/**/storefront-graphql-env.d.ts
+experiments/**/customer-account-graphql-env.d.ts
+experiments/**/storefront-graphql-env.d.ts
 packages/*/playwright-report/
 packages/*/test-results/
-examples/hydrogen/.tmp/
+experiments/hydrogen/.tmp/
 /templates/*/package-lock.json
 /templates/*/pnpm-lock.yaml
 /templates/*/yarn.lock

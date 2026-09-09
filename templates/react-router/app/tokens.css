@@ -1,10 +1,10 @@
 /*
-  Storefront Kit examples core tokens.
-  Derived once from ose-next-theme/config/styles.css for the five-page storefront
-  (product, collection, collections list, search, home), the shared chrome, and the
-  consent banner. Intentionally excludes the source-scanning directives from the
-  Shopify theme. This file is the single source of truth: it is auto-inlined into
-  each reference/*.html by scripts/inline-core-tokens.ts (run `pnpm tokens:inline`).
+  Storefront Kit experiments core tokens.
+  Transcribed from experiments/core/tokens.css — the single source of truth for
+  styling. Covers the five-page storefront (product, collection, collections
+  list, search, home), the shared chrome, and the consent banner. There is no
+  auto-sync script in-tree: when the core tokens change, mirror the change by
+  hand into every downstream CSS copy.
 */
 
 @theme {
@@ -83,7 +83,7 @@
   --radius-input: 0.5rem;
   --radius-badge: 9999px;
 
-  /* Typography: locked to system-ui for examples. */
+  /* Typography: locked to system-ui for experiments. */
   --font-body: system-ui, -apple-system, sans-serif;
   --font-heading: system-ui, -apple-system, sans-serif;
 

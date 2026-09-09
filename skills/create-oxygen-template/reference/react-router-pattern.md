@@ -1,7 +1,7 @@
 # React Router Template Pattern
 
 Concrete file-by-file shape for `templates/react-router`. Read this when implementing or maintaining the template.
-Do not generalize these instructions to framework examples such as Next, Nuxt, Astro, Solid, or SvelteKit
+Do not generalize these instructions to the Next.js template or to framework experiments such as Nuxt, Astro, Solid, or SvelteKit
 without adding framework-specific guidance first. For the high-level workflow, dependency mechanism, lockfile, and
 validation, see [SKILL.md](../SKILL.md).
 
@@ -19,7 +19,7 @@ validation, see [SKILL.md](../SKILL.md).
 
 ## package.json
 
-Rename the package from example to template, for example:
+Rename the package from experiment to template, for example:
 
 ```json
 "name": "@shopify/hydrogen-template-react-router"
@@ -60,7 +60,7 @@ Dependencies:
 - Add `"engines": {"node": "^22 || ^24"}`.
 - Replace `catalog:` ranges with npm-compatible semver ranges. Keep `@types/node` in `devDependencies` (build tooling
   such as `vite.config.ts` needs it) even though it is dropped from the app tsconfig `types` (see "Env and types").
-- Choose other package versions at implementation time; prefer the versions already present in the example's package files.
+- Choose other package versions at implementation time; prefer the versions already present in the experiment's package files.
 
 ## vite.config.ts
 
@@ -143,7 +143,7 @@ export default {
 
 Prefer `import.meta.env.MODE` for the Vite/Oxygen template entrypoint. Do not introduce a Node-oriented `process.env.NODE_ENV` dependency unless existing template code already requires it and it has been verified in MiniOxygen.
 
-Implement `createAppLoadContext` using React Router's context API and the example's existing middleware expectations. This function is the right place to create request-scoped Worker resources and expose them to middleware/loaders:
+Implement `createAppLoadContext` using React Router's context API and the experiment's existing middleware expectations. This function is the right place to create request-scoped Worker resources and expose them to middleware/loaders:
 
 ```ts
 async function createAppLoadContext(
@@ -175,7 +175,7 @@ middleware check for a Shopify redirect.
 Removing `@react-router/node` removes the default server runtime, so `react-router typegen` and `react-router build`
 fail with `Could not determine server runtime. Please install @react-router/node, or provide a custom
 entry.server.tsx/jsx`. Add both entries. Write minimal, Oxygen-compatible versions — do NOT copy the classic-Hydrogen
-example's entries, which import CSP/nonce from `@shopify/hydrogen-classic`.
+experiment's entries, which import CSP/nonce from `@shopify/hydrogen-classic`.
 
 `app/entry.server.tsx` (Web-streams renderer, not the Node stream renderer):
 
@@ -249,13 +249,13 @@ const cache = await caches.open("hydrogen-v1");
 const waitUntil = executionContext.waitUntil.bind(executionContext);
 ```
 
-Pass `cache` directly to `createStorefrontClient`'s `config` — the client wraps its fetch internally (the example does this; an Oxygen template should also pass `waitUntil`). Do not use `createFetchWithCache` or the example's `lru-cache` adapter in an Oxygen template. (Passing per-query `cache:` strategies to `graphql()` requires `cache` on the client config, or it throws `StorefrontCacheConfigError` at runtime.)
+Pass `cache` directly to `createStorefrontClient`'s `config` — the client wraps its fetch internally (the experiment does this; an Oxygen template should also pass `waitUntil`). Do not use `createFetchWithCache` or the experiment's `lru-cache` adapter in an Oxygen template. (Passing per-query `cache:` strategies to `graphql()` requires `cache` on the client config, or it throws `StorefrontCacheConfigError` at runtime.)
 
 ## Env and types
 
 Ship a `.env.example` (committed, blank) and a gitignored `.env`. Only the two real secrets are required; everything
 else public lives in `app/lib/config.ts` (see config split). To smoke-test against the demo store in this repo, run
-`pnpm run examples:secrets:decrypt` from the repository root (needs the ejson key locally). It writes the private token
+`pnpm run experiments:secrets:decrypt` from the repository root (needs the ejson key locally). It writes the private token
 and store domain to the gitignored `templates/react-router/.env`.
 
 ```sh
@@ -316,4 +316,4 @@ Additionally, keep `lib/route-templates.ts` unchanged — `routeTemplates` is re
 
 This avoids a fragile loader->client refactor and keeps every feature working. Note this applies beyond root middleware: route modules also import public identity (e.g. `analyticsShop`) on the client, so keeping it as a bundled `config.ts` constant — rather than something read from `env` — is what makes those client imports work.
 
-Keep Customer Account, cart, search, analytics, and other example features unless the user explicitly asks to remove them.
+Keep Customer Account, cart, search, analytics, and other experiment features unless the user explicitly asks to remove them.

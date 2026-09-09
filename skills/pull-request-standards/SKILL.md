@@ -28,7 +28,7 @@ Identify the intent behind the pull request via:
 - **Conversation context**: the user request, issue, spec, linked PRs, review thread, or task notes that explain why the work exists.
 - **Diff** between the branch this PR is merging into and this PR.
 - **Why**: the problem, drift, missing source of truth, or developer pain.
-- **Developer impact**: public APIs, exports, examples, skills, docs, generated types, or migration work.
+- **Developer impact**: public APIs, exports, experiments, skills, docs, generated types, or migration work.
 - **UX impact**: routes, buttons, UI states, forms, navigation, copy, loading states, or accessibility behavior.
 - **Before/after**: the smallest useful old/new code or behavior comparison.
 - **Versioning**: whether a changeset is needed and why.
@@ -59,7 +59,7 @@ TL;DR: [Short explanation of the problem and intent.]
 
 ## Developer impact
 
-[Only if library users, examples, public exports, package skills, types, or migration paths change.]
+[Only if library users, experiments, public exports, package skills, types, or migration paths change.]
 
 ## UX impact
 
@@ -87,15 +87,15 @@ Do not include categories that do not apply.
 ## Rules
 
 - Never assume the reader will have full context of the situation
-- Prefer **source-of-truth** framing when the PR aligns server handlers, examples, generated types, or agent skills.
+- Prefer **source-of-truth** framing when the PR aligns server handlers, experiments, generated types, or agent skills.
 - Use conversation context to recover intent; the diff usually shows what changed, not why it changed.
 - If the why is not clear from the diff, issue, spec, linked PRs, review thread, or current conversation, ask the user before drafting.
-- Use before/after snippets for API and example migrations.
+- Use before/after snippets for API and experiment migrations.
 - Keep snippets short and focused on the changed contract.
 - Separate developer-facing impact from implementation details.
 - Include UX impact for any visible route, UI, navigation, or interaction change.
 - Call out direct public entrypoint changes separately from internal refactors.
-- Explain changeset level when the diff touches `packages/hydrogen/src/**`, package exports, `packages/hydrogen/skills/**`, or examples that teach supported patterns. See **Versioning** below.
+- Explain changeset level when the diff touches `packages/hydrogen/src/**`, package exports, `packages/hydrogen/skills/**`, or experiments that teach supported patterns. See **Versioning** below.
 - Do not use linting, unit tests, integration tests, typechecks, or CI as `How to Test`.
 - If there is no meaningful manual behavior to test, omit `How to Test`.
 - `Out of scope` names what this PR does not try to solve. It is not a roadmap.
@@ -103,11 +103,11 @@ Do not include categories that do not apply.
 
 ## Versioning
 
-When the diff touches library code, exports, packaged skills, or teaching examples, say whether a changeset is included and why that bump level fits. Put this in **Developer impact** unless versioning is the whole point of the PR.
+When the diff touches library code, exports, packaged skills, or teaching experiments, say whether a changeset is included and why that bump level fits. Put this in **Developer impact** unless versioning is the whole point of the PR.
 
 Use these levels for `@shopify/hydrogen`:
 
-- **patch**: bug fixes, internal refactors, or skill/example hardening with no new public API
+- **patch**: bug fixes, internal refactors, or skill/experiment hardening with no new public API
 - **minor**: new exports, helpers, or supported patterns that are additive for consumers
 - **major**: breaking changes to public exports or taught patterns
 
@@ -116,7 +116,7 @@ This is an example of the level of detail expected. Do not force every PR into t
 ```md
 ## Developer impact
 
-Includes a **patch** changeset for `@shopify/hydrogen`. Tightens cart drawer skill guidance and the Next.js example wiring. No new exports and no runtime contract changes.
+Includes a **patch** changeset for `@shopify/hydrogen`. Tightens cart drawer skill guidance and the Next.js template wiring. No new exports and no runtime contract changes.
 ```
 
 ```md
@@ -125,7 +125,7 @@ Includes a **patch** changeset for `@shopify/hydrogen`. Tightens cart drawer ski
 Includes a **minor** changeset for `@shopify/hydrogen`. Adds predictive search helpers, server handlers, and framework bindings. Consumers can adopt the new API without breaking existing search routes.
 ```
 
-If no changeset is needed, say why. Example-only or repo-local skill changes that do not ship in `@shopify/hydrogen` do not need a package bump.
+If no changeset is needed, say why. Experiment-only or repo-local skill changes that do not ship in `@shopify/hydrogen` do not need a package bump.
 
 ## Manual Testing
 
@@ -139,7 +139,7 @@ This is an example of the level of detail expected. Do not force every PR into t
 ## How to Test
 
 1. Run `pnpm install && pnpm build:pkgs` to rebuild the packages.
-2. Run `pnpm dev:next` to start the Next.js example app.
+2. Run `pnpm dev:next` to start the Next.js template app.
 3. Open `http://localhost:3000/collections/frontpage`.
 4. Select a filter.
 5. Confirm the URL updates and the product grid shows the filtered products.

@@ -25,7 +25,7 @@ Maintain `templates/react-router` as the canonical source for a professional sta
 2. Preserve app features and route behavior unless the user explicitly asks to simplify.
 3. Remove monorepo-only coupling:
    - no `@shared/*` imports
-   - no `examples/shared/*` runtime dependency
+   - no `experiments/shared/*` runtime dependency
    - no `localCdnAssets`
    - keep the Hydrogen local HTTPS Vite plugin and `dev:https` script, using its portable default certificate paths
    - no `@shopify/hydrogen-classic`
@@ -131,7 +131,7 @@ Do not maintain copied skill directories under `.agents` or `.claude`.
 
 ## README
 
-Rewrite the README for a starter project, not for the monorepo example. Include:
+Rewrite the README for a starter project, not for the monorepo experiment. Include:
 
 - what the template is
 - prerequisites
@@ -144,7 +144,7 @@ Rewrite the README for a starter project, not for the monorepo example. Include:
 - a "Deploy to Oxygen" section with the one-click button (see "Deploy button")
 - a brief note that it runs on Oxygen/MiniOxygen through Vite
 
-Remove example-comparison tables, monorepo-only commands, and references to `examples/shared`.
+Remove experiment-comparison tables, monorepo-only commands, and references to `experiments/shared`.
 
 ### Deploy button
 
@@ -183,7 +183,7 @@ in place, so the template does not need to ship a copy.)
 Before finishing:
 
 1. Install with `CI=true` (see Prerequisites).
-2. Run `rg -n "@shared/|examples/shared|localCdnAssets|localHttps|hydrogen-classic|@react-router/node|@react-router/serve|lru-cache|catalog:|process\\.env|file:./shopify-hydrogen" templates/<name> -g '!pnpm-lock.yaml' -g '!package-lock.json' -g '!node_modules'`. Exclude `pnpm-lock.yaml`, `package-lock.json`, and `node_modules` — lockfiles can legitimately list transitive `@react-router/node`, `@react-router/serve`, and `lru-cache` even after the template drops them as direct deps; scanning them produces false positives.
+2. Run `rg -n "@shared/|experiments/shared|localCdnAssets|localHttps|hydrogen-classic|@react-router/node|@react-router/serve|lru-cache|catalog:|process\\.env|file:./shopify-hydrogen" templates/<name> -g '!pnpm-lock.yaml' -g '!package-lock.json' -g '!node_modules'`. Exclude `pnpm-lock.yaml`, `package-lock.json`, and `node_modules` — lockfiles can legitimately list transitive `@react-router/node`, `@react-router/serve`, and `lru-cache` even after the template drops them as direct deps; scanning them produces false positives.
 3. Run the template typecheck (`react-router typegen && tsc --noEmit && hydrogen gql check --fail-on-warn`).
 4. Run the template build. Confirm it creates `dist/client`, `dist/server`, and `dist/server/index.js`.
 5. Run `node_modules/.bin/shopify hydrogen deploy --help` from the template directory. Confirm it lists

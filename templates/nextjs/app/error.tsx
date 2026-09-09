@@ -19,7 +19,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[hydrogen-example-nextjs] Route error:", error);
+    console.error("[hydrogen-template-nextjs] Route error:", error);
   }, [error]);
 
   const message =

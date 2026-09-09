@@ -1,6 +1,6 @@
 packages:
   - packages/*
-  - examples/*
+  - experiments/*
   - templates/*
 allowBuilds:
   "@parcel/watcher": false
