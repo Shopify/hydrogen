@@ -35,6 +35,8 @@ If the framework requires a prefix to expose client-side variables, preserve the
 
 List `PUBLIC_STOREFRONT_API_TOKEN` in the app's env example file as a commented-out entry (`# PUBLIC_STOREFRONT_API_TOKEN=`). The Storefront client accepts `undefined` as tokenless access, which is all mock.shop supports, so the scaffold works before the user has tokens and upgrades in place when they add one. Do not write an uncommented empty assignment (`PUBLIC_STOREFRONT_API_TOKEN=`): env loaders parse that as an empty string, and the client rejects empty tokens. Recommend filling it in (or switching to a private client) once the app targets a real store.
 
+When the user has no store yet, point `PUBLIC_STORE_DOMAIN` at a mock.shop store. `mock.shop` is the default apparel catalog; https://mock.shop/llms.txt lists every other fictional store with its host (for example `pets.mock.shop`) and what it sells. Pick the store closest to what the user is building, and see the `hydrogen-storefront-client` skill for the details.
+
 ### Continue when
 
 - [ ] Env vars follow the canonical names (plus any required framework prefix)

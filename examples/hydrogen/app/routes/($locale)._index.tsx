@@ -35,8 +35,11 @@ async function loadCriticalData({ context }: Route.LoaderArgs) {
     throw new Response("Featured collection not found", { status: 404 });
   }
 
+  const storeDomain = context.env.PUBLIC_STORE_DOMAIN;
+
   return {
-    isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
+    // A mock.shop store on its own host (e.g. pets.mock.shop) is still mock data.
+    isShopLinked: Boolean(storeDomain && !/(^|\.)mock\.shop$/.test(storeDomain)),
     featuredCollection,
   };
 }

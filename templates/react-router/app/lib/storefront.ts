@@ -11,6 +11,7 @@ import type { Env } from "~/lib/env";
 import {
   DEVELOPMENT_BUYER_IP,
   getBuyerIp,
+  getMockShopDomain,
   getPrivateStorefrontToken,
   getStoreDomain,
   storefrontConfig,
@@ -39,7 +40,7 @@ export function createRequestStorefrontClient(
     buyerIp,
   });
 
-  const storeDomain = usingMockShop ? "mock.shop" : getStoreDomain(env);
+  const storeDomain = usingMockShop ? getMockShopDomain(env) : getStoreDomain(env);
   const privateStorefrontToken = usingMockShop
     ? "mock-private-token"
     : getPrivateStorefrontToken(env);

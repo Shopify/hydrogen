@@ -58,6 +58,8 @@ Public values:
 
 If `PRIVATE_STOREFRONT_API_TOKEN` is unset, the app uses `mock.shop`. If you set a private token, you must also set `NEXT_PUBLIC_STORE_DOMAIN`.
 
+`mock.shop` is a catalog of fictional stores, each on its own host. The default at `mock.shop` sells apparel basics; the directory at [mock.shop/llms.txt](https://mock.shop/llms.txt) lists every other store with what it sells. Set `NEXT_PUBLIC_STORE_DOMAIN` to one of those hosts (for example `pets.mock.shop`) to build against that store's catalog while staying in mock mode.
+
 ## Scripts
 
 | Script | Does |
