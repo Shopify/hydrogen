@@ -21,5 +21,6 @@ export type {
   ShopAnalytics,
   StorefrontAnalyticsConfig,
   StorefrontAnalyticsDestination,
+  StorefrontAnalyticsDestinationConsent,
   StorefrontAnalyticsDestinationSetupContext,
 } from "./types";

@@ -70,6 +70,7 @@ export type {
   StorefrontAnalytics,
   StorefrontAnalyticsConfig,
   StorefrontAnalyticsDestination,
+  StorefrontAnalyticsDestinationConsent,
   StorefrontAnalyticsDestinationSetupContext,
 } from "./analytics";
 export {
