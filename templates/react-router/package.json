@@ -7,7 +7,7 @@
     "build": "react-router build",
     "deploy": "shopify hydrogen deploy --assets-dir dist/client --worker-dir dist/server",
     "dev": "hydrogen skills check --mode=warn && vite dev",
-    "dev:https": "vite dev",
+    "dev:https": "hydrogen skills check --mode=warn && vite dev",
     "preview": "react-router build && vite preview",
     "typecheck": "react-router typegen && tsc && hydrogen gql check --fail-on-warn"
   },
