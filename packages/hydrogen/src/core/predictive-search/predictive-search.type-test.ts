@@ -3,7 +3,7 @@ import type { ResultOf, VariablesOf } from "gql.tada";
 
 import type { StorefrontClient } from "../../client";
 import { gql } from "../../graphql";
-import { createShopifyRouteTemplates } from "../standard-routes/index";
+import { defineShopifyRouteTemplates } from "../standard-routes/index";
 import type {
   PredictiveSearchDataForOptions,
   PredictiveSearchProductItem,
@@ -120,7 +120,7 @@ describe("predictive search URL helper types", () => {
       styledText: "<b>snow</b>board",
       trackingParameters: null,
     } satisfies PredictiveSearchQueryItem;
-    const routeTemplates = createShopifyRouteTemplates({ search: "/find" });
+    const routeTemplates = defineShopifyRouteTemplates({ search: "/find" });
 
     const url = getPredictiveSearchItemUrl(query, {
       pathPrefix: "/fr-ca",
@@ -163,7 +163,7 @@ describe("predictive search URL helper types", () => {
       selectedOrFirstAvailableVariant: null,
     } satisfies PredictiveSearchProductItem;
 
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
 

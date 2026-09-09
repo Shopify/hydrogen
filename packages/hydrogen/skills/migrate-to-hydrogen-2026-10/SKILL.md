@@ -223,8 +223,8 @@ export function createRequestStorefrontClient(
 `app/lib/route-templates.ts` — maps Shopify entities to your route shapes. Pass it to `handleShopifyRoutes` (optional in the type, but handler-owned URLs come out wrong without it), to `handleShopifyRedirects` (**required** there), and to the `routes` prop of `ShopifyScripts`:
 
 ```ts
-import {createShopifyRouteTemplates} from '@shopify/hydrogen';
-export const routeTemplates = createShopifyRouteTemplates({
+import {defineShopifyRouteTemplates} from '@shopify/hydrogen';
+export const routeTemplates = defineShopifyRouteTemplates({
   productInCollection: '/products/:productHandle',
 });
 ```
