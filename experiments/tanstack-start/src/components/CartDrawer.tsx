@@ -1,6 +1,6 @@
 import { ShopPayButton } from "@shopify/hydrogen/react";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
 
 import { useCart, useCartForm } from "~/lib/cart";
 import { closeCartDrawer, configureOpenCartAction, CART_DRAWER_ID } from "~/lib/cart-drawer";
@@ -173,7 +173,11 @@ export function CartLineItem({ line }: { line: CartLineView }) {
       <div className="min-w-0 flex-1">
         <p className="type-body-sm text-on-surface font-medium">
           {handle ? (
-            <Link to={`/products/${handle}`} className="text-on-surface no-underline">
+            <Link
+              to="/products/$handle"
+              params={{ handle }}
+              className="text-on-surface no-underline"
+            >
               {title}
             </Link>
           ) : (

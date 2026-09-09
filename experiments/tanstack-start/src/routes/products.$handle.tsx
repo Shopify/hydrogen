@@ -1,172 +1,48 @@
 import {
   buildProductSelectionSearchParams,
   canAddToCart,
-  getSelectedProductOptions,
-  gql,
   type SelectedOption,
 } from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
-import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Await, createFileRoute, Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
-import { ProductCard, PRODUCT_CARD_FRAGMENT } from "~/components/ProductCard";
-import { AnalyticsEvent, getAnalytics, getAnalyticsShop } from "~/lib/analytics";
+import { ProductCard, type ProductCardData } from "~/components/ProductCard";
+import { AnalyticsEvent, analyticsShop, getAnalytics } from "~/lib/analytics";
 import { openCartDrawer } from "~/lib/cart-drawer";
 import { formatPrice, salePercent } from "~/lib/money";
 import { ProductProvider, useProductForm } from "~/lib/product";
-import { storefrontClientContext } from "~/lib/storefront";
+import { searchFromString, toStorefrontSearch } from "~/lib/search-params";
+import { getProduct, getRelatedProducts, type ProductData } from "~/server/product";
 
-import type { Route } from "./+types/product";
+export const Route = createFileRoute("/products/$handle")({
+  validateSearch: toStorefrontSearch,
+  loaderDeps: ({ search }) => search,
+  loader: async ({ params, location }) => {
+    // Related products stream in after the product itself. They are
+    // nice-to-have, so failures resolve to an empty list: a rejected deferred
+    // promise must never become an unhandled rejection when `getProduct` throws.
+    const relatedProducts: Promise<ProductCardData[]> = getRelatedProducts({
+      data: { handle: params.handle },
+    }).catch(() => []);
+    const { product, origin } = await getProduct({
+      data: { handle: params.handle, search: location.searchStr },
+    });
+    return { product, relatedProducts, origin };
+  },
+  head: ({ loaderData }) => ({
+    meta: [
+      { title: `${loaderData?.product.title ?? "Product"} · CORE` },
+      {
+        name: "description",
+        content: loaderData?.product.description || "Shop the CORE product detail page.",
+      },
+    ],
+  }),
+  component: ProductPage,
+});
 
-const PRODUCT_VARIANT_FRAGMENT = gql(`
-  fragment ProductVariantFields on ProductVariant {
-    id
-    title
-    availableForSale
-    quantityAvailable
-    selectedOptions {
-      name
-      value
-    }
-    price {
-      amount
-      currencyCode
-    }
-    compareAtPrice {
-      amount
-      currencyCode
-    }
-    image {
-      id
-      url
-      altText
-      width
-      height
-    }
-    product {
-      title
-      handle
-    }
-    sku
-  }
-`);
-
-const PRODUCT_QUERY = gql(
-  `
-    query ProductPage($handle: String!, $selectedOptions: [SelectedOptionInput!]!) {
-      product(handle: $handle) {
-        id
-        handle
-        title
-        vendor
-        description
-        descriptionHtml
-        requiresSellingPlan
-        encodedVariantExistence
-        encodedVariantAvailability
-        featuredImage {
-          id
-          url
-          altText
-          width
-          height
-        }
-        images(first: 8) {
-          nodes {
-            id
-            url
-            altText
-            width
-            height
-          }
-        }
-        priceRange {
-          minVariantPrice {
-            amount
-            currencyCode
-          }
-          maxVariantPrice {
-            amount
-            currencyCode
-          }
-        }
-        options {
-          name
-          optionValues {
-            name
-            firstSelectableVariant {
-              ...ProductVariantFields
-            }
-            swatch {
-              color
-              image {
-                previewImage {
-                  url
-                }
-              }
-            }
-          }
-        }
-        selectedOrFirstAvailableVariant(
-          selectedOptions: $selectedOptions
-          ignoreUnknownOptions: true
-          caseInsensitiveMatch: true
-        ) {
-          ...ProductVariantFields
-        }
-        adjacentVariants(
-          selectedOptions: $selectedOptions
-          ignoreUnknownOptions: true
-          caseInsensitiveMatch: true
-        ) {
-          ...ProductVariantFields
-        }
-      }
-      products(first: 5) {
-        nodes {
-          ...ProductCard
-        }
-      }
-    }
-  `,
-  [PRODUCT_VARIANT_FRAGMENT, PRODUCT_CARD_FRAGMENT],
-);
-
-export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "Product · CORE" },
-    {
-      name: "description",
-      content: "Shop the CORE product detail page.",
-    },
-  ];
-}
-
-export async function loader({ context, params, request }: Route.LoaderArgs) {
-  const handle = params.handle;
-  if (!handle) throw new Response("Not Found", { status: 404 });
-
-  const storefrontClient = context.get(storefrontClientContext);
-  const selectedOptions = getSelectedProductOptions({
-    searchParams: new URL(request.url).searchParams,
-  });
-  const { data } = await storefrontClient.graphql(PRODUCT_QUERY, {
-    variables: { handle, selectedOptions },
-  });
-
-  if (!data?.product) throw new Response("Not Found", { status: 404 });
-
-  return {
-    product: data.product,
-    relatedProducts: data.products.nodes
-      .filter((product) => product.handle !== data.product?.handle)
-      .slice(0, 4),
-  };
-}
-
-type ProductData = Route.ComponentProps["loaderData"]["product"];
 type ProductVariant = NonNullable<ProductData["selectedOrFirstAvailableVariant"]>;
-type RelatedProduct = Route.ComponentProps["loaderData"]["relatedProducts"][number];
 
 type ProductImage = {
   id?: string | null;
@@ -181,11 +57,7 @@ type SwatchValue = {
   imageUrl?: string | null;
 };
 
-function toRouterLocation(url: string) {
-  return url;
-}
-
-function variantUrl(
+function variantTarget(
   product: { handle: string; options: Array<{ name: string }> },
   selectedOptions: SelectedOption[],
   handle = product.handle,
@@ -196,8 +68,7 @@ function variantUrl(
     optionNames: product.options.map((option) => option.name),
     base,
   });
-  const query = params.toString();
-  return `/products/${handle}${query ? `?${query}` : ""}`;
+  return { handle, search: searchFromString(params.toString()) };
 }
 
 function buildSwatchLookup(product: ProductData) {
@@ -226,8 +97,7 @@ function hasSwatchData(product: ProductData, optionName: string) {
 function ProductViewedTracker({ product }: { product: ProductData }) {
   useEffect(() => {
     const analytics = getAnalytics();
-    const shop = getAnalyticsShop();
-    if (!analytics || !shop) return;
+    if (!analytics) return;
 
     const selectedVariant = product.selectedOrFirstAvailableVariant;
     analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
@@ -244,7 +114,7 @@ function ProductViewedTracker({ product }: { product: ProductData }) {
         },
       ],
       url: window.location.href,
-      shop,
+      shop: analyticsShop,
     });
   }, [product]);
 
@@ -493,9 +363,15 @@ function OptionValueControl({
   );
 
   if (value.handle !== product.handle) {
-    const target = variantUrl(product, value.selectedOptions, value.handle, baseParams);
+    const target = variantTarget(product, value.selectedOptions, value.handle, baseParams);
     return (
-      <Link to={toRouterLocation(target)} preventScrollReset {...shared}>
+      <Link
+        to="/products/$handle"
+        params={{ handle: target.handle }}
+        search={target.search}
+        resetScroll={false}
+        {...shared}
+      >
         {content}
       </Link>
     );
@@ -516,8 +392,8 @@ function OptionValueControl({
 function VariantOptions({ product }: { product: ProductData }) {
   const { options } = useProductForm();
   const swatches = useMemo(() => buildSwatchLookup(product), [product]);
-  const location = useLocation();
-  const baseParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const searchStr = useLocation({ select: (location) => location.searchStr });
+  const baseParams = useMemo(() => new URLSearchParams(searchStr), [searchStr]);
 
   return (
     <div className="swatch-buttons space-y-4">
@@ -553,6 +429,13 @@ function VariantOptions({ product }: { product: ProductData }) {
   );
 }
 
+const MIN_QUANTITY = 1;
+const MAX_QUANTITY = 99;
+
+function clamp(value: number) {
+  return Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, value));
+}
+
 function QuantitySelector({
   quantity,
   setQuantity,
@@ -560,8 +443,6 @@ function QuantitySelector({
   quantity: number;
   setQuantity: (quantity: number) => void;
 }) {
-  const clamp = (value: number) => Math.min(99, Math.max(1, value));
-
   return (
     <div className="shrink-0">
       <label className="text-on-surface mb-2 block text-sm font-medium" htmlFor="quantity">
@@ -729,11 +610,49 @@ function ProductInfo({
   );
 }
 
-function ProductPageContent({ product }: { product: ProductData }) {
+function ProductJsonLd({
+  product,
+  selectedVariant,
+  origin,
+}: {
+  product: ProductData;
+  selectedVariant: ProductVariant | null;
+  origin: string;
+}) {
+  const images = useGalleryImages(product, selectedVariant);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: product.description || undefined,
+    image: images.map((image) => image.url),
+    offers: selectedVariant
+      ? {
+          "@type": "Offer",
+          price: selectedVariant.price.amount,
+          priceCurrency: selectedVariant.price.currencyCode,
+          availability: selectedVariant.availableForSale
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+          url: `${origin}/products/${product.handle}`,
+        }
+      : {
+          "@type": "AggregateOffer",
+          priceCurrency: product.priceRange.minVariantPrice.currencyCode,
+          lowPrice: product.priceRange.minVariantPrice.amount,
+          highPrice: product.priceRange.maxVariantPrice.amount,
+        },
+  };
+
+  return <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>;
+}
+
+function ProductPageContent({ product, origin }: { product: ProductData; origin: string }) {
   const { selectedVariant } = useProductForm();
 
   return (
     <section className="max-w-page px-margin mx-auto w-full pb-4">
+      <ProductJsonLd product={product} selectedVariant={selectedVariant} origin={origin} />
       <div className="product-grid mb-16 grid grid-cols-1 gap-6 md:gap-12">
         <ProductGallery product={product} selectedVariant={selectedVariant} />
         <ProductInfo product={product} selectedVariant={selectedVariant} />
@@ -742,7 +661,7 @@ function ProductPageContent({ product }: { product: ProductData }) {
   );
 }
 
-function RelatedProducts({ products }: { products: RelatedProduct[] }) {
+function RelatedProducts({ products }: { products: readonly ProductCardData[] }) {
   if (products.length === 0) return null;
 
   return (
@@ -771,34 +690,38 @@ function RelatedProducts({ products }: { products: RelatedProduct[] }) {
   );
 }
 
-export default function ProductRoute({ loaderData }: Route.ComponentProps) {
-  const { product, relatedProducts } = loaderData;
+function ProductPage() {
+  const { product, relatedProducts, origin } = Route.useLoaderData();
   const navigate = useNavigate();
-  const location = useLocation();
+  const searchStr = useLocation({ select: (location) => location.searchStr });
 
   return (
     <ProductProvider
       product={product}
       onSelect={(result) => {
-        const url = toRouterLocation(
-          variantUrl(
-            product,
-            result.selectedOptions,
-            result.selectedVariant?.product?.handle,
-            new URLSearchParams(location.search),
-          ),
+        const target = variantTarget(
+          product,
+          result.selectedOptions,
+          result.selectedVariant?.product?.handle,
+          new URLSearchParams(searchStr),
         );
-        void navigate(url, {
+        void navigate({
+          to: "/products/$handle",
+          params: { handle: target.handle },
+          search: target.search,
           replace: true,
-          preventScrollReset: true,
-          ...(result.status === "resolved" ? { defaultShouldRevalidate: false } : {}),
+          resetScroll: false,
         });
       }}
     >
       <ProductViewedTracker product={product} />
       <main className="flex-1" id="main-content" tabIndex={-1}>
-        <ProductPageContent product={product} />
-        <RelatedProducts products={relatedProducts} />
+        <ProductPageContent product={product} origin={origin} />
+        <Suspense fallback={null}>
+          <Await promise={relatedProducts}>
+            {(products) => <RelatedProducts products={products} />}
+          </Await>
+        </Suspense>
       </main>
     </ProductProvider>
   );

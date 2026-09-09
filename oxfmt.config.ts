@@ -22,6 +22,8 @@ export default defineConfig({
     "**/static/*",
     "**/playwright-report/**",
     "**/.react-router/**",
+    "**/routeTree.gen.ts",
+    "**/.tanstack/**",
     "**/.last-run.json",
     "pnpm-lock.yaml",
     "patches/**",

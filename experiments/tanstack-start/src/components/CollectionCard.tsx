@@ -1,5 +1,5 @@
 import { gql, type StorefrontApi } from "@shopify/hydrogen";
-import { Link } from "react-router";
+import { Link } from "@tanstack/react-router";
 
 export const COLLECTION_CARD_PRODUCT_COUNT_LIMIT = 100;
 
@@ -126,7 +126,8 @@ export function CollectionCard({
       <div className="text-interactive-text absolute inset-x-0 bottom-0 z-10 p-4 text-left">
         <h3 className="type-body-lg font-medium">
           <Link
-            to={`/collections/${collection.handle}`}
+            to="/collections/$handle"
+            params={{ handle: collection.handle }}
             className="card-link text-interactive-text rounded-card focus-visible:outline-accent"
             aria-label={collection.title}
           >

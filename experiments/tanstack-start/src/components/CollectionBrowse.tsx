@@ -8,10 +8,11 @@ import {
   type ProductFilter,
 } from "@shopify/hydrogen";
 import { useCollection, useCollectionForm } from "@shopify/hydrogen/react";
+import { Link, useLocation } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { Link, useFetcher, useLocation } from "react-router";
 
 import { formatPrice } from "~/lib/money";
+import { searchFromString, type StorefrontSearch } from "~/lib/search-params";
 
 export type SortOption = {
   label: string;
@@ -64,10 +65,9 @@ export type BrowsePageInfo = {
   endCursor?: string | null;
 };
 
-type LoadMoreResponse<T> = {
+export type LoadMoreResponse<T> = {
   products: readonly T[];
   pageInfo: BrowsePageInfo;
-  dataSearch: string;
 };
 
 const FILTER_DRAWER_ID = "collection-filter-drawer";
@@ -101,13 +101,20 @@ function currentSortValue(state: CollectionState): string | undefined {
   return state.sortKey ? getSortByValue(state.sortKey, state.reverse) : undefined;
 }
 
-function filterValueInputParamEntries(input: string): Array<{ name: string; value: string }> {
-  let filter: ProductFilter;
+// Shopify's filter `input` is the JSON of a single `ProductFilter`; anything
+// else is treated as "no filter" rather than trusted.
+function parseFilterInput(input: string): ProductFilter | null {
   try {
-    filter = JSON.parse(input) as ProductFilter;
+    const parsed: unknown = JSON.parse(input);
+    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed) ? parsed : null;
   } catch {
-    return [];
+    return null;
   }
+}
+
+function filterValueInputParamEntries(input: string): Array<{ name: string; value: string }> {
+  const filter = parseFilterInput(input);
+  if (!filter) return [];
 
   return Array.from(
     serializeCollectionParams({ filters: [filter], sortKey: undefined, reverse: false }),
@@ -124,19 +131,6 @@ function hiddenInputsFromParams(params: URLSearchParams, exclude = new Set<strin
 
 function activeFilterParams(state: CollectionState) {
   return serializeCollectionParams({ filters: state.filters, sortKey: undefined, reverse: false });
-}
-
-function buildPathWithRemoval(basePath: string, removal: string): string {
-  if (removal === "?") return basePath;
-
-  const [pathname, existingSearch = ""] = basePath.split("?");
-  const params = new URLSearchParams(existingSearch);
-  const removalParams = new URLSearchParams(removal.startsWith("?") ? removal.slice(1) : removal);
-
-  for (const [name, value] of removalParams) params.append(name, value);
-
-  const search = params.toString();
-  return search ? `${pathname}?${search}` : pathname;
 }
 
 function priceFilter(state: CollectionState) {
@@ -388,7 +382,7 @@ function ColorSwatchFacet({ filter, state }: { filter: BrowseFilter; state: Coll
     const style = {
       ...(color ? { "--filter-swatch-color": color } : {}),
       ...(imageUrl ? { backgroundImage: `url("${imageUrl}")` } : {}),
-    } as CSSProperties;
+    } satisfies CSSProperties;
 
     return (
       <li key={value.id}>
@@ -592,12 +586,11 @@ export function FilterDrawer({
 }
 
 export function ActiveFilterChips({
-  basePath,
-  clearAllTo,
+  baseSearch = {},
   currencyCode,
 }: {
-  basePath: string;
-  clearAllTo: string;
+  /** Search params to keep when removing a filter (e.g. the search term). */
+  baseSearch?: StorefrontSearch;
   currencyCode: string;
 }) {
   const state: CollectionState = useCollection();
@@ -614,13 +607,13 @@ export function ActiveFilterChips({
       {state.filters.map((filter, index) => {
         const label = describeFilter(filter, currencyCode);
         const removal = getFilterRemovalUrl(currentParams, filter);
-        const to = buildPathWithRemoval(basePath, removal);
 
         return (
           <Link
             key={`${label}-${index}-${removal}`}
-            to={to}
-            preventScrollReset
+            to="."
+            search={{ ...baseSearch, ...searchFromString(removal) }}
+            resetScroll={false}
             className="chip-filled hover:bg-border min-h-touch-target inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-sm no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
             aria-label={`Remove ${label} filter`}
           >
@@ -634,49 +627,61 @@ export function ActiveFilterChips({
           </Link>
         );
       })}
-      <Link to={clearAllTo} preventScrollReset className="text-accent text-sm hover:underline">
+      <Link
+        to="."
+        search={baseSearch}
+        resetScroll={false}
+        className="text-accent text-sm hover:underline"
+      >
         Clear all
       </Link>
     </div>
   );
 }
 
+/**
+ * Appends result pages on top of the route loader's first page. The next page
+ * is fetched through the same server function the loader uses (passed in as
+ * `fetchPage`), so pagination never bypasses the server-side data path.
+ */
 export function useLoadMore<T>(
   initialNodes: readonly T[],
   initialPageInfo: BrowsePageInfo,
   dataSearch: string,
+  fetchPage: (search: string) => Promise<LoadMoreResponse<T>>,
 ) {
-  const fetcher = useFetcher();
   const [nodes, setNodes] = useState<readonly T[]>(initialNodes);
   const [pageInfo, setPageInfo] = useState<BrowsePageInfo>(initialPageInfo);
+  const [isLoading, setIsLoading] = useState(false);
   const requestedSearch = useRef<string | null>(null);
-  const appendedSearches = useRef(new Set<string>());
 
   useEffect(() => {
     setNodes(initialNodes);
     setPageInfo(initialPageInfo);
+    setIsLoading(false);
     requestedSearch.current = null;
-    appendedSearches.current.clear();
   }, [dataSearch, initialNodes, initialPageInfo]);
-
-  useEffect(() => {
-    const data = fetcher.data as LoadMoreResponse<T> | undefined;
-    if (!data || data.dataSearch !== requestedSearch.current) return;
-    if (appendedSearches.current.has(data.dataSearch)) return;
-
-    appendedSearches.current.add(data.dataSearch);
-    requestedSearch.current = null;
-    setNodes((current) => [...current, ...data.products]);
-    setPageInfo(data.pageInfo);
-  }, [fetcher.data]);
 
   return {
     nodes,
     pageInfo,
-    isLoading: fetcher.state !== "idle",
-    loadMore: (href: string, nextDataSearch: string) => {
-      requestedSearch.current = nextDataSearch;
-      fetcher.load(href);
+    isLoading,
+    loadMore: async (nextSearch: string) => {
+      if (requestedSearch.current === nextSearch) return;
+      requestedSearch.current = nextSearch;
+      setIsLoading(true);
+      try {
+        const page = await fetchPage(nextSearch);
+        // Ignore stale responses if the user changed filters meanwhile.
+        if (requestedSearch.current !== nextSearch) return;
+        setNodes((current) => [...current, ...page.products]);
+        setPageInfo(page.pageInfo);
+      } finally {
+        if (requestedSearch.current === nextSearch) {
+          requestedSearch.current = null;
+          setIsLoading(false);
+        }
+      }
     },
   };
 }
@@ -692,16 +697,15 @@ export function LoadMore({
   loadedCount: number;
   countLabel?: string;
   isLoading: boolean;
-  onLoad: (href: string, nextDataSearch: string) => void;
+  onLoad: (nextSearch: string) => void;
 }) {
   const location = useLocation();
 
   if (!pageInfo.hasNextPage || !pageInfo.endCursor) return null;
 
-  const params = new URLSearchParams(location.search);
+  const params = new URLSearchParams(location.searchStr);
   params.set("after", pageInfo.endCursor);
-  const nextSearch = params.toString();
-  const href = `${location.pathname}?${nextSearch}`;
+  const nextSearch = `?${params.toString()}`;
 
   return (
     <div className="mt-12 flex flex-col items-center gap-3">
@@ -709,13 +713,14 @@ export function LoadMore({
         {countLabel ?? `Showing ${loadedCount} products`}
       </p>
       <Link
-        to={href}
-        preventScrollReset
+        to="."
+        search={searchFromString(nextSearch)}
+        resetScroll={false}
         aria-disabled={isLoading}
         className={`button-outline rounded-button focus-visible:outline-accent inline-flex h-11 items-center justify-center gap-2 px-6 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] ${isLoading ? "pointer-events-none opacity-50" : ""}`}
         onClick={(event) => {
           event.preventDefault();
-          if (!isLoading) onLoad(href, nextSearch);
+          if (!isLoading) onLoad(nextSearch);
         }}
       >
         {isLoading ? "Loading…" : "Load more"}

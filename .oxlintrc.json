@@ -25,6 +25,8 @@
     "!scripts/preview-template-dist*.ts",
     "experiments/**",
     "experiments/hydrogen/**",
+    "!experiments/tanstack-start/**",
+    "**/routeTree.gen.ts",
     "!experiments/hydrogen/app/components/PaginatedResourceSection.tsx",
     "!experiments/hydrogen/app/components/CartDeliveryInstructions.tsx",
     "!experiments/hydrogen/app/lib/pagination.ts",
@@ -129,7 +131,8 @@
         "packages/hydrogen/src/vue/cart.ts",
         "packages/hydrogen/src/vue/collection.ts",
         "packages/hydrogen/src/vue/predictive-search.ts",
-        "packages/hydrogen/src/vue/product.ts"
+        "packages/hydrogen/src/vue/product.ts",
+        "templates/react-router/app/components/CollectionBrowse.tsx"
       ],
       "rules": {
         "@typescript-eslint/consistent-type-assertions": "off"
@@ -140,13 +143,6 @@
         "experiments/nuxt/components/CollectionBrowserContent.vue",
         "experiments/nuxt/error.vue",
         "experiments/nuxt/pages/collections/*.vue",
-        "templates/react-router/app/components/CartDrawer.tsx",
-        "templates/react-router/app/components/CollectionBrowse.tsx",
-        "templates/react-router/app/components/CollectionCard.tsx",
-        "templates/react-router/app/components/ProductCard.tsx",
-        "templates/react-router/app/routes/collection.tsx",
-        "templates/react-router/app/routes/product.tsx",
-        "templates/react-router/app/routes/search.tsx",
         "templates/nextjs/components/CollectionBrowser.tsx",
         "templates/nextjs/components/ProductDetails.tsx",
         "templates/nextjs/components/ProductCard.tsx",

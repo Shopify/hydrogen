@@ -1,5 +1,5 @@
 import { gql, type StorefrontApi } from "@shopify/hydrogen";
-import { Link } from "react-router";
+import { Link } from "@tanstack/react-router";
 
 import { compareMoney, formatPrice } from "~/lib/money";
 
@@ -130,7 +130,11 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       </div>
       <div className="flex flex-col gap-0.5 text-left">
         <h3 className="type-body-sm text-on-surface line-clamp-2 font-medium">
-          <Link to={`/products/${product.handle}`} className="card-link text-on-surface">
+          <Link
+            to="/products/$handle"
+            params={{ handle: product.handle }}
+            className="card-link text-on-surface"
+          >
             {product.title}
           </Link>
         </h3>
