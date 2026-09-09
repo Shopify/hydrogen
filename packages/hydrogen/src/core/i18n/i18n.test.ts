@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { defineShopifyI18n, getLocalizedHref, getSupportedLocales, matchLocale } from "./index";
-import { resolveSupportedLocale } from "./match";
+import {
+  defineShopifyI18n,
+  getLocalizedHref,
+  getSupportedLocales,
+  matchLocale,
+  resolveSupportedLocale,
+} from "./index";
 
 const EN_US = { language: "EN", country: "US" } as const;
 const FR_CA = { language: "FR", country: "CA" } as const;

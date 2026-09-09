@@ -183,6 +183,7 @@ export function getAlternateLinks(currentUrl: string, currentLocale: ShopifyLoca
 - `getLocalizedHref(href, { i18n, locale })` rewrites an href to the same page in another locale. Under pathname routing it returns a path with any existing locale prefix replaced; under domain routing it returns an absolute `https:` URL on the target hostname; with no routing it returns the input unchanged. It throws when `locale` is not defined in `i18n`.
 - `getSupportedLocales(i18n)` returns every locale the definition can resolve to, default first, keeping `pathSegment` / `hostname` and any extra fields.
 - `matchLocale(request | url, i18n)` exposes the same resolution the request context uses, for sitemaps or tests that hold a URL but no request context.
+- `resolveSupportedLocale(locale, i18n)` resolves a locale the app already chose (a selector value, a stored preference) to its `pathPrefix`/`hostname`, throwing when it is not in the definition. Use it to validate user input before redirecting.
 
 Persist an explicit buyer choice by redirecting to `getLocalizedHref(...)`; do not resolve the locale from a cookie on the server.
 
