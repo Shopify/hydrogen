@@ -4,7 +4,7 @@ import { createStorefrontClient } from "../../client/client";
 import type { I18nConfig } from "../../client/types";
 import { configureLogging, resetLoggingForTests } from "../logging";
 import { createShopifyRequestContext } from "../request-context";
-import { createShopifyRouteTemplates } from "../standard-routes/index";
+import { defineShopifyRouteTemplates } from "../standard-routes/index";
 import { assert, createTestLogger } from "../test-utils";
 import { handleShopifyRedirects } from "./handle-shopify-redirects";
 
@@ -13,7 +13,7 @@ const defaultConfig = {
 } as const;
 
 const DEFAULT_I18N = { country: "US", language: "EN" } as const;
-const DEFAULT_ROUTE_TEMPLATES = createShopifyRouteTemplates({});
+const DEFAULT_ROUTE_TEMPLATES = defineShopifyRouteTemplates({});
 
 function createPrivateStorefrontClient(request: Request, i18n: I18nConfig = DEFAULT_I18N) {
   return createStorefrontClient({

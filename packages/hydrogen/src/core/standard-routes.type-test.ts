@@ -1,10 +1,10 @@
 import { describe, expectTypeOf, it } from "vitest";
 
-import { createShopifyRouteTemplates, getStandardRoute, type ShopifyRouteTemplates } from "./standard-routes/index";
+import { defineShopifyRouteTemplates, getStandardRoute, type ShopifyRouteTemplates } from "./standard-routes/index";
 
 describe("ShopifyRouteTemplates types", () => {
   it("accepts templates with required placeholders", () => {
-    const routes = createShopifyRouteTemplates({
+    const routes = defineShopifyRouteTemplates({
       article: "/articles/:articleHandle/from/:blogHandle",
       blog: "/journal/:blogHandle",
       cart: "/basket",
@@ -16,7 +16,7 @@ describe("ShopifyRouteTemplates types", () => {
       productInCollection: "/p/:productHandle/in/:collectionHandle",
       search: "/find",
     });
-    const canonicalProductRoutes = createShopifyRouteTemplates({
+    const canonicalProductRoutes = defineShopifyRouteTemplates({
       productInCollection: "/p/:productHandle",
     });
 
@@ -28,7 +28,7 @@ describe("ShopifyRouteTemplates types", () => {
   });
 
   it("rejects templates without the required placeholders", () => {
-    const routes = createShopifyRouteTemplates({
+    const routes = defineShopifyRouteTemplates({
       // @ts-expect-error product routes must include :productHandle
       product: "/p/:productHandler",
       // @ts-expect-error collection routes must include :collectionHandle
@@ -53,11 +53,11 @@ describe("ShopifyRouteTemplates types", () => {
   });
 
   it("requires params for the selected standard route", () => {
-    const routes = createShopifyRouteTemplates({
+    const routes = defineShopifyRouteTemplates({
       article: "/articles/:articleHandle/from/:blogHandle",
       product: "/p/:productHandle",
     });
-    const defaultRoutes = createShopifyRouteTemplates({});
+    const defaultRoutes = defineShopifyRouteTemplates({});
 
     const productUrl = getStandardRoute(routes, "product", { productHandle: "snowboard" });
     const collectionUrl = getStandardRoute(defaultRoutes, "collection", {

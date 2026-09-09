@@ -36,7 +36,7 @@ Maintain `templates/react-router` as the canonical source for a professional sta
    - use `@shopify/hydrogen: workspace:*` in this repository so template E2E exercises the package under development
      (see "Hydrogen dependency" below). Do not use repo-local `file:` dependencies or vendored package tarballs.
 
-Keep `lib/route-templates.ts` unchanged. It defines `routeTemplates` via `createShopifyRouteTemplates`, which is a REQUIRED arg on `handleShopifyRedirects`, `ShopifyScripts` (`routes` prop), and `getPredictiveSearchItemUrl` (`routes` option).
+Keep `lib/route-templates.ts` unchanged. It defines `routeTemplates` via `defineShopifyRouteTemplates`, which is a REQUIRED arg on `handleShopifyRedirects`, `ShopifyScripts` (`routes` prop), and `getPredictiveSearchItemUrl` (`routes` option).
 
 4. Add Oxygen/MiniOxygen support:
    - `@shopify/mini-oxygen`: pin `^4.2.0` — its `oxygen()` plugin adds `configurePreviewServer`, which `vite preview`

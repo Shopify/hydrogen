@@ -1,5 +1,5 @@
 export type { RedirectOptions } from "./request-routing/handle-shopify-redirects";
-export { createShopifyRouteTemplates } from "./standard-routes/index";
+export { defineShopifyRouteTemplates } from "./standard-routes/index";
 export type { ShopifyRouteTemplates } from "./standard-routes/index";
 export { handleShopifyRedirects } from "./request-routing/handle-shopify-redirects";
 export { handleShopifyRoutes } from "./request-routing/handle-shopify-routes";

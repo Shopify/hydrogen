@@ -1,5 +1,5 @@
-import { createShopifyRouteTemplates } from "@shopify/hydrogen";
+import { defineShopifyRouteTemplates } from "@shopify/hydrogen";
 
-export const routeTemplates = createShopifyRouteTemplates({
+export const routeTemplates = defineShopifyRouteTemplates({
   productInCollection: "/products/:productHandle",
 });
