@@ -1534,6 +1534,8 @@ function enqueueTransaction<TType extends TransactionType>(
   );
   if (expectedEventIndex !== -1) {
     store.expectedEvents.splice(expectedEventIndex, 1);
+    // Prevent request cancellation from becoming an unhandled rejection.
+    promise.then(NOOP, NOOP);
     return;
   }
   if (store.observedPromises.has(promise)) return;
