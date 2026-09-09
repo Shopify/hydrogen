@@ -15,7 +15,17 @@ import { describe, expect, it, vi } from "vitest";
 
 import { assert } from "../../core/test-utils";
 import { isObjectRecord } from "../../core/utils/record";
-import { syncSkills, type SyncSkillsResult, type SyncSkillsRootResult } from "../skills";
+import {
+  checkSkills,
+  describeSkillsSyncStatus,
+  parseSkillsCheckArgs,
+  getSkillsSyncStatus,
+  parseSkillsSyncArgs,
+  syncSkills,
+  type SkillsSyncStatus,
+  type SyncSkillsResult,
+  type SyncSkillsRootResult,
+} from "../skills";
 
 const REAL_SKILLS_ROOT = join(import.meta.dirname, "../../../skills");
 
@@ -93,12 +103,21 @@ function readMetadata(content: string): { version: string; hash: string } {
   return { version, hash };
 }
 
+function statusFixture(overrides: Partial<SkillsSyncStatus> = {}): SkillsSyncStatus {
+  return {
+    version: "2026.2.0",
+    pending: { add: 0, update: 0, remove: 0, modified: 0 },
+    conflicts: [],
+    ...overrides,
+  };
+}
+
 /** Tests that expect a prompt pass their own confirm; everything else must never ask. */
 const rejectPrompt = (question: string): Promise<boolean> =>
   Promise.reject(new Error(`Unexpected prompt: ${question}`));
 
-function sync(appRoot: string, packageRoot: string, args: string[] = []) {
-  return syncSkills({ cwd: appRoot, packageRoot, args, log: vi.fn(), confirm: rejectPrompt });
+function sync(appRoot: string, packageRoot: string, force = false) {
+  return syncSkills({ cwd: appRoot, packageRoot, force, log: vi.fn(), confirm: rejectPrompt });
 }
 
 function rootResult(result: SyncSkillsResult, harness: string): SyncSkillsRootResult {
@@ -181,7 +200,7 @@ describe("syncSkills", () => {
     });
     expect(readSkill(appRoot, "hydrogen-cart-ui")).toContain("My local note.");
 
-    const forced = await sync(appRoot, newPackageRoot, ["--force"]);
+    const forced = await sync(appRoot, newPackageRoot, true);
     expect(agents(forced)).toMatchObject({ updated: 1, skipped: [] });
     expect(readSkill(appRoot, "hydrogen-cart-ui")).toContain("New.");
     expect(readSkill(appRoot, "hydrogen-cart-ui")).not.toContain("My local note.");
@@ -209,7 +228,7 @@ describe("syncSkills", () => {
     const skillFile = join(appRoot, ".agents/skills/hydrogen-cart-ui/SKILL.md");
     writeFileSync(skillFile, readFileSync(skillFile, "utf8") + "My local note.\n");
 
-    const result = await sync(appRoot, packageRoot, ["--force"]);
+    const result = await sync(appRoot, packageRoot, true);
 
     expect(agents(result)).toMatchObject({ updated: 1, unchanged: 0, skipped: [] });
     expect(readSkill(appRoot, "hydrogen-cart-ui")).not.toContain("My local note.");
@@ -394,7 +413,7 @@ describe("syncSkills", () => {
     it("removes without asking when forced", async () => {
       const { appRoot, skillFile, newPackageRoot } = await createEditedStaleSkill();
 
-      const result = await sync(appRoot, newPackageRoot, ["--force"]);
+      const result = await sync(appRoot, newPackageRoot, true);
 
       expect(agents(result)).toMatchObject({ removed: 1, kept: [], skipped: [] });
       expect(existsSync(skillFile)).toBe(false);
@@ -425,7 +444,7 @@ describe("syncSkills", () => {
     expect(existsSync(join(appRoot, ".agents/skills/hydrogen-setup"))).toBe(false);
     expect(readSkill(appRoot, "hydrogen-cart-ui")).toContain("Handwritten.");
 
-    expect(agents(await sync(appRoot, packageRoot, ["--force"]))).toMatchObject({
+    expect(agents(await sync(appRoot, packageRoot, true))).toMatchObject({
       added: 1,
       updated: 1,
     });
@@ -472,11 +491,10 @@ describe("syncSkills", () => {
     expect(existsSync(join(appRoot, ".claude/skills"))).toBe(false);
   });
 
-  it("rejects unknown arguments", async () => {
-    const appRoot = createAppRoot();
-    const packageRoot = createPackageRoot("2026.1.0");
-
-    await expect(sync(appRoot, packageRoot, ["--yolo"])).rejects.toThrow();
+  it("parses --force and rejects unknown flags", () => {
+    expect(parseSkillsSyncArgs([])).toEqual({ force: false });
+    expect(parseSkillsSyncArgs(["--force"])).toEqual({ force: true });
+    expect(() => parseSkillsSyncArgs(["--yolo"])).toThrow("--yolo");
   });
 
   describe("package resolution", () => {
@@ -564,5 +582,194 @@ describe("syncSkills", () => {
     for (const skillName of shipped) {
       readMetadata(readSkill(appRoot, skillName));
     }
+  });
+
+  describe("getSkillsSyncStatus", () => {
+    it("reports everything pending for a project that never synced", () => {
+      const appRoot = createAppRoot();
+      const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
+
+      const status = getSkillsSyncStatus({ cwd: appRoot, packageRoot });
+
+      expect(status).toEqual({
+        version: "2026.1.0",
+        pending: { add: 1, update: 0, remove: 0, modified: 0 },
+        conflicts: [],
+      });
+    });
+
+    it("reports nothing pending right after a sync", async () => {
+      const appRoot = createAppRoot();
+      const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
+      await sync(appRoot, packageRoot);
+
+      const status = getSkillsSyncStatus({ cwd: appRoot, packageRoot });
+
+      expect(status.pending).toEqual({ add: 0, update: 0, remove: 0, modified: 0 });
+    });
+
+    it("counts updates, additions, removals, and local modifications after an upgrade", async () => {
+      const appRoot = createAppRoot();
+      await sync(
+        appRoot,
+        createPackageRoot("2026.1.0", {
+          "hydrogen-cart-ui": "Cart.\n",
+          "hydrogen-legacy": "Legacy.\n",
+          "hydrogen-money": "Money.\n",
+        }),
+      );
+      for (const harness of [".claude", ".agents"]) {
+        const moneyFile = join(appRoot, harness, "skills/hydrogen-money/SKILL.md");
+        writeFileSync(moneyFile, readFileSync(moneyFile, "utf8") + "Mine.\n");
+      }
+      const newPackageRoot = createPackageRoot("2026.2.0", {
+        "hydrogen-cart-ui": "Cart v2.\n",
+        "hydrogen-money": "Money v2.\n",
+        "hydrogen-image": "Image.\n",
+      });
+
+      const status = getSkillsSyncStatus({ cwd: appRoot, packageRoot: newPackageRoot });
+
+      expect(status).toEqual({
+        version: "2026.2.0",
+        pending: { add: 1, update: 1, remove: 1, modified: 1 },
+        conflicts: [],
+      });
+      expect(readSkill(appRoot, "hydrogen-cart-ui")).toContain("Cart.\n");
+    });
+
+    it("counts an edited skill the package no longer ships as locally modified", async () => {
+      const appRoot = createAppRoot();
+      await sync(appRoot, createPackageRoot("2026.1.0", { "hydrogen-legacy": "Legacy.\n" }));
+      const skillFile = join(appRoot, ".agents/skills/hydrogen-legacy/SKILL.md");
+      writeFileSync(skillFile, readFileSync(skillFile, "utf8") + "Mine.\n");
+
+      const status = getSkillsSyncStatus({
+        cwd: appRoot,
+        packageRoot: createPackageRoot("2026.2.0"),
+      });
+
+      // The .claude copy is untouched and would be removed; the edited .agents copy waits for consent.
+      expect(status.pending).toEqual({ add: 0, update: 0, remove: 1, modified: 1 });
+    });
+
+    it("surfaces name collisions without throwing", () => {
+      const appRoot = createAppRoot();
+      writeSkill(join(appRoot, ".agents/skills"), "hydrogen-cart-ui", "Handwritten.\n");
+      const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
+
+      const status = getSkillsSyncStatus({ cwd: appRoot, packageRoot });
+
+      expect(status.conflicts).toEqual([join(appRoot, ".agents/skills/hydrogen-cart-ui")]);
+    });
+  });
+
+  describe("describeSkillsSyncStatus", () => {
+    it("returns nothing when everything is current", () => {
+      expect(describeSkillsSyncStatus(statusFixture())).toBeUndefined();
+    });
+
+    it("lists pending updates, additions, and removals with the sync command", () => {
+      expect(
+        describeSkillsSyncStatus(
+          statusFixture({ pending: { add: 2, update: 5, remove: 1, modified: 0 } }),
+        ),
+      ).toBe(
+        "Hydrogen skills are out of date with @shopify/hydrogen 2026.2.0 (5 to update, 2 new, 1 removed upstream). Run `npx @shopify/hydrogen skills sync`.",
+      );
+    });
+
+    it("points at --force when only locally modified skills are behind", () => {
+      const message = describeSkillsSyncStatus(
+        statusFixture({ pending: { add: 0, update: 0, remove: 0, modified: 2 } }),
+      );
+
+      expect(message).toContain("2 locally modified");
+      expect(message).toContain("skills sync --force");
+    });
+
+    it("explains collisions", () => {
+      const message = describeSkillsSyncStatus(
+        statusFixture({ conflicts: ["/app/.agents/skills/x"] }),
+      );
+
+      expect(message).toContain("/app/.agents/skills/x");
+      expect(message).toContain("--force");
+    });
+  });
+
+  describe("checkSkills", () => {
+    it("passes and reports the version when skills are current", async () => {
+      const appRoot = createAppRoot();
+      const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
+      await sync(appRoot, packageRoot);
+      const log = vi.fn();
+
+      checkSkills({ cwd: appRoot, packageRoot, log });
+
+      expect(log).toHaveBeenCalledWith(
+        "Hydrogen skills are up to date with @shopify/hydrogen 2026.1.0.",
+      );
+    });
+
+    it("fails when the package moved on", async () => {
+      const appRoot = createAppRoot();
+      await sync(appRoot, createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" }));
+      const newPackageRoot = createPackageRoot("2026.2.0", { "hydrogen-cart-ui": "Cart v2.\n" });
+
+      expect(() =>
+        checkSkills({ cwd: appRoot, packageRoot: newPackageRoot, log: vi.fn() }),
+      ).toThrow("out of date with @shopify/hydrogen 2026.2.0 (1 to update)");
+    });
+
+    it("fails when skills were never synced", () => {
+      const appRoot = createAppRoot();
+      const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
+
+      expect(() => checkSkills({ cwd: appRoot, packageRoot, log: vi.fn() })).toThrow("1 new");
+    });
+
+    it("warns and returns instead of throwing in warn mode", () => {
+      const appRoot = createAppRoot();
+      const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
+      const log = vi.fn();
+      const warn = vi.fn();
+
+      checkSkills({ cwd: appRoot, packageRoot, mode: "warn", log, warn });
+
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[0]).toContain("1 new");
+      expect(log).not.toHaveBeenCalled();
+    });
+
+    it("stays silent in warn mode when skills are current", async () => {
+      const appRoot = createAppRoot();
+      const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
+      await sync(appRoot, packageRoot);
+      const log = vi.fn();
+      const warn = vi.fn();
+
+      checkSkills({ cwd: appRoot, packageRoot, mode: "warn", log, warn });
+
+      expect(log).not.toHaveBeenCalled();
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it("parses --mode and rejects unknown values", () => {
+      expect(parseSkillsCheckArgs([])).toEqual({ mode: "error" });
+      expect(parseSkillsCheckArgs(["--mode=warn"])).toEqual({ mode: "warn" });
+      expect(parseSkillsCheckArgs(["--mode", "error"])).toEqual({ mode: "error" });
+      expect(() => parseSkillsCheckArgs(["--mode=loud"])).toThrow("Unknown --mode 'loud'");
+      expect(() => parseSkillsCheckArgs(["--yolo"])).toThrow("--yolo");
+    });
+
+    it("never writes", () => {
+      const appRoot = createAppRoot();
+      const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
+
+      expect(() => checkSkills({ cwd: appRoot, packageRoot, log: vi.fn() })).toThrow();
+      expect(existsSync(join(appRoot, ".agents/skills"))).toBe(false);
+      expect(existsSync(join(appRoot, ".claude"))).toBe(false);
+    });
   });
 });

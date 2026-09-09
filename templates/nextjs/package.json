@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "hydrogen skills check --mode=warn && next dev",
     "dev:https": "next dev --experimental-https --hostname local.tryhydrogen.dev --port 5173",
     "build": "next build --debug-prerender",
     "start": "next start",

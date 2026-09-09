@@ -109,7 +109,8 @@ export interface SyncSkillsResult {
 }
 
 export interface SyncSkillsOptions {
-  args?: string[];
+  /** Overwrite locally modified or unmanaged colliding skills and remove modified stale ones. */
+  force?: boolean;
   cwd?: string;
   packageRoot?: string;
   log?: (message: string) => void;
@@ -456,7 +457,7 @@ function executePlan(destinationRoot: string, planned: PlannedSkill[]): SyncSkil
   return result;
 }
 
-function parseSyncArgs(args: string[]): { force: boolean } {
+export function parseSkillsSyncArgs(args: string[]): { force: boolean } {
   const { values } = parseArgs({
     args,
     options: { force: { type: "boolean", default: false } },
@@ -466,28 +467,171 @@ function parseSyncArgs(args: string[]): { force: boolean } {
   return { force: values.force };
 }
 
-export async function syncSkills(options: SyncSkillsOptions = {}): Promise<SyncSkillsResult> {
-  const appRoot = options.cwd ?? process.cwd();
-  const log = options.log ?? console.log;
-  const confirm = options.confirm ?? confirmByDefault;
-  const { force } = parseSyncArgs(options.args ?? []);
-  const packageRoot = options.packageRoot ?? getInstalledPackageRoot(appRoot) ?? getPackageRoot();
-  const sourceSkillsRoot = join(packageRoot, SKILLS_DIRECTORY_NAME);
+interface SyncPlan {
+  version: string;
+  destinations: DestinationPlan[];
+}
+
+function planSkillsSync(
+  appRoot: string,
+  packageRoot: string | undefined,
+  force: boolean,
+): SyncPlan {
+  const resolvedPackageRoot = packageRoot ?? getInstalledPackageRoot(appRoot) ?? getPackageRoot();
+  const sourceSkillsRoot = join(resolvedPackageRoot, SKILLS_DIRECTORY_NAME);
   assertDirectory(sourceSkillsRoot, `No packaged skills found at ${sourceSkillsRoot}.`);
 
-  const version = readPackageVersion(packageRoot);
+  const version = readPackageVersion(resolvedPackageRoot);
   const shippedSkills = new Map(
     listDirectoryNames(sourceSkillsRoot).map((skillName) => [
       skillName,
       readShippedSkill(sourceSkillsRoot, skillName, version),
     ]),
   );
-  const destinationRoots = getSkillsDestinationRoots(appRoot);
-  const plans = destinationRoots.map((destinationRoot) =>
+  const destinations = getSkillsDestinationRoots(appRoot).map((destinationRoot) =>
     planDestination(destinationRoot, shippedSkills, force),
   );
 
-  const conflicts = plans.flatMap((plan) => plan.conflicts);
+  return { version, destinations };
+}
+
+export interface SkillsSyncStatus {
+  /** Version of the installed `@shopify/hydrogen` the skills are compared against. */
+  version: string;
+  /** Distinct skills a `hydrogen skills sync` run would touch right now. */
+  pending: { add: number; update: number; remove: number; modified: number };
+  /** Directories Hydrogen did not create that collide with shipped skill names. */
+  conflicts: string[];
+}
+
+/** Reports what a sync would change without touching the filesystem. */
+export function getSkillsSyncStatus(
+  options: Pick<SyncSkillsOptions, "cwd" | "packageRoot"> = {},
+): SkillsSyncStatus {
+  const plan = planSkillsSync(options.cwd ?? process.cwd(), options.packageRoot, false);
+  // Count skills, not directories: the same skill sits in every harness root.
+  const names = {
+    add: new Set<string>(),
+    update: new Set<string>(),
+    remove: new Set<string>(),
+    modified: new Set<string>(),
+  };
+  for (const destination of plan.destinations) {
+    for (const skill of destination.planned) {
+      if (skill.action === "add" || skill.action === "update" || skill.action === "remove") {
+        names[skill.action].add(skill.skillName);
+      } else if (skill.action === "skip") {
+        names.modified.add(skill.skillName);
+      }
+    }
+    // Edited skills the package no longer ships wait for consent in `sync`;
+    // read-only they are simply local edits that a sync would not clear.
+    for (const skillName of destination.orphans) names.modified.add(skillName);
+  }
+
+  return {
+    version: plan.version,
+    pending: {
+      add: names.add.size,
+      update: names.update.size,
+      remove: names.remove.size,
+      modified: names.modified.size,
+    },
+    conflicts: plan.destinations.flatMap((destination) => destination.conflicts),
+  };
+}
+
+const SYNC_COMMAND = "npx @shopify/hydrogen skills sync";
+
+function describePending(status: SkillsSyncStatus): string | undefined {
+  const { pending } = status;
+  const parts = [
+    pending.update > 0 && `${pending.update} to update`,
+    pending.add > 0 && `${pending.add} new`,
+    pending.remove > 0 && `${pending.remove} removed upstream`,
+  ].filter((part): part is string => typeof part === "string");
+
+  if (parts.length === 0) return undefined;
+  return `Hydrogen skills are out of date with @shopify/hydrogen ${status.version} (${parts.join(", ")}). Run \`${SYNC_COMMAND}\`.`;
+}
+
+/** Explains why a status is not up to date, or returns undefined when nothing needs doing. */
+export function describeSkillsSyncStatus(status: SkillsSyncStatus): string | undefined {
+  if (status.conflicts.length > 0) {
+    return `Hydrogen skills cannot be synced: ${status.conflicts.join(", ")} were not created by Hydrogen. Remove them or run \`${SYNC_COMMAND} --force\`.`;
+  }
+
+  const pendingMessage = describePending(status);
+  if (pendingMessage) return pendingMessage;
+
+  if (status.pending.modified > 0) {
+    return `${status.pending.modified} locally modified Hydrogen skill(s) are behind @shopify/hydrogen ${status.version}. Run \`${SYNC_COMMAND} --force\` to reset them.`;
+  }
+
+  return undefined;
+}
+
+const CHECK_MODES = ["error", "warn"] as const;
+
+export type CheckSkillsMode = (typeof CHECK_MODES)[number];
+
+export interface CheckSkillsOptions extends Pick<SyncSkillsOptions, "cwd" | "packageRoot" | "log"> {
+  /** `error` throws on drift for CI; `warn` reports it and continues for dev scripts. */
+  mode?: CheckSkillsMode;
+  warn?: (message: string) => void;
+}
+
+function isCheckSkillsMode(value: string): value is CheckSkillsMode {
+  return CHECK_MODES.some((mode) => mode === value);
+}
+
+export function parseSkillsCheckArgs(args: string[]): { mode: CheckSkillsMode } {
+  const { values } = parseArgs({
+    args,
+    options: { mode: { type: "string", default: "error" } },
+    strict: true,
+  });
+
+  if (!isCheckSkillsMode(values.mode)) {
+    throw new Error(`Unknown --mode '${values.mode}'. Expected one of: ${CHECK_MODES.join(", ")}.`);
+  }
+
+  return { mode: values.mode };
+}
+
+/**
+ * Reports whether the synced skills match the installed package without writing.
+ * A project with no synced skills counts as drift; running this command is the opt-in.
+ */
+export function checkSkills(options: CheckSkillsOptions = {}): void {
+  const mode = options.mode ?? "error";
+  const log = options.log ?? console.log;
+  const warn = options.warn ?? console.warn;
+  const status = getSkillsSyncStatus(options);
+  const problem = describeSkillsSyncStatus(status);
+
+  if (problem) {
+    if (mode === "error") throw new Error(problem);
+    warn(problem);
+    return;
+  }
+
+  // Warn mode prefixes dev scripts, so it only speaks when something needs doing.
+  if (mode === "error") {
+    log(`Hydrogen skills are up to date with @shopify/hydrogen ${status.version}.`);
+  }
+}
+
+export async function syncSkills(options: SyncSkillsOptions = {}): Promise<SyncSkillsResult> {
+  const log = options.log ?? console.log;
+  const confirm = options.confirm ?? confirmByDefault;
+  const plan = planSkillsSync(
+    options.cwd ?? process.cwd(),
+    options.packageRoot,
+    options.force ?? false,
+  );
+
+  const conflicts = plan.destinations.flatMap((destination) => destination.conflicts);
   if (conflicts.length > 0) {
     throw new Error(
       `Skill directories exist that Hydrogen did not create: ${conflicts.join(", ")}. Remove them or rerun with --force to overwrite.`,
@@ -496,12 +640,14 @@ export async function syncSkills(options: SyncSkillsOptions = {}): Promise<SyncS
 
   // Prompt only once the run is known to be conflict-free, so nobody answers
   // questions for a sync that then refuses to write.
-  await planOrphans(plans, version, confirm);
+  await planOrphans(plan.destinations, plan.version, confirm);
 
-  const roots = plans.map((plan) => executePlan(plan.destinationRoot, plan.planned));
+  const roots = plan.destinations.map((destination) =>
+    executePlan(destination.destinationRoot, destination.planned),
+  );
   for (const root of roots) {
     log(
-      `Synced Hydrogen ${version} skills to ${root.root}: ${root.added} added, ${root.updated} updated, ${root.unchanged} unchanged, ${root.removed} removed.`,
+      `Synced Hydrogen ${plan.version} skills to ${root.root}: ${root.added} added, ${root.updated} updated, ${root.unchanged} unchanged, ${root.removed} removed.`,
     );
   }
 
@@ -517,7 +663,7 @@ export async function syncSkills(options: SyncSkillsOptions = {}): Promise<SyncS
     log(
       [
         "",
-        `WARNING: Hydrogen ${version} no longer ships these skills, but they were edited locally so they were kept:`,
+        `WARNING: Hydrogen ${plan.version} no longer ships these skills, but they were edited locally so they were kept:`,
         ...kept.map((skillRoot) => `  - ${skillRoot}`),
         "Delete them yourself, or rerun with --force to remove them.",
         "",
@@ -525,5 +671,5 @@ export async function syncSkills(options: SyncSkillsOptions = {}): Promise<SyncS
     );
   }
 
-  return { version, roots };
+  return { version: plan.version, roots };
 }

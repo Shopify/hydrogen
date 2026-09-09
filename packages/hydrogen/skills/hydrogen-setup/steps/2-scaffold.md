@@ -18,6 +18,25 @@ Invoke the `hydrogen-routing` skill and create the shared route template manifes
 
 - [ ] Route templates are set up
 
+## Keep Skills In Sync
+
+The packaged skills describe the installed Hydrogen version. Chain `hydrogen skills check --mode=warn` in front of the app's `dev` script so a later `@shopify/hydrogen` bump prints the resync command the next time the dev server starts, without blocking it:
+
+```json
+{
+  "scripts": {
+    "dev": "hydrogen skills check --mode=warn && <framework dev command>"
+  }
+}
+```
+
+Keep the framework's own dev command exactly as it was; only prefix it. Do not add the plain `hydrogen skills check` (error mode) to `dev`; that belongs in CI, where a stale skill copy should fail the build.
+
+### Continue when
+
+- [ ] `dev` runs `hydrogen skills check --mode=warn` before the framework dev command
+- [ ] Running the `dev` script prints no skills warning (skills were synced by `hydrogen setup`)
+
 ## Use Standard Environment Names
 
 Use these canonical environment variable names throughout the app (kept in sync with `hydrogen-storefront-client`):
