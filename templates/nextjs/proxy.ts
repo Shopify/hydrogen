@@ -28,8 +28,10 @@ import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/stor
  *
  * The original request URL is forwarded to Server Components via
  * `requestContext.getForwardedRequestHeaders()` (carries `x-storefront-url` for
- * `not-found.tsx` and locale resolution in `lib/storefront.ts`). SFAPI response headers are merged
- * onto the forwarded response via `requestContext.applyResponseHeaders`.
+ * `not-found.tsx` and locale resolution in `lib/storefront.ts`; without it every
+ * Server Component request context silently resolves to the default locale).
+ * SFAPI response headers are merged onto the forwarded response via
+ * `requestContext.applyResponseHeaders`.
  *
  * mock.shop fallback: when no `PRIVATE_STOREFRONT_API_TOKEN` is present, the
  * shared `resolveStorefrontConfig()` falls back to `mock.shop` + its well-known

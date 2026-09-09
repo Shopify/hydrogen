@@ -18,8 +18,10 @@ export type LocaleMatchSource = Pick<Request, "url"> | URL | string;
  * locale. Unknown prefixes or hostnames, and unparsable or missing URLs, resolve to
  * `defaultLocale`.
  *
- * Only the first path segment (pathname routing) or the hostname (domain routing) is read, so
- * framework suffixes such as React Router's `.data` do not affect the result.
+ * Only the first path segment (pathname routing) or the hostname (domain routing) is read. The
+ * URL is matched as-is: framework-specific rewrites of that segment must be normalized by the
+ * caller. React Router single-fetch requests the locale root as `/fr-ca.data`, for example, so
+ * strip the suffix before matching or pass the resolved locale to `createShopifyRequestContext`.
  */
 export function matchLocale<const TI18n extends ShopifyI18n>(
   source: LocaleMatchSource | undefined,
