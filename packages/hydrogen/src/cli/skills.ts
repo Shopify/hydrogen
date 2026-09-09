@@ -29,7 +29,9 @@ const PACKAGE_JSON_FILE_NAME = "package.json";
 const HASH_ALGORITHM = "sha256";
 const STAGING_SUFFIX = ".hydrogen-sync";
 const FRONTMATTER_DELIMITER = "---";
-const FRONTMATTER_PATTERN = /^---\n([\s\S]*?)\n---(?:\n|$)/;
+// Captures the closing delimiter's terminator so injection can reproduce a
+// frontmatter-only file that ends without a newline byte for byte.
+const FRONTMATTER_PATTERN = /^---\n([\s\S]*?)\n---(\n|$)/;
 // Files editors and operating systems drop into directories; never user edits.
 const IGNORED_FILE_NAMES = new Set([".DS_Store", "Thumbs.db", "desktop.ini"]);
 
@@ -235,7 +237,7 @@ function readShippedSkill(
     throw new Error(`${skillFilePath} has no frontmatter to record Hydrogen metadata in.`);
   }
 
-  const [fullMatch, frontmatter] = frontmatterMatch;
+  const [fullMatch, frontmatter, terminator] = frontmatterMatch;
   if (/^metadata:/m.test(frontmatter)) {
     throw new Error(`${skillFilePath} already declares frontmatter metadata.`);
   }
@@ -247,7 +249,7 @@ function readShippedSkill(
       frontmatter,
       renderMetadataBlock(metadata) + FRONTMATTER_DELIMITER,
     ].join("\n") +
-    "\n" +
+    terminator +
     content.slice(fullMatch.length);
 
   return { skillName, sourceRoot, metadata, skillFile };

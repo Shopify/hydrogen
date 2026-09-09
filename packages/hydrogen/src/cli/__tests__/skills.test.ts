@@ -262,6 +262,24 @@ describe("syncSkills", () => {
     expect(readSkill(appRoot, "hydrogen-skills")).toContain('hash: "sha256:example"');
   });
 
+  it("keeps a frontmatter-only skill without a trailing newline stable across resyncs", () => {
+    const appRoot = createAppRoot();
+    const packageRoot = createPackageRoot("2026.1.0");
+    mkdirSync(join(packageRoot, "skills/hydrogen-pointer"));
+    writeFileSync(
+      join(packageRoot, "skills/hydrogen-pointer/SKILL.md"),
+      "---\nname: hydrogen-pointer\ndescription: Read node_modules/@shopify/hydrogen/skills.\n---",
+    );
+    sync(appRoot, packageRoot);
+
+    const result = sync(appRoot, packageRoot);
+
+    expect(agents(result)).toMatchObject({ unchanged: 1, skipped: [] });
+    expect(readSkill(appRoot, "hydrogen-pointer")).toMatch(
+      /\n {2}hash: "sha256:[0-9a-f]{64}"\n---$/,
+    );
+  });
+
   it("treats CRLF line endings as unmodified", () => {
     const appRoot = createAppRoot();
     const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });
