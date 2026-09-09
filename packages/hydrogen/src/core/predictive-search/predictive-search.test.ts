@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { gql } from "../../graphql";
-import { createShopifyRouteTemplates } from "../standard-routes/index";
+import { defineShopifyRouteTemplates } from "../standard-routes/index";
 import {
   createPredictiveSearchFormRegister,
   DEFAULT_PREDICTIVE_SEARCH_LIMIT,
@@ -80,7 +80,7 @@ describe("getEmptyPredictiveSearchResult", () => {
 
 describe("getPredictiveSearchItemUrl", () => {
   const term = "snow";
-  const defaultRouteTemplates = createShopifyRouteTemplates({});
+  const defaultRouteTemplates = defineShopifyRouteTemplates({});
 
   it("builds standard resource routes from predictive search item types", () => {
     expect(
@@ -132,7 +132,7 @@ describe("getPredictiveSearchItemUrl", () => {
   });
 
   it("uses the configured search route for query suggestions", () => {
-    const routeTemplates = createShopifyRouteTemplates({ search: "/find" });
+    const routeTemplates = defineShopifyRouteTemplates({ search: "/find" });
 
     expect(
       getPredictiveSearchItemUrl(mockItems.queries[0], {
@@ -143,7 +143,7 @@ describe("getPredictiveSearchItemUrl", () => {
   });
 
   it("prefers an explicit query suggestion search path", () => {
-    const routeTemplates = createShopifyRouteTemplates({ search: "/find" });
+    const routeTemplates = defineShopifyRouteTemplates({ search: "/find" });
 
     expect(
       getPredictiveSearchItemUrl(mockItems.queries[0], {
@@ -155,7 +155,7 @@ describe("getPredictiveSearchItemUrl", () => {
   });
 
   it("uses standard route templates for resource routes", () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       article: "/articles/:blogHandle/:articleHandle",
       product: "/p/:productHandle",
     });
