@@ -7,6 +7,7 @@ export {
   getSupportedLocales,
   isSameLocale,
   matchLocale,
+  resolveSupportedLocale,
 } from "./i18n/index";
 export type {
   GetLocalizedHrefOptions,
