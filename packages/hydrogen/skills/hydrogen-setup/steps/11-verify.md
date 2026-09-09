@@ -20,6 +20,7 @@ If Playwright is present, run it headless.
 
 - [ ] Every applicable script was executed in this session, after the last code change, and passed
 - [ ] `hydrogen gql check` ran as part of static checks (not skipped)
+- [ ] `dev` still starts with `hydrogen skills check --mode=warn` and prints no skills warning
 
 ## Run Runtime Smoke Tests
 
