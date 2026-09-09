@@ -1,5 +1,3 @@
-import type { I18nConfig } from "../request-context";
-
 type StandardRouteTemplateWithParam<Param extends string> =
   | `/${string}:${Param}`
   | `/${string}:${Param}/${string}`;
@@ -120,7 +118,10 @@ export type StandardRouteParamsByName = {
   productInCollection: { collectionHandle: string; productHandle: string };
   search: Record<string, never>;
 };
-export type StandardRouteOptions = Pick<I18nConfig, "pathPrefix">;
+export type StandardRouteOptions = {
+  /** App route prefix for localized paths, for example "/es-es". */
+  pathPrefix?: string;
+};
 
 export type ShopifyStandardRouteMatch<
   TRoute extends ShopifyStandardRouteName = ShopifyStandardRouteName,

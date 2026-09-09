@@ -33,15 +33,6 @@ const SHOPIFY_COOKIES = new Set([SHOPIFY_ESSENTIAL_COOKIE, ...SHOPIFY_TRACKING_C
 type StorefrontRequest = Pick<Request, "headers"> &
   Partial<Pick<Request, "method" | "signal" | "url">>;
 
-/**
- * A locale plus the URL path prefix it is served under. This is the shape of
- * `requestContext.locale` and of the `i18n` prop accepted by `ShopifyScripts`.
- */
-export type I18nConfig = ShopifyLocale & {
-  /** App route prefix for localized paths, for example "/es-es". Empty for the default locale. */
-  pathPrefix?: string;
-};
-
 type ShopifyRequestContextInputBase<TI18n extends ShopifyI18n = ShopifyI18n> = {
   request: StorefrontRequest;
   /** Module-scope definition from `defineShopifyI18n`. */
