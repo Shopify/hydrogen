@@ -242,6 +242,26 @@ describe("syncSkills", () => {
     expect(claude(result).skipped).toHaveLength(0);
   });
 
+  it("treats a skill that documents the metadata block in its body as unmodified", () => {
+    const appRoot = createAppRoot();
+    const documentedBlock = [
+      "```yaml",
+      "metadata:",
+      '  source: "@shopify/hydrogen"',
+      '  version: "2026.1.0"',
+      '  hash: "sha256:example"',
+      "```",
+      "",
+    ].join("\n");
+    const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-skills": documentedBlock });
+    sync(appRoot, packageRoot);
+
+    const result = sync(appRoot, packageRoot);
+
+    expect(agents(result)).toMatchObject({ unchanged: 1, skipped: [] });
+    expect(readSkill(appRoot, "hydrogen-skills")).toContain('hash: "sha256:example"');
+  });
+
   it("treats CRLF line endings as unmodified", () => {
     const appRoot = createAppRoot();
     const packageRoot = createPackageRoot("2026.1.0", { "hydrogen-cart-ui": "Cart.\n" });

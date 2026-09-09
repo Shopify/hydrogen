@@ -41,6 +41,12 @@ const METADATA_BLOCK_PATTERN = new RegExp(
   `^metadata:\\n {2}source: "${PACKAGE_NAME}"\\n {2}version: "([^"\\n]*)"\\n {2}hash: "([^"\\n]*)"\\n`,
   "m",
 );
+/**
+ * Hashing strips every occurrence, not just the first: a skill whose body
+ * documents the block would otherwise hash differently before and after
+ * injection and read as locally modified forever.
+ */
+const METADATA_BLOCK_GLOBAL_PATTERN = new RegExp(METADATA_BLOCK_PATTERN.source, "gm");
 
 interface SkillMetadata {
   version: string;
@@ -201,7 +207,9 @@ function hashSkillDirectory(skillRoot: string): string {
 
   for (const relativePath of listFilesRecursively(skillRoot)) {
     let content = readNormalizedText(join(skillRoot, relativePath));
-    if (relativePath === SKILL_FILE_NAME) content = content.replace(METADATA_BLOCK_PATTERN, "");
+    if (relativePath === SKILL_FILE_NAME) {
+      content = content.replaceAll(METADATA_BLOCK_GLOBAL_PATTERN, "");
+    }
 
     hash.update(relativePath);
     hash.update("\0");
