@@ -328,6 +328,12 @@ describe("getLocalizedHref", () => {
     );
   });
 
+  it("still rejects unsupported locales without routing", () => {
+    expect(() =>
+      getLocalizedHref("/products/x", { i18n: singleLocale, locale: FR_CA }),
+    ).toThrowError(/FR-CA is not defined/);
+  });
+
   describe("pathname routing", () => {
     it.each([
       ["/products/x", FR_CA, "/fr-ca/products/x"],
