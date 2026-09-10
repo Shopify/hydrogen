@@ -10,6 +10,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
+  SHOPIFY_ACCOUNT_WIDGET_SCRIPT,
 } from "./constants";
 import { getShopifyGlobalBootstrapScript } from "./global";
 import { getPerfKitScript } from "./perfkit";
@@ -34,6 +35,7 @@ export {
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
+  SHOPIFY_ACCOUNT_WIDGET_SCRIPT,
 } from "./constants";
 export { getShopifyGlobal, getShopifyGlobalBootstrapScript } from "./global";
 export { initializeShopifyScripts } from "./initialize";
@@ -65,6 +67,7 @@ export function getShopifyScriptTags({
   shop,
   shopifyAnalytics = true,
   inbox = false,
+  accountWidget = false,
 }: ShopifyScriptTagsOptions): ShopifyScriptTagDescriptors {
   const nonceAttributes = nonce !== undefined ? { nonce } : undefined;
   const analyticsConfig = getShopifyAnalyticsConfig({ analytics, consent, shop });
@@ -139,6 +142,19 @@ export function getShopifyScriptTags({
     });
   }
 
+  if (accountWidget) {
+    scripts.push({
+      tagName: "script",
+      attributes: {
+        id: "shopify-account-widget",
+        type: "module",
+        async: true,
+        crossorigin: "anonymous",
+        ...nonceAttributes,
+        src: SHOPIFY_ACCOUNT_WIDGET_SCRIPT,
+      },
+    });
+  }
   // Install readiness listeners before loading the async consent library so a
   // cached script cannot finish initialization before Hydrogen starts listening.
   scripts.push({

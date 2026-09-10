@@ -87,6 +87,7 @@ export type ShopifyScriptTagsOptions = {
   nonce?: string;
   shop: ShopifyScriptsShop;
   shopifyAnalytics?: boolean;
+  accountWidget?: boolean;
 };
 
 export type ShopifyRoutesOptions = {
