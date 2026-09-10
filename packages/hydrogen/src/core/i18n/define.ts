@@ -89,7 +89,13 @@ export function getSupportedLocales(i18n: ShopifyI18n): ShopifySupportedLocale[]
 
   // Domain routing lists the default locale itself (it needs a hostname); pathname routing
   // keeps it out of the list so the default stays unprefixed.
-  if (routing.type === "domain") return [...routing.locales];
+  if (routing.type === "domain") {
+    const isDefault = (locale: ShopifyLocale) => isSameLocale(locale, i18n.defaultLocale);
+    return [
+      ...routing.locales.filter(isDefault),
+      ...routing.locales.filter((locale) => !isDefault(locale)),
+    ];
+  }
 
   return [i18n.defaultLocale, ...routing.locales];
 }
