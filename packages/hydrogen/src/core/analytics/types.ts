@@ -164,8 +164,23 @@ export type StorefrontAnalyticsDestinationSetupContext = {
   getConfig: () => StorefrontAnalyticsConfig;
 };
 
+/**
+ * PROTOTYPE: Consent purpose a destination requires before it receives events.
+ *
+ * - `"analytics"` (default): delivered only when Customer Privacy reports
+ *   analytics processing is allowed. Events published before consent are
+ *   buffered and replayed once granted.
+ * - `"essential"`: delivered regardless of consent state, including before
+ *   Customer Privacy loads and after the shopper declines. Only use for
+ *   first-party processing the merchant has classified as strictly necessary
+ *   (equivalent to a Liquid custom pixel with permission "Not required").
+ *   The merchant, not Hydrogen, owns that classification.
+ */
+export type StorefrontAnalyticsDestinationConsent = "analytics" | "essential";
+
 export type StorefrontAnalyticsDestination = {
   name: string;
+  consent?: StorefrontAnalyticsDestinationConsent;
   setup: (
     context: StorefrontAnalyticsDestinationSetupContext,
   ) => void | (() => void) | Promise<void | (() => void)>;

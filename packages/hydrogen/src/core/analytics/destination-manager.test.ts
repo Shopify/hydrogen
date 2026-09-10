@@ -68,6 +68,89 @@ describe("createDestinationManager", () => {
     });
   });
 
+  describe("essential destinations (PROTOTYPE)", () => {
+    it("delivers live events while tracking is blocked", () => {
+      const { manager } = createTestManager(() => false);
+      const essential = vi.fn();
+      const gated = vi.fn();
+
+      manager.addDestination({
+        name: "essential-ga",
+        consent: "essential",
+        setup({ subscribe }) {
+          subscribe("page_viewed", essential);
+        },
+      });
+      manager.addDestination({
+        name: "gated",
+        setup({ subscribe }) {
+          subscribe("page_viewed", gated);
+        },
+      });
+
+      manager.onPublish("page_viewed", { url: "/blocked" });
+
+      expect(essential).toHaveBeenCalledWith({ url: "/blocked" });
+      expect(gated).not.toHaveBeenCalled();
+    });
+
+    it("replays buffered events to a late essential destination while blocked", () => {
+      const { manager } = createTestManager(() => false);
+      const essential = vi.fn();
+
+      manager.onPublish("page_viewed", { url: "/early" });
+
+      manager.addDestination({
+        name: "essential-ga",
+        consent: "essential",
+        setup({ subscribe }) {
+          subscribe("page_viewed", essential);
+        },
+      });
+
+      expect(essential).toHaveBeenCalledOnce();
+      expect(essential).toHaveBeenCalledWith({ url: "/early" });
+    });
+
+    it("keeps delivering after consent is declined", () => {
+      const { manager } = createTestManager(() => false);
+      const essential = vi.fn();
+
+      manager.addDestination({
+        name: "essential-ga",
+        consent: "essential",
+        setup({ subscribe }) {
+          subscribe("page_viewed", essential);
+        },
+      });
+
+      manager.replay(true);
+      manager.onPublish("page_viewed", { url: "/after-decline" });
+
+      expect(essential).toHaveBeenCalledWith({ url: "/after-decline" });
+    });
+
+    it("does not deliver an event twice to an essential destination", () => {
+      let canTrack = false;
+      const { manager } = createTestManager(() => canTrack);
+      const essential = vi.fn();
+
+      manager.addDestination({
+        name: "essential-ga",
+        consent: "essential",
+        setup({ subscribe }) {
+          subscribe("page_viewed", essential);
+        },
+      });
+
+      manager.onPublish("page_viewed", { url: "/once" });
+      canTrack = true;
+      manager.replay();
+
+      expect(essential).toHaveBeenCalledOnce();
+    });
+  });
+
   describe("replay", () => {
     it("replays buffered events after tracking is granted", () => {
       let canTrack = false;
