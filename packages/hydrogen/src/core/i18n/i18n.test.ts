@@ -151,6 +151,24 @@ describe("getSupportedLocales", () => {
       { ...FR_CA, hostname: "FR.example.ca" },
     ]);
   });
+
+  it("moves the default's domain entry to the front regardless of definition order", () => {
+    const i18n = defineShopifyI18n({
+      defaultLocale: EN_US,
+      routing: {
+        type: "domain",
+        locales: [
+          { ...FR_CA, hostname: "fr.example.ca" },
+          { ...EN_US, hostname: "example.com" },
+        ],
+      },
+    });
+
+    expect(getSupportedLocales(i18n)).toEqual([
+      { ...EN_US, hostname: "example.com" },
+      { ...FR_CA, hostname: "fr.example.ca" },
+    ]);
+  });
 });
 
 describe("matchLocale", () => {
