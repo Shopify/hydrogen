@@ -20,7 +20,7 @@ import { cartHandlers } from "~/lib/cart-handlers";
 import { envContext } from "~/lib/env";
 import { routeTemplates } from "~/lib/route-templates";
 import { createRequestSessionManager } from "~/lib/session";
-import { analyticsConsent, analyticsShop, shop, storefrontConfig } from "~/lib/shop";
+import { analyticsConsent, shop, storefrontConfig } from "~/lib/shop";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -100,8 +100,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return {
     cartData: cartResult.data,
     navCollections: navResult.data?.collections.nodes ?? [],
-    analyticsShop,
-    consent: analyticsConsent,
     enableAnalyticsTestTap: env.MOCK_SHOP === "1",
   };
 }
@@ -142,11 +140,7 @@ export function Layout({ children }: { children: ReactNode }) {
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <CartProvider initialData={loaderData.cartData}>
-      <AnalyticsTracker
-        shop={loaderData.analyticsShop}
-        consent={loaderData.consent}
-        enableTestTap={loaderData.enableAnalyticsTestTap}
-      />
+      <AnalyticsTracker enableTestTap={loaderData.enableAnalyticsTestTap} />
       <CartAnalyticsTracker />
       <div
         role="region"
