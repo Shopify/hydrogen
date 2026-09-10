@@ -175,9 +175,9 @@ function validateDomainLocales(
     if (isSameLocale(locale, defaultLocale)) defaultListed = true;
 
     const hostname = locale.hostname;
-    if (typeof hostname !== "string" || hostname.trim() === "" || /[\s/:]/.test(hostname)) {
+    if (typeof hostname !== "string" || parseHostname(hostname) !== hostname.toLowerCase()) {
       throw new Error(
-        `defineShopifyI18n: ${label} has invalid hostname ${JSON.stringify(hostname)}. Use a bare hostname with no scheme, port, or path, for example "fr.example.com".`,
+        `defineShopifyI18n: ${label} has invalid hostname ${JSON.stringify(hostname)}. Use the bare hostname exactly as URL.hostname reports it (no scheme, port, or path; punycode for non-ASCII), for example "fr.example.com".`,
       );
     }
 
@@ -195,5 +195,19 @@ function validateDomainLocales(
     throw new Error(
       `defineShopifyI18n: defaultLocale ${formatLocale(defaultLocale)} must appear in domain routing.locales so it has a canonical hostname.`,
     );
+  }
+}
+
+/**
+ * Matching compares `URL.hostname`, which lowercases, strips userinfo/port/path, and encodes
+ * Unicode as punycode. Returns that canonical form, or `undefined` when the value is not a
+ * hostname at all, so the caller can reject anything that would define fine but never match.
+ */
+function parseHostname(hostname: string): string | undefined {
+  if (hostname === "") return undefined;
+  try {
+    return new URL(`https://${hostname}`).hostname;
+  } catch {
+    return undefined;
   }
 }
