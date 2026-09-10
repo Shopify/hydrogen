@@ -6,7 +6,6 @@ import { headers } from "next/headers";
 import { customerAccountConfig, i18n } from "./config";
 import { EncryptedCookieCustomerSession } from "./customer-session";
 import { getSessionSecret } from "./env";
-import { SITE_ORIGIN } from "./site";
 import { isCustomerAccountsAvailable } from "./storefront-config";
 
 let customerSession: ReturnType<typeof createCustomerSession> | undefined;
@@ -44,11 +43,6 @@ export function createEphemeralSessionManager(request: Request) {
   };
 }
 
-export async function createCurrentRequest(pathname = "/account") {
-  const requestHeaders = await headers();
-  return new Request(new URL(pathname, SITE_ORIGIN), { headers: requestHeaders });
-}
-
 export async function isCustomerLoggedIn() {
   if (!isCustomerAccountsAvailable()) return false;
   const { requestContext, sessionManager } = await createCustomerRequestContext();
@@ -63,11 +57,16 @@ export async function getCustomerAccessToken() {
   };
 }
 
-async function createCustomerRequestContext(pathname = "/account") {
-  const request = await createCurrentRequest(pathname);
+/**
+ * Server Component read context. Built from `headers()` only, like `lib/storefront.ts`: the
+ * forwarded `x-storefront-url` (set by `proxy.ts`) drives `requestContext.url` and the locale.
+ * A synthetic `Request` with a fixed origin would win over that header and pin every RSC account
+ * read to the default locale.
+ */
+async function createCustomerRequestContext() {
+  const requestHeaders = await headers();
   return {
-    request,
-    requestContext: createShopifyRequestContext({ request, i18n }),
-    sessionManager: await createCustomerSessionManager(request),
+    requestContext: createShopifyRequestContext({ request: { headers: requestHeaders }, i18n }),
+    sessionManager: await EncryptedCookieCustomerSession.read(requestHeaders, getSessionSecret()),
   };
 }
