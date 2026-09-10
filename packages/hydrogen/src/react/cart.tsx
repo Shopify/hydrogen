@@ -29,7 +29,12 @@ const DEFAULT_CART_ENDPOINT = "/api/cart";
 
 let cartEndpoint = DEFAULT_CART_ENDPOINT;
 
-const CartContext = createContext<CartStore | null>(null);
+interface CartContextValue {
+  store: CartStore;
+  hydrationSnapshot: CartState;
+}
+
+const CartContext = createContext<CartContextValue | null>(null);
 
 export function configureCartEndpoint(endpoint: string): void {
   cartEndpoint = endpoint;
@@ -97,9 +102,7 @@ export function createCartComponents<THandlers>(): TypedCartComponents<
     selector: (state: CartState<TData>) => S,
     isEqual?: (a: S, b: S) => boolean,
   ): S {
-    const readyPromise = useCart((state) => state.readyPromise);
-    if (readyPromise) throw readyPromise;
-    return useCart(selector, isEqual);
+    return useSuspenseCartSelector(selector, isEqual);
   }
 
   return {
@@ -113,12 +116,16 @@ export function createCartComponents<THandlers>(): TypedCartComponents<
 }
 
 export function useCartStore(hookName = "useCart"): CartStore {
-  const store = useContext(CartContext);
-  if (!store) throw new Error(`${hookName} must be used inside <CartProvider>.`);
-  return store;
+  return useCartContext(hookName).store;
 }
 
-function useOptionalCartStore(): CartStore | null {
+function useCartContext(hookName = "useCart"): CartContextValue {
+  const context = useContext(CartContext);
+  if (!context) throw new Error(`${hookName} must be used inside <CartProvider>.`);
+  return context;
+}
+
+function useOptionalCartContext(): CartContextValue | null {
   return useContext(CartContext);
 }
 
@@ -129,8 +136,13 @@ export function CartProvider({
   initialData?: CartInitialData;
   children?: ReactNode;
 }) {
-  // oxlint-disable-next-line react-hooks/exhaustive-deps -- store is created once with the initial server data
-  const store = useMemo(() => createCartStore({ initialData }), []);
+  const context = useMemo(() => {
+    const store = createCartStore({ initialData });
+    // Plain consumers must hydrate from the state used for SSR, even if the live store settles first.
+    return { store, hydrationSnapshot: store.getState() };
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- provider initialData seeds one store for its lifetime
+  }, []);
+  const { store } = context;
 
   useEffect(() => {
     configureCoreCartEndpoint(cartEndpoint);
@@ -140,15 +152,15 @@ export function CartProvider({
     };
   }, [store]);
 
-  return <CartContext.Provider value={store}>{children}</CartContext.Provider>;
+  return <CartContext.Provider value={context}>{children}</CartContext.Provider>;
 }
 
 export function useCart<TData extends CartData = CartData, S = unknown>(
   selector: (state: CartState<TData>) => S,
   isEqual?: (a: S, b: S) => boolean,
 ): S {
-  const store = useCartStore();
-  return useCartSelector(store, selector, isEqual) as S;
+  const { store, hydrationSnapshot } = useCartContext();
+  return useCartSelector(store, hydrationSnapshot, selector, isEqual) as S;
 }
 
 export function useCartActions(): CartActions {
@@ -171,41 +183,102 @@ export function useOptionalCart<TData extends CartData = CartData, S = unknown>(
   selector: (state: CartState<TData>) => S,
   isEqual?: (a: S, b: S) => boolean,
 ): S | undefined {
-  const store = useOptionalCartStore();
-  if (!store) return undefined;
-  return useCartSelector(store, selector, isEqual);
+  const context = useOptionalCartContext();
+  if (!context) return undefined;
+  return useCartSelector(context.store, context.hydrationSnapshot, selector, isEqual);
 }
 
 function useCartSelector<TData extends CartData = CartData, S = unknown>(
   store: CartStore,
+  hydrationSnapshot: CartState,
   selector: (state: CartState<TData>) => S,
   isEqual?: (a: S, b: S) => boolean,
 ): S {
-  const cachedRef = useRef<{ state: unknown; selector: typeof selector; value: S } | null>(null);
+  const liveCacheRef = useRef<SelectorCache<S> | null>(null);
+  const hydrationCacheRef = useRef<SelectorCache<S> | null>(null);
 
+  const getSnapshot = () =>
+    selectCartSnapshot(store.getState() as CartState<TData>, selector, isEqual, liveCacheRef);
+  const getServerSnapshot = () =>
+    selectCartSnapshot(hydrationSnapshot as CartState<TData>, selector, isEqual, hydrationCacheRef);
+
+  return useSyncExternalStore(store.subscribe, getSnapshot, getServerSnapshot);
+}
+
+interface SelectorCache<S> {
+  state: unknown;
+  selector: unknown;
+  value: S;
+}
+
+function selectCartSnapshot<TData extends CartData, S>(
+  state: CartState<TData>,
+  selector: (state: CartState<TData>) => S,
+  isEqual: ((a: S, b: S) => boolean) | undefined,
+  cacheRef: { current: SelectorCache<S> | null },
+): S {
+  if (cacheRef.current?.state === state && cacheRef.current.selector === selector) {
+    return cacheRef.current.value;
+  }
+
+  const next = selector(state);
+
+  if (cacheRef.current && isEqual?.(cacheRef.current.value, next)) {
+    cacheRef.current = { state, selector, value: cacheRef.current.value };
+    return cacheRef.current.value;
+  }
+
+  cacheRef.current = { state, selector, value: next };
+  return next;
+}
+
+type SuspenseSnapshot<S> =
+  | { status: "pending"; promise: PromiseLike<void> }
+  | { status: "ready"; value: S };
+
+interface SuspenseSelectorCache<S> {
+  state: unknown;
+  selector: unknown;
+  snapshot: SuspenseSnapshot<S>;
+}
+
+function useSuspenseCartSelector<TData extends CartData, S>(
+  selector: (state: CartState<TData>) => S,
+  isEqual?: (a: S, b: S) => boolean,
+): S {
+  const { store } = useCartContext();
+  const cacheRef = useRef<SuspenseSelectorCache<S> | null>(null);
+
+  // Suspense retries must read live readiness and data; the hydration snapshot would freeze the fallback.
   const getSnapshot = () => {
     const state = store.getState() as CartState<TData>;
 
-    if (
-      cachedRef.current &&
-      cachedRef.current.state === state &&
-      cachedRef.current.selector === selector
-    ) {
-      return cachedRef.current.value;
+    if (cacheRef.current?.state === state && cacheRef.current.selector === selector) {
+      return cacheRef.current.snapshot;
     }
 
-    const next = selector(state);
-
-    if (cachedRef.current && isEqual?.(cachedRef.current.value, next)) {
-      cachedRef.current = { state, selector, value: cachedRef.current.value };
-      return cachedRef.current.value;
+    if (state.readyPromise) {
+      const snapshot: SuspenseSnapshot<S> = { status: "pending", promise: state.readyPromise };
+      cacheRef.current = { state, selector, snapshot };
+      return snapshot;
     }
 
-    cachedRef.current = { state, selector, value: next };
-    return next;
+    const value = selector(state);
+    const previous = cacheRef.current?.snapshot;
+
+    if (previous?.status === "ready" && isEqual?.(previous.value, value)) {
+      cacheRef.current = { state, selector, snapshot: previous };
+      return previous;
+    }
+
+    const snapshot: SuspenseSnapshot<S> = { status: "ready", value };
+    cacheRef.current = { state, selector, snapshot };
+    return snapshot;
   };
 
-  return useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot);
+  const snapshot = useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot);
+  if (snapshot.status === "pending") throw snapshot.promise;
+  return snapshot.value;
 }
 
 export function useCartForm() {
