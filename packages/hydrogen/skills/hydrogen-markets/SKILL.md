@@ -174,11 +174,19 @@ export function getAlternateLinks(currentUrl: string, currentLocale: ShopifyLoca
   return getSupportedLocales(i18n)
     .filter((locale) => !isSameLocale(locale, currentLocale))
     .map((locale) => ({
-      hreflang: `${locale.language}-${locale.country}`.toLowerCase(),
+      hreflang: toHreflang(locale),
       href: getLocalizedHref(currentUrl, { i18n, locale }),
     }));
 }
+
+// BCP 47 allows one region subtag. Regional language codes (`PT_BR`, `ZH_TW`) already carry one,
+// so keep the primary language and let `country` name the region: PT_BR + BR -> `pt-BR`.
+function toHreflang({ language, country }: ShopifyLocale): string {
+  return `${language.replace(/_.*$/, "").toLowerCase()}-${country}`;
+}
 ```
+
+- `hreflang` values are `language-REGION`. Do not build them as `${language}-${country}`: Shopify's regional language codes would yield two region subtags (`pt-br-BR`), which is invalid.
 
 - `getLocalizedHref(href, { i18n, locale })` rewrites an href to the same page in another locale. Under pathname routing it returns a path with any existing locale prefix replaced; under domain routing it returns an absolute `https:` URL on the target hostname; with no routing it returns the input unchanged. It throws when `locale` is not defined in `i18n`.
 - `getSupportedLocales(i18n)` returns every locale the definition can resolve to, default first, keeping `pathSegment` / `hostname` and any extra fields.
