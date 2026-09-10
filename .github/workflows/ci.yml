@@ -54,3 +54,55 @@ jobs:
 
       - name: Test
         run: pnpm run test
+
+  local-https:
+    name: Local HTTPS (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Provision local HTTPS certificate
+        if: runner.os != 'Windows'
+        run: pnpm https:setup
+
+      - name: Provision local HTTPS certificate on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          # GitHub-hosted runners cannot accept Windows' root-store prompt.
+          # Generate the same CA and provide it directly to Node's TLS verifier.
+          TRUST_STORES: none
+        run: |
+          pnpm https:setup
+          $rootCertificate = Join-Path $env:LOCALAPPDATA 'mkcert\rootCA.pem'
+          if (!(Test-Path $rootCertificate)) {
+            throw "mkcert root CA was not created at $rootCertificate"
+          }
+          Add-Content -Path $env:GITHUB_ENV -Value "NODE_EXTRA_CA_CERTS=$rootCertificate"
+
+      - name: Verify trusted local HTTPS
+        run: pnpm run test:local-https
