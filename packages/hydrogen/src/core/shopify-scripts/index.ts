@@ -58,6 +58,7 @@ export type {
  * component. Frameworks without a binding can render these descriptors during SSR and call
  * `initializeShopifyScripts()` during browser hydration.
  */
+// oxlint-disable-next-line complexity -- ordered assembly of optional Shopify script tags; each flag adds one branch and splitting would obscure the required load order
 export function getShopifyScriptTags({
   analytics,
   consent,

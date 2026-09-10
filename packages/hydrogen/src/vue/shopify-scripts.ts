@@ -27,6 +27,7 @@ const consentProp: PropType<ShopifyScriptTagsOptions["consent"]> = Object;
 const analyticsProp: PropType<ShopifyScriptTagsOptions["analytics"]> = Object;
 const debugProp: PropType<ShopifyScriptTagsOptions["debug"]> = Object;
 const inboxProp: PropType<ShopifyScriptTagsOptions["inbox"]> = Boolean;
+const accountWidgetProp: PropType<ShopifyScriptTagsOptions["accountWidget"]> = Boolean;
 
 export const ShopifyScripts = defineComponent({
   name: "ShopifyScripts",
@@ -65,6 +66,10 @@ export const ShopifyScripts = defineComponent({
     },
     inbox: {
       type: inboxProp,
+      default: undefined,
+    },
+    accountWidget: {
+      type: accountWidgetProp,
       default: undefined,
     },
     shopifyAnalytics: {
