@@ -131,14 +131,42 @@ describe("defineShopifyI18n", () => {
       ).toThrowError(/must appear in domain routing.locales/);
     });
 
-    it("rejects hostnames carrying a scheme, port, or path", () => {
-      for (const hostname of ["https://example.com", "example.com:5173", "example.com/fr", ""]) {
-        expect(() =>
-          defineShopifyI18n({
-            defaultLocale: EN_US,
-            routing: { type: "domain", locales: [{ ...EN_US, hostname }] },
-          }),
+    it("rejects hostnames that are not the canonical URL.hostname form", () => {
+      const invalidHostnames = [
+        "https://example.com",
+        "example.com:5173",
+        "example.com/fr",
+        "",
+        "example.com?x",
+        "example.com\\x",
+        "user@example.com",
+        "a b.com",
+        "münchen.example",
+      ];
+      for (const hostname of invalidHostnames) {
+        expect(
+          () =>
+            defineShopifyI18n({
+              defaultLocale: EN_US,
+              routing: { type: "domain", locales: [{ ...EN_US, hostname }] },
+            }),
+          hostname,
         ).toThrowError(/invalid hostname/);
+      }
+    });
+
+    it("accepts hostnames in the form URL.hostname reports, case-insensitively", () => {
+      for (const hostname of [
+        "example.com",
+        "EXAMPLE.com",
+        "xn--mnchen-3ya.example",
+        "localhost",
+      ]) {
+        const i18n = defineShopifyI18n({
+          defaultLocale: EN_US,
+          routing: { type: "domain", locales: [{ ...EN_US, hostname }] },
+        });
+        expect(matchLocale(`https://${hostname}/products/x`, i18n)).toMatchObject({ hostname });
       }
     });
 
