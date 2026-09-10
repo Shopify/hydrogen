@@ -69,16 +69,23 @@ export type ShopifyI18n = {
 
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
-type RoutingLocaleEntry<TI18n extends ShopifyI18n> = TI18n["routing"] extends {
+/**
+ * `TRouting` is a naked type parameter so this distributes over `ShopifyI18nRouting | undefined`.
+ * Under domain routing the default locale is one of the entries (it carries the hostname), so
+ * the raw `defaultLocale` is not part of the union there.
+ */
+type SupportedLocaleForRouting<TDefault, TRouting> = TRouting extends {
+  type: "domain";
   locales: readonly (infer TLocale)[];
 }
   ? TLocale
-  : never;
+  : TRouting extends { type: "pathname"; locales: readonly (infer TLocale)[] }
+    ? TDefault | TLocale
+    : TDefault;
 
 /** Every locale entry a definition can resolve to, keeping any extra per-locale fields. */
 export type ShopifySupportedLocale<TI18n extends ShopifyI18n = ShopifyI18n> =
-  | TI18n["defaultLocale"]
-  | RoutingLocaleEntry<TI18n>;
+  SupportedLocaleForRouting<TI18n["defaultLocale"], TI18n["routing"]>;
 
 /**
  * A locale resolved for one request. `pathSegment` is replaced by the derived `pathPrefix`
