@@ -13,6 +13,7 @@ import {
   SHOPIFY_PRIVACY_BANNER_SCRIPT,
   SHOPIFY_SHOP_APP_ORIGIN,
   SHOPIFY_INBOX_SCRIPT,
+  SHOPIFY_ACCOUNT_WIDGET_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
@@ -98,6 +99,7 @@ describe("ShopifyScripts", () => {
         routes: routeTemplates,
         shop: TEST_SHOP,
         inbox: true,
+        accountWidget: true,
       }),
     );
 
@@ -120,6 +122,9 @@ describe("ShopifyScripts", () => {
     expect(html).toContain("shopify-standard-events-inspector");
     expect(html).toContain(
       `<script id="shopify-inbox" type="module" async="" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_INBOX_SCRIPT}"></script>`,
+    );
+    expect(html).toContain(
+      `<script id="shopify-account-widget" type="module" async="" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_ACCOUNT_WIDGET_SCRIPT}"></script>`,
     );
     expect(html).not.toContain("<shopify-chat");
     expect(html).toContain(`id="shopify-perfkit"`);

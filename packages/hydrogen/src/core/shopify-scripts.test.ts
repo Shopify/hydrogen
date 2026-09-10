@@ -14,6 +14,7 @@ import {
   SHOPIFY_PERF_KIT_SCRIPT,
   SHOPIFY_SHOP_APP_ORIGIN,
   SHOPIFY_INBOX_SCRIPT,
+  SHOPIFY_ACCOUNT_WIDGET_SCRIPT,
   SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
@@ -645,6 +646,45 @@ describe("shopify scripts", () => {
       ),
     ).toBeLessThan(
       descriptors.scripts.findIndex(({ attributes }) => attributes?.src === SHOPIFY_INBOX_SCRIPT),
+    );
+  });
+
+  it("includes the async account widget module when enabled", () => {
+    const descriptors = getShopifyScriptTags({
+      nonce: "test-nonce",
+      shop: TEST_SHOP,
+      accountWidget: true,
+    });
+
+    expect(descriptors.scripts).toContainEqual({
+      tagName: "script",
+      attributes: {
+        id: "shopify-account-widget",
+        type: "module",
+        async: true,
+        crossorigin: "anonymous",
+        nonce: "test-nonce",
+        src: SHOPIFY_ACCOUNT_WIDGET_SCRIPT,
+      },
+    });
+    expect(
+      descriptors.scripts.findIndex(
+        ({ attributes }) => attributes?.src === SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
+      ),
+    ).toBeLessThan(
+      descriptors.scripts.findIndex(
+        ({ attributes }) => attributes?.src === SHOPIFY_ACCOUNT_WIDGET_SCRIPT,
+      ),
+    );
+  });
+
+  it("omits the account widget module by default", () => {
+    const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
+
+    expect(descriptors.scripts).not.toContainEqual(
+      expect.objectContaining({
+        attributes: expect.objectContaining({ src: SHOPIFY_ACCOUNT_WIDGET_SCRIPT }),
+      }),
     );
   });
 
