@@ -7,6 +7,8 @@ import type {
   ShopifySupportedLocale,
 } from "./types";
 
+const VALIDATION_URL_BASE = "https://shopify.local";
+
 /**
  * Defines the module-scope internationalization configuration for a storefront.
  *
@@ -127,13 +129,10 @@ function validatePathnameLocales(
     }
     seenLocales.push(locale);
 
-    if (locale.pathSegment !== undefined) {
-      const segment = locale.pathSegment;
-      if (segment.trim() === "" || /[\s/]/.test(segment)) {
-        throw new Error(
-          `defineShopifyI18n: ${label} has invalid pathSegment ${JSON.stringify(segment)}. Use a single path segment with no slashes or whitespace, for example "br".`,
-        );
-      }
+    if (locale.pathSegment !== undefined && !isSinglePathSegment(locale.pathSegment)) {
+      throw new Error(
+        `defineShopifyI18n: ${label} has invalid pathSegment ${JSON.stringify(locale.pathSegment)}. Use one path segment that URL parsing leaves unchanged: no slashes, whitespace, "?", "#", "\\", or characters that need percent-encoding, for example "br".`,
+      );
     }
 
     const segment = getLocalePathSegment(locale);
@@ -145,6 +144,16 @@ function validatePathnameLocales(
     }
     seenSegments.set(segment, locale);
   }
+}
+
+/**
+ * Matching compares `URL.pathname` against the segment verbatim, so anything the URL parser
+ * normalizes away (`.`, `..`, `?`, `#`, `\`) or percent-encodes (whitespace, non-ASCII) would
+ * define fine but never match a request.
+ */
+function isSinglePathSegment(segment: string): boolean {
+  if (segment === "" || segment.includes("/")) return false;
+  return new URL(`/${segment}`, VALIDATION_URL_BASE).pathname === `/${segment}`;
 }
 
 function validateDomainLocales(

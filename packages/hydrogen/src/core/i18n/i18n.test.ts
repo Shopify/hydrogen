@@ -70,14 +70,41 @@ describe("defineShopifyI18n", () => {
       ).toThrowError(/listed more than once/);
     });
 
-    it("rejects path segments containing slashes or whitespace", () => {
-      for (const pathSegment of ["/br", "br/", "b r", "", "  "]) {
-        expect(() =>
-          defineShopifyI18n({
-            defaultLocale: EN_US,
-            routing: { type: "pathname", locales: [{ ...PT_BR, pathSegment }] },
-          }),
+    it("rejects path segments that URL parsing would normalize or encode", () => {
+      const invalidSegments = [
+        "/br",
+        "br/",
+        "b r",
+        "",
+        "  ",
+        ".",
+        "..",
+        "fr?ca",
+        "fr#ca",
+        "fr\\ca",
+        "é",
+      ];
+      for (const pathSegment of invalidSegments) {
+        expect(
+          () =>
+            defineShopifyI18n({
+              defaultLocale: EN_US,
+              routing: { type: "pathname", locales: [{ ...PT_BR, pathSegment }] },
+            }),
+          pathSegment,
         ).toThrowError(/invalid pathSegment/);
+      }
+    });
+
+    it("accepts path segments that round-trip through URL parsing", () => {
+      for (const pathSegment of ["br", "BR", "pt-br", "x.y", "~x", "%41"]) {
+        const i18n = defineShopifyI18n({
+          defaultLocale: EN_US,
+          routing: { type: "pathname", locales: [{ ...PT_BR, pathSegment }] },
+        });
+        expect(matchLocale(`https://example.com/${pathSegment}/products/x`, i18n)).toMatchObject(
+          PT_BR,
+        );
       }
     });
 
