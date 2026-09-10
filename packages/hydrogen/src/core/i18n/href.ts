@@ -25,12 +25,14 @@ export type GetLocalizedHrefOptions = {
  * @throws when `locale` is not defined in `i18n`.
  */
 export function getLocalizedHref(href: string, { i18n, locale }: GetLocalizedHrefOptions): string {
+  // Validate first so an unsupported locale throws regardless of routing strategy.
+  const target = resolveSupportedLocale(locale, i18n);
+
   const routing = i18n.routing;
   if (!routing) return href;
 
   const absolute = isAbsoluteUrl(href);
   const url = new URL(href, RELATIVE_URL_BASE);
-  const target = resolveSupportedLocale(locale, i18n);
 
   switch (routing.type) {
     case "pathname": {
