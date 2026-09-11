@@ -2230,8 +2230,22 @@ function getAddPayload(
     : Math.max(DEFAULT_ADD_QUANTITY, rawQuantity);
   const rawSellingPlanId = formData.get("sellingPlanId") as string | null;
   const sellingPlanId = rawSellingPlanId || undefined;
+  const rawAttributes = getCartAttributeFormEntries(formData);
+  const attributes: AddLineAttribute[] | undefined =
+    rawAttributes.length > 0
+      ? rawAttributes
+          .filter(({ key }) => key !== "")
+          .map(({ key, value }) => ({ key, value: String(value) }))
+      : undefined;
   return {
-    lines: [{ merchandiseId, quantity, ...(sellingPlanId ? { sellingPlanId } : {}) }],
+    lines: [
+      {
+        merchandiseId,
+        quantity,
+        ...(sellingPlanId ? { sellingPlanId } : {}),
+        ...(attributes ? { attributes } : {}),
+      },
+    ],
     products: extractProductDetails(eventDetail),
     ...(eventDetail ? { eventDetail } : {}),
   };
@@ -2283,10 +2297,12 @@ async function handleFormSubmitInStore(
     return dispatchTransaction(store, "set_note", { note });
   }
   if (intent === "attributes-update") {
-    const attributes = getCartAttributeFormEntries(formData).map(({ key, value }) => ({
-      key,
-      value: String(value),
-    }));
+    const attributes = getCartAttributeFormEntries(formData)
+      .filter(({ key }) => key !== "")
+      .map(({ key, value }) => ({
+        key,
+        value: String(value),
+      }));
     return dispatchTransaction(store, "set_attributes", { attributes });
   }
   throw new Error(`Unknown cart form intent: "${intent}"`);

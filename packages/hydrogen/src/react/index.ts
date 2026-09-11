@@ -43,6 +43,8 @@ export type {
 } from "./product";
 export type {
   ProductAddToCartProps,
+  ProductAttributeDefaultValueProps,
+  ProductAttributeValueProps,
   ProductFormRegister,
   ProductMerchandiseIdProps,
   ProductOptionValueProps,

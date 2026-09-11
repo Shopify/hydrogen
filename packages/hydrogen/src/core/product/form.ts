@@ -33,11 +33,25 @@ export interface ProductAddToCartProps {
   type: "submit";
 }
 
+type AttributeValueName = `attributes.${string}`;
+
+/** Props returned by {@link ProductFormRegister} for a line-item attribute input. */
+export interface ProductAttributeValueProps {
+  name: AttributeValueName;
+  value: string;
+}
+
+/** Props returned by {@link ProductFormRegister} for an uncontrolled line-item attribute input. */
+export interface ProductAttributeDefaultValueProps {
+  name: AttributeValueName;
+  defaultValue: string;
+}
+
 /**
  * Register function returned by `useProductForm`.
  *
  * Product forms only register product-relevant fields:
- * `merchandiseId`, `quantity`, `optionValue`, and `addToCart`.
+ * `merchandiseId`, `quantity`, `optionValue`, `attributeValue`, and `addToCart`.
  *
  * Option values return form identity and activation handlers. UI props such as
  * `type`, `checked`, `disabled`, and `aria-pressed` belong to the caller — use
@@ -48,6 +62,11 @@ export type ProductFormRegister = {
   (field: "quantity", opts: { value: number }): ProductQuantityProps;
   (field: "quantity", opts: { defaultValue: number }): ProductQuantityDefaultProps;
   (field: "optionValue", opts: { optionName: string; value: string }): ProductOptionValueProps;
+  (field: "attributeValue", opts: { key: string; value: string }): ProductAttributeValueProps;
+  (
+    field: "attributeValue",
+    opts: { key: string; defaultValue: string },
+  ): ProductAttributeDefaultValueProps;
   (field: "addToCart", opts: {}): ProductAddToCartProps;
 };
 
@@ -77,6 +96,16 @@ export function createProductFormRegister(
       const value = String(opts?.value ?? "");
       const handleSelect = () => selectOption(optionName, value);
       return { name: optionName, value, onChange: handleSelect, onClick: handleSelect };
+    }
+
+    if (field === "attributeValue") {
+      const key = String(opts?.key ?? "");
+      if (!key) throw new TypeError('Product attribute values require a non-empty "key".');
+      const name = `attributes.${key}` as AttributeValueName;
+      if (opts && "defaultValue" in opts) {
+        return { name, defaultValue: String(opts.defaultValue) };
+      }
+      return { name, value: String(opts?.value ?? "") };
     }
 
     if (field === "addToCart") {

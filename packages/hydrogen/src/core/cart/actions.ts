@@ -289,6 +289,11 @@ function parseAddIntent(form: FormData, merchandiseId: string): CartAction {
   const line: CartLineAddInput = { merchandiseId, quantity };
   if (sellingPlanId) line.sellingPlanId = sellingPlanId;
 
+  const rawAttributes = getCartAttributeFormEntries(form);
+  if (rawAttributes.length > 0) {
+    line.attributes = parseAttributes(rawAttributes);
+  }
+
   return { intent: "add", lines: [line] };
 }
 
