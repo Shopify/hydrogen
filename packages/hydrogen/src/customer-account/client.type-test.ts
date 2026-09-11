@@ -17,7 +17,7 @@ const storefront = createStorefrontClient({
   type: "public",
   requestContext: createShopifyRequestContext({
     request: new Request("https://example.com"),
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
   }),
   config: {
     storeDomain: "test.myshopify.com",
@@ -28,7 +28,7 @@ const customerAccount = createCustomerAccountClient({
   shopId: "123456789",
   requestContext: createShopifyRequestContext({
     request: new Request("https://example.com/account"),
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
   }),
 });
 const customerAccountAccessToken = "customer-token";
@@ -117,7 +117,8 @@ describe("Customer Account API type boundary", () => {
         requestContext: {
           url: "https://example.com/account",
           signal: new AbortController().signal,
-          i18n: { country: "US", language: "EN", pathPrefix: "" },
+          i18n: { defaultLocale: { country: "US", language: "EN" } },
+          locale: { country: "US", language: "EN", pathPrefix: "" },
         },
       });
     };

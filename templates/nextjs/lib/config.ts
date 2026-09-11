@@ -1,9 +1,9 @@
+import { defineShopifyI18n } from "@shopify/hydrogen";
+
 type StorefrontConfigShape = {
   storeDomain: string;
   publicStorefrontToken: string;
 };
-
-type I18nShape = { country: "US"; language: "EN"; currency: "USD" };
 
 type ShopifyScriptsShopShape = {
   shopId: string;
@@ -30,11 +30,15 @@ export const customerAccountConfig = {
   customerAccountApiClientId: process.env.NEXT_PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID || "",
 } satisfies CustomerAccountConfigShape;
 
-export const defaultI18n = {
-  country: "US",
-  language: "EN",
-  currency: "USD",
-} satisfies I18nShape;
+/**
+ * Single-locale storefront: every request resolves to the default locale. Add `routing` to serve
+ * more locales; every page is already rendered per locale under `app/[locale]`, and `proxy.ts`
+ * rewrites incoming URLs into that shape. `currency` is an extra field carried through to
+ * `ShopifyScripts`; the Storefront API itself derives currency from `country`.
+ */
+export const i18n = defineShopifyI18n({
+  defaultLocale: { country: "US", language: "EN", currency: "USD" },
+});
 
 export const shop = {
   shopId: customerAccountConfig.shopId,

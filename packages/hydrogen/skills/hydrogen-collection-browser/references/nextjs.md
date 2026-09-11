@@ -4,7 +4,7 @@ Use a client component for browse controls. Server pages fetch products and filt
 
 ## Server Page
 
-In `app/collections/[handle]/page.tsx`:
+In `app/[locale]/collections/[handle]/page.tsx` (the `[locale]` segment is the hydrogen-markets skill's Next.js route shape; resolve it with `resolveLocaleParam` and pass the locale to your fetch):
 
 ```tsx
 export default async function CollectionPage({

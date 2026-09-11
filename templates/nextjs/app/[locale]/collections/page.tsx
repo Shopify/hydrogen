@@ -1,31 +1,39 @@
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
-import Link from "next/link";
 
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CollectionCard } from "@/components/CollectionCard";
+import { LocalizedLink } from "@/components/LocalizedLink";
 import { content } from "@/lib/content";
+import { canonicalUrl, type Locale, localizedAlternates, resolveLocaleParam } from "@/lib/locale";
 import { COLLECTIONS_QUERY } from "@/lib/queries";
-import { canonicalUrl } from "@/lib/site";
-import { staticStorefrontClient } from "@/lib/storefront-static";
+import { getStaticStorefrontClient } from "@/lib/storefront-static";
 
-export const metadata: Metadata = {
-  title: "Collections",
-  description: "Browse all collections",
-  alternates: { canonical: "/collections" },
-  openGraph: {
-    title: "Collections",
-    type: "website",
-    url: canonicalUrl("/collections"),
-  },
+type Props = {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-async function fetchCollections(after?: string) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const locale = resolveLocaleParam((await params).locale);
+  return {
+    title: "Collections",
+    description: "Browse all collections",
+    alternates: localizedAlternates("/collections", locale),
+    openGraph: {
+      title: "Collections",
+      type: "website",
+      url: canonicalUrl("/collections", locale),
+    },
+  };
+}
+
+async function fetchCollections(locale: Locale, after?: string) {
   "use cache";
   cacheLife("hours");
   cacheTag("collections");
 
-  const { data, errors } = await staticStorefrontClient.graphql(COLLECTIONS_QUERY, {
+  const { data, errors } = await getStaticStorefrontClient(locale).graphql(COLLECTIONS_QUERY, {
     variables: { first: 24, after },
   });
   if (errors) {
@@ -37,14 +45,11 @@ async function fetchCollections(after?: string) {
   };
 }
 
-export default async function CollectionsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const params = await searchParams;
-  const after = typeof params.after === "string" ? params.after : undefined;
-  const { collections, pageInfo } = await fetchCollections(after);
+export default async function CollectionsPage({ params, searchParams }: Props) {
+  const locale = resolveLocaleParam((await params).locale);
+  const search = await searchParams;
+  const after = typeof search.after === "string" ? search.after : undefined;
+  const { collections, pageInfo } = await fetchCollections(locale, after);
 
   return (
     <div className="max-w-page px-margin mx-auto w-full py-8">
@@ -68,12 +73,12 @@ export default async function CollectionsPage({
 
       {pageInfo.hasNextPage ? (
         <div className="mt-12 text-center">
-          <Link
+          <LocalizedLink
             href={`/collections?after=${encodeURIComponent(pageInfo.endCursor ?? "")}`}
             className="rounded-button button-outline focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             Load more
-          </Link>
+          </LocalizedLink>
         </div>
       ) : null}
     </div>

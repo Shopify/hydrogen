@@ -19,7 +19,7 @@ Prerequisite: analytics depends on the same-origin SFAPI proxy (see `hydrogen-re
 
 ## Core Pattern
 
-Render Shopify runtime scripts once from the app root/document head with the same resolved market used by Storefront API requests. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass the `shop` object matching the `ShopifyScriptsShop` type, and `i18n` matching the `ShopifyScriptsI18n` type and serialize them into ShopifyScripts. — declare them as constants with type annotations to keep errors located close to the source of writing. The analytics bus is created by default; pass `analytics` only for optional bus configuration such as `customData`. Do not pass market `country` or `language` through analytics consent config.
+Render Shopify runtime scripts once from the app root/document head with the same resolved locale used by Storefront API requests (`requestContext.locale`, also `storefrontClient.locale`). Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass the `shop` object matching the `ShopifyScriptsShop` type, and `i18n` matching the `ShopifyScriptsI18n` type and serialize them into ShopifyScripts. — declare them as constants with type annotations to keep errors located close to the source of writing. The analytics bus is created by default; pass `analytics` only for optional bus configuration such as `customData`. Do not pass market `country` or `language` through analytics consent config.
 
 Read one browser-lazy singleton from the Shopify global created by `ShopifyScripts`:
 
@@ -69,7 +69,7 @@ Required product analytics fields include Shopify Product GID, ProductVariant GI
 - Raw subscribers can observe events before consent; destinations receive only consent-allowed replay.
 - Render ShopifyScripts before route components publish events.
 - Do not dispatch server-side analytics through this browser bus.
-- Keep ShopifyScripts i18n aligned with the resolved market when the storefront uses markets.
+- Keep ShopifyScripts `i18n` aligned with `requestContext.locale` when the storefront serves several locales; pass the resolved locale, not the `defineShopifyI18n` definition.
 
 ## Verify
 

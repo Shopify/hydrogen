@@ -3,23 +3,37 @@ name: hydrogen-markets
 description: >
   Guide for implementing Shopify Markets with Hydrogen. Use when adding
   market routing, country/language localization, Shopify Markets, subdomains,
-  per-market domains, path-prefixed markets, Next.js App Router market routing,
-  or Storefront API @inContext wiring.
+  per-market domains, path-prefixed markets, defineShopifyI18n, locale switchers,
+  hreflang links, Next.js App Router market routing, or Storefront API @inContext wiring.
 ---
 
 # Markets
 
-Markets are an application routing concern plus Storefront API context. Hydrogen does not prescribe how a storefront chooses a market. Use domains, subdomains, paths, cookies, buyer preferences, geolocation, or merchant config as needed.
+Markets are a routing concern plus Storefront API context. Hydrogen owns both halves once the storefront declares its locales: `defineShopifyI18n` describes which locales exist and how the URL encodes them, and `createShopifyRequestContext({ request, i18n })` resolves the request's locale from that definition. Queries that declare `$country` and `$language` with `@inContext(country: $country, language: $language)` receive those values from the resolved locale.
 
-The Hydrogen part is request-scoped `i18n` on `createShopifyRequestContext`. Resolve the market first, then create the request context with `i18n`. When a query declares `$country` and `$language` and uses `@inContext(country: $country, language: $language)`, the client injects those values from the resolved `i18n`.
-
-If the storefront uses Next.js App Router, read `references/nextjs.md` before writing code. Server Components do not receive a full `Request`, so host-based and path-prefixed markets need Next-specific wiring.
+If the storefront uses Next.js App Router, read `references/nextjs.md` before writing code. Server Components do not receive a full `Request`, and any `headers()` read drops out of the static shell, so static pages take the locale from a `[locale]` route param and dynamic components from the forwarded URL header.
 
 ---
 
 ## Core Rule
 
-Add `i18n` where the app already creates its Shopify request context:
+Define the storefront's locales once at module scope, then pass that definition where the app creates its Shopify request context:
+
+```ts
+// lib/i18n.ts
+import { defineShopifyI18n } from "@shopify/hydrogen";
+
+export const i18n = defineShopifyI18n({
+  defaultLocale: { language: "EN", country: "US" },
+  routing: {
+    type: "pathname",
+    locales: [
+      { language: "EN", country: "CA" },
+      { language: "FR", country: "CA" },
+    ],
+  },
+});
+```
 
 ```diff
 import {
@@ -27,6 +41,7 @@ import {
   createShopifyRequestContext,
   gql,
 } from "@shopify/hydrogen";
++import { i18n } from "./lib/i18n";
 
 const PRODUCTS_PAGE_SIZE = 12;
 
@@ -47,7 +62,6 @@ export async function loadProducts(request: Request) {
 -    request,
 -    i18n: DEFAULT_MARKET,
 -  });
-+  const i18n = getMarketFromRequest(request);
 +  const requestContext = createShopifyRequestContext({
 +    request,
 +    i18n,
@@ -68,114 +82,121 @@ export async function loadProducts(request: Request) {
 }
 ```
 
-Do not pass `country` or `language` in every query call. Resolve the market once at the request boundary, set `i18n` when creating the request context, and let the client inject the context variables into queries that declare them.
+Do not pass `country` or `language` in every query call. The request context resolves the locale once at the request boundary and the client injects the context variables into queries that declare them.
 
-The returned Storefront client exposes the resolved locale as `client.i18n`. Use `client.i18n.pathPrefix` when app route helpers need to prepend a market path; Hydrogen normalizes it to `""` or a leading-slash prefix with no trailing slash.
+`requestContext.i18n` is the definition passed in. `requestContext.locale` is the resolved locale for this request: `{ language, country, pathPrefix }` (`ShopifyMatchedLocale`). `pathPrefix` is `""` for the default locale and for domain routing, or a leading-slash prefix such as `/fr-ca` with no trailing slash. The Storefront client mirrors both as `client.i18n` and `client.locale`.
 
 ---
 
-## Market Shape
+## Definition Shape
 
-Keep the resolver small and explicit. The Storefront API expects uppercase enum values like `US`, `CA`, `EN`, and `FR`.
+`defineShopifyI18n` returns its input unchanged with literal types preserved, so the definition is serializable and safe to import from server and client code. It validates once at module load, so a bad entry fails at startup rather than on the first request that hits it.
 
 ```ts
-type Market = {
-  country: string;
-  language: string;
-  pathPrefix?: string;
+type ShopifyI18n = {
+  defaultLocale: { language: ShopifyLanguageCode; country: ShopifyCountryCode };
+  routing?:
+    | { type: "pathname"; locales: readonly ShopifyPathnameLocale[] }
+    | { type: "domain"; locales: readonly ShopifyDomainLocale[] };
 };
-
-const DEFAULT_MARKET = {
-  country: "US",
-  language: "EN",
-} satisfies Market;
 ```
 
-If the app needs labels or alternate domains, keep those as application fields. `country` and `language` are required in `i18n`; `pathPrefix` is optional on input and is normalized on the request context to `""` or a leading-slash prefix with no trailing slash.
-
----
-
-## Subdomains
-
-Use this when each market lives under one storefront domain, like `ca.example.com` or `fr.example.com`.
-
-```ts
-const MARKET_BY_SUBDOMAIN = {
-  ca: { country: "CA", language: "EN" },
-  fr: { country: "FR", language: "FR" },
-} satisfies Record<string, Market>;
-
-export function getMarketFromRequest(request: Request): Market {
-  const { hostname } = new URL(request.url);
-  const [subdomain] = hostname.toLowerCase().split(".");
-
-  return MARKET_BY_SUBDOMAIN[subdomain] ?? DEFAULT_MARKET;
-}
-```
-
----
-
-## Per-Market Domains
-
-Use this when markets have separate buyer-facing domains, like `example.com`, `example.ca`, and `example.fr`.
-
-```ts
-const MARKET_BY_HOST = {
-  "example.com": { country: "US", language: "EN" },
-  "example.ca": { country: "CA", language: "EN" },
-  "example.fr": { country: "FR", language: "FR" },
-} satisfies Record<string, Market>;
-
-export function getMarketFromRequest(request: Request): Market {
-  const { hostname } = new URL(request.url);
-  const host = hostname.toLowerCase();
-
-  return MARKET_BY_HOST[host] ?? DEFAULT_MARKET;
-}
-```
+- Omit `routing` for a single-locale storefront; every request resolves to `defaultLocale`.
+- Codes are the Storefront API enums: `US`, `CA`, `EN`, `FR`, `PT_BR`.
+- Extra per-locale fields (labels, `currency`) are kept on the entries returned by `getSupportedLocales(i18n)` and on `requestContext.locale`, so the app can carry its own metadata without a parallel map.
+- Cookie-based, geolocation-based, or buyer-preference routing is not a routing type. Read those signals in the app and redirect to a canonical URL; the URL stays the only input to locale resolution.
 
 ---
 
 ## Path Prefixes
 
-Use this when markets share one domain and the market is encoded in the pathname, like `/en-ca/products/shirt` or `/fr-fr/products/shirt`.
+Use `type: "pathname"` when locales share one domain and the locale is encoded in the first path segment, like `/fr-ca/products/shirt`.
 
 ```ts
-type PathMarket = Market & {
-  pathPrefix: string;
-};
+export const i18n = defineShopifyI18n({
+  defaultLocale: { language: "EN", country: "US" },
+  routing: {
+    type: "pathname",
+    locales: [
+      { language: "FR", country: "CA" },
+      { language: "PT_BR", country: "BR", pathSegment: "br" },
+    ],
+  },
+});
+```
 
-const FIRST_PATH_SEGMENT_INDEX = 0;
+- The prefix derives as `/{language}-{country}` lowercased with `_` replaced by `-`: `{ language: "FR", country: "CA" }` is served at `/fr-ca`. Set `pathSegment` when the derived segment is undesirable (`PT_BR` + `BR` would derive to `pt-br-br`). A segment is one path part with no slashes.
+- `defaultLocale` is served unprefixed only and must not appear in `locales`; the definition throws if it does. Every page has one canonical URL.
+- Unknown first segments resolve to `defaultLocale`. If the router has a `$locale` param, treat a matched param with an empty `requestContext.locale.pathPrefix` as a 404 so `/en-us/...` and `/xx/...` do not render the default locale under a second URL.
+- Route templates stay prefix-free. Hydrogen prepends `requestContext.locale.pathPrefix` when it builds or matches standard route URLs, and `handleShopifyRoutes` matches registered handlers with the prefix stripped, so `/fr-ca/api/cart` reaches the `/api/cart` handler. Use the local `hydrogen-routing` skill for templates.
 
-const MARKET_BY_PATH_PREFIX = {
-  "en-ca": { country: "CA", language: "EN", pathPrefix: "/en-ca" },
-  "fr-fr": { country: "FR", language: "FR", pathPrefix: "/fr-fr" },
-} satisfies Record<string, PathMarket>;
+---
 
-function getFirstPathSegment(pathname: string): string | undefined {
-  return pathname.split("/").filter(Boolean)[FIRST_PATH_SEGMENT_INDEX];
+## Per-Market Domains And Subdomains
+
+Use `type: "domain"` when each locale has its own hostname: `example.com`, `example.ca`, `fr.example.com`.
+
+```ts
+export const i18n = defineShopifyI18n({
+  defaultLocale: { language: "EN", country: "US" },
+  routing: {
+    type: "domain",
+    locales: [
+      { language: "EN", country: "US", hostname: "example.com" },
+      { language: "EN", country: "CA", hostname: "example.ca" },
+      { language: "FR", country: "FR", hostname: "fr.example.com" },
+    ],
+  },
+});
+```
+
+- Match is exact on `URL.hostname` (no port), so `fr.example.com`, `example.fr`, and `example.com` are three separate entries. Hostname comparison is case-insensitive.
+- `defaultLocale` must be listed so it has a canonical hostname for links and sitemaps. Unrecognized hosts (localhost, preview URLs) resolve to `defaultLocale`.
+- `www.` and other aliases are a redirect concern. Do not list them as locales.
+- `pathPrefix` is always `""` under domain routing.
+
+---
+
+## Locale Switchers And Alternate Links
+
+Use the exported helpers instead of string-building URLs:
+
+```ts
+import {
+  getLocalizedHref,
+  getSupportedLocales,
+  isSameLocale,
+  type ShopifyLocale,
+} from "@shopify/hydrogen";
+import { i18n } from "./lib/i18n";
+
+export function getAlternateLinks(currentUrl: string, currentLocale: ShopifyLocale) {
+  return getSupportedLocales(i18n)
+    .filter((locale) => !isSameLocale(locale, currentLocale))
+    .map((locale) => ({
+      hreflang: toHreflang(locale),
+      href: getLocalizedHref(currentUrl, { i18n, locale }),
+    }));
 }
 
-export function getMarketFromRequest(request: Request): PathMarket | Market {
-  const { pathname } = new URL(request.url);
-  const pathPrefix = getFirstPathSegment(pathname);
-
-  if (!pathPrefix) return DEFAULT_MARKET;
-
-  return MARKET_BY_PATH_PREFIX[pathPrefix.toLowerCase()] ?? DEFAULT_MARKET;
-}
-
-export function localizePath(pathname: string, market: PathMarket | Market): string {
-  if (!("pathPrefix" in market)) return pathname;
-
-  const normalizedPathname = pathname.replace(/^\/+/, "");
-  return `${market.pathPrefix}/${normalizedPathname}`;
+// BCP 47 allows one region subtag. Regional language codes (`PT_BR`, `ZH_TW`) already carry one,
+// so keep the primary language and let `country` name the region: PT_BR + BR -> `pt-BR`. The
+// Chinese codes differ by script, so they keep a script subtag: ZH_TW + HK -> `zh-Hant-HK`.
+function toHreflang({ language, country }: ShopifyLocale): string {
+  const primary = { ZH_CN: "zh-Hans", ZH_TW: "zh-Hant" }[language] ?? language.replace(/_.*$/, "").toLowerCase();
+  return `${primary}-${country}`;
 }
 ```
 
-The router should strip or interpret the prefix before matching product and collection routes. Hydrogen's Storefront API variable injection uses `country` and `language`; `pathPrefix` is carried as a leading-slash app route prefix for helpers.
+- `hreflang` values are `language-REGION` (optionally `language-Script-REGION`). Do not build them as `${language}-${country}`: Shopify's regional language codes would yield two region subtags (`pt-br-BR`), which is invalid. Two locales must never collapse to the same tag; fail loudly if they do.
 
-When the app uses custom Shopify resource paths, use the local `hydrogen-routing` skill. Keep market prefixes in `i18n.pathPrefix`, not in route template values.
+- `getLocalizedHref(href, { i18n, locale })` rewrites an href to the same page in another locale. Under pathname routing it returns a path with any existing locale prefix replaced; under domain routing it returns an absolute `https:` URL on the target hostname; with no routing it returns the input unchanged. It throws when `locale` is not defined in `i18n`.
+- `getSupportedLocales(i18n)` returns every locale the definition can resolve to, default first, keeping `pathSegment` / `hostname` and any extra fields.
+- `matchLocale(request | url, i18n)` exposes the same resolution the request context uses, for sitemaps or tests that hold a URL but no request context.
+- `resolveSupportedLocale(localeOrSegment, i18n)` resolves a locale the app already chose (a selector value, a stored preference, a `[locale]` route param) to its `pathPrefix`/`hostname`. Accepts a `{language, country}` pair or the path segment from `getLocalePathSegment`. Throws `UnsupportedLocaleError` when it is not in the definition; catch it to turn an unknown route param into a 404.
+- `getLocalePathSegment(locale)` is the URL identifier for a locale (`fr-ca`, or its `pathSegment`), defined for every locale regardless of routing type. Use it for `generateStaticParams` values and as the internal path segment a request is rewritten to. It reads `pathPrefix` on matched locales, so do not rebuild it from `language`/`country` by hand.
+
+Persist an explicit buyer choice by redirecting to `getLocalizedHref(...)`; do not resolve the locale from a cookie on the server.
 
 ---
 
@@ -183,37 +204,52 @@ When the app uses custom Shopify resource paths, use the local `hydrogen-routing
 
 Read the relevant reference before applying the generic `Request` examples in frameworks that do not expose the full incoming request to server code.
 
-- **Next.js App Router** — read `references/nextjs.md` first. Server Components can read `headers()` and route `params`, but not the current URL or a standard `Request`; host-based markets, path-prefix markets, and raw URL fallback each need different wiring.
+- **Next.js App Router** — read `references/nextjs.md` first. Static pages live under `app/[locale]`, resolve `params.locale` with `resolveSupportedLocale`, and pin it on a per-locale static client; `proxy.ts` rewrites incoming URLs into that shape. Per-request (dynamic) components resolve the locale from the forwarded `x-storefront-url` header.
 
 ---
 
 ## Rules
 
-- **Use whatever market strategy fits the store.** Hydrogen should not force domains, subdomains, pathnames, or detection policy.
-- **Resolve the market on the server from a standard `Request`.** `new URL(request.url)` is enough for host and path strategies.
-- **Use request-context `i18n` as the Storefront API boundary.** Prefer `createShopifyRequestContext({ request, i18n })`. Always provide a default market rather than letting it be undefined.
+- **Define locales once with `defineShopifyI18n`.** Keep the definition in a module both server and client code can import. Do not hand-roll host allowlists or path parsers; the definition is the allowlist.
+- **Resolve the locale through `createShopifyRequestContext({ request, i18n })`.** Pass a real `Request` when the framework has one so `request.url` drives matching. With `request: { headers }`, the forwarded `x-storefront-url` header is used instead.
+- **Pass `locale` only when there is no meaningful URL.** Static rendering, background jobs, and module-scope clients set `locale` to a supported locale (from a route param, or `i18n.defaultLocale`). The override is validated against the definition and throws `UnsupportedLocaleError` otherwise.
+- **Static multi-locale pages put the locale in the URL, never in a request read.** Enumerate `getSupportedLocales(i18n).map(getLocalePathSegment)` as route params and rewrite incoming requests to that internal shape in the request handler. Reading `headers()` or `cookies()` for the locale makes the page dynamic.
+- **Read the resolved locale from `requestContext.locale`, never from `requestContext.i18n`.** `i18n` is the whole definition; `locale` is this request's `{ language, country, pathPrefix }`.
 - **Use market-contextualized queries.** The Storefront client injects `country` and `language` variable values when the document declares `$country` and `$language`; it does not rewrite query text. Market-sensitive queries still need `@inContext(country: $country, language: $language)` or equivalent Storefront API context in the document.
 - **Do not calculate currency locally.** Render `amount` and `currencyCode` returned by Shopify and format them with the local `hydrogen-money` skill's `formatMoney()` guidance.
-- **Keep ShopifyScripts in the same market.** When the app renders Shopify browser runtime scripts, pass the resolved `country` and `language` into `ShopifyScripts` i18n so Shopify globals match Storefront API context.
-- **Keep route templates prefix-free.** When route templates are configured, pass market prefixes through `i18n.pathPrefix`; do not bake prefixes such as `/en-ca` into template values.
+- **Keep ShopifyScripts in the same locale.** Pass `requestContext.locale` (plus optional `currency`) as the `ShopifyScripts` `i18n` prop so Shopify globals match Storefront API context.
+- **Keep route templates prefix-free.** Hydrogen applies `requestContext.locale.pathPrefix`; do not bake prefixes such as `/en-ca` into template values.
 - **Keep translations separate.** Shopify Markets context localizes Shopify data. Application UI strings still need the app's translation system.
-- **Treat geolocation as a hint, not truth.** Buyers travel, use VPNs, and intentionally choose markets. Persist explicit choices when the app supports switching.
-- **Ask before choosing the strategy.** If the app does not already make market selection clear, ask whether domains, subdomains, path prefixes, cookies, buyer preference, geolocation, or merchant config should own it before writing code.
+- **Treat geolocation as a hint, not truth.** Buyers travel, use VPNs, and intentionally choose markets. Redirect to a canonical locale URL when the app supports switching.
+- **Ask before choosing the routing type.** If the app does not already make locale selection clear, ask whether path prefixes or per-locale domains should own it before writing code.
 
 ---
 
 ## Testing
 
-Test market resolution with plain `Request` objects. You do not need a framework test harness.
+Test locale resolution with plain `Request` objects against the definition. You do not need a framework test harness.
 
 ```ts
+import { matchLocale } from "@shopify/hydrogen";
 import { describe, expect, it } from "vitest";
 
-describe("getMarketFromRequest", () => {
-  it("resolves a subdomain market", () => {
-    const request = new Request("https://ca.example.com/products/shirt");
+import { i18n } from "./i18n";
 
-    expect(getMarketFromRequest(request)).toEqual({ country: "CA", language: "EN" });
+describe("i18n", () => {
+  it("resolves a prefixed locale", () => {
+    const request = new Request("https://example.com/fr-ca/products/shirt");
+
+    expect(matchLocale(request, i18n)).toEqual({
+      language: "FR",
+      country: "CA",
+      pathPrefix: "/fr-ca",
+    });
+  });
+
+  it("falls back to the default locale for unknown prefixes", () => {
+    const request = new Request("https://example.com/xx/products/shirt");
+
+    expect(matchLocale(request, i18n).pathPrefix).toBe("");
   });
 });
 ```

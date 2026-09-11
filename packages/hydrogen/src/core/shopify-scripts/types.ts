@@ -4,7 +4,7 @@ import type {
   ShopAnalyticsChannel,
   StorefrontAnalyticsConfig,
 } from "../analytics/types";
-import type { I18nConfig } from "../request-context";
+import type { ShopifyLocale } from "../i18n/types";
 import type { ShopifyRouteTemplates } from "../standard-routes/index";
 
 export type ShopifyScriptsAnalyticsConfig = {
@@ -12,10 +12,11 @@ export type ShopifyScriptsAnalyticsConfig = {
   customData?: StorefrontAnalyticsConfig["customData"];
 };
 
-export type ShopifyScriptsI18n = Pick<I18nConfig, "country" | "language"> &
-  Partial<Pick<I18nConfig, "pathPrefix">> & {
-    currency?: string;
-  };
+export type ShopifyScriptsI18n = ShopifyLocale & {
+  /** App route prefix for localized paths, for example "/es-es". Empty for the default locale. */
+  pathPrefix?: string;
+  currency?: string;
+};
 
 // DOM types expose element properties such as `crossOrigin`, but these descriptors represent
 // serialized HTML attributes such as `crossorigin` so they work outside React. Attribute values are

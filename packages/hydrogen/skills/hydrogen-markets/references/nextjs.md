@@ -2,133 +2,177 @@
 
 ## Contents
 
-- Host-Based Markets
-- Path-Prefix Markets
-- Raw URL Fallback
+- Definition
+- Static Pages: Locale As A Route Segment
+- Proxy Rewrite
+- Static Client Per Locale
+- Localized Links And Metadata
+- Per-Request Client
+- Unmatched URLs
 
-Next.js App Router Server Components do not receive a standard `Request` object or direct access to the current URL. Use the source that matches the market strategy:
+Static rendering and locale-from-the-request are incompatible in Next.js: any `headers()` or `cookies()` read opts the component out of the static shell. A prerender can only see the URL, so for static multi-locale pages the locale must live in the route tree as a `[locale]` param. The locale still comes from the shared `defineShopifyI18n` definition; what changes is where it is read from:
 
-- Host or subdomain markets: read the URL from Hydrogen's request context when the app proxy forwards it.
-- Path-prefix markets: model the market as a route segment, such as `app/[market]/products/[handle]/page.tsx`, and read it from `params`.
-- Raw URL markets: use a request-context handoff in `proxy.ts`; do not invent a second URL header.
+- Static pages: `params.locale`, resolved with `resolveSupportedLocale`, pinned on the request context via `locale`.
+- Per-request (dynamic) components: `proxy.ts` forwards the original URL as `x-storefront-url`; a request context created from `{ headers: await headers() }` matches the locale from that header.
+
+Do not invent a second URL header or a parallel market map. The definition lives in `lib/config.ts`.
 
 ---
 
-## Host-Based Markets
-
-Use this for domain or subdomain routing, like `example.ca`, `fr.example.com`, or `ca.example.com`.
-
-`proxy.ts` creates a request context from the `NextRequest`, forwards `requestContext.getForwardedRequestHeaders()`, and Server Components recreate the request context from `headers()`. That handoff includes the original URL.
+## Definition
 
 ```ts
-// lib/markets.ts
-type Market = {
-  country: string;
-  language: string;
-  pathPrefix?: string;
-};
+// lib/config.ts
+import { defineShopifyI18n } from "@shopify/hydrogen";
 
-const DEFAULT_MARKET = {
-  country: "US",
-  language: "EN",
-} satisfies Market;
-
-const MARKET_BY_HOST = {
-  "example.com": { country: "US", language: "EN" },
-  "example.ca": { country: "CA", language: "EN" },
-  "fr.example.com": { country: "FR", language: "FR" },
-} satisfies Record<string, Market>;
-
-export function getMarketFromHeaders(headers: Pick<Headers, "get">): Market {
-  const forwardedUrl = headers.get("x-storefront-url");
-  if (!forwardedUrl) return DEFAULT_MARKET;
-
-  const { hostname } = new URL(forwardedUrl);
-  const host = hostname.toLowerCase();
-
-  return MARKET_BY_HOST[host] ?? DEFAULT_MARKET;
-}
-```
-
-Use an allowlist like `MARKET_BY_HOST`; do not blindly trust request hosts for anything security-sensitive.
-
-```ts
-// lib/storefront.ts
-import "server-only";
-import {
-  createStorefrontClient,
-  createShopifyRequestContext,
-} from "@shopify/hydrogen";
-import { headers } from "next/headers";
-import { cache } from "react";
-
-import { storefrontConfig } from "./config";
-import { getMarketFromHeaders } from "./markets";
-
-export const getStorefrontClient = cache(async () => {
-  const requestHeaders = await headers();
-  const request = { headers: requestHeaders };
-  const requestContext = createShopifyRequestContext({
-    request,
-    i18n: getMarketFromHeaders(requestHeaders),
-  });
-
-  return createStorefrontClient({
-    type: "public",
-    requestContext,
-    config: {
-      storeDomain: storefrontConfig.storeDomain,
-      publicStorefrontToken: storefrontConfig.publicStorefrontToken,
-    },
-  });
+export const i18n = defineShopifyI18n({
+  defaultLocale: { language: "EN", country: "US", currency: "USD" },
+  routing: {
+    type: "pathname",
+    locales: [
+      { language: "FR", country: "CA", currency: "CAD" },
+      { language: "PT_BR", country: "BR", currency: "BRL", pathSegment: "br" },
+    ],
+  },
 });
 ```
 
-`headers()` is a request-time API, so pages using this helper are dynamically rendered.
+Swap `routing` for `type: "domain"` with a `hostname` per locale when each locale has its own host. Omit `routing` for a single-locale storefront; the `[locale]` tree still works, it just has one param. Extra fields such as `currency` are carried through to `requestContext.locale` and `ShopifyScripts`.
 
 ---
 
-## Path-Prefix Markets
+## Static Pages: Locale As A Route Segment
 
-Use this for routes like `/en-ca/products/shirt` or `/fr-fr/products/shirt`. Model the market prefix as a route segment so Server Components can read it from `params` without `headers()`.
+Put every page under `app/[locale]`, make that layout the root layout, and enumerate the definition's locales in `generateStaticParams`. `getLocalePathSegment` is the identifier for a locale in a URL or param, defined for every locale regardless of routing type, and `resolveSupportedLocale` accepts it back.
 
 ```ts
-// lib/path-markets.ts
-type Market = {
-  country: string;
-  language: string;
-  pathPrefix?: string;
-};
+// lib/locale.ts
+import {
+  getLocalePathSegment,
+  getSupportedLocales,
+  resolveSupportedLocale,
+  type ShopifyLocale,
+  type ShopifyMatchedLocale,
+  UnsupportedLocaleError,
+} from "@shopify/hydrogen";
+import { notFound } from "next/navigation";
 
-const DEFAULT_MARKET = {
-  country: "US",
-  language: "EN",
-} satisfies Market;
+import { i18n } from "./config";
 
-const MARKET_BY_PARAM = {
-  "en-ca": { country: "CA", language: "EN", pathPrefix: "/en-ca" },
-  "fr-fr": { country: "FR", language: "FR", pathPrefix: "/fr-fr" },
-} satisfies Record<string, Market>;
+export type Locale = ShopifyMatchedLocale<typeof i18n>;
 
-export function getMarketFromParam(marketParam: string): Market {
-  return MARKET_BY_PARAM[marketParam.toLowerCase()] ?? DEFAULT_MARKET;
+export function localeParams(): { locale: string }[] {
+  return getSupportedLocales(i18n).map((locale) => ({ locale: getLocalePathSegment(locale) }));
+}
+
+export function resolveLocaleParam(segment: string): Locale {
+  try {
+    return resolveSupportedLocale(segment, i18n);
+  } catch (error) {
+    if (error instanceof UnsupportedLocaleError) notFound();
+    throw error;
+  }
+}
+
+/** BCP 47 for `<html lang>` and hreflang: PT_BR + BR -> `pt-BR`, ZH_TW + HK -> `zh-Hant-HK`. */
+export function toLanguageTag({ language, country }: ShopifyLocale): string {
+  const primary = { ZH_CN: "zh-Hans", ZH_TW: "zh-Hant" }[language] ?? language.replace(/_.*$/, "").toLowerCase();
+  return `${primary}-${country}`;
 }
 ```
 
-For static or ISR-cached pages, use a `private_no_buyer_context` client and pass the market from route params. The page can be prerendered when the route uses `generateStaticParams` and does not call request-time APIs like `headers()` or `cookies()`.
+```tsx
+// app/[locale]/layout.tsx — the root layout
+import { localeParams, resolveLocaleParam } from "@/lib/locale";
+
+export function generateStaticParams() {
+  return localeParams();
+}
+
+export default async function RootLayout({ params, children }) {
+  const locale = resolveLocaleParam((await params).locale);
+  return (
+    <html lang={toLanguageTag(locale)}>
+      <body>
+        <LocaleProvider locale={locale}>{children}</LocaleProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+- `dynamicParams = false` is not allowed under `cacheComponents`; `resolveLocaleParam` is what 404s an unknown segment. Call it in every layout, page, and `generateMetadata` that reads `params.locale`.
+- `<html lang>` and `hreflang` values are BCP 47. Keep only the primary language subtag (`PT_BR` + `BR` -> `pt-BR`, never `pt-br-BR`); the Chinese codes keep a script subtag so `ZH_CN` and `ZH_TW` for one country stay distinct. Throw when two locales produce the same tag.
+- `LocaleProvider` is a client context so client components (and `LocalizedLink`, below) can read the locale without prop drilling.
+
+---
+
+## Proxy Rewrite
+
+The public URL keeps whatever the routing type dictates; `proxy.ts` rewrites it into the `[locale]` shape after `handleShopifyRoutes` has had its turn:
 
 ```ts
-// lib/static-storefront.ts
-import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
+// proxy.ts (after handleShopifyRoutes returns nothing)
+const requestUrl = new URL(request.url);
+const canonicalUrl = toCanonicalDefaultUrl(requestUrl, requestContext.locale, i18n);
+if (canonicalUrl) return NextResponse.redirect(canonicalUrl, 308);
 
-import { getMarketFromParam } from "./path-markets";
+const requestHeaders = requestContext.getForwardedRequestHeaders();
+const internalUrl = toLocaleSegmentUrl(requestUrl, requestContext.locale);
+const response = internalUrl
+  ? NextResponse.rewrite(internalUrl, { request: { headers: requestHeaders } })
+  : NextResponse.next({ request: { headers: requestHeaders } });
+requestContext.applyResponseHeaders(response.headers);
+return response;
+```
 
-export function createStaticStorefrontClient(marketParam: string) {
+Rules the two helpers encode (keep them pure functions over `URL` so they are unit-testable without Next):
+
+- Rewrite target: `/${getLocalePathSegment(requestContext.locale)}` followed by the path with `requestContext.locale.pathPrefix` stripped. `/products/x` -> `/en-us/products/x`; `fr.example.ca/products/x` -> `/fr-ca/products/x`; `/fr-ca/products/x` is already in shape.
+- Pathname routing only: an explicit default prefix (`/en-us/...`) is not a locale match, so redirect it to the unprefixed URL. One canonical URL per page.
+- Keep an explicit allowlist of root paths Next serves outside `[locale]` (`/robots.txt`, `/sitemap.xml`, your `public/` files, `/api/*` route handlers, `/.well-known/*`) and pass those through untouched; the proxy runs before `public/` is served. Do not infer "file" from an extension: a scanner hitting `/wp-login.php` would then reach the `[locale]` layout with a bogus param, and a root layout has nowhere to render a 404, so it 500s. Rewriting unknown paths sends them to the catch-all instead.
+- The root layout resolves its shell locale leniently (default on an unknown segment) for the same reason; pages and `generateMetadata` resolve strictly and 404.
+- `x-storefront-url` still carries the original browser URL, so dynamic components and `not-found.tsx` see the real request.
+- Use `getLocalePathSegment(requestContext.locale)`, not a hand-built `${language}-${country}`: a matched locale carries `pathPrefix` in place of `pathSegment`, and the helper reads it so custom segments round-trip.
+
+Domain routing depends on `request.url` carrying the real hostname. Hosting platforms that forward the host do this; a bare `next start` reports its own hostname, so test domain routing through the helper functions rather than `curl -H Host:`.
+
+---
+
+## Static Client Per Locale
+
+Module-scope clients have no request URL. Create one per locale and pin `locale`; pages pass the plain locale object into `"use cache"` functions so it becomes part of the cache key:
+
+```ts
+// lib/storefront-static.ts
+import "server-only";
+import {
+  createShopifyRequestContext,
+  createStorefrontClient,
+  getLocalePathSegment,
+  type ShopifyLocale,
+} from "@shopify/hydrogen";
+
+import { i18n } from "./config";
+
+const clients = new Map<string, ReturnType<typeof createClient>>();
+
+export function getStaticStorefrontClient(locale: ShopifyLocale = i18n.defaultLocale) {
+  const key = getLocalePathSegment(locale);
+  let client = clients.get(key);
+  if (!client) {
+    client = createClient(locale);
+    clients.set(key, client);
+  }
+  return client;
+}
+
+function createClient(locale: ShopifyLocale) {
   const requestContext = createShopifyRequestContext({
     request: { headers: new Headers() },
-    i18n: getMarketFromParam(marketParam),
+    i18n,
+    locale,
   });
-
   return createStorefrontClient({
     type: "private_no_buyer_context",
     requestContext,
@@ -140,18 +184,62 @@ export function createStaticStorefrontClient(marketParam: string) {
 }
 ```
 
-Use the query shape from `SKILL.md`: declare `$country` and `$language`, use `@inContext`, and let the client inject the market variables. Use the private client with trusted buyer context instead when the page needs buyer-specific headers, cookies, or personalized data. That path becomes dynamic because it must read request-time data.
+```tsx
+// app/[locale]/products/[handle]/page.tsx
+export default async function ProductPage({ params }) {
+  const { locale: localeParam, handle } = await params;
+  const locale = resolveLocaleParam(localeParam);
+  const { product } = await fetchProduct(locale, handle);
+  // ...
+}
+
+async function fetchProduct(locale: Locale, handle: string) {
+  "use cache";
+  return getStaticStorefrontClient(locale).graphql(PRODUCT_QUERY, { variables: { handle } });
+}
+```
+
+Await `params` outside the cached function and pass the resolved value in. Passing the `params` promise into a `"use cache"` scope is what triggers "filling a cache during prerender timed out".
 
 ---
 
-## Raw URL Fallback
+## Localized Links And Metadata
 
-Use raw URLs only when host headers or route params cannot represent the market, usually with rewrites or catch-all route setups.
+Write internal hrefs unprefixed and localize them at the edge with `getLocalizedHref`. A client `LocalizedLink` wrapping `next/link` reads the locale from `LocaleProvider`, so server and client components link the same way; the few raw `<a>`/`<form action>` elements in server components take `locale` as a prop.
 
-Use this proxy handoff:
+```tsx
+// components/LocalizedLink.tsx
+"use client";
+export function LocalizedLink({ href, ...props }) {
+  const locale = useLocale();
+  return <Link {...props} href={getLocalizedHref(href, { i18n, locale })} />;
+}
+```
 
-- In `proxy.ts`, create a request context from the `NextRequest`.
-- Forward `requestContext.getForwardedRequestHeaders()` through `NextResponse.next({ request: { headers } })`.
-- In Server Components, recreate a request-like object with `request: { headers: await headers() }`, resolve the market from the forwarded URL header, then create the client request context with that `i18n`.
+Metadata: `alternates.canonical` is the localized absolute URL; `alternates.languages` maps each supported locale's BCP 47 tag to its URL (omit it for single-locale storefronts). The sitemap lists every path once per locale with the same alternates. `getLocalizedHref` returns a path under pathname routing and an absolute `https:` URL under domain routing, so resolve it against the trusted site origin before emitting.
 
-`createShopifyRequestContext` already persists the URL through `x-storefront-url`, so do not set a parallel URL header unless the app cannot use the proxy handoff.
+---
+
+## Per-Request Client
+
+Personalized reads (cart seed, account state) are per-buyer, so they are dynamic anyway. Keep them behind `<Suspense>` and create the request context from `headers()` only; the forwarded `x-storefront-url` drives `requestContext.url` and the locale:
+
+```ts
+// lib/storefront.ts
+export const getStorefrontClient = cache(async () => {
+  const requestHeaders = await headers();
+  const requestContext = createShopifyRequestContext({
+    request: { headers: requestHeaders },
+    i18n,
+  });
+  return createStorefrontClient({ type: "private", requestContext, config: { /* ... */ } });
+});
+```
+
+Never build a synthetic `Request` with a fixed origin for these contexts: `request.url` wins over `x-storefront-url`, so every read would resolve the default locale.
+
+---
+
+## Unmatched URLs
+
+With the root layout inside `[locale]`, Next has no static layout to compose a global `app/not-found.tsx` from. Add `app/[locale]/[...rest]/page.tsx` that calls `notFound()`; the proxy has already rewritten the URL into the segment, so it renders the locale's `not-found.tsx` inside the shell (and can run `handleShopifyRedirects` there). Under Cache Components that `notFound()` fires in a prerendered shell, so the response is `200` with `<meta name="robots" content="noindex">` rather than a `404` status, the same as `notFound()` from a product page. `experimental.globalNotFound` gives a true `404` instead, at the cost of an unlocalized static page that cannot run redirects.

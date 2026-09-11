@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-import type { CacheInstance } from "../core";
+import type { CacheInstance, ShopifyI18n } from "../core";
 import { Cache } from "../core/cache";
 import {
   createShopifyRequestContext,
@@ -11,7 +11,7 @@ import { assert } from "../core/test-utils";
 import { gql } from "../graphql";
 import { createStorefrontClient } from "./client";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";
-import type { I18nConfig, StorefrontClient } from "./types";
+import type { StorefrontClient } from "./types";
 
 const SHOP_QUERY = gql(`query { shop { name } }`);
 const PRODUCT_QUERY = gql(
@@ -71,7 +71,7 @@ describe("createStorefrontClient", () => {
       expect(client.i18n).toEqual(DEFAULT_I18N);
       expect(typeof client.apiUrl).toBe("string");
       expect(typeof client.storeUrl).toBe("string");
-      expect(client.i18n).toEqual(DEFAULT_I18N);
+      expect(client.locale).toEqual({ ...DEFAULT_LOCALE, pathPrefix: "" });
     });
 
     it("constructs storeUrl and apiUrl from storeDomain and pinned API version", () => {
@@ -331,8 +331,8 @@ describe("createStorefrontClient", () => {
       const client = createStorefrontClient({
         type: "public",
         requestContext: createShopifyRequestContext({
-          request: { headers: new Headers() },
-          i18n: { language: "ES", country: "ES", pathPrefix: "/es-es/" },
+          request: new Request("https://shop.example.com/es-es/products/snowboard"),
+          i18n: PATHNAME_I18N,
         }),
         config: {
           storeDomain: "test.myshopify.com",
@@ -340,7 +340,8 @@ describe("createStorefrontClient", () => {
           fetch: mockFetch,
         },
       });
-      expect(client.i18n).toEqual({ language: "ES", country: "ES", pathPrefix: "/es-es" });
+      expect(client.i18n).toBe(PATHNAME_I18N);
+      expect(client.locale).toEqual({ language: "ES", country: "ES", pathPrefix: "/es-es" });
       await client.graphql(LOCALIZED_QUERY);
 
       const body = getBody(mockFetch);
@@ -350,12 +351,12 @@ describe("createStorefrontClient", () => {
       });
     });
 
-    it("uses request context i18n for auto-injected variables", async () => {
+    it("uses request context locale for auto-injected variables", async () => {
       const client = createPublicClient({
         fetch: mockFetch,
         requestContext: createShopifyRequestContext({
-          request: { headers: new Headers() },
-          i18n: { language: "FR", country: "CA", pathPrefix: "/fr-ca/" },
+          request: new Request("https://shop.example.com/fr-ca/products/snowboard"),
+          i18n: PATHNAME_I18N,
         }),
       });
       await client.graphql(LOCALIZED_QUERY);
@@ -920,21 +921,32 @@ describe("createStorefrontClient", () => {
   });
 });
 
-const DEFAULT_I18N = { language: "EN", country: "US", pathPrefix: "" } as I18nConfig;
+const DEFAULT_LOCALE = { language: "EN", country: "US" } as const;
+const DEFAULT_I18N = { defaultLocale: DEFAULT_LOCALE } as const satisfies ShopifyI18n;
+const PATHNAME_I18N = {
+  defaultLocale: DEFAULT_LOCALE,
+  routing: {
+    type: "pathname",
+    locales: [
+      { language: "ES", country: "ES" },
+      { language: "FR", country: "CA" },
+    ],
+  },
+} as const satisfies ShopifyI18n;
 
 type StorefrontRequestInput = Pick<Request, "headers"> &
   Partial<Pick<Request, "method" | "signal" | "url">>;
 
 function createTestRequestContext(
   input: StorefrontRequestInput = { headers: new Headers() },
-  i18n: I18nConfig = DEFAULT_I18N,
+  i18n: ShopifyI18n = DEFAULT_I18N,
 ): ShopifyRequestContext {
   return createShopifyRequestContext({ request: input, i18n });
 }
 
 function createBuyerTestRequestContext(
   input: StorefrontRequestInput = { headers: new Headers() },
-  i18n: I18nConfig = DEFAULT_I18N,
+  i18n: ShopifyI18n = DEFAULT_I18N,
 ): ShopifyRequestContextWithBuyerIp {
   return createShopifyRequestContext({
     request: input,

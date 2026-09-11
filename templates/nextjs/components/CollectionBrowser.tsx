@@ -7,7 +7,6 @@ import {
   type ProductFilter,
 } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
@@ -19,10 +18,13 @@ import { FilterGroup } from "@/lib/filters";
 import { formatPrice } from "@/lib/money";
 import type { CollectionAvailableFilter, SearchAvailableFilter } from "@/lib/queries";
 
+import { useLocalizedHref } from "./LocaleProvider";
+import { LocalizedLink } from "./LocalizedLink";
+
 /**
  * Shared collection/search browser (`hydrogen-collection-browser` /
  * `references/nextjs.md`). The server page fetches the product + filter
- * snapshot via `staticStorefrontClient` inside a `use cache` cache-point and
+ * snapshot via `getStaticStorefrontClient(locale)` inside a `use cache` cache-point and
  * passes it here. This client component owns the `CollectionProvider`,
  * `useCollection`/`useCollectionForm`, URL sync via `useRouter`/`useSearchParams`,
  * and the filter/sort/grid UI.
@@ -137,6 +139,7 @@ function CollectionPage(props: CollectionPageProps) {
   const state = useCollection();
   const { formProps } = useCollectionForm();
   const router = useRouter();
+  const localize = useLocalizedHref();
   // Reset key for the uncontrolled filter subtree (checkboxes + price inputs).
   // Keyed by the serialized filter state (NOT the URL) so the subtree remounts
   // *after* the reconciler settles `state.filters` — clearing `defaultChecked` /
@@ -151,11 +154,11 @@ function CollectionPage(props: CollectionPageProps) {
   }).toString();
   const isLoading = state.status === "loading";
   const collectionPath = `/collections/${collection.handle}`;
-  // `<Link>` navigations (active-filter chips, clear-all, load-more) update the
+  // `<LocalizedLink>` navigations (active-filter chips, clear-all, load-more) update the
   // URL but, under Cache Components / PPR, the RSC payload doesn't re-fetch on a
   // same-segment `searchParams` change unless we explicitly refresh. `onChange`
   // (form-driven) already calls `router.refresh()`; this wires the same refresh
-  // to the `<Link>` clicks so the server products/filters catch up to the URL
+  // to the `<LocalizedLink>` clicks so the server products/filters catch up to the URL
   // (hydrogen-collection-browser/references/nextjs.md).
   const onNavigate = () => router.refresh();
 
@@ -188,7 +191,7 @@ function CollectionPage(props: CollectionPageProps) {
       <form
         {...formProps()}
         method="get"
-        action={collectionPath}
+        action={localize(collectionPath)}
         className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
       >
         <FilterSidebar
@@ -256,6 +259,7 @@ function SearchPage(props: SearchPageProps) {
   const state = useCollection();
   const { formProps } = useCollectionForm();
   const router = useRouter();
+  const localize = useLocalizedHref();
   const onNavigate = () => router.refresh();
   // Reset key for the uncontrolled filter subtree — see CollectionPage for rationale.
   const filterSubtreeKey = serializeCollectionParams({
@@ -275,7 +279,12 @@ function SearchPage(props: SearchPageProps) {
       <h1 className="type-display mb-6">{content.search.title}</h1>
 
       {/* Search header form — real GET /search so it works without JS (F4). */}
-      <form action="/search" method="get" role="search" className="mb-8 flex items-center gap-2">
+      <form
+        action={localize("/search")}
+        method="get"
+        role="search"
+        className="mb-8 flex items-center gap-2"
+      >
         <label htmlFor="search-q" className="sr-only">
           {content.search.label}
         </label>
@@ -296,12 +305,12 @@ function SearchPage(props: SearchPageProps) {
           {content.search.submit}
         </button>
         {term ? (
-          <Link
+          <LocalizedLink
             href="/search"
             className="text-on-surface-secondary hover:text-on-surface text-sm no-underline"
           >
             {content.search.clear}
-          </Link>
+          </LocalizedLink>
         ) : null}
       </form>
 
@@ -318,7 +327,7 @@ function SearchPage(props: SearchPageProps) {
         <form
           {...formProps()}
           method="get"
-          action="/search"
+          action={localize("/search")}
           className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
           key={`search-${term}`}
         >
@@ -383,13 +392,13 @@ function SearchPage(props: SearchPageProps) {
 
             {pageInfo.hasNextPage ? (
               <div className="mt-8 text-center">
-                <Link
+                <LocalizedLink
                   href={`/search?q=${encodeURIComponent(term)}&after=${encodeURIComponent(pageInfo.endCursor ?? "")}`}
                   onClick={onNavigate}
                   className="rounded-button button-outline inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline"
                 >
                   {content.search.loadMore}
-                </Link>
+                </LocalizedLink>
               </div>
             ) : null}
 
@@ -509,7 +518,7 @@ function ActiveFilterChips({
           const filterLabel = describeFilter(filter, currencyCode);
           return (
             <li key={`${filter.toString()}-${index}`}>
-              <Link
+              <LocalizedLink
                 href={href}
                 onClick={onNavigate}
                 aria-label={`Remove filter: ${filterLabel}`}
@@ -517,18 +526,18 @@ function ActiveFilterChips({
               >
                 <span aria-hidden="true">{filterLabel}</span>
                 <span aria-hidden="true">×</span>
-              </Link>
+              </LocalizedLink>
             </li>
           );
         })}
       <li>
-        <Link
+        <LocalizedLink
           href={collectionPath}
           onClick={onNavigate}
           className="text-link inline-flex items-center rounded-full px-3 py-1 text-sm no-underline underline"
         >
           {content.collection.clearAll}
-        </Link>
+        </LocalizedLink>
       </li>
     </ul>
   );
@@ -575,13 +584,13 @@ function LoadMore({
 
   return (
     <div className="mt-8 text-center">
-      <Link
+      <LocalizedLink
         href={href}
         onClick={onNavigate}
         className="rounded-button button-outline focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         {content.collection.loadMore}
-      </Link>
+      </LocalizedLink>
     </div>
   );
 }

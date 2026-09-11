@@ -17,7 +17,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
 } from "../core/shopify-scripts/index";
-import { createShopifyRouteTemplates } from "../core/standard-routes/index";
+import { defineShopifyRouteTemplates } from "../core/standard-routes/index";
 import { assert } from "../core/test-utils";
 import { ShopifyScripts } from "./shopify-scripts";
 
@@ -80,14 +80,14 @@ async function hydrateShopifyScripts(serverHtml: string, nonce: string) {
 }
 
 describe("ShopifyScripts", () => {
-  const emptyRouteTemplates = createShopifyRouteTemplates({});
+  const emptyRouteTemplates = defineShopifyRouteTemplates({});
 
   it("types and renders the raw Inbox custom element", () => {
     expect(renderToStaticMarkup(<shopify-chat />)).toBe("<shopify-chat></shopify-chat>");
   });
 
   it("renders Shopify storefront runtime scripts during SSR", () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     const html = renderToStaticMarkup(
@@ -259,7 +259,7 @@ describe("ShopifyScripts", () => {
     mockShopifyScriptTags();
     const initializeShopifyScripts = vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts");
     const navigate = vi.fn();
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     (window as any).Shopify = {

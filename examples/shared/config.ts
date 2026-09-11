@@ -4,6 +4,7 @@ type StorefrontConfigShape = {
   privateStorefrontTokenEnvKey: PrivateStorefrontTokenEnvKey;
 };
 
+type I18nDefinitionShape = { defaultLocale: { country: "US"; language: "EN" } };
 type I18nShape = { country: "US"; language: "EN"; currency: "USD" };
 
 type PrivateStorefrontTokenEnvKey =
@@ -62,9 +63,18 @@ export const customerAccountConfig = {
   sessionSecret: LOCAL_CUSTOMER_SESSION_SECRET,
 } satisfies CustomerAccountConfigShape;
 
+/**
+ * Single-locale storefront: every request resolves to the default locale. Structurally a
+ * `ShopifyI18n` for `createShopifyRequestContext({i18n})`; this shared module stays free of
+ * package imports so every example can alias it, hence no `defineShopifyI18n` call here.
+ */
+export const i18n = {
+  defaultLocale: { country: "US", language: "EN" },
+} as const satisfies I18nDefinitionShape;
+
+/** Locale plus display currency for `ShopifyScripts`. */
 export const defaultI18n = {
-  country: "US",
-  language: "EN",
+  ...i18n.defaultLocale,
   currency: "USD",
 } satisfies I18nShape;
 

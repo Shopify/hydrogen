@@ -5,18 +5,25 @@ import { CartCheckoutButton } from "@/components/CartCheckoutButton";
 import { CartContent } from "@/components/CartContent";
 import { CartViewedTracker } from "@/components/CartViewedTracker";
 import { content } from "@/lib/content";
-import { canonicalUrl } from "@/lib/site";
+import { canonicalUrl, localizedAlternates, resolveLocaleParam } from "@/lib/locale";
 
-export const metadata: Metadata = {
-  title: "Cart",
-  description: content.cart.title,
-  alternates: { canonical: "/cart" },
-  openGraph: {
-    title: "Cart",
-    type: "website",
-    url: canonicalUrl("/cart"),
-  },
+type Props = {
+  params: Promise<{ locale: string }>;
 };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const locale = resolveLocaleParam((await params).locale);
+  return {
+    title: "Cart",
+    description: content.cart.title,
+    alternates: localizedAlternates("/cart", locale),
+    openGraph: {
+      title: "Cart",
+      type: "website",
+      url: canonicalUrl("/cart", locale),
+    },
+  };
+}
 
 /**
  * `/cart` is the drawer's fallback route.
@@ -29,7 +36,11 @@ export const metadata: Metadata = {
  * `AppShell` calls `connection()` and reads `headers()` for the cart seed.
  * Reachable via the footer `/cart` link when the drawer is unavailable.
  */
-export default function CartPage() {
+export default async function CartPage({ params }: Props) {
+  // Nothing here depends on the locale, but every page validates its segment so a bogus param
+  // 404s in the page body, not only in `generateMetadata`.
+  resolveLocaleParam((await params).locale);
+
   return (
     <div className="max-w-page px-margin mx-auto w-full py-8">
       <h1 className="type-display mb-8">{content.cart.title}</h1>

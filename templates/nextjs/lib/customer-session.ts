@@ -1,3 +1,5 @@
+import type { ReadonlyCustomerSessionManager } from "@shopify/hydrogen/customer-account";
+
 const COOKIE_NAME = "__Host-hydrogen_customer_session";
 const COOKIE_PATH = "/";
 const COOKIE_VERSION = "v1";
@@ -27,11 +29,20 @@ export class EncryptedCookieCustomerSession {
     this.#secret = secret;
   }
 
+  /** Writable session for request handlers (`proxy.ts`) that commit `Set-Cookie` on their response. */
   static async init(request: Request, secret: string) {
-    assertSessionSecret(secret);
-    const cookieValue = getCookieValue(request.headers.get("cookie"), COOKIE_NAME);
-    const data = cookieValue ? await decryptSessionCookie(cookieValue, secret) : {};
+    const data = await readSessionCookie(request.headers, secret);
     return new EncryptedCookieCustomerSession(data, new URL(request.url).origin, secret);
+  }
+
+  /**
+   * Read-only session for Server Components. Reads never need the request URL (the origin only
+   * feeds OAuth writes), and RSC render cannot commit a cookie mutation anyway, so this shape
+   * makes writes impossible rather than silently dropped.
+   */
+  static async read(headers: Headers, secret: string): Promise<ReadonlyCustomerSessionManager> {
+    const data = await readSessionCookie(headers, secret);
+    return { getSessionItem: (key) => data[key] };
   }
 
   getSessionItem(key: string) {
@@ -65,6 +76,12 @@ export class EncryptedCookieCustomerSession {
     this.#isDirty = false;
     return headers;
   }
+}
+
+async function readSessionCookie(headers: Headers, secret: string): Promise<SessionRecord> {
+  assertSessionSecret(secret);
+  const cookieValue = getCookieValue(headers.get("cookie"), COOKIE_NAME);
+  return cookieValue ? decryptSessionCookie(cookieValue, secret) : {};
 }
 
 async function encryptSessionCookie(data: SessionRecord, secret: string): Promise<string> {

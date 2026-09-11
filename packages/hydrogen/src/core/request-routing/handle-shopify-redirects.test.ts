@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
-import type { I18nConfig } from "../../client/types";
+import type { ShopifyI18n } from "../i18n/types";
 import { configureLogging, resetLoggingForTests } from "../logging";
 import { createShopifyRequestContext } from "../request-context";
-import { createShopifyRouteTemplates } from "../standard-routes/index";
+import { defineShopifyRouteTemplates } from "../standard-routes/index";
 import { assert, createTestLogger } from "../test-utils";
 import { handleShopifyRedirects } from "./handle-shopify-redirects";
 
@@ -12,10 +12,14 @@ const defaultConfig = {
   storeDomain: "test-store.myshopify.com",
 } as const;
 
-const DEFAULT_I18N = { country: "US", language: "EN" } as const;
-const DEFAULT_ROUTE_TEMPLATES = createShopifyRouteTemplates({});
+const DEFAULT_I18N = { defaultLocale: { country: "US", language: "EN" } } as const;
+const PATHNAME_I18N = {
+  ...DEFAULT_I18N,
+  routing: { type: "pathname", locales: [{ country: "CA", language: "FR" }] },
+} as const satisfies ShopifyI18n;
+const DEFAULT_ROUTE_TEMPLATES = defineShopifyRouteTemplates({});
 
-function createPrivateStorefrontClient(request: Request, i18n: I18nConfig = DEFAULT_I18N) {
+function createPrivateStorefrontClient(request: Request, i18n: ShopifyI18n = DEFAULT_I18N) {
   return createStorefrontClient({
     type: "private",
     requestContext: createShopifyRequestContext({ request, i18n, buyerIp: "127.0.0.1" }),
@@ -26,7 +30,7 @@ function createPrivateStorefrontClient(request: Request, i18n: I18nConfig = DEFA
   });
 }
 
-function createTokenlessPublicStorefrontClient(request: Request, i18n: I18nConfig = DEFAULT_I18N) {
+function createTokenlessPublicStorefrontClient(request: Request, i18n: ShopifyI18n = DEFAULT_I18N) {
   return createStorefrontClient({
     type: "public",
     requestContext: createShopifyRequestContext({ request, i18n }),
@@ -279,13 +283,10 @@ describe("handleShopifyRedirects", () => {
   });
 
   it("strips the i18n path prefix before matching standard routes", async () => {
-    const request = new Request("https://my-app.com/en-us/products/snowboard");
+    const request = new Request("https://my-app.com/FR-CA/products/snowboard");
     const result = await handleShopifyRedirects(
       redirectOptions(request, {
-        storefrontClient: createPrivateStorefrontClient(request, {
-          ...DEFAULT_I18N,
-          pathPrefix: "/EN-US",
-        }),
+        storefrontClient: createPrivateStorefrontClient(request, PATHNAME_I18N),
         routeTemplates: {
           product: "/p/:productHandle",
         },
@@ -293,18 +294,15 @@ describe("handleShopifyRedirects", () => {
     );
 
     assert(result, "expected localized standard route redirect response");
-    expect(result.headers.get("location")).toBe("/EN-US/p/snowboard");
+    expect(result.headers.get("location")).toBe("/fr-ca/p/snowboard");
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("does not redirect i18n standard resource routes to themselves", async () => {
-    const request = new Request("https://my-app.com/en-us/products/snowboard?utm_source=test");
+    const request = new Request("https://my-app.com/fr-ca/products/snowboard?utm_source=test");
     const result = await handleShopifyRedirects(
       redirectOptions(request, {
-        storefrontClient: createPrivateStorefrontClient(request, {
-          ...DEFAULT_I18N,
-          pathPrefix: "/en-us",
-        }),
+        storefrontClient: createPrivateStorefrontClient(request, PATHNAME_I18N),
         routeTemplates: {
           product: "/products/:productHandle",
         },

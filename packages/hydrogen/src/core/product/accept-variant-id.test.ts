@@ -3,13 +3,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createStorefrontClient, type StorefrontClient } from "../../client";
 import { StorefrontApiError } from "../../client/errors";
 import { Cache } from "../cache";
+import type { ShopifyI18n } from "../i18n/types";
 import { configureLogging, resetLoggingForTests } from "../logging";
-import { createShopifyRequestContext, type I18nConfig } from "../request-context";
+import { createShopifyRequestContext } from "../request-context";
 import type { HydrogenRoutesOptions } from "../request-routing/route-types";
 import type { ShopifyRouteTemplates } from "../standard-routes/types";
 import { handleProductVariantId } from "./accept-variant-id";
 
-const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
+const DEFAULT_I18N = { defaultLocale: { country: "US", language: "EN" } } as const;
 
 const VARIANT_NODE = {
   selectedOptions: [
@@ -31,7 +32,7 @@ function createContext({
   method?: string;
   node?: typeof VARIANT_NODE | null;
   graphql?: ReturnType<typeof vi.fn>;
-  i18n?: I18nConfig;
+  i18n?: ShopifyI18n;
   routeTemplates?: ShopifyRouteTemplates;
 }) {
   const request = new Request(url, { method });
@@ -39,6 +40,7 @@ function createContext({
   const storefrontClient = {
     graphql,
     i18n: requestContext.i18n,
+    locale: requestContext.locale,
     storeUrl: "https://shop.myshopify.com",
     requestContext,
   } as unknown as StorefrontClient;
@@ -206,7 +208,10 @@ describe("handleProductVariantId", () => {
   });
 
   it("matches locale-prefixed URLs and keeps the prefix on cross-product redirects", async () => {
-    const i18n = { country: "CA", language: "FR", pathPrefix: "/fr-ca" } as const;
+    const i18n = {
+      defaultLocale: { country: "US", language: "EN" },
+      routing: { type: "pathname", locales: [{ country: "CA", language: "FR" }] },
+    } as const satisfies ShopifyI18n;
     const samePage = await run({
       url: "https://shop.com/fr-ca/products/snowboard?variant=42",
       i18n,
