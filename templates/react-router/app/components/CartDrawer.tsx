@@ -117,7 +117,7 @@ export function CartLineItem({ line }: { line: CartLineView }) {
         </p>
         {optionText ? <p className="text-on-surface-secondary mt-1 text-xs">{optionText}</p> : null}
         {line.attributes
-          ?.filter((attr) => !attr.key.startsWith("_"))
+          ?.filter((attr) => !attr.key.startsWith("_") && attr.value != null)
           .map((attr) => (
             <p key={attr.key} className="text-on-surface-secondary mt-1 text-xs italic">
               {attr.key}: {attr.value}
