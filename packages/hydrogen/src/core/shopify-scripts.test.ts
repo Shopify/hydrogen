@@ -672,9 +672,7 @@ describe("shopify scripts", () => {
         ({ attributes }) => attributes?.src === SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
       ),
     ).toBeLessThan(
-      descriptors.scripts.findIndex(
-        ({ attributes }) => attributes?.src === SHOPIFY_ACCOUNT_SCRIPT,
-      ),
+      descriptors.scripts.findIndex(({ attributes }) => attributes?.src === SHOPIFY_ACCOUNT_SCRIPT),
     );
   });
 
