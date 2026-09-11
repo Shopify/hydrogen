@@ -10,6 +10,7 @@ import {
   type CartState,
 } from "../cart/state";
 import { createObservable } from "../observable";
+import { createProductFormRegister } from "./form";
 import {
   canAddToCart,
   createProductFormStore,
@@ -1535,5 +1536,39 @@ describe("canAddToCart", () => {
     const product: ProductInput = { ...makeSingleOptionProduct(RED), requiresSellingPlan: true };
     const store = createStore(product);
     expect(canAddToCart(product, store.getState().options)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createProductFormRegister — attributeValue
+// ---------------------------------------------------------------------------
+
+const noop = () => {};
+
+describe("createProductFormRegister — attributeValue", () => {
+  const register = createProductFormRegister(RED, noop);
+
+  it("returns controlled props with attributes.{key} name", () => {
+    const props = register("attributeValue", { key: "Engraving", value: "Hello" });
+    expect(props).toEqual({ name: "attributes.Engraving", value: "Hello" });
+  });
+
+  it("returns uncontrolled props with defaultValue", () => {
+    const props = register("attributeValue", { key: "Gift message", defaultValue: "" });
+    expect(props).toEqual({ name: "attributes.Gift message", defaultValue: "" });
+  });
+
+  it("throws TypeError for empty key", () => {
+    expect(() => register("attributeValue", { key: "", value: "x" })).toThrow(TypeError);
+  });
+
+  it("handles keys with special characters", () => {
+    const props = register("attributeValue", { key: "Note (optional)", value: "Hi" });
+    expect(props).toEqual({ name: "attributes.Note (optional)", value: "Hi" });
+  });
+
+  it("coerces non-string value to string", () => {
+    const props = register("attributeValue", { key: "Qty", value: 5 as unknown as string });
+    expect(props.value).toBe("5");
   });
 });

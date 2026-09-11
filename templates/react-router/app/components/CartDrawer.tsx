@@ -68,6 +68,7 @@ type CartLineView = {
   id: string;
   quantity: number;
   cost: { totalAmount: { amount: string; currencyCode: string } };
+  attributes?: Array<{ key: string; value: string | null }>;
   merchandise?: {
     title?: string | null;
     selectedOptions?: Array<{ name: string; value: string }> | null;
@@ -115,6 +116,13 @@ export function CartLineItem({ line }: { line: CartLineView }) {
           )}
         </p>
         {optionText ? <p className="text-on-surface-secondary mt-1 text-xs">{optionText}</p> : null}
+        {line.attributes
+          ?.filter((attr) => !attr.key.startsWith("_") && attr.value != null)
+          .map((attr) => (
+            <p key={attr.key} className="text-on-surface-secondary mt-1 text-xs italic">
+              {attr.key}: {attr.value}
+            </p>
+          ))}
         <p className={`text-on-surface mt-2 text-sm ${pending ? "opacity-50" : ""}`}>
           {formatPrice(line.cost.totalAmount)}
         </p>
