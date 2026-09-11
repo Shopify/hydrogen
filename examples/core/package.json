@@ -1,0 +1,12 @@
+{
+  "name": "@shopify/hydrogen-example-core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Frozen static five-page storefront design core (HTML + Tailwind, no app JS) that framework examples translate from.",
+  "scripts": {
+    "dev": "node scripts/dev.js"
+  },
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}
