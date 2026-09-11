@@ -1,5 +1,6 @@
 import { getSupportedLocales } from "./define";
-import { formatLocale, getLocaleHostname, getLocalePathSegment, isSameLocale } from "./locale";
+import { UnsupportedLocaleError } from "./errors";
+import { getLocaleHostname, getLocalePathSegment, isSameLocale } from "./locale";
 import type {
   ShopifyDomainLocale,
   ShopifyI18n,
@@ -59,30 +60,40 @@ export function matchLocale(
 
 /**
  * Resolves an explicitly chosen locale against the definition, for callers that already know the
- * locale (static rendering, locale switchers) and must not derive it from a URL.
+ * locale and must not derive it from a URL: static rendering, locale switchers, or a `[locale]`
+ * route param.
  *
- * @throws when `locale` is not one of the definition's supported locales, so a stale or mistyped
- * choice fails fast instead of silently producing an unroutable URL or request context.
+ * Accepts either a `{language, country}` pair or the locale's path segment as returned by
+ * `getLocalePathSegment` (case-insensitive), so a route param can be resolved directly.
+ *
+ * @throws {UnsupportedLocaleError} when the locale or segment is not one of the definition's
+ * supported locales, so a stale or mistyped choice fails fast instead of silently producing an
+ * unroutable URL or request context. Catch it to turn an unknown route param into a 404.
  */
 export function resolveSupportedLocale<const TI18n extends ShopifyI18n>(
-  locale: ShopifyLocale,
+  locale: ShopifyLocale | string,
   i18n: TI18n,
 ): ShopifyMatchedLocale<TI18n>;
 export function resolveSupportedLocale(
-  locale: ShopifyLocale,
+  locale: ShopifyLocale | string,
   i18n: ShopifyI18n,
 ): ShopifyMatchedLocale {
-  if (isSameLocale(locale, i18n.defaultLocale)) return toDefaultMatchedLocale(i18n);
+  const matches =
+    typeof locale === "string"
+      ? (candidate: ShopifyLocale) => getLocalePathSegment(candidate) === locale.toLowerCase()
+      : (candidate: ShopifyLocale) => isSameLocale(candidate, locale);
+
+  if (matches(i18n.defaultLocale)) return toDefaultMatchedLocale(i18n);
 
   const routing = i18n.routing;
   switch (routing?.type) {
     case "pathname": {
-      const match = routing.locales.find((candidate) => isSameLocale(candidate, locale));
+      const match = routing.locales.find(matches);
       if (match) return toPathnameMatchedLocale(match);
       break;
     }
     case "domain": {
-      const match = routing.locales.find((candidate) => isSameLocale(candidate, locale));
+      const match = routing.locales.find(matches);
       if (match) return toDomainMatchedLocale(match);
       break;
     }
@@ -92,10 +103,7 @@ export function resolveSupportedLocale(
       routing satisfies never;
   }
 
-  const supported = getSupportedLocales(i18n).map(formatLocale).join(", ");
-  throw new Error(
-    `Locale ${formatLocale(locale)} is not defined in this storefront's i18n. Supported locales: ${supported}.`,
-  );
+  throw new UnsupportedLocaleError(locale, getSupportedLocales(i18n));
 }
 
 function toDefaultMatchedLocale(i18n: ShopifyI18n): ShopifyMatchedLocale {

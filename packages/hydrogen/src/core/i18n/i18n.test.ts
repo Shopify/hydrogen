@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 
+import { assert } from "../test-utils";
 import {
   defineShopifyI18n,
+  getLocalePathSegment,
   getLocalizedHref,
   getSupportedLocales,
   matchLocale,
   resolveSupportedLocale,
+  UnsupportedLocaleError,
 } from "./index";
 
 const EN_US = { language: "EN", country: "US" } as const;
@@ -314,10 +317,76 @@ describe("resolveSupportedLocale", () => {
     });
   });
 
-  it("throws for locales outside the definition", () => {
-    expect(() =>
-      resolveSupportedLocale({ language: "DE", country: "DE" }, pathnameI18n),
-    ).toThrowError(/DE-DE is not defined.*Supported locales: EN-US, FR-CA, PT_BR-BR/);
+  it("throws UnsupportedLocaleError for locales outside the definition", () => {
+    const unsupported = { language: "DE", country: "DE" } as const;
+    let caught: UnsupportedLocaleError | undefined;
+    try {
+      resolveSupportedLocale(unsupported, pathnameI18n);
+    } catch (error) {
+      if (error instanceof UnsupportedLocaleError) caught = error;
+    }
+
+    assert(caught, "expected UnsupportedLocaleError");
+    expect(caught.message).toMatch(
+      /Locale DE-DE is not defined.*Supported locales: EN-US, FR-CA, PT_BR-BR/,
+    );
+    expect(caught.requested).toEqual(unsupported);
+    expect(caught.supported).toEqual(getSupportedLocales(pathnameI18n));
+  });
+
+  describe("by path segment", () => {
+    it("resolves the default from its derived segment under pathname routing", () => {
+      expect(resolveSupportedLocale("en-us", pathnameI18n)).toEqual({ ...EN_US, pathPrefix: "" });
+    });
+
+    it("resolves prefixed locales from derived and custom segments, case-insensitively", () => {
+      expect(resolveSupportedLocale("FR-CA", pathnameI18n)).toMatchObject({
+        ...FR_CA,
+        pathPrefix: "/fr-ca",
+      });
+      expect(resolveSupportedLocale("br", pathnameI18n)).toMatchObject({
+        ...PT_BR,
+        pathPrefix: "/br",
+      });
+    });
+
+    it("resolves domain locales from their derived segment, keeping the hostname", () => {
+      expect(resolveSupportedLocale("fr-ca", domainI18n)).toEqual({
+        ...FR_CA,
+        hostname: "FR.example.ca",
+        pathPrefix: "",
+      });
+    });
+
+    it("throws UnsupportedLocaleError naming the segment", () => {
+      expect(() => resolveSupportedLocale("de-de", pathnameI18n)).toThrowError(
+        UnsupportedLocaleError,
+      );
+      expect(() => resolveSupportedLocale("de-de", pathnameI18n)).toThrowError(
+        /Path segment "de-de" is not defined/,
+      );
+    });
+
+    it("round-trips every supported locale through getLocalePathSegment", () => {
+      for (const i18n of [singleLocale, pathnameI18n, domainI18n]) {
+        for (const locale of getSupportedLocales(i18n)) {
+          expect(resolveSupportedLocale(getLocalePathSegment(locale), i18n)).toEqual(
+            resolveSupportedLocale(locale, i18n),
+          );
+        }
+      }
+    });
+  });
+});
+
+describe("getLocalePathSegment", () => {
+  it.each([
+    [EN_US, "en-us"],
+    [PT_BR, "pt-br-br"],
+    [{ ...PT_BR, pathSegment: "BR" }, "br"],
+    [{ ...FR_CA, hostname: "fr.example.ca" }, "fr-ca"],
+  ])("derives %o -> %s", (locale, expected) => {
+    expect(getLocalePathSegment(locale)).toBe(expected);
   });
 });
 
@@ -331,7 +400,7 @@ describe("getLocalizedHref", () => {
   it("still rejects unsupported locales without routing", () => {
     expect(() =>
       getLocalizedHref("/products/x", { i18n: singleLocale, locale: FR_CA }),
-    ).toThrowError(/FR-CA is not defined/);
+    ).toThrowError(UnsupportedLocaleError);
   });
 
   describe("pathname routing", () => {
