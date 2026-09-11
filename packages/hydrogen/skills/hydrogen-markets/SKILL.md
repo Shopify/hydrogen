@@ -11,7 +11,7 @@ description: >
 
 Markets are a routing concern plus Storefront API context. Hydrogen owns both halves once the storefront declares its locales: `defineShopifyI18n` describes which locales exist and how the URL encodes them, and `createShopifyRequestContext({ request, i18n })` resolves the request's locale from that definition. Queries that declare `$country` and `$language` with `@inContext(country: $country, language: $language)` receive those values from the resolved locale.
 
-If the storefront uses Next.js App Router, read `references/nextjs.md` before writing code. Server Components do not receive a full `Request`, so the locale comes from the forwarded URL header or an explicit `locale` override.
+If the storefront uses Next.js App Router, read `references/nextjs.md` before writing code. Server Components do not receive a full `Request`, and any `headers()` read drops out of the static shell, so static pages take the locale from a `[locale]` route param and dynamic components from the forwarded URL header.
 
 ---
 
@@ -191,7 +191,8 @@ function toHreflang({ language, country }: ShopifyLocale): string {
 - `getLocalizedHref(href, { i18n, locale })` rewrites an href to the same page in another locale. Under pathname routing it returns a path with any existing locale prefix replaced; under domain routing it returns an absolute `https:` URL on the target hostname; with no routing it returns the input unchanged. It throws when `locale` is not defined in `i18n`.
 - `getSupportedLocales(i18n)` returns every locale the definition can resolve to, default first, keeping `pathSegment` / `hostname` and any extra fields.
 - `matchLocale(request | url, i18n)` exposes the same resolution the request context uses, for sitemaps or tests that hold a URL but no request context.
-- `resolveSupportedLocale(locale, i18n)` resolves a locale the app already chose (a selector value, a stored preference) to its `pathPrefix`/`hostname`, throwing when it is not in the definition. Use it to validate user input before redirecting.
+- `resolveSupportedLocale(localeOrSegment, i18n)` resolves a locale the app already chose (a selector value, a stored preference, a `[locale]` route param) to its `pathPrefix`/`hostname`. Accepts a `{language, country}` pair or the path segment from `getLocalePathSegment`. Throws `UnsupportedLocaleError` when it is not in the definition; catch it to turn an unknown route param into a 404.
+- `getLocalePathSegment(locale)` is the URL identifier for a locale (`fr-ca`, or its `pathSegment`), defined for every locale regardless of routing type. Use it for `generateStaticParams` values and as the internal path segment a request is rewritten to. It reads `pathPrefix` on matched locales, so do not rebuild it from `language`/`country` by hand.
 
 Persist an explicit buyer choice by redirecting to `getLocalizedHref(...)`; do not resolve the locale from a cookie on the server.
 
@@ -201,7 +202,7 @@ Persist an explicit buyer choice by redirecting to `getLocalizedHref(...)`; do n
 
 Read the relevant reference before applying the generic `Request` examples in frameworks that do not expose the full incoming request to server code.
 
-- **Next.js App Router** — read `references/nextjs.md` first. Server Components can read `headers()` but not the current URL or a standard `Request`; the per-request client resolves the locale from the forwarded `x-storefront-url` header, and module-scope static clients pin `locale` explicitly.
+- **Next.js App Router** — read `references/nextjs.md` first. Static pages live under `app/[locale]`, resolve `params.locale` with `resolveSupportedLocale`, and pin it on a per-locale static client; `proxy.ts` rewrites incoming URLs into that shape. Per-request (dynamic) components resolve the locale from the forwarded `x-storefront-url` header.
 
 ---
 
@@ -209,7 +210,8 @@ Read the relevant reference before applying the generic `Request` examples in fr
 
 - **Define locales once with `defineShopifyI18n`.** Keep the definition in a module both server and client code can import. Do not hand-roll host allowlists or path parsers; the definition is the allowlist.
 - **Resolve the locale through `createShopifyRequestContext({ request, i18n })`.** Pass a real `Request` when the framework has one so `request.url` drives matching. With `request: { headers }`, the forwarded `x-storefront-url` header is used instead.
-- **Pass `locale` only when there is no meaningful URL.** Static rendering, background jobs, and module-scope clients set `locale: i18n.defaultLocale` (or another supported locale). The override is validated against the definition and throws for unsupported locales.
+- **Pass `locale` only when there is no meaningful URL.** Static rendering, background jobs, and module-scope clients set `locale` to a supported locale (from a route param, or `i18n.defaultLocale`). The override is validated against the definition and throws `UnsupportedLocaleError` otherwise.
+- **Static multi-locale pages put the locale in the URL, never in a request read.** Enumerate `getSupportedLocales(i18n).map(getLocalePathSegment)` as route params and rewrite incoming requests to that internal shape in the request handler. Reading `headers()` or `cookies()` for the locale makes the page dynamic.
 - **Read the resolved locale from `requestContext.locale`, never from `requestContext.i18n`.** `i18n` is the whole definition; `locale` is this request's `{ language, country, pathPrefix }`.
 - **Use market-contextualized queries.** The Storefront client injects `country` and `language` variable values when the document declares `$country` and `$language`; it does not rewrite query text. Market-sensitive queries still need `@inContext(country: $country, language: $language)` or equivalent Storefront API context in the document.
 - **Do not calculate currency locally.** Render `amount` and `currencyCode` returned by Shopify and format them with the local `hydrogen-money` skill's `formatMoney()` guidance.

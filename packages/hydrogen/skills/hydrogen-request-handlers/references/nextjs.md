@@ -1,6 +1,6 @@
 # Next.js App Router
 
-Next splits Hydrogen routing across `proxy.ts` and `app/not-found.tsx`.
+Next splits Hydrogen routing across `proxy.ts` and the `not-found.tsx` under the `[locale]` segment.
 
 ## `proxy.ts`
 
@@ -53,8 +53,17 @@ export async function proxy(request: NextRequest) {
   });
   if (shopifyRoute) return shopifyRoute;
 
+  // Everything else renders from `app/[locale]`: rewrite the matched locale into the path
+  // (see the hydrogen-markets skill, `references/nextjs.md`, "Proxy Rewrite").
+  const requestUrl = new URL(request.url);
+  const canonicalUrl = toCanonicalDefaultUrl(requestUrl, requestContext.locale, i18n);
+  if (canonicalUrl) return NextResponse.redirect(canonicalUrl, 308);
+
   const requestHeaders = requestContext.getForwardedRequestHeaders();
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  const internalUrl = toLocaleSegmentUrl(requestUrl, requestContext.locale);
+  const response = internalUrl
+    ? NextResponse.rewrite(internalUrl, { request: { headers: requestHeaders } })
+    : NextResponse.next({ request: { headers: requestHeaders } });
   requestContext.applyResponseHeaders(response.headers);
   return response;
 }
@@ -72,7 +81,7 @@ Keep `handleShopifyRoutes` broad inside `proxy.ts`. Do not manually whitelist Hy
 
 Next docs warn that Proxy is not for slow data fetching or full session management. For Customer Account API this means `proxy.ts` may create the request context and local session manager needed by registered handlers, but access-token refresh belongs to the registered `/account/refresh` handler, not generic app-page proxy work.
 
-## `app/not-found.tsx`
+## `app/[locale]/not-found.tsx`
 
 ```tsx
 import { handleShopifyRedirects } from "@shopify/hydrogen";
@@ -117,7 +126,7 @@ With `cacheComponents: true`, keep request-time work in an async child under `<S
 
 ## Storefront Client
 
-In server components, use a cached server-only factory that reads `headers()` and creates a request-scoped client (public by default). In `proxy.ts`, use the actual `NextRequest` so URL, signal, and forwarded headers are preserved. `requestContext.getForwardedRequestHeaders()` carries the original URL through `x-storefront-url` for `not-found.tsx`, and `createShopifyRequestContext({ request: { headers }, i18n })` reads that same header to resolve `requestContext.locale` in Server Components. Module-scope static clients have no URL; pass `locale: i18n.defaultLocale` there.
+In server components, use a cached server-only factory that reads `headers()` and creates a request-scoped client (public by default). In `proxy.ts`, use the actual `NextRequest` so URL, signal, and forwarded headers are preserved. `requestContext.getForwardedRequestHeaders()` carries the original URL through `x-storefront-url` for `not-found.tsx`, and `createShopifyRequestContext({ request: { headers }, i18n })` reads that same header to resolve `requestContext.locale` in dynamic Server Components. Static pages take the locale from the `[locale]` route param instead and pin it on a per-locale static client; after `handleShopifyRoutes` returns nothing, `proxy.ts` rewrites the request into that `app/[locale]` shape (see the `hydrogen-markets` skill's `references/nextjs.md`).
 
 When a Server Component or layout reads Customer Account session state under Cache Components, put that read below an explicit dynamic boundary (`connection()` + `<Suspense>`). Do not rely on static route-segment config that Cache Components rejects.
 
