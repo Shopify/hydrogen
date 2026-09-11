@@ -51,7 +51,7 @@ export interface ProductAttributeDefaultValueProps {
  * Register function returned by `useProductForm`.
  *
  * Product forms only register product-relevant fields:
- * `merchandiseId`, `quantity`, `optionValue`, and `addToCart`.
+ * `merchandiseId`, `quantity`, `optionValue`, `attributeValue`, and `addToCart`.
  *
  * Option values return form identity and activation handlers. UI props such as
  * `type`, `checked`, `disabled`, and `aria-pressed` belong to the caller — use
