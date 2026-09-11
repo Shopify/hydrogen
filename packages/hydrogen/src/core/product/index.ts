@@ -19,6 +19,8 @@ export type { ProductSelectionLinkStyle } from "./url";
 export { createProductFormRegister } from "./form";
 export type {
   ProductAddToCartProps,
+  ProductAttributeDefaultValueProps,
+  ProductAttributeValueProps,
   ProductFormRegister,
   ProductMerchandiseIdProps,
   ProductOptionValueProps,
