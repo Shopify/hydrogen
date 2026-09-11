@@ -9,7 +9,7 @@ import {
   initializeShopifyScripts,
   renderShopifyScriptTag,
   renderShopifyScriptTags,
-  SHOPIFY_ACCOUNT_WIDGET_SCRIPT,
+  SHOPIFY_ACCOUNT_SCRIPT,
   SHOPIFY_CONSENT_API_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
   SHOPIFY_PERF_KIT_SCRIPT,
@@ -649,22 +649,22 @@ describe("shopify scripts", () => {
     );
   });
 
-  it("includes the async account widget module when enabled", () => {
+  it("includes the async account module when enabled", () => {
     const descriptors = getShopifyScriptTags({
       nonce: "test-nonce",
       shop: TEST_SHOP,
-      accountWidget: true,
+      account: true,
     });
 
     expect(descriptors.scripts).toContainEqual({
       tagName: "script",
       attributes: {
-        id: "shopify-account-widget",
+        id: "shopify-account",
         type: "module",
         async: true,
         crossorigin: "anonymous",
         nonce: "test-nonce",
-        src: SHOPIFY_ACCOUNT_WIDGET_SCRIPT,
+        src: SHOPIFY_ACCOUNT_SCRIPT,
       },
     });
     expect(
@@ -673,17 +673,17 @@ describe("shopify scripts", () => {
       ),
     ).toBeLessThan(
       descriptors.scripts.findIndex(
-        ({ attributes }) => attributes?.src === SHOPIFY_ACCOUNT_WIDGET_SCRIPT,
+        ({ attributes }) => attributes?.src === SHOPIFY_ACCOUNT_SCRIPT,
       ),
     );
   });
 
-  it("omits the account widget module by default", () => {
+  it("omits the account module by default", () => {
     const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
 
     expect(descriptors.scripts).not.toContainEqual(
       expect.objectContaining({
-        attributes: expect.objectContaining({ src: SHOPIFY_ACCOUNT_WIDGET_SCRIPT }),
+        attributes: expect.objectContaining({ src: SHOPIFY_ACCOUNT_SCRIPT }),
       }),
     );
   });

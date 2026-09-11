@@ -1,6 +1,6 @@
 import { getShopifyAnalyticsBusScript, getShopifyAnalyticsConfig } from "./analytics";
 import {
-  SHOPIFY_ACCOUNT_WIDGET_SCRIPT,
+  SHOPIFY_ACCOUNT_SCRIPT,
   SHOPIFY_CONSENT_API_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
   SHOPIFY_CONSENT_SCRIPT_ID,
@@ -24,7 +24,7 @@ import type {
 
 export {
   CONSENT_TRACKING_API_LOADED_EVENT,
-  SHOPIFY_ACCOUNT_WIDGET_SCRIPT,
+  SHOPIFY_ACCOUNT_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
   SHOPIFY_CONSENT_API_SCRIPT,
   SHOPIFY_PERF_KIT_SCRIPT,
@@ -60,7 +60,7 @@ export type {
  */
 // oxlint-disable-next-line complexity -- ordered assembly of optional Shopify script tags; each flag adds one branch and splitting would obscure the required load order
 export function getShopifyScriptTags({
-  accountWidget = false,
+  account = false,
   analytics,
   consent,
   debug,
@@ -143,16 +143,16 @@ export function getShopifyScriptTags({
     });
   }
 
-  if (accountWidget) {
+  if (account) {
     scripts.push({
       tagName: "script",
       attributes: {
-        id: "shopify-account-widget",
+        id: "shopify-account",
         type: "module",
         async: true,
         crossorigin: "anonymous",
         ...nonceAttributes,
-        src: SHOPIFY_ACCOUNT_WIDGET_SCRIPT,
+        src: SHOPIFY_ACCOUNT_SCRIPT,
       },
     });
   }
