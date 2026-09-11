@@ -33,8 +33,15 @@ export async function loader({ request, params, context: { storefront } }: Route
 
 // BCP 47 allows one region subtag. Shopify's regional language codes (`PT_BR`, `ZH_TW`) already
 // carry one, so keep only the primary language and let `country` name the targeted region:
-// PT_BR + BR -> `pt-BR`, PT_BR + CA -> `pt-CA`.
+// PT_BR + BR -> `pt-BR`, PT_BR + CA -> `pt-CA`. The Chinese codes differ by script, not region,
+// so they keep a script subtag: ZH_TW + HK -> `zh-Hant-HK`.
 function toHreflang({ language, country }: ShopifyLocale): string {
-  const primaryLanguage = language.replace(/_.*$/, "").toLowerCase();
+  const primaryLanguage =
+    HREFLANG_LANGUAGE_OVERRIDES[language] ?? language.replace(/_.*$/, "").toLowerCase();
   return `${primaryLanguage}-${country}`;
 }
+
+const HREFLANG_LANGUAGE_OVERRIDES: Partial<Record<ShopifyLocale["language"], string>> = {
+  ZH_CN: "zh-Hans",
+  ZH_TW: "zh-Hant",
+};

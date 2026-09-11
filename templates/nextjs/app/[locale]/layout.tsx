@@ -9,7 +9,7 @@ import { ShopifyScriptsWithNavigation } from "@/components/ShopifyScriptsWithNav
 import { getAnalyticsShop } from "@/lib/analytics-shop";
 import { shop } from "@/lib/config";
 import { content } from "@/lib/content";
-import { localeParams, resolveLocaleParam, toLanguageTag } from "@/lib/locale";
+import { localeParams, resolveShellLocale, toLanguageTag } from "@/lib/locale";
 import { SITE_ORIGIN } from "@/lib/site";
 
 import { AppShell } from "./app-shell";
@@ -26,8 +26,10 @@ type Props = {
  * prerenders each. `proxy.ts` rewrites incoming URLs into this shape, so the
  * public URL keeps whatever the routing type dictates (`/fr-ca/...`,
  * `fr.example.ca/...`, or nothing for the default). A segment that is not a
- * supported locale 404s in `resolveLocaleParam` (`dynamicParams = false` is
- * not available under `cacheComponents`).
+ * supported locale 404s in each page's `resolveLocaleParam` (`dynamicParams =
+ * false` is not available under `cacheComponents`); the layout itself renders
+ * the shell in the default locale for such a segment because a root layout has
+ * nowhere to render a 404.
  *
  * With `cacheComponents: true` the layout prerenders the `<html>`/`<body>` +
  * announcement bar, then wraps the per-request (dynamic) `AppShell` (cart seed
@@ -60,7 +62,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ params, children }: Props) {
-  const locale = resolveLocaleParam((await params).locale);
+  const locale = resolveShellLocale((await params).locale);
 
   return (
     <html lang={toLanguageTag(locale)}>
