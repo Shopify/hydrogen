@@ -3,11 +3,13 @@ export { defineShopifyRouteTemplates } from "./standard-routes/index";
 export type { ShopifyRouteTemplates } from "./standard-routes/index";
 export {
   defineShopifyI18n,
+  getLocalePathSegment,
   getLocalizedHref,
   getSupportedLocales,
   isSameLocale,
   matchLocale,
   resolveSupportedLocale,
+  UnsupportedLocaleError,
 } from "./i18n/index";
 export type {
   GetLocalizedHrefOptions,

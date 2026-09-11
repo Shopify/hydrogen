@@ -4,6 +4,7 @@ import {
   defineShopifyI18n,
   getSupportedLocales,
   matchLocale,
+  resolveSupportedLocale,
   type ShopifyI18n,
   type ShopifyMatchedLocale,
   type ShopifySupportedLocale,
@@ -58,6 +59,17 @@ describe("ShopifySupportedLocale", () => {
     type Broad = ShopifySupportedLocale<ShopifyI18n>;
     expectTypeOf<Extract<Broad, { hostname: string }>>().not.toBeNever();
     expectTypeOf<Extract<Broad, { pathSegment?: string }>>().not.toBeNever();
+  });
+});
+
+describe("resolveSupportedLocale", () => {
+  it("returns the same matched type for a locale and for its path segment", () => {
+    expectTypeOf(resolveSupportedLocale("fr-ca", domainI18n)).toEqualTypeOf(
+      resolveSupportedLocale(FR_CA, domainI18n),
+    );
+    expectTypeOf(resolveSupportedLocale("fr-ca", domainI18n).hostname).toEqualTypeOf<
+      "example.com" | "fr.example.ca"
+    >();
   });
 });
 
