@@ -1,6 +1,6 @@
-import Link from "next/link";
-
 import { content } from "@/lib/content";
+
+import { LocalizedLink } from "./LocalizedLink";
 
 const footerLinkClass =
   "min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors";
@@ -28,24 +28,24 @@ export function Footer({ shopName = "CORE" }: { shopName?: string }) {
           </h2>
           <ul role="list" className="flex flex-col gap-2">
             <li>
-              <Link href="/collections" className={footerLinkClass}>
+              <LocalizedLink href="/collections" className={footerLinkClass}>
                 Collections
-              </Link>
+              </LocalizedLink>
             </li>
             <li>
-              <Link href="/collections/men" className={footerLinkClass}>
+              <LocalizedLink href="/collections/men" className={footerLinkClass}>
                 Men
-              </Link>
+              </LocalizedLink>
             </li>
             <li>
-              <Link href="/collections/women" className={footerLinkClass}>
+              <LocalizedLink href="/collections/women" className={footerLinkClass}>
                 Women
-              </Link>
+              </LocalizedLink>
             </li>
             <li>
-              <Link href="/collections/accessories" className={footerLinkClass}>
+              <LocalizedLink href="/collections/accessories" className={footerLinkClass}>
                 Accessories
-              </Link>
+              </LocalizedLink>
             </li>
           </ul>
         </nav>
@@ -58,14 +58,14 @@ export function Footer({ shopName = "CORE" }: { shopName?: string }) {
           </h2>
           <ul role="list" className="flex flex-col gap-2">
             <li>
-              <Link href="/search" className={footerLinkClass}>
+              <LocalizedLink href="/search" className={footerLinkClass}>
                 {content.footer.search}
-              </Link>
+              </LocalizedLink>
             </li>
             <li>
-              <Link href="/cart" className={footerLinkClass}>
+              <LocalizedLink href="/cart" className={footerLinkClass}>
                 {content.cart.title}
-              </Link>
+              </LocalizedLink>
             </li>
           </ul>
         </nav>

@@ -388,6 +388,23 @@ describe("getLocalePathSegment", () => {
   ])("derives %o -> %s", (locale, expected) => {
     expect(getLocalePathSegment(locale)).toBe(expected);
   });
+
+  it("reads a matched locale's prefix, which replaced its custom pathSegment", () => {
+    expect(getLocalePathSegment(matchLocale("https://example.com/br", pathnameI18n))).toBe("br");
+    expect(getLocalePathSegment(matchLocale("https://example.com/", pathnameI18n))).toBe("en-us");
+    expect(getLocalePathSegment(matchLocale("https://fr.example.ca/", domainI18n))).toBe("fr-ca");
+  });
+
+  it("round-trips a matched locale through resolveSupportedLocale", () => {
+    for (const url of [
+      "https://example.com/",
+      "https://example.com/fr-ca",
+      "https://example.com/br",
+    ]) {
+      const matched = matchLocale(url, pathnameI18n);
+      expect(resolveSupportedLocale(getLocalePathSegment(matched), pathnameI18n)).toEqual(matched);
+    }
+  });
 });
 
 describe("getLocalizedHref", () => {

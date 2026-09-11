@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { content } from "@/lib/content";
+
+import { LocalizedLink } from "./LocalizedLink";
 
 const navItemHref: Record<(typeof content.header.navItems)[number], string> = {
   Collections: "/collections",
@@ -16,7 +17,7 @@ const navItemHref: Record<(typeof content.header.navItems)[number], string> = {
  * Mobile nav — a `<dialog>` opened via state, with an always-rendered fallback
  * link list (F4). The hamburger button is the client trigger; the dialog
  * contains the same nav items as the desktop nav. Server-rendered baseline is
- * the hidden dialog content (links are real `<Link>`s).
+ * the hidden dialog content (links are real `<LocalizedLink>`s).
  */
 export function MobileNavDialog() {
   const [open, setOpen] = useState(false);
@@ -85,13 +86,13 @@ export function MobileNavDialog() {
               <ul role="list" className="flex flex-col">
                 {content.header.navItems.map((item) => (
                   <li key={item}>
-                    <Link
+                    <LocalizedLink
                       href={navItemHref[item]}
                       onClick={() => setOpen(false)}
                       className="text-on-surface flex items-center rounded-sm py-3 text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
                     >
                       {item}
-                    </Link>
+                    </LocalizedLink>
                   </li>
                 ))}
               </ul>

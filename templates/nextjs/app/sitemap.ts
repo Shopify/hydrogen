@@ -1,53 +1,59 @@
+import { getSupportedLocales } from "@shopify/hydrogen";
 import type { MetadataRoute } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 
+import { i18n } from "@/lib/config";
+import { alternateUrls, canonicalUrl } from "@/lib/locale";
 import { SITEMAP_QUERY } from "@/lib/queries";
-import { SITE_ORIGIN } from "@/lib/site";
-import { staticStorefrontClient } from "@/lib/storefront-static";
+import { getStaticStorefrontClient } from "@/lib/storefront-static";
 
 /**
- * `/sitemap.xml`. Lists product + collection URLs with
- * `updatedAt` timestamps, fetched via the shared `staticStorefrontClient`
- * inside a `use cache` cache-point (catalog, not personalized). mock.shop
- * fallback works (queries mock.shop).
+ * `/sitemap.xml`. Lists product + collection paths once per supported locale,
+ * each entry carrying `hreflang` alternates for the other locales. Fetched via
+ * the default-locale `getStaticStorefrontClient()` inside a `use cache`
+ * cache-point (catalog, not personalized); handles are the same in every
+ * locale, so one query covers all of them. mock.shop fallback works (queries
+ * mock.shop).
+ *
+ * Lives outside `app/[locale]` because `proxy.ts` passes file-like paths
+ * through untouched, so `/sitemap.xml` is served from the root.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries = await fetchSitemap();
 
-  return entries.map((entry) => ({
-    url: entry.loc,
-    lastModified: entry.lastmod ?? undefined,
-  }));
+  return getSupportedLocales(i18n).flatMap((locale) =>
+    entries.map((entry) => ({
+      url: canonicalUrl(entry.path, locale),
+      lastModified: entry.lastmod ?? undefined,
+      alternates: { languages: alternateUrls(entry.path) },
+    })),
+  );
 }
 
-type SitemapEntry = { loc: string; lastmod?: string };
+type SitemapEntry = { path: string; lastmod?: string };
 
 async function fetchSitemap(): Promise<SitemapEntry[]> {
   "use cache";
   cacheLife("hours");
   cacheTag("products", "collections");
 
-  const { data, errors } = await staticStorefrontClient.graphql(SITEMAP_QUERY);
+  const { data, errors } = await getStaticStorefrontClient().graphql(SITEMAP_QUERY);
   if (errors) {
     console.error("[hydrogen] Sitemap query failed", errors);
   }
 
-  const entries: SitemapEntry[] = [
-    { loc: `${SITE_ORIGIN}/` },
-    { loc: `${SITE_ORIGIN}/collections` },
-    { loc: `${SITE_ORIGIN}/search` },
-  ];
+  const entries: SitemapEntry[] = [{ path: "/" }, { path: "/collections" }, { path: "/search" }];
 
   for (const collection of data?.collections?.nodes ?? []) {
     entries.push({
-      loc: `${SITE_ORIGIN}/collections/${collection.handle}`,
+      path: `/collections/${collection.handle}`,
       lastmod: collection.updatedAt ?? undefined,
     });
   }
 
   for (const product of data?.products?.nodes ?? []) {
     entries.push({
-      loc: `${SITE_ORIGIN}/products/${product.handle}`,
+      path: `/products/${product.handle}`,
       lastmod: product.updatedAt ?? undefined,
     });
   }

@@ -6,7 +6,6 @@ import {
   type SelectedOption,
 } from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRef } from "react";
 
@@ -15,21 +14,26 @@ import { QuantityStepper } from "@/components/QuantityStepper";
 import { openCartDrawer } from "@/lib/cart-drawer";
 import { content } from "@/lib/content";
 import { shopifyImageUrl, srcSetFor } from "@/lib/image";
+import { canonicalUrl } from "@/lib/locale";
 import { formatPrice } from "@/lib/money";
 import { ProductProvider, useProductForm } from "@/lib/product";
 import type { ProductData } from "@/lib/product-query";
-import { canonicalUrl, jsonLdScript } from "@/lib/site";
+import { jsonLdScript } from "@/lib/site";
+
+import { useLocale, useLocalizedHref } from "./LocaleProvider";
+import { LocalizedLink } from "./LocalizedLink";
 
 /**
  * Interactive product details (`hydrogen-variant-form` /
  * `references/nextjs.md`). Wraps the server-fetched product in `ProductProvider`;
  * variant selection + add-to-cart live here (client). Same-product option values
- * are GET `<Link>`s with `aria-current` (no-JS degrades to server variant
+ * are GET `<LocalizedLink>`s with `aria-current` (no-JS degrades to server variant
  * resolution); cross-product values navigate to the other product; non-existent
  * combinations are disabled `<button>`s with `aria-pressed`.
  */
 export function ProductDetails({ product }: { product: ProductData }) {
   const router = useRouter();
+  const localize = useLocalizedHref();
 
   return (
     <ProductProvider
@@ -42,7 +46,7 @@ export function ProductDetails({ product }: { product: ProductData }) {
           targetHandle,
           new URLSearchParams(),
         );
-        router.replace(next, { scroll: false });
+        router.replace(localize(next), { scroll: false });
       }}
     >
       <ProductViewedTracker product={product} />
@@ -54,6 +58,7 @@ export function ProductDetails({ product }: { product: ProductData }) {
 function ProductPage({ product }: { product: ProductData }) {
   const { options, selectedVariant, formProps, register, errors } = useProductForm();
   const searchParams = useSearchParams();
+  const locale = useLocale();
   const addable = canAddToCart(product, options);
   const addToCartProps = register("addToCart", {});
   const firstOptionRef = useRef<HTMLFieldSetElement>(null);
@@ -99,7 +104,7 @@ function ProductPage({ product }: { product: ProductData }) {
           availability: selectedVariant.availableForSale
             ? "https://schema.org/InStock"
             : "https://schema.org/OutOfStock",
-          url: canonicalUrl(`/products/${product.handle}`),
+          url: canonicalUrl(`/products/${product.handle}`, locale),
         }
       : {
           "@type": "AggregateOffer",
@@ -173,7 +178,7 @@ function ProductPage({ product }: { product: ProductData }) {
                         // Cross-product value — navigates to the other product
                         // (hydrogen-variant-form combined-listings rule). Uses the
                         // live `useSearchParams` base so unrelated params survive.
-                        <Link
+                        <LocalizedLink
                           key={value.name}
                           href={variantUrl(
                             product,
@@ -189,16 +194,16 @@ function ProductPage({ product }: { product: ProductData }) {
                           {!value.available ? (
                             <span className="sr-only"> ({content.product.badge.soldOut})</span>
                           ) : null}
-                        </Link>
+                        </LocalizedLink>
                       ) : value.exists ? (
-                        // Same-product value — a real GET `<Link>` to the option
+                        // Same-product value — a real GET `<LocalizedLink>` to the option
                         // URL so selection works without JS (the server page
                         // resolves the variant). Hydration enhances the same
                         // element via `register("optionValue", ...)`; the
                         // provider `onSelect` syncs the URL client-side.
                         // `aria-current` marks the selected link (`aria-pressed`
                         // is invalid on a link).
-                        <Link
+                        <LocalizedLink
                           key={value.name}
                           href={variantUrl(
                             product,
@@ -220,7 +225,7 @@ function ProductPage({ product }: { product: ProductData }) {
                           {!value.available ? (
                             <span className="sr-only"> ({content.product.badge.soldOut})</span>
                           ) : null}
-                        </Link>
+                        </LocalizedLink>
                       ) : (
                         // Non-existent combination — no valid option URL to
                         // degrade to, so render a disabled `<button>` with

@@ -1,35 +1,43 @@
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
-import Link from "next/link";
 
 import { CollectionCard } from "@/components/CollectionCard";
+import { LocalizedLink } from "@/components/LocalizedLink";
 import { ProductCard } from "@/components/ProductCard";
 import { content } from "@/lib/content";
+import { canonicalUrl, type Locale, localizedAlternates, resolveLocaleParam } from "@/lib/locale";
 import { HOME_QUERY } from "@/lib/queries";
-import { canonicalUrl } from "@/lib/site";
-import { staticStorefrontClient } from "@/lib/storefront-static";
+import { getStaticStorefrontClient } from "@/lib/storefront-static";
 
-export const metadata: Metadata = {
-  title: content.home.hero.heading,
-  description: content.home.hero.subtitle,
-  alternates: { canonical: "/" },
-  openGraph: {
-    title: content.home.hero.heading,
-    description: content.home.hero.subtitle,
-    type: "website",
-    url: canonicalUrl("/"),
-  },
-  twitter: { card: "summary_large_image" },
+type Props = {
+  params: Promise<{ locale: string }>;
 };
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const locale = resolveLocaleParam((await params).locale);
+  return {
+    title: content.home.hero.heading,
+    description: content.home.hero.subtitle,
+    alternates: localizedAlternates("/", locale),
+    openGraph: {
+      title: content.home.hero.heading,
+      description: content.home.hero.subtitle,
+      type: "website",
+      url: canonicalUrl("/", locale),
+    },
+    twitter: { card: "summary_large_image" },
+  };
+}
+
 /** Home catalog fetch — cached at the data boundary (F2: dynamic root layout
- *  precludes page-level prerender, so the cache-point is the fetch function). */
-async function fetchHome() {
+ *  precludes page-level prerender, so the cache-point is the fetch function).
+ *  `locale` is a plain object, so it is part of the cache key. */
+async function fetchHome(locale: Locale) {
   "use cache";
   cacheLife("minutes");
   cacheTag("products", "collections");
 
-  const { data, errors } = await staticStorefrontClient.graphql(HOME_QUERY);
+  const { data, errors } = await getStaticStorefrontClient(locale).graphql(HOME_QUERY);
   if (errors) {
     console.error("[hydrogen] Home query failed", errors);
   }
@@ -43,8 +51,9 @@ type HomeData = Awaited<ReturnType<typeof fetchHome>>;
 type ProductNode = HomeData["featuredProducts"][number];
 type CollectionNode = HomeData["featuredCollections"][number];
 
-export default async function HomePage() {
-  const { featuredProducts, featuredCollections } = await fetchHome();
+export default async function HomePage({ params }: Props) {
+  const locale = resolveLocaleParam((await params).locale);
+  const { featuredProducts, featuredCollections } = await fetchHome(locale);
 
   return (
     <>
@@ -89,18 +98,18 @@ function Hero() {
           </h1>
           <p className="type-body-lg mb-6 max-w-prose opacity-90">{content.home.hero.subtitle}</p>
           <div className="flex flex-wrap items-center gap-3">
-            <Link
+            <LocalizedLink
               href="/collections"
               className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 items-center justify-center gap-2 px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               {content.home.hero.primaryCta}
-            </Link>
-            <Link
+            </LocalizedLink>
+            <LocalizedLink
               href="/collections"
               className="rounded-button button-secondary focus-visible:outline-accent inline-flex h-11 items-center justify-center gap-2 px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               {content.home.hero.secondaryCta}
-            </Link>
+            </LocalizedLink>
           </div>
         </div>
       </div>
@@ -113,7 +122,7 @@ function BestSellers({ products }: { products: ProductNode[] }) {
     <section className="bg-surface w-full pt-20 pb-12">
       <div className="max-w-page px-margin mx-auto mb-4 flex items-center justify-between">
         <h2 className="type-heading-xl">{content.home.bestSellers}</h2>
-        <Link
+        <LocalizedLink
           href="/collections"
           className="min-h-touch-target text-on-surface focus-visible:outline-accent inline-flex items-center gap-1 rounded-sm text-sm font-normal no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
         >
@@ -135,7 +144,7 @@ function BestSellers({ products }: { products: ProductNode[] }) {
               <polyline points="12 5 19 12 12 19" />
             </svg>
           </span>
-        </Link>
+        </LocalizedLink>
       </div>
 
       <div className="max-w-page px-margin mx-auto contain-paint">

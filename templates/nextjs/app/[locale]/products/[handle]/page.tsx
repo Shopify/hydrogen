@@ -8,37 +8,39 @@ import { Breadcrumbs, type Crumb } from "@/components/Breadcrumbs";
 import { ProductCard, type ProductCardData } from "@/components/ProductCard";
 import { ProductDetails } from "@/components/ProductDetails";
 import { content } from "@/lib/content";
+import { canonicalUrl, type Locale, localizedAlternates, resolveLocaleParam } from "@/lib/locale";
 import { PRODUCT_QUERY, RELATED_PRODUCTS_QUERY, type ProductData } from "@/lib/product-query";
-import { canonicalUrl } from "@/lib/site";
-import { staticStorefrontClient } from "@/lib/storefront-static";
+import { getStaticStorefrontClient } from "@/lib/storefront-static";
 import { toURLSearchParams } from "@/lib/url-params";
 
 type Props = {
-  params: Promise<{ handle: string }>;
+  params: Promise<{ locale: string; handle: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { handle } = await params;
+  const { locale: localeParam, handle } = await params;
+  const locale = resolveLocaleParam(localeParam);
   // Re-fetch the product for metadata. It hits the same `use cache` cache-point
   // as the page render, so this is a cache hit in practice.
-  const { product } = await fetchProduct(handle, "");
+  const { product } = await fetchProduct(locale, handle, "");
   const title = product?.title ?? "Product";
   return {
     title,
     description: product?.description ?? "",
     // Variant params do NOT change the canonical (F10).
-    alternates: { canonical: `/products/${handle}` },
+    alternates: localizedAlternates(`/products/${handle}`, locale),
     openGraph: {
       title,
       description: product?.description ?? "",
-      url: canonicalUrl(`/products/${handle}`),
+      url: canonicalUrl(`/products/${handle}`, locale),
     },
     twitter: { card: "summary_large_image" },
   };
 }
 
 async function fetchProduct(
+  locale: Locale,
   handle: string,
   searchString: string,
 ): Promise<{ product: ProductData | null }> {
@@ -55,7 +57,7 @@ async function fetchProduct(
     searchParams: new URLSearchParams(searchString),
   });
 
-  const { data, errors } = await staticStorefrontClient.graphql(PRODUCT_QUERY, {
+  const { data, errors } = await getStaticStorefrontClient(locale).graphql(PRODUCT_QUERY, {
     variables: { handle, selectedOptions },
   });
 
@@ -67,9 +69,10 @@ async function fetchProduct(
 }
 
 export default async function ProductPage({ params, searchParams }: Props) {
-  const { handle } = await params;
+  const { locale: localeParam, handle } = await params;
+  const locale = resolveLocaleParam(localeParam);
   const urlSearch = toURLSearchParams(await searchParams);
-  const { product } = await fetchProduct(handle, urlSearch.toString());
+  const { product } = await fetchProduct(locale, handle, urlSearch.toString());
 
   // 404 only when the query has no GraphQL errors and the product is missing
   // (F8: errors are logged above; don't blanket-404 on a Storefront auth error).
@@ -95,7 +98,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
       {/* Best-effort related products (F14): a separate async server child in a
           <Suspense> boundary that degrades silently — never blocks the PDP. */}
       <Suspense fallback={null}>
-        <RelatedProducts handle={handle} />
+        <RelatedProducts locale={locale} handle={handle} />
       </Suspense>
     </>
   );
@@ -104,18 +107,21 @@ export default async function ProductPage({ params, searchParams }: Props) {
 /**
  * Related products (`notes/product.md` "you may also like"). Best-effort: any
  * error/timeout returns an empty list so the PDP never breaks. Fetched via the
- * shared `staticStorefrontClient` inside a `use cache` cache-point.
+ * shared `getStaticStorefrontClient(locale)` inside a `use cache` cache-point.
  */
-async function RelatedProducts({ handle }: { handle: string }) {
+async function RelatedProducts({ locale, handle }: { locale: Locale; handle: string }) {
   "use cache";
   cacheLife("minutes");
   cacheTag("products");
 
   let related: ProductCardData[] = [];
   try {
-    const { data, errors } = await staticStorefrontClient.graphql(RELATED_PRODUCTS_QUERY, {
-      variables: { handle },
-    });
+    const { data, errors } = await getStaticStorefrontClient(locale).graphql(
+      RELATED_PRODUCTS_QUERY,
+      {
+        variables: { handle },
+      },
+    );
     if (errors) {
       console.error("[hydrogen] Related products query failed", errors);
     }

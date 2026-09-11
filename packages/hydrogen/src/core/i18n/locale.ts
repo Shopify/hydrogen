@@ -1,4 +1,9 @@
-import type { ShopifyDomainLocale, ShopifyLocale, ShopifyPathnameLocale } from "./types";
+import type {
+  ShopifyDomainLocale,
+  ShopifyLocale,
+  ShopifyMatchedLocale,
+  ShopifyPathnameLocale,
+} from "./types";
 
 export function isSameLocale(a: ShopifyLocale, b: ShopifyLocale): boolean {
   return a.language === b.language && a.country === b.country;
@@ -17,9 +22,18 @@ export function formatLocale(locale: ShopifyLocale): string {
  * where the URL cannot carry the locale itself: a `[locale]` route param that static rendering
  * derives the locale from, or the internal path a domain-routed request is rewritten to.
  * `resolveSupportedLocale` accepts this segment back.
+ *
+ * Accepts matched locales too: `matchLocale` replaces `pathSegment` with the derived
+ * `pathPrefix`, so a non-empty prefix is the segment's source of truth there.
  */
-export function getLocalePathSegment(locale: ShopifyPathnameLocale): string {
-  return (locale.pathSegment ?? deriveLocalePathSegment(locale)).toLowerCase();
+export function getLocalePathSegment(locale: ShopifyPathnameLocale | ShopifyMatchedLocale): string {
+  if ("pathSegment" in locale && locale.pathSegment !== undefined) {
+    return locale.pathSegment.toLowerCase();
+  }
+  if ("pathPrefix" in locale && locale.pathPrefix !== "") {
+    return locale.pathPrefix.slice(1).toLowerCase();
+  }
+  return deriveLocalePathSegment(locale);
 }
 
 /** The locale's hostname in the form `URL.hostname` reports it. */

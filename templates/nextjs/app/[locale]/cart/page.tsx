@@ -5,18 +5,25 @@ import { CartCheckoutButton } from "@/components/CartCheckoutButton";
 import { CartContent } from "@/components/CartContent";
 import { CartViewedTracker } from "@/components/CartViewedTracker";
 import { content } from "@/lib/content";
-import { canonicalUrl } from "@/lib/site";
+import { canonicalUrl, localizedAlternates, resolveLocaleParam } from "@/lib/locale";
 
-export const metadata: Metadata = {
-  title: "Cart",
-  description: content.cart.title,
-  alternates: { canonical: "/cart" },
-  openGraph: {
-    title: "Cart",
-    type: "website",
-    url: canonicalUrl("/cart"),
-  },
+type Props = {
+  params: Promise<{ locale: string }>;
 };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const locale = resolveLocaleParam((await params).locale);
+  return {
+    title: "Cart",
+    description: content.cart.title,
+    alternates: localizedAlternates("/cart", locale),
+    openGraph: {
+      title: "Cart",
+      type: "website",
+      url: canonicalUrl("/cart", locale),
+    },
+  };
+}
 
 /**
  * `/cart` is the drawer's fallback route.
