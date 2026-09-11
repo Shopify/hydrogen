@@ -12,7 +12,7 @@ description: >
 
 # Hydrogen & Shopify API Versioning
 
-Reference for all versioning schemes in the Hydrogen ecosystem. For release *process* (how to actually ship a release), see `hydrogen-release-process`. For domain architecture context, see `headless-storefronts-context`.
+Reference for all versioning schemes in the Hydrogen ecosystem. For release *process* (how to actually ship a release), see `hydrogen-release-process`.
 
 ## Shopify GraphQL API Versioning
 
