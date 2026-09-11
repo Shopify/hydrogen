@@ -75,6 +75,11 @@ export type ShopifyScriptsShop = {
 };
 
 export type ShopifyScriptTagsOptions = {
+  /**
+   * Loads the customer account component. Render `<shopify-account>` where you want the account UI to appear.
+   * @see {@link https://shopify.dev/docs/api/storefront-web-components/components/shopify-account | shopify-account}
+   */
+  account?: boolean;
   analytics?: ShopifyScriptsAnalyticsConfig;
   consent?: ConsentConfig;
   debug?: {
