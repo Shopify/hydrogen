@@ -601,5 +601,5 @@ Potential enhancements being considered:
 
 - [Hydrogen Release Process](../CLAUDE.md#hydrogen-release-process) - Complete release workflow
 - [Major Protection Workflow](../.github/workflows/major-protection.yml) - Protection implementation
-- [Protection Utilities](../.github/scripts/changeset-protection-utils.js) - Shared utilities
+- [Protection Utilities](../.changeset/changeset-protection-utils.js) - Shared utilities
 - [.changeset/README.md](../.changeset/README.md) - Changesets documentation
