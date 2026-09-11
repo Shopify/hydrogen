@@ -1,5 +1,6 @@
 import "server-only";
 import { isCustomerLoggedIn } from "@/lib/customer-account";
+import { type Locale, localizedHref } from "@/lib/locale";
 import { isCustomerAccountsAvailable } from "@/lib/storefront-config";
 
 const accountLinkClassName =
@@ -17,20 +18,23 @@ const accountLinkClassName =
  * `/account/login` only exists when Customer Account handlers are registered.
  * Keep the icon visible for mock/unconfigured stores by linking to `/account`,
  * where the page explains the required setup.
+ *
+ * Takes `locale` as a prop because raw `<a>` elements in a server component
+ * cannot read the client `LocaleProvider`.
  */
-export async function HeaderAccountLink() {
+export async function HeaderAccountLink({ locale }: { locale: Locale }) {
   const available = isCustomerAccountsAvailable(); // sync — no await
-  if (!available) return <AccountIconLink href="/account" label="Account" />;
+  if (!available) return <AccountIconLink href="/account" label="Account" locale={locale} />;
 
   const loggedIn = await isCustomerLoggedIn();
-  if (loggedIn) return <AccountIconLink href="/account" label="Account" />;
+  if (loggedIn) return <AccountIconLink href="/account" label="Account" locale={locale} />;
 
-  return <AccountIconLink href="/account/login" label="Log in" />;
+  return <AccountIconLink href="/account/login" label="Log in" locale={locale} />;
 }
 
-function AccountIconLink({ href, label }: { href: string; label: string }) {
+function AccountIconLink({ href, label, locale }: { href: string; label: string; locale: Locale }) {
   return (
-    <a href={href} className={accountLinkClassName} aria-label={label}>
+    <a href={localizedHref(href, locale)} className={accountLinkClassName} aria-label={label}>
       <img
         src="/icons/icon-user.svg"
         width="20"

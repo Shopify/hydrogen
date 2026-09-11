@@ -5,35 +5,37 @@ import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 
 import { CollectionBrowser } from "@/components/CollectionBrowser";
+import { canonicalUrl, type Locale, localizedAlternates, resolveLocaleParam } from "@/lib/locale";
 import { COLLECTION_QUERY, type CollectionAvailableFilter } from "@/lib/queries";
-import { canonicalUrl } from "@/lib/site";
-import { staticStorefrontClient } from "@/lib/storefront-static";
+import { getStaticStorefrontClient } from "@/lib/storefront-static";
 import { toURLSearchParams } from "@/lib/url-params";
 
 type Props = {
-  params: Promise<{ handle: string }>;
+  params: Promise<{ locale: string; handle: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { handle } = await params;
-  const { collection } = await fetchCollection(handle, undefined, "");
+  const { locale: localeParam, handle } = await params;
+  const locale = resolveLocaleParam(localeParam);
+  const { collection } = await fetchCollection(locale, handle, undefined, "");
   const title = collection?.title ?? "Collection";
   const description = collection?.description ?? "";
   return {
     title,
     description,
-    alternates: { canonical: `/collections/${handle}` },
+    alternates: localizedAlternates(`/collections/${handle}`, locale),
     openGraph: {
       title,
       description,
       type: "website",
-      url: canonicalUrl(`/collections/${handle}`),
+      url: canonicalUrl(`/collections/${handle}`, locale),
     },
   };
 }
 
 async function fetchCollection(
+  locale: Locale,
   handle: string,
   after: string | undefined,
   searchString: string,
@@ -51,18 +53,19 @@ async function fetchCollection(
   // serializes arguments, so a URLSearchParams passed in loses `.get` — pass a
   // plain string across the cache boundary and parse inside.
   const browse = parseCollectionParams(new URLSearchParams(searchString));
-  const result = await query(handle, after, browse.filters, browse.sortKey, browse.reverse);
+  const result = await query(locale, handle, after, browse.filters, browse.sortKey, browse.reverse);
   return result;
 }
 
 async function query(
+  locale: Locale,
   handle: string,
   after: string | undefined,
   filters: ReturnType<typeof parseCollectionParams>["filters"],
   sortKey: ReturnType<typeof parseCollectionParams>["sortKey"],
   reverse: boolean,
 ) {
-  const { data, errors } = await staticStorefrontClient.graphql(COLLECTION_QUERY, {
+  const { data, errors } = await getStaticStorefrontClient(locale).graphql(COLLECTION_QUERY, {
     variables: {
       handle,
       first: 24,
@@ -92,11 +95,13 @@ async function query(
 }
 
 export default async function CollectionPage({ params, searchParams }: Props) {
-  const { handle } = await params;
+  const { locale: localeParam, handle } = await params;
+  const locale = resolveLocaleParam(localeParam);
   const urlSearch = toURLSearchParams(await searchParams);
   const after = urlSearch.get("after") ?? undefined;
 
   const { collection, products, availableFilters, pageInfo } = await fetchCollection(
+    locale,
     handle,
     after,
     urlSearch.toString(),

@@ -1,8 +1,9 @@
 import type { StorefrontApi } from "@shopify/hydrogen";
-import Link from "next/link";
 
 import type { COLLECTION_CARD_QUERY } from "@/lib/fragments";
 import { shopifyImageUrl, srcSetFor } from "@/lib/image";
+
+import { LocalizedLink } from "./LocalizedLink";
 
 /** The typed collection card node. */
 export type CollectionCardData = NonNullable<
@@ -48,7 +49,7 @@ export function CollectionCard({
         ) : null}
       </div>
       <div className="overlay-dark pointer-events-none absolute inset-0" />
-      <Link
+      <LocalizedLink
         href={`/collections/${collection.handle}`}
         className="card-link"
         aria-label={collection.title}

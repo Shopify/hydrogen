@@ -15,6 +15,7 @@ import {
   createEphemeralSessionManager,
 } from "@/lib/customer-account";
 import { getCustomerSessionHandlers } from "@/lib/customer-session-handlers";
+import { toCanonicalDefaultUrl, toLocaleSegmentUrl } from "@/lib/locale-routing";
 import { predictiveSearchHandlers } from "@/lib/predictive-search-handlers";
 import { routeTemplates } from "@/lib/route-templates";
 import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/storefront-config";
@@ -26,9 +27,13 @@ import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/stor
  * `/api/{ver}/graphql.json`, `/admin`, …) short-circuit here. Storefront URL
  * redirects run in `app/not-found.tsx` (post-404), never here.
  *
+ * Everything else is rewritten into the `app/[locale]` tree: the locale matched
+ * from the request URL becomes the first path segment, so every page renders as
+ * a static shell per locale from `params` alone (see `lib/locale-routing.ts`).
+ *
  * The original request URL is forwarded to Server Components via
  * `requestContext.getForwardedRequestHeaders()` (carries `x-storefront-url` for
- * `not-found.tsx` and locale resolution in `lib/storefront.ts`; without it every
+ * `not-found.tsx` and the per-buyer `lib/storefront.ts` client; without it every
  * Server Component request context silently resolves to the default locale).
  * SFAPI response headers are merged onto the forwarded response via
  * `requestContext.applyResponseHeaders`.
@@ -92,13 +97,22 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
     return shopifyRoute;
   }
 
+  const requestUrl = new URL(request.url);
+  const canonicalUrl = toCanonicalDefaultUrl(requestUrl, requestContext.locale, i18n);
+  if (canonicalUrl) return NextResponse.redirect(canonicalUrl, PERMANENT_REDIRECT_STATUS);
+
   // Forward the original URL (via `x-storefront-url`) + request context headers
   // to Server Components, then merge SFAPI response headers onto the response.
   const requestHeaders = requestContext.getForwardedRequestHeaders();
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  const internalUrl = toLocaleSegmentUrl(requestUrl, requestContext.locale);
+  const response = internalUrl
+    ? NextResponse.rewrite(internalUrl, { request: { headers: requestHeaders } })
+    : NextResponse.next({ request: { headers: requestHeaders } });
   requestContext.applyResponseHeaders(response.headers);
   return response;
 }
+
+const PERMANENT_REDIRECT_STATUS = 308;
 
 export const config = {
   // Exclude static Next assets; keep Hydrogen-owned paths (e.g. /admin,

@@ -24,7 +24,7 @@ import { i18n, shop, storefrontConfig } from "./config";
  * calling Storefront directly, so this client is provided as the sanctioned
  * pattern for future client-side GraphQL — not dead code. For server-side
  * (RSC/route-handler) fetches, use `getStorefrontClient()` (per-buyer) or
- * `staticStorefrontClient` (shared rate limit) from `lib/storefront.ts` /
+ * `getStaticStorefrontClient(locale)` (shared rate limit) from `lib/storefront.ts` /
  * `lib/storefront-static.ts` instead.
  *
  * NB: `config.ts` only reads browser-safe `NEXT_PUBLIC_*` values, so it is safe

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocalizedLink } from "./LocalizedLink";
 
 export type Crumb = {
   label: string;
@@ -21,9 +21,9 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
         className="text-on-surface-secondary flex flex-wrap items-center gap-1 text-sm"
       >
         <li key="home">
-          <Link href="/" className="hover:text-on-surface no-underline">
+          <LocalizedLink href="/" className="hover:text-on-surface no-underline">
             Home
-          </Link>
+          </LocalizedLink>
         </li>
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
@@ -31,9 +31,9 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
             <li key={`${item.label}-${index}`} className="flex items-center gap-1">
               <span aria-hidden="true">/</span>
               {item.href && !isLast ? (
-                <Link href={item.href} className="hover:text-on-surface no-underline">
+                <LocalizedLink href={item.href} className="hover:text-on-surface no-underline">
                   {item.label}
-                </Link>
+                </LocalizedLink>
               ) : (
                 <span
                   className="text-on-surface"

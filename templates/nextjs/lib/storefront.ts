@@ -20,7 +20,7 @@ import { resolveStorefrontConfig } from "./storefront-config";
  * the `i18n` definition.
  *
  * **Used only for the cart seed in the per-request AppShell** because the cart
- * is personalized. Catalog reads go through `staticStorefrontClient`
+ * is personalized. Catalog reads go through `getStaticStorefrontClient(locale)`
  * (`storefront-static.ts`) so they share a throttle bucket and never carry a
  * buyer IP (F2).
  */
