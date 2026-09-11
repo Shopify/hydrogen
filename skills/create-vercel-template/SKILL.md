@@ -149,7 +149,9 @@ middleware is not a React Server Component boundary, so `server-only` would brea
   is a route param: `app/[locale]/layout.tsx` is the root layout (`generateStaticParams` from `lib/locale.ts`'s
   `localeParams()`, `resolveLocaleParam()` on the param, `<html lang>` per locale, `LocaleProvider` for client
   components). `proxy.ts` rewrites incoming URLs into that shape through `lib/locale-routing.ts` (matched locale ->
-  first segment; file-like paths pass through; explicit default prefix 308s to the unprefixed URL). Static pages
+  first segment; an explicit root allowlist of metadata routes, `public/` files, `/api/*` and `/.well-known/*` passes
+  through; explicit default prefix 308s to the unprefixed URL). The root layout resolves its locale leniently
+  (`resolveShellLocale`) because a root layout cannot render a 404; pages use the strict `resolveLocaleParam`. Static pages
   pin the param's locale on `getStaticStorefrontClient(locale)` (`lib/storefront-static.ts`, one client per
   locale); the per-request `lib/storefront.ts` and `lib/customer-account.ts` contexts are built from `headers()`
   only and resolve the locale from the forwarded `x-storefront-url`. Internal links go through

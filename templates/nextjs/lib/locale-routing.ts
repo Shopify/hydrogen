@@ -10,15 +10,27 @@ import {
  */
 
 /**
+ * Paths Next serves outside `app/[locale]`: metadata routes, `public/` assets, and route
+ * handlers. Everything else is a page and gets the locale segment. Explicit rather than
+ * inferred from a file extension so a scanner hitting `/wp-login.php` cannot reach the
+ * `[locale]` layout with a bogus param, and so `app/api/*` handlers you add keep working.
+ * Extend this when adding files to `public/` or routes under `app/api`.
+ */
+const ROOT_PATHS = new Set(["/robots.txt", "/sitemap.xml", "/favicon.svg"]);
+const ROOT_PREFIXES = ["/api/", "/.well-known/", "/icons/"];
+
+export function isRootPath(pathname: string): boolean {
+  return ROOT_PATHS.has(pathname) || ROOT_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+/**
  * Every page lives under `app/[locale]`, so the matched locale is rewritten into the path as the
  * first segment: `/products/x` -> `/en-us/products/x`, `fr.example.ca/products/x` ->
  * `/fr-ca/products/x`. The browser URL is untouched and `x-storefront-url` still carries it.
- *
- * Paths whose last segment has an extension (`/robots.txt`, `/sitemap.xml`, `public/` assets) are
- * root-level files, not pages, and pass through. Returns `undefined` when no rewrite is needed.
+ * Returns `undefined` for root paths and for URLs already in the internal shape.
  */
 export function toLocaleSegmentUrl(url: URL, locale: ShopifyMatchedLocale): URL | undefined {
-  if (FILE_PATH_RE.test(url.pathname)) return undefined;
+  if (isRootPath(url.pathname)) return undefined;
 
   const unprefixedPathname = url.pathname.slice(locale.pathPrefix.length) || "/";
   const segmentPath = `/${getLocalePathSegment(locale)}`;
@@ -51,5 +63,3 @@ export function toCanonicalDefaultUrl(
   canonicalUrl.pathname = url.pathname.slice(defaultPrefix.length) || "/";
   return canonicalUrl;
 }
-
-const FILE_PATH_RE = /\/[^/]+\.[^/]+$/;

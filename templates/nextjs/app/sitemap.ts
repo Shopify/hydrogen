@@ -21,13 +21,15 @@ import { getStaticStorefrontClient } from "@/lib/storefront-static";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries = await fetchSitemap();
 
-  return getSupportedLocales(i18n).flatMap((locale) =>
-    entries.map((entry) => ({
+  const locales = getSupportedLocales(i18n);
+  return entries.flatMap((entry) => {
+    const languages = alternateUrls(entry.path);
+    return locales.map((locale) => ({
       url: canonicalUrl(entry.path, locale),
       lastModified: entry.lastmod ?? undefined,
-      alternates: { languages: alternateUrls(entry.path) },
-    })),
-  );
+      alternates: { languages },
+    }));
+  });
 }
 
 type SitemapEntry = { path: string; lastmod?: string };

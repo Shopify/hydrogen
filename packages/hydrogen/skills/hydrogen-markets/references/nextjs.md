@@ -74,9 +74,10 @@ export function resolveLocaleParam(segment: string): Locale {
   }
 }
 
-/** BCP 47 for `<html lang>` and hreflang: PT_BR + BR -> `pt-BR`, PT_BR + CA -> `pt-CA`. */
+/** BCP 47 for `<html lang>` and hreflang: PT_BR + BR -> `pt-BR`, ZH_TW + HK -> `zh-Hant-HK`. */
 export function toLanguageTag({ language, country }: ShopifyLocale): string {
-  return `${language.replace(/_.*$/, "").toLowerCase()}-${country}`;
+  const primary = { ZH_CN: "zh-Hans", ZH_TW: "zh-Hant" }[language] ?? language.replace(/_.*$/, "").toLowerCase();
+  return `${primary}-${country}`;
 }
 ```
 
@@ -101,7 +102,7 @@ export default async function RootLayout({ params, children }) {
 ```
 
 - `dynamicParams = false` is not allowed under `cacheComponents`; `resolveLocaleParam` is what 404s an unknown segment. Call it in every layout, page, and `generateMetadata` that reads `params.locale`.
-- `<html lang>` and `hreflang` values are BCP 47 `language-REGION`. Keep only the primary language subtag: `PT_BR` + `BR` -> `pt-BR`, never `pt-br-BR`.
+- `<html lang>` and `hreflang` values are BCP 47. Keep only the primary language subtag (`PT_BR` + `BR` -> `pt-BR`, never `pt-br-BR`); the Chinese codes keep a script subtag so `ZH_CN` and `ZH_TW` for one country stay distinct. Throw when two locales produce the same tag.
 - `LocaleProvider` is a client context so client components (and `LocalizedLink`, below) can read the locale without prop drilling.
 
 ---
@@ -129,7 +130,8 @@ Rules the two helpers encode (keep them pure functions over `URL` so they are un
 
 - Rewrite target: `/${getLocalePathSegment(requestContext.locale)}` followed by the path with `requestContext.locale.pathPrefix` stripped. `/products/x` -> `/en-us/products/x`; `fr.example.ca/products/x` -> `/fr-ca/products/x`; `/fr-ca/products/x` is already in shape.
 - Pathname routing only: an explicit default prefix (`/en-us/...`) is not a locale match, so redirect it to the unprefixed URL. One canonical URL per page.
-- Paths whose last segment has an extension (`/robots.txt`, `/sitemap.xml`, `public/` assets) are files, not pages. Pass them through; the proxy runs before `public/` is served.
+- Keep an explicit allowlist of root paths Next serves outside `[locale]` (`/robots.txt`, `/sitemap.xml`, your `public/` files, `/api/*` route handlers, `/.well-known/*`) and pass those through untouched; the proxy runs before `public/` is served. Do not infer "file" from an extension: a scanner hitting `/wp-login.php` would then reach the `[locale]` layout with a bogus param, and a root layout has nowhere to render a 404, so it 500s. Rewriting unknown paths sends them to the catch-all instead.
+- The root layout resolves its shell locale leniently (default on an unknown segment) for the same reason; pages and `generateMetadata` resolve strictly and 404.
 - `x-storefront-url` still carries the original browser URL, so dynamic components and `not-found.tsx` see the real request.
 - Use `getLocalePathSegment(requestContext.locale)`, not a hand-built `${language}-${country}`: a matched locale carries `pathPrefix` in place of `pathSegment`, and the helper reads it so custom segments round-trip.
 

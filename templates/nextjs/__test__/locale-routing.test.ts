@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { defineShopifyI18n, matchLocale } from "@shopify/hydrogen";
 
-import { toCanonicalDefaultUrl, toLocaleSegmentUrl } from "../lib/locale-routing.ts";
+import { isRootPath, toCanonicalDefaultUrl, toLocaleSegmentUrl } from "../lib/locale-routing.ts";
 
 const EN_US = { language: "EN", country: "US" } as const;
 const FR_CA = { language: "FR", country: "CA" } as const;
@@ -60,15 +60,33 @@ test("domain routing: the hostname becomes the internal segment", () => {
   assert.equal(rewrite("http://localhost:3000/products/x", domainI18n), "/en-us/products/x");
 });
 
-test("keeps the query string and never touches file-like paths", () => {
+test("keeps the query string", () => {
   const url = new URL("https://shop.test/collections?after=abc");
   assert.equal(
     toLocaleSegmentUrl(url, matchLocale(url, pathnameI18n))?.href,
     "https://shop.test/en-us/collections?after=abc",
   );
+});
 
-  for (const path of ["/robots.txt", "/sitemap.xml", "/favicon.svg", "/icons/icon-user.svg"]) {
+test("root paths pass through: metadata routes, public assets, route handlers", () => {
+  const rootPaths = [
+    "/robots.txt",
+    "/sitemap.xml",
+    "/favicon.svg",
+    "/icons/icon-user.svg",
+    "/api/revalidate",
+    "/.well-known/apple-developer-merchantid-domain-association",
+  ];
+  for (const path of rootPaths) {
+    assert.equal(isRootPath(path), true, path);
     assert.equal(rewrite(`https://shop.test${path}`, pathnameI18n), undefined, path);
+  }
+});
+
+test("unknown file-like paths are pages, so they get the segment and reach the 404 catch-all", () => {
+  for (const path of ["/wp-login.php", "/.env", "/products/x.js", "/favicon.ico"]) {
+    assert.equal(isRootPath(path), false, path);
+    assert.equal(rewrite(`https://shop.test${path}`, pathnameI18n), `/en-us${path}`, path);
   }
 });
 
