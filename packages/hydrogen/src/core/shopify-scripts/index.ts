@@ -1,5 +1,6 @@
 import { getShopifyAnalyticsBusScript, getShopifyAnalyticsConfig } from "./analytics";
 import {
+  SHOPIFY_ACCOUNT_SCRIPT,
   SHOPIFY_CONSENT_API_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
   SHOPIFY_CONSENT_SCRIPT_ID,
@@ -23,6 +24,7 @@ import type {
 
 export {
   CONSENT_TRACKING_API_LOADED_EVENT,
+  SHOPIFY_ACCOUNT_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
   SHOPIFY_CONSENT_API_SCRIPT,
   SHOPIFY_PERF_KIT_SCRIPT,
@@ -56,7 +58,9 @@ export type {
  * component. Frameworks without a binding can render these descriptors during SSR and call
  * `initializeShopifyScripts()` during browser hydration.
  */
+// oxlint-disable-next-line complexity -- ordered assembly of optional Shopify script tags; each flag adds one branch and splitting would obscure the required load order
 export function getShopifyScriptTags({
+  account = false,
   analytics,
   consent,
   debug,
@@ -135,6 +139,20 @@ export function getShopifyScriptTags({
         crossorigin: "anonymous",
         ...nonceAttributes,
         src: SHOPIFY_INBOX_SCRIPT,
+      },
+    });
+  }
+
+  if (account) {
+    scripts.push({
+      tagName: "script",
+      attributes: {
+        id: "shopify-account",
+        type: "module",
+        async: true,
+        crossorigin: "anonymous",
+        ...nonceAttributes,
+        src: SHOPIFY_ACCOUNT_SCRIPT,
       },
     });
   }
