@@ -11,7 +11,7 @@ Product data is fetched in the server page. Variant selection and add-to-cart li
 
 ## Server Page
 
-In `app/products/[handle]/page.tsx`, read selected options from URL search params and query Storefront API with Hydrogen's product fields:
+In `app/[locale]/products/[handle]/page.tsx` (the `[locale]` segment is the hydrogen-markets skill's Next.js route shape), read selected options from URL search params and query Storefront API with Hydrogen's product fields:
 
 ```tsx
 import { getSelectedProductOptions, gql } from "@shopify/hydrogen";

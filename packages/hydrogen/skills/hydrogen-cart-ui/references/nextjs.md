@@ -5,7 +5,7 @@ Next.js App Router cart bindings. This is the primary reference for promise-base
 With `cacheComponents: true`, keep the root layout as a static shell. Render an async `AppShell` inside `<Suspense>`, call `await connection()` there, create the cart read, and pass its promise to a `"use client"` provider wrapper as `initialData`. Do not `await` the cart before rendering the shell when the app is optimized for streaming. `CartProvider` tracks the promise and `useSuspenseCart()` lets cart content suspend locally, so the static shell can stream while cart views wait behind a cart-specific fallback.
 
 ```tsx
-// app/providers.tsx
+// app/[locale]/providers.tsx
 "use client";
 
 import type { ReactNode } from "react";
@@ -20,14 +20,16 @@ export function Providers({ cartData, children }: { cartData: Promise<CartData>;
 ```
 
 ```tsx
-// app/layout.tsx
+// app/[locale]/layout.tsx — the root layout; `lang` comes from the resolved locale param
+// (hydrogen-markets skill, `references/nextjs.md`)
 import { Suspense } from "react";
 
 import { AppShell } from "./app-shell";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ params, children }: LayoutProps) {
+  const locale = resolveLocaleParam((await params).locale);
   return (
-    <html lang="en">
+    <html lang={toLanguageTag(locale)}>
       <body>
         <Suspense fallback={null}>
           <AppShell>{children}</AppShell>
@@ -39,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ```
 
 ```tsx
-// app/app-shell.tsx
+// app/[locale]/app-shell.tsx
 import { connection } from "next/server";
 
 import { cartHandlers } from "@/lib/cart-handlers";

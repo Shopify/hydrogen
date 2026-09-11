@@ -73,6 +73,8 @@ If `PRIVATE_STOREFRONT_API_TOKEN` is unset, the app uses `mock.shop`. If you set
 
 ## Pages
 
+Every page renders once per locale from `app/[locale]`. With the default single-locale `i18n` in `lib/config.ts` the URLs below are served as written; add `routing` to the definition to serve more locales by path prefix (`/fr-ca/...`) or hostname, and `proxy.ts` maps incoming URLs onto the same pages.
+
 - `/`: home with hero, featured products, and featured collections.
 - `/collections`: all collections.
 - `/collections/:handle`: collection page with filters, sort, pagination, and active filter chips.
@@ -98,7 +100,7 @@ Prefer to wire it up yourself? Push this project to a Git provider, import it in
 
 ## Where to Start
 
-- Pages live in `app/`.
+- Pages live in `app/[locale]/`; the locale definition lives in `lib/config.ts` and the URL <-> locale helpers in `lib/locale.ts`.
 - Shared UI lives in `components/`.
 - Storefront, cart, Customer Account, analytics, and query helpers live in `lib/`.
 - Global styling lives in `app/globals.css`.
