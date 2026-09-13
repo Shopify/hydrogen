@@ -1,5 +1,9 @@
 import {
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
+  startTransition,
+  useCallback,
   useEffect,
   useState,
   useMemo,
@@ -307,7 +311,21 @@ function AnalyticsProvider({
     customCanTrack ? true : false,
   );
   const [consentCollected, setConsentCollected] = useState(false);
-  const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
+  const [carts, setCartsState] = useState<Carts>({cart: null, prevCart: null});
+
+  // This provider sits above every route-level Suspense boundary, so an urgent
+  // update from it interrupts hydration and forces boundaries that are still
+  // dehydrated to discard their server HTML and client-render (React #418).
+  // None of this analytics bookkeeping is urgent, so every update that can land
+  // after hydration begins is applied as a transition.
+  //
+  // `setCarts` is handed to `CartAnalytics`, which applies it when the deferred
+  // cart resolves. Transition at the declaration, not at that call site, so the
+  // guarantee holds for every caller.
+  const setCarts = useCallback<Dispatch<SetStateAction<Carts>>>(
+    (update) => startTransition(() => setCartsState(update)),
+    [],
+  );
   const [canTrack, setCanTrack] = useState<() => boolean>(
     customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
   );
@@ -391,14 +409,16 @@ function AnalyticsProvider({
         <ShopifyAnalytics
           consent={consent}
           onReady={() => {
-            setAnalyticsLoaded(true);
-            setCanTrack(
-              customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
-            );
+            startTransition(() => {
+              setAnalyticsLoaded(true);
+              setCanTrack(
+                customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
+              );
 
-            // Delay loading PerfKit until consent is collected
-            // so that it reads updated tracking values from old cookies.
-            setConsentCollected(true);
+              // Delay loading PerfKit until consent is collected
+              // so that it reads updated tracking values from old cookies.
+              setConsentCollected(true);
+            });
           }}
           domain={cookieDomain}
         />
@@ -431,7 +451,11 @@ function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
 
   // resolve the shop analytics that could have been deferred
   useEffect(() => {
-    Promise.resolve(shopProp).then(setShop);
+    // Transitioned for the same reason as the provider's other deferred
+    // updates: this lands after hydration begins and must not interrupt it.
+    Promise.resolve(shopProp).then((resolvedShop) => {
+      startTransition(() => setShop(resolvedShop));
+    });
     return () => {};
   }, [setShop, shopProp]);
 
