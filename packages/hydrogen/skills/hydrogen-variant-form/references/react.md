@@ -6,9 +6,11 @@ Create typed React product bindings once from `@shopify/hydrogen/react`, usually
 import { createProductComponents } from "@shopify/hydrogen/react";
 import type { ProductData } from "./types";
 
-export const { ProductProvider, useProductForm } =
+export const { ProductProvider, useProduct, useProductForm } =
   createProductComponents<ProductData>();
 ```
+
+`useProduct` returns read-only selection state for consumers such as price, gallery, and analytics. `useProductForm` adds the form bindings (`register`, `formProps`, `pending`) and belongs in the purchase panel.
 
 Use the provider's `onSelect` callback for same-product URL sync:
 

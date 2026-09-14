@@ -13,73 +13,7 @@ Run the app in the framework's dev server and, when practical, in a production b
 
 If any check below fails, fix the app and re-run the failing check before treating verification as complete.
 
-Copyable checklist (details for each check are in the sections below):
-
-```
-Static checks:
-- [ ] Formatting fixer, if present
-- [ ] lint, typecheck, or check
-- [ ] GraphQL validation (`hydrogen gql check`) when `gql()` documents changed
-- [ ] build
-- [ ] test
-- [ ] Formatting check, if distinct from the fixer
-
-Request handlers:
-- [ ] POST /api/{api-version}/graphql.json returns Storefront API JSON, not the framework 404
-- [ ] GET /api/cart returns cart handler JSON (no cart cookie -> {cart: null})
-- [ ] GET /admin redirects to the configured shop/admin domain
-- [ ] Unknown path returns framework 404 unless a Shopify URL redirect matches
-
-Navigation:
-- [ ] Every navbar and footer link href returns 200 when curled directly (no invented routes)
-
-Product page:
-- [ ] Server-renders title, gallery, price, variant options, add-to-cart form, and related products when available
-- [ ] URL option params select the expected variant on reload
-- [ ] Selecting same-product options updates the URL without scroll reset
-- [ ] Combined-listing values navigate to the target product handle instead of calling selectOption
-- [ ] Sold-out values remain selectable and show sold-out text
-- [ ] Non-existent combinations are disabled
-- [ ] Add-to-cart is enabled only when canAddToCart(product, options) is true
-- [ ] Shop Pay renders only when a selected variant exists and is disabled when add-to-cart is disabled or pending
-
-Cart:
-- [ ] /cart works without JavaScript and is reachable via a real /cart link in the footer
-- [ ] Header cart trigger is a `/cart` anchor that opens the drawer via `showModal()` after hydration
-- [ ] window.Shopify.actions.openCart() opens the drawer after Standard Actions loads
-- [ ] A mutation driven through the real Add to cart UI or framework cart action issues `Set-Cookie` and propagates expected response headers
-- [ ] Add-to-cart can open the drawer after a successful submit when the product UX chooses that behavior
-- [ ] Each line item form includes hidden set, scoped lineId, and editable quantity
-- [ ] Quantity Enter key submits a set action
-- [ ] Rapid quantity clicks settle to the final expected quantity
-- [ ] Line, discount, note, attribute, network, and cart-level errors appear in the right scope
-- [ ] Attribute editing submits the complete list, preserves unrelated attributes, and shows scoped pending UI
-- [ ] Totals are server-provided and visually pending during cart mutations
-
-Collection and search:
-- [ ] Collection filters and sort update the URL and product grid
-- [ ] Checkbox filters and price min/max controls both render, apply, and persist after reload
-- [ ] Reloading a filtered URL server-renders the same filter/sort state
-- [ ] Active filter chips remove one filter and preserve unrelated params
-- [ ] Search filters preserve q
-- [ ] JavaScript-disabled filter forms still submit with GET
-- [ ] Back/forward navigation does not leave browse state stuck in loading
-
-Analytics:
-- [ ] Page view fires on initial load and client navigations
-- [ ] Product/collection/search/cart view events fire once per route data change
-- [ ] Cart tracking is wired once via trackCartAnalytics(cartStore) (React/Vue: useCartAnalytics()), delta events fire on confirmed cart data changes, and the cart query includes updatedAt
-- [ ] No browser module reads private env variables
-- [ ] Production does not bypass Customer Privacy consent gating (no forced-always-true consent checks)
-
-Markets and money:
-- [ ] Market-aware Storefront API queries declare $country, $language, and @inContext
-- [ ] Money renders from Storefront API money fields via formatMoney()
-- [ ] No client-side subtotal/total arithmetic exists
-
-Production pass:
-- [ ] Build and run the production bundle and repeat the request-handler checks against production mode
-```
+Work through the sections below and track them as a checklist. Skip a section only when the change under test cannot affect it.
 
 ## Static Checks
 

@@ -12,7 +12,7 @@ Assume the deterministic Hydrogen setup command has already installed `@shopify/
 
 ## How To Work Through The Steps
 
-Read each step file and complete it fully before opening the next. Every step ends each of its phases with a "Continue when" checklist of observable criteria — do not move to the next phase or step until every criterion passes. Reusable domain knowledge lives in the standalone `hydrogen-*` skills the steps invoke; setup-specific details live in `references/`.
+Read each step file and complete it fully before opening the next. Every step ends each of its phases with a "Continue when" checklist of observable criteria — do not move to the next phase or step until every criterion passes. Reusable domain knowledge lives in the standalone `hydrogen-*` skills the steps invoke; each step holds only the ordering, prerequisites, and choices specific to setup.
 
 ## Verification Discipline
 
