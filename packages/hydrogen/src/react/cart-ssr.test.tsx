@@ -1,6 +1,8 @@
 // @vitest-environment node
+import { PassThrough } from "node:stream";
+
 import { createElement, Suspense } from "react";
-import { renderToString } from "react-dom/server";
+import { renderToPipeableStream, renderToString } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 
 import type { CartData } from "../core/cart/state";
@@ -153,5 +155,50 @@ describe("CartProvider SSR", () => {
 
     expect(html).toContain("Loading cart");
     expect(html).not.toContain(">0<");
+  });
+
+  it("streams resolved cart content from useSuspenseCart", async () => {
+    let resolveInitialData: ((value: { cart: CartData }) => void) | undefined;
+    const initialData = new Promise<{ cart: CartData }>((resolve) => {
+      resolveInitialData = resolve;
+    });
+    const tree = createElement(
+      typedCart.CartProvider,
+      { initialData },
+      createElement(
+        Suspense,
+        { fallback: createElement("span", null, "Loading cart") },
+        createElement(SuspenseCartTotalQuantity),
+      ),
+    );
+
+    const html = await new Promise<string>((resolve, reject) => {
+      const destination = new PassThrough();
+      let output = "";
+      destination.setEncoding("utf8");
+      destination.on("data", (chunk: string) => {
+        output += chunk;
+      });
+      destination.on("end", () => resolve(output));
+      destination.on("error", reject);
+
+      const stream = renderToPipeableStream(tree, {
+        onShellReady() {
+          if (!resolveInitialData) {
+            reject(new Error("Expected initialData resolver to be assigned"));
+            return;
+          }
+          resolveInitialData({ cart: MOCK_CART });
+        },
+        onAllReady() {
+          stream.pipe(destination);
+        },
+        onShellError: reject,
+        onError: reject,
+      });
+    });
+
+    expect(html).toContain(">3<");
+    expect(html).not.toContain("Loading cart");
   });
 });
