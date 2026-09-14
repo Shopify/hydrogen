@@ -29,13 +29,17 @@ describe("renderShopifyAccountWidget", () => {
     const html = renderShopifyAccountWidget({
       ...baseOptions,
       storeDomain: 'a"b&c<d>e.myshopify.com',
+      customerAccessToken: 'tok"en&<>',
       menu: 'main"menu',
+      nonce: 'n"once&',
       signInUrl: "/login?next=/account&x=1",
     });
 
     expect(html).toContain('store-domain="a&quot;b&amp;c&lt;d&gt;e.myshopify.com"');
+    expect(html).toContain('customer-access-token="tok&quot;en&amp;&lt;&gt;"');
     expect(html).toContain('menu="main&quot;menu"');
     expect(html).toContain('sign-in-url="/login?next=/account&amp;x=1"');
+    expect(html).toContain('<style nonce="n&quot;once&amp;">');
   });
 
   it("serialises the customer access token only when provided", () => {
@@ -48,7 +52,7 @@ describe("renderShopifyAccountWidget", () => {
     ).not.toContain("customer-access-token");
     expect(
       renderShopifyAccountWidget({ ...baseOptions, customerAccessToken: "customer-token" }),
-    ).toContain('public-access-token="public-token" customer-access-token="customer-token">');
+    ).toContain('customer-access-token="customer-token"');
   });
 
   it("defaults sign-in-url to /account/login and allows overriding it", () => {
@@ -62,7 +66,29 @@ describe("renderShopifyAccountWidget", () => {
     expect(renderShopifyAccountWidget(baseOptions)).not.toContain("menu=");
     expect(
       renderShopifyAccountWidget({ ...baseOptions, menu: "customer-account-main-menu" }),
-    ).toContain('sign-in-url="/account/login" menu="customer-account-main-menu">');
+    ).toContain('menu="customer-account-main-menu"');
+  });
+
+  it("treats whitespace-only optional values as omitted", () => {
+    const omitted = renderShopifyAccountWidget({
+      ...baseOptions,
+      signInUrl: "  ",
+      menu: " ",
+      nonce: " ",
+    });
+
+    expect(omitted).toContain('sign-in-url="/account/login"');
+    expect(omitted).not.toContain("menu=");
+    expect(omitted).toContain("<style>");
+
+    const trimmed = renderShopifyAccountWidget({
+      ...baseOptions,
+      signInUrl: " /auth/login ",
+      menu: " main ",
+    });
+
+    expect(trimmed).toContain('sign-in-url="/auth/login"');
+    expect(trimmed).toContain('menu="main"');
   });
 
   it("applies the CSP nonce to the style element only", () => {

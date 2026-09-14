@@ -78,7 +78,7 @@ In the Shopify admin, open the Hydrogen app, select your storefront and go to
 `unauthenticated_read_customers`, `unauthenticated_read_content` and
 `unauthenticated_read_product_listings` permissions. Never use
 `PRIVATE_STOREFRONT_API_TOKEN` here. Without the public token, or in `mock.shop`
-mode, the header keeps a plain account link with the same footprint.
+mode, the header keeps a placeholder account control with the same footprint.
 
 Mode is **auto-detected**: when a `PRIVATE_STOREFRONT_API_TOKEN` is present the
 app talks to the real store (`PUBLIC_STORE_DOMAIN`, falling back to the default in
