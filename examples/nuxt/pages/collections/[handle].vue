@@ -61,7 +61,6 @@ function publishCollectionView() {
       id: collection.value.id,
       handle: collection.value.handle,
     },
-    url: window.location.href,
   });
 }
 

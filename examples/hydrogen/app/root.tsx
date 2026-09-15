@@ -91,7 +91,7 @@ export async function loader(args: Route.LoaderArgs) {
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
     shop,
     consent: {
-      mode: "no-banner",
+      mode: "default-banner",
     } satisfies ConsentConfig,
   };
 }
