@@ -535,6 +535,43 @@ describe("parseCartRequest", () => {
         ],
       });
     });
+
+    it("intent=add with line-item attributes includes them on the line", async () => {
+      const { action } = await parseCartRequest(
+        formRequest({
+          intent: "add",
+          merchandiseId: "gid://shopify/ProductVariant/42",
+          "attributes.Gift message": "Happy birthday",
+          "attributes.Engraving": "A.B.",
+        }),
+      );
+      expect(action).toEqual({
+        intent: "add",
+        lines: [
+          {
+            merchandiseId: "gid://shopify/ProductVariant/42",
+            quantity: 1,
+            attributes: [
+              { key: "Gift message", value: "Happy birthday" },
+              { key: "Engraving", value: "A.B." },
+            ],
+          },
+        ],
+      });
+    });
+
+    it("intent=add without attributes omits the field", async () => {
+      const { action } = await parseCartRequest(
+        formRequest({
+          intent: "add",
+          merchandiseId: "gid://shopify/ProductVariant/42",
+        }),
+      );
+      expect(action).toEqual({
+        intent: "add",
+        lines: [{ merchandiseId: "gid://shopify/ProductVariant/42", quantity: 1 }],
+      });
+    });
   });
 
   describe("FormData — discount intents", () => {

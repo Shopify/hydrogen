@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import * as shopifyScriptsCore from "../core/shopify-scripts";
 import {
+  SHOPIFY_ACCOUNT_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
   SHOPIFY_CONSENT_API_SCRIPT,
   SHOPIFY_PERF_KIT_SCRIPT,
@@ -98,6 +99,7 @@ describe("ShopifyScripts", () => {
         routes: routeTemplates,
         shop: TEST_SHOP,
         inbox: true,
+        account: true,
       }),
     );
 
@@ -106,7 +108,9 @@ describe("ShopifyScripts", () => {
     expect(html).toContain('"locale":"en"');
     expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
     expect(html).toContain(`"shop":"${TEST_MYSHOPIFY_DOMAIN}"`);
-    expect(html).toContain('"customerPrivacy":{"config":{"isHeadless":true}');
+    expect(html).toContain(
+      '"customerPrivacy":{"config":{"isHeadless":true,"asyncConsent":true,"asyncVisitorState":true}',
+    );
     expect(html).toContain("consentDomain=window.location.host");
     expect(html).toContain(`id="shopify-consent"`);
     expect(html).toContain(`src="${SHOPIFY_CONSENT_API_SCRIPT}"`);
@@ -118,6 +122,9 @@ describe("ShopifyScripts", () => {
     expect(html).toContain("shopify-standard-events-inspector");
     expect(html).toContain(
       `<script id="shopify-inbox" type="module" async="" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_INBOX_SCRIPT}"></script>`,
+    );
+    expect(html).toContain(
+      `<script id="shopify-account" type="module" async="" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_ACCOUNT_SCRIPT}"></script>`,
     );
     expect(html).not.toContain("<shopify-chat");
     expect(html).toContain(`id="shopify-perfkit"`);
@@ -197,7 +204,9 @@ describe("ShopifyScripts", () => {
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
     expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
-    expect(html).toContain('"customerPrivacy":{"config":{"isHeadless":true}');
+    expect(html).toContain(
+      '"customerPrivacy":{"config":{"isHeadless":true,"asyncConsent":true,"asyncVisitorState":true}',
+    );
     expect(html).toContain("consentDomain=window.location.host");
     expect(html).toContain(`id="shopify-consent"`);
     expect(html).toContain(`src="${SHOPIFY_CONSENT_API_SCRIPT}"`);
@@ -211,18 +220,15 @@ describe("ShopifyScripts", () => {
       }),
     );
 
-    expect(html.indexOf('"consentStatus":"pending"')).toBeLessThan(
-      html.indexOf(SHOPIFY_CONSENT_API_SCRIPT),
-    );
-    expect(html.indexOf(SHOPIFY_CONSENT_API_SCRIPT)).toBeLessThan(
-      html.indexOf("visitorConsentCollected"),
-    );
-    expect(html.indexOf("visitorConsentCollected")).toBeLessThan(
+    expect(html.indexOf('"asyncConsent":true')).toBeLessThan(
       html.indexOf("Analytics bus already initialized"),
+    );
+    expect(html.indexOf("Analytics bus already initialized")).toBeLessThan(
+      html.indexOf(SHOPIFY_CONSENT_API_SCRIPT),
     );
     expect(html).toContain('"currency":{"active":"USD"}');
     expect(html).toContain('"shop":{"shopId":"42","storefrontId":"sub-1","channel":"hydrogen"}');
-    expect(html.indexOf("Analytics bus already initialized")).toBeLessThan(
+    expect(html.indexOf(SHOPIFY_CONSENT_API_SCRIPT)).toBeLessThan(
       html.indexOf("storefront/analytics/shopify.js"),
     );
     expect(html.indexOf("storefront/analytics/shopify.js")).toBeLessThan(
@@ -238,7 +244,7 @@ describe("ShopifyScripts", () => {
     expect(html).toContain(`id="shopify-consent"`);
     expect(html).toContain(`src="${SHOPIFY_PRIVACY_BANNER_SCRIPT}"`);
     expect(html).toContain(`async=""`);
-    expect(html).toContain('"consentStatus":"pending"');
+    expect(html).toContain('"asyncConsent":true,"asyncVisitorState":true');
     expect(html).toContain("consentDomain=window.location.host");
   });
 

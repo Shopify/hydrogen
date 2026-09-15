@@ -552,6 +552,21 @@ describe("createShopifyRequestContext", () => {
     ]);
   });
 
+  it("returns Shopify cookies for a marked session-establishing request", () => {
+    const context = createTestRequestContext(
+      new Request("https://example.com/api/ucp/mcp", { method: "POST" }),
+    );
+    context.markResponseAsSessionEstablishing("ucp request");
+    const headers = new Headers({ "content-type": "application/json" });
+    headers.append("set-cookie", "_shopify_essential=established; Path=/; Secure; HttpOnly");
+
+    context.applyResponseHeaders(headers);
+
+    expect(headers.getSetCookie()).toEqual([
+      "_shopify_essential=established; Path=/; Secure; HttpOnly",
+    ]);
+  });
+
   it("never replays captured Shopify state on document responses", () => {
     const context = createTestRequestContext(
       new Request("https://example.com", {

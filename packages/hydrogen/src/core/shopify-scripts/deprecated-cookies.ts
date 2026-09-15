@@ -8,7 +8,7 @@
  * To remove: delete this file and remove the ShopifyScripts startup call.
  */
 
-import { VISITOR_CONSENT_COLLECTED_EVENT } from "./constants";
+import { CONSENT_TRACKING_API_LOADED_EVENT, VISITOR_CONSENT_COLLECTED_EVENT } from "./constants";
 import { findWritableCookieDomain } from "./utils/cookie-domain";
 import { getTrackingValues } from "./utils/tracking-values";
 import { buildUUID } from "./utils/uuid";
@@ -103,6 +103,7 @@ export function initializeDeprecatedCookies(): () => void {
     updateCookies(hasAnalyticsConsent(), domain);
   };
 
+  document.addEventListener(CONSENT_TRACKING_API_LOADED_EVENT, syncConsent);
   document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, syncConsent);
   if (isConsentLoaded()) syncConsent();
 

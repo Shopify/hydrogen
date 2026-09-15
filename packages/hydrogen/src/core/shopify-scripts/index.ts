@@ -1,6 +1,6 @@
 import { getShopifyAnalyticsBusScript, getShopifyAnalyticsConfig } from "./analytics";
-import { getShopifyConsentTrackingScript } from "./consent";
 import {
+  SHOPIFY_ACCOUNT_SCRIPT,
   SHOPIFY_CONSENT_API_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
   SHOPIFY_CONSENT_SCRIPT_ID,
@@ -23,6 +23,8 @@ import type {
 } from "./types";
 
 export {
+  CONSENT_TRACKING_API_LOADED_EVENT,
+  SHOPIFY_ACCOUNT_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
   SHOPIFY_CONSENT_API_SCRIPT,
   SHOPIFY_PERF_KIT_SCRIPT,
@@ -56,7 +58,9 @@ export type {
  * component. Frameworks without a binding can render these descriptors during SSR and call
  * `initializeShopifyScripts()` during browser hydration.
  */
+// oxlint-disable-next-line complexity -- ordered assembly of optional Shopify script tags; each flag adds one branch and splitting would obscure the required load order
 export function getShopifyScriptTags({
+  account = false,
   analytics,
   consent,
   debug,
@@ -139,9 +143,28 @@ export function getShopifyScriptTags({
     });
   }
 
-  // Keep this async consent library immediately before the inline consent bootstrap.
-  // Parser-inserted async scripts execute in a later task, so the following inline
-  // script can attach a load listener before the library runs.
+  if (account) {
+    scripts.push({
+      tagName: "script",
+      attributes: {
+        id: "shopify-account",
+        type: "module",
+        async: true,
+        crossorigin: "anonymous",
+        ...nonceAttributes,
+        src: SHOPIFY_ACCOUNT_SCRIPT,
+      },
+    });
+  }
+
+  // Install readiness listeners before loading the async consent library so a
+  // cached script cannot finish initialization before Hydrogen starts listening.
+  scripts.push({
+    tagName: "script",
+    attributes: { id: "shopify-analytics-bus", ...nonceAttributes },
+    innerHTML: getShopifyAnalyticsBusScript(analyticsConfig),
+  });
+
   scripts.push({
     tagName: "script",
     attributes: {
@@ -154,21 +177,6 @@ export function getShopifyScriptTags({
           ? SHOPIFY_PRIVACY_BANNER_SCRIPT
           : SHOPIFY_CONSENT_API_SCRIPT,
     },
-  });
-  // This must run immediately after the consent library tag so it can find that
-  // tag and attach its load listener before consent-tracking-api/privacy-banner executes.
-  scripts.push({
-    tagName: "script",
-    attributes: { id: "shopify-consent-bootstrap", ...nonceAttributes },
-    innerHTML: getShopifyConsentTrackingScript(consent),
-  });
-
-  // This must run after getShopifyConsentTrackingScript because that script
-  // temporarily annotates visitorConsentCollected events for the analytics bus.
-  scripts.push({
-    tagName: "script",
-    attributes: { id: "shopify-analytics-bus", ...nonceAttributes },
-    innerHTML: getShopifyAnalyticsBusScript(analyticsConfig),
   });
 
   if (shopifyAnalytics) {

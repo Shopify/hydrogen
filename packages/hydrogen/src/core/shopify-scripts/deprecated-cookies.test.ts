@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-import { VISITOR_CONSENT_COLLECTED_EVENT } from "./constants";
+import { CONSENT_TRACKING_API_LOADED_EVENT, VISITOR_CONSENT_COLLECTED_EVENT } from "./constants";
 
 const { getTrackingValuesMock } = vi.hoisted(() => ({
   getTrackingValuesMock: vi.fn(() => ({
@@ -135,6 +135,18 @@ describe("deprecated-cookies", () => {
 
       initializeDeprecatedCookies();
       triggerDocumentListener(VISITOR_CONSENT_COLLECTED_EVENT);
+
+      expect(cookieJar).toContain("_shopify_y=");
+      expect(cookieJar).toContain("_shopify_s=");
+    });
+
+    it("sets cookies when initial consent becomes ready and tracking is allowed", async () => {
+      const { initializeDeprecatedCookies } = await loadDeprecatedCookies();
+
+      setAnalyticsConsent(true);
+
+      initializeDeprecatedCookies();
+      triggerDocumentListener(CONSENT_TRACKING_API_LOADED_EVENT);
 
       expect(cookieJar).toContain("_shopify_y=");
       expect(cookieJar).toContain("_shopify_s=");

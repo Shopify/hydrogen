@@ -6,7 +6,10 @@
 //     present. On Oxygen, a linked storefront injects PRIVATE_STOREFRONT_API_TOKEN
 //     and PUBLIC_STORE_DOMAIN; for local real-store dev set them in `.env`.
 //   • mock.shop — the tokenless fallback used when no token is present (so a
-//     fresh deploy always renders), and forced explicitly by MOCK_SHOP=1.
+//     fresh deploy always renders), forced explicitly by MOCK_SHOP=1, and implied
+//     by a mock.shop host in PUBLIC_STORE_DOMAIN. mock.shop is many stores, each
+//     on its own host (directory: https://mock.shop/llms.txt); PUBLIC_STORE_DOMAIN
+//     picks one (e.g. pets.mock.shop), otherwise the default store at mock.shop.
 //
 // `storeDomain` below is the default used only when PUBLIC_STORE_DOMAIN is unset.
 // It points at Shopify's public Hydrogen Preview store as an EXAMPLE — replace it
@@ -18,13 +21,32 @@ export const storefrontConfig = {
   i18n: { country: "US", language: "EN" },
 } as const;
 
-// Real store iff a private Storefront API token is available; otherwise the
-// tokenless mock.shop demo. MOCK_SHOP=1 forces mock (used by the gate + as the
-// zero-config default).
+// Real store iff a private Storefront API token is available and the store isn't
+// a mock.shop host; otherwise the tokenless mock.shop demo. MOCK_SHOP=1 forces
+// mock (used by the gate + as the zero-config default).
 export function shouldUseMockShop(
-  env: Pick<Env, "MOCK_SHOP" | "PRIVATE_STOREFRONT_API_TOKEN">,
+  env: Pick<Env, "MOCK_SHOP" | "PRIVATE_STOREFRONT_API_TOKEN" | "PUBLIC_STORE_DOMAIN">,
 ): boolean {
-  return env.MOCK_SHOP === "1" || !env.PRIVATE_STOREFRONT_API_TOKEN;
+  return (
+    env.MOCK_SHOP === "1" ||
+    !env.PRIVATE_STOREFRONT_API_TOKEN ||
+    isMockShopDomain(env.PUBLIC_STORE_DOMAIN)
+  );
+}
+
+// mock.shop is a catalog of stores, not one store. The default store at mock.shop
+// sells apparel basics; every other store lives on its own host (pets.mock.shop,
+// snowboards.mock.shop, ...) and is listed at https://mock.shop/llms.txt.
+export const MOCK_SHOP_DOMAIN = "mock.shop";
+
+export function isMockShopDomain(domain: string | undefined): domain is string {
+  return domain === MOCK_SHOP_DOMAIN || Boolean(domain?.endsWith(`.${MOCK_SHOP_DOMAIN}`));
+}
+
+// Store domain for mock mode: a mock.shop host in PUBLIC_STORE_DOMAIN selects that
+// store's catalog; anything else means the default store.
+export function getMockShopDomain(env: Pick<Env, "PUBLIC_STORE_DOMAIN">): string {
+  return isMockShopDomain(env.PUBLIC_STORE_DOMAIN) ? env.PUBLIC_STORE_DOMAIN : MOCK_SHOP_DOMAIN;
 }
 
 // Store domain for real-store mode: prefer the worker env (Oxygen injects

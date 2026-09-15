@@ -41,6 +41,8 @@ On mutation:
 
 When overlapping mutations make response snapshots ambiguous, the store sets `state.revalidating` to `true`. It starts one authoritative refresh after those mutations settle and clears the flag when the refresh completes or fails. Until then, server-derived values such as costs remain at their last trustworthy value. A refresh failure preserves the locally reconciled cart and appears in `errors.network`.
 
+App-owned cart mutations outside Standard Actions do not emit the events the store normally observes. After such a mutation succeeds, call `CartStore.refresh()` directly or use the framework binding's `useCartActions().refresh()`. The refresh waits for active optimistic work, reconciles custom fragment fields from the configured cart endpoint, and loads the cart when none exists yet (e.g. one just created server-side). Do not call it after ordinary Hydrogen cart forms; their Standard Actions events already synchronize the store. For cart metafields specifically, see the `hydrogen-cart-metafields` skill.
+
 The store supersedes keyed mutations for the same line, discount batch, note, or complete attribute list. Relative additions remain independent so every submitted quantity reaches the server; their projections are reconciled together without disabling controls.
 
 ## Stable selectors
@@ -139,6 +141,7 @@ Errors survive unrelated cart work and clear when a new mutation begins for the 
 
 ### Form structure
 
+- **Optionally render visible line-item attributes.** Each cart line may carry `attributes` — an array of `{ key, value }` pairs set during add-to-cart. If your storefront uses line-item attributes (e.g. engraving text, gift messages, custom options), render them below the variant subtitle as secondary text. Filter out attributes whose key starts with `_` (these are internal/private, set by apps or Shopify systems). The same variant with different attributes creates separate cart lines — the optimistic layer uses attributes in line identity matching.
 - **Each line item is its own form.** This gives each line its own identity input and its own submit buttons. A single form containing multiple lines creates ambiguity about which line an action targets.
 - **Each line item form must preserve the progressive-enhancement shape.** The rendered structure will vary by framework and design system, but every line item quantity form needs the same Hydrogen contract: `register("set")`, `register("lineId", { value: line.id })`, and a real editable quantity input using `register("quantity", { value: line.quantity, interactive: true })`. Increase, decrease, and remove buttons are additional submit controls, not replacements for the set intent or the quantity input.
 - **The `set` control is a hidden submit button, not a hidden input.** `register("set")` already returns `{ type: "submit", hidden: true }`; render it on a `<button>`. Do not swap it for `<input type="hidden">` — that removes the submit button, so pressing Enter in the quantity input no longer submits the set action.
@@ -205,6 +208,10 @@ Errors survive unrelated cart work and clear when a new mutation begins for the 
 
 29. **Initial load** — Before the cart is fetched, show skeleton placeholders.
 30. **Empty cart** — After fetch completes with zero lines, show empty state.
+
+### Out-of-band mutations
+
+31. **Refresh custom data** — After an app-owned cart mutation succeeds, request a cart refresh. Every cart consumer receives the updated custom fragment data, `revalidating` represents the refresh, and a refresh failure preserves the confirmed cart while appearing in `errors.network`.
 
 ---
 

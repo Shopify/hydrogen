@@ -4,6 +4,9 @@ import type { HydrogenRouteInterceptor, HydrogenRoutesOptions } from "../route-t
 
 const PROXY_TIMEOUT_MS = 30_000;
 
+// Proxy errors are transient and may be buyer-specific: never cache them.
+const PROXY_ERROR_CACHE_CONTROL = "no-store";
+
 type ScopedLogger = ReturnType<typeof getLogger>;
 
 type PrepareHeaders = (headers: Headers, options: HydrogenRoutesOptions, url: URL) => void;
@@ -83,7 +86,22 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
   return (url, options) => {
     const { request } = options;
     if (!descriptor.match.test(url.pathname)) return null;
-    if (descriptor.methods && !descriptor.methods.includes(request.method)) return null;
+    if (descriptor.methods && !descriptor.methods.includes(request.method)) {
+      // Method not allowed. Shape the body via formatError, like other errors.
+      return Promise.resolve(
+        new Response(
+          request.method === "HEAD" ? null : JSON.stringify(formatError("Method Not Allowed")),
+          {
+            status: 405,
+            headers: {
+              allow: descriptor.methods.join(", "),
+              "content-type": "application/json",
+              "cache-control": PROXY_ERROR_CACHE_CONTROL,
+            },
+          },
+        ),
+      );
+    }
 
     let requestInit: ProxyRequestInit;
     try {
@@ -121,16 +139,10 @@ function createProxyRequestInit(
   const upstreamPathname = descriptor.rewritePathname?.(url.pathname) ?? url.pathname;
   const search = descriptor.forwardSearch === false ? "" : url.search;
   const upstreamUrl = new URL(upstreamPathname + search, storefrontClient.storeUrl);
-  const headers = createProxyRequestHeaders(descriptor, request);
-  if (descriptor.requestHeaders.applyStorefrontHeaders !== false) {
-    options.requestContext.applyStorefrontRequestHeaders(headers);
-  }
-  descriptor.requestHeaders.prepare?.(headers, options, url);
-
   const init: RequestInit & { duplex?: "half" } = {
     method: request.method,
     body: request.body,
-    headers,
+    headers: createProxyRequestHeaders(descriptor, options, url),
     signal: AbortSignal.timeout(descriptor.timeoutMs ?? PROXY_TIMEOUT_MS),
     redirect: descriptor.redirect ?? "manual",
   };
@@ -208,23 +220,43 @@ function createProxyErrorResponse(
   const status = mapping?.status ?? (phase === "setup" ? 500 : 502);
   return new Response(method === "HEAD" ? null : JSON.stringify(formatError(message)), {
     status,
-    headers: { "content-type": "application/json", ...mapping?.headers },
+    headers: {
+      "content-type": "application/json",
+      "cache-control": PROXY_ERROR_CACHE_CONTROL,
+      ...mapping?.headers,
+    },
   });
 }
 
 function createProxyRejectionResponse(rejection: ProxyResponseRejection, method: string): Response {
   return new Response(method === "HEAD" ? null : JSON.stringify(rejection.body), {
     status: rejection.status,
-    headers: { "content-type": "application/json", ...rejection.headers },
+    headers: {
+      "content-type": "application/json",
+      "cache-control": PROXY_ERROR_CACHE_CONTROL,
+      ...rejection.headers,
+    },
   });
 }
 
-function createProxyRequestHeaders(descriptor: ProxyDescriptor, request: Request): Headers {
-  const { allow, deny } = descriptor.requestHeaders;
+function createProxyRequestHeaders(
+  descriptor: ProxyDescriptor,
+  options: HydrogenRoutesOptions,
+  url: URL,
+): Headers {
+  const { request, requestContext } = options;
+  const { allow, deny, prepare } = descriptor.requestHeaders;
   const headers = allow
     ? new Headers(extractHeaders((key) => request.headers.get(key), allow))
     : new Headers(request.headers);
+
+  if (descriptor.requestHeaders.applyStorefrontHeaders !== false) {
+    requestContext.applyStorefrontRequestHeaders(headers);
+  }
+
   for (const header of deny ?? []) headers.delete(header);
+  prepare?.(headers, options, url);
+
   return headers;
 }
 

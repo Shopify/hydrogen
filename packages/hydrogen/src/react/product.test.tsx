@@ -98,6 +98,7 @@ function createMockCartStore(initialData?: CartData | CartState | null): MockCar
       };
     }),
     fetch: vi.fn(() => Promise.resolve()),
+    refresh: vi.fn(),
     reset: vi.fn(),
     handleFormSubmit: vi.fn(() => Promise.resolve()),
     setState(next: CartState) {

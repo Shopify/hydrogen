@@ -1,7 +1,10 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-import { VISITOR_CONSENT_COLLECTED_EVENT } from "../shopify-scripts";
+import {
+  CONSENT_TRACKING_API_LOADED_EVENT,
+  VISITOR_CONSENT_COLLECTED_EVENT,
+} from "../shopify-scripts";
 import { setupStorefrontAnalytics } from "./bus";
 import type {
   StorefrontAnalyticsConfig,
@@ -330,9 +333,9 @@ describe("setupStorefrontAnalytics", () => {
       expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: "/buffered" }));
     });
 
-    it("buffers destination events while consent status is pending", async () => {
+    it("buffers destination events while consent status is loading", async () => {
       (window as any).Shopify = {
-        customerPrivacy: { consentStatus: "pending", analyticsProcessingAllowed: () => true },
+        customerPrivacy: { consentStatus: "loading", analyticsProcessingAllowed: () => true },
       };
 
       const bus = createTestBus();
@@ -349,9 +352,7 @@ describe("setupStorefrontAnalytics", () => {
       expect(destination).not.toHaveBeenCalled();
 
       (window as any).Shopify.customerPrivacy.consentStatus = "loaded";
-      document.dispatchEvent(
-        new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT, { detail: { source: "initial" } }),
-      );
+      document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
 
       expect(destination).toHaveBeenCalledOnce();
       expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: "/pending" }));
@@ -407,7 +408,7 @@ describe("setupStorefrontAnalytics", () => {
       expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: "/early" }));
     });
 
-    it("replays buffered events from the initial consent event", async () => {
+    it("replays buffered events when initial consent is ready", async () => {
       (window as any).Shopify = {
         customerPrivacy: { consentStatus: "loaded", analyticsProcessingAllowed: () => false },
       };
@@ -426,9 +427,7 @@ describe("setupStorefrontAnalytics", () => {
       expect(destination).not.toHaveBeenCalled();
 
       (window as any).Shopify.customerPrivacy.analyticsProcessingAllowed = () => true;
-      document.dispatchEvent(
-        new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT, { detail: { source: "initial" } }),
-      );
+      document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
 
       expect(destination).toHaveBeenCalledOnce();
       expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: "/ready" }));
@@ -437,10 +436,9 @@ describe("setupStorefrontAnalytics", () => {
     it("waits for interaction before replaying default banner events when the banner is required", async () => {
       (window as any).Shopify = {
         customerPrivacy: {
-          consentStatus: "pending",
+          consentStatus: "loading",
           analyticsProcessingAllowed: () => true,
-          currentVisitorConsent: () => ({ analytics: "", marketing: "", preferences: "" }),
-          shouldShowBanner: () => true,
+          shouldShowGDPRBanner: () => true,
         },
       };
       (window as any).privacyBanner = {};
@@ -457,15 +455,11 @@ describe("setupStorefrontAnalytics", () => {
       bus.publish("page_viewed", { url: "/blocked-initial", shop: SHOP_DATA });
 
       (window as any).Shopify.customerPrivacy.consentStatus = "loaded";
-      document.dispatchEvent(
-        new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT, { detail: { source: "initial" } }),
-      );
+      document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
 
       expect(destination).not.toHaveBeenCalled();
 
-      document.dispatchEvent(
-        new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT, { detail: { source: "interaction" } }),
-      );
+      document.dispatchEvent(new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT));
 
       expect(destination).toHaveBeenCalledOnce();
       expect(destination).toHaveBeenCalledWith(
@@ -473,13 +467,71 @@ describe("setupStorefrontAnalytics", () => {
       );
     });
 
+    it("recognizes default banner mode before the privacy banner global is assigned", async () => {
+      (window as any).Shopify = {
+        customerPrivacy: {
+          consentStatus: "loading",
+          analyticsProcessingAllowed: () => true,
+          shouldShowGDPRBanner: () => true,
+        },
+      };
+
+      const bus = createTestBus({ consent: { ...CONSENT_DATA, mode: "default-banner" } });
+      const destination = vi.fn();
+
+      bus.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", destination);
+        },
+      });
+      bus.publish("page_viewed", { url: "/before-banner-global", shop: SHOP_DATA });
+
+      (window as any).Shopify.customerPrivacy.consentStatus = "loaded";
+      document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
+
+      expect(destination).not.toHaveBeenCalled();
+    });
+
+    it("catches up on initial readiness that fired before the bus attached", async () => {
+      // Consent is already loaded and the readiness event has passed, so the bus
+      // must reconcile the default-banner gate on setup instead of missing it.
+      (window as any).Shopify = {
+        customerPrivacy: {
+          consentStatus: "loaded",
+          analyticsProcessingAllowed: () => true,
+          shouldShowGDPRBanner: () => true,
+        },
+      };
+
+      const bus = createTestBus({ consent: { ...CONSENT_DATA, mode: "default-banner" } });
+      const destination = vi.fn();
+
+      bus.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", destination);
+        },
+      });
+      bus.publish("page_viewed", { url: "/missed-readiness", shop: SHOP_DATA });
+
+      // Without the catch-up the pre-interaction gate would stay open and leak this event.
+      expect(destination).not.toHaveBeenCalled();
+
+      document.dispatchEvent(new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT));
+
+      expect(destination).toHaveBeenCalledOnce();
+      expect(destination).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/missed-readiness" }),
+      );
+    });
+
     it("waits for interaction when privacy-banner is present without explicit mode", async () => {
       (window as any).Shopify = {
         customerPrivacy: {
-          consentStatus: "pending",
+          consentStatus: "loading",
           analyticsProcessingAllowed: () => true,
-          currentVisitorConsent: () => ({ analytics: "", marketing: "", preferences: "" }),
-          shouldShowBanner: () => true,
+          shouldShowGDPRBanner: () => true,
         },
       };
       (window as any).privacyBanner = {};
@@ -496,9 +548,7 @@ describe("setupStorefrontAnalytics", () => {
       bus.publish("page_viewed", { url: "/privacy-banner-runtime", shop: SHOP_DATA });
 
       (window as any).Shopify.customerPrivacy.consentStatus = "loaded";
-      document.dispatchEvent(
-        new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT, { detail: { source: "initial" } }),
-      );
+      document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
 
       expect(destination).not.toHaveBeenCalled();
     });
@@ -506,10 +556,9 @@ describe("setupStorefrontAnalytics", () => {
     it("does not wait for interaction in custom banner mode", async () => {
       (window as any).Shopify = {
         customerPrivacy: {
-          consentStatus: "pending",
+          consentStatus: "loading",
           analyticsProcessingAllowed: () => true,
-          currentVisitorConsent: () => ({ analytics: "", marketing: "", preferences: "" }),
-          shouldShowBanner: () => true,
+          shouldShowGDPRBanner: () => true,
         },
       };
 
@@ -525,9 +574,7 @@ describe("setupStorefrontAnalytics", () => {
       bus.publish("page_viewed", { url: "/custom-banner-initial", shop: SHOP_DATA });
 
       (window as any).Shopify.customerPrivacy.consentStatus = "loaded";
-      document.dispatchEvent(
-        new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT, { detail: { source: "initial" } }),
-      );
+      document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
 
       expect(destination).toHaveBeenCalledOnce();
       expect(destination).toHaveBeenCalledWith(
@@ -538,10 +585,9 @@ describe("setupStorefrontAnalytics", () => {
     it("replays default banner initial events when no banner interaction is required", async () => {
       (window as any).Shopify = {
         customerPrivacy: {
-          consentStatus: "pending",
+          consentStatus: "loading",
           analyticsProcessingAllowed: () => true,
-          currentVisitorConsent: () => ({ analytics: "", marketing: "", preferences: "" }),
-          shouldShowBanner: () => false,
+          shouldShowGDPRBanner: () => false,
         },
       };
       (window as any).privacyBanner = {};
@@ -558,9 +604,7 @@ describe("setupStorefrontAnalytics", () => {
       bus.publish("page_viewed", { url: "/allowed-initial", shop: SHOP_DATA });
 
       (window as any).Shopify.customerPrivacy.consentStatus = "loaded";
-      document.dispatchEvent(
-        new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT, { detail: { source: "initial" } }),
-      );
+      document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
 
       expect(destination).toHaveBeenCalledOnce();
       expect(destination).toHaveBeenCalledWith(
@@ -571,10 +615,9 @@ describe("setupStorefrontAnalytics", () => {
     it("replays default banner initial events when consent was already collected", async () => {
       (window as any).Shopify = {
         customerPrivacy: {
-          consentStatus: "pending",
+          consentStatus: "loading",
           analyticsProcessingAllowed: () => true,
-          currentVisitorConsent: () => ({ analytics: "yes", marketing: "yes", preferences: "yes" }),
-          shouldShowBanner: () => true,
+          shouldShowGDPRBanner: () => false,
         },
       };
       (window as any).privacyBanner = {};
@@ -591,15 +634,13 @@ describe("setupStorefrontAnalytics", () => {
       bus.publish("page_viewed", { url: "/prior-consent", shop: SHOP_DATA });
 
       (window as any).Shopify.customerPrivacy.consentStatus = "loaded";
-      document.dispatchEvent(
-        new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT, { detail: { source: "initial" } }),
-      );
+      document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
 
       expect(destination).toHaveBeenCalledOnce();
       expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: "/prior-consent" }));
     });
 
-    it("does not clear buffered events when initial consent fires while tracking is blocked", async () => {
+    it("does not clear buffered events when initial consent becomes ready while tracking is blocked", async () => {
       (window as any).Shopify = {
         customerPrivacy: { consentStatus: "loaded", analyticsProcessingAllowed: () => false },
       };
@@ -609,9 +650,7 @@ describe("setupStorefrontAnalytics", () => {
 
       bus.publish("page_viewed", { url: "/pending", shop: SHOP_DATA });
 
-      document.dispatchEvent(
-        new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT, { detail: { source: "initial" } }),
-      );
+      document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
 
       (window as any).Shopify.customerPrivacy.analyticsProcessingAllowed = () => true;
       bus.addDestination({
@@ -635,9 +674,7 @@ describe("setupStorefrontAnalytics", () => {
 
       bus.publish("page_viewed", { url: "/denied", shop: SHOP_DATA });
 
-      document.dispatchEvent(
-        new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT, { detail: { source: "interaction" } }),
-      );
+      document.dispatchEvent(new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT));
 
       (window as any).Shopify.customerPrivacy.analyticsProcessingAllowed = () => true;
       bus.addDestination({

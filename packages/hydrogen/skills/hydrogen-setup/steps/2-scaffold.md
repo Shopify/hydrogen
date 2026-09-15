@@ -10,13 +10,32 @@ Preserve the app's existing route shape when present. When there is no establish
 - `/products/{handle}` for product detail. Use plural `products`, not `/product`.
 - `/cart` for the full cart page.
 
-Hydrogen-owned handlers are not page routes: `/api/cart`, `/api/{api-version}/graphql.json`, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/agent/*`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product redirects, `/admin` redirects, and Storefront URL redirects belong in the `hydrogen-request-handlers` wiring.
+Hydrogen-owned handlers are not page routes: `/api/cart`, `/api/{api-version}/graphql.json`, the generic `/__shopify/*` API proxy, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product redirects, `/admin` redirects, and Storefront URL redirects belong in the `hydrogen-request-handlers` wiring.
 
 Invoke the `hydrogen-routing` skill and create the shared route template manifest for Shopify resources such as products, collections, pages, blogs, or articles.
 
 ### Continue when
 
 - [ ] Route templates are set up
+
+## Keep Skills In Sync
+
+The packaged skills describe the installed Hydrogen version. Chain `hydrogen skills check --mode=warn` in front of the app's `dev` script so a later `@shopify/hydrogen` bump prints the resync command the next time the dev server starts, without blocking it:
+
+```json
+{
+  "scripts": {
+    "dev": "hydrogen skills check --mode=warn && <framework dev command>"
+  }
+}
+```
+
+Keep the framework's own dev command exactly as it was; only prefix it. Apply the same prefix to any sibling dev script such as `dev:https`. Do not add the plain `hydrogen skills check` (error mode) to `dev`; that belongs in CI, where a stale skill copy should fail the build.
+
+### Continue when
+
+- [ ] `dev` runs `hydrogen skills check --mode=warn` before the framework dev command
+- [ ] Running the `dev` script prints no skills warning (skills were synced by `hydrogen setup`)
 
 ## Use Standard Environment Names
 
@@ -34,6 +53,8 @@ Use these canonical environment variable names throughout the app (kept in sync 
 If the framework requires a prefix to expose client-side variables, preserve the canonical suffix and add only the required framework prefix. Never expose `PRIVATE_STOREFRONT_API_TOKEN` to the client.
 
 List `PUBLIC_STOREFRONT_API_TOKEN` in the app's env example file as a commented-out entry (`# PUBLIC_STOREFRONT_API_TOKEN=`). The Storefront client accepts `undefined` as tokenless access, which is all mock.shop supports, so the scaffold works before the user has tokens and upgrades in place when they add one. Do not write an uncommented empty assignment (`PUBLIC_STOREFRONT_API_TOKEN=`): env loaders parse that as an empty string, and the client rejects empty tokens. Recommend filling it in (or switching to a private client) once the app targets a real store.
+
+When the user has no store yet, point `PUBLIC_STORE_DOMAIN` at a mock.shop store. `mock.shop` is the default apparel catalog; https://mock.shop/llms.txt lists every other fictional store with its host (for example `pets.mock.shop`) and what it sells. Pick the store closest to what the user is building, and see the `hydrogen-storefront-client` skill for the details.
 
 ### Continue when
 

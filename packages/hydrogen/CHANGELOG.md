@@ -1,5 +1,43 @@
 # @shopify/hydrogen
 
+## 2026.10.0-preview.3
+
+### Minor Changes
+
+- 8827904: Add an `account` option to `getShopifyScriptTags()` and the React/Vue `ShopifyScripts` components. When enabled, Hydrogen loads the Shopify customer account web component (`https://cdn.shopify.com/storefront/web-components/account.js`) with the same nonce and `crossorigin` handling as the other Shopify runtime scripts. Render `<shopify-account>` where you want the account UI to appear. The script URL is also exported as `SHOPIFY_ACCOUNT_SCRIPT`.
+- 96f9d2d: Add `register("attributeValue", { key, value })` to `ProductFormRegister` for attaching line-item attributes (engraving text, gift messages, custom options) through the form-based add-to-cart path. Both client-side (`getAddPayload`) and server-side (`parseAddIntent`) now extract `attributes.*` entries from FormData. Exports two new types: `ProductAttributeValueProps` and `ProductAttributeDefaultValueProps`.
+- d92f398: Add `hydrogen skills check`, which exits non-zero when the project's synced skills do not match the installed `@shopify/hydrogen`, or were never synced. It prints the summary `skills sync` would act on and writes nothing. The default `--mode=error` gates CI; `--mode=warn` prints the same message and exits zero for dev scripts.
+- 05e43e6: Add `hydrogen skills sync` to keep packaged agent skills aligned with the installed `@shopify/hydrogen` version. Skills are always written to both `.claude/skills` and `.agents/skills`, covering Claude Code, Codex, Cursor, and OpenCode without configuration. Each copied `SKILL.md` records the package version and a content hash under frontmatter `metadata`. Rerunning the command after an upgrade overwrites unmodified skills, adds new ones, removes skills the package no longer ships, and leaves locally modified skills alone unless `--force` is passed. If you edited a skill the package no longer ships, you are asked before it is removed; without a terminal (for example in CI) it is kept and a warning is printed. `hydrogen setup` runs the same sync after installing the package and accepts the same `--force`, so rerunning it over previously synced skills now updates them instead of failing. Preview templates ship their skills with the same metadata, so `skills sync` works on deployed templates too.
+  
+  Projects that ran `hydrogen setup` before this version have skills without the metadata block. Run `npx @shopify/hydrogen skills sync --force` once to adopt them; later syncs then manage them normally. Skills from those earlier copies whose names are no longer shipped are not recognised and should be deleted by hand.
+- 54a1e7e: Proxy caller-authenticated UCP MCP requests from `/api/ucp/mcp` to the configured Shopify store.
+
+### Patch Changes
+
+- d8f8476: Add the `hydrogen-cart-metafields` skill: a behavioral guide for reading and writing cart metafields (custom cart data such as delivery instructions) through a custom `CartFragment`, an app-owned mutation route, and `useCartActions().refresh()`.
+- a6e3a71: Cart permalinks now hand off to the mock.shop demo store for every mock.shop host, not only `mock.shop` itself, so a storefront built against a per-store host such as `pets.mock.shop` behaves the same in mock mode. The `hydrogen-storefront-client` and `hydrogen-setup` skills now explain that mock.shop is a catalog of stores and how to pick one from https://mock.shop/llms.txt.
+- c35ee9d: Prevent superseded cart mutations from producing unhandled `AbortError` console errors.
+
+## 2026.10.0-preview.2
+
+### Minor Changes
+
+- 78b94c5: Accept Liquid-style `?variant=<numeric id>` links on product pages.
+  
+  - `handleShopifyRoutes({routeTemplates})` now 302-redirects `?variant=` product URLs to the canonical option-params URL (`/products/x?variant=123` → `/products/x?Color=Red&Size=M`), resolving the variant through the Storefront API with `Cache.long()` when the client has a cache adapter, following combined-listing variants to their own product page, and stripping unknown or deleted variant ids. When both `variant` and option params are present, the variant wins.
+  - `buildProductSelectionSearchParams({style?, selectedOptions, variant?, optionNames, base?})` builds selection link search params, scrubbing stale option and `variant` params while preserving unrelated ones. `style: "variant"` emits a shareable `?variant=<numeric id>` link, falling back to option params when no variant is resolved.
+  - `getSelectedProductOptions` now treats the `variant` search param as reserved and never returns it as an option.
+  - Registered route redirects can now set an explicit `status` restricted to `301 | 302 | 303 | 307 | 308`.
+- 4767139: Add `CartStore.refresh()` and React/Vue `useCartActions()` APIs for reconciling the current cart after an out-of-band mutation. Refreshes use the configured cart transport, wait for active optimistic mutations, update custom cart fragment fields, and report progress and failures through cart state. When the store has no cart yet, refresh loads one so a cart created server-side (e.g. via `cartCreate`) is picked up.
+
+### Patch Changes
+
+- 1d2f7d9: Storefront Agent requests now route through the generic `/__shopify/*` Shopify API proxy. Unprefixed `/agent/buyer-claims` and `/agent/handoff` requests are no longer intercepted and fall through to app routing, where they may return a 404 or catch-all HTML response.
+- 4ea228e: Reset `before` and `after` pagination cursors when collection filters or sorting change.
+- 84f818e: Clarify collection filter guidance and examples for price ranges.
+- 0289d74: Allowlist the Frontend Event Collector ingress path (`/.well-known/shopify/fec/produce`) in the well-known proxy. This forwards the first-party path to the Online Store origin so WebMCP analytics reach the collector on headless storefronts, matching how Online Store storefronts route it through the myshopify.com edge.
+- 95ab890: Rename local HTTPS development scripts from `https:dev` to `dev:https` and rely on the Vite plugin to provision certificates automatically.
+
 ## 2026.10.0-preview.1
 
 ### Minor Changes

@@ -19,6 +19,7 @@ import type { CartErrorCode, CartWarningCode } from "../../graphql/generated/sto
 import { getLogger } from "../logging";
 import { createObservable } from "../observable";
 import {
+  CONSENT_TRACKING_API_LOADED_EVENT,
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts/index";
@@ -101,6 +102,11 @@ export type CartStore = {
   getState(): CartState;
   subscribe(listener: (state: CartState) => void): () => void;
   fetch(): Promise<void>;
+  /**
+   * Reconciles the cart after an out-of-band mutation: revalidates the current
+   * cart, or loads one when none is present yet (e.g. just created server-side).
+   */
+  refresh(): void;
   reset(): void;
   handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;
 };
@@ -218,7 +224,8 @@ type ActiveCartLoad = {
 };
 
 type ActiveCartRevalidation = {
-  cartId: string;
+  // Null for a discovery load (no local cart to target).
+  cartId: string | null;
   controller: AbortController;
   generation: number;
   mutationRevision: number;
@@ -730,7 +737,9 @@ function createNetworkEntry(error: unknown): CartNetworkEntry {
   if (error instanceof CartNetworkError) {
     return { message: error.message, status: error.status };
   }
-  return { message: error instanceof Error ? error.message : "Cart update failed" };
+  return {
+    message: error instanceof Error ? error.message : "Cart update failed",
+  };
 }
 
 function mergeErrorGroups(left: CartErrorGroup, right: CartErrorGroup): CartErrorGroup {
@@ -916,7 +925,10 @@ function withAdditionMerchandise(
   const product = products.find((candidate) => candidate.id === addition.merchandiseId);
   if (!product) return line;
   const { price: _price, ...merchandise } = product;
-  return { ...line, merchandise: merchandise as unknown as CartLine["merchandise"] };
+  return {
+    ...line,
+    merchandise: merchandise as unknown as CartLine["merchandise"],
+  };
 }
 
 function replaceOrPrependLine(
@@ -1079,7 +1091,10 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
 
       const addedQuantity = payload.lines.reduce((total, line) => total + line.quantity, 0);
       const data = setLines(
-        { ...state.data, totalQuantity: state.data.totalQuantity + addedQuantity },
+        {
+          ...state.data,
+          totalQuantity: state.data.totalQuantity + addedQuantity,
+        },
         linesChanged ? lines : getLines(state.data),
       );
       return { ...state, data };
@@ -1189,7 +1204,10 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       if (options.mergeServerCart) {
         return { ...state, data: mergeAuthoritativeCartData(state.data, cart) };
       }
-      return { ...state, data: { ...state.data, discountCodes: cart.discountCodes } };
+      return {
+        ...state,
+        data: { ...state.data, discountCodes: cart.discountCodes },
+      };
     },
     getSignalKeys: () => DISCOUNT_CODES_KEY,
     getPendingKeys: (state, payload) => {
@@ -1231,7 +1249,10 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
         );
       }
       if (!result.cart || (result.userErrors?.length ?? 0) > 0) return state;
-      return { ...state, data: { ...state.data, attributes: payload.attributes } };
+      return {
+        ...state,
+        data: { ...state.data, attributes: payload.attributes },
+      };
     },
     getSignalKeys: () => ATTRIBUTES_KEY,
   },
@@ -1377,7 +1398,11 @@ function trimPendingTransaction<TType extends TransactionType>(
     );
     if (!trimmed) return undefined;
     remaining = trimmed;
-    nextIdentity = { ...identity, pendingKeys: undefined, errorKeys: undefined };
+    nextIdentity = {
+      ...identity,
+      pendingKeys: undefined,
+      errorKeys: undefined,
+    };
   }
   return createPendingTransaction(
     store,
@@ -1509,6 +1534,8 @@ function enqueueTransaction<TType extends TransactionType>(
   );
   if (expectedEventIndex !== -1) {
     store.expectedEvents.splice(expectedEventIndex, 1);
+    // Prevent request cancellation from becoming an unhandled rejection.
+    promise.then(NOOP, NOOP);
     return;
   }
   if (store.observedPromises.has(promise)) return;
@@ -1553,6 +1580,10 @@ function markOverlappingTransactionForRevalidation(
   }
   transaction.requiresRevalidation = true;
   for (const pending of store.transactions) pending.requiresRevalidation = true;
+  requestCartRevalidation(store);
+}
+
+function requestCartRevalidation(store: CartStoreContext): void {
   store.revalidation.requested = true;
   store.revalidation.visible = true;
   store.revalidation.active?.controller.abort();
@@ -1584,7 +1615,10 @@ function withTransactionEventToken(
       ...options,
       event: {
         ...options?.event,
-        detail: { ...options?.event?.detail, [TRANSACTION_EVENT_TOKEN_KEY]: token },
+        detail: {
+          ...options?.event?.detail,
+          [TRANSACTION_EVENT_TOKEN_KEY]: token,
+        },
       },
     });
 }
@@ -1912,19 +1946,24 @@ function destroyCartStore(store: CartStoreContext, handlers: CartEventHandlers):
   publishVisibleState(store);
 }
 
-function handleVisitorConsentCollected(): void {
+function handleConsentStateChanged(): void {
   revalidateConnectedCartCheckoutUrls();
 }
 
 function attachCartConsentListener(): void {
   if (cartConsentListenerAttached) return;
-  document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, handleVisitorConsentCollected);
+  document.addEventListener(CONSENT_TRACKING_API_LOADED_EVENT, handleConsentStateChanged);
+  document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, handleConsentStateChanged);
   cartConsentListenerAttached = true;
+  if (window.Shopify?.customerPrivacy?.consentStatus === "loaded") {
+    revalidateConnectedCartCheckoutUrls();
+  }
 }
 
 function detachCartConsentListenerIfIdle(): void {
   if (!cartConsentListenerAttached || connectedCartStores.size > 0) return;
-  document.removeEventListener(VISITOR_CONSENT_COLLECTED_EVENT, handleVisitorConsentCollected);
+  document.removeEventListener(CONSENT_TRACKING_API_LOADED_EVENT, handleConsentStateChanged);
+  document.removeEventListener(VISITOR_CONSENT_COLLECTED_EVENT, handleConsentStateChanged);
   cartConsentListenerAttached = false;
 }
 
@@ -2131,6 +2170,7 @@ export function createCartStore<TData extends CartData = CartData>(
     getState: () => store.observable.state,
     subscribe: (listener) => store.observable.subscribe(listener),
     fetch: () => loadCartInStore(store),
+    refresh: () => refreshCartInStore(store),
     reset: () => resetCartStore(store),
     handleFormSubmit: (event, eventDetail) =>
       handleFormSubmitInStore(store, handlers, event, eventDetail),
@@ -2190,8 +2230,22 @@ function getAddPayload(
     : Math.max(DEFAULT_ADD_QUANTITY, rawQuantity);
   const rawSellingPlanId = formData.get("sellingPlanId") as string | null;
   const sellingPlanId = rawSellingPlanId || undefined;
+  const rawAttributes = getCartAttributeFormEntries(formData);
+  const attributes: AddLineAttribute[] | undefined =
+    rawAttributes.length > 0
+      ? rawAttributes
+          .filter(({ key }) => key !== "")
+          .map(({ key, value }) => ({ key, value: String(value) }))
+      : undefined;
   return {
-    lines: [{ merchandiseId, quantity, ...(sellingPlanId ? { sellingPlanId } : {}) }],
+    lines: [
+      {
+        merchandiseId,
+        quantity,
+        ...(sellingPlanId ? { sellingPlanId } : {}),
+        ...(attributes ? { attributes } : {}),
+      },
+    ],
     products: extractProductDetails(eventDetail),
     ...(eventDetail ? { eventDetail } : {}),
   };
@@ -2243,10 +2297,12 @@ async function handleFormSubmitInStore(
     return dispatchTransaction(store, "set_note", { note });
   }
   if (intent === "attributes-update") {
-    const attributes = getCartAttributeFormEntries(formData).map(({ key, value }) => ({
-      key,
-      value: String(value),
-    }));
+    const attributes = getCartAttributeFormEntries(formData)
+      .filter(({ key }) => key !== "")
+      .map(({ key, value }) => ({
+        key,
+        value: String(value),
+      }));
     return dispatchTransaction(store, "set_attributes", { attributes });
   }
   throw new Error(`Unknown cart form intent: "${intent}"`);
@@ -2317,7 +2373,9 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
     };
 
     if (typeof document !== "undefined" && document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", configure, { once: true });
+      document.addEventListener("DOMContentLoaded", configure, {
+        once: true,
+      });
       return;
     }
     configure();
@@ -2366,8 +2424,8 @@ async function fetchCart(
   return { cart: result.cart };
 }
 
-function fetchCartData(cartId?: string | null): Promise<CartData | null> {
-  return fetchCart(cartId).then(({ cart }) =>
+function fetchCartData(cartId?: string | null, signal?: AbortSignal): Promise<CartData | null> {
+  return fetchCart(cartId, signal).then(({ cart }) =>
     cart
       ? {
           ...cart,
@@ -2412,6 +2470,7 @@ function isCurrentCartRevalidationRequest(
   request: ActiveCartRevalidation,
 ): boolean {
   return (
+    !request.controller.signal.aborted &&
     store.revalidation.active === request &&
     store.generation === request.generation &&
     store.mutationRevision === request.mutationRevision &&
@@ -2420,12 +2479,61 @@ function isCurrentCartRevalidationRequest(
   );
 }
 
-function isCurrentCartRevalidation(
+// Merges authoritative fields for a same-cart revalidation, or adopts a
+// discovered cart when the refresh had no cart id.
+function applyCartRevalidation(
   store: CartStoreContext,
   request: ActiveCartRevalidation,
-  cart: CartData,
-): boolean {
-  return isCurrentCartRevalidationRequest(store, request) && cart.id === request.cartId;
+  cart: CartData | null,
+): void {
+  if (!isCurrentCartRevalidationRequest(store, request)) return;
+
+  if (request.cartId === null) {
+    // A null result isn't an error (an out-of-band creation hasn't propagated
+    // yet); adopt the cart once it appears. hydrateCartInStore resets
+    // revalidation state.
+    if (cart) {
+      hydrateCartInStore(store, cart);
+      return;
+    }
+    store.revalidation.visible = false;
+    publishVisibleState(store);
+    return;
+  }
+
+  if (!cart) throw new Error(CART_REVALIDATION_ERROR_MESSAGE);
+  if (cart.id !== request.cartId) {
+    // A configured endpoint resolves the cart from its cookie, which an external
+    // operation can swap for a different cart. Treat the response as an
+    // authoritative replacement; hydrateCartInStore adopts it and clears
+    // revalidation state so clients don't stay stuck with revalidating: true.
+    hydrateCartInStore(store, cart);
+    return;
+  }
+  store.settled = {
+    ...store.settled,
+    data: mergeAuthoritativeCartData(store.settled.data, cart),
+  };
+  store.revalidation.visible = false;
+  publishVisibleState(store);
+}
+
+function refreshCartInStore(store: CartStoreContext): void {
+  // Publishing over an in-flight initial load invalidates it (the ready state
+  // carries the load's identity), which would discard the fetched cart. Wait
+  // for the load to settle, then reconcile against whatever cart it produced.
+  const activeCartLoad = store.activeCartLoad;
+  if (activeCartLoad) {
+    const runAfterLoad = () => refreshCartInStore(store);
+    activeCartLoad.promise.then(runAfterLoad, runAfterLoad);
+    return;
+  }
+  // Reconcile through the queue so the refresh stays non-blocking. With no cart
+  // id, revalidateCartWhenIdle waits for in-flight work then discovers a cart
+  // created out of band.
+  requestCartRevalidation(store);
+  publishVisibleState(store);
+  revalidateCartWhenIdle(store);
 }
 
 function revalidateCartWhenIdle(store: CartStoreContext): void {
@@ -2438,30 +2546,19 @@ function revalidateCartWhenIdle(store: CartStoreContext): void {
     return;
   }
 
-  const cartId = store.settled.data.id;
-  if (!cartId) {
-    store.revalidation.requested = false;
-    store.revalidation.visible = false;
-    publishVisibleState(store);
-    return;
-  }
-
   store.revalidation.requested = false;
   clearProjectedErrors(store, [REVALIDATION_ERROR_KEY]);
   publishVisibleState(store);
+
+  // No cart id: discover one with a full-cart load instead of revalidating.
+  const cartId = store.settled.data.id;
   const controller = new AbortController();
   let request: ActiveCartRevalidation;
-  const promise = fetchCartRevalidationData(cartId, controller.signal)
-    .then((cart) => {
-      if (!cart) throw new Error(CART_REVALIDATION_ERROR_MESSAGE);
-      if (!isCurrentCartRevalidation(store, request, cart)) return;
-      store.settled = {
-        ...store.settled,
-        data: mergeAuthoritativeCartData(store.settled.data, cart),
-      };
-      store.revalidation.visible = false;
-      publishVisibleState(store);
-    })
+  const revalidationFetch = cartId
+    ? fetchCartRevalidationData(cartId, controller.signal)
+    : fetchCartData(null, controller.signal);
+  const promise = revalidationFetch
+    .then((cart) => applyCartRevalidation(store, request, cart))
     .catch((error: unknown) => {
       if (isAbortError(error) || !isCurrentCartRevalidationRequest(store, request)) return;
       store.revalidation.visible = false;
@@ -2490,7 +2587,10 @@ async function refreshCheckoutUrl(store: CartStoreContext): Promise<void> {
   if (!cart || (current.data.id && current.data.id !== cart.id)) return;
   const checkoutUrl = cart.checkoutUrl ?? null;
   if (current.data.checkoutUrl === checkoutUrl) return;
-  store.settled = { ...store.settled, data: { ...store.settled.data, checkoutUrl } };
+  store.settled = {
+    ...store.settled,
+    data: { ...store.settled.data, checkoutUrl },
+  };
   publishVisibleState(store);
 }
 

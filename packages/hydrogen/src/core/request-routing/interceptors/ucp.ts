@@ -1,4 +1,5 @@
 import { UCP_RE } from "../../url";
+import type { HydrogenRouteInterceptor } from "../route-types";
 import { createProxyInterceptor } from "./proxy";
 
 const UCP_CACHE_CONTROL =
@@ -8,9 +9,8 @@ const UCP_PROFILE_PATH = "/.well-known/ucp";
 const UCP_FETCH_TIMEOUT_MS = 5_000;
 const UCP_RESPONSE_HEADERS = ["content-type", "etag", "last-modified", "vary"] as const;
 
-export const handleUcpProxy = createProxyInterceptor({
+const proxyUcpRequest = createProxyInterceptor({
   match: UCP_RE,
-  methods: ["GET", "HEAD"],
   scope: "ucp-proxy",
   timeoutMs: UCP_FETCH_TIMEOUT_MS,
   forwardSearch: false,
@@ -65,3 +65,9 @@ export const handleUcpProxy = createProxyInterceptor({
   }),
   formatError: () => ({ error: "Unable to fetch the Shopify UCP profile" }),
 });
+
+export const handleUcpProxy: HydrogenRouteInterceptor = (url, options) => {
+  // Unlike reserved API routes, unsupported discovery methods fall through to the app.
+  if (options.request.method !== "GET" && options.request.method !== "HEAD") return null;
+  return proxyUcpRequest(url, options);
+};

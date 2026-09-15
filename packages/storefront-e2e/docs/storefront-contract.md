@@ -70,11 +70,11 @@ Accessible labels are preferred. Broad data-testid attributes should only be use
 
 ## Checkout Handoff
 
-The checkout test verifies only the storefront-to-checkout handoff.
+The checkout test verifies only the storefront-owned side of the checkout handoff.
 
-It clicks the visible checkout link, waits for the first checkout document, asserts the URL looks like checkout, and asserts the added product and variant are visible. It must not enter customer data, payment data, or any irreversible checkout step.
+It verifies the added product and variant in the storefront cart, clicks the visible checkout link, and waits for a checkout URL. It does not depend on the external checkout document loading, enter customer data, payment data, or perform any irreversible checkout step.
 
-If checkout blocks before showing the product summary, the test fails as a contract or environment issue.
+If the storefront does not start checkout navigation, the test fails as a contract issue. External checkout availability is outside this suite's boundary.
 
 ## Operations
 

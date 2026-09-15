@@ -9,6 +9,7 @@ import {
   initializeShopifyScripts,
   renderShopifyScriptTag,
   renderShopifyScriptTags,
+  SHOPIFY_ACCOUNT_SCRIPT,
   SHOPIFY_CONSENT_API_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
   SHOPIFY_PERF_KIT_SCRIPT,
@@ -457,6 +458,11 @@ describe("shopify scripts", () => {
       },
       {
         tagName: "script",
+        attributes: { id: "shopify-analytics-bus", nonce: "test-nonce" },
+        innerHTML: expect.stringContaining("Analytics bus already initialized"),
+      },
+      {
+        tagName: "script",
         attributes: {
           id: "shopify-consent",
           async: true,
@@ -464,16 +470,6 @@ describe("shopify scripts", () => {
           nonce: "test-nonce",
           src: SHOPIFY_CONSENT_API_SCRIPT,
         },
-      },
-      {
-        tagName: "script",
-        attributes: { id: "shopify-consent-bootstrap", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining("visitorConsentCollected"),
-      },
-      {
-        tagName: "script",
-        attributes: { id: "shopify-analytics-bus", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining("Analytics bus already initialized"),
       },
       {
         tagName: "script",
@@ -554,6 +550,11 @@ describe("shopify scripts", () => {
       },
       {
         tagName: "script",
+        attributes: { id: "shopify-analytics-bus", nonce: "test-nonce" },
+        innerHTML: expect.stringContaining("Analytics bus already initialized"),
+      },
+      {
+        tagName: "script",
         attributes: {
           id: "shopify-consent",
           async: true,
@@ -561,16 +562,6 @@ describe("shopify scripts", () => {
           nonce: "test-nonce",
           src: SHOPIFY_CONSENT_API_SCRIPT,
         },
-      },
-      {
-        tagName: "script",
-        attributes: { id: "shopify-consent-bootstrap", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining("visitorConsentCollected"),
-      },
-      {
-        tagName: "script",
-        attributes: { id: "shopify-analytics-bus", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining("Analytics bus already initialized"),
       },
       {
         tagName: "script",
@@ -607,7 +598,7 @@ describe("shopify scripts", () => {
       nonce: "",
       shop: TEST_SHOP,
     });
-    expect(descriptors.scripts).toHaveLength(8);
+    expect(descriptors.scripts).toHaveLength(7);
     for (const { attributes } of descriptors.scripts) {
       expect(attributes).toHaveProperty("nonce", "");
     }
@@ -616,7 +607,7 @@ describe("shopify scripts", () => {
   it("does not include WebMCP in SSR descriptors", () => {
     const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
 
-    expect(descriptors.scripts).toHaveLength(7);
+    expect(descriptors.scripts).toHaveLength(6);
     expect(descriptors.scripts).not.toContainEqual(
       expect.objectContaining({
         attributes: expect.objectContaining({
@@ -655,6 +646,43 @@ describe("shopify scripts", () => {
       ),
     ).toBeLessThan(
       descriptors.scripts.findIndex(({ attributes }) => attributes?.src === SHOPIFY_INBOX_SCRIPT),
+    );
+  });
+
+  it("includes the async account module when enabled", () => {
+    const descriptors = getShopifyScriptTags({
+      nonce: "test-nonce",
+      shop: TEST_SHOP,
+      account: true,
+    });
+
+    expect(descriptors.scripts).toContainEqual({
+      tagName: "script",
+      attributes: {
+        id: "shopify-account",
+        type: "module",
+        async: true,
+        crossorigin: "anonymous",
+        nonce: "test-nonce",
+        src: SHOPIFY_ACCOUNT_SCRIPT,
+      },
+    });
+    expect(
+      descriptors.scripts.findIndex(
+        ({ attributes }) => attributes?.src === SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
+      ),
+    ).toBeLessThan(
+      descriptors.scripts.findIndex(({ attributes }) => attributes?.src === SHOPIFY_ACCOUNT_SCRIPT),
+    );
+  });
+
+  it("omits the account module by default", () => {
+    const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
+
+    expect(descriptors.scripts).not.toContainEqual(
+      expect.objectContaining({
+        attributes: expect.objectContaining({ src: SHOPIFY_ACCOUNT_SCRIPT }),
+      }),
     );
   });
 
@@ -805,7 +833,7 @@ describe("shopify scripts", () => {
     });
     const html = htmlTags.join("\n");
 
-    expect(htmlTags).toHaveLength(11);
+    expect(htmlTags).toHaveLength(10);
     expect(html).toContain('<script id="shopify-global-bootstrap" nonce="test-nonce">');
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');

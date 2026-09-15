@@ -407,6 +407,25 @@ describe("transaction cart store", () => {
     expect(store.getState().pending.lines).toEqual(new Set());
   });
 
+  it("handles an aborted correlated Standard Event promise", async () => {
+    dispatchEventsSynchronously = false;
+    store.hydrate(makeCart([makeLine("line-a", 1)]));
+    getCart.mockResolvedValueOnce({ cart: makeCart([makeLine("line-a", 3)]) });
+
+    const first = store.handleFormSubmit(submitLine("line-a"));
+    await Promise.resolve();
+    await Promise.resolve();
+    const second = store.handleFormSubmit(submitLine("line-a"));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(transportSignals[0].aborted).toBe(true);
+    transportDeferreds[1].resolve(serverResult([makeLine("line-a", 3)]));
+    await Promise.all([first, second]);
+
+    expect(store.getState().data.lines.nodes[0].quantity).toBe(3);
+  });
+
   it("retains references outside a transaction's scope", () => {
     const lineA = makeLine("line-a", 1);
     const lineB = makeLine("line-b", 1);

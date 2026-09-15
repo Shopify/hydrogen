@@ -4,8 +4,6 @@ import { createContractError } from "../../src/contract";
 import { test, type CheckoutTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
-const CHECKOUT_LOAD_TIMEOUT_MS = 30_000;
-
 const ADD_TO_CART_NAME = /add to cart/i;
 const CHECKOUT_CONTROL_NAME = /check\s*out|checkout|continue to checkout/i;
 
@@ -15,10 +13,10 @@ type CartExpectation = {
   readonly variantLabel: string;
 };
 
-test("checkout contains cart product", async ({ data, page }) => {
+test("checkout handoff starts from populated cart", async ({ data, page }) => {
   const expectation = await addProductToCart(page, data.products, data.paths.cart);
 
-  await openCheckoutAndExpectItem(page, expectation);
+  await startCheckoutFromPopulatedCart(page, expectation);
 });
 
 async function addProductToCart(
@@ -59,16 +57,7 @@ async function tryAddProductToCart(
     (await addToCart.isEnabled().catch(() => false));
   if (!isCartEnabled) return null;
 
-  const [cartResponse] = await Promise.all([
-    page
-      .waitForResponse((r) => r.url().includes("/api/cart") && r.request().method() === "POST", {
-        timeout: CART_SETTLE_TIMEOUT_MS,
-      })
-      .catch(() => null),
-    addToCart.click(),
-  ]);
-  await cartResponse?.finished().catch(() => null);
-
+  await addToCart.click();
   await expect(cartOverlayLineFor(page, expectation.productTitle)).toBeVisible({
     timeout: CART_SETTLE_TIMEOUT_MS,
   });
@@ -78,18 +67,30 @@ async function tryAddProductToCart(
   return expectation;
 }
 
-async function openCheckoutAndExpectItem(page: Page, expectation: CartExpectation): Promise<void> {
+async function startCheckoutFromPopulatedCart(
+  page: Page,
+  expectation: CartExpectation,
+): Promise<void> {
   await expectCartLine(page, expectation);
 
   const checkout = page.getByRole("link", { name: CHECKOUT_CONTROL_NAME }).first();
   await expect(checkout).toBeVisible();
-  await checkout.click();
+  const checkoutUrl = await requireCheckoutUrl(page, checkout, expectation.cartPath);
+  const isCheckoutNavigation = (url: URL) => url.href === checkoutUrl.href;
 
-  await page.waitForLoadState("domcontentloaded", { timeout: CHECKOUT_LOAD_TIMEOUT_MS });
-  expect(isCheckoutUrl(page.url(), expectation.cartPath)).toBe(true);
-  await expect(page.getByText(expectation.productTitle, { exact: false })).toBeVisible();
-  if (shouldAssertVariant(expectation.variantLabel)) {
-    await expect(page.getByText(expectation.variantLabel, { exact: false })).toBeVisible();
+  await page.route(isCheckoutNavigation, async (route) => {
+    await route.fulfill({
+      body: "<!doctype html><title>Checkout</title>",
+      contentType: "text/html",
+      status: 200,
+    });
+  });
+
+  try {
+    await checkout.click();
+    await expect(page).toHaveURL(checkoutUrl.href);
+  } finally {
+    await page.unroute(isCheckoutNavigation);
   }
 }
 
@@ -116,7 +117,34 @@ function shouldAssertVariant(variantLabel: string): boolean {
   return variantLabel !== "" && variantLabel.toLowerCase() !== "default title";
 }
 
-function isCheckoutUrl(rawUrl: string, cartPath: string): boolean {
-  const url = new URL(rawUrl);
-  return /checkout|checkouts/i.test(rawUrl) || url.pathname.startsWith(`${cartPath}/c/`);
+async function requireCheckoutUrl(page: Page, checkout: Locator, cartPath: string): Promise<URL> {
+  const href = await checkout.getAttribute("href");
+  if (href === null || href === "") {
+    throw checkoutHandoffError(cartPath);
+  }
+
+  let url: URL;
+  try {
+    url = new URL(href, page.url());
+  } catch {
+    throw checkoutHandoffError(cartPath);
+  }
+
+  if (isCheckoutUrl(url, cartPath)) return url;
+
+  throw checkoutHandoffError(cartPath);
+}
+
+function checkoutHandoffError(cartPath: string): Error {
+  return createContractError({
+    capability: "checkout-handoff",
+    routePath: cartPath,
+    expectation: "The visible checkout link targets a checkout URL.",
+    likelyFix: "Set the checkout link href to the cart checkout URL.",
+    docsAnchor: "#checkout-handoff",
+  });
+}
+
+function isCheckoutUrl(url: URL, cartPath: string): boolean {
+  return /checkout|checkouts/i.test(url.href) || url.pathname.startsWith(`${cartPath}/c/`);
 }

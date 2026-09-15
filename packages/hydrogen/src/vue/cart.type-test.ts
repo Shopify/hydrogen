@@ -48,4 +48,11 @@ describe("createCartComponents", () => {
     expectTypeOf<InitialCart>().toHaveProperty("attributes");
     expectTypeOf<Merchandise>().toHaveProperty("availableForSale");
   });
+
+  it("keeps cart actions available on typed components", () => {
+    expectTypeOf(typedCart.useCartActions).toBeFunction();
+    expectTypeOf<ReturnType<typeof typedCart.useCartActions>["refresh"]>().toEqualTypeOf<
+      () => void
+    >();
+  });
 });

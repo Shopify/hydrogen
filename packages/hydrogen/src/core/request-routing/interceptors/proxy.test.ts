@@ -53,6 +53,7 @@ describe("createProxyInterceptor", () => {
 
   afterEach(() => {
     resetLoggingForTests();
+    vi.unstubAllGlobals();
   });
 
   it("returns a 500 error response instead of throwing when the upstream URL is invalid", async () => {
@@ -164,5 +165,50 @@ describe("createProxyInterceptor", () => {
     mockFetch.mockRejectedValueOnce(new Error("Connection refused"));
     const fetched = await getResponse(run(fetchFails, new Request("https://app.example/x")));
     expect(fetched.status).toBe(502);
+  });
+
+  it("applies context headers before deny and prepare", async () => {
+    const prepare = vi.fn((headers: Headers) => {
+      expect(headers.get("cookie")).toBeNull();
+      headers.set("x-prepared", "true");
+    });
+    const handleProxy = createProxyInterceptor({
+      match: /^\/proxy$/,
+      requestHeaders: { deny: ["cookie"], prepare },
+      scope: "test-proxy",
+    });
+    const request = new Request("https://my-app.com/proxy", {
+      headers: { cookie: "session=private" },
+    });
+
+    const response = await run(handleProxy, request);
+
+    assert(response, "expected a response");
+    const call = mockFetch.mock.calls[0];
+    assert(call, "expected fetch to be called");
+    const headers = new Headers(call[1].headers);
+    expect(headers.get("cookie")).toBeNull();
+    expect(headers.get("x-prepared")).toBe("true");
+    expect(prepare).toHaveBeenCalledOnce();
+  });
+
+  it("returns the allowed methods when the request method is unsupported", async () => {
+    const handleProxy = createProxyInterceptor({
+      match: /^\/proxy$/,
+      methods: ["POST", "DELETE"],
+      requestHeaders: { deny: [] },
+      scope: "test-proxy",
+    });
+    const request = new Request("https://my-app.com/proxy", { method: "GET" });
+
+    const response = await run(handleProxy, request);
+
+    assert(response, "expected a response");
+    expect(response.status).toBe(405);
+    expect(response.headers.get("allow")).toBe("POST, DELETE");
+    expect(response.headers.get("content-type")).toBe("application/json");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.json()).toEqual({ error: "Method Not Allowed" });
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 });

@@ -7,7 +7,6 @@ export const REQUEST_GROUP_ID_HEADER = "Custom-Storefront-Request-Group-ID";
 export const SDK_VARIANT_HEADER = "X-SDK-Variant";
 export const SDK_VARIANT_SOURCE_HEADER = "X-SDK-Variant-Source";
 export const SDK_VERSION_HEADER = "X-SDK-Version";
-export const SHOPIFY_CHAT_FRAME_ORIGIN_HEADER = "Sec-Shopify-Chat-Frame-Origin";
 export const SHOPIFY_STOREFRONT_ORIGIN_HEADER = "Sec-Shopify-Storefront-Origin";
 export const STOREFRONT_ID_HEADER = "Shopify-Storefront-Id";
 export const SHOPIFY_STOREFRONT_S_HEADER = "Shopify-Storefront-S";
@@ -53,7 +52,6 @@ export type ShopifyHeaderName =
   | typeof SDK_VARIANT_HEADER
   | typeof SDK_VARIANT_SOURCE_HEADER
   | typeof SDK_VERSION_HEADER
-  | typeof SHOPIFY_CHAT_FRAME_ORIGIN_HEADER
   | typeof SHOPIFY_STOREFRONT_ORIGIN_HEADER
   | typeof SHOPIFY_STOREFRONT_S_HEADER
   | typeof SHOPIFY_STOREFRONT_Y_HEADER
@@ -119,8 +117,6 @@ export const SFAPI_REQUEST_HEADER_ALLOWLIST = defineHeaderList(
 );
 
 export const MCP_REQUEST_HEADER_ALLOWLIST = defineHeaderList(...COMMON_PROXY_HEADER_ALLOWLIST);
-
-export const AGENT_REQUEST_HEADER_ALLOWLIST = defineHeaderList(...COMMON_PROXY_HEADER_ALLOWLIST);
 
 export const AJAX_API_REQUEST_HEADER_ALLOWLIST = defineHeaderList(
   ...COMMON_PROXY_HEADER_ALLOWLIST,

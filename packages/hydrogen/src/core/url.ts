@@ -2,6 +2,7 @@ export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
 export const SHOPIFY_API_PROXY_PREFIX = "/__shopify";
 export const SHOPIFY_API_PROXY_RE = /^\/__shopify(?:\/|$)/;
 export const MCP_RE = /^\/api\/mcp$/;
+export const UCP_MCP_RE = /^\/api\/ucp\/mcp$/;
 export const CHECKOUT_RE = /^\/checkout$/;
 export const CART_PERMALINK_RE = /^\/cart\/\d+:\d+(?:,\d+:\d+)*$/;
 export const CUSTOMER_ACCOUNT_PATHS = {
@@ -29,10 +30,18 @@ export function isHydrogenServerHandoffPath(pathname: string): boolean {
   );
 }
 
-export const AGENT_BUYER_CLAIMS_RE =
-  /^(?:\/[a-z]{2}(?:-[a-z]{2})?)?\/agent\/(?:handoff|buyer-claims)(?:\.[^/.]+)?\/?$/i;
 export const UCP_RE = /^\/\.well-known\/ucp$/;
-export const WELL_KNOWN_RE = /^\/\.well-known\/(?:apple-developer-merchantid-domain-association)$/;
+
+/**
+ * Allowlisted `.well-known` resources proxied to the Online Store origin:
+ * - `apple-developer-merchantid-domain-association` — Apple Pay domain verification.
+ * - `shopify/fec/produce` — Frontend Event Collector ingress. On the Online
+ *   Store the myshopify.com edge forwards this first-party path to the
+ *   collector; headless storefronts have no such edge, so Hydrogen proxies it
+ *   to the same origin (used by WebMCP's Event Refinery client).
+ */
+export const WELL_KNOWN_RE =
+  /^\/\.well-known\/(?:apple-developer-merchantid-domain-association|shopify\/fec\/produce)$/;
 export const AJAX_CART_RE =
   /^(?:\/[a-z]{2}(?:-[a-z]{2})?)?\/cart(?:\.(?:js|json)|\/(?:add|update|change|clear)(?:\.(?:js|json))?)$/i;
 

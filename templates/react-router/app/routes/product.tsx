@@ -622,6 +622,7 @@ function AddToCart({
   selectedVariant: ProductVariant | null;
 }) {
   const { options, register, formProps, errors, pending } = useProductForm();
+  const [engravingText, setEngravingText] = useState("");
   const addable = canAddToCart(product, options);
   const buttonText = addable ? "Add to cart" : selectedVariant ? "Sold out" : "Select options";
 
@@ -630,6 +631,32 @@ function AddToCart({
       <form {...formProps({ afterSubmit: openCartDrawer })}>
         <input type="hidden" {...register("merchandiseId", {})} />
         <input type="hidden" {...register("quantity", { value: quantity })} />
+        {engravingText ? (
+          <input
+            type="hidden"
+            {...register("attributeValue", {
+              key: "Engraving",
+              value: engravingText,
+            })}
+          />
+        ) : null}
+        <div className="mb-4">
+          <label
+            htmlFor="engraving-text"
+            className="type-body-sm text-on-surface mb-2 block font-medium"
+          >
+            Engraving text <span className="text-on-surface-secondary font-normal">(optional)</span>
+          </label>
+          <input
+            id="engraving-text"
+            type="text"
+            maxLength={30}
+            placeholder="e.g. Happy Birthday"
+            value={engravingText}
+            onChange={(e) => setEngravingText(e.target.value)}
+            className="border-border text-on-surface placeholder:text-on-surface-secondary rounded-input h-11 w-full border px-3 text-sm focus:outline-2 focus:outline-offset-2"
+          />
+        </div>
         <button
           type="submit"
           className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
