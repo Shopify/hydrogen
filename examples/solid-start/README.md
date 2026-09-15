@@ -39,13 +39,15 @@ Port of the canonical `examples/core` design to [SolidStart](https://start.solid
 
 The account flow uses `createCustomerSession` and `createCustomerAccountServerHandlers` from `@shopify/hydrogen/customer-account`, Customer Account values from `examples/shared/config.ts`, and an encrypted HttpOnly `__Host-` cookie adapter from `examples/shared/customer-session.ts`.
 
-Customer Account OAuth requires a public HTTPS origin. To test locally without a tunnel, register `https://local.tryhydrogen.dev:5173/account/authorize` as the callback URI and run:
+Customer Account OAuth requires a public HTTPS origin. To test locally without a tunnel, run:
 
 ```sh
 pnpm --filter @shopify/hydrogen-example-solid-start dev:https
 ```
 
 On the first run, restart the command after the Vite plugin provisions the certificate so Vinxi can load it.
+
+When the server starts, the local HTTPS plugin links an unlinked Hydrogen storefront and pushes the Customer Account callback, JavaScript origin, and logout URLs. If automatic setup is unavailable, it prints the values for manual configuration.
 
 ## Run
 
