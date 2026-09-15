@@ -91,7 +91,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
     } catch (error) {
       log.error("request failed", { error });
       return Promise.resolve(
-        createProxyErrorResponse(error, "setup", descriptor.mapError, formatError),
+        createProxyErrorResponse(error, "setup", descriptor.mapError, formatError, request.method),
       );
     }
 
@@ -101,7 +101,13 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
       )
       .catch((error) => {
         log.error("request failed", { error });
-        return createProxyErrorResponse(error, "fetch", descriptor.mapError, formatError);
+        return createProxyErrorResponse(
+          error,
+          "fetch",
+          descriptor.mapError,
+          formatError,
+          request.method,
+        );
       });
   };
 }
@@ -153,7 +159,7 @@ function buildProxyResponse(
     // owns the sole cancellation and no validator can leak the upstream connection.
     upstreamResponse.body?.cancel().catch(() => {});
     if (rejection.logMessage) log.error(rejection.logMessage, rejection.log ?? {});
-    return createProxyRejectionResponse(rejection);
+    return createProxyRejectionResponse(rejection, options.request.method);
   }
 
   const headers = buildProxyResponseHeaders(
@@ -195,18 +201,19 @@ function createProxyErrorResponse(
   phase: ProxyErrorPhase,
   mapError: MapProxyError | undefined,
   formatError: (message: string) => unknown,
+  method: string,
 ): Response {
   const message = error instanceof Error ? error.message : "Internal proxy error";
   const mapping = mapError?.(error, phase);
   const status = mapping?.status ?? (phase === "setup" ? 500 : 502);
-  return new Response(JSON.stringify(formatError(message)), {
+  return new Response(method === "HEAD" ? null : JSON.stringify(formatError(message)), {
     status,
     headers: { "content-type": "application/json", ...mapping?.headers },
   });
 }
 
-function createProxyRejectionResponse(rejection: ProxyResponseRejection): Response {
-  return new Response(JSON.stringify(rejection.body), {
+function createProxyRejectionResponse(rejection: ProxyResponseRejection, method: string): Response {
+  return new Response(method === "HEAD" ? null : JSON.stringify(rejection.body), {
     status: rejection.status,
     headers: { "content-type": "application/json", ...rejection.headers },
   });

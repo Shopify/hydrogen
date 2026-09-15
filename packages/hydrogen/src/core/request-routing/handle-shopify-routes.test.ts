@@ -189,9 +189,9 @@ describe("handleShopifyRoutes", () => {
     expect(result).toBeInstanceOf(Response);
   });
 
-  it("returns the UCP business profile from the Online Store origin", async () => {
+  it.each(["GET", "HEAD"])("proxies %s UCP requests to the Online Store origin", async (method) => {
     mockFetch.mockResolvedValueOnce(
-      new Response('{"ucp":{"version":"2026-01-11"}}', {
+      new Response(method === "HEAD" ? null : '{"ucp":{"version":"2026-01-11"}}', {
         status: 200,
         headers: {
           "content-type": "application/json",
@@ -202,6 +202,7 @@ describe("handleShopifyRoutes", () => {
 
     const result = await handleShopifyRoutes({
       request: new Request("https://my-app.com/.well-known/ucp", {
+        method,
         headers: { accept: "text/html", cookie: "shopper=secret" },
       }),
     });
@@ -211,10 +212,12 @@ describe("handleShopifyRoutes", () => {
     assert(ucpCall, "expected fetch to be called");
     const [ucpUrl, ucpInit] = ucpCall;
     expect(ucpUrl.href).toBe("https://test-store.myshopify.com/.well-known/ucp");
+    expect(ucpInit.method).toBe(method);
     expect(ucpInit.redirect).toBe("manual");
     expect([...new Headers(ucpInit.headers)]).toEqual([["accept", "application/json"]]);
+    expect(result.status).toBe(200);
     expect(result.headers.get("cache-control")).toBe(
-      "public, max-age=60, s-maxage=60, stale-while-revalidate=300, stale-if-error=86400",
+      "public, max-age=60, s-maxage=60, stale-while-revalidate=300, stale-if-error=300",
     );
     expect(result.headers.get("set-cookie")).toBeNull();
     expect(result.headers.get("server-timing")).toBeNull();

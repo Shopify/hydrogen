@@ -8,9 +8,9 @@ import { handleUcpProxy as handleUcpProxyImpl } from "./ucp";
 const STORE_URL = "https://test-store.myshopify.com";
 const UCP_PATH = "/.well-known/ucp";
 const UCP_CACHE_CONTROL =
-  "public, max-age=60, s-maxage=60, stale-while-revalidate=300, stale-if-error=86400";
+  "public, max-age=60, s-maxage=60, stale-while-revalidate=300, stale-if-error=300";
 
-function handleUcpProxy(request: Request) {
+function handleUcpProxy(request: Request, storeUrl = STORE_URL) {
   const requestContext = createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
@@ -28,8 +28,8 @@ function handleUcpProxy(request: Request) {
     storefrontClient: {
       type: "private",
       i18n: { country: "US", language: "EN", pathPrefix: "" },
-      storeUrl: STORE_URL,
-      apiUrl: `${STORE_URL}/api/2026-04/graphql.json`,
+      storeUrl,
+      apiUrl: `${storeUrl}/api/2026-04/graphql.json`,
       requestContext,
       graphql: vi.fn(),
     },
@@ -80,7 +80,7 @@ describe("handleUcpProxy", () => {
     expect(init.signal).toBeInstanceOf(AbortSignal);
   });
 
-  it("only handles exact GET requests", async () => {
+  it("ignores unsupported paths and methods", async () => {
     for (const request of [
       new Request("https://headless.example/.well-known/ucp/"),
       new Request(`https://headless.example${UCP_PATH}`, { method: "POST" }),
@@ -90,7 +90,8 @@ describe("handleUcpProxy", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("does not forward shopper or conditional request headers", async () => {
+  it("forwards conditional request headers but not shopper state", async () => {
+    const lastModified = "Thu, 27 Aug 2026 20:00:00 GMT";
     await handleUcpProxy(
       new Request(`https://headless.example${UCP_PATH}`, {
         headers: {
@@ -98,6 +99,7 @@ describe("handleUcpProxy", () => {
           authorization: "Bearer secret",
           cookie: "shopper=secret",
           "if-none-match": '"old-profile"',
+          "if-modified-since": lastModified,
           "user-agent": "commerce-agent",
         },
       }),
@@ -106,7 +108,45 @@ describe("handleUcpProxy", () => {
     const call = mockFetch.mock.calls[0];
     assert(call, "expected fetch to be called");
     const headers = new Headers(call[1].headers);
-    expect([...headers]).toEqual([["accept", "application/json"]]);
+    expect([...headers]).toEqual([
+      ["accept", "application/json"],
+      ["if-modified-since", lastModified],
+      ["if-none-match", '"old-profile"'],
+    ]);
+  });
+
+  it("passes through upstream 304 responses with public caching and validation headers", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const lastModified = "Thu, 27 Aug 2026 20:00:00 GMT";
+    mockFetch.mockResolvedValueOnce(
+      new Response(null, {
+        status: 304,
+        headers: {
+          etag: '"old-profile"',
+          "last-modified": lastModified,
+          "cache-control": "private",
+          "set-cookie": "shopper=secret",
+          "x-shopify-internal": "secret",
+        },
+      }),
+    );
+
+    const response = getResponse(
+      await handleUcpProxy(
+        new Request(`https://headless.example${UCP_PATH}`, {
+          headers: { "if-none-match": '"old-profile"' },
+        }),
+      ),
+    );
+
+    expect(response.status).toBe(304);
+    expect(response.headers.get("cache-control")).toBe(UCP_CACHE_CONTROL);
+    expect(response.headers.get("etag")).toBe('"old-profile"');
+    expect(response.headers.get("last-modified")).toBe(lastModified);
+    expect(response.headers.get("set-cookie")).toBeNull();
+    expect(response.headers.get("x-shopify-internal")).toBeNull();
+    expect(logger.error).not.toHaveBeenCalled();
   });
 
   it("streams successful profiles with edge-first caching and validation headers", async () => {
@@ -150,11 +190,39 @@ describe("handleUcpProxy", () => {
     });
   });
 
-  it.each([404, 500])("does not cache upstream %s responses", async (status) => {
+  it.each(["GET", "HEAD"])("replaces upstream HTML 404s for %s", async (method) => {
+    const upstream = new Response(method === "HEAD" ? null : "<html>Not found</html>", {
+      status: 404,
+      headers: {
+        "content-type": "text/html",
+        "cache-control": "public",
+        "set-cookie": "shopper=secret",
+        etag: '"html-404"',
+      },
+    });
+    mockFetch.mockResolvedValueOnce(upstream);
+
+    const response = getResponse(
+      await handleUcpProxy(new Request(`https://headless.example${UCP_PATH}`, { method })),
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("content-type")).toBe("application/json");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("set-cookie")).toBeNull();
+    expect(response.headers.get("etag")).toBeNull();
+    if (method === "HEAD") {
+      expect(response.body).toBeNull();
+    } else {
+      await expect(response.json()).resolves.toEqual({ error: expect.any(String) });
+    }
+  });
+
+  it("does not cache upstream 500 responses", async () => {
     mockFetch.mockResolvedValueOnce(
       Response.json(
         { error: "upstream error" },
-        { status, headers: { "cache-control": "public" } },
+        { status: 500, headers: { "cache-control": "public" } },
       ),
     );
 
@@ -162,30 +230,59 @@ describe("handleUcpProxy", () => {
       await handleUcpProxy(new Request(`https://headless.example${UCP_PATH}`)),
     );
 
-    expect(response.status).toBe(status);
+    expect(response.status).toBe(500);
     expect(response.headers.get("cache-control")).toBe("no-store");
+  });
+
+  it.each(["GET", "HEAD"])("returns an uncached 500 for %s setup failures", async (method) => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
+    const response = getResponse(
+      await handleUcpProxy(
+        new Request(`https://headless.example${UCP_PATH}`, { method }),
+        "::not-a-valid-url::",
+      ),
+    );
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mockFetch).not.toHaveBeenCalled();
+    if (method === "HEAD") expect(response.body).toBeNull();
+    expect(logger.error).toHaveBeenCalledWith(
+      "request failed",
+      expect.objectContaining({ scope: "ucp-proxy" }),
+    );
   });
 
   it.each([
-    [new DOMException("Timed out", "TimeoutError"), 504],
-    [new Error("Connection refused"), 502],
-  ])("logs fetch failures and returns an uncached response", async (error, status) => {
-    const logger = createTestLogger();
-    configureLogging({ logger });
-    mockFetch.mockRejectedValueOnce(error);
+    ["GET", 504, new DOMException("Timed out", "TimeoutError")],
+    ["GET", 502, new Error("Connection refused")],
+    ["HEAD", 504, new DOMException("Timed out", "TimeoutError")],
+  ])(
+    "logs %s fetch failures and returns an uncached %s response",
+    async (method, status, error) => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      mockFetch.mockRejectedValueOnce(error);
 
-    const response = getResponse(
-      await handleUcpProxy(new Request(`https://headless.example${UCP_PATH}`)),
-    );
+      const response = getResponse(
+        await handleUcpProxy(new Request(`https://headless.example${UCP_PATH}`, { method })),
+      );
 
-    expect(response.status).toBe(status);
-    expect(response.headers.get("cache-control")).toBe("no-store");
-    await expect(response.json()).resolves.toEqual({
-      error: "Unable to fetch the Shopify UCP profile",
-    });
-    expect(logger.error).toHaveBeenCalledWith("request failed", {
-      scope: "ucp-proxy",
-      error,
-    });
-  });
+      expect(response.status).toBe(status);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      if (method === "HEAD") {
+        expect(response.body).toBeNull();
+      } else {
+        await expect(response.json()).resolves.toEqual({
+          error: "Unable to fetch the Shopify UCP profile",
+        });
+      }
+      expect(logger.error).toHaveBeenCalledWith("request failed", {
+        scope: "ucp-proxy",
+        error,
+      });
+    },
+  );
 });

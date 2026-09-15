@@ -32,7 +32,9 @@ Request
 
 ## UCP Business Profile
 
-`GET /.well-known/ucp` serves Shopify's managed UCP business profile from the headless storefront origin. Hydrogen fetches the profile without shopper cookies or authorization, preserves Shopify's status and validation headers, and applies edge-first caching only to successful responses. Upstream errors and unpublished profiles are returned with `Cache-Control: no-store`.
+`GET /.well-known/ucp` serves Shopify's managed UCP business profile from the headless storefront origin; `HEAD` returns the response headers without a body. Hydrogen forwards `If-None-Match` and `If-Modified-Since`, but not shopper cookies or authorization, and preserves upstream validation headers and `304 Not Modified` responses.
+
+Successful profiles and `304` responses use public caching with a 60-second freshness lifetime and a 300-second stale-if-error window. Unpublished profiles return a JSON `404` rather than the Online Store's HTML error page. All errors use `Cache-Control: no-store`.
 
 Serve the storefront over HTTPS and wire `handleShopifyRoutes` before framework routing so the profile is available without an app-owned route. Return the matched response directly without adding session headers or applying request-context headers again.
 
@@ -103,7 +105,7 @@ import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-
 
 Run the app in dev and production modes, then check:
 
-1. `GET /.well-known/ucp` returns Shopify's UCP business profile with a public cache policy and no shopper cookies.
+1. `GET /.well-known/ucp` returns Shopify's UCP business profile with a public cache policy and no shopper cookies. `HEAD` returns headers without a body. A conditional request with a matching `If-None-Match` returns `304`; an unpublished profile returns an uncached JSON `404`.
 2. `POST /api/{api-version}/graphql.json` returns Storefront API JSON, not the app 404.
 3. `GET /api/cart` returns cart handler JSON when cart handlers are registered. With no cart id, the body is `{cart: null}` and no Storefront API cart lookup is made.
 4. `GET /api/predictive-search?q=snow` returns predictive search JSON when predictive search handlers are registered.
