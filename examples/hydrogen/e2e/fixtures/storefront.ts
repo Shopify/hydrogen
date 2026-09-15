@@ -260,36 +260,18 @@ export class StorefrontPage {
       .toEqual([]);
   }
 
-  /**
-   * Assert that analytics cookies are present and return them
-   */
-  async expectAnalyticsCookiesPresent() {
+  async expectHttpOnlyAnalyticsCookiesPresent() {
     await expect
       .poll(
         async () => {
           const cookies = await this.getCookies();
-          return (
-            cookies.some((c) => c.name === "_shopify_y") &&
-            cookies.some((c) => c.name === "_shopify_s")
+          return ["_shopify_analytics", "_shopify_marketing"].every((name) =>
+            cookies.some((cookie) => cookie.name === name && cookie.httpOnly),
           );
         },
-        {
-          message: "_shopify_y and _shopify_s cookies should be present",
-          timeout: 15000,
-        },
+        { message: "HTTP-only analytics and marketing cookies should be present", timeout: 15000 },
       )
       .toBe(true);
-
-    const cookies = await this.getCookies();
-    const shopifyY = cookies.find((c) => c.name === "_shopify_y");
-    const shopifyS = cookies.find((c) => c.name === "_shopify_s");
-    const shopifyAnalytics = cookies.find((c) => c.name === "_shopify_analytics");
-    const shopifyMarketing = cookies.find((c) => c.name === "_shopify_marketing");
-
-    expect(shopifyY, "_shopify_y cookie should be present").toBeDefined();
-    expect(shopifyS, "_shopify_s cookie should be present").toBeDefined();
-
-    return { shopifyY, shopifyS, shopifyAnalytics, shopifyMarketing };
   }
 
   /**

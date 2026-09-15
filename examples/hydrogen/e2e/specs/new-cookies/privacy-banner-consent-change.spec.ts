@@ -25,14 +25,9 @@ test.describe("Privacy Banner - Consent Change", () => {
       const originalYValue = establishedServerTiming._y!;
       const originalSValue = establishedServerTiming._s!;
 
-      // 4. Verify all analytics cookies are present
-      const { shopifyY, shopifyS, shopifyAnalytics, shopifyMarketing } =
-        await storefront.expectAnalyticsCookiesPresent();
-
-      expect(shopifyY!.value, "_shopify_y should match server-timing").toBe(originalYValue);
-      expect(shopifyS!.value, "_shopify_s should match server-timing").toBe(originalSValue);
-      expect(shopifyAnalytics, "_shopify_analytics should be present after accept").toBeDefined();
-      expect(shopifyMarketing, "_shopify_marketing should be present after accept").toBeDefined();
+      // 4. Only backend analytics cookies are created.
+      await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+      await storefront.expectNoLegacyAnalyticsCookies();
 
       // 5. Wait for analytics to fire to confirm tracking is working
       await storefront.waitForPerfKit();
@@ -139,28 +134,9 @@ test.describe("Privacy Banner - Consent Change", () => {
       const newYValue = serverTimingAfterAccept._y!;
       const newSValue = serverTimingAfterAccept._s!;
 
-      // 9. Verify analytics cookies are now present
-      const { shopifyY, shopifyS, shopifyAnalytics, shopifyMarketing } =
-        await storefront.expectAnalyticsCookiesPresent();
-
-      // Cookie values should match the new server-timing values
-      expect(shopifyY!.value, "_shopify_y cookie should match new server-timing _y value").toBe(
-        newYValue,
-      );
-
-      expect(shopifyS!.value, "_shopify_s cookie should match new server-timing _s value").toBe(
-        newSValue,
-      );
-
-      // Verify HTTP-only cookies are set
-      expect(
-        shopifyAnalytics,
-        "_shopify_analytics cookie should be present after accepting",
-      ).toBeDefined();
-      expect(
-        shopifyMarketing,
-        "_shopify_marketing cookie should be present after accepting",
-      ).toBeDefined();
+      // 9. Only backend analytics cookies are created after granting consent.
+      await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+      await storefront.expectNoLegacyAnalyticsCookies();
 
       // 10. Navigate to a product page and wait for analytics requests to fire after granting consent
       await storefront.finalizePerfKitMetrics();
@@ -195,7 +171,8 @@ test.describe("Privacy Banner - Consent Change", () => {
       await storefront.expectPrivacyBannerNotVisible();
 
       // Verify cookies persist after reload
-      const cookiesAfterReload = await storefront.expectAnalyticsCookiesPresent();
+      await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+      await storefront.expectNoLegacyAnalyticsCookies();
 
       // Verify server-timing values match
       const serverTimingAfterReload = await storefront.getServerTimingValues();
@@ -207,16 +184,6 @@ test.describe("Privacy Banner - Consent Change", () => {
       expect(
         serverTimingAfterReload._s,
         "Server-timing _s after reload should match value from before reload",
-      ).toBe(newSValue);
-
-      // Cookies should also match
-      expect(
-        cookiesAfterReload.shopifyY?.value,
-        "_shopify_y cookie after reload should match server-timing _y",
-      ).toBe(newYValue);
-      expect(
-        cookiesAfterReload.shopifyS?.value,
-        "_shopify_s cookie after reload should match server-timing _s",
       ).toBe(newSValue);
 
       // Wait for analytics requests after reload

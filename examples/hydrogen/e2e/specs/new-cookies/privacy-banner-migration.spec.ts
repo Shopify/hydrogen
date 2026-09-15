@@ -27,11 +27,15 @@ test.describe("Privacy Banner - Session Migration", () => {
       const originalYValue = establishedServerTiming._y!;
       const originalSValue = establishedServerTiming._s!;
 
-      // 4. Verify all cookies are present
-      const { shopifyY, shopifyS } = await storefront.expectAnalyticsCookiesPresent();
+      // 4. New visitors receive backend cookies only.
+      await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+      await storefront.expectNoLegacyAnalyticsCookies();
 
-      expect(shopifyY!.value, "_shopify_y should match server-timing").toBe(originalYValue);
-      expect(shopifyS!.value, "_shopify_s should match server-timing").toBe(originalSValue);
+      // Model cookies left by an older storefront version.
+      await storefront.page.context().addCookies([
+        { name: "_shopify_y", value: originalYValue, url: storefront.page.url() },
+        { name: "_shopify_s", value: originalSValue, url: storefront.page.url() },
+      ]);
 
       // === MIGRATION: Remove new cookies but keep old ones ===
 
@@ -81,30 +85,8 @@ test.describe("Privacy Banner - Session Migration", () => {
         "Server-timing _s after migration should match original value",
       ).toBe(originalSValue);
 
-      // 9. Verify new HTTP-only cookies are recreated with correct values
-      const {
-        shopifyY: yAfterReload,
-        shopifyS: sAfterReload,
-        shopifyAnalytics: analyticsAfterReload,
-        shopifyMarketing: marketingAfterReload,
-      } = await storefront.expectAnalyticsCookiesPresent();
-
-      expect(
-        analyticsAfterReload,
-        "_shopify_analytics should be recreated after migration",
-      ).toBeDefined();
-      expect(
-        marketingAfterReload,
-        "_shopify_marketing should be recreated after migration",
-      ).toBeDefined();
-
-      // Verify cookie values match original tracking session
-      expect(yAfterReload!.value, "_shopify_y should keep original value after migration").toBe(
-        originalYValue,
-      );
-      expect(sAfterReload!.value, "_shopify_s should keep original value after migration").toBe(
-        originalSValue,
-      );
+      // 9. Verify migration establishes the modern HTTP-only cookies.
+      await storefront.expectHttpOnlyAnalyticsCookiesPresent();
 
       // 10. Wait for analytics requests and verify they use original tracking values
       await storefront.waitForPerfKit();

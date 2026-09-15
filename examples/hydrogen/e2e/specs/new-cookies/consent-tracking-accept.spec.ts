@@ -1,4 +1,5 @@
 import { setTestStore, test, expect } from "../../fixtures";
+import assert from "../../fixtures/assertions";
 
 setTestStore("defaultConsentAllowed_cookiesEnabled");
 
@@ -24,29 +25,11 @@ test.describe("Consent Tracking - Auto-Allowed (Consent Allowed by Default)", ()
     // Verify they are real UUIDs (not mock values)
     storefront.expectRealServerTimingValues(navigationServerTiming);
 
-    // 4. Verify analytics cookies are set immediately (no user action needed)
-    const { shopifyY, shopifyS, shopifyAnalytics, shopifyMarketing } =
-      await storefront.expectAnalyticsCookiesPresent();
-
-    // Cookie values should match navigation server-timing values
-    // (unlike accept flow, values shouldn't change - consent was already allowed)
-    expect(
-      shopifyY!.value,
-      "_shopify_y cookie value should match navigation server-timing _y value",
-    ).toBe(navigationServerTiming._y);
-
-    expect(
-      shopifyS!.value,
-      "_shopify_s cookie value should match navigation server-timing _s value",
-    ).toBe(navigationServerTiming._s);
-
-    // Verify HTTP-only cookies are set
-    expect(shopifyAnalytics, "_shopify_analytics cookie should be present").toBeDefined();
-    expect(shopifyMarketing, "_shopify_marketing cookie should be present").toBeDefined();
-
-    // Verify HTTP-only cookies have httpOnly flag set
-    expect(shopifyAnalytics!.httpOnly, "_shopify_analytics cookie should be HTTP-only").toBe(true);
-    expect(shopifyMarketing!.httpOnly, "_shopify_marketing cookie should be HTTP-only").toBe(true);
+    // 4. Auto-allowed consent establishes backend cookies without legacy cookies.
+    await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+    await storefront.expectNoLegacyAnalyticsCookies();
+    assert(navigationServerTiming._y, "Initial unique token should be present");
+    assert(navigationServerTiming._s, "Initial visit token should be present");
 
     // 5. Confirm perf-kit is loaded and wait for analytics requests to fire
     await storefront.waitForPerfKit();
@@ -120,7 +103,8 @@ test.describe("Consent Tracking - Auto-Allowed (Consent Allowed by Default)", ()
     await storefront.expectPrivacyBannerNotVisible();
 
     // Verify cookies persist after reload
-    const cookiesAfterReload = await storefront.expectAnalyticsCookiesPresent();
+    await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+    await storefront.expectNoLegacyAnalyticsCookies();
 
     // Verify server-timing values after reload match original navigation values
     const serverTimingAfterReload = await storefront.getServerTimingValues();
@@ -144,16 +128,6 @@ test.describe("Consent Tracking - Auto-Allowed (Consent Allowed by Default)", ()
       "Server-timing _s after reload should match original navigation value",
     ).toBe(navigationServerTiming._s);
 
-    // Cookies should also match
-    expect(
-      cookiesAfterReload.shopifyY?.value,
-      "_shopify_y cookie after reload should match navigation value",
-    ).toBe(navigationServerTiming._y);
-    expect(
-      cookiesAfterReload.shopifyS?.value,
-      "_shopify_s cookie after reload should match navigation value",
-    ).toBe(navigationServerTiming._s);
-
     // Wait for analytics requests after reload
     await storefront.waitForMonorailRequests();
 
@@ -165,6 +139,12 @@ test.describe("Consent Tracking - Auto-Allowed (Consent Allowed by Default)", ()
     );
 
     // === MIGRATION: Test upgrade from old cookies ===
+
+    // Model cookies left by an older storefront version.
+    await storefront.page.context().addCookies([
+      { name: "_shopify_y", value: navigationServerTiming._y, url: storefront.page.url() },
+      { name: "_shopify_s", value: navigationServerTiming._s, url: storefront.page.url() },
+    ]);
 
     // 12. Remove HTTP-only cookies but keep old _shopify_y/_shopify_s
     await storefront.removeHttpOnlyCookies();
@@ -208,30 +188,8 @@ test.describe("Consent Tracking - Auto-Allowed (Consent Allowed by Default)", ()
       "Server-timing _s after migration should match original value",
     ).toBe(navigationServerTiming._s);
 
-    // 15. Verify HTTP-only cookies are recreated with original values
-    const {
-      shopifyY: yAfterMigration,
-      shopifyS: sAfterMigration,
-      shopifyAnalytics: analyticsAfterMigration,
-      shopifyMarketing: marketingAfterMigration,
-    } = await storefront.expectAnalyticsCookiesPresent();
-
-    expect(
-      analyticsAfterMigration,
-      "_shopify_analytics should be recreated after migration",
-    ).toBeDefined();
-    expect(
-      marketingAfterMigration,
-      "_shopify_marketing should be recreated after migration",
-    ).toBeDefined();
-
-    // Cookie values should match original tracking values
-    expect(yAfterMigration!.value, "_shopify_y should keep original value after migration").toBe(
-      navigationServerTiming._y,
-    );
-    expect(sAfterMigration!.value, "_shopify_s should keep original value after migration").toBe(
-      navigationServerTiming._s,
-    );
+    // 15. Verify migration establishes the modern HTTP-only cookies.
+    await storefront.expectHttpOnlyAnalyticsCookiesPresent();
 
     // 16. Wait for analytics and verify they use original tracking values
     await storefront.waitForMonorailRequests();

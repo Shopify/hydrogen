@@ -58,40 +58,11 @@ test.describe("Privacy Banner - Accept Flow", () => {
       ).not.toBe(initialServerTimingValues._s);
     }
 
-    // 7. Verify _shopify_y and _shopify_s cookies are created with server-timing values
-    const { shopifyY, shopifyS, shopifyAnalytics, shopifyMarketing } =
-      await storefront.expectAnalyticsCookiesPresent();
-    assert(shopifyY, "_shopify_y cookie should be present after accept");
-    assert(shopifyS, "_shopify_s cookie should be present after accept");
-    assert(shopifyAnalytics, "_shopify_analytics cookie should be present after accept");
-    assert(shopifyMarketing, "_shopify_marketing cookie should be present after accept");
+    // 7. The backend owns tracking cookies; Hydrogen does not create legacy cookies.
+    await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+    await storefront.expectNoLegacyAnalyticsCookies();
     assert(updatedServerTimingValues._y, "Updated _y value should be present after consent");
     assert(updatedServerTimingValues._s, "Updated _s value should be present after consent");
-
-    // The cookie values should match the LATEST server-timing values (from consent response)
-    expect(
-      shopifyY.value,
-      "_shopify_y cookie value should match latest server-timing _y value",
-    ).toBe(updatedServerTimingValues._y);
-
-    expect(
-      shopifyS.value,
-      "_shopify_s cookie value should match latest server-timing _s value",
-    ).toBe(updatedServerTimingValues._s);
-
-    // Verify HTTP-only cookies are set after consent
-    expect(
-      shopifyAnalytics,
-      "_shopify_analytics cookie should be present after accept",
-    ).toBeDefined();
-    expect(
-      shopifyMarketing,
-      "_shopify_marketing cookie should be present after accept",
-    ).toBeDefined();
-
-    // Verify HTTP-only cookies have httpOnly flag set
-    expect(shopifyAnalytics.httpOnly, "_shopify_analytics cookie should be HTTP-only").toBe(true);
-    expect(shopifyMarketing.httpOnly, "_shopify_marketing cookie should be HTTP-only").toBe(true);
 
     // 8. Confirm perf-kit is loaded and wait for analytics requests to fire
     await storefront.waitForPerfKit();
@@ -165,7 +136,8 @@ test.describe("Privacy Banner - Accept Flow", () => {
     await storefront.expectPrivacyBannerNotVisible();
 
     // Verify cookies are still present after reload
-    const cookiesAfterReload = await storefront.expectAnalyticsCookiesPresent();
+    await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+    await storefront.expectNoLegacyAnalyticsCookies();
 
     // Verify server-timing values after reload match the values from before reload (same session)
     const serverTimingAfterReload = await storefront.getServerTimingValues();
@@ -187,16 +159,6 @@ test.describe("Privacy Banner - Accept Flow", () => {
     expect(
       serverTimingAfterReload._s,
       "Server-timing _s after reload should match value from before reload",
-    ).toBe(updatedServerTimingValues._s);
-
-    // Cookies should also match the server-timing values
-    expect(
-      cookiesAfterReload.shopifyY?.value,
-      "_shopify_y cookie after reload should match server-timing _y",
-    ).toBe(updatedServerTimingValues._y);
-    expect(
-      cookiesAfterReload.shopifyS?.value,
-      "_shopify_s cookie after reload should match server-timing _s",
     ).toBe(updatedServerTimingValues._s);
 
     // Wait for analytics requests after reload

@@ -22,11 +22,11 @@
 
 **Prerequisites:**
 
-- A storefront built on `@shopify/hydrogen` with the request interceptors already wired (`handleShopifyRoutes` and `handleShopifyRedirects`). The analytics bus depends on the SFAPI proxy so the browser can observe same-origin Storefront API responses for session cookies. Without the proxy, analytics falls back to deprecated JavaScript-visible cookies and should be treated as incomplete. If you have not installed the interceptors yet, install them first with the local `hydrogen-request-handlers` skill.
+- A storefront built on `@shopify/hydrogen` with the request interceptors already wired (`handleShopifyRoutes` and `handleShopifyRedirects`). The analytics bus depends on the SFAPI proxy so the browser can observe same-origin Storefront API responses for session cookies. Without the proxy, the backend session cookies cannot be established and analytics should be treated as incomplete. If you have not installed the interceptors yet, install them first with the local `hydrogen-request-handlers` skill.
 - Shopify runtime scripts rendered from the root/document head. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass `{country, language, currency?}` as `i18n`; pass `{shopId: env.SHOP_ID, storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0", myshopifyDomain: env.PUBLIC_STORE_DOMAIN}` as `shop`. Resolve both on the server, declare them as consts annotated with the `ShopifyScriptsShop` / `ShopifyScriptsI18n` types from `@shopify/hydrogen` (so wrong or missing fields fail typecheck where they are built), and serialize them into ShopifyScripts. ShopifyScripts creates `window.Shopify.analytics` by default and exposes the permanent domain as `window.Shopify.shop`. Analytics consent config does not accept `country` or `language`.
 - A client-side lifecycle hook in your framework (route-change effect, navigation event, `<script>` tag, etc.) so view events can fire on the right URL transitions.
 
-`ShopifyScripts` creates the zero-dependency analytics bus, sets it on `window.Shopify.analytics`, and owns Shopify consent setup, analytics CDN loading, and deprecated-cookie compatibility. Framework adapters stay thin: they translate framework lifecycle events into bus calls and wire cart delta tracking with `trackCartAnalytics()`.
+`ShopifyScripts` creates the zero-dependency analytics bus, sets it on `window.Shopify.analytics`, and owns Shopify consent setup and analytics CDN loading. Framework adapters stay thin: they translate framework lifecycle events into bus calls and wire cart delta tracking with `trackCartAnalytics()`.
 
 ## What you're installing, and what it does on its own
 
@@ -46,8 +46,7 @@ ShopifyScripts
   │
   ├── loads Shopify Customer Privacy script (consent + region gating)
   ├── loads Privacy Banner script in default-banner mode
-  ├── loads Shopify analytics destination by default
-  └── writes deprecated _shopify_y / _shopify_s cookies
+  └── loads Shopify analytics destination by default
 ```
 
 The bus is **browser-only effective** and is created by ShopifyScripts in the browser. There is no server-side dispatch.
@@ -621,4 +620,4 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Don't reimplement Monorail dispatch.** If you need a third-party destination, register it with `addDestination()` and forward from there — do not parallel-publish to Monorail yourself.
 - **Don't put per-route view events in a global subscriber.** A single subscriber that watches `page_viewed` and synthesizes `product_viewed` from URL parsing is brittle and loses payload context. Publish each view event from the route that has the data.
 - **Don't construct multiple buses for "different consent contexts" on the same page.** Customer Privacy config is global; the latest initialized config takes effect. If you need conditional behavior, branch inside subscribers, not at construction.
-- **Don't skip the request-handler prerequisite.** Without the SFAPI proxy, modern same-origin Shopify cookies cannot be set. Analytics may appear to work via deprecated JS-visible cookies, but session continuity into checkout breaks. Treat analytics as incomplete until the proxy is live in production.
+- **Don't skip the request-handler prerequisite.** Without the SFAPI proxy, modern same-origin Shopify cookies cannot be set. Session continuity into checkout depends on these backend cookies. Treat analytics as incomplete until the proxy is live in production.
