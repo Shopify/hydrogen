@@ -41,7 +41,7 @@ Invoke the `hydrogen-customer-account` skill for the session/token rules (read-o
 
 ## OAuth Caveat
 
-Completing a real login requires a public HTTPS origin whose `/account/authorize` callback is registered in the Customer Account app configuration. When the local origin is not registered, verify the signed-out rendering and handler wiring; skip the signed-in checks and say so instead of faking them.
+Completing a real login requires a public HTTPS origin whose `/account/authorize` callback is registered in the Customer Account app configuration. When account routes fail with "Customer Account OAuth origin must use HTTPS", run the dev server on a trusted HTTPS origin per the `hydrogen-local-https` skill (`npx hydrogen certs install`) and register that origin's callback. When the local origin is not registered, verify the signed-out rendering and handler wiring; skip the signed-in checks and say so instead of faking them.
 
 ## Continue when
 
