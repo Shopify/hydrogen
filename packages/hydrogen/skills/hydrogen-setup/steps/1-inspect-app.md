@@ -39,7 +39,9 @@ If multiple signals appear, prefer the one the app already uses for layout and c
 
 ## Framework specific references
 
-Every skill prefixed with `hydrogen-` *may* ship a framework-specific instruction file under its own `references/`. After detecting the framework, check that skill's `references/` for the matching file and read it before making framework-specific choices. If no matching reference exists, continue from the generic instructions and follow the app's existing conventions.
+Every skill prefixed with `hydrogen-` *may* ship a framework-specific instruction file under its own `references/`. After detecting the framework, check that skill's `references/` for the matching file and read it before making framework-specific choices.
+
+If no matching reference exists, check the Hydrogen repository for an example storefront built on the same framework before improvising: https://github.com/Shopify/hydrogen/tree/preview/examples (Astro, Nuxt, SolidStart and SvelteKit are covered there; see "Example Storefronts On GitHub" in `SKILL.md` for the per-framework paths). Read the example for how Hydrogen is wired into that framework's request lifecycle, routing, and data loading, treat it as reference rather than a structure to copy, then continue from the generic instructions and follow the app's existing conventions.
 
 Inspect dependencies, configuration files, server entry points, route directories, and existing request lifecycle code. Identify whether the app has a framework that can run server code and expose request handlers, middleware, loaders, server functions, or route handlers.
 
