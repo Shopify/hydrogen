@@ -71,6 +71,7 @@ type LoadMoreResponse<T> = {
 };
 
 const FILTER_DRAWER_ID = "collection-filter-drawer";
+const PRICE_FILTER_DEBOUNCE_MS = 900;
 const PRICE_MIN_PARAM = "filter.v.price.gte";
 const PRICE_MAX_PARAM = "filter.v.price.lte";
 
@@ -316,6 +317,12 @@ function PriceRangeFacet({ state }: { state: CollectionState }) {
     };
   }, []);
 
+  function schedulePriceSubmit(event: React.ChangeEvent<HTMLInputElement>) {
+    if (timer.current) clearTimeout(timer.current);
+    const form = event.currentTarget.form;
+    timer.current = setTimeout(() => form?.requestSubmit(), PRICE_FILTER_DEBOUNCE_MS);
+  }
+
   return (
     <div className="flex items-center gap-2 pt-2">
       <div className="flex-1">
@@ -330,11 +337,7 @@ function PriceRangeFacet({ state }: { state: CollectionState }) {
           placeholder="Min"
           defaultValue={activePrice?.min ?? ""}
           className="border-border rounded-input bg-surface text-on-surface w-full border px-3 py-2 text-sm"
-          onChange={(event) => {
-            if (timer.current) clearTimeout(timer.current);
-            const form = event.currentTarget.form;
-            timer.current = setTimeout(() => form?.requestSubmit(), 350);
-          }}
+          onChange={schedulePriceSubmit}
         />
       </div>
       <span className="text-on-surface-secondary text-sm">to</span>
@@ -350,11 +353,7 @@ function PriceRangeFacet({ state }: { state: CollectionState }) {
           placeholder="Max"
           defaultValue={activePrice?.max ?? ""}
           className="border-border rounded-input bg-surface text-on-surface w-full border px-3 py-2 text-sm"
-          onChange={(event) => {
-            if (timer.current) clearTimeout(timer.current);
-            const form = event.currentTarget.form;
-            timer.current = setTimeout(() => form?.requestSubmit(), 350);
-          }}
+          onChange={schedulePriceSubmit}
         />
       </div>
     </div>
