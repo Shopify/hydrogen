@@ -77,7 +77,10 @@ describe("setupHydrogen", () => {
     const existingRoot = createTempDirectory();
     const packageRoot = createPackageRoot(["hydrogen-setup"]);
 
-    writeJson(join(freshRoot, "package.json"), { packageManager: "pnpm@10.33.0", dependencies: {} });
+    writeJson(join(freshRoot, "package.json"), {
+      packageManager: "pnpm@10.33.0",
+      dependencies: {},
+    });
     writeJson(join(existingRoot, "package.json"), {
       dependencies: { "@shopify/hydrogen": "^1.0.0" },
     });
