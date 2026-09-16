@@ -58,34 +58,26 @@ function invokeCart(
       ERROR: {
         target: options?.errorTarget || 'error',
         actions: [
-          assign({
+          assign<CartMachineContext, CartMachineEvent>({
             prevCart: (context) => context?.lastValidCart,
             cart: (context) => context?.lastValidCart,
-            errors: (_, event) => event?.payload?.errors,
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            userErrors: (_) => undefined,
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            warnings: (_) => undefined,
+            errors: (_: CartMachineContext, event: CartMachineEvent) =>
+              event.type === 'ERROR' ? event.payload.errors : undefined,
+            userErrors: () => undefined,
+            warnings: () => undefined,
           }),
         ],
       },
       CART_COMPLETED: {
         target: 'cartCompleted',
-        actions: assign({
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          prevCart: (_) => undefined,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          cart: (_) => undefined,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          lastValidCart: (_) => undefined,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          rawCartResult: (_) => undefined,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          errors: (_) => undefined,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          userErrors: (_) => undefined,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          warnings: (_) => undefined,
+        actions: assign<CartMachineContext, CartMachineEvent>({
+          prevCart: () => undefined,
+          cart: () => undefined,
+          lastValidCart: () => undefined,
+          rawCartResult: () => undefined,
+          errors: () => undefined,
+          userErrors: () => undefined,
+          warnings: () => undefined,
         }),
       },
     },
