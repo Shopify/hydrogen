@@ -72,6 +72,41 @@ describe("setupHydrogen", () => {
     }
   });
 
+  it("prints the next-step message only on a fresh setup", async () => {
+    const freshRoot = createTempDirectory();
+    const existingRoot = createTempDirectory();
+    const packageRoot = createPackageRoot(["hydrogen-setup"]);
+
+    writeJson(join(freshRoot, "package.json"), { packageManager: "pnpm@10.33.0", dependencies: {} });
+    writeJson(join(existingRoot, "package.json"), {
+      dependencies: { "@shopify/hydrogen": "^1.0.0" },
+    });
+
+    const freshLog = vi.fn();
+    await setupHydrogen({
+      cwd: freshRoot,
+      packageRoot,
+      runCommand: createRunCommandSpy(),
+      log: freshLog,
+      env: {},
+    });
+    expect(freshLog).toHaveBeenCalledWith(
+      "Setup is ready. Next: ask your agent to use the hydrogen-setup skill.",
+    );
+
+    const existingLog = vi.fn();
+    await setupHydrogen({
+      cwd: existingRoot,
+      packageRoot,
+      runCommand: createRunCommandSpy(),
+      log: existingLog,
+      env: {},
+    });
+    expect(existingLog).not.toHaveBeenCalledWith(
+      "Setup is ready. Next: ask your agent to use the hydrogen-setup skill.",
+    );
+  });
+
   it("detects pnpm from its lockfile", async () => {
     const appRoot = createTempDirectory();
     const packageRoot = createPackageRoot(["hydrogen-setup"]);

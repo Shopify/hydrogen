@@ -142,12 +142,17 @@ export async function setupHydrogen(options: SetupHydrogenOptions = {}): Promise
   const runCommand = options.runCommand ?? spawnRunCommand;
   const log = options.log ?? console.log;
   const packageJson = readPackageJson(appRoot);
+  const isFreshSetup = !hasHydrogenDependency(packageJson);
 
-  if (!hasHydrogenDependency(packageJson)) {
+  if (isFreshSetup) {
     const packageManager = detectPackageManager(appRoot, packageJson, env);
     log(`Installing ${PACKAGE_NAME} with ${packageManager}...`);
     await installHydrogen(appRoot, packageManager, runCommand);
   }
 
   await syncSkills({ force: options.force, cwd: appRoot, packageRoot: options.packageRoot, log });
+
+  if (isFreshSetup) {
+    log("Setup is ready. Next: ask your agent to use the hydrogen-setup skill.");
+  }
 }
