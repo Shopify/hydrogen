@@ -610,6 +610,49 @@ describe('<CartProvider />', () => {
         expect(result.current.userErrors).toEqual([]);
       });
 
+      it('surfaces userErrors and warnings when the response also has GraphQL errors', async () => {
+        const errorMock = new Error('GraphQL error');
+        const mockUserErrors = [
+          {
+            code: 'INVALID',
+            field: ['lines', '0', 'quantity'],
+            message: 'Quantity must be greater than 0',
+          },
+        ];
+        const mockWarnings = [
+          {
+            code: 'MERCHANDISE_NOT_ENOUGH_STOCK',
+            message: 'Not enough stock',
+            target: 'gid://shopify/CartLine/1',
+          },
+        ];
+
+        const cartLineAddSpy = vi.fn(() => ({
+          data: {
+            cartLinesAdd: {
+              cart: cartMock,
+              userErrors: mockUserErrors,
+              warnings: mockWarnings,
+            },
+          },
+          errors: errorMock,
+        }));
+
+        const result = await useCartWithInitializedCart({
+          cartLineAdd: cartLineAddSpy,
+        });
+
+        void act(() => {
+          result.current.linesAdd([{merchandiseId: '123'}]);
+        });
+
+        await act(async () => {});
+
+        expect(result.current.error).toEqual(errorMock);
+        expect(result.current.userErrors).toEqual(mockUserErrors);
+        expect(result.current.warnings).toEqual(mockWarnings);
+      });
+
       it('deletes local storage on complete', async () => {
         const cartLineAddSpy = vi.fn(() => ({
           data: {cartLinesAdd: {cart: null}},

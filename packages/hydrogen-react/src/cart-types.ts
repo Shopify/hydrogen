@@ -215,7 +215,12 @@ export type CartMachineFetchResultEvent =
     }
   | {
       type: 'ERROR';
-      payload: {cartActionEvent: CartMachineActionEvent; errors: unknown};
+      payload: {
+        cartActionEvent: CartMachineActionEvent;
+        errors: unknown;
+        userErrors?: CartUserError[];
+        warnings?: CartWarning[];
+      };
     };
 
 export type CartMachineEvent =

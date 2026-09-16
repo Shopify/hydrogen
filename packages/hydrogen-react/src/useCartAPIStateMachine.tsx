@@ -63,8 +63,10 @@ function invokeCart(
             cart: (context) => context?.lastValidCart,
             errors: (_: CartMachineContext, event: CartMachineEvent) =>
               event.type === 'ERROR' ? event.payload.errors : undefined,
-            userErrors: () => undefined,
-            warnings: () => undefined,
+            userErrors: (_: CartMachineContext, event: CartMachineEvent) =>
+              event.type === 'ERROR' ? event.payload.userErrors : undefined,
+            warnings: (_: CartMachineContext, event: CartMachineEvent) =>
+              event.type === 'ERROR' ? event.payload.warnings : undefined,
           }),
         ],
       },
@@ -414,8 +416,16 @@ function eventFromFetchResult(
   cartActionEvent: CartMachineActionEvent,
   {data, errors}: CartFetchResult,
 ): CartMachineFetchResultEvent {
+  const userErrors = data?.userErrors?.filter(
+    (e): e is CartUserError => e != null,
+  );
+  const warnings = data?.warnings?.filter((w): w is CartWarning => w != null);
+
   if (errors) {
-    return {type: 'ERROR', payload: {errors, cartActionEvent}};
+    return {
+      type: 'ERROR',
+      payload: {errors, cartActionEvent, userErrors, warnings},
+    };
   }
 
   const cart = data?.cart;
@@ -434,8 +444,8 @@ function eventFromFetchResult(
       cart: cartFromGraphQL(cart),
       rawCartResult: cart,
       cartActionEvent,
-      userErrors: data.userErrors?.filter((e): e is CartUserError => e != null),
-      warnings: data.warnings?.filter((w): w is CartWarning => w != null),
+      userErrors,
+      warnings,
     },
   };
 }
