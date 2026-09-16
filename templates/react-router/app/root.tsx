@@ -157,7 +157,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       </div>
       <Header navCollections={loaderData.navCollections} />
       <Outlet />
-      <Footer />
+      <Footer navCollections={loaderData.navCollections} />
       <CartDrawer />
     </CartProvider>
   );

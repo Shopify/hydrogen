@@ -19,7 +19,7 @@ const HERO = {
     altText: "A white chair beside a white wall",
   },
   primaryCta: { label: "Shop now", to: "/collections" },
-  secondaryCta: { label: "Learn more", href: "#" },
+  secondaryCta: { label: "Learn more", to: "/collections" },
 } as const;
 
 const HOME_QUERY = gql(
@@ -92,12 +92,12 @@ function Hero() {
             >
               {HERO.primaryCta.label}
             </Link>
-            <a
-              href={HERO.secondaryCta.href}
+            <Link
+              to={HERO.secondaryCta.to}
               className="rounded-button button-secondary focus-visible:outline-accent inline-flex h-11 items-center justify-center gap-2 px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
             >
               {HERO.secondaryCta.label}
-            </a>
+            </Link>
           </div>
         </div>
       </div>

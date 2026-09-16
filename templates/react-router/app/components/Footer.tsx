@@ -1,9 +1,13 @@
 import { Link } from "react-router";
 
+import type { NavCollection } from "./MobileNav";
+
 const linkClass =
   "min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors";
 
-export function Footer() {
+const QUICK_LINK_COLLECTIONS = 3;
+
+export function Footer({ navCollections }: { navCollections: NavCollection[] }) {
   return (
     <footer className="max-w-page px-margin mx-auto w-full">
       <div className="border-border grid grid-cols-1 gap-8 border-t py-12 text-sm md:grid-cols-2 lg:grid-cols-4">
@@ -20,20 +24,17 @@ export function Footer() {
           </h2>
           <ul role="list" className="flex flex-col gap-2">
             <li>
-              <a href="#" className={linkClass}>
-                New arrivals
-              </a>
+              <Link to="/collections" className={linkClass}>
+                All collections
+              </Link>
             </li>
-            <li>
-              <a href="#" className={linkClass}>
-                Essentials
-              </a>
-            </li>
-            <li>
-              <a href="#" className={linkClass}>
-                Objects
-              </a>
-            </li>
+            {navCollections.slice(0, QUICK_LINK_COLLECTIONS).map((collection) => (
+              <li key={collection.handle}>
+                <Link to={`/collections/${collection.handle}`} className={linkClass}>
+                  {collection.title}
+                </Link>
+              </li>
+            ))}
           </ul>
         </nav>
         <nav aria-labelledby="footer-customer-care-heading">
@@ -50,9 +51,9 @@ export function Footer() {
               </Link>
             </li>
             <li>
-              <a href="#" className={linkClass}>
-                Account
-              </a>
+              <Link to="/cart" className={linkClass}>
+                Cart
+              </Link>
             </li>
           </ul>
         </nav>
