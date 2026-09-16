@@ -55,7 +55,7 @@ import type { Route } from "./+types/root";
 export const middleware: Route.MiddlewareFunction[] = [storefrontMiddleware];
 ```
 
-Verify React Router framework middleware is enabled with `future.v8_middleware: true` in `react-router.config.ts`. If the app also needs Hydrogen route handlers and Shopify redirects, use the `hydrogen-request-handlers` React Router shape so this client creation, `handleShopifyRoutes()`, context setup, `handleShopifyRedirects()`, and response-header propagation all live in one root middleware chain.
+Make sure middleware is enabled for your version of React Router. If the app also needs Hydrogen route handlers and Shopify redirects, use the `hydrogen-request-handlers` React Router shape so this client creation, `handleShopifyRoutes()`, context setup, `handleShopifyRedirects()`, and response-header propagation all live in one root middleware chain.
 
 ```ts
 // app/routes/product.tsx — loader reads client from context
