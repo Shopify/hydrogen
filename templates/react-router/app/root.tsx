@@ -9,6 +9,7 @@ import {
   Scripts,
   ScrollRestoration,
   useNavigate,
+  useRouteLoaderData,
 } from "react-router";
 
 import { AnalyticsTracker, CartAnalyticsTracker } from "~/components/AnalyticsTrackers";
@@ -115,6 +116,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
 export function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const loaderData = useRouteLoaderData<typeof loader>("root");
 
   return (
     <html lang="en">
@@ -122,7 +124,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <ShopifyScripts
-          account
+          account={loaderData?.accountWidget != null}
           i18n={storefrontConfig.i18n}
           shop={shop}
           consent={analyticsConsent}
