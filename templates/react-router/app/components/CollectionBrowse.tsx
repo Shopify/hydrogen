@@ -226,7 +226,7 @@ function FacetGroup({
   const selectedCount = activeValueCount(filter, state);
 
   return (
-    <details className="block" open>
+    <details className="group block" open>
       <summary className="marker-hidden text-on-surface flex w-full cursor-pointer items-center justify-between py-4 text-sm font-medium motion-safe:transition motion-safe:active:scale-[0.97]">
         <span className="inline-flex items-center gap-1.5">
           {filter.label}
@@ -245,10 +245,10 @@ function FacetGroup({
           ) : null}
         </span>
         <span
-          className="inline-flex size-4 shrink-0 items-center justify-center"
+          className="inline-flex size-4 shrink-0 items-center justify-center group-open:rotate-180 motion-safe:transition-transform motion-safe:duration-200"
           aria-hidden="true"
         >
-          <img src="/icons/icon-chevron-down.svg" alt="" className="size-4 rotate-180" />
+          <img src="/icons/icon-chevron-down.svg" alt="" className="size-4" />
         </span>
       </summary>
       <div className="pb-4">{children}</div>
