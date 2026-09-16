@@ -3,10 +3,6 @@
  * the React Router example uses the same verified copy as the other examples.
  */
 export const content = {
-  announcement: {
-    label: "Announcement",
-    text: "Free shipping on orders over $50",
-  },
   general: {
     skipToContent: "Skip to content",
     search: "Search",

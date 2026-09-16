@@ -14,11 +14,11 @@ import { AppShell } from "./app-shell";
 
 /**
  * Root layout. With `cacheComponents: true`,
- * the layout is a **static shell** — it prerenders the `<html>`/`<body>` +
- * announcement bar, then wraps the per-request (dynamic) `AppShell` (cart seed
- * + analytics shop + chrome) in `<Suspense>` so the dynamic parts stream while
- * the static shell serves immediately. `AppShell` calls `connection()` to opt
- * the subtree into dynamic rendering.
+ * the layout is a **static shell** — it prerenders the `<html>`/`<body>`, then
+ * wraps the per-request (dynamic) `AppShell` (cart seed + analytics shop +
+ * chrome) in `<Suspense>` so the dynamic parts stream while the static shell
+ * serves immediately. `AppShell` calls `connection()` to opt the subtree into
+ * dynamic rendering.
  *
  * `metadataBase` is set here for canonical/OG URL resolution (F10). The `<title>`
  * template uses the live `shop.name` (via `getAnalyticsShop`, which is cached
@@ -55,14 +55,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ShopifyScriptsWithNavigation shop={shop} />
       </head>
       <body className="bg-surface text-on-surface font-body flex min-h-svh flex-col antialiased">
-        <div
-          role="region"
-          aria-label={content.announcement.label}
-          className="bg-on-surface px-margin py-2.5 text-center"
-        >
-          <p className="type-body-sm text-surface">{content.announcement.text}</p>
-        </div>
-
         <Suspense
           fallback={
             <div className="bg-surface text-on-surface-secondary flex-1" aria-busy="true" />

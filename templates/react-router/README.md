@@ -23,7 +23,7 @@ analytics, and a consent banner wired up.
   `gql.tada`).
 - A real cart: storefront client + request handlers + `/api/cart` + an accessible
   cart drawer wired to Shopify Standard Actions.
-- A shared layout (header with mobile nav, footer, announcement bar).
+- A shared layout (header with mobile nav, footer).
 - Analytics + a consent banner.
 - The design tokens in `app/tokens.css` and SVG icons in `public/icons/`.
 
