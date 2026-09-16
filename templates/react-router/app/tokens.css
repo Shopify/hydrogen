@@ -730,6 +730,13 @@
     appearance: none;
   }
 
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-decoration {
+    appearance: none;
+    -webkit-appearance: none;
+    display: none;
+  }
+
   .marker-hidden {
     list-style: none;
   }
