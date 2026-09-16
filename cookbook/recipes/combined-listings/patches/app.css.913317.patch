@@ -1,0 +1,15 @@
+index 3be08d316..38e9afed1 100644
+--- a/templates/skeleton/app/styles/app.css
++++ b/templates/skeleton/app/styles/app.css
+@@ -489,6 +489,11 @@ button.reset:hover:not(:has(> *)) {
+   width: 100%;
+ }
+ 
++.product-item .combined-listing-price {
++  display: flex;
++  grid-gap: 0.5rem;
++}
++
+ /*
+ * --------------------------------------------------
+ * routes/products.$handle.tsx

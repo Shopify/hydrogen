@@ -56,7 +56,7 @@ export type Release = {
   commit: `https://${string}`;
   date: string;
   dependencies: Record<string, string>;
-  devDependencies: Record<string, string>;
+  devDependencies?: Record<string, string>;
   dependenciesMeta?: Record<string, {required: boolean}>;
   removeDependencies?: string[];
   removeDevDependencies?: string[];
@@ -82,6 +82,10 @@ export type CumulativeRelease = {
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
 };
+
+function getAllRemovedPackages(release: CumulativeRelease): string[] {
+  return [...release.removeDependencies, ...release.removeDevDependencies];
+}
 
 const INSTRUCTIONS_FOLDER = '.hydrogen';
 
@@ -127,7 +131,7 @@ type UpgradeOptions = {
 export async function runUpgrade({
   appPath,
   version: targetVersion,
-  force,
+  force = false,
 }: UpgradeOptions) {
   // --version=next is only available when running from monorepo, tests, or CI
   if (targetVersion === 'next') {
@@ -214,11 +218,13 @@ export async function runUpgrade({
       selectedRelease,
     });
 
-    confirmed = await displayConfirmation({
-      cumulativeRelease,
-      selectedRelease,
-      targetVersion,
-    });
+    confirmed =
+      force ||
+      (await displayConfirmation({
+        cumulativeRelease,
+        selectedRelease,
+        targetVersion,
+      }));
   } while (!confirmed);
 
   // Generate a markdown file with upgrade instructions
@@ -227,6 +233,7 @@ export async function runUpgrade({
     cumulativeRelease,
     currentVersion,
     selectedRelease,
+    force,
   });
 
   await upgradeNodeModules({
@@ -299,7 +306,7 @@ export async function isRunningFromHydrogenMonorepo(): Promise<boolean> {
 function createNextRelease(latestRelease: Release): Release {
   // Use latest release as base and override specific @shopify packages to "next"
   const dependencies = {...latestRelease.dependencies};
-  const devDependencies = {...latestRelease.devDependencies};
+  const devDependencies = {...(latestRelease.devDependencies ?? {})};
 
   // Override @shopify/hydrogen and @shopify/mini-oxygen to "next" if they exist
   if (dependencies['@shopify/hydrogen']) {
@@ -446,7 +453,7 @@ function hasOutdatedDependencies({
 }) {
   return Object.entries({
     ...release.dependencies,
-    ...release.devDependencies,
+    ...(release.devDependencies ?? {}),
   }).some(([name, version]) => {
     // Skip checking the bundled CLI for now because it's always outdated.
     // (we release a new version of the CLI after every Hydrogen release)
@@ -722,7 +729,9 @@ export function displayConfirmation({
   targetVersion?: string;
 }) {
   const {features, fixes} = cumulativeRelease;
-  if (features.length || fixes.length) {
+  const allRemovedPackages = getAllRemovedPackages(cumulativeRelease);
+
+  if (features.length || fixes.length || allRemovedPackages.length) {
     renderInfo({
       headline: `Included in this upgrade:`,
       // @ts-expect-error - filter(Boolean) removes falsy values, leaving only objects
@@ -743,6 +752,16 @@ export function displayConfirmation({
             {
               list: {
                 items: fixes.map((item) => item.title),
+              },
+            },
+          ],
+        },
+        allRemovedPackages.length && {
+          title: 'Removed packages',
+          body: [
+            {
+              list: {
+                items: allRemovedPackages,
               },
             },
           ],
@@ -883,7 +902,7 @@ export function buildUpgradeCommandArgs({
   };
   const effectiveDevDependencies = {
     ...(cumulativeDevDependencies ?? {}),
-    ...selectedRelease.devDependencies,
+    ...(selectedRelease.devDependencies ?? {}),
   };
 
   // upgrade dependencies
@@ -1394,16 +1413,18 @@ function generateStepMd(item: ReleaseItem) {
 /**
  * Generates a markdown file with upgrade instructions
  */
-async function generateUpgradeInstructionsFile({
+export async function generateUpgradeInstructionsFile({
   appPath,
   cumulativeRelease,
   currentVersion,
   selectedRelease,
+  force = false,
 }: {
   appPath: string;
   cumulativeRelease: CumulativeRelease;
   currentVersion: string;
   selectedRelease: Release;
+  force?: boolean;
 }) {
   let filename = '';
 
@@ -1428,7 +1449,14 @@ async function generateUpgradeInstructionsFile({
     .filter((fixes) => fixes.steps)
     .map(generateStepMd);
 
-  if (!featuresMd.length && !fixesMd.length && !breakingChangesMd.length) {
+  const allRemovedPackages = getAllRemovedPackages(cumulativeRelease);
+
+  if (
+    !featuresMd.length &&
+    !fixesMd.length &&
+    !breakingChangesMd.length &&
+    !allRemovedPackages.length
+  ) {
     renderInfo({
       headline: `No upgrade instructions generated`,
       body: `There are no additional upgrade instructions for this version.`,
@@ -1460,6 +1488,13 @@ async function generateUpgradeInstructionsFile({
     )}`;
   }
 
+  if (allRemovedPackages.length) {
+    md += fixesMd.length ? '\n\n----\n\n' : '\n';
+    md += `## Removed packages\n\nThe following packages have been removed as part of this upgrade:\n\n`;
+    md += allRemovedPackages.map((dep) => `- \`${dep}\``).join('\n');
+    md += '\n';
+  }
+
   const filePath = joinPath(instructionsFolderPath, filename);
 
   try {
@@ -1471,10 +1506,12 @@ async function generateUpgradeInstructionsFile({
   if (!(await fileExists(filePath))) {
     await touchFile(filePath);
   } else {
-    const overwriteMdFile = await renderConfirmationPrompt({
-      message: `A previous upgrade instructions file already exists for this version.\nDo you want to overwrite it?`,
-      defaultValue: false,
-    });
+    const overwriteMdFile =
+      force ||
+      (await renderConfirmationPrompt({
+        message: `A previous upgrade instructions file already exists for this version.\nDo you want to overwrite it?`,
+        defaultValue: false,
+      }));
 
     if (overwriteMdFile) {
       await removeFile(`${filePath}.old`);

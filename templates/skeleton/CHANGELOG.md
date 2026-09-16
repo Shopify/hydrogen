@@ -1,5 +1,64 @@
 # skeleton
 
+## 2026.4.6
+
+### Patch Changes
+
+- Recommend the Shopify AI Toolkit in newly scaffolded storefronts. ([#3887](https://github.com/Shopify/hydrogen/pull/3887)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Updated dependencies [[`10356c92fc1d4335244db7304cc6cdd47ba5c892`](https://github.com/Shopify/hydrogen/commit/10356c92fc1d4335244db7304cc6cdd47ba5c892), [`f15667f98826650f3904597b61b5dcb5f8b51c0a`](https://github.com/Shopify/hydrogen/commit/f15667f98826650f3904597b61b5dcb5f8b51c0a)]:
+  - @shopify/hydrogen@2026.4.5
+
+## 2026.4.5
+
+### Patch Changes
+
+- Add an explicit `~` app alias to new Hydrogen projects. ([#3852](https://github.com/Shopify/hydrogen/pull/3852)) by [@andguy95](https://github.com/andguy95)
+
+  JavaScript projects use `jsconfig.json`, which is not reliably covered by Vite's native `resolve.tsconfigPaths` behavior. New projects now define Hydrogen's `~/` import convention directly in the Vite config so imports like `~/assets/favicon.svg` work in both TypeScript and JavaScript projects.
+
+## 2026.4.4
+
+### Patch Changes
+
+- Updated dependencies [[`23431c956193420bce3442e9e5cc711dc95cc497`](https://github.com/Shopify/hydrogen/commit/23431c956193420bce3442e9e5cc711dc95cc497)]:
+  - @shopify/hydrogen@2026.4.4
+
+## 2026.4.3
+
+### Patch Changes
+
+- Include line item children recursively in cart. ([#3753](https://github.com/Shopify/hydrogen/pull/3753)) by [@martin-pettersson](https://github.com/martin-pettersson)
+
+- Add generic cart result typing to `createCartHandler` so custom cart fragments can use their generated fragment types. ([#3767](https://github.com/Shopify/hydrogen/pull/3767)) by [@andguy95](https://github.com/andguy95)
+
+- Widen React Router peer dependency ranges so Hydrogen packages accept compatible React Router 7.16 patch versions without npm peer dependency conflicts. New Hydrogen projects now default to React Router 7.16.0. ([#3771](https://github.com/Shopify/hydrogen/pull/3771)) by [@fredericoo](https://github.com/fredericoo)
+
+- Updated dependencies [[`3ccc22e0a3407298e835104e29adfb036f261474`](https://github.com/Shopify/hydrogen/commit/3ccc22e0a3407298e835104e29adfb036f261474), [`a810db483c108ac8bbeaac45595b130ed95a2ec7`](https://github.com/Shopify/hydrogen/commit/a810db483c108ac8bbeaac45595b130ed95a2ec7), [`d17057eb4630710743e81b83573973100ec56d23`](https://github.com/Shopify/hydrogen/commit/d17057eb4630710743e81b83573973100ec56d23), [`995190036d99e02ba6fb559b8e3c406c90043599`](https://github.com/Shopify/hydrogen/commit/995190036d99e02ba6fb559b8e3c406c90043599), [`39f2b326e9fddda36b1d12149794bf4ffcc0d4b8`](https://github.com/Shopify/hydrogen/commit/39f2b326e9fddda36b1d12149794bf4ffcc0d4b8)]:
+  - @shopify/hydrogen@2026.4.3
+
+## 2026.4.2
+
+### Patch Changes
+
+- Add support for Vite 7 and Vite 8. Hydrogen remains backwards-compatible with Vite 5+. ([#3617](https://github.com/Shopify/hydrogen/pull/3617)) by [@frandiox](https://github.com/frandiox)
+
+  Mini Oxygen's dev server has been refactored to use the [Vite Environment API](https://vite.dev/guide/api-environment), which is the standard way to run non-browser runtimes in Vite. This replaces the previous custom middleware approach with a first-class `FetchableDevEnvironment`, improving compatibility with Vite's built-in HMR and module invalidation.
+
+  New Hydrogen projects created with `npm create @shopify/hydrogen` will default to Vite 8. The `vite-tsconfig-paths` plugin is no longer needed in the skeleton template since Vite 8 supports `resolve.tsconfigPaths` natively.
+
+- Updated dependencies [[`dc49699c799997d5893bc06e444f888e86a3bc29`](https://github.com/Shopify/hydrogen/commit/dc49699c799997d5893bc06e444f888e86a3bc29), [`50df825c57159757529f5f9f62c258d4de2a4b97`](https://github.com/Shopify/hydrogen/commit/50df825c57159757529f5f9f62c258d4de2a4b97), [`51f1e77fe63be5e5ded4ef0c91942bc304f1abc4`](https://github.com/Shopify/hydrogen/commit/51f1e77fe63be5e5ded4ef0c91942bc304f1abc4)]:
+  - @shopify/hydrogen@2026.4.2
+
+## 2026.4.1
+
+### Patch Changes
+
+- Fix `set-cookie-parser` and `cookie` resolution warnings during `dev` by using Vite's nested dependency syntax (`react-router > dep`). These are CJS transitive dependencies of `react-router` that weren't resolvable by bare name with strict package managers like pnpm. ([#3698](https://github.com/Shopify/hydrogen/pull/3698)) by [@fredericoo](https://github.com/fredericoo)
+
+- Updated dependencies [[`f84ab400c62d89827574d0fa65ba310a2e75f36f`](https://github.com/Shopify/hydrogen/commit/f84ab400c62d89827574d0fa65ba310a2e75f36f)]:
+  - @shopify/hydrogen@2026.4.1
+
 ## 2026.4.0
 
 ### Major Changes

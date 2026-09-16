@@ -95,7 +95,7 @@ export const combinedListingsSettings = {
 
 Create a new `combined-listings.ts` file that contains utilities and settings for handling combined listings.
 
-#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
+#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
 ~~~ts
 // Edit these values to customize combined listings' behavior
@@ -347,13 +347,7 @@ Update the "all products" collection page to filter out combined listing parent 
 #### File: /app/routes/collections.all.tsx
 
 ~~~diff
-@@ -1,11 +1,13 @@
- import type {Route} from './+types/collections.all';
--import {
--  useLoaderData,
--} from 'react-router';
-+import {useLoaderData} from 'react-router';
- import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
+@@ -4,6 +4,10 @@ import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
  import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  import {ProductItem} from '~/components/ProductItem';
  import type {CollectionItemFragment} from 'storefrontapi.generated';
@@ -364,7 +358,7 @@ Update the "all products" collection page to filter out combined listing parent 
  
  export const meta: Route.MetaFunction = () => {
    return [{title: `Hydrogen | Products`}];
-@@ -33,7 +35,12 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
+@@ -31,7 +35,12 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
  
    const [{products}] = await Promise.all([
      storefront.query(CATALOG_QUERY, {
@@ -378,7 +372,7 @@ Update the "all products" collection page to filter out combined listing parent 
      }),
      // Add other queries here, so that they are loaded in parallel
    ]);
-@@ -80,6 +87,7 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
+@@ -78,6 +87,7 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
      id
      handle
      title
@@ -386,7 +380,7 @@ Update the "all products" collection page to filter out combined listing parent 
      featuredImage {
        id
        altText
-@@ -107,8 +115,9 @@ const CATALOG_QUERY = `#graphql
+@@ -105,8 +115,9 @@ const CATALOG_QUERY = `#graphql
      $last: Int
      $startCursor: String
      $endCursor: String
@@ -407,15 +401,15 @@ Update the "all products" collection page to filter out combined listing parent 
 #### File: /app/routes/_index.tsx
 
 ~~~diff
-@@ -11,6 +11,7 @@ import type {
-   RecommendedProductsQuery,
+@@ -8,6 +8,7 @@ import type {
  } from 'storefrontapi.generated';
  import {ProductItem} from '~/components/ProductItem';
+ import {MockShopNotice} from '~/components/MockShopNotice';
 +import {maybeFilterOutCombinedListingsQuery} from '~/lib/combined-listings';
  
  export const meta: Route.MetaFunction = () => {
    return [{title: 'Hydrogen | Home'}];
-@@ -48,7 +49,11 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
+@@ -46,7 +47,11 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
   */
  function loadDeferredData({context}: Route.LoaderArgs) {
    const recommendedProducts = context.storefront
@@ -428,7 +422,7 @@ Update the "all products" collection page to filter out combined listing parent 
      .catch((error: Error) => {
        // Log query errors, but don't throw them so the page can still render
        console.error(error);
-@@ -104,11 +109,9 @@ function RecommendedProducts({
+@@ -110,11 +115,9 @@ function RecommendedProducts({
          <Await resolve={products}>
            {(response) => (
              <div className="recommended-products-grid">
@@ -443,7 +437,7 @@ Update the "all products" collection page to filter out combined listing parent 
              </div>
            )}
          </Await>
-@@ -151,7 +154,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+@@ -157,7 +160,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
          amount
          currencyCode
        }
@@ -456,7 +450,7 @@ Update the "all products" collection page to filter out combined listing parent 
      featuredImage {
        id
        url
-@@ -160,9 +168,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+@@ -166,9 +174,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
        height
      }
    }
@@ -534,6 +528,51 @@ Since it's not possible to directly apply query filters when retrieving collecti
            ...ProductItem
 ~~~
 
+### Step 10: package.json
+
+
+
+#### File: /package.json
+
+~~~diff
+@@ -14,12 +14,12 @@
+   },
+   "prettier": "@shopify/prettier-config",
+   "dependencies": {
+-    "@shopify/hydrogen": "workspace:*",
++    "@shopify/hydrogen": "2026.4.0",
+     "graphql": "^16.10.0",
+     "graphql-tag": "^2.12.6",
+     "isbot": "^5.1.22",
+-    "react": "catalog:",
+-    "react-dom": "catalog:",
++    "react": "^18.3.1",
++    "react-dom": "^18.3.1",
+     "react-router": "7.14.0",
+     "react-router-dom": "7.14.0"
+   },
+@@ -31,14 +31,14 @@
+     "@react-router/dev": "7.14.0",
+     "@react-router/fs-routes": "7.14.0",
+     "@shopify/cli": "3.93.2",
+-    "@shopify/hydrogen-codegen": "workspace:*",
+-    "@shopify/mini-oxygen": "workspace:*",
++    "@shopify/hydrogen-codegen": "0.3.3",
++    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/oxygen-workers-types": "^4.1.6",
+-    "@shopify/prettier-config": "catalog:",
++    "@shopify/prettier-config": "^1.1.2",
+     "@total-typescript/ts-reset": "^0.6.1",
+     "@types/eslint": "^9.6.1",
+-    "@types/react": "catalog:",
+-    "@types/react-dom": "catalog:",
++    "@types/react": "^18.3.28",
++    "@types/react-dom": "^18.3.7",
+     "@typescript-eslint/eslint-plugin": "^8.21.0",
+     "@typescript-eslint/parser": "^8.21.0",
+     "eslint": "^9.18.0",
+~~~
+
 ### Step 11: Show price ranges on product pages
 
 1. Display a range of prices for combined listings instead of the variant price.
@@ -543,7 +582,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
 #### File: /app/routes/products.$handle.tsx
 
 ~~~diff
-@@ -14,7 +14,14 @@ import {
+@@ -11,7 +11,14 @@ import {
  import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
@@ -559,7 +598,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
  
  export const meta: Route.MetaFunction = ({data}) => {
    return [
-@@ -66,6 +73,10 @@ async function loadCriticalData({
+@@ -59,6 +66,10 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
    // The API handle might be localized, so redirect to the localized handle
    redirectIfHandleIsLocalized(request, {handle, data: product});
  
@@ -570,7 +609,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
    return {
      product,
    };
-@@ -85,6 +96,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
+@@ -78,6 +89,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
  
  export default function Product() {
    const {product} = useLoaderData<typeof loader>();
@@ -578,7 +617,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
  
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
-@@ -94,7 +106,9 @@ export default function Product() {
+@@ -87,7 +99,9 @@ export default function Product() {
  
    // Sets the search param to the selected variant without navigation
    // only when no search params are set in the url
@@ -589,7 +628,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
  
    // Get the product options array
    const productOptions = getProductOptions({
-@@ -102,21 +116,41 @@ export default function Product() {
+@@ -95,21 +109,41 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
  
@@ -638,7 +677,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
          />
          <br />
          <br />
-@@ -193,6 +227,22 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -186,6 +220,22 @@ const PRODUCT_FRAGMENT = `#graphql
      description
      encodedVariantExistence
      encodedVariantAvailability
@@ -670,7 +709,7 @@ Add a class to the product item to show a range of prices for combined listings.
 #### File: /app/styles/app.css
 
 ~~~diff
-@@ -418,6 +418,11 @@ button.reset:hover:not(:has(> *)) {
+@@ -489,6 +489,11 @@ button.reset:hover:not(:has(> *)) {
    width: 100%;
  }
  

@@ -65,9 +65,9 @@ export async function runSetupMarkets({
   ]);
 
   renderSuccess({
-    headline: `Makerts support setup complete with strategy ${I18N_STRATEGY_NAME_MAP[
+    headline: `Markets support setup complete with strategy ${I18N_STRATEGY_NAME_MAP[
       strategy
-    ].toLocaleLowerCase()}.`,
+    ].toLowerCase()}.`,
     body: `You can now modify the supported locales in ${
       remixConfig.serverEntryPoint ?? 'your server entry file.'
     }\n`,

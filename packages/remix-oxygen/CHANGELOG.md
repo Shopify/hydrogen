@@ -1,5 +1,17 @@
 # @shopify/remix-oxygen
 
+## 3.0.4
+
+### Patch Changes
+
+- Widen React Router peer dependency ranges so Hydrogen packages accept compatible React Router 7.16 patch versions without npm peer dependency conflicts. New Hydrogen projects now default to React Router 7.16.0. ([#3771](https://github.com/Shopify/hydrogen/pull/3771)) by [@fredericoo](https://github.com/fredericoo)
+
+## 3.0.3
+
+### Patch Changes
+
+- Deprecated `@shopify/remix-oxygen`. This package is a pass-through layer — all types and utilities it re-exports are available directly from `react-router`. For `createRequestHandler`, use `@shopify/hydrogen/oxygen` instead. For `getStorefrontHeaders`, use `@shopify/hydrogen`. ([#3621](https://github.com/Shopify/hydrogen/pull/3621)) by [@fredericoo](https://github.com/fredericoo)
+
 ## 3.0.2
 
 ### Patch Changes

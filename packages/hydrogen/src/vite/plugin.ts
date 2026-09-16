@@ -59,9 +59,6 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           build: {
             outDir: 'dist',
           },
-          server: {
-            watch: null,
-          },
           ssr: {
             optimizeDeps: {
               // Add CJS dependencies that break code in workerd
@@ -128,7 +125,6 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
             // Emit events for requests
             emitRequestEvent(
               {
-                __fromVite: true,
                 eventType: 'request',
                 url: request.url,
                 requestId: request.headers['request-id'],

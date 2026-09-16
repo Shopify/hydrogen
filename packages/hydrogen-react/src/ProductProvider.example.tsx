@@ -14,12 +14,11 @@ function UsingProduct() {
   return (
     <>
       <h1>{product?.title}</h1>
-      {variants?.map((variant) => {
+      {variants?.map((variant) => (
         <button onClick={() => setSelectedVariant(variant)} key={variant?.id}>
           {variant?.title}
-        </button>;
-      })}
-      ;
+        </button>
+      ))}
     </>
   );
 }

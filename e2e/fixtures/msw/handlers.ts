@@ -462,6 +462,32 @@ scenarios.set('subscriptions-logged-in', {
   mocksCustomerAccountApi: true,
 });
 
+export const STOREFRONT_REDIRECT_PATHS = {
+  from: '/old-page',
+  to: '/new-page',
+} as const;
+
+const STOREFRONT_REDIRECT_MAP: Record<string, string> = {
+  [`path:${STOREFRONT_REDIRECT_PATHS.from}`]: STOREFRONT_REDIRECT_PATHS.to,
+};
+
+scenarios.set(MSW_SCENARIOS.storefrontRedirects, {
+  handlers: [
+    graphql.query('redirects', ({variables}) => {
+      const target = STOREFRONT_REDIRECT_MAP[variables.query as string];
+      return HttpResponse.json({
+        data: {
+          urlRedirects: {
+            edges: target ? [{node: {target}}] : [],
+          },
+        },
+      });
+    }),
+  ],
+  mocksCustomerAccountApi: false,
+  mocksLegacyCustomerAuth: false,
+});
+
 function isMswScenario(scenario: string): scenario is MswScenario {
   return scenarios.has(scenario);
 }

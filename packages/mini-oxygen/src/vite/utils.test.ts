@@ -1,9 +1,7 @@
 import {describe, it, expect, vi} from 'vitest';
 import {Readable, Writable} from 'node:stream';
-import {ReadableStream} from 'node:stream/web';
 import {IncomingMessage, ServerResponse} from 'node:http';
-import {pipeFromWeb, toWeb, toURL} from './utils.js';
-import {Response} from '../worker/index.js';
+import {pipeFromWeb, toMiniflareRequest, toWeb, toURL} from './utils.js';
 import * as nodeFetchServer from '@mjackson/node-fetch-server';
 
 // Mock the sendResponse function from @mjackson/node-fetch-server
@@ -52,18 +50,42 @@ describe('utils', () => {
 
       // Mock the Readable.toWeb method
       const mockBody = new ReadableStream();
-      vi.spyOn(Readable, 'toWeb').mockReturnValue(mockBody);
+      vi.spyOn(Readable, 'toWeb').mockReturnValue(
+        mockBody as unknown as ReturnType<typeof Readable.toWeb>,
+      );
 
       const webReq = toWeb(nodeReq);
 
-      // The Request constructor being used is from ../worker/index.js
       expect(webReq.constructor.name).toBe('Request');
       expect(webReq.method).toBe('POST');
       expect(webReq.headers.get('content-type')).toBe('application/json');
+      expect(webReq.headers.get('host')).toBe('localhost:3000');
       expect(webReq.url).toBe('http://localhost:3000/test');
     });
 
-    it('should throw error if host header is missing', () => {
+    it('should convert an HTTP/2 request using the authority pseudo-header', () => {
+      const nodeReq = {
+        url: '/test',
+        method: 'GET',
+        headers: {
+          ':authority': 'localtest.me:5173',
+          ':method': 'GET',
+          ':path': '/test',
+          ':scheme': 'https',
+          accept: 'text/html',
+        },
+      } as unknown as IncomingMessage;
+
+      const webReq = toWeb(nodeReq);
+
+      expect(webReq.url).toBe('http://localtest.me:5173/test');
+      expect(webReq.headers.get('host')).toBe('localtest.me:5173');
+      expect([...webReq.headers.keys()]).not.toContainEqual(
+        expect.stringMatching(/^:/),
+      );
+    });
+
+    it('should throw error if host and authority headers are missing', () => {
       const nodeReq = {
         url: '/test',
         headers: {},
@@ -85,6 +107,44 @@ describe('utils', () => {
 
       const webReq = toWeb(nodeReq);
       expect(webReq.body).toBeNull();
+    });
+
+    it('should preserve Node header precedence when merging headers', () => {
+      const nodeReq = {
+        url: '/test',
+        method: 'GET',
+        headers: {
+          ':authority': 'authority.example.com',
+          host: 'localhost:3000',
+          'x-test': 'node',
+        },
+      } as unknown as IncomingMessage;
+
+      const webReq = toWeb(nodeReq, {
+        host: 'override.example.com',
+        'x-test': 'provided',
+        'x-provided': 'value',
+      });
+
+      expect(webReq.headers.get('host')).toBe('localhost:3000');
+      expect(webReq.url).toBe('http://localhost:3000/test');
+      expect(webReq.headers.get('x-test')).toBe('node');
+      expect(webReq.headers.get('x-provided')).toBe('value');
+    });
+  });
+
+  describe('toMiniflareRequest', () => {
+    it('should preserve the original host in X-Forwarded-Host', () => {
+      const request = new Request('http://localhost/test', {
+        headers: {host: 'original.example.com'},
+      });
+
+      const miniflareRequest = toMiniflareRequest(request);
+
+      expect(miniflareRequest.headers.get('x-forwarded-host')).toBe(
+        'original.example.com',
+      );
+      expect(miniflareRequest.headers.get('accept-encoding')).toBe('identity');
     });
   });
 

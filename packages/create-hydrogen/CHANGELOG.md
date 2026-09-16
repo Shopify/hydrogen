@@ -1,5 +1,53 @@
 # @shopify/create-hydrogen
 
+## 5.0.39
+
+### Patch Changes
+
+- Recommend the Shopify AI Toolkit in newly scaffolded storefronts. ([#3887](https://github.com/Shopify/hydrogen/pull/3887)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+## 5.0.38
+
+### Patch Changes
+
+- Add an explicit `~` app alias to new Hydrogen projects. ([#3852](https://github.com/Shopify/hydrogen/pull/3852)) by [@andguy95](https://github.com/andguy95)
+
+  JavaScript projects use `jsconfig.json`, which is not reliably covered by Vite's native `resolve.tsconfigPaths` behavior. New projects now define Hydrogen's `~/` import convention directly in the Vite config so imports like `~/assets/favicon.svg` work in both TypeScript and JavaScript projects.
+
+## 5.0.37
+
+### Patch Changes
+
+- Include line item children recursively in cart. ([#3753](https://github.com/Shopify/hydrogen/pull/3753)) by [@martin-pettersson](https://github.com/martin-pettersson)
+
+- Add generic cart result typing to `createCartHandler` so custom cart fragments can use their generated fragment types. ([#3767](https://github.com/Shopify/hydrogen/pull/3767)) by [@andguy95](https://github.com/andguy95)
+
+- Widen React Router peer dependency ranges so Hydrogen packages accept compatible React Router 7.16 patch versions without npm peer dependency conflicts. New Hydrogen projects now default to React Router 7.16.0. ([#3771](https://github.com/Shopify/hydrogen/pull/3771)) by [@fredericoo](https://github.com/fredericoo)
+
+## 5.0.36
+
+### Patch Changes
+
+- Add support for Vite 7 and Vite 8. Hydrogen remains backwards-compatible with Vite 5+. ([#3617](https://github.com/Shopify/hydrogen/pull/3617)) by [@frandiox](https://github.com/frandiox)
+
+  Mini Oxygen's dev server has been refactored to use the [Vite Environment API](https://vite.dev/guide/api-environment), which is the standard way to run non-browser runtimes in Vite. This replaces the previous custom middleware approach with a first-class `FetchableDevEnvironment`, improving compatibility with Vite's built-in HMR and module invalidation.
+
+  New Hydrogen projects created with `npm create @shopify/hydrogen` will default to Vite 8. The `vite-tsconfig-paths` plugin is no longer needed in the skeleton template since Vite 8 supports `resolve.tsconfigPaths` natively.
+
+## 5.0.35
+
+### Patch Changes
+
+- Updated route scaffolding and JS transpilation to import from `react-router` instead of the deprecated `@shopify/remix-oxygen`. ([#3621](https://github.com/Shopify/hydrogen/pull/3621)) by [@fredericoo](https://github.com/fredericoo)
+
+- Fix `set-cookie-parser` and `cookie` resolution warnings during `dev` by using Vite's nested dependency syntax (`react-router > dep`). These are CJS transitive dependencies of `react-router` that weren't resolvable by bare name with strict package managers like pnpm. ([#3698](https://github.com/Shopify/hydrogen/pull/3698)) by [@fredericoo](https://github.com/fredericoo)
+
+## 5.0.34
+
+### Patch Changes
+
+- Update skeleton template to use @shopify/cli 3.93.2 ([#3699](https://github.com/Shopify/hydrogen/pull/3699)) by [@itsjustriley](https://github.com/itsjustriley)
+
 ## 5.0.33
 
 ### Patch Changes

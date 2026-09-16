@@ -9,7 +9,6 @@ const CHANGESET_ALL = `---
 '@shopify/cli-hydrogen': patch
 '@shopify/create-hydrogen': patch
 '@shopify/hydrogen-codegen': patch
-'@shopify/remix-oxygen': patch
 ---
 
 Trigger changeset for all packages for next release

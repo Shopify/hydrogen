@@ -63,7 +63,7 @@ describe('Client types', async () => {
       expectTypeOf(clientQuery(Queries.Unknown)).resolves.toEqualTypeOf<any>();
     });
 
-    it('can be overriden', async () => {
+    it('can be overridden', async () => {
       // Non-recognized query, override return type
       expectTypeOf(
         clientQuery<{test: string}>(Queries.Unknown),

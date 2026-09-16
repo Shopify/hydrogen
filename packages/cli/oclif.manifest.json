@@ -192,7 +192,7 @@
         "codegen.js"
       ]
     },
-    "hydrogen:customer-account:push": {
+    "hydrogen:customer-account-push": {
       "aliases": [],
       "args": {},
       "description": "Push project configuration to admin",
@@ -220,6 +220,13 @@
           "multiple": false,
           "type": "option"
         },
+        "javascript-origin": {
+          "description": "The origin to register as the allowed JavaScript origin for the Customer Account API OAuth flow. Defaults to --dev-origin. Must not include a port (Shopify rejects origins with ports); use this to register a portless origin while keeping a portful --dev-origin.",
+          "name": "javascript-origin",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "relative-redirect-uri": {
           "description": "The relative url of allowed callback url for Customer Account API OAuth flow. Default is '/account/authorize'",
           "name": "relative-redirect-uri",
@@ -237,7 +244,7 @@
       },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
-      "id": "hydrogen:customer-account:push",
+      "id": "hydrogen:customer-account-push",
       "pluginAlias": "@shopify/cli-hydrogen",
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
@@ -248,8 +255,7 @@
         "dist",
         "commands",
         "hydrogen",
-        "customer-account",
-        "push.js"
+        "customer-account-push.js"
       ]
     },
     "hydrogen:debug:cpu": {
@@ -353,7 +359,7 @@
         },
         "force": {
           "char": "f",
-          "description": "Forces a deployment to proceed if there are uncommited changes in its Git repository.",
+          "description": "Forces a deployment to proceed if there are uncommitted changes in its Git repository, and skips confirmation prompts for non-preview environments.",
           "env": "SHOPIFY_HYDROGEN_FLAG_FORCE",
           "name": "force",
           "required": false,
@@ -388,8 +394,26 @@
           "type": "option"
         },
         "build-command": {
-          "description": "Specify a build command to run before deploying. If not specified, `shopify hydrogen build` will be used.",
+          "description": "Specify a build command to run before deploying. If not specified, the Hydrogen build pipeline will be used. When custom output directories are configured, defaults to `node --run build`.",
           "name": "build-command",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "assets-dir": {
+          "description": "Directory containing the client assets to deploy, relative to the project root. Defaults to the detected Vite client output directory, then falls back to `dist/client`.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_ASSETS_DIR",
+          "name": "assets-dir",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "worker-dir": {
+          "description": "Directory containing the Oxygen worker entry point (`index.js` or `index.mjs`), relative to the project root. Defaults to the detected Vite server output directory, then falls back to `dist/server`.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_WORKER_DIR",
+          "name": "worker-dir",
           "required": false,
           "hasDynamicHelp": false,
           "multiple": false,
@@ -437,7 +461,7 @@
           "type": "option"
         },
         "metadata-description": {
-          "description": "Description of the changes in the deployment. Defaults to the commit message of the latest commit if there are no uncommited changes.",
+          "description": "Description of the changes in the deployment. Defaults to the commit message of the latest commit if there are no uncommitted changes.",
           "env": "SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION",
           "name": "metadata-description",
           "required": false,
@@ -787,6 +811,24 @@
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
+        },
+        "force": {
+          "char": "f",
+          "description": "Push environment variable changes without confirmation.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_FORCE",
+          "name": "force",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "dry-run": {
+          "description": "Preview environment variable changes without pushing them.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_DRY_RUN",
+          "exclusive": [
+            "force"
+          ],
+          "name": "dry-run",
+          "allowNo": false,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
@@ -854,7 +896,7 @@
       "description": "Generates a standard Shopify route.",
       "flags": {
         "adapter": {
-          "description": "Remix adapter used in the route. The default is `@shopify/remix-oxygen`.",
+          "description": "React Router adapter used in the route. The default is `react-router`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_ADAPTER",
           "name": "adapter",
           "hasDynamicHelp": false,
@@ -917,7 +959,7 @@
       "description": "Generates all supported standard shopify routes.",
       "flags": {
         "adapter": {
-          "description": "Remix adapter used in the route. The default is `@shopify/remix-oxygen`.",
+          "description": "React Router adapter used in the route. The default is `react-router`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_ADAPTER",
           "name": "adapter",
           "hasDynamicHelp": false,
@@ -1114,10 +1156,44 @@
           "multiple": false,
           "type": "option"
         },
+        "shop": {
+          "char": "s",
+          "description": "Shop URL. It can be the shop prefix (janes-apparel) or the full myshopify.com URL (janes-apparel.myshopify.com, https://janes-apparel.myshopify.com).",
+          "env": "SHOPIFY_SHOP",
+          "name": "shop",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "storefront": {
           "description": "The name of a Hydrogen Storefront (e.g. \"Jane's Apparel\")",
           "env": "SHOPIFY_HYDROGEN_STOREFRONT",
+          "exclusive": [
+            "create-storefront",
+            "name"
+          ],
           "name": "storefront",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "create-storefront": {
+          "description": "Create a new Hydrogen storefront.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_CREATE_STOREFRONT",
+          "exclusive": [
+            "storefront"
+          ],
+          "name": "create-storefront",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "description": "The name to use when creating a new Hydrogen storefront.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_NAME",
+          "exclusive": [
+            "storefront"
+          ],
+          "name": "name",
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -1675,5 +1751,5 @@
       ]
     }
   },
-  "version": "11.1.14"
+  "version": "13.0.4"
 }

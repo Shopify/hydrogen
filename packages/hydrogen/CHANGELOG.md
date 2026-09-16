@@ -1,5 +1,72 @@
 # @shopify/hydrogen
 
+## 2026.4.5
+
+### Patch Changes
+
+- Recover customer account login when switching browser contexts or opening multiple login tabs. OAuth state values now use cryptographically secure randomness. ([#3856](https://github.com/Shopify/hydrogen/pull/3856)) by [@fredericoo](https://github.com/fredericoo)
+
+- Keep customers logged in when a Customer Account API token refresh fails due to a transient error. The session is now only cleared when the refresh token is missing or the token endpoint returns `invalid_grant`, so other OAuth errors, HTTP failures, and network failures can be retried on a subsequent request. ([#3916](https://github.com/Shopify/hydrogen/pull/3916)) by [@markusvoigt](https://github.com/markusvoigt)
+
+## 2026.4.4
+
+### Patch Changes
+
+- Reduce PerfKit resource timing sampling rate from 100 to 10. ([#3790](https://github.com/Shopify/hydrogen/pull/3790)) by [@andguy95](https://github.com/andguy95)
+
+## 2026.4.3
+
+### Patch Changes
+
+- Fix `cart.get()` to use provided `cartId` before falling back to `getCartId()` ([#3664](https://github.com/Shopify/hydrogen/pull/3664)) by [@Vitalini](https://github.com/Vitalini)
+
+- Fix `Image` component generating `1x/2x/3x` density descriptors instead of `w` descriptors for fluid (responsive) images whose source dimensions cap the srcset to exactly 3 entries. ([#3756](https://github.com/Shopify/hydrogen/pull/3756)) by [@z0n](https://github.com/z0n)
+
+  **What was happening:** When a product image stored in Shopify was small enough that the default srcset ladder (200px, 400px, 600px, 800px, …) was filtered down to exactly 3 entries by the source-dimension cap, the `Image` component incorrectly switched to density descriptors (`1x`/`2x`/`3x`) and silently ignored the `sizes` attribute. On a DPR-1 screen this caused the smallest srcset entry (200px) to be used regardless of the rendered image size, resulting in blurry images.
+
+  **The fix:** Descriptor type (density vs width) is now determined by whether the image is in fixed or fluid mode — not by how many srcset entries happen to survive source-dimension filtering.
+
+- Fix `storefrontRedirect` not working for client-side navigations. React Router v7's Single Fetch changed how data requests work — they now use a `.data` pathname suffix instead of a `_data` query parameter. `storefrontRedirect` now correctly detects both conventions, strips the `.data` suffix before matching redirects, and returns the proper `204` status code for soft navigation redirect responses. ([#3762](https://github.com/Shopify/hydrogen/pull/3762)) by [@fredericoo](https://github.com/fredericoo)
+
+- Add generic cart result typing to `createCartHandler` so custom cart fragments can use their generated fragment types. ([#3767](https://github.com/Shopify/hydrogen/pull/3767)) by [@andguy95](https://github.com/andguy95)
+
+- Widen React Router peer dependency ranges so Hydrogen packages accept compatible React Router 7.16 patch versions without npm peer dependency conflicts. New Hydrogen projects now default to React Router 7.16.0. ([#3771](https://github.com/Shopify/hydrogen/pull/3771)) by [@fredericoo](https://github.com/fredericoo)
+
+- Updated dependencies [[`a810db483c108ac8bbeaac45595b130ed95a2ec7`](https://github.com/Shopify/hydrogen/commit/a810db483c108ac8bbeaac45595b130ed95a2ec7)]:
+  - @shopify/hydrogen-react@2026.4.3
+
+## 2026.4.2
+
+### Minor Changes
+
+- Add support for Vite 7 and Vite 8. Hydrogen remains backwards-compatible with Vite 5+. ([#3617](https://github.com/Shopify/hydrogen/pull/3617)) by [@frandiox](https://github.com/frandiox)
+
+  Mini Oxygen's dev server has been refactored to use the [Vite Environment API](https://vite.dev/guide/api-environment), which is the standard way to run non-browser runtimes in Vite. This replaces the previous custom middleware approach with a first-class `FetchableDevEnvironment`, improving compatibility with Vite's built-in HMR and module invalidation.
+
+  New Hydrogen projects created with `npm create @shopify/hydrogen` will default to Vite 8. The `vite-tsconfig-paths` plugin is no longer needed in the skeleton template since Vite 8 supports `resolve.tsconfigPaths` natively.
+
+### Patch Changes
+
+- Fixed the `CartProvider` example code (both TS and JS) to include the missing `return` statement in the `App` component. ([#3685](https://github.com/Shopify/hydrogen/pull/3685)) by [@J8118](https://github.com/J8118)
+
+- Fixed the `ProductProvider` example code (both TS and JS): restored the missing `return` in the `.map()` callback so option buttons render, and removed a stray semicolon that rendered as visible text. ([#3680](https://github.com/Shopify/hydrogen/pull/3680)) by [@J8118](https://github.com/J8118)
+
+- Updated dependencies [[`dc49699c799997d5893bc06e444f888e86a3bc29`](https://github.com/Shopify/hydrogen/commit/dc49699c799997d5893bc06e444f888e86a3bc29), [`50df825c57159757529f5f9f62c258d4de2a4b97`](https://github.com/Shopify/hydrogen/commit/50df825c57159757529f5f9f62c258d4de2a4b97), [`51f1e77fe63be5e5ded4ef0c91942bc304f1abc4`](https://github.com/Shopify/hydrogen/commit/51f1e77fe63be5e5ded4ef0c91942bc304f1abc4)]:
+  - @shopify/hydrogen-react@2026.4.2
+
+## 2026.4.1
+
+### Patch Changes
+
+- Fix cart operations failing on stores without `VisitorConsent` type ([#3720](https://github.com/Shopify/hydrogen/pull/3720)) by [@itsjustriley](https://github.com/itsjustriley)
+
+  Cart operations (like `cart.setMetafields()`) were unconditionally including the `visitorConsent` parameter in GraphQL operations, even when not being used. This caused failures on stores whose Storefront API schema doesn't include the `VisitorConsent` type (older API versions or certain store configurations).
+
+  The `visitorConsent` parameter is now only included in cart GraphQL operations when explicitly provided. This restores compatibility with stores that don't support the `VisitorConsent` type while preserving the feature for users who need it.
+
+- Updated dependencies [[`f84ab400c62d89827574d0fa65ba310a2e75f36f`](https://github.com/Shopify/hydrogen/commit/f84ab400c62d89827574d0fa65ba310a2e75f36f)]:
+  - @shopify/hydrogen-react@2026.4.1
+
 ## 2026.4.0
 
 ### Major Changes

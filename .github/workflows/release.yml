@@ -27,7 +27,7 @@ jobs:
   release:
     name: Production Release
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'shopify' && github.ref_name == 'main'
+    if: github.repository_owner == 'shopify' && github.event_name == 'push' && github.ref_name == 'main'
     permissions:
       contents: write # enable pushing changes to the origin
       id-token: write # enable generation of an ID token for publishing
@@ -148,6 +148,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.repository_owner == 'shopify' &&
+      github.event_name == 'push' &&
       github.ref_name == 'main' &&
       !startsWith(github.event.head_commit.message, '[ci] release')
     permissions:
@@ -233,7 +234,7 @@ jobs:
   backfix-release:
     name: Back-fix Release
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'shopify' && github.ref_name != 'main'
+    if: github.repository_owner == 'shopify' && github.event_name == 'push' && github.ref_name != 'main'
     permissions:
       contents: write # enable pushing changes to the origin
       id-token: write # enable generation of an ID token for publishing
@@ -310,7 +311,7 @@ jobs:
           node-version: 24
 
       - name: Install the packages
-        run: pnpm install --frozen-lockfile --ignore-engines
+        run: pnpm install --frozen-lockfile
 
       - name: Build the dist code
         run: pnpm run build

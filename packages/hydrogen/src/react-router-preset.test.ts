@@ -23,8 +23,8 @@ describe('hydrogenPreset', () => {
         v8_splitRouteModules: true,
         v8_viteEnvironmentApi: false,
         unstable_optimizeDeps: true,
-        unstable_subResourceIntegrity: false,
       },
+      subResourceIntegrity: false,
     });
   });
 
@@ -46,8 +46,8 @@ describe('hydrogenPreset', () => {
             v8_splitRouteModules: true,
             v8_viteEnvironmentApi: false,
             unstable_optimizeDeps: true,
-            unstable_subResourceIntegrity: false,
           },
+          subResourceIntegrity: false,
           ...overrides,
         } as unknown as Parameters<
           NonNullable<typeof preset.reactRouterConfigResolved>
@@ -99,33 +99,15 @@ describe('hydrogenPreset', () => {
       );
     });
 
-    it('should throw error when unstable_subResourceIntegrity is enabled', () => {
+    it('should throw error when subResourceIntegrity is enabled', () => {
       expect(() => {
-        testResolvedConfig({
-          future: {
-            v8_middleware: true,
-            v8_splitRouteModules: true,
-            v8_viteEnvironmentApi: false,
-            unstable_optimizeDeps: true,
-            unstable_subResourceIntegrity: true,
-          },
-        });
-      }).toThrow(
-        '[Hydrogen Preset] unstable_subResourceIntegrity cannot be enabled',
-      );
+        testResolvedConfig({subResourceIntegrity: true});
+      }).toThrow('[Hydrogen Preset] subResourceIntegrity cannot be enabled');
     });
 
-    it('should not throw when unstable_subResourceIntegrity is false', () => {
+    it('should not throw when subResourceIntegrity is false', () => {
       expect(() => {
-        testResolvedConfig({
-          future: {
-            v8_middleware: true,
-            v8_splitRouteModules: true,
-            v8_viteEnvironmentApi: false,
-            unstable_optimizeDeps: true,
-            unstable_subResourceIntegrity: false,
-          },
-        });
+        testResolvedConfig({subResourceIntegrity: false});
       }).not.toThrow();
     });
 
@@ -156,7 +138,7 @@ describe('hydrogenPreset', () => {
       }) as ReactRouterConfig | undefined;
 
       // Verify incompatible features are disabled
-      expect(config?.future?.unstable_subResourceIntegrity).toBe(false);
+      expect(config?.subResourceIntegrity).toBe(false);
       expect(config?.future?.v8_viteEnvironmentApi).toBe(false);
     });
 

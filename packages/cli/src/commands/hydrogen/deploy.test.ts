@@ -1,4 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
+import {mkdtempSync, mkdirSync, rmSync, writeFileSync} from 'node:fs';
+import {tmpdir} from 'node:os';
 import {type AdminSession, login} from '../../lib/auth.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
@@ -16,13 +18,16 @@ import {
   getLatestGitCommit,
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
-import {createRequire} from 'node:module';
 
-import {deploymentLogger, getHydrogenVersion, runDeploy} from './deploy.js';
+import {
+  deploymentLogger,
+  getHydrogenVersion,
+  resolveDeploymentOutputDirs,
+  runDeploy,
+} from './deploy.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {execAsync} from '../../lib/process.js';
 import {createEnvironmentCliChoiceLabel} from '../../lib/common.js';
-import {getSkeletonSourceDir} from '../../lib/build.js';
 import {
   CompletedDeployment,
   createDeploy,
@@ -30,8 +35,60 @@ import {
 } from '@shopify/oxygen-cli/deploy';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
 import {runBuild} from './build.js';
-import {PackageJson} from 'type-fest';
 
+vi.mock('node:module', async () => {
+  const actual =
+    await vi.importActual<typeof import('node:module')>('node:module');
+  const {existsSync} =
+    await vi.importActual<typeof import('node:fs')>('node:fs');
+  const path = await vi.importActual<typeof import('node:path')>('node:path');
+
+  function resolveHydrogenPackageJson(paths: string[]) {
+    for (const startPath of paths) {
+      let currentPath = path.resolve(startPath);
+
+      while (true) {
+        const packageJsonPath = path.join(
+          currentPath,
+          'node_modules',
+          '@shopify',
+          'hydrogen',
+          'package.json',
+        );
+
+        if (existsSync(packageJsonPath)) return packageJsonPath;
+
+        const parentPath = path.dirname(currentPath);
+        if (parentPath === currentPath) break;
+
+        currentPath = parentPath;
+      }
+    }
+
+    throw new Error("Cannot find module '@shopify/hydrogen/package.json'");
+  }
+
+  return {
+    ...actual,
+    createRequire: (filename: string | URL) => {
+      const baseRequire = actual.createRequire(filename);
+      const resolve = Object.assign(
+        (id: string, options?: {paths?: string[]}) => {
+          if (id === '@shopify/hydrogen/package.json' && options?.paths) {
+            return resolveHydrogenPackageJson(options.paths);
+          }
+
+          return baseRequire.resolve(id, options);
+        },
+        {paths: baseRequire.resolve.paths},
+      );
+
+      return Object.assign((id: string) => baseRequire(id), baseRequire, {
+        resolve,
+      });
+    },
+  };
+});
 vi.mock('@shopify/oxygen-cli/deploy');
 vi.mock('@shopify/cli-kit/node/dot-env');
 vi.mock('@shopify/cli-kit/node/fs');
@@ -64,22 +121,35 @@ vi.mock('@shopify/cli-kit/node/git', async () => {
   };
 });
 
-async function createHydrogenDependencyPackageJson(version?: string) {
-  const require = createRequire(import.meta.url);
-  const packageJson: PackageJson = require(
-    require.resolve('@shopify/hydrogen/package.json', {
-      paths: [getSkeletonSourceDir()],
+const tempRoots: string[] = [];
+
+function createAppWithHydrogenVersion(version?: string) {
+  const root = mkdtempSync(`${tmpdir()}/hydrogen-deploy-`);
+  tempRoots.push(root);
+
+  const hydrogenPackageRoot = `${root}/node_modules/@shopify/hydrogen`;
+  mkdirSync(hydrogenPackageRoot, {recursive: true});
+  writeFileSync(
+    `${root}/package.json`,
+    JSON.stringify({
+      dependencies: {
+        '@shopify/hydrogen': version ?? 'workspace:*',
+      },
+    }),
+  );
+  writeFileSync(
+    `${hydrogenPackageRoot}/package.json`,
+    JSON.stringify({
+      name: '@shopify/hydrogen',
+      version,
+      exports: {'./package.json': './package.json'},
     }),
   );
 
-  packageJson.version = version;
-
-  return packageJson;
+  return root;
 }
 
 describe('deploy', async () => {
-  await createHydrogenDependencyPackageJson('2000.1.1');
-
   const ADMIN_SESSION: AdminSession = {
     token: 'abc123',
     storeFqdn: 'my-shop.myshopify.com',
@@ -131,14 +201,16 @@ describe('deploy', async () => {
     defaultEnvironment: false,
     deploymentUrl: 'https://oxygen.shopifyapps.com',
     deploymentToken: mockToken,
+    environmentTag: undefined,
     generateAuthBypassToken: true,
+    authBypassTokenDuration: undefined,
     verificationMaxDuration: 180,
     metadata: {
       url: deployParams.metadataUrl,
       user: deployParams.metadataUser,
       version: deployParams.metadataVersion,
-      hydrogenVersion: '2000.1.1',
     },
+    overriddenEnvironmentVariables: undefined,
     skipVerification: true,
     rootPath: deployParams.path,
     skipBuild: false,
@@ -157,6 +229,16 @@ describe('deploy', async () => {
     onUploadFilesComplete: expect.any(Function),
     onUploadFilesError: expect.any(Function),
   };
+
+  function expectDeployConfig({
+    metadata,
+    ...rest
+  }: Record<string, unknown> & {metadata?: Record<string, unknown>}) {
+    return expect.objectContaining({
+      ...rest,
+      ...(metadata ? {metadata: expect.objectContaining(metadata)} : {}),
+    });
+  }
 
   beforeEach(async () => {
     process.exit = vi.fn() as any;
@@ -182,13 +264,16 @@ describe('deploy', async () => {
       oxygenDeploymentToken: 'some-encoded-token',
       environments: [],
     });
-
     vi.mocked(parseToken).mockReturnValue(mockToken);
   });
 
   afterEach(() => {
     vi.resetAllMocks();
     process.exit = originalExit;
+
+    for (const tempRoot of tempRoots.splice(0)) {
+      rmSync(tempRoot, {recursive: true, force: true});
+    }
   });
 
   it('calls getOxygenDeploymentData with the correct parameters', async () => {
@@ -204,11 +289,100 @@ describe('deploy', async () => {
     await runDeploy(deployParams);
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: expectedConfig,
+      config: expectDeployConfig(expectedConfig),
       hooks: expectedHooks,
       logger: deploymentLogger,
     });
     expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
+  });
+
+  it('calls createDeploy with configured deploy output paths', async () => {
+    const {buildFunction: _, ...hooks} = expectedHooks;
+
+    await runDeploy({
+      ...deployParams,
+      assetsDir: 'custom/client',
+      workerDir: 'custom/server',
+    });
+
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+      config: expectDeployConfig({
+        ...expectedConfig,
+        assetsDir: 'custom/client',
+        workerDir: 'custom/server',
+        buildCommand: 'node --run build',
+      }),
+      hooks,
+      logger: deploymentLogger,
+    });
+    expect(vi.mocked(runBuild)).not.toHaveBeenCalled();
+  });
+
+  describe('resolveDeploymentOutputDirs', () => {
+    const root = '/project';
+
+    it('uses Vite output dirs when available', () => {
+      expect(
+        resolveDeploymentOutputDirs({
+          root,
+          viteOutputDirs: {
+            clientOutDir: '/project/vite/client',
+            serverOutDir: '/project/vite/server',
+          },
+        }),
+      ).toEqual({
+        assetsDir: 'vite/client',
+        workerDir: 'vite/server',
+      });
+    });
+
+    it('uses configured output paths before Vite output dirs', () => {
+      expect(
+        resolveDeploymentOutputDirs({
+          root,
+          viteOutputDirs: {
+            clientOutDir: '/project/vite/client',
+            serverOutDir: '/project/vite/server',
+          },
+          assetsDirFlag: 'custom/client',
+          workerDirFlag: 'custom/server',
+        }),
+      ).toEqual({
+        assetsDir: 'custom/client',
+        workerDir: 'custom/server',
+      });
+    });
+
+    it('uses configured output paths before fallback output', () => {
+      expect(
+        resolveDeploymentOutputDirs({
+          root,
+          assetsDirFlag: 'custom/client',
+        }),
+      ).toEqual({
+        assetsDir: 'custom/client',
+        workerDir: 'dist/server',
+      });
+    });
+
+    it('falls back to dist output when Vite output is unavailable', () => {
+      expect(resolveDeploymentOutputDirs({root})).toEqual({
+        assetsDir: 'dist/client',
+        workerDir: 'dist/server',
+      });
+    });
+
+    it('uses configured worker dirs as directories', () => {
+      expect(
+        resolveDeploymentOutputDirs({
+          root,
+          workerDirFlag: 'custom/server',
+        }),
+      ).toEqual({
+        assetsDir: 'dist/client',
+        workerDir: 'custom/server',
+      });
+    });
   });
 
   it('calls createDeploy with overridden variables in environment file', async () => {
@@ -225,7 +399,7 @@ describe('deploy', async () => {
     });
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
+      config: expectDeployConfig({
         ...expectedConfig,
         overriddenEnvironmentVariables: [
           {
@@ -234,7 +408,7 @@ describe('deploy', async () => {
             isSecret: true,
           },
         ],
-      },
+      }),
       hooks: expectedHooks,
       logger: deploymentLogger,
     });
@@ -281,10 +455,10 @@ describe('deploy', async () => {
     });
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
+      config: expectDeployConfig({
         ...expectedConfig,
         environmentTag: 'stage-1',
-      },
+      }),
       hooks: expectedHooks,
       logger: deploymentLogger,
     });
@@ -312,10 +486,10 @@ describe('deploy', async () => {
     });
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
+      config: expectDeployConfig({
         ...expectedConfig,
         environmentTag: 'stage-1',
-      },
+      }),
       hooks: expectedHooks,
       logger: deploymentLogger,
     });
@@ -336,10 +510,10 @@ describe('deploy', async () => {
     });
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
+      config: expectDeployConfig({
         ...expectedConfig,
         environmentTag: 'stage-1',
-      },
+      }),
       hooks: expectedHooks,
       logger: deploymentLogger,
     });
@@ -449,14 +623,14 @@ describe('deploy', async () => {
           body: expect.anything(),
         });
         expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-          config: {
+          config: expectDeployConfig({
             ...expectedConfig,
             environmentTag: 'main',
             metadata: {
               ...expectedConfig.metadata,
               description: '123 with additional changes',
             },
-          },
+          }),
           hooks: expectedHooks,
           logger: deploymentLogger,
         });
@@ -485,14 +659,14 @@ describe('deploy', async () => {
 
           expect(vi.mocked(renderWarning)).not.toHaveBeenCalled;
           expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-            config: {
+            config: expectDeployConfig({
               ...expectedConfig,
               environmentTag: 'main',
               metadata: {
                 ...expectedConfig.metadata,
                 description: 'cool new stuff',
               },
-            },
+            }),
             hooks: expectedHooks,
             logger: deploymentLogger,
           });
@@ -515,7 +689,7 @@ describe('deploy', async () => {
     await runDeploy(deployParams);
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {...expectedConfig, environmentTag: 'main'},
+      config: expectDeployConfig({...expectedConfig, environmentTag: 'main'}),
       hooks: expectedHooks,
       logger: deploymentLogger,
     });
@@ -597,11 +771,11 @@ describe('deploy', async () => {
       await runDeploy(deployParams);
 
       expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-        config: {
+        config: expectDeployConfig({
           ...expectedConfig,
           defaultEnvironment: true,
           environmentTag: undefined,
-        },
+        }),
         hooks: expectedHooks,
         logger: deploymentLogger,
       });
@@ -659,6 +833,37 @@ describe('deploy', async () => {
     });
   });
 
+  it('surfaces the original build error instead of the wrapped deploy error', async () => {
+    // The kind of actionable error `runBuild` throws when the project is
+    // missing its `vite` dependency (via `importVite`).
+    const buildError = new AbortError(
+      "Could not find the 'vite' package in your project.",
+      'Hydrogen uses Vite to run this command.',
+      [
+        'Install your project dependencies (for example, by running `npm install`) and try again.',
+      ],
+    );
+    vi.mocked(runBuild).mockRejectedValueOnce(buildError);
+
+    // Simulate how `@shopify/oxygen-cli` wraps a failing `buildFunction` into a
+    // generic, non-AbortError error before rejecting the deploy promise.
+    vi.mocked(createDeploy).mockImplementationOnce(async (options) => {
+      try {
+        await options.hooks?.buildFunction?.('some-cool-asset-path');
+      } catch (error) {
+        throw new Error(
+          `Build function failed with error: ${(error as Error).message}`,
+        );
+      }
+
+      return {url: 'https://a-lovely-deployment.com'};
+    });
+
+    // The original AbortError (with its next steps) is surfaced, not the
+    // wrapped generic error that would be reported as an uncaught crash.
+    await expect(runDeploy(deployParams)).rejects.toBe(buildError);
+  });
+
   it('passes a build command to createDeploy when the build-command flag is used', async () => {
     const params = {
       ...deployParams,
@@ -669,13 +874,71 @@ describe('deploy', async () => {
     await runDeploy(params);
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
+      config: expectDeployConfig({
         ...expectedConfig,
         buildCommand: 'hocus pocus',
-      },
+      }),
       hooks,
       logger: deploymentLogger,
     });
+  });
+
+  it('uses the default build command for Hydrogen preview versions', async () => {
+    const hydrogenVersion = '0.0.0-preview-20260625000000';
+    const root = createAppWithHydrogenVersion(hydrogenVersion);
+
+    const {buildFunction: _, ...hooks} = expectedHooks;
+
+    await runDeploy({...deployParams, path: root});
+
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+      config: expectDeployConfig({
+        ...expectedConfig,
+        rootPath: root,
+        buildCommand: 'node --run build',
+        metadata: {
+          ...expectedConfig.metadata,
+          hydrogenVersion,
+        },
+      }),
+      hooks,
+      logger: deploymentLogger,
+    });
+    expect(vi.mocked(runBuild)).not.toHaveBeenCalled();
+  });
+
+  it('deploys custom app output with a custom build command and output directories', async () => {
+    const root = mkdtempSync(`${tmpdir()}/hydrogen-deploy-`);
+    tempRoots.push(root);
+
+    const params = {
+      ...deployParams,
+      path: root,
+      buildCommand: 'custom-framework build',
+      assetsDir: 'xyz/client',
+      workerDir: 'xyz/server',
+    };
+    const {buildFunction: _, ...hooks} = expectedHooks;
+
+    await runDeploy(params);
+
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+      config: expectDeployConfig({
+        ...expectedConfig,
+        rootPath: root,
+        assetsDir: 'xyz/client',
+        workerDir: 'xyz/server',
+        buildCommand: 'custom-framework build',
+        metadata: {
+          url: deployParams.metadataUrl,
+          user: deployParams.metadataUser,
+          version: deployParams.metadataVersion,
+        },
+      }),
+      hooks,
+      logger: deploymentLogger,
+    });
+    expect(vi.mocked(runBuild)).not.toHaveBeenCalled();
   });
 
   it('writes a file with JSON content in CI environments', async () => {
@@ -860,6 +1123,20 @@ describe('deploy', async () => {
           message: expect.any(String),
         });
       });
+
+      it("doesn't render a user confirmation on deploy when the force flag is provided", async () => {
+        await runDeploy({
+          ...deployParams,
+          env: 'production',
+          force: true,
+        });
+
+        expect(renderConfirmationPrompt).not.toHaveBeenCalledWith({
+          confirmationMessage: 'Yes, confirm deploy',
+          cancellationMessage: 'No, cancel deploy',
+          message: expect.any(String),
+        });
+      });
     });
 
     describe('user provides a preview environment', () => {
@@ -994,15 +1271,24 @@ describe('deploy', async () => {
 
   describe('getHydrogenVersion', () => {
     it('returns the version', async () => {
-      const version = await getHydrogenVersion({appPath: deployParams.path});
+      const root = createAppWithHydrogenVersion('2000.1.1');
+
+      const version = getHydrogenVersion({appPath: root});
       expect(version).toBe('2000.1.1');
+    });
+
+    it('returns undefined when Hydrogen is not installed in the app', async () => {
+      const root = mkdtempSync(`${tmpdir()}/hydrogen-deploy-`);
+      tempRoots.push(root);
+
+      expect(getHydrogenVersion({appPath: root})).toBeUndefined();
     });
 
     describe('when there are no version is available', () => {
       it('returns undefined', async () => {
-        await createHydrogenDependencyPackageJson(undefined);
+        const root = createAppWithHydrogenVersion(undefined);
 
-        const version = await getHydrogenVersion({appPath: deployParams.path});
+        const version = getHydrogenVersion({appPath: root});
         expect(version).toBeUndefined();
       });
     });

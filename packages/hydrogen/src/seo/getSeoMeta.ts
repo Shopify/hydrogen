@@ -10,7 +10,8 @@ import {MetaFunction} from 'react-router';
 
 export type GetSeoMetaReturn = ReturnType<MetaFunction>;
 
-type GetSeoMetaTypeForDocs = {
+/** @publicDocs */
+export type GetSeoMetaTypeForDocs = {
   /** `getSeoMeta` takes an arbitrary number of configuration object parameters. Values in each object are overwritten based on the object order. \`jsonLd\` properties are preserved between each configuration object. */
   seoInputs: SeoConfig[];
 };
@@ -21,6 +22,7 @@ type Optional<T> = T | null | undefined;
 
 /**
  * Generate a Remix meta array from one or more SEO configuration objects. This is useful to pass SEO configuration for the parent route(s) and the current route. Similar to `Object.assign()`, each property is overwritten based on the object order. The exception is `jsonLd`, which is preserved so that each route has it's own independent jsonLd meta data.
+ * @publicDocs
  */
 export function getSeoMeta(
   ...seoInputs: Optional<SeoConfig>[]

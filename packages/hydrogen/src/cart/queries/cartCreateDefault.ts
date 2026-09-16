@@ -11,25 +11,33 @@ import type {
   CartQueryDataReturn,
 } from './cart-types';
 import type {CartInput} from '@shopify/hydrogen-react/storefront-api-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
+} from './cart-query-helpers';
 
-export type CartCreateFunction = (
+export type CartCreateFunction<TCart = CartQueryDataReturn['cart']> = (
   input: CartInput,
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
-export function cartCreateDefault(
+/** @publicDocs */
+export function cartCreateDefault<TCart = CartQueryDataReturn['cart']>(
   options: CartQueryOptions,
-): CartCreateFunction {
+): CartCreateFunction<TCart> {
   return async (input, optionalParams) => {
     const buyer = options.customerAccount
       ? await options.customerAccount.getBuyer()
       : undefined;
     const {cartId, ...restOfOptionalParams} = optionalParams || {};
     const {buyerIdentity, ...restOfInput} = input;
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartCreate, errors} = await options.storefront.mutate<{
-      cartCreate: CartQueryData;
+      cartCreate: CartQueryData<TCart>;
       errors: StorefrontApiErrors;
-    }>(CART_CREATE_MUTATION(options.cartFragment), {
+    }>(CART_CREATE_MUTATION(options.cartFragment, {includeVisitorConsent}), {
       variables: {
         input: {
           ...restOfInput,
@@ -48,13 +56,12 @@ export function cartCreateDefault(
 //! @see: https://shopify.dev/docs/api/storefront/latest/mutations/cartCreate
 export const CART_CREATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartCreate(
     $input: CartInput!
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartCreate(input: $input) {
       cart {
         ...CartApiMutation

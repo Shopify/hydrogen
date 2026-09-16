@@ -17,6 +17,7 @@ type CartLineQuantityAdjustButtonProps<
  * The `<CartLineQuantityAdjustButton />` component renders a button that adjusts the cart line's quantity when pressed.
  *
  * It must be a descendent of `<CartLineProvider/>` and `<CartProvider/>`.
+ * @publicDocs
  */
 export function CartLineQuantityAdjustButton<
   AsType extends React.ElementType = 'button',

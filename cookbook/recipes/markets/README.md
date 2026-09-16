@@ -57,33 +57,33 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx) | A component that displays a country selector inside the Header. |
-| [app/components/Link.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx) | A unified locale-aware Link component that handles both regular links and navigation links with active states. Automatically prepends locale prefixes and cleans menu URLs. |
-| [app/lib/i18n.ts](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts) | Comprehensive i18n utilities including locale detection, path transformation hooks, URL cleaning functions, and locale validation. Centralizes all localization logic in one place. |
-| [app/routes/($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx) | A route that renders a localized version of the home page. |
-| [app/routes/($locale).account.$.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.$.tsx) | Fallback route for unauthenticated account pages with locale support |
-| [app/routes/($locale).account._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account._index.tsx) | Localized account dashboard redirect route |
-| [app/routes/($locale).account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.addresses.tsx) | Customer address management page with locale-aware forms and links |
-| [app/routes/($locale).account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders.$id.tsx) | Individual order details page with localized currency and date formatting |
-| [app/routes/($locale).account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders._index.tsx) | Customer order history listing with locale-specific pagination |
-| [app/routes/($locale).account.profile.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.profile.tsx) | Customer profile editing form with localized field labels |
-| [app/routes/($locale).account.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.tsx) | Account layout wrapper with locale-aware navigation tabs |
-| [app/routes/($locale).account_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.authorize.tsx) | OAuth authorization callback route with locale preservation |
-| [app/routes/($locale).account_.login.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.login.tsx) | Customer login redirect with locale-specific return URL |
-| [app/routes/($locale).account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.logout.tsx) | Logout handler that maintains locale after sign out |
-| [app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx) | Blog article page with locale-specific content and SEO metadata |
-| [app/routes/($locale).blogs.$blogHandle._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle._index.tsx) | Blog listing page with localized article previews and pagination |
-| [app/routes/($locale).blogs._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs._index.tsx) | All blogs overview page with locale-aware navigation links |
-| [app/routes/($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx) | A localized cart route. |
-| [app/routes/($locale).collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.$handle.tsx) | Collection page displaying products with locale-specific pricing and availability |
-| [app/routes/($locale).collections._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections._index.tsx) | Collections listing page with localized collection names and images |
-| [app/routes/($locale).collections.all.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.all.tsx) | All products page with locale-based filtering and sorting |
-| [app/routes/($locale).pages.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).pages.$handle.tsx) | Dynamic page route for locale-specific content pages |
-| [app/routes/($locale).policies.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies.$handle.tsx) | Policy page (privacy, terms, etc.) with locale-specific legal content |
-| [app/routes/($locale).policies._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies._index.tsx) | Policies index page listing all available store policies |
-| [app/routes/($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx) | A route that renders a localized version of the product page. |
-| [app/routes/($locale).search.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).search.tsx) | Search results page with locale-aware product matching and predictive search |
-| [app/routes/($locale).tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx) | A utility route that makes sure the locale is valid. |
+| [app/components/CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx) | A component that displays a country selector inside the Header. |
+| [app/components/Link.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx) | A unified locale-aware Link component that handles both regular links and navigation links with active states. Automatically prepends locale prefixes and cleans menu URLs. |
+| [app/lib/i18n.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts) | Comprehensive i18n utilities including locale detection, path transformation hooks, URL cleaning functions, and locale validation. Centralizes all localization logic in one place. |
+| [app/routes/($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx) | A route that renders a localized version of the home page. |
+| [app/routes/($locale).account.$.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.$.tsx) | Fallback route for unauthenticated account pages with locale support |
+| [app/routes/($locale).account._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account._index.tsx) | Localized account dashboard redirect route |
+| [app/routes/($locale).account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.addresses.tsx) | Customer address management page with locale-aware forms and links |
+| [app/routes/($locale).account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders.$id.tsx) | Individual order details page with localized currency and date formatting |
+| [app/routes/($locale).account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders._index.tsx) | Customer order history listing with locale-specific pagination |
+| [app/routes/($locale).account.profile.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.profile.tsx) | Customer profile editing form with localized field labels |
+| [app/routes/($locale).account.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.tsx) | Account layout wrapper with locale-aware navigation tabs |
+| [app/routes/($locale).account_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.authorize.tsx) | OAuth authorization callback route with locale preservation |
+| [app/routes/($locale).account_.login.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.login.tsx) | Customer login redirect with locale-specific return URL |
+| [app/routes/($locale).account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.logout.tsx) | Logout handler that maintains locale after sign out |
+| [app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx) | Blog article page with locale-specific content and SEO metadata |
+| [app/routes/($locale).blogs.$blogHandle._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle._index.tsx) | Blog listing page with localized article previews and pagination |
+| [app/routes/($locale).blogs._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs._index.tsx) | All blogs overview page with locale-aware navigation links |
+| [app/routes/($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx) | A localized cart route. |
+| [app/routes/($locale).collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.$handle.tsx) | Collection page displaying products with locale-specific pricing and availability |
+| [app/routes/($locale).collections._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections._index.tsx) | Collections listing page with localized collection names and images |
+| [app/routes/($locale).collections.all.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.all.tsx) | All products page with locale-based filtering and sorting |
+| [app/routes/($locale).pages.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).pages.$handle.tsx) | Dynamic page route for locale-specific content pages |
+| [app/routes/($locale).policies.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies.$handle.tsx) | Policy page (privacy, terms, etc.) with locale-specific legal content |
+| [app/routes/($locale).policies._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies._index.tsx) | Policies index page listing all available store policies |
+| [app/routes/($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx) | A route that renders a localized version of the product page. |
+| [app/routes/($locale).search.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).search.tsx) | Search results page with locale-aware product matching and predictive search |
+| [app/routes/($locale).tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx) | A utility route that makes sure the locale is valid. |
 
 ## Steps
 
@@ -95,10 +95,10 @@ In this section, we'll create utilities to handle localization and country selec
 
 Update cart line items to use the unified Link component for product links.
 
-##### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/app/components/CartLineItem.tsx)
+##### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/CartLineItem.tsx)
 
 ~~~diff
-index 63a0ecd9..47da6dfa 100644
+index 63a0ecd9d..47da6dfa0 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -2,7 +2,7 @@ import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
@@ -116,10 +116,10 @@ index 63a0ecd9..47da6dfa 100644
 
 Update the AddToCartButton component to post to the localized cart route (e.g., /FR-CA/cart instead of /cart) so the cart is created with the correct market context and currency.
 
-##### File: [app/components/AddToCartButton.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/app/components/AddToCartButton.tsx)
+##### File: [app/components/AddToCartButton.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/AddToCartButton.tsx)
 
 ~~~diff
-index 6e553f9f..a8aefc7d 100644
+index 6e553f9f6..a8aefc7d8 100644
 --- a/templates/skeleton/app/components/AddToCartButton.tsx
 +++ b/templates/skeleton/app/components/AddToCartButton.tsx
 @@ -1,5 +1,6 @@
@@ -149,7 +149,7 @@ Create a new `CountrySelector` component that allows users to select the locale 
 To handle redirects, use a `Form` that updates the cart buyer identity,
 which eventually redirects to the localized root of the app.
 
-##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
+##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
 
 <details>
 
@@ -172,10 +172,12 @@ export function CountrySelector() {
       : 'Country';
 
   return (
-    <details style={{position: 'relative', cursor: 'pointer'}} aria-label="Country selector">
-      <summary aria-label={`Current locale: ${label}`}>
-        {label}
-      </summary>
+    <details
+      role="group"
+      aria-label="Country selector"
+      style={{position: 'relative', cursor: 'pointer'}}
+    >
+      <summary aria-label={`Current locale: ${label}`}>{label}</summary>
       <div
         style={{
           position: 'absolute',
@@ -227,8 +229,8 @@ function LocaleForm({locale}: {locale: Locale}) {
         name="cartFormInput"
         value={JSON.stringify(variables)}
       />
-      <button type="submit" aria-label={`Switch to ${locale.language}-${locale.country}`}>
-        {locale.language}-{locale.country}
+      <button type="submit">
+        Switch to {locale.language}-{locale.country}
       </button>
     </Form>
   );
@@ -247,7 +249,7 @@ This component automatically:
 - Cleans invalid locale prefixes from menu URLs
 - Enables locale switching while preserving paths
 
-##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
+##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
 
 <details>
 
@@ -329,7 +331,7 @@ Create a centralized i18n module that includes:
 6. Locale validation utilities for route params
 7. Support for case-insensitive locale matching
 
-##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
+##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
 
 <details>
 
@@ -554,10 +556,10 @@ export function useLocalizedPath(
 Replace standard react-router Link imports with the new unified Link component.
 This ensures all product links automatically include the correct locale prefix.
 
-##### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/app/components/ProductItem.tsx)
+##### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/ProductItem.tsx)
 
 ~~~diff
-index 3b0f6913..81ff9ec9 100644
+index 3b0f69133..81ff9ec9f 100644
 --- a/templates/skeleton/app/components/ProductItem.tsx
 +++ b/templates/skeleton/app/components/ProductItem.tsx
 @@ -1,4 +1,3 @@
@@ -579,10 +581,10 @@ index 3b0f6913..81ff9ec9 100644
 
 Detect the locale from the URL path, and add it to the HydrogenContext.
 
-##### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/app/lib/context.ts)
+##### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/lib/context.ts)
 
 ~~~diff
-index 692d5ae1..7373ebca 100644
+index 692d5ae17..7373ebca2 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
 @@ -1,6 +1,7 @@
@@ -621,12 +623,12 @@ index 692d5ae1..7373ebca 100644
 
 Menu URLs are automatically cleaned of invalid locale prefixes.
 
-##### File: [app/components/Header.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/app/components/Header.tsx)
+##### File: [app/components/Header.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/Header.tsx)
 
 <details>
 
 ~~~diff
-index 045a7592..8da92cde 100644
+index 045a75925..8da92cdef 100644
 --- a/templates/skeleton/app/components/Header.tsx
 +++ b/templates/skeleton/app/components/Header.tsx
 @@ -1,5 +1,6 @@
@@ -723,10 +725,10 @@ index 045a7592..8da92cde 100644
 3. Add a key prop to the `PageLayout` component to make sure it re-renders
 when the locale changes.
 
-##### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/app/root.tsx)
+##### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/root.tsx)
 
 ~~~diff
-index df87425c..97ca8174 100644
+index df87425c5..97ca81746 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -77,6 +77,7 @@ export async function loader(args: Route.LoaderArgs) {
@@ -759,10 +761,10 @@ In this section, we'll add localization to the individual routes using the langu
 
 Replace all Link imports to use the unified locale-aware `Link` component for consistent navigation.
 
-##### File: [app/components/CartMain.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/app/components/CartMain.tsx)
+##### File: [app/components/CartMain.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/CartMain.tsx)
 
 ~~~diff
-index f70b7476..39c4c473 100644
+index f70b74760..39c4c4731 100644
 --- a/templates/skeleton/app/components/CartMain.tsx
 +++ b/templates/skeleton/app/components/CartMain.tsx
 @@ -1,5 +1,5 @@
@@ -790,7 +792,7 @@ For brevity, we'll focus on the home page, the cart page, and the product page i
 > [!NOTE]
 > Rename `app/routes/_index.tsx` to `app/routes/($locale)._index.tsx`.
 
-##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
+##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
 
 <details>
 
@@ -975,7 +977,7 @@ Add the dynamic segment to the cart page route.
 > [!NOTE]
 > Rename `app/routes/cart.tsx` to `app/routes/($locale).cart.tsx`.
 
-##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
+##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
 
 <details>
 
@@ -1111,7 +1113,7 @@ localized prefix.
 > [!NOTE]
 > Rename `app/routes/products.$handle.tsx` to `app/routes/($locale).products.$handle.tsx`.
 
-##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
+##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
 
 <details>
 
@@ -1379,7 +1381,7 @@ Add a utility route in `$(locale).tsx` that will use `localeMatchesPrefix`
 to validate the locale from the URL params. If the locale is invalid,
 the route will throw a 404 error.
 
-##### File: [($locale).tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx)
+##### File: [($locale).tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx)
 
 <details>
 
@@ -1403,7 +1405,7 @@ export async function loader({params}: Route.LoaderArgs) {
 
 Add a fallback route for unauthenticated account pages with locale support.
 
-##### File: [($locale).account.$.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.$.tsx)
+##### File: [($locale).account.$.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.$.tsx)
 
 <details>
 
@@ -1426,7 +1428,7 @@ export async function loader({context}: Route.LoaderArgs) {
 
 Add a localized account dashboard redirect route.
 
-##### File: [($locale).account._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account._index.tsx)
+##### File: [($locale).account._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account._index.tsx)
 
 <details>
 
@@ -1445,7 +1447,7 @@ export async function loader() {
 
 Add a customer address management page with locale-aware forms and links.
 
-##### File: [($locale).account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.addresses.tsx)
+##### File: [($locale).account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.addresses.tsx)
 
 <details>
 
@@ -1975,7 +1977,7 @@ export function AddressForm({
 
 Add an individual order details page with localized currency and date formatting.
 
-##### File: [($locale).account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders.$id.tsx)
+##### File: [($locale).account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders.$id.tsx)
 
 <details>
 
@@ -2211,7 +2213,7 @@ function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
 
 Implement customer order history listing with locale-specific pagination.
 
-##### File: [($locale).account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders._index.tsx)
+##### File: [($locale).account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders._index.tsx)
 
 <details>
 
@@ -2447,7 +2449,7 @@ function OrderItem({order}: {order: OrderItemFragment}) {
 
 Add a customer profile editing form with localized field labels.
 
-##### File: [($locale).account.profile.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.profile.tsx)
+##### File: [($locale).account.profile.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.profile.tsx)
 
 <details>
 
@@ -2594,7 +2596,7 @@ export default function AccountProfile() {
 
 Add an account layout wrapper with locale-aware navigation tabs.
 
-##### File: [($locale).account.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.tsx)
+##### File: [($locale).account.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.tsx)
 
 <details>
 
@@ -2708,7 +2710,7 @@ function Logout() {
 
 Add an OAuth authorization callback route with locale preservation.
 
-##### File: [($locale).account_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.authorize.tsx)
+##### File: [($locale).account_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.authorize.tsx)
 
 <details>
 
@@ -2727,7 +2729,7 @@ export async function loader({context}: Route.LoaderArgs) {
 
 Add a customer login redirect with a locale-specific return URL.
 
-##### File: [($locale).account_.login.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.login.tsx)
+##### File: [($locale).account_.login.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.login.tsx)
 
 <details>
 
@@ -2758,7 +2760,7 @@ export async function loader({request, context}: Route.LoaderArgs) {
 
 Add a logout handler that maintains locale after the user signs out.
 
-##### File: [($locale).account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.logout.tsx)
+##### File: [($locale).account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.logout.tsx)
 
 <details>
 
@@ -2783,7 +2785,7 @@ export async function action({context}: Route.ActionArgs) {
 
 Add a blog article page with locale-specific content and SEO metadata.
 
-##### File: [($locale).blogs.$blogHandle.$articleHandle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx)
+##### File: [($locale).blogs.$blogHandle.$articleHandle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx)
 
 <details>
 
@@ -2926,7 +2928,7 @@ const ARTICLE_QUERY = `#graphql
 
 Add a blog listing page with localized article previews and pagination.
 
-##### File: [($locale).blogs.$blogHandle._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle._index.tsx)
+##### File: [($locale).blogs.$blogHandle._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle._index.tsx)
 
 <details>
 
@@ -3122,7 +3124,7 @@ const BLOGS_QUERY = `#graphql
 
 Add an overview page for all blogs with locale-aware navigation links.
 
-##### File: [($locale).blogs._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs._index.tsx)
+##### File: [($locale).blogs._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs._index.tsx)
 
 <details>
 
@@ -3246,7 +3248,7 @@ const BLOGS_QUERY = `#graphql
 
 Add a collection page displaying products with locale-specific pricing and availability.
 
-##### File: [($locale).collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.$handle.tsx)
+##### File: [($locale).collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.$handle.tsx)
 
 <details>
 
@@ -3421,7 +3423,7 @@ const COLLECTION_QUERY = `#graphql
 
 Add a collections listing page with localized collection names and images.
 
-##### File: [($locale).collections._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections._index.tsx)
+##### File: [($locale).collections._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections._index.tsx)
 
 <details>
 
@@ -3569,7 +3571,7 @@ const COLLECTIONS_QUERY = `#graphql
 
 Add an "All products" page with locale-based filtering and sorting.
 
-##### File: [($locale).collections.all.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.all.tsx)
+##### File: [($locale).collections.all.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.all.tsx)
 
 <details>
 
@@ -3707,7 +3709,7 @@ const CATALOG_QUERY = `#graphql
 
 Add a dynamic page route for locale-specific content pages.
 
-##### File: [($locale).pages.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).pages.$handle.tsx)
+##### File: [($locale).pages.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).pages.$handle.tsx)
 
 <details>
 
@@ -3815,7 +3817,7 @@ const PAGE_QUERY = `#graphql
 
 Add a policy page (privacy, terms, etc.) with locale-specific legal content.
 
-##### File: [($locale).policies.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies.$handle.tsx)
+##### File: [($locale).policies.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies.$handle.tsx)
 
 <details>
 
@@ -3925,7 +3927,7 @@ const POLICY_CONTENT_QUERY = `#graphql
 
 Add a policies index page that lists all available store policies.
 
-##### File: [($locale).policies._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies._index.tsx)
+##### File: [($locale).policies._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies._index.tsx)
 
 <details>
 
@@ -4009,7 +4011,7 @@ const POLICIES_QUERY = `#graphql
 
 Add a search results page with locale-aware product matching and predictive search.
 
-##### File: [($locale).search.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).search.tsx)
+##### File: [($locale).search.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).search.tsx)
 
 <details>
 
@@ -4439,28 +4441,76 @@ async function predictiveSearch({
 
 </details>
 
+### Step 8: package.json
+
+
+
+#### File: [package.json](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/package.json)
+
+~~~diff
+index 0bb332639..651bbfffa 100644
+--- a/templates/skeleton/package.json
++++ b/templates/skeleton/package.json
+@@ -14,12 +14,12 @@
+   },
+   "prettier": "@shopify/prettier-config",
+   "dependencies": {
+-    "@shopify/hydrogen": "workspace:*",
++    "@shopify/hydrogen": "2026.4.0",
+     "graphql": "^16.10.0",
+     "graphql-tag": "^2.12.6",
+     "isbot": "^5.1.22",
+-    "react": "catalog:",
+-    "react-dom": "catalog:",
++    "react": "^18.3.1",
++    "react-dom": "^18.3.1",
+     "react-router": "7.14.0",
+     "react-router-dom": "7.14.0"
+   },
+@@ -31,14 +31,14 @@
+     "@react-router/dev": "7.14.0",
+     "@react-router/fs-routes": "7.14.0",
+     "@shopify/cli": "3.93.2",
+-    "@shopify/hydrogen-codegen": "workspace:*",
+-    "@shopify/mini-oxygen": "workspace:*",
++    "@shopify/hydrogen-codegen": "0.3.3",
++    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/oxygen-workers-types": "^4.1.6",
+-    "@shopify/prettier-config": "catalog:",
++    "@shopify/prettier-config": "^1.1.2",
+     "@total-typescript/ts-reset": "^0.6.1",
+     "@types/eslint": "^9.6.1",
+-    "@types/react": "catalog:",
+-    "@types/react-dom": "catalog:",
++    "@types/react": "^18.3.28",
++    "@types/react-dom": "^18.3.7",
+     "@typescript-eslint/eslint-plugin": "^8.21.0",
+     "@typescript-eslint/parser": "^8.21.0",
+     "eslint": "^9.18.0",
+~~~
+
 ## Deleted Files
 
-- [templates/skeleton/app/routes/account.$.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/account.$.tsx)
-- [templates/skeleton/app/routes/account._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/account._index.tsx)
-- [templates/skeleton/app/routes/account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/account.addresses.tsx)
-- [templates/skeleton/app/routes/account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/account.orders.$id.tsx)
-- [templates/skeleton/app/routes/account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/account.orders._index.tsx)
-- [templates/skeleton/app/routes/account.profile.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/account.profile.tsx)
-- [templates/skeleton/app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/account.tsx)
-- [templates/skeleton/app/routes/account_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/account_.authorize.tsx)
-- [templates/skeleton/app/routes/account_.login.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/account_.login.tsx)
-- [templates/skeleton/app/routes/account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/account_.logout.tsx)
-- [templates/skeleton/app/routes/blogs.$blogHandle.$articleHandle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/blogs.$blogHandle.$articleHandle.tsx)
-- [templates/skeleton/app/routes/blogs.$blogHandle._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/blogs.$blogHandle._index.tsx)
-- [templates/skeleton/app/routes/blogs._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/blogs._index.tsx)
-- [templates/skeleton/app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/collections.$handle.tsx)
-- [templates/skeleton/app/routes/collections._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/collections._index.tsx)
-- [templates/skeleton/app/routes/collections.all.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/collections.all.tsx)
-- [templates/skeleton/app/routes/pages.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/pages.$handle.tsx)
-- [templates/skeleton/app/routes/policies.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/policies.$handle.tsx)
-- [templates/skeleton/app/routes/policies._index.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/policies._index.tsx)
-- [templates/skeleton/app/routes/search.tsx](https://github.com/Shopify/hydrogen/blob/f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2/templates/skeleton/templates/skeleton/app/routes/search.tsx)
+- [templates/skeleton/app/routes/account.$.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/account.$.tsx)
+- [templates/skeleton/app/routes/account._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/account._index.tsx)
+- [templates/skeleton/app/routes/account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/account.addresses.tsx)
+- [templates/skeleton/app/routes/account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/account.orders.$id.tsx)
+- [templates/skeleton/app/routes/account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/account.orders._index.tsx)
+- [templates/skeleton/app/routes/account.profile.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/account.profile.tsx)
+- [templates/skeleton/app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/account.tsx)
+- [templates/skeleton/app/routes/account_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/account_.authorize.tsx)
+- [templates/skeleton/app/routes/account_.login.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/account_.login.tsx)
+- [templates/skeleton/app/routes/account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/account_.logout.tsx)
+- [templates/skeleton/app/routes/blogs.$blogHandle.$articleHandle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/blogs.$blogHandle.$articleHandle.tsx)
+- [templates/skeleton/app/routes/blogs.$blogHandle._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/blogs.$blogHandle._index.tsx)
+- [templates/skeleton/app/routes/blogs._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/blogs._index.tsx)
+- [templates/skeleton/app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/collections.$handle.tsx)
+- [templates/skeleton/app/routes/collections._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/collections._index.tsx)
+- [templates/skeleton/app/routes/collections.all.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/collections.all.tsx)
+- [templates/skeleton/app/routes/pages.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/pages.$handle.tsx)
+- [templates/skeleton/app/routes/policies.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/policies.$handle.tsx)
+- [templates/skeleton/app/routes/policies._index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/policies._index.tsx)
+- [templates/skeleton/app/routes/search.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/templates/skeleton/app/routes/search.tsx)
 
 ## Next steps
 

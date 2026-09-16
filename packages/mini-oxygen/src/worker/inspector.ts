@@ -60,7 +60,7 @@ export interface ErrorProperties {
  *    the main Node.js process, so that we can display them in the terminal.
  *
  * @param options - Options for the inspector.
- * @returns A function to reconnect to the inspector.
+ * @returns A connector for reconnecting to and closing the inspector.
  */
 export function createInspectorConnector(options: {
   privateInspectorPort: number;
@@ -72,33 +72,43 @@ export function createInspectorConnector(options: {
   let inspectorConnection: InspectorConnection | undefined;
   let inspectorProxy: InspectorProxy | undefined;
 
-  return async (onBeforeConnect?: () => void | Promise<void>) => {
-    inspectorConnection?.close();
+  return {
+    async close() {
+      inspectorConnection?.close();
+      await inspectorProxy?.close();
+      inspectorConnection = undefined;
+      inspectorProxy = undefined;
+    },
 
-    inspectorUrl ??= await findInspectorUrl(
-      options.privateInspectorPort,
-      options.workerName,
-    );
+    async reconnect(onBeforeConnect?: () => void | Promise<void>) {
+      inspectorConnection?.close();
 
-    await onBeforeConnect?.();
+      inspectorUrl ??= await findInspectorUrl(
+        options.privateInspectorPort,
+        options.workerName,
+      );
 
-    inspectorConnection = connectToInspector({
-      inspectorUrl,
-      sourceMapPath: options.sourceMapPath,
-    });
+      await onBeforeConnect?.();
 
-    addInspectorConsoleLogger(inspectorConnection);
+      inspectorConnection = connectToInspector({
+        inspectorUrl,
+        sourceMapPath: options.sourceMapPath,
+      });
 
-    if (options.publicInspectorPort) {
-      if (inspectorProxy) {
-        inspectorProxy.updateInspectorConnection(inspectorConnection);
-      } else {
-        inspectorProxy = createInspectorProxy(
-          options.publicInspectorPort,
-          inspectorConnection,
-        );
+      addInspectorConsoleLogger(inspectorConnection);
+
+      if (options.publicInspectorPort) {
+        if (inspectorProxy) {
+          inspectorProxy.updateInspectorConnection(inspectorConnection);
+        } else {
+          inspectorProxy = createInspectorProxy(
+            options.publicInspectorPort,
+            inspectorConnection,
+          );
+          await inspectorProxy.ready;
+        }
       }
-    }
+    },
   };
 }
 
@@ -392,9 +402,12 @@ function connectToInspector({inspectorUrl, sourceMapPath}: InspectorOptions) {
       if (!isClosed()) {
         try {
           ws.removeAllListeners();
+          // Closing while the connection is still being established emits an
+          // asynchronous error, so keep a listener around to consume it.
+          ws.once('error', () => {});
           ws.close();
-        } catch (err) {
-          // Closing before the websocket is ready will throw an error.
+        } catch {
+          // Ignore synchronous close errors from a connection state race.
         }
       }
 

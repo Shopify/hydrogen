@@ -132,6 +132,7 @@ function logMissingConfig(fieldName: string) {
   );
 }
 
+/** @publicDocs */
 export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   const {
     withPrivacyBanner = false,

@@ -1,9 +1,13 @@
-import {createRequire} from 'node:module';
 import {spawnSync} from 'node:child_process';
 import type {Hook} from '@oclif/core';
 import {outputDebug, outputNewline} from '@shopify/cli-kit/node/output';
-import {cwd, joinPath, resolvePath} from '@shopify/cli-kit/node/path';
+import {cwd, resolvePath} from '@shopify/cli-kit/node/path';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
+
+import {
+  applyHydrogenCommandPolicy,
+  isHydrogenProject,
+} from '../lib/hydrogen-command-policy.js';
 
 const hook: Hook<'init'> = async function (options) {
   // Check if this is a Hydrogen command to avoid running this
@@ -48,6 +52,10 @@ const hook: Hook<'init'> = async function (options) {
     process.exit(1);
   }
 
+  if (applyHydrogenCommandPolicy({id: options.id, projectPath})) {
+    process.exit(1);
+  }
+
   if (
     commandNeedsVM(options.id, options.argv) &&
     !process.execArgv.includes(EXPERIMENTAL_VM_MODULES_FLAG) &&
@@ -72,23 +80,6 @@ const EXPERIMENTAL_VM_MODULES_FLAG = '--experimental-vm-modules';
 function commandNeedsVM(id = '', argv: string[] = []) {
   // All the commands that rely on MiniOxygen's Node sandbox:
   return id === 'hydrogen:debug:cpu';
-}
-
-function isHydrogenProject(projectPath: string) {
-  try {
-    const require = createRequire(import.meta.url);
-    const {dependencies, scripts} = require(
-      joinPath(projectPath, 'package.json'),
-    );
-
-    return (
-      !!dependencies?.['@shopify/hydrogen'] ||
-      // Diff examples don't have dependencies:
-      !!scripts?.dev?.includes('--diff')
-    );
-  } catch {
-    return false;
-  }
 }
 
 export default hook;

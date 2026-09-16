@@ -241,6 +241,7 @@ const defaultI18n: I18nBase = {
  *  This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2026-04/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
  *
  *  Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).
+ * @publicDocs
  */
 export function createStorefrontClient<TI18n extends I18nBase>(
   options: CreateStorefrontClientOptions<TI18n>,
@@ -780,6 +781,7 @@ export function formatAPIResult<T>(
   };
 }
 
+/** @publicDocs */
 export type CreateStorefrontClientForDocs<TI18n extends I18nBase> = {
   storefront?: StorefrontForDoc<TI18n>;
 };

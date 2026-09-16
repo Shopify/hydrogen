@@ -20,12 +20,12 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | Displays the available subscription options on product pages. |
-| [app/graphql/customer-account/CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts) | Mutations for managing customer subscriptions. |
-| [app/graphql/customer-account/CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts) | Queries for managing customer subscriptions. |
-| [app/routes/account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx) | Subscriptions management page. |
-| [app/styles/account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css) | Subscriptions management page styles. |
-| [app/styles/selling-plan.css](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css) | Styles the `SellingPlanSelector` component. |
+| [app/components/SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | Displays the available subscription options on product pages. |
+| [app/graphql/customer-account/CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts) | Mutations for managing customer subscriptions. |
+| [app/graphql/customer-account/CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts) | Queries for managing customer subscriptions. |
+| [app/routes/account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx) | Subscriptions management page. |
+| [app/styles/account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css) | Subscriptions management page styles. |
+| [app/styles/selling-plan.css](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css) | Styles the `SellingPlanSelector` component. |
 
 ## Steps
 
@@ -42,26 +42,15 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
 2. Extract `sellingPlanAllocation` from cart line data to access subscription information.
 3. Display the subscription plan name when items have an active selling plan.
 
-#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/components/CartLineItem.tsx)
+#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/CartLineItem.tsx)
 
 ~~~diff
-index 80e34be2..68b05499 100644
+index 63a0ecd9d..748dfef74 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
-@@ -3,8 +3,8 @@ import type {CartLayout} from '~/components/CartMain';
- import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
- import {useVariantUrl} from '~/lib/variants';
- import {Link} from 'react-router';
--import {ProductPrice} from './ProductPrice';
--import {useAside} from './Aside';
-+import {ProductPrice} from '~/components/ProductPrice';
-+import {useAside} from '~/components/Aside';
- import type {CartApiQueryFragment} from 'storefrontapi.generated';
- 
- type CartLine = OptimisticCartLine<CartApiQueryFragment>;
-@@ -20,7 +20,8 @@ export function CartLineItem({
-   layout: CartLayout;
+@@ -27,7 +27,8 @@ export function CartLineItem({
    line: CartLine;
+   childrenMap: LineItemChildrenMap;
  }) {
 -  const {id, merchandise} = line;
 +  // Get the selling plan allocation
@@ -69,19 +58,19 @@ index 80e34be2..68b05499 100644
    const {product, title, image, selectedOptions} = merchandise;
    const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
    const {close} = useAside();
-@@ -54,6 +55,12 @@ export function CartLineItem({
-         </Link>
-         <ProductPrice price={line?.cost?.totalAmount} />
-         <ul>
-+          {/* Optionally render the selling plan name if available */}
-+          {sellingPlanAllocation && (
-+            <li key={sellingPlanAllocation.sellingPlan.name}>
-+              <small>{sellingPlanAllocation.sellingPlan.name}</small>
-+            </li>
-+          )}
-           {selectedOptions.map((option) => (
-             <li key={option.name}>
-               <small>
+@@ -64,6 +65,12 @@ export function CartLineItem({
+           </Link>
+           <ProductPrice price={line?.cost?.totalAmount} />
+           <ul>
++            {/* Optionally render the selling plan name if available */}
++            {sellingPlanAllocation && (
++              <li key={sellingPlanAllocation.sellingPlan.name}>
++                <small>{sellingPlanAllocation.sellingPlan.name}</small>
++              </li>
++            )}
+             {selectedOptions.map((option) => (
+               <li key={option.name}>
+                 <small>
 ~~~
 
 ### Step 3: Show subscription options on product pages
@@ -92,7 +81,7 @@ In this step we'll implement the ability to display subscription options on  pro
 
 Create a new `SellingPlanSelector` component that displays the available subscription options for a product.
 
-##### File: [SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
+##### File: [SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
 
 <details>
 
@@ -211,7 +200,7 @@ export function SellingPlanSelector({
 
 Add styles for the `SellingPlanSelector` component.
 
-##### File: [selling-plan.css](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
+##### File: [selling-plan.css](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
 
 <details>
 
@@ -260,12 +249,12 @@ Add styles for the `SellingPlanSelector` component.
 2. Implement `SellingPlanSelector` and `SellingPlanGroup` components to handle subscription plan selection.
 3. Update `AddToCartButton` to include selling plan data when subscriptions are selected.
 
-##### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/components/ProductForm.tsx)
+##### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/ProductForm.tsx)
 
 <details>
 
 ~~~diff
-index 47c8f305..bea5bcce 100644
+index 47c8f3056..bea5bccee 100644
 --- a/templates/skeleton/app/components/ProductForm.tsx
 +++ b/templates/skeleton/app/components/ProductForm.tsx
 @@ -6,14 +6,25 @@ import type {
@@ -391,12 +380,12 @@ index 47c8f305..bea5bcce 100644
 1. Add a `SellingPlanPrice` function to calculate adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
 2. Add logic to handle different price adjustment types and render the appropriate subscription price when a selling plan is selected.
 
-##### File: [app/components/ProductPrice.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/components/ProductPrice.tsx)
+##### File: [app/components/ProductPrice.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/ProductPrice.tsx)
 
 <details>
 
 ~~~diff
-index 32460ae2..59eed1d8 100644
+index 76f924e87..cf93f2123 100644
 --- a/templates/skeleton/app/components/ProductPrice.tsx
 +++ b/templates/skeleton/app/components/ProductPrice.tsx
 @@ -1,13 +1,31 @@
@@ -429,7 +418,7 @@ index 32460ae2..59eed1d8 100644
 +  }
 +
    return (
-     <div className="product-price">
+     <div aria-label="Price" className="product-price" role="group">
        {compareAtPrice ? (
 @@ -25,3 +43,74 @@ export function ProductPrice({
      </div>
@@ -516,23 +505,22 @@ index 32460ae2..59eed1d8 100644
 2. Add logic to handle pricing adjustments, maintain selection state using URL parameters, and update the add-to-cart functionality.
 3. Fetch subscription data through the updated cart GraphQL fragments.
 
-##### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/routes/products.$handle.tsx)
+##### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
 ~~~diff
-index 422a2eb9..79bacfbe 100644
+index 99730d418..e98f27938 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
-@@ -3,6 +3,7 @@ import {
-   useLoaderData,
- } from 'react-router';
+@@ -1,5 +1,6 @@
+ import {redirect, useLoaderData} from 'react-router';
  import type {Route} from './+types/products.$handle';
 +import type {SellingPlanFragment} from 'storefrontapi.generated';
  import {
    getSelectedProductOptions,
    Analytics,
-@@ -16,6 +17,12 @@ import {ProductImage} from '~/components/ProductImage';
+@@ -13,6 +14,12 @@ import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
  
@@ -545,7 +533,7 @@ index 422a2eb9..79bacfbe 100644
  export const meta: Route.MetaFunction = ({data}) => {
    return [
      {title: `Hydrogen | ${data?.product.title ?? ''}`},
-@@ -66,8 +73,34 @@ async function loadCriticalData({
+@@ -59,8 +66,34 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
    // The API handle might be localized, so redirect to the localized handle
    redirectIfHandleIsLocalized(request, {handle, data: product});
  
@@ -580,7 +568,7 @@ index 422a2eb9..79bacfbe 100644
    };
  }
  
-@@ -84,7 +117,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
+@@ -77,7 +110,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
  }
  
  export default function Product() {
@@ -589,7 +577,7 @@ index 422a2eb9..79bacfbe 100644
  
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
-@@ -102,7 +135,7 @@ export default function Product() {
+@@ -95,7 +128,7 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
  
@@ -598,7 +586,7 @@ index 422a2eb9..79bacfbe 100644
  
    return (
      <div className="product">
-@@ -112,11 +145,15 @@ export default function Product() {
+@@ -105,11 +138,15 @@ export default function Product() {
          <ProductPrice
            price={selectedVariant?.price}
            compareAtPrice={selectedVariant?.compareAtPrice}
@@ -614,7 +602,7 @@ index 422a2eb9..79bacfbe 100644
          />
          <br />
          <br />
-@@ -180,9 +217,83 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+@@ -173,9 +210,83 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
        amount
        currencyCode
      }
@@ -698,7 +686,7 @@ index 422a2eb9..79bacfbe 100644
  const PRODUCT_FRAGMENT = `#graphql
    fragment Product on Product {
      id
-@@ -210,6 +321,11 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -203,6 +314,11 @@ const PRODUCT_FRAGMENT = `#graphql
          }
        }
      }
@@ -710,7 +698,7 @@ index 422a2eb9..79bacfbe 100644
      selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
        ...ProductVariant
      }
-@@ -221,6 +337,7 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -214,6 +330,7 @@ const PRODUCT_FRAGMENT = `#graphql
        title
      }
    }
@@ -729,14 +717,14 @@ In this step we'll implement support for showing subscription info in the cart's
 
 Add `sellingPlanAllocation` field with the plan name to both the standard cart line and componentizable cart line GraphQL fragments. This ensures subscription details are fetched when querying cart data.
 
-##### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/lib/fragments.ts)
+##### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/lib/fragments.ts)
 
 ~~~diff
-index cf35c25e..6d972449 100644
+index f6b6b2a36..f3f9ecff2 100644
 --- a/templates/skeleton/app/lib/fragments.ts
 +++ b/templates/skeleton/app/lib/fragments.ts
-@@ -54,6 +54,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
-         }
+@@ -59,6 +59,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+         id
        }
      }
 +    sellingPlanAllocation {
@@ -747,9 +735,9 @@ index cf35c25e..6d972449 100644
    }
    fragment CartLineComponent on ComponentizableCartLine {
      id
-@@ -104,6 +109,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
-         }
-       }
+@@ -112,6 +117,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+     lineComponents {
+       ...CartLine
      }
 +    sellingPlanAllocation {
 +      sellingPlan {
@@ -769,7 +757,7 @@ In this step we'll implement support for subscription management through an acco
 
 Create GraphQL queries that retrieve the subscription info from the customer account client.
 
-##### File: [CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
+##### File: [CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
 
 <details>
 
@@ -842,7 +830,7 @@ export const SUBSCRIPTIONS_CONTRACTS_QUERY = `#graphql
 
 Create a GraqhQL mutation to cancel an existing subscription.
 
-##### File: [CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
+##### File: [CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
 
 <details>
 
@@ -871,7 +859,7 @@ export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
 
 Create a new account subpage that lets customers manage their existing  subscriptions based on the new GraphQL queries and mutations.
 
-##### File: [account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
+##### File: [account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
 
 <details>
 
@@ -881,12 +869,7 @@ import type {
   SubscriptionDiscountFragmentFragment,
   SubscriptionsContractsQueryQuery,
 } from 'customer-accountapi.generated';
-import {
-  data,
-  useActionData,
-  useFetcher,
-  useLoaderData,
-} from 'react-router';
+import {data, useActionData, useFetcher, useLoaderData} from 'react-router';
 import type {Route} from './+types/account.subscriptions';
 import {SUBSCRIPTIONS_CONTRACTS_QUERY} from '../graphql/customer-account/CustomerSubscriptionsQuery';
 import {SUBSCRIPTION_CANCEL_MUTATION} from '../graphql/customer-account/CustomerSubscriptionsMutations';
@@ -969,14 +952,14 @@ export default function AccountProfile() {
           </mark>
         </p>
       ) : null}
-      <div className="account-subscriptions">
+      <ul className="account-subscriptions" aria-label="Subscriptions">
         {subscriptions?.customer?.subscriptionContracts.nodes.map(
           (subscription) => {
             const isBeingCancelled =
               fetcher.state !== 'idle' &&
               fetcher.formData?.get('subId') === subscription.id;
             return (
-              <div key={subscription.id} className="subscription-row">
+              <li key={subscription.id} className="subscription-row">
                 <div className="subscription-row-content">
                   <div>
                     {subscription.lines.nodes.map((line) => (
@@ -1027,11 +1010,11 @@ export default function AccountProfile() {
                     </fetcher.Form>
                   )}
                 </div>
-              </div>
+              </li>
             );
           },
         )}
-      </div>
+      </ul>
     </div>
   );
 }
@@ -1086,13 +1069,13 @@ function formatDiscountValue(
 
 Add a `Subscriptions` link to the account menu so customers can easily access their subscription management page.
 
-##### File: [app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/routes/account.tsx)
+##### File: [app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/account.tsx)
 
 ~~~diff
-index 46272bbd..817cbd26 100644
+index 0429e7ebe..6bd5ac6bd 100644
 --- a/templates/skeleton/app/routes/account.tsx
 +++ b/templates/skeleton/app/routes/account.tsx
-@@ -86,6 +86,9 @@ function AccountMenu() {
+@@ -83,6 +83,9 @@ function AccountMenu() {
          &nbsp; Addresses &nbsp;
        </NavLink>
        &nbsp;|&nbsp;
@@ -1108,7 +1091,7 @@ index 46272bbd..817cbd26 100644
 
 Add styles for the Subscriptions page.
 
-##### File: [account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
+##### File: [account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
 
 <details>
 
@@ -1117,6 +1100,9 @@ Add styles for the Subscriptions page.
   display: flex;
   flex-direction: column;
   gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .account-subscriptions .subscription-row {
@@ -1164,6 +1150,54 @@ Add styles for the Subscriptions page.
 ~~~
 
 </details>
+
+### Step 7: package.json
+
+
+
+#### File: [package.json](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/package.json)
+
+~~~diff
+index 0bb332639..651bbfffa 100644
+--- a/templates/skeleton/package.json
++++ b/templates/skeleton/package.json
+@@ -14,12 +14,12 @@
+   },
+   "prettier": "@shopify/prettier-config",
+   "dependencies": {
+-    "@shopify/hydrogen": "workspace:*",
++    "@shopify/hydrogen": "2026.4.0",
+     "graphql": "^16.10.0",
+     "graphql-tag": "^2.12.6",
+     "isbot": "^5.1.22",
+-    "react": "catalog:",
+-    "react-dom": "catalog:",
++    "react": "^18.3.1",
++    "react-dom": "^18.3.1",
+     "react-router": "7.14.0",
+     "react-router-dom": "7.14.0"
+   },
+@@ -31,14 +31,14 @@
+     "@react-router/dev": "7.14.0",
+     "@react-router/fs-routes": "7.14.0",
+     "@shopify/cli": "3.93.2",
+-    "@shopify/hydrogen-codegen": "workspace:*",
+-    "@shopify/mini-oxygen": "workspace:*",
++    "@shopify/hydrogen-codegen": "0.3.3",
++    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/oxygen-workers-types": "^4.1.6",
+-    "@shopify/prettier-config": "catalog:",
++    "@shopify/prettier-config": "^1.1.2",
+     "@total-typescript/ts-reset": "^0.6.1",
+     "@types/eslint": "^9.6.1",
+-    "@types/react": "catalog:",
+-    "@types/react-dom": "catalog:",
++    "@types/react": "^18.3.28",
++    "@types/react-dom": "^18.3.7",
+     "@typescript-eslint/eslint-plugin": "^8.21.0",
+     "@typescript-eslint/parser": "^8.21.0",
+     "eslint": "^9.18.0",
+~~~
 
 ## Next steps
 

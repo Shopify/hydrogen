@@ -59,6 +59,7 @@ describe('i18n replacers', () => {
         "import { createHydrogenContext } from "@shopify/hydrogen";
         import { AppSession } from "~/lib/session";
         import { CART_QUERY_FRAGMENT } from "~/lib/fragments";
+        import type { CartApiQueryFragment } from "storefrontapi.generated";
         import { getLocaleFromRequest } from "~/lib/i18n";
 
         // Define the additional context object
@@ -75,6 +76,10 @@ describe('i18n replacers', () => {
 
         declare global {
           interface HydrogenAdditionalContext extends AdditionalContextType {}
+
+          // Augment HydrogenCustomCartFragment with the codegen'd cart fragment type so
+          // that context.cart.get() and all cart mutations return the extended cart type.
+          interface HydrogenCustomCartFragment extends CartApiQueryFragment {}
         }
 
         /**

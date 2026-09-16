@@ -10,7 +10,7 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {
   getStorefrontId,
   runCustomerAccountPush,
-} from '../commands/hydrogen/customer-account/push.js';
+} from '../commands/hydrogen/customer-account-push.js';
 import {getLocalVariables} from '../lib/environment-variables.js';
 import {startTunnelPlugin, pollTunnelURL} from './tunneling.js';
 import {getConfig} from './shopify-config.js';
@@ -117,7 +117,7 @@ export function getDebugBannerLine(publicInspectorPort: number) {
   )}.\nAttach a ${outputToken.link(
     colors.yellow(isVSCode ? 'VSCode debugger' : 'debugger'),
     debuggingDocsLink,
-  )} or open DevTools in http://localhost:${String(publicInspectorPort)}.`
+  )} or open DevTools in http://127.0.0.1:${String(publicInspectorPort)}.`
     .value;
 }
 

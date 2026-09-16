@@ -11,11 +11,19 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
+} from './cart-query-helpers';
 
-export type CartDeliveryAddressesAddFunction = (
+export type CartDeliveryAddressesAddFunction<
+  TCart = CartQueryDataReturn['cart'],
+> = (
   addresses: Array<CartSelectableAddressInput>,
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
 /**
  * Adds delivery addresses to the cart.
@@ -37,24 +45,31 @@ export type CartDeliveryAddressesAddFunction = (
  *    }
  *  ], { someOptionalParam: 'value' }
  * );
+ * @publicDocs
  */
-export function cartDeliveryAddressesAddDefault(
-  options: CartQueryOptions,
-): CartDeliveryAddressesAddFunction {
+export function cartDeliveryAddressesAddDefault<
+  TCart = CartQueryDataReturn['cart'],
+>(options: CartQueryOptions): CartDeliveryAddressesAddFunction<TCart> {
   return async (
     addresses: Array<CartSelectableAddressInput>,
     optionalParams,
   ) => {
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartDeliveryAddressesAdd, errors} = await options.storefront.mutate<{
-      cartDeliveryAddressesAdd: CartQueryData;
+      cartDeliveryAddressesAdd: CartQueryData<TCart>;
       errors: StorefrontApiErrors;
-    }>(CART_DELIVERY_ADDRESSES_ADD_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        addresses,
-        ...optionalParams,
+    }>(
+      CART_DELIVERY_ADDRESSES_ADD_MUTATION(options.cartFragment, {
+        includeVisitorConsent,
+      }),
+      {
+        variables: {
+          cartId: options.getCartId(),
+          addresses,
+          ...optionalParams,
+        },
       },
-    });
+    );
 
     return formatAPIResult(cartDeliveryAddressesAdd, errors);
   };
@@ -63,14 +78,13 @@ export function cartDeliveryAddressesAddDefault(
 //! @see: https://shopify.dev/docs/api/storefront/latest/mutations/cartDeliveryAddressesAdd
 export const CART_DELIVERY_ADDRESSES_ADD_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartDeliveryAddressesAdd(
     $cartId: ID!
     $addresses: [CartSelectableAddressInput!]!,
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartDeliveryAddressesAdd(addresses: $addresses, cartId: $cartId) {
       cart {
         ...CartApiMutation

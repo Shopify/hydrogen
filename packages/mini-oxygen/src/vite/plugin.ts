@@ -1,26 +1,35 @@
-import {defaultClientConditions} from 'vite';
-import path from 'node:path';
-import type {Plugin, ResolvedConfig} from 'vite';
+import {defaultClientConditions, loadEnv} from 'vite';
+import type {Plugin} from 'vite';
+import {
+  createMiniOxygenDevEnvironment,
+  hasProvidedEnvBindings,
+  type MiniOxygenDevEnvironment,
+  type MiniOxygenRuntimeOptions,
+  mergeMiniOxygenRuntimeOptions,
+} from './environment.js';
 import {
   setupOxygenMiddleware,
-  type InternalMiniOxygenOptions,
   type MiniOxygenViteOptions,
 } from './server-middleware.js';
+import {getHydrogenCompatibilityDate} from './compat-date.js';
+import {
+  setupOxygenPreviewServer,
+  type OxygenPreviewOptions,
+} from './preview.js';
 
 // Note: Vite resolves extensions like .js or .ts automatically.
 const DEFAULT_SSR_ENTRY = './server';
+const workerConditions = ['worker', 'workerd', ...defaultClientConditions];
 
 export type OxygenPluginOptions = Partial<
   Pick<
     MiniOxygenViteOptions,
     'entry' | 'env' | 'inspectorPort' | 'logRequestLine' | 'debug'
   >
->;
+> &
+  OxygenPreviewOptions;
 
-type OxygenApiOptions = OxygenPluginOptions &
-  InternalMiniOxygenOptions & {
-    envPromise?: Promise<Record<string, any>>;
-  };
+type OxygenApiOptions = MiniOxygenRuntimeOptions;
 
 /**
  * For internal use only.
@@ -30,123 +39,181 @@ export type OxygenPlugin = Plugin<{
   registerPluginOptions(newOptions: OxygenApiOptions): void;
 }>;
 
+export type {MiniOxygenDevEnvironment};
+
 /**
  * Runs backend code in an Oxygen worker instead of Node.js during development.
  * If used with `remix`, place it before it in the Vite plugin list.
  */
 export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
-  let resolvedConfig: ResolvedConfig;
-  let absoluteWorkerEntryFile: string;
   let apiOptions: OxygenApiOptions = {};
+  let miniOxygenEnvironment: MiniOxygenDevEnvironment | undefined;
+  let root = process.cwd();
+  let isSsrBuild = false;
+  let userTsconfigPaths: boolean | undefined;
+
+  const resolveMiniOxygenOptions = async (
+    runtimeOptions: MiniOxygenRuntimeOptions,
+    viteDevServer: MiniOxygenViteOptions['viteDevServer'],
+  ): Promise<MiniOxygenViteOptions> => {
+    const entry =
+      runtimeOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
+    const remoteEnv = await Promise.resolve(runtimeOptions.envPromise);
+    const fallbackEnv =
+      !hasProvidedEnvBindings(pluginOptions) &&
+      !hasProvidedEnvBindings(runtimeOptions)
+        ? loadEnv(viteDevServer.config.mode, viteDevServer.config.envDir, '')
+        : undefined;
+
+    const env = Object.assign(
+      {},
+      fallbackEnv,
+      remoteEnv,
+      runtimeOptions.env,
+      pluginOptions.env,
+    );
+
+    return {
+      entry,
+      viteDevServer,
+      crossBoundarySetup: runtimeOptions.crossBoundarySetup,
+      env,
+      debug: runtimeOptions.debug ?? pluginOptions.debug ?? false,
+      inspectorPort:
+        runtimeOptions.inspectorPort ?? pluginOptions.inspectorPort,
+      requestHook: runtimeOptions.requestHook,
+      entryPointErrorHandler: runtimeOptions.entryPointErrorHandler,
+      compatibilityDate:
+        runtimeOptions.compatibilityDate ??
+        getHydrogenCompatibilityDate(viteDevServer.config.root),
+      logRequestLine:
+        // Give priority to the plugin option over the CLI option here,
+        // since the CLI one is just a default, not a user-provided flag.
+        pluginOptions.logRequestLine ?? runtimeOptions.logRequestLine,
+    };
+  };
+
+  const applyRuntimeOptions = (newOptions: OxygenApiOptions) => {
+    miniOxygenEnvironment?.configureRuntime(newOptions);
+    apiOptions = mergeMiniOxygenRuntimeOptions(apiOptions, newOptions);
+  };
 
   return [
     {
       name: 'oxygen:main',
       config(config, env) {
-        return {
-          appType: 'custom',
-          resolve: {
-            conditions: ['worker', 'workerd', ...defaultClientConditions],
-          },
-          ssr: {
-            noExternal: true,
-            target: 'webworker',
-            resolve: {
-              conditions: ['worker', 'workerd', ...defaultClientConditions],
-            },
-          },
+        // Capture the user's tsconfigPaths setting so we can
+        // forward it to our custom SSR environment below.
+        userTsconfigPaths = config.resolve?.tsconfigPaths;
+
+        const build = {
           // When building, the CLI will set the `ssr` option to `true`
           // if no --entry flag is passed for the default SSR entry file.
           // Replace it here with a default value.
           ...(env.isSsrBuild &&
             config.build?.ssr && {
-              build: {
-                ssr:
-                  config.build?.ssr === true
-                    ? // No --entry flag passed by the user, use the
-                      // option passed to the plugin or the default value
-                      (pluginOptions.entry ?? DEFAULT_SSR_ENTRY)
-                    : // --entry flag passed by the user, keep it
-                      config.build?.ssr,
-              },
+              ssr:
+                config.build?.ssr === true
+                  ? // No --entry flag passed by the user, use the
+                    // option passed to the plugin or the default value
+                    (pluginOptions.entry ?? DEFAULT_SSR_ENTRY)
+                  : // --entry flag passed by the user, keep it
+                    config.build?.ssr,
             }),
+        };
+
+        return {
+          appType: 'custom',
+          ...(Object.keys(build).length > 0 && {build}),
+          ssr: {
+            noExternal: true,
+            target: 'webworker',
+            resolve: {
+              conditions: workerConditions,
+            },
+          },
+        };
+      },
+      configResolved(resolvedConfig) {
+        root = resolvedConfig.root;
+        isSsrBuild = Boolean(resolvedConfig.build.ssr);
+      },
+      configEnvironment(name) {
+        if (name !== 'ssr') return;
+
+        return {
+          resolve: {
+            conditions: workerConditions,
+            ...(userTsconfigPaths != null && {
+              tsconfigPaths: userTsconfigPaths,
+            }),
+          },
+          dev: {
+            createEnvironment(name, config) {
+              // Vite can recreate environments on server restart. Keep this
+              // pointer on the latest SSR environment so late runtime options
+              // are applied to the active instance, and let Vite close the
+              // previous environment through its normal restart lifecycle.
+              return (miniOxygenEnvironment = createMiniOxygenDevEnvironment(
+                name,
+                config,
+                apiOptions,
+                resolveMiniOxygenOptions,
+              ));
+            },
+          },
         };
       },
       api: {
         registerPluginOptions(newOptions) {
-          apiOptions = {
-            ...apiOptions,
-            ...newOptions,
-            env: {...apiOptions.env, ...newOptions.env},
-            crossBoundarySetup: [
-              ...(apiOptions.crossBoundarySetup || []),
-              ...(newOptions.crossBoundarySetup || []),
-            ],
-          };
+          applyRuntimeOptions(newOptions);
         },
       },
       configureServer: {
         order: 'pre',
         handler: (viteDevServer) => {
-          const entry =
-            apiOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
-
-          // For transform hook:
-          resolvedConfig = viteDevServer.config;
-          absoluteWorkerEntryFile = path.isAbsolute(entry)
-            ? entry
-            : path.resolve(resolvedConfig.root, entry);
-
           return () => {
-            setupOxygenMiddleware(viteDevServer, async () => {
-              const remoteEnv = await Promise.resolve(apiOptions.envPromise);
-
-              return {
-                entry,
-                viteDevServer,
-                crossBoundarySetup: apiOptions.crossBoundarySetup,
-                env: {...remoteEnv, ...apiOptions.env, ...pluginOptions.env},
-                debug: apiOptions.debug ?? pluginOptions.debug ?? false,
-                inspectorPort:
-                  apiOptions.inspectorPort ?? pluginOptions.inspectorPort,
-                requestHook: apiOptions.requestHook,
-                entryPointErrorHandler: apiOptions.entryPointErrorHandler,
-                compatibilityDate: apiOptions.compatibilityDate,
-                logRequestLine:
-                  // Give priority to the plugin option over the CLI option here,
-                  // since the CLI one is just a default, not a user-provided flag.
-                  pluginOptions?.logRequestLine ?? apiOptions.logRequestLine,
-              };
-            });
+            setupOxygenMiddleware(
+              viteDevServer,
+              () => apiOptions.entryPointErrorHandler,
+            );
           };
         },
       },
-      generateBundle(_, bundle) {
-        if (apiOptions.compatibilityDate) {
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(apiOptions.compatibilityDate)) {
+      configurePreviewServer: {
+        order: 'pre',
+        async handler(previewServer) {
+          return setupOxygenPreviewServer(
+            previewServer,
+            pluginOptions,
+            apiOptions,
+          );
+        },
+      },
+      generateBundle() {
+        if (!isSsrBuild) return;
+
+        const compatibilityDate =
+          apiOptions.compatibilityDate ?? getHydrogenCompatibilityDate(root);
+
+        if (compatibilityDate) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(compatibilityDate)) {
             throw new Error(
-              `Invalid compatibility date "${apiOptions.compatibilityDate}"`,
+              `Invalid compatibility date "${compatibilityDate}"`,
             );
           }
 
           const oxygenJsonFile = 'oxygen.json';
           const oxygenJsonContent = {
             version: 1,
-            compatibility_date: apiOptions.compatibilityDate,
+            compatibility_date: compatibilityDate,
           };
 
-          bundle[oxygenJsonFile] = {
+          this.emitFile({
             type: 'asset',
             fileName: oxygenJsonFile,
-            needsCodeReference: false,
             source: JSON.stringify(oxygenJsonContent, null, 2),
-            names: [oxygenJsonFile],
-            originalFileNames: [oxygenJsonFile],
-            // name and originalFileName should be deprecated .. but
-            // for some reason, removing them breaks typescript check
-            name: oxygenJsonFile,
-            originalFileName: oxygenJsonFile,
-          };
+          });
         }
       },
     } satisfies Plugin<{

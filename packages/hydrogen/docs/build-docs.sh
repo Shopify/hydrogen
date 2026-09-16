@@ -1,13 +1,16 @@
-COMPILE_DOCS="pnpm exec tsc --project docs/tsconfig.docs.json --types react --moduleResolution node --target esNext && generate-docs --overridePath ./docs/typeOverride.json --input ./src --output ./docs/generated && rm -rf src/**/**/*.doc.js src/**/*.doc.js src/*.doc.js"
-COMPILE_STATIC_PAGES="pnpm exec tsc docs/staticPages/*.doc.ts --types react --moduleResolution node --target esNext && generate-docs --isLandingPage --input ./docs/staticPages --output ./docs/generated && rm -rf docs/staticPages/*.doc.js"
+#!/bin/bash
+set -e
 
-if [ "$1" = "isTest" ];
-then
-COMPILE_DOCS="pnpm exec tsc --project docs/tsconfig.docs.json --types react --moduleResolution node  --target esNext && generate-docs --overridePath ./docs/typeOverride.json --input ./src --output ./docs/temp && rm -rf src/**/*.doc.js src/*.doc.js"
-COMPILE_STATIC_PAGES="pnpm exec tsc docs/staticPages/*.doc.ts --types react --moduleResolution node  --target esNext && generate-docs --isLandingPage --input ./docs/staticPages --output ./docs/temp && rm -rf docs/staticPages/*.doc.js"
+OUTPUT_DIR="./docs/generated"
+if [ "$1" = "isTest" ]; then
+  OUTPUT_DIR="./docs/temp"
 fi
 
-eval $COMPILE_DOCS
-eval $COMPILE_STATIC_PAGES
+generate-docs \
+  --overridePath ./docs/typeOverride.json \
+  --input ./src ../hydrogen-react/src \
+  --output "$OUTPUT_DIR"
 
-node ./docs/copy-hydrogen-react-docs.cjs
+if [ "$1" != "isTest" ]; then
+  node ./docs/copy-docs-to-shopify-dev.mjs
+fi

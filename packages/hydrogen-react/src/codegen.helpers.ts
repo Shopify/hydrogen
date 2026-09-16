@@ -2,6 +2,7 @@
  * Meant to be used with GraphQL CodeGen to type the Storefront API's custom scalars correctly.
  * Reference for the GraphQL types: https://shopify.dev/docs/api/storefront/2026-04/scalars/HTML
  * Note: JSON is generated as 'unknown' by default.
+ * @publicDocs
  */
 export const storefrontApiCustomScalars = {
   // Keep in sync with the definitions in the app/nextjs/codegen.ts!
@@ -17,6 +18,7 @@ export const storefrontApiCustomScalars = {
  * Meant to be used with GraphQL CodeGen to type the Storefront API's custom scalars correctly.
  * Reference for the GraphQL types: https://shopify.dev/docs/api/customer/2026-04/scalars/HTML
  * Note: JSON is generated as 'unknown' by default.
+ * @publicDocs
  */
 export const customerAccountApiCustomScalars = {
   DateTime: 'string',

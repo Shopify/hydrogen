@@ -10,11 +10,19 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
+} from './cart-query-helpers';
 
-export type CartGiftCardCodesUpdateFunction = (
+export type CartGiftCardCodesUpdateFunction<
+  TCart = CartQueryDataReturn['cart'],
+> = (
   giftCardCodes: string[],
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
 /**
  * Updates (replaces) gift card codes in the cart.
@@ -27,21 +35,28 @@ export type CartGiftCardCodesUpdateFunction = (
  * @example Replace all gift card codes
  * const updateGiftCardCodes = cartGiftCardCodesUpdateDefault({ storefront, getCartId });
  * await updateGiftCardCodes(['SUMMER2025', 'WELCOME10']);
+ * @publicDocs
  */
-export function cartGiftCardCodesUpdateDefault(
-  options: CartQueryOptions,
-): CartGiftCardCodesUpdateFunction {
+export function cartGiftCardCodesUpdateDefault<
+  TCart = CartQueryDataReturn['cart'],
+>(options: CartQueryOptions): CartGiftCardCodesUpdateFunction<TCart> {
   return async (giftCardCodes, optionalParams) => {
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartGiftCardCodesUpdate, errors} = await options.storefront.mutate<{
-      cartGiftCardCodesUpdate: CartQueryData;
+      cartGiftCardCodesUpdate: CartQueryData<TCart>;
       errors: StorefrontApiErrors;
-    }>(CART_GIFT_CARD_CODE_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        giftCardCodes,
-        ...optionalParams,
+    }>(
+      CART_GIFT_CARD_CODE_UPDATE_MUTATION(options.cartFragment, {
+        includeVisitorConsent,
+      }),
+      {
+        variables: {
+          cartId: options.getCartId(),
+          giftCardCodes,
+          ...optionalParams,
+        },
       },
-    });
+    );
     return formatAPIResult(cartGiftCardCodesUpdate, errors);
   };
 }
@@ -49,14 +64,13 @@ export function cartGiftCardCodesUpdateDefault(
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartGiftCardCodesUpdate
 export const CART_GIFT_CARD_CODE_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartGiftCardCodesUpdate(
     $cartId: ID!
     $giftCardCodes: [String!]!
-    $language: LanguageCode
-    $country: CountryCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartGiftCardCodesUpdate(cartId: $cartId, giftCardCodes: $giftCardCodes) {
       cart {
         ...CartApiMutation

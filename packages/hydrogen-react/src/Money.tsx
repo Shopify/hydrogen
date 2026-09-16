@@ -71,6 +71,7 @@ export type MoneyProps<ComponentGeneric extends React.ElementType> =
  *   measurementSeparator=" per "
  * />
  * ```
+ * @publicDocs
  */
 export function Money<ComponentGeneric extends React.ElementType = 'div'>({
   data,

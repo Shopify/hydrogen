@@ -1,5 +1,51 @@
 # @shopify/mini-oxygen
 
+## 4.2.2
+
+### Patch Changes
+
+- Support HTTP/2 requests in MiniOxygen's Vite request conversion. ([#3939](https://github.com/Shopify/hydrogen/pull/3939)) by [@fredericoo](https://github.com/fredericoo)
+
+## 4.2.1
+
+### Patch Changes
+
+- Improve the reliability of local debugger connections. ([#3883](https://github.com/Shopify/hydrogen/pull/3883)) by [@frandiox](https://github.com/frandiox)
+
+## 4.2.0
+
+### Minor Changes
+
+- - Make the Oxygen Vite plugin self-sufficient by inferring a compatibility date from the resolved Hydrogen package when one is not provided. ([#3819](https://github.com/Shopify/hydrogen/pull/3819)) by [@frandiox](https://github.com/frandiox)
+
+  - Worker-specific resolve conditions now apply only to the SSR worker environment so browser/client modules continue using Vite's normal client conditions.
+  - `oxygen.json` is now emitted only during SSR builds.
+  - The Oxygen Vite plugin now loads Vite environment variables as Mini Oxygen bindings when no env bindings are provided by plugin options or the Hydrogen CLI.
+  - `vite preview` can now run the built Oxygen worker in Mini Oxygen, with an optional `previewEntry` override for custom worker output paths.
+
+### Patch Changes
+
+- Fix `~/` path alias resolution in the MiniOxygen SSR environment ([#3823](https://github.com/Shopify/hydrogen/pull/3823)) by [@jibin7jose](https://github.com/jibin7jose)
+
+  The Oxygen Vite plugin now captures the user's `resolve.tsconfigPaths` setting
+  from the top-level Vite config and forwards it to the custom SSR environment
+  returned by `configEnvironment()`. Because Vite environments are isolated, the
+  top-level resolve config does not automatically apply to custom environments
+  created by plugins, so tsconfig path aliases (e.g. `~/assets/favicon.svg`)
+  would fail to resolve at runtime.
+
+  Fixes #3816
+
+## 4.1.0
+
+### Minor Changes
+
+- Add support for Vite 7 and Vite 8. Hydrogen remains backwards-compatible with Vite 5+. ([#3617](https://github.com/Shopify/hydrogen/pull/3617)) by [@frandiox](https://github.com/frandiox)
+
+  Mini Oxygen's dev server has been refactored to use the [Vite Environment API](https://vite.dev/guide/api-environment), which is the standard way to run non-browser runtimes in Vite. This replaces the previous custom middleware approach with a first-class `FetchableDevEnvironment`, improving compatibility with Vite's built-in HMR and module invalidation.
+
+  New Hydrogen projects created with `npm create @shopify/hydrogen` will default to Vite 8. The `vite-tsconfig-paths` plugin is no longer needed in the skeleton template since Vite 8 supports `resolve.tsconfigPaths` natively.
+
 ## 4.0.2
 
 ### Patch Changes

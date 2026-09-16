@@ -142,6 +142,7 @@ export interface HydrogenContextOverloads<
   session: TSession;
 }
 
+/** @publicDocs */
 export function createHydrogenContext<
   TSession extends HydrogenSession,
   TCustomMethods extends CustomMethodsBase | undefined = {},
@@ -234,7 +235,9 @@ export function createHydrogenContext<
     setCartId: cartOptions.setId || cartSetIdDefault(),
     cartQueryFragment: cartOptions.queryFragment,
     cartMutateFragment: cartOptions.mutateFragment,
-    customMethods: cartOptions.customMethods,
+    ...(cartOptions.customMethods && {
+      customMethods: cartOptions.customMethods,
+    }),
     buyerIdentity,
 
     // defaults
@@ -326,6 +329,7 @@ export function createHydrogenContext<
     TAdditionalContext;
 }
 
+/** @publicDocs */
 export type HydrogenContextOptionsForDocs<
   TSession extends HydrogenSession = HydrogenSession,
   TI18n extends I18nBase = I18nBase,

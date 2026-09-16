@@ -10,26 +10,37 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
+} from './cart-query-helpers';
 
-export type CartNoteUpdateFunction = (
+export type CartNoteUpdateFunction<TCart = CartQueryDataReturn['cart']> = (
   note: string,
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryDataReturn>;
+) => Promise<CartQueryDataReturn<TCart>>;
 
-export function cartNoteUpdateDefault(
+/** @publicDocs */
+export function cartNoteUpdateDefault<TCart = CartQueryDataReturn['cart']>(
   options: CartQueryOptions,
-): CartNoteUpdateFunction {
+): CartNoteUpdateFunction<TCart> {
   return async (note, optionalParams) => {
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartNoteUpdate, errors} = await options.storefront.mutate<{
-      cartNoteUpdate: CartQueryData;
+      cartNoteUpdate: CartQueryData<TCart>;
       errors: StorefrontApiErrors;
-    }>(CART_NOTE_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        note,
-        ...optionalParams,
+    }>(
+      CART_NOTE_UPDATE_MUTATION(options.cartFragment, {includeVisitorConsent}),
+      {
+        variables: {
+          cartId: options.getCartId(),
+          note,
+          ...optionalParams,
+        },
       },
-    });
+    );
     return formatAPIResult(cartNoteUpdate, errors);
   };
 }
@@ -37,14 +48,13 @@ export function cartNoteUpdateDefault(
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartNoteUpdate
 export const CART_NOTE_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartNoteUpdate(
     $cartId: ID!
     $note: String!
-    $language: LanguageCode
-    $country: CountryCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartNoteUpdate(cartId: $cartId, note: $note) {
       cart {
         ...CartApiMutation

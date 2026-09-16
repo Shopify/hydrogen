@@ -1,5 +1,113 @@
 # @shopify/cli-hydrogen
 
+## 13.0.4
+
+### Patch Changes
+
+- New flag `--javascript-origin` override to `hydrogen customer-account-push`. Not providing it still defaults to `--dev-origin`. ([#3938](https://github.com/Shopify/hydrogen/pull/3938)) by [@fredericoo](https://github.com/fredericoo)
+
+- Fix local Hydrogen CLI discovery so `shopify hydrogen customer-account-push` resolves to the local command implementation. ([#3941](https://github.com/Shopify/hydrogen/pull/3941)) by [@fredericoo](https://github.com/fredericoo)
+
+- Recommend the Shopify AI Toolkit in newly scaffolded storefronts. ([#3887](https://github.com/Shopify/hydrogen/pull/3887)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Updated dependencies [[`28eb887f4787ece9b03bceae089cf2f060a7af77`](https://github.com/Shopify/hydrogen/commit/28eb887f4787ece9b03bceae089cf2f060a7af77)]:
+  - @shopify/mini-oxygen@4.2.2
+
+## 13.0.3
+
+### Patch Changes
+
+- Use the IPv4 loopback address in local debugger instructions. ([#3883](https://github.com/Shopify/hydrogen/pull/3883)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`7af05b8dc83a94ff8192bfb17a3fd8048dbef674`](https://github.com/Shopify/hydrogen/commit/7af05b8dc83a94ff8192bfb17a3fd8048dbef674)]:
+  - @shopify/mini-oxygen@4.2.1
+
+## 13.0.2
+
+### Patch Changes
+
+- Add noninteractive shop and storefront creation flags to `hydrogen link`. ([#3834](https://github.com/Shopify/hydrogen/pull/3834)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Use `--force` to bypass confirmation prompts in `hydrogen upgrade`. ([#3835](https://github.com/Shopify/hydrogen/pull/3835)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+## 13.0.1
+
+### Patch Changes
+
+- Read disabled command metadata from @shopify/hydrogen and stop those commands with an actionable error. ([#3846](https://github.com/Shopify/hydrogen/pull/3846)) by [@graygilmore](https://github.com/graygilmore)
+
+- Preserve actionable build errors during `h2 deploy`. When the build step fails (for example, when the `vite` package is missing from the project), the original error and its guidance are now surfaced instead of being wrapped into a generic "Build function failed with error" message and reported as an uncaught crash. ([#3848](https://github.com/Shopify/hydrogen/pull/3848)) by [@bashu-shopify](https://github.com/bashu-shopify)
+
+- Add an explicit `~` app alias to new Hydrogen projects. ([#3852](https://github.com/Shopify/hydrogen/pull/3852)) by [@andguy95](https://github.com/andguy95)
+
+  JavaScript projects use `jsconfig.json`, which is not reliably covered by Vite's native `resolve.tsconfigPaths` behavior. New projects now define Hydrogen's `~/` import convention directly in the Vite config so imports like `~/assets/favicon.svg` work in both TypeScript and JavaScript projects.
+
+- Skip confirmation before deploying to non-preview environments with `--force`. ([#3832](https://github.com/Shopify/hydrogen/pull/3832)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Add `--force` and `--dry-run` flags to `hydrogen env push`. ([#3831](https://github.com/Shopify/hydrogen/pull/3831)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Fix Hydrogen deploy asset directory resolution when Vite reports the client output directory as the SSR server output directory. ([#3842](https://github.com/Shopify/hydrogen/pull/3842)) by [@frandiox](https://github.com/frandiox)
+
+## 13.0.0
+
+### Patch Changes
+
+- Add deploy flags and environment variables for configuring Oxygen's client assets directory and worker directory. The worker directory must contain an `index.js` or `index.mjs` entry point. ([#3819](https://github.com/Shopify/hydrogen/pull/3819)) by [@frandiox](https://github.com/frandiox)
+
+  Deployments now resolve output directories from explicit flags, Vite output directories, then `dist/client` and `dist/server` fallbacks. Custom output deployments and `0.0.0-preview-*` Hydrogen versions default to `node --run build` instead of the Hydrogen build pipeline when no build command is provided.
+
+- Updated dependencies [[`375ed8e512b8d1f85867e8b7e52c48893cf6e4fb`](https://github.com/Shopify/hydrogen/commit/375ed8e512b8d1f85867e8b7e52c48893cf6e4fb), [`091f8ec62f9e213b02f68f540d81c65e9ee41cd2`](https://github.com/Shopify/hydrogen/commit/091f8ec62f9e213b02f68f540d81c65e9ee41cd2)]:
+  - @shopify/mini-oxygen@4.2.0
+
+## 12.0.2
+
+### Patch Changes
+
+- Show a clear, actionable error when `vite` cannot be found in your project instead of crashing with an unhandled `Cannot find module 'vite'`. This typically happens when a Hydrogen command is run outside the app directory or before installing dependencies; the CLI now explains how to fix it. ([#3796](https://github.com/Shopify/hydrogen/pull/3796)) by [@lucyxiang](https://github.com/lucyxiang)
+
+## 12.0.1
+
+### Patch Changes
+
+- Include line item children recursively in cart. ([#3753](https://github.com/Shopify/hydrogen/pull/3753)) by [@martin-pettersson](https://github.com/martin-pettersson)
+
+- Add generic cart result typing to `createCartHandler` so custom cart fragments can use their generated fragment types. ([#3767](https://github.com/Shopify/hydrogen/pull/3767)) by [@andguy95](https://github.com/andguy95)
+
+- Widen React Router peer dependency ranges so Hydrogen packages accept compatible React Router 7.16 patch versions without npm peer dependency conflicts. New Hydrogen projects now default to React Router 7.16.0. ([#3771](https://github.com/Shopify/hydrogen/pull/3771)) by [@fredericoo](https://github.com/fredericoo)
+
+## 12.0.0
+
+### Minor Changes
+
+- Add support for Vite 7 and Vite 8. Hydrogen remains backwards-compatible with Vite 5+. ([#3617](https://github.com/Shopify/hydrogen/pull/3617)) by [@frandiox](https://github.com/frandiox)
+
+  Mini Oxygen's dev server has been refactored to use the [Vite Environment API](https://vite.dev/guide/api-environment), which is the standard way to run non-browser runtimes in Vite. This replaces the previous custom middleware approach with a first-class `FetchableDevEnvironment`, improving compatibility with Vite's built-in HMR and module invalidation.
+
+  New Hydrogen projects created with `npm create @shopify/hydrogen` will default to Vite 8. The `vite-tsconfig-paths` plugin is no longer needed in the skeleton template since Vite 8 supports `resolve.tsconfigPaths` natively.
+
+### Patch Changes
+
+- Fixed "uncommited" typo to "uncommitted" in `shopify hydrogen deploy` flag descriptions and the uncommitted-changes warning message. ([#3684](https://github.com/Shopify/hydrogen/pull/3684)) by [@J8118](https://github.com/J8118)
+
+- Show removed packages in the upgrade confirmation prompt and upgrade instructions file so that it's visible which dependencies will be cleaned up during the upgrade. ([#3630](https://github.com/Shopify/hydrogen/pull/3630)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated dependencies [[`51f1e77fe63be5e5ded4ef0c91942bc304f1abc4`](https://github.com/Shopify/hydrogen/commit/51f1e77fe63be5e5ded4ef0c91942bc304f1abc4)]:
+  - @shopify/mini-oxygen@4.1.0
+
+## 11.1.16
+
+### Patch Changes
+
+- Updated route scaffolding and JS transpilation to import from `react-router` instead of the deprecated `@shopify/remix-oxygen`. ([#3621](https://github.com/Shopify/hydrogen/pull/3621)) by [@fredericoo](https://github.com/fredericoo)
+
+- Fix `set-cookie-parser` and `cookie` resolution warnings during `dev` by using Vite's nested dependency syntax (`react-router > dep`). These are CJS transitive dependencies of `react-router` that weren't resolvable by bare name with strict package managers like pnpm. ([#3698](https://github.com/Shopify/hydrogen/pull/3698)) by [@fredericoo](https://github.com/fredericoo)
+
+## 11.1.15
+
+### Patch Changes
+
+- Update skeleton template to use @shopify/cli 3.93.2 ([#3699](https://github.com/Shopify/hydrogen/pull/3699)) by [@itsjustriley](https://github.com/itsjustriley)
+
 ## 11.1.14
 
 ### Patch Changes

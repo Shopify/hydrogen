@@ -11,20 +11,44 @@ const CART_MUTATION_FIELDS = /* GraphQL */ `
   }
 `;
 
-export const CartLineAdd = (cartFragment: string): string => /* GraphQL */ `
+type CartQueryOptions = {
+  includeVisitorConsent?: boolean;
+};
+
+function getInContextVariables(includeVisitorConsent: boolean): string {
+  const base = `$country: CountryCode = ZZ
+    $language: LanguageCode`;
+
+  return includeVisitorConsent
+    ? `${base}
+    $visitorConsent: VisitorConsent`
+    : base;
+}
+
+function getInContextDirective(includeVisitorConsent: boolean): string {
+  return includeVisitorConsent
+    ? `@inContext(
+    country: $country
+    language: $language
+    visitorConsent: $visitorConsent
+  )`
+    : `@inContext(
+    country: $country
+    language: $language
+  )`;
+}
+
+export const CartLineAdd = (
+  cartFragment: string,
+  options: CartQueryOptions = {},
+): string => /* GraphQL */ `
   mutation CartLineAdd(
     $cartId: ID!
     $lines: [CartLineInput!]!
     $numCartLines: Int = 250
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
   )
-  @inContext(
-    country: $country
-    language: $language
-    visitorConsent: $visitorConsent
-  ) {
+  ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
       cart {
         ...CartFragment
@@ -36,19 +60,16 @@ export const CartLineAdd = (cartFragment: string): string => /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const CartCreate = (cartFragment: string): string => /* GraphQL */ `
+export const CartCreate = (
+  cartFragment: string,
+  options: CartQueryOptions = {},
+): string => /* GraphQL */ `
   mutation CartCreate(
     $input: CartInput!
     $numCartLines: Int = 250
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
   )
-  @inContext(
-    country: $country
-    language: $language
-    visitorConsent: $visitorConsent
-  ) {
+  ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartCreate(input: $input) {
       cart {
         ...CartFragment
@@ -60,20 +81,17 @@ export const CartCreate = (cartFragment: string): string => /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const CartLineRemove = (cartFragment: string): string => /* GraphQL */ `
+export const CartLineRemove = (
+  cartFragment: string,
+  options: CartQueryOptions = {},
+): string => /* GraphQL */ `
   mutation CartLineRemove(
     $cartId: ID!
     $lines: [ID!]!
     $numCartLines: Int = 250
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
   )
-  @inContext(
-    country: $country
-    language: $language
-    visitorConsent: $visitorConsent
-  ) {
+  ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartLinesRemove(cartId: $cartId, lineIds: $lines) {
       cart {
         ...CartFragment
@@ -85,20 +103,17 @@ export const CartLineRemove = (cartFragment: string): string => /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const CartLineUpdate = (cartFragment: string): string => /* GraphQL */ `
+export const CartLineUpdate = (
+  cartFragment: string,
+  options: CartQueryOptions = {},
+): string => /* GraphQL */ `
   mutation CartLineUpdate(
     $cartId: ID!
     $lines: [CartLineUpdateInput!]!
     $numCartLines: Int = 250
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
   )
-  @inContext(
-    country: $country
-    language: $language
-    visitorConsent: $visitorConsent
-  ) {
+  ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
         ...CartFragment
@@ -110,20 +125,17 @@ export const CartLineUpdate = (cartFragment: string): string => /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const CartNoteUpdate = (cartFragment: string): string => /* GraphQL */ `
+export const CartNoteUpdate = (
+  cartFragment: string,
+  options: CartQueryOptions = {},
+): string => /* GraphQL */ `
   mutation CartNoteUpdate(
     $cartId: ID!
     $note: String!
     $numCartLines: Int = 250
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
   )
-  @inContext(
-    country: $country
-    language: $language
-    visitorConsent: $visitorConsent
-  ) {
+  ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartNoteUpdate(cartId: $cartId, note: $note) {
       cart {
         ...CartFragment
@@ -137,20 +149,15 @@ export const CartNoteUpdate = (cartFragment: string): string => /* GraphQL */ `
 
 export const CartBuyerIdentityUpdate = (
   cartFragment: string,
+  options: CartQueryOptions = {},
 ): string => /* GraphQL */ `
   mutation CartBuyerIdentityUpdate(
     $cartId: ID!
     $buyerIdentity: CartBuyerIdentityInput!
     $numCartLines: Int = 250
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
   )
-  @inContext(
-    country: $country
-    language: $language
-    visitorConsent: $visitorConsent
-  ) {
+  ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
       cart {
         ...CartFragment
@@ -164,20 +171,15 @@ export const CartBuyerIdentityUpdate = (
 
 export const CartAttributesUpdate = (
   cartFragment: string,
+  options: CartQueryOptions = {},
 ): string => /* GraphQL */ `
   mutation CartAttributesUpdate(
     $attributes: [AttributeInput!]!
     $cartId: ID!
     $numCartLines: Int = 250
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
   )
-  @inContext(
-    country: $country
-    language: $language
-    visitorConsent: $visitorConsent
-  ) {
+  ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartAttributesUpdate(attributes: $attributes, cartId: $cartId) {
       cart {
         ...CartFragment
@@ -191,20 +193,15 @@ export const CartAttributesUpdate = (
 
 export const CartDiscountCodesUpdate = (
   cartFragment: string,
+  options: CartQueryOptions = {},
 ): string => /* GraphQL */ `
   mutation CartDiscountCodesUpdate(
     $cartId: ID!
     $discountCodes: [String!]!
     $numCartLines: Int = 250
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
   )
-  @inContext(
-    country: $country
-    language: $language
-    visitorConsent: $visitorConsent
-  ) {
+  ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
       cart {
         ...CartFragment
@@ -216,19 +213,16 @@ export const CartDiscountCodesUpdate = (
   ${cartFragment}
 `;
 
-export const CartQuery = (cartFragment: string): string => /* GraphQL */ `
+export const CartQuery = (
+  cartFragment: string,
+  options: CartQueryOptions = {},
+): string => /* GraphQL */ `
   query CartQuery(
     $id: ID!
     $numCartLines: Int = 250
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
   )
-  @inContext(
-    country: $country
-    language: $language
-    visitorConsent: $visitorConsent
-  ) {
+  ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cart(id: $id) {
       ...CartFragment
     }

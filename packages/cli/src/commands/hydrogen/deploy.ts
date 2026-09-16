@@ -8,6 +8,7 @@ import {
   Logger,
   LogLevel,
 } from '@shopify/cli-kit/node/output';
+import {type PackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {writeFile} from '@shopify/cli-kit/node/fs';
@@ -16,7 +17,7 @@ import {
   getLatestGitCommit,
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
-import {joinPath, relativePath, resolvePath} from '@shopify/cli-kit/node/path';
+import {relativePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {
   renderConfirmationPrompt,
   renderInfo,
@@ -60,6 +61,7 @@ import {packageManagers} from '../../lib/package-managers.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 
 const DEPLOY_OUTPUT_FILE_HANDLE = 'h2_deploy_log.json';
+const DEFAULT_BUILD_COMMAND = 'node --run build';
 
 export const deploymentLogger: Logger = (
   message: string,
@@ -92,7 +94,7 @@ export default class Deploy extends Command {
     force: Flags.boolean({
       char: 'f',
       description:
-        'Forces a deployment to proceed if there are uncommited changes in its Git repository.',
+        'Forces a deployment to proceed if there are uncommitted changes in its Git repository, and skips confirmation prompts for non-preview environments.',
       default: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
       required: false,
@@ -118,7 +120,19 @@ export default class Deploy extends Command {
     }),
     'build-command': Flags.string({
       description:
-        'Specify a build command to run before deploying. If not specified, `shopify hydrogen build` will be used.',
+        'Specify a build command to run before deploying. If not specified, the Hydrogen build pipeline will be used. When custom output directories are configured, defaults to `node --run build`.',
+      required: false,
+    }),
+    'assets-dir': Flags.string({
+      description:
+        'Directory containing the client assets to deploy, relative to the project root. Defaults to the detected Vite client output directory, then falls back to `dist/client`.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_ASSETS_DIR',
+      required: false,
+    }),
+    'worker-dir': Flags.string({
+      description:
+        'Directory containing the Oxygen worker entry point (`index.js` or `index.mjs`), relative to the project root. Defaults to the detected Vite server output directory, then falls back to `dist/server`.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_WORKER_DIR',
       required: false,
     }),
     ...commonFlags.lockfileCheck,
@@ -140,7 +154,7 @@ export default class Deploy extends Command {
     }),
     'metadata-description': Flags.string({
       description:
-        'Description of the changes in the deployment. Defaults to the commit message of the latest commit if there are no uncommited changes.',
+        'Description of the changes in the deployment. Defaults to the commit message of the latest commit if there are no uncommitted changes.',
       required: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION',
     }),
@@ -213,6 +227,8 @@ interface OxygenDeploymentOptions {
   metadataUser?: string;
   metadataVersion?: string;
   entry?: string;
+  assetsDir?: string;
+  workerDir?: string;
 }
 
 interface GitCommit {
@@ -250,17 +266,19 @@ export async function runDeploy(
     env: envHandle,
     envBranch,
     environmentFile,
-    force: forceOnUncommitedChanges,
+    force,
     forceClientSourcemap = false,
     noVerify,
     lockfileCheck,
     jsonOutput,
     path: root,
     shop,
+    assetsDir: assetsDirFlag,
     metadataUrl,
     metadataUser,
     metadataVersion,
     entry: ssrEntry,
+    workerDir: workerDirFlag,
   } = options;
   let {metadataDescription} = options;
 
@@ -272,7 +290,7 @@ export async function runDeploy(
       isCleanGit = false;
     }
 
-    if (!forceOnUncommitedChanges && !isCleanGit) {
+    if (!force && !isCleanGit) {
       let errorMessage = 'Uncommitted changes detected';
       let changedFiles = undefined;
 
@@ -333,7 +351,7 @@ export async function runDeploy(
     renderWarning({
       headline: 'No deployment description provided',
       body: [
-        'Deploying uncommited changes, but no description has been provided. Use the ',
+        'Deploying uncommitted changes, but no description has been provided. Use the ',
         {command: '--metadata-description'},
         'flag to provide a description. If no description is provided, the description defaults to ',
         {userInput: '<sha> with additional changes'},
@@ -465,18 +483,29 @@ export async function runDeploy(
   let workerDir = 'dist/worker';
 
   const isClassicCompiler = await isClassicProject(root);
+  const metadataHydrogenVersion = getHydrogenVersion({appPath: root});
+  const shouldUseDefaultBuildCommand =
+    !buildCommand &&
+    !isClassicCompiler &&
+    (assetsDirFlag ||
+      workerDirFlag ||
+      isHydrogenPreviewVersion(metadataHydrogenVersion));
 
-  if (!isClassicCompiler) {
+  if (isClassicCompiler) {
+    assetsDir = assetsDirFlag ?? assetsDir;
+    workerDir = workerDirFlag ?? workerDir;
+  } else {
     const viteConfig = await getViteConfig(root, ssrEntry).catch(() => null);
-    if (viteConfig) {
-      assetsDir = relativePath(root, viteConfig.clientOutDir);
-      workerDir = relativePath(root, viteConfig.serverOutDir);
-    } else {
-      workerDir = 'dist/server';
-    }
-  }
+    const outputDirs = resolveDeploymentOutputDirs({
+      root,
+      viteOutputDirs: viteConfig,
+      assetsDirFlag,
+      workerDirFlag,
+    });
 
-  const metadataHydrogenVersion = await getHydrogenVersion({appPath: root});
+    assetsDir = outputDirs.assetsDir;
+    workerDir = outputDirs.workerDir;
+  }
 
   const config: DeploymentConfig = {
     assetsDir,
@@ -511,7 +540,8 @@ export async function runDeploy(
   if (
     !isCI &&
     !config.defaultEnvironment &&
-    (userProvidedEnvironmentTag || userChosenEnvironmentTag)
+    (userProvidedEnvironmentTag || userChosenEnvironmentTag) &&
+    !force
   ) {
     let chosenEnvironment = findEnvironmentByBranchOrThrow(
       deploymentData!.environments!,
@@ -554,6 +584,7 @@ Continue?`.value,
   );
 
   let deployError: AbortError | null = null;
+  let buildError: Error | null = null;
   let resolveDeploy: () => void;
   let rejectDeploy: (reason?: AbortError) => void;
   const deployPromise = new Promise<void>((resolve, reject) => {
@@ -589,7 +620,7 @@ Continue?`.value,
     },
   };
 
-  if (buildCommand) {
+  if (buildCommand || shouldUseDefaultBuildCommand) {
     if (forceClientSourcemap) {
       console.log('');
       renderInfo({
@@ -598,28 +629,34 @@ Continue?`.value,
         body: 'Client sourcemaps will not be generated.',
       });
     }
-    config.buildCommand = buildCommand;
+    config.buildCommand = buildCommand ?? DEFAULT_BUILD_COMMAND;
   } else {
     hooks.buildFunction = async (
       assetPath: string | undefined,
     ): Promise<void> => {
-      outputInfo(
-        outputContent`${colors.whiteBright('Building project...')}`.value,
-      );
+      try {
+        outputInfo(
+          outputContent`${colors.whiteBright('Building project...')}`.value,
+        );
 
-      if (isClassicCompiler) {
-        throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
+        if (isClassicCompiler) {
+          throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
+        }
+
+        await runBuild({
+          directory: root,
+          assetPath,
+          lockfileCheck,
+          sourcemap: true,
+          forceClientSourcemap,
+          useCodegen: false,
+          entry: ssrEntry,
+        });
+      } catch (error) {
+        // Capture the original error so it can be surfaced later, before oxygen-cli wraps it.
+        buildError = error as Error;
+        throw error;
       }
-
-      await runBuild({
-        directory: root,
-        assetPath,
-        lockfileCheck,
-        sourcemap: true,
-        forceClientSourcemap,
-        useCodegen: false,
-        entry: ssrEntry,
-      });
     };
   }
 
@@ -694,24 +731,64 @@ Continue?`.value,
       resolveDeploy();
     })
     .catch((error) => {
-      rejectDeploy(deployError || error);
+      rejectDeploy(deployError || buildError || error);
     });
 
   return deployPromise;
 }
 
+type DeploymentOutputResolverOptions = {
+  root: string;
+  viteOutputDirs?: {
+    clientOutDir: string;
+    serverOutDir: string;
+  } | null;
+  assetsDirFlag?: string;
+  workerDirFlag?: string;
+};
+
+export function resolveDeploymentOutputDirs({
+  root,
+  viteOutputDirs,
+  assetsDirFlag,
+  workerDirFlag,
+}: DeploymentOutputResolverOptions): {
+  assetsDir: string;
+  workerDir: string;
+} {
+  const viteAssetsDir =
+    viteOutputDirs && relativePath(root, viteOutputDirs.clientOutDir);
+  const viteWorkerDir =
+    viteOutputDirs && relativePath(root, viteOutputDirs.serverOutDir);
+
+  return {
+    assetsDir: assetsDirFlag ?? viteAssetsDir ?? 'dist/client',
+    workerDir: workerDirFlag ?? viteWorkerDir ?? 'dist/server',
+  };
+}
+
+function isHydrogenPreviewVersion(version?: string) {
+  return version?.startsWith('0.0.0-preview-') ?? false;
+}
+
 /**
  * Gets the current @shopify/hydrogen version from the package's package.json
  */
-export async function getHydrogenVersion({appPath}: {appPath: string}) {
+export function getHydrogenVersion({appPath}: {appPath: string}) {
   const {root} = getProjectPaths(appPath);
 
-  const require = createRequire(import.meta.url);
-  const {version} = require(
-    require.resolve('@shopify/hydrogen/package.json', {
-      paths: [root],
-    }),
-  );
+  try {
+    const require = createRequire(import.meta.url);
+    const packageJson = require(
+      require.resolve('@shopify/hydrogen/package.json', {
+        paths: [root],
+      }),
+    ) as PackageJson;
 
-  return version;
+    return typeof packageJson.version === 'string'
+      ? packageJson.version
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }

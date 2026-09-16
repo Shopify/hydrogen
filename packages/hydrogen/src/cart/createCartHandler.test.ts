@@ -9,7 +9,8 @@ import {
   mockCreateCustomerAccountClient,
   mockCreateStorefrontClient,
 } from './cart-test-helper';
-import {Storefront} from '../storefront';
+import type {Storefront, StorefrontApiErrors} from '../storefront';
+import type {CartQueryDataReturn} from './queries/cart-types';
 
 type MockCarthandler = {
   cartId?: string;
@@ -18,6 +19,17 @@ type MockCarthandler = {
   customMethods?: Record<string, Function>;
   buyerIdentity?: CartBuyerIdentityInput;
   storefront?: Storefront;
+};
+
+type CustomCart = {
+  id: string;
+  checkoutUrl: string;
+  totalQuantity: number;
+  customField?: string;
+};
+
+type ExtraCartGetVariables = {
+  customVariable?: string;
 };
 
 function getCartHandler(options: MockCarthandler = {}) {
@@ -75,6 +87,73 @@ describe('createCartHandler', () => {
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{foo: () => 'bar'}>>;
     expect(Object.keys(cart)).toHaveLength(22);
+    expect(cart.foo()).toBe('bar');
+  });
+
+  it('can type cart methods with a custom cart fragment type', () => {
+    const cart = createCartHandler<CustomCart>({
+      storefront: mockCreateStorefrontClient(),
+      getCartId: () => undefined,
+      setCartId: () => new Headers(),
+      cartQueryFragment: 'cartQueryFragmentOverride',
+      cartMutateFragment: 'cartMutateFragmentOverride',
+    });
+
+    expectTypeOf(cart).toEqualTypeOf<HydrogenCart<CustomCart>>();
+    expectTypeOf<Awaited<ReturnType<typeof cart.get>>>().toEqualTypeOf<
+      (CustomCart & {errors?: StorefrontApiErrors}) | null
+    >();
+    expectTypeOf<Awaited<ReturnType<typeof cart.create>>>().toEqualTypeOf<
+      CartQueryDataReturn<CustomCart>
+    >();
+    expectTypeOf<Awaited<ReturnType<typeof cart.addLines>>>().toEqualTypeOf<
+      CartQueryDataReturn<CustomCart>
+    >();
+  });
+
+  it('can type custom cart get variables', () => {
+    const cart = createCartHandler<CustomCart, ExtraCartGetVariables>({
+      storefront: mockCreateStorefrontClient(),
+      getCartId: () => undefined,
+      setCartId: () => new Headers(),
+      cartQueryFragment: 'cartQueryFragmentOverride',
+    });
+
+    expectTypeOf<Parameters<typeof cart.get>[0]>().toMatchTypeOf<
+      ExtraCartGetVariables | undefined
+    >();
+
+    if (false) {
+      void cart.get({customVariable: 'value'});
+      // @ts-expect-error customVariable must be a string.
+      void cart.get({customVariable: 123});
+    }
+  });
+
+  it('can combine custom cart typing with custom methods', () => {
+    const cart = createCartHandler<
+      CustomCart,
+      ExtraCartGetVariables,
+      {foo: () => 'bar'}
+    >({
+      storefront: mockCreateStorefrontClient(),
+      getCartId: () => undefined,
+      setCartId: () => new Headers(),
+      cartQueryFragment: 'cartQueryFragmentOverride',
+      cartMutateFragment: 'cartMutateFragmentOverride',
+      customMethods: {
+        foo() {
+          return 'bar';
+        },
+      },
+    });
+
+    expectTypeOf(cart).toEqualTypeOf<
+      HydrogenCartCustom<{foo: () => 'bar'}, CustomCart, ExtraCartGetVariables>
+    >();
+    expectTypeOf<Awaited<ReturnType<typeof cart.get>>>().toEqualTypeOf<
+      (CustomCart & {errors?: StorefrontApiErrors}) | null
+    >();
     expect(cart.foo()).toBe('bar');
   });
 
@@ -320,6 +399,45 @@ describe('createCartHandler', () => {
     const result = await cart.updateBuyerIdentity({});
 
     expect(result.cart).toHaveProperty('id', 'c1-new-cart-id');
+  });
+
+  it('function updateBuyerIdentity returns cart create errors when cart is not created', async () => {
+    const storefront = {
+      ...mockCreateStorefrontClient(),
+      mutate: vi.fn().mockResolvedValueOnce({
+        cartCreate: {
+          cart: null,
+          userErrors: [{message: 'Cannot create cart'}],
+        },
+      }),
+    } as unknown as Storefront;
+    const cart = getCartHandler({storefront});
+
+    const result = await cart.updateBuyerIdentity({
+      companyLocationId: 'gid://shopify/CompanyLocation/1',
+    });
+
+    expect(result.cart).toBeNull();
+    expect(result.userErrors?.[0]).toHaveProperty(
+      'message',
+      'Cannot create cart',
+    );
+  });
+
+  it('function create throws when a returned cart is missing id', async () => {
+    const storefront = {
+      ...mockCreateStorefrontClient(),
+      mutate: vi.fn().mockResolvedValueOnce({
+        cartCreate: {
+          cart: {totalQuantity: 0},
+        },
+      }),
+    } as unknown as Storefront;
+    const cart = getCartHandler({storefront});
+
+    await expect(cart.create({})).rejects.toThrow(
+      'Cart created but response is missing a valid `id` field.',
+    );
   });
 
   it('function updateNote has a working default implementation', async () => {

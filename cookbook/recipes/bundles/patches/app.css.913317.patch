@@ -1,0 +1,14 @@
+index 3be08d316..51b749115 100644
+--- a/templates/skeleton/app/styles/app.css
++++ b/templates/skeleton/app/styles/app.css
+@@ -506,6 +506,10 @@ button.reset:hover:not(:has(> *)) {
+   margin-top: 0;
+ }
+ 
++.product-image {
++  position: relative;
++}
++
+ .product-image img {
+   height: auto;
+   width: 100%;

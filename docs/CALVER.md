@@ -224,7 +224,7 @@ The release workflow now operates with zero manual intervention:
 ### Semver Packages (X.Y.Z format)
 - `@shopify/cli-hydrogen`
 - `@shopify/mini-oxygen`
-- `@shopify/remix-oxygen`
+- `@shopify/remix-oxygen` (deprecated — no longer actively versioned)
 - All other packages
 
 ## Version Transformation Process
@@ -601,5 +601,5 @@ Potential enhancements being considered:
 
 - [Hydrogen Release Process](../CLAUDE.md#hydrogen-release-process) - Complete release workflow
 - [Major Protection Workflow](../.github/workflows/major-protection.yml) - Protection implementation
-- [Protection Utilities](../.github/scripts/changeset-protection-utils.js) - Shared utilities
+- [Protection Utilities](../.changeset/changeset-protection-utils.js) - Shared utilities
 - [.changeset/README.md](../.changeset/README.md) - Changesets documentation

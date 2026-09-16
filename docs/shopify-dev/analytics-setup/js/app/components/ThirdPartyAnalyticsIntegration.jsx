@@ -6,7 +6,7 @@ import {useEffect} from 'react';
 // [START export]
 export function ThirdPartyAnalyticsIntegration() {
   // [START use]
-  const {subscribe} = useAnalytics();
+  const {subscribe, register} = useAnalytics();
   // [END use]
   // [START register]
   // Register this analytics integration - this will prevent any analytics events
@@ -35,7 +35,10 @@ export function ThirdPartyAnalyticsIntegration() {
 
     // Custom events
     subscribe('custom_checkbox_toggled', (data) => {
-      console.log('ThirdPartyAnalyticsIntegration - Custom checkbox toggled:', data);
+      console.log(
+        'ThirdPartyAnalyticsIntegration - Custom checkbox toggled:',
+        data,
+      );
     });
     // [END subscribe]
 

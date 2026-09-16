@@ -5,18 +5,18 @@ index c584e537..4cecca6d 100644
 -# Hydrogen template: Skeleton
 +# Hydrogen Express Skeleton
  
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the modern multi-strategy router for React. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
 +This is a Hydrogen skeleton template configured to run with NodeJS [Express](https://expressjs.com/) instead of Shopify Oxygen. 
 +
 +Hydrogen is Shopify's stack for headless commerce, designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal Express setup** with basic components and routes to get started with Hydrogen on Node.js.
  
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
--[Get familiar with Remix](https://remix.run/docs/en/v1)
+-[Get familiar with React Router](https://reactrouter.com/start/framework/routing)
 +[Get familiar with React Router](https://reactrouter.com/en/main)
  
  ## What's included
  
--- Remix
+-- React Router
 +- React Router 7
  - Hydrogen
 -- Oxygen
@@ -42,7 +42,7 @@ index c584e537..4cecca6d 100644
  
  **Requirements:**
  
--- Node.js version 18.0.0 or higher
+-- Node.js version 22.x or 24.x
 +- Node.js version 18.0.0 or higher (but less than 22.0.0)
 +
 +### Environment Setup
@@ -85,10 +85,10 @@ index c584e537..4cecca6d 100644
  
 -## Setup for using Customer Account API (`/account` section)
 +### Deployment
++
++When deploying your Express application, ensure you deploy:
  
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
-+When deploying your Express application, ensure you deploy:
-+
 +- `build/` directory
 +- `server.mjs` file
 +- `package.json` and dependencies
@@ -106,4 +106,3 @@ index c584e537..4cecca6d 100644
 +  - `root.tsx` - Root layout component
 +  - `routes/` - Application routes
 +- `build/` - Production build output (generated)
-\ No newline at end of file

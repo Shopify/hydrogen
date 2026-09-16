@@ -248,6 +248,10 @@ jobs:
 
   test_scaffolding:
     name: ⬣ Scaffolding tests (${{ matrix.os }} / ${{ matrix.pm }})
+    # Skip on Changesets release PRs. They bump workspace packages to versions
+    # that are not published to npm until the PR merges, so the scaffolded app's
+    # install pins an unpublished exact version and always fails here.
+    if: ${{ !startsWith(github.head_ref, 'changeset-release/') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     concurrency:

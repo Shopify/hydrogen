@@ -53,6 +53,18 @@ describe('cartGetDefault', () => {
     expect(result).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
   });
 
+  it('should use provided cartId even when getCartId returns undefined', async () => {
+    const cartGet = cartGetDefault({
+      storefront: mockCreateStorefrontClient(),
+      getCartId: () => undefined,
+    });
+
+    const result = await cartGet({cartId: 'gid://shopify/Cart/c1-456'});
+
+    expect(result).not.toBeNull();
+    expect(result).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
+  });
+
   describe('run with customerAccount option', () => {
     it('should add logged_in search param to checkout link if customer is logged in', async () => {
       const cartGet = cartGetDefault({

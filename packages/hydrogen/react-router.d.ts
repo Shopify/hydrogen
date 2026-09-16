@@ -30,6 +30,16 @@ declare global {
     //   updateLineByOptions: (productId: string, selectedOptions: SelectedOptionInput[], line: CartLineUpdateInput) => Promise<CartQueryDataReturn>;
     // }
   }
+
+  /**
+   * The cart type used for `context.cart` in route files.
+   *
+   * `HydrogenCart`'s default type parameter already includes
+   * `HydrogenCustomCartFragment & Cart`, so no explicit intersection is needed
+   * here. The augmentable `HydrogenCustomCartFragment` interface is declared
+   * in `cart/queries/cart-types.ts`.
+   */
+  type HydrogenCartWithFragment = HydrogenCart & HydrogenCustomCartMethods;
 }
 
 declare module 'react-router' {
@@ -37,7 +47,7 @@ declare module 'react-router' {
   interface RouterContextProvider extends HydrogenAdditionalContext {
     // Standard Hydrogen context properties from HydrogenRouterContextProvider
     storefront: HydrogenRouterContextProvider['storefront'];
-    cart: HydrogenCart & HydrogenCustomCartMethods;
+    cart: HydrogenCartWithFragment;
     customerAccount: HydrogenRouterContextProvider['customerAccount'];
     env: HydrogenRouterContextProvider['env'];
     session: HydrogenRouterContextProvider['session'];
@@ -48,7 +58,7 @@ declare module 'react-router' {
   interface AppLoadContext extends HydrogenAdditionalContext {
     // Standard Hydrogen context properties from HydrogenRouterContextProvider
     storefront: HydrogenRouterContextProvider['storefront'];
-    cart: HydrogenCart & HydrogenCustomCartMethods;
+    cart: HydrogenCartWithFragment;
     customerAccount: HydrogenRouterContextProvider['customerAccount'];
     env: HydrogenRouterContextProvider['env'];
     session: HydrogenRouterContextProvider['session'];

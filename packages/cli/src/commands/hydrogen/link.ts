@@ -11,7 +11,7 @@ import {
 } from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
-import {commonFlags} from '../../lib/flags.js';
+import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
 import {setStorefront, type ShopifyConfig} from '../../lib/shopify-config.js';
 import {createStorefront} from '../../lib/graphql/admin/create-storefront.js';
@@ -40,37 +40,57 @@ export default class Link extends Command {
   static flags = {
     ...commonFlags.force,
     ...commonFlags.path,
+    ...commonFlags.shop,
     storefront: Flags.string({
       description: 'The name of a Hydrogen Storefront (e.g. "Jane\'s Apparel")',
       env: 'SHOPIFY_HYDROGEN_STOREFRONT',
+      exclusive: ['create-storefront', 'name'],
+    }),
+    'create-storefront': Flags.boolean({
+      description: 'Create a new Hydrogen storefront.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_CREATE_STOREFRONT',
+      exclusive: ['storefront'],
+    }),
+    name: Flags.string({
+      description: 'The name to use when creating a new Hydrogen storefront.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_NAME',
+      exclusive: ['storefront'],
     }),
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Link);
-    await runLink(flags);
+    await runLink(flagsToCamelObject(flags));
   }
 }
 
 export interface LinkStorefrontArguments {
   force?: boolean;
   path?: string;
+  shop?: string;
   storefront?: string;
+  createStorefront?: boolean;
+  name?: string;
 }
 
 export async function runLink({
+  createStorefront: flagCreateStorefront,
   force,
   path: root = process.cwd(),
+  shop,
   storefront: flagStorefront,
+  name,
 }: LinkStorefrontArguments) {
   const [{session, config}, cliCommand] = await Promise.all([
-    login(root),
+    login(root, shop),
     getCliCommand(),
   ]);
 
   const linkedStore = await linkStorefront(root, session, config, {
     force,
+    flagCreateStorefront,
     flagStorefront,
+    storefrontName: name,
     cliCommand,
   });
 
@@ -94,16 +114,29 @@ export async function linkStorefront(
   config: ShopifyConfig,
   {
     force = false,
+    flagCreateStorefront,
     flagStorefront,
+    storefrontName,
     cliCommand,
     storefronts,
   }: {
     force?: boolean;
+    flagCreateStorefront?: boolean;
     flagStorefront?: string;
+    storefrontName?: string;
     cliCommand: string;
     storefronts?: ParsedHydrogenStorefront[];
   },
 ) {
+  storefrontName = storefrontName?.trim() || undefined;
+
+  if (flagStorefront && (flagCreateStorefront || storefrontName)) {
+    throw new AbortError(
+      '`--storefront` cannot be used with storefront creation flags.',
+      'Use `--storefront` to link an existing storefront or `--name` to create a new one.',
+    );
+  }
+
   if (!config.shop) {
     throw new AbortError('No shop found in local config, login first.');
   }
@@ -146,6 +179,13 @@ export async function linkStorefront(
 
       return;
     }
+  } else if (flagCreateStorefront || storefrontName) {
+    selectedStorefront = await createNewStorefront(
+      root,
+      session,
+      storefronts,
+      storefrontName,
+    );
   } else {
     selectedStorefront = await handleStorefrontSelection(storefronts);
 
@@ -167,6 +207,7 @@ async function createNewStorefront(
   root: string,
   session: AdminSession,
   storefronts: ParsedHydrogenStorefront[],
+  storefrontName?: string,
 ) {
   const projectDirectory = basename(root);
   let defaultProjectName = titleize(projectDirectory);
@@ -177,10 +218,12 @@ async function createNewStorefront(
     defaultProjectName = generateRandomName();
   }
 
-  const projectName = await renderTextPrompt({
-    message: 'New storefront name',
-    defaultValue: defaultProjectName,
-  });
+  const projectName =
+    storefrontName ??
+    (await renderTextPrompt({
+      message: 'New storefront name',
+      defaultValue: defaultProjectName,
+    }));
 
   let storefront: HydrogenStorefront | undefined;
   let jobId: string | undefined;

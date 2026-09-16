@@ -7,8 +7,14 @@ import type {
   LanguageCode,
   VisitorConsent,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
+} from './cart-query-helpers';
 
-type CartGetProps = {
+export type CartGetProps<TExtraVariables = {}> = {
   /**
    * The cart ID.
    * @default cart.getCartId();
@@ -43,11 +49,11 @@ type CartGetProps = {
    * When provided, consent is encoded into the cart's checkoutUrl via the _cs parameter.
    */
   visitorConsent?: VisitorConsent;
-};
+} & TExtraVariables;
 
-export type CartGetFunction = (
-  cartInput?: CartGetProps,
-) => Promise<CartReturn | null>;
+export type CartGetFunction<TCart = Cart, TExtraVariables = {}> = (
+  cartInput?: CartGetProps<TExtraVariables>,
+) => Promise<CartReturn<TCart> | null>;
 
 type CartGetOptions = CartQueryOptions & {
   /**
@@ -56,29 +62,40 @@ type CartGetOptions = CartQueryOptions & {
   customerAccount?: CustomerAccount;
 };
 
-export function cartGetDefault({
+/** @publicDocs */
+export function cartGetDefault<TCart = Cart, TExtraVariables = {}>({
   storefront,
   customerAccount,
   getCartId,
   cartFragment,
-}: CartGetOptions): CartGetFunction {
-  return async (cartInput?: CartGetProps) => {
-    const cartId = getCartId();
+}: CartGetOptions): CartGetFunction<TCart, TExtraVariables> {
+  return async (cartInput?: CartGetProps<TExtraVariables>) => {
+    const cartId = cartInput?.cartId ?? getCartId();
 
     if (!cartId) return null;
 
+    const includeVisitorConsent = shouldIncludeVisitorConsent(cartInput);
     const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([
       customerAccount ? customerAccount.isLoggedIn() : false,
-      storefront.query<{cart: Cart | null}>(CART_QUERY(cartFragment), {
-        variables: {cartId, ...cartInput},
-        cache: storefront.CacheNone(),
-      }),
+      storefront.query<{cart: TCart | null}>(
+        CART_QUERY(cartFragment, {includeVisitorConsent}),
+        {
+          variables: {cartId, ...cartInput},
+          cache: storefront.CacheNone(),
+        },
+      ),
     ]);
 
-    if (isCustomerLoggedIn && cart?.checkoutUrl) {
+    if (
+      isCustomerLoggedIn &&
+      cart &&
+      typeof cart === 'object' &&
+      'checkoutUrl' in cart &&
+      typeof cart.checkoutUrl === 'string'
+    ) {
       const finalCheckoutUrl = new URL(cart.checkoutUrl);
       finalCheckoutUrl.searchParams.set('logged_in', 'true');
-      cart.checkoutUrl = finalCheckoutUrl.toString();
+      Object.assign(cart, {checkoutUrl: finalCheckoutUrl.toString()});
     }
 
     return cart || errors ? formatAPIResult(cart, errors) : null;
@@ -86,14 +103,15 @@ export function cartGetDefault({
 }
 
 //! @see https://shopify.dev/docs/api/storefront/latest/queries/cart
-const CART_QUERY = (cartFragment = DEFAULT_CART_FRAGMENT) => `#graphql
+const CART_QUERY = (
+  cartFragment = DEFAULT_CART_FRAGMENT,
+  options: CartBuilderOptions = {},
+) => `#graphql
   query CartQuery(
     $cartId: ID!
     $numCartLines: Int = 100
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cart(id: $cartId) {
       ...CartApiQuery
     }

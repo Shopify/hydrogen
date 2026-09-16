@@ -46,6 +46,10 @@ export const ShopifyAppId = {
  * These duplicated interface declaration is so that we can generate proper documentation
  * for these public facing constants
  */
+
+/**
+ * Analytics event names accepted by Shopify analytics.
+ * @publicDocs */
 export interface AnalyticsEventName {
   /** Page view */
   PAGE_VIEW: 'PAGE_VIEW';
@@ -53,6 +57,9 @@ export interface AnalyticsEventName {
   ADD_TO_CART: 'ADD_TO_CART';
 }
 
+/**
+ * Analytics page type values accepted by Shopify analytics.
+ * @publicDocs */
 export interface AnalyticsPageType {
   article: 'article';
   blog: 'blog';
@@ -78,6 +85,9 @@ export interface AnalyticsPageType {
   search: 'search';
 }
 
+/**
+ * Analytics sales channel values accepted by Shopify analytics.
+ * @publicDocs */
 export interface ShopifySalesChannel {
   /** Shopify Hydrogen sales channel */
   hydrogen: 'hydrogen';

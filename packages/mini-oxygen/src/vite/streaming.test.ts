@@ -1,8 +1,6 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {ServerResponse} from 'node:http';
-import {ReadableStream} from 'node:stream/web';
 import {pipeFromWeb} from './utils.js';
-import {Response} from '../worker/index.js';
 import * as nodeFetchServer from '@mjackson/node-fetch-server';
 
 // Mock the sendResponse function

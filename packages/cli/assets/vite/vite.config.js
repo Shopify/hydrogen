@@ -2,9 +2,11 @@ import {defineConfig} from 'vite';
 import {hydrogen} from '@shopify/hydrogen/vite';
 import {oxygen} from '@shopify/mini-oxygen/vite';
 import {vitePlugin as remix} from '@remix-run/dev';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     hydrogen(),
     oxygen(),
@@ -17,7 +19,6 @@ export default defineConfig({
         v3_routeConfig: false,
       },
     }),
-    tsconfigPaths(),
   ],
   build: {
     // Allow a strict Content-Security-Policy

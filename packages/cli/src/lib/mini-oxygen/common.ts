@@ -6,7 +6,7 @@ import {
 import colors from '@shopify/cli-kit/node/colors';
 import {DEV_ROUTES} from '../request-events.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import type {RequestHookInfo} from '@shopify/mini-oxygen';
+import type {RequestHookInfo} from '~/mini-oxygen/worker/handler.js';
 
 // Default port used for debugging in VSCode and Chrome DevTools.
 export const DEFAULT_INSPECTOR_PORT = 9229;

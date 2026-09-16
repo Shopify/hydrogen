@@ -213,22 +213,27 @@ export function AnalyticsPageView(props: BasicViewProps) {
   return <AnalyticsView {...props} type="page_viewed" />;
 }
 
+/** @publicDocs */
 export function AnalyticsProductView(props: ProductViewProps) {
   return <AnalyticsView {...props} type="product_viewed" />;
 }
 
+/** @publicDocs */
 export function AnalyticsCollectionView(props: CollectionViewProps) {
   return <AnalyticsView {...props} type="collection_viewed" />;
 }
 
+/** @publicDocs */
 export function AnalyticsCartView(props: BasicViewProps) {
   return <AnalyticsView {...props} type="cart_viewed" />;
 }
 
+/** @publicDocs */
 export function AnalyticsSearchView(props: SearchViewProps) {
   return <AnalyticsView {...props} type="search_viewed" />;
 }
 
+/** @publicDocs */
 export function AnalyticsCustomView(props: CustomViewProps) {
   return <AnalyticsView {...props} />;
 }

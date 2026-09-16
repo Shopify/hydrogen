@@ -480,7 +480,7 @@ Implement the CustomUpdateLineByOptions action handler for processing variant ch
 #### File: /app/routes/cart.tsx
 
 ~~~diff
-@@ -6,6 +6,10 @@ import {
+@@ -2,6 +2,10 @@ import {useLoaderData, data, type HeadersFunction} from 'react-router';
  import type {Route} from './+types/cart';
  import type {CartQueryDataReturn} from '@shopify/hydrogen';
  import {CartForm} from '@shopify/hydrogen';
@@ -491,7 +491,7 @@ Implement the CustomUpdateLineByOptions action handler for processing variant ch
  import {CartMain} from '~/components/CartMain';
  
  export const meta: Route.MetaFunction = () => {
-@@ -29,6 +33,21 @@ export async function action({request, context}: Route.ActionArgs) {
+@@ -25,6 +29,21 @@ export async function action({request, context}: Route.ActionArgs) {
    let result: CartQueryDataReturn;
  
    switch (action) {
@@ -513,6 +513,51 @@ Implement the CustomUpdateLineByOptions action handler for processing variant ch
      case CartForm.ACTIONS.LinesAdd:
        result = await cart.addLines(inputs.lines);
        break;
+~~~
+
+### Step 6: package.json
+
+
+
+#### File: /package.json
+
+~~~diff
+@@ -14,12 +14,12 @@
+   },
+   "prettier": "@shopify/prettier-config",
+   "dependencies": {
+-    "@shopify/hydrogen": "workspace:*",
++    "@shopify/hydrogen": "2026.4.0",
+     "graphql": "^16.10.0",
+     "graphql-tag": "^2.12.6",
+     "isbot": "^5.1.22",
+-    "react": "catalog:",
+-    "react-dom": "catalog:",
++    "react": "^18.3.1",
++    "react-dom": "^18.3.1",
+     "react-router": "7.14.0",
+     "react-router-dom": "7.14.0"
+   },
+@@ -31,14 +31,14 @@
+     "@react-router/dev": "7.14.0",
+     "@react-router/fs-routes": "7.14.0",
+     "@shopify/cli": "3.93.2",
+-    "@shopify/hydrogen-codegen": "workspace:*",
+-    "@shopify/mini-oxygen": "workspace:*",
++    "@shopify/hydrogen-codegen": "0.3.3",
++    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/oxygen-workers-types": "^4.1.6",
+-    "@shopify/prettier-config": "catalog:",
++    "@shopify/prettier-config": "^1.1.2",
+     "@total-typescript/ts-reset": "^0.6.1",
+     "@types/eslint": "^9.6.1",
+-    "@types/react": "catalog:",
+-    "@types/react-dom": "catalog:",
++    "@types/react": "^18.3.28",
++    "@types/react-dom": "^18.3.7",
+     "@typescript-eslint/eslint-plugin": "^8.21.0",
+     "@typescript-eslint/parser": "^8.21.0",
+     "eslint": "^9.18.0",
 ~~~
 
 </recipe_implementation>

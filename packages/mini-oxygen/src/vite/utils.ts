@@ -2,8 +2,7 @@ import type {ServerResponse, IncomingMessage} from 'node:http';
 import path from 'node:path';
 import {Readable} from 'node:stream';
 import {sendResponse} from '@mjackson/node-fetch-server';
-import {Request, type Response} from '../worker/index.js';
-import type {ViteDevServer} from 'vite';
+import {Request as MiniflareRequest} from 'miniflare';
 
 /**
  * Creates a fully qualified URL from a Node request or a string.
@@ -24,17 +23,30 @@ export function toURL(req: string | IncomingMessage = '/', origin?: string) {
  * Turns a Node request into a Web request by using native Node APIs.
  */
 export function toWeb(req: IncomingMessage, headers?: Record<string, string>) {
-  if (!req.headers.host) {
+  const authorityHeader = req.headers.host || req.headers[':authority'];
+  const authority = Array.isArray(authorityHeader)
+    ? authorityHeader[0]
+    : authorityHeader;
+  if (!authority) {
     throw new Error('Request must contain a host header.');
   }
 
-  return new Request(toURL(req), {
+  const requestHeaders = Object.fromEntries(
+    Object.entries({...headers, ...(req.headers as object)}).filter(
+      ([name]) => !name.startsWith(':'),
+    ),
+  );
+  requestHeaders.host = authority;
+
+  return new Request(toURL(req, `http://${authority}`), {
     method: req.method,
-    headers: {...headers, ...(req.headers as object)},
-    body: req.headers['content-length'] ? Readable.toWeb(req) : undefined,
+    headers: requestHeaders,
+    body: req.headers['content-length']
+      ? (Readable.toWeb(req) as unknown as BodyInit)
+      : undefined,
     duplex: 'half', // This is required when sending a ReadableStream as body
     redirect: 'manual', // Avoid consuming 300 responses here, return to browser
-  });
+  } as RequestInit & {duplex: 'half'});
 }
 
 /**
@@ -43,6 +55,20 @@ export function toWeb(req: IncomingMessage, headers?: Record<string, string>) {
  */
 export function pipeFromWeb(webResponse: Response, res: ServerResponse) {
   // The sendResponse function from @mjackson/node-fetch-server properly handles
-  // streaming responses, including turbo-stream responses from React Router
-  return sendResponse(res, webResponse as unknown as globalThis.Response);
+  // streaming responses, including turbo-stream responses from React Router.
+  return sendResponse(res, webResponse);
+}
+
+export function toMiniflareRequest(request: Request): MiniflareRequest {
+  // Set the X-Forwarded-Host header to the original host as the `Host` header inside a Worker will contain the workerd host
+  const host = request.headers.get('Host');
+  if (host) {
+    request.headers.set('X-Forwarded-Host', host);
+  }
+  return new MiniflareRequest(request.url, {
+    method: request.method,
+    headers: [['accept-encoding', 'identity'], ...request.headers],
+    body: request.body as any,
+    duplex: 'half',
+  });
 }

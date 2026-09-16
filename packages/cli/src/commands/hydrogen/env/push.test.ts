@@ -478,4 +478,94 @@ describe('pushVariables', () => {
       );
     });
   });
+
+  it('does not prompt for diff confirmation when --force is provided', async () => {
+    vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+      id: SHOPIFY_CONFIG.storefront.id,
+      environmentVariables: [
+        {
+          id: '1',
+          key: 'EXISTING_TOKEN',
+          value: '1',
+          isSecret: false,
+          readOnly: false,
+        },
+        {
+          id: '2',
+          key: 'SECOND_TOKEN',
+          value: '2',
+          isSecret: false,
+          readOnly: false,
+        },
+      ],
+    });
+
+    await inTemporaryDirectory(async (tmpDir) => {
+      const filePath = joinPath(tmpDir, envFile);
+      await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=NEW_VALUE');
+      await expect(
+        runEnvPush({
+          path: tmpDir,
+          env: 'preview',
+          envFile,
+          force: true,
+        }),
+      ).resolves.not.toThrow();
+
+      expect(renderConfirmationPrompt).not.toHaveBeenCalled();
+      expect(pushStorefrontEnvVariables).toHaveBeenCalledWith(
+        {storeFqdn: 'my-shop', token: 'abc123'},
+        'gid://shopify/HydrogenStorefront/2',
+        'gid://shopify/HydrogenStorefrontEnvironment/2',
+        [
+          {key: 'EXISTING_TOKEN', value: '1'},
+          {key: 'SECOND_TOKEN', value: 'NEW_VALUE'},
+        ],
+      );
+    });
+  });
+
+  it('renders a diff without pushing when --dry-run is provided', async () => {
+    vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+      id: SHOPIFY_CONFIG.storefront.id,
+      environmentVariables: [
+        {
+          id: '1',
+          key: 'EXISTING_TOKEN',
+          value: '1',
+          isSecret: false,
+          readOnly: false,
+        },
+        {
+          id: '2',
+          key: 'SECOND_TOKEN',
+          value: '2',
+          isSecret: false,
+          readOnly: false,
+        },
+      ],
+    });
+
+    await inTemporaryDirectory(async (tmpDir) => {
+      const filePath = joinPath(tmpDir, envFile);
+      await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=NEW_VALUE');
+      await expect(
+        runEnvPush({
+          path: tmpDir,
+          env: 'preview',
+          envFile,
+          dryRun: true,
+        }),
+      ).resolves.not.toThrow();
+
+      expect(renderConfirmationPrompt).not.toHaveBeenCalled();
+      expect(pushStorefrontEnvVariables).not.toHaveBeenCalled();
+      expect(outputMock.info()).toMatch(/The following changes would be made/);
+      expect(outputMock.info()).toMatch(/Preview/);
+      expect(outputMock.info()).toMatch(/SECOND_TOKEN=NEW_VALUE/);
+      expect(outputMock.info()).toMatch(
+        /No changes were pushed because --dry-run was used/,
+      );
+    });
+  });
 });

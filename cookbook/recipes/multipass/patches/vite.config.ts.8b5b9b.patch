@@ -1,0 +1,11 @@
+index 2c36cdf92..85b0b5eb 100644
+--- a/templates/skeleton/vite.config.ts
++++ b/templates/skeleton/vite.config.ts
+@@ -35,6 +35,7 @@ export default defineConfig({
+         'react-router > set-cookie-parser',
+         'react-router > cookie',
+         'react-router',
++        'crypto-js',
+       ],
+     },
+   },
