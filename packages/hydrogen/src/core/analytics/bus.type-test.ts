@@ -1,15 +1,27 @@
-import { describe, it } from "vitest";
+import { describe, it, expectTypeOf } from "vitest";
 
+import type {
+  AnalyticsTrackingValues,
+  ShopifyGlobal,
+  StorefrontAnalyticsDestinationEventContext,
+} from "../index";
 import { AnalyticsEvent } from "./events";
 import type { StorefrontAnalytics } from "./types";
 
 declare const analytics: StorefrontAnalytics;
+declare const privacy: ShopifyGlobal["customerPrivacy"];
 
 describe("analytics publish types", () => {
   it("allows payload omission only when the payload has no required fields", () => {});
 });
 
 export function analyticsPublishTypes() {
+  // @ts-expect-error consent token internals are not part of the public ShopifyGlobal type
+  privacy.__internal;
+
+  // @ts-expect-error consent token internals are not exposed on window.Shopify
+  window.Shopify?.customerPrivacy.__internal;
+
   analytics.publish(AnalyticsEvent.PAGE_VIEWED);
   analytics.publish(AnalyticsEvent.PAGE_VIEWED, {});
 
@@ -34,6 +46,15 @@ export function analyticsPublishTypes() {
   analytics.addDestination({
     name: "test-destination",
     setup({ subscribe }) {
+      subscribe("search_viewed", (payload, context) => {
+        expectTypeOf(payload.searchTerm).toEqualTypeOf<string>();
+        expectTypeOf(context).toEqualTypeOf<StorefrontAnalyticsDestinationEventContext>();
+        expectTypeOf(context.getTrackingValues()).toEqualTypeOf<AnalyticsTrackingValues>();
+
+        // @ts-expect-error the destination name determines the tag
+        context.getTrackingValues({ tag: "custom" });
+      });
+
       // @ts-expect-error custom destination subscriptions are temporarily unsupported
       subscribe("custom_marketing_banner_opened", () => {});
     },

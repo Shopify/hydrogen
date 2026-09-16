@@ -20,6 +20,7 @@ const SHOP_DATA: ShopAnalytics = {
 };
 
 const CONSENT_DATA = {};
+const DESTINATION_CONTEXT = { getTrackingValues: expect.any(Function) };
 
 function installLocalStorageShim() {
   const storage = new Map<string, string>();
@@ -82,6 +83,137 @@ describe("setupStorefrontAnalytics", () => {
   afterEach(() => {
     delete (window as any).Shopify;
     delete (window as any).privacyBanner;
+  });
+
+  describe("destination tracking values", () => {
+    it("reads current tokens for each destination with its own Hydrogen tag", () => {
+      const uniqueToken = vi.fn(() => "unique");
+      const visitToken = vi.fn(() => "visit");
+      const privacy = {
+        consentStatus: "loaded",
+        analyticsProcessingAllowed: () => true,
+        __internal: { uniqueToken, visitToken },
+      };
+      (window as any).Shopify = { customerPrivacy: privacy };
+      const bus = createTestBus();
+      const received = vi.fn();
+
+      for (const name of ["shopify-analytics", "ga4"]) {
+        bus.addDestination({
+          name,
+          setup({ subscribe }) {
+            subscribe("page_viewed", (payload, { getTrackingValues }) => {
+              received(name, payload.url, getTrackingValues());
+            });
+          },
+        });
+      }
+
+      expect(uniqueToken).not.toHaveBeenCalled();
+      expect(visitToken).not.toHaveBeenCalled();
+      bus.publish("page_viewed", { url: "/first" });
+
+      const updatedUniqueToken = vi.fn(() => "updated-unique");
+      const updatedVisitToken = vi.fn(() => "updated-visit");
+      privacy.__internal = { uniqueToken: updatedUniqueToken, visitToken: updatedVisitToken };
+      bus.publish("page_viewed", { url: "/second" });
+
+      expect(received.mock.calls).toEqual([
+        ["shopify-analytics", "/first", { uniqueToken: "unique", visitToken: "visit" }],
+        ["ga4", "/first", { uniqueToken: "unique", visitToken: "visit" }],
+        [
+          "shopify-analytics",
+          "/second",
+          { uniqueToken: "updated-unique", visitToken: "updated-visit" },
+        ],
+        ["ga4", "/second", { uniqueToken: "updated-unique", visitToken: "updated-visit" }],
+      ]);
+      for (const getter of [uniqueToken, visitToken, updatedUniqueToken, updatedVisitToken]) {
+        expect(getter.mock.calls).toEqual([
+          [{ generateFallback: true, tag: "hydrogen:shopify-analytics" }],
+          [{ generateFallback: true, tag: "hydrogen:ga4" }],
+        ]);
+      }
+      bus.destroy();
+    });
+
+    it("reads buffered event tokens only after consent is loaded and analytics is allowed", () => {
+      const uniqueToken = vi.fn(() => "ready-unique");
+      const visitToken = vi.fn(() => "ready-visit");
+      const privacy = {
+        consentStatus: "loading",
+        analyticsProcessingAllowed: () => true,
+        __internal: { uniqueToken, visitToken },
+      };
+      (window as any).Shopify = { customerPrivacy: privacy };
+      const bus = createTestBus();
+      const received = vi.fn();
+      bus.addDestination({
+        name: "shopify-analytics",
+        setup({ subscribe }) {
+          subscribe("page_viewed", (payload, { getTrackingValues }) => {
+            received(payload.url, getTrackingValues());
+          });
+        },
+      });
+
+      bus.publish("page_viewed", { url: "/buffered" });
+      expect(uniqueToken).not.toHaveBeenCalled();
+      expect(visitToken).not.toHaveBeenCalled();
+
+      privacy.consentStatus = "loaded";
+      privacy.analyticsProcessingAllowed = () => false;
+      document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
+      expect(uniqueToken).not.toHaveBeenCalled();
+      expect(visitToken).not.toHaveBeenCalled();
+
+      privacy.analyticsProcessingAllowed = () => true;
+      document.dispatchEvent(new Event(VISITOR_CONSENT_COLLECTED_EVENT));
+      expect(received).toHaveBeenCalledExactlyOnceWith("/buffered", {
+        uniqueToken: "ready-unique",
+        visitToken: "ready-visit",
+      });
+      for (const getter of [uniqueToken, visitToken]) {
+        expect(getter).toHaveBeenCalledExactlyOnceWith({
+          generateFallback: true,
+          tag: "hydrogen:shopify-analytics",
+        });
+      }
+
+      privacy.analyticsProcessingAllowed = () => false;
+      document.dispatchEvent(new Event(VISITOR_CONSENT_COLLECTED_EVENT));
+      bus.publish("page_viewed", { url: "/declined" });
+      expect(uniqueToken).toHaveBeenCalledOnce();
+      expect(visitToken).toHaveBeenCalledOnce();
+      expect(received).toHaveBeenCalledOnce();
+      bus.destroy();
+    });
+
+    it("does not request tokens when destinations ignore the getter", () => {
+      const uniqueToken = vi.fn();
+      const visitToken = vi.fn();
+      (window as any).Shopify = {
+        customerPrivacy: {
+          consentStatus: "loaded",
+          analyticsProcessingAllowed: () => true,
+          __internal: { uniqueToken, visitToken },
+        },
+      };
+      const bus = createTestBus();
+      const received = vi.fn();
+      bus.addDestination({
+        name: "observer",
+        setup({ subscribe }) {
+          subscribe("page_viewed", (payload) => received(payload.url));
+        },
+      });
+      bus.publish("page_viewed", { url: "/observed" });
+
+      expect(received).toHaveBeenCalledExactlyOnceWith("/observed");
+      expect(uniqueToken).not.toHaveBeenCalled();
+      expect(visitToken).not.toHaveBeenCalled();
+      bus.destroy();
+    });
   });
 
   describe("pub/sub", () => {
@@ -305,7 +437,10 @@ describe("setupStorefrontAnalytics", () => {
       bus.publish("page_viewed", { url: "/live", shop: SHOP_DATA });
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: "/live" }));
+      expect(destination).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/live" }),
+        DESTINATION_CONTEXT,
+      );
     });
 
     it("buffers destination events until analytics consent is granted", async () => {
@@ -330,7 +465,10 @@ describe("setupStorefrontAnalytics", () => {
       document.dispatchEvent(new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT));
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: "/buffered" }));
+      expect(destination).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/buffered" }),
+        DESTINATION_CONTEXT,
+      );
     });
 
     it("buffers destination events while consent status is loading", async () => {
@@ -355,7 +493,10 @@ describe("setupStorefrontAnalytics", () => {
       document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: "/pending" }));
+      expect(destination).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/pending" }),
+        DESTINATION_CONTEXT,
+      );
     });
 
     it("snapshots inferred URLs before destination replay", async () => {
@@ -381,7 +522,10 @@ describe("setupStorefrontAnalytics", () => {
       document.dispatchEvent(new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT));
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: publishedUrl }));
+      expect(destination).toHaveBeenCalledWith(
+        expect.objectContaining({ url: publishedUrl }),
+        DESTINATION_CONTEXT,
+      );
     });
 
     it("replays buffered events to destinations added after consent is granted", async () => {
@@ -405,7 +549,10 @@ describe("setupStorefrontAnalytics", () => {
       });
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: "/early" }));
+      expect(destination).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/early" }),
+        DESTINATION_CONTEXT,
+      );
     });
 
     it("replays buffered events when initial consent is ready", async () => {
@@ -430,7 +577,10 @@ describe("setupStorefrontAnalytics", () => {
       document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: "/ready" }));
+      expect(destination).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/ready" }),
+        DESTINATION_CONTEXT,
+      );
     });
 
     it("waits for interaction before replaying default banner events when the banner is required", async () => {
@@ -464,6 +614,7 @@ describe("setupStorefrontAnalytics", () => {
       expect(destination).toHaveBeenCalledOnce();
       expect(destination).toHaveBeenCalledWith(
         expect.objectContaining({ url: "/blocked-initial" }),
+        DESTINATION_CONTEXT,
       );
     });
 
@@ -523,6 +674,7 @@ describe("setupStorefrontAnalytics", () => {
       expect(destination).toHaveBeenCalledOnce();
       expect(destination).toHaveBeenCalledWith(
         expect.objectContaining({ url: "/missed-readiness" }),
+        DESTINATION_CONTEXT,
       );
     });
 
@@ -579,6 +731,7 @@ describe("setupStorefrontAnalytics", () => {
       expect(destination).toHaveBeenCalledOnce();
       expect(destination).toHaveBeenCalledWith(
         expect.objectContaining({ url: "/custom-banner-initial" }),
+        DESTINATION_CONTEXT,
       );
     });
 
@@ -609,6 +762,7 @@ describe("setupStorefrontAnalytics", () => {
       expect(destination).toHaveBeenCalledOnce();
       expect(destination).toHaveBeenCalledWith(
         expect.objectContaining({ url: "/allowed-initial" }),
+        DESTINATION_CONTEXT,
       );
     });
 
@@ -637,7 +791,10 @@ describe("setupStorefrontAnalytics", () => {
       document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: "/prior-consent" }));
+      expect(destination).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/prior-consent" }),
+        DESTINATION_CONTEXT,
+      );
     });
 
     it("does not clear buffered events when initial consent becomes ready while tracking is blocked", async () => {
@@ -661,7 +818,10 @@ describe("setupStorefrontAnalytics", () => {
       });
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith(expect.objectContaining({ url: "/pending" }));
+      expect(destination).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/pending" }),
+        DESTINATION_CONTEXT,
+      );
     });
 
     it("does not replay buffered events after explicit analytics consent denial", async () => {
@@ -780,8 +940,16 @@ describe("setupStorefrontAnalytics", () => {
       document.dispatchEvent(new CustomEvent(VISITOR_CONSENT_COLLECTED_EVENT));
 
       expect(destination).toHaveBeenCalledTimes(2);
-      expect(destination).toHaveBeenNthCalledWith(1, expect.objectContaining({ url: "/one" }));
-      expect(destination).toHaveBeenNthCalledWith(2, expect.objectContaining({ url: "/two" }));
+      expect(destination).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ url: "/one" }),
+        DESTINATION_CONTEXT,
+      );
+      expect(destination).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ url: "/two" }),
+        DESTINATION_CONTEXT,
+      );
     });
 
     it("cleans up destination subscriptions", () => {

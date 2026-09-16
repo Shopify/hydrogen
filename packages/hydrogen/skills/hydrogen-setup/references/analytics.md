@@ -579,6 +579,8 @@ analytics?.addDestination({
 
 Consent gating happens at the bus level before destination callbacks see the payload. Raw `analytics.subscribe()` is live-only and consent-agnostic; use `addDestination()` for logging or analytics destinations that should respect consent and replay.
 
+Destinations that need Shopify visitor IDs can call `getTrackingValues()` from the callback's second argument: `subscribe(event, (payload, { getTrackingValues }) => { ... })`. It reads current `uniqueToken` and `visitToken` values from the consent API when called, including during replay, and requests fallback generation with the tag `hydrogen:<destination name>`. Unavailable tokens are empty strings. Call it inside the destination callback; registration itself does not read or generate tokens.
+
 ---
 
 ## Verify
