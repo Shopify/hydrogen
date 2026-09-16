@@ -9,6 +9,7 @@ import {
   CartMachineFetchResultEvent,
   CartMachineTypeState,
 } from './cart-types.js';
+import type {CartUserError, CartWarning} from './storefront-api-types.js';
 import {flattenConnection} from './flatten-connection.js';
 import {useCartActions} from './useCartActions.js';
 import {useMemo} from 'react';
@@ -49,32 +50,36 @@ function invokeCart(
             rawCartResult: (_, event) => event?.payload?.rawCartResult,
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             errors: (_) => undefined,
+            userErrors: (_, event) => event?.payload?.userErrors,
+            warnings: (_, event) => event?.payload?.warnings,
           }),
         ],
       },
       ERROR: {
         target: options?.errorTarget || 'error',
         actions: [
-          assign({
+          assign<CartMachineContext, CartMachineEvent>({
             prevCart: (context) => context?.lastValidCart,
             cart: (context) => context?.lastValidCart,
-            errors: (_, event) => event?.payload?.errors,
+            errors: (_: CartMachineContext, event: CartMachineEvent) =>
+              event.type === 'ERROR' ? event.payload.errors : undefined,
+            userErrors: (_: CartMachineContext, event: CartMachineEvent) =>
+              event.type === 'ERROR' ? event.payload.userErrors : undefined,
+            warnings: (_: CartMachineContext, event: CartMachineEvent) =>
+              event.type === 'ERROR' ? event.payload.warnings : undefined,
           }),
         ],
       },
       CART_COMPLETED: {
         target: 'cartCompleted',
-        actions: assign({
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          prevCart: (_) => undefined,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          cart: (_) => undefined,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          lastValidCart: (_) => undefined,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          rawCartResult: (_) => undefined,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          errors: (_) => undefined,
+        actions: assign<CartMachineContext, CartMachineEvent>({
+          prevCart: () => undefined,
+          cart: () => undefined,
+          lastValidCart: () => undefined,
+          rawCartResult: () => undefined,
+          errors: () => undefined,
+          userErrors: () => undefined,
+          warnings: () => undefined,
         }),
       },
     },
@@ -242,7 +247,7 @@ export function useCartAPIStateMachine({
         if (event.type !== 'CART_FETCH') return;
 
         const {data, errors} = await cartFetch(event?.payload?.cartId);
-        const resultEvent = eventFromFetchResult(event, data?.cart, errors);
+        const resultEvent = eventFromFetchResult(event, {data, errors});
         send(resultEvent);
       },
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -250,11 +255,10 @@ export function useCartAPIStateMachine({
         if (event.type !== 'CART_CREATE') return;
 
         const {data, errors} = await cartCreate(event?.payload);
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartCreate?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartCreate,
           errors,
-        );
+        });
         send(resultEvent);
       },
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -266,11 +270,10 @@ export function useCartAPIStateMachine({
           event.payload.lines,
         );
 
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartLinesAdd?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartLinesAdd,
           errors,
-        );
+        });
 
         send(resultEvent);
       },
@@ -282,11 +285,10 @@ export function useCartAPIStateMachine({
           event.payload.lines,
         );
 
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartLinesUpdate?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartLinesUpdate,
           errors,
-        );
+        });
 
         send(resultEvent);
       },
@@ -298,11 +300,10 @@ export function useCartAPIStateMachine({
           event.payload.lines,
         );
 
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartLinesRemove?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartLinesRemove,
           errors,
-        );
+        });
 
         send(resultEvent);
       },
@@ -314,11 +315,10 @@ export function useCartAPIStateMachine({
           event.payload.note,
         );
 
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartNoteUpdate?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartNoteUpdate,
           errors,
-        );
+        });
 
         send(resultEvent);
       },
@@ -331,11 +331,10 @@ export function useCartAPIStateMachine({
           event.payload.buyerIdentity,
         );
 
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartBuyerIdentityUpdate?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartBuyerIdentityUpdate,
           errors,
-        );
+        });
 
         send(resultEvent);
       },
@@ -348,11 +347,10 @@ export function useCartAPIStateMachine({
           event.payload.attributes,
         );
 
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartAttributesUpdate?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartAttributesUpdate,
           errors,
-        );
+        });
 
         send(resultEvent);
       },
@@ -364,11 +362,10 @@ export function useCartAPIStateMachine({
           context.cart.id,
           event.payload.discountCodes,
         );
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartDiscountCodesUpdate?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartDiscountCodesUpdate,
           errors,
-        );
+        });
 
         send(resultEvent);
       },
@@ -407,15 +404,31 @@ export function cartFromGraphQL(
   };
 }
 
+type CartFetchResult = {
+  data?: PartialDeep<
+    {cart: CartType; userErrors: CartUserError[]; warnings: CartWarning[]},
+    {recurseIntoArrays: true}
+  > | null;
+  errors?: unknown;
+};
+
 function eventFromFetchResult(
   cartActionEvent: CartMachineActionEvent,
-  cart?: PartialDeep<CartType, {recurseIntoArrays: true}> | null,
-  errors?: unknown,
+  {data, errors}: CartFetchResult,
 ): CartMachineFetchResultEvent {
+  const userErrors = data?.userErrors?.filter(
+    (e): e is CartUserError => e != null,
+  );
+  const warnings = data?.warnings?.filter((w): w is CartWarning => w != null);
+
   if (errors) {
-    return {type: 'ERROR', payload: {errors, cartActionEvent}};
+    return {
+      type: 'ERROR',
+      payload: {errors, cartActionEvent, userErrors, warnings},
+    };
   }
 
+  const cart = data?.cart;
   if (!cart) {
     return {
       type: 'CART_COMPLETED',
@@ -431,6 +444,8 @@ function eventFromFetchResult(
       cart: cartFromGraphQL(cart),
       rawCartResult: cart,
       cartActionEvent,
+      userErrors,
+      warnings,
     },
   };
 }

@@ -1,3 +1,16 @@
+const CART_MUTATION_FIELDS = /* GraphQL */ `
+  userErrors {
+    code
+    field
+    message
+  }
+  warnings {
+    code
+    message
+    target
+  }
+`;
+
 type CartQueryOptions = {
   includeVisitorConsent?: boolean;
 };
@@ -40,6 +53,7 @@ export const CartLineAdd = (
       cart {
         ...CartFragment
       }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -60,6 +74,7 @@ export const CartCreate = (
       cart {
         ...CartFragment
       }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -81,6 +96,7 @@ export const CartLineRemove = (
       cart {
         ...CartFragment
       }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -102,6 +118,7 @@ export const CartLineUpdate = (
       cart {
         ...CartFragment
       }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -123,6 +140,7 @@ export const CartNoteUpdate = (
       cart {
         ...CartFragment
       }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -144,6 +162,7 @@ export const CartBuyerIdentityUpdate = (
       cart {
         ...CartFragment
       }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -165,6 +184,7 @@ export const CartAttributesUpdate = (
       cart {
         ...CartFragment
       }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -186,6 +206,7 @@ export const CartDiscountCodesUpdate = (
       cart {
         ...CartFragment
       }
+      ${CART_MUTATION_FIELDS}
     }
   }
 

@@ -8,6 +8,8 @@ import {
   CountryCode,
   LanguageCode,
   Cart as CartType,
+  CartUserError,
+  CartWarning,
   MutationCartDiscountCodesUpdateArgs,
   MutationCartNoteUpdateArgs,
 } from './storefront-api-types.js';
@@ -26,6 +28,12 @@ import {useCartFetch} from './cart-hooks.js';
 import {PartialDeep} from 'type-fest';
 
 type CartResponse = PartialDeep<CartType, {recurseIntoArrays: true}>;
+
+type CartMutationResponse = {
+  cart: CartResponse;
+  userErrors: CartUserError[];
+  warnings: CartWarning[];
+};
 
 /**
  * The `useCartActions` hook returns helper graphql functions for Storefront Cart API
@@ -67,7 +75,7 @@ export function useCartActions({
 
   const cartCreate = useCallback(
     (cart: CartInput) => {
-      return fetchCart<{cartCreate: {cart: CartResponse}}>({
+      return fetchCart<{cartCreate: CartMutationResponse}>({
         query: CartCreate(cartFragment),
         variables: {
           input: cart,
@@ -82,7 +90,7 @@ export function useCartActions({
 
   const cartLineAdd = useCallback(
     (cartId: string, lines: CartLineInput[]) => {
-      return fetchCart<{cartLinesAdd: {cart: CartResponse}}>({
+      return fetchCart<{cartLinesAdd: CartMutationResponse}>({
         query: CartLineAdd(cartFragment),
         variables: {
           cartId,
@@ -98,7 +106,7 @@ export function useCartActions({
 
   const cartLineUpdate = useCallback(
     (cartId: string, lines: CartLineUpdateInput[]) => {
-      return fetchCart<{cartLinesUpdate: {cart: CartResponse}}>({
+      return fetchCart<{cartLinesUpdate: CartMutationResponse}>({
         query: CartLineUpdate(cartFragment),
         variables: {
           cartId,
@@ -114,7 +122,7 @@ export function useCartActions({
 
   const cartLineRemove = useCallback(
     (cartId: string, lines: string[]) => {
-      return fetchCart<{cartLinesRemove: {cart: CartResponse}}>({
+      return fetchCart<{cartLinesRemove: CartMutationResponse}>({
         query: CartLineRemove(cartFragment),
         variables: {
           cartId,
@@ -130,7 +138,7 @@ export function useCartActions({
 
   const noteUpdate = useCallback(
     (cartId: string, note: MutationCartNoteUpdateArgs['note']) => {
-      return fetchCart<{cartNoteUpdate: {cart: CartResponse}}>({
+      return fetchCart<{cartNoteUpdate: CartMutationResponse}>({
         query: CartNoteUpdate(cartFragment),
         variables: {
           cartId,
@@ -146,7 +154,7 @@ export function useCartActions({
 
   const buyerIdentityUpdate = useCallback(
     (cartId: string, buyerIdentity: CartBuyerIdentityInput) => {
-      return fetchCart<{cartBuyerIdentityUpdate: {cart: CartResponse}}>({
+      return fetchCart<{cartBuyerIdentityUpdate: CartMutationResponse}>({
         query: CartBuyerIdentityUpdate(cartFragment),
         variables: {
           cartId,
@@ -162,7 +170,7 @@ export function useCartActions({
 
   const cartAttributesUpdate = useCallback(
     (cartId: string, attributes: AttributeInput[]) => {
-      return fetchCart<{cartAttributesUpdate: {cart: CartResponse}}>({
+      return fetchCart<{cartAttributesUpdate: CartMutationResponse}>({
         query: CartAttributesUpdate(cartFragment),
         variables: {
           cartId,
@@ -181,7 +189,7 @@ export function useCartActions({
       cartId: string,
       discountCodes: MutationCartDiscountCodesUpdateArgs['discountCodes'],
     ) => {
-      return fetchCart<{cartDiscountCodesUpdate: {cart: CartResponse}}>({
+      return fetchCart<{cartDiscountCodesUpdate: CartMutationResponse}>({
         query: CartDiscountCodesUpdate(cartFragment),
         variables: {
           cartId,
