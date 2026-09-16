@@ -10,7 +10,7 @@ If it does not contain `@shopify/hydrogen@preview` (or a more specific hash) in 
 
 ### Continue when
 
-- [ ] Current directrory has `package.json`
+- [ ] Current directory has `package.json`
 - [ ] Current project includes `@shopify/hydrogen@preview` or similar in its dependencies
 
 ## Styling
