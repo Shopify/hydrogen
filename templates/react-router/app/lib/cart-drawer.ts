@@ -1,4 +1,5 @@
 export const CART_DRAWER_ID = "cart-drawer";
+export const CART_DRAWER_CLOSE_ID = "cart-drawer-close";
 export const MOBILE_NAV_DRAWER_ID = "mobile-nav-drawer";
 
 let openCartActionConfigured = false;
@@ -46,6 +47,23 @@ export function closeMobileNavDrawer(): void {
 export function openDialogFallback(id: string): void {
   if (supportsDialogCommands()) return;
   openDialog(id);
+}
+
+function isFocusOrphaned(): boolean {
+  const active = document.activeElement;
+  if (active === null || active === document.body || active === document.documentElement) {
+    return true;
+  }
+  return !active.isConnected || active instanceof HTMLDialogElement;
+}
+
+export function restoreCartDrawerFocus(): void {
+  if (typeof window === "undefined") return;
+  window.requestAnimationFrame(() => {
+    const dialog = getDialog(CART_DRAWER_ID);
+    if (!dialog?.open || !isFocusOrphaned()) return;
+    document.getElementById(CART_DRAWER_CLOSE_ID)?.focus();
+  });
 }
 
 function configureOpenCartActionNow(): boolean {

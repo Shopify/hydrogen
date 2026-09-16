@@ -1,9 +1,15 @@
 import { ShopPayButton } from "@shopify/hydrogen/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type SubmitEvent } from "react";
 import { Link } from "react-router";
 
 import { useCart, useCartForm } from "~/lib/cart";
-import { closeCartDrawer, configureOpenCartAction, CART_DRAWER_ID } from "~/lib/cart-drawer";
+import {
+  closeCartDrawer,
+  configureOpenCartAction,
+  restoreCartDrawerFocus,
+  CART_DRAWER_CLOSE_ID,
+  CART_DRAWER_ID,
+} from "~/lib/cart-drawer";
 import { formatPrice } from "~/lib/money";
 
 import { publishCartViewed } from "./AnalyticsTrackers";
@@ -88,6 +94,18 @@ export function CartLineItem({ line }: { line: CartLineView }) {
     ?.map((option: { name: string; value: string }) => option.value)
     .join(" / ");
   const errorId = `cart-line-error-${line.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+  const focusCameFromLine = useRef(false);
+
+  useEffect(
+    () => () => {
+      if (focusCameFromLine.current) restoreCartDrawerFocus();
+    },
+    [],
+  );
+
+  const rememberFocus = (event: SubmitEvent<HTMLFormElement>) => {
+    focusCameFromLine.current = event.currentTarget.contains(document.activeElement);
+  };
 
   return (
     <li
@@ -126,7 +144,10 @@ export function CartLineItem({ line }: { line: CartLineView }) {
         <p className={`text-on-surface mt-2 text-sm ${pending ? "opacity-50" : ""}`}>
           {formatPrice(line.cost.totalAmount)}
         </p>
-        <form {...formProps()} className="mt-3 flex items-center gap-2">
+        <form
+          {...formProps({ beforeSubmit: rememberFocus })}
+          className="mt-3 flex items-center gap-2"
+        >
           <button {...register("set")} />
           <input type="hidden" {...register("lineId", { value: line.id })} />
           <div className="quantity-selector-outlined rounded-input inline-flex items-center">
@@ -287,6 +308,7 @@ export function CartDrawer() {
             </div>
             <button
               type="button"
+              id={CART_DRAWER_CLOSE_ID}
               commandfor={CART_DRAWER_ID}
               command="close"
               className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
