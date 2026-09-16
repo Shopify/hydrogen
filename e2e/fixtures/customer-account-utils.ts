@@ -84,12 +84,7 @@ export class CustomerAccountUtil {
       .locator('[role="alert"]')
       .filter({hasText: /.+/})
       .or(this.page.getByText(/enter the correct 6-digit code/i));
-    if (
-      await otpError
-        .first()
-        .isVisible({timeout: 3000})
-        .catch(() => false)
-    ) {
+    if (await otpError.first().isVisible({timeout: 3000}).catch(() => false)) {
       const errorText = (await otpError.first().textContent())?.trim();
       throw new Error(
         `OTP submission failed${
