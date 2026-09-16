@@ -148,13 +148,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
         enableTestTap={loaderData.enableAnalyticsTestTap}
       />
       <CartAnalyticsTracker />
-      <div
-        role="region"
-        aria-label="Announcement"
-        className="bg-on-surface px-margin py-2.5 text-center"
-      >
-        <p className="type-body-sm text-surface">Free shipping on orders over $50</p>
-      </div>
       <Header navCollections={loaderData.navCollections} />
       <Outlet />
       <Footer />
