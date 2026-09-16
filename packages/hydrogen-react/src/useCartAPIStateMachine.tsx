@@ -245,7 +245,7 @@ export function useCartAPIStateMachine({
         if (event.type !== 'CART_FETCH') return;
 
         const {data, errors} = await cartFetch(event?.payload?.cartId);
-        const resultEvent = eventFromFetchResult(event, data?.cart, errors);
+        const resultEvent = eventFromFetchResult(event, {data, errors});
         send(resultEvent);
       },
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -253,13 +253,10 @@ export function useCartAPIStateMachine({
         if (event.type !== 'CART_CREATE') return;
 
         const {data, errors} = await cartCreate(event?.payload);
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartCreate?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartCreate,
           errors,
-          data?.cartCreate?.userErrors,
-          data?.cartCreate?.warnings,
-        );
+        });
         send(resultEvent);
       },
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -271,13 +268,10 @@ export function useCartAPIStateMachine({
           event.payload.lines,
         );
 
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartLinesAdd?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartLinesAdd,
           errors,
-          data?.cartLinesAdd?.userErrors,
-          data?.cartLinesAdd?.warnings,
-        );
+        });
 
         send(resultEvent);
       },
@@ -289,13 +283,10 @@ export function useCartAPIStateMachine({
           event.payload.lines,
         );
 
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartLinesUpdate?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartLinesUpdate,
           errors,
-          data?.cartLinesUpdate?.userErrors,
-          data?.cartLinesUpdate?.warnings,
-        );
+        });
 
         send(resultEvent);
       },
@@ -307,13 +298,10 @@ export function useCartAPIStateMachine({
           event.payload.lines,
         );
 
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartLinesRemove?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartLinesRemove,
           errors,
-          data?.cartLinesRemove?.userErrors,
-          data?.cartLinesRemove?.warnings,
-        );
+        });
 
         send(resultEvent);
       },
@@ -325,13 +313,10 @@ export function useCartAPIStateMachine({
           event.payload.note,
         );
 
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartNoteUpdate?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartNoteUpdate,
           errors,
-          data?.cartNoteUpdate?.userErrors,
-          data?.cartNoteUpdate?.warnings,
-        );
+        });
 
         send(resultEvent);
       },
@@ -344,13 +329,10 @@ export function useCartAPIStateMachine({
           event.payload.buyerIdentity,
         );
 
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartBuyerIdentityUpdate?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartBuyerIdentityUpdate,
           errors,
-          data?.cartBuyerIdentityUpdate?.userErrors,
-          data?.cartBuyerIdentityUpdate?.warnings,
-        );
+        });
 
         send(resultEvent);
       },
@@ -363,13 +345,10 @@ export function useCartAPIStateMachine({
           event.payload.attributes,
         );
 
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartAttributesUpdate?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartAttributesUpdate,
           errors,
-          data?.cartAttributesUpdate?.userErrors,
-          data?.cartAttributesUpdate?.warnings,
-        );
+        });
 
         send(resultEvent);
       },
@@ -381,13 +360,10 @@ export function useCartAPIStateMachine({
           context.cart.id,
           event.payload.discountCodes,
         );
-        const resultEvent = eventFromFetchResult(
-          event,
-          data?.cartDiscountCodesUpdate?.cart,
+        const resultEvent = eventFromFetchResult(event, {
+          data: data?.cartDiscountCodesUpdate,
           errors,
-          data?.cartDiscountCodesUpdate?.userErrors,
-          data?.cartDiscountCodesUpdate?.warnings,
-        );
+        });
 
         send(resultEvent);
       },
@@ -426,21 +402,23 @@ export function cartFromGraphQL(
   };
 }
 
+type CartFetchResult = {
+  data?: PartialDeep<
+    {cart: CartType; userErrors: CartUserError[]; warnings: CartWarning[]},
+    {recurseIntoArrays: true}
+  > | null;
+  errors?: unknown;
+};
+
 function eventFromFetchResult(
   cartActionEvent: CartMachineActionEvent,
-  cart?: PartialDeep<CartType, {recurseIntoArrays: true}> | null,
-  errors?: unknown,
-  userErrors?: Array<
-    PartialDeep<CartUserError, {recurseIntoArrays: true}> | undefined
-  >,
-  warnings?: Array<
-    PartialDeep<CartWarning, {recurseIntoArrays: true}> | undefined
-  >,
+  {data, errors}: CartFetchResult,
 ): CartMachineFetchResultEvent {
   if (errors) {
     return {type: 'ERROR', payload: {errors, cartActionEvent}};
   }
 
+  const cart = data?.cart;
   if (!cart) {
     return {
       type: 'CART_COMPLETED',
@@ -456,8 +434,8 @@ function eventFromFetchResult(
       cart: cartFromGraphQL(cart),
       rawCartResult: cart,
       cartActionEvent,
-      userErrors: userErrors?.filter((e): e is CartUserError => e != null),
-      warnings: warnings?.filter((w): w is CartWarning => w != null),
+      userErrors: data.userErrors?.filter((e): e is CartUserError => e != null),
+      warnings: data.warnings?.filter((w): w is CartWarning => w != null),
     },
   };
 }
