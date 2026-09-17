@@ -15,7 +15,7 @@ description: >
 
 # Migrate to Hydrogen 2026-10
 
-Migrate a classic-Hydrogen storefront (Remix- or React-Router-based) to Hydrogen 2026-10 — the release where Hydrogen becomes a server-handler library. Until the 2026-10 release ships, install it as `@shopify/hydrogen@preview` (the `preview` dist-tag); after, pin the `2026.10.x` calver. This skill is storefront-agnostic — it captures the migration shape and, most importantly, the **traps that agents get wrong**.
+Migrate a classic-Hydrogen storefront (Remix- or React-Router-based) to Hydrogen 2026-10 — the release where Hydrogen becomes a server-handler library. Check npm first (`npm view @shopify/hydrogen dist-tags`): if a stable `2026.10.x` exists, pin that calver; if not, install `@shopify/hydrogen@preview` (the `preview` dist-tag), which resolves to a `2026.10.0-preview.xx` build of the same library. This skill is storefront-agnostic — it captures the migration shape and, most importantly, the **traps that agents get wrong**.
 
 ## The mental model (get this right first)
 
@@ -34,7 +34,7 @@ Do these in order; verify each against the installed package rather than assumin
 ```
 Hydrogen migration:
 - [ ] Determine if already on React Router (if so, skip the Remix swaps in steps 1 and 6)
-- [ ] 1. Dependencies + version pins (@shopify/hydrogen@preview until 2026-10 ships; drop classic-era deps)
+- [ ] 1. Dependencies + version pins (@shopify/hydrogen 2026.10.x, or @preview → 2026.10.0-preview.xx while unreleased; drop classic-era deps)
 - [ ] 2. Scripts: hydrogen skills check --mode=warn && vite dev / react-router build / vite preview; deploy via @shopify/cli
 - [ ] 3. vite.config plugins: [localHttps({enabled}), ...oxygen(), reactRouter()]
 - [ ] 4. react-router.config.ts added (v8_middleware on, buildDirectory 'dist')
@@ -45,7 +45,7 @@ Hydrogen migration:
 - [ ] 8. Verify (build/typecheck gate, then hydrogen-smoke-test), then hand off to the user
 ```
 
-1. **Dependencies** — *(Remix swap only if not already on React Router)* replace `@remix-run/*` + `@shopify/remix-oxygen` with `react-router` + `@react-router/dev` (pin all React Router packages to one version; `react-router-dom` is not needed). Add `@shopify/hydrogen@preview` (the `2026.10.x` calver once the release ships), `@shopify/mini-oxygen@^4.2.0`, `vite@^8`; keep `@shopify/cli` (≥ `4.4.0`) for deploy only. Remove `@shopify/cli-hydrogen` and any `@shopify/hydrogen-classic`-style alias if present. Align versions to the known-good seed below rather than picking latest of each independently.
+1. **Dependencies** — *(Remix swap only if not already on React Router)* replace `@remix-run/*` + `@shopify/remix-oxygen` with `react-router` + `@react-router/dev` (pin all React Router packages to one version; `react-router-dom` is not needed). Add `@shopify/hydrogen` at `2026.10.x` if a stable release exists, else `@shopify/hydrogen@preview` (resolves to `2026.10.0-preview.xx`); add `@shopify/mini-oxygen@^4.2.0`, `vite@^8`; keep `@shopify/cli` (≥ `4.4.0`) for deploy only. Remove `@shopify/cli-hydrogen` and any `@shopify/hydrogen-classic`-style alias if present. Align versions to the known-good seed below rather than picking latest of each independently.
 2. **Scripts** — `dev`: `hydrogen skills check --mode=warn && vite dev` (the prefix prints the resync command after a later `@shopify/hydrogen` bump without blocking dev; plain `hydrogen skills check` belongs in CI); `build`: `react-router build`; `preview`: `react-router build && vite preview`; `deploy`: `shopify hydrogen deploy --assets-dir dist/client --worker-dir dist/server`. Add `dev:https` with the **same** command — the vite.config computes the `localHttps` `enabled` flag from `npm_lifecycle_event` (step 3), not the script body.
 3. **`vite.config`** — plugins are `[localHttps({enabled}), ...oxygen(), reactRouter()]`, with `localHttps` from `@shopify/hydrogen/vite` and `oxygen` from `@shopify/mini-oxygen/vite` (it returns an **array** — spread it). `localHttps` takes a **required** `enabled: boolean` — it does not self-detect; compute it in the config: `const enabled = process.env.VITE_LOCAL_HTTPS === '1' || process.env.npm_lifecycle_event === 'dev:https'`. There is no `hydrogen()` plugin anymore. You do **not** pass an oxygen `entry` — it picks up the React Router server build.
 4. **`react-router.config.ts`** — add it (React Router framework config + future flags; `v8_middleware: true` is required for the middleware skeleton below). Set `buildDirectory: 'dist'` — React Router defaults to `build/`, and the deploy script's `--assets-dir dist/client --worker-dir dist/server` flags silently point at nothing without it. Explicit `routes.ts` route config and flat routes via `@react-router/fs-routes` both work — for a migration, fs-routes preserves the existing flat route filenames with the least churn.
@@ -70,7 +70,7 @@ Known-good seed — **verify against the current published build and update this
 
 ```jsonc
 // package.json — align to a known-good release set
-"@shopify/hydrogen":  "preview",   // the preview dist-tag until 2026-10 ships; then the 2026.10.x calver
+"@shopify/hydrogen":  "preview",   // resolves to 2026.10.0-preview.xx; pin the 2026.10.x calver once it ships
 "react" | "react-dom": "^19.2.7",  "react-router": "7.15.1",  "isbot": "^5.1.36",
 // devDependencies:
 "@react-router/dev":  "7.15.1",
