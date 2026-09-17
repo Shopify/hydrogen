@@ -1,13 +1,13 @@
 import "server-only";
-import { createShopifyRequestContext, createStorefrontClient } from "@shopify/hydrogen";
-
 import { DEFAULT_MARKET } from "./markets";
+import { createStaticStorefrontClient } from "./storefront-client";
 import { resolveStorefrontConfig } from "./storefront-config";
 
 /**
- * Shared-rate-limit private Storefront client for **all catalog reads**.
+ * Shared-rate-limit Storefront client for **all catalog reads**.
  * Module-scoped: one client for the process, no `headers()`
  * → no buyer IP, shared throttle bucket. Single-market example → `DEFAULT_MARKET`.
+ * Private (no buyer context) against a real store; tokenless public on mock.shop.
  *
  * Catalog pages (home, collections index, collection PLP, product, search,
  * sitemap, related products, shop analytics GID) fetch through this client.
@@ -17,19 +17,8 @@ import { resolveStorefrontConfig } from "./storefront-config";
  * inputs). The `cache:` option is never passed to `graphql()` — Next native
  * data cache + `cacheLife`/`cacheTag` replace the Oxygen sub-request LRU.
  */
-const requestContext = createShopifyRequestContext({
+export const staticStorefrontClient = createStaticStorefrontClient({
+  config: resolveStorefrontConfig(),
   request: { headers: new Headers() },
   i18n: DEFAULT_MARKET,
-});
-
-const { storeDomain, privateStorefrontToken, storefrontId } = resolveStorefrontConfig();
-
-export const staticStorefrontClient = createStorefrontClient({
-  type: "private_no_buyer_context",
-  requestContext,
-  config: {
-    storeDomain,
-    privateStorefrontToken,
-    storefrontId,
-  },
 });
