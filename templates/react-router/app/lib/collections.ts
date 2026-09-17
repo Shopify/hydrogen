@@ -1,5 +1,5 @@
 import { gql, type StorefrontApi } from "@shopify/hydrogen";
-import type { RequestScopedPrivateStorefrontClient } from "@shopify/hydrogen";
+import type { StorefrontClient } from "@shopify/hydrogen";
 
 import { COLLECTION_CARD_FRAGMENT } from "~/components/CollectionCard";
 
@@ -28,7 +28,7 @@ export async function loadCollectionsPage({
   storefrontClient,
   request,
 }: {
-  storefrontClient: RequestScopedPrivateStorefrontClient;
+  storefrontClient: StorefrontClient;
   request: Request;
 }) {
   const url = new URL(request.url);
