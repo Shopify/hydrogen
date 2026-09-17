@@ -52,6 +52,11 @@ function attributesOf(element: Element): Record<string, string> {
   return Object.fromEntries(Array.from(element.attributes, (attr) => [attr.name, attr.value]));
 }
 
+/** Models JS callers bypassing the required `ReactElement` prop type. */
+function withMissingAvatar(signedOutAvatar: null | undefined): ShopifyAccountWidgetProps {
+  return { ...baseProps, signedOutAvatar: signedOutAvatar as unknown as ReactElement };
+}
+
 describe("ShopifyAccountWidget", () => {
   describe("structure", () => {
     it("renders store > account > (style, avatar wrapper) using the core descriptors", () => {
@@ -110,6 +115,18 @@ describe("ShopifyAccountWidget", () => {
       expect(wrapper.getAttribute("slot")).toBe("signed-out-avatar");
       expect(wrapper.getAttribute("aria-hidden")).toBe("true");
       expect(wrapper.firstElementChild?.getAttribute("data-avatar")).toBe("next");
+    });
+
+    it.each([
+      { label: "undefined", signedOutAvatar: undefined },
+      { label: "null", signedOutAvatar: null },
+    ])("throws a synchronous TypeError when signedOutAvatar is $label", ({ signedOutAvatar }) => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+
+      expect(() =>
+        render(createElement(ShopifyAccountWidget, withMissingAvatar(signedOutAvatar))),
+      ).toThrowError(new TypeError("ShopifyAccountWidget requires the signedOutAvatar prop."));
+      expect(document.querySelector("shopify-store")).toBeNull();
     });
 
     it("does not leak handler props onto the DOM", () => {

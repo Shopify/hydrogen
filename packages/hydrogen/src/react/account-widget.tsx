@@ -51,6 +51,9 @@ type ShopifyAccountElement = HTMLElement & {
  */
 export function ShopifyAccountWidget(props: ShopifyAccountWidgetProps): ReactElement {
   const { signedOutAvatar, onOpen, onClose, ...options } = props;
+  if (signedOutAvatar == null) {
+    throw new TypeError("ShopifyAccountWidget requires the signedOutAvatar prop.");
+  }
   const { store, account, style, avatar } = getShopifyAccountWidgetStructure(options);
   const storeKey = getStoreKey(options);
   const accountRef = useRef<ShopifyAccountElement>(null);

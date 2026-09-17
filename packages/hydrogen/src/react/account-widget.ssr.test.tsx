@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { act } from "@testing-library/react";
-import { createElement } from "react";
+import { createElement, type ReactElement } from "react";
 import { hydrateRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -111,6 +111,24 @@ describe("ShopifyAccountWidget SSR", () => {
     );
 
     expect(html).not.toMatch(/on(open|close)/i);
+  });
+
+  it.each([
+    { label: "undefined", signedOutAvatar: undefined },
+    { label: "null", signedOutAvatar: null },
+  ])("throws a synchronous TypeError when signedOutAvatar is $label", ({ signedOutAvatar }) => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    // Models JS callers bypassing the required `ReactElement` prop type.
+    const props: ShopifyAccountWidgetProps = {
+      ...baseProps,
+      signedOutAvatar: signedOutAvatar as unknown as ReactElement,
+    };
+    const expected = new TypeError("ShopifyAccountWidget requires the signedOutAvatar prop.");
+
+    expect(() => renderToString(createElement(ShopifyAccountWidget, props))).toThrowError(expected);
+    expect(() => renderToStaticMarkup(createElement(ShopifyAccountWidget, props))).toThrowError(
+      expected,
+    );
   });
 });
 
