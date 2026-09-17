@@ -19,7 +19,7 @@ Use server-side configuration for:
 - `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID` — Customer Account API client ID.
 - `CUSTOMER_ACCOUNT_SESSION_SECRET` — private per-app secret for encrypted cookie examples, or replace cookie storage with opaque server-side sessions in production.
 
-Do not expose access tokens, refresh tokens, ID tokens, or session secrets to client components or browser storage.
+Do not expose access tokens, refresh tokens, ID tokens, or session secrets to client components or browser storage. The one intentional exception is the current customer access token passed to Shopify's account widget (see [Account Widget](#account-widget)).
 
 ## Session Module
 
@@ -94,7 +94,71 @@ Hydrogen ships no account UI yet — the app owns it. A storefront with the hand
 - **Signed in** — fetch and render a minimal profile (`customer { firstName lastName emailAddress { emailAddress } }`). Check GraphQL `errors` and render an error state instead of crashing.
 - **Logout** — a plain HTML `<form method="post" action="/account/logout">` with a submit button. The handler enforces same-origin POST and returns a raw redirect (to Shopify's logout endpoint when an `id_token` exists); a native browser submit follows it, a client-side form component or fetch call does not. This also keeps logout working without JavaScript. An optional `return_to` search param on the action URL controls the post-logout destination.
 - **Navbar** — link to `/account`. A static link is enough; the page handles both states. If showing signed-in state in the header, use `isLoggedIn()` behind the framework's streaming primitive per the Server Rendering rules above.
-- Never serialize tokens or session objects into loader data or HTML; render only derived profile fields.
+- Never serialize tokens or session objects into loader data or HTML; render only derived profile fields. The only exception is the `customerAccessToken` the Account Widget below serializes for Shopify's `<shopify-account>` component.
+
+## Account Widget
+
+Hydrogen renders Shopify's [`<shopify-account>`](https://shopify.dev/docs/api/storefront-web-components/components/shopify-account) header control with SSR-safe markup: the signed-out avatar is visible before Shopify's bundle loads and its footprint is reserved so the header does not shift. The widget needs the account bundle, so enable `account` on the same `ShopifyScripts` (or `getShopifyScriptTags()`) the app already renders once in the document head:
+
+```tsx
+<ShopifyScripts account shop={shop} routes={routeTemplates} />
+```
+
+All bindings share the same options: `storeDomain`, a **public** Storefront API token as `publicAccessToken` (it is serialised into HTML; never the private token), optional `customerAccessToken` for the signed-in customer, optional `menu` handle, `signInUrl` (defaults to `/account/login`), and `nonce` for the emitted `<style>`. The avatar is visual only: pass an icon or image with no links, buttons, or focusable elements, and no `slot` attribute — Hydrogen wraps it in the `signed-out-avatar` slot. The bindings need no class, user CSS, or inline style to hold a stable layout.
+
+Core (framework-agnostic HTML string). Hydrogen does not escape `signedOutAvatarHtml`, so pass only application-owned markup:
+
+```ts
+import { renderShopifyAccountWidget } from "@shopify/hydrogen";
+
+const html = renderShopifyAccountWidget({
+  storeDomain,
+  publicAccessToken,
+  customerAccessToken,
+  signedOutAvatarHtml: '<img src="/icons/user.svg" alt="">',
+});
+```
+
+React:
+
+```tsx
+import { ShopifyAccountWidget } from "@shopify/hydrogen/react";
+
+<ShopifyAccountWidget
+  storeDomain={storeDomain}
+  publicAccessToken={publicAccessToken}
+  customerAccessToken={customerAccessToken}
+  signedOutAvatar={<img src="/icons/user.svg" alt="" />}
+  onOpen={() => {}}
+  onClose={() => {}}
+/>;
+```
+
+Vue:
+
+```vue
+<script setup lang="ts">
+import { ShopifyAccountWidget } from "@shopify/hydrogen/vue";
+</script>
+
+<template>
+  <ShopifyAccountWidget
+    :store-domain="storeDomain"
+    :public-access-token="publicAccessToken"
+    :customer-access-token="customerAccessToken"
+    @open="onOpen"
+    @close="onClose"
+  >
+    <template #signed-out-avatar>
+      <img src="/icons/user.svg" alt="" />
+    </template>
+  </ShopifyAccountWidget>
+</template>
+```
+
+`open` / `close` are the component's own `CustomEvent<null>` events, forwarded unchanged. Resolve `customerAccessToken` on the server with `getAccessToken()` per the Server Rendering rules and pass only that token — never the session. After a token refresh, render the widget again with the new value so the signed-in state matches the session.
+
+`customerAccessToken` is the narrow, intentional exception to the token rules above: Shopify's `<shopify-account>` component needs the current customer access token as a `customer-access-token` attribute, so it is serialized into HTML and visible in the browser. Pass only that token — never the session object, refresh token, ID token, or the private Storefront token. Because the response contains a per-customer secret, finalize it through `requestContext.applyResponseHeaders()` so it is marked private and never cached publicly or on a CDN. Do not copy the token into browser storage; re-render the widget from the server instead.
 
 ## Typed Queries
 
