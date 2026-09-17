@@ -67,7 +67,7 @@ export const handleProductVariantId: HydrogenRouteInterceptor = (
   const variantId = parseVariantSearchParam(url.searchParams.get(VARIANT_SEARCH_PARAM));
   if (!variantId) return null;
 
-  const pathPrefix = requestContext.i18n.pathPrefix;
+  const pathPrefix = requestContext.locale.pathPrefix;
   const match = matchStandardRouteUrl({ routeTemplates, pathPrefix, url: url.href });
   if (match?.pageTemplateName !== "product") return null;
 

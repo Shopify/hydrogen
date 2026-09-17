@@ -284,7 +284,7 @@ export {};
 
 Add typed React Router contexts for Worker values the app needs, such as `env`, `cache`, and `waitUntil`. Use `createContext<T>()`/`RouterContextProvider` consistently so middleware and loaders do not reach for globals or `process.env`.
 
-Do not replace `tsconfig.json` wholesale. Keep `types` set to `["@shopify/oxygen-workers-types", "react-router", "vite/client"]` without `node`. Under `verbatimModuleSyntax`, any binding used only in a type position must use `import type`. Example: `defaultI18n` in `app/lib/storefront.ts` is used only as `typeof defaultI18n`, so it must be `import type {defaultI18n}`.
+Do not replace `tsconfig.json` wholesale. Keep `types` set to `["@shopify/oxygen-workers-types", "react-router", "vite/client"]` without `node`. Under `verbatimModuleSyntax`, any binding used only in a type position must use `import type`. Example: a module that only references `typeof i18n` (the `defineShopifyI18n` definition exported from the public config module) must use `import type { i18n }`.
 
 Keep `@types/node` in `devDependencies` (build tooling needs it at runtime); it is just not in the app `types` array.
 
@@ -309,8 +309,10 @@ Additionally, keep `lib/route-templates.ts` unchanged — `routeTemplates` is re
 `Layout`) and analytics run on the CLIENT, where the Worker `env` is not available. Split it:
 
 - Public identity -> bundled `app/lib/config.ts` (store domain, public Storefront token, shop/storefront IDs,
-  Customer Account client ID, `defaultI18n`, `analyticsShop`, `analyticsConsent`). These are non-secret and safe in the
-  client bundle; default them to the demo store so the template runs out of the box.
+  Customer Account client ID, the `defineShopifyI18n` definition `i18n`, `analyticsShop`, `analyticsConsent`). These are
+  non-secret and safe in the client bundle; default them to the demo store so the template runs out of the box.
+  `defineShopifyI18n` returns serializable config, so importing `i18n` on the client is fine; `createShopifyRequestContext`
+  resolves `requestContext.locale` from it on the server.
 - Real secrets -> Worker `env`, read on the server only: `SESSION_SECRET`, `PRIVATE_STOREFRONT_API_TOKEN`, plus an
   optional `PUBLIC_STORE_DOMAIN` override. Read them in root middleware, not at module scope.
 

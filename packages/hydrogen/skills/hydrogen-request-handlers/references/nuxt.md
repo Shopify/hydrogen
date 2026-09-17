@@ -21,7 +21,7 @@ Create `server/middleware/shopify.ts`:
 
 The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` from the app's trusted deployment headers per the buyer-IP guidance from `hydrogen-storefront-client`.
 
-Create app-owned `sessionManager` and `routeTemplates` values before `handleShopifyRoutes`; the session manager must be request-scoped.
+Create app-owned `sessionManager`, `routeTemplates`, and `i18n` (the `defineShopifyI18n` definition from `SKILL.md`) values before `handleShopifyRoutes`; the session manager must be request-scoped.
 
 ```ts
 import {
@@ -31,6 +31,7 @@ import {
   handleShopifyRoutes,
   type ShopifyRequestContext,
 } from "@shopify/hydrogen";
+import { i18n } from "~/lib/i18n";
 
 const cartHandlers = createCartServerHandlers();
 
@@ -38,7 +39,7 @@ export default defineEventHandler(async (event) => {
   const request = toWebRequest(event);
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
   });
   const sessionManager = await createSessionManager(request);
   const storefrontClient = createPublicStorefrontClient(requestContext);
@@ -174,16 +175,17 @@ if (import.meta.server && props.error.statusCode === 404) {
 
 ## Client Storefront Plugin
 
-For client-side refetches, use a public client whose `fetch` rewrites Storefront API URLs to the same-origin Hydrogen SFAPI proxy:
+For client-side refetches, use a public client whose `fetch` rewrites Storefront API URLs to the same-origin Hydrogen SFAPI proxy. Pass the page URL as `request.url` so the browser client resolves the same locale as the server did:
 
 ```ts
 import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
+import { i18n } from "~/lib/i18n";
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig().public;
   const requestContext = createShopifyRequestContext({
-    request: { headers: new Headers() },
-    i18n: { country: "US", language: "EN" },
+    request: { headers: new Headers(), url: window.location.href },
+    i18n,
   });
   const storefrontClient = createStorefrontClient({
     type: "public",

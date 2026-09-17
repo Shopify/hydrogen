@@ -78,9 +78,9 @@ export async function loader(args: Route.LoaderArgs) {
     myshopifyDomain: env.PUBLIC_STORE_DOMAIN,
   };
   const i18n = {
-    country: storefront.i18n.country,
-    language: storefront.i18n.language,
-    pathPrefix: storefront.i18n.pathPrefix,
+    country: storefront.locale.country,
+    language: storefront.locale.language,
+    pathPrefix: storefront.locale.pathPrefix,
     ...(analyticsCurrency ? { currency: analyticsCurrency } : {}),
   };
 

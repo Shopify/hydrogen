@@ -14,7 +14,7 @@ import {
   getMockShopDomain,
   getPrivateStorefrontToken,
   getStoreDomain,
-  storefrontConfig,
+  i18n,
   shouldUseMockShop,
 } from "~/lib/shop";
 
@@ -36,7 +36,7 @@ export function createRequestStorefrontClient(
   const buyerIp = usingMockShop ? getMockBuyerIp(request.headers) : getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: storefrontConfig.i18n,
+    i18n,
     buyerIp,
   });
 

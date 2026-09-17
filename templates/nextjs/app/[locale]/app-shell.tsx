@@ -8,6 +8,7 @@ import { Header } from "@/components/Header";
 import { HeaderAccountLink, HeaderAccountLinkFallback } from "@/components/HeaderAccountLink";
 import { getAnalyticsShop } from "@/lib/analytics-shop";
 import { cartHandlers } from "@/lib/cart-handlers";
+import type { Locale } from "@/lib/locale";
 import { getStorefrontClient } from "@/lib/storefront";
 
 import { Providers } from "./providers";
@@ -19,11 +20,19 @@ import { Providers } from "./providers";
  * static HTML shell prerenders and the per-buyer parts stream
  * (`next/server` `connection()` + `headers()`/`cookies()` are per-request).
  *
- * Rendered inside `<Suspense>` from the root layout. `await connection()`
+ * Rendered inside `<Suspense>` from the `[locale]` layout. `await connection()`
  * opts the subtree into dynamic rendering (resolves immediately on a real
- * request, never during prerender).
+ * request, never during prerender). The locale comes from the layout's route
+ * param; only the server components that render raw `<a>`/`<form>` elements
+ * need it as a prop, everything else links through `LocalizedLink`.
  */
-export async function AppShell({ children }: { children: React.ReactNode }) {
+export async function AppShell({
+  locale,
+  children,
+}: {
+  locale: Locale;
+  children: React.ReactNode;
+}) {
   await connection();
 
   // Cart seed: per-buyer and non-blocking so the shell can stream.
@@ -44,9 +53,10 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       <Header
         accountLink={
           <Suspense fallback={<HeaderAccountLinkFallback />}>
-            <HeaderAccountLink />
+            <HeaderAccountLink locale={locale} />
           </Suspense>
         }
+        locale={locale}
         shopName={analyticsShop.shopName}
       />
 

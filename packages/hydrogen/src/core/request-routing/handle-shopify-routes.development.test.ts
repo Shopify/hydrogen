@@ -9,7 +9,7 @@ const defaultConfig = {
   storeDomain: "test-store.myshopify.com",
 } as const;
 
-const DEFAULT_I18N = { country: "US", language: "EN" } as const;
+const DEFAULT_I18N = { defaultLocale: { country: "US", language: "EN" } } as const;
 
 function handleShopifyRoutesDev(
   options: Omit<

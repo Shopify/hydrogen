@@ -44,7 +44,7 @@ const writableSessionManager: WritableCustomerSessionManager = {
 };
 const requestContext = createShopifyRequestContext({
   request: new Request("https://example.com"),
-  i18n: { country: "US", language: "EN" },
+  i18n: { defaultLocale: { country: "US", language: "EN" } },
 });
 
 describe("Customer Account session type boundary", () => {

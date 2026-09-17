@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { customerAccountConfig } from "@/lib/config";
 import { getCustomerAccessToken } from "@/lib/customer-account";
+import { type Locale, localizedHref, resolveLocaleParam } from "@/lib/locale";
 import { isCustomerAccountsAvailable } from "@/lib/storefront-config";
 import { toURLSearchParams } from "@/lib/url-params";
 
@@ -31,6 +32,7 @@ type AccountCustomer = {
 };
 
 type AccountPageProps = {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
@@ -42,7 +44,7 @@ type AccountPageProps = {
  * the `AppShell` dynamic context (`await connection()` in the root layout's
  * shell), which opts the whole subtree into dynamic rendering — any
  * `headers()`/`cookies()` read inside (e.g. `getCustomerAccessToken()` →
- * `createCurrentRequest()` → `headers()`) is then automatically dynamic, the
+ * `headers()`) is then automatically dynamic, the
  * same convention `cart/page.tsx` follows.
  *
  * Token refresh is delegated to the `/account/refresh` handler (intercepted in
@@ -53,13 +55,14 @@ type AccountPageProps = {
  * the handler refreshes, commits the cookie on its response, and redirects
  * back to `/account`, which now reads a valid token.
  */
-export default async function AccountPage({ searchParams }: AccountPageProps) {
+export default async function AccountPage({ params, searchParams }: AccountPageProps) {
+  const locale = resolveLocaleParam((await params).locale);
   const available = isCustomerAccountsAvailable(); // sync — no await
   const urlSearchParams = toURLSearchParams(await searchParams);
   const loginFailed = urlSearchParams.get("login") === "failed";
   const refreshAttempted = urlSearchParams.get("refreshed") === "1";
 
-  if (!available) return <AccountShell notice="real-store" />;
+  if (!available) return <AccountShell locale={locale} notice="real-store" />;
 
   const { accessToken, requestContext } = await getCustomerAccessToken();
   if (!accessToken && !loginFailed && !refreshAttempted) {
@@ -69,9 +72,10 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     // mutation that happens during render. Refreshing in-page would break that
     // no-render-commit invariant. The handler refreshes, sets the cookie on its
     // own response, and redirects back with `refreshed=1`.
-    redirect(`/account/refresh?return_to=${encodeURIComponent("/account?refreshed=1")}`);
+    const returnTo = localizedHref("/account?refreshed=1", locale);
+    redirect(localizedHref(`/account/refresh?return_to=${encodeURIComponent(returnTo)}`, locale));
   }
-  if (!accessToken) return <AccountShell loginFailed={loginFailed} />;
+  if (!accessToken) return <AccountShell locale={locale} loginFailed={loginFailed} />;
 
   // Build the client per-call (Next has no RR "context" equivalent; per-call
   // construction from `headers()` is the native Next approach, matching
@@ -93,13 +97,14 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     error = "Customer Account API request failed. Try again later.";
   }
 
-  return <AccountShell customer={customer} error={error} />;
+  return <AccountShell locale={locale} customer={customer} error={error} />;
 }
 
-type AccountShellProps =
+type AccountShellProps = { locale: Locale } & (
   | { notice: "real-store" }
   | { loginFailed: boolean }
-  | { customer?: AccountCustomer | null; error?: string };
+  | { customer?: AccountCustomer | null; error?: string }
+);
 
 function AccountShell(props: AccountShellProps) {
   return (
@@ -112,12 +117,14 @@ function AccountShell(props: AccountShellProps) {
       </p>
 
       {"notice" in props && <RealStoreNotice />}
-      {"loginFailed" in props && <LoginPanel loginFailed={props.loginFailed} />}
+      {"loginFailed" in props && (
+        <LoginPanel locale={props.locale} loginFailed={props.loginFailed} />
+      )}
       {"customer" in props &&
         (props.error ? (
           <CustomerAccountError message={props.error} />
         ) : (
-          <CustomerCard customer={props.customer} />
+          <CustomerCard locale={props.locale} customer={props.customer} />
         ))}
     </div>
   );
@@ -140,7 +147,7 @@ function RealStoreNotice() {
   );
 }
 
-function LoginPanel({ loginFailed }: { loginFailed: boolean }) {
+function LoginPanel({ locale, loginFailed }: { locale: Locale; loginFailed: boolean }) {
   return (
     <section
       className="border-border bg-surface mt-8 rounded border p-8"
@@ -164,7 +171,7 @@ function LoginPanel({ loginFailed }: { loginFailed: boolean }) {
       ) : null}
       {/* Plain `<a>` — `/account/login` is handler-intercepted in `proxy.ts`. */}
       <a
-        href="/account/login"
+        href={localizedHref("/account/login", locale)}
         className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         Log in
@@ -184,7 +191,7 @@ function CustomerAccountError({ message }: { message: string }) {
   );
 }
 
-function CustomerCard({ customer }: { customer?: AccountCustomer | null }) {
+function CustomerCard({ locale, customer }: { locale: Locale; customer?: AccountCustomer | null }) {
   const name = [customer?.firstName, customer?.lastName].filter(Boolean).join(" ") || "Customer";
 
   return (
@@ -202,7 +209,7 @@ function CustomerCard({ customer }: { customer?: AccountCustomer | null }) {
       {customer?.emailAddress?.emailAddress ? (
         <p className="type-body text-on-surface-secondary">{customer.emailAddress.emailAddress}</p>
       ) : null}
-      <form method="post" action="/account/logout" className="mt-8">
+      <form method="post" action={localizedHref("/account/logout", locale)} className="mt-8">
         <button
           type="submit"
           className="rounded-button button-outline focus-visible:outline-accent inline-flex h-11 items-center justify-center px-5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"

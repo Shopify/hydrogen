@@ -1,6 +1,6 @@
 import type { ShopifyStandardActions } from "../vendor/standard-actions";
 import type { StorefrontAnalytics } from "./core/analytics/types";
-import type { I18nConfig } from "./core/request-context";
+import type { ShopifyCountryCode, ShopifyLanguageCode } from "./core/i18n/types";
 import type { ShopifyStandardRouteMatch } from "./core/standard-routes/index";
 
 export type ShopifyGlobal = {
@@ -15,7 +15,7 @@ export type ShopifyGlobal = {
       language?: string;
     };
   };
-  country: I18nConfig["country"] | string;
+  country: ShopifyCountryCode | string;
   currency?: {
     active: string;
   };
@@ -39,7 +39,7 @@ export type ShopifyGlobal = {
     shouldShowBanner: () => boolean;
     shouldShowGDPRBanner: () => boolean;
   };
-  locale: Lowercase<I18nConfig["language"]> | string;
+  locale: Lowercase<ShopifyLanguageCode> | string;
   /** @deprecated Use `Shopify.routes.navigate` instead. */
   navigate?: (url: string) => void | Promise<void>;
   routes: {

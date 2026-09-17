@@ -9,11 +9,6 @@ export const SITE_ORIGIN =
     ? (process.env.SITE_ORIGIN ?? "http://localhost:3000")
     : "http://localhost:3000";
 
-/** Build an absolute canonical URL from a path. */
-export function canonicalUrl(path: string): string {
-  return new URL(path, SITE_ORIGIN).toString();
-}
-
 /**
  * Serialize JSON-LD and escape it for safe embedding in a
  * `<script type="application/ld+json">` tag. It escapes `<` so the payload

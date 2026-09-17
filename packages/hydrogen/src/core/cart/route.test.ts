@@ -11,10 +11,10 @@ import { createCartServerHandlers } from "./server-handlers";
 
 type TestStorefrontConfig = {
   storeDomain: string;
-  i18n?: { country: "US" | "CA"; language: "EN" | "FR" };
+  locale?: { country: "US" | "CA"; language: "EN" | "FR" };
 };
 
-const DEFAULT_I18N = { country: "US", language: "EN" } as const;
+const DEFAULT_LOCALE = { country: "US", language: "EN" } as const;
 
 const defaultConfig: TestStorefrontConfig = {
   storeDomain: "https://test-store.myshopify.com",
@@ -122,7 +122,7 @@ function createPrivateStorefrontClient(
     type: "private",
     requestContext: createShopifyRequestContext({
       request,
-      i18n: fixture.i18n ?? DEFAULT_I18N,
+      i18n: { defaultLocale: fixture.locale ?? DEFAULT_LOCALE },
       buyerIp: "127.0.0.1",
     }),
     config: {
@@ -398,7 +398,7 @@ describe("createCartServerHandlers", () => {
 
       await handleCartRequest(createGetRequest("cart=123"), {
         ...defaultConfig,
-        i18n: { country: "CA", language: "FR" },
+        locale: { country: "CA", language: "FR" },
       });
 
       const [, init] = mockFetch.mock.calls[0];

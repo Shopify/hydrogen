@@ -5,6 +5,7 @@ import {
   createShopifyRequestContext,
   handleShopifyRedirects,
   handleShopifyRoutes,
+  matchLocale,
 } from "@shopify/hydrogen";
 import { createStorefrontClient } from "@shopify/hydrogen";
 import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
@@ -15,7 +16,7 @@ import { cartHandlers } from "~/lib/cart-handlers";
 import { cartMetafieldHandlers } from "~/lib/cart-metafields.server";
 import { createHydrogenRouterContext } from "~/lib/context";
 import { createCustomerAccountContext, createCustomerSessionManager } from "~/lib/customer-account";
-import { getLocaleFromRequest } from "~/lib/i18n";
+import { i18n } from "~/lib/i18n";
 import { routeTemplates } from "~/lib/route-templates";
 
 const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
@@ -31,12 +32,12 @@ export default {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext): Promise<Response> {
     try {
       const publicRequest = createPublicRequest(request);
-      const i18n = getLocaleFromRequest(publicRequest);
       const buyerIp = getBuyerIp(request.headers);
 
       const shopifyRequestContext = createShopifyRequestContext({
         request: publicRequest,
         i18n,
+        locale: matchLocale(getLocaleMatchUrl(publicRequest), i18n),
         buyerIp,
       });
       const storefrontClient = createStorefrontClient({
@@ -138,6 +139,16 @@ export default {
     }
   },
 };
+
+/**
+ * React Router single-fetch requests the locale root as `/fr-ca.data`, which would otherwise read
+ * as an unknown segment and resolve to the default locale.
+ */
+function getLocaleMatchUrl(request: Request): URL {
+  const url = new URL(request.url);
+  url.pathname = url.pathname.replace(/\.data$/, "");
+  return url;
+}
 
 function createPublicRequest(request: Request): Request {
   const publicUrl = getPublicUrl(request);

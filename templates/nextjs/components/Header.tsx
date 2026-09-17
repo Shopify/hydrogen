@@ -1,9 +1,10 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { content } from "@/lib/content";
+import { type Locale, localizedHref } from "@/lib/locale";
 
 import { CartTrigger } from "./CartTrigger";
+import { LocalizedLink } from "./LocalizedLink";
 import { MobileNavDialog } from "./MobileNavDialog";
 import { PredictiveSearchTrigger } from "./PredictiveSearchTrigger";
 
@@ -18,8 +19,9 @@ const navItemHref: Record<(typeof content.header.navItems)[number], string> = {
 
 /**
  * Site header: server shell + small client islands. Server-rendered: logo
- * `<Link>`, desktop nav `<Link>`s, and a real `<Link href="/search">` search
- * trigger that is reachable without JS. Client islands: `CartTrigger`,
+ * link, desktop nav links, and a real `/search` link as the search trigger
+ * that is reachable without JS. Links go through `LocalizedLink`; the
+ * `<noscript>` form action is localized directly since it is a raw element. Client islands: `CartTrigger`,
  * `PredictiveSearchTrigger`, and `MobileNavDialog`.
  *
  * The cart trigger opens the `<dialog>` drawer via `showModal()`. The footer
@@ -27,9 +29,11 @@ const navItemHref: Record<(typeof content.header.navItems)[number], string> = {
  */
 export function Header({
   accountLink,
+  locale,
   shopName = "CORE",
 }: {
   accountLink?: ReactNode;
+  locale: Locale;
   shopName?: string;
 }) {
   return (
@@ -40,12 +44,12 @@ export function Header({
       >
         <div className="flex items-center gap-2">
           <MobileNavDialog />
-          <Link
+          <LocalizedLink
             href="/"
             className="text-on-surface focus-visible:outline-accent inline-flex items-center rounded-sm text-lg font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {shopName}
-          </Link>
+          </LocalizedLink>
         </div>
 
         <nav
@@ -53,20 +57,25 @@ export function Header({
           className="mx-8 hidden min-w-0 flex-1 items-center gap-8 md:flex"
         >
           {content.header.navItems.map((item) => (
-            <Link
+            <LocalizedLink
               key={item}
               href={navItemHref[item]}
               className="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
             >
               {item}
-            </Link>
+            </LocalizedLink>
           ))}
         </nav>
 
         <div className="flex items-center gap-0">
           <PredictiveSearchTrigger />
           <noscript>
-            <form action="/search" method="get" role="search" className="sr-only">
+            <form
+              action={localizedHref("/search", locale)}
+              method="get"
+              role="search"
+              className="sr-only"
+            >
               <label htmlFor="header-search-q">{content.general.search}</label>
               <input id="header-search-q" name="q" type="search" autoComplete="off" />
               <button type="submit">{content.search.submit}</button>

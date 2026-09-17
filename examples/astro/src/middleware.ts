@@ -1,5 +1,5 @@
 import { getBuyerIp } from "@shared/buyer-ip";
-import { defaultI18n, storefrontConfig } from "@shared/config";
+import { i18n, storefrontConfig } from "@shared/config";
 import { getPrivateStorefrontToken } from "@shared/private-env";
 import {
   STOREFRONT_CACHE_MAX_ENTRIES,
@@ -29,7 +29,7 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
   const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: defaultI18n,
+    i18n,
     buyerIp,
   });
   const storefrontClient = createPrivateStorefrontClient(requestContext);

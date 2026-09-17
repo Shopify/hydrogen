@@ -213,7 +213,7 @@ Destinations are consent-gated and receive replayed buffered events once trackin
 
 Each framework should derive `shop` and `i18n` on the server and render ShopifyScripts before publishing. The exact env API varies by framework; these examples show the data flow, not a requirement to use these file names.
 
-Do not query `localization.language` just to echo the language already passed to `@inContext`. If the app only knows country/language and does not have a market currency code, add `currencyCode` to the app's market config or query `localization { country { currency { isoCode } } }` as a fallback.
+Read the locale from `requestContext.locale` (or `storefrontClient.locale`), the `{ language, country, pathPrefix }` resolved for the request from the `defineShopifyI18n` definition. Do not query `localization.language` just to echo the language already passed to `@inContext`. If the app does not have a currency code for the locale, add `currency` to the locale entries in `defineShopifyI18n` (extra fields survive on `requestContext.locale`) or query `localization { country { currency { isoCode } } }` as a fallback.
 
 React root layout:
 
@@ -224,7 +224,7 @@ React root layout:
     storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0",
     myshopifyDomain: env.PUBLIC_STORE_DOMAIN,
   }}
-  i18n={{ country: market.country, language: market.language, currency: market.currencyCode }}
+  i18n={{ ...storefrontClient.locale, currency: currencyCode }}
   consent={{ mode: "default-banner" }}
 />
 ```
@@ -238,7 +238,7 @@ const shopifyTags = renderShopifyScriptTags({
     storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0",
     myshopifyDomain: env.PUBLIC_STORE_DOMAIN,
   },
-  i18n: { country: market.country, language: market.language, currency: market.currencyCode },
+  i18n: { ...requestContext.locale, currency: currencyCode },
   consent: { mode: "default-banner" },
 });
 ```

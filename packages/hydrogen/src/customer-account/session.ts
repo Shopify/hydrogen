@@ -608,7 +608,7 @@ async function handleLoginRoute(
   const loginUrl = await customerSession.prepareLoginUrl(sessionManager, requestContext, {
     origin,
     returnTo,
-    countryCode: requestContext.i18n.country,
+    countryCode: requestContext.locale.country,
     locale: getOptionalSearchParam(requestUrl, "locale"),
     acrValues: getOptionalSearchParam(requestUrl, "acr_values"),
     loginHint: getOptionalSearchParam(requestUrl, "login_hint"),

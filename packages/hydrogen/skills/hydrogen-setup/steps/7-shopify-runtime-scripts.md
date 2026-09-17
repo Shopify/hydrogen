@@ -21,8 +21,9 @@ const shop: ShopifyScriptsShop = {
 };
 
 const i18n: ShopifyScriptsI18n = {
-  country, // resolved market country, e.g. "US"
-  language, // resolved market language, e.g. "EN"
+  country: requestContext.locale.country, // e.g. "US"
+  language: requestContext.locale.language, // e.g. "EN"
+  pathPrefix: requestContext.locale.pathPrefix, // "" for the default locale
 };
 ```
 
@@ -32,7 +33,7 @@ All three `shop` fields are required and identify different things:
 - `storefrontId` — the specific **headless/Hydrogen storefront instance** attached to the shop. A shop can have several storefronts; analytics and PerfKit use this ID to attribute traffic to this one. Use `"0"` when the app has no provisioned storefront ID.
 - `myshopifyDomain` — the shop's permanent `*.myshopify.com` domain, exposed as `window.Shopify.shop`.
 
-`i18n` is the same resolved market used by Storefront API requests (`country` + `language`, optional `currency`) — not a locale string, and not the analytics consent config.
+`i18n` is the same resolved locale used by Storefront API requests: read `country`, `language`, and `pathPrefix` from `requestContext.locale` (or `storefrontClient.locale`), plus optional `currency`. It is not the `defineShopifyI18n` definition, not a locale string, and not the analytics consent config.
 
 For vanilla browser code that does not use SSR or a framework head API, render the HTML from core and include it in the document shell. If your app renders tags through core helpers instead of a framework binding, call `initializeShopifyScripts()` from bundled client code:
 

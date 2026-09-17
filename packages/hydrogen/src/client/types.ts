@@ -13,8 +13,6 @@ import type { AnyStorefrontQueryString, SourceOf, StorefrontQueryString } from "
 import type { InferResult, InferVariables } from "../graphql";
 import type { InferOperationKind } from "../graphql/type-resolver";
 
-export type { I18nConfig } from "../core/request-context";
-
 type DocLike = TadaDocumentNode<any, any> | AnyStorefrontQueryString;
 type InferredDoc<T extends string> = StorefrontQueryString<InferResult<T>, InferVariables<T>, T>;
 type ResolveDoc<D> = D extends DocLike ? D : D extends string ? InferredDoc<D> : never;
@@ -208,7 +206,10 @@ export type StorefrontClient<
   RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
 > = {
   type: Type;
+  /** The storefront's i18n definition. */
   i18n: RequestContext["i18n"];
+  /** The locale resolved for this request; drives `@inContext` variable injection. */
+  locale: RequestContext["locale"];
   graphql: <const Doc extends DocLike | string>(
     doc: Doc,
     ...options: GqlRestParam<ResolveDoc<Doc>, Extra>

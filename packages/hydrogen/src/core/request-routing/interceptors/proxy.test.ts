@@ -10,7 +10,7 @@ const STORE_URL = "https://test-store.myshopify.com";
 function createOptions(request: Request): HydrogenRoutesOptions {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
   });
 
   return {
@@ -24,7 +24,8 @@ function createOptions(request: Request): HydrogenRoutesOptions {
     },
     storefrontClient: {
       type: "private",
-      i18n: { country: "US", language: "EN", pathPrefix: "" },
+      i18n: { defaultLocale: { country: "US", language: "EN" } },
+      locale: { country: "US", language: "EN", pathPrefix: "" },
       storeUrl: STORE_URL,
       apiUrl: `${STORE_URL}/api/2026-04/graphql.json`,
       requestContext,
