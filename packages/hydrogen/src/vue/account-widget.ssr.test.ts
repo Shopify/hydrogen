@@ -1,15 +1,23 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createSSRApp, h, nextTick, type VNode } from "vue";
+import { type App, createSSRApp, h, nextTick, type VNode } from "vue";
 import { renderToString } from "vue/server-renderer";
 
 import { renderShopifyAccountWidget } from "../core/account-widget";
 import { assert } from "../core/test-utils";
 import { ShopifyAccountWidget, type ShopifyAccountWidgetProps } from "./account-widget";
 
+const mounted: Array<{ container: HTMLElement; app?: App }> = [];
+
 afterEach(() => {
-  document.body.innerHTML = "";
-  vi.restoreAllMocks();
+  const entries = mounted.splice(0);
+  try {
+    for (const { app } of entries) app?.unmount();
+  } finally {
+    for (const { container } of entries) container.remove();
+    document.body.innerHTML = "";
+    vi.restoreAllMocks();
+  }
 });
 
 const AVATAR_HTML = '<img src="/icons/icon-user.svg" alt="">';
@@ -65,6 +73,8 @@ async function hydrate(
   avatarSlot: () => VNode[] = avatar,
 ) {
   const container = parse(html);
+  const entry: (typeof mounted)[number] = { container };
+  mounted.push(entry);
   document.body.append(container);
   const store = container.querySelector("shopify-store");
   const account = container.querySelector("shopify-account");
@@ -81,11 +91,12 @@ async function hydrate(
   });
   app.config.warnHandler = warnHandler;
   app.config.errorHandler = errorHandler;
+  entry.app = app;
 
   app.mount(container);
   await nextTick();
 
-  return { container, store, account, style, image, app, warnHandler, errorHandler };
+  return { container, store, account, style, image, warnHandler, errorHandler };
 }
 
 describe("ShopifyAccountWidget SSR", () => {
@@ -137,8 +148,10 @@ describe("ShopifyAccountWidget hydration", () => {
   it("hydrates server markup without mismatches and attaches handlers", async () => {
     const onOpen = vi.fn();
     const html = await render(baseProps);
-    const { container, store, account, style, image, app, warnHandler, errorHandler } =
-      await hydrate(html, { ...baseProps, onOpen });
+    const { container, store, account, style, image, warnHandler, errorHandler } = await hydrate(
+      html,
+      { ...baseProps, onOpen },
+    );
 
     expect(container.querySelector("shopify-store")).toBe(store);
     expect(container.querySelector("shopify-account")).toBe(account);
@@ -151,31 +164,36 @@ describe("ShopifyAccountWidget hydration", () => {
     account.dispatchEvent(event);
     expect(onOpen).toHaveBeenCalledOnce();
     expect(onOpen.mock.calls[0][0]).toBe(event);
-
-    app.unmount();
   });
 
   it("hydrates without warnings when the browser conceals the style nonce", async () => {
     const html = await render(fullProps);
     concealStyleNonceAttributes();
 
-    const { container, style, app, warnHandler, errorHandler } = await hydrate(html, fullProps);
+    const { container, style, warnHandler, errorHandler } = await hydrate(html, fullProps);
 
     expect(container.querySelector("style")).toBe(style);
     expect(style.getAttribute("nonce")).toBe("");
     expect(warnHandler).not.toHaveBeenCalled();
     expect(errorHandler).not.toHaveBeenCalled();
-
-    app.unmount();
   });
 
-  it("keeps hydration warnings for mismatched owned attributes", async () => {
-    const html = (await render(baseProps)).replace('slot="signed-out-avatar"', 'slot="unexpected"');
+  it.each([
+    { label: "without a nonce", props: baseProps, concealNonce: false },
+    {
+      label: "with a concealed style nonce",
+      props: { ...baseProps, nonce: "nonce-1" },
+      concealNonce: true,
+    },
+  ])(
+    "keeps hydration warnings for mismatched owned attributes $label",
+    async ({ props, concealNonce }) => {
+      const html = (await render(props)).replace('slot="signed-out-avatar"', 'slot="unexpected"');
+      if (concealNonce) concealStyleNonceAttributes();
 
-    const { app, warnHandler } = await hydrate(html, baseProps);
+      const { warnHandler } = await hydrate(html, props);
 
-    expect(warnHandler.mock.calls.map(([message]) => message).join(" ")).toContain("slot");
-
-    app.unmount();
-  });
+      expect(warnHandler.mock.calls.map(([message]) => message).join(" ")).toContain("slot");
+    },
+  );
 });

@@ -9,7 +9,19 @@ import { renderShopifyAccountWidget } from "../core/account-widget";
 import { assert } from "../core/test-utils";
 import { ShopifyAccountWidget, type ShopifyAccountWidgetProps } from "./account-widget";
 
-afterEach(() => vi.restoreAllMocks());
+const mounted: Array<{ container: HTMLElement; root?: Root }> = [];
+
+afterEach(async () => {
+  const entries = mounted.splice(0);
+  try {
+    for (const { root } of entries) {
+      if (root) await act(async () => root.unmount());
+    }
+  } finally {
+    for (const { container } of entries) container.remove();
+    vi.restoreAllMocks();
+  }
+});
 
 const AVATAR_HTML = '<svg data-avatar="user" viewBox="0 0 24 24"></svg>';
 const baseProps: ShopifyAccountWidgetProps = {
@@ -54,6 +66,8 @@ function concealStyleNonceAttributes() {
 
 async function hydrate(html: string, props: ShopifyAccountWidgetProps) {
   const container = parse(html);
+  const entry: (typeof mounted)[number] = { container };
+  mounted.push(entry);
   document.body.append(container);
   const account = container.querySelector("shopify-account");
   const style = container.querySelector("style");
@@ -62,15 +76,15 @@ async function hydrate(html: string, props: ShopifyAccountWidgetProps) {
   const onRecoverableError = vi.fn();
   const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
-  let root: Root | undefined;
   await act(async () => {
-    root = hydrateRoot(container, createElement(ShopifyAccountWidget, props), {
+    entry.root = hydrateRoot(container, createElement(ShopifyAccountWidget, props), {
       onRecoverableError,
     });
   });
+  const { root } = entry;
   assert(root, "expected hydrateRoot to create a root");
 
-  return { container, account, style, root, onRecoverableError, consoleError };
+  return { container, account, style, onRecoverableError, consoleError };
 }
 
 describe("ShopifyAccountWidget SSR", () => {
@@ -136,7 +150,7 @@ describe("ShopifyAccountWidget hydration", () => {
   it("hydrates server markup without mismatches and attaches handlers", async () => {
     const onOpen = vi.fn();
     const html = renderToString(createElement(ShopifyAccountWidget, baseProps));
-    const { container, account, root, onRecoverableError, consoleError } = await hydrate(html, {
+    const { container, account, onRecoverableError, consoleError } = await hydrate(html, {
       ...baseProps,
       onOpen,
     });
@@ -149,9 +163,6 @@ describe("ShopifyAccountWidget hydration", () => {
     account.dispatchEvent(event);
     expect(onOpen).toHaveBeenCalledOnce();
     expect(onOpen.mock.calls[0][0]).toBe(event);
-
-    await act(async () => root.unmount());
-    container.remove();
   });
 
   it("suppresses hydration warnings caused by a concealed style nonce", async () => {
@@ -159,27 +170,28 @@ describe("ShopifyAccountWidget hydration", () => {
     const html = renderToString(createElement(ShopifyAccountWidget, props));
     concealStyleNonceAttributes();
 
-    const { container, style, root, onRecoverableError, consoleError } = await hydrate(html, props);
+    const { container, style, onRecoverableError, consoleError } = await hydrate(html, props);
 
     expect(container.querySelector("style")).toBe(style);
     expect(onRecoverableError).not.toHaveBeenCalled();
     expect(consoleError).not.toHaveBeenCalled();
-
-    await act(async () => root.unmount());
-    container.remove();
   });
 
-  it("keeps hydration warnings for mismatched account attributes", async () => {
-    const html = renderToString(createElement(ShopifyAccountWidget, baseProps)).replace(
-      'sign-in-url="/account/login"',
-      'sign-in-url="/unexpected"',
-    );
+  it.each([
+    { label: "without a nonce", props: baseProps, concealNonce: false },
+    { label: "with a concealed style nonce", props: fullProps, concealNonce: true },
+  ])(
+    "keeps hydration warnings for mismatched account attributes $label",
+    async ({ props, concealNonce }) => {
+      const html = renderToString(createElement(ShopifyAccountWidget, props)).replace(
+        /sign-in-url="[^"]*"/,
+        'sign-in-url="/unexpected"',
+      );
+      if (concealNonce) concealStyleNonceAttributes();
 
-    const { container, root, consoleError } = await hydrate(html, baseProps);
+      const { consoleError } = await hydrate(html, props);
 
-    expect(consoleError.mock.calls.flat().join(" ")).toContain("sign-in-url");
-
-    await act(async () => root.unmount());
-    container.remove();
-  });
+      expect(consoleError.mock.calls.flat().join(" ")).toContain("sign-in-url");
+    },
+  );
 });

@@ -128,15 +128,31 @@ describe("ShopifyAccountWidget", () => {
         },
         { attachTo: document.body },
       );
-      const { account, style, avatarWrapper } = query(wrapper);
+      const { store, account, style, avatarWrapper } = query(wrapper);
 
       await wrapper.setProps({ next: true });
 
+      let next = query(wrapper);
+      expect(next.store).toBe(store);
+      expect(next.account).toBe(account);
+      expect(next.avatarWrapper).toBe(avatarWrapper);
       expect(account.children[1]).toBe(avatarWrapper);
       expect(avatarWrapper.previousElementSibling).toBe(style);
       expect(avatarWrapper.getAttribute("slot")).toBe("signed-out-avatar");
       expect(avatarWrapper.getAttribute("aria-hidden")).toBe("true");
+      expect(avatarWrapper.children).toHaveLength(1);
       expect(avatarWrapper.firstElementChild?.getAttribute("data-avatar")).toBe("next");
+
+      await wrapper.setProps({ next: false });
+
+      next = query(wrapper);
+      expect(next.store).toBe(store);
+      expect(next.account).toBe(account);
+      expect(next.avatarWrapper).toBe(avatarWrapper);
+      expect(avatarWrapper.children).toHaveLength(1);
+      expect(avatarWrapper.querySelector("svg")).toBeNull();
+      expect(avatarWrapper.firstElementChild?.tagName.toLowerCase()).toBe("img");
+      expect(avatarWrapper.firstElementChild?.getAttribute("src")).toBe("/icons/icon-user.svg");
     });
 
     it("does not fall through attributes or leak handlers onto the owned structure", () => {
@@ -387,6 +403,16 @@ describe("ShopifyAccountWidget", () => {
 
       expect(next.account.getAttribute("menu")).toBe("main");
       expect(next.account.getAttribute("sign-in-url")).toBe("/auth/login");
+    });
+
+    it("removes menu and restores the default sign-in-url without remounting", async () => {
+      const next = await expectNoRemount(
+        { customerAccessToken: "customer-token", menu: "main", signInUrl: "/auth/login" },
+        { customerAccessToken: "customer-token" },
+      );
+
+      expect(next.account.hasAttribute("menu")).toBe(false);
+      expect(next.account.getAttribute("sign-in-url")).toBe("/account/login");
     });
 
     it("moves the listeners to the remounted account element", async () => {

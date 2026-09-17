@@ -320,7 +320,7 @@ describe("ShopifyAccountWidget", () => {
     });
 
     it("does not remount for unchanged identity or handler, menu and avatar changes", () => {
-      expectNoRemount(
+      const next = expectNoRemount(
         { customerAccessToken: "customer-token", onOpen: vi.fn() },
         {
           customerAccessToken: "customer-token",
@@ -328,9 +328,31 @@ describe("ShopifyAccountWidget", () => {
           onClose: vi.fn(),
           menu: "main",
           signInUrl: "/auth/login",
-          signedOutAvatar: createElement("svg"),
+          signedOutAvatar: createElement("svg", { "data-avatar": "next" }),
         },
       );
+
+      expect(next.account.getAttribute("menu")).toBe("main");
+      expect(next.account.getAttribute("sign-in-url")).toBe("/auth/login");
+      expect(next.wrapper.children).toHaveLength(1);
+      expect(next.wrapper.firstElementChild?.getAttribute("data-avatar")).toBe("next");
+    });
+
+    it("removes menu, restores the default sign-in-url and swaps the avatar without remounting", () => {
+      const next = expectNoRemount(
+        {
+          customerAccessToken: "customer-token",
+          menu: "main",
+          signInUrl: "/auth/login",
+          signedOutAvatar: createElement("svg", { "data-avatar": "next" }),
+        },
+        { customerAccessToken: "customer-token" },
+      );
+
+      expect(next.account.hasAttribute("menu")).toBe(false);
+      expect(next.account.getAttribute("sign-in-url")).toBe("/account/login");
+      expect(next.wrapper.children).toHaveLength(1);
+      expect(next.wrapper.firstElementChild?.getAttribute("data-avatar")).toBe("user");
     });
 
     it("attaches handlers to the remounted account element", () => {
