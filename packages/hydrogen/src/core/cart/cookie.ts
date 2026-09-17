@@ -1,4 +1,5 @@
 const COOKIE_NAME = "cart";
+const BINDING_COOKIE_NAME = "__Host-hydrogen-cart";
 const MAX_AGE_IN_SECONDS = 1209600; // 14 days
 const CART_GID_PREFIX = "gid://shopify/Cart/";
 
@@ -10,16 +11,55 @@ export function normalizeCartId(cartId: string | null | undefined): string | nul
 }
 
 export function getCartIdFromCookie(input: CartCookieSource): string | null {
+  const values = readCartCookieValues(input, COOKIE_NAME);
+  // Recover ordinary cart operations from cookie tossing without creating a new
+  // cart on every request. Auth attachment below still rejects the ambiguity.
+  return values.length > 1 ? getCartIdFromBindingCookie(input) : parseCartCookie(values);
+}
+
+// Browser enforcement of __Host- isolates the binding from sibling domains.
+// Do not infer the browser's transport from request.url: TLS may terminate at
+// a trusted proxy. The server sets this cookie HttpOnly on a resolved HTTPS origin.
+export function getCartIdFromBindingCookie(input: CartCookieSource): string | null {
+  return parseCartCookie(readCartCookieValues(input, BINDING_COOKIE_NAME));
+}
+
+export function getBoundCartId(request: Request): string | null {
+  const boundCartId = getCartIdFromBindingCookie(request);
+  const visibleCartId = parseCartCookie(readCartCookieValues(request, COOKIE_NAME));
+  return boundCartId === visibleCartId ? boundCartId : null;
+}
+
+export function createCartBindingCookie(cartId: string): string {
+  return `${BINDING_COOKIE_NAME}=${encodeURIComponent(cartId)}; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=${MAX_AGE_IN_SECONDS}`;
+}
+
+export function createExpiredCartBindingCookie(): string {
+  return `${BINDING_COOKIE_NAME}=; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=0`;
+}
+
+function readCartCookieValues(input: CartCookieSource, name: string): string[] {
   const header = input instanceof Request ? input.headers.get("cookie") : input.cookie;
-  if (!header) return null;
+  if (!header) return [];
 
-  const match = header.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]*)`));
-  if (!match || !match[1]) return null;
+  const values: string[] = [];
+  for (const cookie of header.split(";")) {
+    const separator = cookie.indexOf("=");
+    if (separator < 0 || cookie.slice(0, separator).trim() !== name) continue;
+    values.push(cookie.slice(separator + 1).trim());
+  }
+  return values;
+}
 
-  const token = decodeURIComponent(match[1]);
-  if (!token) return null;
-
-  return normalizeCartId(token);
+function parseCartCookie(values: string[]): string | null {
+  // Cookie headers omit Path and Domain. Never pick a winner among duplicates.
+  if (values.length !== 1) return null;
+  const [value] = values;
+  try {
+    return value ? normalizeCartId(decodeURIComponent(value)) : null;
+  } catch {
+    return null;
+  }
 }
 
 export function createCartCookie(cartId: string): string {

@@ -5,7 +5,7 @@ import { createCartServerHandlers } from "../core/cart/server-handlers";
 import { configureLogging, resetLoggingForTests } from "../core/logging";
 import { createShopifyRequestContext } from "../core/request-context";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../core/request-routing/handle-shopify-routes";
-import { createTestLogger } from "../core/test-utils";
+import { assert, createTestLogger } from "../core/test-utils";
 import {
   createCustomerAccountServerHandlers,
   createCustomerSession,
@@ -41,8 +41,13 @@ const UNICODE_OVERSIZED_RETURN_TO_CHARACTER_COUNT = 500;
 const ID_TOKEN = createIdToken("expected-nonce");
 const CART_ID_TOKEN = "cart-id-1";
 const CART_GID = `gid://shopify/Cart/${CART_ID_TOKEN}`;
-const CART_COOKIE = `cart=${CART_ID_TOKEN}`;
-const EXPIRED_CART_COOKIE = "cart=; Path=/; SameSite=Lax; Max-Age=0";
+const LEGACY_CART_COOKIE = `cart=${CART_ID_TOKEN}`;
+const CART_BINDING_COOKIE = `__Host-hydrogen-cart=${encodeURIComponent(CART_GID)}`;
+const CART_COOKIE = `${LEGACY_CART_COOKIE}; ${CART_BINDING_COOKIE}`;
+const EXPIRED_CART_COOKIES = [
+  "cart=; Path=/; SameSite=Lax; Max-Age=0",
+  "__Host-hydrogen-cart=; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=0",
+];
 
 type CustomerAccountSessionData = {
   tokens?: {
@@ -870,7 +875,7 @@ describe("createCustomerAccountServerHandlers", () => {
 
     expect(response?.status).toBe(303);
     expect(response?.headers.get("location")).toContain(`${AUTH_BASE_URL}/logout`);
-    expect(response?.headers.getSetCookie()).toEqual(["session=1", EXPIRED_CART_COOKIE]);
+    expect(response?.headers.getSetCookie()).toEqual(["session=1", ...EXPIRED_CART_COOKIES]);
     expect(sessionManager.data).toBeUndefined();
     expect(logger.error).toHaveBeenCalledWith("cart buyer identity sync failed", {
       scope: "customer-account",
@@ -1066,6 +1071,257 @@ describe("createCustomerAccountServerHandlers", () => {
 
     expect(response?.status).toBe(303);
     expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
+  });
+
+  describe.each([CUSTOMER_ACCOUNT_AUTHORIZE_PATH, CUSTOMER_ACCOUNT_REFRESH_PATH])(
+    "cart ownership checks on %s",
+    (path) => {
+      it.each([
+        ["no cookies", ""],
+        ["legacy cookie only", "cart=attacker%3Fkey%3Dretained-secret"],
+        ["binding only", CART_BINDING_COOKIE],
+        ["replaced visible cookie", `cart=attacker; ${CART_BINDING_COOKIE}`],
+        ["attacker cookie first", `cart=attacker; ${CART_COOKIE}`],
+        ["attacker cookie last", `${CART_COOKIE}; cart=attacker`],
+        ["duplicate binding first", `__Host-hydrogen-cart=attacker; ${CART_COOKIE}`],
+        ["duplicate binding last", `${CART_COOKIE}; __Host-hydrogen-cart=attacker`],
+        ["malformed binding", `${LEGACY_CART_COOKIE}; __Host-hydrogen-cart=%`],
+        ["malformed visible cookie", `cart=%; ${CART_BINDING_COOKIE}`],
+      ])("does not attach customer identity with %s", async (_label, cookie) => {
+        const authorizing = path === CUSTOMER_ACCOUNT_AUTHORIZE_PATH;
+        const customerSession = createSession({
+          fetch: vi.fn().mockResolvedValue(tokenResponse()),
+        });
+        const sessionManager = new TestSessionManager(
+          authorizing ? { pendingLogin: validPendingLogin() } : validSessionData(),
+        );
+        const storefrontFetch = vi.fn();
+        const request = new Request(`${ORIGIN}${path}?code=code-123&state=stored-state`, {
+          headers: { cookie },
+        });
+        const response = await handleShopifyRoutes({
+          request,
+          sessionManager,
+          storefrontFetch,
+          handlers: [
+            createCustomerAccountServerHandlers({
+              customerSession,
+              cartServerHandlers: createCartServerHandlers({ customerSession }),
+            }),
+          ],
+        });
+        expect(response?.status).toBe(303);
+        expect(storefrontFetch).not.toHaveBeenCalled();
+        expect(sessionManager.data?.tokens?.accessToken).toBe(
+          authorizing ? NEW_ACCESS_TOKEN : ACCESS_TOKEN,
+        );
+        expect(response?.headers.getSetCookie()).toEqual(["session=1"]);
+      });
+    },
+  );
+
+  it("accepts a protected browser cart behind a TLS-terminating proxy", async () => {
+    const customerSession = createSession();
+    const storefrontFetch = vi.fn().mockResolvedValue(cartMutationResponse());
+    const response = await handleShopifyRoutes({
+      request: new Request(`http://example.com${CUSTOMER_ACCOUNT_REFRESH_PATH}`, {
+        headers: { cookie: CART_COOKIE },
+      }),
+      sessionManager: new TestSessionManager(validSessionData()),
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+    expect(response?.status).toBe(303);
+    expect(getCartMutationVariables(storefrontFetch)).toEqual({
+      cartId: CART_GID,
+      buyerIdentity: { customerAccessToken: ACCESS_TOKEN },
+    });
+  });
+
+  it("does not use query cart IDs for customer identity attachment", async () => {
+    const customerSession = createSession();
+    const storefrontFetch = vi.fn().mockResolvedValue(cartMutationResponse());
+    await handleShopifyRoutes({
+      request: new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?cartId=attacker`, {
+        headers: { cookie: CART_COOKIE },
+      }),
+      sessionManager: new TestSessionManager(validSessionData()),
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+    expect(getCartMutationVariables(storefrontFetch).cartId).toBe(CART_GID);
+  });
+
+  it.each([
+    { cookie: CART_BINDING_COOKIE, cartIds: [CART_GID] },
+    {
+      cookie: `cart=attacker; ${CART_BINDING_COOKIE}`,
+      cartIds: [CART_GID, "gid://shopify/Cart/attacker"],
+    },
+    { cookie: `cart=attacker; ${CART_COOKIE}`, cartIds: [CART_GID] },
+  ])(
+    "detaches protected and unambiguous visible carts during logout: $cookie",
+    async ({ cookie, cartIds }) => {
+      const customerSession = createSession();
+      const storefrontFetch = vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(cartMutationResponse()));
+      const response = await handleShopifyRoutes({
+        request: new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
+          method: "POST",
+          headers: { origin: ORIGIN, cookie },
+        }),
+        sessionManager: new TestSessionManager(validSessionData()),
+        storefrontFetch,
+        handlers: [
+          createCustomerAccountServerHandlers({
+            customerSession,
+            cartServerHandlers: createCartServerHandlers({ customerSession }),
+          }),
+        ],
+      });
+      expect(response?.status).toBe(303);
+      expect(response?.headers.getSetCookie()).toEqual(["session=1"]);
+      expect(
+        storefrontFetch.mock.calls.map(
+          ([, init]) => JSON.parse(String((init as RequestInit).body)).variables,
+        ),
+      ).toEqual(
+        cartIds.map((cartId) => ({ cartId, buyerIdentity: { customerAccessToken: null } })),
+      );
+    },
+  );
+
+  it("attempts both detachments and expires both cookies if either fails", async () => {
+    const customerSession = createSession();
+    const storefrontFetch = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("protected cart unavailable"))
+      .mockResolvedValueOnce(cartMutationResponse());
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const response = await handleShopifyRoutes({
+      request: new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
+        method: "POST",
+        headers: { origin: ORIGIN, cookie: `cart=replacement; ${CART_BINDING_COOKIE}` },
+      }),
+      sessionManager: new TestSessionManager(validSessionData()),
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+    expect(response?.status).toBe(303);
+    expect(storefrontFetch).toHaveBeenCalledTimes(2);
+    expect(response?.headers.getSetCookie()).toEqual(["session=1", ...EXPIRED_CART_COOKIES]);
+    expect(logger.error).toHaveBeenCalledOnce();
+  });
+
+  it("still detaches legacy carts on logout without granting new customer access", async () => {
+    const customerSession = createSession();
+    const storefrontFetch = vi.fn().mockResolvedValue(cartMutationResponse());
+    await handleShopifyRoutes({
+      request: new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
+        method: "POST",
+        headers: { origin: ORIGIN, cookie: LEGACY_CART_COOKIE },
+      }),
+      sessionManager: new TestSessionManager(validSessionData()),
+      storefrontFetch,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession,
+          cartServerHandlers: createCartServerHandlers({ customerSession }),
+        }),
+      ],
+    });
+    expect(getCartMutationVariables(storefrontFetch).buyerIdentity).toEqual({
+      customerAccessToken: null,
+    });
+  });
+
+  it("binds an anonymous cart at creation and uses that binding through login and logout", async () => {
+    const customerSession = createSession({ fetch: vi.fn().mockResolvedValue(tokenResponse()) });
+    const cartHandlers = createCartServerHandlers({ customerSession });
+    const handlers = [
+      cartHandlers,
+      createCustomerAccountServerHandlers({ customerSession, cartServerHandlers: cartHandlers }),
+    ];
+    const id = "gid://shopify/Cart/new-cart?key=server-generated-secret";
+    const storefrontFetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({ data: { cartCreate: { cart: { id }, userErrors: [] } } }),
+      )
+      .mockImplementation(() =>
+        Promise.resolve(
+          Response.json({ data: { cartBuyerIdentityUpdate: { cart: { id }, userErrors: [] } } }),
+        ),
+      );
+    const sessionManager = new TestSessionManager();
+    const created = await handleShopifyRoutes({
+      request: new Request(`${ORIGIN}/api/cart`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+        }),
+      }),
+      sessionManager,
+      storefrontFetch,
+      handlers,
+    });
+    assert(created, "expected the cart creation response");
+    expect(created.status).toBe(200);
+    const cookie = created.headers
+      .getSetCookie()
+      .map((value) => value.split(";")[0])
+      .join("; ");
+    expect(cookie).toContain("__Host-hydrogen-cart=");
+    sessionManager.setSessionItem(SESSION_KEY, { pendingLogin: validPendingLogin() });
+    await handleShopifyRoutes({
+      request: new Request(
+        `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+        { headers: { cookie } },
+      ),
+      sessionManager,
+      storefrontFetch,
+      handlers,
+    });
+    await handleShopifyRoutes({
+      request: new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
+        method: "POST",
+        headers: { origin: ORIGIN, cookie },
+      }),
+      sessionManager,
+      storefrontFetch,
+      handlers,
+    });
+    const mutations = storefrontFetch.mock.calls.map(([, init]) =>
+      JSON.parse(String((init as RequestInit).body)),
+    );
+    expect(mutations[0].variables.input).not.toHaveProperty("buyerIdentity");
+    expect(mutations[1].variables).toEqual({
+      cartId: id,
+      buyerIdentity: { customerAccessToken: NEW_ACCESS_TOKEN },
+    });
+    expect(mutations[2].variables).toEqual({
+      cartId: id,
+      buyerIdentity: { customerAccessToken: null },
+    });
+    expect(sessionManager.data).toBeUndefined();
   });
 
   it("attaches cart buyer identity after authorization", async () => {
@@ -1313,7 +1569,7 @@ describe("createCustomerAccountServerHandlers", () => {
 
     expect(response?.status).toBe(303);
     expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
-    expect(response?.headers.getSetCookie()).toEqual(["session=1", EXPIRED_CART_COOKIE]);
+    expect(response?.headers.getSetCookie()).toEqual(["session=1", ...EXPIRED_CART_COOKIES]);
     expect(sessionManager.data?.tokens).toBeUndefined();
     expect(logger.error).toHaveBeenCalledWith("cart buyer identity sync failed", {
       scope: "customer-account",
