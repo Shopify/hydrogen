@@ -1,3 +1,9 @@
+export { ShopifyAccountWidget } from "./account-widget";
+export type {
+  ShopifyAccountWidgetEventHandler,
+  ShopifyAccountWidgetProps,
+  ShopifyAccountWidgetSlots,
+} from "./account-widget";
 export { createCartComponents, useCartActions, useCartAnalytics } from "./cart";
 export type { CartActions } from "./cart";
 export type { ShopifyGlobal } from "../globals";
