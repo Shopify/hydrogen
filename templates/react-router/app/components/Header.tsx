@@ -1,4 +1,4 @@
-import { renderShopifyAccountWidget } from "@shopify/hydrogen";
+import { ShopifyAccountWidget } from "@shopify/hydrogen/react";
 import { Link } from "react-router";
 
 import { useCart } from "~/lib/cart";
@@ -6,8 +6,6 @@ import { CART_DRAWER_ID, openDialogFallback } from "~/lib/cart-drawer";
 import type { AccountWidgetConfig } from "~/lib/shop";
 
 import { MobileNav, MobileNavTrigger, type NavCollection } from "./MobileNav";
-
-const ACCOUNT_ICON_HTML = '<img src="/icons/icon-user.svg" alt="" class="size-5">';
 
 function cartCountLabel(count: number) {
   return count === 1 ? "Cart (1 item)" : `Cart (${count} items)`;
@@ -35,12 +33,12 @@ function AccountControl({ config }: { config: AccountWidgetConfig | null }) {
   }
 
   return (
-    <span
-      className="text-on-surface inline-flex"
-      dangerouslySetInnerHTML={{
-        __html: renderShopifyAccountWidget({ ...config, signedOutAvatarHtml: ACCOUNT_ICON_HTML }),
-      }}
-    />
+    <span className="text-on-surface inline-flex">
+      <ShopifyAccountWidget
+        {...config}
+        signedOutAvatar={<img src="/icons/icon-user.svg" alt="" className="size-5" />}
+      />
+    </span>
   );
 }
 
