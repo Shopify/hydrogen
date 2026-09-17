@@ -1,5 +1,5 @@
 import { gql, parseCollectionParams, type StorefrontApi } from "@shopify/hydrogen";
-import type { RequestScopedPrivateStorefrontClient } from "@shopify/hydrogen";
+import type { StorefrontClient } from "@shopify/hydrogen";
 import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
 
 import { PRODUCT_CARD_FRAGMENT } from "~/components/ProductCard";
@@ -81,7 +81,7 @@ export async function loadCollectionPage({
   handle,
   request,
 }: {
-  storefrontClient: RequestScopedPrivateStorefrontClient;
+  storefrontClient: StorefrontClient;
   handle: string;
   request: Request;
 }) {
