@@ -135,5 +135,6 @@ export function createProxyResponseHeaders(upstreamHeaders: Headers): Headers {
   const headers = new Headers(upstreamHeaders);
   headers.delete("content-encoding");
   headers.delete("content-length");
+  headers.delete("server-timing");
   return headers;
 }

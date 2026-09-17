@@ -1,7 +1,6 @@
 export const CACHE_CONTROL_HEADER = "Cache-Control";
 export const CONSENT_MANAGEMENT_HEADER = "Shopify-Storefront-Consent-Management";
 export const HYDROGEN_VERSION_HEADER = "X-Hydrogen-Version";
-export const SERVER_TIMING_HEADER = "Server-Timing";
 export const SURROGATE_CONTROL_HEADER = "Surrogate-Control";
 export const REQUEST_GROUP_ID_HEADER = "Custom-Storefront-Request-Group-ID";
 export const SDK_VARIANT_HEADER = "X-SDK-Variant";
@@ -36,7 +35,6 @@ export type StandardHeaderName =
   | "proxy-authenticate"
   | "proxy-authorization"
   | "referer"
-  | typeof SERVER_TIMING_HEADER
   | typeof SURROGATE_CONTROL_HEADER
   | "te"
   | "trailer"

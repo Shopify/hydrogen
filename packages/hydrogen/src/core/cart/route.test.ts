@@ -294,12 +294,18 @@ describe("createCartServerHandlers", () => {
 
   describe("GET", () => {
     it("returns cart data when cart cookie is present", async () => {
-      mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse(
+          { cart: MOCK_CART },
+          { "server-timing": '_y;desc="unique", _s;desc="visit"' },
+        ),
+      );
 
       const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
       assert(result, "expected a response");
       const body = await result.json();
       expect(body.cart).toEqual(MOCK_CART);
+      expect(result.headers.get("server-timing")).toBeNull();
     });
 
     it("prevents shared caches from storing cart responses", async () => {
@@ -363,20 +369,6 @@ describe("createCartServerHandlers", () => {
       expect(body.cart.checkoutUrl).toBe(MOCK_CART.checkoutUrl);
     });
 
-    it("forwards SFAPI server-timing when cart cookie is present", async () => {
-      mockFetch.mockResolvedValueOnce(
-        mockGqlResponse(
-          { cart: MOCK_CART },
-          { "server-timing": '_y;desc="unique", _s;desc="visit"' },
-        ),
-      );
-
-      const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
-
-      assert(result, "expected a response");
-      expect(result.headers.get("server-timing")).toBe('_y;desc="unique", _s;desc="visit"');
-    });
-
     it("forwards browser cookies to SFAPI when loading a cart", async () => {
       mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
 
@@ -415,7 +407,6 @@ describe("createCartServerHandlers", () => {
       assert(result, "expected a response");
       const body = await result.json();
       expect(body).toEqual({ cart: null });
-      expect(result.headers.get("server-timing")).toBeNull();
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
@@ -629,7 +620,7 @@ describe("createCartServerHandlers", () => {
       ]);
     });
 
-    it("forwards SFAPI server-timing and Shopify cookies", async () => {
+    it("strips SFAPI server-timing and forwards Shopify cookies", async () => {
       const headers = new Headers({
         "server-timing": '_y;desc="unique", _s;desc="visit"',
       });
@@ -648,7 +639,7 @@ describe("createCartServerHandlers", () => {
       );
 
       assert(result, "expected a response");
-      expect(result.headers.get("server-timing")).toBe('_y;desc="unique", _s;desc="visit"');
+      expect(result.headers.get("server-timing")).toBeNull();
       const cookie = result.headers.get("set-cookie");
       expect(cookie).toContain("_shopify_y=unique");
       expect(cookie).toContain("_shopify_s=visit");
@@ -1200,7 +1191,6 @@ describe("createCartServerHandlers", () => {
         mockGqlResponse(
           { cartCreate: { cart: MOCK_CART, userErrors: [] } },
           {
-            "server-timing": '_y;desc="unique", _s;desc="visit"',
             "set-cookie": "_shopify_y=unique; Path=/; Secure",
           },
         ),
@@ -1221,7 +1211,6 @@ describe("createCartServerHandlers", () => {
       expect(result.status).toBe(303);
       expect(result.headers.get("set-cookie")).toContain("cart=");
       expect(result.headers.get("set-cookie")).toContain("_shopify_y=unique");
-      expect(result.headers.get("server-timing")).toBe('_y;desc="unique", _s;desc="visit"');
     });
 
     it("FormData intent=add without cart cookie creates cart and sets cookie", async () => {

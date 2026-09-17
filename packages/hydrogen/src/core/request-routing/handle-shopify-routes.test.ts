@@ -109,25 +109,19 @@ describe("handleShopifyRoutes", () => {
     expect(result?.headers.getSetCookie()).toEqual([]);
   });
 
-  it("strips Server-Timing from cold non-consent SFAPI proxy responses", async () => {
-    mockFetch.mockResolvedValueOnce(
-      new Response("{}", { headers: { "server-timing": "db;dur=2, _y;desc=unique" } }),
-    );
-
-    const result = await handleShopifyRoutes({
-      request: new Request("https://my-app.com/api/unstable/graphql.json", {
-        method: "POST",
-        body: "{}",
-      }),
+  it("protects consent response bodies without upstream cookies", async () => {
+    const body = {
+      data: {
+        consentManagement: {
+          cookies: { shopifyUnique: "unique", shopifyVisit: "visit" },
+        },
+      },
+    };
+    const headers = new Headers({
+      "cache-control": "public, s-maxage=600",
+      "cdn-cache-control": "public, s-maxage=600",
     });
-
-    expect(result?.headers.has("server-timing")).toBe(false);
-  });
-
-  it("returns Server-Timing from marked consent-management proxy responses", async () => {
-    mockFetch.mockResolvedValueOnce(
-      new Response("{}", { headers: { "server-timing": "db;dur=2, _y;desc=unique" } }),
-    );
+    mockFetch.mockResolvedValueOnce(Response.json(body, { headers }));
 
     const result = await handleShopifyRoutes({
       request: new Request("https://my-app.com/api/unstable/graphql.json", {
@@ -137,15 +131,24 @@ describe("handleShopifyRoutes", () => {
       }),
     });
 
-    expect(result?.headers.get("server-timing")).toBe("db;dur=2, _y;desc=unique");
-    expect(result?.headers.get("cache-control")).toBe(
+    assert(result, "expected consent response");
+    expect(await result.json()).toEqual(body);
+    expect(result.headers.getSetCookie()).toEqual([]);
+    expect(result.headers.get("cache-control")).toBe(
       "private, no-store, max-age=0, must-revalidate",
     );
+    expect(result.headers.has("cdn-cache-control")).toBe(false);
   });
 
-  it("strips Server-Timing from cacheable SFAPI proxy responses", async () => {
+  it("strips upstream timing while preserving public cache directives", async () => {
     mockFetch.mockResolvedValueOnce(
-      new Response("{}", { headers: { "server-timing": "db;dur=2, _y;desc=unique" } }),
+      new Response("{}", {
+        headers: {
+          "server-timing": "db;dur=2, _y;desc=unique, _s;desc=visit",
+          "cache-control": "public, s-maxage=600",
+          "cdn-cache-control": "public, s-maxage=600",
+        },
+      }),
     );
 
     const result = await handleShopifyRoutes({
@@ -154,7 +157,10 @@ describe("handleShopifyRoutes", () => {
       }),
     });
 
-    expect(result?.headers.has("server-timing")).toBe(false);
+    assert(result, "expected proxy response");
+    expect(result.headers.has("server-timing")).toBe(false);
+    expect(result.headers.get("cache-control")).toBe("public, s-maxage=600");
+    expect(result.headers.get("cdn-cache-control")).toBe("public, s-maxage=600");
   });
 
   it("returns Shopify cookies from marked consent-management proxy responses", async () => {

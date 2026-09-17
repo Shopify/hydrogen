@@ -15,7 +15,6 @@ import {
   SDK_VARIANT_HEADER,
   SDK_VARIANT_SOURCE_HEADER,
   SDK_VERSION_HEADER,
-  SERVER_TIMING_HEADER,
   SHOPIFY_STOREFRONT_ORIGIN_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
@@ -88,12 +87,12 @@ type ShopifyRequestContextBase = {
    */
   applyStorefrontRequestHeaders(headers: Headers): void;
   /**
-   * Capture the first fresh storefront response headers for replay onto the final app response.
+   * Capture cookies from the first fresh storefront response that sets them for replay.
    * @internal
    */
   captureSubrequestHeaders(headers: Headers): void;
   /**
-   * Consume storefront proxy response state for gated replay onto the final app response.
+   * Consume storefront proxy cookies for gated replay onto the final app response.
    * @internal
    */
   consumeStorefrontResponseHeaders(headers: Headers): void;
@@ -182,24 +181,17 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     ...(request.signal && { signal: request.signal }),
   } as Context<I18n>;
 
-  let capturedSubrequestHeaders:
-    | {
-        serverTiming: string;
-        setCookie: string[];
-      }
-    | undefined;
+  let capturedCookies: string[] | undefined;
   let personalizedResponseReason: string | undefined;
   let sessionEstablishingReason: string | undefined;
 
   const captureSubrequestHeaders = (headers: Headers): void => {
-    // Capture this the first time we get a fresh response to increase the
-    // chance of returning it from the main server response. The main response
+    // Capture the first fresh response cookies to increase the
+    // chance of returning them from the main server response. The main response
     // needs headers set at send time, while the body can stream later, so this
     // may not be used if subrequests finish after the main response is sent.
-    capturedSubrequestHeaders ??= {
-      serverTiming: headers.get(SERVER_TIMING_HEADER) ?? "",
-      setCookie: headers.getSetCookie(),
-    };
+    const cookies = headers.getSetCookie();
+    if (cookies.length > 0) capturedCookies ??= cookies;
   };
 
   if (!hasTrackingCookie) {
@@ -227,11 +219,8 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     },
     captureSubrequestHeaders,
     consumeStorefrontResponseHeaders(headers) {
-      if (headers.has(SERVER_TIMING_HEADER) || headers.getSetCookie().length > 0) {
-        captureSubrequestHeaders(headers);
-      }
+      captureSubrequestHeaders(headers);
       headers.delete("set-cookie");
-      headers.delete(SERVER_TIMING_HEADER);
     },
     markResponseAsPersonalized(reason) {
       personalizedResponseReason ??= reason;
@@ -257,42 +246,24 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
           isConsentManagementRequest ||
           sessionEstablishingReason !== undefined);
 
-      // Replay state captured from fresh SFAPI and proxy responses when allowed.
-      if (capturedSubrequestHeaders && mayReturnShopifyState) {
+      // Replay cookies captured from fresh SFAPI and proxy responses when allowed.
+      if (capturedCookies && mayReturnShopifyState) {
         const existingSetCookies = new Set(headers.getSetCookie());
-        for (const value of capturedSubrequestHeaders.setCookie) {
+        for (const value of capturedCookies) {
           if (existingSetCookies.has(value)) continue;
           headers.append("set-cookie", value);
           existingSetCookies.add(value);
         }
-
-        const capturedServerTiming = capturedSubrequestHeaders.serverTiming;
-        const existingServerTiming = headers.get(SERVER_TIMING_HEADER) ?? "";
-        const shouldAppendServerTiming =
-          capturedServerTiming !== "" &&
-          existingServerTiming !== capturedServerTiming &&
-          !existingServerTiming.startsWith(`${capturedServerTiming}, `) &&
-          !existingServerTiming.endsWith(`, ${capturedServerTiming}`);
-        if (shouldAppendServerTiming) {
-          headers.set(
-            SERVER_TIMING_HEADER,
-            existingServerTiming
-              ? `${existingServerTiming}, ${capturedServerTiming}`
-              : capturedServerTiming,
-          );
-        }
       }
 
-      // Responses containing buyer-specific or replayed state must not enter shared caches.
-      const returnsCapturedState =
-        mayReturnShopifyState &&
-        Boolean(
-          capturedSubrequestHeaders?.serverTiming || capturedSubrequestHeaders?.setCookie.length,
-        );
+      // Consent/session responses can contain private state in the body without setting cookies.
+      const returnsCapturedCookies = mayReturnShopifyState && Boolean(capturedCookies?.length);
 
       if (
         personalizedResponseReason ||
-        returnsCapturedState ||
+        isConsentManagementRequest ||
+        sessionEstablishingReason !== undefined ||
+        returnsCapturedCookies ||
         headers.getSetCookie().some(isShopifySetCookie)
       ) {
         applyPrivateResponseCacheHeaders(headers);
