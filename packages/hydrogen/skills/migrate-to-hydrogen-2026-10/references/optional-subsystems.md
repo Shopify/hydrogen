@@ -4,13 +4,14 @@ Read this at the "Optional subsystems" step of the outline. The migration outlin
 
 **Order matters — later subsystems consume earlier ones. Do them in this sequence:**
 
-1. **Localization / i18n / multi-market** — detect: `@inContext`, a root `localization` query, `pathPrefix`, a country/language selector, `I18nBase`. Migrate first because it produces the currency + accepted-language that the analytics `shop` payload needs.
+1. **Localization / i18n / multi-market** — detect: `@inContext`, a root `localization` query, `pathPrefix`, a country/language selector, `I18nBase`. Migrate first because it produces the currency + accepted-language that the analytics `shop` payload needs. Follow the `hydrogen-markets` packaged skill.
 2. **Customer Accounts / auth** — detect: `createCustomerAccountClient`, `/account*` routes, login/logout, a `customerAccount` context. Migrate via the library (see the OAuth-path and HTTPS-origin traps in `references/customer-account.md`).
 3. **Analytics + consent — one unit, do not split, and do it after localization.** Detect: `Analytics.Provider` / `useAnalytics` / `getShopAnalytics`, a `dataLayer` / GTM / GA snippet, *or* any consent / cookie-banner / customer-privacy config. Consent is a **load-bearing** input to `<ShopifyScripts consent={…}>`, not a sibling feature: Shopify Customer Privacy gates what reaches analytics **destinations** (raw subscribers observe events pre-consent; destinations get a consent-allowed replay only), so wiring analytics without the consent config means destinations go dark while the build stays green. Migrate the two together, and after localization so the i18n inputs the `shop` payload needs are settled. See `references/analytics.md` for the port itself.
 
 **Lower-coupling checks (migrate the ones the source has, any order, after the above):**
 
-- **Search + predictive search** — detect: a `predictiveSearch` query or a `/search` route.
+- **Search + predictive search** — detect: a `predictiveSearch` query or a `/search` route. The library ships the suite (`createPredictiveSearchServerHandlers` registered through `handleShopifyRoutes`, `createPredictiveSearchStore`, React `PredictiveSearchProvider`/`usePredictiveSearch*`) — follow the `hydrogen-predictive-search` packaged skill; don't port a hand-rolled predictive fetcher.
+- **Shop Pay button** — detect: `<ShopPayButton>` or a Shop Pay checkout link. The library ships it again (`ShopPayButton` from `@shopify/hydrogen/react`, `createShopPayButton` for other frameworks) — follow the `hydrogen-shop-pay` packaged skill.
 - **Subscriptions / selling plans** — detect: `sellingPlanGroups`, `sellingPlanAllocation`.
 - **B2B** — detect: `buyerIdentity` company fields, `companyLocationId`, `buyer` context.
 - **Content routes** — detect: `/blogs`, `/pages`, `/policies` routes and their `article`/`page`/`shopPolicy` queries.
