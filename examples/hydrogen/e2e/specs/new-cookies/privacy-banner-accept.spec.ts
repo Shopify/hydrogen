@@ -1,5 +1,4 @@
 import { setTestStore, test, expect } from "../../fixtures";
-import assert from "../../fixtures/assertions";
 
 setTestStore("defaultConsentDisallowed_cookiesEnabled");
 
@@ -7,15 +6,15 @@ test.describe("Privacy Banner - Accept Flow", () => {
   test("should set analytics cookies and make analytics requests when user accepts consent", async ({
     storefront,
   }) => {
-    // Enable privacy banner via JS bundle interception (preserves server-timing)
+    // Enable privacy banner via JS bundle interception
     await storefront.setConsentMode("default-banner");
 
     // 1. Navigate to main page
-    await storefront.goto("/");
+    // Start listening before navigation: the initial consent response fires during page load.
+    const initialResponse = await storefront.withConsentResponse(() => storefront.goto("/"));
 
-    // 2. Check any initial server-timing values (_y and _s) exposed via Performance API.
-    // Old Hydrogen exposed mock values before consent; Hydrogen dev-preview may expose none before consent.
-    const initialServerTimingValues = await storefront.getServerTimingValues();
+    // 2. Verify consent is declined before the shopper makes a choice
+    await storefront.expectDeclinedConsent(initialResponse);
 
     // 3. Verify no analytics requests have been made and no analytics cookies are present
     await storefront.expectNoAnalyticsCookies();
@@ -26,111 +25,61 @@ test.describe("Privacy Banner - Accept Flow", () => {
     storefront.expectPerfKitLoaded();
     storefront.expectNoPerfKitProduceRequests();
 
-    // 5. Verify privacy banner appears and click accept
-    await storefront.acceptPrivacyBanner();
+    // 5. Verify privacy banner appears, click accept, and check the consent response for real UUIDs
+    const tokens = await storefront.expectAllowedConsent(await storefront.acceptPrivacyBanner());
 
-    // 6. Verify server-timing values changed after consent
-    // Get updated server timing values from the page (prefer latest resource entries)
-    const updatedServerTimingValues = await storefront.getServerTimingValues(true);
-
-    // Verify server-timing values after consent are different from initial values
-    // The consent response should bring back different _y and _s values
-    expect(
-      updatedServerTimingValues._y,
-      "Updated _y value should be present after consent",
-    ).toBeTruthy();
-    expect(
-      updatedServerTimingValues._s,
-      "Updated _s value should be present after consent",
-    ).toBeTruthy();
-
-    // Verify values changed from initial when Hydrogen exposes pre-consent mock values.
-    if (initialServerTimingValues._y) {
-      expect(
-        updatedServerTimingValues._y,
-        "Server-timing _y should be different after consent",
-      ).not.toBe(initialServerTimingValues._y);
-    }
-    if (initialServerTimingValues._s) {
-      expect(
-        updatedServerTimingValues._s,
-        "Server-timing _s should be different after consent",
-      ).not.toBe(initialServerTimingValues._s);
-    }
-
-    // 7. The backend owns tracking cookies; Hydrogen does not create legacy cookies.
+    // 6. The backend owns tracking cookies; Hydrogen does not create legacy cookies.
     await storefront.expectHttpOnlyAnalyticsCookiesPresent();
     await storefront.expectNoLegacyAnalyticsCookies();
-    assert(updatedServerTimingValues._y, "Updated _y value should be present after consent");
-    assert(updatedServerTimingValues._s, "Updated _s value should be present after consent");
 
-    // 8. Confirm perf-kit is loaded and wait for analytics requests to fire
-    await storefront.waitForPerfKit();
-    storefront.expectPerfKitLoaded();
-
-    // Wait for analytics requests to Monorail
+    // 7. Wait for analytics requests to Monorail
     await storefront.waitForMonorailRequests();
 
-    // Verify the analytics requests contain the correct _y and _s values
-    storefront.verifyMonorailRequests(
-      updatedServerTimingValues._y,
-      updatedServerTimingValues._s,
-      "after consent",
-    );
+    // Verify the analytics requests contain the tracking values established after consent
+    storefront.verifyMonorailRequests(tokens.uniqueToken, tokens.visitToken, "after consent");
 
     // TODO: Uncomment once perf-kit bot detection fix ships — perf-kit produce
     // requests are blocked by bot detection, causing verifyPerfKitRequests to fail.
-    // 9. Finalize perf-kit metrics before navigation (triggers LCP finalization)
+    // 8. Finalize perf-kit metrics before navigation (triggers LCP finalization)
     // await storefront.finalizePerfKitMetrics();
 
-    // 10. Navigate to a product (this triggers perf-kit to send metrics via visibility change)
-    await storefront.navigateToInStockProduct();
-
-    // 11. Verify perf-kit payload contains correct tracking values
-    // Wait a moment for perf-kit to send its metrics after visibility change
-    // await storefront.page.waitForTimeout(500);
-
-    // storefront.verifyPerfKitRequests(
-    //   updatedServerTimingValues._y!,
-    //   updatedServerTimingValues._s!,
-    //   'after navigation',
-    // );
-
-    // 12. Add to cart
-    await storefront.addToCart();
-
-    // 13. Verify server-timing values after cart mutation match the session values
-    const serverTimingAfterCart = await storefront.getServerTimingValues(true);
-
-    expect(
-      serverTimingAfterCart._y,
-      "Server-timing _y should be present after cart mutation",
-    ).toBeTruthy();
-    expect(
-      serverTimingAfterCart._s,
-      "Server-timing _s should be present after cart mutation",
-    ).toBeTruthy();
+    // 9. Navigate to a product (this triggers perf-kit to send metrics via visibility change)
+    const productResponse = await storefront.navigateToInStockProduct({ waitForConsent: true });
 
     // Values should match the session established after consent
     expect(
-      serverTimingAfterCart._y,
-      "Server-timing _y after cart mutation should match session value",
-    ).toBe(updatedServerTimingValues._y);
-    expect(
-      serverTimingAfterCart._s,
-      "Server-timing _s after cart mutation should match session value",
-    ).toBe(updatedServerTimingValues._s);
+      await storefront.expectAllowedConsent(productResponse),
+      "Session should survive navigation",
+    ).toEqual(tokens);
 
-    // 14. Verify checkout URLs in cart drawer contain tracking params
+    // 10. Verify perf-kit payload contains correct tracking values
+    // Re-enable this check together with PerfKit finalization above.
+    // storefront.verifyPerfKitRequests(tokens.uniqueToken, tokens.visitToken, "after navigation");
+
+    // 11. Add to cart
+    await storefront.addToCart();
+
+    // 12. Verify tracking values after cart mutation match the session values
+    expect(await storefront.getTrackingTokens(), "Cart mutations should preserve tokens").toEqual(
+      tokens,
+    );
+
+    // 13. Verify checkout URLs in cart drawer contain tracking params
     // TODO: uncomment these out once backend changes have shipped
     // await storefront.verifyCheckoutUrlTrackingParams(
-    //   updatedServerTimingValues._y!,
-    //   updatedServerTimingValues._s!,
-    //   'in cart drawer after adding to cart',
+    //   tokens.uniqueToken,
+    //   tokens.visitToken,
+    //   "in cart drawer after adding to cart",
     // );
 
-    // 15. Reload the page and verify state is preserved
-    await storefront.reload();
+    // 14. Reload the page and verify state is preserved
+    const reloadResponse = await storefront.withConsentResponse(() => storefront.reload());
+
+    // Tracking values should match the session established after consent (before reload)
+    expect(
+      await storefront.expectAllowedConsent(reloadResponse),
+      "Session should survive reload",
+    ).toEqual(tokens);
 
     // Verify privacy banner does NOT show up on reload (consent was saved)
     await storefront.expectPrivacyBannerNotVisible();
@@ -139,36 +88,10 @@ test.describe("Privacy Banner - Accept Flow", () => {
     await storefront.expectHttpOnlyAnalyticsCookiesPresent();
     await storefront.expectNoLegacyAnalyticsCookies();
 
-    // Verify server-timing values after reload match the values from before reload (same session)
-    const serverTimingAfterReload = await storefront.getServerTimingValues();
-
-    expect(
-      serverTimingAfterReload._y,
-      "Server-timing _y should be present after reload",
-    ).toBeTruthy();
-    expect(
-      serverTimingAfterReload._s,
-      "Server-timing _s should be present after reload",
-    ).toBeTruthy();
-
-    // Values should match the session established after consent (before reload)
-    expect(
-      serverTimingAfterReload._y,
-      "Server-timing _y after reload should match value from before reload",
-    ).toBe(updatedServerTimingValues._y);
-    expect(
-      serverTimingAfterReload._s,
-      "Server-timing _s after reload should match value from before reload",
-    ).toBe(updatedServerTimingValues._s);
-
     // Wait for analytics requests after reload
     await storefront.waitForMonorailRequests();
 
     // Verify analytics events after reload have correct values (matching session from before reload)
-    storefront.verifyMonorailRequests(
-      updatedServerTimingValues._y,
-      updatedServerTimingValues._s,
-      "after reload",
-    );
+    storefront.verifyMonorailRequests(tokens.uniqueToken, tokens.visitToken, "after reload");
   });
 });
