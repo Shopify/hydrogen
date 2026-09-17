@@ -301,7 +301,7 @@ interface CustomerAccountServerHandlersOptionsWithoutCart extends CreateCustomer
   /**
    * The cart server handlers that `createCartServerHandlers` returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.
    *
-   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.
+   * The authorize and refresh routes attach the customer to the cart only when the cart matches its server-issued HTTPS binding. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie and its binding cookie. The sync needs `storefrontClient` in the handler context.
    *
    * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from `createCustomerSession`.
    */
@@ -315,7 +315,7 @@ interface CustomerAccountServerHandlersOptionsWithCart extends CreateCustomerAcc
   /**
    * The cart server handlers that `createCartServerHandlers` returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.
    *
-   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.
+   * The authorize and refresh routes attach the customer to the cart only when the cart matches its server-issued HTTPS binding. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie and its binding cookie. The sync needs `storefrontClient` in the handler context.
    *
    * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from `createCustomerSession`.
    */
@@ -788,7 +788,9 @@ async function handleLogoutRoute(
     detachFailed = !(await syncCartBuyerIdentity(cartSync, context, null, "logout"));
   }
   const headers = new Headers(await commitSession(sessionManager));
-  if (cartSync && detachFailed) headers.append("set-cookie", cartSync.expiredCartCookie);
+  if (cartSync && detachFailed) {
+    for (const cookie of cartSync.expiredCartCookies) headers.append("set-cookie", cookie);
+  }
   return redirectResult(logoutUrl, headers);
 }
 
@@ -865,7 +867,9 @@ async function handleRefreshRoute(
   }
 
   const headers = new Headers(await commitSession(sessionManager));
-  if (detachFailed) headers.append("set-cookie", cartSync.expiredCartCookie);
+  if (detachFailed) {
+    for (const cookie of cartSync.expiredCartCookies) headers.append("set-cookie", cookie);
+  }
   return refreshRedirectResult(request, origin, headers);
 }
 

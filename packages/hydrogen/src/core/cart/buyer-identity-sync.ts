@@ -18,13 +18,13 @@ export type CartBuyerIdentitySyncContext = {
  * Create the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you.
  */
 export type CartBuyerIdentitySync = {
-  /** Attaches the customer to the cart in the request's `cart` cookie, or detaches the customer when the token is `null`. */
+  /** Attaches the customer to the cart only when the request's `cart` cookie matches its server-issued binding. Detaches the customer from both the bound and the visible cart when the token is `null`. */
   updateBuyerIdentity(
     context: CartBuyerIdentitySyncContext,
     customerAccessToken: string | null,
   ): Promise<void>;
-  /** A `Set-Cookie` value that clears the `cart` cookie. The customer account handlers send the value when they can't detach the customer from the cart. */
-  readonly expiredCartCookie: string;
+  /** `Set-Cookie` values that clear the `cart` cookie and its binding cookie. The customer account handlers send the values when they can't detach the customer from the cart. */
+  readonly expiredCartCookies: readonly string[];
 };
 
 /** Cart server handlers that you created with `customerSession`. */

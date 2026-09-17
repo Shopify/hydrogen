@@ -1,11 +1,22 @@
 import { describe, it, expect } from "vitest";
 
-import { getCartIdFromCookie, createCartCookie } from "./cookie";
+import {
+  getCartIdFromCookie,
+  getCartIdFromBindingCookie,
+  getBoundCartId,
+  createCartCookie,
+  createCartBindingCookie,
+  createExpiredCartBindingCookie,
+} from "./cookie";
 
 function requestWithCookies(cookies: string): Request {
   return new Request("http://localhost/api/cart", {
     headers: cookies ? { cookie: cookies } : {},
   });
+}
+
+function bindingRequest(cookie: string, scheme = "https") {
+  return new Request(`${scheme}://shop.example/account/refresh`, { headers: { cookie } });
 }
 
 describe("getCartIdFromCookie", () => {
@@ -34,10 +45,99 @@ describe("getCartIdFromCookie", () => {
     expect(getCartIdFromCookie(request)).toBeNull();
   });
 
+  it.each([
+    "cart=attacker; cart=victim",
+    "cart=victim; cart=attacker",
+    "cart=victim; cart=victim",
+    "cart=; cart=victim",
+    "cart=%",
+    "cart=%E0%A4",
+  ])("ignores ambiguous or malformed cookies: %s", (cookie) => {
+    expect(getCartIdFromCookie(requestWithCookies(cookie))).toBeNull();
+  });
+
   it("reads cart ID from a request context cookie", () => {
     expect(getCartIdFromCookie({ cookie: "cart=context-token" })).toBe(
       "gid://shopify/Cart/context-token",
     );
+  });
+});
+
+describe("cart ownership binding", () => {
+  const cartId = "gid://shopify/Cart/victim?key=secret";
+  const visibleCookie = "cart=victim%3Fkey%3Dsecret";
+  const bindingCookie = `__Host-hydrogen-cart=${encodeURIComponent(cartId)}`;
+
+  it("requires the full cart ID, including its key, to match the binding", () => {
+    expect(getBoundCartId(bindingRequest(`${visibleCookie}; ${bindingCookie}`))).toBe(cartId);
+    expect(
+      getBoundCartId(bindingRequest(`cart=victim%3Fkey%3Dother-secret; ${bindingCookie}`)),
+    ).toBeNull();
+  });
+
+  it("normalizes token and GID representations without stripping the secret", () => {
+    expect(
+      getBoundCartId(
+        bindingRequest(
+          `cart=${encodeURIComponent(cartId)}; __Host-hydrogen-cart=victim%3Fkey%3Dsecret`,
+        ),
+      ),
+    ).toBe(cartId);
+  });
+
+  it.each([
+    "",
+    visibleCookie,
+    bindingCookie,
+    `${visibleCookie}; __Host-hydrogen-cart=attacker`,
+    `cart=attacker; ${visibleCookie}; ${bindingCookie}`,
+    `${visibleCookie}; cart=attacker; ${bindingCookie}`,
+    `${visibleCookie}; ${bindingCookie}; __Host-hydrogen-cart=attacker`,
+    `${visibleCookie}; __Host-hydrogen-cart=attacker; ${bindingCookie}`,
+    `${visibleCookie}; ${bindingCookie}; ${bindingCookie}`,
+    `${visibleCookie}; __Host-hydrogen-cart=`,
+    `${visibleCookie}; __Host-hydrogen-cart=%`,
+    `cart=%; ${bindingCookie}`,
+  ])("fails closed for missing, mismatched, duplicate, or malformed cookies: %s", (cookie) => {
+    expect(getBoundCartId(bindingRequest(cookie))).toBeNull();
+  });
+
+  it("accepts a browser-protected binding after a proxy terminates TLS", () => {
+    const proxiedRequest = bindingRequest(`${visibleCookie}; ${bindingCookie}`, "http");
+    expect(getCartIdFromBindingCookie(proxiedRequest)).toBe(cartId);
+    expect(getBoundCartId(proxiedRequest)).toBe(cartId);
+  });
+
+  it("can retrieve the protected cart for cleanup despite a replaced visible cookie", () => {
+    expect(getCartIdFromBindingCookie(bindingRequest(`cart=attacker; ${bindingCookie}`))).toBe(
+      cartId,
+    );
+  });
+
+  it("recovers ordinary cart operations from duplicates without authorizing attachment", () => {
+    const request = bindingRequest(`cart=attacker; ${visibleCookie}; ${bindingCookie}`);
+    expect(getCartIdFromCookie(request)).toBe(cartId);
+    expect(getCartIdFromCookie({ cookie: request.headers.get("cookie") ?? "" })).toBe(cartId);
+    expect(getBoundCartId(request)).toBeNull();
+  });
+
+  it("does not recover duplicates from an ambiguous binding", () => {
+    expect(
+      getCartIdFromCookie(
+        bindingRequest(`cart=attacker; ${visibleCookie}; ${bindingCookie}; ${bindingCookie}`),
+      ),
+    ).toBeNull();
+  });
+
+  it("issues only host-bound, server-readable cookies and expires the same scope", () => {
+    const attributes = "Path=/; Secure; HttpOnly; SameSite=Lax";
+    expect(createCartBindingCookie(cartId)).toBe(
+      `${bindingCookie}; ${attributes}; Max-Age=1209600`,
+    );
+    expect(createExpiredCartBindingCookie()).toBe(
+      `__Host-hydrogen-cart=; ${attributes}; Max-Age=0`,
+    );
+    expect(createCartBindingCookie(cartId)).not.toMatch(/Domain=/i);
   });
 });
 
