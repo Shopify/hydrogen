@@ -277,4 +277,39 @@ describe("handleCheckoutRedirect", () => {
       "https://test-store.myshopify.com/cart/123:1?source=hydrogen&payment=shop_pay",
     );
   });
+
+  it("returns null synchronously for bare /buy", () => {
+    const result = handleCheckoutRedirect(new Request("https://my-app.com/buy"), defaultConfig);
+
+    expect(result).toBeNull();
+  });
+
+  it("forwards buy permalinks to the configured store domain with the query string unchanged", async () => {
+    const result = await handleCheckoutRedirect(
+      new Request(
+        "https://my-app.com/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1?continue_to=%2Fcollections%2Fall&buyer_identity%2Femail=buyer%40example.com",
+      ),
+      defaultConfig,
+    );
+
+    expect(result?.status).toBe(303);
+    expect(result?.headers.get("location")).toBe(
+      "https://test-store.myshopify.com/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1?continue_to=%2Fcollections%2Fall&buyer_identity%2Femail=buyer%40example.com",
+    );
+    expect(result?.headers.get("cache-control")).toBe("no-store");
+    expect(result?.headers.get("referrer-policy")).toBe("no-referrer");
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("does not add payment or existing cart params to buy permalinks", async () => {
+    mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+
+    const result = await handleCheckoutRedirect(
+      new Request("https://my-app.com/buy/123:1", { headers: { cookie: "cart=123" } }),
+      defaultConfig,
+    );
+
+    expect(result?.headers.get("location")).toBe("https://test-store.myshopify.com/buy/123:1");
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 });

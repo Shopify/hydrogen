@@ -1,11 +1,11 @@
 import type { StorefrontClient } from "../../../client";
 import { getCart, getCartId } from "../../cart/get-cart";
 import { getLogger } from "../../logging";
-import { CHECKOUT_RE, isHydrogenServerHandoffPath } from "../../url";
+import { BUY_PERMALINK_RE, CHECKOUT_RE, isHydrogenServerHandoffPath } from "../../url";
 import type { HydrogenRouteInterceptor } from "../route-types";
 
 const log = getLogger("checkout");
-const MOCK_SHOP_CART_PERMALINK_ORIGIN = "https://demostore.mock.shop";
+const MOCK_SHOP_PERMALINK_ORIGIN = "https://demostore.mock.shop";
 
 export const handleCheckoutRedirect: HydrogenRouteInterceptor = (
   url,
@@ -17,6 +17,18 @@ export const handleCheckoutRedirect: HydrogenRouteInterceptor = (
 
   if (request.method !== "GET" && request.method !== "HEAD") {
     return Promise.resolve(new Response("Method Not Allowed", { status: 405 }));
+  }
+
+  if (BUY_PERMALINK_RE.test(url.pathname)) {
+    // UCP permalink response shape (303, no-store, no-referrer), forwarded verbatim since re-encoding would alter `continue_to`.
+    // https://ucp.dev/2026-08-25/specification/permalink/#redirect-resolution
+    const location = `${getPermalinkOrigin(storefrontClient.storeUrl)}${url.pathname}${url.search}`;
+    return Promise.resolve(
+      new Response(null, {
+        status: 303,
+        headers: { location, "cache-control": "no-store", "referrer-policy": "no-referrer" },
+      }),
+    );
   }
 
   const redirectUrlPromise = CHECKOUT_RE.test(url.pathname)
@@ -62,10 +74,7 @@ async function getCartRedirectUrl(
   storefrontClient: StorefrontClient,
 ): Promise<URL> {
   const sourceUrl = new URL(request.url);
-  const redirectUrl = new URL(
-    sourceUrl.pathname,
-    getCartPermalinkOrigin(storefrontClient.storeUrl),
-  );
+  const redirectUrl = new URL(sourceUrl.pathname, getPermalinkOrigin(storefrontClient.storeUrl));
 
   const cartId = getCartId(request);
   if (!cartId) return redirectUrl;
@@ -82,9 +91,9 @@ async function getCartRedirectUrl(
   return redirectUrl;
 }
 
-function getCartPermalinkOrigin(storeUrl: string): string {
+function getPermalinkOrigin(storeUrl: string): string {
   const url = new URL(storeUrl);
-  return isMockShopHost(url.hostname) ? MOCK_SHOP_CART_PERMALINK_ORIGIN : url.origin;
+  return isMockShopHost(url.hostname) ? MOCK_SHOP_PERMALINK_ORIGIN : url.origin;
 }
 
 // mock.shop serves many stores, each on its own host (pets.mock.shop, ...), and
