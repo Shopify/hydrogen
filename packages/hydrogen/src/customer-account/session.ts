@@ -202,9 +202,9 @@ export type CreateCustomerAccountServerHandlersOptions =
        * Cart server handlers created with `createCartServerHandlers({customerSession})`.
        * When provided, the authorize, refresh, and logout routes keep the browser
        * cart's buyer identity in step with the customer session: attach on login
-       * and refresh, detach on logout. Sync is best-effort — failures are logged
-       * and never block the route's redirect; a failed detach during logout
-       * expires the cart cookie instead.
+       * and refresh only when the cart matches its server-issued HTTPS binding,
+       * detach on logout. Sync is best-effort — failures are logged and never
+       * block the route's redirect; a failed detach expires both cart cookies.
        */
       cartServerHandlers: CartBuyerIdentitySyncSource;
     });
@@ -644,7 +644,9 @@ async function handleLogoutRoute(
     detachFailed = !(await syncCartBuyerIdentity(cartSync, context, null, "logout"));
   }
   const headers = new Headers(await commitSession(sessionManager));
-  if (cartSync && detachFailed) headers.append("set-cookie", cartSync.expiredCartCookie);
+  if (cartSync && detachFailed) {
+    for (const cookie of cartSync.expiredCartCookies) headers.append("set-cookie", cookie);
+  }
   return redirectResult(logoutUrl, headers);
 }
 
@@ -721,7 +723,9 @@ async function handleRefreshRoute(
   }
 
   const headers = new Headers(await commitSession(sessionManager));
-  if (detachFailed) headers.append("set-cookie", cartSync.expiredCartCookie);
+  if (detachFailed) {
+    for (const cookie of cartSync.expiredCartCookies) headers.append("set-cookie", cookie);
+  }
   return refreshRedirectResult(request, origin, headers);
 }
 

@@ -15,13 +15,13 @@ export type CartBuyerIdentitySyncContext = {
  * keep the browser cart's buyer identity in step with the customer session.
  */
 export type CartBuyerIdentitySync = {
-  /** Attaches (token) or detaches (null) the customer on the request's cart cookie. */
+  /** Attaches only to a bound cart; detaches both protected and visible carts. */
   updateBuyerIdentity(
     context: CartBuyerIdentitySyncContext,
     customerAccessToken: string | null,
   ): Promise<void>;
-  /** Set-Cookie value that expires the cart cookie, for fail-safe logout cleanup. */
-  readonly expiredCartCookie: string;
+  /** Set-Cookie values expiring the cart and its binding after failed detachment. */
+  readonly expiredCartCookies: readonly string[];
 };
 
 /** Cart server handlers capable of buyer identity sync. */
