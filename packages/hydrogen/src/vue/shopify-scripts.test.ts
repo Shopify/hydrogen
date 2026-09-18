@@ -5,7 +5,7 @@ import { h } from "vue";
 import { renderToString } from "vue/server-renderer";
 
 import { setupStorefrontAnalytics } from "../core/analytics/bus";
-import type { ConsentSetupContext } from "../core/analytics/types";
+import type { ConsentSetup } from "../core/analytics/types";
 import {
   SHOPIFY_ACCOUNT_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
@@ -195,7 +195,7 @@ describe("ShopifyScripts", () => {
       },
     });
     const setupComplete = Promise.withResolvers<void>();
-    const setup = vi.fn((_context: ConsentSetupContext) => setupComplete.promise);
+    const setup = vi.fn<ConsentSetup>(() => setupComplete.promise);
     const wrapper = mount(ShopifyScripts, {
       props: {
         shop: TEST_SHOP,

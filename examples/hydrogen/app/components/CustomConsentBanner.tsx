@@ -1,18 +1,20 @@
-import type { ConsentPreferences, ConsentSetup, ConsentSetupContext } from "@shopify/hydrogen";
+import type { ConsentPreferences, ConsentSetup } from "@shopify/hydrogen";
 import { useCallback, useState } from "react";
 
 /** A minimal app-owned banner: setup stays pending until the shopper's choice is saved. */
 export function useCustomConsentBanner() {
-  const [saveConsent, setSaveConsent] = useState<ConsentSetupContext["setTrackingConsent"]>();
+  const [saveConsent, setSaveConsent] = useState<(choice: ConsentPreferences) => Promise<void>>();
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
 
   const setup = useCallback<ConsentSetup>(
-    ({ setTrackingConsent }) =>
+    () =>
       new Promise<void>((resolve) => {
+        const customerPrivacy = window.Shopify?.customerPrivacy;
+        if (!customerPrivacy) throw new Error("Shopify Customer Privacy API is unavailable.");
         setSaveConsent(() => async (choice: ConsentPreferences) => {
-          await setTrackingConsent(choice);
+          await customerPrivacy.setTrackingConsent(choice);
           resolve();
         });
       }),

@@ -10,7 +10,7 @@ import {
 import { assert } from "../test-utils";
 import { setupStorefrontAnalytics } from "./bus";
 import { initializeCustomConsent } from "./custom-consent";
-import type { ConsentPreferences, ConsentSetup, ConsentSetupContext } from "./types";
+import type { ConsentPreferences, ConsentSetup } from "./types";
 
 const allowed: ConsentPreferences = {
   analytics: true,
@@ -32,18 +32,15 @@ function createHarness(status: "loading" | "loaded" = "loaded") {
     consentStatus: status,
     currentVisitorConsent: () => ({ analytics: analyticsAllowed ? "yes" : "no" }),
     analyticsProcessingAllowed: () => analyticsAllowed,
-    setTrackingConsent: vi.fn<ShopifyGlobal["customerPrivacy"]["setTrackingConsent"]>(
-      (choice, callback) => {
-        const request = Promise.withResolvers<void>();
-        requests.push(request);
-        return request.promise.then(() => {
-          analyticsAllowed = choice.analytics === true;
-          // CTA updates its cache and emits before completing the write callback/promise.
-          document.dispatchEvent(new Event(VISITOR_CONSENT_COLLECTED_EVENT));
-          callback(undefined);
-        });
-      },
-    ),
+    setTrackingConsent: vi.fn<ShopifyGlobal["customerPrivacy"]["setTrackingConsent"]>((choice) => {
+      const request = Promise.withResolvers<void>();
+      requests.push(request);
+      return request.promise.then(() => {
+        analyticsAllowed = choice.analytics === true;
+        // CTA updates its cache and emits before resolving the write promise.
+        document.dispatchEvent(new Event(VISITOR_CONSENT_COLLECTED_EVENT));
+      });
+    }),
   };
   window.Shopify = { customerPrivacy: privacy } as unknown as ShopifyGlobal;
   const bus = setupStorefrontAnalytics({ shop: null, consent: { mode: "custom-banner" } });
@@ -55,23 +52,15 @@ function createHarness(status: "loading" | "loaded" = "loaded") {
     },
   });
 
-  let context: ConsentSetupContext | undefined;
   const setupComplete = Promise.withResolvers<void>();
   const mount = (setup: ConsentSetup = () => setupComplete.promise) =>
-    initializeCustomConsent((value) => {
-      context = value;
-      return setup(value);
-    });
-  const getContext = () => {
-    assert(context, "Expected custom setup to run after CTA loaded");
-    return context;
-  };
+    initializeCustomConsent(setup);
   const request = (index = 0) => {
     const value = requests[index];
     assert(value, `Expected consent request ${index}`);
     return value;
   };
-  return { bus, destination, privacy, mount, getContext, request, setupComplete };
+  return { bus, destination, privacy, mount, request, setupComplete };
 }
 
 afterEach(() => {
@@ -93,7 +82,7 @@ describe("custom banner consent", () => {
     h.bus.publish("page_viewed", { url: "/banner-open" });
     expect(h.destination).not.toHaveBeenCalled();
 
-    const write = h.getContext().setTrackingConsent(allowed);
+    const write = h.privacy.setTrackingConsent(allowed);
     h.request().resolve();
     await write;
     expect(h.destination).not.toHaveBeenCalled();
@@ -107,19 +96,24 @@ describe("custom banner consent", () => {
     );
   });
 
-  it("waits for CTA readiness and invokes setup only once, including repeated readiness events", () => {
-    const h = createHarness("loading");
-    const setup = vi.fn<ConsentSetup>(async () => {});
-    h.mount(setup);
-    expect(setup).not.toHaveBeenCalled();
-    h.privacy.consentStatus = "loaded";
-    document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
-    document.dispatchEvent(new Event(VISITOR_CONSENT_COLLECTED_EVENT));
-    document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
-    expect(setup).toHaveBeenCalledOnce();
-  });
+  it.each([CONSENT_TRACKING_API_LOADED_EVENT, VISITOR_CONSENT_COLLECTED_EVENT])(
+    "waits for CTA readiness and invokes setup only once (first event: %s)",
+    (event) => {
+      const h = createHarness("loading");
+      const setup = vi.fn<ConsentSetup>(async () => {});
+      h.mount(setup);
+      expect(setup).not.toHaveBeenCalled();
+      h.privacy.consentStatus = "loaded";
+      document.dispatchEvent(new Event(event));
+      expect(setup).toHaveBeenCalledOnce();
+      document.dispatchEvent(new Event(VISITOR_CONSENT_COLLECTED_EVENT));
+      document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
+      expect(setup).toHaveBeenCalledOnce();
+      expect(setup).toHaveBeenCalledWith();
+    },
+  );
 
-  it("trusts setup completion without requiring a call to the supplied setter", async () => {
+  it("trusts setup completion without requiring a consent write", async () => {
     const h = createHarness();
     h.mount();
     h.bus.publish("page_viewed");
@@ -134,7 +128,7 @@ describe("custom banner consent", () => {
     const setupComplete = Promise.withResolvers<void>();
     h.mount(() => setupComplete.promise);
     h.bus.publish("page_viewed");
-    const write = h.getContext().setTrackingConsent(allowed);
+    const write = h.privacy.setTrackingConsent(allowed);
     h.request().resolve();
     await write;
     expect(h.destination).not.toHaveBeenCalled();
@@ -145,11 +139,15 @@ describe("custom banner consent", () => {
   it("can synchronize saved consent immediately when setup attaches after CTA loaded", async () => {
     const h = createHarness();
     h.bus.publish("page_viewed", { url: "/saved" });
-    let write: Promise<void> | undefined;
-    h.mount(({ setTrackingConsent }) => {
-      write = setTrackingConsent(allowed);
-      return write;
+    let write: Promise<unknown> | undefined;
+    h.mount(async () => {
+      assert(window.Shopify, "Expected Shopify global");
+      write = window.Shopify.customerPrivacy.setTrackingConsent(allowed);
+      await write;
     });
+    expect(h.privacy.setTrackingConsent).toHaveBeenCalledExactlyOnceWith(allowed);
+    await Promise.resolve();
+    expect(h.destination).not.toHaveBeenCalled();
     h.request().resolve();
     await write;
     await vi.waitFor(() => expect(h.destination).toHaveBeenCalledOnce());
@@ -159,7 +157,7 @@ describe("custom banner consent", () => {
     const h = createHarness();
     h.mount();
     h.bus.publish("page_viewed", { url: "/before-denial" });
-    const first = h.getContext().setTrackingConsent(denied);
+    const first = h.privacy.setTrackingConsent(denied);
     h.request().resolve();
     await first;
     h.setupComplete.resolve();
@@ -167,7 +165,7 @@ describe("custom banner consent", () => {
     h.bus.publish("page_viewed", { url: "/while-denied" });
     expect(h.destination).not.toHaveBeenCalled();
 
-    const second = h.getContext().setTrackingConsent(allowed);
+    const second = h.privacy.setTrackingConsent(allowed);
     h.request(1).resolve();
     await second;
     expect(h.destination).not.toHaveBeenCalled();
@@ -180,20 +178,20 @@ describe("custom banner consent", () => {
     const h = createHarness();
     h.mount();
     h.bus.publish("page_viewed", { url: "/initial" });
-    const initial = h.getContext().setTrackingConsent(allowed);
+    const initial = h.privacy.setTrackingConsent(allowed);
     h.request().resolve();
     await initial;
     h.setupComplete.resolve();
     await vi.waitFor(() => expect(h.destination).toHaveBeenCalledOnce());
 
     // Later changes use the existing consent event flow, including direct CTA callers.
-    const revoke = h.privacy.setTrackingConsent(denied, () => {});
+    const revoke = h.privacy.setTrackingConsent(denied);
     h.request(1).resolve();
     await revoke;
     h.bus.publish("page_viewed", { url: "/denied" });
     expect(h.destination).toHaveBeenCalledOnce();
 
-    const grant = h.privacy.setTrackingConsent(allowed, () => {});
+    const grant = h.privacy.setTrackingConsent(allowed);
     h.request(2).resolve();
     await grant;
     h.bus.publish("page_viewed", { url: "/granted" });
@@ -207,66 +205,17 @@ describe("custom banner consent", () => {
     const h = createHarness();
     h.mount();
     h.bus.publish("page_viewed", { url: "/retry" });
-    const first = h.getContext().setTrackingConsent(allowed);
-    const rejection = expect(first).rejects.toThrow("offline");
-    h.request().reject(new Error("offline"));
+    const first = h.privacy.setTrackingConsent(allowed);
+    const error = { error: "Server error", statusCode: 503 };
+    const rejection = expect(first).rejects.toBe(error);
+    h.request().reject(error);
     await rejection;
     document.dispatchEvent(new Event(VISITOR_CONSENT_COLLECTED_EVENT));
     expect(h.destination).not.toHaveBeenCalled();
 
-    const retry = h.getContext().setTrackingConsent(allowed);
+    const retry = h.privacy.setTrackingConsent(allowed);
     h.request(1).resolve();
     await retry;
-    h.setupComplete.resolve();
-    await vi.waitFor(() => expect(h.destination).toHaveBeenCalledOnce());
-  });
-
-  it("supports callback-only CTA writes without treating undefined return as success", async () => {
-    const h = createHarness();
-    let callback: Parameters<ShopifyGlobal["customerPrivacy"]["setTrackingConsent"]>[1] | undefined;
-    h.privacy.setTrackingConsent.mockImplementation((_choice, value) => {
-      callback = value;
-    });
-    h.mount();
-    h.bus.publish("page_viewed");
-    const write = h.getContext().setTrackingConsent(allowed);
-    await Promise.resolve();
-    expect(h.destination).not.toHaveBeenCalled();
-    assert(callback, "Expected a CTA completion callback");
-    callback(undefined);
-    await write;
-    h.setupComplete.resolve();
-    await vi.waitFor(() => expect(h.destination).toHaveBeenCalledOnce());
-  });
-
-  it("rejects callback errors without opening delivery", async () => {
-    const h = createHarness();
-    h.privacy.setTrackingConsent.mockImplementation((_choice, callback) => {
-      callback({ error: "permission update failed" });
-      return Promise.resolve();
-    });
-    h.mount();
-    await expect(h.getContext().setTrackingConsent(allowed)).rejects.toThrow(
-      "permission update failed",
-    );
-    h.bus.publish("page_viewed");
-    expect(h.destination).not.toHaveBeenCalled();
-  });
-
-  it("rejects thrown and promise-only errors, and accepts a promise-only retry", async () => {
-    const h = createHarness();
-    h.mount();
-    h.privacy.setTrackingConsent
-      .mockImplementationOnce(() => {
-        throw new Error("invalid choice");
-      })
-      .mockRejectedValueOnce(new Error("network"));
-    await expect(h.getContext().setTrackingConsent(allowed)).rejects.toThrow("invalid choice");
-    await expect(h.getContext().setTrackingConsent(allowed)).rejects.toThrow("network");
-    h.bus.publish("page_viewed");
-    expect(h.destination).not.toHaveBeenCalled();
-    h.privacy.setTrackingConsent.mockResolvedValueOnce(undefined);
-    await h.getContext().setTrackingConsent(allowed);
     h.setupComplete.resolve();
     await vi.waitFor(() => expect(h.destination).toHaveBeenCalledOnce());
   });
@@ -284,7 +233,7 @@ describe("custom banner consent", () => {
   it("ignores an old write after destruction and keeps a new bus pending", async () => {
     const h = createHarness();
     h.mount();
-    const first = h.getContext().setTrackingConsent(allowed);
+    const first = h.privacy.setTrackingConsent(allowed);
     h.bus.destroy();
 
     const nextBus = setupStorefrontAnalytics({ shop: null, consent: { mode: "custom-banner" } });
@@ -384,14 +333,13 @@ describe("custom banner consent", () => {
     window.Shopify.customerPrivacy = {
       consentStatus: "loaded",
       analyticsProcessingAllowed: () => true,
-      setTrackingConsent: (_choice, callback) => callback(undefined),
-    } as ShopifyGlobal["customerPrivacy"];
+      setTrackingConsent: async () => {},
+    } as unknown as ShopifyGlobal["customerPrivacy"];
     await initializeShopifyScripts({ consent, webMcp: false });
     expect(setup).toHaveBeenCalledOnce();
     expect(destination).not.toHaveBeenCalled();
-    expect(setup).toHaveBeenCalledWith({ setTrackingConsent: expect.any(Function) });
-    const context = setup.mock.calls[0][0];
-    await context.setTrackingConsent(allowed);
+    expect(setup).toHaveBeenCalledWith();
+    await window.Shopify.customerPrivacy.setTrackingConsent(allowed);
     expect(destination).not.toHaveBeenCalled();
     setupComplete.resolve();
     await vi.waitFor(() => expect(destination).toHaveBeenCalled());

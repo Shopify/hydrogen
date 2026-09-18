@@ -26,23 +26,15 @@ export type ConsentPreferences = {
   sale_of_data: boolean;
 };
 
-export type ConsentSetupContext = {
-  /**
-   * Synchronizes a resolved choice with Shopify. Await this before resolving setup.
-   * Later updates use the normal consent-event handling.
-   * Rejects on failure so the caller can handle errors and retry.
-   */
-  setTrackingConsent: (consent: ConsentPreferences) => Promise<void>;
-};
-
 /**
  * Connects a consent provider once per analytics bus, after Shopify's consent API has loaded.
+ * Use window.Shopify.customerPrivacy to synchronize consent.
  * Resolve only after the provider has a saved choice or the shopper interacts, and that
  * consent has been synchronized with Shopify. Hydrogen then checks consent and replays
  * allowed events. Rejection keeps delivery blocked. The integration stays active
  * across component unmounts.
  */
-export type ConsentSetup = (context: ConsentSetupContext) => Promise<void>;
+export type ConsentSetup = () => Promise<void>;
 
 export type ConsentConfig =
   | { mode?: "no-banner"; setup?: never }

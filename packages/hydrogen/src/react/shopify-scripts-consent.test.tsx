@@ -4,8 +4,9 @@ import { StrictMode } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { setupStorefrontAnalytics } from "../core/analytics/bus";
-import type { ConsentSetupContext } from "../core/analytics/types";
+import type { ConsentSetup } from "../core/analytics/types";
 import * as shopifyScripts from "../core/shopify-scripts";
+import { assert } from "../core/test-utils";
 import type { ShopifyGlobal } from "../globals";
 import { ShopifyScripts } from "./shopify-scripts";
 
@@ -26,7 +27,9 @@ it("synchronizes once across Strict Mode and remounts, and stays active after un
     customerPrivacy: {
       consentStatus: "loaded",
       analyticsProcessingAllowed: () => true,
-      setTrackingConsent: vi.fn((_choice, callback) => callback(undefined)),
+      setTrackingConsent: vi
+        .fn<ShopifyGlobal["customerPrivacy"]["setTrackingConsent"]>()
+        .mockResolvedValue(undefined),
     },
   } as unknown as ShopifyGlobal;
   const bus = setupStorefrontAnalytics({ shop: null, consent: { mode: "custom-banner" } });
@@ -37,9 +40,10 @@ it("synchronizes once across Strict Mode and remounts, and stays active after un
       subscribe("page_viewed", destination);
     },
   });
-  let write: Promise<void> | undefined;
-  const setup = vi.fn(async ({ setTrackingConsent }: ConsentSetupContext) => {
-    write = setTrackingConsent({
+  let write: Promise<unknown> | undefined;
+  const setup = vi.fn<ConsentSetup>(async () => {
+    assert(window.Shopify, "Expected Shopify global");
+    write = window.Shopify.customerPrivacy.setTrackingConsent({
       analytics: true,
       marketing: true,
       preferences: true,
