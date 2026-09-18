@@ -30,6 +30,8 @@ export function isHydrogenServerHandoffPath(pathname: string): boolean {
   );
 }
 
+export const UCP_RE = /^\/\.well-known\/ucp$/;
+
 /**
  * Allowlisted `.well-known` resources proxied to the Online Store origin:
  * - `apple-developer-merchantid-domain-association` — Apple Pay domain verification.
