@@ -12,9 +12,10 @@ export function normalizeCartId(cartId: string | null | undefined): string | nul
 
 export function getCartIdFromCookie(input: CartCookieSource): string | null {
   const values = readCartCookieValues(input, COOKIE_NAME);
-  // Recover ordinary cart operations from cookie tossing without creating a new
-  // cart on every request. Auth attachment below still rejects the ambiguity.
-  return values.length > 1 ? getCartIdFromBindingCookie(input) : parseCartCookie(values);
+  // Recover ordinary operations when the visible cookie is unusable, keeping
+  // the protected cart available for logout cleanup instead of replacing it.
+  // Auth attachment below still requires an unambiguous visible cookie.
+  return parseCartCookie(values) ?? getCartIdFromBindingCookie(input);
 }
 
 // Browser enforcement of __Host- isolates the binding from sibling domains.

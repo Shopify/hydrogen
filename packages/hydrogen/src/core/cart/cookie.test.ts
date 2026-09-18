@@ -114,10 +114,31 @@ describe("cart ownership binding", () => {
     );
   });
 
-  it("recovers ordinary cart operations from duplicates without authorizing attachment", () => {
-    const request = bindingRequest(`cart=attacker; ${visibleCookie}; ${bindingCookie}`);
+  it.each([
+    "",
+    "cart=",
+    "cart=%",
+    "cart=%E0%A4",
+    `cart=attacker; ${visibleCookie}`,
+    `${visibleCookie}; cart=attacker`,
+  ])("recovers an unusable visible cookie without authorizing attachment: %s", (cookie) => {
+    const request = bindingRequest([cookie, bindingCookie].filter(Boolean).join("; "));
     expect(getCartIdFromCookie(request)).toBe(cartId);
     expect(getCartIdFromCookie({ cookie: request.headers.get("cookie") ?? "" })).toBe(cartId);
+    expect(getBoundCartId(request)).toBeNull();
+  });
+
+  it.each([
+    "__Host-hydrogen-cart=",
+    "__Host-hydrogen-cart=%",
+    `${bindingCookie}; ${bindingCookie}`,
+  ])("does not recover a missing visible cookie from an invalid binding: %s", (cookie) => {
+    expect(getCartIdFromCookie(bindingRequest(cookie))).toBeNull();
+  });
+
+  it("preserves a different well-formed visible cart without authorizing attachment", () => {
+    const request = bindingRequest(`cart=replacement; ${bindingCookie}`);
+    expect(getCartIdFromCookie(request)).toBe("gid://shopify/Cart/replacement");
     expect(getBoundCartId(request)).toBeNull();
   });
 
