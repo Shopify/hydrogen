@@ -5,7 +5,7 @@ import { createCartServerHandlers } from "../core/cart/server-handlers";
 import { configureLogging, resetLoggingForTests } from "../core/logging";
 import { createShopifyRequestContext } from "../core/request-context";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../core/request-routing/handle-shopify-routes";
-import { createTestLogger } from "../core/test-utils";
+import { assert, createTestLogger } from "../core/test-utils";
 import {
   createCustomerAccountServerHandlers,
   createCustomerSession,
@@ -43,6 +43,15 @@ const CART_ID_TOKEN = "cart-id-1";
 const CART_GID = `gid://shopify/Cart/${CART_ID_TOKEN}`;
 const CART_COOKIE = `cart=${CART_ID_TOKEN}`;
 const EXPIRED_CART_COOKIE = "cart=; Path=/; SameSite=Lax; Max-Age=0";
+const UNSAFE_RETURN_TARGETS = [
+  "https://attacker.example/phish",
+  "//attacker.example/phish",
+  `${ORIGIN}//attacker.example/phish`,
+  `${ORIGIN}/\\attacker.example/phish`,
+  "/.//attacker.example/phish",
+  "/%2e//attacker.example/phish",
+  "/account/..//attacker.example/phish",
+];
 
 type CustomerAccountSessionData = {
   tokens?: {
@@ -493,12 +502,12 @@ describe("createCustomerSession", () => {
     );
   });
 
-  it("sanitizes unsafe login return targets", async () => {
+  it.each(UNSAFE_RETURN_TARGETS)("sanitizes unsafe login return target %s", async (returnTo) => {
     const customerSession = createSession();
     const sessionManager = new TestSessionManager();
 
     await customerSession.prepareLoginUrl(sessionManager, createRequestContext(), {
-      returnTo: "https://attacker.example/phish",
+      returnTo,
     });
 
     expect(sessionManager.data?.pendingLogin?.returnTo).toBe("/account");
@@ -546,6 +555,30 @@ describe("createCustomerSession", () => {
         expiresAt: REFRESHED_EXPIRES_AT,
       },
     });
+  });
+
+  it("sanitizes pending return targets saved before the redirect fix", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(tokenResponse());
+    const sessionManager = new TestSessionManager({
+      pendingLogin: validPendingLogin({ returnTo: "//attacker.example/phish" }),
+    });
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+    );
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession: createSession({ fetch: fetchMock }),
+        }),
+      ],
+    });
+
+    assert(response, "expected an authorization redirect");
+    expect(response.headers.get("location")).toBe(`${ORIGIN}/account`);
+    expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
   });
 
   it("rejects mismatched OAuth state and clears only the pending login", async () => {
@@ -1154,6 +1187,39 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
     expect(response?.headers.get("set-cookie")).toBe("session=1");
     expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
+  });
+
+  describe.each(["return_to", "returnTo"])("refresh redirect with %s", (parameter) => {
+    it.each(UNSAFE_RETURN_TARGETS)("rejects unsafe return target %s", async (returnTo) => {
+      const requestUrl = new URL(CUSTOMER_ACCOUNT_REFRESH_PATH, ORIGIN);
+      requestUrl.searchParams.set(parameter, returnTo);
+      const response = await handleShopifyRoutes({
+        request: new Request(requestUrl),
+        sessionManager: new TestSessionManager(),
+        handlers: [createCustomerAccountServerHandlers({ customerSession: createSession() })],
+      });
+
+      assert(response, "expected a refresh redirect");
+      expect(response.status).toBe(303);
+      expect(response.headers.get("location")).toBe(`${ORIGIN}/account`);
+    });
+
+    it.each([
+      "/orders?cursor=abc#latest",
+      `${ORIGIN}/orders?cursor=abc#latest`,
+      "/account?next=//attacker.example#orders",
+    ])("preserves safe return target %s", async (returnTo) => {
+      const requestUrl = new URL(CUSTOMER_ACCOUNT_REFRESH_PATH, ORIGIN);
+      requestUrl.searchParams.set(parameter, returnTo);
+      const response = await handleShopifyRoutes({
+        request: new Request(requestUrl),
+        sessionManager: new TestSessionManager(),
+        handlers: [createCustomerAccountServerHandlers({ customerSession: createSession() })],
+      });
+
+      assert(response, "expected a refresh redirect");
+      expect(response.headers.get("location")).toBe(new URL(returnTo, ORIGIN).toString());
+    });
   });
 
   it("supports refresh on custom customer sessions", async () => {
