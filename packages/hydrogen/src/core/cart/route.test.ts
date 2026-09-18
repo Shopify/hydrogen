@@ -1319,6 +1319,28 @@ describe("createCartServerHandlers", () => {
   });
 
   describe("open redirect protection", () => {
+    it.each([
+      `${APP_ORIGIN}//attacker.example/phish`,
+      `${APP_ORIGIN}/\\attacker.example/phish`,
+      `${APP_ORIGIN}/.//attacker.example/phish`,
+      `${APP_ORIGIN}/%2e//attacker.example/phish`,
+    ])(
+      "redirects to / when Referer normalizes to a network-path reference: %s",
+      async (referer) => {
+        const result = await handleCartRequest(
+          createFormPostRequest(
+            { intent: "remove", lineId: "gid://shopify/CartLine/1" },
+            { referer },
+          ),
+        );
+
+        assert(result, "expected a cart redirect");
+        expect(result.status).toBe(303);
+        expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/`);
+        expect(mockFetch).not.toHaveBeenCalled();
+      },
+    );
+
     it("redirects to pathname only for same-origin Referer", async () => {
       mockFetch.mockResolvedValueOnce(
         mockGqlResponse({ cartLinesRemove: { cart: MOCK_CART, userErrors: [] } }),

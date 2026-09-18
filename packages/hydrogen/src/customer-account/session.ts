@@ -870,7 +870,7 @@ async function completeOAuthCallback({
   });
 
   return {
-    location: pendingLogin.returnTo ?? DEFAULT_LOGIN_RETURN_TO_PATH,
+    location: sanitizeReturnTo(pendingLogin.returnTo, origin),
     accessToken: tokenResponse.access_token,
   };
 }
@@ -1410,7 +1410,8 @@ function sanitizeReturnTo(
 
   try {
     const url = new URL(returnTo, origin);
-    if (url.origin !== origin) return fallbackReturnTo;
+    // A leading // becomes an external host when the origin is stripped.
+    if (url.origin !== origin || url.pathname.startsWith("//")) return fallbackReturnTo;
     const sanitizedReturnTo = `${url.pathname}${url.search}${url.hash}`;
     if (new TextEncoder().encode(sanitizedReturnTo).byteLength > MAX_RETURN_TO_LENGTH_IN_BYTES) {
       return fallbackReturnTo;

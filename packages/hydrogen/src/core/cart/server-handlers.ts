@@ -459,7 +459,8 @@ function safeRedirectTarget(request: Request): string {
   try {
     const refererUrl = new URL(referer);
     const requestUrl = new URL(request.url);
-    if (refererUrl.origin !== requestUrl.origin) return "/";
+    // A leading // becomes an external host when the origin is stripped.
+    if (refererUrl.origin !== requestUrl.origin || refererUrl.pathname.startsWith("//")) return "/";
     return refererUrl.toString().replace(refererUrl.origin, "");
   } catch {
     return "/";
