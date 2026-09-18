@@ -104,4 +104,4 @@ The same `@shopify/hydrogen/ts-plugin` and `hydrogen gql check` setup from the `
 
 ## Local OAuth
 
-Customer Account OAuth needs a public HTTPS callback origin. For local examples, use a trusted local HTTPS hostname and register the exact `/account/authorize` callback URL in the Customer Account app configuration.
+Customer Account OAuth needs a public HTTPS callback origin. For local examples, use a trusted local HTTPS hostname and register the exact `/account/authorize` callback URL in the Customer Account app configuration. When account routes fail with "Customer Account OAuth origin must use HTTPS", run the dev server on a trusted HTTPS origin per the `hydrogen-local-https` skill (`npx hydrogen certs install`).
