@@ -7,7 +7,7 @@ import {
   type ShopifyRouteHandlerResult,
 } from "@shopify/hydrogen";
 
-import { CART_METAFIELDS_PATH } from "~/lib/cart-metafields-path";
+import { CART_METAFIELDS_PATH } from "./cart-metafields-path";
 
 // App-owned cart metafield endpoint.
 //
@@ -159,10 +159,33 @@ async function setCartMetafields(
   return { type: "json", data: { userErrors: result.data.cartMetafieldsSet?.userErrors ?? [] } };
 }
 
+function isSameOriginRequest(request: Request, trustedOrigin: string): boolean {
+  // This app-owned mutation route owns its CSRF protection. An invalid Origin
+  // must not fall back to a more permissive Referer.
+  const source = request.headers.get("origin") ?? request.headers.get("referer");
+  if (!source) return false;
+
+  try {
+    const url = new URL(source);
+    return (url.protocol === "https:" || url.protocol === "http:") && url.origin === trustedOrigin;
+  } catch {
+    return false;
+  }
+}
+
 async function handleCartMetafieldsPost(
   context: ShopifyRouteHandlerContext,
 ): Promise<ShopifyRouteHandlerResult> {
   const { request, storefrontClient } = context;
+  const origin = new URL(await context.sessionManager.getSessionOrigin()).origin;
+  if (!isSameOriginRequest(request, origin)) {
+    return {
+      type: "error",
+      status: 403,
+      headers: { "cache-control": "no-store" },
+      error: { code: "forbidden", message: "Forbidden" },
+    };
+  }
 
   let parsed: CartMetafieldRequest;
   try {
