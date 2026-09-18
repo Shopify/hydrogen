@@ -79,7 +79,7 @@
     "@qwik.dev/partytown": "^0.11.2",
     "@react-router/dev": "7.16.0",
     "@react-router/fs-routes": "7.16.0",
-    "@shopify/cli": "0.0.0-nightly-20260918061914",
+    "@shopify/cli": "3.93.2",
     "@shopify/eslint-plugin-cli": "github:Shopify/cli#160a22fdf2bac71bea52eff80336c74af75493db&path:/packages/eslint-plugin-cli",
     "@shopify/prettier-config": "catalog:",
     "@total-typescript/ts-reset": "^0.6.1",
