@@ -1506,36 +1506,38 @@ describe("createCartServerHandlers", () => {
       ]);
     });
 
-    it.each(["read", "add"])(
-      "recovers the protected cart from duplicate visible cookies for %s",
-      async (operation) => {
-        mockFetch.mockResolvedValueOnce(
-          mockGqlResponse(
+    describe.each(["read", "add"])("protected cart recovery for %s", (operation) => {
+      it.each(["", "cart=", "cart=%", "cart=%E0%A4", "cart=attacker; cart=123"])(
+        "recovers the protected cart without overwriting its binding: %s",
+        async (visibleCookie) => {
+          mockFetch.mockResolvedValueOnce(
+            mockGqlResponse(
+              operation === "read"
+                ? { cart: MOCK_CART }
+                : { cartLinesAdd: { cart: MOCK_CART, userErrors: [] } },
+            ),
+          );
+          const cookie = [visibleCookie, "__Host-hydrogen-cart=123"].filter(Boolean).join("; ");
+          const request =
             operation === "read"
-              ? { cart: MOCK_CART }
-              : { cartLinesAdd: { cart: MOCK_CART, userErrors: [] } },
-          ),
-        );
-        const cookie = "cart=attacker; cart=123; __Host-hydrogen-cart=123";
-        const request =
-          operation === "read"
-            ? createGetRequest(cookie)
-            : createJsonPostRequest(
-                { lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }] },
-                cookie,
-              );
-        const result = await handleCartRequest(request);
-        assert(result, "expected a cart response");
-        expect(result.status).toBe(200);
-        expect((await result.json()).cart).toEqual(MOCK_CART);
-        expect(result.headers.getSetCookie()).toEqual([]);
-        const [, init] = mockFetch.mock.calls[0];
-        expect(JSON.parse(init.body).variables).toHaveProperty(
-          operation === "read" ? "id" : "cartId",
-          MOCK_CART.id,
-        );
-      },
-    );
+              ? createGetRequest(cookie)
+              : createJsonPostRequest(
+                  { lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }] },
+                  cookie,
+                );
+          const result = await handleCartRequest(request);
+          assert(result, "expected a cart response");
+          expect(result.status).toBe(200);
+          expect((await result.json()).cart).toEqual(MOCK_CART);
+          expect(result.headers.getSetCookie()).toEqual([]);
+          expect(mockFetch).toHaveBeenCalledOnce();
+          const [, init] = mockFetch.mock.calls[0];
+          const { query, variables } = JSON.parse(init.body);
+          expect(query).not.toContain("mutation CartCreate");
+          expect(variables).toHaveProperty(operation === "read" ? "id" : "cartId", MOCK_CART.id);
+        },
+      );
+    });
 
     it.each([
       [undefined, "attacker-cart"],
@@ -1543,6 +1545,8 @@ describe("createCartServerHandlers", () => {
       ["cart=attacker-cart", "attacker-cart"],
       ["cart=victim; __Host-hydrogen-cart=victim", "attacker-cart"],
       ["cart=attacker-cart; __Host-hydrogen-cart=victim", undefined],
+      ["__Host-hydrogen-cart=victim", "attacker-cart"],
+      ["cart=%; __Host-hydrogen-cart=victim", "attacker-cart"],
     ])(
       "does not promote a supplied cart into a binding (cookie: %s, body: %s)",
       async (cookie, cartId) => {

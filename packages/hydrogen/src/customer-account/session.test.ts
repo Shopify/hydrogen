@@ -1252,6 +1252,86 @@ describe("createCustomerAccountServerHandlers", () => {
     });
   });
 
+  describe.each(["logout", "refresh rejection"])("protected cart cleanup on %s", (cleanup) => {
+    it.each(["", "cart=", "cart=%", "cart=%E0%A4"])(
+      "preserves the original binding through an add when the visible cookie is unusable: %s",
+      async (visibleCookie) => {
+        const customerFetch = vi.fn().mockResolvedValue(new Response(null, { status: 401 }));
+        const customerSession = createSession({ fetch: customerFetch });
+        const cartHandlers = createCartServerHandlers({ customerSession });
+        const handlers = [
+          cartHandlers,
+          createCustomerAccountServerHandlers({
+            customerSession,
+            cartServerHandlers: cartHandlers,
+          }),
+        ];
+        const id = "gid://shopify/Cart/original?key=original-secret";
+        const cookie = [visibleCookie, `__Host-hydrogen-cart=${encodeURIComponent(id)}`]
+          .filter(Boolean)
+          .join("; ");
+        const storefrontFetch = vi
+          .fn()
+          .mockResolvedValueOnce(
+            Response.json({ data: { cartLinesAdd: { cart: { id }, userErrors: [] } } }),
+          )
+          .mockResolvedValueOnce(
+            Response.json({ data: { cartBuyerIdentityUpdate: { cart: { id }, userErrors: [] } } }),
+          );
+        const sessionManager = new TestSessionManager(validSessionData());
+        const added = await handleShopifyRoutes({
+          request: new Request(`${ORIGIN}/api/cart`, {
+            method: "POST",
+            headers: { "content-type": "application/json", cookie },
+            body: JSON.stringify({
+              lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+            }),
+          }),
+          sessionManager,
+          storefrontFetch,
+          handlers,
+        });
+        assert(added, "expected a cart response");
+        expect(added.status).toBe(200);
+        expect(added.headers.getSetCookie()).toEqual([]);
+        expect(customerFetch).not.toHaveBeenCalled();
+        const [addCall] = storefrontFetch.mock.calls;
+        assert(addCall, "expected a cart mutation");
+        const addOperation = JSON.parse(String((addCall[1] as RequestInit).body));
+        expect(addOperation.query).toContain("mutation CartLinesAdd");
+        expect(addOperation.variables.cartId).toBe(id);
+
+        if (cleanup === "refresh rejection") {
+          sessionManager.setSessionItem(
+            SESSION_KEY,
+            validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
+          );
+        }
+        const response = await handleShopifyRoutes({
+          request: new Request(
+            `${ORIGIN}${cleanup === "logout" ? CUSTOMER_ACCOUNT_LOGOUT_PATH : CUSTOMER_ACCOUNT_REFRESH_PATH}`,
+            {
+              method: cleanup === "logout" ? "POST" : "GET",
+              headers: { origin: ORIGIN, cookie },
+            },
+          ),
+          sessionManager,
+          storefrontFetch,
+          handlers,
+        });
+        expect(response?.status).toBe(303);
+        expect(sessionManager.data).toBeUndefined();
+        expect(storefrontFetch).toHaveBeenCalledTimes(2);
+        const [, detachCall] = storefrontFetch.mock.calls;
+        assert(detachCall, "expected detachment of the original cart");
+        expect(JSON.parse(String((detachCall[1] as RequestInit).body)).variables).toEqual({
+          cartId: id,
+          buyerIdentity: { customerAccessToken: null },
+        });
+      },
+    );
+  });
+
   it("binds an anonymous cart at creation and uses that binding through login and logout", async () => {
     const customerSession = createSession({ fetch: vi.fn().mockResolvedValue(tokenResponse()) });
     const cartHandlers = createCartServerHandlers({ customerSession });
