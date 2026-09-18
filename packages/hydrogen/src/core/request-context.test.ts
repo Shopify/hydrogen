@@ -341,24 +341,26 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("powered-by")).toBe("Shopify, Hydrogen");
   });
 
-  it("preserves user-provided Shopify cookies and disables caching", () => {
-    const context = createTestRequestContext(
-      new Request("https://example.com/api/data", {
-        headers: { cookie: "_shopify_essential=established" },
-      }),
-    );
-    const headers = new Headers({
-      "cache-control": "public, max-age=60",
-    });
-    headers.append("set-cookie", "_shopify_essential=updated; Path=/; Secure; HttpOnly");
+  it.each(["_shopify_essential", "app_session"])(
+    "preserves the user-provided %s cookie and disables caching",
+    (name) => {
+      const context = createTestRequestContext(new Request("https://example.com/api/data"));
+      const headers = new Headers({
+        "cache-control": "public, max-age=60",
+        "cdn-cache-control": "public, s-maxage=600",
+        "surrogate-control": "max-age=600",
+      });
+      const cookie = `${name}=updated; Path=/; Secure; HttpOnly`;
+      headers.append("set-cookie", cookie);
 
-    context.applyResponseHeaders(headers);
+      context.applyResponseHeaders(headers);
 
-    expect(headers.getSetCookie()).toEqual([
-      "_shopify_essential=updated; Path=/; Secure; HttpOnly",
-    ]);
-    expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
-  });
+      expect(headers.getSetCookie()).toEqual([cookie]);
+      expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+      expect(headers.has("cdn-cache-control")).toBe(false);
+      expect(headers.has("surrogate-control")).toBe(false);
+    },
+  );
 
   it("replays captured SFAPI cookies for an established session", () => {
     const context = createTestRequestContext(

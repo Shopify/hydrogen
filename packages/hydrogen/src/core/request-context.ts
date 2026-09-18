@@ -26,7 +26,6 @@ import { normalizePathPrefix } from "./standard-routes/path";
 
 const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
 const SHOPIFY_TRACKING_COOKIES = ["_shopify_analytics", "_shopify_marketing"];
-const SHOPIFY_COOKIES = new Set([SHOPIFY_ESSENTIAL_COOKIE, ...SHOPIFY_TRACKING_COOKIES]);
 
 type StorefrontRequest = Pick<Request, "headers"> &
   Partial<Pick<Request, "method" | "signal" | "url">>;
@@ -257,14 +256,11 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       }
 
       // Consent/session responses can contain private state in the body without setting cookies.
-      const returnsCapturedCookies = mayReturnShopifyState && Boolean(capturedCookies?.length);
-
       if (
         personalizedResponseReason ||
         isConsentManagementRequest ||
         sessionEstablishingReason !== undefined ||
-        returnsCapturedCookies ||
-        headers.getSetCookie().some(isShopifySetCookie)
+        headers.has("set-cookie")
       ) {
         applyPrivateResponseCacheHeaders(headers);
       }
@@ -334,9 +330,4 @@ function parseCookieHeader(cookieHeader: string | undefined): Map<string, string
   }
 
   return cookies;
-}
-
-function isShopifySetCookie(value: string): boolean {
-  const name = value.match(/^\s*([^=;\s]+)\s*=/)?.[1];
-  return name !== undefined && SHOPIFY_COOKIES.has(name);
 }
