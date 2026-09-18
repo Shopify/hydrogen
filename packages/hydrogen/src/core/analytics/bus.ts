@@ -236,12 +236,18 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
       }
 
       if (usesDefaultBanner || isObjectRecord(window.privacyBanner)) {
-        if (initializationStarted) return;
+        if (initializationStarted) {
+          // Refresh replay recording without reopening the banner interaction gate.
+          destinationManager.replay();
+          return;
+        }
+
         initializationStarted = true;
         if (shouldWaitForDefaultBannerInteraction()) {
           consentReady = false;
           return;
         }
+
         completeConsent();
         return;
       }
