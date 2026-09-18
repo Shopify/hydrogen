@@ -5,9 +5,11 @@ import {
 } from "../shopify-scripts/constants";
 import { getShopifyGlobal } from "../shopify-scripts/global";
 import { isObjectRecord } from "../utils/record";
+import { CUSTOM_CONSENT, setTrackingConsent } from "./custom-consent";
 import { createDestinationManager } from "./destination-manager";
 import { AnalyticsEvent, type AnalyticsEventName } from "./events";
 import type {
+  ConsentSetup,
   StorefrontAnalytics,
   StorefrontAnalyticsConfig,
   PayloadFor,
@@ -92,9 +94,8 @@ function warnUnsupportedAnalyticsEvent(event: unknown): void {
 
 // Only Shopify's privacy-banner has known pre-interaction initial state:
 // it may call setTrackingConsent once to hydrate consent state, then again
-// after the shopper accepts or declines. Custom banners also may call
-// setTrackingConsent later, but Hydrogen does not own or observe their UI
-// lifecycle, so their initial event must be treated as actionable consent.
+// after the shopper accepts or declines. Custom banners instead synchronize
+// their provider's resolved choice through the setup callback's consent setter.
 function shouldWaitForDefaultBannerInteraction(usesDefaultBanner: boolean): boolean {
   try {
     if (!usesDefaultBanner && !isObjectRecord(window.privacyBanner)) return false;
@@ -132,6 +133,8 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
 
   const { consent, customData } = options;
   const usesDefaultBanner = consent?.mode === "default-banner";
+  const usesCustomBanner = consent?.mode === "custom-banner";
+  let customConsentReady = !usesCustomBanner;
 
   const shop = normalizeShopAnalytics(options.shop);
   let destroyed = false;
@@ -151,7 +154,8 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
   // Tracking integrations (Shopify analytics CDN, third-party destinations) need consent
   // gating and event replay. subscribe() stays live-only; destinations go through here.
   const destinationManager = createDestinationManager({
-    canTrack: () => !waitingForDefaultBannerInteraction && hasAnalyticsConsent(),
+    canTrack: () =>
+      customConsentReady && !waitingForDefaultBannerInteraction && hasAnalyticsConsent(),
     getConfig,
     isSupportedEvent: isSupportedAnalyticsEvent,
     warnUnsupportedEvent: warnUnsupportedAnalyticsEvent,
@@ -209,8 +213,21 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
   function initConsentReplay() {
     if (typeof document === "undefined") return;
 
-    const replayInitialConsent = () => {
+    let customSetup: (() => Promise<boolean>) | undefined;
+    let customSetupStarted = false;
+
+    const replayInitialConsent = async () => {
       if (destroyed) return;
+
+      if (usesCustomBanner) {
+        if (customSetupStarted || !customSetup) return;
+        customSetupStarted = true;
+        if (await customSetup()) {
+          customConsentReady = true;
+          destinationManager.replay(true);
+        }
+        return;
+      }
 
       // If privacy-banner is present and visible, initial readiness only
       // hydrates consent state; replay waits for the later interaction event.
@@ -226,6 +243,9 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
 
     const replayConsentEvent = () => {
       if (destroyed) return;
+      // CTA emits before its write callback completes. Keep initial events buffered
+      // until custom setup finishes; subsequent consent changes follow the usual flow.
+      if (!customConsentReady) return;
 
       waitingForDefaultBannerInteraction = false;
 
@@ -236,11 +256,32 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
       destinationManager.replay(true);
     };
 
+    if (usesCustomBanner) {
+      Object.defineProperty(busInstance, CUSTOM_CONSENT, {
+        value(setup: ConsentSetup) {
+          customSetup ??= async function () {
+            try {
+              await setup({ setTrackingConsent });
+              return !destroyed;
+            } catch (error) {
+              consoleLogger.error("custom consent setup failed", { scope: "consent", error });
+            }
+
+            return false;
+          };
+
+          if (window.Shopify?.customerPrivacy?.consentStatus === "loaded") {
+            void replayInitialConsent();
+          }
+        },
+      });
+    }
+
     document.addEventListener(CONSENT_TRACKING_API_LOADED_EVENT, replayInitialConsent);
     document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, replayConsentEvent);
 
     // Catch up if consent became ready before this listener attached.
-    if (window.Shopify?.customerPrivacy?.consentStatus === "loaded") replayInitialConsent();
+    if (window.Shopify?.customerPrivacy?.consentStatus === "loaded") void replayInitialConsent();
 
     cleanupConsentReplay = () => {
       document.removeEventListener(CONSENT_TRACKING_API_LOADED_EVENT, replayInitialConsent);

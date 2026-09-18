@@ -741,7 +741,7 @@ describe("setupStorefrontAnalytics", () => {
       expect(destination).not.toHaveBeenCalled();
     });
 
-    it("does not wait for interaction in custom banner mode", async () => {
+    it("keeps custom banner events pending after CTA loads with regional defaults", async () => {
       (window as any).Shopify = {
         customerPrivacy: {
           consentStatus: "loading",
@@ -764,11 +764,8 @@ describe("setupStorefrontAnalytics", () => {
       (window as any).Shopify.customerPrivacy.consentStatus = "loaded";
       document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
 
-      expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith(
-        expect.objectContaining({ url: "/custom-banner-initial" }),
-        DESTINATION_CONTEXT,
-      );
+      expect(destination).not.toHaveBeenCalled();
+      bus.destroy();
     });
 
     it("replays default banner initial events when no banner interaction is required", async () => {

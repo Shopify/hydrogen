@@ -67,6 +67,7 @@ Required product analytics fields include Shopify Product GID, ProductVariant GI
 - Let Shopify Customer Privacy control destination delivery in production.
 - Initialize one single bus per page lifetime through ShopifyScripts.
 - Raw subscribers can observe events before consent; destinations receive only consent-allowed replay.
+- For third-party banners, use `consent: {mode: "custom-banner", setup}` and read [Custom consent providers](references/custom-consent.md) for readiness, synchronization, and framework integration.
 - Render ShopifyScripts before route components publish events.
 - Do not dispatch server-side analytics through this browser bus.
 - Keep ShopifyScripts i18n aligned with the resolved market when the storefront uses markets.
