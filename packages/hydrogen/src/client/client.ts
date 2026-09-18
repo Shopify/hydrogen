@@ -252,6 +252,8 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
     try {
       const init: PlainRequestInit = {
         method: "POST",
+        // Fetch can forward the private token header across origins on redirects.
+        redirect: "manual",
         headers: new Headers(requestHeaders),
         body: JSON.stringify({ query: queryText, variables }),
         signal: externalSignals.length > 0 ? AbortSignal.any(externalSignals) : undefined,
