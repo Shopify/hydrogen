@@ -235,15 +235,13 @@ describe("handleShopifyRoutes", () => {
           }),
         });
 
-        // Preserve the legacy identifiers on the request so migration can reuse them.
+        // Forward legacy cookies so Shopify can decide whether to migrate their identifiers.
         const call = mockFetch.mock.calls[0];
         assert(call, "expected consent request to reach Shopify");
         const requestHeaders = new Headers(call[1].headers);
         expect(requestHeaders.get("cookie")).toContain(legacyCookies);
-        if (scenario === "migration") {
-          expect(requestHeaders.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBe("legacy-unique");
-          expect(requestHeaders.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBe("legacy-visit");
-        }
+        expect(requestHeaders.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBeNull();
+        expect(requestHeaders.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBeNull();
 
         // Replay the modern state and expire both host-only and parent-domain cookies.
         assert(result, "expected consent response");

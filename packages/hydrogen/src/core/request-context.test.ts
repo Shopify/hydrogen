@@ -33,7 +33,7 @@ describe("createShopifyRequestContext", () => {
     ).toThrow("i18n with country and language is required");
   });
 
-  it("does not generate tracking tokens from a request", () => {
+  it("stores request metadata and creates a request group ID", () => {
     const request = new Request("https://example.com/products/snowboard");
 
     const result = createTestRequestContext(request);
@@ -41,8 +41,6 @@ describe("createShopifyRequestContext", () => {
     expect(result.url).toBe("https://example.com/products/snowboard");
     expect(result.storefrontOrigin).toBe("https://example.com");
     expect(result.requestGroupId).toBeTruthy();
-    expect(result.uniqueToken).toBeUndefined();
-    expect(result.visitToken).toBeUndefined();
   });
 
   it("keeps a reference to the request signal", () => {
@@ -151,58 +149,22 @@ describe("createShopifyRequestContext", () => {
     expect(result.i18n.pathPrefix).toBe("/fr-ca");
   });
 
-  it("does not create tracking tokens when modern Shopify analytics cookies are present", () => {
-    const result = createTestRequestContext(
-      new Request("https://example.com", {
-        headers: { cookie: "_shopify_analytics=1; _shopify_marketing=1" },
-      }),
+  it.each([
+    "_shopify_y=unique-token; _shopify_s=visit-token",
+    "_shopify_essential=established; _shopify_y=unique-token; _shopify_s=visit-token",
+    "_shopify_analytics=1; _shopify_marketing=1; _shopify_y=unique-token; _shopify_s=visit-token",
+  ])("forwards cookies without deriving tracking headers: %s", (cookie) => {
+    const context = createTestRequestContext(
+      new Request("https://example.com", { headers: { cookie } }),
     );
+    const headers = new Headers();
+    context.applyStorefrontRequestHeaders(headers);
 
-    expect(result.cookie).toBe("_shopify_analytics=1; _shopify_marketing=1");
-    expect(result.uniqueToken).toBeUndefined();
-    expect(result.visitToken).toBeUndefined();
-  });
-
-  it("reuses legacy tracking cookies when only the Shopify essential cookie is present", () => {
-    const result = createTestRequestContext(
-      new Request("https://example.com", {
-        headers: {
-          cookie:
-            "_shopify_essential=declined-session; _shopify_y=unique-token; _shopify_s=visit-token",
-        },
-      }),
-    );
-
-    expect(result.uniqueToken).toBe("unique-token");
-    expect(result.visitToken).toBe("visit-token");
-    expect(result.legacyTokens).toBe(true);
-  });
-
-  it("reuses legacy Shopify tracking cookies when present", () => {
-    const result = createTestRequestContext(
-      new Request("https://example.com", {
-        headers: { cookie: "_shopify_y=unique-token; _shopify_s=visit-token" },
-      }),
-    );
-
-    expect(result.uniqueToken).toBe("unique-token");
-    expect(result.visitToken).toBe("visit-token");
-    expect(result.legacyTokens).toBe(true);
-  });
-
-  it("does not reuse legacy Shopify tracking cookies when modern analytics cookies are present", () => {
-    const result = createTestRequestContext(
-      new Request("https://example.com", {
-        headers: {
-          cookie:
-            "_shopify_analytics=1; _shopify_marketing=1; _shopify_y=unique-token; _shopify_s=visit-token",
-        },
-      }),
-    );
-
-    expect(result.uniqueToken).toBeUndefined();
-    expect(result.visitToken).toBeUndefined();
-    expect(result.legacyTokens).toBeUndefined();
+    expect(headers.get("cookie")).toBe(cookie);
+    expect(headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBeNull();
+    expect(headers.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBeNull();
+    expect(headers.get(SHOPIFY_STOREFRONT_Y_HEADER)).toBeNull();
+    expect(headers.get(SHOPIFY_STOREFRONT_S_HEADER)).toBeNull();
   });
 
   it("uses x-request-id as the default request group id", () => {
@@ -225,21 +187,6 @@ describe("createShopifyRequestContext", () => {
     expect(result.requestGroupId).toBe("incoming-request-id");
   });
 
-  it("reuses tracking tokens forwarded in request headers", () => {
-    const result = createTestRequestContext(
-      new Request("https://example.com", {
-        headers: {
-          [SHOPIFY_UNIQUE_TOKEN_HEADER]: "forwarded-unique-token",
-          [SHOPIFY_VISIT_TOKEN_HEADER]: "forwarded-visit-token",
-        },
-      }),
-    );
-
-    expect(result.requestGroupId).toBeTruthy();
-    expect(result.uniqueToken).toBe("forwarded-unique-token");
-    expect(result.visitToken).toBe("forwarded-visit-token");
-  });
-
   it("gets forwarded request headers for handing off through a proxy", () => {
     const context = createTestRequestContext(
       new Request("https://example.com/products/snowboard", {
@@ -247,6 +194,8 @@ describe("createShopifyRequestContext", () => {
           accept: "text/html",
           cookie: "_shopify_y=unique-token; _shopify_s=visit-token",
           "x-request-id": "incoming-request-id",
+          [SHOPIFY_UNIQUE_TOKEN_HEADER]: "forwarded-unique-token",
+          [SHOPIFY_VISIT_TOKEN_HEADER]: "forwarded-visit-token",
         },
       }),
     );
@@ -258,10 +207,8 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("x-storefront-url")).toBe("https://example.com/products/snowboard");
     expect(headers.get(REQUEST_GROUP_ID_HEADER)).toBe("incoming-request-id");
     expect(headers.get(SHOPIFY_STOREFRONT_ORIGIN_HEADER)).toBe("https://example.com");
-    expect(headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBe("unique-token");
-    expect(headers.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBe("visit-token");
-    expect(headers.get(SHOPIFY_STOREFRONT_Y_HEADER)).toBe("unique-token");
-    expect(headers.get(SHOPIFY_STOREFRONT_S_HEADER)).toBe("visit-token");
+    expect(headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBe("forwarded-unique-token");
+    expect(headers.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBe("forwarded-visit-token");
   });
 
   it("does not mutate the original request headers when getting forwarded request headers", () => {
@@ -285,6 +232,8 @@ describe("createShopifyRequestContext", () => {
           cookie: "_shopify_y=unique-token; _shopify_s=visit-token",
           "x-random": "not-forwarded",
           "x-request-id": "incoming-request-id",
+          [SHOPIFY_UNIQUE_TOKEN_HEADER]: "forwarded-unique-token",
+          [SHOPIFY_VISIT_TOKEN_HEADER]: "forwarded-visit-token",
         },
       }),
     );
@@ -308,10 +257,8 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("cookie")).toBe("_shopify_y=unique-token; _shopify_s=visit-token");
     expect(headers.get(REQUEST_GROUP_ID_HEADER)).toBe("incoming-request-id");
     expect(headers.get(SHOPIFY_STOREFRONT_ORIGIN_HEADER)).toBe("https://example.com");
-    expect(headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBe("unique-token");
-    expect(headers.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBe("visit-token");
-    expect(headers.get(SHOPIFY_STOREFRONT_Y_HEADER)).toBe("unique-token");
-    expect(headers.get(SHOPIFY_STOREFRONT_S_HEADER)).toBe("visit-token");
+    expect(headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBeNull();
+    expect(headers.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBeNull();
   });
 
   it("does not apply legacy tracking tokens to document server-timing", () => {

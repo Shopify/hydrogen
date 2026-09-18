@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
 import {
+  SHOPIFY_UNIQUE_TOKEN_HEADER,
+  SHOPIFY_VISIT_TOKEN_HEADER,
   STOREFRONT_BUYER_IP_HEADER,
   STOREFRONT_ID_HEADER,
   STOREFRONT_PRIVATE_TOKEN_HEADER,
@@ -211,6 +213,29 @@ describe("handleSfapiProxy", () => {
     expect(headers.get("accept")).toBe("application/json");
     expect(headers.get("user-agent")).toBe("test-agent");
     expect(headers.get("cookie")).toBe("session=abc");
+  });
+
+  it.each([
+    "",
+    "_shopify_y=legacy-unique; _shopify_s=legacy-visit",
+    "_shopify_analytics=1; _shopify_marketing=1; _shopify_y=legacy-unique; _shopify_s=legacy-visit",
+  ])("forwards CTA token headers independently of cookies: %s", async (cookie) => {
+    const request = createRequest("/api/unstable/graphql.json", {
+      headers: {
+        ...(cookie && { cookie }),
+        [SHOPIFY_UNIQUE_TOKEN_HEADER]: "forwarded-unique-token",
+        [SHOPIFY_VISIT_TOKEN_HEADER]: "forwarded-visit-token",
+      },
+    });
+
+    await handleSfapiProxy(request);
+
+    const call = mockFetch.mock.calls[0];
+    assert(call, "expected fetch to be called");
+    const headers = new Headers(call[1].headers);
+    expect(headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBe("forwarded-unique-token");
+    expect(headers.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBe("forwarded-visit-token");
+    expect(headers.get("cookie")).toBe(cookie || null);
   });
 
   it("does NOT forward headers outside the allowlist", async () => {

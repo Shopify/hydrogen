@@ -380,8 +380,8 @@ describe("createCartServerHandlers", () => {
       const [, init] = mockFetch.mock.calls[0];
       const headers = new Headers(init.headers);
       expect(headers.get("cookie")).toBe("cart=123; _shopify_y=unique; _shopify_s=visit");
-      expect(headers.get("x-shopify-uniquetoken")).toBe("unique");
-      expect(headers.get("x-shopify-visittoken")).toBe("visit");
+      expect(headers.get("x-shopify-uniquetoken")).toBeNull();
+      expect(headers.get("x-shopify-visittoken")).toBeNull();
       expect(headers.get("custom-storefront-request-group-id")).toBeTruthy();
     });
 
@@ -686,8 +686,8 @@ describe("createCartServerHandlers", () => {
       const [, init] = mockFetch.mock.calls[0];
       const headers = new Headers(init.headers);
       expect(headers.get("cookie")).toBe("cart=123; _shopify_y=unique; _shopify_s=visit");
-      expect(headers.get("x-shopify-uniquetoken")).toBe("unique");
-      expect(headers.get("x-shopify-visittoken")).toBe("visit");
+      expect(headers.get("x-shopify-uniquetoken")).toBeNull();
+      expect(headers.get("x-shopify-visittoken")).toBeNull();
       expect(headers.get("custom-storefront-request-group-id")).toBeTruthy();
     });
   });
