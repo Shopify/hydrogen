@@ -264,6 +264,155 @@ describe("createCustomerSession", () => {
     }
   });
 
+  it.each(["", "   "])("rejects an empty session key: %j", (sessionKey) => {
+    expect(() => createSession({ sessionKey })).toThrow("sessionKey must be a non-empty string");
+  });
+
+  describe("custom session keys", () => {
+    const sessionKey = "customerAccount:another-shop";
+
+    it("isolates login, token reads, and logout from the default session", async () => {
+      const fetchMock = vi.fn();
+      const customerSession = createSession({ sessionKey, fetch: fetchMock });
+      const original = validSessionData({ pendingLogin: validPendingLogin() });
+      const sessionManager = new TestSessionManager(original);
+      const requestContext = createRequestContext();
+
+      await expect(customerSession.isLoggedIn(sessionManager, requestContext)).resolves.toBe(false);
+      await expect(
+        customerSession.getAccessToken(sessionManager, requestContext),
+      ).resolves.toBeUndefined();
+      await expect(
+        customerSession.getOrRefreshAccessToken(sessionManager, requestContext),
+      ).resolves.toBeUndefined();
+      expect(fetchMock).not.toHaveBeenCalled();
+
+      const loginUrl = new URL(
+        await customerSession.prepareLoginUrl(sessionManager, requestContext, {
+          returnTo: "/orders",
+        }),
+      );
+      const nonce = loginUrl.searchParams.get("nonce");
+      const state = loginUrl.searchParams.get("state");
+      assert(nonce, "expected a login nonce");
+      assert(state, "expected a login state");
+      expect(sessionManager.getSessionItem(sessionKey)).toMatchObject({
+        pendingLogin: { state, nonce },
+      });
+      expect(sessionManager.data).toEqual(original);
+
+      fetchMock.mockResolvedValueOnce(tokenResponse({ id_token: createIdToken(nonce) }));
+      const callback = new Request(
+        `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=${state}`,
+      );
+      await expect(
+        customerSession.handleOAuthCallback(sessionManager, requestContext, callback),
+      ).resolves.toBe("/orders");
+      expect(sessionManager.getSessionItem(sessionKey)).toEqual({
+        tokens: {
+          accessToken: NEW_ACCESS_TOKEN,
+          refreshToken: NEW_REFRESH_TOKEN,
+          idToken: createIdToken(nonce),
+          expiresAt: REFRESHED_EXPIRES_AT,
+        },
+      });
+      await expect(customerSession.getAccessToken(sessionManager, requestContext)).resolves.toBe(
+        NEW_ACCESS_TOKEN,
+      );
+      await expect(
+        customerSession.getOrRefreshAccessToken(sessionManager, requestContext),
+      ).resolves.toBe(NEW_ACCESS_TOKEN);
+      await expect(customerSession.isLoggedIn(sessionManager, requestContext)).resolves.toBe(true);
+
+      await customerSession.logout(sessionManager, requestContext);
+
+      expect(sessionManager.getSessionItem(sessionKey)).toBeUndefined();
+      expect(sessionManager.data).toEqual(original);
+      expect(sessionManager.removeCalls).toEqual([sessionKey]);
+      expect(sessionManager.setCalls.map(({ key }) => key)).toEqual([sessionKey, sessionKey]);
+      expect(fetchMock).toHaveBeenCalledOnce();
+    });
+
+    it("refreshes only the selected session while preserving its pending login", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(tokenResponse());
+      const customerSession = createSession({ sessionKey, fetch: fetchMock });
+      const original = validSessionData();
+      const sessionManager = new TestSessionManager(original);
+      const pendingLogin = validPendingLogin();
+      sessionManager.setSessionItem(
+        sessionKey,
+        validSessionData({
+          tokens: { expiresAt: NOW_IN_MS, refreshToken: "custom-refresh-token" },
+          pendingLogin,
+        }),
+      );
+
+      await expect(
+        customerSession.getOrRefreshAccessToken(sessionManager, createRequestContext()),
+      ).resolves.toBe(NEW_ACCESS_TOKEN);
+
+      expect(getFetchBody(fetchMock).get("refresh_token")).toBe("custom-refresh-token");
+      expect(sessionManager.getSessionItem(sessionKey)).toMatchObject({
+        tokens: { accessToken: NEW_ACCESS_TOKEN, refreshToken: NEW_REFRESH_TOKEN },
+        pendingLogin,
+      });
+      expect(sessionManager.data).toEqual(original);
+    });
+
+    it.each([false, true])(
+      "isolates rejected refresh cleanup, pending login=%s",
+      async (hasPendingLogin) => {
+        const fetchMock = vi.fn().mockResolvedValue(new Response("invalid", { status: 401 }));
+        const customerSession = createSession({ sessionKey, fetch: fetchMock });
+        const original = validSessionData();
+        const sessionManager = new TestSessionManager(original);
+        const pendingLogin = hasPendingLogin ? validPendingLogin() : undefined;
+        sessionManager.setSessionItem(
+          sessionKey,
+          validSessionData({ tokens: { expiresAt: NOW_IN_MS }, pendingLogin }),
+        );
+
+        await expect(
+          customerSession.getOrRefreshAccessToken(sessionManager, createRequestContext()),
+        ).resolves.toBeUndefined();
+
+        expect(sessionManager.getSessionItem(sessionKey)).toEqual(
+          hasPendingLogin ? { pendingLogin } : undefined,
+        );
+        expect(sessionManager.removeCalls).toEqual(hasPendingLogin ? [] : [sessionKey]);
+        expect(sessionManager.data).toEqual(original);
+      },
+    );
+
+    it.each([false, true])(
+      "isolates failed callback cleanup, existing tokens=%s",
+      async (hasTokens) => {
+        const customerSession = createSession({ sessionKey });
+        const original = validSessionData({ pendingLogin: validPendingLogin() });
+        const sessionManager = new TestSessionManager(original);
+        const tokens = hasTokens ? validSessionData().tokens : undefined;
+        sessionManager.setSessionItem(sessionKey, { tokens, pendingLogin: validPendingLogin() });
+        const request = new Request(
+          `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=wrong-state`,
+        );
+
+        await expect(
+          customerSession.handleOAuthCallback(
+            sessionManager,
+            createRequestContext(request),
+            request,
+          ),
+        ).rejects.toThrow(CustomerAccountOAuthError);
+
+        expect(sessionManager.getSessionItem(sessionKey)).toEqual(
+          hasTokens ? { tokens } : undefined,
+        );
+        expect(sessionManager.removeCalls).toEqual(hasTokens ? [] : [sessionKey]);
+        expect(sessionManager.data).toEqual(original);
+      },
+    );
+  });
+
   it("gets usable access tokens through a read-only session manager", async () => {
     const customerSession = createSession();
     const sessionManager = new TestSessionManager(validSessionData());
