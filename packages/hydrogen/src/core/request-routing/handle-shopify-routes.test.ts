@@ -229,6 +229,27 @@ describe("handleShopifyRoutes", () => {
     expect(call[0].href).toBe("https://test-store.myshopify.com/en/cart.json?locale=en");
   });
 
+  it.each([
+    ["/cart.js", "GET"],
+    ["/__shopify/cart.js", "GET"],
+    ["/api/2026-04/graphql.json", "POST"],
+    ["/api/mcp", "POST"],
+    ["/api/ucp/mcp", "POST"],
+    ["/.well-known/shopify/fec/produce", "POST"],
+  ])("rejects JSONP before forwarding through %s (%s)", async (path, method) => {
+    const response = await handleShopifyRoutes({
+      request: new Request(`https://store.example.com${path}?callback=readCart`, {
+        method,
+        headers: { cookie: "cart=cart-token%3Fkey%3Dcart-secret" },
+      }),
+    });
+    assert(response, "expected a JSONP rejection");
+    expect(response.status).toBe(400);
+    expect(response.headers.get("content-type")).toContain("application/json");
+    expect(response.headers.get("cache-control")).toContain("no-store");
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
   it("returns Response for MCP proxy requests", async () => {
     const result = await handleShopifyRoutes({
       request: new Request("https://my-app.com/api/mcp", {
