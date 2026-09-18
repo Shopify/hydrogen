@@ -102,7 +102,8 @@ function createProxyErrorResponse(
   status: number,
   formatError: (message: string) => unknown,
 ): Response {
-  const message = error instanceof Error ? error.message : "Internal proxy error";
+  // Exception details may contain private request data; expose them only in development.
+  const message = __DEV__ && error instanceof Error ? error.message : "Internal proxy error";
   return new Response(JSON.stringify(formatError(message)), {
     status,
     headers: {

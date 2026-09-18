@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { configureLogging, resetLoggingForTests } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
-import { assert } from "../../test-utils";
+import { assert, createTestLogger } from "../../test-utils";
 import type { HydrogenRoutesOptions } from "../route-types";
 import { createProxyInterceptor } from "./proxy";
 
@@ -35,8 +36,50 @@ function createOptions(request: Request): HydrogenRoutesOptions {
 
 describe("createProxyInterceptor", () => {
   afterEach(() => {
+    resetLoggingForTests();
     vi.unstubAllGlobals();
   });
+
+  it.each(["request preparation", "upstream fetch", "response preparation"])(
+    "returns and logs %s exception details in development",
+    async (stage) => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const error = new Error(
+        "Request to https://internal.example/api?token=private-token failed for customer@example.com",
+      );
+      const fail = () => {
+        throw error;
+      };
+      const handleProxy = createProxyInterceptor({
+        match: /^\/proxy$/,
+        requestHeaders: {
+          deny: [],
+          prepare: stage === "request preparation" ? fail : undefined,
+        },
+        responseHeaders: {
+          prepare: stage === "response preparation" ? fail : undefined,
+        },
+        scope: "test-proxy",
+      });
+      const mockFetch = vi.fn().mockResolvedValue(new Response());
+      if (stage === "upstream fetch") mockFetch.mockRejectedValueOnce(error);
+      vi.stubGlobal("fetch", mockFetch);
+      const request = new Request("https://my-app.com/proxy");
+
+      const response = await handleProxy(new URL(request.url), createOptions(request));
+
+      assert(response, "expected an error response");
+      expect(response.status).toBe(stage === "request preparation" ? 500 : 502);
+      expect(response.headers.get("content-type")).toBe("application/json");
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(await response.json()).toEqual({ error: error.message });
+      expect(logger.error).toHaveBeenCalledExactlyOnceWith("request failed", {
+        scope: "test-proxy",
+        error,
+      });
+    },
+  );
 
   it("applies context headers before deny and prepare", async () => {
     const prepare = vi.fn((headers: Headers) => {
