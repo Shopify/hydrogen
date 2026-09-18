@@ -91,10 +91,11 @@ test.describe("Consent Tracking - Auto-Allowed (Consent Allowed by Default)", ()
 
     // === MIGRATION: Test upgrade from old cookies ===
 
-    // Model cookies left by an older storefront version.
+    // Model cookies left by an older storefront version, which used Path=/.
+    const storefrontOrigin = new URL(storefront.page.url()).origin;
     await storefront.context.addCookies([
-      { name: "_shopify_y", value: tokens.uniqueToken, url: storefront.page.url() },
-      { name: "_shopify_s", value: tokens.visitToken, url: storefront.page.url() },
+      { name: "_shopify_y", value: tokens.uniqueToken, url: storefrontOrigin },
+      { name: "_shopify_s", value: tokens.visitToken, url: storefrontOrigin },
     ]);
 
     // 12. Remove HTTP-only cookies but keep old _shopify_y/_shopify_s
@@ -118,8 +119,9 @@ test.describe("Consent Tracking - Auto-Allowed (Consent Allowed by Default)", ()
       "Migration should preserve the original tokens",
     ).toEqual(tokens);
 
-    // 15. Verify migration establishes the modern HTTP-only cookies.
+    // 15. Verify migration establishes the modern HTTP-only cookies and removes the old cookies.
     await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+    await storefront.expectNoLegacyAnalyticsCookies();
 
     // 16. Wait for analytics and verify they use original tracking values
     await storefront.waitForMonorailRequests();

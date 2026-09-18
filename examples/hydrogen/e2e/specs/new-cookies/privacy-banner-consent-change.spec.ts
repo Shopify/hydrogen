@@ -37,6 +37,13 @@ test.describe("Privacy Banner - Consent Change", () => {
 
       // === CONSENT CHANGE: Decline via preferences ===
 
+      // Model cookies left by an older storefront so revocation also covers their cleanup.
+      const storefrontOrigin = new URL(storefront.page.url()).origin;
+      await storefront.context.addCookies([
+        { name: "_shopify_y", value: tokens.uniqueToken, url: storefrontOrigin },
+        { name: "_shopify_s", value: tokens.visitToken, url: storefrontOrigin },
+      ]);
+
       // 5. Open privacy preferences, decline consent, and verify analytics consent is revoked
       await storefront.openPrivacyPreferences();
       await storefront.expectDeclinedConsent(await storefront.declineInPreferences());
