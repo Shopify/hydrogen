@@ -39,6 +39,20 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
   return (url, options) => {
     const { request, storefrontClient } = options;
     if (!descriptor.match.test(url.pathname)) return null;
+
+    // Disable JSONP requests for security:
+    if (url.searchParams.has("callback")) {
+      return Promise.resolve(
+        new Response(JSON.stringify(formatError("JSONP requests are not supported")), {
+          status: 400,
+          headers: {
+            "content-type": "application/json",
+            "cache-control": PROXY_ERROR_CACHE_CONTROL,
+          },
+        }),
+      );
+    }
+
     if (descriptor.methods && !descriptor.methods.includes(request.method)) {
       // Method not allowed. Shape the body via formatError, like other errors.
       return Promise.resolve(
