@@ -105,45 +105,50 @@ export default defineNitroPlugin((nitroApp) => {
     const requestContext = event.context.shopifyRequestContext;
     if (!requestContext) return;
 
-    const headers = new Headers();
-    copyHeader(event.node.res.getHeader("content-type"), (value) => {
-      headers.set("content-type", value);
-    });
-    copyHeader(event.node.res.getHeader("server-timing"), (value) => {
-      headers.append("server-timing", value);
-    });
+    const response = event.node.res;
+    const headers = createHeaders(response.getHeaders());
 
     requestContext.applyResponseHeaders(headers);
-
-    const serverTiming = headers.get("server-timing");
-    if (serverTiming) event.node.res.setHeader("server-timing", serverTiming);
-
-    const setCookies = headers.getSetCookie();
-    if (setCookies.length > 0) {
-      event.node.res.setHeader("set-cookie", [
-        ...normalizeSetCookie(event.node.res.getHeader("set-cookie")),
-        ...setCookies,
-      ]);
-    }
+    syncHeaders(response, headers);
   });
 });
 
-function copyHeader(value: number | string | string[] | undefined, copy: (value: string) => void) {
-  if (Array.isArray(value)) {
-    for (const item of value) copy(item);
-  } else if (value != null) {
-    copy(String(value));
+type ResponseHeaders = Record<string, number | string | string[] | undefined>;
+
+function createHeaders(source: ResponseHeaders): Headers {
+  const headers = new Headers();
+  for (const [name, value] of Object.entries(source)) {
+    if (Array.isArray(value)) {
+      for (const item of value) headers.append(name, item);
+    } else if (value != null) {
+      headers.set(name, String(value));
+    }
   }
+  return headers;
 }
 
-function normalizeSetCookie(value: number | string | string[] | undefined): string[] {
-  if (Array.isArray(value)) return value;
-  if (typeof value === "string") return [value];
-  return [];
+function syncHeaders(
+  response: {
+    getHeaders(): ResponseHeaders;
+    removeHeader(name: string): void;
+    setHeader(name: string, value: number | string | readonly string[]): unknown;
+  },
+  headers: Headers,
+) {
+  for (const name of Object.keys(response.getHeaders())) {
+    if (!headers.has(name)) response.removeHeader(name);
+  }
+  for (const [name, value] of headers) {
+    if (name !== "set-cookie") response.setHeader(name, value);
+  }
+
+  const setCookies = headers.getSetCookie();
+  if (setCookies.length > 0) response.setHeader("set-cookie", setCookies);
+  else response.removeHeader("set-cookie");
 }
 ```
 
-Preserve existing `set-cookie` values when appending Storefront cookies.
+Start with all existing response headers and synchronize both updates and removals after `applyResponseHeaders()`. This preserves multiple `set-cookie` values, applies private cache headers to personalized responses, and removes conflicting CDN cache directives.
 
 ## 404 Redirects
 

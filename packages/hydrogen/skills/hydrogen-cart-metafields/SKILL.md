@@ -67,6 +67,7 @@ Register a custom `POST` route with `createShopifyRouteHandler` in `handleShopif
 
 ```ts
 async function handleCartMetafieldsPost({ request, storefrontClient }) {
+  // Apply the app's CSRF protection before reading the body or cart cookie.
   const body = parseRequest(await request.json()); // validate at the boundary
   const cartId = getCartId(request); // read the owner from the cookie, never the client body
 
@@ -120,6 +121,7 @@ Without the definition the cart write still succeeds, but nothing is copied to t
 - **Mutation returns `userErrors` only.** Never refetch and return the cart in the same request.
 - **Re-sync with `refresh()`** after success. Treat a refresh failure as a soft error (`errors.network`), not a failed save.
 - **Inject `ownerId` server-side** from the cart cookie (`getCartId`). Never trust a client-supplied `ownerId`.
+- **Custom routes own their CSRF protection.** Before reading the body or cart cookie, require a matching `Origin` (or `Referer` only when `Origin` is absent), checked against the app's trusted public origin. Reject missing or invalid source headers. JSON and `SameSite=Lax` cookies do not prevent attacks from sibling subdomains.
 - **Require an existing cart.** Reject writes when no cart cookie is present; never call `cartCreate` in this route — it races on the cookie.
 - **Validate the request body** at the route boundary before calling the Storefront API.
 - **Delete is single-key**, matching `cartMetafieldDelete`.
