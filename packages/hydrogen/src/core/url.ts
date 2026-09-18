@@ -5,6 +5,8 @@ export const MCP_RE = /^\/api\/mcp$/;
 export const UCP_MCP_RE = /^\/api\/ucp\/mcp$/;
 export const CHECKOUT_RE = /^\/checkout$/;
 export const CART_PERMALINK_RE = /^\/cart\/\d+:\d+(?:,\d+:\d+)*$/;
+export const BUY_PERMALINK_RE =
+  /^\/buy\/(?:[A-Za-z0-9._-]+|~[A-Za-z0-9_-]+):[1-9]\d*(?:,(?:[A-Za-z0-9._-]+|~[A-Za-z0-9_-]+):[1-9]\d*)*\/?$/;
 export const CUSTOMER_ACCOUNT_PATHS = {
   authorize: "/account/authorize",
   login: "/account/login",
@@ -26,6 +28,7 @@ export function isHydrogenServerHandoffPath(pathname: string): boolean {
   return (
     CHECKOUT_RE.test(pathname) ||
     CART_PERMALINK_RE.test(pathname) ||
+    BUY_PERMALINK_RE.test(pathname) ||
     CUSTOMER_ACCOUNT_HANDOFF_PATHS.has(pathname)
   );
 }
