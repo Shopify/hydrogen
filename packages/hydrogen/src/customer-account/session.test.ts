@@ -986,6 +986,26 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(sessionManager.commits).toHaveLength(0);
   });
 
+  it("rejects an empty logout Origin even when the Referer is same-origin", async () => {
+    const initialSessionData = validSessionData();
+    const sessionManager = new TestSessionManager(initialSessionData);
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
+      method: "POST",
+      headers: { origin: "", referer: `${ORIGIN}/account` },
+    });
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      handlers: [createCustomerAccountServerHandlers({ customerSession: createSession() })],
+    });
+
+    expect(response?.status).toBe(403);
+    expect(response?.headers.get("cache-control")).toBe("no-store");
+    expect(sessionManager.data).toBe(initialSessionData);
+    expect(sessionManager.commits).toHaveLength(0);
+  });
+
   it("checks logout posts against the resolved Customer Account origin", async () => {
     const publicOrigin = "https://public.example";
     const sessionManager = new TestSessionManager(validSessionData(), publicOrigin);
