@@ -10,6 +10,7 @@ import { applyPrivateResponseCacheHeaders } from "../headers";
 import { getLogger } from "../logging";
 import type { ShopifyRequestContext } from "../request-context";
 import { createProxyResponseHeaders } from "../request-routing/interceptors/proxy";
+import { isSameOriginRequest } from "../request-routing/is-same-origin";
 import type {
   CallableRouteHandler,
   ShopifyRouteError,
@@ -55,7 +56,11 @@ export type CartGetData<TCart = CartData> = {
 export type CartGetResult<TCart = CartData> = ShopifyRouteJsonResult<CartGetData<TCart>>;
 
 /** Machine-readable error codes returned by the cart POST handler. */
-export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_mutation_failed";
+export type CartErrorCode =
+  | "invalid_cart_request"
+  | "missing_cart"
+  | "cart_mutation_failed"
+  | "forbidden";
 
 /** A cart route error carrying a {@link CartErrorCode} for programmatic handling. */
 export type CartError = ShopifyRouteError & {
@@ -90,6 +95,8 @@ type CartGetHandlerContext = {
 type CartPostHandlerContext = {
   request: Request;
   storefrontClient: StorefrontClient;
+  /** Trusted public origin for direct handler calls behind TLS-terminating proxies. */
+  sessionManager?: Pick<WritableCustomerSessionManager, "getSessionOrigin">;
 };
 
 type CartCustomerSessionReadContext = {
@@ -322,12 +329,20 @@ function logCartErrors(errors: CartGetData["errors"]): void {
   log.error(errors.map(({ message }) => message).join("\n"));
 }
 
+async function resolveCartRequestOrigin({ request, sessionManager }: CartPostHandlerContext) {
+  return new URL((await sessionManager?.getSessionOrigin()) ?? request.url).origin;
+}
+
 async function handlePost(
   context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>,
   queries: RuntimeCartQueries,
   customerSession?: CartCustomerSession,
 ): Promise<CartPostResult> {
   const { request, storefrontClient } = context;
+  const origin = await resolveCartRequestOrigin(context);
+  if (!isSameOriginRequest(request, origin)) {
+    return errorResult("forbidden", "Forbidden", { "cache-control": "no-store" }, 403);
+  }
   const isFormRequest = !request.headers.get("content-type")?.includes("application/json");
   const redirectTarget = safeRedirectTarget(request);
 

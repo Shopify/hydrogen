@@ -7,6 +7,7 @@ import {
 import { DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
 import { getLogger } from "../core/logging";
 import type { ShopifyRequestContext } from "../core/request-context";
+import { isSameOriginRequest } from "../core/request-routing/is-same-origin";
 import {
   createCallableRouteHandler,
   type CallableRouteHandler,
@@ -626,7 +627,7 @@ async function handleLogoutRoute(
 ): Promise<CustomerAccountRouteResult> {
   const { request, sessionManager, requestContext } = context;
   const origin = await resolveRouteOrigin(sessionManager, request, originOption);
-  if (!isSameOriginPost(request, origin)) return forbiddenResult();
+  if (!isSameOriginRequest(request, origin)) return forbiddenResult();
 
   const requestUrl = new URL(request.url);
   const requestedReturnTo =
@@ -873,26 +874,6 @@ async function completeOAuthCallback({
     location: sanitizeReturnTo(pendingLogin.returnTo, origin),
     accessToken: tokenResponse.access_token,
   };
-}
-
-function isSameOriginPost(request: Request, trustedOrigin: string): boolean {
-  const origin = request.headers.get("origin");
-  if (origin) {
-    try {
-      return normalizeOrigin(origin) === trustedOrigin;
-    } catch {
-      return false;
-    }
-  }
-
-  const referer = request.headers.get("referer");
-  if (!referer) return false;
-
-  try {
-    return normalizeOrigin(new URL(referer).origin) === trustedOrigin;
-  } catch {
-    return false;
-  }
 }
 
 function assertOAuthCallbackParams(
