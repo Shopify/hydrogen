@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2026.10.0-preview.4
+
+### Patch Changes
+
+- f368205: Reject JSONP `callback` requests before forwarding them through any Shopify proxy.
+
 ## 2026.10.0-preview.3
 
 ### Minor Changes
