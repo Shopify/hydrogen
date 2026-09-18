@@ -215,6 +215,9 @@ export {
 } from "./shop-pay";
 export type { ShopPayButtonOptions } from "./shop-pay";
 
+export { renderShopifyAccountWidget } from "./account-widget";
+export type { ShopifyAccountWidgetOptions } from "./account-widget";
+
 export {
   createPredictiveSearchFormRegister,
   createPredictiveSearchServerHandlers,

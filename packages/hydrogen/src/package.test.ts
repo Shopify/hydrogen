@@ -142,6 +142,9 @@ if (typeof plugin !== "function" || typeof plugin({typescript}).create !== "func
     expect(coreDeclaration).toContain("getShopifyScriptTags");
     expect(coreDeclaration).toContain("initializeShopifyScripts");
     expect(coreDeclaration).toContain("renderShopifyScriptTags");
+    expect(coreDeclaration).toContain("./account-widget/");
+    expect(coreDeclaration).toContain("renderShopifyAccountWidget");
+    expect(coreDeclaration).toContain("ShopifyAccountWidgetOptions");
     expect(coreDeclaration).not.toContain("initializeDeprecatedCookies");
     expect(coreDeclaration).not.toContain("loadShopifyWebMcpTools");
     expect(coreDeclaration).not.toContain("setShopifyRouting");
