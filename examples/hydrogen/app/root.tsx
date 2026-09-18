@@ -1,5 +1,6 @@
 import { Cache, type ConsentConfig } from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
+import { useState } from "react";
 import {
   Outlet,
   useRouteError,
@@ -22,6 +23,7 @@ import { FOOTER_QUERY, HEADER_QUERY, type HeaderQuery } from "~/lib/fragments";
 import { routeTemplates } from "~/lib/route-templates";
 
 import type { Route } from "./+types/root";
+import { useCustomConsentBanner } from "./components/CustomConsentBanner";
 import { PageLayout } from "./components/PageLayout";
 
 import tailwindCss from "./styles/tailwind.css?url";
@@ -91,8 +93,10 @@ export async function loader(args: Route.LoaderArgs) {
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
     shop,
     consent: {
-      mode: "no-banner",
-    } satisfies ConsentConfig,
+      mode: new URL(args.request.url).pathname.endsWith("/consent/custom-banner")
+        ? "custom-banner"
+        : "no-banner",
+    } satisfies Pick<ConsentConfig, "mode">,
   };
 }
 
@@ -155,6 +159,10 @@ export function Layout({ children }: { children?: React.ReactNode }) {
   const nonce = useNonce();
   const data = useRouteLoaderData<RootLoader>("root");
   const navigate = useNavigate();
+  const customConsent = useCustomConsentBanner();
+  // The consent integration belongs to the document, including after loader revalidation.
+  const [consentMode] = useState(data?.consent.mode ?? "no-banner");
+  const usesCustomBanner = consentMode === "custom-banner";
 
   return (
     <html lang={toHtmlLang(data?.i18n)}>
@@ -172,12 +180,17 @@ export function Layout({ children }: { children?: React.ReactNode }) {
             i18n={data.i18n}
             routes={routeTemplates}
             shop={data.shop}
-            consent={data.consent}
+            consent={
+              usesCustomBanner
+                ? { mode: "custom-banner", setup: customConsent.setup }
+                : { mode: consentMode }
+            }
             navigate={navigate}
           />
         ) : null}
       </head>
       <body>
+        {usesCustomBanner ? customConsent.banner : null}
         {children}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />

@@ -15,7 +15,7 @@ export function getShopifyAnalyticsConfig({
       channel === "headless"
         ? { shopId: shop.shopId, channel }
         : { shopId: shop.shopId, storefrontId: shop.storefrontId, channel },
-    consent: consent ?? {},
+    consent: consent?.mode ? { mode: consent.mode } : {},
     customData: analytics?.customData,
   };
 }
