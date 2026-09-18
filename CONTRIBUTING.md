@@ -60,6 +60,21 @@ The Hydrogen monorepo provides commands for linting and formatting, and uses [Hu
 | `pnpm run lint`      | Lints the code with ESLint                |
 | `pnpm run format`    | Formats the code with prettier            |
 
+### CLI JSON output
+
+New finite commands in `packages/cli/src/commands` must include `...jsonFlag` in
+their static flags and declare a static `jsonOutputSchema` getter. The shared
+`@shopify/cli/command-json-output` ESLint rule enforces this contract. See the
+[Shopify CLI JSON output guide](https://github.com/Shopify/cli/blob/main/docs/cli/json-output.md)
+for schema and output requirements.
+
+Existing commands awaiting migration and streaming commands are listed separately
+in `packages/cli/json-output-command-exceptions.cjs`. Remove finite commands from
+the list as they adopt the contract; do not add new finite commands. Use exact
+repository-relative paths with forward slashes. A command's exception does not
+cover its subcommands. Commands with an optional watch mode, such as `build` and
+`codegen`, remain in the finite migration list.
+
 ## Naming conventions
 
 Hydrogen follows common React naming conventions for filenames, component names, classes, constants, and more.
