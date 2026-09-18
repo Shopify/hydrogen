@@ -3,8 +3,9 @@ name: hydrogen-customer-account
 description: >
   Customer Account API setup for Hydrogen storefronts. Use when wiring customer
   sessions, login/logout/OAuth route handlers, account profile, order history,
-  account-gated UI, cart buyer identity sync, or Customer Account
-  GraphQL queries.
+  account-gated UI, cart buyer identity sync, Customer Account GraphQL queries,
+  or the header account widget / signed-out avatar (ShopifyAccountWidget,
+  renderShopifyAccountWidget).
 ---
 
 # Customer Account API
@@ -19,7 +20,7 @@ Use server-side configuration for:
 - `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID` — Customer Account API client ID.
 - `CUSTOMER_ACCOUNT_SESSION_SECRET` — private per-app secret for encrypted cookie examples, or replace cookie storage with opaque server-side sessions in production.
 
-Do not expose access tokens, refresh tokens, ID tokens, or session secrets to client components or browser storage.
+Do not expose access tokens, refresh tokens, ID tokens, or session secrets to client components or browser storage. The one exception is described under [Account Widget](#account-widget).
 
 ## Session Module
 
@@ -88,13 +89,28 @@ Wrap header/account-link UI in the framework's streaming primitive when possible
 
 ## Account Page
 
-Hydrogen ships no account UI yet — the app owns it. A storefront with the handlers wired but no account page has working auth endpoints a buyer can never reach. Build at least a minimal `/account` route:
+The app owns its account pages. The header [Account Widget](#account-widget) below does not create the app's OAuth/session handlers or account routes. When building an app-owned account experience, build at least a minimal `/account` route:
 
 - **Signed out** — render a sign-in panel linking to `/account/login?return_to=/account`. The login link must be a full-document navigation (plain `<a>` or the framework link's reload-document mode): the handler returns a raw redirect to Shopify's hosted login page that client-side routing cannot follow.
 - **Signed in** — fetch and render a minimal profile (`customer { firstName lastName emailAddress { emailAddress } }`). Check GraphQL `errors` and render an error state instead of crashing.
 - **Logout** — a plain HTML `<form method="post" action="/account/logout">` with a submit button. The handler enforces same-origin POST and returns a raw redirect (to Shopify's logout endpoint when an `id_token` exists); a native browser submit follows it, a client-side form component or fetch call does not. This also keeps logout working without JavaScript. An optional `return_to` search param on the action URL controls the post-logout destination.
 - **Navbar** — link to `/account`. A static link is enough; the page handles both states. If showing signed-in state in the header, use `isLoggedIn()` behind the framework's streaming primitive per the Server Rendering rules above.
-- Never serialize tokens or session objects into loader data or HTML; render only derived profile fields.
+- Never serialize tokens or session objects into loader data or HTML; render only derived profile fields. The only exception is described under [Account Widget](#account-widget).
+
+## Account Widget
+
+Hydrogen renders Shopify's [`<shopify-account>`](https://shopify.dev/docs/api/storefront-web-components/components/shopify-account) header control with SSR-safe markup: the signed-out avatar shows before Shopify's bundle loads and its footprint is reserved, so the header does not shift and needs no consumer CSS.
+
+Before writing widget UI, check whether this skill has a reference file for the app's framework in `references/` ([React](references/react.md), [Vue](references/vue.md)). If one exists, read it and use that framework binding. If there is no matching reference, use [`references/core.md`](references/core.md) and render the framework-neutral HTML string where the app accepts raw HTML.
+
+Rules:
+
+- Load Shopify's account bundle by enabling `account` on the `ShopifyScripts` (or `getShopifyScriptTags()`) setup the app already renders once in the document head; do not add a second script setup.
+- Use a **public** Storefront API token for `publicAccessToken`; it is serialized into HTML.
+- The signed-out avatar is projected inside Shopify's own button, so it is visual only: an icon or image with no links, buttons, or focusable elements. Hydrogen owns the `signed-out-avatar` slot wrapper; never add a `slot` attribute yourself.
+- Pass `nonce` only when the Content Security Policy requires nonces for inline `<style>`, and keep widget options and avatar identical between server render and hydration.
+
+`customerAccessToken` is the one intentional exception to the token rules: Shopify's component needs the current customer access token as an attribute, so it is serialized into HTML. Resolve it on the server with `getAccessToken()` per the Server Rendering rules and pass only that token — never the session, refresh token, ID token, or private Storefront token. Omit it (or pass `null`) when signed out, and never copy it into browser storage. The widget does not refresh tokens; re-render it from the server when the session changes. Because the response then carries a per-customer secret, finalize it through `requestContext.applyResponseHeaders()` so it is marked private and never cached publicly or on a CDN.
 
 ## Typed Queries
 

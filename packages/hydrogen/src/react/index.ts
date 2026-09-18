@@ -1,6 +1,8 @@
 "use client";
 
 export type { ShopifyStandardActions } from "../../vendor/standard-actions";
+export { ShopifyAccountWidget } from "./account-widget";
+export type { ShopifyAccountWidgetEventHandler, ShopifyAccountWidgetProps } from "./account-widget";
 export {
   CartProvider,
   createCartComponents,

@@ -1,2 +1,9 @@
-export { renderShopifyAccountWidget } from "./account-widget";
-export type { ShopifyAccountWidgetOptions } from "./account-widget";
+export { getShopifyAccountWidgetStructure, renderShopifyAccountWidget } from "./account-widget";
+export type {
+  ShopifyAccountWidgetAttributes,
+  ShopifyAccountWidgetElementDescriptor,
+  ShopifyAccountWidgetOptions,
+  ShopifyAccountWidgetStructure,
+  ShopifyAccountWidgetStructureOptions,
+  ShopifyAccountWidgetStyleDescriptor,
+} from "./account-widget";

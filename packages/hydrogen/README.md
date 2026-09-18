@@ -110,4 +110,63 @@ The login handler respects a sanitized `return_to` search parameter and otherwis
 
 When a writable method can update cookie-backed session state, commit once while finalizing the response and append headers from `await sessionManager.commit?.()` there. After committing session headers, call `requestContext.applyResponseHeaders(response.headers)`. Customer Account session reads and GraphQL calls mark the request context private so the finalizer can prevent public/CDN caching of personalized responses.
 
-Use the GraphQL client from server or edge routes only. Keep Customer Account tokens in protected server session storage or encrypted HttpOnly cookies, not browser-readable storage. Pass the same Shopify request context used by the Storefront client so the Customer Account client can derive the `Origin` header, default language, and final response cache policy from request-scoped data. Keep GraphQL documents static and pass user input through variables. Do not retry Customer Account mutations after a timeout unless the operation is externally idempotent.
+Use the GraphQL client from server or edge routes only. Keep Customer Account tokens in protected server session storage or encrypted HttpOnly cookies, not browser-readable storage; the one intentional exception is the current access token the account widget below serializes for Shopify's component. Pass the same Shopify request context used by the Storefront client so the Customer Account client can derive the `Origin` header, default language, and final response cache policy from request-scoped data. Keep GraphQL documents static and pass user input through variables. Do not retry Customer Account mutations after a timeout unless the operation is externally idempotent.
+
+### Account widget
+
+Render Shopify's [`<shopify-account>`](https://shopify.dev/docs/api/storefront-web-components/components/shopify-account) header control with SSR-safe markup that shows your signed-out avatar before Shopify's bundle loads and reserves its footprint so the header does not shift. Enable `account` on `ShopifyScripts` (or `getShopifyScriptTags()`) to load the bundle:
+
+```tsx
+<ShopifyScripts account shop={shop} routes={routeTemplates} />
+```
+
+Core, React, and Vue share `storeDomain`, `publicAccessToken`, optional `customerAccessToken`, `menu`, `signInUrl` (default `/account/login`), and `nonce`. Pass the **public** Storefront API token — it is serialised into HTML. The avatar is visual only: an icon or image with no links, buttons, or focusable elements. No class, user CSS, or inline style is needed for a stable layout.
+
+```ts
+import { renderShopifyAccountWidget } from "@shopify/hydrogen";
+
+// Core: `signedOutAvatarHtml` is trusted and not escaped — application-owned markup only.
+const html = renderShopifyAccountWidget({
+  storeDomain,
+  publicAccessToken,
+  customerAccessToken,
+  signedOutAvatarHtml: '<img src="/icons/user.svg" alt="">',
+});
+```
+
+```tsx
+import { ShopifyAccountWidget } from "@shopify/hydrogen/react";
+
+<ShopifyAccountWidget
+  storeDomain={storeDomain}
+  publicAccessToken={publicAccessToken}
+  customerAccessToken={customerAccessToken}
+  signedOutAvatar={<img src="/icons/user.svg" alt="" />}
+  onOpen={() => {}}
+  onClose={() => {}}
+/>;
+```
+
+```vue
+<script setup lang="ts">
+import { ShopifyAccountWidget } from "@shopify/hydrogen/vue";
+</script>
+
+<template>
+  <ShopifyAccountWidget
+    :store-domain="storeDomain"
+    :public-access-token="publicAccessToken"
+    :customer-access-token="customerAccessToken"
+    @open="onOpen"
+    @close="onClose"
+  >
+    <template #signed-out-avatar>
+      <img src="/icons/user.svg" alt="" />
+    </template>
+  </ShopifyAccountWidget>
+</template>
+```
+
+`open` and `close` forward the component's `CustomEvent<null>` events. Resolve `customerAccessToken` on the server with `getAccessToken()` and pass only the token; after a refresh, render the widget again with the new value.
+
+`customerAccessToken` is serialized into HTML as `customer-access-token` and is visible in the browser — this is the intentional exception to the token rules above, required by Shopify's `<shopify-account>` component. Pass only the current customer access token, never the session, refresh token, ID token, or private Storefront token. Finalize the response through `requestContext.applyResponseHeaders()` so it stays private and is never cached publicly or on a CDN, and do not copy the token into browser storage.
