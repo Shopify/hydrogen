@@ -11,7 +11,6 @@
     "preview": "shopify hydrogen preview --build",
     "typecheck": "react-router typegen && tsc --noEmit",
     "e2e": "playwright test",
-    "e2e:old-cookies": "playwright test --project=old-cookies",
     "e2e:new-cookies": "playwright test --project=new-cookies",
     "e2e:smoke": "playwright test --project=smoke"
   },

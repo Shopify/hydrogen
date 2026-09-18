@@ -1,10 +1,11 @@
-import type { Page, BrowserContext, Locator, Route } from "@playwright/test";
+import type { Page, BrowserContext, Locator, Route, Response } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import {
   SHOPIFY_CONSENT_API_SCRIPT,
   SHOPIFY_PRIVACY_BANNER_SCRIPT,
 } from "../../../../packages/hydrogen/src/core/shopify-scripts/constants";
+import assert from "./assertions";
 
 // Privacy Banner element IDs
 export const PRIVACY_BANNER_DIALOG_ID = "shopify-pc__banner";
@@ -35,9 +36,9 @@ export const GRAPHQL_URL = "graphql.json";
 // Mock value pattern for declined consent (all zeros with a 5)
 export const MOCK_VALUE_PATTERN = /^00000000\-0000\-0000\-5000\-000000000000$/;
 
-export interface ServerTimingValues {
-  _y?: string;
-  _s?: string;
+export interface TrackingTokens {
+  uniqueToken: string | null;
+  visitToken: string | null;
 }
 
 export interface MonorailPayload {
@@ -157,52 +158,80 @@ export class StorefrontPage {
     await this.page.waitForLoadState("networkidle");
   }
 
-  /**
-   * Get server-timing values (_y and _s) from the Performance API
-   * @param preferLatestResource - If true, prefer the latest resource entry over navigation timing
-   */
-  async getServerTimingValues(preferLatestResource = false): Promise<ServerTimingValues> {
-    return this.page.evaluate((preferLatest) => {
-      const result: { _y?: string; _s?: string } = {};
+  /** Capture the initialization query before a full navigation or reload. */
+  async withConsentResponse(action: () => Promise<unknown>): Promise<Response> {
+    const [response] = await Promise.all([
+      this.waitForConsentResponse().then(async (response) => {
+        // Read before another navigation can discard Chromium's response body.
+        await response.body();
+        return response;
+      }),
+      action(),
+    ]);
+    return response;
+  }
 
-      // Get values from resource timing entries (latest entries first)
-      const resourceEntries = performance.getEntriesByType(
-        "resource",
-      ) as PerformanceResourceTiming[];
+  /** Read the same global token API used by analytics, without generating fallback values. */
+  async getTrackingTokens(): Promise<TrackingTokens> {
+    await this.page.waitForFunction(
+      () => (window as any).Shopify?.customerPrivacy?.consentStatus === "loaded",
+    );
+    return this.page.evaluate(() => {
+      const privacy = (window as any).Shopify.customerPrivacy;
+      return {
+        uniqueToken: privacy.__internal.uniqueToken() ?? null,
+        visitToken: privacy.__internal.visitToken() ?? null,
+      };
+    });
+  }
 
-      // Reverse to get latest entries first
-      for (const entry of [...resourceEntries].reverse()) {
-        if (entry.serverTiming) {
-          for (const { name, description } of entry.serverTiming) {
-            if (name === "_y" && description && !result._y) {
-              result._y = description;
-            } else if (name === "_s" && description && !result._s) {
-              result._s = description;
-            }
-          }
-        }
-        if (result._y && result._s) break;
-      }
+  private async getConsentTokens(response: Response): Promise<TrackingTokens> {
+    expect(response.ok(), "Consent request should succeed").toBe(true);
+    expect(await response.headerValue("cache-control")).toContain("no-store");
+    const body = await response.json();
+    expect(body.errors, "Consent query should have no GraphQL errors").toBeUndefined();
+    const cookies = body.data?.consentManagement?.cookies;
+    assert(cookies, "Consent response should contain cookies");
+    expect(cookies).toHaveProperty("shopifyUnique");
+    expect(cookies).toHaveProperty("shopifyVisit");
+    return { uniqueToken: cookies.shopifyUnique, visitToken: cookies.shopifyVisit };
+  }
 
-      // Fall back to navigation timing only when latest resource timing is not requested.
-      if (!preferLatest) {
-        const navigationEntry = performance.getEntriesByType(
-          "navigation",
-        )[0] as PerformanceNavigationTiming;
+  async expectAllowedConsent(response: Response) {
+    const { uniqueToken, visitToken } = await this.getConsentTokens(response);
+    assert(uniqueToken, "Consent response should contain a unique token");
+    assert(visitToken, "Consent response should contain a visit token");
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    for (const token of [uniqueToken, visitToken]) {
+      expect(token).toMatch(uuid);
+      expect(token).not.toMatch(MOCK_VALUE_PATTERN);
+    }
+    const tokens = { uniqueToken, visitToken };
+    await expect
+      .poll(() => this.getTrackingTokens(), "Global getters should match consent response")
+      .toEqual(tokens);
+    await this.expectAnalyticsAllowed(true);
+    return tokens;
+  }
 
-        if (navigationEntry?.serverTiming) {
-          for (const { name, description } of navigationEntry.serverTiming) {
-            if (name === "_y" && description && !result._y) {
-              result._y = description;
-            } else if (name === "_s" && description && !result._s) {
-              result._s = description;
-            }
-          }
-        }
-      }
+  async expectDeclinedConsent(response: Response) {
+    const tokens = { uniqueToken: null, visitToken: null };
+    expect(
+      await this.getConsentTokens(response),
+      "Declined consent should return no tokens",
+    ).toEqual(tokens);
+    await expect
+      .poll(() => this.getTrackingTokens(), "Global getters should expose no tokens")
+      .toEqual(tokens);
+    await this.expectAnalyticsAllowed(false);
+  }
 
-      return result;
-    }, preferLatestResource);
+  private async expectAnalyticsAllowed(allowed: boolean) {
+    await expect
+      .poll(() =>
+        this.page.evaluate(() => window.Shopify?.customerPrivacy?.analyticsProcessingAllowed()),
+      )
+      .toBe(allowed);
   }
 
   /**
@@ -260,36 +289,18 @@ export class StorefrontPage {
       .toEqual([]);
   }
 
-  /**
-   * Assert that analytics cookies are present and return them
-   */
-  async expectAnalyticsCookiesPresent() {
+  async expectHttpOnlyAnalyticsCookiesPresent() {
     await expect
       .poll(
         async () => {
           const cookies = await this.getCookies();
-          return (
-            cookies.some((c) => c.name === "_shopify_y") &&
-            cookies.some((c) => c.name === "_shopify_s")
+          return ["_shopify_analytics", "_shopify_marketing"].every((name) =>
+            cookies.some((cookie) => cookie.name === name && cookie.httpOnly),
           );
         },
-        {
-          message: "_shopify_y and _shopify_s cookies should be present",
-          timeout: 15000,
-        },
+        { message: "HTTP-only analytics and marketing cookies should be present", timeout: 15000 },
       )
       .toBe(true);
-
-    const cookies = await this.getCookies();
-    const shopifyY = cookies.find((c) => c.name === "_shopify_y");
-    const shopifyS = cookies.find((c) => c.name === "_shopify_s");
-    const shopifyAnalytics = cookies.find((c) => c.name === "_shopify_analytics");
-    const shopifyMarketing = cookies.find((c) => c.name === "_shopify_marketing");
-
-    expect(shopifyY, "_shopify_y cookie should be present").toBeDefined();
-    expect(shopifyS, "_shopify_s cookie should be present").toBeDefined();
-
-    return { shopifyY, shopifyS, shopifyAnalytics, shopifyMarketing };
   }
 
   /**
@@ -334,15 +345,17 @@ export class StorefrontPage {
    * Wait for consent management GraphQL response
    */
   waitForConsentResponse() {
-    return this.page.waitForResponse(async (response) => {
-      const url = response.url();
-      if (url.includes(GRAPHQL_URL)) {
-        const postData = response.request().postData();
-        if (postData && postData.includes("consentManagement")) {
-          return true;
-        }
-      }
-      return false;
+    return this.page.waitForResponse((response) => {
+      const request = response.request();
+      if (!response.url().includes(GRAPHQL_URL) || request.method() !== "POST") return false;
+      const query = request.postDataJSON()?.query;
+      // Banner configuration and fallback persistence also use consentManagement.
+      return (
+        typeof query === "string" &&
+        /\bconsentManagement\b/.test(query) &&
+        /\bshopifyUnique\b/.test(query) &&
+        /\bshopifyVisit\b/.test(query)
+      );
     });
   }
 
@@ -361,7 +374,7 @@ export class StorefrontPage {
     const response = await responsePromise;
     expect(response.ok(), "Consent request should succeed").toBe(true);
 
-    await this.page.waitForLoadState("networkidle");
+    await response.finished();
     return response;
   }
 
@@ -380,7 +393,7 @@ export class StorefrontPage {
     const response = await responsePromise;
     expect(response.ok(), "Consent request should succeed").toBe(true);
 
-    await this.page.waitForLoadState("networkidle");
+    await response.finished();
     return response;
   }
 
@@ -438,7 +451,7 @@ export class StorefrontPage {
     const response = await responsePromise;
     expect(response.ok(), "Consent request should succeed").toBe(true);
 
-    await this.page.waitForLoadState("networkidle");
+    await response.finished();
     return response;
   }
 
@@ -457,7 +470,7 @@ export class StorefrontPage {
     const response = await responsePromise;
     expect(response.ok(), "Consent request should succeed").toBe(true);
 
-    await this.page.waitForLoadState("networkidle");
+    await response.finished();
     return response;
   }
 
@@ -486,20 +499,25 @@ export class StorefrontPage {
    * A product is usable only after the product form resolves a merchandise ID
    * and exposes an enabled "Add to cart" submit button.
    */
-  async navigateToInStockProduct() {
+  navigateToInStockProduct(options: { waitForConsent: true }): Promise<Response>;
+  navigateToInStockProduct(): Promise<void>;
+  async navigateToInStockProduct(options?: { waitForConsent: true }): Promise<Response | void> {
+    const navigate = (path: string) =>
+      options?.waitForConsent
+        ? this.withConsentResponse(() => this.page.goto(path))
+        : this.page.goto(path).then(() => undefined);
     const listingUrl = this.page.url();
     const knownInStockProductUrl = "/products/the-element";
-    await this.page.goto(knownInStockProductUrl);
-    if (await this.isProductReadyForCart()) return;
+    const initialResponse = await navigate(knownInStockProductUrl);
+    if (await this.isProductReadyForCart()) return initialResponse;
 
-    await this.page.goto(listingUrl);
+    await navigate(listingUrl);
     const productLinks = this.page.locator('a[href*="/products/"]');
     const linkCount = await productLinks.count();
     expect(linkCount, "At least one product link should exist").toBeGreaterThan(0);
 
     // Cap attempts to avoid slow failure on pages with many products
     const MAX_PRODUCT_ATTEMPTS = 10;
-    const attemptsToMake = Math.min(linkCount, MAX_PRODUCT_ATTEMPTS);
     const productUrls = [
       ...new Set(
         await productLinks.evaluateAll((links) =>
@@ -515,8 +533,8 @@ export class StorefrontPage {
     const rejectedProducts: ProductFormState[] = [];
 
     for (const productUrl of productUrls) {
-      await this.page.goto(productUrl);
-      if (await this.isProductReadyForCart()) return;
+      const response = await navigate(productUrl);
+      if (await this.isProductReadyForCart()) return response;
       rejectedProducts.push(await this.getProductFormState());
     }
 
@@ -613,15 +631,6 @@ export class StorefrontPage {
     });
 
     expect(response.ok, `Cart add failed with ${response.status}: ${response.text}`).toBe(true);
-    await expect
-      .poll(
-        async () => {
-          const serverTiming = await this.getServerTimingValues(true);
-          return Boolean(serverTiming._y && serverTiming._s);
-        },
-        { timeout: 10000 },
-      )
-      .toBe(true);
   }
 
   /**
@@ -773,7 +782,8 @@ export class StorefrontPage {
     ).toBeGreaterThan(0);
 
     for (const request of requestsWithData) {
-      const payload = JSON.parse(request.postData!) as {
+      assert(request.postData, "Analytics request should contain a payload");
+      const payload = JSON.parse(request.postData) as {
         events?: Array<{ payload: MonorailPayload }>;
       };
 
@@ -782,20 +792,23 @@ export class StorefrontPage {
         `Monorail request payload should be present ${assertionContext}`,
       ).toBeDefined();
 
-      for (const event of payload.events!) {
+      assert(payload.events, "Analytics payload should contain events");
+      for (const event of payload.events) {
         if (!shouldVerifyTrackingValues) continue;
 
         const eventPayload = event.payload;
 
         const uniqueToken = eventPayload.unique_token || eventPayload.uniqToken;
-        expect(uniqueToken, `Monorail unique_token ${assertionContext} should match _y value`).toBe(
-          expectedYOrContext,
-        );
+        expect(
+          uniqueToken,
+          `Monorail unique_token ${assertionContext} should match the consent unique token`,
+        ).toBe(expectedYOrContext);
 
         const visitToken = eventPayload.deprecated_visit_token || eventPayload.visitToken;
-        expect(visitToken, `Monorail visit_token ${assertionContext} should match _s value`).toBe(
-          expectedS,
-        );
+        expect(
+          visitToken,
+          `Monorail visit_token ${assertionContext} should match the consent visit token`,
+        ).toBe(expectedS);
       }
     }
   }
@@ -824,7 +837,8 @@ export class StorefrontPage {
     let foundPerfKitPayload = false;
 
     for (const request of perfKitRequests) {
-      const payload = JSON.parse(request.postData!) as {
+      assert(request.postData, "Analytics request should contain a payload");
+      const payload = JSON.parse(request.postData) as {
         payload?: MonorailPayload;
       };
 
@@ -838,12 +852,12 @@ export class StorefrontPage {
 
       expect(
         payload.payload?.unique_token,
-        `Perf-kit unique_token ${context} should match _y value`,
+        `Perf-kit unique_token ${context} should match the consent unique token`,
       ).toBe(expectedY);
 
       expect(
         payload.payload?.session_token,
-        `Perf-kit session_token ${context} should match _s value`,
+        `Perf-kit session_token ${context} should match the consent visit token`,
       ).toBe(expectedS);
     }
 
@@ -853,40 +867,6 @@ export class StorefrontPage {
     ).toBe(true);
 
     return foundPerfKitPayload;
-  }
-
-  /**
-   * Assert that server-timing values are mock values (for declined consent)
-   */
-  expectMockServerTimingValues(values: ServerTimingValues) {
-    if (values._y) {
-      expect(
-        MOCK_VALUE_PATTERN.test(values._y),
-        `Server-timing _y should be a mock value, got: ${values._y}`,
-      ).toBe(true);
-    }
-    if (values._s) {
-      expect(
-        MOCK_VALUE_PATTERN.test(values._s),
-        `Server-timing _s should be a mock value, got: ${values._s}`,
-      ).toBe(true);
-    }
-  }
-
-  /**
-   * Assert that server-timing values are real UUIDs (not mock values)
-   */
-  expectRealServerTimingValues(values: ServerTimingValues) {
-    expect(values._y, "Y value should be present").toBeTruthy();
-    expect(values._s, "S value should be present").toBeTruthy();
-    expect(values._y, "Y value should not be a mock value").not.toMatch(MOCK_VALUE_PATTERN);
-    expect(values._s, "S value should not be a mock value").not.toMatch(MOCK_VALUE_PATTERN);
-    expect(values._y, "Y value should be a UUID").toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    );
-    expect(values._s, "S value should be a UUID").toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    );
   }
 
   /**

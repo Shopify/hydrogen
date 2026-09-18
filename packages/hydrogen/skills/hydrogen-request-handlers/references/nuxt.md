@@ -109,14 +109,8 @@ export default defineNitroPlugin((nitroApp) => {
     copyHeader(event.node.res.getHeader("content-type"), (value) => {
       headers.set("content-type", value);
     });
-    copyHeader(event.node.res.getHeader("server-timing"), (value) => {
-      headers.append("server-timing", value);
-    });
 
     requestContext.applyResponseHeaders(headers);
-
-    const serverTiming = headers.get("server-timing");
-    if (serverTiming) event.node.res.setHeader("server-timing", serverTiming);
 
     const setCookies = headers.getSetCookie();
     if (setCookies.length > 0) {

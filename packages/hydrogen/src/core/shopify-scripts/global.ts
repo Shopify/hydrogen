@@ -16,7 +16,15 @@ export type ShopifyGlobalConfig = {
   currency?: NonNullable<ShopifyGlobal["currency"]>;
   locale: Lowercase<I18nConfig["language"]>;
   customerPrivacy: {
-    config: NonNullable<ShopifyGlobal["customerPrivacy"]["config"]>;
+    config: NonNullable<ShopifyGlobal["customerPrivacy"]["config"]> & {
+      /** Temporary diagnostic metadata for instrumentation; does not change consent or token behavior. */
+      debug: {
+        hydrogen: {
+          generation: number;
+          serverTiming: boolean;
+        };
+      };
+    };
   };
   routes: {
     root: string;
@@ -147,6 +155,12 @@ export function getShopifyGlobalBootstrapScript({
         isHeadless: true,
         asyncConsent: true,
         asyncVisitorState: true,
+        debug: {
+          hydrogen: {
+            generation: 3,
+            serverTiming: false,
+          },
+        },
       },
     },
   };

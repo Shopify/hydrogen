@@ -9,13 +9,13 @@ description: >
 
 # Storefront Analytics
 
-Hydrogen's analytics bus owns the event API, event normalization, and consent-gated destination replay. ShopifyScripts owns Shopify consent setup, analytics CDN loading, and deprecated cookie compatibility. App code owns when to publish route/view events and when to call cart delta tracking.
+Hydrogen's analytics bus owns the event API, event normalization, and consent-gated destination replay. ShopifyScripts owns Shopify consent setup and analytics CDN loading. App code owns when to publish route/view events and when to call cart delta tracking.
 
 ## Framework References
 
 Before wiring route events, check whether this skill has a reference file for the app's framework in `references/`. If one exists, read it and use that framework's route-change and lifecycle primitives. If there is no matching reference, keep the core singleton below and adapt page-view, product-view, collection-view, search-view, and cart tracking to the app's own route lifecycle.
 
-Prerequisite: analytics depends on the same-origin SFAPI proxy (see `hydrogen-request-handlers`) so the browser can observe tracking values from Storefront API responses. Without it, analytics falls back to deprecated JavaScript-visible cookies and session continuity into checkout breaks — treat it as incomplete until the proxy is wired. Key consent setup: Shopify Customer Privacy controls destination delivery in production. Raw subscribers can observe events before consent; destinations receive only consent-allowed replay. Do not bypass Customer Privacy consent gating in production.
+Prerequisite: analytics depends on the same-origin SFAPI proxy (see `hydrogen-request-handlers`) so the browser can observe tracking values from Storefront API responses. The proxy establishes the backend session cookies needed for analytics and checkout continuity; treat analytics as incomplete until it is wired. Key consent setup: Shopify Customer Privacy controls destination delivery in production. Raw subscribers can observe events before consent; destinations receive only consent-allowed replay. Do not bypass Customer Privacy consent gating in production.
 
 ## Core Pattern
 

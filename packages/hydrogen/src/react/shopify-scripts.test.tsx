@@ -109,7 +109,7 @@ describe("ShopifyScripts", () => {
     expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
     expect(html).toContain(`"shop":"${TEST_MYSHOPIFY_DOMAIN}"`);
     expect(html).toContain(
-      '"customerPrivacy":{"config":{"isHeadless":true,"asyncConsent":true,"asyncVisitorState":true}',
+      '"customerPrivacy":{"config":{"isHeadless":true,"asyncConsent":true,"asyncVisitorState":true,"debug":{"hydrogen":{"generation":3,"serverTiming":false}}}',
     );
     expect(html).toContain("consentDomain=window.location.host");
     expect(html).toContain(`id="shopify-consent"`);
@@ -205,7 +205,7 @@ describe("ShopifyScripts", () => {
     expect(html).toContain('"locale":"en"');
     expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
     expect(html).toContain(
-      '"customerPrivacy":{"config":{"isHeadless":true,"asyncConsent":true,"asyncVisitorState":true}',
+      '"customerPrivacy":{"config":{"isHeadless":true,"asyncConsent":true,"asyncVisitorState":true,"debug":{"hydrogen":{"generation":3,"serverTiming":false}}}',
     );
     expect(html).toContain("consentDomain=window.location.host");
     expect(html).toContain(`id="shopify-consent"`);
