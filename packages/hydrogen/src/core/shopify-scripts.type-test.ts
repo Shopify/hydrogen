@@ -8,6 +8,18 @@ describe("Shopify script option types", () => {
 });
 
 export function shopifyGlobalTypes(shopify: ShopifyGlobal) {
+  expectTypeOf(
+    shopify.customerPrivacy.setTrackingConsent({ analytics: true }),
+  ).toEqualTypeOf<Promise<unknown>>();
+  // @ts-expect-error only the promise form is exposed in Hydrogen's types
+  void shopify.customerPrivacy.setTrackingConsent({ analytics: true }, () => {});
+
+  expectTypeOf(window.Shopify).toEqualTypeOf<ShopifyGlobal | undefined>();
+  // @ts-expect-error callers must narrow the optional global before using it
+  window.Shopify.customerPrivacy;
+  // @ts-expect-error internal token methods are not part of the public ShopifyGlobal type
+  shopify.customerPrivacy.__internal;
+
   // @ts-expect-error consent diagnostics are not part of the public ShopifyGlobal type
   shopify.customerPrivacy.config?.debug;
 
@@ -43,20 +55,18 @@ const cleanupReturn: ConsentSetup = async () => () => {};
 void [synchronous, cleanupReturn];
 
 export function consentSetupTypes() {
-  const setup: ConsentSetup = async (context) => {
-    expectTypeOf<keyof typeof context>().toEqualTypeOf<"setTrackingConsent">();
-    const { setTrackingConsent } = context;
+  expectTypeOf<Parameters<ConsentSetup>>().toEqualTypeOf<[]>();
+  const setup: ConsentSetup = async () => {
+    const customerPrivacy = window.Shopify?.customerPrivacy;
+    if (!customerPrivacy) throw new Error("Shopify Customer Privacy API is unavailable.");
     const choice: ConsentPreferences = {
       analytics: true,
       marketing: false,
       preferences: true,
       sale_of_data: false,
     };
-    expectTypeOf(setTrackingConsent(choice)).toEqualTypeOf<Promise<void>>();
-    // @ts-expect-error providers must explicitly map all four consent purposes
-    setTrackingConsent({ analytics: true });
-    // @ts-expect-error unresolved provider state is not a consent choice
-    setTrackingConsent({ ...choice, analytics: undefined });
+    expectTypeOf(customerPrivacy.setTrackingConsent(choice)).toEqualTypeOf<Promise<unknown>>();
+    await customerPrivacy.setTrackingConsent(choice);
   };
   const custom: ConsentConfig = { mode: "custom-banner", setup };
   const asyncCustom: ConsentConfig = { mode: "custom-banner", setup: async () => {} };
