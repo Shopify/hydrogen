@@ -100,6 +100,8 @@ export type ShopifyRoutesOptions = {
 };
 
 export type InitializeShopifyScriptsOptions = ShopifyRoutesOptions & {
+  /** Pass the same consent configuration used to render the script tags. Setup runs once per bus. */
+  consent?: ConsentConfig;
   webMcp?: boolean;
 };
 
