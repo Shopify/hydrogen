@@ -11,9 +11,24 @@ description: >
 
 Hydrogen's analytics bus owns the event API, event normalization, and consent-gated destination replay. ShopifyScripts owns Shopify consent setup, analytics CDN loading, and deprecated cookie compatibility. App code owns when to publish route/view events and when to call cart delta tracking.
 
-## Framework References
+## References
 
-Before wiring route events, check whether this skill has a reference file for the app's framework in `references/`. If one exists, read it and use that framework's route-change and lifecycle primitives. If there is no matching reference, keep the core singleton below and adapt page-view, product-view, collection-view, search-view, and cart tracking to the app's own route lifecycle.
+Framework wiring — read the one that matches the app, and use its route-change and lifecycle primitives:
+
+- `references/react.md`, `references/vue.md`, `references/sveltekit.md`, `references/nextjs.md`, `references/astro.md`
+
+With no matching file, keep the core singleton below and let three questions place everything:
+
+1. Where is the client route-change hook? `PAGE_VIEWED` goes there. MPA-only frameworks fall back to a script in the root document, which fires on every full load.
+2. Where does per-page server-resolved data reach the client? Each view event goes there — a React `useEffect`, a Svelte `$effect`, an Astro data-attribute bridge.
+3. Where does the client first hold the cart store? `trackCartAnalytics(cartStore)` is called once there, in a client-only effect after ShopifyScripts has rendered.
+
+Topics — read when the task reaches them:
+
+- `references/configuration.md` — `shop`, `i18n`, `analytics`, and `consent` config, consent gating, root layout examples.
+- `references/cart-tracking.md` — tracker change detection, the `AnalyticsCart` shape, `lines.nodes` vs `lines.edges`.
+- `references/destinations.md` — `addDestination()` for third-party analytics and a dev console logger.
+- `references/troubleshooting.md` — browser verification steps, gotchas, anti-patterns.
 
 Prerequisite: analytics depends on the same-origin SFAPI proxy (see `hydrogen-request-handlers`) so the browser can observe tracking values from Storefront API responses. Without it, analytics falls back to deprecated JavaScript-visible cookies and session continuity into checkout breaks — treat it as incomplete until the proxy is wired. Key consent setup: Shopify Customer Privacy controls destination delivery in production. Raw subscribers can observe events before consent; destinations receive only consent-allowed replay. Do not bypass Customer Privacy consent gating in production.
 
@@ -55,7 +70,7 @@ Publish these from route/page boundaries:
 - `PRODUCT_VIEWED` when product data is resolved on a product page.
 - `COLLECTION_VIEWED` when collection data is resolved.
 - `SEARCH_VIEWED` when a non-empty search term has results metadata.
-- `CART_VIEWED` when the full cart page or cart drawer is viewed.
+- `CART_VIEWED` when the full cart page or cart drawer is viewed. It requires `{ cart }`; pass `cart: null` rather than a partial object when no compatible cart is available.
 - Wire cart tracking once per cart store lifecycle with `trackCartAnalytics(cartStore)` — React apps use the `useCartAnalytics()` hook from `@shopify/hydrogen/react` and Vue apps use the `useCartAnalytics()` composable from `@shopify/hydrogen/vue`; both call it with the provider's cart store and clean up on unmount. The tracker subscribes to the cart store itself, skips pending/revalidating/note updates, publishes cart delta events on confirmed cart changes, and returns an unsubscribe function. Call it from a client-only effect (`useEffect` / `onMounted`), never at cart-store creation time — it throws when `window.Shopify.analytics` is missing (SSR). Do not manually publish cart delta events.
 
 The bus defaults `shop` from the top-level `shop` config passed to ShopifyScripts; pass `shop` in an event payload only when intentionally overriding that configured value. Shopify analytics reads language and currency from `window.Shopify.locale` and `window.Shopify.currency.active`.
@@ -72,6 +87,8 @@ Required product analytics fields include Shopify Product GID, ProductVariant GI
 - Keep ShopifyScripts i18n aligned with the resolved market when the storefront uses markets.
 
 ## Verify
+
+Read `references/troubleshooting.md` for the browser dev-tools procedure behind these.
 
 - Page view fires on initial load and client navigations.
 - Product, collection, search, and cart view events fire once per relevant route data change.

@@ -35,53 +35,11 @@ export function AnalyticsTracker() {
 }
 ```
 
-Add `"use client"` only when this component lives in a Next.js App Router client component file.
-
-For real route tracking, include the framework location in the effect dependency. In React Router, read `useLocation()` and key the effect by `location.pathname + location.search`. In Next App Router, read `usePathname()` and `useSearchParams()` in a client component wrapped in `Suspense`, then key the effect by both values. View events infer `url` from `window.location.href`; pass `url` only for an explicit override.
+For real route tracking, include the framework location in the effect dependency. In React Router, read `useLocation()` and key the effect by `location.pathname + location.search`. View events infer `url` from `window.location.href`; pass `url` only for an explicit override.
 
 Cart analytics should publish from the confirmed cart state. If a component reads cart state directly, wait while `cart.revalidating === true || cart.pending.cost === true || cart.pending.note` is true so optimistic or revalidating cart changes do not publish as settled analytics.
 
-```tsx
-// app/layout.tsx
-import { Suspense } from "react";
-import { AnalyticsTracker } from "./components/AnalyticsTracker";
-
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>
-        <Suspense fallback={null}>
-          <AnalyticsTracker />
-        </Suspense>
-        {children}
-      </body>
-    </html>
-  );
-}
-```
-
-```tsx
-// app/components/AnalyticsTracker.tsx
-"use client";
-
-import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
-import { AnalyticsEvent, getAnalytics } from "../lib/analytics";
-
-export function AnalyticsTracker() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const pageKey = `${pathname}?${searchParams?.toString() ?? ""}`;
-
-  useEffect(() => {
-    const analytics = getAnalytics();
-    if (!analytics) return;
-    analytics.publish(AnalyticsEvent.PAGE_VIEWED);
-  }, [pageKey]);
-
-  return null;
-}
-```
+> Next.js App Router splits this across server and client components — read this file for the event payloads, then `references/nextjs.md` for the root tracker and per-page tracker shapes.
 
 ## Product Viewed
 
