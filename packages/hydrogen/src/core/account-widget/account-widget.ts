@@ -1,3 +1,5 @@
+import { escapeAttribute, hasContent } from "../html";
+
 const DEFAULT_SIGN_IN_URL = "/account/login";
 const AVATAR_SIZE = "var(--shopify-account-avatar-size, 44px)";
 export const ACCOUNT_WIDGET_ATTRIBUTE = "data-hydrogen-account-widget";
@@ -85,18 +87,6 @@ function getShopifyAccountAttributes(options: ShopifyAccountWidgetOptions): Reco
   };
   if (hasContent(options.menu)) attributes.menu = options.menu.trim();
   return attributes;
-}
-
-function hasContent(value: string | undefined): value is string {
-  return typeof value === "string" && value.trim() !== "";
-}
-
-function escapeAttribute(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 function serializeAttributes(attributes: Record<string, string>): string {
