@@ -2,7 +2,7 @@ import type { MouseEvent } from "react";
 import { Link } from "react-router";
 
 import { useCart } from "~/lib/cart";
-import { canOpenDialog, CART_DRAWER_ID, openCartDrawer } from "~/lib/cart-drawer";
+import { CART_DRAWER_ID, openCartDrawer } from "~/lib/cart-drawer";
 
 import { MobileNav, MobileNavTrigger, type NavCollection } from "./MobileNav";
 
@@ -22,7 +22,7 @@ function shouldOpenCartDrawer(event: MouseEvent<HTMLAnchorElement>) {
   if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
     return false;
   }
-  return canOpenDialog(CART_DRAWER_ID);
+  return document.getElementById(CART_DRAWER_ID) instanceof HTMLDialogElement;
 }
 
 export function Header({ navCollections }: { navCollections: NavCollection[] }) {

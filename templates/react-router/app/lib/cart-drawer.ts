@@ -10,10 +10,6 @@ function getDialog(id: string): HTMLDialogElement | null {
   return dialog instanceof HTMLDialogElement ? dialog : null;
 }
 
-export function canOpenDialog(id: string): boolean {
-  return getDialog(id) !== null;
-}
-
 function supportsDialogCommands(): boolean {
   if (typeof HTMLButtonElement === "undefined") return false;
   return (
