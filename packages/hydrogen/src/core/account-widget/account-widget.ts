@@ -51,8 +51,10 @@ export type ShopifyAccountWidgetOptions = {
  * Renders Shopify's `<shopify-account>` component and its `<shopify-store>`
  * configuration as an HTML string for server rendering. The signed-out avatar
  * is visible before the account bundle loads and its footprint stays reserved
- * while Shopify upgrades the element. Load the bundle by enabling `account` in
- * `ShopifyScripts`.
+ * while Shopify upgrades the element.
+ *
+ * Override `--shopify-account-avatar-size` to change the reserved footprint.
+ * Load the bundle by enabling `account` in `ShopifyScripts`.
  *
  * @see {@link https://shopify.dev/docs/api/storefront-web-components/components/shopify-account | shopify-account}
  */
