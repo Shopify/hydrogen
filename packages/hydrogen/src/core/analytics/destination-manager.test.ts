@@ -14,6 +14,7 @@ const SHOP_DATA: ShopAnalytics = {
 };
 
 const CONSENT_DATA = {};
+const DESTINATION_CONTEXT = { getTrackingValues: expect.any(Function) };
 
 const CONFIG: StorefrontAnalyticsConfig = {
   shop: SHOP_DATA,
@@ -48,7 +49,7 @@ describe("createDestinationManager", () => {
       manager.onPublish("page_viewed", { url: "/live" });
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith({ url: "/live" });
+      expect(destination).toHaveBeenCalledWith({ url: "/live" }, DESTINATION_CONTEXT);
     });
 
     it("does not deliver events when tracking is blocked", () => {
@@ -88,7 +89,7 @@ describe("createDestinationManager", () => {
       manager.replay();
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith({ url: "/buffered" });
+      expect(destination).toHaveBeenCalledWith({ url: "/buffered" }, DESTINATION_CONTEXT);
     });
 
     it("replays buffered events to destinations added after tracking is granted", () => {
@@ -109,7 +110,7 @@ describe("createDestinationManager", () => {
       });
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith({ url: "/early" });
+      expect(destination).toHaveBeenCalledWith({ url: "/early" }, DESTINATION_CONTEXT);
     });
 
     it("clears the replay buffer when replay is called with clearWhenBlocked", () => {
@@ -144,7 +145,10 @@ describe("createDestinationManager", () => {
       });
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith({ shop: SHOP_DATA, searchTerm: "snowboard" });
+      expect(destination).toHaveBeenCalledWith(
+        { shop: SHOP_DATA, searchTerm: "snowboard" },
+        DESTINATION_CONTEXT,
+      );
     });
 
     it("replays each buffered event to a destination only once", () => {
@@ -167,8 +171,8 @@ describe("createDestinationManager", () => {
       manager.replay();
 
       expect(destination).toHaveBeenCalledTimes(2);
-      expect(destination).toHaveBeenNthCalledWith(1, { url: "/one" });
-      expect(destination).toHaveBeenNthCalledWith(2, { url: "/two" });
+      expect(destination).toHaveBeenNthCalledWith(1, { url: "/one" }, DESTINATION_CONTEXT);
+      expect(destination).toHaveBeenNthCalledWith(2, { url: "/two" }, DESTINATION_CONTEXT);
     });
 
     it("drops the oldest buffered events when the replay buffer exceeds its max size", () => {
@@ -189,8 +193,8 @@ describe("createDestinationManager", () => {
       });
 
       expect(destination).toHaveBeenCalledTimes(500);
-      expect(destination).not.toHaveBeenCalledWith({ url: "/event-0" });
-      expect(destination).toHaveBeenCalledWith({ url: "/event-500" });
+      expect(destination).not.toHaveBeenCalledWith({ url: "/event-0" }, DESTINATION_CONTEXT);
+      expect(destination).toHaveBeenCalledWith({ url: "/event-500" }, DESTINATION_CONTEXT);
     });
   });
 
@@ -420,7 +424,7 @@ describe("createDestinationManager", () => {
       manager.onPublish("page_viewed", { url: "/after" });
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith({ url: "/before" });
+      expect(destination).toHaveBeenCalledWith({ url: "/before" }, DESTINATION_CONTEXT);
     });
 
     it("destroys all destinations and runs cleanup", () => {
@@ -493,8 +497,8 @@ describe("createDestinationManager", () => {
 
       expect(destinationA).toHaveBeenCalledOnce();
       expect(destinationB).toHaveBeenCalledOnce();
-      expect(destinationA).not.toHaveBeenCalledWith({ id: "p1" });
-      expect(destinationB).not.toHaveBeenCalledWith({ url: "/page" });
+      expect(destinationA).not.toHaveBeenCalledWith({ id: "p1" }, DESTINATION_CONTEXT);
+      expect(destinationB).not.toHaveBeenCalledWith({ url: "/page" }, DESTINATION_CONTEXT);
     });
 
     it("advances replay cursor for unsubscribed events without delivering them", () => {
@@ -512,7 +516,7 @@ describe("createDestinationManager", () => {
       manager.onPublish("product_viewed", { id: "p1" });
 
       expect(destination).toHaveBeenCalledOnce();
-      expect(destination).toHaveBeenCalledWith({ id: "p1" });
+      expect(destination).toHaveBeenCalledWith({ id: "p1" }, DESTINATION_CONTEXT);
     });
   });
 });

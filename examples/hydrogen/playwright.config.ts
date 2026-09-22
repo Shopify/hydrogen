@@ -52,11 +52,6 @@ export default defineConfig({
       name: "new-cookies",
       testDir: path.join(e2eSpecsRoot, "new-cookies"),
     },
-    {
-      // TODO: remove once new cookies are rolled out
-      name: "old-cookies",
-      testDir: path.join(e2eSpecsRoot, "old-cookies"),
-    },
     // TODO-HYDROGEN-E2E: re-enable recipes after fixture generation copies from a
     // source outside examples/hydrogen/.tmp instead of copying into itself.
     // {

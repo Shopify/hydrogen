@@ -1,9 +1,11 @@
 import { consoleLogger } from "../logging";
 import type { AnalyticsEventName } from "./events";
+import { getTrackingValues } from "./tracking-values";
 import type {
   PayloadFor,
   StorefrontAnalyticsConfig,
   StorefrontAnalyticsDestination,
+  StorefrontAnalyticsDestinationEventContext,
 } from "./types";
 
 const MAX_REPLAY_BUFFER_SIZE = 500;
@@ -14,10 +16,16 @@ type ReplayEntry = {
   payload: unknown;
 };
 
+type DestinationCallback = (
+  payload: unknown,
+  context: StorefrontAnalyticsDestinationEventContext,
+) => void;
+
 type DestinationRecord = {
   name: string;
+  context: StorefrontAnalyticsDestinationEventContext;
   cleanup?: () => void;
-  subscriptions: Map<string, Set<(payload: unknown) => void>>;
+  subscriptions: Map<string, Set<DestinationCallback>>;
   nextReplaySequence: number;
 };
 
@@ -35,7 +43,7 @@ function deliverDestinationEvent(destination: DestinationRecord, entry: ReplayEn
 
   for (const callback of eventSubscriptions) {
     try {
-      callback(entry.payload);
+      callback(entry.payload, destination.context);
     } catch (error) {
       consoleLogger.error(`error in analytics destination "${destination.name}"`, {
         scope: "analytics",
@@ -109,8 +117,15 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
 
     destinationNames.add(destination.name);
 
+    const tag = `hydrogen:${destination.name}`;
     const destinationRecord: DestinationRecord = {
       name: destination.name,
+      context: {
+        // Destinations may retain this getter beyond the delivery callback, so
+        // re-check consent at call time rather than trusting delivery gating.
+        getTrackingValues: () =>
+          deps.canTrack() ? getTrackingValues(tag) : { uniqueToken: "", visitToken: "" },
+      },
       subscriptions: new Map(),
       nextReplaySequence: 0,
     };
@@ -119,7 +134,10 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
     /** Subscribe callback passed to destination setup. No-op after removal. */
     const destinationSubscribe = <E extends AnalyticsEventName>(
       event: E,
-      callback: (payload: PayloadFor<E>) => void,
+      callback: (
+        payload: PayloadFor<E>,
+        context: StorefrontAnalyticsDestinationEventContext,
+      ) => void,
     ) => {
       if (removed) {
         return () => {};
@@ -135,10 +153,10 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
         destinationRecord.subscriptions.set(event, eventSubscriptions);
       }
 
-      eventSubscriptions.add(callback as (payload: unknown) => void);
+      eventSubscriptions.add(callback as DestinationCallback);
       return () => {
         const subscriptionsForEvent = destinationRecord.subscriptions.get(event);
-        subscriptionsForEvent?.delete(callback as (payload: unknown) => void);
+        subscriptionsForEvent?.delete(callback as DestinationCallback);
         if (subscriptionsForEvent?.size === 0) {
           destinationRecord.subscriptions.delete(event);
         }
