@@ -5,6 +5,7 @@ import {
   CONSENT_TRACKING_API_LOADED_EVENT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts";
+import { assert } from "../test-utils";
 import { setupStorefrontAnalytics } from "./bus";
 import type {
   StorefrontAnalyticsConfig,
@@ -186,6 +187,41 @@ describe("setupStorefrontAnalytics", () => {
       expect(uniqueToken).toHaveBeenCalledOnce();
       expect(visitToken).toHaveBeenCalledOnce();
       expect(received).toHaveBeenCalledOnce();
+      bus.destroy();
+    });
+
+    it("returns empty tokens from a retained getter after consent is revoked", () => {
+      const uniqueToken = vi.fn(() => "unique");
+      const visitToken = vi.fn(() => "visit");
+      const privacy = {
+        consentStatus: "loaded",
+        analyticsProcessingAllowed: () => true,
+        __internal: { uniqueToken, visitToken },
+      };
+      (window as any).Shopify = { customerPrivacy: privacy };
+      const bus = createTestBus();
+      let retainedGetter: (() => unknown) | undefined;
+      bus.addDestination({
+        name: "retaining",
+        setup({ subscribe }) {
+          subscribe("page_viewed", (_payload, { getTrackingValues }) => {
+            retainedGetter = getTrackingValues;
+          });
+        },
+      });
+      bus.publish("page_viewed", { url: "/first" });
+
+      assert(retainedGetter, "expected destination to receive the getter");
+      expect(retainedGetter()).toEqual({ uniqueToken: "unique", visitToken: "visit" });
+      expect(uniqueToken).toHaveBeenCalledOnce();
+      expect(visitToken).toHaveBeenCalledOnce();
+
+      privacy.analyticsProcessingAllowed = () => false;
+      document.dispatchEvent(new Event(VISITOR_CONSENT_COLLECTED_EVENT));
+
+      expect(retainedGetter()).toEqual({ uniqueToken: "", visitToken: "" });
+      expect(uniqueToken).toHaveBeenCalledOnce();
+      expect(visitToken).toHaveBeenCalledOnce();
       bus.destroy();
     });
 

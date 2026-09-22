@@ -120,7 +120,12 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
     const tag = `hydrogen:${destination.name}`;
     const destinationRecord: DestinationRecord = {
       name: destination.name,
-      context: { getTrackingValues: () => getTrackingValues(tag) },
+      context: {
+        // Destinations may retain this getter beyond the delivery callback, so
+        // re-check consent at call time rather than trusting delivery gating.
+        getTrackingValues: () =>
+          deps.canTrack() ? getTrackingValues(tag) : { uniqueToken: "", visitToken: "" },
+      },
       subscriptions: new Map(),
       nextReplaySequence: 0,
     };

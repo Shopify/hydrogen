@@ -163,7 +163,8 @@ export type AnalyticsTrackingValues = {
 
 export type StorefrontAnalyticsDestinationEventContext = {
   /**
-   * Reads current tokens from the consent API. Unavailable tokens are empty strings.
+   * Reads current tokens from the consent API. Returns empty strings when tokens are
+   * unavailable or analytics tracking is not currently allowed.
    */
   getTrackingValues: () => AnalyticsTrackingValues;
 };
