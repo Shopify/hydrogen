@@ -18,11 +18,12 @@ function displayCount(count: number) {
   return count > 99 ? "99+" : String(count);
 }
 
-function shouldOpenCartDrawer(event: MouseEvent<HTMLAnchorElement>) {
-  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-    return false;
-  }
-  return document.getElementById(CART_DRAWER_ID) instanceof HTMLDialogElement;
+function preventAndOpenCartDialog(event: MouseEvent<HTMLAnchorElement>) {
+  const isModifiedClick = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+  if (event.button !== 0 || isModifiedClick) return;
+  if (!(document.getElementById(CART_DRAWER_ID) instanceof HTMLDialogElement)) return;
+  event.preventDefault();
+  openCartDrawer();
 }
 
 export function Header({ navCollections }: { navCollections: NavCollection[] }) {
@@ -84,11 +85,7 @@ export function Header({ navCollections }: { navCollections: NavCollection[] }) 
             aria-controls={CART_DRAWER_ID}
             aria-haspopup="dialog"
             data-testid="cart-trigger"
-            onClick={(event) => {
-              if (!shouldOpenCartDrawer(event)) return;
-              event.preventDefault();
-              openCartDrawer();
-            }}
+            onClick={preventAndOpenCartDialog}
           >
             <span
               className="relative inline-flex size-5 shrink-0 items-center justify-center"
