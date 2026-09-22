@@ -45,16 +45,29 @@ const CART_MUTATION_FAILED_STATUS = 500;
 const CART_MUTATION_FAILED_MESSAGE = "Cart mutation failed. Please try again.";
 const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
+/** Response shape from the cart GET handler — the fetched cart plus any GraphQL errors. */
 export type CartGetData<TCart = CartData> = {
   cart: TCart | null;
   errors?: Array<{ message: string }>;
 };
 
+/** Full route result from the cart GET handler — JSON with {@link CartGetData} payload and response headers. */
 export type CartGetResult<TCart = CartData> = ShopifyRouteJsonResult<CartGetData<TCart>>;
+
+/** Machine-readable error codes returned by the cart POST handler. */
 export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_mutation_failed";
+
+/** A cart route error carrying a {@link CartErrorCode} for programmatic handling. */
 export type CartError = ShopifyRouteError & {
   code: CartErrorCode;
 };
+
+/**
+ * Result from the cart POST handler — one of:
+ * - JSON with the mutation payload (programmatic clients)
+ * - 303 redirect back to the referrer (HTML form submissions)
+ * - An error with a {@link CartErrorCode}
+ */
 export type CartPostResult =
   | ShopifyRouteJsonResult<Record<string, unknown>>
   | ShopifyRouteRedirectResult
@@ -91,6 +104,7 @@ type CartCustomerSessionWriteContext = {
 
 type CartCustomerSession = CustomerSession;
 
+/** GET handler for the `/api/cart` route — fetches the current cart from the Storefront API. */
 export type CartGetHandler<
   TCart = CartData,
   TContext extends CartGetHandlerContext = CartGetHandlerContext,
@@ -101,9 +115,17 @@ export type CartGetHandler<
   typeof CART_GET_METHOD
 >;
 
+/** POST handler for the `/api/cart` route — processes cart mutations from JSON or FormData bodies. */
 export type CartPostHandler<TContext extends CartPostHandlerContext = CartPostHandlerContext> =
   CallableRouteHandler<TContext, CartPostResult, typeof CART_API_PATH, typeof CART_POST_METHOD>;
 
+/**
+ * GET and POST handlers for the `/api/cart` route.
+ *
+ * Created by {@link createCartServerHandlers}. Register these with your
+ * framework's router so the {@link CartStore} can communicate with the
+ * Storefront API.
+ */
 export type CartServerHandlers<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
   TCart extends CartData = CartDataFromQuery<TCartQuery>,
@@ -113,6 +135,13 @@ export type CartServerHandlers<
   post: CartPostHandler;
 };
 
+/**
+ * {@link CartServerHandlers} variant that additionally syncs the cart's buyer
+ * identity with a customer session — the handler contexts require a session
+ * manager and request context.
+ *
+ * Created by passing `customerSession` to {@link createCartServerHandlers}.
+ */
 export type CartServerHandlersWithCustomerSession<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
   TCart extends CartData = CartDataFromQuery<TCartQuery>,
@@ -141,13 +170,29 @@ type CartDataFromHandlerResult<TResult> = [TResult] extends [never]
       : CartData
     : CartData;
 
+/**
+ * Infers the {@link CartData} shape from a {@link CartServerHandlers} instance.
+ *
+ * Use this to type framework components and hooks so they match the server
+ * handler's custom cart query without repeating the generic parameter.
+ *
+ * @example
+ * ```ts
+ * type MyCartData = CartDataFromHandlers<typeof cartHandlers>;
+ * ```
+ */
 export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
   CartGetHandlerResult<THandlers>
 >;
 
+/** Options for {@link createCartServerHandlers}. */
 export type CreateCartServerHandlersOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
 > = {
+  /**
+   * Custom cart GraphQL fragment spread into every query and mutation response.
+   * The fragment must be named `CartFragment` and target `Cart`.
+   */
   readonly fragment?: TCartFragment;
 } & ({ readonly customerSession: CartCustomerSession } | { readonly customerSession?: undefined });
 
@@ -160,6 +205,33 @@ type CartServerHandlersForOptions<TOptions> = TOptions extends {
     >
   : CartServerHandlers<CartQueriesForOptions<TOptions>["cart"], CartDataForOptions<TOptions>>;
 
+/**
+ * Creates GET and POST handlers for the `/api/cart` route.
+ *
+ * The handlers parse incoming requests (JSON or FormData), resolve the cart
+ * identity from a cookie, execute the matching Storefront API mutation, and
+ * return either JSON (programmatic clients) or a 303 redirect (form submissions).
+ *
+ * Pass `customerSession` to additionally sync the cart's buyer identity with
+ * the logged-in customer — the returned handlers then require a session manager
+ * in their context.
+ *
+ * @example
+ * ```ts
+ * // Basic setup
+ * const cartHandlers = createCartServerHandlers();
+ *
+ * // With a custom cart fragment
+ * const cartHandlers = createCartServerHandlers({
+ *   fragment: CART_FRAGMENT,
+ * });
+ *
+ * // With customer session for buyer identity sync
+ * const cartHandlers = createCartServerHandlers({
+ *   customerSession,
+ * });
+ * ```
+ */
 export function createCartServerHandlers(): CartServerHandlers<typeof cartQueries.cart>;
 export function createCartServerHandlers<const TOptions extends CreateCartServerHandlersOptions>(
   options: TOptions,

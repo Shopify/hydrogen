@@ -1,3 +1,10 @@
+/**
+ * HTML attributes for a hidden submit button that triggers the `"set"` intent.
+ *
+ * Used by {@link CartFormRegister} when `register("set")` is called. The button
+ * must be the first submit button in the form for {@link attachQuantityInput}
+ * to auto-submit on quantity changes.
+ */
 export interface SetButtonAttributes {
   name: "intent";
   value: "set";
@@ -5,6 +12,13 @@ export interface SetButtonAttributes {
   hidden: true;
 }
 
+/**
+ * HTML attributes for a quantity `<input>` in interactive mode.
+ *
+ * Returned by `register("quantity", { value, interactive: true })`. Uses
+ * `type: "text"` with `inputMode: "numeric"` for mobile number keyboards
+ * without the native spinner arrows.
+ */
 export interface QuantityInputAttributes {
   name: "quantity";
   value: string;
@@ -17,6 +31,33 @@ export interface QuantityInputAttributes {
 
 type AttributeValueName = `attributes.${string}`;
 
+/**
+ * Overloaded function that produces the correct HTML attributes for any cart
+ * form field or action button.
+ *
+ * Call with a **field name** (`"lineId"`, `"quantity"`, `"merchandiseId"`,
+ * `"discountCode"`, `"note"`, `"attributeValue"`, `"sellingPlanId"`) to get
+ * input attributes, or with an **action name** (`"add"`, `"increase"`,
+ * `"decrease"`, `"remove"`, `"set"`, `"discount-apply"`, `"discount-remove"`,
+ * `"note-update"`, `"attributes-update"`) to get submit button attributes.
+ *
+ * @example
+ * ```ts
+ * const register = createCartFormRegister();
+ *
+ * // Hidden line ID field
+ * <input {...register("lineId", { value: line.id })} />
+ *
+ * // Interactive quantity input (auto-submits on change via attachQuantityInput)
+ * <input {...register("quantity", { value: line.quantity, interactive: true })} />
+ *
+ * // Hidden submit button for the "set" intent
+ * <button {...register("set")} />
+ *
+ * // Increase quantity button
+ * <button {...register("increase")}>+</button>
+ * ```
+ */
 export type CartFormRegister = {
   (field: "lineId", opts: { value: string }): { name: "lineId"; value: string; readOnly: true };
   (field: "quantity", opts: { value: number | string; interactive: true }): QuantityInputAttributes;
@@ -115,6 +156,24 @@ function createFieldAttributes(name: string, opts?: RegisterOptions) {
   return attrs;
 }
 
+/**
+ * Creates a {@link CartFormRegister} function for generating cart form field attributes.
+ *
+ * The returned `register` function is stateless — it can be called multiple times
+ * and shared across components. Framework hooks (`useCartForm`) wrap this with
+ * additional conveniences like `formProps()` and interactive `ref` wiring.
+ *
+ * @example
+ * ```ts
+ * const register = createCartFormRegister();
+ *
+ * const lineIdAttrs = register("lineId", { value: "gid://shopify/CartLine/123" });
+ * // → { name: "lineId", value: "gid://shopify/CartLine/123", readOnly: true }
+ *
+ * const addAttrs = register("add");
+ * // → { name: "intent", value: "add" }
+ * ```
+ */
 export function createCartFormRegister(): CartFormRegister {
   return ((nameOrAction: string, opts?: RegisterOptions) => {
     if (nameOrAction === "attributeValue") {

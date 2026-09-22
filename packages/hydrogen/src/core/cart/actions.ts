@@ -1,22 +1,43 @@
 import { normalizeCartId } from "./cookie";
 import { getCartAttributeFormEntries } from "./form";
 
+/** A key-value pair for cart or line attribute mutations. */
 export type CartAttributeInput = { key: string; value: string };
 
+/** Input for adding a new line to the cart. */
 export type CartLineAddInput = {
+  /** Storefront API GID of the product variant to add. */
   merchandiseId: string;
   quantity: number;
   attributes?: CartAttributeInput[];
+  /** Selling plan GID for subscription line items. */
   sellingPlanId?: string;
 };
 
+/** Input for updating an existing cart line. Setting `quantity` to `0` removes the line. */
 export type CartLineUpdateInput = {
+  /** The {@link CartLine.id} of the line to update. */
   id: string;
   quantity: number;
   attributes?: CartAttributeInput[];
   sellingPlanId?: string;
 };
 
+/**
+ * Discriminated union of all cart mutation intents.
+ *
+ * {@link parseCartRequest} normalizes both JSON and FormData requests into one
+ * of these variants. The `intent` field determines the Storefront API mutation:
+ *
+ * - `"add"` — add new lines (cartLinesAdd)
+ * - `"update"` — change quantity or attributes on existing lines (cartLinesUpdate)
+ * - `"remove"` — remove lines by ID (cartLinesRemove)
+ * - `"discount-update"` — replace all discount codes (cartDiscountCodesUpdate)
+ * - `"discount-apply"` — add a single discount code
+ * - `"discount-remove"` — remove a single discount code
+ * - `"attributes-update"` — set cart-level attributes (cartAttributesUpdate)
+ * - `"note-update"` — set the cart note (cartNoteUpdate)
+ */
 export type CartAction =
   | { intent: "add"; lines: CartLineAddInput[] }
   | { intent: "update"; lines: CartLineUpdateInput[] }
@@ -39,6 +60,30 @@ class CartActionError extends Error {
   }
 }
 
+/**
+ * Parses an incoming cart mutation request into a typed {@link CartAction}.
+ *
+ * Accepts both `application/json` and `application/x-www-form-urlencoded` /
+ * `multipart/form-data` content types. JSON bodies express the full range of
+ * operations; HTML form submissions use an `intent` field to disambiguate.
+ *
+ * Used internally by {@link createCartServerHandlers} — call it directly only
+ * when building a custom cart route.
+ *
+ * @example
+ * ```ts
+ * // In a custom server route handler
+ * const { action, cartId } = await parseCartRequest(request);
+ *
+ * switch (action.intent) {
+ *   case "add":
+ *     return cartLinesAdd(cartId, action.lines);
+ *   case "remove":
+ *     return cartLinesRemove(cartId, action.lineIds);
+ *   // ...
+ * }
+ * ```
+ */
 export async function parseCartRequest(request: Request): Promise<ParsedCartRequest> {
   const contentType = request.headers.get("content-type") ?? "";
 
