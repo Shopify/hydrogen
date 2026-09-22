@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "HOST=localhost vinxi dev",
-    "dev:https": "HOST=local.tryhydrogen.dev vinxi dev --port 5173",
+    "dev": "vinxi dev",
+    "dev:https": "vinxi dev",
     "build": "vinxi build",
     "start": "HOST=localhost vinxi start",
     "typecheck": "tsc"

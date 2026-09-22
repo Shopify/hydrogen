@@ -105,18 +105,25 @@ const httpsOptions = {
 const httpsPlugin = localHttps(httpsOptions);
 const devServer = httpsPlugin.api.getDevServerConfig();
 
+// Vinxi reads its bind target from HOST/PORT when the listener starts, after
+// this config has loaded. Setting them here works on every OS; a `HOST=...`
+// prefix in the package script fails on Windows shells.
+if (devServer) {
+  process.env.HOST = devServer.host;
+  process.env.PORT = String(devServer.port);
+}
+
 export default defineConfig({
   server: { https: devServer?.https },
   vite: { plugins: [httpsPlugin] },
 });
 ```
 
-Vinxi also needs its bind target and port on startup:
-
 ```json
 {
   "scripts": {
-    "dev:https": "HOST=local.tryhydrogen.dev vinxi dev --port 5173"
+    "dev": "vinxi dev",
+    "dev:https": "vinxi dev"
   }
 }
 ```

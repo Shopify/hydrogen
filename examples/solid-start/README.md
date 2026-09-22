@@ -57,11 +57,13 @@ pnpm install
 pnpm --filter @shopify/hydrogen-example-solid-start dev
 ```
 
-Then open http://localhost:8080.
+Then open http://localhost:3000.
 
 ### Note on `HOST`
 
-The `dev` and `start` scripts inline `HOST=localhost`. Vinxi's port-finder reads `HOST` from the environment to pick a bind target, and Shopify-managed dev machines export `HOST` globally — without the override the dev server tries to bind to that hostname, falls back through alternative ports, and prints an unreachable network URL. Forcing `localhost` keeps it bound where the rest of the examples bind.
+Vinxi has no config field for its bind target; it reads `HOST` (and `PORT`) from the environment when the listener starts. Shopify-managed dev machines export `HOST` globally — without an override the dev server tries to bind to that hostname, falls back through alternative ports, and prints an unreachable network URL.
+
+`app.config.ts` sets `process.env.HOST`/`PORT` after evaluating the local HTTPS plugin: `local.tryhydrogen.dev:5173` for `dev:https`, `localhost` otherwise. Doing it in the config rather than as a `HOST=...` prefix in the scripts keeps `dev` and `dev:https` working on Windows shells, which treat `HOST=x` as a command. `start` still inlines `HOST=localhost` because `vinxi start` serves the built output and never loads `app.config.ts`.
 
 ## Notes for the core SDK
 
@@ -75,4 +77,4 @@ These are calls/patterns that would benefit from a `@shopify/hydrogen` helper as
 ## Open questions
 
 - **Framework bindings.** This example intentionally uses core primitives directly. If Solid bindings are added later, compare them against `src/lib/cart.tsx`, `src/components/CollectionBrowser.tsx`, and `src/components/ProductPurchasePanel.tsx`.
-- **`SERVER_HOST` env handling.** If the kit ever ships a recommended-config preset, baking the host override into `app.config.ts` instead of the script line might be cleaner — but it's a Shopify-machine-specific workaround, so keeping it out of the framework config feels right for now.
+- **`start` on Windows.** `vinxi start` bypasses `app.config.ts`, so its `HOST=localhost` prefix is still shell-specific. A cross-platform fix would need a small Node launcher or a `cross-env`-style helper; not worth a dependency for a dev-only example yet.
