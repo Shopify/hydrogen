@@ -33,7 +33,7 @@ describe("createShopifyRequestContext", () => {
     ).toThrow("i18n with country and language is required");
   });
 
-  it("does not generate tracking tokens from a request", () => {
+  it("stores request metadata and creates a request group ID", () => {
     const request = new Request("https://example.com/products/snowboard");
 
     const result = createTestRequestContext(request);
@@ -41,8 +41,6 @@ describe("createShopifyRequestContext", () => {
     expect(result.url).toBe("https://example.com/products/snowboard");
     expect(result.storefrontOrigin).toBe("https://example.com");
     expect(result.requestGroupId).toBeTruthy();
-    expect(result.uniqueToken).toBeUndefined();
-    expect(result.visitToken).toBeUndefined();
   });
 
   it("keeps a reference to the request signal", () => {
@@ -151,58 +149,22 @@ describe("createShopifyRequestContext", () => {
     expect(result.i18n.pathPrefix).toBe("/fr-ca");
   });
 
-  it("does not create tracking tokens when modern Shopify analytics cookies are present", () => {
-    const result = createTestRequestContext(
-      new Request("https://example.com", {
-        headers: { cookie: "_shopify_analytics=1; _shopify_marketing=1" },
-      }),
+  it.each([
+    "_shopify_y=unique-token; _shopify_s=visit-token",
+    "_shopify_essential=established; _shopify_y=unique-token; _shopify_s=visit-token",
+    "_shopify_analytics=1; _shopify_marketing=1; _shopify_y=unique-token; _shopify_s=visit-token",
+  ])("forwards cookies without deriving tracking headers: %s", (cookie) => {
+    const context = createTestRequestContext(
+      new Request("https://example.com", { headers: { cookie } }),
     );
+    const headers = new Headers();
+    context.applyStorefrontRequestHeaders(headers);
 
-    expect(result.cookie).toBe("_shopify_analytics=1; _shopify_marketing=1");
-    expect(result.uniqueToken).toBeUndefined();
-    expect(result.visitToken).toBeUndefined();
-  });
-
-  it("reuses legacy tracking cookies when only the Shopify essential cookie is present", () => {
-    const result = createTestRequestContext(
-      new Request("https://example.com", {
-        headers: {
-          cookie:
-            "_shopify_essential=declined-session; _shopify_y=unique-token; _shopify_s=visit-token",
-        },
-      }),
-    );
-
-    expect(result.uniqueToken).toBe("unique-token");
-    expect(result.visitToken).toBe("visit-token");
-    expect(result.legacyTokens).toBe(true);
-  });
-
-  it("reuses legacy Shopify tracking cookies when present", () => {
-    const result = createTestRequestContext(
-      new Request("https://example.com", {
-        headers: { cookie: "_shopify_y=unique-token; _shopify_s=visit-token" },
-      }),
-    );
-
-    expect(result.uniqueToken).toBe("unique-token");
-    expect(result.visitToken).toBe("visit-token");
-    expect(result.legacyTokens).toBe(true);
-  });
-
-  it("does not reuse legacy Shopify tracking cookies when modern analytics cookies are present", () => {
-    const result = createTestRequestContext(
-      new Request("https://example.com", {
-        headers: {
-          cookie:
-            "_shopify_analytics=1; _shopify_marketing=1; _shopify_y=unique-token; _shopify_s=visit-token",
-        },
-      }),
-    );
-
-    expect(result.uniqueToken).toBeUndefined();
-    expect(result.visitToken).toBeUndefined();
-    expect(result.legacyTokens).toBeUndefined();
+    expect(headers.get("cookie")).toBe(cookie);
+    expect(headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBeNull();
+    expect(headers.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBeNull();
+    expect(headers.get(SHOPIFY_STOREFRONT_Y_HEADER)).toBeNull();
+    expect(headers.get(SHOPIFY_STOREFRONT_S_HEADER)).toBeNull();
   });
 
   it("uses x-request-id as the default request group id", () => {
@@ -225,21 +187,6 @@ describe("createShopifyRequestContext", () => {
     expect(result.requestGroupId).toBe("incoming-request-id");
   });
 
-  it("reuses tracking tokens forwarded in request headers", () => {
-    const result = createTestRequestContext(
-      new Request("https://example.com", {
-        headers: {
-          [SHOPIFY_UNIQUE_TOKEN_HEADER]: "forwarded-unique-token",
-          [SHOPIFY_VISIT_TOKEN_HEADER]: "forwarded-visit-token",
-        },
-      }),
-    );
-
-    expect(result.requestGroupId).toBeTruthy();
-    expect(result.uniqueToken).toBe("forwarded-unique-token");
-    expect(result.visitToken).toBe("forwarded-visit-token");
-  });
-
   it("gets forwarded request headers for handing off through a proxy", () => {
     const context = createTestRequestContext(
       new Request("https://example.com/products/snowboard", {
@@ -247,6 +194,8 @@ describe("createShopifyRequestContext", () => {
           accept: "text/html",
           cookie: "_shopify_y=unique-token; _shopify_s=visit-token",
           "x-request-id": "incoming-request-id",
+          [SHOPIFY_UNIQUE_TOKEN_HEADER]: "forwarded-unique-token",
+          [SHOPIFY_VISIT_TOKEN_HEADER]: "forwarded-visit-token",
         },
       }),
     );
@@ -258,10 +207,8 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("x-storefront-url")).toBe("https://example.com/products/snowboard");
     expect(headers.get(REQUEST_GROUP_ID_HEADER)).toBe("incoming-request-id");
     expect(headers.get(SHOPIFY_STOREFRONT_ORIGIN_HEADER)).toBe("https://example.com");
-    expect(headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBe("unique-token");
-    expect(headers.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBe("visit-token");
-    expect(headers.get(SHOPIFY_STOREFRONT_Y_HEADER)).toBe("unique-token");
-    expect(headers.get(SHOPIFY_STOREFRONT_S_HEADER)).toBe("visit-token");
+    expect(headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBe("forwarded-unique-token");
+    expect(headers.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBe("forwarded-visit-token");
   });
 
   it("does not mutate the original request headers when getting forwarded request headers", () => {
@@ -285,6 +232,8 @@ describe("createShopifyRequestContext", () => {
           cookie: "_shopify_y=unique-token; _shopify_s=visit-token",
           "x-random": "not-forwarded",
           "x-request-id": "incoming-request-id",
+          [SHOPIFY_UNIQUE_TOKEN_HEADER]: "forwarded-unique-token",
+          [SHOPIFY_VISIT_TOKEN_HEADER]: "forwarded-visit-token",
         },
       }),
     );
@@ -308,10 +257,8 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("cookie")).toBe("_shopify_y=unique-token; _shopify_s=visit-token");
     expect(headers.get(REQUEST_GROUP_ID_HEADER)).toBe("incoming-request-id");
     expect(headers.get(SHOPIFY_STOREFRONT_ORIGIN_HEADER)).toBe("https://example.com");
-    expect(headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBe("unique-token");
-    expect(headers.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBe("visit-token");
-    expect(headers.get(SHOPIFY_STOREFRONT_Y_HEADER)).toBe("unique-token");
-    expect(headers.get(SHOPIFY_STOREFRONT_S_HEADER)).toBe("visit-token");
+    expect(headers.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBeNull();
+    expect(headers.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBeNull();
   });
 
   it("does not apply legacy tracking tokens to document server-timing", () => {
@@ -341,30 +288,28 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("powered-by")).toBe("Shopify, Hydrogen");
   });
 
-  it("preserves user-provided Shopify state and disables caching", () => {
-    const context = createTestRequestContext(
-      new Request("https://example.com/api/data", {
-        headers: { cookie: "_shopify_essential=established" },
-      }),
-    );
-    const headers = new Headers({
-      "cache-control": "public, max-age=60",
-      "server-timing": 'db;dur=2, _y;desc="unique", app;desc="one, two", _s;desc="visit"',
-    });
-    headers.append("set-cookie", "_shopify_essential=updated; Path=/; Secure; HttpOnly");
+  it.each(["_shopify_essential", "app_session"])(
+    "preserves the user-provided %s cookie and disables caching",
+    (name) => {
+      const context = createTestRequestContext(new Request("https://example.com/api/data"));
+      const headers = new Headers({
+        "cache-control": "public, max-age=60",
+        "cdn-cache-control": "public, s-maxage=600",
+        "surrogate-control": "max-age=600",
+      });
+      const cookie = `${name}=updated; Path=/; Secure; HttpOnly`;
+      headers.append("set-cookie", cookie);
 
-    context.applyResponseHeaders(headers);
+      context.applyResponseHeaders(headers);
 
-    expect(headers.getSetCookie()).toEqual([
-      "_shopify_essential=updated; Path=/; Secure; HttpOnly",
-    ]);
-    expect(headers.get("server-timing")).toBe(
-      'db;dur=2, _y;desc="unique", app;desc="one, two", _s;desc="visit"',
-    );
-    expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
-  });
+      expect(headers.getSetCookie()).toEqual([cookie]);
+      expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+      expect(headers.has("cdn-cache-control")).toBe(false);
+      expect(headers.has("surrogate-control")).toBe(false);
+    },
+  );
 
-  it("applies captured SFAPI subrequest headers for an established essential session", () => {
+  it("replays captured SFAPI cookies for an established session", () => {
     const context = createTestRequestContext(
       new Request("https://example.com", {
         method: "POST",
@@ -373,9 +318,7 @@ describe("createShopifyRequestContext", () => {
         },
       }),
     );
-    const subrequestHeaders = new Headers({
-      "server-timing": '_y;desc="collected-y", _s;desc="collected-s"',
-    });
+    const subrequestHeaders = new Headers();
     subrequestHeaders.append("set-cookie", "_shopify_y=collected-y; Path=/; Secure");
     subrequestHeaders.append("set-cookie", "_shopify_s=collected-s; Path=/; Secure");
     context.captureSubrequestHeaders(subrequestHeaders);
@@ -390,17 +333,16 @@ describe("createShopifyRequestContext", () => {
       "_shopify_y=collected-y; Path=/; Secure",
       "_shopify_s=collected-s; Path=/; Secure",
     ]);
-    expect(headers.get("server-timing")).toBe('_y;desc="collected-y", _s;desc="collected-s"');
     expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
   });
 
-  it("does not return Shopify state or disable caching for GET requests", () => {
+  it("does not return captured Shopify cookies or disable caching for GET requests", () => {
     const context = createTestRequestContext(
       new Request("https://example.com/api/data", {
         headers: { cookie: "_shopify_essential=established" },
       }),
     );
-    const subrequestHeaders = new Headers({ "server-timing": '_y;desc="unique"' });
+    const subrequestHeaders = new Headers();
     subrequestHeaders.append("set-cookie", "_shopify_essential=updated; Path=/; Secure; HttpOnly");
     context.captureSubrequestHeaders(subrequestHeaders);
     const headers = new Headers({
@@ -411,13 +353,14 @@ describe("createShopifyRequestContext", () => {
     context.applyResponseHeaders(headers);
 
     expect(headers.getSetCookie()).toEqual([]);
-    expect(headers.get("server-timing")).toBeNull();
     expect(headers.get("cache-control")).toBe("public, max-age=60");
   });
 
-  it("does not apply captured SFAPI headers without an established essential session", () => {
-    const context = createTestRequestContext(new Request("https://example.com/api/data"));
-    const subrequestHeaders = new Headers({ "server-timing": '_y;desc="unique"' });
+  it("does not apply captured SFAPI cookies without an established essential session", () => {
+    const context = createTestRequestContext(
+      new Request("https://example.com/api/data", { method: "POST" }),
+    );
+    const subrequestHeaders = new Headers();
     subrequestHeaders.append("set-cookie", "_shopify_essential=cold; Path=/; Secure; HttpOnly");
     subrequestHeaders.append("set-cookie", "_shopify_analytics=cold; Path=/; Secure; HttpOnly");
     subrequestHeaders.append("set-cookie", "unknown_cookie=not-returned; Path=/; Secure; HttpOnly");
@@ -427,10 +370,9 @@ describe("createShopifyRequestContext", () => {
     context.applyResponseHeaders(headers);
 
     expect(headers.getSetCookie()).toEqual([]);
-    expect(headers.get("server-timing")).toBeNull();
   });
 
-  it("returns Shopify cookies for an established essential session", () => {
+  it("consumes upstream cookies for gated replay", () => {
     const context = createTestRequestContext(
       new Request("https://example.com/api/data", {
         method: "POST",
@@ -439,7 +381,6 @@ describe("createShopifyRequestContext", () => {
     );
     const subrequestHeaders = new Headers();
     subrequestHeaders.append("set-cookie", "_shopify_essential=updated; Path=/; Secure; HttpOnly");
-    subrequestHeaders.set("server-timing", '_y;desc="unique"');
     context.consumeStorefrontResponseHeaders(subrequestHeaders);
     const headers = new Headers({
       "cache-control": "public, max-age=60",
@@ -452,8 +393,6 @@ describe("createShopifyRequestContext", () => {
       "_shopify_essential=updated; Path=/; Secure; HttpOnly",
     ]);
     expect(subrequestHeaders.getSetCookie()).toEqual([]);
-    expect(subrequestHeaders.get("server-timing")).toBeNull();
-    expect(headers.get("server-timing")).toBe('_y;desc="unique"');
     expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
   });
 
@@ -479,61 +418,80 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
   });
 
-  it("forces no-store when captured state already exists on the response", () => {
+  it("forces no-store when captured cookies already exist on the response", () => {
     const context = createTestRequestContext(
       new Request("https://example.com/api/data", {
         method: "POST",
         headers: { cookie: "_shopify_essential=established" },
       }),
     );
-    const subrequestHeaders = new Headers({ "server-timing": "shopify;dur=10" });
+    const subrequestHeaders = new Headers();
     subrequestHeaders.append("set-cookie", "unknown_cookie=returned; Path=/; Secure; HttpOnly");
     context.captureSubrequestHeaders(subrequestHeaders);
     const headers = new Headers({
       "cache-control": "public, max-age=60",
       "content-type": "application/json",
-      "server-timing": "shopify;dur=10",
     });
     headers.append("set-cookie", "unknown_cookie=returned; Path=/; Secure; HttpOnly");
 
     context.applyResponseHeaders(headers);
 
     expect(headers.getSetCookie()).toEqual(["unknown_cookie=returned; Path=/; Secure; HttpOnly"]);
-    expect(headers.get("server-timing")).toBe("shopify;dur=10");
     expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
   });
 
-  it("merges captured server-timing into user timing only once", () => {
+  it("preserves application timing without replaying upstream timing", () => {
     const context = createTestRequestContext(
       new Request("https://example.com/api/data", {
         method: "POST",
         headers: { cookie: "_shopify_essential=established" },
       }),
     );
-    context.captureSubrequestHeaders(
-      new Headers({ "server-timing": '_y;desc="unique", _s;desc="visit"' }),
-    );
+    const upstreamHeaders = new Headers({
+      "server-timing": '_y;desc="unique", _s;desc="visit"',
+    });
+    context.consumeStorefrontResponseHeaders(upstreamHeaders);
     const headers = new Headers({
       "content-type": "application/json",
+      "cache-control": "public, max-age=60",
       "server-timing": "app;dur=1",
     });
 
     context.applyResponseHeaders(headers);
-    context.applyResponseHeaders(headers);
 
-    expect(headers.get("server-timing")).toBe('app;dur=1, _y;desc="unique", _s;desc="visit"');
-
-    const headersWithCapturedTimingFirst = new Headers({
-      "content-type": "application/json",
-      "server-timing": '_y;desc="unique", _s;desc="visit", app;dur=1',
-    });
-
-    context.applyResponseHeaders(headersWithCapturedTimingFirst);
-
-    expect(headersWithCapturedTimingFirst.get("server-timing")).toBe(
-      '_y;desc="unique", _s;desc="visit", app;dur=1',
-    );
+    expect(headers.get("server-timing")).toBe("app;dur=1");
+    expect(headers.get("cache-control")).toBe("public, max-age=60");
   });
+
+  it.each(["consent", "session"])(
+    "disables shared caching for a %s response without upstream headers",
+    (kind) => {
+      const context = createTestRequestContext(
+        new Request("https://example.com/api/unstable/graphql.json", {
+          method: "POST",
+          headers: kind === "consent" ? { [CONSENT_MANAGEMENT_HEADER]: "1" } : {},
+        }),
+      );
+      if (kind === "session") context.markResponseAsSessionEstablishing("session endpoint");
+      const headers = new Headers({
+        "content-type": "application/json",
+        "cache-control": "public, s-maxage=600",
+        "cdn-cache-control": "public, s-maxage=600",
+        "cloudflare-cdn-cache-control": "public, s-maxage=600",
+        "netlify-cdn-cache-control": "public, s-maxage=600",
+        "surrogate-control": "max-age=600",
+      });
+
+      context.applyResponseHeaders(headers);
+
+      expect(headers.getSetCookie()).toEqual([]);
+      expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+      expect(headers.has("cdn-cache-control")).toBe(false);
+      expect(headers.has("cloudflare-cdn-cache-control")).toBe(false);
+      expect(headers.has("netlify-cdn-cache-control")).toBe(false);
+      expect(headers.has("surrogate-control")).toBe(false);
+    },
+  );
 
   it("returns Shopify cookies for a marked consent-management request", () => {
     const context = createTestRequestContext(
@@ -567,7 +525,7 @@ describe("createShopifyRequestContext", () => {
     ]);
   });
 
-  it("never replays captured Shopify state on document responses", () => {
+  it("never replays captured Shopify cookies on document responses", () => {
     const context = createTestRequestContext(
       new Request("https://example.com", {
         headers: {
@@ -576,9 +534,7 @@ describe("createShopifyRequestContext", () => {
         },
       }),
     );
-    const subrequestHeaders = new Headers({
-      "server-timing": '_y;desc="unique", _s;desc="visit"',
-    });
+    const subrequestHeaders = new Headers();
     subrequestHeaders.append("set-cookie", "_shopify_essential=updated; Path=/; Secure; HttpOnly");
     context.captureSubrequestHeaders(subrequestHeaders);
     const headers = new Headers({ "content-type": "text/html" });
@@ -586,10 +542,9 @@ describe("createShopifyRequestContext", () => {
     context.applyResponseHeaders(headers);
 
     expect(headers.getSetCookie()).toEqual([]);
-    expect(headers.get("server-timing")).toBeNull();
   });
 
-  it("keeps the first captured SFAPI subrequest headers", () => {
+  it("keeps the first cookie-bearing SFAPI response, ignoring earlier timing-only responses", () => {
     const context = createTestRequestContext(
       new Request("https://example.com", {
         method: "POST",
@@ -600,13 +555,16 @@ describe("createShopifyRequestContext", () => {
       new Headers({ "server-timing": '_y;desc="first-y", _s;desc="first-s"' }),
     );
     context.captureSubrequestHeaders(
-      new Headers({ "server-timing": '_y;desc="second-y", _s;desc="second-s"' }),
+      new Headers({ "set-cookie": "_shopify_essential=first; Path=/" }),
+    );
+    context.captureSubrequestHeaders(
+      new Headers({ "set-cookie": "_shopify_essential=second; Path=/" }),
     );
     const headers = new Headers();
 
     context.applyResponseHeaders(headers);
 
-    expect(headers.get("server-timing")).toBe('_y;desc="first-y", _s;desc="first-s"');
+    expect(headers.getSetCookie()).toEqual(["_shopify_essential=first; Path=/"]);
   });
 
   it("forces no-store cache headers for personalized responses", () => {
@@ -638,23 +596,24 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("cache-control")).toBe("public, s-maxage=600");
   });
 
-  it("preserves set-cookie and server-timing when applying personalized cache safety", () => {
+  it("preserves captured cookies when applying personalized cache safety", () => {
     const context = createTestRequestContext(
       new Request("https://example.com/account", {
         method: "POST",
         headers: { cookie: "_shopify_essential=established" },
       }),
     );
-    const subrequestHeaders = new Headers({ "server-timing": "shopify;dur=10" });
+    const subrequestHeaders = new Headers();
     subrequestHeaders.append("set-cookie", "session=1; Path=/; Secure");
     context.captureSubrequestHeaders(subrequestHeaders);
     context.markResponseAsPersonalized("customer-account-test");
-    const headers = new Headers({ "cache-control": "public, s-maxage=600" });
+    const headers = new Headers({
+      "cache-control": "public, s-maxage=600",
+    });
 
     context.applyResponseHeaders(headers);
 
     expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
     expect(headers.getSetCookie()).toEqual(["session=1; Path=/; Secure"]);
-    expect(headers.get("server-timing")).toBe("shopify;dur=10");
   });
 });

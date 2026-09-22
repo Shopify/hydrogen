@@ -110,7 +110,13 @@ describe("createPredictiveSearchServerHandlers", () => {
     });
 
     it("returns predictive search data directly from get", async () => {
-      const headers = new Headers({ "x-request-id": "123", "content-length": "999" });
+      const headers = new Headers({
+        "x-request-id": "123",
+        "content-length": "999",
+        "server-timing": '_y;desc="unique", _s;desc="visit"',
+        "cache-control": "public, s-maxage=600",
+        "cdn-cache-control": "public, s-maxage=600",
+      });
       mockFetch.mockResolvedValueOnce(mockGqlResponse({ predictiveSearch: MOCK_ITEMS }, headers));
       const request = createPredictiveSearchRequest();
       const handlers = createPredictiveSearchServerHandlers();
@@ -126,6 +132,9 @@ describe("createPredictiveSearchServerHandlers", () => {
       expect(result.data).toEqual({ term: "snow", total: 2, items: MOCK_ITEMS });
       expect(new Headers(result.headers).get("x-request-id")).toBe("123");
       expect(new Headers(result.headers).has("content-length")).toBe(false);
+      expect(new Headers(result.headers).get("server-timing")).toBeNull();
+      expect(new Headers(result.headers).get("cache-control")).toBe("public, s-maxage=600");
+      expect(new Headers(result.headers).get("cdn-cache-control")).toBe("public, s-maxage=600");
     });
   });
 

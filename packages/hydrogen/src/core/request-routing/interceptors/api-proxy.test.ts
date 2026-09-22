@@ -146,7 +146,7 @@ describe("handleShopifyApiProxy", () => {
     expect(headers.get("x-custom-header")).toBe("custom-value");
   });
 
-  it("consumes upstream state from SFR responses", async () => {
+  it("consumes upstream cookies from SFR responses and strips timing", async () => {
     const headers = new Headers({ "server-timing": '_y;desc="unique"' });
     headers.append("set-cookie", "future_cookie=value; Path=/; Secure");
     mockFetch.mockResolvedValueOnce(new Response("ok", { headers }));

@@ -22,7 +22,7 @@ describe("consent script tags", () => {
     const { scripts } = getShopifyScriptTags({ shop: SHOP });
 
     expect(scripts[0].innerHTML).toContain(
-      '"config":{"isHeadless":true,"asyncConsent":true,"asyncVisitorState":true}',
+      '"config":{"isHeadless":true,"asyncConsent":true,"asyncVisitorState":true,"debug":{"hydrogen":{"generation":3,"serverTiming":false}}}',
     );
     expect(scripts[0].innerHTML).toContain("consentDomain=window.location.host");
     expect(scripts).toContainEqual(
@@ -105,6 +105,12 @@ describe("consent script tags", () => {
       asyncConsent: true,
       asyncVisitorState: true,
       consentDomain: window.location.host,
+      debug: {
+        hydrogen: {
+          generation: 3,
+          serverTiming: false,
+        },
+      },
     });
     expect(window.Shopify?.customerPrivacy?.consentStatus).toBeUndefined();
   });
