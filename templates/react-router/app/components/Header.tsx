@@ -1,4 +1,3 @@
-import type { MouseEvent } from "react";
 import { Link } from "react-router";
 
 import { useCart } from "~/lib/cart";
@@ -16,14 +15,6 @@ function liveCartCountLabel(count: number) {
 
 function displayCount(count: number) {
   return count > 99 ? "99+" : String(count);
-}
-
-function preventAndOpenCartDialog(event: MouseEvent<HTMLAnchorElement>) {
-  const isModifiedClick = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
-  if (event.button !== 0 || isModifiedClick) return;
-  if (!(document.getElementById(CART_DRAWER_ID) instanceof HTMLDialogElement)) return;
-  event.preventDefault();
-  openCartDrawer();
 }
 
 export function Header({ navCollections }: { navCollections: NavCollection[] }) {
@@ -85,7 +76,14 @@ export function Header({ navCollections }: { navCollections: NavCollection[] }) 
             aria-controls={CART_DRAWER_ID}
             aria-haspopup="dialog"
             data-testid="cart-trigger"
-            onClick={preventAndOpenCartDialog}
+            onClick={(event) => {
+              const isModifiedClick =
+                event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+              if (event.button !== 0 || isModifiedClick) return;
+              if (!(document.getElementById(CART_DRAWER_ID) instanceof HTMLDialogElement)) return;
+              event.preventDefault();
+              openCartDrawer();
+            }}
           >
             <span
               className="relative inline-flex size-5 shrink-0 items-center justify-center"
