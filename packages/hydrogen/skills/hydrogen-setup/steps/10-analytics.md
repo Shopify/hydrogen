@@ -1,6 +1,8 @@
 # Analytics
 
-Invoke the `hydrogen-analytics` skill to wire storefront analytics. This depends on the request handlers (scaffold step) and Shopify runtime scripts being in place. Read `../references/analytics.md` for the full consent and setup details when needed.
+Invoke the `hydrogen-analytics` skill. It owns configuration, consent gating, per-route events, cart tracking, and the framework shapes.
+
+Setup-specific: request handlers (step 2) and Shopify runtime scripts (step 7) must already be in place. The analytics bus needs the same-origin SFAPI proxy to observe session cookies; without it, treat analytics as incomplete rather than working around it.
 
 ## Continue when
 

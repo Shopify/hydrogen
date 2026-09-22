@@ -9,7 +9,22 @@ Use `@shopify/hydrogen/vue` product bindings. Server page data resolves the sele
 import { createProductComponents } from "@shopify/hydrogen/vue";
 import type { ProductData } from "./product-types";
 
-export const { ProductProvider, useProductForm } = createProductComponents<ProductData>();
+export const { ProductProvider, useProduct, useProductForm } =
+  createProductComponents<ProductData>();
+```
+
+`useProduct` returns read-only selection state (`options`, `selectedVariant`, `errors`, `selectOption`) for consumers such as price and gallery. `useProductForm` adds the form bindings (`register`, `formProps`, `pending`) and is what the purchase panel uses.
+
+Do not destructure either composable's return value. Both expose their state as getters on the returned object, so destructuring during `setup` captures the values once and the picker, price, and submitted merchandise ID stop tracking the current selection:
+
+```ts
+// WRONG: reactivity is lost at setup time
+const { selectedVariant, options } = useProduct();
+
+// RIGHT: keep the object and read through it
+const productState = useProduct();
+const form = useProductForm();
+const addable = computed(() => canAddToCart(props.product, form.options));
 ```
 
 `ProductData` is app-owned. It must include Hydrogen's product form fields: `id`, `handle`, `title`, `options`, `selectedOrFirstAvailableVariant`, `adjacentVariants`, `encodedVariantExistence`, `encodedVariantAvailability`, `requiresSellingPlan`, and variant `price`/`availableForSale` fields used by the UI.
@@ -77,6 +92,30 @@ Same-product option values are GET links (`NuxtLink`) so selection degrades with
 ```
 
 Build route query objects with `buildProductSelectionSearchParams`, passing the product option names as `optionNames`. Convert Nuxt's current route query to `URLSearchParams` for `base` by appending every scalar or array value, then convert the returned params back to a Nuxt query object while preserving repeated keys. This preserves non-option params while removing stale option params and the reserved `variant` param.
+
+```ts
+import type { LocationQuery } from "vue-router";
+
+function queryToSearchParams(query: LocationQuery) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    const values = Array.isArray(value) ? value : [value];
+    for (const item of values) params.append(key, item ?? "");
+  }
+  return params;
+}
+
+function searchParamsToQuery(params: URLSearchParams) {
+  const query: Record<string, string | string[]> = Object.create(null);
+  for (const [key, value] of params) {
+    const current = query[key];
+    if (current === undefined) query[key] = value;
+    else if (Array.isArray(current)) current.push(value);
+    else query[key] = [current, value];
+  }
+  return query;
+}
+```
 
 ## Add To Cart
 

@@ -106,7 +106,11 @@ When creating a product detail page, use the app's existing route convention whe
 
 Before building product UI, check whether this skill has a reference file for the app's framework in `references/`. If one exists, read it and use that framework binding or route pattern first.
 
-If there is no matching reference, use `createProductFormStore` from `@shopify/hydrogen` directly, subscribe with the framework's reactivity primitive, and own hydration, URL sync, and `destroy()` yourself. Packaged bindings are thin wrappers over this same store — apply every rule and anti-pattern below; do not invent a different contract.
+If there is no matching reference, use `createProductFormStore` from `@shopify/hydrogen` directly, subscribe with the framework's reactivity primitive, and own hydration, URL sync, and `destroy()` yourself. Packaged bindings are thin wrappers over this same store — apply every rule and anti-pattern below; do not invent a different contract. Where that lands per framework:
+
+- SvelteKit: create the store once, hydrate it on product identity changes, and destroy it on unmount.
+- SolidStart: own the store lifecycle inside the client component.
+- Astro: build this route only with server output or a server adapter, and put the interactive form in a hydrated island or client script that owns the store lifecycle.
 
 ## Hydration
 
