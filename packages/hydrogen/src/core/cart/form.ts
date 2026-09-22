@@ -57,6 +57,8 @@ type AttributeValueName = `attributes.${string}`;
  * // Increase quantity button
  * <button {...register("increase")}>+</button>
  * ```
+ *
+ * @throws `TypeError` when called with `"attributeValue"` and no non-empty `key`.
  */
 export type CartFormRegister = {
   (field: "lineId", opts: { value: string }): { name: "lineId"; value: string; readOnly: true };

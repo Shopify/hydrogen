@@ -179,7 +179,9 @@ export type CartStore = {
    * Callers must call `event.preventDefault()` before invoking this method.
    * The form's `intent` field determines the action — `"add"`, `"increase"`,
    * `"decrease"`, `"remove"`, `"set"`, `"discount-apply"`, `"discount-remove"`,
-   * `"note"`, or `"attributes"`.
+   * `"note-update"`, or `"attributes-update"`.
+   *
+   * @throws If the form's `intent` field is not one of the recognized values.
    */
   handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;
 };

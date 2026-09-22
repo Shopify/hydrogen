@@ -1,5 +1,7 @@
+/** Default lower bound for {@link sanitizeQuantity} when no `min` is given. */
 export const DEFAULT_MINIMUM_QUANTITY = 1;
 
+/** Sentinel upper bound for {@link sanitizeQuantity} meaning "no maximum". */
 export const NO_QUANTITY_LIMIT = Infinity;
 
 /**

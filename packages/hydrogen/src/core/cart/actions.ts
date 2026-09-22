@@ -1,6 +1,7 @@
 import { normalizeCartId } from "./cookie";
 import { getCartAttributeFormEntries } from "./form";
 
+/** A key-value pair attached to the cart or an individual cart line. */
 export type CartAttributeInput = { key: string; value: string };
 
 export type CartLineAddInput = {
@@ -67,6 +68,9 @@ class CartActionError extends Error {
  *
  * Used internally by {@link createCartServerHandlers} — call it directly only
  * when building a custom cart route.
+ *
+ * @throws If the content-type is unsupported, or the body is malformed (missing
+ * required fields, mixed line operations, or invalid quantities).
  *
  * @example
  * ```ts

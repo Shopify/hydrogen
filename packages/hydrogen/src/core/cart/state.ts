@@ -33,7 +33,9 @@ export interface CartLineCost {
 export interface CartLineMerchandise {
   /** Storefront API GID of the product variant. */
   id: string;
+  /** Variant title (e.g. `"Small / Black"`). */
   title?: string;
+  /** Selected variant option name/value pairs (e.g. `{ name: "Size", value: "S" }`). */
   selectedOptions?: Array<{ name: string; value: string }>;
   product: {
     title: string;
@@ -62,10 +64,14 @@ export interface CartLineMerchandise {
 export interface CartLine {
   /** Storefront API GID of this cart line — used as the key in {@link CartPending.lines}. */
   id: string;
+  /** Number of units of this merchandise in the cart. */
   quantity: number;
   attributes?: Attribute[];
+  /** Per-line cost breakdown from the Storefront API. */
   cost: CartLineCost;
+  /** The product variant this line represents. */
   merchandise?: CartLineMerchandise;
+  /** Subscription selling plan allocation, or `null` for one-time purchases. */
   sellingPlanAllocation?: { sellingPlan: { id: string } } | null;
   parentRelationship?: { parent: { id: string } } | null;
   /** Nested child lines when this line is a bundle parent. */
@@ -197,10 +203,15 @@ export interface CartData {
   checkoutUrl?: string | null;
   /** Sum of all line quantities. */
   totalQuantity: number;
+  /** Cart-level cost breakdown (subtotal, total, checkout charge). */
   cost: CartCost;
+  /** Buyer-supplied cart note, or `null`/empty when unset. */
   note?: string | null;
+  /** Cart-level custom attributes. */
   attributes: Attribute[];
+  /** The cart's line items. */
   lines: CartLineConnection;
+  /** Discount codes applied to the cart, with their applicability. */
   discountCodes: DiscountCode[];
   [key: string]: unknown;
 }
@@ -255,6 +266,7 @@ export function createEmptyPending(): CartPending {
   };
 }
 
+/** Creates an empty {@link CartErrorGroup} — no user errors, no warnings. */
 export function createEmptyErrorGroup(): CartErrorGroup {
   return { userErrors: [], warnings: [] };
 }
@@ -321,4 +333,5 @@ export function createEmptyCartState({ loading = true }: { loading?: boolean } =
   );
 }
 
+/** Shared empty {@link CartState} — backed by {@link EMPTY_CART_DATA}, defaults to `loading: true`. */
 export const EMPTY_CART_STATE: CartState = createEmptyCartState();
