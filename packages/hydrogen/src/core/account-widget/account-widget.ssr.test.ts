@@ -55,6 +55,18 @@ describe("renderShopifyAccountWidget", () => {
     ).toContain('customer-access-token="customer-token"');
   });
 
+  it("omits blank customer access tokens and preserves non-blank tokens verbatim", () => {
+    expect(renderShopifyAccountWidget({ ...baseOptions, customerAccessToken: "" })).not.toContain(
+      "customer-access-token",
+    );
+    expect(
+      renderShopifyAccountWidget({ ...baseOptions, customerAccessToken: "   " }),
+    ).not.toContain("customer-access-token");
+    expect(
+      renderShopifyAccountWidget({ ...baseOptions, customerAccessToken: " customer-token " }),
+    ).toContain('customer-access-token=" customer-token "');
+  });
+
   it("defaults sign-in-url to /account/login and allows overriding it", () => {
     expect(renderShopifyAccountWidget(baseOptions)).toContain('sign-in-url="/account/login"');
     expect(renderShopifyAccountWidget({ ...baseOptions, signInUrl: "/auth/login" })).toContain(
