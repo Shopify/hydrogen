@@ -20,6 +20,8 @@ export type ShopifyAccountWidgetOptions = {
   /**
    * Customer Account API access token for the signed-in customer. Omit it, or
    * pass `null`, for signed-out customers so Shopify renders the signed-out slot.
+   * Blank (empty or whitespace-only) tokens are treated as omitted; non-blank
+   * tokens are emitted verbatim.
    */
   customerAccessToken?: string | null;
   /**
@@ -75,8 +77,9 @@ function getShopifyStoreAttributes(options: ShopifyAccountWidgetOptions): Record
     "store-domain": options.storeDomain,
     "public-access-token": options.publicAccessToken,
   };
-  if (options.customerAccessToken != null) {
-    attributes["customer-access-token"] = options.customerAccessToken;
+  const customerAccessToken = options.customerAccessToken ?? undefined;
+  if (hasContent(customerAccessToken)) {
+    attributes["customer-access-token"] = customerAccessToken;
   }
   return attributes;
 }
