@@ -32,7 +32,7 @@ describe("renderShopifyAccountWidget", () => {
       customerAccessToken: 'tok"en&<>',
       menu: 'main"menu',
       nonce: 'n"once&',
-      signInUrl: "/login?next=/account&x=1",
+      signInPath: "/login?next=/account&x=1",
     });
 
     expect(html).toContain('store-domain="a&quot;b&amp;c&lt;d&gt;e.myshopify.com"');
@@ -67,11 +67,84 @@ describe("renderShopifyAccountWidget", () => {
     ).toContain('customer-access-token=" customer-token "');
   });
 
-  it("defaults sign-in-url to /account/login and allows overriding it", () => {
-    expect(renderShopifyAccountWidget(baseOptions)).toContain('sign-in-url="/account/login"');
-    expect(renderShopifyAccountWidget({ ...baseOptions, signInUrl: "/auth/login" })).toContain(
-      'sign-in-url="/auth/login"',
-    );
+  describe("signInPath", () => {
+    const SIGN_IN_PATH_ERROR =
+      'signInPath must be a root-relative path starting with a single "/" and containing no backslashes or ASCII control characters.';
+    const render = (signInPath: string | undefined) =>
+      renderShopifyAccountWidget({ ...baseOptions, signInPath });
+
+    it.each([undefined, "", "   "])("defaults %j to /account/login", (signInPath) => {
+      expect(render(signInPath)).toContain('sign-in-url="/account/login"');
+    });
+
+    it("trims surrounding whitespace", () => {
+      expect(render(" /auth/login ")).toContain('sign-in-url="/auth/login"');
+    });
+
+    // Encoded characters and dot segments are emitted verbatim: Hydrogen does
+    // not decode or normalise paths.
+    const accepted = [
+      "/",
+      "/auth/login",
+      "/a//b",
+      "/auth/login?return_to=/account",
+      "/auth/login#top",
+      "/%2f%2fevil.example",
+      "/%5cevil.example",
+      "/%09%0d%0a",
+      "/caf%C3%A9",
+      "/./login",
+      "/../login",
+      "/.//evil.example",
+    ];
+
+    it.each(accepted)("emits root-relative path %j unchanged", (signInPath) => {
+      expect(render(signInPath)).toContain(`sign-in-url="${signInPath}"`);
+    });
+
+    it.each(accepted)("resolves %j to the storefront origin", (signInPath) => {
+      expect(new URL(signInPath, "https://your-store.example").origin).toBe(
+        "https://your-store.example",
+      );
+    });
+
+    const controlCharacters = [
+      ...Array.from({ length: 0x20 }, (_, code) => String.fromCharCode(code)),
+      "\u007f",
+    ];
+
+    it.each([
+      "https://evil.example/login",
+      "http://evil.example/login",
+      "https://your-store.example/account/login",
+      "javascript:alert(1)",
+      "data:text/html,<script>alert(1)</script>",
+      "//evil.example",
+      "///evil.example",
+      "./login",
+      "../login",
+      "account/login",
+      "?next=/account",
+      "#login",
+      "%2fevil.example",
+      "\\evil.example",
+      "/\\evil.example",
+      "/a\\b",
+      "/login?next=\\evil.example",
+      "/\t/evil.example",
+      "/\n/evil.example",
+      "/\r/evil.example",
+      ...controlCharacters.map((character) => `/a${character}b`),
+    ])("rejects %j", (signInPath) => {
+      expect(() => render(signInPath)).toThrow(TypeError);
+      expect(() => render(signInPath)).toThrow(SIGN_IN_PATH_ERROR);
+    });
+
+    it("escapes accepted paths without decoding entities", () => {
+      expect(render('/login?x="<>&')).toContain('sign-in-url="/login?x=&quot;&lt;&gt;&amp;"');
+      // Escaping `&` keeps an HTML entity from introducing an authority slash.
+      expect(render("/&#47;evil.example")).toContain('sign-in-url="/&amp;#47;evil.example"');
+    });
   });
 
   it("emits the menu attribute only when provided", () => {
@@ -84,7 +157,7 @@ describe("renderShopifyAccountWidget", () => {
   it("treats whitespace-only optional values as omitted", () => {
     const omitted = renderShopifyAccountWidget({
       ...baseOptions,
-      signInUrl: "  ",
+      signInPath: "  ",
       menu: " ",
       nonce: " ",
     });
@@ -95,7 +168,7 @@ describe("renderShopifyAccountWidget", () => {
 
     const trimmed = renderShopifyAccountWidget({
       ...baseOptions,
-      signInUrl: " /auth/login ",
+      signInPath: " /auth/login ",
       menu: " main ",
     });
 
