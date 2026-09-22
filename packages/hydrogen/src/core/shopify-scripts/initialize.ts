@@ -1,4 +1,3 @@
-import { initializeDeprecatedCookies } from "./deprecated-cookies";
 import { configureShopifyRouting } from "./global";
 import { initializeShopifyPageViewEvents } from "./page-view";
 import type { InitializeShopifyScriptsOptions } from "./types";
@@ -17,7 +16,6 @@ export function initializeShopifyScripts({
   webMcp = true,
 }: InitializeShopifyScriptsOptions): Promise<boolean | void> {
   configureShopifyRouting({ navigate, routes });
-  initializeDeprecatedCookies();
   initializeShopifyPageViewEvents();
 
   if (!webMcp) return Promise.resolve();

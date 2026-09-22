@@ -14,6 +14,6 @@ export default function initializeShopifyGlobal(config: ShopifyGlobalConfig) {
   });
 
   // Privacy banner defaults to hostname, which drops protocol/port. Use the current
-  // host for tokenless consent requests and legacy cookie domain inference.
+  // host for tokenless consent requests.
   shopify.customerPrivacy.config.consentDomain = window.location.host;
 }
