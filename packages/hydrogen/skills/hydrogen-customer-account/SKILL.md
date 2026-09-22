@@ -21,6 +21,8 @@ Use server-side configuration for:
 
 Do not expose access tokens, refresh tokens, ID tokens, or session secrets to client components or browser storage.
 
+The one exception is the customer access token passed explicitly as `customerAccessToken` to `renderShopifyAccountWidget`, which the current component API requires in its HTML. Responses containing it must not be shared-cacheable.
+
 ## Session Module
 
 Create `customerSession` at module scope with `createCustomerSession({ shopId, customerAccountApiClientId })`. Create request-scoped session managers from the framework request, backed by protected server storage or encrypted HttpOnly cookies.
@@ -94,7 +96,7 @@ Hydrogen ships no account UI yet — the app owns it. A storefront with the hand
 - **Signed in** — fetch and render a minimal profile (`customer { firstName lastName emailAddress { emailAddress } }`). Check GraphQL `errors` and render an error state instead of crashing.
 - **Logout** — a plain HTML `<form method="post" action="/account/logout">` with a submit button. The handler enforces same-origin POST and returns a raw redirect (to Shopify's logout endpoint when an `id_token` exists); a native browser submit follows it, a client-side form component or fetch call does not. This also keeps logout working without JavaScript. An optional `return_to` search param on the action URL controls the post-logout destination.
 - **Navbar** — link to `/account`. A static link is enough; the page handles both states. If showing signed-in state in the header, use `isLoggedIn()` behind the framework's streaming primitive per the Server Rendering rules above.
-- Never serialize tokens or session objects into loader data or HTML; render only derived profile fields.
+- Never serialize tokens or session objects into loader data or HTML (the only HTML exception is the account widget token under Configuration); render only derived profile fields.
 
 ## Typed Queries
 
