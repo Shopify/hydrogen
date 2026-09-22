@@ -95,6 +95,7 @@ export interface ProductFormStore<
   selectOption(name: string, value: string): VariantSelectionResult<TVariant>;
   hydrate(product: TProduct, opts?: { selectedOptions?: SelectedOption[] }): void;
   reset(): void;
+  connect(): void;
   destroy(): void;
   handleFormSubmit(event: SubmitEvent): Promise<void>;
 }
@@ -186,6 +187,7 @@ export function createProductFormStore<TProduct extends ProductInput>(
     selectOption: (name, value) => selectOption(context, name, value),
     hydrate: (nextProduct, opts) => hydrate(context, nextProduct, opts),
     reset: () => reset(context),
+    connect: () => connect(context),
     destroy: () => destroy(context),
     handleFormSubmit: (event) => handleFormSubmit(context, event),
   };
@@ -312,6 +314,16 @@ function reset<TProduct extends ProductInput>(context: ProductFormStoreContext<T
     context.decodedVariantCache,
   );
   context.observable.setState(deriveFullState(variantState, context.cartStore.getState()));
+}
+
+function connect<TProduct extends ProductInput>(context: ProductFormStoreContext<TProduct>): void {
+  context.unsubCart();
+  context.destroyed = false;
+  context.unsubCart = context.cartStore.subscribe(() => {
+    if (context.destroyed) return;
+    syncFromCart(context);
+  });
+  syncFromCart(context);
 }
 
 function destroy<TProduct extends ProductInput>(context: ProductFormStoreContext<TProduct>): void {
