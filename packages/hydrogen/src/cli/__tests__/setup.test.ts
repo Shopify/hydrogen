@@ -1,11 +1,4 @@
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 
@@ -314,11 +307,7 @@ describe("setupHydrogen", () => {
       });
 
       expect(runCommand.calls[0]?.[0]).toBe("tar");
-      expect(runCommand.calls[1]).toEqual([
-        "pnpm",
-        ["install"],
-        { cwd: appRoot },
-      ]);
+      expect(runCommand.calls[1]).toEqual(["pnpm", ["install"], { cwd: appRoot }]);
       expect(existsSync(join(appRoot, ".claude/skills/hydrogen-setup/SKILL.md"))).toBe(true);
     });
 

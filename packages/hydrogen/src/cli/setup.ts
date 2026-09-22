@@ -1,8 +1,8 @@
 import { spawn } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { createInterface } from "node:readline/promises";
-import { tmpdir } from "node:os";
 
 import { isObjectRecord } from "../core/utils/record";
 import { syncSkills } from "./skills";
@@ -148,8 +148,7 @@ function spawnRunCommand(command: string, args: string[], options: { cwd: string
   });
 }
 
-const TEMPLATE_TARBALL_URL =
-  "https://codeload.github.com/Shopify/hydrogen/tar.gz/dist-preview";
+const TEMPLATE_TARBALL_URL = "https://codeload.github.com/Shopify/hydrogen/tar.gz/dist-preview";
 const TEMPLATE_TARBALL_PREFIX = "hydrogen-dist-preview/templates/react-router/";
 
 type SetupChoice = "scaffold" | "skills";
