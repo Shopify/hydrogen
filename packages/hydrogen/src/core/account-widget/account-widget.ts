@@ -22,6 +22,7 @@ export type ShopifyAccountWidgetOptions = {
    * pass `null`, for signed-out customers so Shopify renders the signed-out slot.
    * Blank (empty or whitespace-only) tokens are treated as omitted; non-blank
    * tokens are emitted verbatim.
+   * Responses containing this token must not be shared-cacheable.
    */
   customerAccessToken?: string | null;
   /**
