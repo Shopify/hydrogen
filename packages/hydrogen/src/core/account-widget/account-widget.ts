@@ -1,6 +1,6 @@
 import { escapeAttribute, hasContent } from "../html";
 
-const DEFAULT_SIGN_IN_URL = "/account/login";
+const DEFAULT_SIGN_IN_PATH = "/account/login";
 const AVATAR_SIZE = "var(--shopify-account-avatar-size, 44px)";
 export const ACCOUNT_WIDGET_ATTRIBUTE = "data-hydrogen-account-widget";
 
@@ -31,11 +31,11 @@ export type ShopifyAccountWidgetOptions = {
    */
   menu?: string;
   /**
-   * Route that starts the Customer Account login flow. Shopify appends the
-   * query parameters that must be forwarded to the authorization request.
-   * Defaults to `"/account/login"`.
+   * Root-relative Customer Account login path. Defaults to `"/account/login"`.
+   * Invalid paths throw a `TypeError`.
+   * Forward Shopify's appended query parameters to the authorization request.
    */
-  signInUrl?: string;
+  signInPath?: string;
   /** Content Security Policy nonce applied to the emitted `<style>` element. */
   nonce?: string;
   /**
@@ -86,9 +86,20 @@ function getShopifyStoreAttributes(options: ShopifyAccountWidgetOptions): Record
 }
 
 function getShopifyAccountAttributes(options: ShopifyAccountWidgetOptions): Record<string, string> {
-  const attributes: Record<string, string> = {
-    "sign-in-url": hasContent(options.signInUrl) ? options.signInUrl.trim() : DEFAULT_SIGN_IN_URL,
-  };
+  const signInPath = hasContent(options.signInPath)
+    ? options.signInPath.trim()
+    : DEFAULT_SIGN_IN_PATH;
+  if (
+    !signInPath.startsWith("/") ||
+    signInPath.startsWith("//") ||
+    // oxlint-disable-next-line no-control-regex -- rejecting ASCII control characters is intentional
+    /[\\\u0000-\u001f\u007f]/.test(signInPath)
+  ) {
+    throw new TypeError(
+      'signInPath must be a root-relative path starting with a single "/" and containing no backslashes or ASCII control characters.',
+    );
+  }
+  const attributes: Record<string, string> = { "sign-in-url": signInPath };
   if (hasContent(options.menu)) attributes.menu = options.menu.trim();
   return attributes;
 }
