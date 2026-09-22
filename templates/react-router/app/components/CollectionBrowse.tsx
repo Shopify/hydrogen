@@ -482,6 +482,14 @@ export function Toolbar({
             </option>
           ))}
         </select>
+        <noscript>
+          <button
+            type="submit"
+            className="button-outline rounded-button focus-visible:outline-accent min-h-touch-target inline-flex shrink-0 cursor-pointer items-center justify-center px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            Sort
+          </button>
+        </noscript>
       </form>
     </div>
   );
