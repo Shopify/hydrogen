@@ -268,7 +268,7 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
  * <template>
  *   <form v-bind="formProps()">
  *     <input v-bind="register('lineId', { value: line.id })" />
- *     <input v-bind="register('quantity', { value: line.quantity })" />
+ *     <input v-bind="register('quantity', { value: line.quantity, interactive: true })" />
  *     <button v-bind="register('set')" />
  *     <button v-bind="register('increase')">+</button>
  *     <button v-bind="register('decrease')">−</button>

@@ -1,7 +1,5 @@
-/** Default minimum quantity for cart line items. */
 export const DEFAULT_MINIMUM_QUANTITY = 1;
 
-/** Sentinel value indicating no upper quantity limit. */
 export const NO_QUANTITY_LIMIT = Infinity;
 
 /**

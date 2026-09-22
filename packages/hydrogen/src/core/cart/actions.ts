@@ -1,10 +1,8 @@
 import { normalizeCartId } from "./cookie";
 import { getCartAttributeFormEntries } from "./form";
 
-/** A key-value pair for cart or line attribute mutations. */
 export type CartAttributeInput = { key: string; value: string };
 
-/** Input for adding a new line to the cart. */
 export type CartLineAddInput = {
   /** Storefront API GID of the product variant to add. */
   merchandiseId: string;

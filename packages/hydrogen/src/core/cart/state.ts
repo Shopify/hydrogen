@@ -18,7 +18,6 @@ export interface CartCost {
   checkoutChargeAmount: Money;
 }
 
-/** Per-line-item cost breakdown. */
 export interface CartLineCost {
   /** Line total after discounts (`quantity × discounted unit price`). */
   totalAmount: Money;
@@ -73,7 +72,6 @@ export interface CartLine {
   lineComponents?: CartLine[];
 }
 
-/** Paginated list of {@link CartLine} items. */
 export interface CartLineConnection {
   nodes: CartLine[];
   [key: string]: unknown;
@@ -247,7 +245,6 @@ export interface CartState<TData extends CartData = CartData> {
   errors: CartErrorState;
 }
 
-/** Creates an empty {@link CartPending} with no in-flight mutations. */
 export function createEmptyPending(): CartPending {
   return {
     lines: new Set(),
@@ -258,7 +255,6 @@ export function createEmptyPending(): CartPending {
   };
 }
 
-/** Creates an empty {@link CartErrorGroup} with no errors or warnings. */
 export function createEmptyErrorGroup(): CartErrorGroup {
   return { userErrors: [], warnings: [] };
 }
@@ -301,7 +297,6 @@ export const EMPTY_CART_DATA: CartData = Object.freeze({
   discountCodes: [] as DiscountCode[],
 });
 
-/** Creates a {@link CartState} from server-returned {@link CartData}. */
 export function createCartState<TData extends CartData>(
   data: TData,
   { loading = false }: { loading?: boolean } = {},
@@ -326,5 +321,4 @@ export function createEmptyCartState({ loading = true }: { loading?: boolean } =
   );
 }
 
-/** Pre-built empty {@link CartState} — `loading: true`, no data. */
 export const EMPTY_CART_STATE: CartState = createEmptyCartState();

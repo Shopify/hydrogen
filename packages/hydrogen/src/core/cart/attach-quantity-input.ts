@@ -13,14 +13,16 @@ const FIRST_SUBMIT_BUTTON_SELECTOR = "button:not([type=button])";
  *
  * @example
  * ```ts
- * const input = document.querySelector<HTMLInputElement>('input[name="quantity"]')!;
- * const form = input.closest('form')!;
+ * const input = document.querySelector<HTMLInputElement>('input[name="quantity"]');
+ * const form = input?.closest('form');
  *
- * const detach = attachQuantityInput(input, form);
- * // Input changes now auto-submit the form
+ * if (input && form) {
+ *   const detach = attachQuantityInput(input, form);
+ *   // Input changes now auto-submit the form
  *
- * // Clean up when unmounting
- * detach();
+ *   // Clean up when unmounting
+ *   detach();
+ * }
  * ```
  */
 export function attachQuantityInput(
