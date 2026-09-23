@@ -91,6 +91,7 @@ React Router framework mode needs:
 - A final splat route such as `route("*", "routes/catchall.tsx")`.
 - Root-route middleware that creates the Storefront client, runs Hydrogen routes, stores the client in context, and applies response headers after `next()`.
 - A public Storefront client by default; when upgrading to `type: "private"`, resolve trusted `buyerIp` before `createStorefrontClient` per the buyer-IP guidance from `hydrogen-storefront-client`.
+- A server entry that restores the public `request.url` with `createPublicRequest` before calling React Router's request handler. See "React Router Origin Check" below.
 
 ```tsx
 import {
@@ -144,6 +145,38 @@ export const middleware: Route.MiddlewareFunction[] = [
 ];
 ```
 
+### React Router Origin Check
+
+React Router rejects `POST`, `PUT`, `PATCH`, and `DELETE` requests whose `Origin` header does not match the request, returning a bare `400 Bad Request`. The check runs before `staticHandler.query()`, so it runs before any route middleware. What it compares against depends on the version:
+
+| React Router | `Origin` compared against |
+| --- | --- |
+| <= 7.17 | `x-forwarded-host`, then `host` (host only) |
+| 7.18.0 to 7.18.2, 8.0.0 to 8.3.0 | `new URL(request.url).host` (forwarded headers ignored) |
+| >= 7.18.3, >= 8.3.1 | `new URL(request.url).origin` (scheme + host + port) |
+
+Behind a proxy that terminates TLS, such as Hydrogen's `localHttps` dev plugin or a tunnel, the server sees `http://localhost:5173` while the browser sends `Origin: https://local.tryhydrogen.dev:5173`. Newer React Router versions then reject every cart and form mutation. Fixing `request` in root middleware is too late. Restore the public URL in the server entry and pass that request to React Router:
+
+```ts
+import { createPublicRequest } from "@shopify/hydrogen";
+import { createRequestHandler } from "react-router";
+
+export default {
+  async fetch(incomingRequest: Request, env: Env, executionContext: ExecutionContext) {
+    const request = createPublicRequest(incomingRequest, {
+      // Trust forwarded headers only when a proxy you control sets them.
+      trustForwardedHeaders: import.meta.env.DEV,
+    });
+    const handleRequest = createRequestHandler(serverBuild, import.meta.env.MODE);
+    return handleRequest(request, await createAppLoadContext(request, env, executionContext));
+  },
+};
+```
+
+Clients can send `x-forwarded-*` headers themselves, so only set `trustForwardedHeaders: true` when a proxy you control overwrites them. Oxygen already passes the public URL as `request.url`, so production Oxygen deployments do not need it. Root middleware then receives the normalized request, so `handleShopifyRoutes`, redirects, and Customer Account OAuth URLs use the public origin.
+
+`allowedActionOrigins` in `react-router.config.ts` is for genuinely cross-origin form submissions. Do not use it to work around a reverse proxy: it leaves `request.url` wrong for redirects and OAuth.
+
 ## SolidStart
 
 SolidStart middleware can short-circuit before routing, but cannot reliably observe the final 404 after SSR streaming starts. Put `handleShopifyRoutes` in middleware and `handleShopifyRedirects` in a last-priority catch-all route.
@@ -175,5 +208,6 @@ In `src/routes/[...404].tsx`, run `handleShopifyRedirects` from a server query/p
 
 - Never run `handleShopifyRedirects` pre-routing.
 - Never run `handleShopifyRoutes` after framework routing.
+- Behind a TLS-terminating proxy, restore the public `request.url` with `createPublicRequest` in the server entry, before the framework's own origin or CSRF checks. Middleware runs too late for React Router.
 - Do not create a second Storefront client inside loaders when one already exists in request context.
 - Framework redirect helpers may turn Hydrogen's `301` into `302` or `307`.

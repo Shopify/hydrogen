@@ -18,6 +18,8 @@ export type {
 } from "./request-routing/registered-routes";
 export { createStorefrontClient } from "../client/client";
 export { createShopifyRequestContext } from "./request-context";
+export { createPublicRequest } from "./public-request";
+export type { CreatePublicRequestOptions } from "./public-request";
 export { Cache, createFetchWithCache, createRunWithCache } from "./cache";
 export type { CacheInstance, CacheOptions, CachingStrategy } from "./cache";
 export { StorefrontApiError, StorefrontTimeoutError } from "../client/errors";

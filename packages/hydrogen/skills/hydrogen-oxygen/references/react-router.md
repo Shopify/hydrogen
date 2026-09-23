@@ -103,13 +103,17 @@ MiniOxygen.
 Add the root Worker entrypoint expected by MiniOxygen. Create the React Router request handler and context per request:
 
 ```ts
+import { createPublicRequest } from "@shopify/hydrogen";
 import { createRequestHandler, RouterContextProvider } from "react-router";
 import * as serverBuild from "virtual:react-router/server-build";
 
 import { createAppLoadContext } from "./app/lib/server-context";
 
 export default {
-  async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
+  async fetch(incomingRequest: Request, env: Env, executionContext: ExecutionContext) {
+    const request = createPublicRequest(incomingRequest, {
+      trustForwardedHeaders: import.meta.env.DEV,
+    });
     const handleRequest = createRequestHandler(serverBuild, import.meta.env.MODE);
     const context = await createAppLoadContext(
       request,
@@ -124,6 +128,15 @@ export default {
 ```
 
 Use `import.meta.env.MODE`, not `process.env.NODE_ENV`, at this Vite boundary.
+
+Call `createPublicRequest` here, not in root middleware. React Router compares a mutation's `Origin` header with the
+request before any middleware runs: `x-forwarded-host`/`host` up to 7.17, then the `request.url` host from 7.18.0 and
+8.0.0, and the full `request.url` origin (scheme, host, and port) from 7.18.3 and 8.3.1. Under `localHttps`, MiniOxygen hands the
+Worker `http://localhost:<port>` while the browser sends an `https://` `Origin`. Without this call, newer React Router
+versions answer every cart and form mutation with a bare `400 Bad Request`. Trust forwarded headers only in development,
+where the `localHttps` plugin sets them. Oxygen already passes the public URL as `request.url`. Do not use React Router's
+`allowedActionOrigins` for this. It exists for genuinely cross-origin submissions and leaves `request.url` wrong for
+redirects and Customer Account OAuth.
 
 ## Request Context
 

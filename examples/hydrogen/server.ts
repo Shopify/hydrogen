@@ -2,6 +2,7 @@ import { getBuyerIp } from "@shared/buyer-ip";
 import { getPrivateStorefrontToken } from "@shared/private-env";
 import {
   createPredictiveSearchServerHandlers,
+  createPublicRequest,
   createShopifyRequestContext,
   handleShopifyRedirects,
   handleShopifyRoutes,
@@ -20,8 +21,6 @@ import { routeTemplates } from "~/lib/route-templates";
 
 const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
 const HTTPS_PROTOCOL = "https:";
-const FORWARDED_PROTO_HEADER = "x-forwarded-proto";
-const FORWARDED_HOST_HEADER = "x-forwarded-host";
 const TRY_HYDROGEN_HOST_SUFFIX = ".tryhydrogen.dev";
 
 /**
@@ -30,7 +29,7 @@ const TRY_HYDROGEN_HOST_SUFFIX = ".tryhydrogen.dev";
 export default {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext): Promise<Response> {
     try {
-      const publicRequest = createPublicRequest(request);
+      const publicRequest = createExamplePublicRequest(request);
       const i18n = getLocaleFromRequest(publicRequest);
       const buyerIp = getBuyerIp(request.headers);
 
@@ -139,22 +138,16 @@ export default {
   },
 };
 
-function createPublicRequest(request: Request): Request {
-  const publicUrl = getPublicUrl(request);
-  if (publicUrl === request.url) return request;
-  return new Request(publicUrl, request);
-}
+function createExamplePublicRequest(request: Request): Request {
+  const publicRequest = createPublicRequest(request, { trustForwardedHeaders: true });
+  const url = new URL(publicRequest.url);
+  // Shopify CLI tunnels serve `*.tryhydrogen.dev` over HTTPS but can reach the dev server over HTTP.
+  if (!url.hostname.endsWith(TRY_HYDROGEN_HOST_SUFFIX) || url.protocol === HTTPS_PROTOCOL) {
+    return publicRequest;
+  }
 
-function getPublicUrl(request: Request): string {
-  const url = new URL(request.url);
-  const forwardedHost = request.headers.get(FORWARDED_HOST_HEADER);
-  const forwardedProto = request.headers.get(FORWARDED_PROTO_HEADER);
-
-  if (forwardedHost) url.host = forwardedHost;
-  if (forwardedProto) url.protocol = `${forwardedProto}:`;
-  if (url.hostname.endsWith(TRY_HYDROGEN_HOST_SUFFIX)) url.protocol = HTTPS_PROTOCOL;
-
-  return url.toString();
+  url.protocol = HTTPS_PROTOCOL;
+  return new Request(url, publicRequest);
 }
 
 async function finalizeHydrogenResponse(

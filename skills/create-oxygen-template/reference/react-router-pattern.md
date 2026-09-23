@@ -128,11 +128,15 @@ Preserve any additional future flags that the template needs. Keep `buildDirecto
 Add a Worker module entrypoint that creates the React Router request handler directly:
 
 ```ts
+import {createPublicRequest} from "@shopify/hydrogen";
 import {createRequestHandler} from "react-router";
 import * as serverBuild from "virtual:react-router/server-build";
 
 export default {
-  async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
+  async fetch(incomingRequest: Request, env: Env, executionContext: ExecutionContext) {
+    const request = createPublicRequest(incomingRequest, {
+      trustForwardedHeaders: import.meta.env.DEV,
+    });
     const handleRequest = createRequestHandler(serverBuild, import.meta.env.MODE);
     const context = await createAppLoadContext(request, env, executionContext);
 
@@ -140,6 +144,22 @@ export default {
   },
 };
 ```
+
+Restore the public request URL with `createPublicRequest` as the first step in `server.ts`, and pass the returned
+request to everything downstream. This is the one exception to keeping Shopify request handling in root middleware.
+React Router checks a mutation's `Origin` header before any route middleware runs, so middleware cannot fix it:
+
+| React Router | `Origin` compared against |
+| --- | --- |
+| <= 7.17 | `x-forwarded-host`, then `host` (host only) |
+| 7.18.0 to 7.18.2, 8.0.0 to 8.3.0 | `new URL(request.url).host` |
+| >= 7.18.3, >= 8.3.1 | `new URL(request.url).origin` (scheme + host + port) |
+
+Under `dev:https`, MiniOxygen hands the Worker `http://localhost:<port>` while the browser sends an `https://` `Origin`.
+Without the call, newer React Router versions answer every cart POST and form mutation with a bare `400 Bad Request`.
+Trust forwarded headers only in development, where `localHttps` sets them. Oxygen already passes the public URL. Do not
+set `allowedActionOrigins` in `react-router.config.ts` to work around this. That option is for genuinely cross-origin
+submissions and leaves `request.url` wrong for redirects and Customer Account OAuth.
 
 Prefer `import.meta.env.MODE` for the Vite/Oxygen template entrypoint. Do not introduce a Node-oriented `process.env.NODE_ENV` dependency unless existing template code already requires it and it has been verified in MiniOxygen.
 
@@ -164,8 +184,8 @@ async function createAppLoadContext(
 ```
 
 Use actual context names that match the template. Keep Shopify initialization and request handling in root middleware,
-with `server.ts` responsible only for providing Worker values through React Router context and invoking the framework
-request handler. The root middleware owns `handleShopifyRoutes` before `next()`, `handleShopifyRedirects` after a
+with `server.ts` responsible only for restoring the public request URL, providing Worker values through React Router
+context, and invoking the framework request handler. The root middleware owns `handleShopifyRoutes` before `next()`, `handleShopifyRedirects` after a
 framework 404, and storefront response headers on framework responses. Shopify handler responses already include
 their own storefront response headers. The catch-all route should only produce the framework 404 that lets the root
 middleware check for a Shopify redirect.

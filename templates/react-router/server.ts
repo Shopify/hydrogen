@@ -1,3 +1,4 @@
+import { createPublicRequest } from "@shopify/hydrogen";
 import { createRequestHandler, RouterContextProvider } from "react-router";
 import * as serverBuild from "virtual:react-router/server-build";
 
@@ -7,8 +8,19 @@ import { envContext } from "~/lib/env";
  * Export a fetch handler in module format for Oxygen / mini-oxygen.
  */
 export default {
-  async fetch(request: Request, env: Env, executionContext: ExecutionContext): Promise<Response> {
+  async fetch(
+    incomingRequest: Request,
+    env: Env,
+    executionContext: ExecutionContext,
+  ): Promise<Response> {
     try {
+      // React Router rejects mutations whose `Origin` differs from `request.url` before any
+      // route middleware runs, so the public URL must be restored here, not in root middleware.
+      // Only the local dev HTTPS proxy sets forwarded headers; Oxygen already sends the public URL.
+      const request = createPublicRequest(incomingRequest, {
+        trustForwardedHeaders: import.meta.env.DEV,
+      });
+
       const method = request.method;
       if ((method === "GET" || method === "HEAD") && request.body) {
         return new Response(`${method} requests cannot have a body`, { status: 400 });
