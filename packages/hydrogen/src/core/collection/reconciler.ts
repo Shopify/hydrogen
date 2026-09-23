@@ -6,8 +6,11 @@ import { collectionSearchEqual, mergeCollectionParams, normalizeCollectionSearch
  * push navigation side-effects without depending on any specific framework.
  */
 export type ReconcilerCallbacks = {
+  /** Returns the current collection store instance. */
   getStore: () => CollectionStore;
+  /** Reads the live URL search string from the framework router. */
   readUrlSearch: () => string;
+  /** Pushes a serialized search string to the framework router for navigation. */
   emitChange: (searchString: string) => void;
 };
 

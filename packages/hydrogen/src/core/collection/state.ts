@@ -41,10 +41,15 @@ export type AvailableFilterValue<
 export interface AvailableFilter<
   TValue extends BaseAvailableFilterValue = BaseAvailableFilterValue,
 > {
+  /** Unique identifier for this filter facet. */
   id: string;
+  /** Human-readable name (e.g. "Color", "Size", "Price"). */
   label: string;
+  /** Input mechanism — boolean toggle, multi-select list, or price slider. */
   type: FilterType;
+  /** Visual presentation hint for the storefront UI. */
   presentation?: FilterPresentation | null;
+  /** Selectable values within this facet. */
   values: AvailableFilterValue<TValue>[];
 }
 
