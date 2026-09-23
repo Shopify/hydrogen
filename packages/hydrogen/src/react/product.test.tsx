@@ -752,7 +752,7 @@ describe("createProductComponents", () => {
           wrapper: ({ children }: { children: ReactNode }) =>
             createElement(ProductProvider, { product: makeProduct() }, children),
         });
-      }).toThrow(/CartProvider/);
+      }).toThrow("ProductProvider must be used inside <CartProvider>");
     });
   });
 
