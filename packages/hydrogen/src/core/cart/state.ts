@@ -219,7 +219,7 @@ export interface CartData {
 /**
  * Full observable state of the cart store.
  *
- * Framework adapters subscribe to this via {@link CartStore.subscribe} (or the
+ * Framework adapters subscribe to this via `CartStore.subscribe` (or the
  * framework-specific hooks like `useCart`). The generic `TData` parameter
  * flows from your server handler configuration, so `data` is typed to match
  * your custom cart query.

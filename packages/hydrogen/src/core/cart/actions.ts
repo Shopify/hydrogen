@@ -15,7 +15,7 @@ export type CartLineAddInput = {
 
 /** Input for updating an existing cart line. Setting `quantity` to `0` removes the line. */
 export type CartLineUpdateInput = {
-  /** The {@link CartLine.id} of the line to update. */
+  /** The `CartLine.id` of the line to update. */
   id: string;
   quantity: number;
   attributes?: CartAttributeInput[];

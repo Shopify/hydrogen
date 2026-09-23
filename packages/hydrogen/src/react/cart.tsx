@@ -304,7 +304,7 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
  * `formProps()` returns `<form>` attributes that intercept submission, call
  * {@link CartStore.handleFormSubmit}, and prevent the default browser navigation.
  * `register()` returns the correct HTML attributes for each field type — see
- * {@link CartFormRegister} for the full field/action list.
+ * `CartFormRegister` for the full field/action list.
  *
  * When `register("quantity", { interactive: true })` is called, the returned
  * attributes include a `ref` callback that attaches {@link attachQuantityInput}

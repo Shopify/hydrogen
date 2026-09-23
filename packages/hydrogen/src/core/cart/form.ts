@@ -2,7 +2,7 @@
  * HTML attributes for a hidden submit button that triggers the `"set"` intent.
  *
  * Used by {@link CartFormRegister} when `register("set")` is called. The button
- * must be the first submit button in the form for {@link attachQuantityInput}
+ * must be the first submit button in the form for `attachQuantityInput`
  * to auto-submit on quantity changes.
  */
 export interface SetButtonAttributes {
@@ -45,8 +45,8 @@ type AttributeValueName = `attributes.${string}`;
  * ```ts
  * const register = createCartFormRegister();
  *
- * // Read-only line ID field
- * <input type="hidden" {...register("lineId", { value: line.id })} />
+ * // Line ID field (register returns readOnly; add type="hidden" to hide it)
+ * <input {...register("lineId", { value: line.id })} />
  *
  * // Interactive quantity input (auto-submits on change via attachQuantityInput)
  * <input {...register("quantity", { value: line.quantity, interactive: true })} />
