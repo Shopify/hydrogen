@@ -16,6 +16,7 @@ analytics, and a consent banner wired up.
 - `/collections/:handle` — collection with filters, sort, and pagination
 - `/search` — product search with the same filtering
 - `/cart` — cart with Shop Pay (also the no-JS fallback for the cart drawer)
+- `/account` — Customer Account sign-in, log out, and order history
 
 ## What it demonstrates
 
@@ -25,6 +26,10 @@ analytics, and a consent banner wired up.
   cart drawer wired to Shopify Standard Actions.
 - A shared layout (header with mobile nav, footer, announcement bar).
 - Analytics + a consent banner.
+- Customer Accounts: Hydrogen's `/account/login`, `/account/authorize`,
+  `/account/refresh`, and `/account/logout` handlers, backed by a signed cookie
+  session (`app/lib/session.ts`). Needs a real store, `SHOP_ID`,
+  `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID`, `SESSION_SECRET`, and HTTPS.
 - The design tokens in `app/tokens.css` and SVG icons in `public/icons/`.
 
 ## Run it

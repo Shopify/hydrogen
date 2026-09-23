@@ -7,8 +7,13 @@ import { envContext } from "~/lib/env";
  * Export a fetch handler in module format for Oxygen / mini-oxygen.
  */
 export default {
-  async fetch(request: Request, env: Env, executionContext: ExecutionContext): Promise<Response> {
+  async fetch(
+    rawRequest: Request,
+    env: Env,
+    executionContext: ExecutionContext,
+  ): Promise<Response> {
     try {
+      const request = toPublicRequest(rawRequest);
       const method = request.method;
       if ((method === "GET" || method === "HEAD") && request.body) {
         return new Response(`${method} requests cannot have a body`, { status: 400 });
@@ -36,3 +41,14 @@ export default {
     }
   },
 };
+
+// Local HTTPS terminates in Vite, so the worker sees `http:`. Customer Account
+// OAuth needs the public `https:` origin.
+function toPublicRequest(request: Request): Request {
+  const url = new URL(request.url);
+  if (url.protocol !== "http:" || request.headers.get("x-forwarded-proto") !== "https") {
+    return request;
+  }
+  url.protocol = "https:";
+  return new Request(url, request);
+}
