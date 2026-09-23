@@ -759,7 +759,7 @@ function RelatedProducts({ products }: { products: RelatedProduct[] }) {
           id="related-products-heading"
           className="type-heading-xl max-w-page px-margin mx-auto mb-8"
         >
-          You may also like
+          More products
         </h2>
         <div className="max-w-page px-margin mx-auto contain-paint">
           <ul
