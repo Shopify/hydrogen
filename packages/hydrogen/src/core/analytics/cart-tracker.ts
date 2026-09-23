@@ -22,6 +22,18 @@ type CartTrackerState = {
   lastEventId: string | null;
 };
 
+/**
+ * Subscribes to a cart store and publishes analytics events when the cart changes.
+ *
+ * Emits `cart_updated` for every mutation, plus `product_added_to_cart` and
+ * `product_removed_from_cart` for individual line-level changes. Deduplicates
+ * events using both an in-memory cursor and `localStorage` to survive
+ * soft navigations.
+ *
+ * @throws {Error} If the Shopify analytics bus (`window.Shopify.analytics`) is
+ *   not available — render `ShopifyScripts` before calling this function.
+ * @returns An unsubscribe function that stops tracking.
+ */
 export function trackCartAnalytics(store: CartAnalyticsStore): () => void {
   const analytics = getGlobalAnalytics();
   const state: CartTrackerState = {
