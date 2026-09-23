@@ -121,15 +121,8 @@ describe("createCartComponents", () => {
 
 describe("@shopify/hydrogen/react cart exports", () => {
   it("only exposes cart hooks through createCartComponents", () => {
-    type ReactEntry = typeof import("./index");
+    type CartExports = Extract<keyof typeof import("./index"), `${string}Cart${string}`>;
 
-    expectTypeOf<ReactEntry>().toHaveProperty("createCartComponents");
-    expectTypeOf<ReactEntry>().toHaveProperty("useCartAnalytics");
-    expectTypeOf<
-      Extract<
-        keyof ReactEntry,
-        "CartProvider" | "useCart" | "useCartActions" | "useCartForm" | "useOptionalCart"
-      >
-    >().toBeNever();
+    expectTypeOf<CartExports>().toEqualTypeOf<"createCartComponents" | "useCartAnalytics">();
   });
 });
