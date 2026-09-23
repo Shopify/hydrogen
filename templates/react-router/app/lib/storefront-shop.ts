@@ -5,17 +5,22 @@
 /** Neutral name used only when the Storefront API returns no shop name. */
 export const FALLBACK_SHOP_NAME = "Store";
 
-export type StorefrontShopLogo = {
+/** A usable brand image (logo or cover image) with a non-empty URL. */
+export type StorefrontShopImage = {
   url: string;
   altText: string | null;
   width: number | null;
   height: number | null;
 };
 
+export type StorefrontShopLogo = StorefrontShopImage;
+
 export type StorefrontShop = {
   name: string;
   /** Brand logo from the shop's brand settings, or `null` when none is set. */
   logo: StorefrontShopLogo | null;
+  /** Brand cover image from the shop's brand settings, or `null` when none is set. */
+  coverImage: StorefrontShopImage | null;
   /** Human-readable accepted card brands, then digital wallets, deduplicated. */
   paymentMethods: string[];
 };
@@ -25,19 +30,22 @@ export type StorefrontShop = {
  * nullable so partial GraphQL results (a field error absorbed by a nullable
  * ancestor) still normalize to a usable `StorefrontShop`.
  */
+type BrandMediaImageQueryData = {
+  alt: string | null;
+  image: {
+    url: string;
+    altText: string | null;
+    width: number | null;
+    height: number | null;
+  } | null;
+} | null;
+
 export type StorefrontShopQueryData =
   | {
       name: string | null;
       brand: {
-        logo: {
-          alt: string | null;
-          image: {
-            url: string;
-            altText: string | null;
-            width: number | null;
-            height: number | null;
-          } | null;
-        } | null;
+        logo: BrandMediaImageQueryData;
+        coverImage?: BrandMediaImageQueryData;
       } | null;
       paymentSettings: {
         acceptedCardBrands: readonly string[];
@@ -90,10 +98,10 @@ export function getPaymentMethodLabels(
   return [...labels];
 }
 
-function normalizeLogo(
-  logo: NonNullable<NonNullable<StorefrontShopQueryData>["brand"]>["logo"] | undefined,
-): StorefrontShopLogo | null {
-  const image = logo?.image;
+function normalizeBrandImage(
+  media: BrandMediaImageQueryData | undefined,
+): StorefrontShopImage | null {
+  const image = media?.image;
   if (!image) return null;
 
   const url = nonEmpty(image.url);
@@ -101,7 +109,7 @@ function normalizeLogo(
 
   return {
     url,
-    altText: nonEmpty(logo?.alt) ?? nonEmpty(image.altText),
+    altText: nonEmpty(media?.alt) ?? nonEmpty(image.altText),
     width: image.width ?? null,
     height: image.height ?? null,
   };
@@ -111,7 +119,8 @@ function normalizeLogo(
 export function normalizeStorefrontShop(shop: StorefrontShopQueryData): StorefrontShop {
   return {
     name: nonEmpty(shop?.name) ?? FALLBACK_SHOP_NAME,
-    logo: normalizeLogo(shop?.brand?.logo),
+    logo: normalizeBrandImage(shop?.brand?.logo),
+    coverImage: normalizeBrandImage(shop?.brand?.coverImage),
     paymentMethods: getPaymentMethodLabels(shop?.paymentSettings),
   };
 }

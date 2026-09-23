@@ -46,6 +46,15 @@ const ROOT_LAYOUT_QUERY = gql(`
             height
           }
         }
+        coverImage {
+          alt
+          image {
+            url
+            altText
+            width
+            height
+          }
+        }
       }
       paymentSettings {
         acceptedCardBrands

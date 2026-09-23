@@ -32,7 +32,7 @@ test("uses the Storefront API shop name, including alternate names", () => {
 });
 
 test("falls back to a neutral name without fabricating branding or payments", () => {
-  const expected = { name: FALLBACK_SHOP_NAME, logo: null, paymentMethods: [] };
+  const expected = { name: FALLBACK_SHOP_NAME, logo: null, coverImage: null, paymentMethods: [] };
   assert.equal(FALLBACK_SHOP_NAME, "Store");
   assert.deepEqual(normalizeStorefrontShop(null), expected);
   assert.deepEqual(normalizeStorefrontShop(undefined), expected);
@@ -86,6 +86,83 @@ test("returns no logo when brand, logo, image, or URL is missing", () => {
     ).logo,
     null,
   );
+});
+
+const COVER_IMAGE = {
+  url: "https://cdn.shopify.com/cover.jpg",
+  altText: "Cover image alt",
+  width: 1600,
+  height: 900,
+};
+
+test("normalizes the brand cover image and prefers the media alt text", () => {
+  const brand = {
+    logo: null,
+    coverImage: {
+      alt: "Snowdevil storefront",
+      image: { ...COVER_IMAGE, url: " " + COVER_IMAGE.url },
+    },
+  };
+  assert.deepEqual(normalizeStorefrontShop(shopData({ brand })).coverImage, {
+    url: COVER_IMAGE.url,
+    altText: "Snowdevil storefront",
+    width: 1600,
+    height: 900,
+  });
+  assert.equal(
+    normalizeStorefrontShop(
+      shopData({ brand: { logo: null, coverImage: { alt: "  ", image: COVER_IMAGE } } }),
+    ).coverImage?.altText,
+    "Cover image alt",
+  );
+});
+
+test("keeps a cover image with null alt text and dimensions as null", () => {
+  const image = { url: COVER_IMAGE.url, altText: null, width: null, height: null };
+  assert.deepEqual(
+    normalizeStorefrontShop(shopData({ brand: { logo: null, coverImage: { alt: null, image } } }))
+      .coverImage,
+    { url: COVER_IMAGE.url, altText: null, width: null, height: null },
+  );
+});
+
+test("returns no cover image when brand, cover media, image, or URL is missing", () => {
+  assert.equal(normalizeStorefrontShop(shopData()).coverImage, null);
+  assert.equal(normalizeStorefrontShop(shopData({ brand: null })).coverImage, null);
+  assert.equal(
+    normalizeStorefrontShop(shopData({ brand: { logo: null, coverImage: null } })).coverImage,
+    null,
+  );
+  assert.equal(
+    normalizeStorefrontShop(
+      shopData({ brand: { logo: null, coverImage: { alt: "Cover", image: null } } }),
+    ).coverImage,
+    null,
+  );
+  for (const url of ["", "   "]) {
+    assert.equal(
+      normalizeStorefrontShop(
+        shopData({
+          brand: { logo: null, coverImage: { alt: "Cover", image: { ...COVER_IMAGE, url } } },
+        }),
+      ).coverImage,
+      null,
+    );
+  }
+});
+
+test("normalizes logo and cover image independently", () => {
+  const shop = normalizeStorefrontShop(
+    shopData({
+      brand: {
+        logo: { alt: "Snowdevil logo", image: LOGO_IMAGE },
+        coverImage: { alt: null, image: COVER_IMAGE },
+      },
+    }),
+  );
+  assert.equal(shop.logo?.url, LOGO_IMAGE.url);
+  assert.equal(shop.coverImage?.url, COVER_IMAGE.url);
+  assert.equal(shop.coverImage?.altText, "Cover image alt");
 });
 
 test("maps every known card brand and digital wallet to a display label", () => {
