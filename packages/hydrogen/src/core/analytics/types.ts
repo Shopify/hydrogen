@@ -65,20 +65,15 @@ export type AnalyticsCartLine = {
   id: string;
   quantity: number;
   merchandise: {
-    /** Storefront API product variant ID. */
     id: string;
     /** Variant title, or the product title when no variant title exists. */
     title: string;
-    /** Unit price for this variant. */
     price: { amount: string; currencyCode?: string };
-    /** Variant SKU, if available. */
     sku?: string | null;
     product: {
-      /** Storefront API product ID. */
       id: string;
       title: string;
       vendor: string;
-      /** Product type, if set. */
       productType?: string;
       handle?: string;
     };
