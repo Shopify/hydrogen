@@ -10,7 +10,6 @@ export type FilterPresentation = "IMAGE" | "SWATCH" | "TEXT";
 export type FilterType = "BOOLEAN" | "LIST" | "PRICE_RANGE" | (string & {});
 
 interface BaseAvailableFilterValue {
-  /** Unique identifier for this filter value. */
   id: string;
   /** Human-readable label (e.g. "Red", "Nike", "$50–$100"). */
   label: string;
@@ -41,7 +40,6 @@ export type AvailableFilterValue<
 export interface AvailableFilter<
   TValue extends BaseAvailableFilterValue = BaseAvailableFilterValue,
 > {
-  /** Unique identifier for this filter facet. */
   id: string;
   /** Human-readable name (e.g. "Color", "Size", "Price"). */
   label: string;
@@ -49,7 +47,6 @@ export interface AvailableFilter<
   type: FilterType;
   /** Visual presentation hint for the storefront UI. */
   presentation?: FilterPresentation | null;
-  /** Selectable values within this facet. */
   values: AvailableFilterValue<TValue>[];
 }
 

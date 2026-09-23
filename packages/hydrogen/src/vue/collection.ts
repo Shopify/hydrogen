@@ -24,7 +24,7 @@ export type { CollectionData };
 
 const CollectionStoreKey: InjectionKey<ShallowRef<CollectionStore>> = Symbol("CollectionStore");
 
-/** Mutation methods that update store state and trigger the `change` event. */
+/** Mutation methods exposed by the collection store. */
 export type CollectionActions = Pick<
   CollectionStore,
   | "setFilters"
@@ -44,7 +44,7 @@ export type CollectionActions = Pick<
  * @example
  * ```vue
  * <script setup lang="ts">
- * import { CollectionProvider } from '@shopify/hydrogen/vue';
+ * import { CollectionProvider, type CollectionData } from '@shopify/hydrogen/vue';
  *
  * const props = defineProps<{ data: CollectionData; urlSearch: string }>();
  * </script>

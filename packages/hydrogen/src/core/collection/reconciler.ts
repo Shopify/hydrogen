@@ -10,7 +10,7 @@ export type ReconcilerCallbacks = {
   getStore: () => CollectionStore;
   /** Reads the live URL search string from the framework router. */
   readUrlSearch: () => string;
-  /** Pushes a serialized search string to the framework router for navigation. */
+  /** Delivers a serialized search string for the framework adapter to handle. */
   emitChange: (searchString: string) => void;
 };
 
