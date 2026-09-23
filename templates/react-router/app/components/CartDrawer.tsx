@@ -1,5 +1,5 @@
 import { ShopPayButton } from "@shopify/hydrogen/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type SubmitEvent } from "react";
 import { Link } from "react-router";
 
 import { useCart, useCartForm } from "~/lib/cart";
@@ -89,6 +89,28 @@ export function CartLineItem({ line }: { line: CartLineView }) {
     .join(" / ");
   const errorId = `cart-line-error-${line.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
+  // Removing a line unmounts the control that holds focus. Move focus to the same
+  // control on a neighbouring line (or the drawer heading) while the line still exists.
+  const moveFocusBeforeRemoval = (event: SubmitEvent<HTMLFormElement>) => {
+    const form = event.currentTarget;
+    if (!form.contains(document.activeElement)) return;
+    const intent = event.nativeEvent.submitter?.getAttribute("value");
+    const quantity = new FormData(form).get("quantity");
+    const removesLine =
+      intent === "remove" ||
+      (intent === "decrease" && line.quantity <= 1) ||
+      (intent === "set" && Number(quantity) <= 0);
+    if (!removesLine) return;
+
+    const item = form.closest("li");
+    const neighbour = item?.nextElementSibling ?? item?.previousElementSibling;
+    const selector = intent === "set" ? 'input[name="quantity"]' : `button[value="${intent}"]`;
+    const target =
+      neighbour?.querySelector<HTMLElement>(selector) ??
+      document.getElementById("cart-drawer-title");
+    target?.focus();
+  };
+
   return (
     <li
       className={`flex gap-3 py-4 transition-opacity ${pending ? "opacity-60" : ""}`}
@@ -126,7 +148,10 @@ export function CartLineItem({ line }: { line: CartLineView }) {
         <p className={`text-on-surface mt-2 text-sm ${pending ? "opacity-50" : ""}`}>
           {formatPrice(line.cost.totalAmount)}
         </p>
-        <form {...formProps()} className="mt-3 flex items-center gap-2">
+        <form
+          {...formProps({ beforeSubmit: moveFocusBeforeRemoval })}
+          className="mt-3 flex items-center gap-2"
+        >
           <button {...register("set")} />
           <input type="hidden" {...register("lineId", { value: line.id })} />
           <div className="quantity-selector-outlined rounded-input inline-flex items-center">
@@ -280,7 +305,11 @@ export function CartDrawer() {
         <div className="flex h-full flex-col">
           <div className="flex shrink-0 items-center py-2 ps-4">
             <div className="flex flex-1 items-center gap-2">
-              <h2 id="cart-drawer-title" className="text-on-surface text-lg font-medium">
+              <h2
+                id="cart-drawer-title"
+                tabIndex={-1}
+                className="text-on-surface text-lg font-medium"
+              >
                 Cart
               </h2>
               <span className="cart-count-badge">{totalQuantity}</span>
