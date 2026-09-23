@@ -9,13 +9,26 @@ interface StorefrontApiErrorOptions {
   extensions?: Record<string, unknown>;
 }
 
+/**
+ * Thrown when a Storefront API request fails — HTTP error, network failure,
+ * or an unparseable response body.
+ *
+ * In development, `queryText` and `variables` are attached for debugging.
+ */
 export class StorefrontApiError extends Error {
+  /** Shopify `x-request-id` header, when available. Useful for support requests. */
   readonly requestId?: string;
+  /** HTTP response status code, when the request reached the server. */
   readonly status?: number;
+  /** The GraphQL query text. Only populated in development builds. */
   readonly queryText?: string;
+  /** The variables sent with the request. Only populated in development builds. */
   readonly variables?: Record<string, unknown>;
+  /** Source locations within the query where the error originated. */
   readonly locations?: ReadonlyArray<{ line: number; column: number }>;
+  /** Response path to the field that triggered the error. */
   readonly path?: ReadonlyArray<string | number>;
+  /** Vendor extensions (e.g. Shopify error codes). */
   readonly extensions?: Record<string, unknown>;
 
   constructor(message: string, options?: StorefrontApiErrorOptions) {
@@ -52,6 +65,7 @@ export class StorefrontApiError extends Error {
     return result;
   }
 
+  /** Serializes the error. In production, `locations`, `path`, and `extensions` are omitted. */
   toJSON(): {
     name: string;
     message: string;
@@ -73,7 +87,13 @@ export class StorefrontApiError extends Error {
   }
 }
 
+/**
+ * Thrown when a Storefront API request exceeds the configured `defaultTimeoutInMs`.
+ *
+ * Subclass of {@link StorefrontApiError}; catch either to handle all SFAPI failures.
+ */
 export class StorefrontTimeoutError extends StorefrontApiError {
+  /** The timeout threshold that was exceeded, in milliseconds. */
   readonly timeoutInMs: number;
 
   constructor(timeoutInMs: number, options?: Omit<StorefrontApiErrorOptions, "cause">) {
