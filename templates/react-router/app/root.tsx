@@ -12,9 +12,11 @@ import {
 } from "react-router";
 
 import { CartAnalyticsTracker, PageViewedTracker } from "~/components/AnalyticsTrackers";
+import { AnnouncementBar } from "~/components/AnnouncementBar";
 import { CartDrawer } from "~/components/CartDrawer";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
+import { loadAnnouncement } from "~/lib/announcement";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { createRequestCustomerAccount, customerAccountContext } from "~/lib/customer-account";
@@ -125,9 +127,10 @@ export const middleware: Route.MiddlewareFunction[] = [
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const storefrontClient = context.get(storefrontClientContext);
-  const [cartResult, layoutResult] = await Promise.all([
+  const [cartResult, layoutResult, announcement] = await Promise.all([
     cartHandlers.get({ storefrontClient, request }),
     storefrontClient.graphql(ROOT_LAYOUT_QUERY),
+    loadAnnouncement(storefrontClient),
   ]);
 
   if (layoutResult.errors) {
@@ -142,6 +145,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     shopInfo: normalizeStorefrontShop(layoutResult.data?.shop),
     // Computed on the server so the footer year cannot differ during hydration.
     copyrightYear: new Date().getFullYear(),
+    announcement,
   };
 }
 
@@ -184,13 +188,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
     <CartProvider initialData={loaderData.cartData}>
       <PageViewedTracker />
       <CartAnalyticsTracker />
-      <div
-        role="region"
-        aria-label="Announcement"
-        className="bg-on-surface px-margin py-2.5 text-center"
-      >
-        <p className="type-body-sm text-surface">Free shipping on orders over $50</p>
-      </div>
+      <AnnouncementBar message={loaderData.announcement} />
       <Header navCollections={loaderData.navCollections} shopInfo={loaderData.shopInfo} />
       <Outlet />
       <Footer shopInfo={loaderData.shopInfo} copyrightYear={loaderData.copyrightYear} />
