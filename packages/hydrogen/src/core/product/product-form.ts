@@ -27,7 +27,7 @@ import type {
 // Public types
 // ---------------------------------------------------------------------------
 
-/** Cart errors relevant to the currently selected variant in a {@link ProductFormStore}. */
+/** Cart and line-item errors surfaced by a {@link ProductFormStore}. */
 export interface ProductFormErrors {
   userErrors: CartUserError[];
   warnings: CartWarning[];
@@ -83,7 +83,7 @@ export type ValidProductSelectionResult<TProduct extends ProductInput = ProductI
 
 /** Options for {@link createProductFormStore}. */
 export type CreateProductFormStoreOptions = {
-  /** Initial selection to apply instead of using the product's `selectedOrFirstAvailableVariant`. */
+  /** Fallback selection used when the product has no `selectedOrFirstAvailableVariant`. */
   selectedOptions?: SelectedOption[];
 };
 
@@ -92,7 +92,7 @@ export interface ProductFormStore<
   TProduct extends ProductInput = ProductInput,
   TVariant extends ProductVariantInput = ProductVariantFrom<TProduct>,
 > {
-  /** Returns the current state snapshot with optimistic projections applied. */
+  /** Returns the current state snapshot. */
   getState(): ProductFormStoreState<TVariant, ProductOptionValueFrom<TProduct>>;
   /** Registers a listener invoked on every state change. Returns an unsubscribe function. */
   subscribe(
@@ -102,13 +102,13 @@ export interface ProductFormStore<
   selectOption(name: string, value: string): VariantSelectionResult<TVariant>;
   /** Replaces the product data and re-derives state — use after a server-side product reload. */
   hydrate(product: TProduct, opts?: { selectedOptions?: SelectedOption[] }): void;
-  /** Clears all selections and errors, restoring the store to its initial state. */
+  /** Restores the store to its initial product and selection state. */
   reset(): void;
   /** Activates the store — starts listening for cart state changes to track the matched line item. */
   connect(): void;
   /** Tears down the store — removes cart subscription and releases resources. */
   destroy(): void;
-  /** Intercepts a native `SubmitEvent` from a product form and dispatches an add-to-cart transaction. */
+  /** Handles a native `SubmitEvent` by dispatching an add-to-cart transaction via the cart store. */
   handleFormSubmit(event: SubmitEvent): Promise<void>;
 }
 

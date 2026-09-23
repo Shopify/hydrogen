@@ -3,17 +3,14 @@
 
 /** Monetary amount in a specific currency, mirroring the Storefront API `MoneyV2` type. */
 export interface Money {
-  /** Decimal money amount. */
   amount: string;
-  /** Currency of the money. */
   currencyCode: string;
 }
 
 /** Minimum and maximum variant prices for a product, mirroring the Storefront API `ProductPriceRange` type. */
 export interface ProductPriceRange {
-  /** Lowest variant price. */
   minVariantPrice: Money;
-  /** Highest variant price. Absent when all variants share the same price. */
+  /** May be absent when the Storefront API omits it. */
   maxVariantPrice?: Money;
 }
 
@@ -73,9 +70,9 @@ export interface ProductInput<TVariant extends ProductVariantInput = ProductVari
   priceRange?: ProductPriceRange;
   /** When `true`, the product cannot be added to cart without a selling plan. */
   requiresSellingPlan?: boolean | null;
-  /** Base-64 encoded bitfield of which option-value combinations map to real variants. */
+  /** Encoded representation of which option-value combinations map to real variants. Consumers should treat this as opaque. */
   encodedVariantExistence?: string | null;
-  /** Base-64 encoded bitfield of which existing variants are currently available for sale. */
+  /** Encoded representation of which existing variants are currently available for sale. Consumers should treat this as opaque. */
   encodedVariantAvailability?: string | null;
   options: ProductOptionInput<TVariant>[];
   /** The variant pre-selected by the URL or, if none, the first variant available for sale. */
