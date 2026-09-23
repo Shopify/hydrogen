@@ -46,7 +46,7 @@ export type SetConsentHeadlessParams = VisitorConsent &
   };
 
 /**
-  Ideally this type should come from the Custoemr Privacy API sdk
+  Ideally this type should come from the Customer Privacy API sdk
   analyticsProcessingAllowed -
   currentVisitorConsent
   doesMerchantSupportGranularConsent

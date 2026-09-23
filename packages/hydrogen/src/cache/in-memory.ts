@@ -9,6 +9,10 @@ type CacheMatch = {
  * This is a limited implementation of an in-memory cache.
  * It only supports the `cache-control` header.
  * It does NOT support `age` or `expires` headers.
+ *
+ * Entries live in the memory of a single server process, so they are not
+ * shared between instances and are lost on restart. Use it for local
+ * development only, and rely on the Oxygen cache in production.
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Cache
  * @publicDocs
  */

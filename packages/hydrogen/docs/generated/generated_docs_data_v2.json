@@ -4222,7 +4222,7 @@
     "src/cache/in-memory.ts": {
       "filePath": "src/cache/in-memory.ts",
       "name": "InMemoryCache",
-      "description": "This is a limited implementation of an in-memory cache. It only supports the `cache-control` header. It does NOT support `age` or `expires` headers.",
+      "description": "This is a limited implementation of an in-memory cache. It only supports the `cache-control` header. It does NOT support `age` or `expires` headers. Entries live in the memory of a single server process, so they are not shared between instances and are lost on restart. Use it for local development only, and rely on the Oxygen cache in production.",
       "isPublicDocs": true,
       "members": [
         {
@@ -6736,7 +6736,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "OriginalCustomerPrivacy",
       "value": "{\n  currentVisitorConsent: () => VisitorConsent;\n  preferencesProcessingAllowed: () => boolean;\n  saleOfDataAllowed: () => boolean;\n  marketingAllowed: () => boolean;\n  analyticsProcessingAllowed: () => boolean;\n  setTrackingConsent: (\n    consent: SetConsentHeadlessParams,\n    callback: (data: {error: string} | undefined) => void,\n  ) => void;\n  shouldShowBanner: () => boolean;\n}",
-      "description": "Ideally this type should come from the Custoemr Privacy API sdk analyticsProcessingAllowed - currentVisitorConsent doesMerchantSupportGranularConsent firstPartyMarketingAllowed getCCPAConsent getTrackingConsent marketingAllowed preferencesProcessingAllowed saleOfDataAllowed saleOfDataRegion setTrackingConsent shouldShowBanner shouldShowGDPRBanner thirdPartyMarketingAllowed",
+      "description": "Ideally this type should come from the Customer Privacy API sdk analyticsProcessingAllowed - currentVisitorConsent doesMerchantSupportGranularConsent firstPartyMarketingAllowed getCCPAConsent getTrackingConsent marketingAllowed preferencesProcessingAllowed saleOfDataAllowed saleOfDataRegion setTrackingConsent shouldShowBanner shouldShowGDPRBanner thirdPartyMarketingAllowed",
       "members": [
         {
           "filePath": "src/customer-privacy/ShopifyCustomerPrivacy.tsx",
