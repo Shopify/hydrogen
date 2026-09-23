@@ -1,0 +1,132 @@
+// Shop identity for the shared layout (header, footer, page metadata), read once
+// per request by the root loader. Every value comes from the Storefront API `shop`
+// object; nothing here is invented when the store leaves a field unset.
+
+/** Neutral name used only when the Storefront API returns no shop name. */
+export const FALLBACK_SHOP_NAME = "Store";
+
+export type StorefrontShopLogo = {
+  url: string;
+  altText: string | null;
+  width: number | null;
+  height: number | null;
+};
+
+export type StorefrontShop = {
+  name: string;
+  /** Brand logo from the shop's brand settings, or `null` when none is set. */
+  logo: StorefrontShopLogo | null;
+  /** Human-readable accepted card brands, then digital wallets, deduplicated. */
+  paymentMethods: string[];
+};
+
+/**
+ * The `shop` selection returned by the root layout query. Every level is
+ * nullable so partial GraphQL results (a field error absorbed by a nullable
+ * ancestor) still normalize to a usable `StorefrontShop`.
+ */
+export type StorefrontShopQueryData =
+  | {
+      name: string | null;
+      brand: {
+        logo: {
+          alt: string | null;
+          image: {
+            url: string;
+            altText: string | null;
+            width: number | null;
+            height: number | null;
+          } | null;
+        } | null;
+      } | null;
+      paymentSettings: {
+        acceptedCardBrands: readonly string[];
+        supportedDigitalWallets: readonly string[];
+      } | null;
+    }
+  | null
+  | undefined;
+
+// Only brands the Storefront API reports as accepted are shown. Unrecognized
+// enum values are omitted rather than displayed raw.
+const PAYMENT_METHOD_LABELS = new Map<string, string>([
+  ["VISA", "Visa"],
+  ["MASTERCARD", "Mastercard"],
+  ["AMERICAN_EXPRESS", "American Express"],
+  ["DINERS_CLUB", "Diners Club"],
+  ["DISCOVER", "Discover"],
+  ["JCB", "JCB"],
+  ["APPLE_PAY", "Apple Pay"],
+  ["GOOGLE_PAY", "Google Pay"],
+  ["ANDROID_PAY", "Android Pay"],
+  ["SHOPIFY_PAY", "Shop Pay"],
+]);
+
+function nonEmpty(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed === "" ? null : trimmed;
+}
+
+/** Maps accepted card brands and digital wallets to deduplicated display labels. */
+export function getPaymentMethodLabels(
+  paymentSettings:
+    | {
+        acceptedCardBrands: readonly string[];
+        supportedDigitalWallets: readonly string[];
+      }
+    | null
+    | undefined,
+): string[] {
+  if (!paymentSettings) return [];
+
+  const labels = new Set<string>();
+  for (const method of [
+    ...paymentSettings.acceptedCardBrands,
+    ...paymentSettings.supportedDigitalWallets,
+  ]) {
+    const label = PAYMENT_METHOD_LABELS.get(method);
+    if (label !== undefined) labels.add(label);
+  }
+  return [...labels];
+}
+
+function normalizeLogo(
+  logo: NonNullable<NonNullable<StorefrontShopQueryData>["brand"]>["logo"] | undefined,
+): StorefrontShopLogo | null {
+  const image = logo?.image;
+  if (!image) return null;
+
+  const url = nonEmpty(image.url);
+  if (url === null) return null;
+
+  return {
+    url,
+    altText: nonEmpty(logo?.alt) ?? nonEmpty(image.altText),
+    width: image.width ?? null,
+    height: image.height ?? null,
+  };
+}
+
+/** Normalizes the root query's `shop` selection for the layout and metadata. */
+export function normalizeStorefrontShop(shop: StorefrontShopQueryData): StorefrontShop {
+  return {
+    name: nonEmpty(shop?.name) ?? FALLBACK_SHOP_NAME,
+    logo: normalizeLogo(shop?.brand?.logo),
+    paymentMethods: getPaymentMethodLabels(shop?.paymentSettings),
+  };
+}
+
+/**
+ * Reads the shop name from the root match passed to a route `meta` function
+ * (`matches[0]` in `Route.MetaArgs`), so routes need no extra API request.
+ */
+export function getShopNameFromRootMatch(
+  rootMatch: { loaderData?: { shopInfo?: { name: string } | null } | null } | null | undefined,
+): string {
+  return nonEmpty(rootMatch?.loaderData?.shopInfo?.name) ?? FALLBACK_SHOP_NAME;
+}
+
+/** Formats a document title as `<page> · <shop name>`. */
+export function formatPageTitle(page: string, shopName: string): string {
+  return `${page} · ${shopName}`;
+}
