@@ -45,6 +45,7 @@ export interface CollectionProviderProps {
    * ```
    */
   onChange?: (searchString: string) => void;
+  /** React children rendered inside the collection context. */
   children?: ReactNode;
 }
 
