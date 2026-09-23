@@ -26,10 +26,10 @@ const proxyUcpProfileRequest = createProxyInterceptor({
   },
   responseHeaders: {
     allow: UCP_RESPONSE_HEADERS,
-    prepare: (headers, upstream) => {
+    prepare: (headers, { response }) => {
       headers.set(
         "cache-control",
-        upstream.ok || upstream.status === 304 ? UCP_CACHE_CONTROL : UCP_NO_CACHE_CONTROL,
+        response.ok || response.status === 304 ? UCP_CACHE_CONTROL : UCP_NO_CACHE_CONTROL,
       );
     },
   },

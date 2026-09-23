@@ -2,7 +2,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
 import { createCartServerHandlers } from "../cart/server-handlers";
-import { CONSENT_MANAGEMENT_HEADER } from "../headers";
+import {
+  CONSENT_MANAGEMENT_HEADER,
+  SHOPIFY_UNIQUE_TOKEN_HEADER,
+  SHOPIFY_VISIT_TOKEN_HEADER,
+} from "../headers";
 import { createShopifyRequestContext } from "../request-context";
 import { assert } from "../test-utils";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "./handle-shopify-routes";
@@ -109,25 +113,19 @@ describe("handleShopifyRoutes", () => {
     expect(result?.headers.getSetCookie()).toEqual([]);
   });
 
-  it("strips Server-Timing from cold non-consent SFAPI proxy responses", async () => {
-    mockFetch.mockResolvedValueOnce(
-      new Response("{}", { headers: { "server-timing": "db;dur=2, _y;desc=unique" } }),
-    );
-
-    const result = await handleShopifyRoutes({
-      request: new Request("https://my-app.com/api/unstable/graphql.json", {
-        method: "POST",
-        body: "{}",
-      }),
+  it("protects consent response bodies without upstream cookies", async () => {
+    const body = {
+      data: {
+        consentManagement: {
+          cookies: { shopifyUnique: "unique", shopifyVisit: "visit" },
+        },
+      },
+    };
+    const headers = new Headers({
+      "cache-control": "public, s-maxage=600",
+      "cdn-cache-control": "public, s-maxage=600",
     });
-
-    expect(result?.headers.has("server-timing")).toBe(false);
-  });
-
-  it("returns Server-Timing from marked consent-management proxy responses", async () => {
-    mockFetch.mockResolvedValueOnce(
-      new Response("{}", { headers: { "server-timing": "db;dur=2, _y;desc=unique" } }),
-    );
+    mockFetch.mockResolvedValueOnce(Response.json(body, { headers }));
 
     const result = await handleShopifyRoutes({
       request: new Request("https://my-app.com/api/unstable/graphql.json", {
@@ -137,15 +135,24 @@ describe("handleShopifyRoutes", () => {
       }),
     });
 
-    expect(result?.headers.get("server-timing")).toBe("db;dur=2, _y;desc=unique");
-    expect(result?.headers.get("cache-control")).toBe(
+    assert(result, "expected consent response");
+    expect(await result.json()).toEqual(body);
+    expect(result.headers.getSetCookie()).toEqual([]);
+    expect(result.headers.get("cache-control")).toBe(
       "private, no-store, max-age=0, must-revalidate",
     );
+    expect(result.headers.has("cdn-cache-control")).toBe(false);
   });
 
-  it("strips Server-Timing from cacheable SFAPI proxy responses", async () => {
+  it("strips upstream timing while preserving public cache directives", async () => {
     mockFetch.mockResolvedValueOnce(
-      new Response("{}", { headers: { "server-timing": "db;dur=2, _y;desc=unique" } }),
+      new Response("{}", {
+        headers: {
+          "server-timing": "db;dur=2, _y;desc=unique, _s;desc=visit",
+          "cache-control": "public, s-maxage=600",
+          "cdn-cache-control": "public, s-maxage=600",
+        },
+      }),
     );
 
     const result = await handleShopifyRoutes({
@@ -154,7 +161,10 @@ describe("handleShopifyRoutes", () => {
       }),
     });
 
-    expect(result?.headers.has("server-timing")).toBe(false);
+    assert(result, "expected proxy response");
+    expect(result.headers.has("server-timing")).toBe(false);
+    expect(result.headers.get("cache-control")).toBe("public, s-maxage=600");
+    expect(result.headers.get("cdn-cache-control")).toBe("public, s-maxage=600");
   });
 
   it("returns Shopify cookies from marked consent-management proxy responses", async () => {
@@ -178,6 +188,149 @@ describe("handleShopifyRoutes", () => {
     ]);
     const [, init] = mockFetch.mock.calls[0];
     expect(new Headers(init.headers).has(CONSENT_MANAGEMENT_HEADER)).toBe(false);
+  });
+
+  describe("legacy tracking cookie cleanup", () => {
+    const legacyCookies = "_shopify_y=legacy-unique; _shopify_s=legacy-visit";
+    const consentBody = {
+      data: {
+        consentManagement: {
+          cookies: { shopifyUnique: "legacy-unique", shopifyVisit: "legacy-visit" },
+        },
+      },
+    };
+
+    it.each(["migration", "denial", "revocation"])(
+      "expires legacy cookies after successful consent %s",
+      async (scenario) => {
+        const body =
+          scenario === "migration"
+            ? consentBody
+            : {
+                data: {
+                  consentManagement: { cookies: { shopifyUnique: null, shopifyVisit: null } },
+                },
+              };
+        const modernCookie = "_shopify_essential=established; Path=/; Secure; HttpOnly";
+        mockFetch.mockResolvedValueOnce(
+          Response.json(body, {
+            headers: {
+              "set-cookie": modernCookie,
+              "cache-control": "public, s-maxage=600",
+              "cdn-cache-control": "public, s-maxage=600",
+            },
+          }),
+        );
+
+        const result = await handleShopifyRoutes({
+          request: new Request("https://shop.example.co.uk/api/unstable/graphql.json", {
+            method: "POST",
+            headers: {
+              [CONSENT_MANAGEMENT_HEADER]: "1",
+              cookie:
+                scenario === "revocation"
+                  ? `${legacyCookies}; _shopify_analytics=established`
+                  : legacyCookies,
+            },
+          }),
+        });
+
+        // Forward legacy cookies so Shopify can decide whether to migrate their identifiers.
+        const call = mockFetch.mock.calls[0];
+        assert(call, "expected consent request to reach Shopify");
+        const requestHeaders = new Headers(call[1].headers);
+        expect(requestHeaders.get("cookie")).toContain(legacyCookies);
+        expect(requestHeaders.get(SHOPIFY_UNIQUE_TOKEN_HEADER)).toBeNull();
+        expect(requestHeaders.get(SHOPIFY_VISIT_TOKEN_HEADER)).toBeNull();
+
+        // Replay the modern state and expire both host-only and parent-domain cookies.
+        assert(result, "expected consent response");
+        expect(await result.json()).toEqual(body);
+        expect(result.headers.getSetCookie()).toContain(modernCookie);
+        for (const name of ["_shopify_y", "_shopify_s"]) {
+          const expired = `${name}=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+          expect(result.headers.getSetCookie()).toEqual(
+            expect.arrayContaining([
+              expired,
+              `${expired}; Domain=shop.example.co.uk`,
+              `${expired}; Domain=example.co.uk`,
+            ]),
+          );
+        }
+        expect(result.headers.get("cache-control")).toBe(
+          "private, no-store, max-age=0, must-revalidate",
+        );
+        expect(result.headers.has("cdn-cache-control")).toBe(false);
+      },
+    );
+
+    it("preserves legacy cookies on an HTTP error", async () => {
+      mockFetch.mockResolvedValueOnce(new Response("Upstream failure", { status: 500 }));
+
+      const result = await handleShopifyRoutes({
+        request: new Request("https://example.com/api/unstable/graphql.json", {
+          method: "POST",
+          headers: { [CONSENT_MANAGEMENT_HEADER]: "1", cookie: legacyCookies },
+        }),
+      });
+
+      assert(result, "expected upstream response");
+      expect(result.status).toBe(500);
+      expect(await result.text()).toBe("Upstream failure");
+      expect(result.headers.getSetCookie()).toEqual([]);
+    });
+
+    it("trusts the consent marker even when HTTP 200 contains GraphQL errors", async () => {
+      const body = { errors: [{ message: "Consent failed" }], data: null };
+      mockFetch.mockResolvedValueOnce(Response.json(body));
+
+      const result = await handleShopifyRoutes({
+        request: new Request("https://example.com/api/unstable/graphql.json", {
+          method: "POST",
+          headers: { [CONSENT_MANAGEMENT_HEADER]: "1", cookie: legacyCookies },
+        }),
+      });
+
+      assert(result, "expected consent response");
+      expect(await result.json()).toEqual(body);
+      expect(result.headers.getSetCookie()).toEqual(
+        expect.arrayContaining([
+          "_shopify_y=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax",
+          "_shopify_s=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax",
+        ]),
+      );
+    });
+
+    it.each(["GET", "POST"])("preserves legacy cookies on unmarked %s requests", async (method) => {
+      mockFetch.mockResolvedValueOnce(Response.json(consentBody));
+
+      const result = await handleShopifyRoutes({
+        request: new Request("https://example.com/api/unstable/graphql.json", {
+          method,
+          headers: { cookie: legacyCookies },
+        }),
+      });
+
+      expect(result?.headers.getSetCookie()).toEqual([]);
+    });
+
+    it.each(["localhost", "127.0.0.1", "[::1]"])(
+      "expires only the detected cookie on %s without adding parent domains",
+      async (hostname) => {
+        mockFetch.mockResolvedValueOnce(Response.json(consentBody));
+
+        const result = await handleShopifyRoutes({
+          request: new Request(`http://${hostname}/api/unstable/graphql.json`, {
+            method: "POST",
+            headers: { [CONSENT_MANAGEMENT_HEADER]: "1", cookie: "_shopify_s=legacy-visit" },
+          }),
+        });
+
+        expect(result?.headers.getSetCookie()).toEqual([
+          "_shopify_s=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax",
+        ]);
+      },
+    );
   });
 
   it("returns Response for Shopify API proxy requests", async () => {
@@ -257,6 +410,27 @@ describe("handleShopifyRoutes", () => {
     const call = mockFetch.mock.calls[0];
     assert(call, "expected fetch to be called");
     expect(call[0].href).toBe("https://test-store.myshopify.com/en/cart.json?locale=en");
+  });
+
+  it.each([
+    ["/cart.js", "GET"],
+    ["/__shopify/cart.js", "GET"],
+    ["/api/2026-04/graphql.json", "POST"],
+    ["/api/mcp", "POST"],
+    ["/api/ucp/mcp", "POST"],
+    ["/.well-known/shopify/fec/produce", "POST"],
+  ])("rejects JSONP before forwarding through %s (%s)", async (path, method) => {
+    const response = await handleShopifyRoutes({
+      request: new Request(`https://store.example.com${path}?callback=readCart`, {
+        method,
+        headers: { cookie: "cart=cart-token%3Fkey%3Dcart-secret" },
+      }),
+    });
+    assert(response, "expected a JSONP rejection");
+    expect(response.status).toBe(400);
+    expect(response.headers.get("content-type")).toContain("application/json");
+    expect(response.headers.get("cache-control")).toContain("no-store");
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("returns Response for MCP proxy requests", async () => {

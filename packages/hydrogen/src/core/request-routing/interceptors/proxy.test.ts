@@ -178,8 +178,8 @@ describe("createProxyInterceptor", () => {
       requestHeaders: { allow: [] },
       responseHeaders: {
         allow: ["x-empty"],
-        prepare: (headers, upstream) => {
-          headers.set("cache-control", upstream.ok ? "public, max-age=60" : "no-store");
+        prepare: (headers, { response }) => {
+          headers.set("cache-control", response.ok ? "public, max-age=60" : "no-store");
         },
       },
     });
@@ -258,5 +258,77 @@ describe("createProxyInterceptor", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await response.json()).toEqual({ error: "Method Not Allowed" });
     expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it.each(["callback=readCart", "callback=", "%63allback=readCart", "callback=&callback=readCart"])(
+    "rejects JSONP before forwarding requests: %s",
+    async (query) => {
+      const handleProxy = createProxyInterceptor({
+        match: /^\/proxy$/,
+        requestHeaders: { deny: [] },
+        scope: "test-proxy",
+      });
+      const request = new Request(`https://my-app.com/proxy?${query}`);
+      const response = await run(handleProxy, request);
+      assert(response, "expected a JSONP rejection");
+      expect(response.status).toBe(400);
+      expect(response.headers.get("content-type")).toContain("application/json");
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(await response.json()).toEqual({ error: "JSONP requests are not supported" });
+      expect(mockFetch).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["GET", "HEAD"])(
+    "preserves the descriptor's error format for %s JSONP rejections",
+    async (method) => {
+      const handleProxy = createProxyInterceptor({
+        match: /^\/proxy$/,
+        requestHeaders: { deny: [] },
+        formatError: (message) => ({ jsonrpc: "2.0", error: { message }, id: null }),
+        scope: "test-proxy",
+      });
+      const request = new Request("https://my-app.com/proxy?callback=readCart", { method });
+      const response = await run(handleProxy, request);
+      assert(response, "expected a JSONP rejection");
+      expect(response.status).toBe(400);
+      if (method === "HEAD") {
+        expect(response.body).toBeNull();
+      } else {
+        expect(await response.json()).toEqual({
+          jsonrpc: "2.0",
+          error: { message: "JSONP requests are not supported" },
+          id: null,
+        });
+      }
+      expect(mockFetch).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not intercept callback parameters outside the proxy's route", () => {
+    const handleProxy = createProxyInterceptor({
+      match: /^\/proxy$/,
+      requestHeaders: { deny: [] },
+      scope: "test-proxy",
+    });
+    const request = new Request("https://my-app.com/other?callback=readCart");
+    expect(run(handleProxy, request)).toBeNull();
+  });
+
+  it("allows similarly named parameters that do not enable JSONP", async () => {
+    const handleProxy = createProxyInterceptor({
+      match: /^\/proxy$/,
+      requestHeaders: { deny: [] },
+      scope: "test-proxy",
+    });
+    mockFetch.mockResolvedValueOnce(new Response("{}"));
+    const request = new Request("https://my-app.com/proxy?callbackUrl=/return");
+    const response = await run(handleProxy, request);
+    assert(response, "expected a successful proxy response");
+    expect(response.status).toBe(200);
+    expect(mockFetch).toHaveBeenCalledWith(
+      new URL(`${STORE_URL}/proxy?callbackUrl=/return`),
+      expect.anything(),
+    );
   });
 });

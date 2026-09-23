@@ -1,13 +1,19 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
 import packageJson from "../package.json" with { type: "json" };
+import { assert } from "./core/test-utils";
 
+const require = createRequire(import.meta.url);
 const PACKAGE_ROOT = resolve(import.meta.dirname, "..");
 const TS_PLUGIN_EXPORT_PATH = "./ts-plugin";
+// pack + tar + spawn on a cold CI runner can exceed vitest's 5s default.
+const TS_PLUGIN_PACK_TIMEOUT_MS = 30_000;
 const STANDARD_EVENTS_SCRIPT_URL = "https://cdn.shopify.com/storefront/standard-events.js";
 const STANDARD_EVENTS_INSPECTOR_ID = "shopify-standard-events-inspector";
 const COPY_GENERATED_GRAPHQL_ASSETS_SCRIPT_PATH = resolve(
@@ -85,6 +91,70 @@ if (typeof plugin !== "function" || typeof plugin({typescript}).create !== "func
     );
   });
 
+  it(
+    "is loadable by tsserver's plugin resolver from the packed tarball",
+    () => {
+      // tsserver resolves `compilerOptions.plugins` with TypeScript's legacy JS
+      // resolver, which ignores package `exports`. Node's `require.resolve` would
+      // pass even when editors cannot load the plugin, and workspace symlinks can
+      // hide files missing from the published tarball.
+      const tempDir = mkdtempSync(join(tmpdir(), "hydrogen-ts-plugin-"));
+      const consumerNodeModules = join(tempDir, "node_modules");
+
+      try {
+        const packOutput = execFileSync("pnpm", ["pack", "--json", "--pack-destination", tempDir], {
+          cwd: PACKAGE_ROOT,
+          encoding: "utf8",
+        });
+        const packResult: unknown = JSON.parse(packOutput);
+        const tarballPath =
+          typeof packResult === "object" &&
+          packResult !== null &&
+          "filename" in packResult &&
+          typeof packResult.filename === "string"
+            ? packResult.filename
+            : undefined;
+        assert(tarballPath, "pnpm pack --json did not report a tarball filename");
+
+        const installedPackageDir = join(consumerNodeModules, "@shopify/hydrogen");
+        mkdirSync(installedPackageDir, { recursive: true });
+        execFileSync("tar", [
+          "-xzf",
+          tarballPath,
+          "--strip-components=1",
+          "-C",
+          installedPackageDir,
+        ]);
+
+        // `gql.tada` is a runtime dependency; a real install places it next to
+        // the package. Symlink it in so the child never leans on the pnpm-provided
+        // NODE_PATH that vitest inherits.
+        const gqlTadaDir = dirname(require.resolve("gql.tada/package.json"));
+        symlinkSync(gqlTadaDir, join(consumerNodeModules, "gql.tada"), "dir");
+
+        execFileSync(
+          process.execPath,
+          [
+            "-e",
+            `const typescript = require("typescript/lib/tsserverlibrary");
+const result = typescript.sys.require(process.argv[1], "@shopify/hydrogen/ts-plugin");
+if (result.error) throw result.error;
+if (typeof result.module !== "function" || typeof result.module({typescript}).create !== "function") throw new Error("Invalid TypeScript plugin export");`,
+            consumerNodeModules,
+          ],
+          {
+            // cwd only affects the inline script's own `require("typescript/...")`.
+            cwd: PACKAGE_ROOT,
+            env: { ...process.env, NODE_PATH: undefined },
+          },
+        );
+      } finally {
+        rmSync(tempDir, { recursive: true, force: true });
+      }
+    },
+    TS_PLUGIN_PACK_TIMEOUT_MS,
+  );
+
   it("centralizes Shopify globals in global types", () => {
     const declaration = readFileSync(resolve(PACKAGE_ROOT, "dist/globals.d.mts"), "utf8");
 
@@ -142,7 +212,6 @@ if (typeof plugin !== "function" || typeof plugin({typescript}).create !== "func
     expect(coreDeclaration).toContain("getShopifyScriptTags");
     expect(coreDeclaration).toContain("initializeShopifyScripts");
     expect(coreDeclaration).toContain("renderShopifyScriptTags");
-    expect(coreDeclaration).not.toContain("initializeDeprecatedCookies");
     expect(coreDeclaration).not.toContain("loadShopifyWebMcpTools");
     expect(coreDeclaration).not.toContain("setShopifyRouting");
 

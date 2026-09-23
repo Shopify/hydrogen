@@ -118,3 +118,11 @@ describe("createCartComponents", () => {
     expectTypeOf(typedCart.useCartForm).toBeFunction();
   });
 });
+
+describe("@shopify/hydrogen/react cart exports", () => {
+  it("only exposes cart hooks through createCartComponents", () => {
+    type CartExports = Extract<keyof typeof import("./index"), `${string}Cart${string}`>;
+
+    expectTypeOf<CartExports>().toEqualTypeOf<"createCartComponents" | "useCartAnalytics">();
+  });
+});

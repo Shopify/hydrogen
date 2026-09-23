@@ -12,6 +12,8 @@
     "typecheck": "react-router typegen && tsc && hydrogen gql check --fail-on-warn"
   },
   "dependencies": {
+    "@remix-run/cookie": "^0.6.0",
+    "@remix-run/session": "^0.4.2",
     "@shopify/hydrogen": "workspace:*",
     "isbot": "^5.1.36",
     "react": "^19.2.7",
@@ -20,7 +22,7 @@
   },
   "devDependencies": {
     "@react-router/dev": "7.15.1",
-    "@shopify/cli": "4.6.0",
+    "@shopify/cli": "4.8.1",
     "@shopify/mini-oxygen": "4.2.2",
     "@shopify/oxygen-workers-types": "^4.1.6",
     "@tailwindcss/vite": "^4.2.2",

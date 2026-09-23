@@ -156,10 +156,23 @@ export type StorefrontAnalyticsConfig = {
   customData?: Record<string, unknown>;
 };
 
+export type AnalyticsTrackingValues = {
+  uniqueToken: string;
+  visitToken: string;
+};
+
+export type StorefrontAnalyticsDestinationEventContext = {
+  /**
+   * Reads current tokens from the consent API. Returns empty strings when tokens are
+   * unavailable or analytics tracking is not currently allowed.
+   */
+  getTrackingValues: () => AnalyticsTrackingValues;
+};
+
 export type StorefrontAnalyticsDestinationSetupContext = {
   subscribe: <E extends AnalyticsEventName>(
     event: E,
-    callback: (payload: PayloadFor<E>) => void,
+    callback: (payload: PayloadFor<E>, context: StorefrontAnalyticsDestinationEventContext) => void,
   ) => () => void;
   getConfig: () => StorefrontAnalyticsConfig;
 };

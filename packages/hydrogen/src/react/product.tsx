@@ -212,12 +212,15 @@ export function createProductComponents<TProduct extends ProductInput>(): {
   }
 
   function ProductProvider({ product, onSelect, children }: ProductProviderProps<TProduct>) {
-    const cartStore = useCartStore();
+    const cartStore = useCartStore("ProductProvider");
 
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- store is intentionally created once
     const store = useMemo(() => createProductFormStore<TProduct>(product, cartStore), []);
 
-    useEffect(() => () => store.destroy(), [store]);
+    useEffect(() => {
+      store.connect();
+      return () => store.destroy();
+    }, [store]);
 
     const productKey = `${product.id}:${product.selectedOrFirstAvailableVariant?.id ?? ""}`;
     const mountedRef = useRef(false);

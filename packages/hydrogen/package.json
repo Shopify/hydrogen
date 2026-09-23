@@ -16,7 +16,8 @@
     "README.md",
     "bin",
     "dist",
-    "skills"
+    "skills",
+    "ts-plugin"
   ],
   "type": "module",
   "sideEffects": false,
@@ -93,6 +94,7 @@
     "postcodegen": "node scripts/postprocess-tada-env.ts && oxfmt src/graphql/generated/*.d.ts src/graphql/generated/*.json"
   },
   "dependencies": {
+    "cross-spawn": "7.0.6",
     "gql.tada": "1.9.2"
   },
   "devDependencies": {
@@ -100,6 +102,7 @@
     "@graphql-codegen/introspection": "^6.0.0",
     "@graphql-codegen/typescript": "^6.0.0",
     "@testing-library/react": "^16.3.2",
+    "@types/cross-spawn": "6.0.6",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vue/test-utils": "^2.4.0",

@@ -752,7 +752,7 @@ describe("createProductComponents", () => {
           wrapper: ({ children }: { children: ReactNode }) =>
             createElement(ProductProvider, { product: makeProduct() }, children),
         });
-      }).toThrow(/CartProvider/);
+      }).toThrow("ProductProvider must be used inside <CartProvider>");
     });
   });
 
@@ -886,11 +886,43 @@ describe("createProductComponents", () => {
       });
 
       unmount();
+    });
+  });
 
-      // The store is internal to ProductProvider — we verify via the cleanup effect.
-      // If destroy wasn't called, the cart store subscription would leak.
-      // We can't directly assert store.destroy, but the test not throwing
-      // after unmount confirms the cleanup runs.
+  describe("StrictMode lifecycle (destroy → connect)", () => {
+    // React StrictMode replays effects: mount → cleanup → mount.
+    // ProductProvider creates the store in useMemo (runs once) and calls
+    // store.destroy() in the cleanup. On the replay mount, connect()
+    // restores the cart subscription so the store stays functional.
+
+    it("connect restores cart subscription after destroy", () => {
+      const mockCart = createMockCartStore(makeCartState());
+      const store = createProductFormStore(makeProduct(RED), mockCart);
+
+      // Simulate StrictMode: cleanup fires, then effect re-runs
+      store.destroy();
+      store.connect();
+
+      // Cart updates must still propagate after reconnect
+      const cartLine = makeCartLine("v-red");
+      mockCart.setState(makeCartState({ lines: [cartLine] }));
+      expect(store.getState().matchedLineItem).toEqual(cartLine);
+    });
+
+    it("connect syncs current cart state immediately", () => {
+      const mockCart = createMockCartStore(makeCartState());
+      const store = createProductFormStore(makeProduct(RED), mockCart);
+
+      store.destroy();
+
+      // Cart changes while destroyed — store misses them
+      const cartLine = makeCartLine("v-red");
+      mockCart.setState(makeCartState({ lines: [cartLine] }));
+      expect(store.getState().matchedLineItem).toBeNull();
+
+      // connect() catches up with current cart state
+      store.connect();
+      expect(store.getState().matchedLineItem).toEqual(cartLine);
     });
   });
 });

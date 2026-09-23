@@ -1,13 +1,7 @@
-import {
-  type CacheInstance,
-  createShopifyRequestContext,
-  createStorefrontClient,
-  handleShopifyRoutes,
-} from "@shopify/hydrogen";
+import { type CacheInstance, handleShopifyRoutes } from "@shopify/hydrogen";
 import { getCache } from "@vercel/functions";
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 
-import { getBuyerIp } from "@/lib/buyer-ip";
 import { cartHandlers } from "@/lib/cart-handlers";
 import { defaultI18n } from "@/lib/config";
 import {
@@ -17,6 +11,7 @@ import {
 import { getCustomerSessionHandlers } from "@/lib/customer-session-handlers";
 import { predictiveSearchHandlers } from "@/lib/predictive-search-handlers";
 import { routeTemplates } from "@/lib/route-templates";
+import { createRequestStorefrontClient } from "@/lib/storefront-client";
 import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/storefront-config";
 
 /**
@@ -32,18 +27,10 @@ import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/stor
  * onto the forwarded response via `requestContext.applyResponseHeaders`.
  *
  * mock.shop fallback: when no `PRIVATE_STOREFRONT_API_TOKEN` is present, the
- * shared `resolveStorefrontConfig()` falls back to `mock.shop` + its well-known
- * `mock-private-token` so the example runs with zero secrets.
+ * shared `resolveStorefrontConfig()` falls back to `mock.shop` with tokenless
+ * public access so the example runs with zero secrets.
  */
 export async function proxy(request: NextRequest, event: NextFetchEvent) {
-  const buyerIp = getBuyerIp(request.headers);
-  const requestContext = createShopifyRequestContext({
-    request,
-    i18n: defaultI18n,
-    buyerIp,
-  });
-
-  const { storeDomain, privateStorefrontToken, storefrontId } = resolveStorefrontConfig();
   const cache: CacheInstance | undefined = process.env.VERCEL
     ? getCache({
         namespace: "hydrogen-v1",
@@ -51,17 +38,16 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
       })
     : undefined;
 
-  const storefrontClient = createStorefrontClient({
-    type: "private",
-    requestContext,
-    config: {
-      storeDomain,
-      privateStorefrontToken,
-      storefrontId,
-      cache,
-      waitUntil: event.waitUntil.bind(event),
-    },
+  // Resolves the buyer IP only for a real store (private client); mock.shop
+  // needs neither a token nor a buyer IP.
+  const storefrontClient = createRequestStorefrontClient({
+    config: resolveStorefrontConfig(),
+    request,
+    i18n: defaultI18n,
+    cache,
+    waitUntil: event.waitUntil.bind(event),
   });
+  const { requestContext } = storefrontClient;
 
   // Sync — no `await` — so the handlers can never be a stray `Promise<boolean>`
   // that's always truthy when spread.

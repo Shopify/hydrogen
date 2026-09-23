@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 
 import { useCart } from "~/lib/cart";
-import { CART_DRAWER_ID, openDialogFallback } from "~/lib/cart-drawer";
+import { CART_DRAWER_ID, openCartDrawer } from "~/lib/cart-drawer";
 
 import { MobileNav, MobileNavTrigger, type NavCollection } from "./MobileNav";
 
@@ -62,23 +62,28 @@ export function Header({ navCollections }: { navCollections: NavCollection[] }) 
           >
             <img src="/icons/icon-search.svg" alt="" className="size-5" aria-hidden="true" />
           </Link>
-          <a
-            href="#"
+          <Link
+            to="/account"
             className="text-on-surface focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
             aria-label="Account"
           >
             <img src="/icons/icon-user.svg" alt="" className="size-5" aria-hidden="true" />
-          </a>
-          <button
-            type="button"
-            commandfor={CART_DRAWER_ID}
-            command="show-modal"
-            className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded bg-transparent p-0 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
+          </Link>
+          <Link
+            to="/cart"
+            className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
             aria-label={cartCountLabel(totalQuantity)}
             aria-controls={CART_DRAWER_ID}
             aria-haspopup="dialog"
             data-testid="cart-trigger"
-            onClick={() => openDialogFallback(CART_DRAWER_ID)}
+            onClick={(event) => {
+              const isModifiedClick =
+                event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+              if (event.button !== 0 || isModifiedClick) return;
+              if (!(document.getElementById(CART_DRAWER_ID) instanceof HTMLDialogElement)) return;
+              event.preventDefault();
+              openCartDrawer();
+            }}
           >
             <span
               className="relative inline-flex size-5 shrink-0 items-center justify-center"
@@ -91,7 +96,7 @@ export function Header({ navCollections }: { navCollections: NavCollection[] }) 
                 </span>
               ) : null}
             </span>
-          </button>
+          </Link>
           <span aria-live="polite" aria-atomic="true" className="sr-only">
             {liveCartCountLabel(totalQuantity)}
           </span>

@@ -10,10 +10,10 @@ import { getOptionalPrivateStorefrontToken } from "./env";
  * by `proxy.ts` so the request handlers hit the same store as the RSC data
  * path.
  *
- * When no `PRIVATE_STOREFRONT_API_TOKEN` is provisioned, the client falls back
- * to the public mock.shop endpoint using its well-known `mock-private-token`.
- * With a real private token present, `NEXT_PUBLIC_STORE_DOMAIN` must identify
- * the store.
+ * When no `PRIVATE_STOREFRONT_API_TOKEN` is provisioned, the clients fall back
+ * to mock.shop with tokenless public access (mock.shop is auth-free and rejects
+ * any private token). With a real private token present,
+ * `NEXT_PUBLIC_STORE_DOMAIN` must identify the store.
  *
  * mock.shop is a catalog of fictional stores, not one store. The default store at
  * `mock.shop` sells apparel basics; every other store lives on its own host
@@ -23,7 +23,6 @@ import { getOptionalPrivateStorefrontToken } from "./env";
  */
 
 export const MOCK_SHOP_DOMAIN = "mock.shop";
-export const MOCK_SHOP_PRIVATE_TOKEN = "mock-private-token";
 
 export function isMockShopDomain(domain: string): boolean {
   return domain === MOCK_SHOP_DOMAIN || domain.endsWith(`.${MOCK_SHOP_DOMAIN}`);
@@ -31,11 +30,11 @@ export function isMockShopDomain(domain: string): boolean {
 
 const SESSION_SECRET_MIN_LENGTH = 32;
 
-export type ResolvedStorefrontConfig = {
-  storeDomain: string;
-  privateStorefrontToken: string;
-  storefrontId?: string;
-};
+// Discriminated on `mode` so a private token can never be attached to a mock
+// store, and a real store can never be created tokenless.
+export type ResolvedStorefrontConfig =
+  | { mode: "mock"; storeDomain: string }
+  | { mode: "private"; storeDomain: string; privateStorefrontToken: string; storefrontId?: string };
 
 let mockShopFallbackWarned = false;
 
@@ -72,10 +71,7 @@ export function resolveStorefrontConfig(): ResolvedStorefrontConfig {
           `PRIVATE_STOREFRONT_API_TOKEN and NEXT_PUBLIC_STORE_DOMAIN to hit a real store.`,
       );
     }
-    return {
-      storeDomain,
-      privateStorefrontToken: MOCK_SHOP_PRIVATE_TOKEN,
-    };
+    return { mode: "mock", storeDomain };
   }
 
   const storeDomain = configuredDomain;
@@ -85,6 +81,7 @@ export function resolveStorefrontConfig(): ResolvedStorefrontConfig {
     );
   }
   return {
+    mode: "private",
     storeDomain,
     privateStorefrontToken,
     storefrontId: shop.storefrontId || undefined,

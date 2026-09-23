@@ -277,7 +277,7 @@ repository root, which is not a deployable Next.js project.
 Before finishing:
 
 1. Install with `CI=true` from the repository root.
-2. Run `rg -n "@shared/|examples/shared|localCdnAssets|localHttps|lru-cache|catalog:|file:" templates/<name> -g '!pnpm-lock.yaml' -g '!node_modules'` — expect no matches. (`process.env` and `workspace:*` are expected in the source Next.js template.)
+2. Run `rg -n "@shared/|examples/shared|localCdnAssets|localHttps|lru-cache|catalog:|file:" templates/<name> -g '!pnpm-lock.yaml' -g '!node_modules' -g '!.agents/**'` — expect no matches. (`process.env` and `workspace:*` are expected in the source Next.js template.)
 3. Run the template lint and typecheck (`eslint`, then `tsc --noEmit && hydrogen gql check --fail-on-warn`). Note: the GraphQL check passes without
    emitting the `*-graphql-env.d.ts` files on disk (they're gitignored, generated on demand) — that is expected.
 4. Run `next build`. The source build can infer the repository workspace root; the standalone distribution should infer the template directory after installing its generated lockfile.
