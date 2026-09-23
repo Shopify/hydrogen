@@ -64,7 +64,7 @@ npm run dev:https
 
 The local HTTPS plugin provisions and reuses a trusted certificate under `~/.shopify/hydrogen/certs/`. On first run, it may prompt to install the local certificate authority. Open <https://local.tryhydrogen.dev:5173>.
 
-**Account widget** — the header renders Shopify's
+**Account widget** — in real-store mode, the header renders Shopify's
 [`<shopify-account>`](https://shopify.dev/docs/api/storefront-web-components/components/shopify-account)
 component when a **public** Storefront API token is available:
 
@@ -83,6 +83,8 @@ mode, the header keeps a placeholder account control with the same footprint.
 **Warning:** if both tokens are set but `PUBLIC_STORE_DOMAIN` is not, the widget
 targets the default `hydrogen-preview.myshopify.com` with your public token. Set
 `PUBLIC_STORE_DOMAIN` to your store's domain.
+
+Opening and interacting with the account sheet requires JavaScript.
 
 Mode is **auto-detected**: when a `PRIVATE_STOREFRONT_API_TOKEN` is present the
 app talks to the real store (`PUBLIC_STORE_DOMAIN`, falling back to the default in
