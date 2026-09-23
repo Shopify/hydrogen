@@ -222,6 +222,7 @@ describe("handleShopifyRoutes", () => {
     expect(result.headers.get("set-cookie")).toBeNull();
     expect(result.headers.get("server-timing")).toBeNull();
     expect(result.headers.get("powered-by")).toBe("Shopify, Hydrogen");
+    if (method === "HEAD") expect(result.body).toBeNull();
   });
 
   it("returns the Apple Pay domain association from the Online Store origin", async () => {

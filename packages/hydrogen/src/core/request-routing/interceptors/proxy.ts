@@ -9,14 +9,13 @@ const PROXY_ERROR_CACHE_CONTROL = "no-store";
 
 type ScopedLogger = ReturnType<typeof getLogger>;
 
-type PrepareHeaders = (headers: Headers, options: HydrogenRoutesOptions, url: URL) => void;
+type PrepareRequestHeaders = (headers: Headers, options: HydrogenRoutesOptions, url: URL) => void;
 
 type ProxyRequestHeaderOptions = (
   | { allow: readonly string[]; deny?: never }
   | { allow?: never; deny: readonly string[] }
 ) & {
-  prepare?: PrepareHeaders;
-
+  prepare?: PrepareRequestHeaders;
   applyStorefrontHeaders?: boolean;
 };
 
@@ -27,25 +26,21 @@ type ProxyUpstreamInfo = {
   headers: Headers;
 };
 
-type ProxyResponseHeaderMode = "forward" | { allow: readonly string[] };
-
-type ProxyResponseHeaderInjector = (
+type PrepareResponseHeaders = (
+  headers: Headers,
   upstream: ProxyUpstreamInfo,
   options: HydrogenRoutesOptions,
   url: URL,
-) => Record<string, string> | void;
+) => void;
 
 type ProxyResponseHeaderOptions = {
-  mode?: ProxyResponseHeaderMode;
-  inject?: ProxyResponseHeaderInjector;
-  prepare?: PrepareHeaders;
-  consumeStorefrontHeaders?: boolean;
+  allow?: readonly string[];
+  prepare?: PrepareResponseHeaders;
 };
 
 type ProxyResponseRejection = {
   status: number;
   body: unknown;
-  headers?: Record<string, string>;
   logMessage?: string;
   log?: Record<string, unknown>;
 };
@@ -58,7 +53,7 @@ type ProxyResponseValidation = (
 
 type ProxyErrorPhase = "setup" | "fetch";
 
-type ProxyErrorMapping = { status?: number; headers?: Record<string, string> };
+type ProxyErrorMapping = { status?: number; body?: unknown };
 
 type MapProxyError = (error: unknown, phase: ProxyErrorPhase) => ProxyErrorMapping;
 
@@ -151,6 +146,7 @@ function createProxyRequestInit(
   if (request.body) init.duplex = "half";
   return { upstreamUrl, init };
 }
+
 function buildProxyResponse(
   upstreamResponse: Response,
   descriptor: ProxyDescriptor,
@@ -176,32 +172,16 @@ function buildProxyResponse(
 
   const headers = buildProxyResponseHeaders(
     upstreamResponse.headers,
-    descriptor.responseHeaders?.mode,
+    descriptor.responseHeaders?.allow,
   );
-  applyProxyResponseHeaders(headers, upstream, descriptor, options, url);
+  descriptor.responseHeaders?.prepare?.(headers, upstream, options, url);
+  options.requestContext.consumeStorefrontResponseHeaders(headers);
 
   return new Response(upstreamResponse.body, {
     status: upstreamResponse.status,
     statusText: upstreamResponse.statusText,
     headers,
   });
-}
-
-function applyProxyResponseHeaders(
-  headers: Headers,
-  upstream: ProxyUpstreamInfo,
-  descriptor: ProxyDescriptor,
-  options: HydrogenRoutesOptions,
-  url: URL,
-): void {
-  const injected = descriptor.responseHeaders?.inject?.(upstream, options, url);
-  if (injected) {
-    for (const [name, value] of Object.entries(injected)) headers.set(name, value);
-  }
-  descriptor.responseHeaders?.prepare?.(headers, options, url);
-  if (descriptor.responseHeaders?.consumeStorefrontHeaders !== false) {
-    options.requestContext.consumeStorefrontResponseHeaders(headers);
-  }
 }
 
 function defaultFormatError(message: string): { error: string } {
@@ -218,14 +198,8 @@ function createProxyErrorResponse(
   const message = error instanceof Error ? error.message : "Internal proxy error";
   const mapping = mapError?.(error, phase);
   const status = mapping?.status ?? (phase === "setup" ? 500 : 502);
-  return new Response(method === "HEAD" ? null : JSON.stringify(formatError(message)), {
-    status,
-    headers: {
-      "content-type": "application/json",
-      "cache-control": PROXY_ERROR_CACHE_CONTROL,
-      ...mapping?.headers,
-    },
-  });
+  const body = mapping?.body === undefined ? formatError(message) : mapping.body;
+  return createProxyRejectionResponse({ status, body }, method);
 }
 
 function createProxyRejectionResponse(rejection: ProxyResponseRejection, method: string): Response {
@@ -234,7 +208,6 @@ function createProxyRejectionResponse(rejection: ProxyResponseRejection, method:
     headers: {
       "content-type": "application/json",
       "cache-control": PROXY_ERROR_CACHE_CONTROL,
-      ...rejection.headers,
     },
   });
 }
@@ -260,16 +233,12 @@ function createProxyRequestHeaders(
   return headers;
 }
 
-function buildProxyResponseHeaders(
-  upstreamHeaders: Headers,
-  mode?: ProxyResponseHeaderMode,
-): Headers {
-  if (mode && mode !== "forward") {
+function buildProxyResponseHeaders(upstreamHeaders: Headers, allow?: readonly string[]): Headers {
+  if (allow) {
     const headers = new Headers();
-    for (const name of mode.allow) {
+    for (const name of allow) {
       const value = upstreamHeaders.get(name);
-
-      if (value) headers.set(name, value);
+      if (value !== null) headers.set(name, value);
     }
     return headers;
   }

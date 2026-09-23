@@ -32,9 +32,9 @@ Request
 
 ## UCP Business Profile
 
-`GET /.well-known/ucp` serves Shopify's managed UCP business profile from the headless storefront origin; `HEAD` returns the response headers without a body. Hydrogen forwards `If-None-Match` and `If-Modified-Since`, but not shopper cookies or authorization, and preserves upstream validation headers and `304 Not Modified` responses.
+`GET /.well-known/ucp` serves Shopify's managed UCP business profile from the headless storefront origin; `HEAD` returns the response headers without a body. Hydrogen forwards `If-None-Match` and `If-Modified-Since`, but not shopper cookies or authorization, and preserves `304 Not Modified` responses. Response headers are filtered through the small `UCP_RESPONSE_HEADERS` allowlist in the profile interceptor; upstream `Vary` is omitted because Hydrogen always requests JSON.
 
-Successful profiles and `304` responses use public caching with a 60-second freshness lifetime and a 300-second stale-if-error window. Unpublished profiles return a JSON `404` rather than the Online Store's HTML error page. All errors use `Cache-Control: no-store`.
+Successful profiles and `304` responses use public caching with a 60-second freshness lifetime and a 300-second stale-if-error window. Unpublished profiles return a JSON `404`, and other non-JSON upstream errors become JSON errors with the upstream status. Redirects and non-JSON successes return `502`; fetch timeouts return `504`. All errors use `Cache-Control: no-store`. Methods other than `GET` and `HEAD` continue to framework routing.
 
 Serve the storefront over HTTPS and wire `handleShopifyRoutes` before framework routing so the profile is available without an app-owned route. Return the matched response directly without adding session headers or applying request-context headers again.
 

@@ -129,7 +129,6 @@ describe("createProxyInterceptor", () => {
           ? {
               status: 502,
               body: { error: "rejected" },
-              headers: { "cache-control": "no-store" },
             }
           : null,
     });
@@ -166,6 +165,55 @@ describe("createProxyInterceptor", () => {
     const fetched = await getResponse(run(fetchFails, new Request("https://app.example/x")));
     expect(fetched.status).toBe(502);
   });
+
+  it("preserves empty allowlisted headers and prepares headers using the upstream status", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response("profile", {
+        headers: { "x-empty": "", "x-internal": "private" },
+      }),
+    );
+    const interceptor = createProxyInterceptor({
+      match: /.*/,
+      scope: "test-proxy",
+      requestHeaders: { allow: [] },
+      responseHeaders: {
+        allow: ["x-empty"],
+        prepare: (headers, upstream) => {
+          headers.set("cache-control", upstream.ok ? "public, max-age=60" : "no-store");
+        },
+      },
+    });
+
+    const response = await getResponse(run(interceptor, new Request("https://app.example/x")));
+
+    expect(response.headers.get("x-empty")).toBe("");
+    expect(response.headers.get("x-internal")).toBeNull();
+    expect(response.headers.get("cache-control")).toBe("public, max-age=60");
+  });
+
+  it.each([
+    [undefined, { message: "Connection refused" }],
+    [{ error: "Upstream unavailable" }, { error: "Upstream unavailable" }],
+  ])(
+    "uses the mapped body when provided, otherwise preserves formatError (%j)",
+    async (body, expected) => {
+      mockFetch.mockRejectedValueOnce(new Error("Connection refused"));
+      const interceptor = createProxyInterceptor({
+        match: /.*/,
+        scope: "test-proxy",
+        requestHeaders: { allow: [] },
+        formatError: (message) => ({ message }),
+        mapError: () => ({ status: 503, body }),
+      });
+
+      const response = await getResponse(run(interceptor, new Request("https://app.example/x")));
+
+      expect(response.status).toBe(503);
+      expect(response.headers.get("content-type")).toBe("application/json");
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      await expect(response.json()).resolves.toEqual(expected);
+    },
+  );
 
   it("applies context headers before deny and prepare", async () => {
     const prepare = vi.fn((headers: Headers) => {

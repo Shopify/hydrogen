@@ -30,6 +30,7 @@ export function isHydrogenServerHandoffPath(pathname: string): boolean {
   );
 }
 
+// UCP profiles need JSON validation and caching separate from the other well-known resources.
 export const UCP_RE = /^\/\.well-known\/ucp$/;
 
 /**
