@@ -1,6 +1,7 @@
 import type {ServerResponse, IncomingMessage} from 'node:http';
 import path from 'node:path';
 import {Readable} from 'node:stream';
+import type {TLSSocket} from 'node:tls';
 import {sendResponse} from '@mjackson/node-fetch-server';
 import {Request as MiniflareRequest} from 'miniflare';
 
@@ -37,8 +38,11 @@ export function toWeb(req: IncomingMessage, headers?: Record<string, string>) {
     ),
   );
   requestHeaders.host = authority;
+  const protocol = (req.socket as Partial<TLSSocket> | undefined)?.encrypted
+    ? 'https'
+    : 'http';
 
-  return new Request(toURL(req, `http://${authority}`), {
+  return new Request(toURL(req, `${protocol}://${authority}`), {
     method: req.method,
     headers: requestHeaders,
     body: req.headers['content-length']
