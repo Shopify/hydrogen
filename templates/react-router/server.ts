@@ -14,17 +14,17 @@ export default {
     executionContext: ExecutionContext,
   ): Promise<Response> {
     try {
+      const method = incomingRequest.method;
+      if ((method === "GET" || method === "HEAD") && incomingRequest.body) {
+        return new Response(`${method} requests cannot have a body`, { status: 400 });
+      }
+
       // React Router rejects mutations whose `Origin` differs from `request.url` before any
       // route middleware runs, so the public URL must be restored here, not in root middleware.
       // Only the local dev HTTPS proxy sets forwarded headers; Oxygen already sends the public URL.
       const request = createPublicRequest(incomingRequest, {
         trustForwardedHeaders: import.meta.env.DEV,
       });
-
-      const method = request.method;
-      if ((method === "GET" || method === "HEAD") && request.body) {
-        return new Response(`${method} requests cannot have a body`, { status: 400 });
-      }
 
       const url = new URL(request.url);
       if (url.pathname.includes("//")) {

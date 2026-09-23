@@ -29,7 +29,7 @@ const TRY_HYDROGEN_HOST_SUFFIX = ".tryhydrogen.dev";
 export default {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext): Promise<Response> {
     try {
-      const publicRequest = createExamplePublicRequest(request);
+      const publicRequest = createTunnelAwarePublicRequest(request);
       const i18n = getLocaleFromRequest(publicRequest);
       const buyerIp = getBuyerIp(request.headers);
 
@@ -138,8 +138,10 @@ export default {
   },
 };
 
-function createExamplePublicRequest(request: Request): Request {
-  const publicRequest = createPublicRequest(request, { trustForwardedHeaders: true });
+function createTunnelAwarePublicRequest(request: Request): Request {
+  const publicRequest = createPublicRequest(request, {
+    trustForwardedHeaders: import.meta.env.DEV,
+  });
   const url = new URL(publicRequest.url);
   // Shopify CLI tunnels serve `*.tryhydrogen.dev` over HTTPS but can reach the dev server over HTTP.
   if (!url.hostname.endsWith(TRY_HYDROGEN_HOST_SUFFIX) || url.protocol === HTTPS_PROTOCOL) {

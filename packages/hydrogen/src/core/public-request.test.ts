@@ -8,10 +8,6 @@ const INTERNAL_URL = "http://localhost:3000/products/shirt?variant=1";
 const TRUSTED = { trustForwardedHeaders: true } as const;
 const UNTRUSTED = { trustForwardedHeaders: false } as const;
 
-function createRequest(url: string, init?: RequestInit) {
-  return new Request(url, init);
-}
-
 describe("createPublicRequest", () => {
   let logger: ReturnType<typeof createTestLogger>;
 
@@ -25,13 +21,13 @@ describe("createPublicRequest", () => {
   });
 
   it("returns the same request when there are no forwarded headers", () => {
-    const request = createRequest(INTERNAL_URL);
+    const request = new Request(INTERNAL_URL);
 
     expect(createPublicRequest(request, TRUSTED)).toBe(request);
   });
 
   it("applies x-forwarded-host and x-forwarded-proto", () => {
-    const request = createRequest(INTERNAL_URL, {
+    const request = new Request(INTERNAL_URL, {
       headers: { "x-forwarded-host": "shop.example", "x-forwarded-proto": "https" },
     });
 
@@ -41,7 +37,7 @@ describe("createPublicRequest", () => {
   });
 
   it("applies x-forwarded-host alone and drops the internal port", () => {
-    const request = createRequest(INTERNAL_URL, {
+    const request = new Request(INTERNAL_URL, {
       headers: { "x-forwarded-host": "shop.example" },
     });
 
@@ -51,7 +47,7 @@ describe("createPublicRequest", () => {
   });
 
   it("applies x-forwarded-proto alone and keeps the request host and port", () => {
-    const request = createRequest(INTERNAL_URL, {
+    const request = new Request(INTERNAL_URL, {
       headers: { "x-forwarded-proto": "https" },
     });
 
@@ -61,7 +57,7 @@ describe("createPublicRequest", () => {
   });
 
   it("preserves a port in x-forwarded-host", () => {
-    const request = createRequest(INTERNAL_URL, {
+    const request = new Request(INTERNAL_URL, {
       headers: { "x-forwarded-host": "local.tryhydrogen.dev:5173", "x-forwarded-proto": "https" },
     });
 
@@ -71,7 +67,7 @@ describe("createPublicRequest", () => {
   });
 
   it("normalizes a default port for the forwarded scheme", () => {
-    const request = createRequest(INTERNAL_URL, {
+    const request = new Request(INTERNAL_URL, {
       headers: { "x-forwarded-host": "shop.example:443", "x-forwarded-proto": "https" },
     });
 
@@ -81,7 +77,7 @@ describe("createPublicRequest", () => {
   });
 
   it("uses the first value of comma-separated forwarded headers", () => {
-    const request = createRequest(INTERNAL_URL, {
+    const request = new Request(INTERNAL_URL, {
       headers: {
         "x-forwarded-host": " shop.example , internal-proxy:8080",
         "x-forwarded-proto": "HTTPS, http",
@@ -93,8 +89,51 @@ describe("createPublicRequest", () => {
     );
   });
 
+  it("returns the same request when forwarded headers match the request URL", () => {
+    const request = new Request("https://shop.example/products/shirt", {
+      headers: { "x-forwarded-host": "shop.example", "x-forwarded-proto": "https" },
+    });
+
+    expect(createPublicRequest(request, TRUSTED)).toBe(request);
+  });
+
+  it("applies an IPv6 x-forwarded-host", () => {
+    const request = new Request(INTERNAL_URL, {
+      headers: { "x-forwarded-host": "[::1]:5173", "x-forwarded-proto": "https" },
+    });
+
+    expect(createPublicRequest(request, TRUSTED).url).toBe(
+      "https://[::1]:5173/products/shirt?variant=1",
+    );
+  });
+
+  it("ignores empty leading values in comma-separated forwarded headers", () => {
+    const request = new Request(INTERNAL_URL, {
+      headers: { "x-forwarded-host": ", shop.example", "x-forwarded-proto": ", https" },
+    });
+
+    expect(createPublicRequest(request, TRUSTED)).toBe(request);
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["without forwarded headers", {}, "http://localhost:3000//attacker.example/cart"],
+    [
+      "with forwarded headers",
+      { "x-forwarded-host": "shop.example", "x-forwarded-proto": "https" },
+      "https://shop.example//attacker.example/cart",
+    ],
+  ])("keeps the host when the path starts with // %s", (_, headers, expectedUrl) => {
+    const request = new Request("http://localhost:3000//attacker.example/cart", { headers });
+
+    const publicRequest = createPublicRequest(request, TRUSTED);
+
+    expect(publicRequest.url).toBe(expectedUrl);
+    expect(new URL(publicRequest.url).pathname).toBe("//attacker.example/cart");
+  });
+
   it("ignores forwarded headers when they are not trusted", () => {
-    const request = createRequest(INTERNAL_URL, {
+    const request = new Request(INTERNAL_URL, {
       headers: { "x-forwarded-host": "attacker.example", "x-forwarded-proto": "https" },
     });
 
@@ -107,13 +146,11 @@ describe("createPublicRequest", () => {
     ["query", "shop.example?x=1"],
     ["invalid host", "shop example"],
   ])("ignores an x-forwarded-host containing a %s", (_, forwardedHost) => {
-    const request = createRequest(INTERNAL_URL, {
+    const request = new Request(INTERNAL_URL, {
       headers: { "x-forwarded-host": forwardedHost, "x-forwarded-proto": "https" },
     });
 
-    const publicRequest = createPublicRequest(request, TRUSTED);
-
-    expect(publicRequest.url).toBe("https://localhost:3000/products/shirt?variant=1");
+    expect(createPublicRequest(request, TRUSTED)).toBe(request);
     expect(logger.warn).toHaveBeenCalledWith("ignoring malformed x-forwarded-host value", {
       scope: "public-request",
       value: forwardedHost,
@@ -121,13 +158,11 @@ describe("createPublicRequest", () => {
   });
 
   it("ignores an unsupported x-forwarded-proto", () => {
-    const request = createRequest(INTERNAL_URL, {
+    const request = new Request(INTERNAL_URL, {
       headers: { "x-forwarded-host": "shop.example", "x-forwarded-proto": "javascript" },
     });
 
-    expect(createPublicRequest(request, TRUSTED).url).toBe(
-      "http://shop.example/products/shirt?variant=1",
-    );
+    expect(createPublicRequest(request, TRUSTED)).toBe(request);
     expect(logger.warn).toHaveBeenCalledWith("ignoring unsupported x-forwarded-proto value", {
       scope: "public-request",
       value: "javascript",
@@ -136,7 +171,7 @@ describe("createPublicRequest", () => {
 
   it("preserves method, headers, body, and signal", async () => {
     const controller = new AbortController();
-    const request = createRequest("http://localhost:3000/api/cart", {
+    const request = new Request("http://localhost:3000/api/cart", {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -183,7 +218,7 @@ describe("createPublicRequest", () => {
 
   describe("development origin check", () => {
     it("warns when a mutation's Origin does not match the public request origin", () => {
-      const request = createRequest("http://localhost:3000/api/cart", {
+      const request = new Request("http://localhost:3000/api/cart", {
         method: "POST",
         headers: { origin: "https://shop.example" },
       });
@@ -203,7 +238,7 @@ describe("createPublicRequest", () => {
     });
 
     it("points at the proxy when forwarded headers are trusted but still do not match", () => {
-      const request = createRequest("http://localhost:3000/api/cart", {
+      const request = new Request("http://localhost:3000/api/cart", {
         method: "POST",
         headers: { origin: "https://shop.example" },
       });
@@ -220,7 +255,7 @@ describe("createPublicRequest", () => {
     });
 
     it("does not warn once forwarded headers produce the public origin", () => {
-      const request = createRequest("http://localhost:3000/api/cart", {
+      const request = new Request("http://localhost:3000/api/cart", {
         method: "POST",
         headers: {
           origin: "https://shop.example",
@@ -243,7 +278,7 @@ describe("createPublicRequest", () => {
       ["POST without Origin", { method: "POST", headers: {} }],
       ["POST with an opaque Origin", { method: "POST", headers: { origin: "null" } }],
     ])("does not warn for %s", (_, init) => {
-      createPublicRequest(createRequest("http://localhost:3000/api/cart", init), UNTRUSTED);
+      createPublicRequest(new Request("http://localhost:3000/api/cart", init), UNTRUSTED);
 
       expect(logger.warn).not.toHaveBeenCalled();
     });

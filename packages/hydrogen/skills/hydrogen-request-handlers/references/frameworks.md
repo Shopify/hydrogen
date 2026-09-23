@@ -173,7 +173,7 @@ export default {
 };
 ```
 
-Clients can send `x-forwarded-*` headers themselves, so only set `trustForwardedHeaders: true` when a proxy you control overwrites them. Oxygen already passes the public URL as `request.url`, so production Oxygen deployments do not need it. Root middleware then receives the normalized request, so `handleShopifyRoutes`, redirects, and Customer Account OAuth URLs use the public origin.
+Clients can send `x-forwarded-*` headers themselves, so only set `trustForwardedHeaders: true` when every request reaches the app through a proxy chain you control that sets them. `localHttps` keeps forwarded headers that are already present so a tunnel's values survive, which is why the template trusts them only in development. Oxygen already passes the public URL as `request.url`, so production Oxygen deployments do not need it. Root middleware then receives the normalized request, so `handleShopifyRoutes`, redirects, and Customer Account OAuth URLs use the public origin.
 
 `allowedActionOrigins` in `react-router.config.ts` is for genuinely cross-origin form submissions. Do not use it to work around a reverse proxy: it leaves `request.url` wrong for redirects and OAuth.
 

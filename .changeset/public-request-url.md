@@ -17,4 +17,4 @@ export default {
 };
 ```
 
-`trustForwardedHeaders` is required: clients can send `x-forwarded-host` and `x-forwarded-proto` themselves, so only enable it when a proxy you control overwrites them. Oxygen already passes the public URL. In development builds, Hydrogen warns when a mutation's `Origin` still does not match the normalized `request.url`.
+`trustForwardedHeaders` is required: clients can send `x-forwarded-host` and `x-forwarded-proto` themselves, so only enable it when every request reaches the app through a proxy chain you control that sets them, such as `localHttps` during development. Oxygen already passes the public URL. If either header is malformed, neither is applied. In development builds, Hydrogen warns when a mutation's `Origin` still does not match the normalized `request.url`.

@@ -9,11 +9,12 @@ const MUTATION_METHODS: ReadonlySet<string> = new Set(["POST", "PUT", "PATCH", "
 
 export type CreatePublicRequestOptions = {
   /**
-   * Whether `x-forwarded-host` and `x-forwarded-proto` were set by a proxy you control.
+   * Whether `x-forwarded-host` and `x-forwarded-proto` come from a proxy chain you control.
    *
-   * Clients can send these headers themselves, so only trust them when the proxy in front of
-   * the app overwrites them: for example Hydrogen's `localHttps` Vite plugin during development,
-   * or your own reverse proxy in production. Oxygen already passes the public URL as
+   * Clients can send these headers themselves, and Hydrogen's `localHttps` Vite plugin keeps
+   * values that are already present so a tunnel's headers survive. Only trust them when every
+   * request reaches the app through proxies that set them: for example during development, or
+   * behind your own reverse proxy in production. Oxygen already passes the public URL as
    * `request.url`, so production Oxygen deployments do not need to trust forwarded headers.
    */
   trustForwardedHeaders: boolean;
@@ -32,57 +33,62 @@ export type CreatePublicRequestOptions = {
  *
  * When `trustForwardedHeaders` is `true`, the first value of `x-forwarded-host` replaces the
  * host (including port) and the first value of `x-forwarded-proto` (`http` or `https`) replaces
- * the scheme. Malformed values are ignored with a warning. Method, headers, body, and signal
- * are preserved. The original request is returned when the URL does not change.
+ * the scheme. If either header is malformed, neither is applied. Method, headers, body, and
+ * signal are preserved. The original request is returned when the URL does not change.
  */
 export function createPublicRequest(
   request: Request,
   options: CreatePublicRequestOptions,
 ): Request {
-  const publicUrl = options.trustForwardedHeaders ? getForwardedUrl(request) : new URL(request.url);
-  const publicRequest = publicUrl.href === request.url ? request : new Request(publicUrl, request);
+  const publicUrl = options.trustForwardedHeaders ? getForwardedUrl(request) : null;
+  const publicRequest =
+    publicUrl && publicUrl.href !== request.url ? new Request(publicUrl, request) : request;
 
   if (__DEV__) warnOnOriginMismatch(publicRequest, options);
 
   return publicRequest;
 }
 
-function getForwardedUrl(request: Request): URL {
+function getForwardedUrl(request: Request): URL | null {
   const url = new URL(request.url);
-  const forwardedProto = readForwardedHeader(
-    request.headers,
-    FORWARDED_PROTO_HEADER,
-  )?.toLowerCase();
+  const forwardedProto = readForwardedHeader(request.headers, FORWARDED_PROTO_HEADER);
   const forwardedHost = readForwardedHeader(request.headers, FORWARDED_HOST_HEADER);
+  if (!forwardedProto && !forwardedHost) return null;
 
-  let protocol = url.protocol.slice(0, -1);
-  if (forwardedProto) {
-    if (FORWARDED_PROTOCOLS.has(forwardedProto)) {
-      protocol = forwardedProto;
-    } else {
+  const protocol = forwardedProto?.toLowerCase() ?? url.protocol.slice(0, -1);
+  if (!FORWARDED_PROTOCOLS.has(protocol)) {
+    if (__DEV__)
       log.warn("ignoring unsupported x-forwarded-proto value", { value: forwardedProto });
-    }
+    return null;
   }
 
-  let origin = forwardedHost ? parseOrigin(protocol, forwardedHost) : null;
-  if (forwardedHost && !origin) {
-    log.warn("ignoring malformed x-forwarded-host value", { value: forwardedHost });
+  const authority = parseAuthority(protocol, forwardedHost ?? url.host);
+  if (!authority) {
+    if (__DEV__) log.warn("ignoring malformed x-forwarded-host value", { value: forwardedHost });
+    return null;
   }
-  origin ??= parseOrigin(protocol, url.host) ?? url.origin;
 
-  return new URL(`${url.pathname}${url.search}${url.hash}`, origin);
+  // Assign through setters: resolving the path against a new base would let a path such as
+  // `//attacker.example/cart` replace the host.
+  // `port` is assigned separately because the `host` setter keeps the old port when the new
+  // host has none.
+  url.protocol = authority.protocol;
+  url.hostname = authority.hostname;
+  url.port = authority.port;
+  return url;
 }
 
 function readForwardedHeader(headers: Headers, name: string): string | undefined {
-  return headers.get(name)?.split(",")[0]?.trim() || undefined;
+  const value = headers.get(name)?.split(",")[0]?.trim();
+  return value ? value : undefined;
 }
 
-function parseOrigin(protocol: string, host: string): string | null {
+function parseAuthority(protocol: string, host: string): URL | null {
   try {
     const url = new URL(`${protocol}://${host}`);
     const isBareAuthority =
       !url.username && !url.password && url.pathname === "/" && !url.search && !url.hash;
-    return isBareAuthority && url.host ? url.origin : null;
+    return isBareAuthority && url.host ? url : null;
   } catch {
     return null;
   }
@@ -104,13 +110,13 @@ function warnOnOriginMismatch(request: Request, options: CreatePublicRequestOpti
   if (originHeader === requestOrigin) return;
 
   log.warn(
-    "request.url origin does not match the Origin header; frameworks that compare them, such as React Router, reject this mutation with 400 Bad Request",
+    "request.url origin does not match the Origin header; frameworks that compare them, such as React Router 7.18+, may reject this mutation with 400 Bad Request",
     {
       origin: originHeader,
       requestOrigin,
       trustForwardedHeaders: options.trustForwardedHeaders,
       hint: options.trustForwardedHeaders
-        ? "make sure the proxy in front of the app sets x-forwarded-host and x-forwarded-proto to the public host and scheme"
+        ? "if this is a same-site request behind a proxy, make sure the proxy sets x-forwarded-host and x-forwarded-proto to the public host and scheme"
         : "if a proxy you control sets x-forwarded-host and x-forwarded-proto, pass trustForwardedHeaders: true",
     },
   );
