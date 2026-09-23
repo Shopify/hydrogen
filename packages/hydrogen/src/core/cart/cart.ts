@@ -174,8 +174,9 @@ export type CartStore = {
    * `"discount-remove"`, `"note-update"`, or `"attributes-update"`. An empty
    * value with a `merchandiseId` field is treated as `"add"`.
    *
-   * @throws {TypeError} If `event.target` is not a form or `event.submitter` is missing.
-   * @throws If the submitter's value is not a recognized intent.
+   * The returned promise rejects with a `TypeError` if `event.target` is not
+   * a form or `event.submitter` is missing, and with an `Error` if the
+   * submitter's value is not a recognized intent.
    */
   handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;
 };
