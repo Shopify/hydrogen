@@ -83,11 +83,11 @@ const FNV1A_PRIME = 0x01000193;
 const CART_REVALIDATION_ERROR_MESSAGE =
   "Something went wrong refreshing your cart. Please try again.";
 
-/** Timeout (in milliseconds) for cart mutation requests to the Storefront API. */
+/** Timeout (in milliseconds) for cart requests to the configured cart endpoint. */
 export const STANDARD_ACTION_TIMEOUT_IN_MS = 30_000;
 
 /**
- * Error thrown when a cart network request fails (e.g. timeout, 5xx).
+ * Error thrown when the cart endpoint responds with a non-2xx status.
  *
  * Carries the HTTP {@link CartNetworkError.status | status} code so callers
  * can distinguish transient failures from permanent ones.
@@ -106,13 +106,12 @@ export class CartNetworkError extends Error {
  * A reactive, framework-agnostic cart state machine.
  *
  * The store manages optimistic mutations and server reconciliation — the client's
- * *intent*. Authoritative data (prices, totals, discount applicability) lives
- * exclusively in the Storefront API response and is never computed client-side.
+ * *intent*. Cart-level costs and totals are always server-authoritative, but
+ * line-level data (quantity, estimated cost) and discount applicability are
+ * projected optimistically until the server response arrives.
  *
- * Mutations are dispatched via {@link CartStore.handleFormSubmit} (from HTML forms)
- * or programmatically through the framework hooks (`useCartForm`). Each mutation
- * optimistically projects the new state, sends the request to the server, then
- * reconciles when the response arrives.
+ * Mutations are dispatched via {@link CartStore.handleFormSubmit} (from HTML
+ * forms) or through Shopify Standard Action `shopify:cart:*` events.
  *
  * @example
  * ```ts
@@ -122,31 +121,25 @@ export class CartNetworkError extends Error {
  *
  * store.connect();
  *
- * // Subscribe to state changes
  * const unsubscribe = store.subscribe((state) => {
  *   renderCart(state.data);
  * });
  *
- * // Clean up
  * store.destroy();
  * ```
  */
 export type CartStore = {
   /**
    * Activates the store — starts listening for Shopify standard action events
-   * and triggers the initial cart load if no data was provided synchronously.
-   * Must be called once before the store processes any mutations.
+   * and triggers the initial cart load if no `initialData` was provided.
+   * Idempotent; no-op without `document` (SSR-safe).
    */
   connect(): void;
 
   /** Tears down the store — cancels in-flight requests, removes event listeners, releases resources. */
   destroy(): void;
 
-  /**
-   * Replaces the settled cart data after a server-side hydration boundary.
-   * Used by framework adapters (e.g. React's `CartProvider`) when fresh
-   * loader data arrives after client-side navigation.
-   */
+  /** Replaces the settled cart data with a fresh server response. */
   hydrate(data: CartData): void;
 
   /** Returns the current {@link CartState}, with optimistic projections applied on top of settled data. */
@@ -154,7 +147,7 @@ export type CartStore = {
 
   /**
    * Registers a listener invoked on every state change. Returns an unsubscribe function.
-   * Compatible with React's `useSyncExternalStore` and Vue's `watchEffect`.
+   * Compatible with React's `useSyncExternalStore`.
    *
    * @param listener - Callback receiving the new {@link CartState} snapshot
    */
@@ -169,19 +162,20 @@ export type CartStore = {
    */
   refresh(): void;
 
-  /** Resets the store to its empty initial state, clearing all data and errors. */
+  /** Resets the store — aborts in-flight requests, clears data and errors, and re-fetches when connected. */
   reset(): void;
 
   /**
    * Intercepts a native `SubmitEvent` from a cart form, parses the intent and
    * field values, and dispatches the matching transaction.
    *
-   * Callers must call `event.preventDefault()` before invoking this method.
-   * The form's `intent` field determines the action — `"add"`, `"increase"`,
-   * `"decrease"`, `"remove"`, `"set"`, `"discount-apply"`, `"discount-remove"`,
-   * `"note-update"`, or `"attributes-update"`.
+   * The submitter's `value` attribute determines the action — `"add"`,
+   * `"increase"`, `"decrease"`, `"remove"`, `"set"`, `"discount-apply"`,
+   * `"discount-remove"`, `"note-update"`, or `"attributes-update"`. An empty
+   * value with a `merchandiseId` field is treated as `"add"`.
    *
-   * @throws If the form's `intent` field is not one of the recognized values.
+   * @throws {TypeError} If `event.target` is not a form or `event.submitter` is missing.
+   * @throws If the submitter's value is not a recognized intent.
    */
   handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;
 };
@@ -2414,14 +2408,13 @@ async function handleFormSubmitInStore(
 }
 
 /**
- * Overrides the default cart API endpoint (`/api/cart`).
+ * Routes cart loads and mutations to a custom endpoint instead of the
+ * Standard Actions default handler.
  *
- * Call this before any {@link CartStore} connects — typically in your app's
- * entry module. Calling it after a store has already connected logs a warning.
+ * Logs a warning if called again with a different endpoint.
  *
  * @example
  * ```ts
- * // Custom endpoint for a proxied setup
  * configureCartEndpoint("/storefront/cart");
  * ```
  */

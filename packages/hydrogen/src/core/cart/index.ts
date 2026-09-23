@@ -1,24 +1,3 @@
-/**
- * Framework-agnostic cart primitives for Hydrogen.
- *
- * The cart spans a server route and a client store, connected by the
- * `/api/cart` endpoint:
- *
- * 1. **Server** — {@link createCartServerHandlers} builds GET/POST handlers for
- *    `/api/cart`. GET fetches the cart ({@link getCart}, {@link getCartId}); POST
- *    parses the request ({@link parseCartRequest}), runs the matching Storefront
- *    API mutation, and persists the cart id ({@link createCartCookie}).
- * 2. **Client** — {@link createCartStore} holds a reactive {@link CartState}:
- *    optimistic projections layered over server-authoritative {@link CartData}.
- *    Mutations POST to `/api/cart` (override with {@link configureCartEndpoint}).
- * 3. **Forms** — {@link createCartFormRegister} generates HTML attributes for
- *    cart form fields and intent buttons; {@link attachQuantityInput} auto-submits
- *    on quantity change; {@link CartStore.handleFormSubmit} dispatches submissions.
- *
- * Prices, totals, and discount applicability are always server-authoritative —
- * they come from the Storefront API and are never computed on the client.
- */
-
 export {
   configureCartEndpoint,
   createCartStore,

@@ -70,7 +70,7 @@ type TypedCartComponents<TData extends CartData> = {
  * Factory that returns typed cart components and hooks matched to your server handler's
  * cart query shape.
  *
- * The generic `THandlers` parameter is inferred from your {@link createCartServerHandlers}
+ * The generic `THandlers` parameter is inferred from your `createCartServerHandlers`
  * call, so every hook's {@link CartState} carries your custom cart fields end-to-end.
  *
  * @example
@@ -236,8 +236,8 @@ export function useCartActions(): CartActions {
  * Subscribes the {@link CartStore} to the analytics event dispatcher.
  *
  * Call once near the root of your app — it subscribes on mount and
- * cleans up on unmount. Fires cart view, update, and line-change
- * analytics events automatically.
+ * cleans up on unmount. Publishes `CART_UPDATED`, `PRODUCT_ADD_TO_CART`,
+ * and `PRODUCT_REMOVED_FROM_CART` analytics events automatically.
  *
  * @example
  * ```tsx

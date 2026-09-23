@@ -259,6 +259,10 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
  * object with `initial` (`ComputedRef<boolean>`) for the initial cart load
  * and `lines(lineId?)` for checking per-line or any-line pending state.
  *
+ * Note: `interactive: true` returns numeric input attributes but does **not**
+ * auto-submit on change — that behavior requires `attachQuantityInput`, which
+ * is only wired by the React adapter.
+ *
  * @example
  * ```vue
  * <script setup>
@@ -268,7 +272,7 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
  * <template>
  *   <form v-bind="formProps()">
  *     <input v-bind="register('lineId', { value: line.id })" />
- *     <input v-bind="register('quantity', { value: line.quantity, interactive: true })" />
+ *     <input v-bind="register('quantity', { value: line.quantity })" />
  *     <button v-bind="register('set')" />
  *     <button v-bind="register('increase')">+</button>
  *     <button v-bind="register('decrease')">−</button>
@@ -321,7 +325,7 @@ export function useCartForm(): {
  * Factory that returns typed cart components and composables matched to your
  * server handler's cart query shape.
  *
- * The generic `THandlers` parameter is inferred from your {@link createCartServerHandlers}
+ * The generic `THandlers` parameter is inferred from your `createCartServerHandlers`
  * call, so every composable's {@link CartState} carries your custom cart fields.
  *
  * @example

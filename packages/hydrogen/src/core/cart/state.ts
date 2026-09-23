@@ -10,18 +10,18 @@ export interface Money {
 
 /** Cart-level cost breakdown returned by the Storefront API. */
 export interface CartCost {
-  /** Sum of line subtotals before shipping and taxes. */
+  /** The amount, before taxes and cart-level discounts, for the customer to pay. */
   subtotalAmount: Money;
   /** Final amount the buyer pays at checkout. */
   totalAmount: Money;
-  /** Amount due at checkout when deferred payment methods apply. */
+  /** Estimated amount due at checkout, excluding deferred payments. Equals the subtotal when no deferred payments exist. */
   checkoutChargeAmount: Money;
 }
 
 export interface CartLineCost {
-  /** Line total after discounts (`quantity × discounted unit price`). */
+  /** Line total after all applicable discounts. */
   totalAmount: Money;
-  /** Line subtotal before cart-level discounts. */
+  /** Line subtotal before line-level discounts. */
   subtotalAmount: Money;
   /** Unit price for a single quantity of this line. */
   amountPerQuantity: Money;
@@ -86,7 +86,7 @@ export interface CartLineConnection {
 /** A discount code applied to the cart. */
 export interface DiscountCode {
   code: string;
-  /** Whether the code is valid and currently active — determined by the Storefront API, never the client. */
+  /** Whether the code is applicable to the cart's current contents. Set optimistically to `false` for newly added codes until the server confirms. */
   applicable: boolean;
 }
 
@@ -111,7 +111,7 @@ export interface CartErrorGroup {
   warnings: CartWarning[];
 }
 
-/** A network-level error encountered during a cart operation (e.g. timeout, 5xx). */
+/** A network-level error encountered during a cart operation (e.g. non-2xx response, abort, timeout). */
 export interface CartNetworkEntry {
   message: string;
   /** HTTP status code when available. */
@@ -244,13 +244,13 @@ export interface CartData {
 export interface CartState<TData extends CartData = CartData> {
   /** The latest server-confirmed cart data, with optimistic projections applied on top. */
   data: TData;
-  /** `true` during the initial full-cart fetch before any data is available. */
+  /** `true` during a full-cart fetch — initial load, after `reset()`, or before connect with no `initialData`. */
   loading: boolean;
   /** Non-rejecting signal that resolves when the current full-cart load settles or is invalidated. */
   readonly readyPromise?: PromiseLike<void>;
   /** Per-resource in-flight mutation tracking. */
   pending: CartPending;
-  /** `true` when a background revalidation is reconciling drift after overlapping mutations. */
+  /** `true` when a background revalidation is in flight (triggered by overlapping mutations or `refresh()`). */
   revalidating?: boolean;
   /** Per-resource error and warning state. */
   errors: CartErrorState;

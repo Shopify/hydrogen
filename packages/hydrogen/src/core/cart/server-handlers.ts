@@ -123,7 +123,7 @@ export type CartPostHandler<TContext extends CartPostHandlerContext = CartPostHa
  * GET and POST handlers for the `/api/cart` route.
  *
  * Created by {@link createCartServerHandlers}. Register these with your
- * framework's router so the {@link CartStore} can communicate with the
+ * framework's router so the client cart store can communicate with the
  * Storefront API.
  */
 export type CartServerHandlers<

@@ -45,8 +45,8 @@ type AttributeValueName = `attributes.${string}`;
  * ```ts
  * const register = createCartFormRegister();
  *
- * // Hidden line ID field
- * <input {...register("lineId", { value: line.id })} />
+ * // Read-only line ID field
+ * <input type="hidden" {...register("lineId", { value: line.id })} />
  *
  * // Interactive quantity input (auto-submits on change via attachQuantityInput)
  * <input {...register("quantity", { value: line.quantity, interactive: true })} />

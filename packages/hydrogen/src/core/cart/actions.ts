@@ -28,12 +28,12 @@ export type CartLineUpdateInput = {
  * {@link parseCartRequest} normalizes both JSON and FormData requests into one
  * of these variants. The `intent` field determines the Storefront API mutation:
  *
- * - `"add"` — add new lines (cartLinesAdd)
+ * - `"add"` — add new lines (cartLinesAdd, or cartCreate when no cart exists)
  * - `"update"` — change quantity or attributes on existing lines (cartLinesUpdate)
  * - `"remove"` — remove lines by ID (cartLinesRemove)
  * - `"discount-update"` — replace all discount codes (cartDiscountCodesUpdate)
- * - `"discount-apply"` — add a single discount code
- * - `"discount-remove"` — remove a single discount code
+ * - `"discount-apply"` — add a single discount code (read-then-write via cartDiscountCodesUpdate)
+ * - `"discount-remove"` — remove a single discount code (read-then-write via cartDiscountCodesUpdate)
  * - `"attributes-update"` — set cart-level attributes (cartAttributesUpdate)
  * - `"note-update"` — set the cart note (cartNoteUpdate)
  */
@@ -62,26 +62,26 @@ class CartActionError extends Error {
 /**
  * Parses an incoming cart mutation request into a typed {@link CartAction}.
  *
- * Accepts both `application/json` and `application/x-www-form-urlencoded` /
- * `multipart/form-data` content types. JSON bodies express the full range of
- * operations; HTML form submissions use an `intent` field to disambiguate.
+ * Accepts `application/json` and `application/x-www-form-urlencoded` /
+ * `multipart/form-data` content types. JSON and FormData each support a
+ * different subset of intents — JSON produces `discount-update` while
+ * FormData produces `discount-apply` / `discount-remove`.
  *
- * Used internally by {@link createCartServerHandlers} — call it directly only
- * when building a custom cart route.
+ * FormData requests always return `cartId: null` — the server handler
+ * should fall back to the cart cookie.
  *
- * @throws If the content-type is unsupported, or the body is malformed (missing
- * required fields, mixed line operations, or invalid quantities).
+ * @throws If the content-type is unsupported, the intent is unrecognized,
+ * or required fields are missing.
  *
  * @example
  * ```ts
- * // In a custom server route handler
  * const { action, cartId } = await parseCartRequest(request);
  *
  * switch (action.intent) {
  *   case "add":
- *     return cartLinesAdd(cartId, action.lines);
+ *     return cartLinesAdd(cartId ?? getCartId(request), action.lines);
  *   case "remove":
- *     return cartLinesRemove(cartId, action.lineIds);
+ *     return cartLinesRemove(cartId ?? getCartId(request), action.lineIds);
  *   // ...
  * }
  * ```

@@ -7,11 +7,10 @@ const FIRST_SUBMIT_BUTTON_SELECTOR = "button:not([type=button])";
  * first submit button (which must carry `name="intent" value="set"`). Returns
  * a cleanup function that removes the event listener.
  *
- * The form must contain a hidden {@link SetButtonAttributes | "set" button} as
- * its first submit element — use `register("set")` from {@link CartFormRegister}
- * to produce it.
+ * The form must contain a `"set"` button as its first submit element — use
+ * `register("set")` from `createCartFormRegister` to produce it.
  *
- * @throws If the form's first submit button is not a hidden `"set"` intent button.
+ * @throws If the form's first submit button is not a `name="intent" value="set"` button.
  *
  * @example
  * ```ts

@@ -549,7 +549,7 @@ type CartLineFromNodes<TNodes> = TNodes extends CartLineConnection["nodes"]
     ? TLine
     : never;
 
-/** Infers the {@link CartData} shape from {@link CreateCartServerHandlersOptions}. */
+/** Infers the {@link CartData} shape from `CreateCartServerHandlersOptions`. */
 export type CartDataForOptions<TOptions> = CartDataFromCartQuery<
   CartQueriesForOptions<TOptions>["cart"]
 >;
@@ -655,10 +655,5 @@ export function makeCartQueries(options?: CreateCartQueriesOptions) {
   return DEFAULT_CART_QUERIES;
 }
 
-/**
- * Default cart GraphQL queries and mutations used by {@link createCartServerHandlers}
- * and {@link getCart}. Includes: `cart`, `cartCreate`, `cartLinesAdd`,
- * `cartLinesUpdate`, `cartLinesRemove`, `cartDiscountCodesUpdate`,
- * `cartNoteUpdate`, and `cartAttributesUpdate`.
- */
+/** Default cart GraphQL queries and mutations. */
 export const cartQueries = makeCartQueries();
