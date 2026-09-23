@@ -88,6 +88,7 @@ export interface ProductInput<TVariant extends ProductVariantInput = ProductVari
 export type ProductVariantFrom<TProduct extends ProductInput> =
   TProduct extends ProductInput<infer TVariant> ? TVariant : ProductVariantInput;
 
+/** Extracts the concrete option-value type from a {@link ProductInput} subtype. */
 export type ProductOptionValueFrom<TProduct extends ProductInput> =
   TProduct["options"][number]["optionValues"][number];
 

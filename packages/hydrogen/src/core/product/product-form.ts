@@ -92,15 +92,23 @@ export interface ProductFormStore<
   TProduct extends ProductInput = ProductInput,
   TVariant extends ProductVariantInput = ProductVariantFrom<TProduct>,
 > {
+  /** Returns the current state snapshot with optimistic projections applied. */
   getState(): ProductFormStoreState<TVariant, ProductOptionValueFrom<TProduct>>;
+  /** Registers a listener invoked on every state change. Returns an unsubscribe function. */
   subscribe(
     listener: (state: ProductFormStoreState<TVariant, ProductOptionValueFrom<TProduct>>) => void,
   ): () => void;
+  /** Selects an option value and resolves the new variant. */
   selectOption(name: string, value: string): VariantSelectionResult<TVariant>;
+  /** Replaces the product data and re-derives state — use after a server-side product reload. */
   hydrate(product: TProduct, opts?: { selectedOptions?: SelectedOption[] }): void;
+  /** Clears all selections and errors, restoring the store to its initial state. */
   reset(): void;
+  /** Activates the store — starts listening for cart state changes to track the matched line item. */
   connect(): void;
+  /** Tears down the store — removes cart subscription and releases resources. */
   destroy(): void;
+  /** Intercepts a native `SubmitEvent` from a product form and dispatches an add-to-cart transaction. */
   handleFormSubmit(event: SubmitEvent): Promise<void>;
 }
 
