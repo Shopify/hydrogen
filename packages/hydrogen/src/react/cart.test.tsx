@@ -18,6 +18,7 @@ import {
   createCartComponents,
   useCart,
   useCartActions,
+  useCartAnalytics,
   useCartForm,
   useOptionalCart,
 } from "./cart";
@@ -225,6 +226,22 @@ describe("useCartActions", () => {
 
     expect(() => render(createElement(Consumer))).toThrow(
       "useCartActions must be used inside <CartProvider>",
+    );
+  });
+});
+
+describe.each([
+  ["useCartAnalytics", useCartAnalytics],
+  ["useCartForm", useCartForm],
+])("%s outside CartProvider", (hookName, hook) => {
+  it("throws a hook-specific error", () => {
+    function Consumer() {
+      hook();
+      return null;
+    }
+
+    expect(() => render(createElement(Consumer))).toThrow(
+      `${hookName} must be used inside <CartProvider>`,
     );
   });
 });
