@@ -5,11 +5,12 @@ import { publishCartViewed } from "~/components/AnalyticsTrackers";
 import { CartLineItem } from "~/components/CartDrawer";
 import { useCart } from "~/lib/cart";
 import { formatPrice } from "~/lib/money";
+import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/cart";
 
-export function meta({}: Route.MetaArgs) {
-  return [{ title: "Cart · CORE" }];
+export function meta({ matches }: Route.MetaArgs) {
+  return [{ title: formatPageTitle("Cart", getShopNameFromRootMatch(matches[0])) }];
 }
 
 export default function CartRoute() {

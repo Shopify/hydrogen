@@ -16,15 +16,17 @@ import { ProductCard } from "~/components/ProductCard";
 import { AnalyticsEvent, getAnalytics, getAnalyticsShop } from "~/lib/analytics";
 import { loadSearchPage, type SearchPageData } from "~/lib/search";
 import { storefrontClientContext } from "~/lib/storefront";
+import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/search";
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ matches }: Route.MetaArgs) {
+  const shopName = getShopNameFromRootMatch(matches[0]);
   return [
-    { title: "Search · CORE" },
+    { title: formatPageTitle("Search", shopName) },
     {
       name: "description",
-      content: "Search products at CORE.",
+      content: `Search products at ${shopName}.`,
     },
   ];
 }

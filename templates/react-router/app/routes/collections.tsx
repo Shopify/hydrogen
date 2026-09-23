@@ -3,15 +3,17 @@ import { Link } from "react-router";
 import { CollectionCard } from "~/components/CollectionCard";
 import { loadCollectionsPage } from "~/lib/collections";
 import { storefrontClientContext } from "~/lib/storefront";
+import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/collections";
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ matches }: Route.MetaArgs) {
+  const shopName = getShopNameFromRootMatch(matches[0]);
   return [
-    { title: "Collections · CORE" },
+    { title: formatPageTitle("Collections", shopName) },
     {
       name: "description",
-      content: "Browse all CORE collections.",
+      content: `Browse all ${shopName} collections.`,
     },
   ];
 }
