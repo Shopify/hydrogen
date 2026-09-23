@@ -50,9 +50,9 @@ export function Footer() {
               </Link>
             </li>
             <li>
-              <a href="#" className={linkClass}>
+              <Link to="/account" className={linkClass}>
                 Account
-              </a>
+              </Link>
             </li>
           </ul>
         </nav>
