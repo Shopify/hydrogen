@@ -27,6 +27,7 @@ import type {
 // Public types
 // ---------------------------------------------------------------------------
 
+/** Cart errors relevant to the currently selected variant in a {@link ProductFormStore}. */
 export interface ProductFormErrors {
   userErrors: CartUserError[];
   warnings: CartWarning[];
@@ -45,6 +46,7 @@ export interface ProductFormStoreState<
   matchedLineItem: CartLine | null;
 }
 
+/** The reactive options array from a {@link ProductFormStoreState}, typed to a specific product. */
 export type ProductFormOptions<TProduct extends ProductInput = ProductInput> =
   ProductFormStoreState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>["options"];
 
@@ -79,7 +81,9 @@ export type ValidProductSelectionResult<TProduct extends ProductInput = ProductI
   { status: "invalid" }
 >;
 
+/** Options for {@link createProductFormStore}. */
 export type CreateProductFormStoreOptions = {
+  /** Initial selection to apply instead of using the product's `selectedOrFirstAvailableVariant`. */
   selectedOptions?: SelectedOption[];
 };
 
@@ -104,12 +108,14 @@ export interface ProductFormStore<
 // Utilities
 // ---------------------------------------------------------------------------
 
+/** Returns the fully resolved variant for the current selection, or `null` when the selection is partial. */
 export function getSelectedVariant<TVariant extends ProductVariantInput>(
   options: VariantOptionState<TVariant, ProductOptionValueInput>[],
 ): TVariant | null {
   return options[0]?.values.find((v) => v.selected)?.variant ?? null;
 }
 
+/** Guards whether the current selection can be added to cart — a variant must be resolved and available, and the product must not require a selling plan. */
 export function canAddToCart<TProduct extends ProductInput>(
   product: TProduct,
   options: VariantOptionState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>[],
@@ -155,6 +161,24 @@ type ProductFormStoreContext<TProduct extends ProductInput> = {
 // Factory
 // ---------------------------------------------------------------------------
 
+/**
+ * Creates a reactive store that manages variant selection and cart integration for a product form.
+ *
+ * The store subscribes to the {@link CartStore} to keep error and line-item
+ * state in sync. Call `destroy()` when the form unmounts to clean up the
+ * subscription.
+ *
+ * @example
+ * ```ts
+ * const store = createProductFormStore(product, cartStore);
+ *
+ * store.subscribe((state) => {
+ *   console.log("selected variant:", state.selectedVariant);
+ * });
+ *
+ * store.selectOption("Color", "Red");
+ * ```
+ */
 export function createProductFormStore<TProduct extends ProductInput>(
   product: TProduct,
   cartStore: CartStore,

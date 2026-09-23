@@ -31,6 +31,12 @@ export function getVariantSearchParamValue(variantId: string): string | null {
   return /^\d+$/.test(numericId) ? numericId : null;
 }
 
+/**
+ * Controls how variant selection is encoded in URL search params.
+ *
+ * - `"options"` — one param per option, e.g. `?Color=Red&Size=M`.
+ * - `"variant"` — a single `?variant=<numeric id>` param (Liquid parity).
+ */
 export type ProductSelectionLinkStyle = "options" | "variant";
 
 /**
