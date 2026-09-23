@@ -81,6 +81,8 @@ type CommonOptions = {
   /** Per-request timeout in milliseconds. `0` disables the timeout. Defaults to 30,000 ms. */
   defaultTimeoutInMs?: number;
   /** Shared cache instance that enables per-query caching via the `cache` option on `graphql()`. */
+  // Mirrored by the `cache?: CacheConfig` inference hole in
+  // CreateStorefrontClientArgs — keep the key and type in sync.
   cache?: CacheInstance;
   /** Worker-style `waitUntil` to extend the request lifetime for background cache writes. */
   waitUntil?: WaitUntil;
@@ -140,7 +142,7 @@ export interface PrivateNoBuyerContextClientOptions<
   privateStorefrontToken: string;
 }
 
-/** Union of all config-object shapes accepted by `createStorefrontClient`. */
+/** Union of all config shapes passed as the `config` field of {@link CreateStorefrontClientArgs}. */
 export type StorefrontClientOptions =
   | PublicClientOptions
   | PrivateClientOptions
@@ -153,6 +155,12 @@ export type StorefrontClientOptions =
  * `"private"` requires a private token plus a request context with `buyerIp`,
  * and `"private_no_buyer_context"` requires a private token without buyer identity.
  */
+// `Type` and `CacheConfig` are inference holes for `createStorefrontClient`:
+// each member's discriminant is intersected with `Type` (resolving to the plain
+// literal when `Type` is the full `ClientType` default) and `cache` narrows
+// `CacheConfig`, so the call signature can recover both without wrapping this
+// union in an intersection — which would defeat discriminant narrowing and
+// excess-property checks while the user is still typing.
 export type CreateStorefrontClientArgs<
   RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
   Type extends ClientType = ClientType,
