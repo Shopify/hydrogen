@@ -80,6 +80,10 @@ In the Shopify admin, open the Hydrogen app, select your storefront and go to
 `PRIVATE_STOREFRONT_API_TOKEN` here. Without the public token, or in `mock.shop`
 mode, the header keeps a placeholder account control with the same footprint.
 
+**Warning:** if both tokens are set but `PUBLIC_STORE_DOMAIN` is not, the widget
+targets the default `hydrogen-preview.myshopify.com` with your public token. Set
+`PUBLIC_STORE_DOMAIN` to your store's domain.
+
 Mode is **auto-detected**: when a `PRIVATE_STOREFRONT_API_TOKEN` is present the
 app talks to the real store (`PUBLIC_STORE_DOMAIN`, falling back to the default in
 `app/lib/shop.ts`); with none it falls back to the `mock.shop` demo, so a fresh
