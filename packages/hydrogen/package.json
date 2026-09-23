@@ -16,7 +16,8 @@
     "README.md",
     "bin",
     "dist",
-    "skills"
+    "skills",
+    "ts-plugin"
   ],
   "type": "module",
   "sideEffects": false,
