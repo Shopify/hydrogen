@@ -77,7 +77,13 @@ type CartLineView = {
   } | null;
 };
 
-export function CartLineItem({ line }: { line: CartLineView }) {
+export function CartLineItem({
+  line,
+  emptyCartFocusId,
+}: {
+  line: CartLineView;
+  emptyCartFocusId: string;
+}) {
   const { formProps, register } = useCartForm();
   const pendingLines = useCart((state) => state.pending.lines);
   const lineError = useCart((state) => state.errors.lines.get(line.id));
@@ -90,7 +96,7 @@ export function CartLineItem({ line }: { line: CartLineView }) {
   const errorId = `cart-line-error-${line.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
   // Removing a line unmounts the control that holds focus. Move focus to the same
-  // control on a neighbouring line (or the drawer heading) while the line still exists.
+  // control on a neighbouring line (or `emptyCartFocusId`) while the line still exists.
   const moveFocusBeforeRemoval = (event: SubmitEvent<HTMLFormElement>) => {
     const form = event.currentTarget;
     if (!form.contains(document.activeElement)) return;
@@ -106,8 +112,7 @@ export function CartLineItem({ line }: { line: CartLineView }) {
     const neighbour = item?.nextElementSibling ?? item?.previousElementSibling;
     const selector = intent === "set" ? 'input[name="quantity"]' : `button[value="${intent}"]`;
     const target =
-      neighbour?.querySelector<HTMLElement>(selector) ??
-      document.getElementById("cart-drawer-title");
+      neighbour?.querySelector<HTMLElement>(selector) ?? document.getElementById(emptyCartFocusId);
     target?.focus();
   };
 
@@ -220,7 +225,7 @@ function CartLines() {
   return (
     <ul role="list" className="divide-border -mt-4 divide-y">
       {lines.map((line) => (
-        <CartLineItem key={line.id} line={line} />
+        <CartLineItem key={line.id} line={line} emptyCartFocusId="cart-drawer-title" />
       ))}
     </ul>
   );
