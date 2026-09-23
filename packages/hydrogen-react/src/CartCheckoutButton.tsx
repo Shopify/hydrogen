@@ -16,6 +16,8 @@ type CartCheckoutButtonProps = Omit<BaseButtonProps<'button'>, 'onClick'> &
 /**
  * The `CartCheckoutButton` component renders a button that redirects to the checkout URL for the cart.
  * It must be a descendent of a `CartProvider` component.
+ *
+ * The button is disabled while the cart is still being created or updated, and it stays disabled when the cart has no checkout URL yet.
  * @publicDocs
  */
 export function CartCheckoutButton(

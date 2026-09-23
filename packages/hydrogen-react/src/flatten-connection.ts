@@ -5,6 +5,8 @@ import type {PartialDeep} from 'type-fest';
  * The utility works with either `nodes` or `edges.node`.
  *
  * If `connection` is null or undefined, will return an empty array instead in production. In development, an error will be thrown.
+ *
+ * The utility only flattens the connection you pass to it. Nested connections, such as a product's `variants` inside a flattened `products` list, stay in their original shape and need their own `flattenConnection` call.
  * @publicDocs
  */
 export function flattenConnection<
