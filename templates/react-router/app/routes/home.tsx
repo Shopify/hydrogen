@@ -8,6 +8,7 @@ import {
 } from "~/components/CollectionCard";
 import { ProductCard, PRODUCT_CARD_FRAGMENT, type ProductCardData } from "~/components/ProductCard";
 import { storefrontClientContext } from "~/lib/storefront";
+import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/home";
 
@@ -39,12 +40,13 @@ const HOME_QUERY = gql(
   [PRODUCT_CARD_FRAGMENT, COLLECTION_CARD_FRAGMENT],
 );
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ matches }: Route.MetaArgs) {
+  const shopName = getShopNameFromRootMatch(matches[0]);
   return [
-    { title: "Home · CORE" },
+    { title: formatPageTitle("Home", shopName) },
     {
       name: "description",
-      content: "Shop best sellers and featured categories at CORE.",
+      content: `Shop best sellers and featured categories at ${shopName}.`,
     },
   ];
 }
