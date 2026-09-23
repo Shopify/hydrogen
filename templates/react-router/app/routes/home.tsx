@@ -1,26 +1,23 @@
 import { gql } from "@shopify/hydrogen";
-import { Link } from "react-router";
+import { Link, useRouteLoaderData } from "react-router";
 
 import {
   CollectionCard,
   COLLECTION_CARD_FRAGMENT,
   type CollectionCardData,
 } from "~/components/CollectionCard";
+import { HomeHero } from "~/components/HomeHero";
 import { ProductCard, PRODUCT_CARD_FRAGMENT, type ProductCardData } from "~/components/ProductCard";
+import { selectHomeHero } from "~/lib/home-hero";
 import { storefrontClientContext } from "~/lib/storefront";
-import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
+import {
+  FALLBACK_SHOP_NAME,
+  formatPageTitle,
+  getShopNameFromRootMatch,
+} from "~/lib/storefront-shop";
+import type { loader as rootLoader } from "~/root";
 
 import type { Route } from "./+types/home";
-
-const HERO = {
-  heading: "Discover our latest collection",
-  subtitle: "Explore our curated selection of premium products",
-  image: {
-    url: "https://images.unsplash.com/photo-1653398597732-37fc919284dd?auto=format&fit=crop&w=2000&q=80",
-    altText: "A white chair beside a white wall",
-  },
-  primaryCta: { label: "Shop now", to: "/collections" },
-} as const;
 
 const HOME_QUERY = gql(
   `
@@ -32,6 +29,7 @@ const HOME_QUERY = gql(
       }
       collections(first: 3) {
         nodes {
+          description
           ...CollectionCard
         }
       }
@@ -56,48 +54,12 @@ export async function loader({ context }: Route.LoaderArgs) {
   const { data } = await storefrontClient.graphql(HOME_QUERY);
 
   const featuredProducts: ProductCardData[] = data?.products.nodes ?? [];
-  const featuredCollections: CollectionCardData[] = data?.collections.nodes ?? [];
+  const featuredCollections = data?.collections.nodes ?? [];
 
   return {
     featuredProducts,
     featuredCollections,
   };
-}
-
-function Hero() {
-  return (
-    <section className="max-w-page px-margin mx-auto w-full">
-      <div
-        className="bleed-full min-h-hero relative overflow-hidden"
-        aria-labelledby="hero-heading"
-      >
-        <div className="bg-surface-secondary absolute inset-0">
-          <img
-            src={HERO.image.url}
-            alt={HERO.image.altText}
-            className="h-full w-full object-cover"
-            loading="eager"
-            fetchPriority="high"
-          />
-        </div>
-        <div className="overlay-dark pointer-events-none absolute inset-0" aria-hidden="true" />
-        <div className="max-w-page px-margin text-interactive-text min-h-hero relative z-10 mx-auto flex flex-col items-start justify-end p-8 pb-12">
-          <h1 id="hero-heading" className="type-display mb-3 max-w-2xl">
-            {HERO.heading}
-          </h1>
-          <p className="type-body-lg mb-6 max-w-prose opacity-90">{HERO.subtitle}</p>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              to={HERO.primaryCta.to}
-              className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 items-center justify-center gap-2 px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
-            >
-              {HERO.primaryCta.label}
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
 }
 
 function BestSellers({ products }: { products: readonly ProductCardData[] }) {
@@ -170,9 +132,16 @@ function ShopByCategory({ collections }: { collections: readonly CollectionCardD
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
+  const rootData = useRouteLoaderData<typeof rootLoader>("root");
+  const hero = selectHomeHero(
+    loaderData.featuredCollections,
+    rootData?.shopInfo.name ?? FALLBACK_SHOP_NAME,
+    rootData?.shopInfo.coverImage ?? null,
+  );
+
   return (
     <main className="flex-1" id="main-content" tabIndex={-1}>
-      <Hero />
+      <HomeHero hero={hero} />
       <BestSellers products={loaderData.featuredProducts} />
       <ShopByCategory collections={loaderData.featuredCollections} />
     </main>
