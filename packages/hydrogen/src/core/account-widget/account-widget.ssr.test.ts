@@ -179,7 +179,7 @@ describe("renderShopifyAccountWidget", () => {
   it("applies the CSP nonce to the style element only", () => {
     const withNonce = renderShopifyAccountWidget({ ...baseOptions, nonce: "nonce-1" });
     expect(withNonce).toContain('<style nonce="nonce-1">');
-    expect(withNonce).not.toContain("<shopify-account data-hydrogen-account-widget nonce");
+    expect(withNonce.match(/nonce=/g)).toHaveLength(1);
 
     expect(renderShopifyAccountWidget(baseOptions)).toContain("<style>");
   });
