@@ -158,7 +158,7 @@ export function useCartActions(): CartActions {
 }
 
 export function useCartAnalytics(): void {
-  const store = useCartStore();
+  const store = useCartStore("useCartAnalytics");
 
   useEffect(() => trackCartAnalytics(store), [store]);
 }
@@ -209,7 +209,7 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
 }
 
 export function useCartForm() {
-  const store = useCartStore();
+  const store = useCartStore("useCartForm");
   const coreRegister = useMemo(() => createCartFormRegister(), []);
 
   const register = useMemo(() => {
