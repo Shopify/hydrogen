@@ -26,13 +26,32 @@ import {
   storefrontClientContext,
   storefrontRequestContext,
 } from "~/lib/storefront";
+import { normalizeStorefrontShop } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/root";
 
 import appStylesHref from "./app.css?url";
 
-const NAV_COLLECTIONS_QUERY = gql(`
-  query NavCollections {
+const ROOT_LAYOUT_QUERY = gql(`
+  query RootLayout {
+    shop {
+      name
+      brand {
+        logo {
+          alt
+          image {
+            url
+            altText
+            width
+            height
+          }
+        }
+      }
+      paymentSettings {
+        acceptedCardBrands
+        supportedDigitalWallets
+      }
+    }
     collections(first: 5) {
       nodes {
         handle
@@ -92,14 +111,23 @@ export const middleware: Route.MiddlewareFunction[] = [
 export async function loader({ context, request }: Route.LoaderArgs) {
   const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
-  const [cartResult, navResult] = await Promise.all([
+  const [cartResult, layoutResult] = await Promise.all([
     cartHandlers.get({ storefrontClient, request }),
-    storefrontClient.graphql(NAV_COLLECTIONS_QUERY),
+    storefrontClient.graphql(ROOT_LAYOUT_QUERY),
   ]);
+
+  if (layoutResult.errors) {
+    console.error(
+      `Root layout query failed: ${layoutResult.errors.map(({ message }) => message).join("\n")}`,
+    );
+  }
 
   return {
     cartData: cartResult.data,
-    navCollections: navResult.data?.collections.nodes ?? [],
+    navCollections: layoutResult.data?.collections.nodes ?? [],
+    shopInfo: normalizeStorefrontShop(layoutResult.data?.shop),
+    // Computed on the server so the footer year cannot differ during hydration.
+    copyrightYear: new Date().getFullYear(),
     analyticsShop,
     consent: analyticsConsent,
     enableAnalyticsTestTap: env.MOCK_SHOP === "1",
@@ -155,9 +183,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
       >
         <p className="type-body-sm text-surface">Free shipping on orders over $50</p>
       </div>
-      <Header navCollections={loaderData.navCollections} />
+      <Header navCollections={loaderData.navCollections} shopInfo={loaderData.shopInfo} />
       <Outlet />
-      <Footer />
+      <Footer shopInfo={loaderData.shopInfo} copyrightYear={loaderData.copyrightYear} />
       <CartDrawer />
     </CartProvider>
   );
