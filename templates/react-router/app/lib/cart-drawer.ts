@@ -5,7 +5,7 @@ let openCartActionConfigured = false;
 let openCartActionRetryQueued = false;
 
 function getDialog(id: string): HTMLDialogElement | null {
-  if (typeof document === "undefined") return null;
+  if (typeof document === "undefined" || typeof HTMLDialogElement === "undefined") return null;
   const dialog = document.getElementById(id);
   return dialog instanceof HTMLDialogElement ? dialog : null;
 }
