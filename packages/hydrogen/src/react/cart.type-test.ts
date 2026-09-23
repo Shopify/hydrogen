@@ -118,3 +118,18 @@ describe("createCartComponents", () => {
     expectTypeOf(typedCart.useCartForm).toBeFunction();
   });
 });
+
+describe("@shopify/hydrogen/react cart exports", () => {
+  it("only exposes cart hooks through createCartComponents", () => {
+    type ReactEntry = typeof import("./index");
+
+    expectTypeOf<ReactEntry>().toHaveProperty("createCartComponents");
+    expectTypeOf<ReactEntry>().toHaveProperty("useCartAnalytics");
+    expectTypeOf<
+      Extract<
+        keyof ReactEntry,
+        "CartProvider" | "useCart" | "useCartActions" | "useCartForm" | "useOptionalCart"
+      >
+    >().toBeNever();
+  });
+});
