@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
 import { mount } from "@vue/test-utils";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { h } from "vue";
 import { renderToString } from "vue/server-renderer";
 
+import { setupStorefrontAnalytics } from "../core/analytics/bus";
+import type { ConsentSetup } from "../core/analytics/types";
 import {
   SHOPIFY_ACCOUNT_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
@@ -16,6 +18,7 @@ import {
 } from "../core/shopify-scripts";
 import * as shopifyScriptsCore from "../core/shopify-scripts";
 import { createShopifyRouteTemplates } from "../core/standard-routes/index";
+import type { ShopifyGlobal } from "../globals";
 import { ShopifyScripts } from "./shopify-scripts";
 
 afterEach(() => {
@@ -155,6 +158,7 @@ describe("ShopifyScripts", () => {
     window.Shopify?.routes.navigate?.("/products/snowboard");
     expect(navigate).toHaveBeenCalledWith("/p/snowboard");
     expect(initializeShopifyScripts).toHaveBeenCalledWith({
+      consent: CONSENT,
       navigate,
       routes: routeTemplates,
       webMcp: true,
@@ -165,5 +169,62 @@ describe("ShopifyScripts", () => {
     });
 
     expect(initializeShopifyScripts).toHaveBeenCalledOnce();
+    wrapper.unmount();
+  });
+
+  it("retains custom consent setup across component unmounts and remounts", async () => {
+    vi.spyOn(shopifyScriptsCore, "getShopifyScriptTags").mockReturnValue({
+      tags: [],
+      scripts: [],
+      links: [],
+    });
+    window.Shopify = {
+      customerPrivacy: {
+        consentStatus: "loaded",
+        analyticsProcessingAllowed: () => true,
+        setTrackingConsent: vi.fn(),
+      },
+    } as unknown as ShopifyGlobal;
+    const { bus, destroy } = setupStorefrontAnalytics({
+      shop: null,
+      consent: { mode: "custom-banner" },
+    });
+    onTestFinished(destroy);
+    const destination = vi.fn();
+    bus.addDestination({
+      name: "test",
+      setup: ({ subscribe }) => {
+        subscribe("page_viewed", destination);
+      },
+    });
+    const setupComplete = Promise.withResolvers<void>();
+    const setup = vi.fn<ConsentSetup>(() => setupComplete.promise);
+    const wrapper = mount(ShopifyScripts, {
+      props: {
+        shop: TEST_SHOP,
+        consent: { mode: "custom-banner", setup },
+        webMcp: false,
+      },
+    });
+
+    expect(setup).toHaveBeenCalledOnce();
+    bus.publish("page_viewed");
+    expect(destination).not.toHaveBeenCalled();
+    wrapper.unmount();
+    const replacement = vi.fn();
+    const remounted = mount(ShopifyScripts, {
+      props: {
+        shop: TEST_SHOP,
+        consent: { mode: "custom-banner", setup: replacement },
+        webMcp: false,
+      },
+    });
+    expect(replacement).not.toHaveBeenCalled();
+    remounted.unmount();
+    expect(destination).not.toHaveBeenCalled();
+    setupComplete.resolve();
+    await vi.waitFor(() => expect(destination).toHaveBeenCalledOnce());
+    bus.publish("page_viewed");
+    expect(destination).toHaveBeenCalledTimes(2);
   });
 });

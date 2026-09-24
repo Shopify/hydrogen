@@ -119,13 +119,13 @@ The analytics bus is enabled by default. Pass `analytics` only when you need opt
 
 This is where the location/region nuance lives. Shopify's hosted Customer Privacy API decides per-visitor whether tracking requires consent based on the visitor's geography:
 
-- **Visitors in jurisdictions with consent requirements** (EU/EEA/UK GDPR, parts of Canada, California CCPA, etc.) — analytics must wait for consent. Use `mode: "default-banner"` for Shopify's hosted privacy banner, or `mode: "custom-banner"` if your app renders its own banner and calls `window.Shopify.customerPrivacy.setTrackingConsent()`.
-- **Visitors in jurisdictions without consent requirements** — the Customer Privacy SDK auto-allows tracking and the banner does not render. The bus dispatches normally.
+- **Visitors in jurisdictions with consent requirements** (EU/EEA/UK GDPR, parts of Canada, California CCPA, etc.) — analytics must wait for consent. Use `mode: "default-banner"` for Shopify's hosted privacy banner, or `mode: "custom-banner"` with a `setup` callback that connects the app's consent provider.
+- **Visitors in jurisdictions without consent requirements** — the Customer Privacy SDK may allow tracking without showing Shopify's banner. Custom-banner integrations still wait for the provider's resolved consent; the provider owns its regional policy.
 
 `mode` controls how consent is collected:
 
 - `"default-banner"` loads Shopify's hosted privacy banner and waits when the Customer Privacy API says banner interaction is required.
-- `"custom-banner"` loads only the Customer Privacy API and treats the initial consent event as actionable. Your banner must call `setTrackingConsent()` when the shopper accepts or declines.
+- `"custom-banner"` loads only the Customer Privacy API and waits for the required asynchronous `setup` callback to resolve before checking consent. Read [Custom consent providers](../../hydrogen-analytics/references/custom-consent.md) when integrating a third-party banner.
 - `"no-banner"` loads only the Customer Privacy API and releases analytics after consent setup. Use this only when consent is already allowed or managed outside this storefront.
 
 ### Consent Gating
