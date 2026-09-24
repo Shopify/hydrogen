@@ -7,13 +7,7 @@ import { PaymentMethodIcon } from "./PaymentMethodIcon";
 const linkClass =
   "min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors";
 
-export function Footer({
-  shopInfo,
-  copyrightYear,
-}: {
-  shopInfo: StorefrontShop;
-  copyrightYear: number;
-}) {
+export function Footer({ shopInfo }: { shopInfo: StorefrontShop }) {
   return (
     <footer className="max-w-page px-margin mx-auto w-full">
       <div
@@ -21,9 +15,6 @@ export function Footer({
       >
         <div className="min-w-0 wrap-anywhere">
           <h2 className="type-body-sm text-on-surface mb-4 font-medium">{shopInfo.name}</h2>
-          <p className="text-on-surface-secondary">
-            &copy; {copyrightYear} {shopInfo.name}
-          </p>
         </div>
         <nav aria-labelledby="footer-customer-care-heading">
           <h2
