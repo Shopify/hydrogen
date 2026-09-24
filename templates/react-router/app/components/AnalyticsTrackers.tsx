@@ -1,109 +1,33 @@
-import type { AnalyticsCart, ConsentConfig, ShopAnalytics } from "@shopify/hydrogen";
+import { AnalyticsEvent, type AnalyticsCart } from "@shopify/hydrogen";
 import { useCartAnalytics } from "@shopify/hydrogen/react";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useLocation } from "react-router";
 
-import {
-  AnalyticsEvent,
-  configureAnalytics,
-  getAnalytics,
-  getAnalyticsShop,
-} from "~/lib/analytics";
+import type { CartData } from "~/lib/cart";
 
-type AnalyticsTapWindow = Window & {
-  __analyticsEvents?: Array<{ event: string; payload: Record<string, unknown> }>;
-};
-
-const TAP_EVENTS = [
-  AnalyticsEvent.PAGE_VIEWED,
-  AnalyticsEvent.PRODUCT_VIEWED,
-  AnalyticsEvent.COLLECTION_VIEWED,
-  AnalyticsEvent.CART_VIEWED,
-  AnalyticsEvent.SEARCH_VIEWED,
-  AnalyticsEvent.CART_UPDATED,
-  AnalyticsEvent.PRODUCT_ADD_TO_CART,
-  AnalyticsEvent.PRODUCT_REMOVED_FROM_CART,
-] as const;
-
-export function AnalyticsTracker({
-  shop,
-  consent,
-  enableTestTap,
-}: {
-  shop: ShopAnalytics;
-  consent: ConsentConfig;
-  enableTestTap: boolean;
-}) {
+export function PageViewedTracker() {
   const location = useLocation();
   const pageKey = `${location.pathname}${location.search}`;
-  const tapConfigured = useRef(false);
 
   useEffect(() => {
-    configureAnalytics(shop, consent);
-    const analytics = getAnalytics();
-    if (!analytics) return;
-
-    if (enableTestTap && !tapConfigured.current) {
-      tapConfigured.current = true;
-      const win = window as AnalyticsTapWindow;
-      win.__analyticsEvents ??= [];
-      analytics.addDestination({
-        name: "test-event-recorder",
-        setup({ subscribe }) {
-          for (const event of TAP_EVENTS) {
-            subscribe(event, (payload) => {
-              win.__analyticsEvents?.push({ event, payload: payload as Record<string, unknown> });
-            });
-          }
-        },
-      });
-    }
-
-    analytics.publish(AnalyticsEvent.PAGE_VIEWED, {
-      url: window.location.href,
-      shop,
-    });
-  }, [pageKey, shop, consent, enableTestTap]);
+    window.Shopify?.analytics?.publish(AnalyticsEvent.PAGE_VIEWED);
+  }, [pageKey]);
 
   return null;
 }
 
-function toAnalyticsCart(cart: unknown): AnalyticsCart | null {
-  const candidate = cart as {
-    id?: string | null;
-    updatedAt?: string;
-    lines?: {
-      nodes?: Array<{
-        id: string;
-        quantity: number;
-        cost?: { amountPerQuantity?: { amount: string; currencyCode?: string } };
-        merchandise?: {
-          id?: string;
-          title?: string;
-          sku?: string | null;
-          product?: {
-            id?: string;
-            title?: string;
-            vendor?: string;
-            productType?: string;
-            handle?: string;
-          };
-        };
-      }>;
-    };
-  };
-
-  if (!candidate.id || !candidate.updatedAt) return null;
+function toAnalyticsCart(cart: CartData): AnalyticsCart | null {
+  if (!cart.id || !cart.updatedAt) return null;
 
   return {
-    id: candidate.id,
-    updatedAt: candidate.updatedAt,
+    id: cart.id,
+    updatedAt: cart.updatedAt,
     lines: {
-      nodes: (candidate.lines?.nodes ?? []).flatMap((line) => {
+      nodes: cart.lines.nodes.flatMap((line) => {
         const merchandise = line.merchandise;
         const product = merchandise?.product;
-        const price = line.cost?.amountPerQuantity;
-        if (!merchandise?.id || !product?.id || !product.title || !product.vendor || !price) {
+        // Optimistic lines may not have product details yet.
+        if (!merchandise?.id || !product?.id || !product.title || !product.vendor) {
           return [];
         }
         return [
@@ -114,7 +38,7 @@ function toAnalyticsCart(cart: unknown): AnalyticsCart | null {
               id: merchandise.id,
               title: merchandise.title ?? product.title,
               sku: merchandise.sku,
-              price,
+              price: line.cost.amountPerQuantity,
               product: {
                 id: product.id,
                 title: product.title,
@@ -135,12 +59,8 @@ export function CartAnalyticsTracker() {
   return null;
 }
 
-export function publishCartViewed(cart: unknown) {
-  const analytics = getAnalytics();
-  if (!analytics) return;
-  analytics.publish(AnalyticsEvent.CART_VIEWED, {
+export function publishCartViewed(cart: CartData) {
+  window.Shopify?.analytics?.publish(AnalyticsEvent.CART_VIEWED, {
     cart: toAnalyticsCart(cart),
-    url: window.location.href,
-    shop: getAnalyticsShop(),
   });
 }
