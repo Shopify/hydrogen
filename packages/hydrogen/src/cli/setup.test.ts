@@ -1,10 +1,12 @@
+import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 
 import { afterEach, describe, it, expect, vi } from "vitest";
 
-import { setupHydrogen, type RunCommand } from "../setup";
+import { setupHydrogen, type RunCommand } from "./setup";
+import * as skills from "./skills";
 
 function createTempDirectory(): string {
   return mkdtempSync(join(tmpdir(), "hydrogen-cli-"));
@@ -37,19 +39,37 @@ function createRunCommandSpy(): RunCommand & { calls: Array<[string, string[], {
   return Object.assign(runCommand, { calls });
 }
 
-function createScaffoldRunCommandSpy(
-  appRoot: string,
-): RunCommand & { calls: Array<[string, string[], { cwd: string }]> } {
+function createFixtureTarball(): Buffer {
+  const fixtureDir = mkdtempSync(join(tmpdir(), "hydrogen-fixture-"));
+  const templateDir = join(fixtureDir, "hydrogen-dist-preview/templates/react-router");
+  const siblingDir = join(fixtureDir, "hydrogen-dist-preview/templates/other-template");
+  mkdirSync(templateDir, { recursive: true });
+  mkdirSync(join(templateDir, "app"), { recursive: true });
+  mkdirSync(siblingDir, { recursive: true });
+
+  writeJson(join(templateDir, "package.json"), {
+    name: "@shopify/hydrogen-template-react-router",
+    private: true,
+    packageManager: "npm@11.17.0",
+    dependencies: { "@shopify/hydrogen": "2026.10.0-preview.3" },
+  });
+  writeJson(join(templateDir, "package-lock.json"), { lockfileVersion: 3 });
+  writeFileSync(join(templateDir, "app/root.tsx"), "export default function App() {}");
+  writeJson(join(siblingDir, "package.json"), { name: "other-template" });
+
+  const tarballPath = join(fixtureDir, "fixture.tar.gz");
+  execFileSync("tar", ["czf", tarballPath, "-C", fixtureDir, "hydrogen-dist-preview"]);
+  return readFileSync(tarballPath);
+}
+
+function createInstallOnlyRunCommandSpy(): RunCommand & {
+  calls: Array<[string, string[], { cwd: string }]>;
+} {
   const calls: Array<[string, string[], { cwd: string }]> = [];
   const runCommand: RunCommand = async (command, args, options) => {
     calls.push([command, args, options]);
     if (command === "tar") {
-      writeJson(join(appRoot, "package.json"), {
-        name: "@shopify/hydrogen-template-react-router",
-        private: true,
-        packageManager: "npm@11.17.0",
-        dependencies: { "@shopify/hydrogen": "2026.10.0-preview.3" },
-      });
+      execFileSync(command, args, { cwd: options.cwd });
     }
   };
   return Object.assign(runCommand, { calls });
@@ -140,6 +160,11 @@ describe("setupHydrogen", () => {
     const packageRoot = createPackageRoot(["hydrogen-setup"]);
     const runCommand = createRunCommandSpy();
 
+    mkdirSync(join(appRoot, "node_modules/@shopify/hydrogen"), { recursive: true });
+    writeJson(join(appRoot, "node_modules/@shopify/hydrogen/package.json"), {
+      name: "@shopify/hydrogen",
+      version: "1.0.0",
+    });
     writeJson(join(appRoot, "package.json"), {
       dependencies: { "@shopify/hydrogen": "^1.0.0" },
     });
@@ -156,6 +181,32 @@ describe("setupHydrogen", () => {
     expect(readFileSync(join(appRoot, ".claude/skills/hydrogen-setup/SKILL.md"), "utf8")).toContain(
       "hydrogen-setup",
     );
+  });
+
+  it("runs install when Hydrogen is declared but not resolvable", async () => {
+    vi.spyOn(skills, "getInstalledPackageRoot").mockReturnValue(undefined);
+
+    const appRoot = createTempDirectory();
+    const packageRoot = createPackageRoot(["hydrogen-setup"]);
+    const runCommand = createRunCommandSpy();
+    const log = vi.fn();
+
+    writeJson(join(appRoot, "package.json"), {
+      dependencies: { "@shopify/hydrogen": "^1.0.0" },
+    });
+
+    await setupHydrogen({
+      cwd: appRoot,
+      packageRoot,
+      runCommand,
+      log,
+      env: { npm_config_user_agent: "npm/10.0.0 node/v24.0.0 darwin arm64" },
+    });
+
+    expect(log).toHaveBeenCalledWith(expect.stringContaining("declared but not installed"));
+    expect(runCommand.calls).toEqual([["npm", ["install"], { cwd: appRoot }]]);
+
+    vi.restoreAllMocks();
   });
 
   it("fails when a harness path exists but is not a directory", async () => {
@@ -278,15 +329,23 @@ describe("setupHydrogen", () => {
 
   describe("no package.json", () => {
     afterEach(() => {
+      vi.unstubAllGlobals();
       vi.restoreAllMocks();
     });
 
+    let fixtureTarball: Buffer;
+
     function stubFetch(): void {
+      fixtureTarball ??= createFixtureTarball();
+      const arrayBuffer = fixtureTarball.buffer.slice(
+        fixtureTarball.byteOffset,
+        fixtureTarball.byteOffset + fixtureTarball.byteLength,
+      );
       vi.stubGlobal(
         "fetch",
         vi.fn().mockResolvedValue({
           ok: true,
-          arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+          arrayBuffer: () => Promise.resolve(arrayBuffer),
         }),
       );
     }
@@ -295,7 +354,7 @@ describe("setupHydrogen", () => {
       stubFetch();
       const appRoot = createTempDirectory();
       const packageRoot = createPackageRoot(["hydrogen-setup"]);
-      const runCommand = createScaffoldRunCommandSpy(appRoot);
+      const runCommand = createInstallOnlyRunCommandSpy();
 
       await setupHydrogen({
         cwd: appRoot,
@@ -306,21 +365,56 @@ describe("setupHydrogen", () => {
         prompt: async () => "scaffold",
       });
 
-      expect(runCommand.calls[0]?.[0]).toBe("tar");
-      expect(runCommand.calls[1]).toEqual(["pnpm", ["install"], { cwd: appRoot }]);
+      expect(existsSync(join(appRoot, "app/root.tsx"))).toBe(true);
+      const installCall = runCommand.calls.find(([cmd]) => cmd !== "tar");
+      expect(installCall).toEqual(["pnpm", ["install"], { cwd: appRoot }]);
       expect(existsSync(join(appRoot, ".claude/skills/hydrogen-setup/SKILL.md"))).toBe(true);
+    });
+
+    it("extracts only the target template, not siblings", async () => {
+      stubFetch();
+      const appRoot = createTempDirectory();
+      const packageRoot = createPackageRoot(["hydrogen-setup"]);
+
+      await setupHydrogen({
+        cwd: appRoot,
+        packageRoot,
+        runCommand: createInstallOnlyRunCommandSpy(),
+        log: vi.fn(),
+        env: {},
+        prompt: async () => "scaffold",
+      });
+
+      expect(existsSync(join(appRoot, "package.json"))).toBe(true);
+      expect(existsSync(join(appRoot, "other-template"))).toBe(false);
+    });
+
+    it("preserves template lockfile after scaffolding", async () => {
+      stubFetch();
+      const appRoot = createTempDirectory();
+      const packageRoot = createPackageRoot(["hydrogen-setup"]);
+
+      await setupHydrogen({
+        cwd: appRoot,
+        packageRoot,
+        runCommand: createInstallOnlyRunCommandSpy(),
+        log: vi.fn(),
+        env: {},
+        prompt: async () => "scaffold",
+      });
+
+      expect(existsSync(join(appRoot, "package-lock.json"))).toBe(true);
     });
 
     it("updates scaffolded package.json: sets name, strips private and packageManager", async () => {
       stubFetch();
       const appRoot = createTempDirectory();
       const packageRoot = createPackageRoot(["hydrogen-setup"]);
-      const runCommand = createScaffoldRunCommandSpy(appRoot);
 
       await setupHydrogen({
         cwd: appRoot,
         packageRoot,
-        runCommand,
+        runCommand: createInstallOnlyRunCommandSpy(),
         log: vi.fn(),
         env: {},
         prompt: async () => "scaffold",
@@ -337,7 +431,7 @@ describe("setupHydrogen", () => {
       stubFetch();
       const appRoot = createTempDirectory();
       const packageRoot = createPackageRoot(["hydrogen-setup"]);
-      const runCommand = createScaffoldRunCommandSpy(appRoot);
+      const runCommand = createInstallOnlyRunCommandSpy();
 
       await setupHydrogen({
         cwd: appRoot,
@@ -348,14 +442,15 @@ describe("setupHydrogen", () => {
         prompt: async () => "scaffold",
       });
 
-      expect(runCommand.calls[1]).toEqual(["yarn", ["install"], { cwd: appRoot }]);
+      const installCall = runCommand.calls.find(([cmd]) => cmd !== "tar");
+      expect(installCall).toEqual(["yarn", ["install"], { cwd: appRoot }]);
     });
 
     it("falls back to npm when no npm_config_user_agent is set", async () => {
       stubFetch();
       const appRoot = createTempDirectory();
       const packageRoot = createPackageRoot(["hydrogen-setup"]);
-      const runCommand = createScaffoldRunCommandSpy(appRoot);
+      const runCommand = createInstallOnlyRunCommandSpy();
 
       await setupHydrogen({
         cwd: appRoot,
@@ -366,7 +461,8 @@ describe("setupHydrogen", () => {
         prompt: async () => "scaffold",
       });
 
-      expect(runCommand.calls[1]).toEqual(["npm", ["install"], { cwd: appRoot }]);
+      const installCall = runCommand.calls.find(([cmd]) => cmd !== "tar");
+      expect(installCall).toEqual(["npm", ["install"], { cwd: appRoot }]);
     });
 
     it("syncs skills only when prompt returns skills", async () => {
@@ -389,23 +485,39 @@ describe("setupHydrogen", () => {
     });
 
     it("defaults to skills-only when no prompt is provided (CI)", async () => {
-      const appRoot = createTempDirectory();
-      const packageRoot = createPackageRoot(["hydrogen-setup"]);
-      const runCommand = createRunCommandSpy();
+      const originalStdinIsTTY = process.stdin.isTTY;
+      const originalStdoutIsTTY = process.stdout.isTTY;
+      Object.defineProperty(process.stdin, "isTTY", { value: true, configurable: true });
+      Object.defineProperty(process.stdout, "isTTY", { value: true, configurable: true });
 
-      await setupHydrogen({
-        cwd: appRoot,
-        packageRoot,
-        runCommand,
-        log: vi.fn(),
-        env: {},
-      });
+      try {
+        const appRoot = createTempDirectory();
+        const packageRoot = createPackageRoot(["hydrogen-setup"]);
+        const runCommand = createRunCommandSpy();
 
-      expect(runCommand.calls).toEqual([]);
-      expect(existsSync(join(appRoot, ".claude/skills/hydrogen-setup/SKILL.md"))).toBe(true);
+        await setupHydrogen({
+          cwd: appRoot,
+          packageRoot,
+          runCommand,
+          log: vi.fn(),
+          env: { CI: "1" },
+        });
+
+        expect(runCommand.calls).toEqual([]);
+        expect(existsSync(join(appRoot, ".claude/skills/hydrogen-setup/SKILL.md"))).toBe(true);
+      } finally {
+        Object.defineProperty(process.stdin, "isTTY", {
+          value: originalStdinIsTTY,
+          configurable: true,
+        });
+        Object.defineProperty(process.stdout, "isTTY", {
+          value: originalStdoutIsTTY,
+          configurable: true,
+        });
+      }
     });
 
-    it("refuses to scaffold into a non-empty directory", async () => {
+    it("errors when directory is non-empty and has no package.json", async () => {
       const appRoot = createTempDirectory();
       writeFileSync(join(appRoot, "README.md"), "# existing project");
       const packageRoot = createPackageRoot(["hydrogen-setup"]);
@@ -419,7 +531,7 @@ describe("setupHydrogen", () => {
           env: {},
           prompt: async () => "scaffold",
         }),
-      ).rejects.toThrow("Directory is not empty");
+      ).rejects.toThrow("No package.json found. Run this command from your project root.");
     });
 
     it("allows scaffolding into a directory that only contains .git", async () => {
@@ -427,7 +539,7 @@ describe("setupHydrogen", () => {
       const appRoot = createTempDirectory();
       mkdirSync(join(appRoot, ".git"));
       const packageRoot = createPackageRoot(["hydrogen-setup"]);
-      const runCommand = createScaffoldRunCommandSpy(appRoot);
+      const runCommand = createInstallOnlyRunCommandSpy();
 
       await setupHydrogen({
         cwd: appRoot,
@@ -438,7 +550,7 @@ describe("setupHydrogen", () => {
         prompt: async () => "scaffold",
       });
 
-      expect(runCommand.calls[0]?.[0]).toBe("tar");
+      expect(existsSync(join(appRoot, "package.json"))).toBe(true);
     });
 
     it("fails with a clear message when template download fails", async () => {
