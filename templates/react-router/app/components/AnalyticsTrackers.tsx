@@ -47,11 +47,16 @@ export function AnalyticsTracker({
       tapConfigured.current = true;
       const win = window as AnalyticsTapWindow;
       win.__analyticsEvents ??= [];
-      for (const event of TAP_EVENTS) {
-        analytics.subscribe(event, (payload) => {
-          win.__analyticsEvents?.push({ event, payload: payload as Record<string, unknown> });
-        });
-      }
+      analytics.addDestination({
+        name: "test-event-recorder",
+        setup({ subscribe }) {
+          for (const event of TAP_EVENTS) {
+            subscribe(event, (payload) => {
+              win.__analyticsEvents?.push({ event, payload: payload as Record<string, unknown> });
+            });
+          }
+        },
+      });
     }
 
     analytics.publish(AnalyticsEvent.PAGE_VIEWED, {
