@@ -708,7 +708,7 @@ export function renderTitle<T extends CustomHeadTagObject['children']>(
 }
 
 export function inferMimeType(url: Maybe<string> | undefined) {
-  const ext = url && url.split('.').pop();
+  const ext = url && url.split(/[?#]/)[0].split('.').pop();
 
   switch (ext) {
     case 'svg':

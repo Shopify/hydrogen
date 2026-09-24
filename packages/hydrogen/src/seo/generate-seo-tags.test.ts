@@ -579,6 +579,32 @@ describe('generateSeoTags', () => {
         ]),
       );
     });
+
+    it('should infer the media type from urls with a query string', () => {
+      // Given
+      const input = {
+        media: {
+          url: 'https://cdn.shopify.com/s/files/logo.png?v=1655847948',
+        },
+      };
+
+      // When
+      const output = generateSeoTags(input);
+
+      // Then
+      expect(output).toEqual(
+        expect.arrayContaining([
+          {
+            key: 'meta-https://cdn.shopify.com/s/files/logo.png?v=1655847948-og:image:type',
+            props: {
+              content: 'image/png',
+              property: 'og:image:type',
+            },
+            tag: 'meta',
+          },
+        ]),
+      );
+    });
   });
 
   describe('handle', () => {
