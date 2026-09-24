@@ -1,5 +1,12 @@
 # @shopify/cli-hydrogen
 
+## 13.0.5
+
+### Patch Changes
+
+- Updated dependencies [[`bce7053fe640a7dfd39ed3bac1a63e4d737cb4e2`](https://github.com/Shopify/hydrogen/commit/bce7053fe640a7dfd39ed3bac1a63e4d737cb4e2)]:
+  - @shopify/mini-oxygen@4.2.3
+
 ## 13.0.4
 
 ### Patch Changes
