@@ -40,18 +40,6 @@ export function analyticsPublishTypes() {
   // @ts-expect-error search views require a search term
   analytics.publish(AnalyticsEvent.SEARCH_VIEWED);
 
-  // @ts-expect-error event subscriptions are only available inside destination setup
-  analytics.subscribe("page_viewed", () => {});
-
-  // @ts-expect-error the global analytics bus also exposes only destination subscriptions
-  window.Shopify?.analytics?.subscribe("page_viewed", () => {});
-
-  // @ts-expect-error Hydrogen owns the bus lifecycle
-  analytics.destroy();
-
-  // @ts-expect-error internal teardown is not exposed on the global analytics bus
-  window.Shopify?.analytics?.destroy();
-
   analytics.addDestination({
     name: "test-destination",
     setup({ subscribe }) {

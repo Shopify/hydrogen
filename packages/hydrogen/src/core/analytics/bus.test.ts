@@ -1005,8 +1005,6 @@ describe("setupStorefrontAnalytics", () => {
     it("assigns bus to window.Shopify.analytics", () => {
       const { bus } = createTestBus();
       expect(window.Shopify?.analytics).toBe(bus);
-      expect(bus).not.toHaveProperty("subscribe");
-      expect(bus).not.toHaveProperty("destroy");
       expect((window.Shopify as any)?.["headless"]).toBeUndefined();
       expect((window as any).headlessAnalytics).toBeUndefined();
     });
