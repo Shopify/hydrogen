@@ -37,7 +37,7 @@ export type CollectionActions = Pick<
 >;
 
 /**
- * Manages the lifecycle of a `CollectionStore`: creates on mount and syncs
+ * Manages the lifecycle of a {@link CollectionStore}: creates on mount and syncs
  * with URL changes. Recreates the store when `data.handle` changes
  * (navigating to a different collection).
  *
@@ -201,7 +201,7 @@ export function useCollection<S>(
 
 /**
  * Returns methods that change filters and sort. The store's `onBrowseChange`
- * callback (set by `CollectionProvider`) handles emitting `change` with a
+ * callback (set by {@link CollectionProvider}) handles emitting `change` with a
  * serialized search string.
  */
 export function useCollectionActions(): CollectionActions {
