@@ -305,7 +305,7 @@ export type PrivateNoBuyerContextStorefrontClient<
  *
  * @example
  * ```ts
- * import { gql, StorefrontApi } from "@shopify/hydrogen";
+ * import { gql, type StorefrontApi } from "@shopify/hydrogen";
  *
  * const PRODUCT_QUERY = gql(`query Product($handle: String!) { product(handle: $handle) { title } }`);
  *
