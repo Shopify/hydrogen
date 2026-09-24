@@ -2,6 +2,8 @@ import { Link } from "react-router";
 
 import type { StorefrontShop } from "~/lib/storefront-shop";
 
+import { PaymentMethodIcon } from "./PaymentMethodIcon";
+
 const linkClass =
   "min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors";
 
@@ -40,17 +42,23 @@ export function Footer({
         </nav>
         {shopInfo.paymentMethods.length > 0 ? (
           <div>
-            <h2 className="type-body-sm text-on-surface mb-4 font-medium">Cards and wallets</h2>
-            <div className="flex flex-wrap items-center gap-2">
+            <h2
+              id="footer-payment-methods-heading"
+              className="type-body-sm text-on-surface mb-4 font-medium"
+            >
+              Payment methods
+            </h2>
+            <ul
+              role="list"
+              aria-labelledby="footer-payment-methods-heading"
+              className="flex flex-wrap items-center gap-2"
+            >
               {shopInfo.paymentMethods.map((method) => (
-                <span
-                  key={method}
-                  className="border-border text-on-surface-secondary rounded-sm border px-2 py-1 text-xs"
-                >
-                  {method}
-                </span>
+                <li key={method} className="max-w-full">
+                  <PaymentMethodIcon method={method} />
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         ) : null}
       </div>

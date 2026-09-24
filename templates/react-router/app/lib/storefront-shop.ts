@@ -2,6 +2,8 @@
 // per request by the root loader. Every value comes from the Storefront API `shop`
 // object; nothing here is invented when the store leaves a field unset.
 
+import type { CardBrand, DigitalWallet } from "@shopify/hydrogen/storefront-api-types";
+
 /** Neutral name used only when the Storefront API returns no shop name. */
 export const FALLBACK_SHOP_NAME = "Store";
 
@@ -17,7 +19,7 @@ export type StorefrontShop = {
   /** Brand logo from the shop's brand settings, or `null` when none is set. */
   logo: StorefrontShopLogo | null;
   /** Human-readable accepted card brands, then digital wallets, deduplicated. */
-  paymentMethods: string[];
+  paymentMethods: PaymentMethodLabel[];
 };
 
 /**
@@ -39,28 +41,36 @@ export type StorefrontShopQueryData =
           } | null;
         } | null;
       } | null;
-      paymentSettings: {
-        acceptedCardBrands: readonly string[];
-        supportedDigitalWallets: readonly string[];
-      } | null;
+      paymentSettings: PaymentSettingsData | null;
     }
   | null
   | undefined;
 
-// Only brands the Storefront API reports as accepted are shown. Unrecognized
-// enum values are omitted rather than displayed raw.
-const PAYMENT_METHOD_LABELS = new Map<string, string>([
-  ["VISA", "Visa"],
-  ["MASTERCARD", "Mastercard"],
-  ["AMERICAN_EXPRESS", "American Express"],
-  ["DINERS_CLUB", "Diners Club"],
-  ["DISCOVER", "Discover"],
-  ["JCB", "JCB"],
-  ["APPLE_PAY", "Apple Pay"],
-  ["GOOGLE_PAY", "Google Pay"],
-  ["ANDROID_PAY", "Android Pay"],
-  ["SHOPIFY_PAY", "Shop Pay"],
-]);
+/** The `paymentSettings` selection, typed with the Storefront API enums. */
+type PaymentSettingsData = {
+  acceptedCardBrands: readonly CardBrand[];
+  supportedDigitalWallets: readonly DigitalWallet[];
+};
+
+// Only brands the Storefront API reports as accepted are shown. Keyed by every
+// schema enum value, so a new enum in the generated types fails to compile here.
+const PAYMENT_METHOD_LABELS = {
+  VISA: "Visa",
+  MASTERCARD: "Mastercard",
+  AMERICAN_EXPRESS: "American Express",
+  DINERS_CLUB: "Diners Club",
+  DISCOVER: "Discover",
+  JCB: "JCB",
+  APPLE_PAY: "Apple Pay",
+  GOOGLE_PAY: "Google Pay",
+  // Legacy alias: Android Pay was rebranded as Google Pay, so both enums share
+  // one label and the label Set below shows it once.
+  ANDROID_PAY: "Google Pay",
+  SHOPIFY_PAY: "Shop Pay",
+} as const satisfies Record<CardBrand | DigitalWallet, string>;
+
+/** Display label for a supported card brand or digital wallet, such as `"Shop Pay"`. */
+export type PaymentMethodLabel = (typeof PAYMENT_METHOD_LABELS)[keyof typeof PAYMENT_METHOD_LABELS];
 
 function nonEmpty(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
@@ -69,23 +79,17 @@ function nonEmpty(value: string | null | undefined): string | null {
 
 /** Maps accepted card brands and digital wallets to deduplicated display labels. */
 export function getPaymentMethodLabels(
-  paymentSettings:
-    | {
-        acceptedCardBrands: readonly string[];
-        supportedDigitalWallets: readonly string[];
-      }
-    | null
-    | undefined,
-): string[] {
+  paymentSettings: PaymentSettingsData | null | undefined,
+): PaymentMethodLabel[] {
   if (!paymentSettings) return [];
 
-  const labels = new Set<string>();
+  const labels = new Set<PaymentMethodLabel>();
   for (const method of [
     ...paymentSettings.acceptedCardBrands,
     ...paymentSettings.supportedDigitalWallets,
   ]) {
-    const label = PAYMENT_METHOD_LABELS.get(method);
-    if (label !== undefined) labels.add(label);
+    // Only display payment methods explicitly listed in the label record.
+    if (Object.hasOwn(PAYMENT_METHOD_LABELS, method)) labels.add(PAYMENT_METHOD_LABELS[method]);
   }
   return [...labels];
 }
