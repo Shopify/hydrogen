@@ -1,4 +1,4 @@
-import { getSortByValue } from "@shopify/hydrogen";
+import { AnalyticsEvent, getSortByValue } from "@shopify/hydrogen";
 import { CollectionProvider } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
@@ -13,7 +13,6 @@ import {
   useLoadMore,
 } from "~/components/CollectionBrowse";
 import { ProductCard } from "~/components/ProductCard";
-import { AnalyticsEvent, getAnalytics, getAnalyticsShop } from "~/lib/analytics";
 import { loadSearchPage, type SearchPageData } from "~/lib/search";
 import { storefrontClientContext } from "~/lib/storefront";
 
@@ -47,15 +46,9 @@ function SearchViewedTracker({
   useEffect(() => {
     if (!searchTerm) return;
 
-    const analytics = getAnalytics();
-    const shop = getAnalyticsShop();
-    if (!analytics || !shop) return;
-
-    analytics.publish(AnalyticsEvent.SEARCH_VIEWED, {
+    window.Shopify?.analytics?.publish(AnalyticsEvent.SEARCH_VIEWED, {
       searchTerm,
       searchResults: { totalCount },
-      url: window.location.href,
-      shop,
     });
   }, [searchTerm, totalCount]);
 

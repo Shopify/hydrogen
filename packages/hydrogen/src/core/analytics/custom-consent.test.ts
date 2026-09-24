@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 import type { ShopifyGlobal } from "../../globals";
 import { configureLogging, resetLoggingForTests } from "../logging";
@@ -26,6 +26,12 @@ const denied: ConsentPreferences = {
   sale_of_data: false,
 };
 
+function createBus() {
+  const instance = setupStorefrontAnalytics({ shop: null, consent: { mode: "custom-banner" } });
+  onTestFinished(instance.destroy);
+  return instance;
+}
+
 function createHarness(status: "loading" | "loaded" = "loaded") {
   let analyticsAllowed = true;
   const requests: ReturnType<typeof Promise.withResolvers<void>>[] = [];
@@ -44,7 +50,7 @@ function createHarness(status: "loading" | "loaded" = "loaded") {
     }),
   };
   window.Shopify = { customerPrivacy: privacy } as unknown as ShopifyGlobal;
-  const bus = setupStorefrontAnalytics({ shop: null, consent: { mode: "custom-banner" } });
+  const { bus, destroy } = createBus();
   const destination = vi.fn();
   bus.addDestination({
     name: "test",
@@ -61,11 +67,10 @@ function createHarness(status: "loading" | "loaded" = "loaded") {
     assert(value, `Expected consent request ${index}`);
     return value;
   };
-  return { bus, destination, privacy, mount, request, setupComplete };
+  return { bus, destroy, destination, privacy, mount, request, setupComplete };
 }
 
 afterEach(() => {
-  window.Shopify?.analytics?.destroy();
   delete window.Shopify;
   resetLoggingForTests();
   vi.restoreAllMocks();
@@ -269,7 +274,7 @@ describe("custom banner consent", () => {
     const h = createHarness("loading");
     const setup = vi.fn<ConsentSetup>(async () => {});
     h.mount(setup);
-    h.bus.destroy();
+    h.destroy();
     h.privacy.consentStatus = "loaded";
     document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
     expect(setup).not.toHaveBeenCalled();
@@ -279,9 +284,9 @@ describe("custom banner consent", () => {
     const h = createHarness();
     h.mount();
     const first = h.privacy.setTrackingConsent(allowed);
-    h.bus.destroy();
+    h.destroy();
 
-    const nextBus = setupStorefrontAnalytics({ shop: null, consent: { mode: "custom-banner" } });
+    const { bus: nextBus } = createBus();
     const destination = vi.fn();
     nextBus.addDestination({
       name: "next",
@@ -360,9 +365,18 @@ describe("custom banner consent", () => {
     expect(bootstrap).not.toContain("browserOnlyConsentProvider");
     expect(setup).not.toHaveBeenCalled();
 
+    // The serialized bus has no public teardown; detach its listeners after this test.
+    const addEventListener = vi.spyOn(document, "addEventListener");
     // Real inline bundle and app imports must agree on the private setup hook.
     // oxlint-disable-next-line no-eval -- Executes the SSR analytics bootstrap in happy-dom.
     eval(bootstrap);
+    const listeners = [...addEventListener.mock.calls];
+    addEventListener.mockRestore();
+    onTestFinished(() => {
+      for (const [event, listener, options] of listeners) {
+        document.removeEventListener(event, listener, options);
+      }
+    });
     const bus = window.Shopify?.analytics;
     assert(bus, "Expected analytics to be installed by the inline script");
     expect(bus.getConfig().consent).toEqual({ mode: "custom-banner" });
@@ -392,6 +406,5 @@ describe("custom banner consent", () => {
     expect(destination).not.toHaveBeenCalled();
     setupComplete.resolve();
     await vi.waitFor(() => expect(destination).toHaveBeenCalled());
-    bus.destroy();
   });
 });

@@ -1,4 +1,5 @@
 import {
+  AnalyticsEvent,
   buildProductSelectionSearchParams,
   canAddToCart,
   getSelectedProductOptions,
@@ -10,7 +11,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 
 import { ProductCard, PRODUCT_CARD_FRAGMENT } from "~/components/ProductCard";
-import { AnalyticsEvent, getAnalytics, getAnalyticsShop } from "~/lib/analytics";
 import { openCartDrawer } from "~/lib/cart-drawer";
 import { formatPrice, salePercent } from "~/lib/money";
 import { ProductProvider, useProductForm } from "~/lib/product";
@@ -225,12 +225,8 @@ function hasSwatchData(product: ProductData, optionName: string) {
 
 function ProductViewedTracker({ product }: { product: ProductData }) {
   useEffect(() => {
-    const analytics = getAnalytics();
-    const shop = getAnalyticsShop();
-    if (!analytics || !shop) return;
-
     const selectedVariant = product.selectedOrFirstAvailableVariant;
-    analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
+    window.Shopify?.analytics?.publish(AnalyticsEvent.PRODUCT_VIEWED, {
       products: [
         {
           id: product.id,
@@ -243,8 +239,6 @@ function ProductViewedTracker({ product }: { product: ProductData }) {
           sku: selectedVariant?.sku,
         },
       ],
-      url: window.location.href,
-      shop,
     });
   }, [product]);
 

@@ -36,8 +36,7 @@ Your app code
   ▼
 window.Shopify.analytics
   │
-  ├── publish / subscribe / addDestination / destroy  (app-facing)
-  ├── raw live subscribers
+  ├── publish / addDestination / getConfig  (app-facing)
   └── consent-gated destinations with replay
       │
       └── Customer Privacy gates destination delivery and replay
@@ -137,9 +136,9 @@ Default:
 () => window.Shopify?.customerPrivacy?.analyticsProcessingAllowed() ?? false
 ```
 
-This is conservative by design: if the Customer Privacy script is blocked, hasn't loaded, or is unavailable, **destination delivery is blocked**. Raw `subscribe()` listeners still see live events, but analytics destinations do not receive events until `analyticsProcessingAllowed()` returns true.
+If the Customer Privacy script is blocked, hasn't loaded, or is unavailable, **destination delivery is blocked**. Destinations receive events only after consent is loaded and analytics processing is allowed.
 
-Events published before consent is ready are buffered for destinations and replayed only if analytics consent is granted. Destinations only receive supported event names they subscribe to. If the visitor explicitly denies analytics consent, the replay buffer is cleared.
+The bus retains up to 500 events for destination replay, including events published while analytics consent was already allowed. New destinations receive that retained history only when analytics consent allows delivery, and only for supported event names they subscribe to. If the visitor explicitly denies analytics consent, the replay buffer is cleared.
 
 Custom event names such as `custom_*` are temporarily unsupported. Publishing or subscribing to an unsupported event name logs a small warning and the event is ignored.
 
@@ -178,7 +177,7 @@ Non-optional constraints:
 - **One instance per page.** The singleton means every route, every effect, every script tag shares the same bus. Multiple instances on the same page overwrite `window.Shopify.customerPrivacy.config`; the latest initialized config wins. Multi-store on one page is not supported.
 - **Lazy.** Reading the bus happens on first `getAnalytics()` call. ShopifyScripts owns bus construction.
 
-App code can add explicit destinations for development logging or third-party integrations, then publish from each route:
+Register destinations once during browser app initialization, after ShopifyScripts has created the bus. Keep destination registration outside route component mount/unmount cycles; route components publish events through the shared bus:
 
 ```ts
 const cleanup = analytics.addDestination({
@@ -204,7 +203,7 @@ const cleanup = analytics.addDestination({
 });
 ```
 
-Destinations are consent-gated and receive replayed buffered events once tracking is allowed.
+Destinations are consent-gated and receive retained history once tracking is allowed. The returned cleanup function removes the destination when the app intentionally stops that integration.
 
 ---
 
@@ -562,7 +561,7 @@ Application code should not manually publish `cart_updated`, `product_added_to_c
 
 ## Wiring third-party destinations
 
-The bus is the right integration point for GA4, Meta Pixel, Klaviyo, etc. Register third-party analytics with `addDestination()`. The bus gates destination callbacks with Shopify Customer Privacy and replays buffered events after analytics consent is granted:
+The bus is the right integration point for GA4, Meta Pixel, Klaviyo, etc. Register each integration once with `addDestination()` during browser app initialization, after ShopifyScripts has created the bus. The bus gates destination callbacks with Shopify Customer Privacy and replays retained history when analytics consent allows:
 
 ```ts
 const analytics = getAnalytics();
@@ -577,7 +576,9 @@ analytics?.addDestination({
 });
 ```
 
-Consent gating happens at the bus level before destination callbacks see the payload. Raw `analytics.subscribe()` is live-only and consent-agnostic; use `addDestination()` for logging or analytics destinations that should respect consent and replay.
+Register all event consumers with `addDestination()` and subscribe inside its setup callback. Consent gating happens at the bus level before destination callbacks see the payload.
+
+Removing and re-adding a destination, even with the same name, creates a fresh registration and replays retained history again. This can duplicate deliveries on component remounts, including React Strict Mode's development effect replay. Keep destinations registered for the page's lifetime; use the returned cleanup when intentionally removing an integration.
 
 Destinations that need Shopify visitor IDs can call `getTrackingValues()` from the callback's second argument: `subscribe(event, (payload, { getTrackingValues }) => { ... })`. It reads current `uniqueToken` and `visitToken` values from the consent API when called, including during replay, and requests fallback generation with the tag `hydrogen:<destination name>`. Unavailable tokens are empty strings, and the getter also returns empty strings whenever analytics tracking is not currently allowed, so a retained getter cannot read or generate tokens after consent is revoked. Call it inside the destination callback; registration itself does not read or generate tokens.
 
@@ -599,7 +600,7 @@ For production, re-verify against the production bundle. Several gotchas only ap
 
 ## Common gotchas
 
-- **Replay is destination-only.** Raw `analytics.subscribe()` listeners only receive live events. `analytics.addDestination()` callbacks receive consent-gated live events plus buffered replay after analytics consent is granted. If the visitor explicitly denies analytics consent, the buffer is cleared and those pre-denial events are never replayed.
+- **Destinations receive live events and buffered replay after analytics consent is granted.** If the visitor explicitly denies analytics consent, the buffer is cleared and those pre-denial events are never replayed.
 - **The singleton must be lazy.** Reading the global bus at module top-level can run on the server during SSR and crash on `window` access. Always wrap in a `typeof window === 'undefined'` guard.
 - **Use the right shop shape for each API.** `ShopifyScripts` accepts a numeric Shop ID or Shopify Shop GID plus `storefrontId` and the permanent `myshopifyDomain`; the analytics bus normalizes `shop.shopId` to a Shopify Shop GID before dispatch, while the bootstrap exposes the domain as `window.Shopify.shop`.
 - **Customer Privacy script blocked by CSP.** If your CSP does not allow `cdn.shopify.com`, the consent script never loads, `analyticsProcessingAllowed()` stays `false`, and destination events never deliver. Check Network tab for blocked requests; add `cdn.shopify.com` to `script-src`.
@@ -609,7 +610,7 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Astro page-view fires only on full loads.** Astro is MPA-by-default. If you adopt View Transitions, listen for `astro:after-swap` instead of relying on the inline-script-runs-on-load behavior — otherwise SPA-nav transitions skip `page_viewed`.
 - **Required product fields silently drop the Monorail leg.** Missing `id`/`title`/`vendor`/`variantId`/`variantTitle`/`price` causes the Shopify analytics subscriber to skip Monorail dispatch and log a field-specific error. The bus event still fires for your subscribers — the loss is only in Shopify analytics. Watch the console.
 - **`updatedAt` missing from cart query weakens dedupe.** The cart tracker prefers cart `updatedAt`, but falls back to the current time when it is absent. Include `updatedAt` in cart queries for stable dedupe across navigations and reloads.
-- **The analytics bus lives for the page lifetime.** Do not call `analytics.destroy()` on component unmount. Remove component-owned subscriptions with their unsubscribe functions.
+- **Register destinations once per page lifetime.** Hydrogen owns the shared bus. Removing and re-adding a destination resets its replay position, so component remounts can deliver retained events again.
 - **Lighthouse skip is silent.** Monorail dispatch is skipped for Chrome Lighthouse user-agents. If your synthetic monitoring runs Lighthouse, you will see no Monorail requests in those runs — this is intentional.
 
 ---
