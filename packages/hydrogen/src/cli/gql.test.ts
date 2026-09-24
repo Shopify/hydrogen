@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { checkGraphQL } from "../gql";
+import { checkGraphQL } from "./gql";
 
 const TSCONFIG_PATH_ARGUMENT_INDEX = 3;
 const tempDirectories: string[] = [];

@@ -1,9 +1,12 @@
 import { spawn } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { basename, join } from "node:path";
+import { createInterface } from "node:readline/promises";
 
 import { isObjectRecord } from "../core/utils/record";
-import { syncSkills } from "./skills";
+import { getInstalledPackageRoot, syncSkills } from "./skills";
+import { canPromptInTerminal } from "./terminal";
 
 const PACKAGE_NAME = "@shopify/hydrogen";
 const PACKAGE_INSTALL_SPEC = `${PACKAGE_NAME}@preview`;
@@ -47,6 +50,8 @@ interface SetupHydrogenOptions {
   env?: Record<string, string | undefined>;
   runCommand?: RunCommand;
   log?: (message: string) => void;
+  /** Override the interactive prompt for testing. When omitted, prompts only in an interactive non-CI terminal; otherwise defaults to skills-only. */
+  prompt?: (log: (message: string) => void) => Promise<SetupChoice>;
 }
 
 function getStringRecord(value: unknown): Record<string, string> | undefined {
@@ -86,6 +91,12 @@ function parsePackageManager(value: string | undefined): PackageManager | undefi
   }
 }
 
+function detectPackageManagerFromEnv(
+  env: Record<string, string | undefined>,
+): PackageManager | undefined {
+  return parsePackageManager(env.npm_config_user_agent);
+}
+
 function detectPackageManager(
   appRoot: string,
   packageJson: PackageJson,
@@ -98,12 +109,7 @@ function detectPackageManager(
     if (existsSync(join(appRoot, lockfile))) return packageManager;
   }
 
-  const userAgentManager = parsePackageManager(env.npm_config_user_agent);
-  if (userAgentManager) return userAgentManager;
-
-  throw new Error(
-    "Could not detect a package manager. Add a packageManager field or a lockfile before running setup.",
-  );
+  return detectPackageManagerFromEnv(env) ?? "npm";
 }
 
 function hasHydrogenDependency(packageJson: PackageJson): boolean {
@@ -136,17 +142,171 @@ function spawnRunCommand(command: string, args: string[], options: { cwd: string
   });
 }
 
-export async function setupHydrogen(options: SetupHydrogenOptions = {}): Promise<void> {
-  const appRoot = options.cwd ?? process.cwd();
-  const env = options.env ?? process.env;
-  const runCommand = options.runCommand ?? spawnRunCommand;
-  const log = options.log ?? console.log;
+// TODO: Update branch from "dist-preview" to "dist" before GA launch
+const TEMPLATE_TARBALL_URL = "https://codeload.github.com/Shopify/hydrogen/tar.gz/dist-preview";
+const TEMPLATE_TARBALL_PREFIX = "hydrogen-dist-preview/templates/react-router/";
+const TEMPLATE_TARBALL_STRIP_COMPONENTS = TEMPLATE_TARBALL_PREFIX.split("/").filter(Boolean).length;
+
+type SetupChoice = "scaffold" | "skills";
+
+async function promptSetupChoice(log: (message: string) => void): Promise<SetupChoice> {
+  log("\nNo project found in this directory.\n");
+  log("  1) Create a new Hydrogen storefront (React Router)");
+  log("  2) Just install Hydrogen skills\n");
+
+  const readline = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    while (true) {
+      const answer = (await readline.question("Your choice [1] ")).trim();
+      if (answer === "" || answer === "1") return "scaffold";
+      if (answer === "2") return "skills";
+      log('Please enter "1" or "2".');
+    }
+  } finally {
+    readline.close();
+  }
+}
+
+function hasPackageJson(appRoot: string): boolean {
+  return existsSync(join(appRoot, PACKAGE_JSON_FILE_NAME));
+}
+
+async function downloadAndExtractTemplate(appRoot: string, runCommand: RunCommand): Promise<void> {
+  const response = await fetch(TEMPLATE_TARBALL_URL, { signal: AbortSignal.timeout(30_000) });
+  if (!response.ok) {
+    throw new Error(
+      `Failed to download template (${response.status}). Check your internet connection.`,
+    );
+  }
+
+  const tempDir = mkdtempSync(join(tmpdir(), "hydrogen-template-"));
+  const tempFile = "template.tar.gz";
+  try {
+    writeFileSync(join(tempDir, tempFile), Buffer.from(await response.arrayBuffer()));
+    await runCommand(
+      "tar",
+      [
+        "xzf",
+        tempFile,
+        `--strip-components=${TEMPLATE_TARBALL_STRIP_COMPONENTS}`,
+        "-C",
+        appRoot,
+        TEMPLATE_TARBALL_PREFIX,
+      ],
+      { cwd: tempDir },
+    );
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
+function updateScaffoldedPackageJson(appRoot: string): void {
+  const packageJsonPath = join(appRoot, PACKAGE_JSON_FILE_NAME);
+  const raw = readFileSync(packageJsonPath, "utf8");
+  const parsed: unknown = JSON.parse(raw);
+  if (!isObjectRecord(parsed)) return;
+
+  parsed.name = basename(appRoot);
+  delete parsed.private;
+  delete parsed.packageManager;
+
+  writeFileSync(packageJsonPath, JSON.stringify(parsed, null, 2) + "\n");
+}
+
+async function scaffoldTemplate(
+  appRoot: string,
+  env: Record<string, string | undefined>,
+  runCommand: RunCommand,
+  log: (message: string) => void,
+): Promise<string> {
+  log("Downloading Hydrogen template...");
+  await downloadAndExtractTemplate(appRoot, runCommand);
+
+  updateScaffoldedPackageJson(appRoot);
+
+  const packageManager = detectPackageManagerFromEnv(env) ?? "npm";
+  log(`Installing dependencies with ${packageManager}...`);
+  try {
+    await runCommand(packageManager, ["install"], { cwd: appRoot });
+  } catch (error) {
+    throw new Error(
+      `Template was created but dependency install failed. Run \`${packageManager} install\` or re-run \`npx @shopify/hydrogen setup\` in ${appRoot} to finish.`,
+      { cause: error },
+    );
+  }
+
+  return packageManager;
+}
+
+async function ensureHydrogenInstalled(
+  appRoot: string,
+  env: Record<string, string | undefined>,
+  runCommand: RunCommand,
+  log: (message: string) => void,
+): Promise<void> {
   const packageJson = readPackageJson(appRoot);
 
-  if (!hasHydrogenDependency(packageJson)) {
+  if (hasHydrogenDependency(packageJson) && getInstalledPackageRoot(appRoot)) return;
+
+  if (hasHydrogenDependency(packageJson)) {
     const packageManager = detectPackageManager(appRoot, packageJson, env);
-    log(`Installing ${PACKAGE_NAME} with ${packageManager}...`);
-    await installHydrogen(appRoot, packageManager, runCommand);
+    log(`${PACKAGE_NAME} is declared but not installed. Running ${packageManager} install...`);
+    await runCommand(packageManager, ["install"], { cwd: appRoot });
+    return;
+  }
+
+  const packageManager = detectPackageManager(appRoot, packageJson, env);
+  log(`Installing ${PACKAGE_NAME} with ${packageManager}...`);
+  await installHydrogen(appRoot, packageManager, runCommand);
+}
+
+interface ResolvedSetupOptions {
+  appRoot: string;
+  env: Record<string, string | undefined>;
+  runCommand: RunCommand;
+  log: (message: string) => void;
+  prompt: ((log: (message: string) => void) => Promise<SetupChoice>) | undefined;
+}
+
+function resolveSetupOptions(options: SetupHydrogenOptions): ResolvedSetupOptions {
+  const env = options.env ?? process.env;
+  return {
+    appRoot: options.cwd ?? process.cwd(),
+    env,
+    runCommand: options.runCommand ?? spawnRunCommand,
+    log: options.log ?? console.log,
+    prompt: options.prompt ?? (canPromptInTerminal(env) ? promptSetupChoice : undefined),
+  };
+}
+
+const IGNORED_DIRECTORY_ENTRIES = new Set([".git", ".DS_Store"]);
+
+function isEmptyDirectory(dir: string): boolean {
+  return readdirSync(dir).every((entry) => IGNORED_DIRECTORY_ENTRIES.has(entry));
+}
+
+export async function setupHydrogen(options: SetupHydrogenOptions = {}): Promise<void> {
+  const { appRoot, env, runCommand, log, prompt } = resolveSetupOptions(options);
+
+  if (hasPackageJson(appRoot)) {
+    await ensureHydrogenInstalled(appRoot, env, runCommand, log);
+  } else if (isEmptyDirectory(appRoot)) {
+    let choice: SetupChoice;
+    if (prompt) {
+      choice = await prompt(log);
+    } else {
+      log("No package.json found and no terminal to prompt; installing skills only.");
+      choice = "skills";
+    }
+
+    if (choice === "scaffold") {
+      const packageManager = await scaffoldTemplate(appRoot, env, runCommand, log);
+      log(
+        `\nHydrogen storefront created. Run \`${packageManager} run dev\` to start (uses mock.shop by default).\n`,
+      );
+    }
+  } else {
+    throw new Error("No package.json found. Run this command from your project root.");
   }
 
   await syncSkills({ force: options.force, cwd: appRoot, packageRoot: options.packageRoot, log });
