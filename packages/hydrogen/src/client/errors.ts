@@ -90,7 +90,8 @@ export class StorefrontApiError extends Error {
 /**
  * Thrown when a Storefront API request exceeds the configured `defaultTimeoutInMs`.
  *
- * Subclass of {@link StorefrontApiError}; catch either to handle all SFAPI failures.
+ * Subclass of {@link StorefrontApiError}, so catching `StorefrontApiError` also handles timeouts.
+ * Aborts from the request context or a per-call `signal` are rethrown as-is, not wrapped.
  */
 export class StorefrontTimeoutError extends StorefrontApiError {
   /** The timeout threshold that was exceeded, in milliseconds. */
