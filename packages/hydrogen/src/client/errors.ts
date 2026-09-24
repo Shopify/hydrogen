@@ -24,11 +24,12 @@ export class StorefrontApiError extends Error {
   readonly queryText?: string;
   /** The variables sent with the request. Only populated in development builds. */
   readonly variables?: Record<string, unknown>;
-  /** Source locations within the query where the error originated. */
+  /** Reserved; not currently populated by `createStorefrontClient`. GraphQL errors are returned in `result.errors`, not thrown. */
   readonly locations?: ReadonlyArray<{ line: number; column: number }>;
-  /** Response path to the field that triggered the error. */
+  /** Reserved; not currently populated by `createStorefrontClient`. */
   readonly path?: ReadonlyArray<string | number>;
-  /** Vendor extensions (e.g. Shopify error codes). */
+  /** Reserved; not currently populated by `createStorefrontClient`. */
+  readonly extensions?: Record<string, unknown>;
   readonly extensions?: Record<string, unknown>;
 
   constructor(message: string, options?: StorefrontApiErrorOptions) {
