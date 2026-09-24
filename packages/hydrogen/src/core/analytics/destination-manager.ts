@@ -91,7 +91,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
    * away and the outer loop picks up the new entries, so every callback sees
    * events in order. Entries published during a catch-up, including by other
    * destinations' callbacks, share the same buffer; if the backlog plus those
-   * publishes exceed it, this destination misses the oldest. More than a
+   * publishes exceed it, this destination can miss the oldest. More than a
    * buffer's worth of publishes during one catch-up is treated as a feedback
    * loop and stops the catch-up instead of hanging the page.
    */
