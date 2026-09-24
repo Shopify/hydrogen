@@ -578,7 +578,7 @@ analytics?.addDestination({
 
 Register all event consumers with `addDestination()` and subscribe inside its setup callback. Consent gating happens at the bus level before destination callbacks see the payload.
 
-Removing and re-adding a destination, even with the same name, creates a fresh registration and replays retained history again. This can duplicate deliveries on component remounts, including React Strict Mode's development effect replay. Keep destinations registered for the page's lifetime; use the returned cleanup when intentionally removing an integration.
+The bus tracks replay progress by destination name. Re-adding a removed name resumes after the last event the bus processed for that name, including events it did not subscribe to, so component remounts and React Strict Mode's development effect replay do not redeliver retained events. If a re-added destination subscribes to additional event types, earlier retained events of those types are not replayed. A re-added name does receive retained events published while it was removed. A new name starts from the beginning of retained history. Still prefer registering destinations for the page's lifetime; use the returned cleanup when intentionally removing an integration.
 
 Destinations that need Shopify visitor IDs can call `getTrackingValues()` from the callback's second argument: `subscribe(event, (payload, { getTrackingValues }) => { ... })`. It reads current `uniqueToken` and `visitToken` values from the consent API when called, including during replay, and requests fallback generation with the tag `hydrogen:<destination name>`. Unavailable tokens are empty strings, and the getter also returns empty strings whenever analytics tracking is not currently allowed, so a retained getter cannot read or generate tokens after consent is revoked. Call it inside the destination callback; registration itself does not read or generate tokens.
 
@@ -610,7 +610,7 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Astro page-view fires only on full loads.** Astro is MPA-by-default. If you adopt View Transitions, listen for `astro:after-swap` instead of relying on the inline-script-runs-on-load behavior — otherwise SPA-nav transitions skip `page_viewed`.
 - **Required product fields silently drop the Monorail leg.** Missing `id`/`title`/`vendor`/`variantId`/`variantTitle`/`price` causes the Shopify analytics subscriber to skip Monorail dispatch and log a field-specific error. The bus event still fires for your subscribers — the loss is only in Shopify analytics. Watch the console.
 - **`updatedAt` missing from cart query weakens dedupe.** The cart tracker prefers cart `updatedAt`, but falls back to the current time when it is absent. Include `updatedAt` in cart queries for stable dedupe across navigations and reloads.
-- **Register destinations once per page lifetime.** Hydrogen owns the shared bus. Removing and re-adding a destination resets its replay position, so component remounts can deliver retained events again.
+- **Replay progress is keyed by destination name.** Re-adding a removed name resumes where it left off, but a new name (for example one that includes a random suffix or a route key) receives all retained history again. Use a stable name per integration.
 - **Lighthouse skip is silent.** Monorail dispatch is skipped for Chrome Lighthouse user-agents. If your synthetic monitoring runs Lighthouse, you will see no Monorail requests in those runs — this is intentional.
 
 ---
