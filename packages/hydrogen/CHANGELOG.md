@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2026.4.6
+
+### Patch Changes
+
+- Fix `og:image:type` falling back to `image/jpeg` for media URLs that include a query string, such as Shopify CDN URLs ending in `?v=...`. ([#4067](https://github.com/Shopify/hydrogen/pull/4067)) by [@kwy404](https://github.com/kwy404)
+
 ## 2026.4.5
 
 ### Patch Changes
