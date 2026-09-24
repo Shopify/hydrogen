@@ -1,4 +1,9 @@
-import {getTrackingValues, useShopifyCookies} from '@shopify/hydrogen-react';
+import {
+  getTrackingValues,
+  SHOPIFY_Y,
+  SHOPIFY_S,
+  useShopifyCookies,
+} from '@shopify/hydrogen-react';
 import {
   CountryCode,
   LanguageCode,
@@ -6,10 +11,7 @@ import {
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {useRevalidator} from 'react-router';
 import {useLoadScript} from '@shopify/hydrogen-react/load-script';
-import {
-  isSfapiProxyEnabled,
-  hasServerReturnedTrackingValues,
-} from '../utils/server-timing';
+import {isSfapiProxyEnabled} from '../utils/server-timing';
 
 export type ConsentStatus = boolean | undefined;
 
@@ -152,16 +154,12 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   );
 
   /**
-   * Determine if we need to fetch tracking values from the browser.
-   * This can happen if the server did not collect this information already (e.g. subrequests were cached).
+   * Fetch tracking values from the browser on every load when the SF API
+   * proxy is detected: the consentManagement response body is the only
+   * channel where tracking values are available.
    */
-  const fetchTrackingValuesFromBrowser = useMemo(
-    () => hasSfapiProxy && !hasServerReturnedTrackingValues(),
-    [hasSfapiProxy],
-  );
-
   const cookiesReady = useShopifyCookies({
-    fetchTrackingValues: fetchTrackingValuesFromBrowser,
+    fetchTrackingValues: hasSfapiProxy,
     storefrontAccessToken,
     ignoreDeprecatedCookies: true,
   });
@@ -341,7 +339,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     // backendConsentStub: the flag object installed after CDN's window.Shopify={} reset,
     //                     before the CDN assigns the full customerPrivacy API
     // fullCustomerPrivacy: the real API once the CDN's Un() assigns it
-    let backendConsentStub: {backendConsentEnabled: true} | null = null;
+    let backendConsentStub: BackendConsentStub | null = null;
     let fullCustomerPrivacy: CustomerPrivacy | null = null;
     let customShopify: {customerPrivacy: CustomerPrivacy} | undefined | object =
       window.Shopify || undefined;
@@ -365,7 +363,13 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
           // reset and its window.Shopify.customerPrivacy = <full API> assignment.
           // The CDN reads this flag before assigning the full API, so the stub
           // must be present when the CDN executes.
-          backendConsentStub = {backendConsentEnabled: true};
+          backendConsentStub = {
+            backendConsentEnabled: true,
+            // Internal diagnostic metadata for Shopify's consent scripts.
+            // The CDN reads `config` from this stub while building its API and
+            // spreads existing values, so it survives the assignment.
+            config: {debug: {hydrogen: HYDROGEN_DEBUG_METADATA}},
+          };
 
           // monitor for when window.Shopify.customerPrivacy is set
           Object.defineProperty(window.Shopify, 'customerPrivacy', {
@@ -412,18 +416,10 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   useEffect(() => {
     if (!apisLoaded || !cookiesReady) return;
 
-    const customerPrivacy = getCustomerPrivacy();
-    // @ts-expect-error Internal property
-    if (customerPrivacy && !customerPrivacy.cachedConsent) {
-      // Consent-tracking-api assumes consent if it doesn't have anything to work with.
-      // Since we have fetched the tracking values already, we set its cachedConsent here.
-      // This is a workaround until consent-tracking-api knows how to read server-timing for us.
-      const trackingValues = getTrackingValues();
-      if (trackingValues.consent) {
-        // @ts-expect-error Internal property
-        customerPrivacy.cachedConsent = trackingValues.consent;
-      }
-    }
+    // Share the consent fetch's values with the Customer Privacy API before
+    // anything consumes it: the banner, the api-loaded event and onReady.
+    // Values the API already holds are never overwritten.
+    publishTrackingValuesToCustomerPrivacy();
 
     if (withPrivacyBanner) {
       const privacyBanner = getPrivacyBanner();
@@ -458,6 +454,62 @@ function emitCustomerPrivacyApiLoaded() {
   hasEmitted = true;
   const event = new CustomEvent('shopifyCustomerPrivacyApiLoaded');
   document.dispatchEvent(event);
+}
+
+// Internal diagnostic metadata for Shopify's consent scripts. Mirrors the
+// metadata newer Hydrogen generations set, with `serverTiming: false` being
+// accurate now that tracking values are read from response bodies.
+const HYDROGEN_DEBUG_METADATA = {generation: 2, serverTiming: false} as const;
+
+type BackendConsentStub = {
+  backendConsentEnabled: true;
+  config: {debug: {hydrogen: typeof HYDROGEN_DEBUG_METADATA}};
+};
+
+// The consent API's in-memory token cache, shared by its readers, Shopify's
+// perf kit and Hydrogen's `getTrackingValues()`.
+type CustomerPrivacyWithTokenCache = CustomerPrivacy & {
+  cachedToken?: Record<string, string | number>;
+  cachedConsent?: string;
+};
+
+// Token cache lifetimes matching the consent API's own `cacheToken` writes:
+const TOKEN_CACHE_EXPIRY_MS = {
+  [SHOPIFY_Y]: 365 * 24 * 60 * 60 * 1000, // ~1 year
+  [SHOPIFY_S]: 30 * 60 * 1000, // 30 minutes
+} as const;
+
+function publishTrackingValuesToCustomerPrivacy(): void {
+  const customerPrivacy =
+    getCustomerPrivacy() as CustomerPrivacyWithTokenCache | null;
+  if (!customerPrivacy) return;
+
+  const {uniqueToken, visitToken, consent} = getTrackingValues();
+
+  const tokens = [
+    {cookieName: SHOPIFY_Y, value: uniqueToken},
+    {cookieName: SHOPIFY_S, value: visitToken},
+  ] as const;
+
+  const publishableTokens = tokens.filter(
+    ({cookieName, value}) =>
+      // Empty values mean no consent was granted: publish nothing for them.
+      value && !customerPrivacy.cachedToken?.[cookieName],
+  );
+
+  if (publishableTokens.length > 0) {
+    const cachedToken = (customerPrivacy.cachedToken ??= {});
+    for (const {cookieName, value} of publishableTokens) {
+      cachedToken[cookieName] = value;
+      // Sibling expiry key, the shape the consent API's token reader expects:
+      cachedToken[`${cookieName}_expires_at`] =
+        Date.now() + TOKEN_CACHE_EXPIRY_MS[cookieName];
+    }
+  }
+
+  if (!customerPrivacy.cachedConsent && consent) {
+    customerPrivacy.cachedConsent = consent;
+  }
 }
 
 function useApisLoaded({withPrivacyBanner}: {withPrivacyBanner: boolean}) {
