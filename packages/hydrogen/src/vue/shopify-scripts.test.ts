@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { mount } from "@vue/test-utils";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { h } from "vue";
 import { renderToString } from "vue/server-renderer";
 
@@ -22,7 +22,6 @@ import type { ShopifyGlobal } from "../globals";
 import { ShopifyScripts } from "./shopify-scripts";
 
 afterEach(() => {
-  window.Shopify?.analytics?.destroy();
   vi.restoreAllMocks();
   delete window.Shopify;
 });
@@ -186,7 +185,11 @@ describe("ShopifyScripts", () => {
         setTrackingConsent: vi.fn(),
       },
     } as unknown as ShopifyGlobal;
-    const bus = setupStorefrontAnalytics({ shop: null, consent: { mode: "custom-banner" } });
+    const { bus, destroy } = setupStorefrontAnalytics({
+      shop: null,
+      consent: { mode: "custom-banner" },
+    });
+    onTestFinished(destroy);
     const destination = vi.fn();
     bus.addDestination({
       name: "test",

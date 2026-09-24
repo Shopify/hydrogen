@@ -11,7 +11,7 @@ import {
   useNavigate,
 } from "react-router";
 
-import { AnalyticsTracker, CartAnalyticsTracker } from "~/components/AnalyticsTrackers";
+import { CartAnalyticsTracker, PageViewedTracker } from "~/components/AnalyticsTrackers";
 import { CartDrawer } from "~/components/CartDrawer";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
@@ -21,7 +21,7 @@ import { createRequestCustomerAccount, customerAccountContext } from "~/lib/cust
 import { envContext } from "~/lib/env";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
-import { analyticsConsent, analyticsShop, shop, storefrontConfig } from "~/lib/shop";
+import { analyticsConsent, shop, storefrontConfig } from "~/lib/shop";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -96,7 +96,6 @@ export const middleware: Route.MiddlewareFunction[] = [
 ];
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
   const [cartResult, navResult] = await Promise.all([
     cartHandlers.get({ storefrontClient, request }),
@@ -106,9 +105,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return {
     cartData: cartResult.data,
     navCollections: navResult.data?.collections.nodes ?? [],
-    analyticsShop,
-    consent: analyticsConsent,
-    enableAnalyticsTestTap: env.MOCK_SHOP === "1",
   };
 }
 
@@ -123,6 +119,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <ShopifyScripts
           i18n={storefrontConfig.i18n}
           shop={shop}
+          analytics={{ channel: "hydrogen" }}
           consent={analyticsConsent}
           navigate={navigate}
           routes={routeTemplates}
@@ -148,11 +145,7 @@ export function Layout({ children }: { children: ReactNode }) {
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <CartProvider initialData={loaderData.cartData}>
-      <AnalyticsTracker
-        shop={loaderData.analyticsShop}
-        consent={loaderData.consent}
-        enableTestTap={loaderData.enableAnalyticsTestTap}
-      />
+      <PageViewedTracker />
       <CartAnalyticsTracker />
       <div
         role="region"

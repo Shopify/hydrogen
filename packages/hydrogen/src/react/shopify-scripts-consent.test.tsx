@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { cleanup, render } from "@testing-library/react";
 import { StrictMode } from "react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, expect, it, onTestFinished, vi } from "vitest";
 
 import { setupStorefrontAnalytics } from "../core/analytics/bus";
 import type { ConsentSetup } from "../core/analytics/types";
@@ -12,7 +12,6 @@ import { ShopifyScripts } from "./shopify-scripts";
 
 afterEach(() => {
   cleanup();
-  window.Shopify?.analytics?.destroy();
   delete window.Shopify;
   vi.restoreAllMocks();
 });
@@ -32,7 +31,11 @@ it("synchronizes once across Strict Mode and remounts, and stays active after un
         .mockResolvedValue(undefined),
     },
   } as unknown as ShopifyGlobal;
-  const bus = setupStorefrontAnalytics({ shop: null, consent: { mode: "custom-banner" } });
+  const { bus, destroy } = setupStorefrontAnalytics({
+    shop: null,
+    consent: { mode: "custom-banner" },
+  });
+  onTestFinished(destroy);
   const destination = vi.fn();
   bus.addDestination({
     name: "test",

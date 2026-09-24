@@ -1,4 +1,4 @@
-import { getSortByValue } from "@shopify/hydrogen";
+import { AnalyticsEvent, getSortByValue } from "@shopify/hydrogen";
 import { CollectionProvider } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
@@ -13,7 +13,6 @@ import {
   useLoadMore,
 } from "~/components/CollectionBrowse";
 import { ProductCard } from "~/components/ProductCard";
-import { AnalyticsEvent, getAnalytics, getAnalyticsShop } from "~/lib/analytics";
 import { loadCollectionPage } from "~/lib/collection";
 import { storefrontClientContext } from "~/lib/storefront";
 
@@ -42,17 +41,11 @@ type ProductNode = Route.ComponentProps["loaderData"]["products"][number];
 
 function CollectionViewedTracker({ collection }: { collection: CollectionData }) {
   useEffect(() => {
-    const analytics = getAnalytics();
-    const shop = getAnalyticsShop();
-    if (!analytics || !shop) return;
-
-    analytics.publish(AnalyticsEvent.COLLECTION_VIEWED, {
+    window.Shopify?.analytics?.publish(AnalyticsEvent.COLLECTION_VIEWED, {
       collection: {
         id: collection.id,
         handle: collection.handle,
       },
-      url: window.location.href,
-      shop,
     });
   }, [collection.id, collection.handle]);
 
