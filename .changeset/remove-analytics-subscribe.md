@@ -1,5 +1,5 @@
 ---
-"@shopify/hydrogen": patch
+"@shopify/hydrogen": minor
 ---
 
 **Breaking:** Remove the top-level `analytics.subscribe()` method. Register event consumers with `analytics.addDestination()` and use the `subscribe` function provided to its setup callback. All event consumers now receive consent-gated delivery and buffered replay.
