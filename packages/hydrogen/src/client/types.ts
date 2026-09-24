@@ -216,7 +216,8 @@ export type GqlRestParam<Doc extends DocLike, Extra extends Record<string, unkno
  * Discriminated on `errors`:
  *
  * - **No `errors`** — `data` is non-null and fully typed by the document.
- * - **`errors` present** — `data` may be `null` (request-level error) or
+ * - **`errors` present** — `data` may be `null` (request-level error, or a non-null
+ *   field error that propagated to the root) or
  *   partial (field-level error absorbed by a nullable ancestor). Always
  *   inspect `errors` first.
  *

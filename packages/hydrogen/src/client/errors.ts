@@ -11,9 +11,9 @@ interface StorefrontApiErrorOptions {
 
 /**
  * Thrown when a Storefront API request fails — HTTP error, network failure,
- * or an unparseable response body.
+ * or an unparseable or unexpected response body.
  *
- * In development, `queryText` and `variables` are attached for debugging.
+ * In development, `queryText` and `variables` are attached when available.
  */
 export class StorefrontApiError extends Error {
   /** Shopify `x-request-id` header, when available. Useful for support requests. */
@@ -29,7 +29,6 @@ export class StorefrontApiError extends Error {
   /** Reserved; not currently populated by `createStorefrontClient`. */
   readonly path?: ReadonlyArray<string | number>;
   /** Reserved; not currently populated by `createStorefrontClient`. */
-  readonly extensions?: Record<string, unknown>;
   readonly extensions?: Record<string, unknown>;
 
   constructor(message: string, options?: StorefrontApiErrorOptions) {
