@@ -99,6 +99,20 @@ function useOptionalCartStore(): CartStore | null {
   return inject(CartStoreKey, null);
 }
 
+/**
+ * Vue component that creates and manages a {@link CartStore} instance.
+ *
+ * Calls {@link CartStore.connect} on mount and {@link CartStore.destroy} on unmount.
+ * All cart composables (`useCart`, `useCartForm`, `useCartActions`) must be
+ * descendants of this component.
+ *
+ * @example
+ * ```vue
+ * <CartProvider :initialData="{ cart: loaderData.cart }">
+ *   <App />
+ * </CartProvider>
+ * ```
+ */
 export const CartProvider = defineComponent({
   name: "CartProvider",
   props: {
@@ -124,6 +138,27 @@ export const CartProvider = defineComponent({
   },
 });
 
+/**
+ * Subscribes to {@link CartState} as a Vue `ShallowRef`.
+ *
+ * Without a selector, returns the full `CartState`. With a selector, returns
+ * a `ShallowRef` of the selected slice — the ref updates only when the
+ * selected value changes (by reference, or by custom `isEqual`).
+ *
+ * @example
+ * ```vue
+ * <script setup>
+ * // Full state
+ * const state = useCart();
+ *
+ * // Selected slice — re-renders only when lines change
+ * const lines = useCart((s) => s.data.lines.nodes);
+ *
+ * // Check if a specific line is pending
+ * const isPending = useCart((s) => s.pending.lines.has(lineId));
+ * </script>
+ * ```
+ */
 export function useCart(): Readonly<ShallowRef<CartState>>;
 export function useCart<TData extends CartData = CartData, S = unknown>(
   selector: (state: CartState<TData>) => S,
@@ -138,11 +173,42 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
   return useCartSelector(store, resolve, isEqual) as Readonly<ShallowRef<S>>;
 }
 
+/**
+ * Returns cart actions for reconciling state after out-of-band mutations.
+ *
+ * Currently exposes {@link CartStore.refresh} — call it after server-side cart
+ * mutations that bypass the form system.
+ *
+ * @example
+ * ```vue
+ * <script setup>
+ * const { refresh } = useCartActions();
+ *
+ * async function handleServerAction() {
+ *   await createCartOnServer();
+ *   refresh();
+ * }
+ * </script>
+ * ```
+ */
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
   return { refresh: store.refresh };
 }
 
+/**
+ * Subscribes the {@link CartStore} to the analytics event dispatcher.
+ *
+ * Call once near the root of your app. Starts tracking on mount via `onMounted`
+ * and cleans up via `onScopeDispose`.
+ *
+ * @example
+ * ```vue
+ * <script setup>
+ * useCartAnalytics();
+ * </script>
+ * ```
+ */
 export function useCartAnalytics(): void {
   const store = useCartStore("useCartAnalytics");
   let stopTracking: (() => void) | undefined;
@@ -185,6 +251,36 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
   return selected as Readonly<ShallowRef<S>>;
 }
 
+/**
+ * Returns form props, a field register function, and reactive pending state
+ * for building cart forms in Vue.
+ *
+ * Unlike the React hook, the Vue variant includes `isPending` — a reactive
+ * object with `initial` (`ComputedRef<boolean>`) for the initial cart load
+ * and `lines(lineId?)` for checking per-line or any-line pending state.
+ *
+ * Note: `interactive: true` returns numeric input attributes but does **not**
+ * auto-submit on change — that behavior requires `attachQuantityInput`, which
+ * is only wired by the React adapter.
+ *
+ * @example
+ * ```vue
+ * <script setup>
+ * const { formProps, register, isPending } = useCartForm();
+ * </script>
+ *
+ * <template>
+ *   <form v-bind="formProps()">
+ *     <input v-bind="register('lineId', { value: line.id })" />
+ *     <input v-bind="register('quantity', { value: line.quantity })" />
+ *     <button v-bind="register('set')" />
+ *     <button v-bind="register('increase')">+</button>
+ *     <button v-bind="register('decrease')">−</button>
+ *     <span v-if="isPending.lines(line.id)">Updating…</span>
+ *   </form>
+ * </template>
+ * ```
+ */
 export function useCartForm(): {
   formProps: (opts?: {
     beforeSubmit?: (e: Event) => void;
@@ -225,6 +321,26 @@ export function useCartForm(): {
   return { formProps, register, isPending };
 }
 
+/**
+ * Factory that returns typed cart components and composables matched to your
+ * server handler's cart query shape.
+ *
+ * The generic `THandlers` parameter is inferred from your `createCartServerHandlers`
+ * call, so every composable's {@link CartState} carries your custom cart fields.
+ *
+ * @example
+ * ```ts
+ * import type { cartServerHandlers } from "./server/cart.server";
+ *
+ * const {
+ *   CartProvider,
+ *   useCart,
+ *   useOptionalCart,
+ *   useCartActions,
+ *   useCartForm,
+ * } = createCartComponents<typeof cartServerHandlers>();
+ * ```
+ */
 export function createCartComponents<THandlers>(): TypedCartComponents<
   CartDataFromHandlers<THandlers>
 > {
