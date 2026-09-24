@@ -40,8 +40,11 @@ export function analyticsPublishTypes() {
   // @ts-expect-error search views require a search term
   analytics.publish(AnalyticsEvent.SEARCH_VIEWED);
 
-  // @ts-expect-error custom subscriptions are temporarily unsupported
-  analytics.subscribe("custom_marketing_banner_opened", () => {});
+  // @ts-expect-error event subscriptions are only available inside destination setup
+  analytics.subscribe("page_viewed", () => {});
+
+  // @ts-expect-error the global analytics bus also exposes only destination subscriptions
+  window.Shopify?.analytics?.subscribe("page_viewed", () => {});
 
   analytics.addDestination({
     name: "test-destination",

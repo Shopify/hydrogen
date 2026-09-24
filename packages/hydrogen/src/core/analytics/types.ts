@@ -186,11 +186,6 @@ export type StorefrontAnalyticsDestination = {
 
 export type StorefrontAnalytics = {
   publish: <E extends AnalyticsEventName>(event: E, ...payload: PublishPayloadArgs<E>) => void;
-  /** Listen for live analytics events. Destination integrations should use `addDestination()`. */
-  subscribe: <E extends AnalyticsEventName>(
-    event: E,
-    callback: (payload: PayloadFor<E>) => void,
-  ) => () => void;
   addDestination: (destination: StorefrontAnalyticsDestination) => () => void;
   destroy: () => void;
   getConfig: () => StorefrontAnalyticsConfig;

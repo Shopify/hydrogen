@@ -64,6 +64,12 @@ const CART_DATA: AnalyticsCart = {
   },
 };
 
+function grantAnalyticsConsent() {
+  (window as any).Shopify = {
+    customerPrivacy: { consentStatus: "loaded", analyticsProcessingAllowed: () => true },
+  };
+}
+
 function createTestBus(overrides: Partial<StorefrontAnalyticsConfig> = {}) {
   return setupStorefrontAnalytics({
     shop: SHOP_DATA,
@@ -252,29 +258,27 @@ describe("setupStorefrontAnalytics", () => {
     });
   });
 
-  describe("pub/sub", () => {
-    it("delivers events to subscribers", () => {
-      const bus = createTestBus();
-      const callback = vi.fn();
-
-      bus.subscribe("page_viewed", callback);
-
-      bus.publish("page_viewed", { url: "/test", shop: SHOP_DATA });
-
-      expect(callback).toHaveBeenCalledOnce();
-      expect(callback).toHaveBeenCalledWith(expect.objectContaining({ url: "/test" }));
-    });
+  describe("publishing", () => {
+    beforeEach(grantAnalyticsConsent);
 
     it("defaults the payload shop from the bus config when omitted", () => {
       const bus = createTestBus();
       const callback = vi.fn();
 
-      bus.subscribe("page_viewed", callback);
+      bus.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", callback);
+        },
+      });
 
       bus.publish("page_viewed", { url: "/test" });
 
       expect(callback).toHaveBeenCalledOnce();
-      expect(callback).toHaveBeenCalledWith(expect.objectContaining({ shop: SHOP_DATA }));
+      expect(callback).toHaveBeenCalledWith(
+        expect.objectContaining({ shop: SHOP_DATA }),
+        DESTINATION_CONTEXT,
+      );
     });
 
     it("normalizes configured shop IDs before publishing", () => {
@@ -287,7 +291,12 @@ describe("setupStorefrontAnalytics", () => {
       });
       const callback = vi.fn();
 
-      bus.subscribe("page_viewed", callback);
+      bus.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", callback);
+        },
+      });
       bus.publish("page_viewed", { url: "/test" });
 
       expect(callback).toHaveBeenCalledOnce();
@@ -299,6 +308,7 @@ describe("setupStorefrontAnalytics", () => {
             storefrontId: "sub-2",
           },
         }),
+        DESTINATION_CONTEXT,
       );
     });
 
@@ -307,12 +317,18 @@ describe("setupStorefrontAnalytics", () => {
       const callback = vi.fn();
       window.history.pushState({}, "", "/optional-payload");
 
-      bus.subscribe("page_viewed", callback);
+      bus.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", callback);
+        },
+      });
       bus.publish("page_viewed");
 
       expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveBeenCalledWith(
         expect.objectContaining({ shop: SHOP_DATA, url: window.location.href }),
+        DESTINATION_CONTEXT,
       );
     });
 
@@ -324,7 +340,12 @@ describe("setupStorefrontAnalytics", () => {
       const bus = createTestBus();
       const callback = vi.fn();
 
-      bus.subscribe("page_viewed", callback);
+      bus.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", callback);
+        },
+      });
 
       bus.publish("page_viewed", { url: "/test", shop: explicitShop });
 
@@ -336,6 +357,7 @@ describe("setupStorefrontAnalytics", () => {
             shopId: "gid://shopify/Shop/2",
           },
         }),
+        DESTINATION_CONTEXT,
       );
     });
 
@@ -344,83 +366,21 @@ describe("setupStorefrontAnalytics", () => {
       const callback = vi.fn();
       window.history.pushState({}, "", "/collections/all?sort=title#grid");
 
-      bus.subscribe("collection_viewed", callback);
+      bus.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("collection_viewed", callback);
+        },
+      });
       bus.publish("collection_viewed", {
         collection: { id: "gid://shopify/Collection/1", handle: "all" },
       });
 
       expect(callback).toHaveBeenCalledOnce();
-      expect(callback).toHaveBeenCalledWith(expect.objectContaining({ url: window.location.href }));
-    });
-
-    it("delivers events regardless of consent state (consent-agnostic bus)", () => {
-      const bus = createTestBus();
-      const callback = vi.fn();
-      bus.subscribe("page_viewed", callback);
-
-      bus.publish("page_viewed", { url: "/test", shop: SHOP_DATA });
-
-      expect(callback).toHaveBeenCalledOnce();
-    });
-
-    it("returns an unsubscribe function", () => {
-      const bus = createTestBus();
-      const callback = vi.fn();
-
-      const unsubscribe = bus.subscribe("page_viewed", callback);
-
-      bus.publish("page_viewed", { url: "/first", shop: SHOP_DATA });
-      expect(callback).toHaveBeenCalledOnce();
-
-      unsubscribe();
-
-      bus.publish("page_viewed", { url: "/second", shop: SHOP_DATA });
-      expect(callback).toHaveBeenCalledOnce();
-    });
-
-    it("supports multiple subscribers for the same event", () => {
-      const bus = createTestBus();
-      const callbackA = vi.fn();
-      const callbackB = vi.fn();
-
-      bus.subscribe("page_viewed", callbackA);
-      bus.subscribe("page_viewed", callbackB);
-
-      bus.publish("page_viewed", { url: "/test", shop: SHOP_DATA });
-
-      expect(callbackA).toHaveBeenCalledOnce();
-      expect(callbackB).toHaveBeenCalledOnce();
-    });
-
-    it("isolates events by name", () => {
-      const bus = createTestBus();
-      const pageCallback = vi.fn();
-      const productCallback = vi.fn();
-
-      bus.subscribe("page_viewed", pageCallback);
-      bus.subscribe("product_viewed", productCallback);
-
-      bus.publish("page_viewed", { url: "/test", shop: SHOP_DATA });
-
-      expect(pageCallback).toHaveBeenCalledOnce();
-      expect(productCallback).not.toHaveBeenCalled();
-    });
-
-    it("catches subscriber errors without breaking other subscribers", () => {
-      const bus = createTestBus();
-      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-      bus.subscribe("page_viewed", () => {
-        throw new Error("subscriber failed");
-      });
-      const healthyCallback = vi.fn();
-      bus.subscribe("page_viewed", healthyCallback);
-
-      bus.publish("page_viewed", { url: "/test", shop: SHOP_DATA });
-
-      expect(healthyCallback).toHaveBeenCalledOnce();
-      expect(errorSpy).toHaveBeenCalled();
-      errorSpy.mockRestore();
+      expect(callback).toHaveBeenCalledWith(
+        expect.objectContaining({ url: window.location.href }),
+        DESTINATION_CONTEXT,
+      );
     });
 
     it("warns and drops unsupported publish events", () => {
@@ -428,23 +388,13 @@ describe("setupStorefrontAnalytics", () => {
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       const callback = vi.fn();
 
-      bus.subscribe("page_viewed", callback);
+      bus.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", callback);
+        },
+      });
       bus.publish("custom_my_event" as never, { shop: SHOP_DATA } as never);
-
-      expect(callback).not.toHaveBeenCalled();
-      expect(warnSpy).toHaveBeenCalledWith(
-        '[hydrogen:warn:analytics] unsupported analytics event "custom_my_event"',
-      );
-      warnSpy.mockRestore();
-    });
-
-    it("warns and ignores unsupported subscriptions", () => {
-      const bus = createTestBus();
-      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-      const callback = vi.fn();
-
-      const unsubscribe = bus.subscribe("custom_my_event" as never, callback as never);
-      unsubscribe();
 
       expect(callback).not.toHaveBeenCalled();
       expect(warnSpy).toHaveBeenCalledWith(
@@ -1054,6 +1004,7 @@ describe("setupStorefrontAnalytics", () => {
     it("assigns bus to window.Shopify.analytics", () => {
       const bus = createTestBus();
       expect(window.Shopify?.analytics).toBe(bus);
+      expect(bus).not.toHaveProperty("subscribe");
       expect((window.Shopify as any)?.["headless"]).toBeUndefined();
       expect((window as any).headlessAnalytics).toBeUndefined();
       bus.destroy();
@@ -1103,15 +1054,27 @@ describe("setupStorefrontAnalytics", () => {
   });
 
   describe("instance isolation", () => {
+    beforeEach(grantAnalyticsConsent);
+
     it("re-created bus after destroy has independent state", () => {
       const busA = createTestBus();
       const callbackA = vi.fn();
-      busA.subscribe("page_viewed", callbackA);
+      busA.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", callbackA);
+        },
+      });
       busA.destroy();
 
       const busB = createTestBus();
       const callbackB = vi.fn();
-      busB.subscribe("page_viewed", callbackB);
+      busB.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", callbackB);
+        },
+      });
 
       busB.publish("page_viewed", { url: "/b", shop: SHOP_DATA });
 
@@ -1123,10 +1086,17 @@ describe("setupStorefrontAnalytics", () => {
   });
 
   describe("destroy", () => {
+    beforeEach(grantAnalyticsConsent);
+
     it("stops delivering events after destroy", () => {
       const bus = createTestBus();
       const callback = vi.fn();
-      bus.subscribe("page_viewed", callback);
+      bus.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", callback);
+        },
+      });
 
       bus.publish("page_viewed", { url: "/before", shop: SHOP_DATA });
       expect(callback).toHaveBeenCalledOnce();
@@ -1139,11 +1109,18 @@ describe("setupStorefrontAnalytics", () => {
   });
 
   describe("backward-compat: page_viewed payload shape", () => {
+    beforeEach(grantAnalyticsConsent);
+
     it("publishes page_viewed with shop, cart, and url", () => {
       const bus = createTestBus();
       const pageViewedEvent = vi.fn();
 
-      bus.subscribe("page_viewed", pageViewedEvent);
+      bus.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", pageViewedEvent);
+        },
+      });
 
       const payload = {
         shop: SHOP_DATA,
@@ -1164,6 +1141,7 @@ describe("setupStorefrontAnalytics", () => {
           shop: SHOP_DATA,
           url: expect.any(String),
         }),
+        DESTINATION_CONTEXT,
       );
     });
   });

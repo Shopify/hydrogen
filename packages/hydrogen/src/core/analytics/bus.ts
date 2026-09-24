@@ -15,8 +15,6 @@ import type {
 } from "./types";
 import { normalizeShopAnalytics } from "./utils/shop";
 
-type AnalyticsCallback = (payload: unknown) => void;
-
 const URL_INFERRED_EVENTS = new Set<string>([
   AnalyticsEvent.PAGE_VIEWED,
   AnalyticsEvent.PRODUCT_VIEWED,
@@ -137,9 +135,6 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
   let destroyed = false;
   let waitingForDefaultBannerInteraction = false;
 
-  const subscribers = new Map<string, Map<string, AnalyticsCallback>>();
-  let nextSubscriberId = 0;
-
   function getConfig() {
     return {
       shop,
@@ -148,8 +143,7 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
     } satisfies StorefrontAnalyticsConfig;
   }
 
-  // Tracking integrations (Shopify analytics CDN, third-party destinations) need consent
-  // gating and event replay. subscribe() stays live-only; destinations go through here.
+  // All event consumers use destinations for consent gating and event replay.
   const destinationManager = createDestinationManager({
     canTrack: () => !waitingForDefaultBannerInteraction && hasAnalyticsConsent(),
     getConfig,
@@ -169,37 +163,9 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
 
     const payload = getPublishPayload(payloadArgs[0]);
     const normalizedPayload = withInferredUrl(event, withDefaultShop(payload, shop));
-    const eventSubscribers = subscribers.get(event) ?? new Map();
-    eventSubscribers.forEach((callback, subscriberId) => {
-      try {
-        callback(normalizedPayload);
-      } catch (error) {
-        consoleLogger.error("analytics publish error", { scope: "analytics", error, subscriberId });
-      }
-    });
 
     // Buffer the event and deliver to destinations when analytics consent allows.
     destinationManager.onPublish(event, normalizedPayload);
-  }
-
-  function subscribe<E extends AnalyticsEventName>(
-    event: E,
-    callback: (payload: PayloadFor<E>) => void,
-  ): () => void {
-    if (!isSupportedAnalyticsEvent(event)) {
-      warnUnsupportedAnalyticsEvent(event);
-      return () => {};
-    }
-    let eventSubscribers = subscribers.get(event);
-    if (!eventSubscribers) {
-      eventSubscribers = new Map();
-      subscribers.set(event, eventSubscribers);
-    }
-    const id = String(nextSubscriberId++);
-    eventSubscribers.set(id, callback as AnalyticsCallback);
-    return () => {
-      subscribers.get(event)?.delete(id);
-    };
   }
 
   const MOCK_SHOP_ID_SUFFIX = "/68817551382";
@@ -260,7 +226,6 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
 
   function destroy() {
     destroyed = true;
-    subscribers.clear();
     destinationManager.destroy(); // Tear down destination subscriptions and cleanup hooks.
     cleanupConsentReplay?.();
 
@@ -271,7 +236,6 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
 
   const busInstance: StorefrontAnalytics = {
     publish,
-    subscribe,
     addDestination: destinationManager.addDestination, // Public API for consent-gated trackers.
     destroy,
     getConfig,

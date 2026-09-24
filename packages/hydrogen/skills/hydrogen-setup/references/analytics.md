@@ -36,8 +36,7 @@ Your app code
   ▼
 window.Shopify.analytics
   │
-  ├── publish / subscribe / addDestination / destroy  (app-facing)
-  ├── raw live subscribers
+  ├── publish / addDestination / destroy / getConfig  (app-facing)
   └── consent-gated destinations with replay
       │
       └── Customer Privacy gates destination delivery and replay
@@ -137,7 +136,7 @@ Default:
 () => window.Shopify?.customerPrivacy?.analyticsProcessingAllowed() ?? false
 ```
 
-This is conservative by design: if the Customer Privacy script is blocked, hasn't loaded, or is unavailable, **destination delivery is blocked**. Raw `subscribe()` listeners still see live events, but analytics destinations do not receive events until `analyticsProcessingAllowed()` returns true.
+If the Customer Privacy script is blocked, hasn't loaded, or is unavailable, **destination delivery is blocked**. Destinations receive events only after consent is loaded and analytics processing is allowed.
 
 Events published before consent is ready are buffered for destinations and replayed only if analytics consent is granted. Destinations only receive supported event names they subscribe to. If the visitor explicitly denies analytics consent, the replay buffer is cleared.
 
@@ -577,7 +576,7 @@ analytics?.addDestination({
 });
 ```
 
-Consent gating happens at the bus level before destination callbacks see the payload. Raw `analytics.subscribe()` is live-only and consent-agnostic; use `addDestination()` for logging or analytics destinations that should respect consent and replay.
+Register all event consumers with `addDestination()` and subscribe inside its setup callback. Consent gating happens at the bus level before destination callbacks see the payload.
 
 Destinations that need Shopify visitor IDs can call `getTrackingValues()` from the callback's second argument: `subscribe(event, (payload, { getTrackingValues }) => { ... })`. It reads current `uniqueToken` and `visitToken` values from the consent API when called, including during replay, and requests fallback generation with the tag `hydrogen:<destination name>`. Unavailable tokens are empty strings, and the getter also returns empty strings whenever analytics tracking is not currently allowed, so a retained getter cannot read or generate tokens after consent is revoked. Call it inside the destination callback; registration itself does not read or generate tokens.
 
@@ -599,7 +598,7 @@ For production, re-verify against the production bundle. Several gotchas only ap
 
 ## Common gotchas
 
-- **Replay is destination-only.** Raw `analytics.subscribe()` listeners only receive live events. `analytics.addDestination()` callbacks receive consent-gated live events plus buffered replay after analytics consent is granted. If the visitor explicitly denies analytics consent, the buffer is cleared and those pre-denial events are never replayed.
+- **Destinations receive live events and buffered replay after analytics consent is granted.** If the visitor explicitly denies analytics consent, the buffer is cleared and those pre-denial events are never replayed.
 - **The singleton must be lazy.** Reading the global bus at module top-level can run on the server during SSR and crash on `window` access. Always wrap in a `typeof window === 'undefined'` guard.
 - **Use the right shop shape for each API.** `ShopifyScripts` accepts a numeric Shop ID or Shopify Shop GID plus `storefrontId` and the permanent `myshopifyDomain`; the analytics bus normalizes `shop.shopId` to a Shopify Shop GID before dispatch, while the bootstrap exposes the domain as `window.Shopify.shop`.
 - **Customer Privacy script blocked by CSP.** If your CSP does not allow `cdn.shopify.com`, the consent script never loads, `analyticsProcessingAllowed()` stays `false`, and destination events never deliver. Check Network tab for blocked requests; add `cdn.shopify.com` to `script-src`.
