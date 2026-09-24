@@ -134,8 +134,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     cartData: cartResult.data,
     navCollections: layoutResult.data?.collections.nodes ?? [],
     shopInfo: normalizeStorefrontShop(layoutResult.data?.shop),
-    // Computed on the server so the footer year cannot differ during hydration.
-    copyrightYear: new Date().getFullYear(),
     announcement,
   };
 }
@@ -182,7 +180,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <AnnouncementBar message={loaderData.announcement} />
       <Header navCollections={loaderData.navCollections} shopInfo={loaderData.shopInfo} />
       <Outlet />
-      <Footer shopInfo={loaderData.shopInfo} copyrightYear={loaderData.copyrightYear} />
+      <Footer shopInfo={loaderData.shopInfo} />
       <CartDrawer />
     </CartProvider>
   );
