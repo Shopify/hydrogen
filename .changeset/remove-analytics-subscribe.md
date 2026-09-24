@@ -19,6 +19,6 @@ analytics.addDestination({
 
 New destinations receive retained history when analytics consent allows, including events published while consent was already allowed. The buffer holds up to 500 events and is cleared when analytics consent is explicitly denied. Consumers migrating from the live-only API should account for this replay.
 
-The function returned by `addDestination()` removes the destination; each setup subscription also returns an unsubscribe function. Removing and re-adding a destination, even with the same name, replays retained history again and can duplicate deliveries. Keep registration outside component mount/unmount cycles.
+The function returned by `addDestination()` removes the destination; each setup subscription also returns an unsubscribe function.
 
 Also remove `analytics.destroy()`. Hydrogen owns the shared bus for the page's lifetime. Use the cleanup function returned by `addDestination()` when intentionally removing a destination.

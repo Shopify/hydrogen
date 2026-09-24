@@ -32,14 +32,15 @@ type DestinationRecord = {
 /**
  * Delivers one buffered event to a destination's subscribed callbacks.
  * Always advances the destination replay cursor, even when it has no
- * subscribers for that event.
+ * subscribers for that event. The cursor advances before callbacks run, so a
+ * callback that removes its own destination does not see the event again
+ * when the destination is re-added.
  */
 function deliverDestinationEvent(destination: DestinationRecord, entry: ReplayEntry): void {
+  destination.nextReplaySequence = Math.max(destination.nextReplaySequence, entry.sequence + 1);
+
   const eventSubscriptions = destination.subscriptions.get(entry.event);
-  if (!eventSubscriptions?.size) {
-    destination.nextReplaySequence = Math.max(destination.nextReplaySequence, entry.sequence + 1);
-    return;
-  }
+  if (!eventSubscriptions?.size) return;
 
   for (const callback of eventSubscriptions) {
     try {
@@ -51,8 +52,6 @@ function deliverDestinationEvent(destination: DestinationRecord, entry: ReplayEn
       });
     }
   }
-
-  destination.nextReplaySequence = Math.max(destination.nextReplaySequence, entry.sequence + 1);
 }
 
 type DestinationManagerDeps = {
@@ -75,6 +74,10 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
   const replayBuffer: ReplayEntry[] = [];
   const destinations = new Set<DestinationRecord>();
   const destinationNames = new Set<string>();
+  // Replay cursors of removed destinations, keyed by name. Re-adding a name
+  // resumes from its cursor, so each retained event reaches a destination name
+  // at most once, even across component remounts.
+  const removedReplayCursors = new Map<string, number>();
 
   /**
    * Replays buffered events to all registered destinations.
@@ -103,7 +106,8 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
   /**
    * Registers a destination integration. Runs setup synchronously or
    * asynchronously, then replays any buffered events the destination
-   * subscribes to.
+   * subscribes to. Re-adding a previously removed name resumes replay after
+   * the last event that name was delivered.
    *
    * @returns A function that removes the destination and runs its cleanup hook.
    */
@@ -116,6 +120,8 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
     }
 
     destinationNames.add(destination.name);
+    const resumedReplaySequence = removedReplayCursors.get(destination.name) ?? 0;
+    removedReplayCursors.delete(destination.name);
 
     const tag = `hydrogen:${destination.name}`;
     const destinationRecord: DestinationRecord = {
@@ -127,7 +133,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
           deps.canTrack() ? getTrackingValues(tag) : { uniqueToken: "", visitToken: "" },
       },
       subscriptions: new Map(),
-      nextReplaySequence: 0,
+      nextReplaySequence: resumedReplaySequence,
     };
     let removed = false;
 
@@ -169,6 +175,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
       removed = true;
       destinations.delete(destinationRecord);
       destinationNames.delete(destination.name);
+      removedReplayCursors.set(destination.name, destinationRecord.nextReplaySequence);
       destinationRecord.subscriptions.clear();
       destinationRecord.cleanup?.();
     };
@@ -249,6 +256,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
     }
     destinations.clear();
     destinationNames.clear();
+    removedReplayCursors.clear();
   }
 
   return {
