@@ -153,7 +153,7 @@ export type StorefrontClientOptions =
  *
  * Discriminated on `type`: `"public"` requires a public (or no) token,
  * `"private"` requires a private token plus a request context with `buyerIp`,
- * and `"private_no_buyer_context"` requires a private token without buyer identity.
+ * and `"private_no_buyer_context"` requires a private token; `buyerIp` is not forwarded.
  */
 // `Type` and `CacheConfig` are inference holes for `createStorefrontClient`:
 // each member's discriminant is intersected with `Type` (resolving to the plain
