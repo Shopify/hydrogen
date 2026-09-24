@@ -812,6 +812,24 @@ describe("shopify scripts", () => {
     );
   });
 
+  it("entity-escapes angle brackets in attribute values and preserves boolean and empty attributes", () => {
+    expect(
+      renderShopifyScriptTag({
+        tagName: "script",
+        attributes: {
+          "data-Config": '<x y="1">&</x>',
+          async: true,
+          defer: false,
+          nonce: "",
+        },
+        innerHTML: 'if (a < b && c > d) { console.log("raw"); }',
+      }),
+    ).toBe(
+      '<script data-config="&lt;x y=&quot;1&quot;&gt;&amp;&lt;/x&gt;" async nonce="">' +
+        'if (a < b && c > d) { console.log("raw"); }</script>',
+    );
+  });
+
   it("renders a link tag descriptor to HTML", () => {
     expect(
       renderShopifyScriptTag({

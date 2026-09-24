@@ -89,6 +89,26 @@ export function getPrivateStorefrontToken(env: Pick<Env, "PRIVATE_STOREFRONT_API
   return token;
 }
 
+// Configuration for the <shopify-account> header widget. Returns null in mock
+// mode (no Customer Account API) or without a PUBLIC token, in which case the
+// header shows a link to `/account` instead. Only public values are returned:
+// they are serialised into the HTML.
+export type AccountWidgetConfig = { storeDomain: string; publicAccessToken: string };
+
+export function getAccountWidgetConfig(
+  env: Pick<
+    Env,
+    | "MOCK_SHOP"
+    | "PRIVATE_STOREFRONT_API_TOKEN"
+    | "PUBLIC_STORE_DOMAIN"
+    | "PUBLIC_STOREFRONT_API_TOKEN"
+  >,
+): AccountWidgetConfig | null {
+  const publicAccessToken = env.PUBLIC_STOREFRONT_API_TOKEN;
+  if (shouldUseMockShop(env) || !publicAccessToken) return null;
+  return { storeDomain: getStoreDomain(env), publicAccessToken };
+}
+
 // Buyer IP for private Storefront clients (Shopify uses it for bot/abuse
 // signals). Returns the first trusted forwarded IP; falls back to localhost in
 // development and throws in production when none is present.

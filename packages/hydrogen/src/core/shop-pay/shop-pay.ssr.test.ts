@@ -14,4 +14,21 @@ describe("renderShopPayButton SSR", () => {
     expect(html).toContain("background-color:#5433eb");
     expect(html).toContain('href="/cart/123:1?payment=shop_pay&amp;source=hydrogen"');
   });
+
+  it("escapes attribute values and omits whitespace-only nonces", () => {
+    const html = renderShopPayButton({
+      accessibilityLabel: 'Buy <b>"now"</b> & save',
+      nonce: 'n"once&<>',
+    });
+
+    expect(html).toContain(
+      'accessibility-label="Buy &lt;b&gt;&quot;now&quot;&lt;/b&gt; &amp; save"',
+    );
+    expect(html).toContain('aria-label="Buy &lt;b&gt;&quot;now&quot;&lt;/b&gt; &amp; save"');
+    expect(html).toContain('<style nonce="n&quot;once&amp;&lt;&gt;">');
+
+    const blankNonce = renderShopPayButton({ nonce: "  " });
+    expect(blankNonce).not.toContain("nonce=");
+    expect(blankNonce).toContain("<style>");
+  });
 });

@@ -212,6 +212,9 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     expect(coreDeclaration).toContain("getShopifyScriptTags");
     expect(coreDeclaration).toContain("initializeShopifyScripts");
     expect(coreDeclaration).toContain("renderShopifyScriptTags");
+    expect(coreDeclaration).toContain("./account-widget/");
+    expect(coreDeclaration).toContain("renderShopifyAccountWidget");
+    expect(coreDeclaration).toContain("ShopifyAccountWidgetOptions");
     expect(coreDeclaration).not.toContain("loadShopifyWebMcpTools");
     expect(coreDeclaration).not.toContain("setShopifyRouting");
 

@@ -71,6 +71,28 @@ Open <https://local.tryhydrogen.dev:5173>.
 
 The local HTTPS plugin provisions and reuses a trusted certificate under `~/.shopify/hydrogen/certs/` (on first run, it may prompt to install the local certificate authority), links an unlinked Hydrogen storefront, and pushes the Customer Account callback, JavaScript origin, and logout URLs. See the `hydrogen-local-https` skill for CI and manual fallback behavior.
 
+**Account widget** — in real-store mode, the header renders Shopify's
+[`<shopify-account>`](https://shopify.dev/docs/api/storefront-web-components/components/shopify-account)
+component when a **public** Storefront API token is available:
+
+```bash
+# .env
+PUBLIC_STOREFRONT_API_TOKEN=   # public token; it is serialised into the HTML
+```
+
+In the Shopify admin, open the Hydrogen app, select your storefront and go to
+**Storefront settings > Storefront API**. The component needs the
+`unauthenticated_read_customers`, `unauthenticated_read_content` and
+`unauthenticated_read_product_listings` permissions. Never use
+`PRIVATE_STOREFRONT_API_TOKEN` here. Without the public token, or in `mock.shop`
+mode, the header shows a link to `/account` instead.
+
+**Warning:** if both tokens are set but `PUBLIC_STORE_DOMAIN` is not, the widget
+targets the default `hydrogen-preview.myshopify.com` with your public token. Set
+`PUBLIC_STORE_DOMAIN` to your store's domain.
+
+Opening and interacting with the account sheet requires JavaScript.
+
 Mode is **auto-detected**: when a `PRIVATE_STOREFRONT_API_TOKEN` is present the
 app talks to the real store (`PUBLIC_STORE_DOMAIN`, falling back to the default in
 `app/lib/shop.ts`); with none it falls back to the `mock.shop` demo, so a fresh

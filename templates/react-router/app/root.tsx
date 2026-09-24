@@ -9,6 +9,7 @@ import {
   Scripts,
   ScrollRestoration,
   useNavigate,
+  useRouteLoaderData,
 } from "react-router";
 
 import { AnalyticsTracker, CartAnalyticsTracker } from "~/components/AnalyticsTrackers";
@@ -21,7 +22,13 @@ import { createRequestCustomerAccount, customerAccountContext } from "~/lib/cust
 import { envContext } from "~/lib/env";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
-import { analyticsConsent, analyticsShop, shop, storefrontConfig } from "~/lib/shop";
+import {
+  analyticsConsent,
+  analyticsShop,
+  getAccountWidgetConfig,
+  shop,
+  storefrontConfig,
+} from "~/lib/shop";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -106,6 +113,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return {
     cartData: cartResult.data,
     navCollections: navResult.data?.collections.nodes ?? [],
+    accountWidget: getAccountWidgetConfig(env),
     analyticsShop,
     consent: analyticsConsent,
     enableAnalyticsTestTap: env.MOCK_SHOP === "1",
@@ -114,6 +122,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
 export function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const loaderData = useRouteLoaderData<typeof loader>("root");
 
   return (
     <html lang="en">
@@ -121,6 +130,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <ShopifyScripts
+          account={loaderData?.accountWidget != null}
           i18n={storefrontConfig.i18n}
           shop={shop}
           consent={analyticsConsent}
@@ -161,7 +171,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       >
         <p className="type-body-sm text-surface">Free shipping on orders over $50</p>
       </div>
-      <Header navCollections={loaderData.navCollections} />
+      <Header navCollections={loaderData.navCollections} accountWidget={loaderData.accountWidget} />
       <Outlet />
       <Footer />
       <CartDrawer />

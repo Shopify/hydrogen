@@ -1,9 +1,13 @@
+import { renderShopifyAccountWidget } from "@shopify/hydrogen";
 import { Link } from "react-router";
 
 import { useCart } from "~/lib/cart";
 import { CART_DRAWER_ID, openCartDrawer } from "~/lib/cart-drawer";
+import type { AccountWidgetConfig } from "~/lib/shop";
 
 import { MobileNav, MobileNavTrigger, type NavCollection } from "./MobileNav";
+
+const ACCOUNT_ICON_HTML = '<img src="/icons/icon-user.svg" alt="" class="size-5">';
 
 function cartCountLabel(count: number) {
   return count === 1 ? "Cart (1 item)" : `Cart (${count} items)`;
@@ -17,7 +21,36 @@ function displayCount(count: number) {
   return count > 99 ? "99+" : String(count);
 }
 
-export function Header({ navCollections }: { navCollections: NavCollection[] }) {
+function AccountControl({ config }: { config: AccountWidgetConfig | null }) {
+  if (!config) {
+    return (
+      <Link
+        to="/account"
+        className="text-on-surface focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
+        aria-label="Account"
+      >
+        <img src="/icons/icon-user.svg" alt="" className="size-5" aria-hidden="true" />
+      </Link>
+    );
+  }
+
+  return (
+    <span
+      className="text-on-surface inline-flex"
+      dangerouslySetInnerHTML={{
+        __html: renderShopifyAccountWidget({ ...config, signedOutAvatarHtml: ACCOUNT_ICON_HTML }),
+      }}
+    />
+  );
+}
+
+export function Header({
+  navCollections,
+  accountWidget,
+}: {
+  navCollections: NavCollection[];
+  accountWidget: AccountWidgetConfig | null;
+}) {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
 
   return (
@@ -62,13 +95,7 @@ export function Header({ navCollections }: { navCollections: NavCollection[] }) 
           >
             <img src="/icons/icon-search.svg" alt="" className="size-5" aria-hidden="true" />
           </Link>
-          <Link
-            to="/account"
-            className="text-on-surface focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
-            aria-label="Account"
-          >
-            <img src="/icons/icon-user.svg" alt="" className="size-5" aria-hidden="true" />
-          </Link>
+          <AccountControl config={accountWidget} />
           <Link
             to="/cart"
             className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"

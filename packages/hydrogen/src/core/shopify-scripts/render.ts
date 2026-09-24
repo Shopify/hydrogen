@@ -1,3 +1,4 @@
+import { escapeAttribute } from "../html";
 import type { ShopifyAttributeValue, ShopifyScriptTagDescriptor } from "./types";
 
 /**
@@ -25,9 +26,5 @@ function renderHtmlAttribute([name, value]: [string, ShopifyAttributeValue]): st
   const serializedName = name.toLowerCase();
   if (value === true) return serializedName;
 
-  return `${serializedName}="${escapeHtmlAttribute(value)}"`;
-}
-
-function escapeHtmlAttribute(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  return `${serializedName}="${escapeAttribute(value)}"`;
 }
