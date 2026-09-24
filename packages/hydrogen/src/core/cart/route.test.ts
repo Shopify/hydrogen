@@ -505,6 +505,7 @@ describe("createCartServerHandlers", () => {
       expect(result.headers.getSetCookie()).toEqual([
         "session=1",
         expect.stringContaining("cart="),
+        expect.stringMatching(/^__Host-hydrogen-cart=/),
       ]);
     });
 
@@ -555,7 +556,10 @@ describe("createCartServerHandlers", () => {
       const gqlBody = JSON.parse(init.body);
       expect(gqlBody.variables.input).not.toHaveProperty("buyerIdentity");
       expect(sessionManager.commit).not.toHaveBeenCalled();
-      expect(result.headers.getSetCookie()).toEqual([expect.stringContaining("cart=")]);
+      expect(result.headers.getSetCookie()).toEqual([
+        expect.stringContaining("cart="),
+        expect.stringMatching(/^__Host-hydrogen-cart=/),
+      ]);
     });
 
     it("commits custom customer session refresh attempts when no token is returned", async () => {
@@ -580,6 +584,7 @@ describe("createCartServerHandlers", () => {
       expect(result.headers.getSetCookie()).toEqual([
         "session=1",
         expect.stringContaining("cart="),
+        expect.stringMatching(/^__Host-hydrogen-cart=/),
       ]);
     });
 
@@ -617,6 +622,7 @@ describe("createCartServerHandlers", () => {
       expect(result.headers.getSetCookie()).toEqual([
         "session=1",
         expect.stringContaining("cart="),
+        expect.stringMatching(/^__Host-hydrogen-cart=/),
       ]);
     });
 
@@ -1381,6 +1387,222 @@ describe("createCartServerHandlers", () => {
   });
 
   describe("cookies", () => {
+    it.each(["json", "form"])(
+      "binds newly-created anonymous carts over HTTPS (%s)",
+      async (format) => {
+        const id = "gid://shopify/Cart/new-cart?key=new-secret";
+        mockFetch.mockResolvedValueOnce(
+          mockGqlResponse(
+            { cartCreate: { cart: { ...MOCK_CART, id }, userErrors: [] } },
+            { "cache-control": "public, s-maxage=600", "cdn-cache-control": "public" },
+          ),
+        );
+        const request =
+          format === "json"
+            ? createJsonPostRequest({
+                lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+              })
+            : createFormPostRequest({
+                intent: "add",
+                merchandiseId: "gid://shopify/ProductVariant/1",
+              });
+        const result = await handleCartRequest(request);
+        assert(result, "expected a cart response");
+        expect(result.headers.getSetCookie()).toEqual([
+          "cart=new-cart%3Fkey%3Dnew-secret; Path=/; SameSite=Lax; Max-Age=1209600",
+          `__Host-hydrogen-cart=${encodeURIComponent(id)}; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=1209600`,
+        ]);
+        expect(result.headers.get("cache-control")).toBe(
+          "private, no-store, max-age=0, must-revalidate",
+        );
+        expect(result.headers.has("cdn-cache-control")).toBe(false);
+      },
+    );
+
+    it("does not bind or authenticate carts created over HTTP", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartCreate: { cart: MOCK_CART, userErrors: [] } }),
+      );
+      const customerSession = createCartCustomerSession(CUSTOMER_ACCESS_TOKEN);
+      const request = createJsonPostRequest(
+        { lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }] },
+        undefined,
+        "http://my-app.com/api/cart",
+      );
+      request.headers.set("x-forwarded-proto", "https");
+      const result = await handleCartRequest(
+        request,
+        defaultConfig,
+        createCartServerHandlers({ customerSession }),
+      );
+      assert(result, "expected a cart response");
+      expect(result.headers.getSetCookie()).toEqual([expect.stringMatching(/^cart=/)]);
+      expect(customerSession.getAccessToken).not.toHaveBeenCalled();
+      const [, init] = mockFetch.mock.calls[0];
+      expect(JSON.parse(init.body).variables.input).not.toHaveProperty("buyerIdentity");
+    });
+
+    it("uses the trusted session origin when TLS terminates before the cart handler", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartCreate: { cart: MOCK_CART, userErrors: [] } }),
+      );
+      const customerSession = createCartCustomerSession(CUSTOMER_ACCESS_TOKEN);
+      const request = createJsonPostRequest(
+        { lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }] },
+        undefined,
+        "http://internal/api/cart",
+      );
+      const sessionManager = {
+        ...createTestSessionManager(request),
+        getSessionOrigin: () => APP_ORIGIN,
+      };
+      const result = await handleCartRequest(
+        request,
+        defaultConfig,
+        createCartServerHandlers({ customerSession }),
+        sessionManager,
+      );
+      assert(result, "expected a cart response");
+      expect(result.status).toBe(200);
+      expect(result.headers.getSetCookie()).toEqual([
+        expect.stringMatching(/^cart=/),
+        expect.stringMatching(/^__Host-hydrogen-cart=/),
+      ]);
+      const [, init] = mockFetch.mock.calls[0];
+      expect(JSON.parse(init.body).variables.input.buyerIdentity).toEqual({
+        customerAccessToken: CUSTOMER_ACCESS_TOKEN,
+      });
+    });
+
+    it("supports a trusted origin for direct anonymous handler calls behind a proxy", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartCreate: { cart: MOCK_CART, userErrors: [] } }),
+      );
+      const request = createJsonPostRequest(
+        { lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }] },
+        undefined,
+        "http://internal/api/cart",
+      );
+      const result = await createCartServerHandlers().post({
+        request,
+        storefrontClient: createPrivateStorefrontClient(request),
+        sessionManager: { getSessionOrigin: async () => APP_ORIGIN },
+      });
+      assert(result.type === "json", "expected a successful cart creation");
+      expect(new Headers(result.headers).getSetCookie()).toEqual([
+        expect.stringMatching(/^cart=/),
+        expect.stringMatching(/^__Host-hydrogen-cart=/),
+      ]);
+    });
+
+    describe.each(["read", "add"])("protected cart recovery for %s", (operation) => {
+      it.each(["", "cart=", "cart=%", "cart=%E0%A4", "cart=attacker; cart=123"])(
+        "recovers the protected cart without overwriting its binding: %s",
+        async (visibleCookie) => {
+          mockFetch.mockResolvedValueOnce(
+            mockGqlResponse(
+              operation === "read"
+                ? { cart: MOCK_CART }
+                : { cartLinesAdd: { cart: MOCK_CART, userErrors: [] } },
+            ),
+          );
+          const cookie = [visibleCookie, "__Host-hydrogen-cart=123"].filter(Boolean).join("; ");
+          const request =
+            operation === "read"
+              ? createGetRequest(cookie)
+              : createJsonPostRequest(
+                  { lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }] },
+                  cookie,
+                );
+          const result = await handleCartRequest(request);
+          assert(result, "expected a cart response");
+          expect(result.status).toBe(200);
+          expect((await result.json()).cart).toEqual(MOCK_CART);
+          expect(result.headers.getSetCookie()).toEqual([]);
+          expect(mockFetch).toHaveBeenCalledOnce();
+          const [, init] = mockFetch.mock.calls[0];
+          const { query, variables } = JSON.parse(init.body);
+          expect(query).not.toContain("mutation CartCreate");
+          expect(variables).toHaveProperty(operation === "read" ? "id" : "cartId", MOCK_CART.id);
+        },
+      );
+    });
+
+    it.each([
+      [undefined, "attacker-cart"],
+      ["cart=attacker-cart", undefined],
+      ["cart=attacker-cart", "attacker-cart"],
+      ["cart=victim; __Host-hydrogen-cart=victim", "attacker-cart"],
+      ["cart=attacker-cart; __Host-hydrogen-cart=victim", undefined],
+      ["__Host-hydrogen-cart=victim", "attacker-cart"],
+      ["cart=%; __Host-hydrogen-cart=victim", "attacker-cart"],
+    ])(
+      "does not promote a supplied cart into a binding (cookie: %s, body: %s)",
+      async (cookie, cartId) => {
+        const id = "gid://shopify/Cart/replacement";
+        mockFetch.mockResolvedValueOnce(
+          mockGqlResponse({ cartLinesAdd: { cart: { ...MOCK_CART, id }, userErrors: [] } }),
+        );
+        const result = await handleCartRequest(
+          createJsonPostRequest(
+            { cartId, lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }] },
+            cookie,
+          ),
+        );
+        assert(result, "expected a cart response");
+        expect(result.status).toBe(200);
+        expect(mockFetch).toHaveBeenCalledOnce();
+        expect(
+          result.headers
+            .getSetCookie()
+            .some((setCookie) => setCookie.startsWith("__Host-hydrogen-cart=")),
+        ).toBe(false);
+      },
+    );
+
+    it("keeps both cookies in step when an already-bound cart rotates", async () => {
+      const id = "gid://shopify/Cart/rotated?key=new-secret";
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartLinesAdd: { cart: { ...MOCK_CART, id }, userErrors: [] } }),
+      );
+      const result = await handleCartRequest(
+        createJsonPostRequest(
+          {
+            cartId: "original?key=secret",
+            lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+          },
+          "cart=original%3Fkey%3Dsecret; __Host-hydrogen-cart=original%3Fkey%3Dsecret",
+        ),
+      );
+      assert(result, "expected a cart response");
+      expect(result.headers.getSetCookie()).toEqual([
+        "cart=rotated%3Fkey%3Dnew-secret; Path=/; SameSite=Lax; Max-Age=1209600",
+        `__Host-hydrogen-cart=${encodeURIComponent(id)}; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=1209600`,
+      ]);
+    });
+
+    it("does not promote an existing cart after a read", async () => {
+      mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+      const result = await handleCartRequest(createGetRequest("cart=123"));
+      assert(result, "expected a cart response");
+      expect(result.headers.getSetCookie()).toEqual([]);
+    });
+
+    it("does not bind a failed cart creation", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartCreate: { cart: null, userErrors: [{ message: "invalid line" }] } }),
+      );
+      const result = await handleCartRequest(
+        createJsonPostRequest({
+          lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+        }),
+      );
+      assert(result, "expected a cart response");
+      expect(result.status).toBe(200);
+      expect(mockFetch).toHaveBeenCalledOnce();
+      expect(result.headers.getSetCookie()).toEqual([]);
+    });
+
     it("sets Set-Cookie on cart creation", async () => {
       mockFetch.mockResolvedValueOnce(
         mockGqlResponse({ cartCreate: { cart: MOCK_CART, userErrors: [] } }),

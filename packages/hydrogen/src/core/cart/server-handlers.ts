@@ -25,7 +25,15 @@ import {
   type CartBuyerIdentitySync,
   type CartBuyerIdentitySyncContext,
 } from "./buyer-identity-sync";
-import { getCartIdFromCookie, createCartCookie, createExpiredCartCookie } from "./cookie";
+import {
+  getCartIdFromCookie,
+  getCartIdFromBindingCookie,
+  getBoundCartId,
+  createCartCookie,
+  createCartBindingCookie,
+  createExpiredCartCookie,
+  createExpiredCartBindingCookie,
+} from "./cookie";
 import { getCart, getCartId, type CartDataFromQuery } from "./get-cart";
 import {
   cartBuyerIdentityUpdateMutation,
@@ -77,6 +85,8 @@ type CartGetHandlerContext = {
 type CartPostHandlerContext = {
   request: Request;
   storefrontClient: StorefrontClient;
+  /** Trusted public origin for direct handler calls behind TLS-terminating proxies. */
+  sessionManager?: Pick<WritableCustomerSessionManager, "getSessionOrigin">;
 };
 
 type CartCustomerSessionReadContext = {
@@ -160,6 +170,11 @@ type CartServerHandlersForOptions<TOptions> = TOptions extends {
     >
   : CartServerHandlers<CartQueriesForOptions<TOptions>["cart"], CartDataForOptions<TOptions>>;
 
+/**
+ * New carts created over HTTPS receive a server-only ownership binding. Preserve
+ * both Set-Cookie headers; legacy or externally supplied carts are not bound and
+ * cannot receive customer identity through the account login/refresh handlers.
+ */
 export function createCartServerHandlers(): CartServerHandlers<typeof cartQueries.cart>;
 export function createCartServerHandlers<const TOptions extends CreateCartServerHandlersOptions>(
   options: TOptions,
@@ -202,7 +217,7 @@ export function createCartServerHandlers(
 function createCartBuyerIdentitySync(): CartBuyerIdentitySync {
   return {
     updateBuyerIdentity: updateCartBuyerIdentity,
-    expiredCartCookie: createExpiredCartCookie(),
+    expiredCartCookies: [createExpiredCartCookie(), createExpiredCartBindingCookie()],
   };
 }
 
@@ -210,16 +225,29 @@ async function updateCartBuyerIdentity(
   context: CartBuyerIdentitySyncContext,
   customerAccessToken: string | null,
 ): Promise<void> {
-  const cartId = getCartIdFromCookie(context.request);
-  if (!cartId) return;
-
-  const result = await context.storefrontClient.graphql(cartBuyerIdentityUpdateMutation, {
-    variables: { cartId, buyerIdentity: { customerAccessToken } },
-  });
-  const { userErrors } = assertMutationData(result, "cartBuyerIdentityUpdate");
-  if (userErrors.length > 0) {
-    throw new Error(userErrors.map(({ message }) => message).join("\n"));
-  }
+  // Attachment grants customer access: require an unambiguous matching binding.
+  // Detach both carts if an out-of-band operation changed the visible cookie.
+  // This also cleans up legacy carts without ever granting them new identity.
+  const cartIds =
+    customerAccessToken === null
+      ? [getCartIdFromBindingCookie(context.request), getCartIdFromCookie(context.request)]
+      : [getBoundCartId(context.request)];
+  const results = await Promise.allSettled(
+    [...new Set(cartIds)]
+      .filter((id) => id !== null)
+      .map(async (cartId) => {
+        const result = await context.storefrontClient.graphql(cartBuyerIdentityUpdateMutation, {
+          variables: { cartId, buyerIdentity: { customerAccessToken } },
+        });
+        const { userErrors } = assertMutationData(result, "cartBuyerIdentityUpdate");
+        if (userErrors.length > 0) {
+          throw new Error(userErrors.map(({ message }) => message).join("\n"));
+        }
+      }),
+  );
+  // Wait for every detach attempt before finalizing the response on edge runtimes.
+  const failure = results.find((result) => result.status === "rejected");
+  if (failure) throw failure.reason;
 }
 
 type RuntimeCartQueries = typeof cartQueries;
@@ -273,10 +301,16 @@ async function handlePost(
   if (missingCartResponse) return missingCartResponse;
 
   const { action } = parsedCartRequest;
+  // Use the app's trusted public origin when TLS terminates before this server.
+  // Never infer it from client-controlled forwarded headers.
+  const secureOrigin =
+    new URL((await context.sessionManager?.getSessionOrigin()) ?? request.url).protocol ===
+    "https:";
   const customerAccess = await getCartCreateCustomerAccess(
     parsedCartRequest.action,
     cartId,
     context,
+    secureOrigin,
     customerSession,
   );
   const customerSessionHeaders = customerAccess.commitSession
@@ -295,13 +329,33 @@ async function handlePost(
   const headers = createProxyResponseHeaders(result.headers);
   appendHeaders(headers, customerSessionHeaders);
 
-  // Only persist carts the browser already owns, including newly-created carts.
-  if (cartId === cookieCartId && result.cartId !== null && result.cartId !== cookieCartId) {
-    headers.append("set-cookie", createCartCookie(result.cartId));
-  }
+  appendCartCookies(headers, request, cartId, result.cartId, secureOrigin);
 
   if (isFormRequest) return redirectResult(redirectTarget, headers);
   return jsonResult(result.data, headers);
+}
+
+function appendCartCookies(
+  headers: Headers,
+  request: Request,
+  previousCartId: string | null,
+  nextCartId: string | null,
+  secureOrigin: boolean,
+): void {
+  const cookieCartId = getCartIdFromCookie(request);
+  // Do not persist carts selected by a body override.
+  if (previousCartId !== cookieCartId || nextCartId === null || nextCartId === cookieCartId) return;
+
+  headers.append("set-cookie", createCartCookie(nextCartId));
+  if (
+    secureOrigin &&
+    (previousCartId === null || getCartIdFromBindingCookie(request) === previousCartId)
+  ) {
+    // Only cartCreate results or rotations of an already-bound cart qualify.
+    // A successful read/mutation of a supplied cart ID is not ownership proof.
+    headers.append("set-cookie", createCartBindingCookie(nextCartId));
+    applyPrivateResponseCacheHeaders(headers);
+  }
 }
 
 async function parseCartAction(
@@ -536,9 +590,10 @@ async function getCartCreateCustomerAccess(
   action: CartAction,
   cartId: string | null,
   context: Partial<CartCustomerSessionWriteContext>,
+  secureOrigin: boolean,
   customerSession?: CartCustomerSession,
 ): Promise<CartCustomerAccessTokenResult> {
-  if (action.intent !== "add" || cartId || !customerSession) {
+  if (action.intent !== "add" || cartId || !customerSession || !secureOrigin) {
     return { commitSession: false };
   }
 
