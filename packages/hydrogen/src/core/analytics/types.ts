@@ -56,7 +56,7 @@ export type ConsentSetup = () => Promise<void>;
  *   otherwise events are released as soon as the consent API loads.
  * - `"custom-banner"` loads only the Customer Privacy API and requires a
  *   `setup` callback that integrates a third-party consent provider.
- *   Events release once the consent API loads.
+ *   Events release once the `setup` callback resolves.
  * - `"no-banner"` (or omitted) loads only the Customer Privacy API and
  *   releases events once it loads.
  *
@@ -84,11 +84,10 @@ export type AnalyticsCartLine = {
     id: string;
     /**
      * Variant title (`"Default Title"` for single-variant products).
-     * `trackCartAnalytics` falls back to the product title only when the cart
-     * fragment doesn't select it.
+     * Populated from the product title when the variant title is unavailable.
      */
     title: string;
-    /** Per-unit price. `trackCartAnalytics` fills it from `CartLine.cost.amountPerQuantity`. */
+    /** Per-unit price (`CartLine.cost.amountPerQuantity`). */
     price: { amount: string; currencyCode?: string };
     sku?: string | null;
     product: {
@@ -111,8 +110,8 @@ export type AnalyticsCart = {
   id: string;
   /**
    * `Cart.updatedAt` (ISO 8601), used to deduplicate cart events. Add it to your
-   * cart fragment: the built-in fragment doesn't select it, and without it
-   * `trackCartAnalytics` uses the current time instead.
+   * cart fragment if you haven't already — without it, the current time is used
+   * instead.
    */
   updatedAt: string;
   cost?: {
@@ -259,9 +258,9 @@ export type StorefrontAnalyticsConfig = {
  * analytics events. See `getTrackingValues` for when they are empty.
  */
 export type AnalyticsTrackingValues = {
-  /** Long-lived browser identifier (backed by `_shopify_y`); persists across visits. */
+  /** Long-lived browser identifier; persists across visits. */
   uniqueToken: string;
-  /** Session identifier (backed by `_shopify_s`, 30-minute rolling expiry). */
+  /** Session identifier (30-minute rolling expiry). */
   visitToken: string;
 };
 

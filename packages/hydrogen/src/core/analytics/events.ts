@@ -1,7 +1,7 @@
 /**
  * Canonical event names for the Hydrogen analytics bus.
  *
- * Use these as the `event` argument to `publish()` and `subscribe()`. Raw string
+ * Use these as the `event` argument to `publish()` and a destination's `subscribe()`. Raw string
  * literals are type-checked and narrow the payload the same way; the constants add
  * autocomplete and a single place to rename.
  */
