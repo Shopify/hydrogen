@@ -83,7 +83,7 @@ const FNV1A_PRIME = 0x01000193;
 const CART_REVALIDATION_ERROR_MESSAGE =
   "Something went wrong refreshing your cart. Please try again.";
 
-/** Timeout (in milliseconds) for cart requests to the configured cart endpoint. */
+/** Timeout (in milliseconds) for cart loads and mutations. */
 export const STANDARD_ACTION_TIMEOUT_IN_MS = 30_000;
 
 /**

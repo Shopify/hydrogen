@@ -111,7 +111,7 @@ export interface CartErrorGroup {
   warnings: CartWarning[];
 }
 
-/** A network-level error encountered during a cart operation (e.g. non-2xx response, abort, timeout). */
+/** A network-level error encountered during a cart operation (e.g. non-2xx response, timeout). Aborted requests are not recorded. */
 export interface CartNetworkEntry {
   message: string;
   /** HTTP status code when available. */
@@ -148,7 +148,7 @@ export interface Attribute {
  * ```
  */
 export interface CartPending {
-  /** Line IDs with in-flight quantity/remove mutations. */
+  /** Line IDs with in-flight add, quantity, or remove mutations. New lines use their `optimistic:` ID until the server confirms. */
   lines: Set<string>;
   note: boolean;
   attributes: boolean;

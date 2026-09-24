@@ -42,13 +42,13 @@ type AttributeValueName = `attributes.${string}`;
  * `"note-update"`, `"attributes-update"`) to get submit button attributes.
  *
  * @example
- * ```ts
+ * ```tsx
  * const register = createCartFormRegister();
  *
  * // Line ID field (register returns readOnly; add type="hidden" to hide it)
  * <input {...register("lineId", { value: line.id })} />
  *
- * // Interactive quantity input (auto-submits on change via attachQuantityInput)
+ * // Interactive quantity input (pair with attachQuantityInput to auto-submit on change)
  * <input {...register("quantity", { value: line.quantity, interactive: true })} />
  *
  * // Hidden submit button for the "set" intent
