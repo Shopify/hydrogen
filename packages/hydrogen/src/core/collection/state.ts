@@ -6,7 +6,7 @@ export type { ProductCollectionSortKeys, ProductFilter };
 /** How a filter option is visually presented in the storefront UI. */
 export type FilterPresentation = "IMAGE" | "SWATCH" | "TEXT";
 
-/** The input mechanism a filter uses — boolean toggle, multi-select list, or price range. */
+/** The input mechanism a filter uses — e.g. boolean toggle, multi-select list, or price range. */
 export type FilterType = "BOOLEAN" | "LIST" | "PRICE_RANGE" | (string & {});
 
 interface BaseAvailableFilterValue {
@@ -43,7 +43,7 @@ export interface AvailableFilter<
   id: string;
   /** Human-readable name (e.g. "Color", "Size", "Price"). */
   label: string;
-  /** Input mechanism — boolean toggle, multi-select list, or price range. */
+  /** Input mechanism — e.g. boolean toggle, multi-select list, or price range. */
   type: FilterType;
   /** Visual presentation hint for the storefront UI. */
   presentation?: FilterPresentation | null;
