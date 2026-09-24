@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-const PACKAGE_ROOT = resolve(import.meta.dirname, "../../..");
+const PACKAGE_ROOT = resolve(import.meta.dirname, "../..");
 const CLI_PATH = resolve(PACKAGE_ROOT, "dist/cli/index.mjs");
 const SUCCESS_EXIT_CODE = 0;
 const tempDirectories: string[] = [];
