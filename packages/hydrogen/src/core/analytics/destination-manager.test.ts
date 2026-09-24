@@ -427,6 +427,128 @@ describe("createDestinationManager", () => {
       expect(destination).toHaveBeenCalledWith({ url: "/before" }, DESTINATION_CONTEXT);
     });
 
+    it("does not replay delivered events when a destination is removed and re-added", () => {
+      const { manager } = createTestManager(() => true);
+      const first = vi.fn();
+      const second = vi.fn();
+
+      manager.onPublish("page_viewed", { url: "/a" });
+      manager.onPublish("page_viewed", { url: "/b" });
+
+      const removeFirst = manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", first);
+        },
+      });
+      removeFirst();
+      manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", second);
+        },
+      });
+      manager.onPublish("page_viewed", { url: "/c" });
+
+      expect(first.mock.calls.map(([payload]) => payload)).toEqual([{ url: "/a" }, { url: "/b" }]);
+      expect(second.mock.calls.map(([payload]) => payload)).toEqual([{ url: "/c" }]);
+    });
+
+    it("replays events published while a destination was removed once it is re-added", () => {
+      const { manager } = createTestManager(() => true);
+      const first = vi.fn();
+      const second = vi.fn();
+
+      manager.onPublish("page_viewed", { url: "/before-removal" });
+      const removeFirst = manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", first);
+        },
+      });
+      removeFirst();
+      manager.onPublish("page_viewed", { url: "/while-removed" });
+      manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", second);
+        },
+      });
+
+      expect(first.mock.calls.map(([payload]) => payload)).toEqual([{ url: "/before-removal" }]);
+      expect(second.mock.calls.map(([payload]) => payload)).toEqual([{ url: "/while-removed" }]);
+    });
+
+    it("replays buffered events once when a destination remounts before consent is granted", () => {
+      let canTrack = false;
+      const { manager } = createTestManager(() => canTrack);
+      const destination = vi.fn();
+      const register = () =>
+        manager.addDestination({
+          name: "component-destination",
+          setup({ subscribe }) {
+            subscribe("page_viewed", destination);
+          },
+        });
+
+      manager.onPublish("page_viewed", { url: "/buffered" });
+      // Mirrors React Strict Mode: mount, unmount, mount.
+      const removeFirst = register();
+      removeFirst();
+      register();
+
+      canTrack = true;
+      manager.replay();
+
+      expect(destination).toHaveBeenCalledOnce();
+      expect(destination).toHaveBeenCalledWith({ url: "/buffered" }, DESTINATION_CONTEXT);
+    });
+
+    it("does not redeliver the event a destination removed itself during", () => {
+      const { manager } = createTestManager(() => true);
+      const second = vi.fn();
+      let removeFirst = noop;
+
+      removeFirst = manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", () => removeFirst());
+        },
+      });
+      manager.onPublish("page_viewed", { url: "/removes-itself" });
+      manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", second);
+        },
+      });
+
+      expect(second).not.toHaveBeenCalled();
+    });
+
+    it("keeps replay cursors separate per destination name", () => {
+      const { manager } = createTestManager(() => true);
+      const other = vi.fn();
+
+      manager.onPublish("page_viewed", { url: "/a" });
+      const removeFirst = manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", noop);
+        },
+      });
+      removeFirst();
+      manager.addDestination({
+        name: "other-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", other);
+        },
+      });
+
+      expect(other).toHaveBeenCalledOnce();
+      expect(other).toHaveBeenCalledWith({ url: "/a" }, DESTINATION_CONTEXT);
+    });
+
     it("destroys all destinations and runs cleanup", () => {
       const { manager } = createTestManager(() => true);
       const destination = vi.fn();
