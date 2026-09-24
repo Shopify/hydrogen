@@ -549,10 +549,17 @@ type CartLineFromNodes<TNodes> = TNodes extends CartLineConnection["nodes"]
     ? TLine
     : never;
 
+/** Infers the {@link CartData} shape from `CreateCartServerHandlersOptions`. */
 export type CartDataForOptions<TOptions> = CartDataFromCartQuery<
   CartQueriesForOptions<TOptions>["cart"]
 >;
 
+/**
+ * Options for {@link makeCartQueries} when providing a custom cart fragment.
+ *
+ * The fragment extends the default `HydrogenCartFragment` — your additional
+ * fields are merged into every cart query and mutation response.
+ */
 export type CreateCartQueriesOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
 > = {
@@ -564,6 +571,7 @@ export type CreateCartQueriesOptions<
   readonly fragment: TCartFragment;
 };
 
+/** Resolves the cart query set from handler options — custom queries when a fragment is provided, defaults otherwise. */
 export type CartQueriesForOptions<TOptions> = TOptions extends {
   readonly fragment: infer TCartFragment extends AnyStorefrontQueryString;
 }
@@ -615,6 +623,25 @@ function createCartQueries<const TCartFragment extends CartFragmentDocument>(
   } as const;
 }
 
+/**
+ * Builds a complete set of cart GraphQL query and mutation documents.
+ *
+ * Without options, returns the default Hydrogen cart queries. With a
+ * {@link CreateCartQueriesOptions.fragment | custom fragment}, returns
+ * queries that spread both `HydrogenCartFragment` and your fragment into
+ * every response, so the result types include your additional fields.
+ *
+ * @example
+ * ```ts
+ * // Default queries
+ * const queries = makeCartQueries();
+ *
+ * // With a custom fragment for metafields
+ * const queries = makeCartQueries({
+ *   fragment: CART_FRAGMENT,
+ * });
+ * ```
+ */
 export function makeCartQueries<const TOptions extends CreateCartQueriesOptions>(
   options: TOptions,
 ): CartQueriesForOptions<TOptions>;
@@ -628,4 +655,5 @@ export function makeCartQueries(options?: CreateCartQueriesOptions) {
   return DEFAULT_CART_QUERIES;
 }
 
+/** Default cart GraphQL queries and mutations. */
 export const cartQueries = makeCartQueries();

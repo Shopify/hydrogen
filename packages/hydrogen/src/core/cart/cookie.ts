@@ -22,6 +22,21 @@ export function getCartIdFromCookie(input: CartCookieSource): string | null {
   return normalizeCartId(token);
 }
 
+/**
+ * Serializes a cart GID into a `Set-Cookie` header value.
+ *
+ * Strips the `gid://shopify/Cart/` prefix before encoding — the cookie stores
+ * only the opaque suffix to keep the header compact. The cookie is set with
+ * `Path=/; SameSite=Lax` and a 14-day `Max-Age`.
+ *
+ * @example
+ * ```ts
+ * const cookie = createCartCookie("gid://shopify/Cart/abc123");
+ * // "cart=abc123; Path=/; SameSite=Lax; Max-Age=1209600"
+ *
+ * headers.append("Set-Cookie", cookie);
+ * ```
+ */
 export function createCartCookie(cartId: string): string {
   const token = cartId.startsWith(CART_GID_PREFIX) ? cartId.slice(CART_GID_PREFIX.length) : cartId;
   const encoded = encodeURIComponent(token);
