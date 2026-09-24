@@ -15,7 +15,7 @@ Hydrogen's analytics bus owns the event API, event normalization, and consent-ga
 
 Before wiring route events, check whether this skill has a reference file for the app's framework in `references/`. If one exists, read it and use that framework's route-change and lifecycle primitives. If there is no matching reference, keep the core singleton below and adapt page-view, product-view, collection-view, search-view, and cart tracking to the app's own route lifecycle.
 
-Prerequisite: analytics depends on the same-origin SFAPI proxy (see `hydrogen-request-handlers`) so the browser can observe tracking values from Storefront API responses. The proxy establishes the backend session cookies needed for analytics and checkout continuity; treat analytics as incomplete until it is wired. Key consent setup: Shopify Customer Privacy controls destination delivery in production. Raw subscribers can observe events before consent; destinations receive only consent-allowed replay. Do not bypass Customer Privacy consent gating in production.
+Prerequisite: analytics depends on the same-origin SFAPI proxy (see `hydrogen-request-handlers`) so the browser can observe tracking values from Storefront API responses. The proxy establishes the backend session cookies needed for analytics and checkout continuity; treat analytics as incomplete until it is wired. Key consent setup: Shopify Customer Privacy controls destination delivery in production. Register event consumers with `addDestination()`; live delivery and replay require analytics consent. Do not bypass Customer Privacy consent gating in production.
 
 ## Core Pattern
 
@@ -66,7 +66,7 @@ Required product analytics fields include Shopify Product GID, ProductVariant GI
 
 - Let Shopify Customer Privacy control destination delivery in production.
 - Initialize one single bus per page lifetime through ShopifyScripts.
-- Raw subscribers can observe events before consent; destinations receive only consent-allowed replay.
+- Register event consumers with `addDestination()` and use the `subscribe` function provided to its setup callback.
 - For third-party banners, use `consent: {mode: "custom-banner", setup}` and read [Custom consent providers](references/custom-consent.md) for readiness, synchronization, and framework integration.
 - Render ShopifyScripts before route components publish events.
 - Do not dispatch server-side analytics through this browser bus.

@@ -40,9 +40,6 @@ export function analyticsPublishTypes() {
   // @ts-expect-error search views require a search term
   analytics.publish(AnalyticsEvent.SEARCH_VIEWED);
 
-  // @ts-expect-error custom subscriptions are temporarily unsupported
-  analytics.subscribe("custom_marketing_banner_opened", () => {});
-
   analytics.addDestination({
     name: "test-destination",
     setup({ subscribe }) {
