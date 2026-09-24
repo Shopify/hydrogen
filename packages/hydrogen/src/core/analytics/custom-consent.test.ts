@@ -2,15 +2,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ShopifyGlobal } from "../../globals";
+import { configureLogging, resetLoggingForTests } from "../logging";
 import { getShopifyScriptTags, initializeShopifyScripts } from "../shopify-scripts";
 import {
   CONSENT_TRACKING_API_LOADED_EVENT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts/constants";
-import { assert } from "../test-utils";
+import { assert, createTestLogger } from "../test-utils";
 import { setupStorefrontAnalytics } from "./bus";
 import { initializeCustomConsent } from "./custom-consent";
-import type { ConsentPreferences, ConsentSetup } from "./types";
+import type { ConsentConfig, ConsentPreferences, ConsentSetup } from "./types";
 
 const allowed: ConsentPreferences = {
   analytics: true,
@@ -66,10 +67,54 @@ function createHarness(status: "loading" | "loaded" = "loaded") {
 afterEach(() => {
   window.Shopify?.analytics?.destroy();
   delete window.Shopify;
+  resetLoggingForTests();
   vi.restoreAllMocks();
 });
 
 describe("custom banner consent", () => {
+  it("warns about missing setup during hydration and keeps delivery blocked", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const h = createHarness();
+    h.bus.publish("page_viewed", { url: "/before-hydration" });
+    document.dispatchEvent(new Event(CONSENT_TRACKING_API_LOADED_EVENT));
+    // The inline bus does not receive setup, so its absence is expected before hydration.
+    expect(logger.warn).not.toHaveBeenCalled();
+
+    await initializeShopifyScripts({
+      // JavaScript consumers can still pass the old preview configuration.
+      consent: { mode: "custom-banner" } as ConsentConfig,
+      webMcp: false,
+    });
+    expect(logger.warn).toHaveBeenCalledExactlyOnceWith(
+      "custom-banner requires a consent.setup callback; analytics delivery remains blocked until setup completes",
+      { scope: "consent" },
+    );
+    document.dispatchEvent(new Event(VISITOR_CONSENT_COLLECTED_EVENT));
+    h.bus.publish("page_viewed", { url: "/after-hydration" });
+    expect(h.destination).not.toHaveBeenCalled();
+    expect(logger.error).not.toHaveBeenCalled();
+  });
+
+  it("logs a missing bootstrap without throwing from browser initialization", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const setup = vi.fn<ConsentSetup>(async () => {});
+
+    await expect(
+      initializeShopifyScripts({ consent: { mode: "custom-banner", setup }, webMcp: false }),
+    ).resolves.toBeUndefined();
+
+    expect(logger.error).toHaveBeenCalledExactlyOnceWith("custom consent initialization failed", {
+      scope: "consent",
+      error: new Error(
+        'Custom consent requires Shopify script tags rendered with consent.mode = "custom-banner".',
+      ),
+    });
+    expect(setup).not.toHaveBeenCalled();
+    expect(window.Shopify?.analytics).toBeUndefined();
+  });
+
   it("keeps regional defaults and raw CTA events pending until the provider synchronizes", async () => {
     const h = createHarness();
     h.bus.publish("page_viewed", { url: "/before-hydration" });
@@ -297,6 +342,8 @@ describe("custom banner consent", () => {
   );
 
   it("connects hydrated setup to the serialized bus without serializing the callback", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
     const setupComplete = Promise.withResolvers<void>();
     const setup = vi.fn<ConsentSetup>(async function browserOnlyConsentProvider() {
       await setupComplete.promise;
@@ -337,6 +384,8 @@ describe("custom banner consent", () => {
     } as unknown as ShopifyGlobal["customerPrivacy"];
     await initializeShopifyScripts({ consent, webMcp: false });
     expect(setup).toHaveBeenCalledOnce();
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.error).not.toHaveBeenCalled();
     expect(destination).not.toHaveBeenCalled();
     expect(setup).toHaveBeenCalledWith();
     await window.Shopify.customerPrivacy.setTrackingConsent(allowed);
