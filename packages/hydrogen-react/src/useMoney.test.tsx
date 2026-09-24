@@ -129,6 +129,18 @@ describe(`useMoney`, () => {
     });
   });
 
+  it('keeps the minus sign in the amount for negative values', () => {
+    const {result} = renderHook(() =>
+      useMoney({
+        amount: '-19.99',
+        currencyCode: 'USD',
+      }),
+    );
+
+    expect(result.current.amount).toBe('-19.99');
+    expect(result.current.localizedString).toBe('-$19.99');
+  });
+
   it('handles Customer Account API MoneyV2 with USDC currency', () => {
     // Test that useMoney works with Customer Account API's MoneyV2
     // which may have currency codes not in Storefront API (e.g., USDC)
