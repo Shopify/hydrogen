@@ -29,8 +29,26 @@ const HOME_QUERY = gql(
       }
       collections(first: 3) {
         nodes {
-          description
           ...CollectionCard
+        }
+      }
+      heroCollections: collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
+        nodes {
+          title
+          handle
+          description
+          image {
+            url
+            altText
+          }
+          products(first: 1) {
+            nodes {
+              featuredImage {
+                url
+                altText
+              }
+            }
+          }
         }
       }
     }
@@ -54,11 +72,15 @@ export async function loader({ context }: Route.LoaderArgs) {
   const { data } = await storefrontClient.graphql(HOME_QUERY);
 
   const featuredProducts: ProductCardData[] = data?.products.nodes ?? [];
-  const featuredCollections = data?.collections.nodes ?? [];
+  const featuredCollections: CollectionCardData[] = data?.collections.nodes ?? [];
+  // The hero features the most recently updated collection, independent of the
+  // category list above.
+  const heroCollections = data?.heroCollections.nodes ?? [];
 
   return {
     featuredProducts,
     featuredCollections,
+    heroCollections,
   };
 }
 
@@ -134,9 +156,8 @@ function ShopByCategory({ collections }: { collections: readonly CollectionCardD
 export default function Home({ loaderData }: Route.ComponentProps) {
   const rootData = useRouteLoaderData<typeof rootLoader>("root");
   const hero = selectHomeHero(
-    loaderData.featuredCollections,
+    loaderData.heroCollections,
     rootData?.shopInfo.name ?? FALLBACK_SHOP_NAME,
-    rootData?.shopInfo.coverImage ?? null,
   );
 
   return (

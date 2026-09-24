@@ -15,23 +15,16 @@ export type HomeHeroData = {
   to: string;
 };
 
+/**
+ * Builds the homepage hero from the first collection passed in (the home query
+ * requests the most recently updated one). Its title, description, and image
+ * stay together, with its first product image as the image fallback. Without a
+ * collection, the hero shows the shop name and links to the collections index.
+ */
 export function selectHomeHero(
   collections: readonly HeroCollection[],
   shopName: string,
-  brandCoverImage: HeroImage | null = null,
 ): HomeHeroData {
-  // The shop's brand cover image outranks collection imagery. It represents the
-  // whole store, so it pairs with the shop name, not a collection's copy.
-  const coverUrl = brandCoverImage?.url.trim() ?? "";
-  if (brandCoverImage && coverUrl !== "") {
-    return {
-      heading: shopName,
-      description: null,
-      image: { url: coverUrl, altText: brandCoverImage.altText },
-      to: "/collections",
-    };
-  }
-
   const collection = collections[0];
   if (!collection) {
     return { heading: shopName, description: null, image: null, to: "/collections" };

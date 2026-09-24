@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { selectHomeHero } from "../app/lib/home-hero.ts";
@@ -63,45 +64,17 @@ test("uses the supplied root shop name and collection index when no collection e
   });
 });
 
-const brandCover = { url: "https://example.com/brand-cover.jpg", altText: "North Coast studio" };
-
-test("brand cover image outranks collection and product images with shop-level copy", () => {
-  assert.deepEqual(selectHomeHero([collection], "North Coast", brandCover), {
-    heading: "North Coast",
-    description: null,
-    image: brandCover,
-    to: "/collections",
-  });
-  assert.deepEqual(
-    selectHomeHero([{ ...collection, image: null }], "North Coast", brandCover).image,
-    brandCover,
+test("home query requests the most recently updated collection for the hero", async () => {
+  const source = await readFile(new URL("../app/routes/home.tsx", import.meta.url), "utf8");
+  assert.match(
+    source,
+    /heroCollections: collections\(first: 1, sortKey: UPDATED_AT, reverse: true\)/,
   );
-});
+  assert.match(source, /selectHomeHero\(\s*loaderData\.heroCollections,/);
+  assert.doesNotMatch(source, /coverImage/);
 
-test("brand cover image works when no collection exists", () => {
-  assert.deepEqual(selectHomeHero([], "North Coast", { ...brandCover, altText: null }), {
-    heading: "North Coast",
-    description: null,
-    image: { url: brandCover.url, altText: null },
-    to: "/collections",
-  });
-});
-
-test("ignores an absent, null, or blank brand cover and keeps collection selection", () => {
-  const expected = selectHomeHero([collection], "Shop");
-  assert.deepEqual(selectHomeHero([collection], "Shop", null), expected);
-  assert.deepEqual(selectHomeHero([collection], "Shop", undefined), expected);
-  assert.deepEqual(
-    selectHomeHero([collection], "Shop", { url: "   ", altText: "Blank" }),
-    expected,
-  );
-  assert.equal(selectHomeHero([{ ...collection, image: null }], "Shop", null).image, productImage);
-  assert.deepEqual(selectHomeHero([], "North Coast", { url: "", altText: null }), {
-    heading: "North Coast",
-    description: null,
-    image: null,
-    to: "/collections",
-  });
+  const rootSource = await readFile(new URL("../app/root.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(rootSource, /coverImage/);
 });
 
 test("preserves merchant copy without inventing marketing claims or parsing HTML", () => {
