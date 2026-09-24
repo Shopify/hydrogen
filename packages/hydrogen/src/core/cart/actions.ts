@@ -1,22 +1,42 @@
 import { normalizeCartId } from "./cookie";
 import { getCartAttributeFormEntries } from "./form";
 
+/** A key-value pair attached to the cart or an individual cart line. */
 export type CartAttributeInput = { key: string; value: string };
 
 export type CartLineAddInput = {
+  /** Storefront API GID of the product variant to add. */
   merchandiseId: string;
   quantity: number;
   attributes?: CartAttributeInput[];
+  /** Selling plan GID for subscription line items. */
   sellingPlanId?: string;
 };
 
+/** Input for updating an existing cart line. Setting `quantity` to `0` removes the line. */
 export type CartLineUpdateInput = {
+  /** The `CartLine.id` of the line to update. */
   id: string;
   quantity: number;
   attributes?: CartAttributeInput[];
   sellingPlanId?: string;
 };
 
+/**
+ * Discriminated union of all cart mutation intents.
+ *
+ * {@link parseCartRequest} normalizes both JSON and FormData requests into one
+ * of these variants. The `intent` field determines the Storefront API mutation:
+ *
+ * - `"add"` — add new lines (cartLinesAdd, or cartCreate when no cart exists)
+ * - `"update"` — change quantity or attributes on existing lines (cartLinesUpdate)
+ * - `"remove"` — remove lines by ID (cartLinesRemove)
+ * - `"discount-update"` — replace all discount codes (cartDiscountCodesUpdate)
+ * - `"discount-apply"` — add a single discount code (read-then-write via cartDiscountCodesUpdate)
+ * - `"discount-remove"` — remove a single discount code (read-then-write via cartDiscountCodesUpdate)
+ * - `"attributes-update"` — set cart-level attributes (cartAttributesUpdate)
+ * - `"note-update"` — set the cart note (cartNoteUpdate)
+ */
 export type CartAction =
   | { intent: "add"; lines: CartLineAddInput[] }
   | { intent: "update"; lines: CartLineUpdateInput[] }
@@ -39,6 +59,33 @@ class CartActionError extends Error {
   }
 }
 
+/**
+ * Parses an incoming cart mutation request into a typed {@link CartAction}.
+ *
+ * Accepts `application/json` and `application/x-www-form-urlencoded` /
+ * `multipart/form-data` content types. JSON and FormData each support a
+ * different subset of intents — JSON produces `discount-update` while
+ * FormData produces `discount-apply` / `discount-remove`.
+ *
+ * FormData requests always return `cartId: null` — the server handler
+ * should fall back to the cart cookie.
+ *
+ * @throws If the content-type is unsupported, the intent is unrecognized,
+ * or required fields are missing.
+ *
+ * @example
+ * ```ts
+ * const { action, cartId } = await parseCartRequest(request);
+ *
+ * switch (action.intent) {
+ *   case "add":
+ *     return cartLinesAdd(cartId ?? getCartId(request), action.lines);
+ *   case "remove":
+ *     return cartLinesRemove(cartId ?? getCartId(request), action.lineIds);
+ *   // ...
+ * }
+ * ```
+ */
 export async function parseCartRequest(request: Request): Promise<ParsedCartRequest> {
   const contentType = request.headers.get("content-type") ?? "";
 
