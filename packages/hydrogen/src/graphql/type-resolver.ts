@@ -472,7 +472,8 @@ export type InferVariablesForSchema<T extends string, Schema extends SchemaLike>
  * Infers the result type of a Storefront API query string against the bundled schema.
  *
  * Useful when you need the result shape outside of `storefront.graphql()` — e.g. for
- * a component prop type. Prefer `StorefrontApi.ResultOf` for document-node inputs.
+ * a component prop type. Takes a raw query source literal: for `gql()` documents use
+ * `StorefrontApi.ResultOf`, since `InferResult<typeof doc>` resolves to `never`.
  */
 export type InferResult<T extends string> = InferResultForSchema<T, StorefrontSchema>;
 
