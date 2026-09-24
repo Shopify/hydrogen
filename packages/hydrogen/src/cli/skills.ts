@@ -12,13 +12,13 @@ import {
 } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative, sep } from "node:path";
-import { createInterface } from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
 // Explicit extension: scripts/preview-template-dist.ts runs this module under
 // plain `node` type stripping, which cannot resolve extensionless imports.
 import { isObjectRecord } from "../core/utils/record.ts";
+import { canPromptInTerminal, confirmInTerminal } from "./terminal.ts";
 
 const PACKAGE_NAME = "@shopify/hydrogen";
 const PACKAGE_ROOT_FROM_CLI_MODULE = "../../";
@@ -143,7 +143,7 @@ function getPackageRoot(): string {
  * node_modules the way Node itself would. This finds hoisted installs in
  * monorepos, which a plain `<appRoot>/node_modules` lookup misses.
  */
-function getInstalledPackageRoot(appRoot: string): string | undefined {
+export function getInstalledPackageRoot(appRoot: string): string | undefined {
   const require = createRequire(join(appRoot, PACKAGE_JSON_FILE_NAME));
   try {
     return dirname(require.resolve(`${PACKAGE_NAME}/${PACKAGE_JSON_FILE_NAME}`));
@@ -379,20 +379,6 @@ async function planOrphans(
         plan.planned.push({ action, skillName, destinationRoot: plan.destinationRoot });
       }
     }
-  }
-}
-
-function canPromptInTerminal(): boolean {
-  return Boolean(process.stdin.isTTY && process.stdout.isTTY) && !process.env.CI;
-}
-
-async function confirmInTerminal(question: string): Promise<boolean> {
-  const readline = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    const answer = (await readline.question(`${question} [Y/n] `)).trim().toLowerCase();
-    return answer === "" || answer === "y" || answer === "yes";
-  } finally {
-    readline.close();
   }
 }
 

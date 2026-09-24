@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { uninstallLocalHttpsCertificates } from "../certs";
+import { uninstallLocalHttpsCertificates } from "./certs";
 
 const fsCalls = vi.hoisted(() => ({ rm: vi.fn(async () => {}) }));
 const mkcertCalls = vi.hoisted(() => ({
@@ -18,7 +18,7 @@ vi.mock("node:fs/promises", async (importOriginal) => ({
   rm: fsCalls.rm,
 }));
 
-vi.mock("../../vite/mkcert", () => ({
+vi.mock("../vite/mkcert", () => ({
   resolveMkcertBinary: mkcertCalls.resolveMkcertBinary,
   uninstallCertificateAuthority: mkcertCalls.uninstallCertificateAuthority,
 }));
