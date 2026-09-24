@@ -242,7 +242,11 @@ describe("createStorefrontClient", () => {
     it("sends request context headers", async () => {
       const requestContext = createTestRequestContext(
         new Request("https://example.com", {
-          headers: { cookie: "_shopify_y=unique-token; _shopify_s=visit-token" },
+          headers: {
+            cookie: "_shopify_y=unique-token; _shopify_s=visit-token",
+            "X-Shopify-UniqueToken": "forwarded-unique-token",
+            "X-Shopify-VisitToken": "forwarded-visit-token",
+          },
         }),
       );
       const client = createPublicClient({ fetch: mockFetch, requestContext });
@@ -251,8 +255,8 @@ describe("createStorefrontClient", () => {
 
       const headers = getHeaders(mockFetch);
       expect(headers.get("cookie")).toBe("_shopify_y=unique-token; _shopify_s=visit-token");
-      expect(headers.get("X-Shopify-UniqueToken")).toBe("unique-token");
-      expect(headers.get("X-Shopify-VisitToken")).toBe("visit-token");
+      expect(headers.get("X-Shopify-UniqueToken")).toBeNull();
+      expect(headers.get("X-Shopify-VisitToken")).toBeNull();
       expect(headers.get("Custom-Storefront-Request-Group-ID")).toBeTruthy();
       expect(headers.get("Sec-Shopify-Storefront-Origin")).toBe("https://example.com");
     });

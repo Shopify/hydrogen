@@ -7,7 +7,12 @@ const PROXY_TIMEOUT_MS = 30_000;
 // Proxy errors are transient and may be buyer-specific: never cache them.
 const PROXY_ERROR_CACHE_CONTROL = "no-store";
 
-type PrepareHeaders = (headers: Headers, options: HydrogenRoutesOptions, url: URL) => void;
+type ProxyHeaderContext = HydrogenRoutesOptions & { url: URL };
+
+type PrepareHeaders<ExtraContext extends object = object> = (
+  headers: Headers,
+  context: ProxyHeaderContext & ExtraContext,
+) => void;
 
 type ProxyRequestHeaderOptions = (
   | { allow: readonly string[]; deny?: never }
@@ -17,7 +22,7 @@ type ProxyRequestHeaderOptions = (
 };
 
 type ProxyResponseHeaderOptions = {
-  prepare?: PrepareHeaders;
+  prepare?: PrepareHeaders<{ response: Response }>;
 };
 
 type ProxyDescriptor = {
@@ -39,6 +44,20 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
   return (url, options) => {
     const { request, storefrontClient } = options;
     if (!descriptor.match.test(url.pathname)) return null;
+
+    // Disable JSONP requests for security:
+    if (url.searchParams.has("callback")) {
+      return Promise.resolve(
+        new Response(JSON.stringify(formatError("JSONP requests are not supported")), {
+          status: 400,
+          headers: {
+            "content-type": "application/json",
+            "cache-control": PROXY_ERROR_CACHE_CONTROL,
+          },
+        }),
+      );
+    }
+
     if (descriptor.methods && !descriptor.methods.includes(request.method)) {
       // Method not allowed. Shape the body via formatError, like other errors.
       return Promise.resolve(
@@ -62,7 +81,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
       init = {
         method: request.method,
         body: request.body,
-        headers: createProxyRequestHeaders(descriptor, options, url),
+        headers: createProxyRequestHeaders(descriptor, { ...options, url }),
         signal: AbortSignal.timeout(descriptor.timeoutMs ?? PROXY_TIMEOUT_MS),
         redirect: descriptor.redirect ?? "manual",
       };
@@ -77,7 +96,11 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
     return fetch(upstreamUrl, init)
       .then((upstreamResponse) => {
         const headers = createProxyResponseHeaders(upstreamResponse.headers);
-        descriptor.responseHeaders?.prepare?.(headers, options, url);
+        descriptor.responseHeaders?.prepare?.(headers, {
+          ...options,
+          url,
+          response: upstreamResponse,
+        });
         options.requestContext.consumeStorefrontResponseHeaders(headers);
 
         return new Response(upstreamResponse.body, {
@@ -114,8 +137,7 @@ function createProxyErrorResponse(
 
 function createProxyRequestHeaders(
   descriptor: ProxyDescriptor,
-  options: HydrogenRoutesOptions,
-  url: URL,
+  options: ProxyHeaderContext,
 ): Headers {
   const { request, requestContext } = options;
   const { allow, deny, prepare } = descriptor.requestHeaders;
@@ -126,7 +148,7 @@ function createProxyRequestHeaders(
   requestContext.applyStorefrontRequestHeaders(headers);
 
   for (const header of deny ?? []) headers.delete(header);
-  prepare?.(headers, options, url);
+  prepare?.(headers, options);
 
   return headers;
 }
@@ -135,5 +157,6 @@ export function createProxyResponseHeaders(upstreamHeaders: Headers): Headers {
   const headers = new Headers(upstreamHeaders);
   headers.delete("content-encoding");
   headers.delete("content-length");
+  headers.delete("server-timing");
   return headers;
 }

@@ -22,11 +22,11 @@
 
 **Prerequisites:**
 
-- A storefront built on `@shopify/hydrogen` with the request interceptors already wired (`handleShopifyRoutes` and `handleShopifyRedirects`). The analytics bus depends on the SFAPI proxy so the browser can observe same-origin Storefront API responses for session cookies. Without the proxy, analytics falls back to deprecated JavaScript-visible cookies and should be treated as incomplete. If you have not installed the interceptors yet, install them first with the local `hydrogen-request-handlers` skill.
+- A storefront built on `@shopify/hydrogen` with the request interceptors already wired (`handleShopifyRoutes` and `handleShopifyRedirects`). The analytics bus depends on the SFAPI proxy so the browser can observe same-origin Storefront API responses for session cookies. Without the proxy, the backend session cookies cannot be established and analytics should be treated as incomplete. If you have not installed the interceptors yet, install them first with the local `hydrogen-request-handlers` skill.
 - Shopify runtime scripts rendered from the root/document head. Use `ShopifyScripts` from your framework binding if it exports one, or `getShopifyScriptTags()` / `renderShopifyScriptTags()` from core in other framework heads. Pass `{country, language, currency?}` as `i18n`; pass `{shopId: env.SHOP_ID, storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0", myshopifyDomain: env.PUBLIC_STORE_DOMAIN}` as `shop`. Resolve both on the server, declare them as consts annotated with the `ShopifyScriptsShop` / `ShopifyScriptsI18n` types from `@shopify/hydrogen` (so wrong or missing fields fail typecheck where they are built), and serialize them into ShopifyScripts. ShopifyScripts creates `window.Shopify.analytics` by default and exposes the permanent domain as `window.Shopify.shop`. Analytics consent config does not accept `country` or `language`.
 - A client-side lifecycle hook in your framework (route-change effect, navigation event, `<script>` tag, etc.) so view events can fire on the right URL transitions.
 
-`ShopifyScripts` creates the zero-dependency analytics bus, sets it on `window.Shopify.analytics`, and owns Shopify consent setup, analytics CDN loading, and deprecated-cookie compatibility. Framework adapters stay thin: they translate framework lifecycle events into bus calls and wire cart delta tracking with `trackCartAnalytics()`.
+`ShopifyScripts` creates the zero-dependency analytics bus, sets it on `window.Shopify.analytics`, and owns Shopify consent setup and analytics CDN loading. Framework adapters stay thin: they translate framework lifecycle events into bus calls and wire cart delta tracking with `trackCartAnalytics()`.
 
 ## What you're installing, and what it does on its own
 
@@ -46,8 +46,7 @@ ShopifyScripts
   │
   ├── loads Shopify Customer Privacy script (consent + region gating)
   ├── loads Privacy Banner script in default-banner mode
-  ├── loads Shopify analytics destination by default
-  └── writes deprecated _shopify_y / _shopify_s cookies
+  └── loads Shopify analytics destination by default
 ```
 
 The bus is **browser-only effective** and is created by ShopifyScripts in the browser. There is no server-side dispatch.
@@ -121,13 +120,13 @@ The analytics bus is enabled by default. Pass `analytics` only when you need opt
 
 This is where the location/region nuance lives. Shopify's hosted Customer Privacy API decides per-visitor whether tracking requires consent based on the visitor's geography:
 
-- **Visitors in jurisdictions with consent requirements** (EU/EEA/UK GDPR, parts of Canada, California CCPA, etc.) — analytics must wait for consent. Use `mode: "default-banner"` for Shopify's hosted privacy banner, or `mode: "custom-banner"` if your app renders its own banner and calls `window.Shopify.customerPrivacy.setTrackingConsent()`.
-- **Visitors in jurisdictions without consent requirements** — the Customer Privacy SDK auto-allows tracking and the banner does not render. The bus dispatches normally.
+- **Visitors in jurisdictions with consent requirements** (EU/EEA/UK GDPR, parts of Canada, California CCPA, etc.) — analytics must wait for consent. Use `mode: "default-banner"` for Shopify's hosted privacy banner, or `mode: "custom-banner"` with a `setup` callback that connects the app's consent provider.
+- **Visitors in jurisdictions without consent requirements** — the Customer Privacy SDK may allow tracking without showing Shopify's banner. Custom-banner integrations still wait for the provider's resolved consent; the provider owns its regional policy.
 
 `mode` controls how consent is collected:
 
 - `"default-banner"` loads Shopify's hosted privacy banner and waits when the Customer Privacy API says banner interaction is required.
-- `"custom-banner"` loads only the Customer Privacy API and treats the initial consent event as actionable. Your banner must call `setTrackingConsent()` when the shopper accepts or declines.
+- `"custom-banner"` loads only the Customer Privacy API and waits for the required asynchronous `setup` callback to resolve before checking consent. Read [Custom consent providers](../../hydrogen-analytics/references/custom-consent.md) when integrating a third-party banner.
 - `"no-banner"` loads only the Customer Privacy API and releases analytics after consent setup. Use this only when consent is already allowed or managed outside this storefront.
 
 ### Consent Gating
@@ -580,6 +579,8 @@ analytics?.addDestination({
 
 Consent gating happens at the bus level before destination callbacks see the payload. Raw `analytics.subscribe()` is live-only and consent-agnostic; use `addDestination()` for logging or analytics destinations that should respect consent and replay.
 
+Destinations that need Shopify visitor IDs can call `getTrackingValues()` from the callback's second argument: `subscribe(event, (payload, { getTrackingValues }) => { ... })`. It reads current `uniqueToken` and `visitToken` values from the consent API when called, including during replay, and requests fallback generation with the tag `hydrogen:<destination name>`. Unavailable tokens are empty strings, and the getter also returns empty strings whenever analytics tracking is not currently allowed, so a retained getter cannot read or generate tokens after consent is revoked. Call it inside the destination callback; registration itself does not read or generate tokens.
+
 ---
 
 ## Verify
@@ -608,7 +609,7 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Astro page-view fires only on full loads.** Astro is MPA-by-default. If you adopt View Transitions, listen for `astro:after-swap` instead of relying on the inline-script-runs-on-load behavior — otherwise SPA-nav transitions skip `page_viewed`.
 - **Required product fields silently drop the Monorail leg.** Missing `id`/`title`/`vendor`/`variantId`/`variantTitle`/`price` causes the Shopify analytics subscriber to skip Monorail dispatch and log a field-specific error. The bus event still fires for your subscribers — the loss is only in Shopify analytics. Watch the console.
 - **`updatedAt` missing from cart query weakens dedupe.** The cart tracker prefers cart `updatedAt`, but falls back to the current time when it is absent. Include `updatedAt` in cart queries for stable dedupe across navigations and reloads.
-- **`destroy()` is not called by any of the framework adapter sketches.** During HMR or React Strict Mode double-mount, this means duplicate event subscribers and possibly duplicate Monorail events in dev. For production this is rarely visible (one bus per page lifetime). If duplicate dev events bother you, wire `analytics.destroy()` into your framework's teardown (React effect cleanup, Svelte `onDestroy`, Solid `onCleanup`, or equivalent).
+- **The analytics bus lives for the page lifetime.** Do not call `analytics.destroy()` on component unmount. Remove component-owned subscriptions with their unsubscribe functions.
 - **Lighthouse skip is silent.** Monorail dispatch is skipped for Chrome Lighthouse user-agents. If your synthetic monitoring runs Lighthouse, you will see no Monorail requests in those runs — this is intentional.
 
 ---
@@ -621,4 +622,4 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Don't reimplement Monorail dispatch.** If you need a third-party destination, register it with `addDestination()` and forward from there — do not parallel-publish to Monorail yourself.
 - **Don't put per-route view events in a global subscriber.** A single subscriber that watches `page_viewed` and synthesizes `product_viewed` from URL parsing is brittle and loses payload context. Publish each view event from the route that has the data.
 - **Don't construct multiple buses for "different consent contexts" on the same page.** Customer Privacy config is global; the latest initialized config takes effect. If you need conditional behavior, branch inside subscribers, not at construction.
-- **Don't skip the request-handler prerequisite.** Without the SFAPI proxy, modern same-origin Shopify cookies cannot be set. Analytics may appear to work via deprecated JS-visible cookies, but session continuity into checkout breaks. Treat analytics as incomplete until the proxy is live in production.
+- **Don't skip the request-handler prerequisite.** Without the SFAPI proxy, modern same-origin Shopify cookies cannot be set. Session continuity into checkout depends on these backend cookies. Treat analytics as incomplete until the proxy is live in production.

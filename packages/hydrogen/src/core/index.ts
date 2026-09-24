@@ -54,11 +54,14 @@ export type {
   AnalyticsCartLine,
   AnalyticsEventMap,
   AnalyticsEventName,
+  AnalyticsTrackingValues,
   CartLineUpdatePayload,
   CartUpdatePayload,
   CartViewPayload,
   CollectionViewPayload,
   ConsentConfig,
+  ConsentPreferences,
+  ConsentSetup,
   EventPayloads,
   OtherData,
   PageViewPayload,
@@ -70,6 +73,7 @@ export type {
   StorefrontAnalytics,
   StorefrontAnalyticsConfig,
   StorefrontAnalyticsDestination,
+  StorefrontAnalyticsDestinationEventContext,
   StorefrontAnalyticsDestinationSetupContext,
 } from "./analytics";
 export {

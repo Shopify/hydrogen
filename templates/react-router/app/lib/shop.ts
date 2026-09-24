@@ -91,8 +91,8 @@ export function getPrivateStorefrontToken(env: Pick<Env, "PRIVATE_STOREFRONT_API
 
 // Configuration for the <shopify-account> header widget. Returns null in mock
 // mode (no Customer Account API) or without a PUBLIC token, in which case the
-// header keeps its placeholder account control. Only public values are
-// returned: they are serialised into the HTML.
+// header shows a link to `/account` instead. Only public values are returned:
+// they are serialised into the HTML.
 export type AccountWidgetConfig = { storeDomain: string; publicAccessToken: string };
 
 export function getAccountWidgetConfig(

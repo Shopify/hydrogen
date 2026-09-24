@@ -16,6 +16,7 @@ analytics, and a consent banner wired up.
 - `/collections/:handle` — collection with filters, sort, and pagination
 - `/search` — product search with the same filtering
 - `/cart` — cart with Shop Pay (also the no-JS fallback for the cart drawer)
+- `/account` — Customer Account sign-in, log out, and order history
 
 ## What it demonstrates
 
@@ -25,6 +26,10 @@ analytics, and a consent banner wired up.
   cart drawer wired to Shopify Standard Actions.
 - A shared layout (header with mobile nav, footer, announcement bar).
 - Analytics + a consent banner.
+- Customer Accounts: Hydrogen's `/account/login`, `/account/authorize`,
+  `/account/refresh`, and `/account/logout` handlers, backed by a signed cookie
+  session (`app/lib/session.ts`). Needs a real store, `SHOP_ID`,
+  `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID`, `SESSION_SECRET`, and HTTPS.
 - The design tokens in `app/tokens.css` and SVG icons in `public/icons/`.
 
 ## Run it
@@ -62,7 +67,9 @@ Customer Account OAuth requires trusted local HTTPS. Run:
 npm run dev:https
 ```
 
-The local HTTPS plugin provisions and reuses a trusted certificate under `~/.shopify/hydrogen/certs/`. On first run, it may prompt to install the local certificate authority. Open <https://local.tryhydrogen.dev:5173>.
+Open <https://local.tryhydrogen.dev:5173>.
+
+The local HTTPS plugin provisions and reuses a trusted certificate under `~/.shopify/hydrogen/certs/` (on first run, it may prompt to install the local certificate authority), links an unlinked Hydrogen storefront, and pushes the Customer Account callback, JavaScript origin, and logout URLs. See the `hydrogen-local-https` skill for CI and manual fallback behavior.
 
 **Account widget** — in real-store mode, the header renders Shopify's
 [`<shopify-account>`](https://shopify.dev/docs/api/storefront-web-components/components/shopify-account)
@@ -78,7 +85,7 @@ In the Shopify admin, open the Hydrogen app, select your storefront and go to
 `unauthenticated_read_customers`, `unauthenticated_read_content` and
 `unauthenticated_read_product_listings` permissions. Never use
 `PRIVATE_STOREFRONT_API_TOKEN` here. Without the public token, or in `mock.shop`
-mode, the header keeps a placeholder account control with the same footprint.
+mode, the header shows a link to `/account` instead.
 
 **Warning:** if both tokens are set but `PUBLIC_STORE_DOMAIN` is not, the widget
 targets the default `hydrogen-preview.myshopify.com` with your public token. Set

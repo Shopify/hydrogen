@@ -18,9 +18,10 @@ import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
+import { createRequestCustomerAccount, customerAccountContext } from "~/lib/customer-account";
 import { envContext } from "~/lib/env";
 import { routeTemplates } from "~/lib/route-templates";
-import { createRequestSessionManager } from "~/lib/session";
+import { createEphemeralSessionManager } from "~/lib/session";
 import {
   analyticsConsent,
   analyticsShop,
@@ -64,7 +65,9 @@ export const middleware: Route.MiddlewareFunction[] = [
       context.waitUntil,
     );
     const requestContext = storefrontClient.requestContext;
-    const sessionManager = createRequestSessionManager(request);
+    const customerAccount = await createRequestCustomerAccount(request, env, requestContext);
+    const sessionManager =
+      customerAccount?.customerAccount.sessionManager ?? createEphemeralSessionManager(request);
 
     const shopifyRoute = handleShopifyRoutes({
       request,
@@ -72,15 +75,18 @@ export const middleware: Route.MiddlewareFunction[] = [
       sessionManager,
       storefrontClient,
       routeTemplates,
-      handlers: [cartHandlers],
+      handlers: customerAccount ? [cartHandlers, customerAccount.handlers] : [cartHandlers],
     });
 
     if (shopifyRoute) return shopifyRoute;
 
     context.set(storefrontClientContext, storefrontClient);
     context.set(storefrontRequestContext, requestContext);
+    context.set(customerAccountContext, customerAccount?.customerAccount ?? null);
 
     const response = await next();
+    const sessionHeaders = new Headers((await sessionManager.commit?.()) ?? undefined);
+    for (const [name, value] of sessionHeaders) response.headers.append(name, value);
     if (response.status === 404) {
       const redirect = await handleShopifyRedirects({
         request,
