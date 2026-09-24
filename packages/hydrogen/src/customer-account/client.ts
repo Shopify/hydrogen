@@ -35,17 +35,57 @@ type FetchCustomerAccountGraphqlParams = {
   timeoutInMs: number;
 };
 
+/**
+ * Options for {@link createCustomerAccountClient}.
+ *
+ * The client validates `shopId`, `customerApiVersion`, and `defaultTimeoutInMs`
+ * at construction time and throws synchronously on invalid values.
+ */
 export type CreateCustomerAccountClientOptions = {
+  /** Numeric Shopify shop ID as a string (e.g. `"12345"`). Validated against `/^\d+$/`. */
   shopId: string;
+  /**
+   * Customer Account API version in `YYYY-MM` format.
+   * Defaults to the version baked into the package (`"2026-04"`).
+   */
   customerApiVersion?: string;
+  /**
+   * Request-scoped context created by `createShopifyRequestContext`. Supplies
+   * the i18n language for automatic `$language` variable injection, an abort
+   * signal that propagates request cancellation, and a personalization marker
+   * that affects CDN caching.
+   */
   requestContext: ShopifyRequestContext;
+  /** Custom `fetch` implementation. Falls back to `globalThis.fetch`. */
   fetch?: typeof globalThis.fetch;
+  /**
+   * Per-request timeout in milliseconds. Must be a positive safe integer no
+   * greater than 2,147,483,647. Defaults to 30,000 ms.
+   */
   defaultTimeoutInMs?: number;
 };
 
+/**
+ * Per-call options passed to {@link CustomerAccountClient.graphql}.
+ *
+ * The `language` variable is auto-injected from
+ * `requestContext.i18n.language` when the document declares `$language`
+ * and the caller omits it, so you rarely need to set it yourself.
+ */
 export type CustomerAccountGraphqlOptions<Variables = Record<string, unknown>> = {
+  /** Customer Account API access token obtained from {@link CustomerSession}. */
   accessToken: string;
+  /**
+   * Query variables. When the GraphQL document declares a `$language` variable
+   * and you omit it here, the client injects it automatically from
+   * `requestContext.i18n.language`.
+   */
   variables?: Variables;
+  /**
+   * Optional abort signal. Combined with the request context signal and the
+   * per-request timeout signal via `AbortSignal.any`, so cancellation from any
+   * source stops the request.
+   */
   signal?: AbortSignal;
 };
 
@@ -60,10 +100,30 @@ type UserVariables<Doc> = Omit<VariablesOfDoc<Doc>, "language"> &
   OptionalAutoVariables<VariablesOfDoc<Doc>>;
 type HasNoRequiredKeys<T> = Record<string, never> extends T ? true : false;
 
+/**
+ * Discriminated union returned by {@link CustomerAccountClient.graphql}.
+ *
+ * Discriminate on the presence of `errors`, not via `Partial`:
+ *
+ * - **Success:** `data` is always present, `errors` is `undefined`.
+ * - **Partial or error:** `errors` is a non-empty array of
+ *   {@link GraphQLFormattedError}, and `data` may be `null`.
+ *
+ * Both arms expose the raw response `headers` for inspecting
+ * `x-request-id` or rate-limit metadata.
+ */
 export type CustomerAccountGraphqlResult<Result = unknown> =
   | { data: Result; errors?: undefined; headers: Headers }
   | { data: Result | null; errors: GraphQLFormattedError[]; headers: Headers };
 
+/**
+ * Conditional rest parameter for {@link CustomerAccountClient.graphql}.
+ *
+ * When the document has no required user variables (after `language` is
+ * excluded from the requirement), `options.variables` is optional. When the
+ * document declares required variables, the type forces the caller to supply
+ * them, turning a missing-variables bug into a compile error.
+ */
 export type CustomerAccountGqlRestParam<Doc extends AnyCustomerAccountDocument> =
   HasNoRequiredKeys<UserVariables<Doc>> extends true
     ? [options: CustomerAccountGraphqlOptions<UserVariables<Doc>>]
@@ -73,14 +133,75 @@ export type CustomerAccountGqlRestParam<Doc extends AnyCustomerAccountDocument> 
         },
       ];
 
+/**
+ * A server-side GraphQL client for the Shopify Customer Account API.
+ *
+ * Created by {@link createCustomerAccountClient}. Each call to `graphql()`
+ * validates that the document was produced by `gql()` (runtime branded with a
+ * private Symbol), validates the access token, auto-injects the `language`
+ * variable from i18n context when applicable, and marks the response as
+ * personalized so CDN caching reflects buyer-specific content.
+ */
 export type CustomerAccountClient = {
+  /** Constructed endpoint: `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`. */
   readonly apiUrl: string;
+  /**
+   * Send a GraphQL request to the Customer Account API.
+   *
+   * The document must be created by `gql()`. At call time the client:
+   * 1. Validates the access token.
+   * 2. Auto-injects the `language` variable from `requestContext.i18n.language`
+   *    when the document declares `$language` and the caller omits it.
+   * 3. Combines the request context signal, the caller's signal, and a timeout
+   *    signal via `AbortSignal.any`.
+   * 4. Marks the response as personalized (affects CDN caching).
+   *
+   * @example
+   * ```ts
+   * const result = await client.graphql(
+   *   gql(`query { customer { firstName lastName } }`),
+   *   { accessToken },
+   * );
+   *
+   * if (result.errors) {
+   *   console.error(result.errors);
+   * } else {
+   *   console.log(result.data.customer.firstName);
+   * }
+   * ```
+   */
   graphql: <const Doc extends AnyCustomerAccountDocument>(
     document: Doc,
     ...options: CustomerAccountGqlRestParam<Doc>
   ) => Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>;
 };
 
+/**
+ * Creates a server-only {@link CustomerAccountClient} for the Shopify Customer
+ * Account API.
+ *
+ * Validates `shopId`, `customerApiVersion`, and `defaultTimeoutInMs` at
+ * construction time. The returned client auto-injects the `language` variable
+ * from `requestContext.i18n.language` when applicable, composes abort signals,
+ * and marks responses as personalized for CDN caching.
+ *
+ * @example
+ * ```ts
+ * import { createCustomerAccountClient } from "@shopify/hydrogen/customer-account";
+ *
+ * const customerAccount = createCustomerAccountClient({
+ *   shopId: "12345",
+ *   requestContext,
+ * });
+ *
+ * const { data } = await customerAccount.graphql(
+ *   gql(`query { customer { firstName } }`),
+ *   { accessToken },
+ * );
+ * ```
+ *
+ * @throws {Error} When called in a browser context (`typeof document !== "undefined"`).
+ */
 export function createCustomerAccountClient({
   shopId,
   customerApiVersion = CUSTOMER_ACCOUNT_API_VERSION,
