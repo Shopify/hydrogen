@@ -108,7 +108,7 @@ export interface ProductFormStore<
   connect(): void;
   /** Tears down the store — removes cart subscription and releases resources. */
   destroy(): void;
-  /** Forwards a native `SubmitEvent` to the cart store's form handler (routed by the submitter's `value`, typically `add`), attaching the selected variant as event detail. */
+  /** Forwards a native `SubmitEvent` to the cart store's form handler (routed by the submitter's `value`, typically `add`), attaching selected variant data as event detail. */
   handleFormSubmit(event: SubmitEvent): Promise<void>;
 }
 
