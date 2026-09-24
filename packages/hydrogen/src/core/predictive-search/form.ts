@@ -55,6 +55,7 @@ export function getPredictiveSearchFormAttributes(
   };
 }
 
+/** Reads the search term from form data submitted by a predictive search form. Returns an empty string when the `"q"` field is absent or not a string. */
 export function readPredictiveSearchFormTerm(formData: FormData): string {
   const value = formData.get(PREDICTIVE_SEARCH_QUERY_PARAM);
   return typeof value === "string" ? value : "";
