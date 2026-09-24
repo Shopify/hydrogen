@@ -111,8 +111,6 @@ const TEST_STORE_KEYS = [
   'mockShop',
   'defaultConsentDisallowed_cookiesEnabled',
   'defaultConsentAllowed_cookiesEnabled',
-  'defaultConsentDisallowed_cookiesDisabled',
-  'defaultConsentAllowed_cookiesDisabled',
   'hydrogenPreviewStorefront',
   'customerAccount',
 ] as const;

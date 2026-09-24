@@ -48,8 +48,8 @@ export const cachedTrackingValues: {
 /**
  * Caches tracking values from a `consentManagement` GraphQL response body for
  * later `getTrackingValues()` reads. A `null` value (the backend's signal that
- * consent was not granted) drops the previously cached value; a missing
- * (`undefined`) value leaves it untouched.
+ * consent was not granted) drops the previously cached value; empty-string
+ * and missing (`undefined`) values leave it untouched.
  */
 export function storeTrackingValues(
   values: Partial<{[K in keyof TrackingValues]: string | null}>,

@@ -47,13 +47,14 @@ type UseShopifyCookiesOptions = CoreShopifyCookiesOptions & {
  * API instead. When consent is not granted, any deprecated cookies found in
  * the browser are removed.
  *
- * If `fetchTrackingValues` is true, it makes a request to Storefront API
- * to fetch or refresh Shopiy analytics and marketing cookies and tracking
- * values. Generally speaking, this should only be needed if you're not using
+ * If `fetchTrackingValues` is true, it sends the consent request to the
+ * Storefront API proxy. The response refreshes the http-only analytics and
+ * marketing cookies, and its tracking values are cached for later reads.
+ * Generally speaking, this should only be needed if you're not using
  * Hydrogen's built-in analytics components and hooks that already handle
  * this automatically. For example, set it to `true` if you are using
- * `hydrogen-react` only with a different framework and still need to make a
- * same-domain request to Storefront API to set cookies.
+ * `hydrogen-react` only with a different framework and still need the
+ * consent request to run from the browser.
  *
  * @returns `true` when the consent request has settled and cookies are ready.
  * @publicDocs
@@ -78,8 +79,10 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {
     if (ignoreDeprecatedCookies || !coreCookiesReady) return;
 
     if (hasUserConsent) {
-      // Deprecated cookies are no longer written. Upstream expires any
-      // existing ones after the consent request migrates their values.
+      // Deprecated cookies are no longer written. When the SFAPI proxy is
+      // used, the server expires any existing ones after the consent request
+      // migrates their values. Setups without the proxy (hydrogen-react only)
+      // have no server-side expiry, so the cookies simply age out.
       return;
     }
 

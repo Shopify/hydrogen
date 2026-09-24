@@ -41,7 +41,6 @@
     "nuke": "rimraf packages/*/node_modules templates/*/node_modules apps/*/node_modules .turbo node_modules/.cache/turbo packages/*/.turbo packages/*/dist",
     "check": "pnpm run build && pnpm run lint && pnpm run typecheck && pnpm run test",
     "e2e": "playwright test",
-    "e2e:old-cookies": "playwright test --project=old-cookies",
     "e2e:new-cookies": "playwright test --project=new-cookies",
     "e2e:smoke": "playwright test --project=smoke",
     "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'"

@@ -302,6 +302,34 @@ describe('createStorefrontClient', () => {
       );
     });
 
+    it('keeps the first captured subrequest cookies when later subrequests respond too', async () => {
+      const {storefront} = createClient();
+      await collectSubrequestHeaders(storefront);
+
+      // A later subrequest returning different cookies must not replace the
+      // first fresh capture: only the first response's cookies are forwarded.
+      const options = vi.mocked(fetchWithServerCache).mock
+        .lastCall?.[2] as Parameters<typeof fetchWithServerCache>[2];
+      options?.onRawHeaders?.(
+        new Headers({
+          'set-cookie': '_shopify_essential=later; Path=/; HttpOnly',
+        }),
+      );
+
+      const response = new Response('<html></html>', {
+        headers: {'content-type': 'text/html'},
+      });
+
+      storefront.setCollectedSubrequestHeaders(response);
+
+      expect(response.headers.get('set-cookie')).toContain(
+        '_shopify_essential=abc',
+      );
+      expect(response.headers.get('set-cookie')).not.toContain(
+        '_shopify_essential=later',
+      );
+    });
+
     it('adds no server-timing values to the document response', async () => {
       const {storefront} = createClient();
       await collectSubrequestHeaders(storefront);
@@ -443,6 +471,7 @@ describe('createStorefrontClient', () => {
           headers: {
             'content-type': 'application/json',
             'server-timing': '_y;desc="upstream-unique"',
+            'set-cookie': '_shopify_essential=abc; Path=/; HttpOnly',
           },
         }),
       );
@@ -457,6 +486,9 @@ describe('createStorefrontClient', () => {
 
       expect(response.headers.get('server-timing')).toBeNull();
       expect(response.headers.get('content-type')).toBe('application/json');
+      expect(response.headers.get('set-cookie')).toContain(
+        '_shopify_essential',
+      );
     });
 
     it('returns JSON-RPC error when upstream fetch fails', async () => {

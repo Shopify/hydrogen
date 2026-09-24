@@ -93,11 +93,17 @@ function fetchCallArgs(
   return {url, init, headers: init.headers as Record<string, string>};
 }
 
+const originalLocation = window.location;
+
 describe(`useShopifyCookies`, () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     cachedTrackingValues.current = null;
+    Object.defineProperty(window, 'location', {
+      value: originalLocation,
+      configurable: true,
+    });
   });
 
   it('never sets deprecated cookies, even with consent and tracking values available', () => {
@@ -161,6 +167,53 @@ describe(`useShopifyCookies`, () => {
       )!;
       expect(cookieName).toMatch(/^_shopify_[ys]$/);
       expect(cookieValue).toBe('');
+    }
+  });
+
+  it('scopes the clear domain to the common domain shared with the checkout domain', () => {
+    const {writes} = mockCookie();
+    Object.defineProperty(window, 'location', {
+      value: {host: 'shop.myshop.com'},
+      configurable: true,
+    });
+    document.cookie = '_shopify_s=legacy-visit; Max-Age=1800;';
+    document.cookie = '_shopify_y=legacy-unique; Max-Age=1800;';
+    writes.length = 0;
+
+    renderHook(() =>
+      useShopifyCookies({
+        hasUserConsent: false,
+        checkoutDomain: 'checkout.myshop.com',
+      }),
+    );
+
+    // Only the common suffix of the storefront and checkout hosts is used,
+    // so cookies set for the shop domain (and its subdomains) are covered:
+    expect(writes.length).toBe(2);
+    for (const write of writes) {
+      const {domain} = parse(write);
+      expect(domain).toBe('.myshop.com');
+    }
+  });
+
+  it('clears host-only cookies when the storefront runs on localhost', () => {
+    const {writes} = mockCookie();
+    Object.defineProperty(window, 'location', {
+      value: {host: 'localhost:3000'},
+      configurable: true,
+    });
+    document.cookie = '_shopify_s=legacy-visit; Max-Age=1800;';
+    document.cookie = '_shopify_y=legacy-unique; Max-Age=1800;';
+    writes.length = 0;
+
+    renderHook(() => useShopifyCookies({hasUserConsent: false}));
+
+    // A Domain attribute would not match a dev localhost host, so the clear
+    // must be host-only:
+    expect(writes.length).toBe(2);
+    for (const write of writes) {
+      const {domain} = parse(write);
+      expect(domain).toBeUndefined();
     }
   });
 
