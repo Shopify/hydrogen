@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {vi, describe, it, expect, beforeEach, afterEach} from 'vitest';
 import {createStorefrontClient} from './storefront';
 import {fetchWithServerCache} from './cache/server-fetch';
@@ -190,6 +191,144 @@ describe('createStorefrontClient', () => {
     });
   });
 
+  describe('forward', () => {
+    let originalFetch: typeof globalThis.fetch;
+    let mockFetch: ReturnType<typeof vi.fn>;
+
+    function createClient() {
+      return createStorefrontClient({
+        storeDomain,
+        storefrontId,
+        storefrontHeaders,
+        publicStorefrontToken,
+      });
+    }
+
+    beforeEach(() => {
+      originalFetch = globalThis.fetch;
+      mockFetch = vi.fn().mockResolvedValue(
+        new Response('ok', {
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+            'server-timing':
+              '_y;desc="upstream-unique", _s;desc="upstream-visit", _cmp;desc="upstream-consent"',
+            'set-cookie': '_shopify_essential=abc; Path=/; HttpOnly',
+          },
+        }),
+      );
+      globalThis.fetch = mockFetch;
+    });
+
+    afterEach(() => {
+      globalThis.fetch = originalFetch;
+    });
+
+    it('strips the upstream server-timing header from the proxied response', async () => {
+      const {storefront} = createClient();
+
+      const request = new Request(
+        'https://my-store.com/api/unstable/graphql.json',
+        {
+          method: 'POST',
+          body: '{}',
+        },
+      );
+
+      const response = await storefront.forward(request);
+
+      expect(response.headers.get('server-timing')).toBeNull();
+    });
+
+    it('preserves other upstream headers, including set-cookie', async () => {
+      const {storefront} = createClient();
+
+      const request = new Request(
+        'https://my-store.com/api/unstable/graphql.json',
+        {
+          method: 'POST',
+          body: '{}',
+        },
+      );
+
+      const response = await storefront.forward(request);
+
+      expect(response.headers.get('content-type')).toBe('application/json');
+      expect(response.headers.get('set-cookie')).toContain(
+        '_shopify_essential',
+      );
+    });
+  });
+
+  describe('setCollectedSubrequestHeaders', () => {
+    function createClient() {
+      return createStorefrontClient({
+        storeDomain,
+        storefrontId,
+        storefrontHeaders,
+        publicStorefrontToken,
+      });
+    }
+
+    async function collectSubrequestHeaders(
+      storefront: ReturnType<typeof createClient>['storefront'],
+    ) {
+      await storefront.query('query {}');
+
+      const options = vi.mocked(fetchWithServerCache).mock
+        .lastCall?.[2] as Parameters<typeof fetchWithServerCache>[2];
+
+      options?.onRawHeaders?.(
+        new Headers({
+          'server-timing':
+            '_y;desc="sub-unique", _s;desc="sub-visit", _cmp;desc="sub-consent"',
+          'set-cookie': '_shopify_essential=abc; Path=/; HttpOnly',
+        }),
+      );
+    }
+
+    it('forwards subrequest set-cookie headers to the document response', async () => {
+      const {storefront} = createClient();
+      await collectSubrequestHeaders(storefront);
+
+      const response = new Response('<html></html>', {
+        headers: {'content-type': 'text/html'},
+      });
+
+      storefront.setCollectedSubrequestHeaders(response);
+
+      expect(response.headers.get('set-cookie')).toContain(
+        '_shopify_essential',
+      );
+    });
+
+    it('adds no server-timing values to the document response', async () => {
+      const {storefront} = createClient();
+      await collectSubrequestHeaders(storefront);
+
+      const response = new Response('<html></html>', {
+        headers: {'content-type': 'text/html'},
+      });
+
+      storefront.setCollectedSubrequestHeaders(response);
+
+      expect(response.headers.get('server-timing')).toBeNull();
+    });
+
+    it('does nothing when no subrequest headers were collected', () => {
+      const {storefront} = createClient();
+
+      const response = new Response('<html></html>', {
+        headers: {'content-type': 'text/html'},
+      });
+
+      storefront.setCollectedSubrequestHeaders(response);
+
+      expect(response.headers.get('set-cookie')).toBeNull();
+      expect(response.headers.get('server-timing')).toBeNull();
+    });
+  });
+
   describe('forwardMcp', () => {
     let originalFetch: typeof globalThis.fetch;
     let mockFetch: ReturnType<typeof vi.fn>;
@@ -295,6 +434,29 @@ describe('createStorefrontClient', () => {
       expect(forwardedHeaders.get(SHOPIFY_STOREFRONT_ID_HEADER)).toBe(
         storefrontId,
       );
+    });
+
+    it('strips the upstream server-timing header from the proxied response', async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response('ok', {
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+            'server-timing': '_y;desc="upstream-unique"',
+          },
+        }),
+      );
+      const {storefront} = createClientWithMcp();
+
+      const request = new Request('https://my-store.com/api/mcp', {
+        method: 'POST',
+        body: '{}',
+      });
+
+      const response = await storefront.forwardMcp(request);
+
+      expect(response.headers.get('server-timing')).toBeNull();
+      expect(response.headers.get('content-type')).toBe('application/json');
     });
 
     it('returns JSON-RPC error when upstream fetch fails', async () => {

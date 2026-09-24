@@ -17,7 +17,6 @@ import {
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
   SHOPIFY_CLIENT_IP_HEADER,
   SHOPIFY_CLIENT_IP_SIG_HEADER,
-  HYDROGEN_SERVER_TRACKING_KEY,
 } from './constants';
 import {
   CacheNone,
@@ -63,11 +62,6 @@ import {
   MCP_RE,
   SFAPI_RE,
 } from './utils/request';
-import {
-  appendServerTimingHeader,
-  extractServerTimingHeader,
-  TrackedTimingsRecord,
-} from './utils/server-timing';
 
 export type I18nBase = {
   language: StorefrontLanguageCode | CustomerLanguageCode;
@@ -196,8 +190,8 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   forwardMcp: (request: Request) => Promise<Response>;
   /**
    * Sets the collected subrequest headers in the response.
-   * Useful to forward the cookies and server-timing headers
-   * from server subrequests to the browser.
+   * Useful to forward cookies from server subrequests
+   * to the browser.
    */
   setCollectedSubrequestHeaders: (response: {headers: Headers}) => void;
 };
@@ -330,7 +324,6 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   let collectedSubrequestHeaders:
     | undefined
     | {
-        serverTiming: string;
         setCookie: string[];
       };
 
@@ -429,7 +422,6 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         // might not be used if subrequests are not over before the main response is sent.
         collectedSubrequestHeaders ??= {
           setCookie: headers.getSetCookie(),
-          serverTiming: headers.get('server-timing') ?? '',
         };
       },
     });
@@ -620,8 +612,13 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           },
         );
 
-        // Create a new response to allow modifying headers
-        return new Response(sfapiResponse.body, sfapiResponse);
+        // Create a new response to allow modifying headers. Tracking values
+        // are no longer forwarded through server-timing, so the upstream
+        // header is removed entirely.
+        const proxyResponse = new Response(sfapiResponse.body, sfapiResponse);
+        proxyResponse.headers.delete('server-timing');
+
+        return proxyResponse;
       },
 
       /**
@@ -676,7 +673,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
             headers: forwardedHeaders,
           });
 
-          return new Response(mcpResponse.body, mcpResponse);
+          // Match the SFAPI proxy: no upstream server-timing on proxied responses.
+          const proxyResponse = new Response(mcpResponse.body, mcpResponse);
+          proxyResponse.headers.delete('server-timing');
+
+          return proxyResponse;
         } catch (error) {
           const JSON_RPC_INTERNAL_ERROR = -32603;
           const message =
@@ -697,59 +698,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       },
 
       setCollectedSubrequestHeaders: (response: {headers: Headers}) => {
-        // Forward cookies
+        // Forward cookies from the first fresh subrequest response
         if (collectedSubrequestHeaders) {
           for (const value of collectedSubrequestHeaders.setCookie) {
             response.headers.append('Set-Cookie', value);
           }
-        }
-
-        const serverTiming = extractServerTimingHeader(
-          collectedSubrequestHeaders?.serverTiming,
-        );
-
-        const isDocumentResponse = response.headers
-          .get('content-type')
-          ?.startsWith('text/html');
-
-        // Only fallback to generated tokens for HTML responses.
-        // This ensures that non-HTML responses (e.g. JSON, React Router streaming)
-        // don't get unexpected _y/_s values. These values might be used by the
-        // browser to set cookies and track the user session if consent is allowed
-        // by default in their store settings (otherwise these values are dropped).
-        const fallbackValues = isDocumentResponse
-          ? ({_y: uniqueToken, _s: visitToken} satisfies TrackedTimingsRecord)
-          : undefined;
-
-        // Forward tracking values via server-timing from subrequests,
-        // and fallback to the ones generated in the current request.
-        appendServerTimingHeader(response, {
-          ...fallbackValues,
-          ...serverTiming,
-        } satisfies TrackedTimingsRecord);
-
-        // Optimization: We set this flag to indicate that the tracking work was done
-        // in the server to skip an extra request from the browser. Conditions:
-        // If any of these conditions are not met, the browser will perform
-        // a request to the SFAPI proxy to get all the necessary cookies and values.
-        if (
-          isDocumentResponse &&
-          collectedSubrequestHeaders &&
-          // _shopify_essential cookie is always set, but we need more than that
-          collectedSubrequestHeaders.setCookie.length > 1 &&
-          serverTiming?._y &&
-          serverTiming?._s &&
-          serverTiming?._cmp
-        ) {
-          // For all SF API requests (that aren't from cache), we expect _y and _s values, as well as the
-          // _shopify_essential cookie to be returned. Even if we get responses from SF API requests that
-          // are cache misses, we still may not get the _cmp value and the _shopify_marketing and _shopify_analytics cookies.
-          // Therefore, even if we had >=1 non-cache hit SF API request, we may still need to make the browser
-          // SF API request to the `consentManagement` endpoint in the SF API, which will give us the _cmp value
-          // and set the _shopify_marketing and _shopify_analytics cookies if they are missing.
-          appendServerTimingHeader(response, {
-            [HYDROGEN_SERVER_TRACKING_KEY]: '1',
-          });
         }
       },
     },
