@@ -12,6 +12,9 @@ import {
 // Marks the same-origin consent request so Hydrogen's server can migrate
 // deprecated cookies on it. A custom header on the cross-origin checkout
 // retry would fail its CORS preflight, so it is never sent there.
+// NOTE: packages/hydrogen/src/constants.ts defines the same header name
+// (STOREFRONT_CONSENT_MANAGEMENT_HEADER) for the server-side expiry; keep
+// the two in sync.
 const CONSENT_MANAGEMENT_MARKER_HEADER =
   'Shopify-Storefront-Consent-Management';
 
