@@ -27,6 +27,7 @@ type DestinationRecord = {
   cleanup?: () => void;
   subscriptions: Map<string, Set<DestinationCallback>>;
   nextReplaySequence: number;
+  catchingUp: boolean;
 };
 
 /**
@@ -72,7 +73,8 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
   let nextReplaySequence = 0;
   let shouldRecordReplay = true;
   // Holds contiguous sequences: recording only stops when the buffer is
-  // cleared, so `catchUp()` can index it by sequence.
+  // cleared, so `catchUp()` can index it by sequence. A gap would make
+  // catch-up silently skip entries, though it would still terminate.
   const replayBuffer: ReplayEntry[] = [];
   const destinations = new Set<DestinationRecord>();
   const destinationNames = new Set<string>();
@@ -83,23 +85,33 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
 
   /**
    * Delivers the retained events a destination has not processed yet, oldest
-   * first. Re-reads the buffer on every step because callbacks may publish,
-   * which appends to it and can evict its oldest entry.
+   * first, while tracking stays allowed. Re-reads the buffer on every step
+   * because callbacks may publish, which appends to it and can evict its
+   * oldest entry. A nested call for the same destination returns straight
+   * away and the outer loop picks up the new entries, so every callback sees
+   * events in order. If one callback publishes more than the buffer holds,
+   * that destination only receives the entries still retained.
    */
   function catchUp(destination: DestinationRecord): void {
-    for (;;) {
-      const oldest = replayBuffer[0];
-      if (oldest === undefined) return;
-      const entry = replayBuffer[Math.max(0, destination.nextReplaySequence - oldest.sequence)];
-      if (entry === undefined) return;
-      deliverDestinationEvent(destination, entry);
+    if (destination.catchingUp) return;
+    destination.catchingUp = true;
+    try {
+      while (deps.canTrack()) {
+        const oldest = replayBuffer[0];
+        if (oldest === undefined) return;
+        const entry = replayBuffer[Math.max(0, destination.nextReplaySequence - oldest.sequence)];
+        if (entry === undefined) return;
+        deliverDestinationEvent(destination, entry);
+      }
+    } finally {
+      destination.catchingUp = false;
     }
   }
 
   /**
    * Saves a removed destination's cursor for a later re-add. Cursors at or
    * before the oldest retained event behave like a fresh name, so they are
-   * dropped to keep the map bounded by the retained window.
+   * dropped and the map only holds cursors that still differ from one.
    */
   function rememberReplayCursor(name: string, cursor: number): void {
     const oldestRetainedSequence = replayBuffer[0]?.sequence ?? nextReplaySequence;
@@ -162,6 +174,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
       },
       subscriptions: new Map(),
       nextReplaySequence: initialReplaySequence,
+      catchingUp: false,
     };
     let removed = false;
 
@@ -260,6 +273,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
    */
   function onPublish(event: string, payload: unknown): void {
     const canTrack = deps.canTrack();
+    // Live delivery reads from the buffer, so a trackable event must be recorded.
     if (canTrack) shouldRecordReplay = true;
 
     if (shouldRecordReplay) {

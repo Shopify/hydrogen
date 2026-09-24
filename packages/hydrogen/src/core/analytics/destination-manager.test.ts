@@ -741,6 +741,48 @@ describe("createDestinationManager", () => {
       expect(deliveredPayloads(second)).toEqual([{ url: "/1" }, { url: "/2" }]);
     });
 
+    it("delivers in order to every callback of a destination when one callback publishes", () => {
+      const { manager } = createTestManager(() => true);
+      const calls: string[] = [];
+
+      manager.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", (payload) => {
+            calls.push(`first:${payload.url}`);
+            if (payload.url === "/1") manager.onPublish("page_viewed", { url: "/2" });
+          });
+          subscribe("page_viewed", (payload) => {
+            calls.push(`second:${payload.url}`);
+          });
+        },
+      });
+      manager.onPublish("page_viewed", { url: "/1" });
+
+      expect(calls).toEqual(["first:/1", "second:/1", "first:/2", "second:/2"]);
+    });
+
+    it("stops catching up when a callback revokes tracking", () => {
+      let canTrack = false;
+      const { manager } = createTestManager(() => canTrack);
+      const destination = vi.fn(() => {
+        canTrack = false;
+      });
+
+      manager.onPublish("page_viewed", { url: "/1" });
+      manager.onPublish("page_viewed", { url: "/2" });
+      manager.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", destination);
+        },
+      });
+      canTrack = true;
+      manager.replay();
+
+      expect(deliveredPayloads(destination)).toEqual([{ url: "/1" }]);
+    });
+
     it("delivers buffered events before a live event published ahead of replay", () => {
       let canTrack = false;
       const { manager } = createTestManager(() => canTrack);
