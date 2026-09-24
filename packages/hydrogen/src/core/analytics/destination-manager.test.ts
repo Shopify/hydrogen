@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 
 import { createDestinationManager } from "./destination-manager";
 import type {
@@ -22,6 +22,10 @@ const CONFIG: StorefrontAnalyticsConfig = {
 };
 
 const noop = () => {};
+
+function deliveredPayloads(callback: Mock): unknown[] {
+  return callback.mock.calls.map((call: unknown[]) => call[0]);
+}
 
 function createTestManager(canTrack: () => boolean = () => true) {
   const getConfig = vi.fn(() => CONFIG);
@@ -450,8 +454,8 @@ describe("createDestinationManager", () => {
       });
       manager.onPublish("page_viewed", { url: "/c" });
 
-      expect(first.mock.calls.map(([payload]) => payload)).toEqual([{ url: "/a" }, { url: "/b" }]);
-      expect(second.mock.calls.map(([payload]) => payload)).toEqual([{ url: "/c" }]);
+      expect(deliveredPayloads(first)).toEqual([{ url: "/a" }, { url: "/b" }]);
+      expect(deliveredPayloads(second)).toEqual([{ url: "/c" }]);
     });
 
     it("replays events published while a destination was removed once it is re-added", () => {
@@ -475,8 +479,8 @@ describe("createDestinationManager", () => {
         },
       });
 
-      expect(first.mock.calls.map(([payload]) => payload)).toEqual([{ url: "/before-removal" }]);
-      expect(second.mock.calls.map(([payload]) => payload)).toEqual([{ url: "/while-removed" }]);
+      expect(deliveredPayloads(first)).toEqual([{ url: "/before-removal" }]);
+      expect(deliveredPayloads(second)).toEqual([{ url: "/while-removed" }]);
     });
 
     it("replays buffered events once when a destination remounts before consent is granted", () => {
@@ -526,6 +530,120 @@ describe("createDestinationManager", () => {
       expect(second).not.toHaveBeenCalled();
     });
 
+    it("keeps the resumed cursor when a re-added destination is removed during async setup", async () => {
+      const { manager } = createTestManager(() => true);
+      const pending = vi.fn();
+      const resumed = vi.fn();
+      let finishSetup = noop;
+
+      manager.onPublish("page_viewed", { url: "/a" });
+      const removeFirst = manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", noop);
+        },
+      });
+      removeFirst();
+      const removePending = manager.addDestination({
+        name: "component-destination",
+        async setup({ subscribe }) {
+          subscribe("page_viewed", pending);
+          await new Promise<void>((resolve) => {
+            finishSetup = resolve;
+          });
+        },
+      });
+      removePending();
+      manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", resumed);
+        },
+      });
+      finishSetup();
+      await Promise.resolve();
+
+      expect(pending).not.toHaveBeenCalled();
+      expect(resumed).not.toHaveBeenCalled();
+    });
+
+    it("delivers only to the remounted destination when an async setup resolves after removal", async () => {
+      const { manager } = createTestManager(() => true);
+      const first = vi.fn();
+      const second = vi.fn();
+      const firstCleanup = vi.fn();
+      let finishFirstSetup = noop;
+
+      manager.onPublish("page_viewed", { url: "/a" });
+      const removeFirst = manager.addDestination({
+        name: "component-destination",
+        async setup({ subscribe }) {
+          subscribe("page_viewed", first);
+          await new Promise<void>((resolve) => {
+            finishFirstSetup = resolve;
+          });
+          return firstCleanup;
+        },
+      });
+      removeFirst();
+      manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", second);
+        },
+      });
+      finishFirstSetup();
+
+      await vi.waitFor(() => {
+        expect(firstCleanup).toHaveBeenCalledOnce();
+      });
+      expect(first).not.toHaveBeenCalled();
+      expect(deliveredPayloads(second)).toEqual([{ url: "/a" }]);
+    });
+
+    it("does not redeliver the event a destination removed itself during on replay", () => {
+      let canTrack = false;
+      const { manager } = createTestManager(() => canTrack);
+      const second = vi.fn();
+      let removeFirst = noop;
+
+      manager.onPublish("page_viewed", { url: "/a" });
+      manager.onPublish("page_viewed", { url: "/b" });
+      removeFirst = manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", () => removeFirst());
+        },
+      });
+      canTrack = true;
+      manager.replay();
+      manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", second);
+        },
+      });
+
+      expect(deliveredPayloads(second)).toEqual([{ url: "/b" }]);
+    });
+
+    it("stops a removed destination's remaining callbacks for the current event", () => {
+      const { manager } = createTestManager(() => true);
+      const later = vi.fn();
+      let removeDestination = noop;
+
+      removeDestination = manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", () => removeDestination());
+          subscribe("page_viewed", later);
+        },
+      });
+      manager.onPublish("page_viewed", { url: "/a" });
+
+      expect(later).not.toHaveBeenCalled();
+    });
+
     it("keeps replay cursors separate per destination name", () => {
       const { manager } = createTestManager(() => true);
       const other = vi.fn();
@@ -567,6 +685,128 @@ describe("createDestinationManager", () => {
 
       expect(destination).not.toHaveBeenCalled();
       expect(cleanup).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe("re-entrant delivery", () => {
+    it("finishes replay in order when a callback publishes during replay", () => {
+      let canTrack = false;
+      const { manager } = createTestManager(() => canTrack);
+      const destination = vi.fn((payload: { url?: string }) => {
+        if (payload.url === "/1") manager.onPublish("page_viewed", { url: "/published" });
+      });
+
+      manager.onPublish("page_viewed", { url: "/1" });
+      manager.onPublish("page_viewed", { url: "/2" });
+      manager.onPublish("page_viewed", { url: "/3" });
+      manager.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", destination);
+        },
+      });
+      canTrack = true;
+      manager.replay();
+
+      expect(deliveredPayloads(destination)).toEqual([
+        { url: "/1" },
+        { url: "/2" },
+        { url: "/3" },
+        { url: "/published" },
+      ]);
+    });
+
+    it("delivers in order to every destination when a callback publishes during live delivery", () => {
+      const { manager } = createTestManager(() => true);
+      const first = vi.fn((payload: { url?: string }) => {
+        if (payload.url === "/1") manager.onPublish("page_viewed", { url: "/2" });
+      });
+      const second = vi.fn();
+
+      manager.addDestination({
+        name: "first-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", first);
+        },
+      });
+      manager.addDestination({
+        name: "second-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", second);
+        },
+      });
+      manager.onPublish("page_viewed", { url: "/1" });
+
+      expect(deliveredPayloads(first)).toEqual([{ url: "/1" }, { url: "/2" }]);
+      expect(deliveredPayloads(second)).toEqual([{ url: "/1" }, { url: "/2" }]);
+    });
+
+    it("delivers buffered events before a live event published ahead of replay", () => {
+      let canTrack = false;
+      const { manager } = createTestManager(() => canTrack);
+      const destination = vi.fn();
+
+      manager.onPublish("page_viewed", { url: "/buffered" });
+      manager.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", destination);
+        },
+      });
+      canTrack = true;
+      manager.onPublish("page_viewed", { url: "/live" });
+
+      expect(deliveredPayloads(destination)).toEqual([{ url: "/buffered" }, { url: "/live" }]);
+    });
+
+    it("delivers the current event once to a destination added from a callback", () => {
+      const { manager } = createTestManager(() => true);
+      const added = vi.fn();
+      let registered = false;
+
+      manager.addDestination({
+        name: "first-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", () => {
+            if (registered) return;
+            registered = true;
+            manager.addDestination({
+              name: "added-destination",
+              setup({ subscribe: subscribeAdded }) {
+                subscribeAdded("page_viewed", added);
+              },
+            });
+          });
+        },
+      });
+      manager.onPublish("page_viewed", { url: "/1" });
+
+      expect(deliveredPayloads(added)).toEqual([{ url: "/1" }]);
+    });
+
+    it("does not redeliver the current event when a callback removes and re-adds its destination", () => {
+      const { manager } = createTestManager(() => true);
+      const readded = vi.fn();
+      let removeFirst = noop;
+
+      removeFirst = manager.addDestination({
+        name: "component-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", () => {
+            removeFirst();
+            manager.addDestination({
+              name: "component-destination",
+              setup({ subscribe: subscribeReadded }) {
+                subscribeReadded("page_viewed", readded);
+              },
+            });
+          });
+        },
+      });
+      manager.onPublish("page_viewed", { url: "/1" });
+      manager.onPublish("page_viewed", { url: "/2" });
+
+      expect(deliveredPayloads(readded)).toEqual([{ url: "/2" }]);
     });
   });
 
