@@ -300,6 +300,7 @@ describe("ShopifyScripts", () => {
     window.Shopify?.routes.navigate?.("/products/snowboard");
     expect(navigate).toHaveBeenCalledWith("/p/snowboard");
     expect(initializeShopifyScripts).toHaveBeenCalledWith({
+      consent: CONSENT,
       navigate,
       routes: routeTemplates,
       webMcp: true,

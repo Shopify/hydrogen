@@ -84,6 +84,7 @@ export const ShopifyScripts = defineComponent({
   setup(props) {
     onMounted(() => {
       void initializeShopifyScripts({
+        consent: props.consent,
         navigate: props.navigate,
         routes: props.routes,
         webMcp: props.webMcp !== false,
