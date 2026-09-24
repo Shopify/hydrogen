@@ -605,6 +605,32 @@ describe('generateSeoTags', () => {
         ]),
       );
     });
+
+    it('should infer the media type from urls with a fragment and an uppercase extension', () => {
+      // Given
+      const input = {
+        media: {
+          url: 'https://cdn.shopify.com/s/files/logo.PNG#preview',
+        },
+      };
+
+      // When
+      const output = generateSeoTags(input);
+
+      // Then
+      expect(output).toEqual(
+        expect.arrayContaining([
+          {
+            key: 'meta-https://cdn.shopify.com/s/files/logo.PNG#preview-og:image:type',
+            props: {
+              content: 'image/png',
+              property: 'og:image:type',
+            },
+            tag: 'meta',
+          },
+        ]),
+      );
+    });
   });
 
   describe('handle', () => {
