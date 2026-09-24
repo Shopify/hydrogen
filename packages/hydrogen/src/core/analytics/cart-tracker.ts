@@ -25,13 +25,15 @@ type CartTrackerState = {
 /**
  * Subscribes to a cart store and publishes analytics events when the cart changes.
  *
- * Emits `cart_updated` for every mutation, plus `product_added_to_cart` and
- * `product_removed_from_cart` for individual line-level changes. Deduplicates
- * events using both an in-memory cursor and `localStorage` to survive
- * soft navigations.
+ * Emits `cart_updated` whenever a settled cart's `updatedAt` changes, plus
+ * `product_added_to_cart` / `product_removed_from_cart` for each line that was
+ * added, removed, or changed quantity. Deduplicates on `updatedAt` with an
+ * in-memory cursor (within this subscription) and `localStorage` (across full
+ * page loads and tabs). Select `updatedAt` in your cart fragment: without it
+ * each snapshot is stamped with the current time and deduplication can't work.
  *
- * @throws {Error} If the Shopify analytics bus (`window.Shopify.analytics`) is
- *   not available — render `ShopifyScripts` before calling this function.
+ * @throws {Error} If `window.Shopify.analytics` is not set (including on the server).
+ *   Render `ShopifyScripts` (or the `getShopifyScriptTags()` output) first.
  * @returns An unsubscribe function that stops tracking.
  */
 export function trackCartAnalytics(store: CartAnalyticsStore): () => void {
