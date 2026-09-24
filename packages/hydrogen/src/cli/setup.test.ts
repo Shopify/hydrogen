@@ -76,6 +76,11 @@ function createInstallOnlyRunCommandSpy(): RunCommand & {
 }
 
 describe("setupHydrogen", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
   it("installs Hydrogen with the packageManager field and copies skills to both harness directories", async () => {
     const appRoot = createTempDirectory();
     const packageRoot = createPackageRoot([
@@ -205,8 +210,6 @@ describe("setupHydrogen", () => {
 
     expect(log).toHaveBeenCalledWith(expect.stringContaining("declared but not installed"));
     expect(runCommand.calls).toEqual([["npm", ["install"], { cwd: appRoot }]]);
-
-    vi.restoreAllMocks();
   });
 
   it("fails when a harness path exists but is not a directory", async () => {
@@ -328,11 +331,6 @@ describe("setupHydrogen", () => {
   });
 
   describe("no package.json", () => {
-    afterEach(() => {
-      vi.unstubAllGlobals();
-      vi.restoreAllMocks();
-    });
-
     let fixtureTarball: Buffer;
 
     function stubFetch(): void {
