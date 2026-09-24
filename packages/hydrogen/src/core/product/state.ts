@@ -10,7 +10,7 @@ export interface Money {
 /** Minimum and maximum variant prices for a product, mirroring the Storefront API `ProductPriceRange` type. */
 export interface ProductPriceRange {
   minVariantPrice: Money;
-  /** May be absent when the Storefront API omits it. */
+  /** Optional so queries that only select `minVariantPrice` still type-check. */
   maxVariantPrice?: Money;
 }
 
@@ -32,7 +32,7 @@ export interface ProductVariantInput {
   availableForSale: boolean;
   selectedOptions: SelectedOption[];
   price: Money;
-  /** Original price before discounts. `null` when the variant has no compare-at price. */
+  /** Merchant-set compare-at price, typically shown struck-through when higher than `price`. `null` when unset; `undefined` when not queried. */
   compareAtPrice?: Money | null;
   image?: unknown;
   product?: { handle: string; title?: string | null } | null;
@@ -50,7 +50,7 @@ export interface ProductOptionValueInput<
   TVariant extends ProductVariantInput = ProductVariantInput,
 > {
   name: string;
-  /** The first variant selectable when this value is chosen. Used to pre-resolve selections. */
+  /** The variant combining this value with the lowest-position values of every other option (SFAPI). Strongly recommended: it seeds the variant cache used for `exists`/`selectedOptions` and combined-listing detection. */
   firstSelectableVariant?: TVariant | null;
   swatch?: unknown;
 }
@@ -75,7 +75,7 @@ export interface ProductInput<TVariant extends ProductVariantInput = ProductVari
   /** Encoded representation of which existing variants are currently available for sale. Consumers should treat this as opaque. */
   encodedVariantAvailability?: string | null;
   options: ProductOptionInput<TVariant>[];
-  /** The variant pre-selected by the URL or, if none, the first variant available for sale. */
+  /** SFAPI `selectedOrFirstAvailableVariant`: the variant matching the query's `selectedOptions` argument, else the first available variant, else the first variant (which may be unavailable). */
   selectedOrFirstAvailableVariant: TVariant | null;
   /** Variants adjacent to the selected variant — used to resolve option values without a full variant list. */
   adjacentVariants: TVariant[];
@@ -103,13 +103,13 @@ export interface VariantOptionValueState<
   swatch?: TOptionValue["swatch"];
   /** Whether this value is the current selection for its option. */
   selected: boolean;
-  /** Whether a variant exists for the combination of current selections plus this value. */
+  /** Whether a variant exists for the target selection. Falls back to `true` when `encodedVariantExistence` wasn't queried. */
   exists: boolean;
-  /** Whether the matching variant is available for sale. Always `false` when `exists` is `false`. */
+  /** Whether the target selection is available for sale. Uses `encodedVariantAvailability` when queried, otherwise the loaded variant's `availableForSale` (`false` if not loaded). */
   available: boolean;
-  /** The fully resolved variant when this value is selected, or `null` if the combination is partial. */
+  /** The loaded variant for the target selection, or `null` if the selection is partial or that variant wasn't part of the query result. */
   variant: TVariant | null;
-  /** The full set of {@link SelectedOption} entries that would result from choosing this value. */
+  /** The selection this value targets. Use for link building; `selectOption()` is the source of truth for the resulting selection. */
   selectedOptions: SelectedOption[];
   /** Product handle, useful for building navigation links to combined-listing child products. */
   handle: string;

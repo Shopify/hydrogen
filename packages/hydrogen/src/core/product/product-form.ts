@@ -104,11 +104,11 @@ export interface ProductFormStore<
   hydrate(product: TProduct, opts?: { selectedOptions?: SelectedOption[] }): void;
   /** Restores the store to its initial product and selection state. */
   reset(): void;
-  /** Activates the store — starts listening for cart state changes to track the matched line item. */
+  /** Re-subscribes to the cart store and resyncs cart-derived state. Only needed to reuse the store after `destroy()` (e.g. React StrictMode effects). */
   connect(): void;
   /** Tears down the store — removes cart subscription and releases resources. */
   destroy(): void;
-  /** Handles a native `SubmitEvent` by dispatching an add-to-cart transaction via the cart store. */
+  /** Forwards a native `SubmitEvent` to the cart store's form handler (routed by the submitter's `value`, typically `add`), attaching the selected variant as event detail. */
   handleFormSubmit(event: SubmitEvent): Promise<void>;
 }
 
@@ -116,7 +116,7 @@ export interface ProductFormStore<
 // Utilities
 // ---------------------------------------------------------------------------
 
-/** Returns the fully resolved variant for the current selection, or `null` when the selection is partial. */
+/** Returns the selected variant, or `null` when the selection is partial or the variant wasn't part of the query result. */
 export function getSelectedVariant<TVariant extends ProductVariantInput>(
   options: VariantOptionState<TVariant, ProductOptionValueInput>[],
 ): TVariant | null {
