@@ -32,10 +32,8 @@ export type ShopifyGlobal = {
     saleOfDataAllowed: () => boolean;
     marketingAllowed: () => boolean;
     analyticsProcessingAllowed: () => boolean;
-    setTrackingConsent: (
-      consent: Record<string, unknown>,
-      callback: (data: { error: string } | undefined) => void,
-    ) => void | Promise<unknown>;
+    /** Synchronizes consent with Shopify. Await completion before using the updated consent. */
+    setTrackingConsent: (consent: Record<string, unknown>) => Promise<unknown>;
     shouldShowBanner: () => boolean;
     shouldShowGDPRBanner: () => boolean;
   };

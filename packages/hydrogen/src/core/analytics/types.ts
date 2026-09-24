@@ -19,9 +19,27 @@ export type ShopAnalytics =
 
 // --- Consent ---
 
-export type ConsentConfig = {
-  mode?: "default-banner" | "custom-banner" | "no-banner";
+export type ConsentPreferences = {
+  analytics: boolean;
+  marketing: boolean;
+  preferences: boolean;
+  sale_of_data: boolean;
 };
+
+/**
+ * Connects a consent provider once per analytics bus, after Shopify's consent API has loaded.
+ * Use window.Shopify.customerPrivacy to synchronize consent.
+ * Resolve only after the provider has a saved choice or the shopper interacts, and that
+ * consent has been synchronized with Shopify. Hydrogen then checks consent and replays
+ * allowed events. Rejection keeps delivery blocked. The integration stays active
+ * across component unmounts.
+ */
+export type ConsentSetup = () => Promise<void>;
+
+export type ConsentConfig =
+  | { mode?: "no-banner"; setup?: never }
+  | { mode: "default-banner"; setup?: never }
+  | { mode: "custom-banner"; setup: ConsentSetup };
 
 // --- Cart types (lightweight, no dependency on hydrogen's CartReturn) ---
 
@@ -152,7 +170,8 @@ export type PublishPayloadArgs<E extends AnalyticsEventName> =
 
 export type StorefrontAnalyticsConfig = {
   shop: ShopAnalytics | null;
-  consent: ConsentConfig;
+  /** Serializable consent settings. The provider setup callback stays in the client bundle. */
+  consent: Pick<ConsentConfig, "mode">;
   customData?: Record<string, unknown>;
 };
 

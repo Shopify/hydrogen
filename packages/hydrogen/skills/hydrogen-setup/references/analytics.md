@@ -120,13 +120,13 @@ The analytics bus is enabled by default. Pass `analytics` only when you need opt
 
 This is where the location/region nuance lives. Shopify's hosted Customer Privacy API decides per-visitor whether tracking requires consent based on the visitor's geography:
 
-- **Visitors in jurisdictions with consent requirements** (EU/EEA/UK GDPR, parts of Canada, California CCPA, etc.) — analytics must wait for consent. Use `mode: "default-banner"` for Shopify's hosted privacy banner, or `mode: "custom-banner"` if your app renders its own banner and calls `window.Shopify.customerPrivacy.setTrackingConsent()`.
-- **Visitors in jurisdictions without consent requirements** — the Customer Privacy SDK auto-allows tracking and the banner does not render. The bus dispatches normally.
+- **Visitors in jurisdictions with consent requirements** (EU/EEA/UK GDPR, parts of Canada, California CCPA, etc.) — analytics must wait for consent. Use `mode: "default-banner"` for Shopify's hosted privacy banner, or `mode: "custom-banner"` with a `setup` callback that connects the app's consent provider.
+- **Visitors in jurisdictions without consent requirements** — the Customer Privacy SDK may allow tracking without showing Shopify's banner. Custom-banner integrations still wait for the provider's resolved consent; the provider owns its regional policy.
 
 `mode` controls how consent is collected:
 
 - `"default-banner"` loads Shopify's hosted privacy banner and waits when the Customer Privacy API says banner interaction is required.
-- `"custom-banner"` loads only the Customer Privacy API and treats the initial consent event as actionable. Your banner must call `setTrackingConsent()` when the shopper accepts or declines.
+- `"custom-banner"` loads only the Customer Privacy API and waits for the required asynchronous `setup` callback to resolve before checking consent. Read [Custom consent providers](../../hydrogen-analytics/references/custom-consent.md) when integrating a third-party banner.
 - `"no-banner"` loads only the Customer Privacy API and releases analytics after consent setup. Use this only when consent is already allowed or managed outside this storefront.
 
 ### Consent Gating
@@ -609,7 +609,7 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Astro page-view fires only on full loads.** Astro is MPA-by-default. If you adopt View Transitions, listen for `astro:after-swap` instead of relying on the inline-script-runs-on-load behavior — otherwise SPA-nav transitions skip `page_viewed`.
 - **Required product fields silently drop the Monorail leg.** Missing `id`/`title`/`vendor`/`variantId`/`variantTitle`/`price` causes the Shopify analytics subscriber to skip Monorail dispatch and log a field-specific error. The bus event still fires for your subscribers — the loss is only in Shopify analytics. Watch the console.
 - **`updatedAt` missing from cart query weakens dedupe.** The cart tracker prefers cart `updatedAt`, but falls back to the current time when it is absent. Include `updatedAt` in cart queries for stable dedupe across navigations and reloads.
-- **`destroy()` is not called by any of the framework adapter sketches.** During HMR or React Strict Mode double-mount, this means duplicate event subscribers and possibly duplicate Monorail events in dev. For production this is rarely visible (one bus per page lifetime). If duplicate dev events bother you, wire `analytics.destroy()` into your framework's teardown (React effect cleanup, Svelte `onDestroy`, Solid `onCleanup`, or equivalent).
+- **The analytics bus lives for the page lifetime.** Do not call `analytics.destroy()` on component unmount. Remove component-owned subscriptions with their unsubscribe functions.
 - **Lighthouse skip is silent.** Monorail dispatch is skipped for Chrome Lighthouse user-agents. If your synthetic monitoring runs Lighthouse, you will see no Monorail requests in those runs — this is intentional.
 
 ---
