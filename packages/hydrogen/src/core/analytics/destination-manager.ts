@@ -89,14 +89,23 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
    * because callbacks may publish, which appends to it and can evict its
    * oldest entry. A nested call for the same destination returns straight
    * away and the outer loop picks up the new entries, so every callback sees
-   * events in order. If one callback publishes more than the buffer holds,
-   * that destination only receives the entries still retained.
+   * events in order. Publishing more than the buffer holds during one
+   * catch-up would already lose entries, so it is reported as a feedback loop
+   * and stops the catch-up instead of hanging the page.
    */
   function catchUp(destination: DestinationRecord): void {
     if (destination.catchingUp) return;
     destination.catchingUp = true;
+    const startSequence = nextReplaySequence;
     try {
       while (deps.canTrack()) {
+        if (nextReplaySequence - startSequence > MAX_REPLAY_BUFFER_SIZE) {
+          consoleLogger.error(
+            `analytics destination "${destination.name}" published too many events during delivery`,
+            { scope: "analytics" },
+          );
+          return;
+        }
         const oldest = replayBuffer[0];
         if (oldest === undefined) return;
         const entry = replayBuffer[Math.max(0, destination.nextReplaySequence - oldest.sequence)];
