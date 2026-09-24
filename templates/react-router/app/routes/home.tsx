@@ -22,7 +22,7 @@ import type { Route } from "./+types/home";
 const HOME_QUERY = gql(
   `
     query Home {
-      products(first: 8, sortKey: BEST_SELLING) {
+      products(first: 8, sortKey: CREATED_AT, reverse: true) {
         nodes {
           ...ProductCard
         }
@@ -62,7 +62,7 @@ export function meta({ matches }: Route.MetaArgs) {
     { title: formatPageTitle("Home", shopName) },
     {
       name: "description",
-      content: `Shop best sellers and featured categories at ${shopName}.`,
+      content: `Shop new arrivals and featured categories at ${shopName}.`,
     },
   ];
 }
@@ -71,6 +71,8 @@ export async function loader({ context }: Route.LoaderArgs) {
   const storefrontClient = context.get(storefrontClientContext);
   const { data } = await storefrontClient.graphql(HOME_QUERY);
 
+  // New arrivals: the most recently created products (by creation date, not
+  // publication date), newest first, in the order the Storefront API returns.
   const featuredProducts: ProductCardData[] = data?.products.nodes ?? [];
   const featuredCollections: CollectionCardData[] = data?.collections.nodes ?? [];
   // The hero features the most recently updated collection, independent of the
@@ -84,18 +86,18 @@ export async function loader({ context }: Route.LoaderArgs) {
   };
 }
 
-function BestSellers({ products }: { products: readonly ProductCardData[] }) {
+function NewArrivals({ products }: { products: readonly ProductCardData[] }) {
   return (
-    <section className="bg-surface w-full pt-20 pb-12" aria-labelledby="best-sellers-heading">
+    <section className="bg-surface w-full pt-20 pb-12" aria-labelledby="new-arrivals-heading">
       <div className="max-w-page px-margin mx-auto mb-4 flex items-center justify-between gap-4">
-        <h2 id="best-sellers-heading" className="type-heading-xl">
-          Best sellers
+        <h2 id="new-arrivals-heading" className="type-heading-xl">
+          New arrivals
         </h2>
         <Link
           to="/collections"
           className="min-h-touch-target text-on-surface focus-visible:outline-accent inline-flex items-center gap-1 rounded-sm text-sm font-normal no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
         >
-          <span>View all</span>
+          <span>Collections</span>
           <span
             className="inline-flex size-4 shrink-0 items-center justify-center"
             aria-hidden="true"
@@ -163,7 +165,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <main className="flex-1" id="main-content" tabIndex={-1}>
       <HomeHero hero={hero} />
-      <BestSellers products={loaderData.featuredProducts} />
+      <NewArrivals products={loaderData.featuredProducts} />
       <ShopByCategory collections={loaderData.featuredCollections} />
     </main>
   );

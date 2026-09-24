@@ -10,7 +10,7 @@ analytics, and a consent banner wired up.
 
 ## Pages
 
-- `/` — home (editorial hero, best sellers, shop by category)
+- `/` — home (editorial hero, new arrivals, shop by category)
 - `/products/:handle` — product detail (gallery, variants, add to cart, Shop Pay)
 - `/collections` — all collections
 - `/collections/:handle` — collection with filters, sort, and pagination
