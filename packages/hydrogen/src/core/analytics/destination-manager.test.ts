@@ -779,7 +779,7 @@ describe("createDestinationManager", () => {
 
       expect(destination.mock.calls.length).toBeLessThanOrEqual(502);
       expect(errorSpy).toHaveBeenCalledWith(
-        '[hydrogen:error:analytics] analytics destination "looping-destination" published too many events during delivery',
+        '[hydrogen:error:analytics] too many analytics events were published while delivering to destination "looping-destination"',
       );
       errorSpy.mockRestore();
     });
