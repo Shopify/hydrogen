@@ -40,7 +40,7 @@ function deliverDestinationEvent(destination: DestinationRecord, entry: ReplayEn
   destination.nextReplaySequence = Math.max(destination.nextReplaySequence, entry.sequence + 1);
 
   const eventSubscriptions = destination.subscriptions.get(entry.event);
-  if (!eventSubscriptions?.size) return;
+  if (eventSubscriptions === undefined) return;
 
   for (const callback of eventSubscriptions) {
     try {
@@ -71,6 +71,8 @@ type DestinationManagerDeps = {
 export function createDestinationManager(deps: DestinationManagerDeps) {
   let nextReplaySequence = 0;
   let shouldRecordReplay = true;
+  // Holds contiguous sequences: recording only stops when the buffer is
+  // cleared, so `catchUp()` can index it by sequence.
   const replayBuffer: ReplayEntry[] = [];
   const destinations = new Set<DestinationRecord>();
   const destinationNames = new Set<string>();
@@ -78,6 +80,34 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
   // resumes from its cursor, so each retained event reaches a destination name
   // at most once, even across component remounts.
   const removedReplayCursors = new Map<string, number>();
+
+  /**
+   * Delivers the retained events a destination has not processed yet, oldest
+   * first. Re-reads the buffer on every step because callbacks may publish,
+   * which appends to it and can evict its oldest entry.
+   */
+  function catchUp(destination: DestinationRecord): void {
+    for (;;) {
+      const oldest = replayBuffer[0];
+      if (oldest === undefined) return;
+      const entry = replayBuffer[Math.max(0, destination.nextReplaySequence - oldest.sequence)];
+      if (entry === undefined) return;
+      deliverDestinationEvent(destination, entry);
+    }
+  }
+
+  /**
+   * Saves a removed destination's cursor for a later re-add. Cursors at or
+   * before the oldest retained event behave like a fresh name, so they are
+   * dropped to keep the map bounded by the retained window.
+   */
+  function rememberReplayCursor(name: string, cursor: number): void {
+    const oldestRetainedSequence = replayBuffer[0]?.sequence ?? nextReplaySequence;
+    for (const [removedName, removedCursor] of removedReplayCursors) {
+      if (removedCursor <= oldestRetainedSequence) removedReplayCursors.delete(removedName);
+    }
+    if (cursor > oldestRetainedSequence) removedReplayCursors.set(name, cursor);
+  }
 
   /**
    * Replays buffered events to all registered destinations.
@@ -90,24 +120,22 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
       if (clearWhenBlocked) {
         replayBuffer.length = 0;
         shouldRecordReplay = false;
+        removedReplayCursors.clear();
       }
       return;
     }
 
     shouldRecordReplay = true;
     for (const destination of destinations) {
-      for (const entry of replayBuffer) {
-        if (entry.sequence < destination.nextReplaySequence) continue;
-        deliverDestinationEvent(destination, entry);
-      }
+      catchUp(destination);
     }
   }
 
   /**
    * Registers a destination integration. Runs setup synchronously or
    * asynchronously, then replays any buffered events the destination
-   * subscribes to. Re-adding a previously removed name resumes replay after
-   * the last event that name was delivered.
+   * subscribes to. Re-adding a previously removed name resumes after the last
+   * event processed for that name, including events it did not subscribe to.
    *
    * @returns A function that removes the destination and runs its cleanup hook.
    */
@@ -120,7 +148,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
     }
 
     destinationNames.add(destination.name);
-    const resumedReplaySequence = removedReplayCursors.get(destination.name) ?? 0;
+    const initialReplaySequence = removedReplayCursors.get(destination.name) ?? 0;
     removedReplayCursors.delete(destination.name);
 
     const tag = `hydrogen:${destination.name}`;
@@ -133,7 +161,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
           deps.canTrack() ? getTrackingValues(tag) : { uniqueToken: "", visitToken: "" },
       },
       subscriptions: new Map(),
-      nextReplaySequence: resumedReplaySequence,
+      nextReplaySequence: initialReplaySequence,
     };
     let removed = false;
 
@@ -175,7 +203,9 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
       removed = true;
       destinations.delete(destinationRecord);
       destinationNames.delete(destination.name);
-      removedReplayCursors.set(destination.name, destinationRecord.nextReplaySequence);
+      rememberReplayCursor(destination.name, destinationRecord.nextReplaySequence);
+      // Empty each set too, so a delivery loop already iterating one stops.
+      for (const callbacks of destinationRecord.subscriptions.values()) callbacks.clear();
       destinationRecord.subscriptions.clear();
       destinationRecord.cleanup?.();
     };
@@ -223,27 +253,26 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
   }
 
   /**
-   * Records a published event in the replay buffer and delivers it to
-   * destinations when tracking is allowed.
+   * Records a published event in the replay buffer and, when tracking is
+   * allowed, brings every destination up to date. A destination still behind
+   * on replay receives its earlier events first, so events published from a
+   * callback never make it skip ones it has not seen.
    */
   function onPublish(event: string, payload: unknown): void {
-    const replayEntry = {
-      sequence: nextReplaySequence++,
-      event,
-      payload,
-    };
+    const canTrack = deps.canTrack();
+    if (canTrack) shouldRecordReplay = true;
 
     if (shouldRecordReplay) {
-      replayBuffer.push(replayEntry);
+      replayBuffer.push({ sequence: nextReplaySequence, event, payload });
       if (replayBuffer.length > MAX_REPLAY_BUFFER_SIZE) {
         replayBuffer.shift();
       }
     }
+    nextReplaySequence++;
 
-    if (deps.canTrack()) {
-      for (const destination of destinations) {
-        deliverDestinationEvent(destination, replayEntry);
-      }
+    if (!canTrack) return;
+    for (const destination of destinations) {
+      catchUp(destination);
     }
   }
 
