@@ -9,7 +9,7 @@ import type {
 } from "./types";
 
 /**
- * Creates a typed map of custom route templates for Shopify standard storefront routes.
+ * Defines a typed, module-scope map of custom route templates for Shopify standard storefront routes.
  *
  * Use the returned object anywhere Hydrogen needs to understand the app's URL shape for
  * Shopify resources and utility pages: `handleShopifyRedirects({routeTemplates})`, `ShopifyScripts`
@@ -26,7 +26,7 @@ import type {
  *
  * @example
  * ```ts
- * const routeTemplates = createShopifyRouteTemplates({
+ * const routeTemplates = defineShopifyRouteTemplates({
  *   product: "/p/:productHandle",
  *   collection: "/c/:collectionHandle",
  *   article: "/journal/:blogHandle/:articleHandle",
@@ -35,7 +35,7 @@ import type {
  * });
  * ```
  */
-export function createShopifyRouteTemplates<const TRoutes extends ShopifyRouteTemplates>(
+export function defineShopifyRouteTemplates<const TRoutes extends ShopifyRouteTemplates>(
   routes: TRoutes,
 ): TRoutes {
   return routes;

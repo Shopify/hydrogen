@@ -1,14 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
 
 import { content } from "@/lib/content";
 
+import { LocalizedLink } from "./LocalizedLink";
 import { PredictiveSearchModal } from "./PredictiveSearchModal";
 
 /**
- * Search trigger — a real server-rendered `<Link href="/search">` baseline
+ * Search trigger — a real server-rendered `<LocalizedLink href="/search">` baseline
  * (F4: reachable without JS) that hydrates into the predictive-search modal
  * trigger after hydration. Renders `PredictiveSearchModal` (client) when open.
  */
@@ -23,7 +23,7 @@ export function PredictiveSearchTrigger() {
   if (!hasHydrated) {
     // No-JS / pre-hydration baseline: a real /search link.
     return (
-      <Link
+      <LocalizedLink
         href="/search"
         className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
         aria-label={content.general.search}
@@ -37,7 +37,7 @@ export function PredictiveSearchTrigger() {
           className="size-5"
           aria-hidden="true"
         />
-      </Link>
+      </LocalizedLink>
     );
   }
 

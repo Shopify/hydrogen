@@ -9,24 +9,24 @@ import type {
   StorefrontApi,
   StorefrontGraphqlResult,
   GraphQLFormattedError,
-  I18nConfig,
   PrivateStorefrontClient,
   StorefrontQueryString,
 } from './index';
-import type {CachingStrategy} from '../core';
+import type {CachingStrategy, ShopifyI18n} from '../core';
 import type * as StorefrontExports from './index';
 import type {ResultOf, VariablesOf} from 'gql.tada';
 
-const DEFAULT_I18N = {country: 'US', language: 'EN', pathPrefix: ''} as const satisfies I18nConfig;
+const DEFAULT_LOCALE = {country: 'US', language: 'EN'} as const;
+const DEFAULT_I18N = {defaultLocale: DEFAULT_LOCALE} as const satisfies ShopifyI18n;
 
 const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify({data: {}}))));
 vi.stubGlobal('fetch', fetchMock);
 
-function createTestRequestContext(i18n: I18nConfig = DEFAULT_I18N) {
+function createTestRequestContext(i18n: ShopifyI18n = DEFAULT_I18N) {
   return createShopifyRequestContext({request: {headers: new Headers()}, i18n});
 }
 
-function createBuyerRequestContext(i18n: I18nConfig = DEFAULT_I18N) {
+function createBuyerRequestContext(i18n: ShopifyI18n = DEFAULT_I18N) {
   return createShopifyRequestContext({
     request: {headers: new Headers()},
     i18n,
@@ -241,6 +241,7 @@ describe('type tests', () => {
         requestContext: {
           requestGroupId: 'group-id',
           i18n: DEFAULT_I18N,
+          locale: {...DEFAULT_LOCALE, pathPrefix: ''},
           getForwardedRequestHeaders() {
             return new Headers();
           },
@@ -264,17 +265,19 @@ describe('type tests', () => {
       });
     });
 
-    it('exposes i18n from requestContext', () => {
+    it('exposes i18n and locale from requestContext', () => {
+      const i18n = {
+        defaultLocale: {
+          country: 'ES',
+          language: 'ES',
+          market: 'spain' as const,
+        },
+      } as const;
       const requestContext = createShopifyRequestContext({
         request: {
           headers: new Headers(),
         },
-        i18n: {
-          country: 'ES',
-          language: 'ES',
-          pathPrefix: '/es-es',
-          market: 'spain' as const,
-        },
+        i18n,
       });
 
       const client = createStorefrontClient({
@@ -286,8 +289,9 @@ describe('type tests', () => {
       });
 
       expectTypeOf(client.requestContext).toEqualTypeOf<typeof requestContext>();
-      expectTypeOf(client.i18n.pathPrefix).toEqualTypeOf<string>();
-      expectTypeOf(client.i18n.market).toEqualTypeOf<'spain'>();
+      expectTypeOf(client.i18n).toEqualTypeOf<typeof i18n>();
+      expectTypeOf(client.locale.pathPrefix).toEqualTypeOf<string>();
+      expectTypeOf(client.locale.market).toEqualTypeOf<'spain'>();
     });
 
     it('rejects clients without requestContext', () => {

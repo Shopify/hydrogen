@@ -1,5 +1,5 @@
 import { getBuyerIp } from "@shared/buyer-ip";
-import { defaultI18n, storefrontConfig } from "@shared/config";
+import { i18n, storefrontConfig } from "@shared/config";
 import { getPrivateStorefrontToken } from "@shared/private-env";
 import { handleShopifyRoutes } from "@shopify/hydrogen";
 import {
@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
   const buyerIp = getBuyerIp(request.headers);
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: defaultI18n,
+    i18n,
     buyerIp,
   });
   const storefrontClient = createPrivateStorefrontClient(requestContext);

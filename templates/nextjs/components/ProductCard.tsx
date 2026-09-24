@@ -1,9 +1,10 @@
 import type { StorefrontApi } from "@shopify/hydrogen";
-import Link from "next/link";
 
 import type { PRODUCT_CARD_QUERY } from "@/lib/fragments";
 import { shopifyImageUrl, srcSetFor } from "@/lib/image";
 import { formatPrice } from "@/lib/money";
+
+import { LocalizedLink } from "./LocalizedLink";
 
 /** The typed product card node consumed by grids across the storefront. */
 export type ProductCardData = NonNullable<
@@ -81,9 +82,9 @@ export function ProductCard({
       </div>
       <div className="flex flex-col gap-0.5 text-left">
         <h3 className="type-body-sm text-on-surface line-clamp-2 font-medium">
-          <Link href={`/products/${product.handle}`} className="card-link text-on-surface">
+          <LocalizedLink href={`/products/${product.handle}`} className="card-link text-on-surface">
             {product.title}
-          </Link>
+          </LocalizedLink>
         </h3>
         <div className="inline-flex flex-wrap items-baseline gap-2 text-sm">
           <span className={onSale ? "text-sale font-medium" : "text-on-surface font-medium"}>

@@ -32,7 +32,7 @@ Prefer this over adding `.catch()` only to the returned promise: the request-lev
 
 The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance.
 
-This shape assumes app-owned `getBuyerIp`, `createSessionManager`, and `routeTemplates` values.
+This shape assumes app-owned `getBuyerIp`, `createSessionManager`, `routeTemplates`, and `i18n` (the `defineShopifyI18n` definition from `SKILL.md`) values.
 
 ```ts
 import {
@@ -43,6 +43,7 @@ import {
   handleShopifyRedirects,
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
+import { i18n } from "./lib/i18n";
 
 const cartHandlers = createCartServerHandlers();
 const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
@@ -50,7 +51,7 @@ const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
 export async function handleRequest(request: Request, next: () => Promise<Response>) {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
   });
   const sessionManager = await createSessionManager(request);
   const storefrontClient = createStorefrontClient({
@@ -101,6 +102,7 @@ import {
   handleShopifyRedirects,
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
+import { i18n } from "~/lib/i18n";
 
 const cartHandlers = createCartServerHandlers();
 const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
@@ -109,7 +111,7 @@ export const middleware: Route.MiddlewareFunction[] = [
   async ({ context, request }, next) => {
     const requestContext = createShopifyRequestContext({
       request,
-      i18n: { country: "US", language: "EN" },
+      i18n,
     });
     const sessionManager = await createSessionManager(request);
     const storefrontClient = createStorefrontClient({

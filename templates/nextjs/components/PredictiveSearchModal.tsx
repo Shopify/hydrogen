@@ -11,13 +11,14 @@ import {
   usePredictiveSearchActions,
   usePredictiveSearchForm,
 } from "@shopify/hydrogen/react";
-import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 import { content } from "@/lib/content";
 import { shopifyImageUrl } from "@/lib/image";
 import { formatPrice } from "@/lib/money";
 import { routeTemplates } from "@/lib/route-templates";
+
+import { LocalizedLink } from "./LocalizedLink";
 
 const PREDICTIVE_SEARCH_LIMIT = 5;
 const PREDICTIVE_SEARCH_DIALOG_ID = "search-modal";
@@ -132,13 +133,13 @@ function PredictiveSearchDialogInner({
 
         {state.result.items.products.length > 0 ? (
           <div className="border-border shrink-0 border-t p-4">
-            <Link
+            <LocalizedLink
               href={`/search?q=${encodeURIComponent(state.result.term)}`}
               onClick={onClose}
               className="rounded-button button-secondary inline-flex h-11 w-full items-center justify-center px-4 text-sm font-medium no-underline"
             >
               View all results
-            </Link>
+            </LocalizedLink>
           </div>
         ) : null}
       </div>
@@ -186,7 +187,7 @@ function PredictiveBody({
         const price = variant?.price ?? null;
         return (
           <li key={product.id} role="listitem">
-            <Link
+            <LocalizedLink
               href={href}
               onClick={onNavigate}
               className="hover:bg-surface-secondary flex items-center gap-3 rounded p-2 no-underline"
@@ -204,7 +205,7 @@ function PredictiveBody({
                   <span className="text-on-surface-secondary text-sm">{formatPrice(price)}</span>
                 ) : null}
               </span>
-            </Link>
+            </LocalizedLink>
           </li>
         );
       })}

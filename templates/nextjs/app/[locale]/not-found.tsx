@@ -1,10 +1,10 @@
 import { handleShopifyRedirects } from "@shopify/hydrogen";
 import { headers } from "next/headers";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
+import { LocalizedLink } from "@/components/LocalizedLink";
 import { routeTemplates } from "@/lib/route-templates";
 import { getStorefrontClient } from "@/lib/storefront";
 
@@ -34,12 +34,12 @@ export default function NotFound() {
       <p className="type-body text-on-surface-secondary mb-8">
         The page you’re looking for doesn’t exist.
       </p>
-      <Link
+      <LocalizedLink
         href="/"
         className="rounded-button button-primary inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline"
       >
         Back to home
-      </Link>
+      </LocalizedLink>
     </div>
   );
 }

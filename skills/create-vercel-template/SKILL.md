@@ -137,8 +137,26 @@ middleware is not a React Server Component boundary, so `server-only` would brea
     customerAccountApiClientId: process.env.NEXT_PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID || "",
   };
   const publicStorefrontId = process.env.NEXT_PUBLIC_STOREFRONT_ID || "";
-  // defaultI18n, shop, analyticsShop, analyticsConsent derive from the above.
+  // Single-locale storefront; add `routing` to serve more locales. `currency` is an extra locale field
+  // carried through to ShopifyScripts.
+  export const i18n = defineShopifyI18n({
+    defaultLocale: { language: "EN", country: "US", currency: "USD" },
+  });
+  // shop, analyticsShop, analyticsConsent derive from the above.
   ```
+
+  `i18n` is passed to every `createShopifyRequestContext` call. Every page lives under `app/[locale]` so the locale
+  is a route param: `app/[locale]/layout.tsx` is the root layout (`generateStaticParams` from `lib/locale.ts`'s
+  `localeParams()`, `resolveLocaleParam()` on the param, `<html lang>` per locale, `LocaleProvider` for client
+  components). `proxy.ts` rewrites incoming URLs into that shape through `lib/locale-routing.ts` (matched locale ->
+  first segment; an explicit root allowlist of metadata routes, `public/` files, `/api/*` and `/.well-known/*` passes
+  through; explicit default prefix 308s to the unprefixed URL). The root layout resolves its locale leniently
+  (`resolveShellLocale`) because a root layout cannot render a 404; pages use the strict `resolveLocaleParam`. Static pages
+  pin the param's locale on `getStaticStorefrontClient(locale)` (`lib/storefront-static.ts`, one client per
+  locale); the per-request `lib/storefront.ts` and `lib/customer-account.ts` contexts are built from `headers()`
+  only and resolve the locale from the forwarded `x-storefront-url`. Internal links go through
+  `components/LocalizedLink.tsx`; raw `<a>`/`<form action>` in server components take `locale` as a prop and call
+  `localizedHref`. There is no `lib/markets.ts`.
 
   The store identity lives entirely in env vars — none of it is baked into source. `NEXT_PUBLIC_STORE_DOMAIN` is required
   only when `PRIVATE_STOREFRONT_API_TOKEN` is set; with no private token, the resolver falls back to `mock.shop`.
@@ -169,7 +187,7 @@ store identity, and local Customer Account session configuration required by the
 ## Shared code migration
 
 Replace each `@shared/*` import with template-local code, then fix the import paths in the files that used them
-(`proxy.ts`, `lib/storefront.ts`, `lib/customer-account.ts`, `lib/analytics.ts`, `app/layout.tsx`,
+(`proxy.ts`, `lib/storefront.ts`, `lib/customer-account.ts`, `lib/analytics.ts`, `app/[locale]/layout.tsx`,
 `components/Header.tsx`):
 
 - `@shared/config` -> `lib/config.ts` (public identity, each value from a `NEXT_PUBLIC_*` env var, empty-string
@@ -184,11 +202,11 @@ Replace each `@shared/*` import with template-local code, then fix the import pa
 
 Keep Customer Account, cart, search, and analytics features unless the user explicitly asks to remove them.
 
-Additionally, keep `lib/route-templates.ts` unchanged — it is not `@shared/*`. `routeTemplates` is required by `handleShopifyRedirects({routeTemplates})` (in `app/not-found.tsx`), `<ShopifyScripts routes={routeTemplates}>` (in `components/ShopifyScriptsClient.tsx`), and `getPredictiveSearchItemUrl(product, {routes: routeTemplates, …})` (in `components/PredictiveSearchModal.tsx`).
+Additionally, keep `lib/route-templates.ts` unchanged — it is not `@shared/*`. `routeTemplates` is required by `handleShopifyRedirects({routeTemplates})` (in `app/[locale]/not-found.tsx`), `<ShopifyScripts routes={routeTemplates}>` (in `components/ShopifyScriptsWithNavigation.tsx`), and `getPredictiveSearchItemUrl(product, {routes: routeTemplates, …})` (in `components/PredictiveSearchModal.tsx`).
 
 ## Caching
 
-Do not ship an in-memory LRU cache. Page data uses Next-native cache points: `"use cache"`, `cacheLife`, and `cacheTag`. The Storefront client created in `proxy.ts` uses Vercel Runtime Cache from `getCache()` for Hydrogen-owned subrequests and passes `NextFetchEvent.waitUntil` for background writes. Under `cacheComponents: true`, `app/layout.tsx` is a static shell wrapping the per-request `AppShell` (cart seed + chrome) in `<Suspense>`; `AppShell` calls `connection()` for dynamic request data. Route-segment configs like `export const dynamic`/`fetchCache`/`revalidate` are NOT used because Cache Components rejects them.
+Do not ship an in-memory LRU cache. Page data uses Next-native cache points: `"use cache"`, `cacheLife`, and `cacheTag`. The Storefront client created in `proxy.ts` uses Vercel Runtime Cache from `getCache()` for Hydrogen-owned subrequests and passes `NextFetchEvent.waitUntil` for background writes. Under `cacheComponents: true`, `app/[locale]/layout.tsx` is a static shell per locale wrapping the per-request `AppShell` (cart seed + chrome) in `<Suspense>`; `AppShell` calls `connection()` for dynamic request data. Route-segment configs like `export const dynamic`/`fetchCache`/`revalidate`/`dynamicParams` are NOT used because Cache Components rejects them; unknown `[locale]` segments 404 through `resolveLocaleParam`, and unmatched URLs hit `app/[locale]/[...rest]/page.tsx` -> `notFound()` (200 + `noindex` under PPR, same as a missing product).
 
 Verify the app still renders live data after the swap (see "Validation").
 

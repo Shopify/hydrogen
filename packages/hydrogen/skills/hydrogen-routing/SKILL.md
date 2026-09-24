@@ -2,9 +2,10 @@
 name: hydrogen-routing
 description: >
   Guide for Hydrogen route templates and Shopify storefront URL routing. Use when
-  adding, modifying, or reviewing createShopifyRouteTemplates, routeTemplates,
+  adding, modifying, or reviewing defineShopifyRouteTemplates, routeTemplates,
   custom Shopify resource or utility-page paths, handleShopifyRoutes,
-  standard route redirects, ShopifyScripts routes, or predictive search result URLs.
+  standard route redirects, ShopifyScripts routes, predictive search result URLs,
+  or localized path prefixes from defineShopifyI18n.
 ---
 
 # Hydrogen Routing
@@ -22,9 +23,9 @@ Only add template keys for Shopify standard routes the app actually handles or i
 Create one `routeTemplates` object and pass the same object to every Hydrogen primitive that builds, redirects, or exposes Shopify storefront URLs:
 
 ```ts
-import { createShopifyRouteTemplates } from "@shopify/hydrogen";
+import { defineShopifyRouteTemplates } from "@shopify/hydrogen";
 
-export const routeTemplates = createShopifyRouteTemplates({
+export const routeTemplates = defineShopifyRouteTemplates({
   product: "/p/:productHandle",
   collection: "/c/:collectionHandle",
   article: "/journal/:blogHandle/:articleHandle",
@@ -39,7 +40,7 @@ If the app currently uses Shopify's default resource paths, create an empty mani
 ```ts
 // Shopify standard storefront routes are currently handled at their default paths.
 // Add entries here if the app changes to custom Shopify resource or utility-page paths.
-export const routeTemplates = createShopifyRouteTemplates({});
+export const routeTemplates = defineShopifyRouteTemplates({});
 ```
 
 Each key is a Shopify standard route identity. Each value is the app's custom pathname template for that identity. Templates must start with `/` and include the required named placeholders for that key. Add a key only when the app handles that route at a non-standard pathname, or when the app intentionally canonicalizes a standard Shopify variant such as `productInCollection`.
@@ -101,7 +102,7 @@ Pass route templates to `ShopifyScripts` so browser-side Shopify modules and age
 ```tsx
 <ShopifyScripts
   shop={shop}
-  i18n={i18n}
+  i18n={requestContext.locale}
   routes={routeTemplates}
 />
 ```
@@ -116,7 +117,7 @@ Pass route templates to `getPredictiveSearchItemUrl()` so predictive result link
 const href = getPredictiveSearchItemUrl(item, {
   term,
   routes: routeTemplates,
-  pathPrefix: i18n.pathPrefix,
+  pathPrefix: requestContext.locale.pathPrefix,
 });
 ```
 
@@ -129,7 +130,7 @@ For query suggestions, pass the same route templates so a custom `search` route 
 Do not include locale or market prefixes in route template values. Keep templates resource-relative:
 
 ```ts
-createShopifyRouteTemplates({
+defineShopifyRouteTemplates({
   product: "/p/:productHandle",
 });
 ```
@@ -137,17 +138,39 @@ createShopifyRouteTemplates({
 not:
 
 ```ts
-createShopifyRouteTemplates({
+defineShopifyRouteTemplates({
   product: "/en-us/p/:productHandle",
 });
 ```
 
-Hydrogen applies `i18n.pathPrefix` separately:
+Hydrogen applies `requestContext.locale.pathPrefix` separately:
 
-- `handleShopifyRoutes()` reads it from `requestContext.i18n.pathPrefix` for product `?variant=` redirects.
-- `handleShopifyRedirects()` reads it from `storefrontClient.requestContext.i18n.pathPrefix`.
-- `ShopifyScripts` receives it through the `i18n` prop or option.
+- `handleShopifyRoutes()` reads it from `requestContext.locale.pathPrefix` for product `?variant=` redirects, and matches registered handler groups with the prefix stripped, so `/fr-ca/api/cart` reaches the `/api/cart` handler.
+- `handleShopifyRedirects()` reads it from `storefrontClient.locale.pathPrefix`.
+- `ShopifyScripts` receives it through the `i18n` prop or option; pass `requestContext.locale` there.
 - `getPredictiveSearchItemUrl()` receives it through `pathPrefix`.
+
+### Localized routing
+
+The prefix comes from the storefront's i18n definition, not from app code. Declare locales once with `defineShopifyI18n` and pass the definition to `createShopifyRequestContext({ request, i18n })`; the request context resolves `locale` from `request.url`:
+
+```ts
+import { defineShopifyI18n } from "@shopify/hydrogen";
+
+export const i18n = defineShopifyI18n({
+  defaultLocale: { language: "EN", country: "US" },
+  routing: {
+    type: "pathname",
+    locales: [{ language: "FR", country: "CA" }],
+  },
+});
+```
+
+- `type: "pathname"` serves each listed locale under `/{language}-{country}` (lowercased, or a custom `pathSegment`); the default locale is served unprefixed and must not be listed.
+- `type: "domain"` serves each locale from its own `hostname`; the default locale must be listed so it has a canonical host. `pathPrefix` is always `""`.
+- Omit `routing` for a single-locale storefront.
+
+Build locale switchers and `hreflang` links with `getLocalizedHref(href, { i18n, locale })`; it swaps the path prefix or hostname according to the routing type and throws for locales the definition does not contain. Enumerate locales with `getSupportedLocales(i18n)`. Naming follows the package convention: `define*` returns module-scope serializable configuration, `create*` returns stateful objects. Read the local `hydrogen-markets` skill for the full definition contract.
 
 ## Rules
 
