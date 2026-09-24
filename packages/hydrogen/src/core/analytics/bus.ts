@@ -117,15 +117,13 @@ function getPublishPayload<E extends AnalyticsEventName>(
 /**
  * Sets up a framework-agnostic analytics event bus.
  *
- * Only one instance may exist at a time — the CDN analytics script binds to
+ * The bus lives for the page's lifetime — the CDN analytics script binds to
  * the global bus reference on first load and won't re-bind to a replacement.
- * Call destroy() before re-initializing.
+ * Teardown is returned separately for internal use, such as test isolation.
  */
-export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): StorefrontAnalytics {
+export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig) {
   if (typeof window !== "undefined" && window.Shopify?.analytics) {
-    throw new Error(
-      "Analytics bus already initialized. Only one setupStorefrontAnalytics() instance is allowed. Call destroy() first to re-initialize.",
-    );
+    throw new Error("Analytics bus already initialized. Only one instance is allowed per page.");
   }
 
   const { consent, customData } = options;
@@ -237,7 +235,6 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
   const busInstance: StorefrontAnalytics = {
     publish,
     addDestination: destinationManager.addDestination, // Public API for consent-gated trackers.
-    destroy,
     getConfig,
   };
 
@@ -250,5 +247,5 @@ export function setupStorefrontAnalytics(options: StorefrontAnalyticsConfig): St
   initConsentReplay();
   initBrowserDiscovery();
 
-  return busInstance;
+  return { bus: busInstance, destroy };
 }

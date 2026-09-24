@@ -16,3 +16,5 @@ analytics.addDestination({
 ```
 
 The function returned by `addDestination()` removes the destination; each setup subscription also returns an unsubscribe function. Events published before consent is ready can be replayed after consent is granted, so consumers migrating from the live-only API should account for buffered events.
+
+Also remove `analytics.destroy()`. Hydrogen owns the shared bus for the page's lifetime. Use the cleanup function returned by `addDestination()` to remove your destination on component unmount.

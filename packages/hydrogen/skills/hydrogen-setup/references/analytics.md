@@ -36,7 +36,7 @@ Your app code
   ▼
 window.Shopify.analytics
   │
-  ├── publish / addDestination / destroy / getConfig  (app-facing)
+  ├── publish / addDestination / getConfig  (app-facing)
   └── consent-gated destinations with replay
       │
       └── Customer Privacy gates destination delivery and replay
@@ -608,7 +608,7 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Astro page-view fires only on full loads.** Astro is MPA-by-default. If you adopt View Transitions, listen for `astro:after-swap` instead of relying on the inline-script-runs-on-load behavior — otherwise SPA-nav transitions skip `page_viewed`.
 - **Required product fields silently drop the Monorail leg.** Missing `id`/`title`/`vendor`/`variantId`/`variantTitle`/`price` causes the Shopify analytics subscriber to skip Monorail dispatch and log a field-specific error. The bus event still fires for your subscribers — the loss is only in Shopify analytics. Watch the console.
 - **`updatedAt` missing from cart query weakens dedupe.** The cart tracker prefers cart `updatedAt`, but falls back to the current time when it is absent. Include `updatedAt` in cart queries for stable dedupe across navigations and reloads.
-- **`destroy()` is not called by any of the framework adapter sketches.** During HMR or React Strict Mode double-mount, this means duplicate event subscribers and possibly duplicate Monorail events in dev. For production this is rarely visible (one bus per page lifetime). If duplicate dev events bother you, wire `analytics.destroy()` into your framework's teardown (React effect cleanup, Svelte `onDestroy`, Solid `onCleanup`, or equivalent).
+- **The analytics bus lives for the page's lifetime.** When a component owns a destination, call the cleanup function returned by `addDestination()` when the component unmounts. Hydrogen owns the shared bus; component cleanup should remove only that component's destination.
 - **Lighthouse skip is silent.** Monorail dispatch is skipped for Chrome Lighthouse user-agents. If your synthetic monitoring runs Lighthouse, you will see no Monorail requests in those runs — this is intentional.
 
 ---

@@ -187,6 +187,5 @@ export type StorefrontAnalyticsDestination = {
 export type StorefrontAnalytics = {
   publish: <E extends AnalyticsEventName>(event: E, ...payload: PublishPayloadArgs<E>) => void;
   addDestination: (destination: StorefrontAnalyticsDestination) => () => void;
-  destroy: () => void;
   getConfig: () => StorefrontAnalyticsConfig;
 };
