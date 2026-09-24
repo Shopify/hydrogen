@@ -762,6 +762,28 @@ describe("createDestinationManager", () => {
       expect(calls).toEqual(["first:/1", "second:/1", "first:/2", "second:/2"]);
     });
 
+    it("reports and stops a destination that publishes on every delivery", () => {
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const { manager } = createTestManager(() => true);
+      const destination = vi.fn(() => {
+        manager.onPublish("page_viewed", { url: "/loop" });
+      });
+
+      manager.addDestination({
+        name: "looping-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", destination);
+        },
+      });
+      manager.onPublish("page_viewed", { url: "/start" });
+
+      expect(destination.mock.calls.length).toBeLessThanOrEqual(502);
+      expect(errorSpy).toHaveBeenCalledWith(
+        '[hydrogen:error:analytics] analytics destination "looping-destination" published too many events during delivery',
+      );
+      errorSpy.mockRestore();
+    });
+
     it("stops catching up when a callback revokes tracking", () => {
       let canTrack = false;
       const { manager } = createTestManager(() => canTrack);
