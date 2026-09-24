@@ -17,7 +17,19 @@ const LOGO_IMAGE = {
   height: 80,
 };
 
-function shopData(overrides: Partial<NonNullable<StorefrontShopQueryData>> = {}) {
+type PaymentSettingsInput = NonNullable<Parameters<typeof getPaymentMethodLabels>[0]>;
+
+// Test-only: simulate unexpected values from the API.
+function fromWire(settings: {
+  acceptedCardBrands: string[];
+  supportedDigitalWallets: string[];
+}): PaymentSettingsInput {
+  return settings as unknown as PaymentSettingsInput;
+}
+
+function shopData(
+  overrides: Partial<NonNullable<StorefrontShopQueryData>> = {},
+): NonNullable<StorefrontShopQueryData> {
   return {
     name: "Snowdevil",
     brand: { logo: { alt: "Snowdevil logo", image: LOGO_IMAGE } },
@@ -124,19 +136,70 @@ test("maps every known card brand and digital wallet to a display label", () => 
       "JCB",
       "Apple Pay",
       "Google Pay",
-      "Android Pay",
       "Shop Pay",
     ],
   );
 });
 
-test("omits unknown payment enums and deduplicates labels", () => {
+test("displays the legacy Android Pay wallet as Google Pay", () => {
+  assert.deepEqual(
+    getPaymentMethodLabels({ acceptedCardBrands: [], supportedDigitalWallets: ["ANDROID_PAY"] }),
+    ["Google Pay"],
+  );
+});
+
+test("shows Google Pay once when both Google Pay and Android Pay are reported", () => {
+  for (const supportedDigitalWallets of [
+    ["GOOGLE_PAY", "ANDROID_PAY"],
+    ["ANDROID_PAY", "GOOGLE_PAY"],
+  ] as const) {
+    assert.deepEqual(
+      getPaymentMethodLabels({ acceptedCardBrands: [], supportedDigitalWallets }),
+      ["Google Pay"],
+      supportedDigitalWallets.join(","),
+    );
+  }
+});
+
+test("keeps first-occurrence order across repeated enums and wallet aliases", () => {
   assert.deepEqual(
     getPaymentMethodLabels({
-      acceptedCardBrands: ["VISA", "UNIONPAY", "VISA"],
-      supportedDigitalWallets: ["FUTURE_WALLET", "SHOPIFY_PAY", "SHOPIFY_PAY"],
+      acceptedCardBrands: ["MASTERCARD", "VISA", "MASTERCARD"],
+      supportedDigitalWallets: [
+        "SHOPIFY_PAY",
+        "ANDROID_PAY",
+        "APPLE_PAY",
+        "GOOGLE_PAY",
+        "SHOPIFY_PAY",
+        "ANDROID_PAY",
+      ],
     }),
+    ["Mastercard", "Visa", "Shop Pay", "Google Pay", "Apple Pay"],
+  );
+});
+
+test("omits unknown payment enums and deduplicates labels", () => {
+  assert.deepEqual(
+    getPaymentMethodLabels(
+      fromWire({
+        acceptedCardBrands: ["VISA", "UNIONPAY", "VISA"],
+        supportedDigitalWallets: ["FUTURE_WALLET", "SHOPIFY_PAY", "SHOPIFY_PAY"],
+      }),
+    ),
     ["Visa", "Shop Pay"],
+  );
+});
+
+test("ignores values that only match Object.prototype properties", () => {
+  const prototypeNames = ["__proto__", "constructor", "toString", "hasOwnProperty", "valueOf"];
+  assert.deepEqual(
+    getPaymentMethodLabels(
+      fromWire({
+        acceptedCardBrands: [...prototypeNames, "MASTERCARD"],
+        supportedDigitalWallets: [...prototypeNames, "GOOGLE_PAY"],
+      }),
+    ),
+    ["Mastercard", "Google Pay"],
   );
 });
 
