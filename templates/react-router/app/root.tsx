@@ -1,4 +1,4 @@
-import { handleShopifyRedirects, handleShopifyRoutes, gql } from "@shopify/hydrogen";
+import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import type { ReactNode } from "react";
 import {
@@ -16,10 +16,10 @@ import { AnnouncementBar } from "~/components/AnnouncementBar";
 import { CartDrawer } from "~/components/CartDrawer";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
-import { loadAnnouncement } from "~/lib/announcement";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { envContext } from "~/lib/env";
+import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createRequestSessionManager } from "~/lib/session";
 import { analyticsConsent, analyticsShop, shop, storefrontConfig } from "~/lib/shop";
@@ -28,40 +28,10 @@ import {
   storefrontClientContext,
   storefrontRequestContext,
 } from "~/lib/storefront";
-import { normalizeStorefrontShop } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/root";
 
 import appStylesHref from "./app.css?url";
-
-const ROOT_LAYOUT_QUERY = gql(`
-  query RootLayout {
-    shop {
-      name
-      brand {
-        logo {
-          alt
-          image {
-            url
-            altText
-            width
-            height
-          }
-        }
-      }
-      paymentSettings {
-        acceptedCardBrands
-        supportedDigitalWallets
-      }
-    }
-    collections(first: 5) {
-      nodes {
-        handle
-        title
-      }
-    }
-  }
-`);
 
 export const links: Route.LinksFunction = () => [
   { rel: "stylesheet", href: appStylesHref },
@@ -113,23 +83,19 @@ export const middleware: Route.MiddlewareFunction[] = [
 export async function loader({ context, request }: Route.LoaderArgs) {
   const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
-  const [cartResult, layoutResult, announcement] = await Promise.all([
+  // A rejected cart or layout request, or missing layout data, propagates to
+  // `ErrorBoundary`; branding field errors and the optional announcement
+  // degrade inside `loadRootLayout`.
+  const [cartResult, layout] = await Promise.all([
     cartHandlers.get({ storefrontClient, request }),
-    storefrontClient.graphql(ROOT_LAYOUT_QUERY),
-    loadAnnouncement(storefrontClient),
+    loadRootLayout(storefrontClient),
   ]);
-
-  if (layoutResult.errors) {
-    console.error(
-      `Root layout query failed: ${layoutResult.errors.map(({ message }) => message).join("\n")}`,
-    );
-  }
 
   return {
     cartData: cartResult.data,
-    navCollections: layoutResult.data?.collections.nodes ?? [],
-    shopInfo: normalizeStorefrontShop(layoutResult.data?.shop),
-    announcement,
+    navCollections: layout.navCollections,
+    shopInfo: layout.shopInfo,
+    announcement: layout.announcement,
     analyticsShop,
     consent: analyticsConsent,
     enableAnalyticsTestTap: env.MOCK_SHOP === "1",

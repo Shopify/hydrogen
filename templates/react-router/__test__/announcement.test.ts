@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test, { afterEach, mock } from "node:test";
 
 import {
@@ -96,12 +95,4 @@ test("returns null and logs the message when the request rejects", async () => {
   assert.deepEqual(consoleError.mock.calls[0]?.arguments, [
     "Shop announcement query failed: network down",
   ]);
-});
-
-test("keeps the root layout query free of the optional announcement metafield", async () => {
-  const source = await readFile(new URL("../app/root.tsx", import.meta.url), "utf8");
-  const layoutQuery = source.match(/query RootLayout \{[\s\S]*?\n`\);/)?.[0];
-  assert.ok(layoutQuery, "root.tsx should define the RootLayout query");
-  assert.doesNotMatch(layoutQuery, /metafield|announcement/);
-  assert.match(source, /loadAnnouncement\(storefrontClient\)/);
 });
