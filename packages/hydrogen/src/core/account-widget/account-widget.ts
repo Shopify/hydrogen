@@ -1,6 +1,7 @@
 import { escapeAttribute, hasContent } from "../html";
+import { CUSTOMER_ACCOUNT_PATHS } from "../url";
 
-const DEFAULT_SIGN_IN_PATH = "/account/login";
+const DEFAULT_SIGN_IN_PATH = CUSTOMER_ACCOUNT_PATHS.login;
 const AVATAR_SIZE = "var(--shopify-account-avatar-size, 44px)";
 export const ACCOUNT_WIDGET_ATTRIBUTE = "data-hydrogen-account-widget";
 
