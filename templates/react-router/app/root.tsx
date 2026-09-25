@@ -9,6 +9,7 @@ import {
   Scripts,
   ScrollRestoration,
   useNavigate,
+  useRouteLoaderData,
 } from "react-router";
 
 import { AnalyticsTracker, CartAnalyticsTracker } from "~/components/AnalyticsTrackers";
@@ -22,7 +23,7 @@ import { envContext } from "~/lib/env";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createRequestSessionManager } from "~/lib/session";
-import { analyticsConsent, analyticsShop, shop, storefrontConfig } from "~/lib/shop";
+import { analyticsConsent, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -93,7 +94,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     navCollections: layout.navCollections,
     shopInfo: layout.shopInfo,
     announcement: layout.announcement,
-    analyticsShop,
+    shopIdentity: resolveShopIdentity(env, layout.shopId),
     consent: analyticsConsent,
     enableAnalyticsTestTap: env.MOCK_SHOP === "1",
   };
@@ -101,19 +102,25 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
 export function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  // Absent when the root loader failed (error page only).
+  const rootData = useRouteLoaderData<typeof loader>("root");
 
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <ShopifyScripts
-          i18n={storefrontConfig.i18n}
-          shop={shop}
-          consent={analyticsConsent}
-          navigate={navigate}
-          routes={routeTemplates}
-        />
+        {rootData ? (
+          <ShopifyScripts
+            i18n={storefrontConfig.i18n}
+            shop={rootData.shopIdentity.scriptShop}
+            analytics={{ channel: rootData.shopIdentity.analyticsShop.channel }}
+            shopifyAnalytics={rootData.shopIdentity.shopifyAnalytics}
+            consent={analyticsConsent}
+            navigate={navigate}
+            routes={routeTemplates}
+          />
+        ) : null}
         <Meta />
         <Links />
       </head>
@@ -136,7 +143,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <CartProvider initialData={loaderData.cartData}>
       <AnalyticsTracker
-        shop={loaderData.analyticsShop}
+        shop={loaderData.shopIdentity.analyticsShop}
         consent={loaderData.consent}
         enableTestTap={loaderData.enableAnalyticsTestTap}
       />

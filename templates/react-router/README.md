@@ -48,13 +48,22 @@ npm run dev
 sells. To build against one of them, set `PUBLIC_STORE_DOMAIN` to its host (for
 example `pets.mock.shop`) and leave the token empty.
 
-**Against a real store** — set your store domain, storefront ID, and a **private**
-Storefront API token, then run normally:
+**Against a real store** — link a Hydrogen storefront and pull its environment
+variables into `.env`, then run normally:
 
 ```bash
-cp .env.example .env   # set PUBLIC_STORE_DOMAIN + PUBLIC_STOREFRONT_ID + PRIVATE_STOREFRONT_API_TOKEN
-npm run dev               # Vite/Mini Oxygen loads .env into the worker environment
+npx shopify hydrogen link       # skip if the project is already linked
+npx shopify hydrogen env pull   # writes the storefront's variables to .env
+npm run dev                     # Vite/Mini Oxygen loads .env into the worker environment
 ```
+
+Oxygen creates `PUBLIC_STORE_DOMAIN`, `PUBLIC_STOREFRONT_ID`, and
+`PRIVATE_STOREFRONT_API_TOKEN` for a linked storefront, so you don't copy them by
+hand. If `env pull` reports secret values it couldn't pull, set those in `.env`. To
+use an existing **private** Storefront API token without linking, copy `.env.example`
+to `.env` and set `PUBLIC_STORE_DOMAIN` and `PRIVATE_STOREFRONT_API_TOKEN`.
+`PUBLIC_STOREFRONT_ID` is optional; providing it enables Shopify analytics for real
+stores.
 
 Customer Account OAuth requires trusted local HTTPS. Run:
 

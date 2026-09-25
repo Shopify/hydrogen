@@ -3,8 +3,10 @@
 //
 // Mode is auto-detected per request (see `shouldUseMockShop` below):
 //   • Real store — used automatically whenever a PRIVATE Storefront API token is
-//     present. On Oxygen, a linked storefront injects PRIVATE_STOREFRONT_API_TOKEN
-//     and PUBLIC_STORE_DOMAIN; for local real-store dev set them in `.env`.
+//     present. On Oxygen, a linked storefront injects PRIVATE_STOREFRONT_API_TOKEN,
+//     PUBLIC_STORE_DOMAIN, and PUBLIC_STOREFRONT_ID; for local real-store dev set
+//     them in `.env`. PUBLIC_STOREFRONT_ID is optional; without it, Shopify
+//     analytics stay off.
 //   • mock.shop — the tokenless fallback used when no token is present (so a
 //     fresh deploy always renders), forced explicitly by MOCK_SHOP=1, and implied
 //     by a mock.shop host in PUBLIC_STORE_DOMAIN. mock.shop is many stores, each
@@ -15,6 +17,8 @@
 // It points at Shopify's public Hydrogen Preview store as an EXAMPLE — replace it
 // or set PUBLIC_STORE_DOMAIN. (mock.shop is a different data source.)
 // ─────────────────────────────────────────────────────────────────────────────
+
+import type { ShopAnalytics, ShopifyScriptsShop } from "@shopify/hydrogen";
 
 export const storefrontConfig = {
   storeDomain: "hydrogen-preview.myshopify.com", // ← default; or set PUBLIC_STORE_DOMAIN
@@ -55,18 +59,41 @@ export function getStoreDomain(env: Pick<Env, "PUBLIC_STORE_DOMAIN">): string {
   return env.PUBLIC_STORE_DOMAIN || storefrontConfig.storeDomain;
 }
 
-// Analytics shop identity. `shopId` is a real Shopify Shop GID.
-export const analyticsShop = {
-  shopId: "gid://shopify/Shop/55145660472", // ← replace with your Shop GID
-  channel: "hydrogen",
-  storefrontId: "1000014875", // ← replace with your storefront id
-} as const;
+// Shop identity for Shopify scripts and analytics. The shop ID comes from the
+// Storefront API, the storefront ID from PUBLIC_STOREFRONT_ID, and the domain is
+// the one the storefront client queries. Only a real store with a storefront ID
+// loads Shopify's analytics (`hydrogen` channel); otherwise events stay local
+// (`headless`), and the empty script `storefrontId` means "none".
+export type ShopIdentity = {
+  scriptShop: ShopifyScriptsShop;
+  analyticsShop: ShopAnalytics;
+  shopifyAnalytics: boolean;
+};
 
-export const shop = {
-  shopId: analyticsShop.shopId,
-  storefrontId: analyticsShop.storefrontId,
-  myshopifyDomain: storefrontConfig.storeDomain,
-} as const;
+export function resolveShopIdentity(
+  env: Pick<
+    Env,
+    "MOCK_SHOP" | "PRIVATE_STOREFRONT_API_TOKEN" | "PUBLIC_STORE_DOMAIN" | "PUBLIC_STOREFRONT_ID"
+  >,
+  shopId: string,
+): ShopIdentity {
+  if (shouldUseMockShop(env)) {
+    return {
+      scriptShop: { shopId, storefrontId: "", myshopifyDomain: getMockShopDomain(env) },
+      analyticsShop: { shopId, channel: "headless" },
+      shopifyAnalytics: false,
+    };
+  }
+
+  const storefrontId = env.PUBLIC_STOREFRONT_ID ?? "";
+  return {
+    scriptShop: { shopId, storefrontId, myshopifyDomain: getStoreDomain(env) },
+    analyticsShop: storefrontId
+      ? { shopId, channel: "hydrogen", storefrontId }
+      : { shopId, channel: "headless" },
+    shopifyAnalytics: storefrontId !== "",
+  };
+}
 
 // Use Shopify's default consent banner and Customer Privacy behavior.
 export const analyticsConsent = {

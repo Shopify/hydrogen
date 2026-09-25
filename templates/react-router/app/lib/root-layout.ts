@@ -6,6 +6,7 @@ import { normalizeStorefrontShop, type StorefrontShop } from "~/lib/storefront-s
 export const ROOT_LAYOUT_QUERY = gql(`
   query RootLayout {
     shop {
+      id
       name
       brand {
         logo {
@@ -35,6 +36,7 @@ export const ROOT_LAYOUT_QUERY = gql(`
 export type RootLayoutQueryResult = StorefrontApi.ResultOf<typeof ROOT_LAYOUT_QUERY>;
 
 type RootLayoutLoaderData = {
+  shopId: string;
   shopInfo: StorefrontShop;
   navCollections: RootLayoutQueryResult["collections"]["nodes"];
   announcement: string | null;
@@ -59,6 +61,7 @@ export async function loadRootLayout(
 
   const { shop, collections } = layoutResult.data;
   return {
+    shopId: shop.id,
     shopInfo: normalizeStorefrontShop(shop),
     navCollections: collections.nodes,
     announcement,
