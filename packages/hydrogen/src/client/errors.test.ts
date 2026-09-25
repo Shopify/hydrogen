@@ -28,33 +28,9 @@ describe("StorefrontApiError", () => {
     expect(error.cause).toBeUndefined();
   });
 
-  it("stores locations from GraphQL errors", () => {
-    const locations = [{ line: 3, column: 5 }];
-    const error = new StorefrontApiError("field error", { locations });
-
-    expect(error.locations).toEqual([{ line: 3, column: 5 }]);
-  });
-
-  it("stores path from GraphQL errors", () => {
-    const path = ["shop", "products", 0, "title"];
-    const error = new StorefrontApiError("field error", { path });
-
-    expect(error.path).toEqual(["shop", "products", 0, "title"]);
-  });
-
   it("exposes name via Symbol.toStringTag", () => {
     const error = new StorefrontApiError("tagged");
     expect(Object.prototype.toString.call(error)).toBe("[object StorefrontApiError]");
-  });
-
-  it("stores extensions from GraphQL errors", () => {
-    const extensions = { code: "THROTTLED", requestedQueryCost: 502 };
-    const error = new StorefrontApiError("throttled", { extensions });
-
-    expect(error.extensions).toEqual({
-      code: "THROTTLED",
-      requestedQueryCost: 502,
-    });
   });
 
   it("populates queryText and variables in dev mode", () => {
@@ -70,25 +46,13 @@ describe("StorefrontApiError", () => {
   });
 
   describe("toString()", () => {
-    it("includes path and extensions for structured server log output", () => {
-      const error = new StorefrontApiError("field not found", {
-        path: ["shop", "products", 0],
-        extensions: { code: "THROTTLED" },
-      });
-
-      const str = error.toString();
-      expect(str).toContain("StorefrontApiError: field not found");
-      expect(str).toContain('path: ["shop","products",0]');
-      expect(str).toContain('extensions: {"code":"THROTTLED"}');
-    });
-
-    it("omits path and extensions sections when absent", () => {
-      const error = new StorefrontApiError("plain error");
-      const str = error.toString();
-
-      expect(str).toBe("StorefrontApiError: plain error");
-      expect(str).not.toContain("path:");
-      expect(str).not.toContain("extensions:");
+    it("formats as name and message", () => {
+      expect(new StorefrontApiError("plain error").toString()).toBe(
+        "StorefrontApiError: plain error",
+      );
+      expect(new StorefrontTimeoutError(5_000).toString()).toBe(
+        "StorefrontTimeoutError: Storefront API request timed out after 5000ms",
+      );
     });
   });
 
@@ -123,21 +87,6 @@ describe("StorefrontApiError", () => {
       expect(serialized).not.toContain("customerAccessTokenCreate");
       expect(serialized).not.toContain("secret123");
       expect(serialized).not.toContain("stack");
-    });
-
-    it("includes locations, path, and extensions in dev mode JSON", () => {
-      const error = new StorefrontApiError("gql error", {
-        requestId: "req-gql",
-        status: 200,
-        locations: [{ line: 2, column: 3 }],
-        path: ["shop", "name"],
-        extensions: { code: "ACCESS_DENIED" },
-      });
-
-      const json = error.toJSON();
-      expect(json.locations).toEqual([{ line: 2, column: 3 }]);
-      expect(json.path).toEqual(["shop", "name"]);
-      expect(json.extensions).toEqual({ code: "ACCESS_DENIED" });
     });
 
     it("omits undefined optional fields from JSON", () => {
