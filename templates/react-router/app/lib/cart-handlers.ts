@@ -1,11 +1,3 @@
-import { createCartServerHandlers, gql } from "@shopify/hydrogen";
+import { createCartServerHandlers } from "@shopify/hydrogen";
 
-const CART_FRAGMENT = gql(`
-  fragment CartFragment on Cart {
-    updatedAt
-  }
-`);
-
-export const cartHandlers = createCartServerHandlers({
-  fragment: CART_FRAGMENT,
-});
+export const cartHandlers = createCartServerHandlers();

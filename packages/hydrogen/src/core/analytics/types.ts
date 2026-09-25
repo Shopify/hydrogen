@@ -110,9 +110,7 @@ export type AnalyticsCartLine = {
 export type AnalyticsCart = {
   id: string;
   /**
-   * `Cart.updatedAt` (ISO 8601), used to deduplicate cart events. Add it to your
-   * cart fragment if you haven't already — without it, the current time is used
-   * instead.
+   * `Cart.updatedAt` (ISO 8601), used to deduplicate cart events.
    */
   updatedAt: string;
   cost?: {
