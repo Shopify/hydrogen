@@ -35,10 +35,12 @@ const log = getLogger("product");
 
 export type { ValidProductSelectionResult } from "../core/product";
 
+/** Options for {@link useProductForm}. */
 export interface UseProductFormOptions<TProduct extends ProductInput> {
   onSelect?: (result: ValidProductSelectionResult<TProduct>) => void;
 }
 
+/** Return value of {@link useProductForm}. */
 export interface UseProductFormResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
   selectedVariant: ProductVariantFrom<TProduct> | null;
@@ -49,6 +51,7 @@ export interface UseProductFormResult<TProduct extends ProductInput> {
   }) => Record<string, unknown>;
   errors: ProductFormErrors;
   matchedLineItem: CartLine | null;
+  /** Reactive ref that is `true` while a form submission is in flight. */
   pending: ShallowRef<boolean>;
   selectOption: (
     name: string,
@@ -56,6 +59,7 @@ export interface UseProductFormResult<TProduct extends ProductInput> {
   ) => VariantSelectionResult<ProductVariantFrom<TProduct>>;
 }
 
+/** Return value of the `useProduct` composable from {@link createProductComponents}. */
 export interface UseProductResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
   selectedVariant: ProductVariantFrom<TProduct> | null;

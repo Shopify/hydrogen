@@ -34,8 +34,8 @@ type EncodedVariantConstraint = {
  * entries whose decoded param name exactly matches a product option name.
  * Passing an empty array filters out every option.
  *
- * Pass the result to `createProductFormStore` or `useProductForm` to pre-select
- * the variant that matches the current URL.
+ * Pass the result to `createProductFormStore` as `selectedOptions`. Used as a
+ * fallback when the product has no `selectedOrFirstAvailableVariant`.
  *
  * @example
  * ```ts
