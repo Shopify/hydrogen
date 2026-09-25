@@ -19,7 +19,7 @@ export type ShopAnalytics =
   | (ShopAnalyticsBase & {
       /** The storefront is served by the Hydrogen sales channel. */
       channel: "hydrogen";
-      /** Hydrogen storefront ID. Pass `"0"` when the app has no storefront ID. */
+      /** ID of the Hydrogen storefront that analytics are attributed to. */
       storefrontId: ShopifyScriptsShop["storefrontId"];
     })
   | (ShopAnalyticsBase & {
