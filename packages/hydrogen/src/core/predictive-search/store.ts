@@ -72,6 +72,9 @@ export type PredictiveSearchStore<TData extends PredictiveSearchData = Predictiv
   destroy(): void;
 };
 
+/** Search methods exposed by the predictive search store. */
+export type PredictiveSearchActions = Pick<PredictiveSearchStore, "search" | "clear">;
+
 type PredictiveSearchStoreContext<TData extends PredictiveSearchData> = {
   observable: ReturnType<typeof createObservable<PredictiveSearchState<TData>>>;
   // API route used to fetch predictive search results.

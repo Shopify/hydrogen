@@ -27,6 +27,7 @@ export type { CreatePredictiveSearchServerHandlersOptions } from "./server-handl
 export { DEFAULT_PREDICTIVE_SEARCH_DEBOUNCE_IN_MS, createPredictiveSearchStore } from "./store";
 export type {
   CreatePredictiveSearchStoreOptions,
+  PredictiveSearchActions,
   PredictiveSearchState,
   PredictiveSearchStatus,
   PredictiveSearchStore,

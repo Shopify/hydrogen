@@ -13,13 +13,14 @@ export default defineConfig({
     environment: "node",
     typecheck: {
       enabled: true,
-      include: ["src/**/*.type-test.ts"],
+      include: ["src/**/*.type-test.ts", "src/**/*.type-test.tsx"],
     },
     include: [
       "plugins/**/*.test.ts",
       "src/**/*.test.ts",
       "src/**/*.test.tsx",
       "src/**/*.type-test.ts",
+      "src/**/*.type-test.tsx",
     ],
   },
 });

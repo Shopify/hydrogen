@@ -22,6 +22,7 @@ import {
   getPredictiveSearchFormAttributes,
   readPredictiveSearchFormTerm,
   type CreatePredictiveSearchStoreOptions,
+  type PredictiveSearchActions,
   type PredictiveSearchFormRegister as CorePredictiveSearchFormRegister,
   type PredictiveSearchData,
   type PredictiveSearchState,
@@ -42,7 +43,7 @@ export type PredictiveSearchProviderProps = CreatePredictiveSearchStoreOptions &
   searchAction?: string;
 };
 
-export type PredictiveSearchActions = Pick<PredictiveSearchStore, "search" | "clear">;
+export type { PredictiveSearchActions };
 
 export type PredictiveSearchFormPropsOptions = Omit<
   FormHTMLAttributes<HTMLFormElement>,
