@@ -85,15 +85,45 @@ type PredictiveSearchServerHandlers<
   get: PredictiveSearchGetHandler<TData>;
 };
 
+/**
+ * Options for {@link createPredictiveSearchServerHandlers}.
+ *
+ * Extends {@link CreatePredictiveSearchQueriesOptions} with server-specific
+ * defaults. Each search option sets a default that individual requests can
+ * override via query parameters.
+ */
 export type CreatePredictiveSearchServerHandlersOptions = CreatePredictiveSearchQueriesOptions & {
+  /** Route path the handler is registered at. Defaults to `"/api/predictive-search"`. */
   path?: string;
+  /** Default result count. Individual requests override via the `limit` query parameter. Clamped to 1–10 by {@link fetchPredictiveSearch}. */
   limit?: number;
+  /** Default limit scope. Individual requests override via the `limitScope` query parameter. */
   limitScope?: PredictiveSearchLimitScope;
+  /** Default resource types to search. Individual requests override via the `types` query parameter (comma-separated). */
   types?: PredictiveSearchType[];
+  /** Default fields to search. Individual requests override via the `searchableFields` query parameter (comma-separated). */
   searchableFields?: SearchableField[];
+  /** Default unavailable-product behavior. Individual requests override via the `unavailableProducts` query parameter. */
   unavailableProducts?: SearchUnavailableProductsType;
 };
 
+/**
+ * Creates a GET request handler that serves predictive search results from
+ * the Storefront API.
+ *
+ * The handler parses search parameters from the request URL:
+ *
+ * - `q` for the search term
+ * - `limit`, `limitScope`, `types`, `searchableFields`, `unavailableProducts`
+ *
+ * Query parameters override the defaults from options. The `types` and
+ * `searchableFields` parameters accept comma-separated values. Invalid enum
+ * values produce an error response with code
+ * `"invalid_predictive_search_request"`.
+ *
+ * The returned handlers object has a `get` method that can be registered
+ * as a route handler.
+ */
 export function createPredictiveSearchServerHandlers(): PredictiveSearchServerHandlers;
 export function createPredictiveSearchServerHandlers<
   const TOptions extends CreatePredictiveSearchServerHandlersOptions,
