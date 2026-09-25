@@ -173,7 +173,7 @@ export function useCollection<S>(
   return useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot);
 }
 
-/** Mutation methods that update store state and trigger the `onChange` callback. */
+/** Mutation methods exposed by the collection store. */
 export type CollectionActions = Pick<
   CollectionStore,
   | "setFilters"

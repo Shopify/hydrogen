@@ -7,8 +7,11 @@ import type { CollectionState } from "./state";
  * that is derived from the URL query string.
  */
 export interface CollectionParams {
+  /** Active product filters parsed from `filter.*` URL keys. */
   filters: ProductFilter[];
+  /** Storefront API sort key parsed from the `sort_by` param. `undefined` when absent. */
   sortKey: ProductCollectionSortKeys | undefined;
+  /** `true` when the `sort_by` value ends with `-descending`. */
   reverse: boolean;
 }
 
