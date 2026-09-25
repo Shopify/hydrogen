@@ -301,7 +301,41 @@ describe('useCustomerPrivacy tracking values', () => {
     expect(cachedToken?._shopify_s).toBe('body-visit');
   });
 
-  it('publishes nothing when the consent response reports no tokens', async () => {
+  it('publishes the declined consent value but no tokens when the response reports no consent', async () => {
+    // A declined store still returns its consent value: it encodes the
+    // declined state and is how the Customer Privacy API learns it. The
+    // tokens are the backend's no-consent signal: null.
+    const fetchMock = mockConsentFetch({
+      data: {
+        consentManagement: {
+          cookies: {
+            trackingConsentCookie: 'declined-consent-value',
+            cookieDomain: 'shop.example',
+            shopifyUnique: null,
+            shopifyVisit: null,
+          },
+        },
+      },
+    });
+
+    const props = {...PROPS, sameDomainForStorefrontApi: true};
+    const {rerender} = renderHook((p) => useCustomerPrivacy(p), {
+      initialProps: props,
+    });
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    simulateCdnConsentApiLoad();
+    rerender(props);
+
+    await act(async () => {});
+
+    const {cachedToken, cachedConsent} = getCustomerPrivacyCache();
+    expect(cachedToken).toBeUndefined();
+    expect(cachedConsent).toBe('declined-consent-value');
+  });
+
+  it('publishes nothing when the response carries no values at all', async () => {
     const fetchMock = mockConsentFetch({
       data: {
         consentManagement: {

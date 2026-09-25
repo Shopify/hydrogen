@@ -538,18 +538,16 @@ function publishConsentResponseValues(values: ConsentResponseValues): void {
     getCustomerPrivacy() as CustomerPrivacyWithTokenCache | null;
   if (!customerPrivacy) return;
 
-  // Null tokens are the backend's no-consent signal: the Customer Privacy
-  // API must hold no values in that case, so publish nothing at all.
-  if (!values.uniqueToken && !values.visitToken) return;
-
   const tokens = [
     {cookieName: SHOPIFY_Y, value: values.uniqueToken},
     {cookieName: SHOPIFY_S, value: values.visitToken},
   ] as const;
 
+  // Null tokens are the backend's no-consent signal: no token is published
+  // for them. The consent value is still published (below): even a declined
+  // response carries it, and it is how the Customer Privacy API learns the
+  // visitor's consent state.
   const publishableTokens = tokens.flatMap(({cookieName, value}) =>
-    // Null or empty values mean no consent was granted: publish nothing
-    // for them.
     value && !customerPrivacy.cachedToken?.[cookieName]
       ? [{cookieName, value}]
       : [],
