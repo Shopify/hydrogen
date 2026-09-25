@@ -66,12 +66,11 @@ test.describe('Consent Tracking - Auto-Allowed (Consent Allowed by Default)', ()
     ).toEqual(tokens);
 
     // 10. Verify checkout URLs contain tracking params matching session
-    // TODO: uncomment these out once backend changes have shipped
-    // await storefront.verifyCheckoutUrlTrackingParams(
-    //   tokens.uniqueToken,
-    //   tokens.visitToken,
-    //   'in cart drawer after adding to cart',
-    // );
+    await storefront.verifyCheckoutUrlTrackingParams(
+      tokens.uniqueToken!,
+      tokens.visitToken!,
+      'in cart drawer after adding to cart',
+    );
 
     // 11. Reload and verify state persists
     const reloadResponse = await storefront.withConsentResponse(() =>
@@ -153,6 +152,24 @@ test.describe('Consent Tracking - Auto-Allowed (Consent Allowed by Default)', ()
       tokens.uniqueToken,
       tokens.visitToken,
       'after migration',
+    );
+
+    // === CHECKOUT: the session must survive the domain handoff ===
+
+    // 17. Re-open the cart drawer (navigations closed it) and go to checkout.
+    // The checkout URL carries the session tokens as params (step 10), so
+    // the checkout page starts from the same session.
+    storefront.clearRequests();
+    await storefront.addToCart();
+    await storefront.gotoCheckoutFromCartDrawer();
+
+    // 18. Verify the checkout page's own Monorail analytics carry the same
+    // tracking values as the storefront's consent response.
+    await storefront.waitForMonorailRequests(1, 30000);
+    storefront.verifyCheckoutMonorailRequests(
+      tokens.uniqueToken!,
+      tokens.visitToken!,
+      'from the checkout page',
     );
   });
 });

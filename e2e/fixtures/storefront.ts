@@ -798,12 +798,12 @@ export class StorefrontPage {
   /**
    * Wait for Monorail analytics requests to be made
    */
-  async waitForMonorailRequests(minCount = 1) {
+  async waitForMonorailRequests(minCount = 1, timeoutInMilliseconds = 5000) {
     await expect
-      .poll(
-        () => this.monorailRequests.length,
-        'Monorail analytics requests should be made',
-      )
+      .poll(() => this.monorailRequests.length, {
+        message: 'Monorail analytics requests should be made',
+        timeout: timeoutInMilliseconds,
+      })
       .toBeGreaterThanOrEqual(minCount);
   }
 
@@ -851,6 +851,98 @@ export class StorefrontPage {
         ).toBe(expectedS);
       }
     }
+  }
+
+  /**
+   * Navigate to checkout through the cart drawer's checkout link. The
+   * storefront session's tracking values ride the checkout URL params
+   * (see `verifyCheckoutUrlTrackingParams`), so the checkout page starts
+   * from the same session.
+   *
+   * Requires the cart drawer to be open (see `addToCart`). Navigates away
+   * from the storefront: use it as the last step of a test.
+   */
+  async gotoCheckoutFromCartDrawer() {
+    const checkoutLink = this.page.locator(
+      '.overlay.expanded a[href*="checkout"], .overlay.expanded a[href*="/cart/c/"]',
+    );
+    await expect(checkoutLink).toBeVisible({timeout: 10000});
+    await checkoutLink.click();
+
+    // The checkout link redirects to the shop's checkout domain:
+    await this.page.waitForURL(
+      (url) =>
+        /\/checkouts\//.test(url.pathname) || /\/cart\/c\//.test(url.pathname),
+      {timeout: 30000},
+    );
+    // Checkout keeps sending requests; networkidle is not guaranteed.
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /**
+   * Verify that the checkout page's Monorail analytics carry the same
+   * tracking values as the storefront's consent response: the session must
+   * survive the cross-domain handoff. Checkout also fires many events
+   * without tracking values (web pixels, performance metrics), so only the
+   * events that carry them are asserted, and at least one must carry both.
+   *
+   * Call after `gotoCheckoutFromCartDrawer` (with request tracking cleared
+   * beforehand), so the tracked requests come from the checkout page.
+   */
+  verifyCheckoutMonorailRequests(
+    expectedY: string,
+    expectedS: string,
+    context: string,
+  ) {
+    const requestsWithData = this.monorailRequests.filter(
+      (req) => req.postData,
+    );
+
+    expect(
+      requestsWithData.length,
+      `Checkout Monorail requests with data ${context}`,
+    ).toBeGreaterThan(0);
+
+    let eventsWithBothTokens = 0;
+    const mismatches: string[] = [];
+
+    for (const request of requestsWithData) {
+      const payload = JSON.parse(request.postData!) as {
+        events?: Array<{payload: MonorailPayload}>;
+      };
+
+      for (const event of payload.events ?? []) {
+        const uniqueToken =
+          event.payload?.unique_token || event.payload?.uniqToken;
+        const visitToken =
+          event.payload?.deprecated_visit_token || event.payload?.visitToken;
+
+        // Events without tracking values (web pixels, metrics) are expected:
+        if (!uniqueToken && !visitToken) continue;
+
+        if (uniqueToken === expectedY && visitToken === expectedS) {
+          eventsWithBothTokens++;
+          continue;
+        }
+
+        // Events carrying only part of the pair must still match their part:
+        if (uniqueToken && uniqueToken !== expectedY) {
+          mismatches.push(`unique_token ${uniqueToken} ≠ ${expectedY}`);
+        }
+        if (visitToken && visitToken !== expectedS) {
+          mismatches.push(`visit_token ${visitToken} ≠ ${expectedS}`);
+        }
+      }
+    }
+
+    expect(
+      mismatches,
+      `Checkout tracking values should match the storefront session ${context}`,
+    ).toEqual([]);
+    expect(
+      eventsWithBothTokens,
+      `At least one checkout event should carry both session tokens ${context}`,
+    ).toBeGreaterThan(0);
   }
 
   /**
