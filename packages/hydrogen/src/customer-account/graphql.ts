@@ -13,6 +13,16 @@ type CustomerAccountTadaGql = InitGraphQLTada<{
 const CUSTOMER_ACCOUNT_DOCUMENT = Symbol("CustomerAccountDocument");
 const VARIABLE_DEFINITION_RE = /\$([_A-Za-z][_0-9A-Za-z]*)\s*:/g;
 
+/**
+ * Branded document type returned by {@link gql}.
+ *
+ * Carries the GraphQL source as a type-level string literal so that
+ * `InferResult` and `InferVariables` can derive typed responses. The
+ * `[CUSTOMER_ACCOUNT_DOCUMENT]` brand is private and cannot be constructed
+ * externally — only `gql()` produces valid instances. Passing a plain object
+ * with a `source` property to `CustomerAccountClient.graphql()` will throw
+ * a `TypeError` at runtime.
+ */
 export type CustomerAccountDocument<
   Result = unknown,
   Variables = never,
@@ -22,12 +32,19 @@ export type CustomerAccountDocument<
   readonly source: Source;
 };
 
+/** Widened alias for {@link CustomerAccountDocument}. Use as a constraint when accepting any Customer Account document. */
 export type AnyCustomerAccountDocument = CustomerAccountDocument<unknown, never, string>;
 
+/** Extracts the source string literal type from a {@link CustomerAccountDocument}. */
 export type SourceOf<Doc> = Doc extends { readonly source: infer Source extends string }
   ? Source
   : never;
 
+/**
+ * Recursively concatenates the source strings of an array of fragment
+ * documents at the type level, joining each with a newline. An empty
+ * tuple produces `""`.
+ */
 export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocument[]> =
   Fragments extends readonly []
     ? ""
@@ -40,6 +57,10 @@ export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocumen
         ? `${SourceOf<First>}\n${FragmentSources<Rest>}`
         : string;
 
+/**
+ * Combines an operation source with its {@link FragmentSources} at the type
+ * level. When `Fragments` is empty the result is just `Source`.
+ */
 export type ComposedSource<
   Source extends string,
   Fragments extends readonly AnyCustomerAccountDocument[],
@@ -67,6 +88,53 @@ type CustomerAccountGql = {
   >;
 } & CustomerAccountTadaGql;
 
+/**
+ * Creates a branded {@link CustomerAccountDocument} from a GraphQL source
+ * string. This is a regular function call, not a tagged template literal.
+ *
+ * The returned document is branded with a private Symbol that
+ * `CustomerAccountClient.graphql()` validates at runtime — passing a plain
+ * object with a `source` property will throw a `TypeError`.
+ *
+ * An optional second argument accepts an array of fragment documents. Fragments
+ * are deduplicated by source string identity (`Set` check, not by fragment
+ * name) and appended to the operation source.
+ *
+ * @example
+ * ```ts
+ * import { gql } from "@shopify/hydrogen/customer-account";
+ *
+ * const CUSTOMER_QUERY = gql(`
+ *   query CustomerDetails {
+ *     customer {
+ *       firstName
+ *       lastName
+ *       emailAddress { emailAddress }
+ *     }
+ *   }
+ * `);
+ * ```
+ *
+ * @example
+ * ```ts
+ * const ORDER_FIELDS = gql(`
+ *   fragment OrderFields on Order {
+ *     id
+ *     totalPrice { amount currencyCode }
+ *   }
+ * `);
+ *
+ * const ORDERS_QUERY = gql(`
+ *   query CustomerOrders {
+ *     customer {
+ *       orders(first: 10) {
+ *         nodes { ...OrderFields }
+ *       }
+ *     }
+ *   }
+ * `, [ORDER_FIELDS]);
+ * ```
+ */
 // oxlint-disable-next-line typescript-eslint/consistent-type-assertions -- gql.tada adds phantom helper properties to the function type that are not used at runtime.
 export const gql = ((source: string, fragments?: readonly CustomerAccountDocument[]) => {
   let query = source;
