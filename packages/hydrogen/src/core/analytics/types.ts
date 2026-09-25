@@ -58,8 +58,7 @@ export type ConsentSetup = () => Promise<void>;
  *   `setup` callback that integrates a third-party consent provider.
  *   Events release once the `setup` callback resolves.
  * - `"no-banner"` (or omitted) loads only the Customer Privacy API and
- *   releases events once it loads. If `window.privacyBanner` is present on the
- *   page anyway, events wait as they do for `"default-banner"`.
+ *   releases events once it loads.
  *
  * In every mode, destinations only receive events while analytics processing is
  * allowed.
