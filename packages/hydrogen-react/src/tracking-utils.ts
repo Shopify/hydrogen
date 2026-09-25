@@ -12,6 +12,27 @@ type TrackingValues = {
   consent: string;
 };
 
+/**
+ * Tracking values returned in a `consentManagement` response body. A `null`
+ * value is the backend's signal that consent was not granted, so no value
+ * exists for that field.
+ */
+export type ConsentResponseValues = {
+  uniqueToken: string | null;
+  visitToken: string | null;
+  consent: string | null;
+};
+
+/**
+ * The outcome of the browser consent fetch. Carried in a component-scoped
+ * ref (see `useShopifyCookies`' `consentResultRef` option) so the component
+ * that initiated the fetch — e.g. Hydrogen's `useCustomerPrivacy` — can
+ * consume the result without module-level state.
+ */
+export type ConsentFetchResult =
+  | {status: 'succeeded'; values: ConsentResponseValues}
+  | {status: 'failed'};
+
 // Consent-management responses are the only token channel, so Hydrogen never
 // asks the Customer Privacy API to generate fallback tokens: minting new
 // tokens would fire a background persist request that races Hydrogen's own

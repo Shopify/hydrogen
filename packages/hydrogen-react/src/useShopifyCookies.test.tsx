@@ -1,7 +1,10 @@
 import {vi, afterEach, describe, expect, it} from 'vitest';
 import {renderHook, waitFor} from '@testing-library/react';
 import {useShopifyCookies} from './useShopifyCookies.js';
-import {cachedTrackingValues} from './tracking-utils.js';
+import {
+  cachedTrackingValues,
+  type ConsentFetchResult,
+} from './tracking-utils.js';
 // @ts-ignore - worktop/cookie types not properly exported
 import {parse} from 'worktop/cookie';
 
@@ -59,6 +62,19 @@ const consentBody = {
         cookieDomain: 'shop.example',
         shopifyUnique: 'body-unique',
         shopifyVisit: 'body-visit',
+      },
+    },
+  },
+};
+
+const noConsentBody = {
+  data: {
+    consentManagement: {
+      cookies: {
+        trackingConsentCookie: null,
+        cookieDomain: 'shop.example',
+        shopifyUnique: null,
+        shopifyVisit: null,
       },
     },
   },
@@ -354,6 +370,96 @@ describe(`useShopifyCookies`, () => {
       // Degraded tracking is better than blocking the app:
       await waitFor(() => expect(result.current).toBe(true));
       expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('consentResultRef', () => {
+    function createConsentResultRef() {
+      return {current: null as ConsentFetchResult | null};
+    }
+
+    it('receives the response body values, including the no-consent null signal', async () => {
+      const fetchMock = mockFetch([createResponse(noConsentBody)]);
+      const consentResultRef = createConsentResultRef();
+
+      renderHook(() =>
+        useShopifyCookies({
+          fetchTrackingValues: true,
+          hasUserConsent: true,
+          consentResultRef,
+        }),
+      );
+
+      await waitFor(() =>
+        expect(consentResultRef.current).toEqual({
+          status: 'succeeded',
+          values: {
+            uniqueToken: null,
+            visitToken: null,
+            consent: null,
+          },
+        }),
+      );
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('receives the retry values when the same-origin attempt fails', async () => {
+      const fetchMock = mockFetch([
+        createResponse(undefined, false),
+        createResponse(),
+      ]);
+      const consentResultRef = createConsentResultRef();
+
+      renderHook(() =>
+        useShopifyCookies({
+          fetchTrackingValues: true,
+          checkoutDomain: 'checkout.myshop.com',
+          hasUserConsent: true,
+          consentResultRef,
+        }),
+      );
+
+      await waitFor(() =>
+        expect(consentResultRef.current).toEqual({
+          status: 'succeeded',
+          values: {
+            uniqueToken: 'body-unique',
+            visitToken: 'body-visit',
+            consent: 'body-consent',
+          },
+        }),
+      );
+    });
+
+    it('reports failure when both attempts fail', async () => {
+      mockFetch([
+        createResponse(undefined, false),
+        createResponse(undefined, false),
+      ]);
+      const consentResultRef = createConsentResultRef();
+
+      renderHook(() =>
+        useShopifyCookies({
+          fetchTrackingValues: true,
+          checkoutDomain: 'checkout.myshop.com',
+          hasUserConsent: true,
+          consentResultRef,
+        }),
+      );
+
+      await waitFor(() =>
+        expect(consentResultRef.current).toEqual({status: 'failed'}),
+      );
+    });
+
+    it('stays untouched when no consent fetch is requested', async () => {
+      const consentResultRef = createConsentResultRef();
+
+      renderHook(() =>
+        useShopifyCookies({hasUserConsent: true, consentResultRef}),
+      );
+
+      await waitFor(() => expect(consentResultRef.current).toBeNull());
     });
   });
 });

@@ -7,6 +7,8 @@ import {
   storeTrackingValues,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
+  type ConsentFetchResult,
+  type ConsentResponseValues,
 } from './tracking-utils.js';
 
 // Marks the same-origin consent request: the backend includes the tracking
@@ -42,6 +44,14 @@ type UseShopifyCookiesOptions = CoreShopifyCookiesOptions & {
    * cookies.
    */
   ignoreDeprecatedCookies?: boolean;
+  /**
+   * A component-scoped ref that receives the consent fetch result: the
+   * response body values (including the `null` no-consent signal) or a
+   * failure when no response could be obtained. Used by Hydrogen's built-in
+   * analytics wiring (`useCustomerPrivacy`) to publish and act on the result
+   * within its component tree; not needed when calling this hook directly.
+   */
+  consentResultRef?: {current: ConsentFetchResult | null};
 };
 
 /**
@@ -71,12 +81,14 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {
     storefrontAccessToken,
     fetchTrackingValues,
     ignoreDeprecatedCookies = false,
+    consentResultRef,
   } = options || {};
 
   const coreCookiesReady = useCoreShopifyCookies({
     storefrontAccessToken,
     fetchTrackingValues,
     checkoutDomain,
+    consentResultRef,
   });
 
   useEffect(() => {
@@ -155,7 +167,7 @@ function setCookie(
 async function fetchTrackingValuesFromBrowser(
   storefrontAccessToken?: string,
   storefrontApiDomain = '',
-): Promise<void> {
+): Promise<ConsentResponseValues> {
   // These values might come from the Customer Privacy API, the last
   // consentManagement response or old cookies. On the first load after
   // upgrading, that means the legacy cookie values, so the session migrates.
@@ -213,21 +225,27 @@ async function fetchTrackingValuesFromBrowser(
   };
 
   const cookies = body.data?.consentManagement?.cookies;
+  const values: ConsentResponseValues = {
+    // Null (or missing) values are the backend's no-consent signal:
+    uniqueToken: cookies?.shopifyUnique ?? null,
+    visitToken: cookies?.shopifyVisit ?? null,
+    consent: cookies?.trackingConsentCookie ?? null,
+  };
+
   if (cookies) {
-    // Null values mean the backend did not grant consent: drop any
-    // previously cached values so stale tokens are never reused.
-    storeTrackingValues({
-      uniqueToken: cookies.shopifyUnique ?? null,
-      visitToken: cookies.shopifyVisit ?? null,
-      consent: cookies.trackingConsentCookie ?? null,
-    });
+    // Null values drop any previously cached values so stale tokens are
+    // never reused.
+    storeTrackingValues(values);
   }
+
+  return values;
 }
 
 type CoreShopifyCookiesOptions = {
   storefrontAccessToken?: string;
   fetchTrackingValues?: boolean;
   checkoutDomain?: string;
+  consentResultRef?: {current: ConsentFetchResult | null};
 };
 
 /**
@@ -239,6 +257,7 @@ function useCoreShopifyCookies({
   checkoutDomain,
   storefrontAccessToken,
   fetchTrackingValues = false,
+  consentResultRef,
 }: CoreShopifyCookiesOptions) {
   const [cookiesReady, setCookiesReady] = useState(!fetchTrackingValues);
   const hasFetchedTrackingValues = useRef(false);
@@ -254,18 +273,30 @@ function useCoreShopifyCookies({
     if (hasFetchedTrackingValues.current) return;
     hasFetchedTrackingValues.current = true;
 
-    // Fetch consent from browser via proxy
-    fetchTrackingValuesFromBrowser(storefrontAccessToken)
-      .catch((error) =>
-        checkoutDomain
-          ? // Retry with checkout domain if the same-origin proxy failed.
-            fetchTrackingValuesFromBrowser(
-              storefrontAccessToken,
-              checkoutDomain,
-            )
-          : Promise.reject(error),
-      )
+    const fetchConsentValues = async () => {
+      try {
+        return await fetchTrackingValuesFromBrowser(storefrontAccessToken);
+      } catch (sameOriginError) {
+        if (!checkoutDomain) throw sameOriginError;
+        // Retry with checkout domain if the same-origin proxy failed.
+        return fetchTrackingValuesFromBrowser(
+          storefrontAccessToken,
+          checkoutDomain,
+        );
+      }
+    };
+
+    // Report the outcome on the component-scoped ref when one was provided:
+    const reportConsentResult = (result: ConsentFetchResult) => {
+      if (consentResultRef) consentResultRef.current = result;
+    };
+
+    fetchConsentValues()
+      .then((values) => {
+        reportConsentResult({status: 'succeeded', values});
+      })
       .catch((error) => {
+        reportConsentResult({status: 'failed'});
         console.warn(
           '[h2:warn:useShopifyCookies] Failed to fetch tracking values from browser: ' +
             (error instanceof Error ? error.message : String(error)),
@@ -275,7 +306,12 @@ function useCoreShopifyCookies({
         // Proceed even on errors, degraded tracking is better than no app
         setCookiesReady(true);
       });
-  }, [checkoutDomain, fetchTrackingValues, storefrontAccessToken]);
+  }, [
+    checkoutDomain,
+    fetchTrackingValues,
+    storefrontAccessToken,
+    consentResultRef,
+  ]);
 
   return cookiesReady;
 }

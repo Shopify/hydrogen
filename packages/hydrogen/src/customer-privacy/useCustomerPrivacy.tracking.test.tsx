@@ -52,6 +52,12 @@ function mockConsentFetch(body: unknown = CONSENT_RESPONSE_BODY) {
   return fetchMock;
 }
 
+function mockConsentFetchFailure() {
+  const fetchMock = vi.fn().mockRejectedValue(new Error('network offline'));
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
 /**
  * Simulates how the consent CDN script loads: it resets `window.Shopify` to
  * an empty object, then assigns the full API while spreading any values
@@ -260,6 +266,67 @@ describe('useCustomerPrivacy tracking values', () => {
 
     await act(async () => {});
 
+    const {cachedToken, cachedConsent} = getCustomerPrivacyCache();
+    expect(cachedToken).toBeUndefined();
+    expect(cachedConsent).toBeUndefined();
+  });
+
+  it('publishes the fresh body values, not stale deprecated-cookie values', async () => {
+    const fetchMock = mockConsentFetch();
+
+    // A visitor upgrading from an older storefront still carries deprecated
+    // cookies with old values; the fresh consent body must win:
+    const cookieSpy = vi
+      .spyOn(document, 'cookie', 'get')
+      .mockReturnValue(
+        '_shopify_y=stale-unique; _shopify_s=stale-visit; _tracking_consent=stale-consent',
+      );
+
+    const props = {...PROPS, sameDomainForStorefrontApi: true};
+    const {rerender} = renderHook((p) => useCustomerPrivacy(p), {
+      initialProps: props,
+    });
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    simulateCdnConsentApiLoad();
+    rerender(props);
+
+    await act(async () => {});
+
+    cookieSpy.mockRestore();
+
+    const {cachedToken, cachedConsent} = getCustomerPrivacyCache();
+    expect(cachedToken?._shopify_y).toBe('body-unique');
+    expect(cachedToken?._shopify_s).toBe('body-visit');
+    expect(cachedConsent).toBe('body-consent');
+  });
+
+  it('publishes nothing when the consent fetch failed, even with deprecated cookies present', async () => {
+    const fetchMock = mockConsentFetchFailure();
+
+    // The same-origin consent fetch fails. `useCustomerPrivacy` does not
+    // opt into the cross-origin `checkoutDomain` retry (that option exists
+    // for direct `useShopifyCookies` callers without the built-in wiring),
+    // so a single attempt is expected:
+    vi.spyOn(document, 'cookie', 'get').mockReturnValue(
+      '_shopify_y=stale-unique; _shopify_s=stale-visit',
+    );
+
+    const props = {...PROPS, sameDomainForStorefrontApi: true};
+    const {rerender} = renderHook((p) => useCustomerPrivacy(p), {
+      initialProps: props,
+    });
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    // The script's own request also produced no values (empty cache):
+    simulateCdnConsentApiLoad();
+    rerender(props);
+
+    await act(async () => {});
+
+    // Stale cookie values must not leak into the Customer Privacy API:
     const {cachedToken, cachedConsent} = getCustomerPrivacyCache();
     expect(cachedToken).toBeUndefined();
     expect(cachedConsent).toBeUndefined();

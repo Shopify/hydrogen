@@ -3,6 +3,8 @@ import {
   SHOPIFY_Y,
   SHOPIFY_S,
   useShopifyCookies,
+  type ConsentFetchResult,
+  type ConsentResponseValues,
 } from '@shopify/hydrogen-react';
 import {
   CountryCode,
@@ -156,12 +158,17 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   /**
    * Fetch tracking values from the browser on every load when the SF API
    * proxy is detected: the consentManagement response body is the only
-   * channel where tracking values are available.
+   * channel where tracking values are available. The result — body values
+   * or failure — rides in this component-scoped ref so the publish step
+   * below only ever uses fresh response values.
    */
+  const consentResultRef = useRef<ConsentFetchResult | null>(null);
+
   const cookiesReady = useShopifyCookies({
     fetchTrackingValues: hasSfapiProxy,
     storefrontAccessToken,
     ignoreDeprecatedCookies: true,
+    consentResultRef,
   });
 
   // Store initial tracking values to compare later
@@ -418,8 +425,12 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
 
     // Share the consent fetch's values with the Customer Privacy API before
     // anything consumes it: the banner, the api-loaded event and onReady.
-    // Values the API already holds are never overwritten.
-    publishTrackingValuesToCustomerPrivacy();
+    // Only fresh response values are published; values the API already
+    // holds are never overwritten.
+    const consentResult = consentResultRef.current;
+    if (consentResult?.status === 'succeeded') {
+      publishConsentResponseValues(consentResult.values);
+    }
 
     if (withPrivacyBanner) {
       const privacyBanner = getPrivacyBanner();
@@ -479,22 +490,26 @@ const TOKEN_CACHE_EXPIRY_MS = {
   [SHOPIFY_S]: 30 * 60 * 1000, // 30 minutes
 } as const;
 
-function publishTrackingValuesToCustomerPrivacy(): void {
+function publishConsentResponseValues(values: ConsentResponseValues): void {
   const customerPrivacy =
     getCustomerPrivacy() as CustomerPrivacyWithTokenCache | null;
   if (!customerPrivacy) return;
 
-  const {uniqueToken, visitToken, consent} = getTrackingValues();
+  // Null tokens are the backend's no-consent signal: the Customer Privacy
+  // API must hold no values in that case, so publish nothing at all.
+  if (!values.uniqueToken && !values.visitToken) return;
 
   const tokens = [
-    {cookieName: SHOPIFY_Y, value: uniqueToken},
-    {cookieName: SHOPIFY_S, value: visitToken},
+    {cookieName: SHOPIFY_Y, value: values.uniqueToken},
+    {cookieName: SHOPIFY_S, value: values.visitToken},
   ] as const;
 
-  const publishableTokens = tokens.filter(
-    ({cookieName, value}) =>
-      // Empty values mean no consent was granted: publish nothing for them.
-      value && !customerPrivacy.cachedToken?.[cookieName],
+  const publishableTokens = tokens.flatMap(({cookieName, value}) =>
+    // Null or empty values mean no consent was granted: publish nothing
+    // for them.
+    value && !customerPrivacy.cachedToken?.[cookieName]
+      ? [{cookieName, value}]
+      : [],
   );
 
   if (publishableTokens.length > 0) {
@@ -507,8 +522,8 @@ function publishTrackingValuesToCustomerPrivacy(): void {
     }
   }
 
-  if (!customerPrivacy.cachedConsent && consent) {
-    customerPrivacy.cachedConsent = consent;
+  if (!customerPrivacy.cachedConsent && values.consent) {
+    customerPrivacy.cachedConsent = values.consent;
   }
 }
 

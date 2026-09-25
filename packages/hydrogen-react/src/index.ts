@@ -75,6 +75,10 @@ export type {
 } from './storefront-api-response.types.js';
 export type {StorefrontClientProps} from './storefront-client.js';
 export {createStorefrontClient} from './storefront-client.js';
+export type {
+  ConsentFetchResult,
+  ConsentResponseValues,
+} from './tracking-utils.js';
 export {
   getTrackingValues,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
