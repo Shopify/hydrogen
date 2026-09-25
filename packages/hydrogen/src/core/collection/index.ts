@@ -1,5 +1,10 @@
 export { createCollectionStore } from "./collection";
-export type { CollectionData, CollectionStore, CreateCollectionStoreOptions } from "./collection";
+export type {
+  CollectionActions,
+  CollectionData,
+  CollectionStore,
+  CreateCollectionStoreOptions,
+} from "./collection";
 
 export type {
   AvailableFilter,
