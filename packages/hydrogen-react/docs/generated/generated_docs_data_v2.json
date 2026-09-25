@@ -5906,7 +5906,7 @@
     "src/tracking-utils.ts": {
       "filePath": "src/tracking-utils.ts",
       "name": "GetTrackingValuesGeneratedType",
-      "description": "Retrieves user session tracking values for analytics and marketing from the browser environment. Values are read, in order, from the Customer Privacy API (`window.Shopify.customerPrivacy`) and the deprecated `_shopify_y`/ `_shopify_s`/`_tracking_consent` cookies during the transition period.",
+      "description": "Retrieves user session tracking values for analytics and marketing from the browser environment. Customer Privacy API token readers are authoritative when available, including when consent denies tracking. Deprecated `_shopify_y`/`_shopify_s` cookies are read only without an API token reader. Consent comes from CTA's cache or the legacy `_tracking_consent` cookie.",
       "isPublicDocs": true,
       "params": [],
       "returns": {
@@ -5915,7 +5915,7 @@
         "name": "TrackingValues",
         "value": "TrackingValues"
       },
-      "value": "export function getTrackingValues(): TrackingValues {\n  const cookie =\n    // Read from arguments to avoid declaring parameters in this function signature.\n    // This logic is only used internally from `getShopifyCookies` and will be deprecated.\n    typeof arguments[0] === 'string'\n      ? arguments[0]\n      : typeof document !== 'undefined'\n        ? document.cookie\n        : '';\n\n  const customerPrivacy =\n    typeof window === 'undefined'\n      ? undefined\n      : (window as {Shopify?: {customerPrivacy?: CustomerPrivacyWithTracking}})\n          .Shopify?.customerPrivacy;\n\n  const internal = customerPrivacy?.__internal;\n\n  return {\n    uniqueToken:\n      internal?.uniqueToken?.(NO_FALLBACK_TOKEN_OPTIONS) ??\n      cookie.match(/\\b_shopify_y=([^;]+)/)?.[1] ??\n      '',\n    visitToken:\n      internal?.visitToken?.(NO_FALLBACK_TOKEN_OPTIONS) ??\n      cookie.match(/\\b_shopify_s=([^;]+)/)?.[1] ??\n      '',\n    consent:\n      customerPrivacy?.cachedConsent ??\n      cookie.match(/\\b_tracking_consent=([^;]+)/)?.[1] ??\n      '',\n  };\n}"
+      "value": "export function getTrackingValues(): TrackingValues {\n  const cookie =\n    // Read from arguments to avoid declaring parameters in this function signature.\n    // This logic is only used internally from `getShopifyCookies` and will be deprecated.\n    typeof arguments[0] === 'string'\n      ? arguments[0]\n      : typeof document !== 'undefined'\n        ? document.cookie\n        : '';\n\n  const customerPrivacy =\n    typeof window === 'undefined'\n      ? undefined\n      : (window as {Shopify?: {customerPrivacy?: CustomerPrivacyWithTracking}})\n          .Shopify?.customerPrivacy;\n\n  const internal = customerPrivacy?.__internal;\n  // Async consent owns initialization and suppresses fallback generation until\n  // it is loaded. Afterwards CTA can refresh expired tokens, as in preview.\n  // Standalone hydrogen-react's explicit consent fetch keeps its previous policy.\n  const tokenOptions = {\n    generateFallback: customerPrivacy?.config?.asyncConsent === true,\n    tag: 'hydrogen:classic',\n  };\n\n  return {\n    // An installed CTA reader is authoritative, including undefined on denial.\n    // Falling through to a legacy cookie could restore a disallowed token.\n    uniqueToken: internal?.uniqueToken\n      ? (internal.uniqueToken(tokenOptions) ?? '')\n      : (cookie.match(/\\b_shopify_y=([^;]+)/)?.[1] ?? ''),\n    visitToken: internal?.visitToken\n      ? (internal.visitToken(tokenOptions) ?? '')\n      : (cookie.match(/\\b_shopify_s=([^;]+)/)?.[1] ?? ''),\n    consent:\n      customerPrivacy?.cachedConsent ??\n      cookie.match(/\\b_tracking_consent=([^;]+)/)?.[1] ??\n      '',\n  };\n}"
     }
   },
   "TrackingValues": {
@@ -6732,58 +6732,6 @@
       ]
     }
   },
-  "ExpireDeprecatedCookiesGeneratedType": {
-    "src/cookies-utils.tsx": {
-      "filePath": "src/cookies-utils.tsx",
-      "name": "ExpireDeprecatedCookiesGeneratedType",
-      "description": "Expires the deprecated `_shopify_y` and `_shopify_s` cookies by writing them with an empty value and `max-age=0`. The cookies are never created or refreshed anymore: tracking values are read from the Customer Privacy API instead, so this only removes leftovers from older storefront versions.\n\nRemoving cookies with a domain: if no `domain` is provided, the current host is used. Deprecated cookies were written with a leading-dot domain to cover the domain scope older storefronts may have used, so the same leading-dot domain is used to expire them. When `checkoutDomain` is set, the domain is scoped to the parts shared with the checkout domain, so the expiry covers the shop domain without touching unrelated domains.",
-      "isPublicDocs": true,
-      "params": [
-        {
-          "name": "options",
-          "description": "",
-          "value": "ExpireDeprecatedCookiesOptions",
-          "isOptional": true,
-          "defaultValue": "{}",
-          "filePath": "src/cookies-utils.tsx"
-        }
-      ],
-      "returns": {
-        "filePath": "src/cookies-utils.tsx",
-        "description": "",
-        "name": "void",
-        "value": "void"
-      },
-      "value": "export function expireDeprecatedCookies(\n  options: ExpireDeprecatedCookiesOptions = {},\n): void {\n  if (typeof document === 'undefined') return;\n\n  const {domain = '', checkoutDomain = ''} = options;\n\n  // Use override domain or current host\n  let currentDomain = domain || window.location.host;\n\n  if (checkoutDomain) {\n    const checkoutDomainParts = checkoutDomain.split('.').reverse();\n    const currentDomainParts = currentDomain.split('.').reverse();\n    const sameDomainParts: Array<string> = [];\n    checkoutDomainParts.forEach((part, index) => {\n      if (part === currentDomainParts[index]) {\n        sameDomainParts.push(part);\n      }\n    });\n\n    currentDomain = sameDomainParts.reverse().join('.');\n  }\n\n  // A Domain attribute would not match a dev localhost host, so the expiry\n  // must be host-only there.\n  if (/^localhost/.test(currentDomain)) currentDomain = '';\n\n  const domainWithLeadingDot = currentDomain\n    ? /^\\./.test(currentDomain)\n      ? currentDomain\n      : `.${currentDomain}`\n    : '';\n\n  setCookie(SHOPIFY_Y, '', 0, domainWithLeadingDot);\n  setCookie(SHOPIFY_S, '', 0, domainWithLeadingDot);\n}"
-    }
-  },
-  "ExpireDeprecatedCookiesOptions": {
-    "src/cookies-utils.tsx": {
-      "filePath": "src/cookies-utils.tsx",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ExpireDeprecatedCookiesOptions",
-      "value": "{\n  /**\n   * The domain scope used to expire the deprecated shopify_y and shopify_s\n   * cookies. Defaults to the current host.\n   */\n  domain?: string;\n  /**\n   * The checkout domain of the shop. If set, the expiry domain is scoped to\n   * the domain shared with the checkout domain.\n   */\n  checkoutDomain?: string;\n}",
-      "description": "",
-      "members": [
-        {
-          "filePath": "src/cookies-utils.tsx",
-          "syntaxKind": "PropertySignature",
-          "name": "checkoutDomain",
-          "value": "string",
-          "description": "The checkout domain of the shop. If set, the expiry domain is scoped to the domain shared with the checkout domain.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/cookies-utils.tsx",
-          "syntaxKind": "PropertySignature",
-          "name": "domain",
-          "value": "string",
-          "description": "The domain scope used to expire the deprecated shopify_y and shopify_s cookies. Defaults to the current host.",
-          "isOptional": true
-        }
-      ]
-    }
-  },
   "IsOptionValueCombinationInEncodedVariant": {
     "src/optionValueDecoder.ts": {
       "filePath": "src/optionValueDecoder.ts",
@@ -7366,7 +7314,7 @@
     "src/useShopifyCookies.tsx": {
       "filePath": "src/useShopifyCookies.tsx",
       "name": "UseShopifyCookiesGeneratedType",
-      "description": "Manages the deprecated `shopify_y` and `shopify_s` cookies based on user consent for backward compatibility support. These cookies are never created or refreshed anymore: tracking values are read from the Customer Privacy API instead. When consent is not granted, any deprecated cookies found in the browser are removed.\n\nIf `fetchTrackingValues` is true, it sends the consent request to the Storefront API proxy. The response refreshes the http-only analytics and marketing cookies, and its tracking values are shared through the `consentResultRef` option for consumers that coordinate with the Customer Privacy API. Generally speaking, this should only be needed if you're not using Hydrogen's built-in analytics components and hooks that already handle this automatically. For example, set it to `true` if you are using `hydrogen-react` only with a different framework and still need the consent request to run from the browser.",
+      "description": "Optionally refreshes backend-managed cookies for standalone integrations. The Customer Privacy API owns tracking values and legacy cookie expiration.\n\nIf `fetchTrackingValues` is true, this sends a consent request through the Storefront API proxy, retrying against `checkoutDomain` if provided. Hydrogen's built-in analytics already delegates consent initialization to the Customer Privacy API and does not use this hook.",
       "isPublicDocs": true,
       "params": [
         {
@@ -7383,7 +7331,7 @@
         "name": "boolean",
         "value": "boolean"
       },
-      "value": "export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {\n  const {\n    hasUserConsent,\n    domain = '',\n    checkoutDomain = '',\n    storefrontAccessToken,\n    fetchTrackingValues,\n    ignoreDeprecatedCookies = false,\n    consentResultRef,\n  } = options || {};\n\n  const coreCookiesReady = useCoreShopifyCookies({\n    storefrontAccessToken,\n    fetchTrackingValues,\n    checkoutDomain,\n    consentResultRef,\n  });\n\n  useEffect(() => {\n    if (ignoreDeprecatedCookies || !coreCookiesReady) return;\n\n    if (hasUserConsent) {\n      // Deprecated cookies are no longer written, and with consent granted\n      // they are not removed here either: Hydrogen's `useCustomerPrivacy`\n      // expires them once their replacement values are in place through the\n      // Customer Privacy API. Setups without that API can call\n      // `expireDeprecatedCookies` directly; otherwise the cookies simply\n      // age out.\n      return;\n    }\n\n    // Remove user and session cookies by expiring them immediately\n    expireDeprecatedCookies({domain, checkoutDomain});\n  }, [\n    coreCookiesReady,\n    hasUserConsent,\n    domain,\n    checkoutDomain,\n    ignoreDeprecatedCookies,\n  ]);\n\n  return coreCookiesReady;\n}"
+      "value": "export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {\n  const {\n    checkoutDomain,\n    storefrontAccessToken,\n    fetchTrackingValues = false,\n  } = options ?? {};\n  const [cookiesReady, setCookiesReady] = useState(!fetchTrackingValues);\n  const hasFetchedTrackingValues = useRef(false);\n\n  useEffect(() => {\n    if (!fetchTrackingValues) {\n      // Backend did the work, or proxy is disabled.\n      setCookiesReady(true);\n      return;\n    }\n\n    // React runs effects twice in dev mode, avoid double fetching\n    if (hasFetchedTrackingValues.current) return;\n    hasFetchedTrackingValues.current = true;\n\n    const fetchConsentValues = async () => {\n      try {\n        return await fetchTrackingValuesFromBrowser(storefrontAccessToken);\n      } catch (sameOriginError) {\n        if (!checkoutDomain) throw sameOriginError;\n        // Retry with checkout domain if the same-origin proxy failed.\n        return fetchTrackingValuesFromBrowser(\n          storefrontAccessToken,\n          checkoutDomain,\n        );\n      }\n    };\n\n    fetchConsentValues()\n      .catch((error) => {\n        console.warn(\n          '[h2:warn:useShopifyCookies] Failed to fetch tracking values from browser: ' +\n            (error instanceof Error ? error.message : String(error)),\n        );\n      })\n      .finally(() => {\n        // Proceed even on errors, degraded tracking is better than no app\n        setCookiesReady(true);\n      });\n  }, [checkoutDomain, fetchTrackingValues, storefrontAccessToken]);\n\n  return cookiesReady;\n}"
     }
   },
   "UseShopifyCookiesOptions": {
@@ -7391,16 +7339,7 @@
       "filePath": "src/useShopifyCookies.tsx",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "UseShopifyCookiesOptions",
-      "value": "CoreShopifyCookiesOptions & {\n  /**\n   * If set to `false`, deprecated Shopify cookies will be removed.\n   * If set to `true`, deprecated Shopify cookies are left untouched:\n   * they are no longer created or refreshed.\n   * Defaults to false.\n   **/\n  hasUserConsent?: boolean;\n  /**\n   * The domain scope used to remove the deprecated shopify_y and shopify_s\n   * cookies. Defaults to empty string.\n   **/\n  domain?: string;\n  /**\n   * The checkout domain of the shop. Defaults to empty string. If set, the\n   * removal domain is scoped to the common domain with the checkout domain.\n   */\n  checkoutDomain?: string;\n  /**\n   * If set to `true`, it skips removing the deprecated shopify_y and shopify_s\n   * cookies.\n   */\n  ignoreDeprecatedCookies?: boolean;\n  /**\n   * A component-scoped ref that receives the consent fetch result: the\n   * response body values (including the `null` no-consent signal) or a\n   * failure when no response could be obtained. Used by Hydrogen's built-in\n   * analytics wiring (`useCustomerPrivacy`) to publish and act on the result\n   * within its component tree; not needed when calling this hook directly.\n   */\n  consentResultRef?: {current: ConsentFetchResult | null};\n}",
-      "description": ""
-    }
-  },
-  "CoreShopifyCookiesOptions": {
-    "src/useShopifyCookies.tsx": {
-      "filePath": "src/useShopifyCookies.tsx",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "CoreShopifyCookiesOptions",
-      "value": "{\n  storefrontAccessToken?: string;\n  fetchTrackingValues?: boolean;\n  checkoutDomain?: string;\n  consentResultRef?: {current: ConsentFetchResult | null};\n}",
+      "value": "{\n  storefrontAccessToken?: string;\n  fetchTrackingValues?: boolean;\n  /** @deprecated No longer used. The Customer Privacy API manages Shopify cookies. */\n  hasUserConsent?: boolean;\n  /** @deprecated No longer used. The Customer Privacy API manages cookie domains. */\n  domain?: string;\n  /** The checkout domain used if the same-origin consent request fails. */\n  checkoutDomain?: string;\n  /** @deprecated No longer used. The Customer Privacy API expires deprecated cookies. */\n  ignoreDeprecatedCookies?: boolean;\n}",
       "description": "",
       "members": [
         {
@@ -7408,16 +7347,17 @@
           "syntaxKind": "PropertySignature",
           "name": "checkoutDomain",
           "value": "string",
-          "description": "",
+          "description": "The checkout domain used if the same-origin consent request fails.",
           "isOptional": true
         },
         {
           "filePath": "src/useShopifyCookies.tsx",
           "syntaxKind": "PropertySignature",
-          "name": "consentResultRef",
-          "value": "{ current: ConsentFetchResult; }",
+          "name": "domain",
+          "value": "string",
           "description": "",
-          "isOptional": true
+          "isOptional": true,
+          "deprecationMessage": "No longer used. The Customer Privacy API manages cookie domains."
         },
         {
           "filePath": "src/useShopifyCookies.tsx",
@@ -7430,51 +7370,28 @@
         {
           "filePath": "src/useShopifyCookies.tsx",
           "syntaxKind": "PropertySignature",
+          "name": "hasUserConsent",
+          "value": "boolean",
+          "description": "",
+          "isOptional": true,
+          "deprecationMessage": "No longer used. The Customer Privacy API manages Shopify cookies."
+        },
+        {
+          "filePath": "src/useShopifyCookies.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "ignoreDeprecatedCookies",
+          "value": "boolean",
+          "description": "",
+          "isOptional": true,
+          "deprecationMessage": "No longer used. The Customer Privacy API expires deprecated cookies."
+        },
+        {
+          "filePath": "src/useShopifyCookies.tsx",
+          "syntaxKind": "PropertySignature",
           "name": "storefrontAccessToken",
           "value": "string",
           "description": "",
           "isOptional": true
-        }
-      ]
-    }
-  },
-  "ConsentFetchResult": {
-    "src/tracking-utils.ts": {
-      "filePath": "src/tracking-utils.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ConsentFetchResult",
-      "value": "{status: 'succeeded'; values: ConsentResponseValues} | {status: 'failed'}",
-      "description": "The outcome of the browser consent fetch. Carried in a component-scoped ref (see `useShopifyCookies`' `consentResultRef` option) so the component that initiated the fetch — e.g. Hydrogen's `useCustomerPrivacy` — can consume the result without module-level state."
-    }
-  },
-  "ConsentResponseValues": {
-    "src/tracking-utils.ts": {
-      "filePath": "src/tracking-utils.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ConsentResponseValues",
-      "value": "{\n  uniqueToken: string | null;\n  visitToken: string | null;\n  consent: string | null;\n}",
-      "description": "Tracking values returned in a `consentManagement` response body. A `null` value is the backend's signal that consent was not granted, so no value exists for that field.",
-      "members": [
-        {
-          "filePath": "src/tracking-utils.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "consent",
-          "value": "string | null",
-          "description": ""
-        },
-        {
-          "filePath": "src/tracking-utils.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "uniqueToken",
-          "value": "string | null",
-          "description": ""
-        },
-        {
-          "filePath": "src/tracking-utils.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "visitToken",
-          "value": "string | null",
-          "description": ""
         }
       ]
     }

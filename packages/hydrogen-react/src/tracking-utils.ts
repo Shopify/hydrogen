@@ -12,39 +12,10 @@ type TrackingValues = {
   consent: string;
 };
 
-/**
- * Tracking values returned in a `consentManagement` response body. A `null`
- * value is the backend's signal that consent was not granted, so no value
- * exists for that field.
- */
-export type ConsentResponseValues = {
-  uniqueToken: string | null;
-  visitToken: string | null;
-  consent: string | null;
-};
-
-/**
- * The outcome of the browser consent fetch. Carried in a component-scoped
- * ref (see `useShopifyCookies`' `consentResultRef` option) so the component
- * that initiated the fetch — e.g. Hydrogen's `useCustomerPrivacy` — can
- * consume the result without module-level state.
- */
-export type ConsentFetchResult =
-  | {status: 'succeeded'; values: ConsentResponseValues}
-  | {status: 'failed'};
-
-// Consent-management responses are the only token channel, so Hydrogen never
-// asks the Customer Privacy API to generate fallback tokens: minting new
-// tokens would fire a background persist request that races Hydrogen's own
-// consent fetch.
-const NO_FALLBACK_TOKEN_OPTIONS = {
-  generateFallback: false,
-  tag: 'hydrogen:classic',
-} as const;
-
 // Keep the consent-tracking-api token interface out of Hydrogen's public
 // global types since it could change in the future.
 type CustomerPrivacyWithTracking = {
+  config?: {asyncConsent?: boolean};
   cachedConsent?: string;
   __internal?: {
     uniqueToken?: (options?: {
@@ -60,9 +31,10 @@ type CustomerPrivacyWithTracking = {
 
 /**
  * Retrieves user session tracking values for analytics and marketing from the
- * browser environment. Values are read, in order, from the Customer Privacy
- * API (`window.Shopify.customerPrivacy`) and the deprecated `_shopify_y`/
- * `_shopify_s`/`_tracking_consent` cookies during the transition period.
+ * browser environment. Customer Privacy API token readers are authoritative
+ * when available, including when consent denies tracking. Deprecated
+ * `_shopify_y`/`_shopify_s` cookies are read only without an API token reader.
+ * Consent comes from CTA's cache or the legacy `_tracking_consent` cookie.
  * @publicDocs
  */
 export function getTrackingValues(): TrackingValues {
@@ -82,16 +54,23 @@ export function getTrackingValues(): TrackingValues {
           .Shopify?.customerPrivacy;
 
   const internal = customerPrivacy?.__internal;
+  // Async consent owns initialization and suppresses fallback generation until
+  // it is loaded. Afterwards CTA can refresh expired tokens, as in preview.
+  // Standalone hydrogen-react's explicit consent fetch keeps its previous policy.
+  const tokenOptions = {
+    generateFallback: customerPrivacy?.config?.asyncConsent === true,
+    tag: 'hydrogen:classic',
+  };
 
   return {
-    uniqueToken:
-      internal?.uniqueToken?.(NO_FALLBACK_TOKEN_OPTIONS) ??
-      cookie.match(/\b_shopify_y=([^;]+)/)?.[1] ??
-      '',
-    visitToken:
-      internal?.visitToken?.(NO_FALLBACK_TOKEN_OPTIONS) ??
-      cookie.match(/\b_shopify_s=([^;]+)/)?.[1] ??
-      '',
+    // An installed CTA reader is authoritative, including undefined on denial.
+    // Falling through to a legacy cookie could restore a disallowed token.
+    uniqueToken: internal?.uniqueToken
+      ? (internal.uniqueToken(tokenOptions) ?? '')
+      : (cookie.match(/\b_shopify_y=([^;]+)/)?.[1] ?? ''),
+    visitToken: internal?.visitToken
+      ? (internal.visitToken(tokenOptions) ?? '')
+      : (cookie.match(/\b_shopify_s=([^;]+)/)?.[1] ?? ''),
     consent:
       customerPrivacy?.cachedConsent ??
       cookie.match(/\b_tracking_consent=([^;]+)/)?.[1] ??

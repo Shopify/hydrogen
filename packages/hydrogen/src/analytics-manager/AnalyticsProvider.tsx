@@ -5,6 +5,7 @@ import {
   useMemo,
   createContext,
   useContext,
+  useCallback,
 } from 'react';
 import {type CartReturn} from '../cart/queries/cart-types';
 import {
@@ -32,6 +33,7 @@ import type {
   Localization,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {AnalyticsEvent} from './events';
+import {hasAnalyticsConsent} from './consent';
 import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
 import {
@@ -83,7 +85,7 @@ export type AnalyticsProviderProps = {
   consent: Consent;
   /** @deprecated Disable throwing errors when required props are missing. */
   disableThrowOnError?: boolean;
-  /** The domain scope used to remove the deprecated cookies handled by `useShopifyCookies`. **/
+  /** @deprecated No longer used. The Customer Privacy API manages Shopify cookies. */
   cookieDomain?: string;
 };
 
@@ -276,19 +278,6 @@ function register(key: string) {
   };
 }
 
-/**
- * This functions attempts to automatically determine if the user can be tracked if the
- * customer privacy API is available. If not, it will default to false.
- */
-function shopifyCanTrack(): boolean {
-  try {
-    return (
-      window.Shopify.customerPrivacy?.analyticsProcessingAllowed?.() ?? false
-    );
-  } catch (e) {}
-  return false;
-}
-
 function messageOnError(field: string, envVar: string) {
   return `[h2:error:Analytics.Provider] - ${field} is required. Make sure ${envVar} is defined in your environment variables. See https://h2o.fyi/analytics/consent to learn how to setup environment variables in the Shopify admin.`;
 }
@@ -300,17 +289,17 @@ function AnalyticsProvider({
   consent,
   customData = {},
   shop: shopProp = null,
-  cookieDomain,
 }: AnalyticsProviderProps): JSX.Element {
   const {shop} = useShopAnalytics(shopProp);
-  const [analyticsLoaded, setAnalyticsLoaded] = useState(
-    customCanTrack ? true : false,
-  );
-  const [consentCollected, setConsentCollected] = useState(false);
+  const [consentVersion, setConsentVersion] = useState(0);
+  const [privacyReady, setPrivacyReady] = useState(false);
   const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
-  const [canTrack, setCanTrack] = useState<() => boolean>(
-    customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
-  );
+  const canTrack = customCanTrack ?? hasAnalyticsConsent;
+  const onConsentChange = useCallback(() => {
+    setPrivacyReady(true);
+    // Re-evaluate the context when consent changes, including later revocation.
+    setConsentVersion((version) => version + 1);
+  }, []);
 
   // eslint-disable-next-line no-extra-boolean-cast
   if (!!shop) {
@@ -365,7 +354,7 @@ function AnalyticsProvider({
       privacyBanner: getPrivacyBanner(),
     };
   }, [
-    analyticsLoaded,
+    consentVersion,
     canTrack,
     carts,
     carts.cart?.updatedAt,
@@ -388,23 +377,10 @@ function AnalyticsProvider({
         <CartAnalytics cart={currentCart} setCarts={setCarts} />
       )}
       {!!shop && (
-        <ShopifyAnalytics
-          consent={consent}
-          onReady={() => {
-            setAnalyticsLoaded(true);
-            setCanTrack(
-              customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
-            );
-
-            // Delay loading PerfKit until consent is collected
-            // so that it reads the tracking values published to the
-            // Customer Privacy API.
-            setConsentCollected(true);
-          }}
-          domain={cookieDomain}
-        />
+        <ShopifyAnalytics consent={consent} onConsentChange={onConsentChange} />
       )}
-      {!!shop && consentCollected && <PerfKit shop={shop} />}
+      {/* Wait until CTA has initialized consent and its token cache. */}
+      {!!shop && privacyReady && <PerfKit shop={shop} />}
     </AnalyticsContext.Provider>
   );
 }

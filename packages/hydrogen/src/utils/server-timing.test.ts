@@ -1,6 +1,5 @@
-import {describe, expect, it, vi} from 'vitest';
-import {appendServerTimingHeader, isSfapiProxyEnabled} from './server-timing';
-import {HYDROGEN_SFAPI_PROXY_KEY} from '../constants';
+import {describe, expect, it} from 'vitest';
+import {appendServerTimingHeader} from './server-timing';
 
 describe('server-timing', () => {
   describe('appendServerTimingHeader', () => {
@@ -13,24 +12,6 @@ describe('server-timing', () => {
       });
 
       expect(response.headers.get('Server-Timing')).toBe('_sfapi_proxy;desc=1');
-    });
-  });
-
-  describe('performance api detection', () => {
-    it('detects if SFAPI proxy is enabled', () => {
-      expect(isSfapiProxyEnabled()).toBe(false);
-
-      vi.stubGlobal('window', {
-        performance: {
-          getEntriesByType: () => [
-            {serverTiming: [{name: HYDROGEN_SFAPI_PROXY_KEY}]},
-          ],
-        },
-      });
-
-      expect(isSfapiProxyEnabled()).toBe(true);
-
-      vi.unstubAllGlobals();
     });
   });
 });

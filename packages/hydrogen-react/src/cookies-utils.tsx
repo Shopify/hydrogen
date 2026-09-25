@@ -1,8 +1,6 @@
 import {ShopifyCookies} from './analytics-types.js';
 import {SHOPIFY_Y, SHOPIFY_S} from './cart-constants.js';
 import {getTrackingValues} from './tracking-utils.js';
-// @ts-ignore - worktop/cookie types not properly exported
-import {stringify} from 'worktop/cookie';
 
 const tokenHash = 'xxxx-4xxx-xxxx-xxxxxxxxxxxx';
 
@@ -73,82 +71,4 @@ export function getShopifyCookies(cookies: string): ShopifyCookies {
     [SHOPIFY_Y]: trackingValues.uniqueToken,
     [SHOPIFY_S]: trackingValues.visitToken,
   };
-}
-
-export type ExpireDeprecatedCookiesOptions = {
-  /**
-   * The domain scope used to expire the deprecated shopify_y and shopify_s
-   * cookies. Defaults to the current host.
-   */
-  domain?: string;
-  /**
-   * The checkout domain of the shop. If set, the expiry domain is scoped to
-   * the domain shared with the checkout domain.
-   */
-  checkoutDomain?: string;
-};
-
-/**
- * Expires the deprecated `_shopify_y` and `_shopify_s` cookies by writing
- * them with an empty value and `max-age=0`. The cookies are never created or
- * refreshed anymore: tracking values are read from the Customer Privacy API
- * instead, so this only removes leftovers from older storefront versions.
- *
- * Removing cookies with a domain: if no `domain` is provided, the current
- * host is used. Deprecated cookies were written with a leading-dot domain to
- * cover the domain scope older storefronts may have used, so the same
- * leading-dot domain is used to expire them. When `checkoutDomain` is set,
- * the domain is scoped to the parts shared with the checkout domain, so the
- * expiry covers the shop domain without touching unrelated domains.
- * @publicDocs
- */
-export function expireDeprecatedCookies(
-  options: ExpireDeprecatedCookiesOptions = {},
-): void {
-  if (typeof document === 'undefined') return;
-
-  const {domain = '', checkoutDomain = ''} = options;
-
-  // Use override domain or current host
-  let currentDomain = domain || window.location.host;
-
-  if (checkoutDomain) {
-    const checkoutDomainParts = checkoutDomain.split('.').reverse();
-    const currentDomainParts = currentDomain.split('.').reverse();
-    const sameDomainParts: Array<string> = [];
-    checkoutDomainParts.forEach((part, index) => {
-      if (part === currentDomainParts[index]) {
-        sameDomainParts.push(part);
-      }
-    });
-
-    currentDomain = sameDomainParts.reverse().join('.');
-  }
-
-  // A Domain attribute would not match a dev localhost host, so the expiry
-  // must be host-only there.
-  if (/^localhost/.test(currentDomain)) currentDomain = '';
-
-  const domainWithLeadingDot = currentDomain
-    ? /^\./.test(currentDomain)
-      ? currentDomain
-      : `.${currentDomain}`
-    : '';
-
-  setCookie(SHOPIFY_Y, '', 0, domainWithLeadingDot);
-  setCookie(SHOPIFY_S, '', 0, domainWithLeadingDot);
-}
-
-function setCookie(
-  name: string,
-  value: string,
-  maxage: number,
-  domain: string,
-): void {
-  document.cookie = stringify(name, value, {
-    maxage,
-    domain,
-    samesite: 'Lax',
-    path: '/',
-  });
 }

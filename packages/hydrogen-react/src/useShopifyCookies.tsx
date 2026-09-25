@@ -3,10 +3,7 @@ import {
   getTrackingValues,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
-  type ConsentFetchResult,
-  type ConsentResponseValues,
 } from './tracking-utils.js';
-import {expireDeprecatedCookies} from './cookies-utils.js';
 
 // Marks the same-origin consent request so the backend can identify
 // headless consent-management traffic. A custom header on the cross-origin
@@ -17,190 +14,37 @@ import {expireDeprecatedCookies} from './cookies-utils.js';
 const CONSENT_MANAGEMENT_MARKER_HEADER =
   'Shopify-Storefront-Consent-Management';
 
-type UseShopifyCookiesOptions = CoreShopifyCookiesOptions & {
-  /**
-   * If set to `false`, deprecated Shopify cookies will be removed.
-   * If set to `true`, deprecated Shopify cookies are left untouched:
-   * they are no longer created or refreshed.
-   * Defaults to false.
-   **/
+type UseShopifyCookiesOptions = {
+  storefrontAccessToken?: string;
+  fetchTrackingValues?: boolean;
+  /** @deprecated No longer used. The Customer Privacy API manages Shopify cookies. */
   hasUserConsent?: boolean;
-  /**
-   * The domain scope used to remove the deprecated shopify_y and shopify_s
-   * cookies. Defaults to empty string.
-   **/
+  /** @deprecated No longer used. The Customer Privacy API manages cookie domains. */
   domain?: string;
-  /**
-   * The checkout domain of the shop. Defaults to empty string. If set, the
-   * removal domain is scoped to the common domain with the checkout domain.
-   */
+  /** The checkout domain used if the same-origin consent request fails. */
   checkoutDomain?: string;
-  /**
-   * If set to `true`, it skips removing the deprecated shopify_y and shopify_s
-   * cookies.
-   */
+  /** @deprecated No longer used. The Customer Privacy API expires deprecated cookies. */
   ignoreDeprecatedCookies?: boolean;
-  /**
-   * A component-scoped ref that receives the consent fetch result: the
-   * response body values (including the `null` no-consent signal) or a
-   * failure when no response could be obtained. Used by Hydrogen's built-in
-   * analytics wiring (`useCustomerPrivacy`) to publish and act on the result
-   * within its component tree; not needed when calling this hook directly.
-   */
-  consentResultRef?: {current: ConsentFetchResult | null};
 };
 
 /**
- * Manages the deprecated `shopify_y` and `shopify_s` cookies based on user
- * consent for backward compatibility support. These cookies are never created
- * or refreshed anymore: tracking values are read from the Customer Privacy
- * API instead. When consent is not granted, any deprecated cookies found in
- * the browser are removed.
+ * Optionally refreshes backend-managed cookies for standalone integrations.
+ * The Customer Privacy API owns tracking values and legacy cookie expiration.
  *
- * If `fetchTrackingValues` is true, it sends the consent request to the
- * Storefront API proxy. The response refreshes the http-only analytics and
- * marketing cookies, and its tracking values are shared through the
- * `consentResultRef` option for consumers that coordinate with the Customer
- * Privacy API. Generally speaking, this should only be needed if you're not
- * using Hydrogen's built-in analytics components and hooks that already
- * handle this automatically. For example, set it to `true` if you are using
- * `hydrogen-react` only with a different framework and still need the
- * consent request to run from the browser.
+ * If `fetchTrackingValues` is true, this sends a consent request through the
+ * Storefront API proxy, retrying against `checkoutDomain` if provided. Hydrogen's
+ * built-in analytics already delegates consent initialization to the Customer
+ * Privacy API and does not use this hook.
  *
  * @returns `true` when the consent request has settled and cookies are ready.
  * @publicDocs
  */
 export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {
   const {
-    hasUserConsent,
-    domain = '',
-    checkoutDomain = '',
-    storefrontAccessToken,
-    fetchTrackingValues,
-    ignoreDeprecatedCookies = false,
-    consentResultRef,
-  } = options || {};
-
-  const coreCookiesReady = useCoreShopifyCookies({
-    storefrontAccessToken,
-    fetchTrackingValues,
     checkoutDomain,
-    consentResultRef,
-  });
-
-  useEffect(() => {
-    if (ignoreDeprecatedCookies || !coreCookiesReady) return;
-
-    if (hasUserConsent) {
-      // Deprecated cookies are no longer written, and with consent granted
-      // they are not removed here either: Hydrogen's `useCustomerPrivacy`
-      // expires them once their replacement values are in place through the
-      // Customer Privacy API. Setups without that API can call
-      // `expireDeprecatedCookies` directly; otherwise the cookies simply
-      // age out.
-      return;
-    }
-
-    // Remove user and session cookies by expiring them immediately
-    expireDeprecatedCookies({domain, checkoutDomain});
-  }, [
-    coreCookiesReady,
-    hasUserConsent,
-    domain,
-    checkoutDomain,
-    ignoreDeprecatedCookies,
-  ]);
-
-  return coreCookiesReady;
-}
-
-async function fetchTrackingValuesFromBrowser(
-  storefrontAccessToken?: string,
-  storefrontApiDomain = '',
-): Promise<ConsentResponseValues> {
-  // These values might come from the Customer Privacy API, the last
-  // consentManagement response or old cookies. On the first load after
-  // upgrading, that means the legacy cookie values, so the session migrates.
-  // No fallback tokens are ever generated for this read.
-  const {uniqueToken, visitToken} = getTrackingValues();
-
-  const response = await fetch(
-    // TODO: update this endpoint when it becomes stable
-    `${storefrontApiDomain.replace(/\/+$/, '')}/api/unstable/graphql.json`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(storefrontAccessToken && {
-          'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
-        }),
-        // The marker header goes on the same-origin request only, where the
-        // Hydrogen server proxy can act on it.
-        ...(storefrontApiDomain
-          ? undefined
-          : {[CONSENT_MANAGEMENT_MARKER_HEADER]: '1'}),
-        ...(visitToken || uniqueToken
-          ? {
-              [SHOPIFY_VISIT_TOKEN_HEADER]: visitToken,
-              [SHOPIFY_UNIQUE_TOKEN_HEADER]: uniqueToken,
-            }
-          : undefined),
-      },
-      body: JSON.stringify({
-        query:
-          // The response body is the only channel for tracking values.
-          // The empty `visitorConsent` refreshes cookies without changing
-          // the stored consent.
-          'query ensureCookies { consentManagement { cookies(visitorConsent:{}) { trackingConsentCookie cookieDomain shopifyUnique shopifyVisit } } }',
-      }),
-    },
-  );
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch consent from browser: ${response.status} ${response.statusText}`,
-    );
-  }
-
-  const body = (await response.json()) as {
-    data?: {
-      consentManagement?: {
-        cookies?: {
-          trackingConsentCookie?: string | null;
-          shopifyUnique?: string | null;
-          shopifyVisit?: string | null;
-        };
-      };
-    };
-  };
-
-  const cookies = body.data?.consentManagement?.cookies;
-  // Null (or missing) values are the backend's no-consent signal:
-  return {
-    uniqueToken: cookies?.shopifyUnique ?? null,
-    visitToken: cookies?.shopifyVisit ?? null,
-    consent: cookies?.trackingConsentCookie ?? null,
-  };
-}
-
-type CoreShopifyCookiesOptions = {
-  storefrontAccessToken?: string;
-  fetchTrackingValues?: boolean;
-  checkoutDomain?: string;
-  consentResultRef?: {current: ConsentFetchResult | null};
-};
-
-/**
- * Gets http-only cookies from Storefront API via same-origin fetch request.
- * Falls back to checkout domain if provided to at least obtain the tracking
- * values from the consentManagement response body.
- */
-function useCoreShopifyCookies({
-  checkoutDomain,
-  storefrontAccessToken,
-  fetchTrackingValues = false,
-  consentResultRef,
-}: CoreShopifyCookiesOptions) {
+    storefrontAccessToken,
+    fetchTrackingValues = false,
+  } = options ?? {};
   const [cookiesReady, setCookiesReady] = useState(!fetchTrackingValues);
   const hasFetchedTrackingValues = useRef(false);
 
@@ -228,17 +72,8 @@ function useCoreShopifyCookies({
       }
     };
 
-    // Report the outcome on the component-scoped ref when one was provided:
-    const reportConsentResult = (result: ConsentFetchResult) => {
-      if (consentResultRef) consentResultRef.current = result;
-    };
-
     fetchConsentValues()
-      .then((values) => {
-        reportConsentResult({status: 'succeeded', values});
-      })
       .catch((error) => {
-        reportConsentResult({status: 'failed'});
         console.warn(
           '[h2:warn:useShopifyCookies] Failed to fetch tracking values from browser: ' +
             (error instanceof Error ? error.message : String(error)),
@@ -248,12 +83,53 @@ function useCoreShopifyCookies({
         // Proceed even on errors, degraded tracking is better than no app
         setCookiesReady(true);
       });
-  }, [
-    checkoutDomain,
-    fetchTrackingValues,
-    storefrontAccessToken,
-    consentResultRef,
-  ]);
+  }, [checkoutDomain, fetchTrackingValues, storefrontAccessToken]);
 
   return cookiesReady;
+}
+
+async function fetchTrackingValuesFromBrowser(
+  storefrontAccessToken?: string,
+  storefrontApiDomain = '',
+): Promise<void> {
+  // Forward the current CTA tokens or legacy cookies to preserve the session.
+  // CTA suppresses token generation while its async consent is loading.
+  const {uniqueToken, visitToken} = getTrackingValues();
+
+  const response = await fetch(
+    // TODO: update this endpoint when it becomes stable
+    `${storefrontApiDomain.replace(/\/+$/, '')}/api/unstable/graphql.json`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(storefrontAccessToken && {
+          'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
+        }),
+        // The marker header goes on the same-origin request only, where the
+        // Hydrogen server proxy can act on it.
+        ...(storefrontApiDomain
+          ? undefined
+          : {[CONSENT_MANAGEMENT_MARKER_HEADER]: '1'}),
+        ...(visitToken || uniqueToken
+          ? {
+              [SHOPIFY_VISIT_TOKEN_HEADER]: visitToken,
+              [SHOPIFY_UNIQUE_TOKEN_HEADER]: uniqueToken,
+            }
+          : undefined),
+      },
+      body: JSON.stringify({
+        query:
+          // The empty `visitorConsent` refreshes cookies without changing
+          // the stored consent.
+          'query ensureCookies { consentManagement { cookies(visitorConsent:{}) { trackingConsentCookie cookieDomain shopifyUnique shopifyVisit } } }',
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch consent from browser: ${response.status} ${response.statusText}`,
+    );
+  }
 }
