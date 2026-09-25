@@ -23,7 +23,7 @@ export type ShopAnalytics =
       storefrontId: ShopifyScriptsShop["storefrontId"];
     })
   | (ShopAnalyticsBase & {
-      /** The storefront uses the Headless sales channel; analytics aren't tied to a storefront. */
+      /** The storefront uses the generic Headless sales channel. */
       channel: "headless";
       storefrontId?: never;
     });
