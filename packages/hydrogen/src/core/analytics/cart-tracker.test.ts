@@ -1,8 +1,13 @@
 // @vitest-environment happy-dom
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+import { buildSchema, graphql } from "graphql";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createCartStore } from "../cart/cart";
 import type { CartStore } from "../cart/cart";
+import { getCart } from "../cart/get-cart";
 import type { CartData } from "../cart/state";
 import { assert } from "../test-utils";
 import { trackCartAnalytics } from "./cart-tracker";
@@ -192,6 +197,74 @@ function createCartDataWithLineCurrencyOnly(cart: AnalyticsCart): CartData {
       checkoutChargeAmount: { amount: "0", currencyCode: "" },
     },
   };
+}
+
+// Server-side cart, including fields the default query may not select. Queries
+// run against the real Storefront API schema, so responses only contain what
+// the query selects.
+const SERVER_MONEY = { amount: "749.95", currencyCode: "USD" };
+const SERVER_CART = {
+  id: CART_DATA.id,
+  updatedAt: CART_DATA.updatedAt,
+  checkoutUrl: "https://shop.example.com/checkout",
+  totalQuantity: 1,
+  note: null,
+  attributes: [],
+  cost: {
+    subtotalAmount: SERVER_MONEY,
+    totalAmount: SERVER_MONEY,
+    checkoutChargeAmount: SERVER_MONEY,
+  },
+  lines: {
+    nodes: [
+      {
+        __typename: "CartLine",
+        id: CART_LINE.id,
+        quantity: 1,
+        attributes: [],
+        cost: {
+          totalAmount: SERVER_MONEY,
+          subtotalAmount: SERVER_MONEY,
+          amountPerQuantity: SERVER_MONEY,
+          compareAtAmountPerQuantity: null,
+        },
+        merchandise: {
+          __typename: "ProductVariant",
+          id: CART_LINE.merchandise.id,
+          title: CART_LINE.merchandise.title,
+          sku: null,
+          image: null,
+          product: { ...CART_LINE.merchandise.product, productType: "" },
+          selectedOptions: [],
+        },
+        sellingPlanAllocation: null,
+        parentRelationship: null,
+      },
+    ],
+  },
+  discountCodes: [],
+};
+
+const storefrontSchema = buildSchema(
+  readFileSync(
+    join(import.meta.dirname, "../../graphql/generated/storefront.schema.graphql"),
+    "utf8",
+  ),
+);
+
+function createSchemaBackedStorefront(cart: typeof SERVER_CART) {
+  return {
+    graphql: async (source: string, options?: { variables?: Record<string, unknown> }) => {
+      const result = await graphql({
+        schema: storefrontSchema,
+        source,
+        rootValue: { cart: () => cart },
+        variableValues: options?.variables,
+      });
+      if (result.errors) throw new AggregateError(result.errors, "Storefront query failed");
+      return { data: result.data, headers: new Headers() };
+    },
+  } as unknown as Parameters<typeof getCart>[1];
 }
 
 function createStore(cart: CartData | null = null): CartStore {
@@ -401,6 +474,32 @@ describe("trackCartAnalytics", () => {
       ([event]) => event === AnalyticsEvent.CART_UPDATED,
     );
     expect(cartUpdatedCalls).toHaveLength(1);
+  });
+
+  it("does not emit cart_updated when the default cart query returns an unchanged cart", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      const { analytics, publish } = createTestAnalytics();
+      setGlobalAnalytics(analytics);
+      const storefront = createSchemaBackedStorefront(SERVER_CART);
+
+      vi.setSystemTime("2024-04-01T00:00:00Z");
+      const initial = await getCart(SERVER_CART.id, storefront);
+      assert(initial.cart, "Expected the default cart query to return a cart");
+      const store = createStore(initial.cart);
+      trackCartAnalytics(store);
+      store.connect();
+
+      vi.setSystemTime("2024-04-01T00:01:00Z");
+      const refetched = await getCart(SERVER_CART.id, storefront);
+      assert(refetched.cart, "Expected the default cart query to return a cart");
+      await dispatchCartLinesUpdate(refetched.cart);
+      store.destroy();
+
+      expect(publish).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("deduplicates via localStorage across tracker instances", () => {

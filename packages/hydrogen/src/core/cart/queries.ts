@@ -26,6 +26,7 @@ const CART_FRAGMENT_PATTERN = createFragmentPattern(CART_FRAGMENT_CONTRACT);
 const HYDROGEN_CART_FRAGMENT = gql(`
   fragment HydrogenCartFragment on Cart {
     id
+    updatedAt
     checkoutUrl
     totalQuantity
     note
