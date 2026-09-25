@@ -3,9 +3,6 @@ import { gql, type StorefrontApi, type StorefrontClient } from "@shopify/hydroge
 import { loadAnnouncement } from "~/lib/announcement";
 import { normalizeStorefrontShop, type StorefrontShop } from "~/lib/storefront-shop";
 
-// Shop identity and navigation for the shared layout, read once per request by
-// the root loader. The optional announcement metafield is deliberately not part
-// of this query (see `loadAnnouncement`).
 export const ROOT_LAYOUT_QUERY = gql(`
   query RootLayout {
     shop {
