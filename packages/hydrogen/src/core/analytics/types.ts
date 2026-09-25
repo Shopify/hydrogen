@@ -204,15 +204,6 @@ export type CartUpdatePayload = CartChangePayload & BasePayload & OtherData;
  */
 export type CartLineUpdatePayload = CartLinePayload & CartChangePayload & BasePayload & OtherData;
 
-export type EventPayloads =
-  | PageViewPayload
-  | ProductViewPayload
-  | CollectionViewPayload
-  | CartViewPayload
-  | SearchViewPayload
-  | CartUpdatePayload
-  | CartLineUpdatePayload;
-
 // --- Type-safe event mapping ---
 
 /**

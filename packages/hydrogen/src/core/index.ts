@@ -62,7 +62,6 @@ export type {
   ConsentConfig,
   ConsentPreferences,
   ConsentSetup,
-  EventPayloads,
   OtherData,
   PageViewPayload,
   PayloadFor,
