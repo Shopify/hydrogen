@@ -8,10 +8,9 @@ import {
 } from './tracking-utils.js';
 import {expireDeprecatedCookies} from './cookies-utils.js';
 
-// Marks the same-origin consent request: the backend includes the tracking
-// values in the response body only for requests carrying this header. A
-// custom header on the cross-origin checkout retry would fail its CORS
-// preflight, so it is never sent there.
+// Marks the same-origin consent request so the backend can identify
+// headless consent-management traffic. A custom header on the cross-origin
+// checkout retry would fail its CORS preflight, so it is never sent there.
 // NOTE: packages/hydrogen/src/constants.ts defines the same header name
 // (STOREFRONT_CONSENT_MANAGEMENT_HEADER) for the server-side proxy
 // forwarding; keep the two in sync.
