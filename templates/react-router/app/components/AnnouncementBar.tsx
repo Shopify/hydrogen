@@ -1,6 +1,14 @@
-export function AnnouncementBar({ message }: { message: string | null }) {
-  const announcement = message?.trim();
-  if (!announcement) return null;
+import type { ReactElement } from "react";
+
+interface Announcement {
+  content: ReactElement;
+}
+
+// Add announcements as JSX elements here.
+const ANNOUNCEMENTS: Announcement[] = [];
+
+export function AnnouncementBar() {
+  if (ANNOUNCEMENTS.length === 0) return null;
 
   return (
     <div
@@ -8,7 +16,15 @@ export function AnnouncementBar({ message }: { message: string | null }) {
       aria-label="Announcement"
       className="bg-on-surface px-margin py-2.5 text-center"
     >
-      <p className="type-body-sm text-surface wrap-anywhere">{announcement}</p>
+      <ul role="list">
+        {ANNOUNCEMENTS.map((announcement, index) => (
+          <AnnouncementBarItem key={index} {...announcement} />
+        ))}
+      </ul>
     </div>
   );
+}
+
+function AnnouncementBarItem({ content }: Announcement) {
+  return <li className="type-body-sm text-surface wrap-anywhere">{content}</li>;
 }

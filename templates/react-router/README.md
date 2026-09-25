@@ -86,12 +86,23 @@ does a `mock.shop` host in `PUBLIC_STORE_DOMAIN`.
 
 ## Announcement bar (optional)
 
-To enable announcements, create a Shop metafield named `custom.announcement`, with type
-`single_line_text_field` and Storefront access `PUBLIC_READ`. It is a template convention,
-not a native Shopify or theme setting.
+Add entries to `ANNOUNCEMENTS` in `app/components/AnnouncementBar.tsx`. An empty
+list hides the bar. Each entry's `content` is a React element, so it can include links:
 
-Set its value to the announcement text. Leave it unset or blank to hide the bar.
-See Shopify's docs on [metafields](https://shopify.dev/docs/apps/build/metafields).
+```tsx
+const ANNOUNCEMENTS: Announcement[] = [
+  {
+    content: (
+      <p>
+        Discover our <a href="/collections" className="underline">latest collections</a>.
+      </p>
+    ),
+  },
+];
+```
+
+You can connect metafields or a CMS later with your own data loading and rendering.
+No specific metafield format is required.
 
 ## Scripts
 
