@@ -80,9 +80,15 @@ Open <https://local.tryhydrogen.dev:5173>.
 
 The local HTTPS plugin provisions and reuses a trusted certificate under `~/.shopify/hydrogen/certs/` (on first run, it may prompt to install the local certificate authority), links an unlinked Hydrogen storefront, and pushes the Customer Account callback, JavaScript origin, and logout URLs. See the `hydrogen-local-https` skill for CI and manual fallback behavior.
 
-**Account widget** — in real-store mode, the header renders Shopify's
+**Account widget** — the header renders Shopify's
 [`<shopify-account>`](https://shopify.dev/docs/api/storefront-web-components/components/shopify-account)
-component when a **public** Storefront API token is available:
+component only when all of these hold:
+
+- real-store mode (`PUBLIC_STORE_DOMAIN` + `PRIVATE_STOREFRONT_API_TOKEN`);
+- Customer Accounts are configured (`SHOP_ID`,
+  `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID`, `SESSION_SECRET`) and the request is
+  HTTPS (`npm run dev:https` locally);
+- a **public** Storefront API token is set:
 
 ```bash
 # .env
@@ -93,8 +99,19 @@ In the Shopify admin, open the Hydrogen app, select your storefront and go to
 **Storefront settings > Storefront API**. The component needs the
 `unauthenticated_read_customers`, `unauthenticated_read_content` and
 `unauthenticated_read_product_listings` permissions. Never use
-`PRIVATE_STOREFRONT_API_TOKEN` here. Without the public token, or in `mock.shop`
-mode, the header shows a link to `/account` instead.
+`PRIVATE_STOREFRONT_API_TOKEN` here. If any requirement is missing — including
+plain HTTP or `mock.shop` mode — the header shows a link to `/account` instead
+and the account script is not loaded.
+
+To verify the widget locally:
+
+1. Set the real-store, Customer Account, and `PUBLIC_STOREFRONT_API_TOKEN` values
+   in `.env`.
+2. Run `npm run dev:https` and open <https://local.tryhydrogen.dev:5173>.
+3. View the page source: the header contains a `<shopify-account>` element and
+   the head contains `<script id="shopify-account">`.
+4. Stop the server, run `npm run dev`, and open the plain-HTTP URL it prints.
+   The page source has neither; the header links to `/account`.
 
 **Warning:** if both tokens are set but `PUBLIC_STORE_DOMAIN` is not, the widget
 targets the default `hydrogen-preview.myshopify.com` with your public token. Set

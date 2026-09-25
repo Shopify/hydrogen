@@ -104,7 +104,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     cartData: cartResult.data,
     shopInfo: layout.shopInfo,
     shopIdentity: resolveShopIdentity(env, layout.shopId),
-    accountWidget: getAccountWidgetConfig(env),
+    accountWidget: context.get(customerAccountContext) ? getAccountWidgetConfig(env) : null,
   };
 }
 
