@@ -2,10 +2,8 @@ import {vi, afterEach, describe, expect, it} from 'vitest';
 import {renderHook, waitFor} from '@testing-library/react';
 import {useShopifyCookies} from './useShopifyCookies.js';
 import {expireDeprecatedCookies} from './cookies-utils.js';
-import {
-  cachedTrackingValues,
-  type ConsentFetchResult,
-} from './tracking-utils.js';
+import {getTrackingValues} from './tracking-utils.js';
+import {type ConsentFetchResult} from './tracking-utils.js';
 // @ts-ignore - worktop/cookie types not properly exported
 import {parse} from 'worktop/cookie';
 
@@ -116,7 +114,6 @@ describe(`useShopifyCookies`, () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
-    cachedTrackingValues.current = null;
     Object.defineProperty(window, 'location', {
       value: originalLocation,
       configurable: true,
@@ -125,17 +122,15 @@ describe(`useShopifyCookies`, () => {
 
   it('never sets deprecated cookies, even with consent and tracking values available', () => {
     const {jar, writes} = mockCookie();
-    cachedTrackingValues.current = {
-      uniqueToken: 'tracked-unique',
-      visitToken: 'tracked-visit',
-      consent: 'tracked-consent',
-    };
+    document.cookie = '_shopify_y=tracked-unique; Max-Age=1800;';
+    document.cookie = '_shopify_s=tracked-visit; Max-Age=1800;';
+    writes.length = 0;
 
     renderHook(() => useShopifyCookies({hasUserConsent: true}));
 
     // No write happens at all when consent is granted:
     expect(writes).toEqual([]);
-    expect(Object.keys(jar).length).toBe(0);
+    expect(Object.keys(jar).length).toBe(2);
   });
 
   it('leaves existing legacy cookies untouched when consent is granted', () => {
@@ -302,10 +297,10 @@ describe(`useShopifyCookies`, () => {
 
     it('sends the current token values as request headers', async () => {
       const fetchMock = mockFetch();
-      cachedTrackingValues.current = {
-        uniqueToken: 'current-unique',
-        visitToken: 'current-visit',
-      };
+      // On the first load after upgrading, the current values are the legacy
+      // cookie values, so the session migrates:
+      document.cookie = '_shopify_y=current-unique; Max-Age=1800;';
+      document.cookie = '_shopify_s=current-visit; Max-Age=1800;';
 
       renderHook(() =>
         useShopifyCookies({fetchTrackingValues: true, hasUserConsent: true}),
@@ -318,48 +313,26 @@ describe(`useShopifyCookies`, () => {
       expect(headers['X-Shopify-VisitToken']).toBe('current-visit');
     });
 
-    it('caches the tracking values from the response body', async () => {
+    it('does not retain the response body values for later reads', async () => {
       const fetchMock = mockFetch();
+      document.cookie = '_shopify_y=legacy-unique; Max-Age=1800;';
+      document.cookie = '_shopify_s=legacy-visit; Max-Age=1800;';
 
       renderHook(() =>
         useShopifyCookies({fetchTrackingValues: true, hasUserConsent: true}),
       );
 
-      await waitFor(() =>
-        expect(cachedTrackingValues.current).toEqual({
-          uniqueToken: 'body-unique',
-          visitToken: 'body-visit',
-          consent: 'body-consent',
-        }),
-      );
-    });
+      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
 
-    it('drops cached values when the body reports no tokens', async () => {
-      const fetchMock = mockFetch([
-        createResponse({
-          data: {
-            consentManagement: {
-              cookies: {
-                trackingConsentCookie: null,
-                cookieDomain: 'shop.example',
-                shopifyUnique: null,
-                shopifyVisit: null,
-              },
-            },
-          },
-        }),
-      ]);
-      cachedTrackingValues.current = {
-        uniqueToken: 'old-unique',
-        visitToken: 'old-visit',
-        consent: 'old-consent',
-      };
-
-      renderHook(() =>
-        useShopifyCookies({fetchTrackingValues: true, hasUserConsent: true}),
-      );
-
-      await waitFor(() => expect(cachedTrackingValues.current).toEqual({}));
+      // The body values are shared through the Customer Privacy API (see
+      // the consentResultRef option), not through a module-level cache:
+      // without that API on the window, later reads still see the legacy
+      // cookie values only.
+      expect(getTrackingValues()).toEqual({
+        uniqueToken: 'legacy-unique',
+        visitToken: 'legacy-visit',
+        consent: '',
+      });
     });
 
     it('resolves cookies as ready even when the fetch fails without a checkout domain', async () => {

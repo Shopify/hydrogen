@@ -1,7 +1,6 @@
 import {useEffect, useRef, useState} from 'react';
 import {
   getTrackingValues,
-  storeTrackingValues,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
   type ConsentFetchResult,
@@ -61,10 +60,11 @@ type UseShopifyCookiesOptions = CoreShopifyCookiesOptions & {
  *
  * If `fetchTrackingValues` is true, it sends the consent request to the
  * Storefront API proxy. The response refreshes the http-only analytics and
- * marketing cookies, and its tracking values are cached for later reads.
- * Generally speaking, this should only be needed if you're not using
- * Hydrogen's built-in analytics components and hooks that already handle
- * this automatically. For example, set it to `true` if you are using
+ * marketing cookies, and its tracking values are shared through the
+ * `consentResultRef` option for consumers that coordinate with the Customer
+ * Privacy API. Generally speaking, this should only be needed if you're not
+ * using Hydrogen's built-in analytics components and hooks that already
+ * handle this automatically. For example, set it to `true` if you are using
  * `hydrogen-react` only with a different framework and still need the
  * consent request to run from the browser.
  *
@@ -176,20 +176,12 @@ async function fetchTrackingValuesFromBrowser(
   };
 
   const cookies = body.data?.consentManagement?.cookies;
-  const values: ConsentResponseValues = {
-    // Null (or missing) values are the backend's no-consent signal:
+  // Null (or missing) values are the backend's no-consent signal:
+  return {
     uniqueToken: cookies?.shopifyUnique ?? null,
     visitToken: cookies?.shopifyVisit ?? null,
     consent: cookies?.trackingConsentCookie ?? null,
   };
-
-  if (cookies) {
-    // Null values drop any previously cached values so stale tokens are
-    // never reused.
-    storeTrackingValues(values);
-  }
-
-  return values;
 }
 
 type CoreShopifyCookiesOptions = {

@@ -58,43 +58,11 @@ type CustomerPrivacyWithTracking = {
   };
 };
 
-// Last known tracking values from a consentManagement response body. Keeps
-// `getTrackingValues()` working when the Customer Privacy API script is not
-// loaded (e.g. hydrogen-react used with a custom framework).
-// Not part of the package's public API surface.
-export const cachedTrackingValues: {
-  current: Partial<TrackingValues> | null;
-} = {current: null};
-
-/**
- * Caches tracking values from a `consentManagement` GraphQL response body for
- * later `getTrackingValues()` reads. A `null` value (the backend's signal that
- * consent was not granted) drops the previously cached value; empty-string
- * and missing (`undefined`) values leave it untouched.
- */
-export function storeTrackingValues(
-  values: Partial<{[K in keyof TrackingValues]: string | null}>,
-): void {
-  const cache = cachedTrackingValues.current ?? {};
-
-  for (const key of Object.keys(values) as (keyof TrackingValues)[]) {
-    const value = values[key];
-    if (typeof value === 'string' && value !== '') {
-      cache[key] = value;
-    } else if (value === null) {
-      delete cache[key];
-    }
-  }
-
-  cachedTrackingValues.current = cache;
-}
-
 /**
  * Retrieves user session tracking values for analytics and marketing from the
  * browser environment. Values are read, in order, from the Customer Privacy
- * API (`window.Shopify.customerPrivacy`), the last `consentManagement`
- * response body, and finally the deprecated `_shopify_y`/`_shopify_s`/
- * `_tracking_consent` cookies during the transition period.
+ * API (`window.Shopify.customerPrivacy`) and the deprecated `_shopify_y`/
+ * `_shopify_s`/`_tracking_consent` cookies during the transition period.
  * @publicDocs
  */
 export function getTrackingValues(): TrackingValues {
@@ -118,17 +86,14 @@ export function getTrackingValues(): TrackingValues {
   return {
     uniqueToken:
       internal?.uniqueToken?.(NO_FALLBACK_TOKEN_OPTIONS) ??
-      cachedTrackingValues.current?.uniqueToken ??
       cookie.match(/\b_shopify_y=([^;]+)/)?.[1] ??
       '',
     visitToken:
       internal?.visitToken?.(NO_FALLBACK_TOKEN_OPTIONS) ??
-      cachedTrackingValues.current?.visitToken ??
       cookie.match(/\b_shopify_s=([^;]+)/)?.[1] ??
       '',
     consent:
       customerPrivacy?.cachedConsent ??
-      cachedTrackingValues.current?.consent ??
       cookie.match(/\b_tracking_consent=([^;]+)/)?.[1] ??
       '',
   };

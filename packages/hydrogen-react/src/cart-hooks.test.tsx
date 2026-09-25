@@ -10,7 +10,6 @@ import {
 import {
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
-  cachedTrackingValues,
 } from './tracking-utils.js';
 
 type TokenGetterOptions = {generateFallback?: boolean; tag?: string};
@@ -57,7 +56,6 @@ describe('useCartFetch', () => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     delete (window as {Shopify?: unknown}).Shopify;
-    cachedTrackingValues.current = null;
   });
 
   it('reads tokens through the Customer Privacy API getters on every cart fetch, never requesting fallback generation', async () => {

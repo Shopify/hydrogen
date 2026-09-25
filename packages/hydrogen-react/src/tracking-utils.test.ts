@@ -1,9 +1,5 @@
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {
-  cachedTrackingValues,
-  getTrackingValues,
-  storeTrackingValues,
-} from './tracking-utils.js';
+import {getTrackingValues} from './tracking-utils.js';
 import {getShopifyCookies} from './cookies-utils.js';
 
 type TokenGetterOptions = {generateFallback?: boolean; tag?: string};
@@ -50,7 +46,6 @@ function stubLegacyCookies(cookie: string) {
 describe('tracking-utils', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
-    cachedTrackingValues.current = null;
   });
 
   describe('getTrackingValues', () => {
@@ -59,11 +54,6 @@ describe('tracking-utils', () => {
         uniqueToken: 'cta-unique',
         visitToken: 'cta-visit',
         cachedConsent: 'cta-consent',
-      });
-      storeTrackingValues({
-        uniqueToken: 'cache-unique',
-        visitToken: 'cache-visit',
-        consent: 'cache-consent',
       });
       stubLegacyCookies(
         '_shopify_y=legacy-unique; _shopify_s=legacy-visit; _tracking_consent=legacy-consent',
@@ -76,26 +66,21 @@ describe('tracking-utils', () => {
       });
     });
 
-    it('falls back to the cached consentManagement body values when the Customer Privacy API holds no tokens', () => {
+    it('falls back to legacy cookies when the Customer Privacy API holds no tokens', () => {
       // A consent gate or empty cache makes the getters return nothing:
       stubCustomerPrivacyApi();
-      storeTrackingValues({
-        uniqueToken: 'cache-unique',
-        visitToken: 'cache-visit',
-        consent: 'cache-consent',
-      });
       stubLegacyCookies(
         '_shopify_y=legacy-unique; _shopify_s=legacy-visit; _tracking_consent=legacy-consent',
       );
 
       expect(getTrackingValues()).toEqual({
-        uniqueToken: 'cache-unique',
-        visitToken: 'cache-visit',
-        consent: 'cache-consent',
+        uniqueToken: 'legacy-unique',
+        visitToken: 'legacy-visit',
+        consent: 'legacy-consent',
       });
     });
 
-    it('falls back to legacy cookies when no Customer Privacy API and no cached body values exist', () => {
+    it('falls back to legacy cookies when no Customer Privacy API exists', () => {
       stubLegacyCookies(
         '_shopify_y=legacy-unique; _shopify_s=legacy-visit; _tracking_consent=legacy-consent',
       );
@@ -147,61 +132,6 @@ describe('tracking-utils', () => {
       expect(visitTokenGetter).toHaveBeenCalledWith({
         generateFallback: false,
         tag: 'hydrogen:classic',
-      });
-    });
-  });
-
-  describe('storeTrackingValues', () => {
-    it('stores consentManagement body values for later reads', () => {
-      storeTrackingValues({
-        uniqueToken: 'body-unique',
-        visitToken: 'body-visit',
-        consent: 'body-consent',
-      });
-
-      expect(getTrackingValues()).toEqual({
-        uniqueToken: 'body-unique',
-        visitToken: 'body-visit',
-        consent: 'body-consent',
-      });
-    });
-
-    it('replaces previously stored values with the latest body values', () => {
-      storeTrackingValues({
-        uniqueToken: 'old-unique',
-        visitToken: 'old-visit',
-        consent: 'old-consent',
-      });
-      storeTrackingValues({
-        uniqueToken: 'new-unique',
-        visitToken: 'new-visit',
-        consent: 'new-consent',
-      });
-
-      expect(getTrackingValues()).toEqual({
-        uniqueToken: 'new-unique',
-        visitToken: 'new-visit',
-        consent: 'new-consent',
-      });
-    });
-
-    it('drops stored values that a later response reports as null', () => {
-      // The backend returns null tokens when consent is not granted:
-      storeTrackingValues({
-        uniqueToken: 'old-unique',
-        visitToken: 'old-visit',
-        consent: 'old-consent',
-      });
-      storeTrackingValues({
-        uniqueToken: null,
-        visitToken: null,
-        consent: null,
-      });
-
-      expect(getTrackingValues()).toEqual({
-        uniqueToken: '',
-        visitToken: '',
-        consent: '',
       });
     });
   });
