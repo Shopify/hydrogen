@@ -103,6 +103,10 @@ In the Shopify admin, open the Hydrogen app, select your storefront and go to
 plain HTTP or `mock.shop` mode — the header shows a link to `/account` instead
 and the account script is not loaded.
 
+The header widget currently always renders signed out; signed-in support via
+[endpoint-based customer token retrieval](https://github.com/Shopify/hydrogen/issues/4089)
+is tracked separately.
+
 To verify the widget locally:
 
 1. Set the real-store, Customer Account, and `PUBLIC_STOREFRONT_API_TOKEN` values
