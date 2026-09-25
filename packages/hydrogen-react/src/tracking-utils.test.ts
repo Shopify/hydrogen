@@ -8,6 +8,7 @@ type StubOptions = {
   uniqueToken?: string;
   visitToken?: string;
   cachedConsent?: string;
+  asyncConsent?: boolean;
 };
 
 /**
@@ -18,6 +19,7 @@ function stubCustomerPrivacyApi({
   uniqueToken,
   visitToken,
   cachedConsent,
+  asyncConsent,
 }: StubOptions = {}) {
   const uniqueTokenGetter = vi.fn(
     (_options?: TokenGetterOptions) => uniqueToken,
@@ -28,6 +30,7 @@ function stubCustomerPrivacyApi({
     Shopify: {
       customerPrivacy: {
         cachedConsent,
+        config: {asyncConsent},
         __internal: {
           uniqueToken: uniqueTokenGetter,
           visitToken: visitTokenGetter,
@@ -66,7 +69,7 @@ describe('tracking-utils', () => {
       });
     });
 
-    it('falls back to legacy cookies when the Customer Privacy API holds no tokens', () => {
+    it('does not restore legacy tokens when the Customer Privacy API returns no tokens', () => {
       // A consent gate or empty cache makes the getters return nothing:
       stubCustomerPrivacyApi();
       stubLegacyCookies(
@@ -74,8 +77,8 @@ describe('tracking-utils', () => {
       );
 
       expect(getTrackingValues()).toEqual({
-        uniqueToken: 'legacy-unique',
-        visitToken: 'legacy-visit',
+        uniqueToken: '',
+        visitToken: '',
         consent: 'legacy-consent',
       });
     });
@@ -115,7 +118,7 @@ describe('tracking-utils', () => {
       });
     });
 
-    it('never asks the Customer Privacy API to generate fallback tokens', () => {
+    it('does not request fallback generation for standalone integrations with their own consent fetch', () => {
       const {uniqueTokenGetter, visitTokenGetter} = stubCustomerPrivacyApi({
         uniqueToken: 'cta-unique',
         visitToken: 'cta-visit',
@@ -123,8 +126,7 @@ describe('tracking-utils', () => {
 
       getTrackingValues();
 
-      // Hydrogen never requests fallback generation: minting new tokens
-      // would race Hydrogen's own consent fetch.
+      // Standalone integrations retain ownership of their consent fetch.
       expect(uniqueTokenGetter).toHaveBeenCalledWith({
         generateFallback: false,
         tag: 'hydrogen:classic',
@@ -133,6 +135,26 @@ describe('tracking-utils', () => {
         generateFallback: false,
         tag: 'hydrogen:classic',
       });
+    });
+
+    it('delegates token generation to CTA for async consent even with legacy cookies', () => {
+      const {uniqueTokenGetter, visitTokenGetter} = stubCustomerPrivacyApi({
+        asyncConsent: true,
+        uniqueToken: 'cta-unique',
+        visitToken: 'cta-visit',
+      });
+      stubLegacyCookies('_tracking_consent=legacy-consent');
+
+      expect(getTrackingValues()).toMatchObject({
+        uniqueToken: 'cta-unique',
+        visitToken: 'cta-visit',
+      });
+      for (const getter of [uniqueTokenGetter, visitTokenGetter]) {
+        expect(getter).toHaveBeenCalledWith({
+          generateFallback: true,
+          tag: 'hydrogen:classic',
+        });
+      }
     });
   });
 });

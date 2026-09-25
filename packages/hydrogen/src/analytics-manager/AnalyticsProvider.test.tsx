@@ -444,6 +444,14 @@ function LoopAnalytics({
       //@ts-ignore
       global.window.Shopify = {};
       global.window.Shopify.customerPrivacy = {
+        consentStatus: 'loaded',
+        currentVisitorConsent: () => ({
+          analytics: 'yes',
+          marketing: 'yes',
+          preferences: 'yes',
+          sale_of_data: 'yes',
+        }),
+        shouldShowBanner: () => false,
         setTrackingConsent: () => {},
         analyticsProcessingAllowed: () => true,
         saleOfDataAllowed: () => true,

@@ -2,7 +2,6 @@ import {
   AnalyticsEventName,
   getClientBrowserParameters,
   sendShopifyAnalytics,
-  useShopifyCookies,
   type ShopifyPageViewPayload,
   AnalyticsPageType,
   type ShopifyAnalyticsProduct,
@@ -10,6 +9,7 @@ import {
 } from '@shopify/hydrogen-react';
 import {type CartReturn} from '../cart/queries/cart-types';
 import {AnalyticsEvent} from './events';
+import {hasAnalyticsConsent, shouldWaitForPrivacyBanner} from './consent';
 import {useAnalytics, type AnalyticsProviderProps} from './AnalyticsProvider';
 import {
   useCustomerPrivacy,
@@ -23,7 +23,7 @@ import type {
   CartLineUpdatePayload,
   SearchViewPayload,
 } from './AnalyticsView';
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {
   CartLine,
   ComponentizableCartLine,
@@ -54,61 +54,18 @@ function getCustomerPrivacyRequired() {
  */
 export function ShopifyAnalytics({
   consent,
-  onReady,
-  domain,
+  onConsentChange,
 }: {
   consent: AnalyticsProviderProps['consent'];
-  onReady: () => void;
-  domain?: string;
+  onConsentChange: () => void;
 }) {
-  const {subscribe, register, canTrack} = useAnalytics();
-  const [shopifyReady, setShopifyReady] = useState(false);
+  const {subscribe, register} = useAnalytics();
   const [privacyReady, setPrivacyReady] = useState(false);
-  const [collectedConsent, setCollectedConsent] = useState('');
   const init = useRef(false);
   const {checkoutDomain, storefrontAccessToken, language} = consent;
   const {ready: shopifyAnalyticsReady} = register('Internal_Shopify_Analytics');
 
-  // load customer privacy and (optionally) the privacy banner APIs
-  useCustomerPrivacy({
-    ...consent,
-    locale: language,
-    checkoutDomain: !checkoutDomain ? 'mock.shop' : checkoutDomain,
-    storefrontAccessToken: !storefrontAccessToken
-      ? 'abcdefghijklmnopqrstuvwxyz123456'
-      : storefrontAccessToken,
-    // If we use privacy banner, we should wait until consent is collected.
-    // Otherwise, we can consider privacy ready immediately:
-    onReady: () => !consent.withPrivacyBanner && setPrivacyReady(true),
-    onVisitorConsentCollected: (consent) => {
-      try {
-        // Store consent to refresh local cookies after it changes
-        setCollectedConsent(JSON.stringify(consent));
-      } catch (e) {}
-
-      setPrivacyReady(true);
-    },
-  });
-
-  const hasUserConsent = useMemo(
-    // must be initialized with true to avoid removing cookies too early
-    () => (privacyReady ? canTrack() : true),
-    // Make this value depend on collectedConsent to re-run `canTrack()` when consent changes
-    [privacyReady, canTrack, collectedConsent],
-  );
-
-  // Remove deprecated shopify_Y and shopify_S cookies when consent is denied.
-  // The consent fetch itself already ran inside useCustomerPrivacy.
-  useShopifyCookies({
-    hasUserConsent,
-    domain,
-    checkoutDomain,
-    // Already done inside useCustomerPrivacy
-    fetchTrackingValues: false,
-    // Avoid removing cookies too early, before consent is known
-    ignoreDeprecatedCookies: !privacyReady,
-  });
-
+  // Subscribe before initializing privacy, which may already be loaded.
   useEffect(() => {
     if (init.current) return;
     init.current = true;
@@ -121,16 +78,41 @@ export function ShopifyAnalytics({
 
     // Cart
     subscribe(AnalyticsEvent.PRODUCT_ADD_TO_CART, productAddedToCartHandler);
-
-    setShopifyReady(true);
   }, [subscribe]);
 
-  useEffect(() => {
-    if (shopifyReady && privacyReady) {
-      shopifyAnalyticsReady();
-      onReady();
+  const updatePrivacyReadiness = () => {
+    // The hook only invokes these callbacks once consent is loaded. After
+    // initial readiness, notify the provider directly on every consent change.
+    if (privacyReady) {
+      onConsentChange();
+    } else if (
+      !consent.withPrivacyBanner ||
+      !shouldWaitForPrivacyBanner(getCustomerPrivacyRequired())
+    ) {
+      setPrivacyReady(true);
     }
-  }, [shopifyReady, privacyReady, onReady]);
+  };
+
+  // load customer privacy and (optionally) the privacy banner APIs
+  useCustomerPrivacy({
+    ...consent,
+    locale: language,
+    checkoutDomain: !checkoutDomain ? 'mock.shop' : checkoutDomain,
+    storefrontAccessToken: !storefrontAccessToken
+      ? 'abcdefghijklmnopqrstuvwxyz123456'
+      : storefrontAccessToken,
+    onReady: updatePrivacyReadiness,
+    onVisitorConsentCollected: updatePrivacyReadiness,
+  });
+
+  useEffect(() => {
+    // Defer the initial queue release until readiness commits, so StrictMode
+    // effect replay cannot deliver an already-loaded page view twice.
+    if (privacyReady) {
+      shopifyAnalyticsReady();
+      onConsentChange();
+    }
+  }, [privacyReady, onConsentChange]);
 
   return null;
 }
@@ -151,7 +133,9 @@ function prepareBasePageViewPayload(
     | CartUpdatePayload,
 ): ShopifyPageViewPayload | undefined {
   const customerPrivacy = getCustomerPrivacyRequired();
-  const hasUserConsent = customerPrivacy.analyticsProcessingAllowed();
+  const hasUserConsent = hasAnalyticsConsent();
+
+  if (!hasUserConsent) return;
 
   if (!payload?.shop?.shopId) {
     logMissingConfig('shopId');
