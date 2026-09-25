@@ -84,7 +84,8 @@ export type AnalyticsCartLine = {
     id: string;
     /**
      * Variant title (`"Default Title"` for single-variant products).
-     * Populated from the product title when the variant title is unavailable.
+     * `trackCartAnalytics` falls back to the product title only when the cart
+     * fragment doesn't select it.
      */
     title: string;
     /** Per-unit price (`CartLine.cost.amountPerQuantity`). */
@@ -203,7 +204,6 @@ export type CartUpdatePayload = CartChangePayload & BasePayload & OtherData;
  */
 export type CartLineUpdatePayload = CartLinePayload & CartChangePayload & BasePayload & OtherData;
 
-/** Union of all analytics event payload types. */
 export type EventPayloads =
   | PageViewPayload
   | ProductViewPayload

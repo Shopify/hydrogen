@@ -17,5 +17,4 @@ export const AnalyticsEvent = {
   PRODUCT_REMOVED_FROM_CART: "product_removed_from_cart" as const,
 };
 
-/** Union of all supported analytics event name literals. */
 export type AnalyticsEventName = (typeof AnalyticsEvent)[keyof typeof AnalyticsEvent];
