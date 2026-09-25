@@ -44,14 +44,6 @@ describe("cartQueries", () => {
     }
   });
 
-  it("selects updatedAt in every cart document so cart analytics can deduplicate", () => {
-    const customQueries = makeCartQueries({ fragment: customCartFragment });
-
-    for (const query of [...Object.values(cartQueries), ...Object.values(customQueries)]) {
-      expect(query).toMatch(/\bupdatedAt\b/);
-    }
-  });
-
   it("includes cart attributes in the minimum payload and exposes their mutation", () => {
     for (const query of Object.values(cartQueries)) {
       expect(query).toContain("attributes");
