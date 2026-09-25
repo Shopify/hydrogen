@@ -17,6 +17,7 @@ import {
 import {
   createCollectionStore,
   createCollectionReconciler,
+  type CollectionActions,
   type CollectionData,
   type CollectionReconciler,
   type CollectionStore,
@@ -173,18 +174,6 @@ export function useCollection<S>(
   return useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot);
 }
 
-/** Mutation methods exposed by the collection store. */
-export type CollectionActions = Pick<
-  CollectionStore,
-  | "setFilters"
-  | "toggleFilter"
-  | "toggleFilterInput"
-  | "setSortKey"
-  | "setSortByValue"
-  | "reset"
-  | "handleFormSubmit"
->;
-
 /**
  * Returns methods that change filters and sort. The store's `onBrowseChange`
  * callback (set by {@link CollectionProvider}) handles calling `onChange` with
@@ -243,4 +232,4 @@ export function useCollectionForm() {
   return { formProps };
 }
 
-export type { CollectionData };
+export type { CollectionActions, CollectionData };

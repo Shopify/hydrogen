@@ -147,6 +147,7 @@ export type {
 
 export { createCollectionReconciler, createCollectionStore } from "./collection";
 export type {
+  CollectionActions,
   CollectionReconciler,
   CollectionData,
   CollectionStore,

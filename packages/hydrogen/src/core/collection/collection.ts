@@ -137,6 +137,18 @@ export type CollectionStore = {
   setSortByValue(sortByValue: string): void;
 };
 
+/** Mutation methods exposed by the collection store. */
+export type CollectionActions = Pick<
+  CollectionStore,
+  | "setFilters"
+  | "toggleFilter"
+  | "toggleFilterInput"
+  | "setSortKey"
+  | "setSortByValue"
+  | "reset"
+  | "handleFormSubmit"
+>;
+
 /** Options for creating a new {@link CollectionStore}. */
 export type CreateCollectionStoreOptions = {
   /** Collection metadata from the framework loader. */

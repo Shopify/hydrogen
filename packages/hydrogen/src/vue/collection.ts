@@ -14,27 +14,16 @@ import {
 import {
   createCollectionStore,
   createCollectionReconciler,
+  type CollectionActions,
   type CollectionData,
   type CollectionReconciler,
   type CollectionStore,
 } from "../core/collection";
 import type { CollectionState } from "../core/collection";
 
-export type { CollectionData };
+export type { CollectionActions, CollectionData };
 
 const CollectionStoreKey: InjectionKey<ShallowRef<CollectionStore>> = Symbol("CollectionStore");
-
-/** Mutation methods exposed by the collection store. */
-export type CollectionActions = Pick<
-  CollectionStore,
-  | "setFilters"
-  | "toggleFilter"
-  | "toggleFilterInput"
-  | "setSortKey"
-  | "setSortByValue"
-  | "reset"
-  | "handleFormSubmit"
->;
 
 /**
  * Manages the lifecycle of a {@link CollectionStore}: creates on mount and syncs
@@ -237,21 +226,21 @@ export function useCollectionActions(): CollectionActions {
  */
 export function useCollectionForm(): {
   formProps: (opts?: {
-    beforeSubmit?: (e: Event) => void;
-    afterSubmit?: (e: Event) => void;
+    beforeSubmit?: (e: SubmitEvent) => void;
+    afterSubmit?: (e: SubmitEvent) => void;
   }) => Record<string, unknown>;
 } {
   const actions = useCollectionActions();
 
   const formProps = (opts?: {
-    beforeSubmit?: (e: Event) => void;
-    afterSubmit?: (e: Event) => void;
+    beforeSubmit?: (e: SubmitEvent) => void;
+    afterSubmit?: (e: SubmitEvent) => void;
   }): Record<string, unknown> => ({
-    onSubmit: (e: Event) => {
+    onSubmit: (e: SubmitEvent) => {
       opts?.beforeSubmit?.(e);
       if (e.defaultPrevented) return;
       e.preventDefault();
-      actions.handleFormSubmit(e as SubmitEvent);
+      actions.handleFormSubmit(e);
       opts?.afterSubmit?.(e);
     },
   });
