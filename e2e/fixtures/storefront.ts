@@ -155,18 +155,35 @@ export class StorefrontPage {
   }
 
   /**
-   * Capture the consent token query response before a full navigation or reload.
-   * The body is read immediately: Chromium discards it once another
+   * Capture the consent token query response before a full navigation or
+   * reload. The body is read immediately: Chromium discards it once another
    * navigation replaces the response.
+   *
+   * A load can fire more than one consent query (Hydrogen's fetch and the
+   * consent script's own request), and a pending one from the current
+   * document may be caught just as the navigation replaces it — Chromium
+   * then discards its body. In that case the next matching response is
+   * tried: every full load fires at least one consent query.
    */
   async withConsentResponse(action: () => Promise<unknown>): Promise<Response> {
-    const [response] = await Promise.all([
-      this.waitForConsentResponse().then(async (consentResponse) => {
-        await consentResponse.body();
-        return consentResponse;
-      }),
-      action(),
-    ]);
+    const MAX_RESPONSE_ATTEMPTS = 3;
+
+    const captureReadableResponse = async (): Promise<Response> => {
+      for (let attempt = 1; attempt <= MAX_RESPONSE_ATTEMPTS; attempt++) {
+        const consentResponse = await this.waitForConsentResponse();
+        try {
+          await consentResponse.body();
+          return consentResponse;
+        } catch {
+          // The body belonged to a replaced document; try the next response.
+        }
+      }
+      throw new Error(
+        'Could not read a consent response body: every attempt was discarded by a navigation',
+      );
+    };
+
+    const [response] = await Promise.all([captureReadableResponse(), action()]);
     return response;
   }
 
