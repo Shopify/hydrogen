@@ -109,7 +109,7 @@ type CustomerAccountGql = {
  *     customer {
  *       firstName
  *       lastName
- *       email
+ *       emailAddress { emailAddress }
  *     }
  *   }
  * `);

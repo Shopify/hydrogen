@@ -93,7 +93,10 @@ export type CreateCustomerSessionOptions = {
   customerAccountApiClientId: string;
   /**
    * Overrides the default `https://shopify.com/authentication/{shopId}` base URL
-   * for OAuth endpoints (authorize, token, logout). Must use HTTPS.
+   * for OAuth endpoints (authorize, token, logout). Also used as the expected
+   * `iss` claim when validating id_tokens — pointing this at a proxy causes
+   * `issuer_mismatch` unless the proxy preserves the original issuer. Must use
+   * HTTPS; validated at construction.
    */
   customerAccountApiUrl?: string;
   /** Custom fetch implementation. Falls back to `globalThis.fetch` when omitted. */
@@ -105,8 +108,9 @@ export type CreateCustomerSessionOptions = {
 /** Options for {@link CustomerSession.prepareLoginUrl}. */
 export type PrepareLoginUrlOptions = {
   /**
-   * Overrides the origin used for the OAuth redirect URI. Must be HTTPS
-   * (or a local dev tunnel). Falls back to the session manager's `getSessionOrigin()`.
+   * Overrides the origin used for the OAuth redirect URI. Must be HTTPS —
+   * unlike `createCustomerAccountClient`, `http://localhost` is not accepted.
+   * Falls back to the session manager's `getSessionOrigin()`.
    */
   origin?: string;
   /**
@@ -118,9 +122,9 @@ export type PrepareLoginUrlOptions = {
   locale?: string;
   /** Passed as the `region_country` search param on the Shopify OAuth authorize URL. */
   countryCode?: string;
-  /** Pre-fills the email or phone on the login screen. Passed as `login_hint`. */
+  /** Email address to pre-fill on the login screen. Passed as `login_hint`. */
   loginHint?: string;
-  /** Only sent when `loginHint` is also set. Passed as `login_hint_mode`. */
+  /** When set to `"submit"` (and `loginHint` is provided), skips the login form and sends the one-time code immediately. Passed as `login_hint_mode`. */
   loginHintMode?: string;
   /** Passed as the `acr_values` search param for authentication context class. */
   acrValues?: string;
@@ -128,9 +132,11 @@ export type PrepareLoginUrlOptions = {
 
 /**
  * Origin override accepted by {@link CustomerSession.getOrRefreshAccessToken}
- * and the route handlers. Falls back to the session manager's `getSessionOrigin()`.
+ * and {@link CustomerSession.logout}. Falls back to the session manager's
+ * `getSessionOrigin()`.
  */
 export type RequestOriginOptions = {
+  /** HTTPS origin string. */
   origin?: string;
 };
 
@@ -167,9 +173,13 @@ export type CustomerSession = {
   ): Promise<string | undefined>;
   /**
    * Returns a usable access token, refreshing from Shopify's token endpoint and
-   * writing updated tokens through the writable session manager when needed. Use
-   * only where the eventual response commits the session manager. Concurrent
-   * refresh requests for the same origin+token combination are deduplicated.
+   * writing updated tokens through the writable session manager when needed.
+   * Returns `undefined` when no refresh token exists (unauthenticated) or when
+   * the refresh fails transiently (the session is preserved for retry). A
+   * 400/401 from the token endpoint clears stored tokens. Never throws for
+   * refresh failures. Concurrent refresh requests for the same origin+token
+   * combination are deduplicated per `createCustomerSession` instance. Use only
+   * where the eventual response commits the session manager.
    */
   getOrRefreshAccessToken(
     sessionManager: WritableCustomerSessionManager,
@@ -192,8 +202,10 @@ export type CustomerSession = {
    * expiry), and stores tokens in the session. Returns the `returnTo` path. Clears
    * pending login state on failure.
    *
-   * @throws {CustomerAccountOAuthError} On validation failures (state mismatch,
-   *   missing params, invalid token response, or id_token claim mismatches).
+   * @throws {CustomerAccountOAuthError} On validation failures (`missing_callback_params`,
+   *   `state_mismatch`, `missing_pending_login`, `token_exchange_rejected`,
+   *   `token_exchange_failed`, `invalid_token_response`, or id_token claim mismatches).
+   * @throws {CustomerAccountApiError} On token-request timeout.
    */
   handleOAuthCallback(
     sessionManager: WritableCustomerSessionManager,
@@ -265,7 +277,7 @@ type CreateCustomerAccountServerHandlersBaseOptions<
   customerSession: TCustomerSession;
   /** Path to redirect to after a successful login when no `return_to` param is present. Defaults to `"/"`. */
   defaultPostLoginRedirectPathname?: string;
-  /** Path to redirect to when the OAuth callback fails. Defaults to `"/account?login=failed"`. */
+  /** Same-origin path to redirect to when the OAuth callback throws a `CustomerAccountOAuthError` (other errors propagate). Defaults to `"/account?login=failed"`. Cross-origin values fall back to `"/account"`. */
   loginFailedRedirectPath?: string;
   /** Static origin string, or a function that resolves the origin per request for dynamic multi-origin setups. */
   origin?: string | ((request: Request) => string);
@@ -364,10 +376,8 @@ type TokenRequestParams = {
 /**
  * Creates a {@link CustomerSession} that manages the Shopify Customer Account
  * OAuth flow (PKCE, token exchange, refresh, logout). Server-only: throws in a
- * browser context. Validates `shopId`, `customerAccountApiClientId`, and timeout
- * at construction. Concurrent refresh-token requests for the same origin+token
- * combination are deduplicated in-flight. Token expiry includes a 120-second
- * buffer (tokens are considered expired 2 minutes before their actual expiry).
+ * browser context. Validates `shopId`, `customerAccountApiClientId`,
+ * `customerAccountApiUrl` (HTTPS), and timeout at construction.
  *
  * @example
  * ```ts
@@ -379,7 +389,7 @@ type TokenRequestParams = {
  * });
  * ```
  *
- * @throws {Error} When called in a browser context.
+ * @throws {Error} When called in a browser context, when an option fails validation, or when no `fetch` is available.
  */
 export function createCustomerSession({
   shopId,

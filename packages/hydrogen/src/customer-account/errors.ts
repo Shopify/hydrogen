@@ -1,13 +1,15 @@
 /**
  * Base error for Customer Account API failures. Thrown by
- * {@link createCustomerAccountClient} when the API responds with a non-OK
+ * `CustomerAccountClient.graphql()` when the API responds with a non-OK
  * HTTP status, when the response body cannot be parsed as JSON, or when the
- * parsed response is missing `data`.
+ * parsed response is missing `data`. Also thrown (without subclassing) for
+ * OAuth token-request timeouts and network failures.
  *
- * Not all fields are populated on every instance. `status` and `requestId`
- * are present whenever an HTTP response was received, including parse failures
- * and missing-data responses. They are absent only on network failures where
- * no response arrived. `retryAfter` is populated only on non-OK responses.
+ * Not all fields are populated on every instance. `status` is present
+ * whenever an HTTP response was received. `requestId` is set when the
+ * `x-request-id` response header exists. Both are absent on network
+ * failures where no response arrived. `retryAfter` is populated only on
+ * non-OK responses.
  */
 export class CustomerAccountApiError extends Error {
   /** HTTP status code from the API response. Present whenever an HTTP response was received (including parse failures), absent on network failures where no response arrived. */
@@ -30,9 +32,11 @@ export class CustomerAccountApiError extends Error {
 }
 
 /**
- * Thrown when the Customer Account API access token is missing, empty,
- * whitespace-only, or contains ASCII control characters. Extends
- * {@link CustomerAccountApiError}.
+ * Client-side pre-flight check. Thrown when the access token is missing,
+ * empty, has leading or trailing whitespace, or contains ASCII control
+ * characters (including DEL). Also thrown when the options object is
+ * missing. A token the server rejects (e.g. expired or revoked) produces
+ * the base {@link CustomerAccountApiError} with `status: 401` instead.
  */
 export class CustomerAccountAuthenticationError extends CustomerAccountApiError {
   constructor(message = "Customer Account API access token is required") {
@@ -42,8 +46,10 @@ export class CustomerAccountAuthenticationError extends CustomerAccountApiError 
 }
 
 /**
- * Thrown when a Customer Account API request exceeds the configured timeout.
- * Extends {@link CustomerAccountApiError}.
+ * Thrown when a `CustomerAccountClient.graphql()` request exceeds
+ * `defaultTimeoutInMs`. (OAuth token-request timeouts throw the base
+ * {@link CustomerAccountApiError} instead.) Extends
+ * {@link CustomerAccountApiError}.
  */
 export class CustomerAccountTimeoutError extends CustomerAccountApiError {
   /** The timeout threshold (in milliseconds) that was exceeded. */
@@ -57,8 +63,10 @@ export class CustomerAccountTimeoutError extends CustomerAccountApiError {
 }
 
 /**
- * Thrown during the Customer Account OAuth flow (authorization code exchange,
- * token refresh, or id_token validation). Extends `Error` directly, **not**
+ * Thrown during the Customer Account OAuth authorization code exchange
+ * or id_token validation in `handleOAuthCallback`. Refresh failures never
+ * surface this error (they are caught internally and returned as
+ * `undefined`). Extends `Error` directly, **not**
  * {@link CustomerAccountApiError}. A `catch` block for
  * `CustomerAccountApiError` will not catch this error.
  *

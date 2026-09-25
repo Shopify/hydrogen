@@ -11,16 +11,13 @@ type CustomerAccountSchema = GraphQLSchemaFor<introspection, CustomerAccountScal
 /**
  * Resolves the GraphQL result type for a Customer Account API query string `T`.
  *
- * Delegates to {@link InferResultForSchema} bound to the Customer Account API
- * introspection schema and scalar mappings. This is the Customer Account
- * counterpart of the Storefront API `InferResult` in `graphql/type-resolver`.
- *
- * Use with {@link gql} document source strings to extract the typed query
- * result at compile time.
+ * Uses the Customer Account API introspection schema and scalar mappings. This
+ * is the Customer Account counterpart of `InferResult` from `@shopify/hydrogen`
+ * (Storefront API).
  *
  * @example
  * ```ts
- * import { gql, type InferResult, type InferVariables } from '@shopify/hydrogen/customer-account';
+ * import { type InferResult, type InferVariables } from '@shopify/hydrogen/customer-account';
  *
  * const QUERY = 'query { customer { firstName lastName } }';
  * type Result = InferResult<typeof QUERY>;
@@ -32,20 +29,8 @@ export type InferResult<T extends string> = InferResultForSchema<T, CustomerAcco
 /**
  * Resolves the GraphQL variables type for a Customer Account API query string `T`.
  *
- * Delegates to {@link InferVariablesForSchema} bound to the Customer Account API
- * introspection schema and scalar mappings. This is the Customer Account
- * counterpart of the Storefront API `InferVariables` in `graphql/type-resolver`.
- *
- * Use with {@link gql} document source strings to extract the expected variable
- * types from a query string at compile time.
- *
- * @example
- * ```ts
- * import { gql, type InferResult, type InferVariables } from '@shopify/hydrogen/customer-account';
- *
- * const QUERY = 'query { customer { firstName lastName } }';
- * type Result = InferResult<typeof QUERY>;
- * type Variables = InferVariables<typeof QUERY>;
- * ```
+ * Uses the Customer Account API introspection schema and scalar mappings. This is
+ * the Customer Account counterpart of `InferVariables` from `@shopify/hydrogen`
+ * (Storefront API). See {@link InferResult} for an example.
  */
 export type InferVariables<T extends string> = InferVariablesForSchema<T, CustomerAccountSchema>;

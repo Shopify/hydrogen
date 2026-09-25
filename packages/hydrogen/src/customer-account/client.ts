@@ -46,14 +46,17 @@ export type CreateCustomerAccountClientOptions = {
   shopId: string;
   /**
    * Customer Account API version in `YYYY-MM` format.
-   * Defaults to the version baked into the package (`"2026-04"`).
+   * Defaults to {@link CUSTOMER_ACCOUNT_API_VERSION}.
    */
   customerApiVersion?: string;
   /**
-   * Request-scoped context created by `createShopifyRequestContext`. Supplies
-   * the i18n language for automatic `$language` variable injection, an abort
-   * signal that propagates request cancellation, and a personalization marker
-   * that affects CDN caching.
+   * Request-scoped context created by `createShopifyRequestContext`. Must
+   * have a `url` property (throws at construction when missing or non-HTTPS;
+   * `http://localhost`, `127.0.0.1` and `::1` are accepted and sent as
+   * HTTPS). Supplies the i18n language for automatic `$language` variable
+   * injection, an abort signal that propagates request cancellation, and a
+   * personalization marker (sets `private, no-store` and removes CDN cache
+   * headers).
    */
   requestContext: ShopifyRequestContext;
   /** Custom `fetch` implementation. Falls back to `globalThis.fetch`. */
@@ -67,13 +70,10 @@ export type CreateCustomerAccountClientOptions = {
 
 /**
  * Per-call options passed to {@link CustomerAccountClient.graphql}.
- *
- * The `language` variable is auto-injected from
- * `requestContext.i18n.language` when the document declares `$language`
- * and the caller omits it, so you rarely need to set it yourself.
+ * See `variables` for automatic `$language` injection.
  */
 export type CustomerAccountGraphqlOptions<Variables = Record<string, unknown>> = {
-  /** Customer Account API access token obtained from {@link CustomerSession}. */
+  /** Customer Account API access token, e.g. from `CustomerSession.getAccessToken()` or `getOrRefreshAccessToken()`. */
   accessToken: string;
   /**
    * Query variables. When the GraphQL document declares a `$language` variable
@@ -140,7 +140,7 @@ export type CustomerAccountGqlRestParam<Doc extends AnyCustomerAccountDocument> 
  * validates that the document was produced by `gql()` (runtime branded with a
  * private Symbol), validates the access token, auto-injects the `language`
  * variable from i18n context when applicable, and marks the response as
- * personalized so CDN caching reflects buyer-specific content.
+ * personalized so the app response is sent with private, no-store cache headers.
  */
 export type CustomerAccountClient = {
   /** Constructed endpoint: `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`. */
@@ -149,12 +149,19 @@ export type CustomerAccountClient = {
    * Send a GraphQL request to the Customer Account API.
    *
    * The document must be created by `gql()`. At call time the client:
-   * 1. Validates the access token.
-   * 2. Auto-injects the `language` variable from `requestContext.i18n.language`
-   *    when the document declares `$language` and the caller omits it.
-   * 3. Combines the request context signal, the caller's signal, and a timeout
+   * 1. Validates the document brand and options object.
+   * 2. Marks the response as personalized (sets `private, no-store`).
+   * 3. Validates the access token.
+   * 4. Throws if a signal is already aborted.
+   * 5. Combines the request context signal, the caller's signal, and a timeout
    *    signal via `AbortSignal.any`.
-   * 4. Marks the response as personalized (affects CDN caching).
+   * 6. Auto-injects the `language` variable from `requestContext.i18n.language`
+   *    when the document declares `$language` and the caller omits it.
+   *
+   * @throws {TypeError} When the document is not a branded `gql()` result.
+   * @throws {CustomerAccountAuthenticationError} When the access token fails pre-flight validation.
+   * @throws {CustomerAccountTimeoutError} When the request exceeds `defaultTimeoutInMs`.
+   * @throws {CustomerAccountApiError} On non-OK HTTP status, unparseable JSON, or missing `data`.
    *
    * @example
    * ```ts
@@ -183,11 +190,11 @@ export type CustomerAccountClient = {
  * Validates `shopId`, `customerApiVersion`, and `defaultTimeoutInMs` at
  * construction time. The returned client auto-injects the `language` variable
  * from `requestContext.i18n.language` when applicable, composes abort signals,
- * and marks responses as personalized for CDN caching.
+ * and marks responses as personalized (sets `private, no-store` cache headers).
  *
  * @example
  * ```ts
- * import { createCustomerAccountClient } from "@shopify/hydrogen/customer-account";
+ * import { createCustomerAccountClient, gql } from "@shopify/hydrogen/customer-account";
  *
  * const customerAccount = createCustomerAccountClient({
  *   shopId: "12345",
@@ -200,7 +207,7 @@ export type CustomerAccountClient = {
  * );
  * ```
  *
- * @throws {Error} When called in a browser context (`typeof document !== "undefined"`).
+ * @throws {Error} When called in a browser context, when `shopId`, `customerApiVersion`, or `defaultTimeoutInMs` is invalid, when no `fetch` is available, or when `requestContext.url` is missing or not HTTPS.
  */
 export function createCustomerAccountClient({
   shopId,
