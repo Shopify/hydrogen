@@ -578,9 +578,9 @@ export function createStorefrontClient<TI18n extends I18nBase>(
               'origin',
               'referer',
               'user-agent',
-              // The backend includes tracking values in the consent response
-              // body only for requests marked with this header, so the proxy
-              // forwards it upstream with the rest of the allowlisted set.
+              // The marker identifies headless consent-management traffic
+              // to the backend, so the proxy forwards it upstream with the
+              // rest of the allowlisted set.
               STOREFRONT_CONSENT_MANAGEMENT_HEADER,
               STOREFRONT_ACCESS_TOKEN_HEADER,
               SHOPIFY_UNIQUE_TOKEN_HEADER,
@@ -617,9 +617,13 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           },
         );
 
-        // Create a new response to allow modifying headers. Tracking values
-        // are no longer forwarded through server-timing, so the upstream
-        // header is removed entirely.
+        // Build a new response so the headers can be modified. Upstream
+        // Server-Timing can still carry tracking values from Shopify's
+        // storefront infrastructure; Hydrogen reads tracking values from the
+        // `consentManagement` response body instead, so the header is
+        // stripped here to keep Server-Timing out of the tracking flow
+        // entirely — both for Hydrogen's own requests and for client-side
+        // calls routed through this proxy.
         const proxyResponse = new Response(sfapiResponse.body, sfapiResponse);
         proxyResponse.headers.delete('server-timing');
 
@@ -678,7 +682,8 @@ export function createStorefrontClient<TI18n extends I18nBase>(
             headers: forwardedHeaders,
           });
 
-          // Match the SFAPI proxy: no upstream server-timing on proxied responses.
+          // Same reasoning as the SFAPI proxy above: no upstream
+          // server-timing on proxied responses.
           const proxyResponse = new Response(mcpResponse.body, mcpResponse);
           proxyResponse.headers.delete('server-timing');
 
