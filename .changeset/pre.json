@@ -2,13 +2,23 @@
   "mode": "pre",
   "tag": "preview",
   "changesets": [
-    "account-script",
-    "cart-metafields-skill",
-    "mock-shop-store-catalog",
-    "product-line-attributes",
-    "quiet-cart-aborts",
-    "skills-check-command",
-    "skills-sync-command",
-    "ucp-mcp-proxy"
+    "analytics-destination-tracking-values",
+    "cart-fragment-updated-at",
+    "cookie-response-cache-control",
+    "custom-banner-consent-setup",
+    "money-negative-amount",
+    "product-store-strict-mode",
+    "reject-proxy-jsonp",
+    "remove-analytics-subscribe",
+    "remove-event-payloads-type",
+    "remove-legacy-tracking-cookies",
+    "remove-storefront-api-error-graphql-fields",
+    "remove-upstream-server-timing",
+    "setup-command-scaffold",
+    "skills-error-and-custom-data-accuracy",
+    "ts-plugin-tsserver-resolution",
+    "unexport-react-cart-hooks",
+    "vue-collection-submit-event",
+    "vue-form-submit-event"
   ]
 }
