@@ -12,15 +12,8 @@ export function useSelectedOptionInUrlParam(
     );
     const currentSearchParams = new URLSearchParams(window.location.search);
 
-    // ts ignoring the URLSearchParams not iterable error for now
-    // https://stackoverflow.com/questions/72522489/urlsearchparams-not-accepting-string#answer-72522838
-    // TODO: update ts lib
     const combinedSearchParams = new URLSearchParams({
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       ...Object.fromEntries(currentSearchParams),
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       ...Object.fromEntries(optionsSearchParams),
     });
 
