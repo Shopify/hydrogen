@@ -5,10 +5,7 @@ import {
   type ServerBuild,
 } from 'react-router';
 import {storefrontContext} from './context-keys';
-import {
-  HYDROGEN_SFAPI_PROXY_KEY,
-  STOREFRONT_CONSENT_MANAGEMENT_HEADER,
-} from './constants';
+import {HYDROGEN_SFAPI_PROXY_KEY} from './constants';
 import {appendServerTimingHeader} from './utils/server-timing';
 
 type CreateRequestHandlerOptions<Context = unknown> = {
@@ -89,7 +86,6 @@ export function createRequestHandler<Context = unknown>({
 
     if (storefront.isStorefrontApiUrl(request)) {
       const response = await storefront.forward(request);
-      expireLegacyTrackingCookies(request, response);
       appendPoweredByHeader?.(response);
       return response;
     }
@@ -121,58 +117,6 @@ export function createRequestHandler<Context = unknown>({
 
     return response;
   };
-}
-
-const LEGACY_TRACKING_COOKIE_NAMES = ['_shopify_y', '_shopify_s'] as const;
-
-/**
- * The same-origin consent request carries the deprecated cookie values
- * upstream, so the session migrates; this expires those cookies in the same
- * response so the browser stops sending them. Deprecated cookies were set
- * with varying domain scopes, so expiry covers the host-only cookie and every
- * domain suffix of the request hostname. Browsers reject public suffixes
- * (such as co.uk), so no public suffix list is needed here.
- */
-function expireLegacyTrackingCookies(
-  request: Request,
-  response: Response,
-): void {
-  if (
-    !request.headers.has(STOREFRONT_CONSENT_MANAGEMENT_HEADER) ||
-    !response.ok
-  ) {
-    return;
-  }
-
-  const cookieHeader = request.headers.get('cookie') ?? '';
-  const legacyNames = LEGACY_TRACKING_COOKIE_NAMES.filter((name) =>
-    cookieHeader
-      .split(';')
-      .some((cookie) => cookie.trim().startsWith(`${name}=`)),
-  );
-
-  if (!legacyNames.length) return;
-
-  const hostname = new URL(request.url).hostname;
-  const domains = [''];
-  if (!hostname.includes(':') && !/^[\d.]+$/.test(hostname)) {
-    const labels = hostname.split('.');
-    while (labels.length > 1) {
-      domains.push(labels.join('.'));
-      labels.shift();
-    }
-  }
-
-  for (const name of legacyNames) {
-    for (const domain of domains) {
-      response.headers.append(
-        'set-cookie',
-        `${name}=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${
-          domain ? `; Domain=${domain}` : ''
-        }`,
-      );
-    }
-  }
 }
 
 /** @publicDocs */

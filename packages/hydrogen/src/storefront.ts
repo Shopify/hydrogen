@@ -14,6 +14,7 @@ import {
   SDK_VARIANT_SOURCE_HEADER,
   SDK_VERSION_HEADER,
   STOREFRONT_ACCESS_TOKEN_HEADER,
+  STOREFRONT_CONSENT_MANAGEMENT_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
   SHOPIFY_CLIENT_IP_HEADER,
   SHOPIFY_CLIENT_IP_SIG_HEADER,
@@ -577,6 +578,10 @@ export function createStorefrontClient<TI18n extends I18nBase>(
               'origin',
               'referer',
               'user-agent',
+              // The backend includes tracking values in the consent response
+              // body only for requests marked with this header, so the proxy
+              // forwards it upstream with the rest of the allowlisted set.
+              STOREFRONT_CONSENT_MANAGEMENT_HEADER,
               STOREFRONT_ACCESS_TOKEN_HEADER,
               SHOPIFY_UNIQUE_TOKEN_HEADER,
               SHOPIFY_VISIT_TOKEN_HEADER,

@@ -8,8 +8,9 @@ export const SDK_VERSION_HEADER = 'X-SDK-Version';
 export const SHOPIFY_CLIENT_IP_HEADER = 'X-Shopify-Client-IP';
 export const SHOPIFY_CLIENT_IP_SIG_HEADER = 'X-Shopify-Client-IP-Sig';
 export const HYDROGEN_SFAPI_PROXY_KEY = '_sfapi_proxy';
-// Marks the same-origin consent request so the request handler can expire
-// deprecated cookies after their values were forwarded upstream.
+// Marks the same-origin consent request: the backend includes the tracking
+// values in the response body only for requests carrying this header, and
+// the SFAPI proxy forwards it upstream (see `forward()` in storefront.ts).
 // NOTE: packages/hydrogen-react/src/useShopifyCookies.tsx defines the same
 // header name (CONSENT_MANAGEMENT_MARKER_HEADER) where the request is sent;
 // keep the two in sync.

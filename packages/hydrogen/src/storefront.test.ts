@@ -258,6 +258,30 @@ describe('createStorefrontClient', () => {
         '_shopify_essential',
       );
     });
+
+    it('forwards the consent management marker header upstream on proxied consent requests', async () => {
+      const {storefront} = createClient();
+
+      const request = new Request(
+        'https://my-store.com/api/unstable/graphql.json',
+        {
+          method: 'POST',
+          body: '{}',
+          headers: {'Shopify-Storefront-Consent-Management': '1'},
+        },
+      );
+
+      await storefront.forward(request);
+
+      // The backend includes the tracking values in the response body only
+      // for requests marked with this header, so the proxy must pass it on:
+      const forwardedHeaders = new Headers(
+        mockFetch.mock.calls[0]![1]!.headers,
+      );
+      expect(
+        forwardedHeaders.get('Shopify-Storefront-Consent-Management'),
+      ).toBe('1');
+    });
   });
 
   describe('setCollectedSubrequestHeaders', () => {

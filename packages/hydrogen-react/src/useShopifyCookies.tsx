@@ -9,12 +9,13 @@ import {
   SHOPIFY_VISIT_TOKEN_HEADER,
 } from './tracking-utils.js';
 
-// Marks the same-origin consent request so Hydrogen's server can migrate
-// deprecated cookies on it. A custom header on the cross-origin checkout
-// retry would fail its CORS preflight, so it is never sent there.
+// Marks the same-origin consent request: the backend includes the tracking
+// values in the response body only for requests carrying this header. A
+// custom header on the cross-origin checkout retry would fail its CORS
+// preflight, so it is never sent there.
 // NOTE: packages/hydrogen/src/constants.ts defines the same header name
-// (STOREFRONT_CONSENT_MANAGEMENT_HEADER) for the server-side expiry; keep
-// the two in sync.
+// (STOREFRONT_CONSENT_MANAGEMENT_HEADER) for the server-side proxy
+// forwarding; keep the two in sync.
 const CONSENT_MANAGEMENT_MARKER_HEADER =
   'Shopify-Storefront-Consent-Management';
 
@@ -82,10 +83,10 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {
     if (ignoreDeprecatedCookies || !coreCookiesReady) return;
 
     if (hasUserConsent) {
-      // Deprecated cookies are no longer written. When the SFAPI proxy is
-      // used, the server expires any existing ones after the consent request
-      // migrates their values. Setups without the proxy (hydrogen-react only)
-      // have no server-side expiry, so the cookies simply age out.
+      // Deprecated cookies are no longer written. Existing ones are removed
+      // client-side once their replacement values are in place through the
+      // Customer Privacy API. Setups without that API (hydrogen-react only)
+      // have no deletion, so the cookies simply age out.
       return;
     }
 
