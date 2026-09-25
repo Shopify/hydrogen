@@ -4,7 +4,7 @@ export {
   CartNetworkError,
   STANDARD_ACTION_TIMEOUT_IN_MS,
 } from "./cart";
-export type { CartStore, CreateCartStoreOptions } from "./cart";
+export type { CartActions, CartStore, CreateCartStoreOptions } from "./cart";
 export { createCartFormRegister } from "./form";
 export type { CartFormRegister, QuantityInputAttributes, SetButtonAttributes } from "./form";
 export { attachQuantityInput } from "./attach-quantity-input";

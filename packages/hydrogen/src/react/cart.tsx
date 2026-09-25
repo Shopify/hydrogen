@@ -19,6 +19,7 @@ import {
   configureCartEndpoint as configureCoreCartEndpoint,
   createCartStore,
   type CreateCartStoreOptions,
+  type CartActions,
   type CartStore,
 } from "../core/cart/cart";
 import { createCartFormRegister } from "../core/cart/form";
@@ -48,8 +49,7 @@ type TypedCartProviderProps<TData extends CartData> = {
 type CartInitialData<TData extends CartData = CartData> =
   CreateCartStoreOptions<TData>["initialData"];
 
-/** Actions for reconciling cart state after updates outside Standard Actions. */
-export type CartActions = Pick<CartStore, "refresh">;
+export type { CartActions };
 
 type TypedCartComponents<TData extends CartData> = {
   CartProvider: (props: TypedCartProviderProps<TData>) => ReactNode;

@@ -17,6 +17,7 @@ import {
   getPredictiveSearchFormAttributes,
   readPredictiveSearchFormTerm,
   type CreatePredictiveSearchStoreOptions,
+  type PredictiveSearchActions,
   type PredictiveSearchData,
   type PredictiveSearchState,
   type PredictiveSearchStore,
@@ -37,7 +38,7 @@ type PredictiveSearchContextValue = {
 
 const PredictiveSearchKey: InjectionKey<PredictiveSearchContextValue> = Symbol("PredictiveSearch");
 
-export type PredictiveSearchActions = Pick<PredictiveSearchStore, "search" | "clear">;
+export type { PredictiveSearchActions };
 
 export type PredictiveSearchFormPropsOptions = {
   preventDefault?: boolean;
