@@ -76,6 +76,6 @@ Required product analytics fields include Shopify Product GID, ProductVariant GI
 
 - Page view fires on initial load and client navigations.
 - Product, collection, search, and cart view events fire once per relevant route data change.
-- Confirmed cart data changes flow through `trackCartAnalytics(cartStore)` (React/Vue bindings: `useCartAnalytics()`), and cart data includes `updatedAt` (Hydrogen's built-in cart queries select it).
+- Confirmed cart data changes flow through `trackCartAnalytics(cartStore)` (React/Vue bindings: `useCartAnalytics()`).
 - Consent-denied visitors do not deliver destination events.
 - No browser module reads private or server-only env variables.
