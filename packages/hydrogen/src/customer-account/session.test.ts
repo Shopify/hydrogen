@@ -5,7 +5,7 @@ import { createCartServerHandlers } from "../core/cart/server-handlers";
 import { configureLogging, resetLoggingForTests } from "../core/logging";
 import { createShopifyRequestContext } from "../core/request-context";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../core/request-routing/handle-shopify-routes";
-import { createTestLogger } from "../core/test-utils";
+import { assert, createTestLogger } from "../core/test-utils";
 import {
   createCustomerAccountServerHandlers,
   createCustomerSession,
@@ -43,6 +43,15 @@ const CART_ID_TOKEN = "cart-id-1";
 const CART_GID = `gid://shopify/Cart/${CART_ID_TOKEN}`;
 const CART_COOKIE = `cart=${CART_ID_TOKEN}`;
 const EXPIRED_CART_COOKIE = "cart=; Path=/; SameSite=Lax; Max-Age=0";
+const UNSAFE_RETURN_TARGETS = [
+  "https://attacker.example/phish",
+  "//attacker.example/phish",
+  `${ORIGIN}//attacker.example/phish`,
+  `${ORIGIN}/\\attacker.example/phish`,
+  "/.//attacker.example/phish",
+  "/%2e//attacker.example/phish",
+  "/account/..//attacker.example/phish",
+];
 
 type CustomerAccountSessionData = {
   tokens?: {
@@ -253,6 +262,155 @@ describe("createCustomerSession", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+
+  it.each(["", "   "])("rejects an empty session key: %j", (sessionKey) => {
+    expect(() => createSession({ sessionKey })).toThrow("sessionKey must be a non-empty string");
+  });
+
+  describe("custom session keys", () => {
+    const sessionKey = "customerAccount:another-shop";
+
+    it("isolates login, token reads, and logout from the default session", async () => {
+      const fetchMock = vi.fn();
+      const customerSession = createSession({ sessionKey, fetch: fetchMock });
+      const original = validSessionData({ pendingLogin: validPendingLogin() });
+      const sessionManager = new TestSessionManager(original);
+      const requestContext = createRequestContext();
+
+      await expect(customerSession.isLoggedIn(sessionManager, requestContext)).resolves.toBe(false);
+      await expect(
+        customerSession.getAccessToken(sessionManager, requestContext),
+      ).resolves.toBeUndefined();
+      await expect(
+        customerSession.getOrRefreshAccessToken(sessionManager, requestContext),
+      ).resolves.toBeUndefined();
+      expect(fetchMock).not.toHaveBeenCalled();
+
+      const loginUrl = new URL(
+        await customerSession.prepareLoginUrl(sessionManager, requestContext, {
+          returnTo: "/orders",
+        }),
+      );
+      const nonce = loginUrl.searchParams.get("nonce");
+      const state = loginUrl.searchParams.get("state");
+      assert(nonce, "expected a login nonce");
+      assert(state, "expected a login state");
+      expect(sessionManager.getSessionItem(sessionKey)).toMatchObject({
+        pendingLogin: { state, nonce },
+      });
+      expect(sessionManager.data).toEqual(original);
+
+      fetchMock.mockResolvedValueOnce(tokenResponse({ id_token: createIdToken(nonce) }));
+      const callback = new Request(
+        `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=${state}`,
+      );
+      await expect(
+        customerSession.handleOAuthCallback(sessionManager, requestContext, callback),
+      ).resolves.toBe("/orders");
+      expect(sessionManager.getSessionItem(sessionKey)).toEqual({
+        tokens: {
+          accessToken: NEW_ACCESS_TOKEN,
+          refreshToken: NEW_REFRESH_TOKEN,
+          idToken: createIdToken(nonce),
+          expiresAt: REFRESHED_EXPIRES_AT,
+        },
+      });
+      await expect(customerSession.getAccessToken(sessionManager, requestContext)).resolves.toBe(
+        NEW_ACCESS_TOKEN,
+      );
+      await expect(
+        customerSession.getOrRefreshAccessToken(sessionManager, requestContext),
+      ).resolves.toBe(NEW_ACCESS_TOKEN);
+      await expect(customerSession.isLoggedIn(sessionManager, requestContext)).resolves.toBe(true);
+
+      await customerSession.logout(sessionManager, requestContext);
+
+      expect(sessionManager.getSessionItem(sessionKey)).toBeUndefined();
+      expect(sessionManager.data).toEqual(original);
+      expect(sessionManager.removeCalls).toEqual([sessionKey]);
+      expect(sessionManager.setCalls.map(({ key }) => key)).toEqual([sessionKey, sessionKey]);
+      expect(fetchMock).toHaveBeenCalledOnce();
+    });
+
+    it("refreshes only the selected session while preserving its pending login", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(tokenResponse());
+      const customerSession = createSession({ sessionKey, fetch: fetchMock });
+      const original = validSessionData();
+      const sessionManager = new TestSessionManager(original);
+      const pendingLogin = validPendingLogin();
+      sessionManager.setSessionItem(
+        sessionKey,
+        validSessionData({
+          tokens: { expiresAt: NOW_IN_MS, refreshToken: "custom-refresh-token" },
+          pendingLogin,
+        }),
+      );
+
+      await expect(
+        customerSession.getOrRefreshAccessToken(sessionManager, createRequestContext()),
+      ).resolves.toBe(NEW_ACCESS_TOKEN);
+
+      expect(getFetchBody(fetchMock).get("refresh_token")).toBe("custom-refresh-token");
+      expect(sessionManager.getSessionItem(sessionKey)).toMatchObject({
+        tokens: { accessToken: NEW_ACCESS_TOKEN, refreshToken: NEW_REFRESH_TOKEN },
+        pendingLogin,
+      });
+      expect(sessionManager.data).toEqual(original);
+    });
+
+    it.each([false, true])(
+      "isolates rejected refresh cleanup, pending login=%s",
+      async (hasPendingLogin) => {
+        const fetchMock = vi.fn().mockResolvedValue(new Response("invalid", { status: 401 }));
+        const customerSession = createSession({ sessionKey, fetch: fetchMock });
+        const original = validSessionData();
+        const sessionManager = new TestSessionManager(original);
+        const pendingLogin = hasPendingLogin ? validPendingLogin() : undefined;
+        sessionManager.setSessionItem(
+          sessionKey,
+          validSessionData({ tokens: { expiresAt: NOW_IN_MS }, pendingLogin }),
+        );
+
+        await expect(
+          customerSession.getOrRefreshAccessToken(sessionManager, createRequestContext()),
+        ).resolves.toBeUndefined();
+
+        expect(sessionManager.getSessionItem(sessionKey)).toEqual(
+          hasPendingLogin ? { pendingLogin } : undefined,
+        );
+        expect(sessionManager.removeCalls).toEqual(hasPendingLogin ? [] : [sessionKey]);
+        expect(sessionManager.data).toEqual(original);
+      },
+    );
+
+    it.each([false, true])(
+      "isolates failed callback cleanup, existing tokens=%s",
+      async (hasTokens) => {
+        const customerSession = createSession({ sessionKey });
+        const original = validSessionData({ pendingLogin: validPendingLogin() });
+        const sessionManager = new TestSessionManager(original);
+        const tokens = hasTokens ? validSessionData().tokens : undefined;
+        sessionManager.setSessionItem(sessionKey, { tokens, pendingLogin: validPendingLogin() });
+        const request = new Request(
+          `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=wrong-state`,
+        );
+
+        await expect(
+          customerSession.handleOAuthCallback(
+            sessionManager,
+            createRequestContext(request),
+            request,
+          ),
+        ).rejects.toThrow(CustomerAccountOAuthError);
+
+        expect(sessionManager.getSessionItem(sessionKey)).toEqual(
+          hasTokens ? { tokens } : undefined,
+        );
+        expect(sessionManager.removeCalls).toEqual(hasTokens ? [] : [sessionKey]);
+        expect(sessionManager.data).toEqual(original);
+      },
+    );
   });
 
   it("gets usable access tokens through a read-only session manager", async () => {
@@ -493,12 +651,12 @@ describe("createCustomerSession", () => {
     );
   });
 
-  it("sanitizes unsafe login return targets", async () => {
+  it.each(UNSAFE_RETURN_TARGETS)("sanitizes unsafe login return target %s", async (returnTo) => {
     const customerSession = createSession();
     const sessionManager = new TestSessionManager();
 
     await customerSession.prepareLoginUrl(sessionManager, createRequestContext(), {
-      returnTo: "https://attacker.example/phish",
+      returnTo,
     });
 
     expect(sessionManager.data?.pendingLogin?.returnTo).toBe("/account");
@@ -546,6 +704,30 @@ describe("createCustomerSession", () => {
         expiresAt: REFRESHED_EXPIRES_AT,
       },
     });
+  });
+
+  it("sanitizes pending return targets saved before the redirect fix", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(tokenResponse());
+    const sessionManager = new TestSessionManager({
+      pendingLogin: validPendingLogin({ returnTo: "//attacker.example/phish" }),
+    });
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+    );
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      handlers: [
+        createCustomerAccountServerHandlers({
+          customerSession: createSession({ fetch: fetchMock }),
+        }),
+      ],
+    });
+
+    assert(response, "expected an authorization redirect");
+    expect(response.headers.get("location")).toBe(`${ORIGIN}/account`);
+    expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
   });
 
   it("rejects mismatched OAuth state and clears only the pending login", async () => {
@@ -953,6 +1135,26 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(sessionManager.commits).toHaveLength(0);
   });
 
+  it("rejects an empty logout Origin even when the Referer is same-origin", async () => {
+    const initialSessionData = validSessionData();
+    const sessionManager = new TestSessionManager(initialSessionData);
+    const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
+      method: "POST",
+      headers: { origin: "", referer: `${ORIGIN}/account` },
+    });
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager,
+      handlers: [createCustomerAccountServerHandlers({ customerSession: createSession() })],
+    });
+
+    expect(response?.status).toBe(403);
+    expect(response?.headers.get("cache-control")).toBe("no-store");
+    expect(sessionManager.data).toBe(initialSessionData);
+    expect(sessionManager.commits).toHaveLength(0);
+  });
+
   it("checks logout posts against the resolved Customer Account origin", async () => {
     const publicOrigin = "https://public.example";
     const sessionManager = new TestSessionManager(validSessionData(), publicOrigin);
@@ -1154,6 +1356,39 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(response?.headers.get("location")).toBe(`${ORIGIN}/account`);
     expect(response?.headers.get("set-cookie")).toBe("session=1");
     expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
+  });
+
+  describe.each(["return_to", "returnTo"])("refresh redirect with %s", (parameter) => {
+    it.each(UNSAFE_RETURN_TARGETS)("rejects unsafe return target %s", async (returnTo) => {
+      const requestUrl = new URL(CUSTOMER_ACCOUNT_REFRESH_PATH, ORIGIN);
+      requestUrl.searchParams.set(parameter, returnTo);
+      const response = await handleShopifyRoutes({
+        request: new Request(requestUrl),
+        sessionManager: new TestSessionManager(),
+        handlers: [createCustomerAccountServerHandlers({ customerSession: createSession() })],
+      });
+
+      assert(response, "expected a refresh redirect");
+      expect(response.status).toBe(303);
+      expect(response.headers.get("location")).toBe(`${ORIGIN}/account`);
+    });
+
+    it.each([
+      "/orders?cursor=abc#latest",
+      `${ORIGIN}/orders?cursor=abc#latest`,
+      "/account?next=//attacker.example#orders",
+    ])("preserves safe return target %s", async (returnTo) => {
+      const requestUrl = new URL(CUSTOMER_ACCOUNT_REFRESH_PATH, ORIGIN);
+      requestUrl.searchParams.set(parameter, returnTo);
+      const response = await handleShopifyRoutes({
+        request: new Request(requestUrl),
+        sessionManager: new TestSessionManager(),
+        handlers: [createCustomerAccountServerHandlers({ customerSession: createSession() })],
+      });
+
+      assert(response, "expected a refresh redirect");
+      expect(response.headers.get("location")).toBe(new URL(returnTo, ORIGIN).toString());
+    });
   });
 
   it("supports refresh on custom customer sessions", async () => {

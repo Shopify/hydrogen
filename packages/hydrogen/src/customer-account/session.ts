@@ -7,6 +7,7 @@ import {
 import { DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
 import { getLogger } from "../core/logging";
 import type { ShopifyRequestContext } from "../core/request-context";
+import { isSameOriginRequest } from "../core/request-routing/is-same-origin";
 import {
   createCallableRouteHandler,
   type CallableRouteHandler,
@@ -25,7 +26,7 @@ export const CUSTOMER_ACCOUNT_LOGIN_PATH = CUSTOMER_ACCOUNT_PATHS.login;
 export const CUSTOMER_ACCOUNT_LOGOUT_PATH = CUSTOMER_ACCOUNT_PATHS.logout;
 export const CUSTOMER_ACCOUNT_REFRESH_PATH = CUSTOMER_ACCOUNT_PATHS.refresh;
 
-const CUSTOMER_ACCOUNT_SESSION_KEY = "customerAccount";
+const DEFAULT_CUSTOMER_ACCOUNT_SESSION_KEY = "customerAccount";
 const DEFAULT_LOGIN_RETURN_TO_PATH = "/account";
 const DEFAULT_POST_LOGIN_REDIRECT_PATHNAME = "/";
 const DEFAULT_POST_LOGOUT_REDIRECT_URI = "/";
@@ -84,6 +85,8 @@ export type CreateCustomerSessionOptions = {
   shopId: string;
   customerAccountApiClientId: string;
   customerAccountApiUrl?: string;
+  /** Storage key for tokens and pending login state. Defaults to "customerAccount". */
+  sessionKey?: string;
   fetch?: typeof globalThis.fetch;
   defaultTimeoutInMs?: number;
 };
@@ -286,6 +289,7 @@ export function createCustomerSession({
   shopId,
   customerAccountApiClientId,
   customerAccountApiUrl,
+  sessionKey = DEFAULT_CUSTOMER_ACCOUNT_SESSION_KEY,
   fetch: customFetch,
   defaultTimeoutInMs = DEFAULT_TIMEOUT_IN_MS,
 }: CreateCustomerSessionOptions): CustomerSessionWithInternals {
@@ -298,6 +302,9 @@ export function createCustomerSession({
   validateShopId(shopId);
   validateCustomerAccountApiClientId(customerAccountApiClientId);
   validateTimeout(defaultTimeoutInMs);
+  if (typeof sessionKey !== "string" || sessionKey.trim() === "") {
+    throw new TypeError("sessionKey must be a non-empty string");
+  }
 
   const fetch = customFetch ?? globalThis.fetch;
   if (typeof fetch !== "function") {
@@ -314,7 +321,7 @@ export function createCustomerSession({
     requestContext: ShopifyRequestContext,
   ) {
     requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON);
-    const accessToken = getUsableAccessToken(await readSessionData(sessionManager));
+    const accessToken = getUsableAccessToken(await readSessionData(sessionManager, sessionKey));
     return accessToken;
   }
 
@@ -333,7 +340,7 @@ export function createCustomerSession({
     options: RequestOriginOptions = {},
   ): Promise<TokenRefreshResult> {
     requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON);
-    const sessionData = await readSessionData(sessionManager);
+    const sessionData = await readSessionData(sessionManager, sessionKey);
     const accessToken = getUsableAccessToken(sessionData);
     if (accessToken) return { status: "authenticated", accessToken };
 
@@ -358,7 +365,7 @@ export function createCustomerSession({
       if (!refreshedAccessToken) {
         return { status: "transient", accessToken: undefined };
       }
-      await writeTokens(sessionManager, refreshResult.tokens);
+      await writeTokens(sessionManager, sessionKey, refreshResult.tokens);
       return {
         status: "authenticated",
         accessToken: refreshedAccessToken,
@@ -366,7 +373,7 @@ export function createCustomerSession({
     }
 
     if (refreshResult.type === "invalid") {
-      await clearTokens(sessionManager);
+      await clearTokens(sessionManager, sessionKey);
       return { status: "unauthenticated", accessToken: undefined };
     }
 
@@ -387,8 +394,8 @@ export function createCustomerSession({
     const returnTo = sanitizeReturnTo(options.returnTo, origin);
     const createdAt = Date.now();
 
-    const sessionData = await readSessionData(sessionManager);
-    await writeSessionData(sessionManager, {
+    const sessionData = await readSessionData(sessionManager, sessionKey);
+    await writeSessionData(sessionManager, sessionKey, {
       ...sessionData,
       pendingLogin: { state, nonce, codeVerifier, returnTo, origin, createdAt },
     });
@@ -424,6 +431,7 @@ export function createCustomerSession({
     try {
       return await completeOAuthCallback({
         sessionManager,
+        sessionKey,
         request,
         endpoints,
         customerAccountApiClientId,
@@ -431,7 +439,7 @@ export function createCustomerSession({
         timeoutInMs: defaultTimeoutInMs,
       });
     } catch (error) {
-      await clearPendingLogin(sessionManager);
+      await clearPendingLogin(sessionManager, sessionKey);
       throw error;
     }
   }
@@ -443,14 +451,14 @@ export function createCustomerSession({
   ) {
     requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_MUTATION_PERSONALIZATION_REASON);
     const origin = await getResolvedOrigin(sessionManager, options.origin);
-    const sessionData = await readSessionData(sessionManager);
+    const sessionData = await readSessionData(sessionManager, sessionKey);
     const idToken = sessionData.tokens?.idToken;
     const postLogoutRedirectUri = absoluteSameOriginUrl(
       options.postLogoutRedirectUri ?? origin,
       origin,
     );
 
-    await sessionManager.removeSessionItem(CUSTOMER_ACCOUNT_SESSION_KEY);
+    await sessionManager.removeSessionItem(sessionKey);
 
     if (!idToken) return postLogoutRedirectUri;
 
@@ -466,7 +474,7 @@ export function createCustomerSession({
       requestContext.markResponseAsPersonalized(
         CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON,
       );
-      return hasCustomerSession(await readSessionData(sessionManager));
+      return hasCustomerSession(await readSessionData(sessionManager, sessionKey));
     },
     getAccessToken,
     getOrRefreshAccessToken,
@@ -626,7 +634,7 @@ async function handleLogoutRoute(
 ): Promise<CustomerAccountRouteResult> {
   const { request, sessionManager, requestContext } = context;
   const origin = await resolveRouteOrigin(sessionManager, request, originOption);
-  if (!isSameOriginPost(request, origin)) return forbiddenResult();
+  if (!isSameOriginRequest(request, origin)) return forbiddenResult();
 
   const requestUrl = new URL(request.url);
   const requestedReturnTo =
@@ -828,6 +836,7 @@ async function commitSession(
 
 async function completeOAuthCallback({
   sessionManager,
+  sessionKey,
   request,
   endpoints,
   customerAccountApiClientId,
@@ -835,6 +844,7 @@ async function completeOAuthCallback({
   timeoutInMs,
 }: {
   sessionManager: WritableCustomerSessionManager;
+  sessionKey: string;
   request: Request;
   endpoints: CustomerAccountEndpoints;
   customerAccountApiClientId: string;
@@ -844,7 +854,7 @@ async function completeOAuthCallback({
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const state = requestUrl.searchParams.get("state");
-  const sessionData = await readSessionData(sessionManager);
+  const sessionData = await readSessionData(sessionManager, sessionKey);
   const pendingLogin = getPendingLogin(sessionData);
 
   assertOAuthCallbackParams(code, state, pendingLogin);
@@ -865,34 +875,14 @@ async function completeOAuthCallback({
     nonce: pendingLogin.nonce,
   });
 
-  await writeSessionData(sessionManager, {
+  await writeSessionData(sessionManager, sessionKey, {
     tokens: createTokensFromResponse(tokenResponse),
   });
 
   return {
-    location: pendingLogin.returnTo ?? DEFAULT_LOGIN_RETURN_TO_PATH,
+    location: sanitizeReturnTo(pendingLogin.returnTo, origin),
     accessToken: tokenResponse.access_token,
   };
-}
-
-function isSameOriginPost(request: Request, trustedOrigin: string): boolean {
-  const origin = request.headers.get("origin");
-  if (origin) {
-    try {
-      return normalizeOrigin(origin) === trustedOrigin;
-    } catch {
-      return false;
-    }
-  }
-
-  const referer = request.headers.get("referer");
-  if (!referer) return false;
-
-  try {
-    return normalizeOrigin(new URL(referer).origin) === trustedOrigin;
-  } catch {
-    return false;
-  }
 }
 
 function assertOAuthCallbackParams(
@@ -1288,46 +1278,55 @@ function hasAudienceClaim(audience: unknown, expectedAudience: string): boolean 
 
 async function readSessionData(
   sessionManager: ReadonlyCustomerSessionManager,
+  sessionKey: string,
 ): Promise<CustomerAccountSessionData> {
-  const value = await sessionManager.getSessionItem(CUSTOMER_ACCOUNT_SESSION_KEY);
+  const value = await sessionManager.getSessionItem(sessionKey);
   return isCustomerAccountSessionData(value) ? value : {};
 }
 
 async function writeSessionData(
   sessionManager: WritableCustomerSessionManager,
+  sessionKey: string,
   sessionData: CustomerAccountSessionData,
 ): Promise<void> {
-  await sessionManager.setSessionItem(CUSTOMER_ACCOUNT_SESSION_KEY, sessionData);
+  await sessionManager.setSessionItem(sessionKey, sessionData);
 }
 
 async function writeTokens(
   sessionManager: WritableCustomerSessionManager,
+  sessionKey: string,
   tokens: CustomerAccountTokens,
 ): Promise<void> {
-  const sessionData = await readSessionData(sessionManager);
-  await writeSessionData(sessionManager, { ...sessionData, tokens });
+  const sessionData = await readSessionData(sessionManager, sessionKey);
+  await writeSessionData(sessionManager, sessionKey, { ...sessionData, tokens });
 }
 
-async function clearTokens(sessionManager: WritableCustomerSessionManager): Promise<void> {
-  const sessionData = await readSessionData(sessionManager);
+async function clearTokens(
+  sessionManager: WritableCustomerSessionManager,
+  sessionKey: string,
+): Promise<void> {
+  const sessionData = await readSessionData(sessionManager, sessionKey);
   const { pendingLogin } = sessionData;
   if (pendingLogin) {
-    await writeSessionData(sessionManager, { pendingLogin });
+    await writeSessionData(sessionManager, sessionKey, { pendingLogin });
     return;
   }
 
-  await sessionManager.removeSessionItem(CUSTOMER_ACCOUNT_SESSION_KEY);
+  await sessionManager.removeSessionItem(sessionKey);
 }
 
-async function clearPendingLogin(sessionManager: WritableCustomerSessionManager): Promise<void> {
-  const sessionData = await readSessionData(sessionManager);
+async function clearPendingLogin(
+  sessionManager: WritableCustomerSessionManager,
+  sessionKey: string,
+): Promise<void> {
+  const sessionData = await readSessionData(sessionManager, sessionKey);
   const { tokens } = sessionData;
   if (tokens) {
-    await writeSessionData(sessionManager, { tokens });
+    await writeSessionData(sessionManager, sessionKey, { tokens });
     return;
   }
 
-  await sessionManager.removeSessionItem(CUSTOMER_ACCOUNT_SESSION_KEY);
+  await sessionManager.removeSessionItem(sessionKey);
 }
 
 function getUsableAccessToken(sessionData: CustomerAccountSessionData): string | undefined {
@@ -1410,7 +1409,8 @@ function sanitizeReturnTo(
 
   try {
     const url = new URL(returnTo, origin);
-    if (url.origin !== origin) return fallbackReturnTo;
+    // A leading // becomes an external host when the origin is stripped.
+    if (url.origin !== origin || url.pathname.startsWith("//")) return fallbackReturnTo;
     const sanitizedReturnTo = `${url.pathname}${url.search}${url.hash}`;
     if (new TextEncoder().encode(sanitizedReturnTo).byteLength > MAX_RETURN_TO_LENGTH_IN_BYTES) {
       return fallbackReturnTo;

@@ -89,6 +89,7 @@ function createJsonPostRequest(
 ): Request {
   const headers: Record<string, string> = {
     "content-type": "application/json",
+    origin: new URL(url).origin,
   };
   if (cookies) headers.cookie = cookies;
   return new Request(url, {
@@ -104,6 +105,7 @@ function createFormPostRequest(
 ): Request {
   const headers: Record<string, string> = {
     "content-type": "application/x-www-form-urlencoded",
+    origin: APP_ORIGIN,
   };
   if (opts?.cookies) headers.cookie = opts.cookies;
   if (opts?.referer) headers.referer = opts.referer;
@@ -290,6 +292,187 @@ describe("createCartServerHandlers", () => {
       assert(result, "expected a response");
       expect(result.status).toBe(405);
     });
+  });
+
+  describe.each(["json", "form", "multipart"])("%s POST origin checks", (format) => {
+    function createMutationRequest(sourceHeaders: HeadersInit) {
+      const headers = new Headers(sourceHeaders);
+      headers.set("cookie", "cart=123");
+      let body: BodyInit;
+      if (format === "json") {
+        headers.set("content-type", "application/json");
+        body = JSON.stringify({ note: "updated note" });
+      } else if (format === "form") {
+        body = new URLSearchParams({ intent: "note-update", note: "updated note" });
+      } else {
+        body = new FormData();
+        body.set("intent", "note-update");
+        body.set("note", "updated note");
+      }
+      return new Request(`${APP_ORIGIN}/api/cart`, { method: "POST", headers, body });
+    }
+
+    it.each<{ name: string; headers: HeadersInit }>([
+      { name: "another site", headers: { origin: "https://evil.example" } },
+      {
+        name: "a sibling subdomain",
+        headers: { origin: "https://evil.my-app.com", "sec-fetch-site": "same-site" },
+      },
+      { name: "a different scheme", headers: { origin: "http://my-app.com" } },
+      { name: "a different port", headers: { origin: `${APP_ORIGIN}:8443` } },
+      { name: "an opaque origin", headers: { origin: "null", referer: `${APP_ORIGIN}/cart` } },
+      { name: "an empty origin", headers: { origin: "", referer: `${APP_ORIGIN}/cart` } },
+      { name: "a malformed origin", headers: { origin: "invalid", referer: `${APP_ORIGIN}/cart` } },
+      {
+        name: "a cross-origin Origin with a same-origin Referer",
+        headers: { origin: "https://evil.example", referer: `${APP_ORIGIN}/cart` },
+      },
+      {
+        name: "a cross-origin Referer alone",
+        headers: { referer: "https://evil.my-app.com/cart" },
+      },
+      { name: "a malformed Referer alone", headers: { referer: "invalid" } },
+      { name: "missing source headers", headers: {} },
+      { name: "Fetch Metadata alone", headers: { "sec-fetch-site": "same-origin" } },
+      {
+        name: "an untrusted forwarded host",
+        headers: { origin: "https://evil.example", "x-forwarded-host": "evil.example" },
+      },
+    ])("rejects $name before reading the body or contacting Shopify", async ({ headers }) => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartNoteUpdate: { cart: MOCK_CART, userErrors: [] } }),
+      );
+      const request = createMutationRequest(headers);
+
+      const result = await handleCartRequest(request);
+
+      assert(result, "expected a forbidden response");
+      expect(result.status).toBe(403);
+      expect(await result.json()).toEqual({ error: { code: "forbidden", message: "Forbidden" } });
+      expect(result.headers.get("cache-control")).toBe("no-store");
+      expect(result.headers.has("set-cookie")).toBe(false);
+      expect(request.bodyUsed).toBe(false);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it.each<{ name: string; headers: HeadersInit }>([
+      { name: "same-origin Origin", headers: { origin: APP_ORIGIN } },
+      { name: "same-origin Referer without Origin", headers: { referer: `${APP_ORIGIN}/cart` } },
+    ])("allows $name", async ({ headers }) => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartNoteUpdate: { cart: MOCK_CART, userErrors: [] } }),
+      );
+      const request = createMutationRequest(headers);
+
+      const result = await handleCartRequest(request);
+
+      assert(result, "expected a successful mutation response");
+      expect(result.status).toBe(format === "json" ? 200 : 303);
+      expect(mockFetch).toHaveBeenCalledOnce();
+      const [, init] = mockFetch.mock.calls[0];
+      expect(JSON.parse(init.body).variables).toMatchObject({
+        cartId: MOCK_CART.id,
+        note: "updated note",
+      });
+    });
+  });
+
+  it("rejects cross-origin cart creation before accessing or committing the customer session", async () => {
+    mockFetch.mockResolvedValueOnce(
+      mockGqlResponse({ cartCreate: { cart: MOCK_CART, userErrors: [] } }),
+    );
+    const request = createFormPostRequest({ merchandiseId: "gid://shopify/ProductVariant/1" });
+    request.headers.set("origin", "https://evil.my-app.com");
+    const customerSession = createCartCustomerSession(undefined);
+    const sessionManager = createTestSessionManager(request);
+
+    const result = await handleCartRequest(
+      request,
+      defaultConfig,
+      createCartServerHandlers({ customerSession }),
+      sessionManager,
+    );
+
+    assert(result, "expected a forbidden response");
+    expect(result.status).toBe(403);
+    expect(result.headers.has("set-cookie")).toBe(false);
+    expect(customerSession.getAccessToken).not.toHaveBeenCalled();
+    expect(customerSession.getOrRefreshAccessToken).not.toHaveBeenCalled();
+    expect(sessionManager.commit).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { source: APP_ORIGIN, status: 200 },
+    { source: "https://evil.my-app.com", status: 403 },
+    { source: "http://internal", status: 403 },
+  ])(
+    "checks proxied cart mutations against the trusted public origin: $source",
+    async ({ source, status }) => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartNoteUpdate: { cart: MOCK_CART, userErrors: [] } }),
+      );
+      const request = createJsonPostRequest(
+        { note: "updated note" },
+        "cart=123",
+        "http://internal/api/cart",
+      );
+      request.headers.set("origin", source);
+      const sessionManager = {
+        ...createTestSessionManager(request),
+        getSessionOrigin: () => APP_ORIGIN,
+      };
+
+      const result = await handleCartRequest(
+        request,
+        defaultConfig,
+        createCartServerHandlers(),
+        sessionManager,
+      );
+
+      assert(result, "expected a cart response");
+      expect(result.status).toBe(status);
+      expect(mockFetch).toHaveBeenCalledTimes(status === 200 ? 1 : 0);
+      expect(request.bodyUsed).toBe(status === 200);
+    },
+  );
+
+  it("supports an async public origin for direct cart handler calls behind a proxy", async () => {
+    mockFetch.mockResolvedValueOnce(
+      mockGqlResponse({ cartNoteUpdate: { cart: MOCK_CART, userErrors: [] } }),
+    );
+    const request = createJsonPostRequest(
+      { note: "updated note" },
+      "cart=123",
+      "http://internal/api/cart",
+    );
+    request.headers.set("origin", APP_ORIGIN);
+
+    const result = await createCartServerHandlers().post({
+      request,
+      storefrontClient: createPrivateStorefrontClient(request),
+      sessionManager: { getSessionOrigin: async () => APP_ORIGIN },
+    });
+
+    expect(result.type).toBe("json");
+    expect(mockFetch).toHaveBeenCalledOnce();
+  });
+
+  it("allows same-origin HTTP cart mutations for local development", async () => {
+    mockFetch.mockResolvedValueOnce(
+      mockGqlResponse({ cartNoteUpdate: { cart: MOCK_CART, userErrors: [] } }),
+    );
+    const request = createJsonPostRequest(
+      { note: "updated note" },
+      "cart=123",
+      "http://localhost:5173/api/cart",
+    );
+
+    const result = await handleCartRequest(request);
+
+    assert(result, "expected a successful mutation response");
+    expect(result.status).toBe(200);
+    expect(mockFetch).toHaveBeenCalledOnce();
   });
 
   describe("GET", () => {
@@ -1319,6 +1502,28 @@ describe("createCartServerHandlers", () => {
   });
 
   describe("open redirect protection", () => {
+    it.each([
+      `${APP_ORIGIN}//attacker.example/phish`,
+      `${APP_ORIGIN}/\\attacker.example/phish`,
+      `${APP_ORIGIN}/.//attacker.example/phish`,
+      `${APP_ORIGIN}/%2e//attacker.example/phish`,
+    ])(
+      "redirects to / when Referer normalizes to a network-path reference: %s",
+      async (referer) => {
+        const result = await handleCartRequest(
+          createFormPostRequest(
+            { intent: "remove", lineId: "gid://shopify/CartLine/1" },
+            { referer },
+          ),
+        );
+
+        assert(result, "expected a cart redirect");
+        expect(result.status).toBe(303);
+        expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/`);
+        expect(mockFetch).not.toHaveBeenCalled();
+      },
+    );
+
     it("redirects to pathname only for same-origin Referer", async () => {
       mockFetch.mockResolvedValueOnce(
         mockGqlResponse({ cartLinesRemove: { cart: MOCK_CART, userErrors: [] } }),
