@@ -110,7 +110,8 @@ export type CollectionStore = {
 
   /**
    * Parses `FormData` from the submitted form into collection params and applies them.
-   * Callers must call `event.preventDefault()` before invoking this method.
+   * Doesn't cancel the event: call `event.preventDefault()` first, or the browser
+   * submits the form natively and navigates away.
    *
    * @throws {TypeError} If `event.target` is not an `HTMLFormElement`.
    */

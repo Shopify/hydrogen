@@ -20,8 +20,9 @@ export type ReconcilerCallbacks = {
  */
 export type CollectionReconciler = {
   /**
-   * URL ↔ store reconciliation state machine. Call whenever urlSearch,
-   * dataSearch, or store state changes.
+   * URL ↔ store reconciliation state machine. Call whenever `urlSearch` or
+   * `dataSearch` changes. Store changes go through
+   * {@link CollectionReconciler.handleBrowseChange} instead.
    */
   reconcile(urlSearch: string, dataSearch: string): void;
   /**

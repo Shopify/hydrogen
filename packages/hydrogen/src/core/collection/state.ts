@@ -45,7 +45,10 @@ export interface AvailableFilter<
   label: string;
   /** Input mechanism — e.g. boolean toggle, multi-select list, or price range. */
   type: FilterType;
-  /** Visual presentation hint for the storefront UI. */
+  /**
+   * Visual presentation hint for the storefront UI. Populated only for `LIST`
+   * filters; `null` otherwise.
+   */
   presentation?: FilterPresentation | null;
   values: AvailableFilterValue<TValue>[];
 }
