@@ -1,5 +1,7 @@
 import {vi, describe, it, beforeEach, afterEach, expect} from 'vitest';
-import {renderHook, act, waitFor} from '@testing-library/react';
+import {renderHook, act, waitFor, cleanup} from '@testing-library/react';
+// @ts-ignore - worktop/cookie types not properly exported
+import {parse} from 'worktop/cookie';
 import {
   useCustomerPrivacy,
   getCustomerPrivacy,
@@ -76,6 +78,60 @@ function simulateCdnConsentApiLoad(extraApi: Record<string, unknown> = {}) {
   };
 }
 
+/**
+ * A minimal cookie jar mock: seeded cookies stay readable, and every write
+ * is captured so expiry writes can be asserted.
+ */
+function mockCookieJar() {
+  const jar = new Map<string, string>();
+  const writes: string[] = [];
+
+  const seedLegacyCookies = () => {
+    jar.set('_shopify_y', 'legacy-unique');
+    jar.set('_shopify_s', 'legacy-visit');
+  };
+
+  vi.spyOn(document, 'cookie', 'get').mockImplementation(() =>
+    [...jar.entries()].map(([name, value]) => `${name}=${value}`).join('; '),
+  );
+  vi.spyOn(document, 'cookie', 'set').mockImplementation(
+    (cookieString: string) => {
+      writes.push(cookieString);
+      const {maxage, ...cookieKeyValuePair} = parse(cookieString);
+      const cookieName = Object.keys(cookieKeyValuePair)[0];
+      if (maxage) {
+        jar.set(cookieName, cookieKeyValuePair[cookieName]);
+      } else {
+        jar.delete(cookieName);
+      }
+    },
+  );
+
+  return {jar, writes, seedLegacyCookies};
+}
+
+function expiryWriteNames(writes: string[]): string[] {
+  return writes
+    .map((write) => {
+      const {maxage, ...cookieKeyValuePair} = parse(write);
+      const [cookieName] = Object.keys(cookieKeyValuePair);
+      return maxage === 0 ? cookieName : undefined;
+    })
+    .filter((name): name is string => Boolean(name));
+}
+
+function simulateConsentScriptRequestValues(uniqueToken: string) {
+  // The consent script caches tokens from its own request on the same
+  // Customer Privacy API object, before dispatching visitorConsentCollected:
+  getCustomerPrivacyCache().cachedToken = {
+    _shopify_y: uniqueToken,
+    _shopify_y_expires_at: Date.now() + 365 * 24 * 60 * 60 * 1000,
+  };
+  document.dispatchEvent(
+    new CustomEvent('visitorConsentCollected', {detail: {}}),
+  );
+}
+
 function getCustomerPrivacyCache() {
   return getCustomerPrivacy() as unknown as {
     cachedToken?: Record<string, unknown>;
@@ -89,6 +145,11 @@ describe('useCustomerPrivacy tracking values', () => {
   });
 
   afterEach(() => {
+    // Vitest runs with `globals: false`, so testing-library's automatic
+    // cleanup does not register: unmount explicitly, otherwise every hook
+    // rendered by an earlier test keeps its document listeners alive and
+    // consent events leak between tests.
+    cleanup();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     document.querySelectorAll('script').forEach((node) => node.remove());
@@ -330,5 +391,159 @@ describe('useCustomerPrivacy tracking values', () => {
     const {cachedToken, cachedConsent} = getCustomerPrivacyCache();
     expect(cachedToken).toBeUndefined();
     expect(cachedConsent).toBeUndefined();
+  });
+
+  describe('deprecated cookie removal', () => {
+    it('removes deprecated cookies once the published values are in place', async () => {
+      const fetchMock = mockConsentFetch();
+      const {writes, seedLegacyCookies} = mockCookieJar();
+      seedLegacyCookies();
+
+      const props = {...PROPS, sameDomainForStorefrontApi: true};
+      const {rerender} = renderHook((p) => useCustomerPrivacy(p), {
+        initialProps: props,
+      });
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+      // The consent script loads with an empty token cache; the published
+      // body values are the only replacement values in place:
+      simulateCdnConsentApiLoad();
+      rerender(props);
+
+      await act(async () => {});
+
+      // Session migration happened on the consent request (its cookie header
+      // carried the legacy values), so the legacy cookies are expired now:
+      expect(expiryWriteNames(writes).sort()).toEqual([
+        '_shopify_s',
+        '_shopify_y',
+      ]);
+    });
+
+    it('removes deprecated cookies when the consent script request provided the unique token', async () => {
+      // Hydrogen's consent fetch fails, but the script's own request already
+      // cached the replacement unique token:
+      const fetchMock = mockConsentFetchFailure();
+      const {writes, seedLegacyCookies} = mockCookieJar();
+      seedLegacyCookies();
+
+      const props = {...PROPS, sameDomainForStorefrontApi: true};
+      const {rerender} = renderHook((p) => useCustomerPrivacy(p), {
+        initialProps: props,
+      });
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+      simulateCdnConsentApiLoad({
+        cachedToken: {
+          _shopify_y: 'script-unique',
+          _shopify_y_expires_at: Date.now() + 365 * 24 * 60 * 60 * 1000,
+        },
+      });
+      rerender(props);
+
+      await act(async () => {});
+
+      expect(expiryWriteNames(writes).sort()).toEqual([
+        '_shopify_s',
+        '_shopify_y',
+      ]);
+    });
+
+    it('removes deprecated cookies when the consent script reports values after the page loaded', async () => {
+      // Both the fetch and the script's request are still in flight when the
+      // APIs load; the script's request completes later:
+      const fetchMock = mockConsentFetchFailure();
+      const {writes, seedLegacyCookies} = mockCookieJar();
+      seedLegacyCookies();
+
+      const props = {...PROPS, sameDomainForStorefrontApi: true};
+      const {rerender} = renderHook((p) => useCustomerPrivacy(p), {
+        initialProps: props,
+      });
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+      simulateCdnConsentApiLoad();
+      rerender(props);
+      await act(async () => {});
+
+      // Nothing replaced the legacy values yet, so they must be kept:
+      expect(expiryWriteNames(writes)).toEqual([]);
+
+      simulateConsentScriptRequestValues('script-unique');
+      await act(async () => {});
+
+      expect(expiryWriteNames(writes).sort()).toEqual([
+        '_shopify_s',
+        '_shopify_y',
+      ]);
+    });
+
+    it('keeps deprecated cookies when both the consent fetch and the script request failed', async () => {
+      // Double failure: no replacement values exist anywhere, so deleting
+      // the legacy cookies would orphan the visitor's session:
+      const fetchMock = mockConsentFetchFailure();
+      const {jar, writes, seedLegacyCookies} = mockCookieJar();
+      seedLegacyCookies();
+
+      const props = {...PROPS, sameDomainForStorefrontApi: true};
+      const {rerender} = renderHook((p) => useCustomerPrivacy(p), {
+        initialProps: props,
+      });
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+      // The script's request also produced no values (empty cache):
+      simulateCdnConsentApiLoad();
+      rerender(props);
+      await act(async () => {});
+
+      // Even a consent event cannot expire the cookies without the unique
+      // token in place — the safety gate holds:
+      document.dispatchEvent(
+        new CustomEvent('visitorConsentCollected', {detail: {}}),
+      );
+      await act(async () => {});
+
+      expect(expiryWriteNames(writes)).toEqual([]);
+      expect(jar.get('_shopify_y')).toBe('legacy-unique');
+      expect(jar.get('_shopify_s')).toBe('legacy-visit');
+    });
+
+    it('keeps deprecated cookies when the consent response reports no consent', async () => {
+      // The backend's no-consent signal: no replacement values exist, so
+      // the legacy cookies stay until the no-consent clear path removes them:
+      const fetchMock = mockConsentFetch({
+        data: {
+          consentManagement: {
+            cookies: {
+              trackingConsentCookie: null,
+              cookieDomain: 'shop.example',
+              shopifyUnique: null,
+              shopifyVisit: null,
+            },
+          },
+        },
+      });
+      const {jar, writes, seedLegacyCookies} = mockCookieJar();
+      seedLegacyCookies();
+
+      const props = {...PROPS, sameDomainForStorefrontApi: true};
+      const {rerender} = renderHook((p) => useCustomerPrivacy(p), {
+        initialProps: props,
+      });
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+      simulateCdnConsentApiLoad();
+      rerender(props);
+      await act(async () => {});
+
+      expect(expiryWriteNames(writes)).toEqual([]);
+      expect(jar.get('_shopify_y')).toBe('legacy-unique');
+      expect(jar.get('_shopify_s')).toBe('legacy-visit');
+    });
   });
 });

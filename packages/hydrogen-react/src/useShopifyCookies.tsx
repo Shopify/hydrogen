@@ -1,7 +1,4 @@
 import {useEffect, useRef, useState} from 'react';
-// @ts-ignore - worktop/cookie types not properly exported
-import {stringify} from 'worktop/cookie';
-import {SHOPIFY_Y, SHOPIFY_S} from './cart-constants.js';
 import {
   getTrackingValues,
   storeTrackingValues,
@@ -10,6 +7,7 @@ import {
   type ConsentFetchResult,
   type ConsentResponseValues,
 } from './tracking-utils.js';
+import {expireDeprecatedCookies} from './cookies-utils.js';
 
 // Marks the same-origin consent request: the backend includes the tracking
 // values in the response body only for requests carrying this header. A
@@ -95,50 +93,17 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {
     if (ignoreDeprecatedCookies || !coreCookiesReady) return;
 
     if (hasUserConsent) {
-      // Deprecated cookies are no longer written. Existing ones are removed
-      // client-side once their replacement values are in place through the
-      // Customer Privacy API. Setups without that API (hydrogen-react only)
-      // have no deletion, so the cookies simply age out.
+      // Deprecated cookies are no longer written, and with consent granted
+      // they are not removed here either: Hydrogen's `useCustomerPrivacy`
+      // expires them once their replacement values are in place through the
+      // Customer Privacy API. Setups without that API can call
+      // `expireDeprecatedCookies` directly; otherwise the cookies simply
+      // age out.
       return;
     }
 
-    /**
-     * Removing cookies with a domain
-     *
-     * If no domain is provided, the cookie will be removed for the current
-     * host. For Shopify, we need to ensure this domain is set with a leading
-     * dot to cover the domain scope older storefronts may have used.
-     */
-
-    // Use override domain or current host
-    let currentDomain = domain || window.location.host;
-
-    if (checkoutDomain) {
-      const checkoutDomainParts = checkoutDomain.split('.').reverse();
-      const currentDomainParts = currentDomain.split('.').reverse();
-      const sameDomainParts: Array<string> = [];
-      checkoutDomainParts.forEach((part, index) => {
-        if (part === currentDomainParts[index]) {
-          sameDomainParts.push(part);
-        }
-      });
-
-      currentDomain = sameDomainParts.reverse().join('.');
-    }
-
-    // Reset domain if localhost
-    if (/^localhost/.test(currentDomain)) currentDomain = '';
-
-    // Deprecated cookies were written with a leading dot domain
-    const domainWithLeadingDot = currentDomain
-      ? /^\./.test(currentDomain)
-        ? currentDomain
-        : `.${currentDomain}`
-      : '';
-
     // Remove user and session cookies by expiring them immediately
-    setCookie(SHOPIFY_Y, '', 0, domainWithLeadingDot);
-    setCookie(SHOPIFY_S, '', 0, domainWithLeadingDot);
+    expireDeprecatedCookies({domain, checkoutDomain});
   }, [
     coreCookiesReady,
     hasUserConsent,
@@ -148,20 +113,6 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {
   ]);
 
   return coreCookiesReady;
-}
-
-function setCookie(
-  name: string,
-  value: string,
-  maxage: number,
-  domain: string,
-): void {
-  document.cookie = stringify(name, value, {
-    maxage,
-    domain,
-    samesite: 'Lax',
-    path: '/',
-  });
 }
 
 async function fetchTrackingValuesFromBrowser(

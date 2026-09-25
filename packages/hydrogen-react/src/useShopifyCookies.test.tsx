@@ -1,6 +1,7 @@
 import {vi, afterEach, describe, expect, it} from 'vitest';
 import {renderHook, waitFor} from '@testing-library/react';
 import {useShopifyCookies} from './useShopifyCookies.js';
+import {expireDeprecatedCookies} from './cookies-utils.js';
 import {
   cachedTrackingValues,
   type ConsentFetchResult,
@@ -460,6 +461,42 @@ describe(`useShopifyCookies`, () => {
       );
 
       await waitFor(() => expect(consentResultRef.current).toBeNull());
+    });
+  });
+
+  describe('expireDeprecatedCookies', () => {
+    it('expires both deprecated cookies on the current host by default', () => {
+      const {writes} = mockCookie();
+
+      expireDeprecatedCookies();
+
+      expect(writes.length).toBe(2);
+      for (const write of writes) {
+        const {maxage, ...cookieKeyValuePair} = parse(write);
+        const [cookieName, cookieValue] = Object.entries(
+          cookieKeyValuePair,
+        ).find(([key]) => key === '_shopify_y' || key === '_shopify_s')!;
+        expect(maxage).toBe(0);
+        expect(cookieValue).toBe('');
+        expect(cookieName).toMatch(/^_shopify_[ys]$/);
+      }
+    });
+
+    it('scopes the expiry domain to the domain shared with the checkout domain', () => {
+      const {writes} = mockCookie();
+      Object.defineProperty(window, 'location', {
+        value: {host: 'shop.myshop.com'},
+        configurable: true,
+      });
+
+      expireDeprecatedCookies({checkoutDomain: 'checkout.myshop.com'});
+
+      expect(writes.length).toBe(2);
+      for (const write of writes) {
+        const {domain, maxage} = parse(write);
+        expect(domain).toBe('.myshop.com');
+        expect(maxage).toBe(0);
+      }
     });
   });
 });
