@@ -1,3 +1,10 @@
+/**
+ * Canonical event names for the Hydrogen analytics bus.
+ *
+ * Use these as the `event` argument to `publish()` and a destination's `subscribe()`. Raw string
+ * literals are type-checked and narrow the payload the same way; the constants add
+ * autocomplete and a single place to rename.
+ */
 export const AnalyticsEvent = {
   PAGE_VIEWED: "page_viewed" as const,
   PRODUCT_VIEWED: "product_viewed" as const,
