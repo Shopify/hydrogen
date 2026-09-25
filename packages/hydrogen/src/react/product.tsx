@@ -55,6 +55,7 @@ export interface UseProductFormResult<TProduct extends ProductInput> {
   }) => FormHTMLAttributes<HTMLFormElement>;
   errors: ProductFormErrors;
   matchedLineItem: CartLine | null;
+  /** Whether a form submission is currently in flight. */
   pending: boolean;
   selectOption: (
     name: string,

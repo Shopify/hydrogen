@@ -27,6 +27,7 @@ import type {
 // Public types
 // ---------------------------------------------------------------------------
 
+/** Cart and line-item errors surfaced by a {@link ProductFormStore}. */
 export interface ProductFormErrors {
   userErrors: CartUserError[];
   warnings: CartWarning[];
@@ -45,6 +46,7 @@ export interface ProductFormStoreState<
   matchedLineItem: CartLine | null;
 }
 
+/** The reactive options array from a {@link ProductFormStoreState}, typed to a specific product. */
 export type ProductFormOptions<TProduct extends ProductInput = ProductInput> =
   ProductFormStoreState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>["options"];
 
@@ -79,7 +81,9 @@ export type ValidProductSelectionResult<TProduct extends ProductInput = ProductI
   { status: "invalid" }
 >;
 
+/** Options for {@link createProductFormStore}. */
 export type CreateProductFormStoreOptions = {
+  /** Fallback selection used when the product has no `selectedOrFirstAvailableVariant`. */
   selectedOptions?: SelectedOption[];
 };
 
@@ -88,15 +92,23 @@ export interface ProductFormStore<
   TProduct extends ProductInput = ProductInput,
   TVariant extends ProductVariantInput = ProductVariantFrom<TProduct>,
 > {
+  /** Returns the current state snapshot. */
   getState(): ProductFormStoreState<TVariant, ProductOptionValueFrom<TProduct>>;
+  /** Registers a listener invoked on every state change. Returns an unsubscribe function. */
   subscribe(
     listener: (state: ProductFormStoreState<TVariant, ProductOptionValueFrom<TProduct>>) => void,
   ): () => void;
+  /** Selects an option value and resolves the new variant. */
   selectOption(name: string, value: string): VariantSelectionResult<TVariant>;
+  /** Replaces the product data and re-derives state — use after a server-side product reload. */
   hydrate(product: TProduct, opts?: { selectedOptions?: SelectedOption[] }): void;
+  /** Restores the store to its initial product and selection state. */
   reset(): void;
+  /** Re-subscribes to the cart store and resyncs cart-derived state. Only needed to reuse the store after `destroy()` (e.g. React StrictMode effects). */
   connect(): void;
+  /** Tears down the store — removes cart subscription and releases resources. */
   destroy(): void;
+  /** Forwards a native `SubmitEvent` to the cart store's form handler (routed by the submitter's `value`, typically `add`), attaching selected variant data as event detail. */
   handleFormSubmit(event: SubmitEvent): Promise<void>;
 }
 
@@ -104,12 +116,14 @@ export interface ProductFormStore<
 // Utilities
 // ---------------------------------------------------------------------------
 
+/** Returns the selected variant, or `null` when the selection is partial or the variant wasn't part of the query result. */
 export function getSelectedVariant<TVariant extends ProductVariantInput>(
   options: VariantOptionState<TVariant, ProductOptionValueInput>[],
 ): TVariant | null {
   return options[0]?.values.find((v) => v.selected)?.variant ?? null;
 }
 
+/** Guards whether the current selection can be added to cart — a variant must be resolved and available, and the product must not require a selling plan. */
 export function canAddToCart<TProduct extends ProductInput>(
   product: TProduct,
   options: VariantOptionState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>[],
@@ -155,6 +169,24 @@ type ProductFormStoreContext<TProduct extends ProductInput> = {
 // Factory
 // ---------------------------------------------------------------------------
 
+/**
+ * Creates a reactive store that manages variant selection and cart integration for a product form.
+ *
+ * The store subscribes to the {@link CartStore} to keep error and line-item
+ * state in sync. Call `destroy()` when the form unmounts to clean up the
+ * subscription.
+ *
+ * @example
+ * ```ts
+ * const store = createProductFormStore(product, cartStore);
+ *
+ * store.subscribe((state) => {
+ *   console.log("selected variant:", state.selectedVariant);
+ * });
+ *
+ * store.selectOption("Color", "Red");
+ * ```
+ */
 export function createProductFormStore<TProduct extends ProductInput>(
   product: TProduct,
   cartStore: CartStore,
