@@ -199,6 +199,8 @@ export interface CartErrorState {
 export interface CartData {
   /** Storefront API Cart GID, or `null` when no cart exists yet. */
   id: string | null;
+  /** `Cart.updatedAt` (ISO 8601). Absent until the first server response. */
+  updatedAt?: string;
   /** Shopify checkout URL. Changes when buyer identity or consent state changes. */
   checkoutUrl?: string | null;
   /** Sum of all line quantities. */
