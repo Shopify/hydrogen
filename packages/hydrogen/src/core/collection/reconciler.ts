@@ -1,16 +1,28 @@
 import type { CollectionStore } from "./collection";
 import { collectionSearchEqual, mergeCollectionParams, normalizeCollectionSearch } from "./url";
 
+/**
+ * Adapter-supplied hooks that let the reconciler read framework state and
+ * push navigation side-effects without depending on any specific framework.
+ */
 export type ReconcilerCallbacks = {
+  /** Returns the current collection store instance. */
   getStore: () => CollectionStore;
+  /** Reads the live URL search string from the framework router. */
   readUrlSearch: () => string;
+  /** Delivers a serialized search string for the framework adapter to handle. */
   emitChange: (searchString: string) => void;
 };
 
+/**
+ * State machine that keeps the URL, server data, and `CollectionStore` in
+ * sync during browse-change chains. Created by `createCollectionReconciler`.
+ */
 export type CollectionReconciler = {
   /**
-   * URL ↔ store reconciliation state machine. Call whenever urlSearch,
-   * dataSearch, or store state changes.
+   * URL ↔ store reconciliation state machine. Call whenever `urlSearch` or
+   * `dataSearch` changes. Store changes go through
+   * {@link CollectionReconciler.handleBrowseChange} instead.
    */
   reconcile(urlSearch: string, dataSearch: string): void;
   /**
