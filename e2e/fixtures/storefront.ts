@@ -175,9 +175,11 @@ export class StorefrontPage {
    * fallback values: Hydrogen never requests fallback tokens.
    */
   async getTrackingTokens(): Promise<TrackingTokens> {
+    // The privacy banner and the standalone consent script expose the token
+    // getters differently (only the banner reports a loaded consent status),
+    // so wait on the getter API itself, which both install.
     await this.page.waitForFunction(
-      () =>
-        (window as any).Shopify?.customerPrivacy?.consentStatus === 'loaded',
+      () => (window as any).Shopify?.customerPrivacy?.__internal !== undefined,
     );
     return this.page.evaluate(() => {
       const privacy = (window as any).Shopify.customerPrivacy;
@@ -222,10 +224,10 @@ export class StorefrontPage {
     }
     const tokens = {uniqueToken, visitToken};
     await expect
-      .poll(
-        () => this.getTrackingTokens(),
-        'Global getters should match consent response',
-      )
+      .poll(() => this.getTrackingTokens(), {
+        message: 'Global getters should match consent response',
+        timeout: 15000,
+      })
       .toEqual(tokens);
     await this.expectAnalyticsAllowed(true);
     return tokens;
@@ -242,20 +244,22 @@ export class StorefrontPage {
       'Declined consent should return no tokens',
     ).toEqual(tokens);
     await expect
-      .poll(
-        () => this.getTrackingTokens(),
-        'Global getters should expose no tokens',
-      )
+      .poll(() => this.getTrackingTokens(), {
+        message: 'Global getters should expose no tokens',
+        timeout: 15000,
+      })
       .toEqual(tokens);
     await this.expectAnalyticsAllowed(false);
   }
 
   private async expectAnalyticsAllowed(allowed: boolean) {
     await expect
-      .poll(() =>
-        this.page.evaluate(() =>
-          window.Shopify?.customerPrivacy?.analyticsProcessingAllowed(),
-        ),
+      .poll(
+        () =>
+          this.page.evaluate(() =>
+            window.Shopify?.customerPrivacy?.analyticsProcessingAllowed(),
+          ),
+        {timeout: 15000},
       )
       .toBe(allowed);
   }
@@ -579,12 +583,13 @@ export class StorefrontPage {
   async navigateToInStockProduct(options?: {
     waitForConsent: true;
   }): Promise<Response | void> {
-    // Clicking a product link navigates like page.goto does; the consent
-    // fetch fires during the new page load either way.
-    const captureConsent = (navigate: () => Promise<unknown>) =>
+    // The consent request fires once per full page load; in-app link clicks
+    // are client-side navigations that never re-run it. When a test needs
+    // the consent response, navigate with a full page load instead.
+    const openPath = (path: string) =>
       options?.waitForConsent
-        ? this.withConsentResponse(navigate)
-        : navigate().then(() => undefined);
+        ? this.withConsentResponse(() => this.page.goto(path))
+        : this.page.goto(path).then(() => undefined);
 
     const listingUrl = this.page.url();
     const productLinks = this.page.locator('a[href*="/products/"]');
@@ -610,7 +615,11 @@ export class StorefrontPage {
       // that aren't actionable (e.g., hidden by CSS or not yet in the DOM).
       if (!(await link.isVisible())) continue;
 
-      const response = await captureConsent(() => link.click());
+      const productPath = new URL(
+        (await link.getAttribute('href'))!,
+        this.page.url(),
+      ).pathname;
+      const response = await openPath(productPath);
       triedUrls.push(this.page.url());
 
       const isInStock = await this.getAddToCartButton()
@@ -621,7 +630,7 @@ export class StorefrontPage {
       if (isInStock) return response;
 
       // Product is sold out — return to listing and try the next one
-      await captureConsent(() => this.page.goto(listingUrl));
+      await openPath(listingUrl);
       await expect(productLinks.first()).toBeVisible();
     }
 

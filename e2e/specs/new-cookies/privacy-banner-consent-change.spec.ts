@@ -134,6 +134,10 @@ test.describe('Privacy Banner - Consent Change', () => {
       await storefront.waitForPerfKit();
       storefront.expectNoMonorailRequests();
 
+      // Let the privacy banner finish processing the declined consent: it
+      // ignores showPreferences calls made during that transition.
+      await storefront.page.waitForTimeout(1500);
+
       // Clear tracked requests before consent change
       storefront.clearRequests();
 
@@ -141,6 +145,7 @@ test.describe('Privacy Banner - Consent Change', () => {
 
       // 6. Open privacy preferences and accept consent.
       // Accepting consent should return real UUID tokens in the consent response
+      await storefront.openPrivacyPreferences();
       const tokens = await storefront.expectAllowedConsent(
         await storefront.acceptInPreferences(),
       );
