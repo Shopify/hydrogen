@@ -91,7 +91,7 @@ const consent: ConsentConfig = {
 };
 
 const analytics: NonNullable<ShopifyScriptTagsOptions["analytics"]> = {
-  customData: { theme: "v2" },             // optional, see `analytics` below
+  customData: { theme: "v2" },             // optional
 };
 ```
 
@@ -113,7 +113,7 @@ Pass the app's resolved `country` and `language` market values. Optional `curren
 
 ### `analytics`
 
-The analytics bus is enabled by default. Pass `analytics` only when you need optional bus configuration such as `customData`. Destinations read it via `getConfig().customData`; `publish()` does not merge it into payloads, and only `trackCartAnalytics()` copies it into the cart events it publishes. Shopify analytics reads currency from `window.Shopify.currency.active`, which is seeded by `i18n.currency` and updated from cart currency when available.
+The analytics bus is enabled by default. Pass `analytics` only when you need optional bus configuration such as `customData`. Shopify analytics reads currency from `window.Shopify.currency.active`, which is seeded by `i18n.currency` and updated from cart currency when available.
 
 ### `consent`
 
