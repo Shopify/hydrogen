@@ -51,8 +51,7 @@ export type CollectionActions = Pick<
  * const route = useRoute();
  * const router = useRouter();
  *
- * // `search` is `"?…"` or `""`. Append it to the path as-is rather than rebuilding
- * // a `{ query }` object, so the URL keeps the provider's exact serialization.
+ * // `search` includes the leading `?`, so append it to the path as-is.
  * const onChange = (search: string) => router.replace(`${route.path}${search}`);
  * </script>
  *

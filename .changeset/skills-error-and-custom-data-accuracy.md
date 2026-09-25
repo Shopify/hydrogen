@@ -2,4 +2,4 @@
 "@shopify/hydrogen": patch
 ---
 
-Correct skill guidance on `StorefrontApiError` (GraphQL error codes are read from `result.errors`, not the thrown error) and on analytics `customData` (only cart events include it in payloads).
+Remove incorrect skill guidance about `StorefrontApiError` carrying GraphQL error details, and clarify that analytics `customData` isn't added to published events.
