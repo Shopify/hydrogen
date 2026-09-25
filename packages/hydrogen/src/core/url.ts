@@ -5,8 +5,9 @@ export const MCP_RE = /^\/api\/mcp$/;
 export const UCP_MCP_RE = /^\/api\/ucp\/mcp$/;
 export const CHECKOUT_RE = /^\/checkout$/;
 export const CART_PERMALINK_RE = /^\/cart\/\d+:\d+(?:,\d+:\d+)*$/;
-export const BUY_PERMALINK_RE =
-  /^\/buy\/(?:[A-Za-z0-9._-]+|~[A-Za-z0-9_-]+):[1-9]\d*(?:,(?:[A-Za-z0-9._-]+|~[A-Za-z0-9_-]+):[1-9]\d*)*\/?$/;
+const BUY_ITEM_PAIR = String.raw`(?:[A-Za-z0-9._-]+|~[A-Za-z0-9_-]+):[1-9]\d*`;
+// Items are required so a storefront's own /buy pages keep routing to the app.
+export const BUY_PERMALINK_RE = new RegExp(`^/buy/${BUY_ITEM_PAIR}(?:,${BUY_ITEM_PAIR})*$`);
 export const CUSTOMER_ACCOUNT_PATHS = {
   authorize: "/account/authorize",
   login: "/account/login",
