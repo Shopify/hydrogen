@@ -17,7 +17,7 @@ const LOGO_IMAGE = {
   height: 80,
 };
 
-type PaymentSettingsInput = NonNullable<Parameters<typeof getPaymentMethodLabels>[0]>;
+type PaymentSettingsInput = Parameters<typeof getPaymentMethodLabels>[0];
 
 // Test-only: simulate unexpected values from the API.
 function fromWire(settings: {
@@ -90,17 +90,11 @@ test("keeps a logo with null alt text and dimensions as null", () => {
   );
 });
 
-test("returns no logo when brand, logo, image, or URL is missing", () => {
+test("returns no logo when brand, logo, or image is missing", () => {
   assert.equal(normalizeStorefrontShop(shopData({ brand: null })).logo, null);
   assert.equal(normalizeStorefrontShop(shopData({ brand: { logo: null } })).logo, null);
   assert.equal(
     normalizeStorefrontShop(shopData({ brand: { logo: { alt: "Logo", image: null } } })).logo,
-    null,
-  );
-  assert.equal(
-    normalizeStorefrontShop(
-      shopData({ brand: { logo: { alt: "Logo", image: { ...LOGO_IMAGE, url: "" } } } }),
-    ).logo,
     null,
   );
 });
@@ -208,13 +202,11 @@ test("ignores values that only match Object.prototype properties", () => {
   );
 });
 
-test("returns no payment methods for empty or missing payment settings", () => {
+test("returns no payment methods for empty payment settings", () => {
   assert.deepEqual(
     getPaymentMethodLabels({ acceptedCardBrands: [], supportedDigitalWallets: [] }),
     [],
   );
-  assert.deepEqual(getPaymentMethodLabels(null), []);
-  assert.deepEqual(getPaymentMethodLabels(undefined), []);
   assert.deepEqual(
     normalizeStorefrontShop(
       shopData({ paymentSettings: { acceptedCardBrands: [], supportedDigitalWallets: [] } }),

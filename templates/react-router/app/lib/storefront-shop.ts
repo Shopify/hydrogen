@@ -24,13 +24,6 @@ export type StorefrontShop = {
   paymentMethods: PaymentMethodLabel[];
 };
 
-/**
- * The root layout query's `shop` selection, derived from the query so its field
- * nullability always matches the schema. `shop`, `name`, `paymentSettings`, and
- * its lists are non-null, so a field error there propagates to the root and
- * nulls the whole response `data`, which the root loader treats as fatal. The
- * nullable `brand` branch isolates branding field errors from shop identity and payments.
- */
 export type StorefrontShopQueryData = RootLayoutQueryResult["shop"];
 
 /** The `paymentSettings` selection, typed with the Storefront API enums. */
@@ -65,11 +58,7 @@ function nonEmpty(value: string | null | undefined): string | null {
 }
 
 /** Maps accepted card brands and digital wallets to deduplicated display labels. */
-export function getPaymentMethodLabels(
-  paymentSettings: PaymentSettingsData | null | undefined,
-): PaymentMethodLabel[] {
-  if (!paymentSettings) return [];
-
+export function getPaymentMethodLabels(paymentSettings: PaymentSettingsData): PaymentMethodLabel[] {
   const labels = new Set<PaymentMethodLabel>();
   for (const method of [
     ...paymentSettings.acceptedCardBrands,
@@ -87,14 +76,11 @@ function normalizeLogo(
   const image = logo?.image;
   if (!image) return null;
 
-  const url = nonEmpty(image.url);
-  if (url === null) return null;
-
   return {
-    url,
+    url: image.url,
     altText: nonEmpty(logo?.alt) ?? nonEmpty(image.altText),
-    width: image.width ?? null,
-    height: image.height ?? null,
+    width: image.width,
+    height: image.height,
   };
 }
 

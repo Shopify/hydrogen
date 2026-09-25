@@ -88,9 +88,6 @@ export const middleware: Route.MiddlewareFunction[] = [
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const storefrontClient = context.get(storefrontClientContext);
-  // A rejected cart or layout request, or missing layout data, propagates to
-  // `ErrorBoundary`; branding field errors and the optional announcement
-  // degrade inside `loadRootLayout`.
   const [cartResult, layout] = await Promise.all([
     cartHandlers.get({ storefrontClient, request }),
     loadRootLayout(storefrontClient),

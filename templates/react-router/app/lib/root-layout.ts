@@ -34,11 +34,9 @@ export const ROOT_LAYOUT_QUERY = gql(`
 
 export type RootLayoutQueryResult = StorefrontApi.ResultOf<typeof ROOT_LAYOUT_QUERY>;
 
-export type RootLayoutNavCollection = RootLayoutQueryResult["collections"]["nodes"][number];
-
-export type RootLayoutLoaderData = {
+type RootLayoutLoaderData = {
   shopInfo: StorefrontShop;
-  navCollections: RootLayoutNavCollection[];
+  navCollections: RootLayoutQueryResult["collections"]["nodes"];
   announcement: string | null;
 };
 
