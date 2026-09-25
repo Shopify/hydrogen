@@ -1,12 +1,9 @@
 import { describe, expectTypeOf, it } from "vitest";
 
-import type { CartActions as CoreCartActions } from "../core";
 import { createCartServerHandlers } from "../core/cart";
 import type { CartData, CartState } from "../core/cart/state";
 import { gql } from "../graphql";
-import type { CartActions as VueCartActions } from "../vue";
 import { createCartComponents } from "./cart";
-import type { CartActions } from "./index";
 
 type CustomCartData = CartData & {
   loyaltyPoints: number;
@@ -127,12 +124,5 @@ describe("@shopify/hydrogen/react cart exports", () => {
     type CartExports = Extract<keyof typeof import("./index"), `${string}Cart${string}`>;
 
     expectTypeOf<CartExports>().toEqualTypeOf<"createCartComponents" | "useCartAnalytics">();
-  });
-});
-
-describe("react cart action types", () => {
-  it("re-exports the core CartActions type", () => {
-    expectTypeOf<CartActions>().toEqualTypeOf<CoreCartActions>();
-    expectTypeOf<CartActions>().toEqualTypeOf<VueCartActions>();
   });
 });

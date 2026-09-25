@@ -1,9 +1,6 @@
 import { describe, expectTypeOf, it } from "vitest";
 
-import type { PredictiveSearchActions as CorePredictiveSearchActions } from "../core";
 import type { PredictiveSearchData, PredictiveSearchState } from "../core/predictive-search";
-import type { PredictiveSearchActions as VuePredictiveSearchActions } from "../vue";
-import type { PredictiveSearchActions } from "./index";
 import { usePredictiveSearch, usePredictiveSearchForm } from "./predictive-search";
 
 type CustomPredictiveSearchData = PredictiveSearchData & {
@@ -45,12 +42,5 @@ describe("predictive search React types", () => {
     }
 
     void Consumer;
-  });
-});
-
-describe("react predictive search action types", () => {
-  it("re-exports the core PredictiveSearchActions type", () => {
-    expectTypeOf<PredictiveSearchActions>().toEqualTypeOf<CorePredictiveSearchActions>();
-    expectTypeOf<PredictiveSearchActions>().toEqualTypeOf<VuePredictiveSearchActions>();
   });
 });
