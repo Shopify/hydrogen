@@ -657,6 +657,15 @@ describe("handleShopifyRoutes", () => {
     expect(headers.get("X-Shopify-Storefront-Access-Token")).toBeNull();
   });
 
+  it("forwards buy permalinks to the configured store domain", async () => {
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/buy/123:1"),
+    });
+
+    expect(result?.status).toBe(303);
+    expect(result?.headers.get("location")).toBe("https://test-store.myshopify.com/buy/123:1");
+  });
+
   it("handles variant id product redirects before registered handlers", async () => {
     mockFetch.mockResolvedValue(
       new Response(

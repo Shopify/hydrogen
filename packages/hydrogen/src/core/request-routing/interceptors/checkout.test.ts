@@ -4,7 +4,10 @@ import { createStorefrontClient } from "../../../client/client";
 import { configureLogging, resetLoggingForTests } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
 import { createTestLogger } from "../../test-utils";
-import { handleCheckoutRedirect as handleCheckoutRedirectImpl } from "./checkout";
+import {
+  handleBuyPermalinkRedirect as handleBuyPermalinkRedirectImpl,
+  handleCheckoutRedirect as handleCheckoutRedirectImpl,
+} from "./checkout";
 
 type TestStorefrontConfig = {
   storeDomain: string;
@@ -51,14 +54,31 @@ function createPrivateStorefrontClient(
   });
 }
 
-function handleCheckoutRedirect(request: Request, fixture: TestStorefrontConfig = defaultConfig) {
+function createInterceptorOptions(request: Request, fixture: TestStorefrontConfig) {
   const storefrontClient = createPrivateStorefrontClient(request, fixture);
-  return handleCheckoutRedirectImpl(new URL(request.url), {
+  return {
     request,
     requestContext: storefrontClient.requestContext,
     sessionManager: createTestSessionManager(request),
     storefrontClient,
-  });
+  };
+}
+
+function handleCheckoutRedirect(request: Request, fixture: TestStorefrontConfig = defaultConfig) {
+  return handleCheckoutRedirectImpl(
+    new URL(request.url),
+    createInterceptorOptions(request, fixture),
+  );
+}
+
+function handleBuyPermalinkRedirect(
+  request: Request,
+  fixture: TestStorefrontConfig = defaultConfig,
+) {
+  return handleBuyPermalinkRedirectImpl(
+    new URL(request.url),
+    createInterceptorOptions(request, fixture),
+  );
 }
 
 function createTestSessionManager(request: Request) {
@@ -277,39 +297,67 @@ describe("handleCheckoutRedirect", () => {
       "https://test-store.myshopify.com/cart/123:1?source=hydrogen&payment=shop_pay",
     );
   });
+});
+
+describe("handleBuyPermalinkRedirect", () => {
+  let mockFetch: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    mockFetch = vi.fn();
+    vi.stubGlobal("fetch", mockFetch);
+  });
 
   it("returns null synchronously for bare /buy", () => {
-    const result = handleCheckoutRedirect(new Request("https://my-app.com/buy"), defaultConfig);
+    const result = handleBuyPermalinkRedirect(new Request("https://my-app.com/buy"), defaultConfig);
 
     expect(result).toBeNull();
   });
 
   it("forwards buy permalinks to the configured store domain with the query string unchanged", async () => {
-    const result = await handleCheckoutRedirect(
+    const result = await handleBuyPermalinkRedirect(
       new Request(
-        "https://my-app.com/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1?continue_to=%2Fcollections%2Fall&buyer_identity%2Femail=buyer%40example.com",
+        "https://my-app.com/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1?continue_to=/collections/all&buyer/email=buyer%40example.com",
       ),
       defaultConfig,
     );
 
     expect(result?.status).toBe(303);
     expect(result?.headers.get("location")).toBe(
-      "https://test-store.myshopify.com/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1?continue_to=%2Fcollections%2Fall&buyer_identity%2Femail=buyer%40example.com",
+      "https://test-store.myshopify.com/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1?continue_to=/collections/all&buyer/email=buyer%40example.com",
     );
     expect(result?.headers.get("cache-control")).toBe("no-store");
     expect(result?.headers.get("referrer-policy")).toBe("no-referrer");
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("does not add payment or existing cart params to buy permalinks", async () => {
+  it("forwards buy permalinks without loading the existing cart or adding payment params", async () => {
     mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
 
-    const result = await handleCheckoutRedirect(
+    const result = await handleBuyPermalinkRedirect(
       new Request("https://my-app.com/buy/123:1", { headers: { cookie: "cart=123" } }),
       defaultConfig,
     );
 
     expect(result?.headers.get("location")).toBe("https://test-store.myshopify.com/buy/123:1");
     expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("forwards mock.shop buy permalinks to the demo store", async () => {
+    const result = await handleBuyPermalinkRedirect(new Request("https://my-app.com/buy/123:1"), {
+      storeDomain: "mock.shop",
+    });
+
+    expect(result?.status).toBe(303);
+    expect(result?.headers.get("location")).toBe("https://demostore.mock.shop/buy/123:1");
+  });
+
+  it.each(["HEAD", "POST"])("returns 405 for %s requests to buy permalinks", async (method) => {
+    const result = await handleBuyPermalinkRedirect(
+      new Request("https://my-app.com/buy/123:1", { method }),
+      defaultConfig,
+    );
+
+    expect(result?.status).toBe(405);
+    expect(result?.headers.get("location")).toBeNull();
   });
 });

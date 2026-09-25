@@ -62,7 +62,7 @@ describe("BUY_PERMALINK_RE", () => {
     "/buy/123:2,456:1",
     "/buy/sku_ab-1.2:3",
     "/buy/~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1",
-    "/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1/",
+    "/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1",
   ])("matches %s", (pathname) => {
     expect(BUY_PERMALINK_RE.test(pathname)).toBe(true);
   });
@@ -75,6 +75,7 @@ describe("BUY_PERMALINK_RE", () => {
     "/buy/123:01",
     "/buy/123:1,",
     "/buy/~:1",
+    "/buy/123:1/",
     "/buy/123:1/extra",
     "/en/buy/123:1",
   ])("does not match %s", (pathname) => {
