@@ -6,6 +6,7 @@ import {
 } from 'react-router';
 import {storefrontContext} from './context-keys';
 import {HYDROGEN_SFAPI_PROXY_KEY} from './constants';
+import {handleBuyPermalinkRedirect} from './routing/buy-permalink';
 import {appendServerTimingHeader} from './utils/server-timing';
 
 type CreateRequestHandlerOptions<Context = unknown> = {
@@ -94,6 +95,16 @@ export function createRequestHandler<Context = unknown>({
       const response = await storefront.forwardMcp(request);
       appendPoweredByHeader?.(response);
       return response;
+    }
+
+    const buyPermalinkResponse = handleBuyPermalinkRedirect(
+      request,
+      url,
+      storefront,
+    );
+    if (buyPermalinkResponse) {
+      appendPoweredByHeader?.(buyPermalinkResponse);
+      return buyPermalinkResponse;
     }
 
     const response = await handleRequest(request, context);

@@ -1,4 +1,5 @@
 import {vi, describe, it, expect, beforeEach} from 'vitest';
+import type {ServerBuild} from 'react-router';
 import {createRequestHandler} from './createRequestHandler.js';
 
 const mockReactRouterHandler =
@@ -15,9 +16,17 @@ vi.mock('react-router', async (importOriginal) => {
 function createMockStorefront({
   isStorefrontApiUrl = (() => false) as (req: Request) => boolean,
   forward = () => Promise.resolve(new Response('forwarded')),
+  isMcpUrl = (() => false) as (req: Request) => boolean,
+  getShopifyDomain = (): string => 'https://test-store.myshopify.com',
   setCollectedSubrequestHeaders = () => {},
 } = {}) {
-  return {isStorefrontApiUrl, forward, setCollectedSubrequestHeaders};
+  return {
+    isStorefrontApiUrl,
+    forward,
+    isMcpUrl,
+    getShopifyDomain,
+    setCollectedSubrequestHeaders,
+  };
 }
 
 function createDocumentRequest(url = 'https://store.test/') {
@@ -64,5 +73,102 @@ describe('createRequestHandler', () => {
 
     expect(forwardMock).toHaveBeenCalledWith(request);
     expect(await response.text()).toBe('proxied');
+  });
+
+  describe('buy permalinks', () => {
+    function createBuyPermalinkHandler(
+      shopifyDomain = 'https://test-store.myshopify.com',
+    ) {
+      const storefront = createMockStorefront({
+        getShopifyDomain: () => shopifyDomain,
+      });
+
+      return createRequestHandler({
+        build: {} as ServerBuild,
+        getLoadContext: () => ({storefront}),
+      });
+    }
+
+    it('forwards buy permalinks to the store domain with the query string unchanged', async () => {
+      const response = await createBuyPermalinkHandler()(
+        createDocumentRequest(
+          'https://store.test/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1?continue_to=/collections/all&buyer/email=buyer%40example.com',
+        ),
+      );
+
+      expect(response.status).toBe(303);
+      expect(response.headers.get('location')).toBe(
+        'https://test-store.myshopify.com/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1?continue_to=/collections/all&buyer/email=buyer%40example.com',
+      );
+      expect(response.headers.get('cache-control')).toBe('no-store');
+      expect(response.headers.get('referrer-policy')).toBe('no-referrer');
+      expect(mockReactRouterHandler).not.toHaveBeenCalled();
+    });
+
+    it.each(['/buy', '/buy/', '/buy/123:1/'])(
+      'lets the app handle %s',
+      async (pathname) => {
+        const response = await createBuyPermalinkHandler()(
+          createDocumentRequest(`https://store.test${pathname}`),
+        );
+
+        expect(mockReactRouterHandler).toHaveBeenCalled();
+        expect(await response.text()).toBe('ok');
+      },
+    );
+
+    it('forwards mock.shop buy permalinks to the demo store', async () => {
+      const response = await createBuyPermalinkHandler('https://mock.shop')(
+        createDocumentRequest('https://store.test/buy/123:1'),
+      );
+
+      expect(response.status).toBe(303);
+      expect(response.headers.get('location')).toBe(
+        'https://demostore.mock.shop/buy/123:1',
+      );
+    });
+
+    it.each(['HEAD', 'POST'])(
+      'returns 405 for %s requests to buy permalinks',
+      async (method) => {
+        const response = await createBuyPermalinkHandler()(
+          new Request('https://store.test/buy/123:1', {method}),
+        );
+
+        expect(response.status).toBe(405);
+        expect(mockReactRouterHandler).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each([
+      [
+        '?continue_to=/collections/all&buyer/email=buyer%40example.com&_routes=routes%2F%24',
+        '?continue_to=/collections/all&buyer/email=buyer%40example.com',
+      ],
+      [
+        '?_routes=routes%2F%24&continue_to=%2fcollections%2fall&_routes&buyer/name=A%20B+~&tag=a&tag=b&flag&blank=',
+        '?continue_to=%2fcollections%2fall&buyer/name=A%20B+~&tag=a&tag=b&flag&blank=',
+      ],
+      [
+        '?%5Froutes=routes%2F%24&_routes_extra=keep&bad%=value',
+        '?_routes_extra=keep&bad%=value',
+      ],
+      ['?continue_to=/collections/all', '?continue_to=/collections/all'],
+      ['?_routes=routes%2F%24&_routes', ''],
+    ])(
+      'reloads buy permalinks without rewriting query bytes in %s',
+      async (search, documentSearch) => {
+        const response = await createBuyPermalinkHandler()(
+          new Request(`https://store.test/buy/123:1.data${search}`),
+        );
+
+        expect(response.status).toBe(204);
+        expect(response.headers.get('X-Remix-Redirect')).toBe(
+          `/buy/123:1${documentSearch}`,
+        );
+        expect(response.headers.get('X-Remix-Reload-Document')).toBe('true');
+        expect(mockReactRouterHandler).not.toHaveBeenCalled();
+      },
+    );
   });
 });

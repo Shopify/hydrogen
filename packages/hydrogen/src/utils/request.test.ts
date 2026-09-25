@@ -1,5 +1,11 @@
 import {describe, it, expect} from 'vitest';
-import {getHeader, extractHeaders, MCP_RE, getSafePathname} from './request';
+import {
+  getHeader,
+  extractHeaders,
+  MCP_RE,
+  BUY_PERMALINK_RE,
+  getSafePathname,
+} from './request';
 import {IncomingMessage} from 'node:http';
 import type {Socket} from 'node:net';
 
@@ -46,6 +52,33 @@ describe('request utils', () => {
 
     it('matches full URLs with query parameters', () => {
       expect(isMcpPath('https://store.com/api/mcp?session=abc')).toBe(true);
+    });
+  });
+
+  describe('BUY_PERMALINK_RE', () => {
+    it.each([
+      '/buy/123:1',
+      '/buy/123:2,456:1',
+      '/buy/sku_ab-1.2:3',
+      '/buy/~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1',
+      '/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1',
+    ])('matches %s', (pathname) => {
+      expect(BUY_PERMALINK_RE.test(pathname)).toBe(true);
+    });
+
+    it.each([
+      '/buy',
+      '/buy/',
+      '/buy/123',
+      '/buy/123:0',
+      '/buy/123:01',
+      '/buy/123:1,',
+      '/buy/~:1',
+      '/buy/123:1/',
+      '/buy/123:1/extra',
+      '/en/buy/123:1',
+    ])('does not match %s', (pathname) => {
+      expect(BUY_PERMALINK_RE.test(pathname)).toBe(false);
     });
   });
 
