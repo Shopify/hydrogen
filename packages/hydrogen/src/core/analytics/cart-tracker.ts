@@ -29,9 +29,8 @@ type CartTrackerState = {
  * `product_added_to_cart` / `product_removed_from_cart` for each line that was
  * added, removed, or changed quantity. Deduplicates on `updatedAt` with an
  * in-memory cursor (within this subscription) and `localStorage` (across full
- * page loads and tabs). The built-in cart queries select `updatedAt`; if you
- * populate the store from your own cart query, select it there too — without
- * it each snapshot is stamped with the current time and deduplication can't work.
+ * page loads and tabs). A store filled from your own cart query must select
+ * `updatedAt`, or deduplication can't work.
  *
  * @throws {Error} If `window.Shopify.analytics` is not set (including on the server).
  *   Render `ShopifyScripts` (or the `getShopifyScriptTags()` output) first.

@@ -1,10 +1,6 @@
 import { createCartServerHandlers, gql } from "@shopify/hydrogen";
 
-/**
- * Custom cart fragment — adds `merchandise.price`, which the analytics
- * `AnalyticsCartLine` shape requires and the built-in `HydrogenCartFragment`
- * omits. Composed alongside the built-in fragment by `createCartServerHandlers`.
- */
+/** Adds `merchandise.price`, which analytics cart lines require. */
 const cartFragment = gql(`
   fragment CartFragment on Cart {
     lines(first: 250) {
