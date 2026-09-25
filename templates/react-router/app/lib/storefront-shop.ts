@@ -4,6 +4,8 @@
 
 import type { CardBrand, DigitalWallet } from "@shopify/hydrogen/storefront-api-types";
 
+import type { RootLayoutQueryResult } from "~/lib/root-layout";
+
 /** Neutral name used only when the Storefront API returns no shop name. */
 export const FALLBACK_SHOP_NAME = "Store";
 
@@ -23,28 +25,13 @@ export type StorefrontShop = {
 };
 
 /**
- * The `shop` selection returned by the root layout query. Every level is
- * nullable so partial GraphQL results (a field error absorbed by a nullable
- * ancestor) still normalize to a usable `StorefrontShop`.
+ * The root layout query's `shop` selection, derived from the query so its field
+ * nullability always matches the schema. `shop`, `name`, `paymentSettings`, and
+ * its lists are non-null, so a field error there propagates to the root and
+ * nulls the whole response `data`, which the root loader treats as fatal. The
+ * nullable `brand` branch isolates branding field errors from shop identity and payments.
  */
-export type StorefrontShopQueryData =
-  | {
-      name: string | null;
-      brand: {
-        logo: {
-          alt: string | null;
-          image: {
-            url: string;
-            altText: string | null;
-            width: number | null;
-            height: number | null;
-          } | null;
-        } | null;
-      } | null;
-      paymentSettings: PaymentSettingsData | null;
-    }
-  | null
-  | undefined;
+export type StorefrontShopQueryData = RootLayoutQueryResult["shop"];
 
 /** The `paymentSettings` selection, typed with the Storefront API enums. */
 type PaymentSettingsData = {
@@ -95,7 +82,7 @@ export function getPaymentMethodLabels(
 }
 
 function normalizeLogo(
-  logo: NonNullable<NonNullable<StorefrontShopQueryData>["brand"]>["logo"] | undefined,
+  logo: NonNullable<StorefrontShopQueryData["brand"]>["logo"] | undefined,
 ): StorefrontShopLogo | null {
   const image = logo?.image;
   if (!image) return null;
@@ -114,9 +101,9 @@ function normalizeLogo(
 /** Normalizes the root query's `shop` selection for the layout and metadata. */
 export function normalizeStorefrontShop(shop: StorefrontShopQueryData): StorefrontShop {
   return {
-    name: nonEmpty(shop?.name) ?? FALLBACK_SHOP_NAME,
-    logo: normalizeLogo(shop?.brand?.logo),
-    paymentMethods: getPaymentMethodLabels(shop?.paymentSettings),
+    name: nonEmpty(shop.name) ?? FALLBACK_SHOP_NAME,
+    logo: normalizeLogo(shop.brand?.logo),
+    paymentMethods: getPaymentMethodLabels(shop.paymentSettings),
   };
 }
 

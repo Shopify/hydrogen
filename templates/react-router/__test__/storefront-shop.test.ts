@@ -27,9 +27,7 @@ function fromWire(settings: {
   return settings as unknown as PaymentSettingsInput;
 }
 
-function shopData(
-  overrides: Partial<NonNullable<StorefrontShopQueryData>> = {},
-): NonNullable<StorefrontShopQueryData> {
+function shopData(overrides: Partial<StorefrontShopQueryData> = {}): StorefrontShopQueryData {
   return {
     name: "Snowdevil",
     brand: { logo: { alt: "Snowdevil logo", image: LOGO_IMAGE } },
@@ -43,19 +41,26 @@ test("uses the Storefront API shop name, including alternate names", () => {
   assert.equal(normalizeStorefrontShop(shopData({ name: "  Mock.shop  " })).name, "Mock.shop");
 });
 
-test("falls back to a neutral name without fabricating branding or payments", () => {
+test("falls back to a neutral name for a blank shop name without fabricating branding or payments", () => {
   const expected = { name: FALLBACK_SHOP_NAME, logo: null, paymentMethods: [] };
+  const noPayments = { acceptedCardBrands: [], supportedDigitalWallets: [] };
   assert.equal(FALLBACK_SHOP_NAME, "Store");
-  assert.deepEqual(normalizeStorefrontShop(null), expected);
-  assert.deepEqual(normalizeStorefrontShop(undefined), expected);
   assert.deepEqual(
-    normalizeStorefrontShop({ name: "", brand: null, paymentSettings: null }),
+    normalizeStorefrontShop({ name: "", brand: null, paymentSettings: noPayments }),
     expected,
   );
   assert.deepEqual(
-    normalizeStorefrontShop({ name: "   ", brand: null, paymentSettings: null }),
+    normalizeStorefrontShop({ name: "   ", brand: null, paymentSettings: noPayments }),
     expected,
   );
+});
+
+test("keeps the name and payments when a nullable brand field error nulls branding", () => {
+  assert.deepEqual(normalizeStorefrontShop(shopData({ brand: null })), {
+    name: "Snowdevil",
+    logo: null,
+    paymentMethods: ["Visa", "Apple Pay"],
+  });
 });
 
 test("normalizes the brand logo and prefers the brand logo alt text", () => {
