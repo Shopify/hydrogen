@@ -403,6 +403,19 @@ describe("trackCartAnalytics", () => {
     expect(cartUpdatedCalls).toHaveLength(1);
   });
 
+  it("does not emit cart_updated when a settled update returns an unchanged cart", async () => {
+    const { analytics, publish } = createTestAnalytics();
+    setGlobalAnalytics(analytics);
+    const store = createStore(createCartDataFromAnalyticsCart(CART_DATA));
+
+    trackCartAnalytics(store);
+    store.connect();
+    await dispatchCartLinesUpdate(createCartDataFromAnalyticsCart(CART_DATA));
+    store.destroy();
+
+    expect(publish).not.toHaveBeenCalled();
+  });
+
   it("deduplicates via localStorage across tracker instances", () => {
     const firstAnalytics = createTestAnalytics();
     setGlobalAnalytics(firstAnalytics.analytics);

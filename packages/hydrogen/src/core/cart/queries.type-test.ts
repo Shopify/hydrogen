@@ -54,6 +54,15 @@ describe("cart query result types", () => {
     expectTypeOf<R>().toHaveProperty("cart");
   });
 
+  it("default cart data includes updatedAt for analytics deduplication", () => {
+    type R = ResultOf<typeof cartQueries.cart>;
+    expectTypeOf<NonNullable<R["cart"]>["updatedAt"]>().toEqualTypeOf<string>();
+    expectTypeOf<CartDataForOptions<{}>["updatedAt"]>().toEqualTypeOf<string>();
+    expectTypeOf<
+      CartDataForOptions<{ readonly fragment: typeof customCartFragment }>["updatedAt"]
+    >().toEqualTypeOf<string>();
+  });
+
   it("custom cart fragments extend cart query types", () => {
     type R = ResultOf<typeof customCartQueries.cart>;
     type Merchandise = CartProductVariantMerchandise<R["cart"]>;
