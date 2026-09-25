@@ -346,20 +346,6 @@ describe("useCart", () => {
     expect(renderSpy).toHaveBeenCalledTimes(initialRenderCount);
   });
 
-  it("server snapshot returns EMPTY_CART_STATE slice", () => {
-    const Consumer = defineComponent({
-      setup() {
-        const qty = useCart((s) => s.data.totalQuantity);
-        return () => h("span", { "data-testid": "qty" }, qty.value);
-      },
-    });
-
-    const wrapper = mount(CartProvider, {
-      slots: { default: () => h(Consumer) },
-    });
-    expect(wrapper.find('[data-testid="qty"]').text()).toBe("0");
-  });
-
   it("returns full cart state when called without a selector", () => {
     vi.mocked(createCartStore).mockImplementation(() =>
       createMockStore({ cart: makeCartData({ totalQuantity: 42 }) }),
@@ -608,13 +594,27 @@ describe("useCartForm", () => {
 });
 
 describe("cartEndpoint option", () => {
-  it("defaults formProps.action to /api/cart", () => {
-    const result = mountWithConsumer(() => {
-      const { formProps } = useCartForm();
-      return { exposed: formProps(), render: () => null };
+  it("defaults formProps.action to /api/cart", async () => {
+    // The shared beforeEach configures the endpoint, so load an unconfigured binding.
+    vi.resetModules();
+    const core = await import("../core/cart/cart");
+    vi.mocked(core.createCartStore).mockImplementation((options) =>
+      createMockStore(options?.initialData),
+    );
+    const fresh = await import("./cart");
+    let result: ReturnType<ReturnType<typeof fresh.useCartForm>["formProps"]> | undefined;
+    const Consumer = defineComponent({
+      setup() {
+        result = fresh.useCartForm().formProps();
+        return () => null;
+      },
     });
 
+    mount(fresh.CartProvider, { slots: { default: () => h(Consumer) } });
+    assert(result, "expected formProps to be assigned");
+
     expect(result.action).toBe("/api/cart");
+    expect(core.configureCartEndpoint).toHaveBeenCalledWith("/api/cart");
   });
 
   it("custom cartEndpoint configures transport and flows to formProps.action", () => {

@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import type { CartActionError } from "../../../vendor/standard-actions";
-import { configureLogging, resetLoggingForTests } from "../logging";
+import { configureLogging } from "../logging";
 import {
   CONSENT_TRACKING_API_LOADED_EVENT,
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
@@ -325,7 +325,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  resetLoggingForTests();
+  configureLogging({});
   store.destroy();
   resetStandardActionsForTests();
   document

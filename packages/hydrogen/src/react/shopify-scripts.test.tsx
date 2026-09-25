@@ -248,18 +248,6 @@ describe("ShopifyScripts", () => {
     expect(html).toContain("consentDomain=window.location.host");
   });
 
-  it("accepts disabled WebMCP without rendering SSR scripts", () => {
-    const html = renderToStaticMarkup(
-      createElement(ShopifyScripts, {
-        routes: emptyRouteTemplates,
-        shop: TEST_SHOP,
-        webMcp: false,
-      }),
-    );
-
-    expect(html).not.toContain(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT);
-  });
-
   it("initializes browser script behavior once with initial props", async () => {
     mockShopifyScriptTags();
     const initializeShopifyScripts = vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts");

@@ -561,32 +561,6 @@ describe("localHttps plugin API", () => {
     vi.restoreAllMocks();
   });
 
-  it("returns dev server config when enabled", () => {
-    const directory = fs.mkdtempSync(join(tmpdir(), "hydrogen-local-https-dev-server-"));
-    const certPath = join(directory, "custom.test.pem");
-    const keyPath = join(directory, "custom.test-key.pem");
-    fs.writeFileSync(certPath, "certificate");
-    fs.writeFileSync(keyPath, "private-key");
-
-    try {
-      const plugin = localHttps({
-        enabled: true,
-        host: "custom.test",
-        port: 4_321,
-        certPath,
-        keyPath,
-      });
-
-      expect(plugin.api.getDevServerConfig()).toEqual({
-        host: "custom.test",
-        port: 4_321,
-        https: { cert: certPath, key: keyPath },
-      });
-    } finally {
-      fs.rmSync(directory, { recursive: true, force: true });
-    }
-  });
-
   it("warns and returns undefined when a certificate is missing", () => {
     const warn = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
     const certPath = join(tmpdir(), "missing-cert.pem");

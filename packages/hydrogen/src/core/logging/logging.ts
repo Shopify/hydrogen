@@ -18,7 +18,7 @@ const CONSOLE_METHODS: Record<LogSeverity, "debug" | "info" | "warn" | "error"> 
   fatal: "error",
 };
 
-export function formatLogPrefix(level: LogSeverity, scope: string): string {
+function formatLogPrefix(level: LogSeverity, scope: string): string {
   return `[hydrogen:${level}:${scope}]`;
 }
 
@@ -80,12 +80,6 @@ export function configureLogging(options: ConfigureLoggingOptions): void {
 
   state.logger = logger;
   state.level = level;
-}
-
-/** @internal */
-export function resetLoggingForTests(): void {
-  state.logger = consoleLogger;
-  state.level = DEFAULT_LOG_LEVEL;
 }
 
 /**

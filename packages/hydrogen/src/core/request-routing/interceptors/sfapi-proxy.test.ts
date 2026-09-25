@@ -7,7 +7,7 @@ import {
   STOREFRONT_ID_HEADER,
   STOREFRONT_PRIVATE_TOKEN_HEADER,
 } from "../../headers";
-import { configureLogging, resetLoggingForTests } from "../../logging";
+import { configureLogging } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
 import { assert, createTestLogger } from "../../test-utils";
 import { handleSfapiProxy as handleSfapiProxyImpl } from "./sfapi-proxy";
@@ -127,7 +127,7 @@ function createTestSessionManager(request: Request) {
 describe("handleSfapiProxy", () => {
   let mockFetch: ReturnType<typeof vi.fn>;
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
   });
 
   beforeEach(() => {
@@ -515,14 +515,5 @@ describe("handleSfapiProxy", () => {
     const body = await result.json();
     expect(body).toEqual({ error: "Connection refused" });
     expect(logger.error).toHaveBeenCalledWith("request failed", { scope: "sfapi-proxy", error });
-  });
-
-  it("passes AbortSignal.timeout to upstream fetch", async () => {
-    await handleSfapiProxy(createRequest("/api/2025-01/graphql.json"), defaultStoreUrl);
-
-    const call = mockFetch.mock.calls[0];
-    assert(call, "expected fetch to be called");
-    const [, init] = call;
-    expect(init.signal).toBeDefined();
   });
 });

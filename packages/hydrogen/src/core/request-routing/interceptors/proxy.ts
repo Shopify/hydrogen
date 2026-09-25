@@ -31,7 +31,6 @@ type ProxyDescriptor = {
   formatError?: (message: string) => unknown;
   redirect?: RequestRedirect;
   scope: string;
-  timeoutMs?: number;
   rewritePathname?: (pathname: string) => string;
   requestHeaders: ProxyRequestHeaderOptions;
   responseHeaders?: ProxyResponseHeaderOptions;
@@ -82,7 +81,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
         method: request.method,
         body: request.body,
         headers: createProxyRequestHeaders(descriptor, { ...options, url }),
-        signal: AbortSignal.timeout(descriptor.timeoutMs ?? PROXY_TIMEOUT_MS),
+        signal: AbortSignal.timeout(PROXY_TIMEOUT_MS),
         redirect: descriptor.redirect ?? "manual",
       };
 

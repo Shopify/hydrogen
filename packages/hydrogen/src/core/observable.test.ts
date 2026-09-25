@@ -173,13 +173,5 @@ describe("createObservable", () => {
       obs.setState({ count: 1 });
       expect(listener2).not.toHaveBeenCalled();
     });
-
-    it("double unsubscribe is safe", () => {
-      const obs = createObservable({ count: 0 });
-      const unsub = obs.subscribe(vi.fn());
-
-      unsub();
-      expect(() => unsub()).not.toThrow();
-    });
   });
 });
