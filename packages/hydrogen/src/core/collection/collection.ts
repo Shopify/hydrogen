@@ -110,7 +110,10 @@ export type CollectionStore = {
 
   /**
    * Parses `FormData` from the submitted form into collection params and applies them.
-   * Callers must call `event.preventDefault()` before invoking this method.
+   * Doesn't cancel the event: call `event.preventDefault()` first, or the browser
+   * submits the form natively and navigates away.
+   *
+   * @throws {TypeError} If `event.target` is not an `HTMLFormElement`.
    */
   handleFormSubmit(event: SubmitEvent): void;
 
@@ -162,6 +165,17 @@ type CollectionStoreContext = {
  *
  * The store manages browse intent (filters, sort) only.
  * Server response data lives in the framework's loader.
+ *
+ * @example
+ * ```ts
+ * const store = createCollectionStore({
+ *   data: loaderData.collection,
+ *   urlSearch: window.location.search,
+ *   onBrowseChange: () => navigate({ search: store.serializeToParams().toString() }),
+ * });
+ *
+ * store.subscribe((state) => renderFilters(state.filters));
+ * ```
  */
 export function createCollectionStore(options: CreateCollectionStoreOptions): CollectionStore {
   const initialState = buildInitialState(options);
