@@ -284,7 +284,7 @@ Every successful result includes `headers` (the raw `Headers` object from the re
 
 A 200 response with GraphQL `errors` does NOT throw — partial success is valid in GraphQL. Non-200 responses, timeouts, network failures, and JSON parse errors all throw `StorefrontApiError` (or the `StorefrontTimeoutError` subclass).
 
-`StorefrontApiError` carries GraphQL error context (`locations`, `path`, `extensions`) when available. `extensions.code` enables programmatic branching (e.g. retry on `"THROTTLED"`). `toJSON()` strips dev-only fields (`queryText`, `variables`, `stack`) — safe for error reporters.
+`StorefrontApiError` carries `status` and `requestId` (the `x-request-id` header, useful for Shopify support) when the request reached the server. In development it also carries `queryText` and `variables`. It does not carry GraphQL error details: to branch on a GraphQL error code (e.g. retry on `"THROTTLED"`), read `errors[i].extensions?.code` from the returned result. `toJSON()` serializes `name`, `message`, `requestId`, and `status`, never `queryText` or `variables` — safe for error reporters.
 
 ---
 

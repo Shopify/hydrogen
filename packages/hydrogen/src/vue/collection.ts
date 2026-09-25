@@ -45,15 +45,22 @@ export type CollectionActions = Pick<
  * ```vue
  * <script setup lang="ts">
  * import { CollectionProvider, type CollectionData } from '@shopify/hydrogen/vue';
+ * import { useRoute, useRouter } from 'vue-router';
  *
  * const props = defineProps<{ data: CollectionData; urlSearch: string }>();
+ * const route = useRoute();
+ * const router = useRouter();
+ *
+ * // `search` is `"?…"` or `""`. Append it to the path as-is rather than rebuilding
+ * // a `{ query }` object, so the URL keeps the provider's exact serialization.
+ * const onChange = (search: string) => router.replace(`${route.path}${search}`);
  * </script>
  *
  * <template>
  *   <CollectionProvider
  *     :data="props.data"
  *     :url-search="props.urlSearch"
- *     @change="(s) => router.replace({ search: s })"
+ *     @change="onChange"
  *   >
  *     <slot />
  *   </CollectionProvider>

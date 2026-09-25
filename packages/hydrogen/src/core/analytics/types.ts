@@ -19,11 +19,11 @@ export type ShopAnalytics =
   | (ShopAnalyticsBase & {
       /** The storefront is served by the Hydrogen sales channel. */
       channel: "hydrogen";
-      /** Identifier assigned by the Hydrogen sales channel. */
+      /** Hydrogen storefront ID. Pass `"0"` when the app has no storefront ID. */
       storefrontId: ShopifyScriptsShop["storefrontId"];
     })
   | (ShopAnalyticsBase & {
-      /** The storefront is a custom headless build without a Hydrogen channel. */
+      /** The storefront uses the Headless sales channel; analytics aren't tied to a storefront. */
       channel: "headless";
       storefrontId?: never;
     });
@@ -58,7 +58,8 @@ export type ConsentSetup = () => Promise<void>;
  *   `setup` callback that integrates a third-party consent provider.
  *   Events release once the `setup` callback resolves.
  * - `"no-banner"` (or omitted) loads only the Customer Privacy API and
- *   releases events once it loads.
+ *   releases events once it loads. If `window.privacyBanner` is present on the
+ *   page anyway, events wait as they do for `"default-banner"`.
  *
  * In every mode, destinations only receive events while analytics processing is
  * allowed.
@@ -249,7 +250,11 @@ export type StorefrontAnalyticsConfig = {
   shop: ShopAnalytics | null;
   /** Serializable consent settings. The provider setup callback stays in the client bundle. */
   consent: Pick<ConsentConfig, "mode">;
-  /** Extra key-value pairs accessible to destinations via `getConfig().customData`. */
+  /**
+   * Extra key-value pairs accessible to destinations via `getConfig().customData`.
+   * `publish()` doesn't merge them into payloads; only `trackCartAnalytics` copies
+   * them into the cart payloads it publishes.
+   */
   customData?: Record<string, unknown>;
 };
 
@@ -290,7 +295,8 @@ export type StorefrontAnalyticsDestinationSetupContext = {
  * Destinations subscribe to events during `setup()` and receive live delivery
  * plus replayed buffered events once tracking is allowed. Return a cleanup
  * function from `setup()` to tear down side effects when the destination is
- * removed or the bus is destroyed.
+ * removed via the function returned by `addDestination()`. The bus itself lives
+ * for the page's lifetime.
  */
 export type StorefrontAnalyticsDestination = {
   /** Unique name for this destination — duplicates are rejected with a warning. */
