@@ -3,10 +3,19 @@ import type { FormatMoneyOptions, FormattedMoney, FormattedMoneyRange, MoneyV2 }
 
 /**
  * Intl.NumberFormat part types that make up the raw numeric amount.
- * Used to extract "19.99" from a formatted string like "$19.99" by
- * filtering out currency symbols, sign, and other non-numeric parts.
+ * Used to extract "19.99" from a formatted string like "$19.99" (or
+ * "-19.99" from "-$19.99") by filtering out currency symbols and other
+ * non-numeric parts. The minus sign is kept so negative amounts such as
+ * refunds and discounts don't render as positive.
  */
-const NUMERIC_PART_TYPES = new Set(["decimal", "fraction", "group", "integer", "literal"]);
+const NUMERIC_PART_TYPES = new Set([
+  "decimal",
+  "fraction",
+  "group",
+  "integer",
+  "literal",
+  "minusSign",
+]);
 const WELL_FORMED_CURRENCY_CODE = /^[a-z]{3}$/i;
 
 type RangeFormatter = Intl.NumberFormat & {

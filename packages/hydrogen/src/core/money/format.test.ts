@@ -89,6 +89,23 @@ describe("formatMoney", () => {
       expect(price.amount).toBe("19.99");
     });
 
+    it("keeps the minus sign in the numeric amount for negative values", () => {
+      const price = formatMoney({ amount: "-19.99", currencyCode: "USD" }, { locale: "en-US" });
+      expect(price.amount).toBe("-19.99");
+      expect(`${price}`).toBe("-$19.99");
+    });
+
+    it("keeps the minus sign when the currency precedes it", () => {
+      const price = formatMoney({ amount: "-234.50", currencyCode: "CHF" }, { locale: "de-CH" });
+      expect(`${price}`).toBe("CHF-234.50");
+      expect(price.amount).toBe("-234.50");
+    });
+
+    it("keeps the minus sign for unsupported currencies", () => {
+      const price = formatMoney({ amount: "-5.00", currencyCode: "USDC" }, { locale: "en-US" });
+      expect(price.amount).toBe("-5.00");
+    });
+
     it("returns the currency symbol", () => {
       const price = formatMoney({ amount: "19.99", currencyCode: "USD" }, { locale: "en-US" });
       expect(price.currencySymbol).toBe("$");
