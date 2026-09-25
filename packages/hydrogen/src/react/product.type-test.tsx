@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes } from "react";
-import { expectTypeOf } from "vitest";
+import { describe, expectTypeOf, it } from "vitest";
 
 import type { ProductFormStore, ProductInput, ProductVariantInput } from "../core/product";
 import { useProductForm } from "./product";
@@ -22,66 +22,72 @@ type ProductWithSwatches = Omit<ProductInput<ProductVariantInput>, "options"> & 
 };
 declare const swatchStore: ProductFormStore<ProductWithSwatches>;
 
-export function productFormTypes() {
-  const result = useProductForm(store);
-  const { register } = result;
+describe("react product form types", () => {
+  it("types useProductForm results and register props", () => {
+    function Consumer() {
+      const result = useProductForm(store);
+      const { register } = result;
 
-  expectTypeOf(result.selectedVariant).toEqualTypeOf<ProductVariantInput | null>();
+      expectTypeOf(result.selectedVariant).toEqualTypeOf<ProductVariantInput | null>();
 
-  const swatchResult = useProductForm(swatchStore);
-  expectTypeOf(swatchResult.options[0].values[0].swatch).toEqualTypeOf<
-    ProductOptionValueSwatch | undefined
-  >();
+      const swatchResult = useProductForm(swatchStore);
+      expectTypeOf(swatchResult.options[0].values[0].swatch).toEqualTypeOf<
+        ProductOptionValueSwatch | undefined
+      >();
 
-  const merchandiseProps: InputHTMLAttributes<HTMLInputElement> = {
-    type: "hidden",
-    ...register("merchandiseId", {}),
-  };
-  expectTypeOf(merchandiseProps.name).toEqualTypeOf<string | undefined>();
+      const merchandiseProps: InputHTMLAttributes<HTMLInputElement> = {
+        type: "hidden",
+        ...register("merchandiseId", {}),
+      };
+      expectTypeOf(merchandiseProps.name).toEqualTypeOf<string | undefined>();
 
-  const quantityProps: InputHTMLAttributes<HTMLInputElement> = {
-    type: "number",
-    ...register("quantity", { value: 1 }),
-  };
-  expectTypeOf(quantityProps.value).toEqualTypeOf<
-    string | number | readonly string[] | undefined
-  >();
+      const quantityProps: InputHTMLAttributes<HTMLInputElement> = {
+        type: "number",
+        ...register("quantity", { value: 1 }),
+      };
+      expectTypeOf(quantityProps.value).toEqualTypeOf<
+        string | number | readonly string[] | undefined
+      >();
 
-  const radioProps: InputHTMLAttributes<HTMLInputElement> = {
-    type: "radio",
-    checked: true,
-    disabled: false,
-    ...register("optionValue", { optionName: "Color", value: "Red" }),
-  };
-  expectTypeOf(radioProps.checked).toEqualTypeOf<boolean | undefined>();
+      const radioProps: InputHTMLAttributes<HTMLInputElement> = {
+        type: "radio",
+        checked: true,
+        disabled: false,
+        ...register("optionValue", { optionName: "Color", value: "Red" }),
+      };
+      expectTypeOf(radioProps.checked).toEqualTypeOf<boolean | undefined>();
 
-  const buttonProps: ButtonHTMLAttributes<HTMLButtonElement> = {
-    type: "button",
-    "aria-pressed": true,
-    disabled: false,
-    ...register("optionValue", { optionName: "Color", value: "Red" }),
-  };
-  expectTypeOf(buttonProps["aria-pressed"]).toEqualTypeOf<
-    ButtonHTMLAttributes<HTMLButtonElement>["aria-pressed"]
-  >();
+      const buttonProps: ButtonHTMLAttributes<HTMLButtonElement> = {
+        type: "button",
+        "aria-pressed": true,
+        disabled: false,
+        ...register("optionValue", { optionName: "Color", value: "Red" }),
+      };
+      expectTypeOf(buttonProps["aria-pressed"]).toEqualTypeOf<
+        ButtonHTMLAttributes<HTMLButtonElement>["aria-pressed"]
+      >();
 
-  const addToCartProps: ButtonHTMLAttributes<HTMLButtonElement> = {
-    disabled: false,
-    ...register("addToCart", {}),
-  };
-  expectTypeOf(addToCartProps.type).toEqualTypeOf<
-    ButtonHTMLAttributes<HTMLButtonElement>["type"]
-  >();
+      const addToCartProps: ButtonHTMLAttributes<HTMLButtonElement> = {
+        disabled: false,
+        ...register("addToCart", {}),
+      };
+      expectTypeOf(addToCartProps.type).toEqualTypeOf<
+        ButtonHTMLAttributes<HTMLButtonElement>["type"]
+      >();
 
-  // @ts-expect-error product register only accepts product-relevant fields
-  register("add");
+      // @ts-expect-error product register only accepts product-relevant fields
+      register("add");
 
-  // @ts-expect-error merchandiseId takes its params in the second argument
-  register("merchandiseId");
+      // @ts-expect-error merchandiseId takes its params in the second argument
+      register("merchandiseId");
 
-  // @ts-expect-error arbitrary option names are registered through "optionValue"
-  register("Color", { value: "Red" });
+      // @ts-expect-error arbitrary option names are registered through "optionValue"
+      register("Color", { value: "Red" });
 
-  // @ts-expect-error optionValue requires optionName
-  register("optionValue", { value: "Red" });
-}
+      // @ts-expect-error optionValue requires optionName
+      register("optionValue", { value: "Red" });
+    }
+
+    void Consumer;
+  });
+});

@@ -46,8 +46,8 @@ export interface UseProductFormResult<TProduct extends ProductInput> {
   selectedVariant: ProductVariantFrom<TProduct> | null;
   register: ProductFormRegister;
   formProps: (opts?: {
-    beforeSubmit?: (e: Event) => void;
-    afterSubmit?: (e: Event) => void;
+    beforeSubmit?: (e: SubmitEvent) => void;
+    afterSubmit?: (e: SubmitEvent) => void;
   }) => Record<string, unknown>;
   errors: ProductFormErrors;
   matchedLineItem: CartLine | null;
@@ -110,17 +110,17 @@ function useProductFormImpl<TProduct extends ProductInput>(
   }
 
   function formProps(opts?: {
-    beforeSubmit?: (e: Event) => void;
-    afterSubmit?: (e: Event) => void;
+    beforeSubmit?: (e: SubmitEvent) => void;
+    afterSubmit?: (e: SubmitEvent) => void;
   }): Record<string, unknown> {
     return {
-      onSubmit: (e: Event) => {
+      onSubmit: (e: SubmitEvent) => {
         opts?.beforeSubmit?.(e);
         if (e.defaultPrevented) return;
         e.preventDefault();
         pending.value = true;
         store
-          .handleFormSubmit(e as SubmitEvent)
+          .handleFormSubmit(e)
           .then(
             () => opts?.afterSubmit?.(e),
             (error: unknown) => {

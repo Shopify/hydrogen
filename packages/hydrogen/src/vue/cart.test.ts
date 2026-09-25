@@ -445,11 +445,51 @@ describe("useCartForm", () => {
     expect(latestStore.handleFormSubmit).toHaveBeenCalledWith(nativeEvent);
   });
 
+  it("formProps passes the submitted form's SubmitEvent to callbacks and the store", () => {
+    const calls: Array<{ step: string; event: SubmitEvent; submitter: HTMLElement | null }> = [];
+    const Consumer = defineComponent({
+      setup() {
+        const { formProps } = useCartForm();
+        return () =>
+          h(
+            "form",
+            formProps({
+              beforeSubmit: (e) => calls.push({ step: "before", event: e, submitter: e.submitter }),
+              afterSubmit: (e) => calls.push({ step: "after", event: e, submitter: e.submitter }),
+            }),
+            [h("button", { type: "submit", name: "intent", value: "add" })],
+          );
+      },
+    });
+    const wrapper = mount(CartProvider, {
+      attachTo: document.body,
+      slots: { default: () => h(Consumer) },
+    });
+    vi.mocked(latestStore.handleFormSubmit).mockImplementation((e) => {
+      calls.push({ step: "store", event: e, submitter: e.submitter });
+      return Promise.resolve();
+    });
+    const button = wrapper.get<HTMLButtonElement>("button").element;
+
+    button.click();
+
+    expect(calls.map((c) => c.step)).toEqual(["before", "store", "after"]);
+    const [first] = calls;
+    assert(first, "expected beforeSubmit to be called");
+    expect(first.event).toBeInstanceOf(SubmitEvent);
+    for (const call of calls) {
+      expect(call.event).toBe(first.event);
+      expect(call.submitter).toBe(button);
+    }
+    wrapper.unmount();
+  });
+
   it("formProps.beforeSubmit can prevent submission", () => {
     const props = mountWithConsumer(() => {
       const { formProps } = useCartForm();
       return {
-        exposed: formProps({ beforeSubmit: (e) => e.preventDefault() }),
+        // Annotated as `Event` to keep callbacks written before the `SubmitEvent` typing compiling.
+        exposed: formProps({ beforeSubmit: (e: Event) => e.preventDefault() }),
         render: () => null,
       };
     });

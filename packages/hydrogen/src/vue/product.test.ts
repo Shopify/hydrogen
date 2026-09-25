@@ -9,7 +9,7 @@ import { EMPTY_CART_DATA, EMPTY_CART_STATE, createEmptyCartErrors } from "../cor
 import { configureLogging, resetLoggingForTests } from "../core/logging";
 import { createProductFormStore } from "../core/product/product-form";
 import type { ProductInput, ProductVariantInput } from "../core/product/state";
-import { createTestLogger } from "../core/test-utils";
+import { assert, createTestLogger } from "../core/test-utils";
 import { CartProvider, configureCartEndpoint } from "./cart";
 import { createProductComponents, useProductForm } from "./product";
 
@@ -550,12 +550,55 @@ describe("useProductForm", () => {
       });
     });
 
+    it("passes the submitted form's SubmitEvent to callbacks and the store", async () => {
+      const { store, cartStore } = makeStore();
+      const calls: Array<{ step: string; event: SubmitEvent; submitter: HTMLElement | null }> = [];
+      vi.mocked(cartStore.handleFormSubmit).mockImplementation((e) => {
+        calls.push({ step: "store", event: e, submitter: e.submitter });
+        return Promise.resolve();
+      });
+      const Consumer = defineComponent({
+        setup() {
+          const { formProps, register } = useProductForm(store);
+          return () =>
+            h(
+              "form",
+              formProps({
+                beforeSubmit: (e) =>
+                  calls.push({ step: "before", event: e, submitter: e.submitter }),
+                afterSubmit: (e) => calls.push({ step: "after", event: e, submitter: e.submitter }),
+              }),
+              [h("button", register("addToCart", {}))],
+            );
+        },
+      });
+      const wrapper = mount(CartProvider, {
+        attachTo: document.body,
+        slots: { default: () => h(Consumer) },
+      });
+      const button = wrapper.get<HTMLButtonElement>("button").element;
+
+      button.click();
+      await vi.waitFor(() => expect(calls).toHaveLength(3));
+
+      expect(calls.map((c) => c.step)).toEqual(["before", "store", "after"]);
+      const [first] = calls;
+      assert(first, "expected beforeSubmit to be called");
+      expect(first.event).toBeInstanceOf(SubmitEvent);
+      for (const call of calls) {
+        expect(call.event).toBe(first.event);
+        expect(call.submitter).toBe(button);
+      }
+      wrapper.unmount();
+    });
+
     it("does not submit if beforeSubmit prevents default", () => {
       const { store, cartStore } = makeStore();
       const formProps = mountStandaloneConsumer(() => {
         const r = useProductForm(store);
         return {
-          exposed: r.formProps({ beforeSubmit: (e) => e.preventDefault() }),
+          // Annotated as `Event` to keep callbacks written before the `SubmitEvent` typing compiling.
+          exposed: r.formProps({ beforeSubmit: (e: Event) => e.preventDefault() }),
           render: () => null,
         };
       });
