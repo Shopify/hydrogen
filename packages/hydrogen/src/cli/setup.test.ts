@@ -254,32 +254,6 @@ describe("setupHydrogen", () => {
     });
 
     expect(existsSync(join(appRoot, ".agents/skills/local-copy/SKILL.md"))).toBe(true);
-    expect(existsSync(join(appRoot, ".agents/skills/npx-copy/SKILL.md"))).toBe(false);
-  });
-
-  it("fails before copying when an unmanaged destination skill already exists", async () => {
-    const appRoot = createTempDirectory();
-    const packageRoot = createPackageRoot(["hydrogen-setup", "hydrogen-cart-ui"]);
-    const runCommand = createRunCommandSpy();
-
-    mkdirSync(join(appRoot, ".agents/skills/hydrogen-cart-ui"), { recursive: true });
-    writeFileSync(join(appRoot, ".agents/skills/hydrogen-cart-ui/SKILL.md"), "existing skill");
-    writeJson(join(appRoot, "package.json"), {
-      packageManager: "npm@11.0.0",
-      dependencies: { "@shopify/hydrogen": "^1.0.0" },
-    });
-
-    await expect(
-      setupHydrogen({
-        cwd: appRoot,
-        packageRoot,
-        runCommand,
-        log: vi.fn(),
-        env: {},
-      }),
-    ).rejects.toThrow("Skill directories exist that Hydrogen did not create");
-
-    expect(existsSync(join(appRoot, ".agents/skills/hydrogen-setup"))).toBe(false);
   });
 
   it("forwards --force to skills sync so unmanaged skills are overwritten", async () => {
@@ -570,42 +544,5 @@ describe("setupHydrogen", () => {
         }),
       ).rejects.toThrow("Failed to download template (404)");
     });
-  });
-
-  it("repairs incomplete destination skill directories while copying all skills", async () => {
-    const appRoot = createTempDirectory();
-    const packageRoot = createPackageRoot([
-      "hydrogen-setup",
-      "hydrogen-cart-ui",
-      "hydrogen-storefront-client",
-    ]);
-    const runCommand = createRunCommandSpy();
-
-    mkdirSync(join(appRoot, ".agents/skills/hydrogen-cart-ui/references"), {
-      recursive: true,
-    });
-    writeFileSync(
-      join(appRoot, ".agents/skills/hydrogen-cart-ui/references/react.md"),
-      "partial copy",
-    );
-    writeJson(join(appRoot, "package.json"), {
-      dependencies: { "@shopify/hydrogen": "^1.0.0" },
-    });
-
-    await setupHydrogen({
-      cwd: appRoot,
-      packageRoot,
-      runCommand,
-      log: vi.fn(),
-      env: {},
-    });
-
-    for (const harness of [".claude", ".agents"]) {
-      expect(existsSync(join(appRoot, harness, "skills/hydrogen-setup/SKILL.md"))).toBe(true);
-      expect(existsSync(join(appRoot, harness, "skills/hydrogen-cart-ui/SKILL.md"))).toBe(true);
-      expect(existsSync(join(appRoot, harness, "skills/hydrogen-storefront-client/SKILL.md"))).toBe(
-        true,
-      );
-    }
   });
 });

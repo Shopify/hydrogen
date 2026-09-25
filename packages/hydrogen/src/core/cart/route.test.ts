@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
 import { createCustomerSession } from "../../customer-account/session";
-import { configureLogging, resetLoggingForTests } from "../logging";
+import { configureLogging } from "../logging";
 import { createShopifyRequestContext } from "../request-context";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../request-routing/handle-shopify-routes";
 import type { ShopifyRouteHandlerGroup } from "../request-routing/registered-routes";
@@ -189,7 +189,7 @@ describe("createCartServerHandlers", () => {
   });
 
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
   });
 
   describe("handler contract", () => {

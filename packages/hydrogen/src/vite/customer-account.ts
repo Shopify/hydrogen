@@ -42,7 +42,7 @@ export function resolveCustomerAccountUrls(host: string, port: number): Customer
   };
 }
 
-export function formatCustomerAccountSettings(urls: CustomerAccountUrls) {
+function formatCustomerAccountSettings(urls: CustomerAccountUrls) {
   return [
     "",
     "Customer Account API - configure these values for your storefront:",

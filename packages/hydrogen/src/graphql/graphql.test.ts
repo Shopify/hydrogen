@@ -3,11 +3,6 @@ import { describe, it, expect } from "vitest";
 import { gql } from "./graphql";
 
 describe("gql", () => {
-  it("returns a string", () => {
-    const doc = gql(`query { shop { name } }`);
-    expect(typeof doc).toBe("string");
-  });
-
   it("preserves the query text verbatim", () => {
     const doc = gql(`query ShopName { shop { name } }`);
     expect(doc as unknown as string).toBe("query ShopName { shop { name } }");

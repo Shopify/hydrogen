@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createStorefrontClient, type StorefrontClient } from "../../client";
 import { StorefrontApiError } from "../../client/errors";
 import { Cache } from "../cache";
-import { configureLogging, resetLoggingForTests } from "../logging";
+import { configureLogging } from "../logging";
 import { createShopifyRequestContext, type I18nConfig } from "../request-context";
 import type { HydrogenRoutesOptions } from "../request-routing/route-types";
 import type { ShopifyRouteTemplates } from "../standard-routes/types";
@@ -109,7 +109,7 @@ async function run(options: Parameters<typeof createContext>[0]) {
 
 describe("handleProductVariantId", () => {
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
   });
 
   it("passes through non-GET/HEAD requests, product-less URLs, and missing or malformed variant params", async () => {
