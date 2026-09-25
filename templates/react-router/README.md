@@ -77,35 +77,12 @@ does a `mock.shop` host in `PUBLIC_STORE_DOMAIN`.
 
 ## Announcement bar (optional)
 
-The announcement bar is hidden until your store sets a value. Its text comes from a
-shop metafield that this template defines. It is a template convention, not a
-native Shopify or theme setting:
+To enable announcements, create a Shop metafield named `custom.announcement`, with type
+`single_line_text_field` and Storefront access `PUBLIC_READ`. It is a template convention,
+not a native Shopify or theme setting.
 
-| Setting | Value |
-| --- | --- |
-| Owner type | Shop (`SHOP`) |
-| Namespace and key | `custom.announcement` |
-| Type | Single line text (`single_line_text_field`) |
-| Storefront access | `PUBLIC_READ` |
-
-1. Create a metafield definition for the shop with the settings above. The Storefront
-   API only returns metafields whose definition grants storefront access.
-2. Set the shop's `custom.announcement` value with Shopify admin tooling or the Admin
-   API (for example, `metafieldDefinitionCreate` with `ownerType: SHOP` and
-   `access: { storefront: PUBLIC_READ }`, then `metafieldsSet` with the shop's ID as
-   `ownerId`). The template's Storefront API token can read the value but can't
-   create it, and the template doesn't use an Admin API token.
-
-The root loader reads the value in its own small query (`app/lib/announcement.ts`),
-so a missing or unreadable metafield never affects the rest of the layout. It shows
-the value as trimmed plain text; HTML and links aren't parsed. A missing, blank, or
-non-`single_line_text_field` value hides the bar, so clear the value to remove the
-announcement. The `mock.shop` demo stores don't set this metafield, so the bar stays
-hidden there.
-
-See Shopify's docs on [custom data](https://shopify.dev/docs/apps/build/custom-data),
-[metafields](https://shopify.dev/docs/apps/build/metafields), and
-[metafield types](https://shopify.dev/docs/apps/build/metafields/list-of-data-types).
+Set its value to the announcement text. Leave it unset or blank to hide the bar.
+See Shopify's docs on [metafields](https://shopify.dev/docs/apps/build/metafields).
 
 ## Scripts
 
