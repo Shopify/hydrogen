@@ -4,9 +4,6 @@ interface StorefrontApiErrorOptions {
   cause?: unknown;
   queryText?: string;
   variables?: Record<string, unknown>;
-  locations?: ReadonlyArray<{ line: number; column: number }>;
-  path?: ReadonlyArray<string | number>;
-  extensions?: Record<string, unknown>;
 }
 
 /**
@@ -14,6 +11,7 @@ interface StorefrontApiErrorOptions {
  * or an unparseable or unexpected response body.
  *
  * In development, `queryText` and `variables` are attached when available.
+ * GraphQL errors (including `THROTTLED`) are not thrown; read them from `result.errors`.
  */
 export class StorefrontApiError extends Error {
   /** Shopify `x-request-id` header, when available. Useful for support requests. */
@@ -24,21 +22,12 @@ export class StorefrontApiError extends Error {
   readonly queryText?: string;
   /** The variables sent with the request. Only populated in development builds. */
   readonly variables?: Record<string, unknown>;
-  /** Reserved; not currently populated by `createStorefrontClient`. GraphQL errors are returned in `result.errors`, not thrown. */
-  readonly locations?: ReadonlyArray<{ line: number; column: number }>;
-  /** Reserved; not currently populated by `createStorefrontClient`. */
-  readonly path?: ReadonlyArray<string | number>;
-  /** Reserved; not currently populated by `createStorefrontClient`. */
-  readonly extensions?: Record<string, unknown>;
 
   constructor(message: string, options?: StorefrontApiErrorOptions) {
     super(message, options?.cause ? { cause: options.cause } : undefined);
     this.name = "StorefrontApiError";
     this.requestId = options?.requestId;
     this.status = options?.status;
-    this.locations = options?.locations;
-    this.path = options?.path;
-    this.extensions = options?.extensions;
 
     if (__DEV__) {
       this.queryText = options?.queryText;
@@ -50,39 +39,13 @@ export class StorefrontApiError extends Error {
     return this.name;
   }
 
-  override toString(): string {
-    let result = `${this.name}: ${this.message}`;
-    if (this.path) {
-      try {
-        result += ` | path: ${JSON.stringify(this.path)}`;
-      } catch {}
-    }
-    if (this.extensions) {
-      try {
-        result += ` | extensions: ${JSON.stringify(this.extensions)}`;
-      } catch {}
-    }
-    return result;
-  }
-
-  /** Serializes the error. In production, `locations`, `path`, and `extensions` are omitted. */
-  toJSON(): {
-    name: string;
-    message: string;
-    requestId?: string;
-    status?: number;
-    locations?: ReadonlyArray<{ line: number; column: number }>;
-    path?: ReadonlyArray<string | number>;
-    extensions?: Record<string, unknown>;
-  } {
+  /** Serializes the error. `queryText`, `variables`, `cause`, and `stack` are always omitted. */
+  toJSON(): { name: string; message: string; requestId?: string; status?: number } {
     return {
       name: this.name,
       message: this.message,
       ...(this.requestId != null && { requestId: this.requestId }),
       ...(this.status != null && { status: this.status }),
-      ...(__DEV__ && this.locations && { locations: this.locations }),
-      ...(__DEV__ && this.path && { path: this.path }),
-      ...(__DEV__ && this.extensions && { extensions: this.extensions }),
     };
   }
 }
