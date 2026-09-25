@@ -1,6 +1,5 @@
 export function AnnouncementBar({ message }: { message: string | null }) {
   const announcement = message?.trim();
-  // Without a configured message, no announcement or spacing is rendered.
   if (!announcement) return null;
 
   return (
