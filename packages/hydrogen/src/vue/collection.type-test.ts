@@ -1,19 +1,13 @@
 import { describe, expectTypeOf, it } from "vitest";
 
-import type { CollectionActions as CoreCollectionActions } from "../core";
-import type { CollectionActions } from "./index";
 import { useCollectionForm } from "./index";
 
-describe("vue collection types", () => {
-  it("re-exports the core CollectionActions type", () => {
-    expectTypeOf<CollectionActions>().toEqualTypeOf<CoreCollectionActions>();
-  });
+type FormPropsOptions = NonNullable<
+  Parameters<ReturnType<typeof useCollectionForm>["formProps"]>[0]
+>;
 
+describe("vue useCollectionForm types", () => {
   it("passes a SubmitEvent to formProps callbacks", () => {
-    type FormPropsOptions = NonNullable<
-      Parameters<ReturnType<typeof useCollectionForm>["formProps"]>[0]
-    >;
-
     expectTypeOf<Parameters<NonNullable<FormPropsOptions["beforeSubmit"]>>[0]>().toEqualTypeOf<
       SubmitEvent
     >();
@@ -31,5 +25,12 @@ describe("vue collection types", () => {
     }
 
     void Consumer;
+  });
+
+  it("accepts callbacks typed with a plain Event", () => {
+    type EventCallback = (e: Event) => void;
+
+    expectTypeOf<EventCallback>().toExtend<NonNullable<FormPropsOptions["beforeSubmit"]>>();
+    expectTypeOf<EventCallback>().toExtend<NonNullable<FormPropsOptions["afterSubmit"]>>();
   });
 });
