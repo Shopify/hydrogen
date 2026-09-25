@@ -251,8 +251,7 @@ export type StorefrontAnalyticsConfig = {
   consent: Pick<ConsentConfig, "mode">;
   /**
    * Extra key-value pairs accessible to destinations via `getConfig().customData`.
-   * `publish()` doesn't merge them into payloads; only `trackCartAnalytics` copies
-   * them into the cart payloads it publishes.
+   * Not added to events you publish.
    */
   customData?: Record<string, unknown>;
 };
