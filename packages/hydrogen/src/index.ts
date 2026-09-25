@@ -129,6 +129,9 @@ export type {
 } from './types';
 export type {
   ClientBrowserParameters,
+  ConsentFetchResult,
+  ConsentResponseValues,
+  ExpireDeprecatedCookiesOptions,
   MappedProductOptions,
   ParsedMetafields,
   // TODO: document this change
@@ -151,6 +154,7 @@ export {
   AnalyticsPageType,
   customerAccountApiCustomScalars,
   decodeEncodedVariant,
+  expireDeprecatedCookies,
   ExternalVideo,
   flattenConnection,
   getAdjacentAndFirstAvailableVariants,

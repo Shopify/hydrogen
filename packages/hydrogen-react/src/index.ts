@@ -42,7 +42,11 @@ export {
   customerAccountApiCustomScalars,
   storefrontApiCustomScalars,
 } from './codegen.helpers.js';
-export {getShopifyCookies} from './cookies-utils.js';
+export {
+  expireDeprecatedCookies,
+  type ExpireDeprecatedCookiesOptions,
+  getShopifyCookies,
+} from './cookies-utils.js';
 export {ExternalVideo} from './ExternalVideo.js';
 export {flattenConnection} from './flatten-connection.js';
 export {
@@ -75,6 +79,10 @@ export type {
 } from './storefront-api-response.types.js';
 export type {StorefrontClientProps} from './storefront-client.js';
 export {createStorefrontClient} from './storefront-client.js';
+export type {
+  ConsentFetchResult,
+  ConsentResponseValues,
+} from './tracking-utils.js';
 export {
   getTrackingValues,
   SHOPIFY_UNIQUE_TOKEN_HEADER,

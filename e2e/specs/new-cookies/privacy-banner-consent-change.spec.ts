@@ -15,46 +15,24 @@ test.describe('Privacy Banner - Consent Change', () => {
       // 1. Navigate to main page
       await storefront.goto('/');
 
-      // 2. Accept privacy banner to establish consent
-      await storefront.acceptPrivacyBanner();
-
-      // 3. Get the established Y/S values after consent
-      const establishedServerTiming =
-        await storefront.getServerTimingValues(true);
-
-      // Verify they are real UUIDs (not mock values)
-      storefront.expectRealServerTimingValues(establishedServerTiming);
-
-      const originalYValue = establishedServerTiming._y!;
-      const originalSValue = establishedServerTiming._s!;
-
-      // 4. Verify all analytics cookies are present
-      const {shopifyY, shopifyS, shopifyAnalytics, shopifyMarketing} =
-        await storefront.expectAnalyticsCookiesPresent();
-
-      expect(shopifyY!.value, '_shopify_y should match server-timing').toBe(
-        originalYValue,
+      // 2. Accept privacy banner and get the established tracking values from
+      // the consent response. Verify they are real UUIDs (not mock values).
+      const tokens = await storefront.expectAllowedConsent(
+        await storefront.acceptPrivacyBanner(),
       );
-      expect(shopifyS!.value, '_shopify_s should match server-timing').toBe(
-        originalSValue,
-      );
-      expect(
-        shopifyAnalytics,
-        '_shopify_analytics should be present after accept',
-      ).toBeDefined();
-      expect(
-        shopifyMarketing,
-        '_shopify_marketing should be present after accept',
-      ).toBeDefined();
 
-      // 5. Wait for analytics to fire to confirm tracking is working
+      // 3. Only the modern http-only analytics cookies are created.
+      await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+      await storefront.expectNoLegacyAnalyticsCookies();
+
+      // 4. Wait for analytics to fire to confirm tracking is working
       await storefront.waitForPerfKit();
       await storefront.waitForMonorailRequests();
 
       // Verify analytics requests have correct tracking values
       storefront.verifyMonorailRequests(
-        originalYValue,
-        originalSValue,
+        tokens.uniqueToken,
+        tokens.visitToken,
         'after initial accept',
       );
 
@@ -63,39 +41,56 @@ test.describe('Privacy Banner - Consent Change', () => {
 
       // === CONSENT CHANGE: Decline via preferences ===
 
-      // 6. Open privacy preferences and decline consent
-      await storefront.openPrivacyPreferences();
-      await storefront.declineInPreferences();
+      // Model cookies left by an older storefront so revocation also covers
+      // their cleanup.
+      const storefrontOrigin = new URL(storefront.page.url()).origin;
+      await storefront.context.addCookies([
+        {
+          name: '_shopify_y',
+          value: tokens.uniqueToken!,
+          url: storefrontOrigin,
+        },
+        {
+          name: '_shopify_s',
+          value: tokens.visitToken!,
+          url: storefrontOrigin,
+        },
+      ]);
 
-      // 7. Verify _shopify_essential cookie is set after declining
+      // 5. Open privacy preferences, decline consent, and verify analytics
+      // consent is revoked
+      await storefront.openPrivacyPreferences();
+      await storefront.expectDeclinedConsent(
+        await storefront.declineInPreferences(),
+      );
+
+      // 6. Verify _shopify_essential cookie is set after declining
       await storefront.expectEssentialCookiePresent();
 
-      // 8. Verify analytics/marketing cookies are no longer valid (cleared or invalidated)
+      // 7. Verify analytics/marketing cookies are no longer valid (cleared or invalidated)
       await storefront.expectNoAnalyticsCookies();
 
-      // 9. Verify server-timing values are now mock values (consent revoked)
-      const serverTimingAfterDecline =
-        await storefront.getServerTimingValues(true);
-      storefront.expectMockServerTimingValues(serverTimingAfterDecline);
-
-      // 10. Wait and verify no NEW analytics requests are made after revoking consent
-      await storefront.page.waitForTimeout(1500);
+      // 8. Verify no NEW analytics requests are made after revoking consent
       storefront.expectNoMonorailRequests();
 
-      // 11. Navigate to a product page to verify no tracking on navigation
-      await storefront.navigateToInStockProduct();
+      // 9. Navigate to a product page to verify consent remains declined
+      const productResponse = await storefront.navigateToInStockProduct({
+        waitForConsent: true,
+      });
+      await storefront.expectDeclinedConsent(productResponse);
 
-      // Still no analytics requests after navigation
-      storefront.expectNoMonorailRequests();
-
-      // 12. Add to cart and verify checkout URLs have mock tracking params
+      // 10. Add to cart and verify no analytics requests or checkout URL tracking params
       await storefront.addToCart();
+      storefront.expectNoMonorailRequests();
       await storefront.expectNoCheckoutUrlTrackingParams(
         'after revoking consent',
       );
 
-      // 13. Reload the page to verify persistence
-      await storefront.reload();
+      // 11. Reload the page to verify persistence
+      const reloadResponse = await storefront.withConsentResponse(() =>
+        storefront.reload(),
+      );
+      await storefront.expectDeclinedConsent(reloadResponse);
 
       // Verify privacy banner does NOT show (consent choice was saved)
       await storefront.expectPrivacyBannerNotVisible();
@@ -106,9 +101,8 @@ test.describe('Privacy Banner - Consent Change', () => {
       // Verify essential cookie persists
       await storefront.expectEssentialCookiePresent();
 
-      // Wait and verify no analytics requests after reload
+      // Wait for perf-kit and verify no analytics requests after reload
       await storefront.waitForPerfKit();
-      await storefront.page.waitForTimeout(1500);
       storefront.expectNoMonorailRequests();
     });
   });
@@ -117,7 +111,7 @@ test.describe('Privacy Banner - Consent Change', () => {
     test('should start analytics when user grants consent', async ({
       storefront,
     }) => {
-      // Enable privacy banner via JS bundle interception (preserves server-timing)
+      // Enable privacy banner via JS bundle interception
       await storefront.setWithPrivacyBanner(true);
 
       // === SETUP: Decline consent initially ===
@@ -125,8 +119,10 @@ test.describe('Privacy Banner - Consent Change', () => {
       // 1. Navigate to main page
       await storefront.goto('/');
 
-      // 2. Decline privacy banner
-      await storefront.declinePrivacyBanner();
+      // 2. Decline privacy banner and verify analytics consent is denied
+      await storefront.expectDeclinedConsent(
+        await storefront.declinePrivacyBanner(),
+      );
 
       // 3. Verify _shopify_essential cookie is set after declining
       await storefront.expectEssentialCookiePresent();
@@ -134,125 +130,116 @@ test.describe('Privacy Banner - Consent Change', () => {
       // 4. Verify no analytics cookies are present
       await storefront.expectNoAnalyticsCookies();
 
-      // 5. Verify server-timing values are mock values
-      const initialServerTiming = await storefront.getServerTimingValues(true);
-      storefront.expectMockServerTimingValues(initialServerTiming);
-
-      // 6. Wait for perf-kit to load but verify no analytics requests
+      // 5. Wait for perf-kit to load but verify no analytics requests
       await storefront.waitForPerfKit();
-      await storefront.page.waitForTimeout(1500);
       storefront.expectNoMonorailRequests();
+
+      // Let the privacy banner finish processing the declined consent: it
+      // ignores showPreferences calls made during that transition.
+      await storefront.page.waitForTimeout(1500);
 
       // Clear tracked requests before consent change
       storefront.clearRequests();
 
+      // === Model deprecated cookies from an older storefront version ===
+
+      // Seeded after the declined state settled: the no-consent clear path
+      // has already run, so these cookies persist through the declined
+      // state. They model a visitor whose old storefront left them behind.
+      const storefrontOrigin = new URL(storefront.page.url()).origin;
+      await storefront.context.addCookies([
+        {name: '_shopify_y', value: 'legacy-unique', url: storefrontOrigin},
+        {name: '_shopify_s', value: 'legacy-visit', url: storefrontOrigin},
+      ]);
+      expect((await storefront.getCookie('_shopify_y'))?.value).toBe(
+        'legacy-unique',
+      );
+      expect((await storefront.getCookie('_shopify_s'))?.value).toBe(
+        'legacy-visit',
+      );
+
       // === CONSENT CHANGE: Accept via preferences ===
 
-      // 7. Open privacy preferences and accept consent
+      // 6. Open privacy preferences and accept consent.
+      // Accepting consent should return real UUID tokens in the consent response
       await storefront.openPrivacyPreferences();
-      await storefront.acceptInPreferences();
+      const tokens = await storefront.expectAllowedConsent(
+        await storefront.acceptInPreferences(),
+      );
 
-      // 8. Verify server-timing values changed to real UUIDs after consent
-      const serverTimingAfterAccept =
-        await storefront.getServerTimingValues(true);
+      // 6b. The accept flow's own consent request (the script's request, not
+      // Hydrogen's page-load fetch) put the replacement tokens in place and
+      // opened the deletion gate: the deprecated cookies are removed.
+      await storefront.expectNoLegacyAnalyticsCookies();
 
-      storefront.expectRealServerTimingValues(serverTimingAfterAccept);
+      // 7. Only the modern http-only analytics cookies are created after
+      // granting consent.
+      await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+      await storefront.expectNoLegacyAnalyticsCookies();
 
-      const newYValue = serverTimingAfterAccept._y!;
-      const newSValue = serverTimingAfterAccept._s!;
+      // 8. Navigate to a product page and wait for analytics requests to fire
+      // after granting consent
+      const productResponse = await storefront.navigateToInStockProduct({
+        waitForConsent: true,
+      });
 
-      // 9. Verify analytics cookies are now present
-      const {shopifyY, shopifyS, shopifyAnalytics, shopifyMarketing} =
-        await storefront.expectAnalyticsCookiesPresent();
-
-      // Cookie values should match the new server-timing values
+      // Tracking values should match the session established after granting consent
       expect(
-        shopifyY!.value,
-        '_shopify_y cookie should match new server-timing _y value',
-      ).toBe(newYValue);
-
-      expect(
-        shopifyS!.value,
-        '_shopify_s cookie should match new server-timing _s value',
-      ).toBe(newSValue);
-
-      // Verify HTTP-only cookies are set
-      expect(
-        shopifyAnalytics,
-        '_shopify_analytics cookie should be present after accepting',
-      ).toBeDefined();
-      expect(
-        shopifyMarketing,
-        '_shopify_marketing cookie should be present after accepting',
-      ).toBeDefined();
-
-      // 10. Wait for analytics requests to fire after granting consent
+        await storefront.expectAllowedConsent(productResponse),
+        'Session should survive navigation',
+      ).toEqual(tokens);
       await storefront.waitForMonorailRequests();
 
       // Verify analytics requests contain the correct tracking values
       storefront.verifyMonorailRequests(
-        newYValue,
-        newSValue,
+        tokens.uniqueToken,
+        tokens.visitToken,
         'after granting consent via preferences',
       );
 
-      // 11. Navigate to a product page
-      await storefront.finalizePerfKitMetrics();
-      await storefront.navigateToInStockProduct();
-
-      // Note: We skip perf-kit request verification here because it captures Y/S values
-      // only when its script is first downloaded so it won't update the values after changing
-      // consent mid-session. This is a bug in perf-kit that needs to be fixed separately.
+      // 9. Verify perf-kit uses the tracking values established after granting consent
+      // Note: We skip perf-kit request verification here because it can initialize before
+      // consent and retain initial tracking values after changing consent mid-session.
+      // This is a bug in perf-kit that needs to be fixed separately.
       // The Monorail requests above already verify tracking is working correctly.
 
-      // 12. Add to cart and verify checkout URLs have real tracking params
+      // 10. Add to cart and verify tracking values match the new session
       await storefront.addToCart();
-      // TODO: uncomment these out once backend changes have shipped
-      // await storefront.verifyCheckoutUrlTrackingParams(
-      //   newYValue,
-      //   newSValue,
-      //   'after granting consent',
-      // );
+      expect(
+        await storefront.getTrackingTokens(),
+        'Cart mutations should preserve tokens',
+      ).toEqual(tokens);
+      await storefront.verifyCheckoutUrlTrackingParams(
+        tokens.uniqueToken!,
+        tokens.visitToken!,
+        'after granting consent',
+      );
 
-      // 13. Reload the page to verify persistence
-      await storefront.reload();
+      // 11. Reload the page to verify persistence
+      const reloadResponse = await storefront.withConsentResponse(() =>
+        storefront.reload(),
+      );
+
+      // Verify tracking values match the session established after granting consent
+      expect(
+        await storefront.expectAllowedConsent(reloadResponse),
+        'Session should survive reload',
+      ).toEqual(tokens);
 
       // Verify privacy banner does NOT show (consent choice was saved)
       await storefront.expectPrivacyBannerNotVisible();
 
       // Verify cookies persist after reload
-      const cookiesAfterReload =
-        await storefront.expectAnalyticsCookiesPresent();
-
-      // Verify server-timing values match
-      const serverTimingAfterReload = await storefront.getServerTimingValues();
-
-      expect(
-        serverTimingAfterReload._y,
-        'Server-timing _y after reload should match value from before reload',
-      ).toBe(newYValue);
-      expect(
-        serverTimingAfterReload._s,
-        'Server-timing _s after reload should match value from before reload',
-      ).toBe(newSValue);
-
-      // Cookies should also match
-      expect(
-        cookiesAfterReload.shopifyY?.value,
-        '_shopify_y cookie after reload should match server-timing _y',
-      ).toBe(newYValue);
-      expect(
-        cookiesAfterReload.shopifyS?.value,
-        '_shopify_s cookie after reload should match server-timing _s',
-      ).toBe(newSValue);
+      await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+      await storefront.expectNoLegacyAnalyticsCookies();
 
       // Wait for analytics requests after reload
       await storefront.waitForMonorailRequests();
 
       // Verify analytics events after reload have correct values
       storefront.verifyMonorailRequests(
-        newYValue,
-        newSValue,
+        tokens.uniqueToken,
+        tokens.visitToken,
         'after reload with consent granted',
       );
     });

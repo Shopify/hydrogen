@@ -83,7 +83,7 @@ export type AnalyticsProviderProps = {
   consent: Consent;
   /** @deprecated Disable throwing errors when required props are missing. */
   disableThrowOnError?: boolean;
-  /** The domain scope of the cookie set with `useShopifyCookies`. **/
+  /** The domain scope used to remove the deprecated cookies handled by `useShopifyCookies`. **/
   cookieDomain?: string;
 };
 
@@ -397,7 +397,8 @@ function AnalyticsProvider({
             );
 
             // Delay loading PerfKit until consent is collected
-            // so that it reads updated tracking values from old cookies.
+            // so that it reads the tracking values published to the
+            // Customer Privacy API.
             setConsentCollected(true);
           }}
           domain={cookieDomain}

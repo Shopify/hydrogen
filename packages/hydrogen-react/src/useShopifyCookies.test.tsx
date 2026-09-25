@@ -1,7 +1,9 @@
 import {vi, afterEach, describe, expect, it} from 'vitest';
-import {renderHook} from '@testing-library/react';
-import {getShopifyCookies} from './cookies-utils.js';
+import {renderHook, waitFor} from '@testing-library/react';
 import {useShopifyCookies} from './useShopifyCookies.js';
+import {expireDeprecatedCookies} from './cookies-utils.js';
+import {getTrackingValues} from './tracking-utils.js';
+import {type ConsentFetchResult} from './tracking-utils.js';
 // @ts-ignore - worktop/cookie types not properly exported
 import {parse} from 'worktop/cookie';
 
@@ -16,8 +18,9 @@ type MockCookieJar = Record<
   }
 >;
 
-function mockCookie(): MockCookieJar {
+function mockCookie(): {jar: MockCookieJar; writes: string[]} {
   const cookieJar: MockCookieJar = {};
+  const writes: string[] = [];
 
   vi.spyOn(document, 'cookie', 'get').mockImplementation(() => {
     let docCookie = '';
@@ -29,6 +32,7 @@ function mockCookie(): MockCookieJar {
 
   vi.spyOn(document, 'cookie', 'set').mockImplementation(
     (cookieString: string) => {
+      writes.push(cookieString);
       const {domain, maxage, path, samesite, ...cookieKeyValuePair} =
         parse(cookieString);
       const cookieName = Object.keys(cookieKeyValuePair)[0];
@@ -46,294 +50,426 @@ function mockCookie(): MockCookieJar {
       }
     },
   );
-  return cookieJar;
+  return {jar: cookieJar, writes};
 }
+
+const consentBody = {
+  data: {
+    consentManagement: {
+      cookies: {
+        trackingConsentCookie: 'body-consent',
+        cookieDomain: 'shop.example',
+        shopifyUnique: 'body-unique',
+        shopifyVisit: 'body-visit',
+      },
+    },
+  },
+};
+
+const noConsentBody = {
+  data: {
+    consentManagement: {
+      cookies: {
+        trackingConsentCookie: null,
+        cookieDomain: 'shop.example',
+        shopifyUnique: null,
+        shopifyVisit: null,
+      },
+    },
+  },
+};
+
+function createResponse(body: unknown = consentBody, ok = true) {
+  return {
+    ok,
+    status: ok ? 200 : 500,
+    statusText: ok ? 'OK' : 'Error',
+    json: () => Promise.resolve(body),
+  } as unknown as Response;
+}
+
+function mockFetch(responses: Response[] = [createResponse()]) {
+  const fetchMock = vi
+    .fn()
+    .mockImplementation(() => Promise.resolve(responses.shift()));
+
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
+function fetchCallArgs(
+  fetchMock: ReturnType<typeof mockFetch>,
+  callIndex: number,
+) {
+  const [url, init] = fetchMock.mock.calls[callIndex] as unknown as [
+    string,
+    RequestInit,
+  ];
+  return {url, init, headers: init.headers as Record<string, string>};
+}
+
+const originalLocation = window.location;
 
 describe(`useShopifyCookies`, () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    Object.defineProperty(window, 'location', {
+      value: originalLocation,
+      configurable: true,
+    });
   });
 
-  it('sets _shopify_s and _shopify_y cookies when not found', () => {
-    const cookieJar: MockCookieJar = mockCookie();
-    let cookies = getShopifyCookies(document.cookie);
-
-    expect(cookies).toEqual({
-      _shopify_s: '',
-      _shopify_y: '',
-    });
+  it('never sets deprecated cookies, even with consent and tracking values available', () => {
+    const {jar, writes} = mockCookie();
+    document.cookie = '_shopify_y=tracked-unique; Max-Age=1800;';
+    document.cookie = '_shopify_s=tracked-visit; Max-Age=1800;';
+    writes.length = 0;
 
     renderHook(() => useShopifyCookies({hasUserConsent: true}));
 
-    cookies = getShopifyCookies(document.cookie);
-
-    expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
-    });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
-
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
-    );
-    expect(cookieJar['_shopify_s'].maxage).toBe(1800);
-    expect(cookieJar['_shopify_y'].maxage).toBe(31104000);
+    // No write happens at all when consent is granted:
+    expect(writes).toEqual([]);
+    expect(Object.keys(jar).length).toBe(2);
   });
 
-  it('does not override cookies when it already exists', () => {
-    const cookieJar: MockCookieJar = mockCookie();
-    document.cookie = '_shopify_s=abc123; Max-Age=1800;';
-    document.cookie = '_shopify_y=def456; Max-Age=1800;';
+  it('leaves existing legacy cookies untouched when consent is granted', () => {
+    const {jar, writes} = mockCookie();
+    document.cookie = '_shopify_s=legacy-visit; Max-Age=1800;';
+    document.cookie = '_shopify_y=legacy-unique; Max-Age=1800;';
+    writes.length = 0;
 
     renderHook(() => useShopifyCookies({hasUserConsent: true}));
 
-    const cookies = getShopifyCookies(document.cookie);
-
-    expect(cookies).toEqual({
-      _shopify_s: 'abc123',
-      _shopify_y: 'def456',
-    });
-    expect(Object.keys(cookieJar).length).toBe(2);
+    expect(writes).toEqual([]);
+    expect(Object.keys(jar).length).toBe(2);
+    expect(document.cookie).toContain('_shopify_s=legacy-visit');
+    expect(document.cookie).toContain('_shopify_y=legacy-unique');
   });
 
-  it('sets new cookie if either cookie is missing', () => {
-    const cookieJar: MockCookieJar = mockCookie();
-    document.cookie = '_shopify_s=abc123; Max-Age=1800;';
+  it('clears deprecated cookies when consent is not granted', () => {
+    const {jar} = mockCookie();
+    document.cookie = '_shopify_s=legacy-visit; Max-Age=1800;';
+    document.cookie = '_shopify_y=legacy-unique; Max-Age=1800;';
 
-    renderHook(() => useShopifyCookies({hasUserConsent: true}));
+    renderHook(() => useShopifyCookies({hasUserConsent: false}));
 
-    let cookies = getShopifyCookies(document.cookie);
-
-    expect(cookies).toEqual({
-      _shopify_s: 'abc123',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
-    });
-    expect(cookies['_shopify_y']).not.toBe('');
-    expect(Object.keys(cookieJar).length).toBe(2);
-
-    document.cookie = '_shopify_s=1; expires=1 Jan 1970 00:00:00 GMT;';
-    document.cookie = '_shopify_y=def456; Max-Age=1800;';
-
-    renderHook(() => useShopifyCookies({hasUserConsent: true}));
-
-    cookies = getShopifyCookies(document.cookie);
-
-    expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      _shopify_y: 'def456',
-    });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(Object.keys(cookieJar).length).toBe(2);
+    expect(Object.keys(jar).length).toBe(0);
+    expect(document.cookie).toBe('');
   });
 
-  it('sets _shopify_y cookie expiry to 1 year when hasUserConsent is set to true', () => {
-    const cookieJar: MockCookieJar = mockCookie();
-
-    renderHook(() => useShopifyCookies({hasUserConsent: true}));
-
-    const cookies = getShopifyCookies(document.cookie);
-
-    expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
-    });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
-
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
-    );
-    expect(cookieJar['_shopify_s'].maxage).toBe(1800);
-    expect(cookieJar['_shopify_y'].maxage).toBe(31104000);
-  });
-
-  it('sets domain with leading period when provided without a leading period', () => {
-    const cookieJar: MockCookieJar = mockCookie();
-    const domain = 'myshop.com';
-
-    renderHook(() => useShopifyCookies({hasUserConsent: true, domain}));
-
-    const cookies = getShopifyCookies(document.cookie);
-
-    expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
-    });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
-
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
-    );
-    expect(cookieJar['_shopify_s']).toMatchObject({
-      domain: `.${domain}`,
-      maxage: 1800,
-    });
-    expect(cookieJar['_shopify_y']).toMatchObject({
-      domain: `.${domain}`,
-      maxage: 31104000,
-    });
-  });
-
-  it('sets domain as is when provided with a leading period', () => {
-    const cookieJar: MockCookieJar = mockCookie();
-    const domain = '.myshop.com';
-
-    renderHook(() => useShopifyCookies({hasUserConsent: true, domain}));
-
-    const cookies = getShopifyCookies(document.cookie);
-
-    expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
-    });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
-
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
-    );
-    expect(cookieJar['_shopify_s']).toMatchObject({
-      domain,
-      maxage: 1800,
-    });
-    expect(cookieJar['_shopify_y']).toMatchObject({
-      domain,
-      maxage: 31104000,
-    });
-  });
-
-  it('removes cookies if hasUserConsent is set to false', () => {
-    const cookieJar: MockCookieJar = mockCookie();
-    document.cookie = '_shopify_s=abc123; Max-Age=1800;';
-    document.cookie = '_shopify_y=def456; Max-Age=1800;';
-
-    renderHook(() => useShopifyCookies({hasUserConsent: true}));
-
-    let cookies = getShopifyCookies(document.cookie);
-
-    expect(cookies).toEqual({
-      _shopify_s: 'abc123',
-      _shopify_y: 'def456',
-    });
-
-    renderHook(() => useShopifyCookies());
-
-    cookies = getShopifyCookies(document.cookie);
-
-    expect(cookies).toEqual({
-      _shopify_s: '',
-      _shopify_y: '',
-    });
-
-    expect(Object.keys(cookieJar).length).toBe(0);
-  });
-
-  it('sets domain to top level domain when checkoutDomain is supplied', () => {
-    const cookieJar: MockCookieJar = mockCookie();
-    const domain = 'myshop.com';
-    const checkoutDomain = 'checkout.myshop.com';
+  it('writes the clear cookies with a leading-dot domain and max-age 0', () => {
+    const {writes} = mockCookie();
+    document.cookie = '_shopify_s=legacy-visit; Max-Age=1800;';
+    document.cookie = '_shopify_y=legacy-unique; Max-Age=1800;';
+    writes.length = 0;
 
     renderHook(() =>
-      useShopifyCookies({hasUserConsent: true, domain, checkoutDomain}),
+      useShopifyCookies({hasUserConsent: false, domain: 'myshop.com'}),
     );
 
-    const cookies = getShopifyCookies(document.cookie);
+    expect(writes.length).toBe(2);
+    for (const write of writes) {
+      const {domain, maxage, ...cookieKeyValuePair} = parse(write);
+      expect(maxage).toBe(0);
+      expect(domain).toBe('.myshop.com');
+      // Empty value removes the cookie:
+      const [cookieName, cookieValue] = Object.entries(cookieKeyValuePair).find(
+        ([key]) => key === '_shopify_y' || key === '_shopify_s',
+      )!;
+      expect(cookieName).toMatch(/^_shopify_[ys]$/);
+      expect(cookieValue).toBe('');
+    }
+  });
 
-    expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
+  it('scopes the clear domain to the common domain shared with the checkout domain', () => {
+    const {writes} = mockCookie();
+    Object.defineProperty(window, 'location', {
+      value: {host: 'shop.myshop.com'},
+      configurable: true,
     });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
+    document.cookie = '_shopify_s=legacy-visit; Max-Age=1800;';
+    document.cookie = '_shopify_y=legacy-unique; Max-Age=1800;';
+    writes.length = 0;
 
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
+    renderHook(() =>
+      useShopifyCookies({
+        hasUserConsent: false,
+        checkoutDomain: 'checkout.myshop.com',
+      }),
     );
-    expect(cookieJar['_shopify_s']).toMatchObject({
-      domain: `.myshop.com`,
-      maxage: 1800,
+
+    // Only the common suffix of the storefront and checkout hosts is used,
+    // so cookies set for the shop domain (and its subdomains) are covered:
+    expect(writes.length).toBe(2);
+    for (const write of writes) {
+      const {domain} = parse(write);
+      expect(domain).toBe('.myshop.com');
+    }
+  });
+
+  it('clears host-only cookies when the storefront runs on localhost', () => {
+    const {writes} = mockCookie();
+    Object.defineProperty(window, 'location', {
+      value: {host: 'localhost:3000'},
+      configurable: true,
     });
-    expect(cookieJar['_shopify_y']).toMatchObject({
-      domain: `.myshop.com`,
-      maxage: 31104000,
+    document.cookie = '_shopify_s=legacy-visit; Max-Age=1800;';
+    document.cookie = '_shopify_y=legacy-unique; Max-Age=1800;';
+    writes.length = 0;
+
+    renderHook(() => useShopifyCookies({hasUserConsent: false}));
+
+    // A Domain attribute would not match a dev localhost host, so the clear
+    // must be host-only:
+    expect(writes.length).toBe(2);
+    for (const write of writes) {
+      const {domain} = parse(write);
+      expect(domain).toBeUndefined();
+    }
+  });
+
+  it('does not clear cookies when ignoreDeprecatedCookies is true', () => {
+    const {jar, writes} = mockCookie();
+    document.cookie = '_shopify_s=legacy-visit; Max-Age=1800;';
+    document.cookie = '_shopify_y=legacy-unique; Max-Age=1800;';
+    writes.length = 0;
+
+    renderHook(() =>
+      useShopifyCookies({hasUserConsent: false, ignoreDeprecatedCookies: true}),
+    );
+
+    expect(writes).toEqual([]);
+    expect(Object.keys(jar).length).toBe(2);
+  });
+
+  describe('fetchTrackingValues', () => {
+    it('requests the tracking values in the consentManagement response body', async () => {
+      const fetchMock = mockFetch();
+
+      renderHook(() =>
+        useShopifyCookies({fetchTrackingValues: true, hasUserConsent: true}),
+      );
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+      const {url, init, headers} = fetchCallArgs(fetchMock, 0);
+
+      expect(url).toMatch(/\/api\/unstable\/graphql\.json$/);
+      expect(String(init.body)).toContain('consentManagement');
+      expect(String(init.body)).toContain('shopifyUnique');
+      expect(String(init.body)).toContain('shopifyVisit');
+      expect(String(init.body)).toContain('trackingConsentCookie');
+      expect(String(init.body)).toContain('cookieDomain');
+      expect(headers['Content-Type']).toBe('application/json');
+    });
+
+    it('sends the consent management marker header only on the same-origin request', async () => {
+      const fetchMock = mockFetch([
+        createResponse(undefined, false),
+        createResponse(),
+      ]);
+
+      renderHook(() =>
+        useShopifyCookies({
+          fetchTrackingValues: true,
+          checkoutDomain: 'checkout.myshop.com',
+          hasUserConsent: true,
+        }),
+      );
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+      const sameOrigin = fetchCallArgs(fetchMock, 0);
+      // The marker triggers server-side migration of deprecated cookies
+      // and must not leak to the cross-origin checkout retry:
+      expect(sameOrigin.headers['Shopify-Storefront-Consent-Management']).toBe(
+        '1',
+      );
+      expect(sameOrigin.url).not.toContain('checkout.myshop.com');
+
+      const crossOrigin = fetchCallArgs(fetchMock, 1);
+      expect(
+        crossOrigin.headers['Shopify-Storefront-Consent-Management'],
+      ).toBeUndefined();
+      expect(crossOrigin.url).toContain('checkout.myshop.com');
+    });
+
+    it('sends the current token values as request headers', async () => {
+      const fetchMock = mockFetch();
+      // On the first load after upgrading, the current values are the legacy
+      // cookie values, so the session migrates:
+      document.cookie = '_shopify_y=current-unique; Max-Age=1800;';
+      document.cookie = '_shopify_s=current-visit; Max-Age=1800;';
+
+      renderHook(() =>
+        useShopifyCookies({fetchTrackingValues: true, hasUserConsent: true}),
+      );
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+      const {headers} = fetchCallArgs(fetchMock, 0);
+      expect(headers['X-Shopify-UniqueToken']).toBe('current-unique');
+      expect(headers['X-Shopify-VisitToken']).toBe('current-visit');
+    });
+
+    it('does not retain the response body values for later reads', async () => {
+      const fetchMock = mockFetch();
+      document.cookie = '_shopify_y=legacy-unique; Max-Age=1800;';
+      document.cookie = '_shopify_s=legacy-visit; Max-Age=1800;';
+
+      renderHook(() =>
+        useShopifyCookies({fetchTrackingValues: true, hasUserConsent: true}),
+      );
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+      // The body values are shared through the Customer Privacy API (see
+      // the consentResultRef option), not through a module-level cache:
+      // without that API on the window, later reads still see the legacy
+      // cookie values only.
+      expect(getTrackingValues()).toEqual({
+        uniqueToken: 'legacy-unique',
+        visitToken: 'legacy-visit',
+        consent: '',
+      });
+    });
+
+    it('resolves cookies as ready even when the fetch fails without a checkout domain', async () => {
+      const fetchMock = mockFetch([createResponse(undefined, false)]);
+      const {result} = renderHook(() =>
+        useShopifyCookies({fetchTrackingValues: true, hasUserConsent: true}),
+      );
+
+      // Degraded tracking is better than blocking the app:
+      await waitFor(() => expect(result.current).toBe(true));
+      expect(fetchMock).toHaveBeenCalledTimes(1);
     });
   });
 
-  it('sets domain to top level domain when domain and checkoutDomain are both subdomains', () => {
-    const cookieJar: MockCookieJar = mockCookie();
-    const domain = 'ca.myshop.com';
-    const checkoutDomain = 'checkout.myshop.com';
+  describe('consentResultRef', () => {
+    function createConsentResultRef() {
+      return {current: null as ConsentFetchResult | null};
+    }
 
-    renderHook(() =>
-      useShopifyCookies({hasUserConsent: true, domain, checkoutDomain}),
-    );
+    it('receives the response body values, including the no-consent null signal', async () => {
+      const fetchMock = mockFetch([createResponse(noConsentBody)]);
+      const consentResultRef = createConsentResultRef();
 
-    const cookies = getShopifyCookies(document.cookie);
+      renderHook(() =>
+        useShopifyCookies({
+          fetchTrackingValues: true,
+          hasUserConsent: true,
+          consentResultRef,
+        }),
+      );
 
-    expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
+      await waitFor(() =>
+        expect(consentResultRef.current).toEqual({
+          status: 'succeeded',
+          values: {
+            uniqueToken: null,
+            visitToken: null,
+            consent: null,
+          },
+        }),
+      );
+      expect(fetchMock).toHaveBeenCalledTimes(1);
     });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
 
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
-    );
-    expect(cookieJar['_shopify_s']).toMatchObject({
-      domain: `.myshop.com`,
-      maxage: 1800,
+    it('receives the retry values when the same-origin attempt fails', async () => {
+      const fetchMock = mockFetch([
+        createResponse(undefined, false),
+        createResponse(),
+      ]);
+      const consentResultRef = createConsentResultRef();
+
+      renderHook(() =>
+        useShopifyCookies({
+          fetchTrackingValues: true,
+          checkoutDomain: 'checkout.myshop.com',
+          hasUserConsent: true,
+          consentResultRef,
+        }),
+      );
+
+      await waitFor(() =>
+        expect(consentResultRef.current).toEqual({
+          status: 'succeeded',
+          values: {
+            uniqueToken: 'body-unique',
+            visitToken: 'body-visit',
+            consent: 'body-consent',
+          },
+        }),
+      );
     });
-    expect(cookieJar['_shopify_y']).toMatchObject({
-      domain: `.myshop.com`,
-      maxage: 31104000,
+
+    it('reports failure when both attempts fail', async () => {
+      mockFetch([
+        createResponse(undefined, false),
+        createResponse(undefined, false),
+      ]);
+      const consentResultRef = createConsentResultRef();
+
+      renderHook(() =>
+        useShopifyCookies({
+          fetchTrackingValues: true,
+          checkoutDomain: 'checkout.myshop.com',
+          hasUserConsent: true,
+          consentResultRef,
+        }),
+      );
+
+      await waitFor(() =>
+        expect(consentResultRef.current).toEqual({status: 'failed'}),
+      );
+    });
+
+    it('stays untouched when no consent fetch is requested', async () => {
+      const consentResultRef = createConsentResultRef();
+
+      renderHook(() =>
+        useShopifyCookies({hasUserConsent: true, consentResultRef}),
+      );
+
+      await waitFor(() => expect(consentResultRef.current).toBeNull());
     });
   });
 
-  it('does not set domain on localhost if checkoutDomain is supplied', () => {
-    const cookieJar: MockCookieJar = mockCookie();
-    const domain = 'localhost:3000';
-    const checkoutDomain = 'checkout.myshop.com';
+  describe('expireDeprecatedCookies', () => {
+    it('expires both deprecated cookies on the current host by default', () => {
+      const {writes} = mockCookie();
 
-    renderHook(() =>
-      useShopifyCookies({hasUserConsent: true, domain, checkoutDomain}),
-    );
+      expireDeprecatedCookies();
 
-    const cookies = getShopifyCookies(document.cookie);
-
-    expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
+      expect(writes.length).toBe(2);
+      for (const write of writes) {
+        const {maxage, ...cookieKeyValuePair} = parse(write);
+        const [cookieName, cookieValue] = Object.entries(
+          cookieKeyValuePair,
+        ).find(([key]) => key === '_shopify_y' || key === '_shopify_s')!;
+        expect(maxage).toBe(0);
+        expect(cookieValue).toBe('');
+        expect(cookieName).toMatch(/^_shopify_[ys]$/);
+      }
     });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
 
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
-    );
-    expect(cookieJar['_shopify_s']).toMatchObject({
-      maxage: 1800,
-    });
-    expect(cookieJar['_shopify_y']).toMatchObject({
-      maxage: 31104000,
+    it('scopes the expiry domain to the domain shared with the checkout domain', () => {
+      const {writes} = mockCookie();
+      Object.defineProperty(window, 'location', {
+        value: {host: 'shop.myshop.com'},
+        configurable: true,
+      });
+
+      expireDeprecatedCookies({checkoutDomain: 'checkout.myshop.com'});
+
+      expect(writes.length).toBe(2);
+      for (const write of writes) {
+        const {domain, maxage} = parse(write);
+        expect(domain).toBe('.myshop.com');
+        expect(maxage).toBe(0);
+      }
     });
   });
 });

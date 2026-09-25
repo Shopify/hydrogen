@@ -97,14 +97,15 @@ export function ShopifyAnalytics({
     [privacyReady, canTrack, collectedConsent],
   );
 
-  // set up shopify_Y and shopify_S cookies
+  // Remove deprecated shopify_Y and shopify_S cookies when consent is denied.
+  // The consent fetch itself already ran inside useCustomerPrivacy.
   useShopifyCookies({
     hasUserConsent,
     domain,
     checkoutDomain,
     // Already done inside useCustomerPrivacy
     fetchTrackingValues: false,
-    // Avoid creating local cookies too early
+    // Avoid removing cookies too early, before consent is known
     ignoreDeprecatedCookies: !privacyReady,
   });
 

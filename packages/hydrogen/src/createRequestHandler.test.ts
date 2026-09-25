@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {vi, describe, it, expect, beforeEach} from 'vitest';
 import {createRequestHandler} from './createRequestHandler.js';
 

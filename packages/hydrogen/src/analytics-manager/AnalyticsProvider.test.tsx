@@ -160,6 +160,19 @@ describe('<Analytics.Provider />', () => {
     expect(screen.getByText('child')).toBeInTheDocument();
   });
 
+  it('never creates the deprecated shopify_y and shopify_s cookies', async () => {
+    render(
+      <Analytics.Provider cart={null} shop={SHOP_DATA} consent={CONSENT_DATA}>
+        <div>child</div>
+      </Analytics.Provider>,
+    );
+
+    await act(async () => {});
+
+    expect(document.cookie).not.toContain('_shopify_y=');
+    expect(document.cookie).not.toContain('_shopify_s=');
+  });
+
   describe('useAnalytics()', () => {
     it('returns shop, cart, customData, privacyBanner and customerPrivacy', async () => {
       const {analytics} = await renderAnalyticsProvider({

@@ -12,158 +12,89 @@ type TrackingValues = {
   consent: string;
 };
 
-// Cache values to avoid losing them when performance
-// entries are cleared from the buffer over time.
-export const cachedTrackingValues: {
-  current: null | TrackingValues;
-} = {current: null};
+/**
+ * Tracking values returned in a `consentManagement` response body. A `null`
+ * value is the backend's signal that consent was not granted, so no value
+ * exists for that field.
+ */
+export type ConsentResponseValues = {
+  uniqueToken: string | null;
+  visitToken: string | null;
+  consent: string | null;
+};
 
 /**
- * Retrieves user session tracking values for analytics and marketing from the browser environment.
+ * The outcome of the browser consent fetch. Carried in a component-scoped
+ * ref (see `useShopifyCookies`' `consentResultRef` option) so the component
+ * that initiated the fetch — e.g. Hydrogen's `useCustomerPrivacy` — can
+ * consume the result without module-level state.
+ */
+export type ConsentFetchResult =
+  | {status: 'succeeded'; values: ConsentResponseValues}
+  | {status: 'failed'};
+
+// Consent-management responses are the only token channel, so Hydrogen never
+// asks the Customer Privacy API to generate fallback tokens: minting new
+// tokens would fire a background persist request that races Hydrogen's own
+// consent fetch.
+const NO_FALLBACK_TOKEN_OPTIONS = {
+  generateFallback: false,
+  tag: 'hydrogen:classic',
+} as const;
+
+// Keep the consent-tracking-api token interface out of Hydrogen's public
+// global types since it could change in the future.
+type CustomerPrivacyWithTracking = {
+  cachedConsent?: string;
+  __internal?: {
+    uniqueToken?: (options?: {
+      generateFallback?: boolean;
+      tag?: string;
+    }) => string | undefined;
+    visitToken?: (options?: {
+      generateFallback?: boolean;
+      tag?: string;
+    }) => string | undefined;
+  };
+};
+
+/**
+ * Retrieves user session tracking values for analytics and marketing from the
+ * browser environment. Values are read, in order, from the Customer Privacy
+ * API (`window.Shopify.customerPrivacy`) and the deprecated `_shopify_y`/
+ * `_shopify_s`/`_tracking_consent` cookies during the transition period.
  * @publicDocs
  */
 export function getTrackingValues(): TrackingValues {
-  // Overall behavior: Tracking values are returned in Server-Timing headers from
-  // Storefront API responses, and we want to find and return these tracking values.
-  //
-  // Search recent fetches for SFAPI requests matching either: same origin (proxy case)
-  // or a subdomain of the current host (eg: checkout subdomain, if there is no proxy).
-  // We consider SF API-like endpoints (/api/.../graphql.json) on subdomains, as well as
-  // any same-origin request. The reason for the latter is that Hydrogen server collects
-  // tracking values and returns them in any non-cached response, not just direct SF API
-  // responses. For example, a cart mutation in a server action could return tracking values.
-  //
-  // If we didn't find tracking values in fetch requests, we fall back to checking cached values,
-  // then the initial page navigation entry, and finally the deprecated `_shopify_s` and `_shopify_y`.
+  const cookie =
+    // Read from arguments to avoid declaring parameters in this function signature.
+    // This logic is only used internally from `getShopifyCookies` and will be deprecated.
+    typeof arguments[0] === 'string'
+      ? arguments[0]
+      : typeof document !== 'undefined'
+        ? document.cookie
+        : '';
 
-  let trackingValues: TrackingValues | undefined;
+  const customerPrivacy =
+    typeof window === 'undefined'
+      ? undefined
+      : (window as {Shopify?: {customerPrivacy?: CustomerPrivacyWithTracking}})
+          .Shopify?.customerPrivacy;
 
-  if (
-    typeof window !== 'undefined' &&
-    typeof window.performance !== 'undefined'
-  ) {
-    try {
-      // RE to extract host and optionally match SFAPI pathname.
-      // Group 1: host (e.g. "checkout.mystore.com")
-      // Group 2: SFAPI path if present (e.g. "/api/2024-01/graphql.json")
-      const resourceRE =
-        /^https?:\/\/([^/]+)(\/api\/(?:unstable|2\d{3}-\d{2})\/graphql\.json(?=$|\?))?/;
+  const internal = customerPrivacy?.__internal;
 
-      // Search backwards through resource entries to find the most recent match.
-      // Match criteria (first one with _y and _s values wins):
-      // - Same origin (exact host match) with tracking values, OR
-      // - Subdomain + SFAPI pathname with tracking values
-      const entries = performance.getEntriesByType(
-        'resource',
-      ) as PerformanceResourceTiming[];
-
-      let matchedValues: ReturnType<typeof extractFromPerformanceEntry>;
-
-      for (let i = entries.length - 1; i >= 0; i--) {
-        const entry = entries[i];
-
-        if (entry.initiatorType !== 'fetch') continue;
-
-        const currentHost = window.location.host;
-        const match = entry.name.match(resourceRE);
-        if (!match) continue;
-
-        const [, matchedHost, sfapiPath] = match;
-
-        const isMatch =
-          // Same origin (exact host match)
-          matchedHost === currentHost ||
-          // Subdomain with SFAPI path
-          (sfapiPath && matchedHost?.endsWith(`.${currentHost}`));
-
-        if (isMatch) {
-          const values = extractFromPerformanceEntry(entry);
-          if (values) {
-            matchedValues = values;
-            break;
-          }
-        }
-      }
-
-      if (matchedValues) {
-        trackingValues = matchedValues;
-      }
-
-      // Resource entries have a limited buffer and are removed over time.
-      // Cache the latest values for future calls if we find them.
-      // A cached resource entry is always newer than a navigation entry.
-      if (trackingValues) {
-        cachedTrackingValues.current = trackingValues;
-      } else if (cachedTrackingValues.current) {
-        // Fallback to cached values from previous calls:
-        trackingValues = cachedTrackingValues.current;
-      }
-
-      if (!trackingValues) {
-        // Fallback to navigation entry from full page rendering load:
-        const navigationEntries = performance.getEntriesByType(
-          'navigation',
-        )[0] as PerformanceNavigationTiming;
-
-        // Navigation entries might omit consent when the Hydrogen server generates it.
-        // In this case, we skip consent requirement and only extract _y and _s values.
-        trackingValues = extractFromPerformanceEntry(navigationEntries, false);
-      }
-    } catch {}
-  }
-
-  // Fallback to deprecated cookies to support transitioning:
-  if (!trackingValues) {
-    const cookie =
-      // Read from arguments to avoid declaring parameters in this function signature.
-      // This logic is only used internally from `getShopifyCookies` and will be deprecated.
-      typeof arguments[0] === 'string'
-        ? arguments[0]
-        : typeof document !== 'undefined'
-          ? document.cookie
-          : '';
-
-    trackingValues = {
-      uniqueToken: cookie.match(/\b_shopify_y=([^;]+)/)?.[1] || '',
-      visitToken: cookie.match(/\b_shopify_s=([^;]+)/)?.[1] || '',
-      consent: cookie.match(/\b_tracking_consent=([^;]+)/)?.[1] || '',
-    };
-  }
-
-  return trackingValues;
-}
-
-function extractFromPerformanceEntry(
-  entry: PerformanceNavigationTiming | PerformanceResourceTiming,
-  isConsentRequired = true,
-): TrackingValues | undefined {
-  let uniqueToken = '';
-  let visitToken = '';
-  let consent = '';
-
-  const serverTiming = entry.serverTiming;
-  // Quick check: we need at least 3 entries (_y, _s, _cmp)
-  if (serverTiming && serverTiming.length >= 3) {
-    // Iterate backwards since our headers are typically at the end
-    for (let i = serverTiming.length - 1; i >= 0; i--) {
-      const {name, description} = serverTiming[i];
-      if (!name || !description) continue;
-
-      if (name === '_y') {
-        uniqueToken = description;
-      } else if (name === '_s') {
-        visitToken = description;
-      } else if (name === '_cmp') {
-        // _cmp (consent management platform) holds the consent value
-        // used by consent-tracking-api and privacy-banner scripts.
-        consent = description;
-      }
-
-      if (uniqueToken && visitToken && consent) break;
-    }
-  }
-
-  return uniqueToken && visitToken && (isConsentRequired ? consent : true)
-    ? {uniqueToken, visitToken, consent}
-    : undefined;
+  return {
+    uniqueToken:
+      internal?.uniqueToken?.(NO_FALLBACK_TOKEN_OPTIONS) ??
+      cookie.match(/\b_shopify_y=([^;]+)/)?.[1] ??
+      '',
+    visitToken:
+      internal?.visitToken?.(NO_FALLBACK_TOKEN_OPTIONS) ??
+      cookie.match(/\b_shopify_s=([^;]+)/)?.[1] ??
+      '',
+    consent:
+      customerPrivacy?.cachedConsent ??
+      cookie.match(/\b_tracking_consent=([^;]+)/)?.[1] ??
+      '',
+  };
 }

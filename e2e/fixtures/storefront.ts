@@ -1,5 +1,12 @@
-import type {Page, BrowserContext, Locator, Route} from '@playwright/test';
+import type {
+  Page,
+  BrowserContext,
+  Locator,
+  Route,
+  Response,
+} from '@playwright/test';
 import {expect} from '@playwright/test';
+import assert from './assertions';
 
 // Privacy Banner element IDs
 export const PRIVACY_BANNER_DIALOG_ID = 'shopify-pc__banner';
@@ -30,9 +37,9 @@ export const GRAPHQL_URL = 'graphql.json';
 // Mock value pattern for declined consent (all zeros with a 5)
 export const MOCK_VALUE_PATTERN = /^00000000\-0000\-0000\-5000\-000000000000$/;
 
-export interface ServerTimingValues {
-  _y?: string;
-  _s?: string;
+export interface TrackingTokens {
+  uniqueToken: string | null;
+  visitToken: string | null;
 }
 
 export interface MonorailPayload {
@@ -148,54 +155,130 @@ export class StorefrontPage {
   }
 
   /**
-   * Get server-timing values (_y and _s) from the Performance API
-   * @param preferLatestResource - If true, prefer the latest resource entry over navigation timing
+   * Capture the consent token query response before a full navigation or
+   * reload. The body is read immediately: Chromium discards it once another
+   * navigation replaces the response.
+   *
+   * A load can fire more than one consent query (Hydrogen's fetch and the
+   * consent script's own request), and a pending one from the current
+   * document may be caught just as the navigation replaces it — Chromium
+   * then discards its body. In that case the next matching response is
+   * tried: every full load fires at least one consent query.
    */
-  async getServerTimingValues(
-    preferLatestResource = false,
-  ): Promise<ServerTimingValues> {
-    return this.page.evaluate((preferLatest) => {
-      const result: {_y?: string; _s?: string} = {};
+  async withConsentResponse(action: () => Promise<unknown>): Promise<Response> {
+    const MAX_RESPONSE_ATTEMPTS = 3;
 
-      // Get values from resource timing entries (latest entries first)
-      const resourceEntries = performance.getEntriesByType(
-        'resource',
-      ) as PerformanceResourceTiming[];
-
-      // Reverse to get latest entries first
-      for (const entry of [...resourceEntries].reverse()) {
-        if (entry.serverTiming) {
-          for (const {name, description} of entry.serverTiming) {
-            if (name === '_y' && description && !result._y) {
-              result._y = description;
-            } else if (name === '_s' && description && !result._s) {
-              result._s = description;
-            }
-          }
-        }
-        if (result._y && result._s) break;
-      }
-
-      // Fall back to navigation timing if resource entries don't have values
-      // or if we explicitly don't prefer latest
-      if (!preferLatest || (!result._y && !result._s)) {
-        const navigationEntry = performance.getEntriesByType(
-          'navigation',
-        )[0] as PerformanceNavigationTiming;
-
-        if (navigationEntry?.serverTiming) {
-          for (const {name, description} of navigationEntry.serverTiming) {
-            if (name === '_y' && description && !result._y) {
-              result._y = description;
-            } else if (name === '_s' && description && !result._s) {
-              result._s = description;
-            }
-          }
+    const captureReadableResponse = async (): Promise<Response> => {
+      for (let attempt = 1; attempt <= MAX_RESPONSE_ATTEMPTS; attempt++) {
+        const consentResponse = await this.waitForConsentResponse();
+        try {
+          await consentResponse.body();
+          return consentResponse;
+        } catch {
+          // The body belonged to a replaced document; try the next response.
         }
       }
+      throw new Error(
+        'Could not read a consent response body: every attempt was discarded by a navigation',
+      );
+    };
 
-      return result;
-    }, preferLatestResource);
+    const [response] = await Promise.all([captureReadableResponse(), action()]);
+    return response;
+  }
+
+  /**
+   * Read the same global token API analytics uses, without generating
+   * fallback values: Hydrogen never requests fallback tokens.
+   */
+  async getTrackingTokens(): Promise<TrackingTokens> {
+    // The privacy banner and the standalone consent script expose the token
+    // getters differently (only the banner reports a loaded consent status),
+    // so wait on the getter API itself, which both install.
+    await this.page.waitForFunction(
+      () => (window as any).Shopify?.customerPrivacy?.__internal !== undefined,
+    );
+    return this.page.evaluate(() => {
+      const privacy = (window as any).Shopify.customerPrivacy;
+      return {
+        uniqueToken: privacy.__internal.uniqueToken() ?? null,
+        visitToken: privacy.__internal.visitToken() ?? null,
+      };
+    });
+  }
+
+  private async getConsentTokens(response: Response): Promise<TrackingTokens> {
+    expect(response.ok(), 'Consent request should succeed').toBe(true);
+    const body = await response.json();
+    expect(
+      body.errors,
+      'Consent query should have no GraphQL errors',
+    ).toBeUndefined();
+    const cookies = body.data?.consentManagement?.cookies;
+    assert(cookies, 'Consent response should contain cookies');
+    expect(cookies).toHaveProperty('shopifyUnique');
+    expect(cookies).toHaveProperty('shopifyVisit');
+    return {
+      uniqueToken: cookies.shopifyUnique,
+      visitToken: cookies.shopifyVisit,
+    };
+  }
+
+  /**
+   * Assert an allowed-consent response: real UUID tokens in the body,
+   * matching values through the global Customer Privacy API getters,
+   * and analytics consent allowed.
+   */
+  async expectAllowedConsent(response: Response) {
+    const {uniqueToken, visitToken} = await this.getConsentTokens(response);
+    assert(uniqueToken, 'Consent response should contain a unique token');
+    assert(visitToken, 'Consent response should contain a visit token');
+    const uuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    for (const token of [uniqueToken, visitToken]) {
+      expect(token).toMatch(uuid);
+      expect(token).not.toMatch(MOCK_VALUE_PATTERN);
+    }
+    const tokens = {uniqueToken, visitToken};
+    await expect
+      .poll(() => this.getTrackingTokens(), {
+        message: 'Global getters should match consent response',
+        timeout: 15000,
+      })
+      .toEqual(tokens);
+    await this.expectAnalyticsAllowed(true);
+    return tokens;
+  }
+
+  /**
+   * Assert a declined-consent response: no tokens in the body, no tokens
+   * through the global getters, and analytics consent denied.
+   */
+  async expectDeclinedConsent(response: Response) {
+    const tokens = {uniqueToken: null, visitToken: null};
+    expect(
+      await this.getConsentTokens(response),
+      'Declined consent should return no tokens',
+    ).toEqual(tokens);
+    await expect
+      .poll(() => this.getTrackingTokens(), {
+        message: 'Global getters should expose no tokens',
+        timeout: 15000,
+      })
+      .toEqual(tokens);
+    await this.expectAnalyticsAllowed(false);
+  }
+
+  private async expectAnalyticsAllowed(allowed: boolean) {
+    await expect
+      .poll(
+        () =>
+          this.page.evaluate(() =>
+            window.Shopify?.customerPrivacy?.analyticsProcessingAllowed(),
+          ),
+        {timeout: 15000},
+      )
+      .toBe(allowed);
   }
 
   /**
@@ -217,34 +300,61 @@ export class StorefrontPage {
    * Assert that no analytics cookies are present
    */
   async expectNoAnalyticsCookies() {
-    const cookies = await this.getCookies();
-    for (const cookieName of ANALYTICS_COOKIES) {
-      const cookie = cookies.find((c) => c.name.startsWith(cookieName));
-      expect(
-        cookie,
-        `Cookie ${cookieName} should not be present`,
-      ).toBeUndefined();
-    }
+    await expect
+      .poll(
+        async () => {
+          const cookies = await this.getCookies();
+          return ANALYTICS_COOKIES.filter((cookieName) =>
+            cookies.some((c) => c.name.startsWith(cookieName)),
+          );
+        },
+        {
+          message: 'Analytics cookies should not be present',
+          timeout: 15000,
+        },
+      )
+      .toEqual([]);
   }
 
   /**
-   * Assert that analytics cookies are present and return them
+   * Assert that the deprecated JS-visible analytics cookies are never created.
    */
-  async expectAnalyticsCookiesPresent() {
-    const cookies = await this.getCookies();
-    const shopifyY = cookies.find((c) => c.name === '_shopify_y');
-    const shopifyS = cookies.find((c) => c.name === '_shopify_s');
-    const shopifyAnalytics = cookies.find(
-      (c) => c.name === '_shopify_analytics',
-    );
-    const shopifyMarketing = cookies.find(
-      (c) => c.name === '_shopify_marketing',
-    );
+  async expectNoLegacyAnalyticsCookies() {
+    await expect
+      .poll(
+        async () => {
+          const cookies = await this.getCookies();
+          return ['_shopify_y', '_shopify_s'].filter((cookieName) =>
+            cookies.some((c) => c.name === cookieName),
+          );
+        },
+        {
+          message: '_shopify_y and _shopify_s cookies should not be present',
+          timeout: 15000,
+        },
+      )
+      .toEqual([]);
+  }
 
-    expect(shopifyY, '_shopify_y cookie should be present').toBeDefined();
-    expect(shopifyS, '_shopify_s cookie should be present').toBeDefined();
-
-    return {shopifyY, shopifyS, shopifyAnalytics, shopifyMarketing};
+  /**
+   * Assert the modern http-only analytics cookies are present.
+   */
+  async expectHttpOnlyAnalyticsCookiesPresent() {
+    await expect
+      .poll(
+        async () => {
+          const cookies = await this.getCookies();
+          return ['_shopify_analytics', '_shopify_marketing'].every((name) =>
+            cookies.some((cookie) => cookie.name === name && cookie.httpOnly),
+          );
+        },
+        {
+          message:
+            'HTTP-only analytics and marketing cookies should be present',
+          timeout: 15000,
+        },
+      )
+      .toBe(true);
   }
 
   /**
@@ -290,18 +400,22 @@ export class StorefrontPage {
   }
 
   /**
-   * Wait for consent management GraphQL response
+   * Wait for the consent management GraphQL response that returns tracking
+   * tokens. Banner configuration requests also use consentManagement, so the
+   * query text must identify the token query specifically.
    */
   waitForConsentResponse() {
-    return this.page.waitForResponse(async (response) => {
-      const url = response.url();
-      if (url.includes(GRAPHQL_URL)) {
-        const postData = response.request().postData();
-        if (postData && postData.includes('consentManagement')) {
-          return true;
-        }
-      }
-      return false;
+    return this.page.waitForResponse((response) => {
+      const request = response.request();
+      if (!response.url().includes(GRAPHQL_URL) || request.method() !== 'POST')
+        return false;
+      const query = request.postDataJSON()?.query;
+      return (
+        typeof query === 'string' &&
+        /\bconsentManagement\b/.test(query) &&
+        /\bshopifyUnique\b/.test(query) &&
+        /\bshopifyVisit\b/.test(query)
+      );
     });
   }
 
@@ -320,7 +434,7 @@ export class StorefrontPage {
     const response = await responsePromise;
     expect(response.ok(), 'Consent request should succeed').toBe(true);
 
-    await this.page.waitForLoadState('networkidle');
+    await response.finished();
     return response;
   }
 
@@ -339,7 +453,7 @@ export class StorefrontPage {
     const response = await responsePromise;
     expect(response.ok(), 'Consent request should succeed').toBe(true);
 
-    await this.page.waitForLoadState('networkidle');
+    await response.finished();
     return response;
   }
 
@@ -397,7 +511,7 @@ export class StorefrontPage {
     const response = await responsePromise;
     expect(response.ok(), 'Consent request should succeed').toBe(true);
 
-    await this.page.waitForLoadState('networkidle');
+    await response.finished();
     return response;
   }
 
@@ -416,7 +530,7 @@ export class StorefrontPage {
     const response = await responsePromise;
     expect(response.ok(), 'Consent request should succeed').toBe(true);
 
-    await this.page.waitForLoadState('networkidle');
+    await response.finished();
     return response;
   }
 
@@ -460,11 +574,40 @@ export class StorefrontPage {
   }
 
   /**
+   * Assert that no perf-kit produce requests have been made
+   */
+  expectNoPerfKitProduceRequests() {
+    const perfKitRequests = this.perfKitProduceRequests.filter((req) =>
+      req.initiator?.includes('perf-kit'),
+    );
+
+    expect(
+      perfKitRequests,
+      'No perf-kit produce requests should be made',
+    ).toHaveLength(0);
+  }
+
+  /**
    * Navigate to an in-stock product by trying product links sequentially.
    * Skips sold-out products (no "Add to cart" button) so that tests only
    * fail when every product on the page is unavailable.
+   *
+   * With `waitForConsent: true`, each navigation also captures and returns
+   * the consent token query response fired during the page load.
    */
-  async navigateToInStockProduct() {
+  navigateToInStockProduct(options: {waitForConsent: true}): Promise<Response>;
+  navigateToInStockProduct(): Promise<void>;
+  async navigateToInStockProduct(options?: {
+    waitForConsent: true;
+  }): Promise<Response | void> {
+    // The consent request fires once per full page load; in-app link clicks
+    // are client-side navigations that never re-run it. When a test needs
+    // the consent response, navigate with a full page load instead.
+    const openPath = (path: string) =>
+      options?.waitForConsent
+        ? this.withConsentResponse(() => this.page.goto(path))
+        : this.page.goto(path).then(() => undefined);
+
     const listingUrl = this.page.url();
     const productLinks = this.page.locator('a[href*="/products/"]');
     const linkCount = await productLinks.count();
@@ -489,7 +632,11 @@ export class StorefrontPage {
       // that aren't actionable (e.g., hidden by CSS or not yet in the DOM).
       if (!(await link.isVisible())) continue;
 
-      await link.click();
+      const productPath = new URL(
+        (await link.getAttribute('href'))!,
+        this.page.url(),
+      ).pathname;
+      const response = await openPath(productPath);
       triedUrls.push(this.page.url());
 
       const isInStock = await this.getAddToCartButton()
@@ -497,10 +644,10 @@ export class StorefrontPage {
         .then(() => true)
         .catch(() => false);
 
-      if (isInStock) return;
+      if (isInStock) return response;
 
       // Product is sold out — return to listing and try the next one
-      await this.page.goto(listingUrl);
+      await openPath(listingUrl);
       await expect(productLinks.first()).toBeVisible();
     }
 
@@ -666,24 +813,14 @@ export class StorefrontPage {
   }
 
   /**
-   * Assert that no perf-kit produce requests have been made
-   */
-  expectNoPerfKitProduceRequests() {
-    expect(
-      this.perfKitProduceRequests,
-      'No perf-kit produce requests should be made',
-    ).toHaveLength(0);
-  }
-
-  /**
    * Wait for Monorail analytics requests to be made
    */
-  async waitForMonorailRequests(minCount = 1) {
+  async waitForMonorailRequests(minCount = 1, timeoutInMilliseconds = 5000) {
     await expect
-      .poll(
-        () => this.monorailRequests.length,
-        'Monorail analytics requests should be made',
-      )
+      .poll(() => this.monorailRequests.length, {
+        message: 'Monorail analytics requests should be made',
+        timeout: timeoutInMilliseconds,
+      })
       .toBeGreaterThanOrEqual(minCount);
   }
 
@@ -731,6 +868,98 @@ export class StorefrontPage {
         ).toBe(expectedS);
       }
     }
+  }
+
+  /**
+   * Navigate to checkout through the cart drawer's checkout link. The
+   * storefront session's tracking values ride the checkout URL params
+   * (see `verifyCheckoutUrlTrackingParams`), so the checkout page starts
+   * from the same session.
+   *
+   * Requires the cart drawer to be open (see `addToCart`). Navigates away
+   * from the storefront: use it as the last step of a test.
+   */
+  async gotoCheckoutFromCartDrawer() {
+    const checkoutLink = this.page.locator(
+      '.overlay.expanded a[href*="checkout"], .overlay.expanded a[href*="/cart/c/"]',
+    );
+    await expect(checkoutLink).toBeVisible({timeout: 10000});
+    await checkoutLink.click();
+
+    // The checkout link redirects to the shop's checkout domain:
+    await this.page.waitForURL(
+      (url) =>
+        /\/checkouts\//.test(url.pathname) || /\/cart\/c\//.test(url.pathname),
+      {timeout: 30000},
+    );
+    // Checkout keeps sending requests; networkidle is not guaranteed.
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /**
+   * Verify that the checkout page's Monorail analytics carry the same
+   * tracking values as the storefront's consent response: the session must
+   * survive the cross-domain handoff. Checkout also fires many events
+   * without tracking values (web pixels, performance metrics), so only the
+   * events that carry them are asserted, and at least one must carry both.
+   *
+   * Call after `gotoCheckoutFromCartDrawer` (with request tracking cleared
+   * beforehand), so the tracked requests come from the checkout page.
+   */
+  verifyCheckoutMonorailRequests(
+    expectedY: string,
+    expectedS: string,
+    context: string,
+  ) {
+    const requestsWithData = this.monorailRequests.filter(
+      (req) => req.postData,
+    );
+
+    expect(
+      requestsWithData.length,
+      `Checkout Monorail requests with data ${context}`,
+    ).toBeGreaterThan(0);
+
+    let eventsWithBothTokens = 0;
+    const mismatches: string[] = [];
+
+    for (const request of requestsWithData) {
+      const payload = JSON.parse(request.postData!) as {
+        events?: Array<{payload: MonorailPayload}>;
+      };
+
+      for (const event of payload.events ?? []) {
+        const uniqueToken =
+          event.payload?.unique_token || event.payload?.uniqToken;
+        const visitToken =
+          event.payload?.deprecated_visit_token || event.payload?.visitToken;
+
+        // Events without tracking values (web pixels, metrics) are expected:
+        if (!uniqueToken && !visitToken) continue;
+
+        if (uniqueToken === expectedY && visitToken === expectedS) {
+          eventsWithBothTokens++;
+          continue;
+        }
+
+        // Events carrying only part of the pair must still match their part:
+        if (uniqueToken && uniqueToken !== expectedY) {
+          mismatches.push(`unique_token ${uniqueToken} ≠ ${expectedY}`);
+        }
+        if (visitToken && visitToken !== expectedS) {
+          mismatches.push(`visit_token ${visitToken} ≠ ${expectedS}`);
+        }
+      }
+    }
+
+    expect(
+      mismatches,
+      `Checkout tracking values should match the storefront session ${context}`,
+    ).toEqual([]);
+    expect(
+      eventsWithBothTokens,
+      `At least one checkout event should carry both session tokens ${context}`,
+    ).toBeGreaterThan(0);
   }
 
   /**
@@ -786,39 +1015,6 @@ export class StorefrontPage {
     ).toBe(true);
 
     return foundPerfKitPayload;
-  }
-
-  /**
-   * Assert that server-timing values are mock values (for declined consent)
-   */
-  expectMockServerTimingValues(values: ServerTimingValues) {
-    if (values._y) {
-      expect(
-        MOCK_VALUE_PATTERN.test(values._y),
-        `Server-timing _y should be a mock value, got: ${values._y}`,
-      ).toBe(true);
-    }
-    if (values._s) {
-      expect(
-        MOCK_VALUE_PATTERN.test(values._s),
-        `Server-timing _s should be a mock value, got: ${values._s}`,
-      ).toBe(true);
-    }
-  }
-
-  /**
-   * Assert that server-timing values are real UUIDs (not mock values)
-   */
-  expectRealServerTimingValues(values: ServerTimingValues) {
-    expect(values._y, 'Y value should be present').toBeTruthy();
-    expect(values._s, 'S value should be present').toBeTruthy();
-    // Mock values match MOCK_VALUE_PATTERN: /^0+[-0]*5/ (zeros followed by 5)
-    expect(values._y, 'Y value should not be a mock value').not.toMatch(
-      MOCK_VALUE_PATTERN,
-    );
-    expect(values._s, 'S value should not be a mock value').not.toMatch(
-      MOCK_VALUE_PATTERN,
-    );
   }
 
   /**
