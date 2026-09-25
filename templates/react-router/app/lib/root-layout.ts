@@ -1,6 +1,5 @@
 import { gql, type StorefrontApi, type StorefrontClient } from "@shopify/hydrogen";
 
-import { loadAnnouncement } from "~/lib/announcement";
 import { normalizeStorefrontShop, type StorefrontShop } from "~/lib/storefront-shop";
 
 export const ROOT_LAYOUT_QUERY = gql(`
@@ -39,16 +38,12 @@ type RootLayoutLoaderData = {
   shopId: string;
   shopInfo: StorefrontShop;
   navCollections: RootLayoutQueryResult["collections"]["nodes"];
-  announcement: string | null;
 };
 
 export async function loadRootLayout(
   storefrontClient: Pick<StorefrontClient, "graphql">,
 ): Promise<RootLayoutLoaderData> {
-  const [layoutResult, announcement] = await Promise.all([
-    storefrontClient.graphql(ROOT_LAYOUT_QUERY),
-    loadAnnouncement(storefrontClient),
-  ]);
+  const layoutResult = await storefrontClient.graphql(ROOT_LAYOUT_QUERY);
 
   if (layoutResult.errors) {
     console.error(
@@ -64,6 +59,5 @@ export async function loadRootLayout(
     shopId: shop.id,
     shopInfo: normalizeStorefrontShop(shop),
     navCollections: collections.nodes,
-    announcement,
   };
 }
