@@ -141,6 +141,23 @@ test.describe('Privacy Banner - Consent Change', () => {
       // Clear tracked requests before consent change
       storefront.clearRequests();
 
+      // === Model deprecated cookies from an older storefront version ===
+
+      // Seeded after the declined state settled: the no-consent clear path
+      // has already run, so these cookies persist through the declined
+      // state. They model a visitor whose old storefront left them behind.
+      const storefrontOrigin = new URL(storefront.page.url()).origin;
+      await storefront.context.addCookies([
+        {name: '_shopify_y', value: 'legacy-unique', url: storefrontOrigin},
+        {name: '_shopify_s', value: 'legacy-visit', url: storefrontOrigin},
+      ]);
+      expect((await storefront.getCookie('_shopify_y'))?.value).toBe(
+        'legacy-unique',
+      );
+      expect((await storefront.getCookie('_shopify_s'))?.value).toBe(
+        'legacy-visit',
+      );
+
       // === CONSENT CHANGE: Accept via preferences ===
 
       // 6. Open privacy preferences and accept consent.
@@ -149,6 +166,11 @@ test.describe('Privacy Banner - Consent Change', () => {
       const tokens = await storefront.expectAllowedConsent(
         await storefront.acceptInPreferences(),
       );
+
+      // 6b. The accept flow's own consent request (the script's request, not
+      // Hydrogen's page-load fetch) put the replacement tokens in place and
+      // opened the deletion gate: the deprecated cookies are removed.
+      await storefront.expectNoLegacyAnalyticsCookies();
 
       // 7. Only the modern http-only analytics cookies are created after
       // granting consent.
@@ -187,12 +209,11 @@ test.describe('Privacy Banner - Consent Change', () => {
         await storefront.getTrackingTokens(),
         'Cart mutations should preserve tokens',
       ).toEqual(tokens);
-      // TODO: uncomment these out once backend changes have shipped
-      // await storefront.verifyCheckoutUrlTrackingParams(
-      //   tokens.uniqueToken,
-      //   tokens.visitToken,
-      //   'after granting consent',
-      // );
+      await storefront.verifyCheckoutUrlTrackingParams(
+        tokens.uniqueToken!,
+        tokens.visitToken!,
+        'after granting consent',
+      );
 
       // 11. Reload the page to verify persistence
       const reloadResponse = await storefront.withConsentResponse(() =>
