@@ -30,6 +30,9 @@ export function isHydrogenServerHandoffPath(pathname: string): boolean {
   );
 }
 
+// UCP profiles need JSON validation and caching separate from the other well-known resources.
+export const UCP_RE = /^\/\.well-known\/ucp$/;
+
 /**
  * Allowlisted `.well-known` resources proxied to the Online Store origin:
  * - `apple-developer-merchantid-domain-association` — Apple Pay domain verification.
