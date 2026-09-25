@@ -56,6 +56,13 @@ export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
  */
 export const MCP_RE = /^\/api\/mcp$/;
 
+const BUY_ITEM_PAIR = String.raw`(?:[A-Za-z0-9._-]+|~[A-Za-z0-9_-]+):[1-9]\d*`;
+
+/** Items are required so a storefront's own /buy pages keep routing to the app. */
+export const BUY_PERMALINK_RE = new RegExp(
+  `^/buy/${BUY_ITEM_PAIR}(?:,${BUY_ITEM_PAIR})*$`,
+);
+
 export const getSafePathname = (url: string) => {
   try {
     return new URL(url, 'http://e.c').pathname;

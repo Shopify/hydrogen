@@ -140,7 +140,7 @@ function createRedirectResponse(
  * - `/_.data` or `/prefix/_.data` → `/` or `/prefix/` (trailingSlashAware)
  * - `/_root.data` or `/prefix/_root.data` → `/` or `/prefix/` (root route)
  */
-function parseSingleFetchPathname(rawPathname: string): {
+export function parseSingleFetchPathname(rawPathname: string): {
   pathname: string;
   isSoftNavigation: boolean;
 } {
