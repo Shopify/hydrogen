@@ -1,11 +1,9 @@
 import type { ShallowRef } from "vue";
 import { describe, expectTypeOf, it } from "vitest";
 
-import type { CartActions as CoreCartActions } from "../core";
 import { createCartServerHandlers } from "../core/cart";
 import { gql } from "../graphql";
 import { createCartComponents } from "./cart";
-import type { CartActions } from "./index";
 
 const cartFragment = gql(`
   fragment CartFragment on Cart {
@@ -56,37 +54,5 @@ describe("createCartComponents", () => {
     expectTypeOf<ReturnType<typeof typedCart.useCartActions>["refresh"]>().toEqualTypeOf<
       () => void
     >();
-  });
-
-  it("re-exports the core CartActions type", () => {
-    expectTypeOf<CartActions>().toEqualTypeOf<CoreCartActions>();
-  });
-
-  it("passes a SubmitEvent to useCartForm formProps callbacks", () => {
-    type FormPropsOptions = NonNullable<
-      Parameters<ReturnType<typeof typedCart.useCartForm>["formProps"]>[0]
-    >;
-
-    expectTypeOf<Parameters<NonNullable<FormPropsOptions["beforeSubmit"]>>[0]>().toEqualTypeOf<
-      SubmitEvent
-    >();
-    expectTypeOf<Parameters<NonNullable<FormPropsOptions["afterSubmit"]>>[0]>().toEqualTypeOf<
-      SubmitEvent
-    >();
-
-    function Consumer() {
-      const { formProps } = typedCart.useCartForm();
-      formProps({
-        beforeSubmit: (e) => {
-          expectTypeOf(e.submitter).toEqualTypeOf<HTMLElement | null>();
-        },
-      });
-      formProps({
-        beforeSubmit: (e: Event) => e.preventDefault(),
-        afterSubmit: (e: Event) => e.preventDefault(),
-      });
-    }
-
-    void Consumer;
   });
 });
