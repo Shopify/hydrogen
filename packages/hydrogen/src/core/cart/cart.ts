@@ -181,6 +181,9 @@ export type CartStore = {
   handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;
 };
 
+/** Actions for reconciling cart state after updates outside Standard Actions. */
+export type CartActions = Pick<CartStore, "refresh">;
+
 type CartInitialData<TData extends CartData = CartData> = {
   cart: TData | null;
   errors?: Array<{ message: string }>;

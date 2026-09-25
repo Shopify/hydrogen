@@ -19,6 +19,7 @@ import {
   configureCartEndpoint as configureCoreCartEndpoint,
   createCartStore,
   type CreateCartStoreOptions,
+  type CartActions,
   type CartStore,
 } from "../core/cart/cart";
 import { createCartFormRegister, type CartFormRegister } from "../core/cart/form";
@@ -60,8 +61,7 @@ type TypedCartProvider<TData extends CartData> = {
   new (): { $props: { initialData?: CartInitialData<TData> } };
 };
 
-/** Actions for reconciling cart state after updates outside Standard Actions. */
-export type CartActions = Pick<CartStore, "refresh">;
+export type { CartActions };
 
 type TypedCartComponents<TData extends CartData> = {
   CartProvider: TypedCartProvider<TData>;
@@ -283,8 +283,8 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
  */
 export function useCartForm(): {
   formProps: (opts?: {
-    beforeSubmit?: (e: Event) => void;
-    afterSubmit?: (e: Event) => void;
+    beforeSubmit?: (e: SubmitEvent) => void;
+    afterSubmit?: (e: SubmitEvent) => void;
   }) => Record<string, unknown>;
   register: CartFormRegister;
   isPending: {
@@ -298,14 +298,14 @@ export function useCartForm(): {
   const register = createCartFormRegister();
 
   const formProps = (opts?: {
-    beforeSubmit?: (e: Event) => void;
-    afterSubmit?: (e: Event) => void;
+    beforeSubmit?: (e: SubmitEvent) => void;
+    afterSubmit?: (e: SubmitEvent) => void;
   }): Record<string, unknown> => ({
-    onSubmit: (e: Event) => {
+    onSubmit: (e: SubmitEvent) => {
       opts?.beforeSubmit?.(e);
       if (e.defaultPrevented) return;
       e.preventDefault();
-      store.handleFormSubmit(e as SubmitEvent).catch(() => {});
+      store.handleFormSubmit(e).catch(() => {});
       opts?.afterSubmit?.(e);
     },
     method: "post",
