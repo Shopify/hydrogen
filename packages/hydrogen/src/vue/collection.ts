@@ -34,15 +34,21 @@ const CollectionStoreKey: InjectionKey<ShallowRef<CollectionStore>> = Symbol("Co
  * ```vue
  * <script setup lang="ts">
  * import { CollectionProvider, type CollectionData } from '@shopify/hydrogen/vue';
+ * import { useRoute, useRouter } from 'vue-router';
  *
  * const props = defineProps<{ data: CollectionData; urlSearch: string }>();
+ * const route = useRoute();
+ * const router = useRouter();
+ *
+ * // `search` includes the leading `?`, so append it to the path as-is.
+ * const onChange = (search: string) => router.replace(`${route.path}${search}`);
  * </script>
  *
  * <template>
  *   <CollectionProvider
  *     :data="props.data"
  *     :url-search="props.urlSearch"
- *     @change="(s) => router.replace({ search: s })"
+ *     @change="onChange"
  *   >
  *     <slot />
  *   </CollectionProvider>
