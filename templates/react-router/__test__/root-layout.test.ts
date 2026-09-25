@@ -32,9 +32,12 @@ const NAV_COLLECTIONS = [
   { handle: "hats", title: "Hats" },
 ];
 
+const SHOP_ID = "gid://shopify/Shop/1";
+
 // A complete, schema-valid RootLayout response.
 const LAYOUT_DATA = {
   shop: {
+    id: SHOP_ID,
     name: "Snowdevil",
     brand: { logo: { alt: "Snowdevil logo", image: LOGO_IMAGE } },
     paymentSettings: { acceptedCardBrands: ["VISA"], supportedDigitalWallets: ["SHOPIFY_PAY"] },
@@ -82,6 +85,7 @@ test("loads shop identity, navigation, and the announcement as separate requests
   });
 
   assert.deepEqual(await loadRootLayout(client), {
+    shopId: SHOP_ID,
     shopInfo: SHOP_INFO,
     navCollections: NAV_COLLECTIONS,
     announcement: "Free shipping",
@@ -106,6 +110,7 @@ test("keeps name, payments, and navigation when a nullable brand field errors", 
   });
 
   assert.deepEqual(await loadRootLayout(client), {
+    shopId: SHOP_ID,
     shopInfo: { ...SHOP_INFO, logo: null },
     navCollections: NAV_COLLECTIONS,
     announcement: "Free shipping",
@@ -181,6 +186,7 @@ test("a rejected announcement request cannot remove the shop or navigation", asy
   });
 
   assert.deepEqual(await loadRootLayout(client), {
+    shopId: SHOP_ID,
     shopInfo: SHOP_INFO,
     navCollections: NAV_COLLECTIONS,
     announcement: null,

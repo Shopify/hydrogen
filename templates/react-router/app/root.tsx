@@ -9,6 +9,7 @@ import {
   Scripts,
   ScrollRestoration,
   useNavigate,
+  useRouteLoaderData,
 } from "react-router";
 
 import { CartAnalyticsTracker, PageViewedTracker } from "~/components/AnalyticsTrackers";
@@ -23,7 +24,7 @@ import { envContext } from "~/lib/env";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
-import { analyticsConsent, shop, storefrontConfig } from "~/lib/shop";
+import { analyticsConsent, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -87,6 +88,7 @@ export const middleware: Route.MiddlewareFunction[] = [
 ];
 
 export async function loader({ context, request }: Route.LoaderArgs) {
+  const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
   const [cartResult, layout] = await Promise.all([
     cartHandlers.get({ storefrontClient, request }),
@@ -98,25 +100,31 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     navCollections: layout.navCollections,
     shopInfo: layout.shopInfo,
     announcement: layout.announcement,
+    shopIdentity: resolveShopIdentity(env, layout.shopId),
   };
 }
 
 export function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  // Absent when the root loader failed (error page only).
+  const rootData = useRouteLoaderData<typeof loader>("root");
 
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <ShopifyScripts
-          i18n={storefrontConfig.i18n}
-          shop={shop}
-          analytics={{ channel: "hydrogen" }}
-          consent={analyticsConsent}
-          navigate={navigate}
-          routes={routeTemplates}
-        />
+        {rootData ? (
+          <ShopifyScripts
+            i18n={storefrontConfig.i18n}
+            shop={rootData.shopIdentity.scriptShop}
+            analytics={{ channel: rootData.shopIdentity.analyticsShop.channel }}
+            shopifyAnalytics={rootData.shopIdentity.shopifyAnalytics}
+            consent={analyticsConsent}
+            navigate={navigate}
+            routes={routeTemplates}
+          />
+        ) : null}
         <Meta />
         <Links />
       </head>

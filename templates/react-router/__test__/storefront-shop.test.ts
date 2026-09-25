@@ -10,6 +10,8 @@ import {
   type StorefrontShopQueryData,
 } from "../app/lib/storefront-shop.ts";
 
+const SHOP_ID = "gid://shopify/Shop/1";
+
 const LOGO_IMAGE = {
   url: "https://cdn.shopify.com/logo.png",
   altText: "Image alt",
@@ -29,6 +31,7 @@ function fromWire(settings: {
 
 function shopData(overrides: Partial<StorefrontShopQueryData> = {}): StorefrontShopQueryData {
   return {
+    id: SHOP_ID,
     name: "Snowdevil",
     brand: { logo: { alt: "Snowdevil logo", image: LOGO_IMAGE } },
     paymentSettings: { acceptedCardBrands: ["VISA"], supportedDigitalWallets: ["APPLE_PAY"] },
@@ -46,11 +49,11 @@ test("falls back to a neutral name for a blank shop name without fabricating bra
   const noPayments = { acceptedCardBrands: [], supportedDigitalWallets: [] };
   assert.equal(FALLBACK_SHOP_NAME, "Store");
   assert.deepEqual(
-    normalizeStorefrontShop({ name: "", brand: null, paymentSettings: noPayments }),
+    normalizeStorefrontShop({ id: SHOP_ID, name: "", brand: null, paymentSettings: noPayments }),
     expected,
   );
   assert.deepEqual(
-    normalizeStorefrontShop({ name: "   ", brand: null, paymentSettings: noPayments }),
+    normalizeStorefrontShop({ id: SHOP_ID, name: "   ", brand: null, paymentSettings: noPayments }),
     expected,
   );
 });
