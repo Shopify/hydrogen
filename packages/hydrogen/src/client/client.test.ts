@@ -261,6 +261,17 @@ describe("createStorefrontClient", () => {
       expect(headers.get("Sec-Shopify-Storefront-Origin")).toBe("https://example.com");
     });
 
+    it.each([null, "1"])("preserves Sec-GPC on Storefront requests: %s", async (secGpc) => {
+      const headers = new Headers();
+      if (secGpc !== null) headers.set("Sec-GPC", secGpc);
+      const requestContext = createTestRequestContext({ headers });
+      const client = createPublicClient({ fetch: mockFetch, requestContext });
+
+      await client.graphql(SHOP_QUERY);
+
+      expect(getHeaders(mockFetch).get("Sec-GPC")).toBe(secGpc);
+    });
+
     it("sends private access token header", async () => {
       const client = createPrivateClient({
         privateStorefrontToken: "priv-token-456",
@@ -275,7 +286,7 @@ describe("createStorefrontClient", () => {
     it("sends buyer metadata for private client", async () => {
       const requestContext = createShopifyRequestContext({
         request: new Request("https://example.com", {
-          headers: { "request-id": "request-context-group" },
+          headers: { "request-id": "request-context-group", "Sec-GPC": "1" },
         }),
         i18n: DEFAULT_I18N,
         buyerIp: "10.0.0.1",
@@ -288,6 +299,7 @@ describe("createStorefrontClient", () => {
 
       const headers = getHeaders(mockFetch);
       expect(headers.get("Shopify-Storefront-Buyer-IP")).toBe("10.0.0.1");
+      expect(headers.get("Sec-GPC")).toBe("1");
       expect(headers.get("Custom-Storefront-Request-Group-ID")).toBe("request-context-group");
     });
 

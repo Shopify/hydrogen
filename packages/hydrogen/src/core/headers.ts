@@ -6,6 +6,7 @@ export const REQUEST_GROUP_ID_HEADER = "Custom-Storefront-Request-Group-ID";
 export const SDK_VARIANT_HEADER = "X-SDK-Variant";
 export const SDK_VARIANT_SOURCE_HEADER = "X-SDK-Variant-Source";
 export const SDK_VERSION_HEADER = "X-SDK-Version";
+export const SEC_GPC_HEADER = "Sec-GPC";
 export const SHOPIFY_STOREFRONT_ORIGIN_HEADER = "Sec-Shopify-Storefront-Origin";
 export const STOREFRONT_ID_HEADER = "Shopify-Storefront-Id";
 export const SHOPIFY_STOREFRONT_S_HEADER = "Shopify-Storefront-S";
@@ -35,6 +36,7 @@ export type StandardHeaderName =
   | "proxy-authenticate"
   | "proxy-authorization"
   | "referer"
+  | typeof SEC_GPC_HEADER
   | typeof SURROGATE_CONTROL_HEADER
   | "te"
   | "trailer"
