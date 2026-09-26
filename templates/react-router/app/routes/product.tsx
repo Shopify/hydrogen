@@ -552,6 +552,9 @@ function VariantOptions({ product }: { product: ProductData }) {
   );
 }
 
+const MIN_QUANTITY = 1;
+const MAX_QUANTITY = 99;
+
 function QuantitySelector({
   quantity,
   setQuantity,
@@ -559,7 +562,7 @@ function QuantitySelector({
   quantity: number;
   setQuantity: (quantity: number) => void;
 }) {
-  const clamp = (value: number) => Math.min(99, Math.max(1, value));
+  const clamp = (value: number) => Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, value));
 
   return (
     <div className="shrink-0">
@@ -575,7 +578,7 @@ function QuantitySelector({
           className="text-on-surface-secondary hover:text-on-surface inline-flex size-11 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50 motion-safe:transition-[color,transform] motion-safe:active:scale-[0.90]"
           aria-label="Decrease quantity"
           onClick={() => setQuantity(clamp(quantity - 1))}
-          disabled={quantity <= 1}
+          disabled={quantity <= MIN_QUANTITY}
         >
           <img src="/icons/icon-minus.svg" alt="" className="size-4" aria-hidden="true" />
         </button>
@@ -583,13 +586,12 @@ function QuantitySelector({
           type="number"
           id="quantity"
           value={quantity}
-          min={1}
-          max={99}
           step={1}
           className="number-reset text-on-surface h-11 w-12 rounded-none border-0 bg-transparent p-0 text-center text-sm"
           aria-label="Quantity"
+          aria-valuetext={String(quantity)}
           onChange={(event) =>
-            setQuantity(clamp(Number.parseInt(event.currentTarget.value, 10) || 1))
+            setQuantity(clamp(Number.parseInt(event.currentTarget.value, 10) || MIN_QUANTITY))
           }
         />
         <button
@@ -597,7 +599,7 @@ function QuantitySelector({
           className="text-on-surface-secondary hover:text-on-surface inline-flex size-11 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50 motion-safe:transition-[color,transform] motion-safe:active:scale-[0.90]"
           aria-label="Increase quantity"
           onClick={() => setQuantity(clamp(quantity + 1))}
-          disabled={quantity >= 99}
+          disabled={quantity >= MAX_QUANTITY}
         >
           <img src="/icons/icon-plus.svg" alt="" className="size-4" aria-hidden="true" />
         </button>
