@@ -319,6 +319,29 @@ export async function generateDefaultConfig(
       (typeof project.schema !== 'string' || !isKnownSchema(project.schema)),
   );
 
+  // The Storefront API project is only recognized when `schema` is a string path
+  // ending in `storefront.schema.json`. If it's an object-style pointer (e.g. a URL
+  // with headers, to introspect a live endpoint), it can't be matched, and codegen
+  // silently falls back to the bundled schema + a broad document glob. Warn instead
+  // of failing silently so the ignored configuration is visible.
+  if (!sfapiProject) {
+    const objectSchemaProject = Object.values(gqlConfig?.projects ?? {}).find(
+      (project) =>
+        typeof project.schema === 'object' &&
+        project.schema !== null &&
+        !Array.isArray(project.schema),
+    );
+
+    if (objectSchemaProject) {
+      renderWarning({
+        headline: 'Could not match a Storefront API schema for codegen.',
+        body:
+          'A GraphQL project uses an object-style `schema` pointer, but Hydrogen codegen only recognizes the Storefront API project when `schema` is a string path ending in `storefront.schema.json`. ' +
+          'Codegen is falling back to the schema bundled with your installed `@shopify/hydrogen` version and a broad document glob, so the custom schema pointer and its documents are ignored.',
+      });
+    }
+  }
+
   return {
     filepath: 'virtual:codegen',
     config: {
