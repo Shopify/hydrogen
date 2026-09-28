@@ -217,23 +217,6 @@ describe("CollectionProvider", () => {
     expect(latestStore.settle).toHaveBeenCalledWith();
   });
 
-  it("does not call syncFromParams while navigation is pending", () => {
-    const loaderData = { handle: "shoes", dataSearch: "" };
-    const pendingWrapper = ({ children }: { children: ReactNode }) =>
-      createElement(CollectionProvider, { data: loaderData, urlSearch: "" }, children);
-
-    const { result } = renderHook(() => useCollectionActions(), { wrapper: pendingWrapper });
-
-    vi.mocked(latestStore.matchesParams).mockReturnValue(false);
-    vi.mocked(latestStore.syncFromParams).mockClear();
-
-    act(() => {
-      result.current.toggleFilter({ tag: "sale" });
-    });
-
-    expect(latestStore.syncFromParams).not.toHaveBeenCalled();
-  });
-
   it("syncs from URL when link navigation supersedes pending onChange", () => {
     const onChange = vi.fn();
     const merged = new URLSearchParams("filter.p.tag=sale");

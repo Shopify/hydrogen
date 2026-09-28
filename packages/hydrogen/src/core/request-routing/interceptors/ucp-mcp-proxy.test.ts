@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { configureLogging, resetLoggingForTests } from "../../logging";
+import { configureLogging } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
 import { assert, createTestLogger } from "../../test-utils";
 import { handleUcpMcpProxy as handleUcpMcpProxyImpl } from "./ucp-mcp-proxy";
@@ -62,7 +62,7 @@ describe("handleUcpMcpProxy", () => {
   });
 
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
     vi.unstubAllGlobals();
   });
 

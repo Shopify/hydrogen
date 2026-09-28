@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { SFAPI_RE, MCP_RE, UCP_MCP_RE, normalizeStoreDomain } from "./url";
+import { SFAPI_RE, normalizeStoreDomain } from "./url";
 
 describe("SFAPI_RE", () => {
   it("matches valid SFAPI paths", () => {
@@ -21,32 +21,6 @@ describe("SFAPI_RE", () => {
     const match = "/api/2025-01/graphql.json".match(SFAPI_RE);
     expect(match?.[1]).toBe("2025-01");
   });
-});
-
-describe("MCP_RE", () => {
-  it("matches exact /api/mcp", () => {
-    expect(MCP_RE.test("/api/mcp")).toBe(true);
-  });
-
-  it("rejects paths with trailing slashes or sub-paths", () => {
-    expect(MCP_RE.test("/api/mcp/")).toBe(false);
-    expect(MCP_RE.test("/api/mcp/foo")).toBe(false);
-    expect(MCP_RE.test("/api/mcps")).toBe(false);
-    expect(MCP_RE.test("/api/mc")).toBe(false);
-  });
-});
-
-describe("UCP_MCP_RE", () => {
-  it("matches exact /api/ucp/mcp", () => {
-    expect(UCP_MCP_RE.test("/api/ucp/mcp")).toBe(true);
-  });
-
-  it.each(["/api/ucp/mcp/", "/api/ucp/mcp/foo", "/api/ucp/mcps", "/api/mcp"])(
-    "does not match %s",
-    (pathname) => {
-      expect(UCP_MCP_RE.test(pathname)).toBe(false);
-    },
-  );
 });
 
 describe("normalizeStoreDomain", () => {

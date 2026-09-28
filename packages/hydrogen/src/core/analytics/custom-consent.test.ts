@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 import type { ShopifyGlobal } from "../../globals";
-import { configureLogging, resetLoggingForTests } from "../logging";
+import { configureLogging } from "../logging";
 import { getShopifyScriptTags, initializeShopifyScripts } from "../shopify-scripts";
 import {
   CONSENT_TRACKING_API_LOADED_EVENT,
@@ -72,7 +72,7 @@ function createHarness(status: "loading" | "loaded" = "loaded") {
 
 afterEach(() => {
   delete window.Shopify;
-  resetLoggingForTests();
+  configureLogging({});
   vi.restoreAllMocks();
 });
 

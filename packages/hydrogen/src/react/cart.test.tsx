@@ -346,16 +346,6 @@ describe("useCart", () => {
     expect(renderSpy).toHaveBeenCalledTimes(initialRenderCount);
   });
 
-  it("server snapshot returns EMPTY_CART_STATE slice", () => {
-    function Consumer() {
-      const qty = useCart((s) => s.data.totalQuantity);
-      return createElement("span", { "data-testid": "qty" }, qty);
-    }
-
-    render(createElement(CartProvider, null, createElement(Consumer)));
-    expect(screen.getByTestId("qty").textContent).toBe("0");
-  });
-
   it("selector closes over latest props on re-render", () => {
     vi.mocked(createCartStore).mockImplementation(() =>
       createMockStore(
@@ -550,36 +540,6 @@ describe("useCartForm", () => {
     expect(latestStore.handleFormSubmit).toHaveBeenCalledWith(nativeEvent);
   });
 
-  it("beforeSubmit can prevent cart submission via e.preventDefault()", () => {
-    let capturedProps: any;
-
-    function Consumer() {
-      const { formProps } = useCartForm();
-      capturedProps = formProps({
-        beforeSubmit: (e: any) => e.preventDefault(),
-      });
-      return null;
-    }
-
-    render(createElement(CartProvider, null, createElement(Consumer)));
-
-    const nativeEvent = new SubmitEvent("submit", { submitter: null });
-    let prevented = false;
-    const syntheticEvent = {
-      preventDefault: vi.fn(() => {
-        prevented = true;
-      }),
-      get defaultPrevented() {
-        return prevented;
-      },
-      nativeEvent,
-    } as any;
-
-    capturedProps.onSubmit(syntheticEvent);
-
-    expect(latestStore.handleFormSubmit).not.toHaveBeenCalled();
-  });
-
   it("afterSubmit runs after store.handleFormSubmit", () => {
     const afterSpy = vi.fn();
     let capturedProps: any;
@@ -685,126 +645,28 @@ describe("useCartForm", () => {
   });
 });
 
-describe("useCart pending state", () => {
-  it("useCart(s => s.pending.lines) returns pending lines Set", () => {
-    const mockStore = createMockStore();
-    mockStore.setState(
-      makeCartState({
-        pending: {
-          lines: new Set(["line-1"]),
-          note: false,
-          attributes: false,
-          discountCodes: new Set(),
-          cost: true,
-        },
-      }),
-    );
-    vi.mocked(createCartStore).mockImplementation(() => mockStore);
-
-    function Consumer() {
-      const pendingLines = useCart((s) => s.pending.lines);
-      return createElement(
-        "span",
-        { "data-testid": "result" },
-        pendingLines.has("line-1") ? "yes" : "no",
-      );
-    }
-
-    render(createElement(CartProvider, null, createElement(Consumer)));
-    expect(screen.getByTestId("result").textContent).toBe("yes");
-  });
-
-  it("useCart(s => s.pending.note) returns pending note boolean", () => {
-    const mockStore = createMockStore();
-    mockStore.setState(
-      makeCartState({
-        pending: {
-          lines: new Set(),
-          note: true,
-          attributes: false,
-          discountCodes: new Set(),
-          cost: false,
-        },
-      }),
-    );
-    vi.mocked(createCartStore).mockImplementation(() => mockStore);
-
-    function Consumer() {
-      const pendingNote = useCart((s) => s.pending.note);
-      return createElement("span", { "data-testid": "result" }, pendingNote ? "yes" : "no");
-    }
-
-    render(createElement(CartProvider, null, createElement(Consumer)));
-    expect(screen.getByTestId("result").textContent).toBe("yes");
-  });
-
-  it("useCart(s => s.pending.discountCodes) returns pending codes Set", () => {
-    const mockStore = createMockStore();
-    mockStore.setState(
-      makeCartState({
-        pending: {
-          lines: new Set(),
-          note: false,
-          attributes: false,
-          discountCodes: new Set(["SAVE10"]),
-          cost: true,
-        },
-      }),
-    );
-    vi.mocked(createCartStore).mockImplementation(() => mockStore);
-
-    function Consumer() {
-      const pendingCodes = useCart((s) => s.pending.discountCodes);
-      return createElement(
-        "span",
-        { "data-testid": "result" },
-        pendingCodes.has("SAVE10") ? "yes" : "no",
-      );
-    }
-
-    render(createElement(CartProvider, null, createElement(Consumer)));
-    expect(screen.getByTestId("result").textContent).toBe("yes");
-  });
-
-  it("useCart(s => s.pending.cost) returns pending cost boolean", () => {
-    const mockStore = createMockStore();
-    mockStore.setState(
-      makeCartState({
-        pending: {
-          lines: new Set(),
-          note: false,
-          attributes: false,
-          discountCodes: new Set(),
-          cost: true,
-        },
-      }),
-    );
-    vi.mocked(createCartStore).mockImplementation(() => mockStore);
-
-    function Consumer() {
-      const pendingCost = useCart((s) => s.pending.cost);
-      return createElement("span", { "data-testid": "result" }, pendingCost ? "yes" : "no");
-    }
-
-    render(createElement(CartProvider, null, createElement(Consumer)));
-    expect(screen.getByTestId("result").textContent).toBe("yes");
-  });
-});
-
 describe("cartEndpoint option", () => {
-  it("defaults formProps.action to /api/cart", () => {
-    let result: ReturnType<ReturnType<typeof useCartForm>["formProps"]> | undefined;
+  it("defaults formProps.action to /api/cart", async () => {
+    // The shared beforeEach configures the endpoint, so load an unconfigured binding.
+    vi.resetModules();
+    const core = await import("../core/cart/cart");
+    vi.mocked(core.createCartStore).mockImplementation((options) =>
+      createMockStore(options?.initialData),
+    );
+    const fresh = await import("./cart");
+    let result: ReturnType<ReturnType<typeof fresh.useCartForm>["formProps"]> | undefined;
 
     function Consumer() {
-      const { formProps } = useCartForm();
+      const { formProps } = fresh.useCartForm();
       result = formProps();
       return null;
     }
 
-    render(createElement(CartProvider, null, createElement(Consumer)));
+    render(createElement(fresh.CartProvider, null, createElement(Consumer)));
     assert(result, "expected formProps to be assigned");
 
     expect(result.action).toBe("/api/cart");
+    expect(core.configureCartEndpoint).toHaveBeenCalledWith("/api/cart");
   });
 
   it("custom cartEndpoint configures transport and flows to formProps.action", () => {

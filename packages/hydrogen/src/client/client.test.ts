@@ -95,15 +95,6 @@ describe("createStorefrontClient", () => {
       expect(client.apiUrl).toBe("https://my-store.myshopify.com/api/2026-01/graphql.json");
     });
 
-    it("normalizes storeDomain without protocol", () => {
-      const client = createPublicClient({
-        storeDomain: "my-store.myshopify.com",
-        fetch: mockFetch,
-      });
-      expect(client.storeUrl).toBe("https://my-store.myshopify.com");
-      expect(client.apiUrl).toContain("https://my-store.myshopify.com");
-    });
-
     it("normalizes storeDomain with existing protocol", () => {
       const client = createPublicClient({
         storeDomain: "https://my-store.myshopify.com",

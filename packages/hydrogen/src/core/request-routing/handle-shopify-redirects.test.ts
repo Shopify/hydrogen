@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
 import type { I18nConfig } from "../../client/types";
-import { configureLogging, resetLoggingForTests } from "../logging";
+import { configureLogging } from "../logging";
 import { createShopifyRequestContext } from "../request-context";
 import { createShopifyRouteTemplates } from "../standard-routes/index";
 import { assert, createTestLogger } from "../test-utils";
@@ -59,7 +59,7 @@ describe("handleShopifyRedirects", () => {
   });
 
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
   });
 
   it("redirects /admin to Shopify admin", async () => {

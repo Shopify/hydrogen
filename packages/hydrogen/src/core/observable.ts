@@ -65,10 +65,7 @@ export function createObservable<T>(initialState: T): InternalObservable<T> {
 
     listeners.push(listener);
 
-    let subscribed = true;
     return () => {
-      if (!subscribed) return;
-      subscribed = false;
       listeners = listeners.filter((l) => l !== listener);
     };
   }

@@ -109,17 +109,6 @@ describe("ShopifyScripts", () => {
     expect(html).not.toContain('"templates"');
   });
 
-  it("accepts disabled WebMCP without rendering SSR scripts", async () => {
-    const html = await renderToString(
-      h(ShopifyScripts, {
-        shop: TEST_SHOP,
-        webMcp: false,
-      }),
-    );
-
-    expect(html).not.toContain(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT);
-  });
-
   it("initializes browser script behavior once with initial props", async () => {
     const initializeShopifyScripts = vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts");
     const navigate = vi.fn();

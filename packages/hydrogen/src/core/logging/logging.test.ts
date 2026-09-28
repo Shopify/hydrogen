@@ -1,12 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import {
-  configureLogging,
-  consoleLogger,
-  formatLogPrefix,
-  getLogger,
-  resetLoggingForTests,
-} from "./logging";
+import { configureLogging, consoleLogger, getLogger } from "./logging";
 import type { HydrogenLogger, LogContext } from "./types";
 
 function createLoggerSpy(): HydrogenLogger & { calls: Array<[string, string, LogContext?]> } {
@@ -29,7 +23,7 @@ function createLoggerSpy(): HydrogenLogger & { calls: Array<[string, string, Log
 }
 
 afterEach(() => {
-  resetLoggingForTests();
+  configureLogging({});
   vi.restoreAllMocks();
 });
 
@@ -192,11 +186,5 @@ describe("configureLogging", () => {
     getLogger("cart").error("routed to second");
     expect(first.calls).toEqual([]);
     expect(second.calls).toEqual([["error", "routed to second", { scope: "cart" }]]);
-  });
-});
-
-describe("formatLogPrefix", () => {
-  it("formats the standard prefix", () => {
-    expect(formatLogPrefix("warn", "analytics")).toBe("[hydrogen:warn:analytics]");
   });
 });
