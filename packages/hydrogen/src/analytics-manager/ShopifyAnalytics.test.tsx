@@ -128,6 +128,8 @@ describe('async analytics consent', () => {
   });
   it('releases analytics after silent initialization when no banner is needed', async () => {
     await renderAnalytics(true);
+    expect(mocks.sendShopifyAnalytics).not.toHaveBeenCalled();
+    expect(mocks.perfKit).not.toHaveBeenCalled();
     await consentLoaded();
     expect(analytics.canTrack()).toBe(true);
     expect(mocks.sendShopifyAnalytics).toHaveBeenCalledOnce();
@@ -142,6 +144,8 @@ describe('async analytics consent', () => {
       });
       mocks.privacy.shouldShowBanner.mockReturnValue(true);
       await renderAnalytics(true);
+      expect(mocks.sendShopifyAnalytics).not.toHaveBeenCalled();
+      expect(mocks.perfKit).not.toHaveBeenCalled();
       await consentLoaded();
       expect(mocks.sendShopifyAnalytics).toHaveBeenCalledOnce();
       expect(mocks.perfKit).toHaveBeenCalled();
@@ -178,6 +182,8 @@ describe('async analytics consent', () => {
     });
     mocks.privacy.shouldShowBanner.mockReturnValue(true);
     await renderAnalytics(true);
+    expect(mocks.sendShopifyAnalytics).not.toHaveBeenCalled();
+    expect(mocks.perfKit).not.toHaveBeenCalled();
     await consentLoaded();
     expect(analytics.canTrack()).toBe(false);
     expect(mocks.sendShopifyAnalytics).not.toHaveBeenCalled();

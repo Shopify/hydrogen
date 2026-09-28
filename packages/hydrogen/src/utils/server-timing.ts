@@ -1,3 +1,5 @@
+import {HYDROGEN_SFAPI_PROXY_KEY} from '../constants';
+
 function buildServerTimingHeader(values: Record<string, string | undefined>) {
   return Object.entries(values)
     .map(([key, value]) => (value ? `${key};desc=${value}` : undefined))
@@ -18,4 +20,22 @@ export function appendServerTimingHeader(
   if (header) {
     response.headers.append('Server-Timing', header);
   }
+}
+
+function hasServerTimingInNavigationEntry(key: string): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    const navigationEntry = window.performance.getEntriesByType(
+      'navigation',
+    )[0] as PerformanceNavigationTiming;
+
+    return !!navigationEntry?.serverTiming?.some((entry) => entry.name === key);
+  } catch (e) {
+    return false;
+  }
+}
+
+export function isSfapiProxyEnabled(): boolean {
+  return hasServerTimingInNavigationEntry(HYDROGEN_SFAPI_PROXY_KEY);
 }

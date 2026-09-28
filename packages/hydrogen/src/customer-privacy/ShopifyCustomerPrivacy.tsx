@@ -6,6 +6,7 @@ import {
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {useRevalidator} from 'react-router';
 import {loadScript} from '@shopify/hydrogen-react/load-script';
+import {isSfapiProxyEnabled} from '../utils/server-timing';
 
 export type ConsentStatus = boolean | undefined;
 
@@ -191,7 +192,8 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     const commonAncestorDomain = parseStoreDomain(checkoutDomain);
     return {
       checkoutRootDomain:
-        sameDomainForStorefrontApi !== false && typeof window !== 'undefined'
+        (sameDomainForStorefrontApi ?? isSfapiProxyEnabled()) &&
+        typeof window !== 'undefined'
           ? window.location.host
           : checkoutDomain,
       storefrontRootDomain: commonAncestorDomain
@@ -362,15 +364,15 @@ function configureCustomerPrivacy(
   }
   const state = {config};
   configuredCustomerPrivacy.set(customerPrivacy, state);
-  const original =
-    customerPrivacy.setTrackingConsent as OriginalCustomerPrivacy['setTrackingConsent'];
+  const original = customerPrivacy.setTrackingConsent;
   customerPrivacy.setTrackingConsent = (consent, callback) => {
     const {locale, country, ...headlessConfig} = state.config;
-    original.call(
-      customerPrivacy,
-      {...headlessConfig, headlessStorefront: true, ...consent},
-      callback,
-    );
+    const params: SetConsentHeadlessParams = {
+      ...headlessConfig,
+      headlessStorefront: true,
+      ...consent,
+    };
+    original.call(customerPrivacy, params, callback);
   };
 }
 
