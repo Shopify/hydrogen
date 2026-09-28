@@ -1,3 +1,4 @@
+import {isJsonOutput} from '../json-output.js';
 import {cp as copyWithFilter} from 'node:fs/promises';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
@@ -24,7 +25,6 @@ import {
   handleI18n,
   handleRouteGeneration,
   createInitialCommit,
-  renderProjectReady,
   commitAll,
   generateProjectEntries,
 } from './common.js';
@@ -302,7 +302,7 @@ export async function setupLocalStarterTemplate(
 
   // If running in --quickstart mode, skip this success banner
   if (options.quickstart) {
-    console.log('\n');
+    if (!isJsonOutput()) console.log('\n');
   } else {
     renderSuccess({
       headline: [
@@ -383,8 +383,6 @@ export async function setupLocalStarterTemplate(
   if (options.git) {
     await commitAll(project.directory, 'Lockfile');
   }
-
-  await renderProjectReady(project, setupSummary);
 
   return {
     ...project,
