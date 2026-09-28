@@ -27,7 +27,9 @@ export default function CartRoute() {
       tabIndex={-1}
       className="max-w-page px-margin mx-auto w-full flex-1 py-12"
     >
-      <h1 className="type-display text-on-surface mb-8">Cart</h1>
+      <h1 id="cart-page-title" tabIndex={-1} className="type-display text-on-surface mb-8">
+        Cart
+      </h1>
       {loading ? <p className="text-on-surface-secondary">Loading cart…</p> : null}
       {!loading && lines.length === 0 ? (
         <div>
@@ -41,7 +43,7 @@ export default function CartRoute() {
         <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
           <ul role="list" className="divide-border divide-y">
             {lines.map((line) => (
-              <CartLineItem key={line.id} line={line} />
+              <CartLineItem key={line.id} line={line} emptyCartFocusId="cart-page-title" />
             ))}
           </ul>
           <aside className="border-border h-fit rounded border p-4" aria-label="Cart summary">
