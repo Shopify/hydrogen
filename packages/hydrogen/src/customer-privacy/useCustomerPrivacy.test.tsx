@@ -154,11 +154,11 @@ describe('useCustomerPrivacy async initialization', () => {
     },
   );
 
-  it('defaults to same-origin consent without a Server-Timing marker', async () => {
+  it('defaults to checkout domain without a Server-Timing marker', async () => {
     const {sameDomainForStorefrontApi: _override, ...props} = PROPS;
     renderHook(() => useCustomerPrivacy(props));
     await act(async () => {});
-    expect(consentGlobal().config?.consentDomain).toBe(window.location.host);
+    expect(consentGlobal().config?.consentDomain).toBe(PROPS.checkoutDomain);
   });
 
   it('uses checkout for consent when the Storefront API proxy is disabled', async () => {
