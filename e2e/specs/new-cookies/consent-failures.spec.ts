@@ -1,9 +1,10 @@
-import {setTestStore, test, expect} from '../../fixtures';
+import {setTestStore, test, expect, ACCEPT_ALL_CONSENT} from '../../fixtures';
 
 /**
- * Failure modes of the consent fetch: the deprecated cookies must survive
- * when no replacement values ever arrive, and a slow consent response must
- * not leak stale values into analytics before it settles.
+ * Failure modes of the Customer Privacy API's consent request. Analytics wait
+ * for consent to load, so a failed or slow request must never release them
+ * early or with stale values, and legacy cookies are expired only after a
+ * successful response.
  */
 setTestStore('defaultConsentAllowed_cookiesEnabled');
 
@@ -15,118 +16,75 @@ function isConsentRequest(postData: string | null): boolean {
 }
 
 test.describe('Consent request failures', () => {
-  test('keeps the deprecated cookies when no replacement values ever arrive', async ({
+  test('keeps analytics and legacy cookies on hold until consent loads', async ({
     storefront,
   }) => {
-    // No banner: consent is allowed by default, so nothing else interferes.
     await storefront.setWithPrivacyBanner(false);
 
-    // === Establish the session as a new visitor ===
-    const initialResponse = await storefront.withConsentResponse(() =>
-      storefront.goto('/'),
-    );
-    const tokens = await storefront.expectAllowedConsent(initialResponse);
+    // === A returning visitor with only legacy cookies ===
+    await storefront.goto('/');
+    await storefront.waitForConsentLoaded();
+    const legacy = await storefront.setTrackingConsent(ACCEPT_ALL_CONSENT);
+    await storefront.seedLegacyVisitor(legacy);
 
-    // === Model the returning visitor: only deprecated cookies remain ===
-    const storefrontOrigin = new URL(storefront.page.url()).origin;
-    await storefront.context.addCookies([
-      {name: '_shopify_y', value: tokens.uniqueToken!, url: storefrontOrigin},
-      {name: '_shopify_s', value: tokens.visitToken!, url: storefrontOrigin},
-    ]);
-    await storefront.removeHttpOnlyCookies();
-
-    // === Fail every consent request: Hydrogen's fetch and the script's ===
-    let abortedConsentRequests = 0;
+    // === Every consent request fails on this load ===
+    let failedConsentRequests = 0;
     await storefront.page.route(PROXY_URL_PATTERN, (route) => {
       if (!isConsentRequest(route.request().postData())) {
         return route.continue();
       }
-      abortedConsentRequests++;
+      failedConsentRequests++;
       return route.abort('failed');
     });
-
-    // Load with the page-load fetch failing.
     await storefront.reload();
-    await storefront.page.waitForLoadState('domcontentloaded');
+    await expect.poll(() => failedConsentRequests).toBeGreaterThan(0);
 
-    // Async consent blocks analytics readiness (and perf-kit) until consent
-    // loads, so a failed initialization keeps both gated. Wait for the
-    // aborted request count instead.
-    await expect
-      .poll(() => abortedConsentRequests, {
-        message: 'The page-load consent request should have been attempted',
-        timeout: 15000,
-      })
-      .toBeGreaterThanOrEqual(1);
-
-    // Fail the consent script's own request too, through the consent API
-    // it exposes. Its callback settles once the request failed.
-    const consentCallResult = await storefront.page.evaluate(
-      () =>
-        new Promise<unknown>((resolve) => {
-          const customerPrivacy = (window as any).Shopify?.customerPrivacy;
-          customerPrivacy?.setTrackingConsent(
-            {
-              marketing: true,
-              analytics: true,
-              preferences: true,
-              sale_of_data: true,
-            },
-            (data: unknown) => resolve(data),
-          );
-        }),
-    );
+    // Consent never loaded: no analytics, no PerfKit, and the legacy cookies
+    // stay in place for the next attempt.
     expect(
-      consentCallResult,
-      'The script request should have failed',
-    ).toMatchObject({error: expect.any(String)});
+      await storefront.page.evaluate(
+        () => window.Shopify?.customerPrivacy?.consentStatus,
+      ),
+    ).not.toBe('loaded');
+    storefront.expectNoMonorailRequests();
+    storefront.expectPerfKitNotLoaded();
     expect(
-      abortedConsentRequests,
-      'Both consent requests should have failed',
-    ).toBe(2);
+      (await storefront.getCookies())
+        .map((cookie) => cookie.name)
+        .filter(
+          (name) =>
+            name.startsWith('_tracking_consent') ||
+            /^_shopify_[ys]$/.test(name),
+        )
+        .sort(),
+    ).toEqual(['_shopify_s', '_shopify_y', '_tracking_consent']);
 
-    // The safety gate outcome: no replacement values arrived, so the
-    // deprecated cookies must be kept — deleting them would orphan the
-    // visitor's session.
-    expect((await storefront.getCookie('_shopify_y'))?.value).toBe(
-      tokens.uniqueToken,
-    );
-    expect((await storefront.getCookie('_shopify_s'))?.value).toBe(
-      tokens.visitToken,
-    );
+    // Client-side navigation does not release analytics without consent.
+    await storefront.page
+      .locator('a[href="/collections/all"]:visible')
+      .first()
+      .click();
+    await expect(storefront.page).toHaveURL(/\/collections\/all/);
+    storefront.expectNoMonorailRequests();
 
-    // The Customer Privacy API never holds the session's unique token: not
-    // from a consent response (all failed).
-    const cachedUniqueToken = await storefront.page.evaluate(
-      () => (window as any).Shopify?.customerPrivacy?.cachedToken?._shopify_y,
-    );
-    expect(cachedUniqueToken).not.toBe(tokens.uniqueToken);
-
-    // === Recovery: consent requests succeed again on the next load ===
+    // === Recovery: a successful consent update releases analytics ===
     await storefront.page.unroute(PROXY_URL_PATTERN);
-
-    const recoveryResponse = await storefront.withConsentResponse(() =>
-      storefront.reload(),
+    await storefront.setTrackingConsent(ACCEPT_ALL_CONSENT);
+    await storefront.waitForPerfKit();
+    await storefront.waitForMonorailRequests();
+    storefront.verifyMonorailRequests(
+      legacy.uniqueToken!,
+      legacy.visitToken!,
+      'after recovering consent',
     );
-
-    // The deprecated cookie values were forwarded upstream on the consent
-    // request, so the same session continues.
-    expect(
-      await storefront.expectAllowedConsent(recoveryResponse),
-      'Recovery should preserve the original tokens',
-    ).toEqual(tokens);
-
-    // The gate opens through the fresh response values: the deprecated
-    // cookies are finally removed.
-    await storefront.expectNoLegacyAnalyticsCookies();
-    await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+    await storefront.expectNoLegacyCookies();
   });
 
   test('waits for a slow consent response without leaking stale values', async ({
     storefront,
   }) => {
-    // Delay the consent response: analytics readiness and the deletion gate
-    // must not act before it settles.
+    // Delay the consent response: analytics and legacy-cookie expiry must
+    // wait for it.
     const CONSENT_DELAY_IN_MILLISECONDS = 3000;
 
     await storefront.setWithPrivacyBanner(false);
@@ -168,8 +126,8 @@ test.describe('Consent request failures', () => {
     storefront.expectPerfKitNotLoaded();
     storefront.expectNoMonorailRequests();
 
-    // The deletion gate has not opened either: the replacement values have
-    // not arrived, so the deprecated cookies are still in place.
+    // The legacy cookies are still in place: they are expired only after a
+    // successful consent response.
     expect((await storefront.getCookie('_shopify_y'))?.value).toBe(
       tokens.uniqueToken,
     );

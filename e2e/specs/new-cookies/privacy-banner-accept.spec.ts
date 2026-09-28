@@ -72,12 +72,11 @@ test.describe('Privacy Banner - Accept Flow', () => {
     ).toEqual(tokens);
 
     // 12. Verify checkout URLs in cart drawer contain tracking params
-    // TODO: uncomment these out once backend changes have shipped
-    // await storefront.verifyCheckoutUrlTrackingParams(
-    //   tokens.uniqueToken,
-    //   tokens.visitToken,
-    //   'in cart drawer after adding to cart',
-    // );
+    await storefront.verifyCheckoutUrlTrackingParams(
+      tokens.uniqueToken!,
+      tokens.visitToken!,
+      'in cart drawer after adding to cart',
+    );
 
     // 13. Reload the page and verify state is preserved
     const reloadResponse = await storefront.withConsentResponse(() =>

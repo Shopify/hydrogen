@@ -2,13 +2,13 @@ import {setTestStore, test, expect} from '../../fixtures';
 
 /**
  * Client-side (SPA) route navigations must not re-run the consent flow: the
- * consent request fires once per full page load, the published values stay
- * in place, and the deprecated cookies are not written again.
+ * consent request fires once per full page load, the tracking values stay in
+ * place, and the deprecated cookies are only ever written to expire them.
  */
 setTestStore('defaultConsentAllowed_cookiesEnabled');
 
 test.describe('SPA route navigation', () => {
-  test('keeps the published values and does not rewrite the deprecated cookies', async ({
+  test('keeps the tracking values and does not rewrite the deprecated cookies', async ({
     storefront,
   }) => {
     await storefront.setWithPrivacyBanner(false);
@@ -120,7 +120,7 @@ test.describe('SPA route navigation', () => {
     expect(writesAfterNavigations).toEqual(writesAfterLoad);
     await storefront.expectNoLegacyAnalyticsCookies();
 
-    // The published values are unchanged: analytics events after the
+    // The tracking values are unchanged: analytics events after the
     // navigations still carry the session tokens.
     expect(await storefront.getTrackingTokens()).toEqual(tokens);
     await storefront.waitForMonorailRequests();

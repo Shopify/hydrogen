@@ -143,9 +143,9 @@ test.describe('Privacy Banner - Consent Change', () => {
 
       // === Model deprecated cookies from an older storefront version ===
 
-      // Seeded after the declined state settled: the no-consent clear path
-      // has already run, so these cookies persist through the declined
-      // state. They model a visitor whose old storefront left them behind.
+      // Seeded after the declined state settled, so no earlier consent
+      // response expires them. They model a visitor whose old storefront
+      // left them behind.
       const storefrontOrigin = new URL(storefront.page.url()).origin;
       await storefront.context.addCookies([
         {name: '_shopify_y', value: 'legacy-unique', url: storefrontOrigin},
@@ -167,9 +167,8 @@ test.describe('Privacy Banner - Consent Change', () => {
         await storefront.acceptInPreferences(),
       );
 
-      // 6b. The accept flow's own consent request (the script's request, not
-      // Hydrogen's page-load fetch) put the replacement tokens in place and
-      // opened the deletion gate: the deprecated cookies are removed.
+      // 6b. The accept flow's successful consent response makes the Customer
+      // Privacy API expire the deprecated cookies.
       await storefront.expectNoLegacyAnalyticsCookies();
 
       // 7. Only the modern http-only analytics cookies are created after

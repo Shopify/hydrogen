@@ -9,7 +9,7 @@ test.describe('Returning visitor edge cases', () => {
   test.describe('Declined by default, with existing deprecated cookies', () => {
     setTestStore('defaultConsentDisallowed_cookiesEnabled');
 
-    test('keeps the deprecated cookies when no replacement values exist', async ({
+    test('expires the deprecated cookies once declined consent loads', async ({
       storefront,
     }) => {
       // The no-banner flow: consent is declined by the store's default and
@@ -28,8 +28,7 @@ test.describe('Returning visitor edge cases', () => {
       ]);
 
       // 3. Returning visit. The consent response reports the store's
-      // declined default: no tokens, and the declined consent value must be
-      // published so the Customer Privacy API learns the visitor's state.
+      // declined default: no tokens.
       const response = await storefront.withConsentResponse(() =>
         storefront.reload(),
       );
@@ -38,10 +37,9 @@ test.describe('Returning visitor edge cases', () => {
       // 4. Declined consent means no analytics at all.
       storefront.expectNoMonorailRequests();
 
-      // 5. The deprecated cookies are removed by the no-consent clear path
-      // once the declined state is learned: a declined visitor must not
-      // keep tracking cookies, whatever happens to the deletion gate (which
-      // stays closed here — no replacement tokens were published).
+      // 5. The Customer Privacy API expires the deprecated cookies after the
+      // successful consent response: a declined visitor keeps no tracking
+      // cookies.
       await storefront.expectNoLegacyAnalyticsCookies();
 
       // 6. Reload: the declined state holds — no tokens, no analytics, and
