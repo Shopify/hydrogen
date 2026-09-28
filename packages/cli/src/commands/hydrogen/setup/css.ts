@@ -1,3 +1,6 @@
+import {writeJsonResult} from '../../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {setupCssJsonOutputSchema} from '../../../lib/setups/types.js';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {
   commonFlags,
@@ -27,12 +30,17 @@ import {getViteConfig} from '../../../lib/vite-config.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
 export default class SetupCSS extends Command {
+  static get jsonOutputSchema(): typeof setupCssJsonOutputSchema {
+    return setupCssJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown =
     'Adds support for certain CSS strategies to your project.';
 
-  static description = 'Setup CSS strategies for your project.';
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
     ...commonFlags.force,
     ...overrideFlag(commonFlags.installDeps, {'install-deps': {default: true}}),
@@ -50,15 +58,18 @@ export default class SetupCSS extends Command {
     const {flags, args} = await this.parse(SetupCSS);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    await runSetupCSS({
-      ...flagsToCamelObject(flags),
-      strategy: args.strategy as CssStrategy,
-      directory,
-    });
+    await runSetupCSS(
+      {
+        ...flagsToCamelObject(flags),
+        strategy: args.strategy as CssStrategy,
+        directory,
+      },
+      flags.json,
+    );
   }
 }
 
-export async function runSetupCSS({
+export async function executeSetupCSS({
   strategy: flagStrategy,
   directory,
   force = false,
@@ -80,17 +91,17 @@ export async function runSetupCSS({
 
   const strategy = flagStrategy ? flagStrategy : await renderCssPrompt();
 
-  if (strategy === 'css-modules' || strategy === 'postcss') {
-    renderSuccess({
-      headline: `Vite works out of the box with ${CSS_STRATEGY_NAME_MAP[strategy]}.`,
-      body: `See the Vite documentation for more information:\n${CSS_STRATEGY_HELP_URL_MAP[strategy]}`,
-    });
-
-    return;
-  }
-
+  const result = {
+    directory,
+    strategy,
+    files: [] as string[],
+    dependenciesInstalled: false,
+    needsNpmReinstall: false,
+  };
+  if (strategy === 'css-modules' || strategy === 'postcss')
+    return {...result, status: 'built-in' as const};
   const setupOutput = await setupCssStrategy(strategy, remixConfig, force);
-  if (!setupOutput) return;
+  if (!setupOutput) return {...result, status: 'cancelled' as const};
 
   const {workPromise, generatedAssets, needsInstallDeps} = setupOutput;
 
@@ -127,6 +138,55 @@ export async function runSetupCSS({
 
   await renderTasks(tasks);
 
+  return {
+    ...result,
+    status: 'configured' as const,
+    files: generatedAssets,
+    dependenciesInstalled: Boolean(installDeps && needsInstallDeps),
+    needsNpmReinstall: Boolean(
+      needsInstallDeps && isNpm && strategy === 'tailwind',
+    ),
+  };
+}
+
+export async function runSetupCSS(
+  options: Parameters<typeof executeSetupCSS>[0],
+  json?: boolean,
+) {
+  const result = await executeSetupCSS(options);
+  if (
+    !writeJsonResult(
+      setupCssJsonOutputSchema,
+      {
+        status: result.status === 'cancelled' ? 'cancelled' : 'success',
+        changed: result.status === 'configured',
+        directory: resolvePath(result.directory),
+        strategy: result.strategy,
+        filePaths: result.files.map((path) =>
+          resolvePath(result.directory, path),
+        ),
+        dependenciesInstalled: result.dependenciesInstalled,
+        needsNpmReinstall: result.needsNpmReinstall,
+      },
+      json,
+    )
+  )
+    renderSetupCSS(result);
+  return result;
+}
+
+export function renderSetupCSS(
+  result: Awaited<ReturnType<typeof executeSetupCSS>>,
+) {
+  const {strategy, files: generatedAssets} = result;
+  if (result.status === 'cancelled') return;
+  if (result.status === 'built-in') {
+    renderSuccess({
+      headline: `Vite works out of the box with ${CSS_STRATEGY_NAME_MAP[strategy]}.`,
+      body: `See the Vite documentation for more information:\n${CSS_STRATEGY_HELP_URL_MAP[strategy]}`,
+    });
+    return;
+  }
   renderSuccess({
     headline: `${CSS_STRATEGY_NAME_MAP[strategy]} setup complete.`,
     body:
@@ -137,16 +197,11 @@ export async function runSetupCSS({
         : '') +
       `\nFor more information, visit ${CSS_STRATEGY_HELP_URL_MAP[strategy]}`,
   });
-
-  // Due to a bug in NPM related to optional dependencies in Tailwind,
-  // we need to reinstall dependencies to fix node_modules:
-  // https://github.com/npm/cli/issues/4828
-  if (needsInstallDeps && isNpm && strategy === 'tailwind') {
+  if (result.needsNpmReinstall)
     renderWarning({
       body: [
         'Due to a bug in NPM, you might need to reinstall dependencies again.\nRun',
         {command: 'npm install'},
       ],
     });
-  }
 }
