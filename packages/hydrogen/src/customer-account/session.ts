@@ -114,8 +114,9 @@ export type PrepareLoginUrlOptions = {
    */
   origin?: string;
   /**
-   * Path to redirect back to after login. Sanitized to same-origin,
-   * max 2 048 bytes. Defaults to `"/account"`.
+   * Same-origin path to redirect back to after login. Must start with `/`, such as
+   * `"/account/orders"`. Absolute URLs and values over 2 048 bytes fall back to the
+   * default, `"/account"`.
    */
   returnTo?: string;
   /** Passed as the `locale` search param on the Shopify OAuth authorize URL. */
@@ -275,9 +276,9 @@ type CreateCustomerAccountServerHandlersBaseOptions<
 > = {
   /** The session object returned by {@link createCustomerSession}. */
   customerSession: TCustomerSession;
-  /** Path to redirect to after a successful login when no `return_to` param is present. Defaults to `"/"`. */
+  /** Path to redirect to after a successful login when `return_to` is missing or not a same-origin path. Defaults to `"/"`. */
   defaultPostLoginRedirectPathname?: string;
-  /** Same-origin path to redirect to when the OAuth callback throws a `CustomerAccountOAuthError` (other errors propagate). Defaults to `"/account?login=failed"`. Cross-origin values fall back to `"/account"`. */
+  /** Same-origin path to redirect to when the OAuth callback throws a `CustomerAccountOAuthError` (other errors propagate). Defaults to `"/account?login=failed"`. Values that are not same-origin paths fall back to `"/account"`. */
   loginFailedRedirectPath?: string;
   /** Static origin string, or a function that resolves the origin per request for dynamic multi-origin setups. */
   origin?: string | ((request: Request) => string);
@@ -606,7 +607,7 @@ export async function getCustomerSessionRefreshResult(
  * `/account/refresh`, `/account/logout`) for `handleShopifyRoutes`. The handlers
  * return redirect results: `login` redirects to Shopify's OAuth, `logout` redirects
  * to Shopify's logout endpoint when an `id_token` exists, and `authorize`/`refresh`
- * redirect back to the app (same-origin `return_to`). Invoke these paths via
+ * redirect back to the app (same-origin `return_to` path). Invoke these paths via
  * full-page navigation (plain `<a>`/`<form>`), not a framework client-side
  * navigation component — client-nav cannot follow these raw redirects.
  */
@@ -1515,12 +1516,15 @@ function sanitizeReturnTo(
   origin: string,
   fallbackReturnTo = DEFAULT_LOGIN_RETURN_TO_PATH,
 ): string {
-  if (!returnTo) return fallbackReturnTo;
+  if (!returnTo?.startsWith("/")) return fallbackReturnTo;
 
   try {
     const url = new URL(returnTo, origin);
     if (url.origin !== origin) return fallbackReturnTo;
     const sanitizedReturnTo = `${url.pathname}${url.search}${url.hash}`;
+    // The parsed pathname can itself start with `//` (e.g. from `/x/..//evil`),
+    // which a redirect would resolve as a protocol-relative URL to another host.
+    if (sanitizedReturnTo.startsWith("//")) return fallbackReturnTo;
     if (new TextEncoder().encode(sanitizedReturnTo).byteLength > MAX_RETURN_TO_LENGTH_IN_BYTES) {
       return fallbackReturnTo;
     }

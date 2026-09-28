@@ -1156,6 +1156,31 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
   });
 
+  it.each([
+    ["/account/orders?page=2#latest", "/account/orders?page=2#latest"],
+    ["/search?q=https://example.org", "/search?q=https://example.org"],
+    [`${ORIGIN}/account/orders`, "/account"],
+    ["//evil.test/p", "/account"],
+    [`${ORIGIN}//evil.test/p`, "/account"],
+    // Each of these parses as same-origin with a protocol-relative `//evil.test/p` pathname.
+    [`//${new URL(ORIGIN).host}//evil.test/p`, "/account"],
+    ["/x/..//evil.test/p", "/account"],
+    ["/.//evil.test/p", "/account"],
+    ["/x/../\\evil.test/p", "/account"],
+  ])("redirects refresh return_to %s to %s", async (returnTo, expectedPath) => {
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=${encodeURIComponent(returnTo)}`,
+    );
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager: new TestSessionManager(),
+      handlers: [createCustomerAccountServerHandlers({ customerSession: createSession() })],
+    });
+
+    expect(response?.headers.get("location")).toBe(`${ORIGIN}${expectedPath}`);
+  });
+
   it("supports refresh on custom customer sessions", async () => {
     const fetchMock = vi.fn();
     const customerSession: CustomerSession = { ...createSession({ fetch: fetchMock }) };
