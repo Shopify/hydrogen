@@ -78,13 +78,20 @@ test.describe('SPA route navigation', () => {
     const consentRequestsAfterLoad = consentRequestUrls.length;
     expect(consentRequestsAfterLoad).toBe(2);
 
-    // The deletion writes: exactly one expiry write per deprecated cookie.
+    // CTA writes two expiry entries per deprecated cookie (with and without
+    // domain), using an expires date in the past.
     const writesAfterLoad = (await storefront.page.evaluate(
       () => (window as any).__deprecatedCookieWrites as string[],
     )) as string[];
     expect(writesAfterLoad.slice().sort()).toEqual([
-      '_shopify_s=; Max-Age=0; Path=/; SameSite=Lax',
-      '_shopify_y=; Max-Age=0; Path=/; SameSite=Lax',
+      expect.stringMatching(
+        /^_shopify_s=; path=\/; domain=localhost; expires=/,
+      ),
+      expect.stringMatching(/^_shopify_s=; path=\/; expires=/),
+      expect.stringMatching(
+        /^_shopify_y=; path=\/; domain=localhost; expires=/,
+      ),
+      expect.stringMatching(/^_shopify_y=; path=\/; expires=/),
     ]);
 
     // === Client-side navigations across routes ===

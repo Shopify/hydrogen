@@ -47,14 +47,17 @@ test.describe('Consent request failures', () => {
 
     // Load with the page-load fetch failing.
     await storefront.reload();
+    await storefront.page.waitForLoadState('domcontentloaded');
 
-    // Perf-kit mounts once the (failed) fetch settles, which proves the
-    // readiness effect ran and the deletion gate was evaluated — closed.
-    await storefront.waitForPerfKit();
-    expect(
-      abortedConsentRequests,
-      'The page-load fetch should have failed',
-    ).toBe(1);
+    // Async consent blocks analytics readiness (and perf-kit) until consent
+    // loads, so a failed initialization keeps both gated. Wait for the
+    // aborted request count instead.
+    await expect
+      .poll(() => abortedConsentRequests, {
+        message: 'The page-load consent request should have been attempted',
+        timeout: 15000,
+      })
+      .toBeGreaterThanOrEqual(1);
 
     // Fail the consent script's own request too, through the consent API
     // it exposes. Its callback settles once the request failed.
@@ -93,8 +96,7 @@ test.describe('Consent request failures', () => {
     );
 
     // The Customer Privacy API never holds the session's unique token: not
-    // from a consent response (all failed). Perf-kit may mint its own
-    // fallback token in degraded mode, but that is not this session's value.
+    // from a consent response (all failed).
     const cachedUniqueToken = await storefront.page.evaluate(
       () => (window as any).Shopify?.customerPrivacy?.cachedToken?._shopify_y,
     );
