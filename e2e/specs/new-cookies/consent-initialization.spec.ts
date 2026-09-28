@@ -1,4 +1,4 @@
-import {setTestStore, test, expect} from '../../fixtures';
+import {setTestStore, test, expect, DECLINE_ALL_CONSENT} from '../../fixtures';
 
 /**
  * The Customer Privacy API owns consent initialization: it sends one
@@ -79,3 +79,50 @@ for (const [storeKey, withPrivacyBanner] of [
     });
   });
 }
+
+test.describe('Consent without a Server-Timing proxy marker', () => {
+  setTestStore('defaultConsentAllowed_cookiesEnabled');
+
+  test('still uses the same-origin proxy, so an opt-out survives a reload', async ({
+    storefront,
+  }) => {
+    // Hides the navigation entry, as when the marker is stripped or
+    // unsupported. Consent must not fall back to a cross-origin request,
+    // which carries no cookies and forgets the visitor's choice.
+    await storefront.page.addInitScript(() => {
+      const getEntriesByType = performance.getEntriesByType.bind(performance);
+      performance.getEntriesByType = (type: string) =>
+        type === 'navigation' ? [] : getEntriesByType(type);
+    });
+    await storefront.setWithPrivacyBanner(false);
+    const consentRequests = storefront.trackConsentRequests();
+
+    await storefront.goto('/');
+    await storefront.waitForConsentLoaded();
+    const optedOut = await storefront.setTrackingConsent(DECLINE_ALL_CONSENT);
+
+    await storefront.reload();
+    await storefront.waitForConsentLoaded();
+
+    expect(
+      consentRequests.every((request) => request.sameOrigin),
+      'Every consent request should use the same-origin proxy',
+    ).toBe(true);
+    expect(
+      await storefront.page.evaluate(() => {
+        const privacy = (window as any).Shopify.customerPrivacy;
+        return {
+          analytics: privacy.analyticsProcessingAllowed(),
+          saleOfData: privacy.saleOfDataAllowed(),
+          uniqueToken: privacy.cachedToken?._shopify_y ?? null,
+        };
+      }),
+      'The opt-out and the visitor persist across the reload',
+    ).toEqual({
+      analytics: false,
+      saleOfData: false,
+      uniqueToken: optedOut.uniqueToken,
+    });
+    storefront.expectNoMonorailRequests();
+  });
+});
