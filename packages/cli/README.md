@@ -4,6 +4,28 @@ The Hydrogen extension for the [Shopify CLI](https://shopify.dev/apps/tools/cli)
 
 [Check out the docs](https://shopify.dev/custom-storefronts/hydrogen)
 
+## JSON output
+
+Finite commands support `--json` and `--json-schema`:
+
+```sh
+shopify hydrogen list --json
+shopify hydrogen env pull --force --json
+shopify hydrogen deploy --json-schema
+```
+
+Successful results are written as one JSON document to stdout. Progress and
+diagnostics use JSON events on stderr. Fatal errors use the CLI's shared error
+document and a nonzero exit status. JSON output does not change confirmation
+prompts or authentication requirements.
+
+Environment pull and push return receipts containing variable names and file
+details, without printing variable values. Deployment's `--json-output` option
+still controls its CI file independently of `--json`.
+
+`dev`, `preview`, and `debug cpu` are streaming commands. The finite JSON result
+format also excludes `build --watch` and `codegen --watch`.
+
 ## Contributing
 
 The most common way to test the cli changes locally is to do the following:

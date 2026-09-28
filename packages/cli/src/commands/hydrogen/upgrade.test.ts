@@ -1,3 +1,4 @@
+import {captureJsonOutput} from '../../../tests/output.js';
 import {createRequire} from 'node:module';
 import {tmpdir} from 'node:os';
 import {mkdtemp, readFile, rm} from 'node:fs/promises';
@@ -455,6 +456,12 @@ describe('upgrade', async () => {
           expect(outputMock.info()).toMatch(
             / success.+ latest Hydrogen version/is,
           );
+          const {stdout} = await captureJsonOutput(() => runUpgrade({appPath}));
+          expect(JSON.parse(stdout)).toMatchObject({
+            status: 'unchanged',
+            packages: [],
+            removedPackages: [],
+          });
         },
         {
           cleanGitRepo: true,
