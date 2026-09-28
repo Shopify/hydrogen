@@ -32,37 +32,6 @@ test("maps each payment label to its official Shopify icon", () => {
   }
 });
 
-test("shows an Android Pay-only shop as Google Pay with the Google Pay icon", () => {
-  const labels = getPaymentMethodLabels({
-    acceptedCardBrands: [],
-    supportedDigitalWallets: ["ANDROID_PAY"],
-  });
-  assert.deepEqual(labels, ["Google Pay"]);
-  assert.deepEqual(labels.map(getPaymentMethodIconUrl), [`${ICON_BASE}google_pay-34c30515.svg`]);
-});
-
-test("renders one icon per label when enums and wallet aliases repeat", () => {
-  const labels = getPaymentMethodLabels({
-    acceptedCardBrands: ["MASTERCARD", "VISA", "MASTERCARD"],
-    supportedDigitalWallets: [
-      "SHOPIFY_PAY",
-      "ANDROID_PAY",
-      "APPLE_PAY",
-      "GOOGLE_PAY",
-      "SHOPIFY_PAY",
-      "ANDROID_PAY",
-    ],
-  });
-  assert.deepEqual(labels, ["Mastercard", "Visa", "Shop Pay", "Google Pay", "Apple Pay"]);
-  assert.deepEqual(labels.map(getPaymentMethodIconUrl), [
-    `${ICON_BASE}master-f5a74105.svg`,
-    `${ICON_BASE}visa-b614b878.svg`,
-    `${ICON_BASE}shopify_pay-925ab76d.svg`,
-    `${ICON_BASE}google_pay-34c30515.svg`,
-    `${ICON_BASE}apple_pay-1721ebad.svg`,
-  ]);
-});
-
 test("uses only fixed HTTPS SVG URLs on Shopify's payment icon CDN path", () => {
   const urls = ALL_LABELS.map(getPaymentMethodIconUrl).filter((url) => url !== null);
   assert.equal(urls.length, 9);

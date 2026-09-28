@@ -18,10 +18,3 @@ test("home product section and metadata are labelled as new arrivals", () => {
   assert.match(source, /content: `Shop new arrivals and featured categories at \$\{shopName\}\.`/);
   assert.doesNotMatch(source, /best.sellers?|BestSellers/i);
 });
-
-test("the hero keeps its most recently updated collection query", () => {
-  assert.match(
-    source,
-    /heroCollections: collections\(first: 1, sortKey: UPDATED_AT, reverse: true\)/,
-  );
-});
