@@ -175,13 +175,17 @@ function parsePredictiveSearchRequest(
   };
 }
 
+// Unlike enum params, every limit has a safe fallback, so unparseable values use the default instead of erroring.
 function parseLimit(
   searchParams: URLSearchParams,
   options: CreatePredictiveSearchServerHandlersOptions,
 ): number {
-  const rawLimit = searchParams.get("limit");
-  if (rawLimit === null) return options.limit ?? DEFAULT_PREDICTIVE_SEARCH_LIMIT;
-  return Number(rawLimit);
+  const defaultLimit = options.limit ?? DEFAULT_PREDICTIVE_SEARCH_LIMIT;
+  const rawLimit = searchParams.get("limit")?.trim() ?? "";
+  if (rawLimit === "") return defaultLimit;
+
+  const limit = Number(rawLimit);
+  return Number.isFinite(limit) ? limit : defaultLimit;
 }
 
 function parseOne<TValue extends string>(
