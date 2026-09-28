@@ -214,6 +214,18 @@ describe("shopify scripts", () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
+  it("uses document navigation for buy permalinks", async () => {
+    const navigate = vi.fn();
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+
+    await initializeShopifyScripts({ navigate, routes: emptyRouteTemplates, webMcp: false });
+
+    window.Shopify?.routes.navigate?.("/buy/123:2,456:1?continue_to=%2Fcollections%2Fall");
+
+    expect(assign).toHaveBeenCalledWith("/buy/123:2,456:1?continue_to=%2Fcollections%2Fall");
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it.each([
     "/account/login?return_to=%2Faccount#login",
     "/account/authorize?code=code-123&state=state-123#callback",
