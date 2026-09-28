@@ -38,26 +38,27 @@ describe("handleQueryParamRedirect", () => {
     expect(result).toBeNull();
   });
 
-  it("rejects cross-domain redirects", () => {
+  it("redirects to the normalized path rather than the raw value", () => {
     const result = handleQueryParamRedirect(
-      new Request("https://my-app.com/login?return_to=https://evil.com/phishing"),
-    );
-    expect(result).toBeNull();
-  });
-
-  it("rejects javascript: protocol redirects", () => {
-    const result = handleQueryParamRedirect(
-      new Request("https://my-app.com/login?return_to=javascript:alert(1)"),
-    );
-    expect(result).toBeNull();
-  });
-
-  it("allows same-origin absolute URLs", () => {
-    const result = handleQueryParamRedirect(
-      new Request("https://my-app.com/login?return_to=https://my-app.com/dashboard"),
+      new Request("https://my-app.com/login?return_to=/x/../dashboard"),
     );
 
     assert(result, "expected redirect response");
-    expect(result.headers.get("location")).toBe("https://my-app.com/dashboard");
+    expect(result.headers.get("location")).toBe("/dashboard");
+  });
+
+  it.each([
+    "https://evil.com/phishing",
+    "javascript:alert(1)",
+    "https://my-app.com/dashboard",
+    "https:evil.com/phishing",
+    "//evil.com/phishing",
+    "/\\evil.com/phishing",
+    "/x/..//evil.com/phishing",
+  ])("rejects return_to %s", (returnTo) => {
+    const result = handleQueryParamRedirect(
+      new Request(`https://my-app.com/login?return_to=${encodeURIComponent(returnTo)}`),
+    );
+    expect(result).toBeNull();
   });
 });

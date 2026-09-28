@@ -18,6 +18,7 @@ import type {
   ShopifyRouteRedirectResult,
 } from "../request-routing/registered-routes";
 import { createCallableRouteHandler } from "../request-routing/registered-routes";
+import { getSameOriginPath } from "../url";
 import { parseCartRequest } from "./actions";
 import type { CartAction, CartLineAddInput } from "./actions";
 import {
@@ -460,7 +461,8 @@ function safeRedirectTarget(request: Request): string {
     const refererUrl = new URL(referer);
     const requestUrl = new URL(request.url);
     if (refererUrl.origin !== requestUrl.origin) return "/";
-    return refererUrl.toString().replace(refererUrl.origin, "");
+    const path = `${refererUrl.pathname}${refererUrl.search}${refererUrl.hash}`;
+    return getSameOriginPath(path, requestUrl.origin) ?? "/";
   } catch {
     return "/";
   }

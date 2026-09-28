@@ -15,7 +15,7 @@ import {
   type ShopifyRouteRedirectResult,
   type ShopifyRouteSessionManager,
 } from "../core/request-routing/registered-routes";
-import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
+import { CUSTOMER_ACCOUNT_PATHS, getSameOriginPath } from "../core/url";
 import { CustomerAccountApiError, CustomerAccountOAuthError } from "./errors";
 
 const log = getLogger("customer-account");
@@ -1516,22 +1516,11 @@ function sanitizeReturnTo(
   origin: string,
   fallbackReturnTo = DEFAULT_LOGIN_RETURN_TO_PATH,
 ): string {
-  if (!returnTo?.startsWith("/")) return fallbackReturnTo;
-
-  try {
-    const url = new URL(returnTo, origin);
-    if (url.origin !== origin) return fallbackReturnTo;
-    const sanitizedReturnTo = `${url.pathname}${url.search}${url.hash}`;
-    // The parsed pathname can itself start with `//` (e.g. from `/x/..//evil`),
-    // which a redirect would resolve as a protocol-relative URL to another host.
-    if (sanitizedReturnTo.startsWith("//")) return fallbackReturnTo;
-    if (new TextEncoder().encode(sanitizedReturnTo).byteLength > MAX_RETURN_TO_LENGTH_IN_BYTES) {
-      return fallbackReturnTo;
-    }
-    return sanitizedReturnTo;
-  } catch {
+  const path = getSameOriginPath(returnTo, origin);
+  if (!path || new TextEncoder().encode(path).byteLength > MAX_RETURN_TO_LENGTH_IN_BYTES) {
     return fallbackReturnTo;
   }
+  return path;
 }
 
 function absoluteSameOriginUrl(url: string, origin: string): string {

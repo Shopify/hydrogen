@@ -47,6 +47,28 @@ export const WELL_KNOWN_RE =
 export const AJAX_CART_RE =
   /^(?:\/[a-z]{2}(?:-[a-z]{2})?)?\/cart(?:\.(?:js|json)|\/(?:add|update|change|clear)(?:\.(?:js|json))?)$/i;
 
+/**
+ * Normalizes `target` to a path on `origin` that is safe to use as a redirect location.
+ * Returns `undefined` unless `target` starts with `/` and stays on `origin`.
+ */
+export function getSameOriginPath(
+  target: string | null | undefined,
+  origin: string,
+): string | undefined {
+  if (!target?.startsWith("/")) return undefined;
+
+  try {
+    const url = new URL(target, origin);
+    if (url.origin !== origin) return undefined;
+    const path = `${url.pathname}${url.search}${url.hash}`;
+    // The parsed pathname can itself start with `//` (e.g. from `/x/..//evil`),
+    // which a redirect would resolve as a protocol-relative URL to another host.
+    return path.startsWith("//") ? undefined : path;
+  } catch {
+    return undefined;
+  }
+}
+
 export function normalizeStoreDomain(domain: string): string {
   if (!domain) {
     throw new Error("Storefront `storeDomain` is required.");
