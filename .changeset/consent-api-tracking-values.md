@@ -7,7 +7,7 @@ Shopify's consent API now returns visitor tracking values in the `consentManagem
 
 Initial consent readiness also releases analytics for returning visitors when the privacy banner is enabled. Later consent changes refresh tracking permissions, and the Customer Privacy API can renew expired session tokens.
 
-Session continuity requires the same-origin Storefront API proxy.
+Consent and analytics require the same-origin Storefront API proxy that `createRequestHandler` includes. Setting `sameDomainForStorefrontApi: false` in the `consent` config is no longer supported and now logs a warning: without the proxy, visitor consent and sessions don't persist across page loads.
 
 `useCustomerPrivacy`'s `onReady` callback now waits for consent as well as the selected APIs. If initial consent fails to load, analytics and PerfKit stay blocked until a successful consent update. Custom consent interfaces should use the returned `customerPrivacy` API when available to allow recovery, rather than relying only on `onReady` to display their controls.
 

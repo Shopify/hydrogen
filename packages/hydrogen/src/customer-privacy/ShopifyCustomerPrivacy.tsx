@@ -135,9 +135,10 @@ export type CustomerPrivacyApiProps = {
    */
   onReady?: () => void;
   /**
-   * Whether consent libraries can use same-domain requests to the Storefront API.
-   * Defaults to true because Hydrogen's standard request handler includes the proxy.
-   * Set to false only when using a custom server without that proxy.
+   * @deprecated Hydrogen requires the same-origin Storefront API proxy, which
+   * `createRequestHandler` includes. `false` is not supported: without the proxy,
+   * visitor consent and analytics sessions do not persist across page loads.
+   * Leave this unset.
    */
   sameDomainForStorefrontApi?: boolean;
 };
@@ -151,6 +152,14 @@ function logMissingConfig(fieldName: string) {
   // eslint-disable-next-line no-console
   console.error(
     `[h2:error:useCustomerPrivacy] Unable to setup Customer Privacy API: Missing consent.${fieldName} configuration.`,
+  );
+}
+
+function logUnsupportedCrossDomainConsent() {
+  console.warn(
+    '[h2:warn:useCustomerPrivacy] `sameDomainForStorefrontApi: false` is not supported. ' +
+      "Consent and analytics require the same-origin Storefront API proxy included in Hydrogen's `createRequestHandler`; " +
+      'without it, visitor consent and sessions do not persist across page loads.',
   );
 }
 
@@ -188,6 +197,9 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
         `[h2:error:useCustomerPrivacy] It looks like you passed a private access token, make sure to use the public token`,
       );
     }
+
+    if (sameDomainForStorefrontApi === false)
+      logUnsupportedCrossDomainConsent();
 
     const commonAncestorDomain = parseStoreDomain(checkoutDomain);
     return {

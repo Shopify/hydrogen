@@ -155,15 +155,24 @@ describe('useCustomerPrivacy async initialization', () => {
   );
 
   it('defaults to checkout domain without a Server-Timing marker', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const {sameDomainForStorefrontApi: _override, ...props} = PROPS;
     renderHook(() => useCustomerPrivacy(props));
     await act(async () => {});
     expect(consentGlobal().config?.consentDomain).toBe(PROPS.checkoutDomain);
+    expect(warn).not.toHaveBeenCalled();
   });
 
-  it('uses checkout for consent when the Storefront API proxy is disabled', async () => {
+  it('warns that disabling the same-origin Storefront API proxy is unsupported', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     renderHook(() => useCustomerPrivacy(PROPS));
     await act(async () => {});
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '`sameDomainForStorefrontApi: false` is not supported',
+      ),
+    );
     expect(consentGlobal().config?.consentDomain).toBe(PROPS.checkoutDomain);
     expect(getCustomerPrivacy()).toBeNull();
   });
