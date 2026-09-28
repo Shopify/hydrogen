@@ -10,3 +10,5 @@ Initial consent readiness also releases analytics for returning visitors when th
 Session continuity requires the same-origin Storefront API proxy.
 
 `useCustomerPrivacy`'s `onReady` callback now waits for consent as well as the selected APIs. If initial consent fails to load, analytics and PerfKit stay blocked until a successful consent update. Custom consent interfaces should use the returned `customerPrivacy` API when available to allow recovery, rather than relying only on `onReady` to display their controls.
+
+`useShopifyCookies`'s `hasUserConsent`, `domain`, and `ignoreDeprecatedCookies` options are now no-ops. The Customer Privacy API manages Shopify cookies and expires deprecated ones. Standalone `hydrogen-react` integrations that passed `hasUserConsent: false` to clear cookies should remove the option; cookie lifecycle is handled automatically.
