@@ -120,19 +120,6 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
   }
 
   /**
-   * Saves a removed destination's cursor for a later re-add. Cursors at or
-   * before the oldest retained event behave like a fresh name, so they are
-   * dropped and the map only holds cursors that still differ from one.
-   */
-  function rememberReplayCursor(name: string, cursor: number): void {
-    const oldestRetainedSequence = replayBuffer[0]?.sequence ?? nextReplaySequence;
-    for (const [removedName, removedCursor] of removedReplayCursors) {
-      if (removedCursor <= oldestRetainedSequence) removedReplayCursors.delete(removedName);
-    }
-    if (cursor > oldestRetainedSequence) removedReplayCursors.set(name, cursor);
-  }
-
-  /**
    * Replays buffered events to all registered destinations.
    *
    * @param clearWhenBlocked - When true and tracking is blocked, clears the
@@ -143,7 +130,6 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
       if (clearWhenBlocked) {
         replayBuffer.length = 0;
         shouldRecordReplay = false;
-        removedReplayCursors.clear();
       }
       return;
     }
@@ -227,7 +213,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
       removed = true;
       destinations.delete(destinationRecord);
       destinationNames.delete(destination.name);
-      rememberReplayCursor(destination.name, destinationRecord.nextReplaySequence);
+      removedReplayCursors.set(destination.name, destinationRecord.nextReplaySequence);
       // Empty each set too, so a delivery loop already iterating one stops.
       for (const callbacks of destinationRecord.subscriptions.values()) callbacks.clear();
       destinationRecord.subscriptions.clear();
