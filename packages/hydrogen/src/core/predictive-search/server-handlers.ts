@@ -28,8 +28,6 @@ import {
   type QueryPredictiveSearchOptions,
 } from "./search";
 
-const predictiveSearchServerHandlersQuery: unique symbol = Symbol("hydrogen.predictiveSearchQuery");
-
 const VALID_LIMIT_SCOPES: readonly PredictiveSearchLimitScope[] = ["ALL", "EACH"];
 const VALID_PREDICTIVE_SEARCH_TYPES: readonly PredictiveSearchType[] = [
   "ARTICLE",
@@ -83,8 +81,6 @@ type PredictiveSearchServerHandlers<
   TOptions extends CreatePredictiveSearchServerHandlersOptions = {},
   TData = PredictiveSearchDataForOptions<TOptions>,
 > = {
-  /** Query that the handlers run, with any custom fragments. */
-  readonly [predictiveSearchServerHandlersQuery]: PredictiveSearchQueriesForOptions<TOptions>["predictiveSearch"];
   /** Answers GET requests with predictive search results as JSON. */
   get: PredictiveSearchGetHandler<TData>;
 };
@@ -140,14 +136,7 @@ export function createPredictiveSearchServerHandlers(
     PREDICTIVE_SEARCH_GET_METHOD,
     (context: PredictiveSearchHandlerContext) => handleGet(context, options, queries),
   );
-  const handlers = {
-    get: handler,
-  } as PredictiveSearchServerHandlers<CreatePredictiveSearchServerHandlersOptions>;
-
-  Object.defineProperty(handlers, predictiveSearchServerHandlersQuery, {
-    value: queries.predictiveSearch,
-  });
-  return handlers;
+  return { get: handler };
 }
 
 async function handleGet(
