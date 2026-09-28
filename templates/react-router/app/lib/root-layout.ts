@@ -23,12 +23,6 @@ export const ROOT_LAYOUT_QUERY = gql(`
         supportedDigitalWallets
       }
     }
-    collections(first: 5) {
-      nodes {
-        handle
-        title
-      }
-    }
   }
 `);
 
@@ -37,7 +31,6 @@ export type RootLayoutQueryResult = StorefrontApi.ResultOf<typeof ROOT_LAYOUT_QU
 type RootLayoutLoaderData = {
   shopId: string;
   shopInfo: StorefrontShop;
-  navCollections: RootLayoutQueryResult["collections"]["nodes"];
 };
 
 export async function loadRootLayout(
@@ -54,10 +47,9 @@ export async function loadRootLayout(
   // Upstream error details are logged above, not exposed through the boundary.
   if (!layoutResult.data) throw new Error("Root layout data is unavailable.");
 
-  const { shop, collections } = layoutResult.data;
+  const { shop } = layoutResult.data;
   return {
     shopId: shop.id,
     shopInfo: normalizeStorefrontShop(shop),
-    navCollections: collections.nodes,
   };
 }

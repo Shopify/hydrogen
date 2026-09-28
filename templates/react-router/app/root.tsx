@@ -97,7 +97,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
   return {
     cartData: cartResult.data,
-    navCollections: layout.navCollections,
     shopInfo: layout.shopInfo,
     shopIdentity: resolveShopIdentity(env, layout.shopId),
   };
@@ -148,7 +147,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <PageViewedTracker />
       <CartAnalyticsTracker />
       <AnnouncementBar />
-      <Header navCollections={loaderData.navCollections} shopInfo={loaderData.shopInfo} />
+      <Header shopInfo={loaderData.shopInfo} />
       <Outlet />
       <Footer shopInfo={loaderData.shopInfo} />
       <CartDrawer />

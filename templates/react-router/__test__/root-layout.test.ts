@@ -26,11 +26,6 @@ const LOGO_IMAGE = {
   height: 80,
 };
 
-const NAV_COLLECTIONS = [
-  { handle: "shirts", title: "Shirts" },
-  { handle: "hats", title: "Hats" },
-];
-
 const SHOP_ID = "gid://shopify/Shop/1";
 
 // A complete, schema-valid RootLayout response.
@@ -41,7 +36,6 @@ const LAYOUT_DATA = {
     brand: { logo: { alt: "Snowdevil logo", image: LOGO_IMAGE } },
     paymentSettings: { acceptedCardBrands: ["VISA"], supportedDigitalWallets: ["SHOPIFY_PAY"] },
   },
-  collections: { nodes: NAV_COLLECTIONS },
 };
 
 const SHOP_INFO = {
@@ -65,7 +59,7 @@ function silenceConsoleError() {
   return mock.method(console, "error", () => {});
 }
 
-test("loads shop identity and navigation in a single root layout query", async () => {
+test("loads shop identity in a single root layout query", async () => {
   const consoleError = silenceConsoleError();
   const { client, graphql } = createClient(
     resolveWith({ data: LAYOUT_DATA, headers: new Headers() }),
@@ -74,17 +68,16 @@ test("loads shop identity and navigation in a single root layout query", async (
   assert.deepEqual(await loadRootLayout(client), {
     shopId: SHOP_ID,
     shopInfo: SHOP_INFO,
-    navCollections: NAV_COLLECTIONS,
   });
   assert.deepEqual(
     graphql.mock.calls.map((call) => call.arguments[0]),
     [ROOT_LAYOUT_QUERY],
   );
-  assert.doesNotMatch(String(ROOT_LAYOUT_QUERY), /metafield|announcement/);
+  assert.doesNotMatch(String(ROOT_LAYOUT_QUERY), /metafield|announcement|collections/);
   assert.equal(consoleError.mock.callCount(), 0);
 });
 
-test("keeps name, payments, and navigation when a nullable brand field errors", async () => {
+test("keeps name and payments when a nullable brand field errors", async () => {
   const consoleError = silenceConsoleError();
   const { client } = createClient(
     resolveWith({
@@ -97,7 +90,6 @@ test("keeps name, payments, and navigation when a nullable brand field errors", 
   assert.deepEqual(await loadRootLayout(client), {
     shopId: SHOP_ID,
     shopInfo: { ...SHOP_INFO, logo: null },
-    navCollections: NAV_COLLECTIONS,
   });
   assert.deepEqual(
     consoleError.mock.calls.map((call) => call.arguments),

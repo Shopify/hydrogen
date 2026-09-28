@@ -5,7 +5,7 @@ import { useCart } from "~/lib/cart";
 import { CART_DRAWER_ID, openCartDrawer } from "~/lib/cart-drawer";
 import type { StorefrontShop } from "~/lib/storefront-shop";
 
-import { MobileNav, MobileNavTrigger, type NavCollection } from "./MobileNav";
+import { MobileNav, MobileNavTrigger } from "./MobileNav";
 
 function cartCountLabel(count: number) {
   return count === 1 ? "Cart (1 item)" : `Cart (${count} items)`;
@@ -19,13 +19,7 @@ function displayCount(count: number) {
   return count > 99 ? "99+" : String(count);
 }
 
-export function Header({
-  navCollections,
-  shopInfo,
-}: {
-  navCollections: NavCollection[];
-  shopInfo: StorefrontShop;
-}) {
+export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
   const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null);
   const logo = shopInfo.logo;
@@ -66,15 +60,12 @@ export function Header({
           className="mx-8 hidden min-w-0 flex-1 items-center gap-8 overflow-x-auto md:flex"
           data-desktop-nav
         >
-          {navCollections.map((collection) => (
-            <Link
-              key={collection.handle}
-              to={`/collections/${collection.handle}`}
-              className="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
-            >
-              {collection.title}
-            </Link>
-          ))}
+          <Link
+            to="/collections"
+            className="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
+          >
+            Collections
+          </Link>
         </nav>
 
         <div className="flex shrink-0 items-center gap-0">
@@ -125,7 +116,7 @@ export function Header({
           </span>
         </div>
       </div>
-      <MobileNav collections={navCollections} />
+      <MobileNav />
     </header>
   );
 }
