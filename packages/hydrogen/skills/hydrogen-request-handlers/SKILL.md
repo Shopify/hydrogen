@@ -4,7 +4,7 @@ description: >
   Guide for wiring Hydrogen request handlers in server frameworks. Use when
   adding, modifying, or reviewing handleShopifyRoutes, handleShopifyRedirects,
   SFAPI proxy routes, cart, predictive search, and Customer Account server handlers,
-  checkout redirects, cart permalinks, AJAX cart proxy routes, /admin redirects, Storefront URL redirects,
+  checkout redirects, cart and UCP buy permalinks, AJAX cart proxy routes, /admin redirects, Storefront URL redirects,
   requestContext response-header propagation, or framework middleware,
   not-found, and catch-all integration.
 ---
@@ -27,7 +27,7 @@ Request
   -> framework 404 page
 ```
 
-`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, the generic `/__shopify/*` API proxy, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product URLs, and app-registered handler groups such as `createCartServerHandlers()` or `createCustomerAccountServerHandlers()`.
+`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, the generic `/__shopify/*` API proxy, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, UCP buy permalinks like `/buy/{itemId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product URLs, and app-registered handler groups such as `createCartServerHandlers()` or `createCustomerAccountServerHandlers()`.
 
 ## Variant Id Redirects
 
