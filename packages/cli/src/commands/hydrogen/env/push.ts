@@ -1,3 +1,6 @@
+import {writeJsonResult} from '../../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {envPushJsonOutputSchema} from '../../../lib/environments/types.js';
 import Command from '../../../lib/hydrogen-command.js';
 import {Flags} from '@oclif/core';
 import {diffLines} from 'diff';
@@ -35,10 +38,17 @@ import {
 import {verifyLinkedStorefront} from '../../../lib/verify-linked-storefront.js';
 
 export default class EnvPush extends Command {
-  static description =
+  static get jsonOutputSchema(): typeof envPushJsonOutputSchema {
+    return envPushJsonOutputSchema;
+  }
+
+  static descriptionWithMarkdown =
     'Push environment variables from the local .env file to your linked Hydrogen storefront.';
 
+  static description = this.descriptionForHelp();
+
   static flags = {
+    ...jsonFlag,
     ...commonFlags.env,
     ...commonFlags.envFile,
     ...commonFlags.path,
@@ -56,7 +66,7 @@ export default class EnvPush extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(EnvPush);
-    await runEnvPush({...flagsToCamelObject(flags)});
+    await runEnvPush({...flagsToCamelObject(flags)}, flags.json);
   }
 }
 
@@ -68,13 +78,17 @@ interface EnvPushOptions {
   path?: string;
 }
 
-export async function runEnvPush({
+export async function pushEnvironmentVariables({
   dryRun = false,
   env: envHandle,
   envFile,
   force = false,
   path = process.cwd(),
-}: EnvPushOptions) {
+}: EnvPushOptions): Promise<
+  import('../../../lib/environments/types.js').EnvPushResult & {
+    diff?: import('diff').Change[];
+  }
+> {
   let validatedEnvironment: Environment;
 
   // Ensure local .env file
@@ -94,7 +108,8 @@ export async function runEnvPush({
     cliCommand,
   });
 
-  if (!linkedStorefront) return;
+  if (!linkedStorefront)
+    return {status: 'cancelled', file: dotEnvPath, variables: [], skipped: []};
 
   config.storefront = linkedStorefront;
 
@@ -191,26 +206,17 @@ export async function runEnvPush({
     );
   }
 
-  if (compareableLocalVars === comparableRemoteVars) {
-    renderInfo({
-      body: 'No changes to your environment variables.',
-    });
-    return;
-  }
+  const result = {
+    file: dotEnvPath,
+    environment: validatedEnvironment,
+    variables: Object.keys(localVariables),
+    skipped: remoteReadOnlyOrSecrets,
+  };
+  if (compareableLocalVars === comparableRemoteVars)
+    return {...result, status: 'unchanged'};
 
   const diff = diffLines(comparableRemoteVars, compareableLocalVars);
-
-  if (dryRun) {
-    renderInfo({
-      body: outputContent`The following changes would be made to your environment variables for ${
-        validatedEnvironment.name
-      }:
-
-${outputToken.linesDiff(diff)}
-No changes were pushed because --dry-run was used.`.value,
-    });
-    return;
-  }
+  if (dryRun) return {...result, status: 'dry-run', diff};
 
   if (!force) {
     const confirmPush = await renderConfirmationPrompt({
@@ -226,7 +232,7 @@ Continue?`.value,
     });
 
     // Cancelled making changes
-    if (!confirmPush) return;
+    if (!confirmPush) return {...result, status: 'cancelled'};
   }
 
   if (!validatedEnvironment.id) throw new AbortError('Missing environment ID');
@@ -244,9 +250,24 @@ Continue?`.value,
     );
   }
 
-  renderSuccess({
-    body: `Environment variables push to ${
-      validatedEnvironment.name ?? 'Preview'
-    } was successful.`,
-  });
+  return {...result, status: 'pushed'};
+}
+
+export async function runEnvPush(options: EnvPushOptions, json?: boolean) {
+  const result = await pushEnvironmentVariables(options);
+  if (writeJsonResult(envPushJsonOutputSchema, result, json)) return result;
+  if (result.status === 'unchanged')
+    renderInfo({body: 'No changes to your environment variables.'});
+  if (result.status === 'dry-run')
+    renderInfo({
+      body: outputContent`The following changes would be made to your environment variables for ${result.environment!.name}:
+
+${outputToken.linesDiff(result.diff!)}
+No changes were pushed because --dry-run was used.`.value,
+    });
+  if (result.status === 'pushed')
+    renderSuccess({
+      body: `Environment variables push to ${result.environment?.name ?? 'Preview'} was successful.`,
+    });
+  return result;
 }
