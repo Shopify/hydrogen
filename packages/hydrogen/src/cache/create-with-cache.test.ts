@@ -226,6 +226,40 @@ describe('createWithCache', () => {
     });
   });
 
+  it('passes an SWR failure to the supplied callback on withCache.run', async () => {
+    const pending: Promise<unknown>[] = [];
+    const callback = vi.fn();
+    const consoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    const cached = createWithCache({
+      cache,
+      request: {headers: {}},
+      waitUntil: (promise) => pending.push(promise),
+      onRevalidationError: callback,
+    });
+    const action = vi
+      .fn()
+      .mockResolvedValueOnce(VALUE)
+      .mockRejectedValueOnce(new Error('PRIVATE_PROVIDER_BODY_SENTINEL'));
+    const options = {
+      cacheKey: KEY,
+      cacheStrategy: CacheShort({maxAge: 1, staleWhileRevalidate: 9}),
+      shouldCacheResult: () => true,
+    };
+    try {
+      expect(await cached.run(options, action)).toBe(VALUE);
+      await Promise.all(pending.splice(0));
+      vi.advanceTimersByTime(3000);
+      expect(await cached.run(options, action)).toBe(VALUE);
+      await Promise.all(pending.splice(0));
+      expect(callback).toHaveBeenCalledOnce();
+      expect(consoleError).not.toHaveBeenCalled();
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
   describe('withCache.fetch', () => {
     const url = 'https://example.com';
 
