@@ -85,7 +85,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
 
   /**
    * Delivers the retained events a destination has not processed yet, oldest
-   * first, while tracking stays allowed. Re-reads the buffer on every step
+   * first, while it stays registered and tracking stays allowed. Re-reads the buffer on every step
    * because callbacks may publish, which appends to it and can evict its
    * oldest entry. A nested call for the same destination returns straight
    * away and the outer loop picks up the new entries, so every callback sees
@@ -100,7 +100,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
     destination.catchingUp = true;
     const startSequence = nextReplaySequence;
     try {
-      while (deps.canTrack()) {
+      while (destinations.has(destination) && deps.canTrack()) {
         if (nextReplaySequence - startSequence > MAX_REPLAY_BUFFER_SIZE) {
           consoleLogger.error(
             `too many analytics events were published while delivering to destination "${destination.name}"`,
