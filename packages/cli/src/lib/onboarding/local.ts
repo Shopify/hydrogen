@@ -348,7 +348,7 @@ export async function setupLocalStarterTemplate(
       // E.g. CSS imports might have been added to the root.
       overwriteFileDeps: false,
     })
-      .then(async (routes) => {
+      .then(async ({routeGroups: routes}) => {
         setupSummary.routes = routes;
 
         // Run React Router typegen after routes are generated for TypeScript projects

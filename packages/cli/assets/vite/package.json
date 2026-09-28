@@ -4,10 +4,9 @@
     "build": "shopify hydrogen build --codegen",
     "dev": "shopify hydrogen dev --codegen"
   },
-  "dependencies": {
-    "isbot": "^5.1.21"
-  },
   "devDependencies": {
-    "vite": "^8.0.1"
+    "@shopify/mini-oxygen": "3.1.1",
+    "vite": "^5.4.21",
+    "vite-tsconfig-paths": "5.1.4"
   }
 }
