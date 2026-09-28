@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useInsertionEffect,
   useMemo,
   useRef,
   useSyncExternalStore,
@@ -33,6 +34,7 @@ const CONFIG_ARRAY_SEPARATOR = "\u0000";
 
 type PredictiveSearchContextValue = {
   store: PredictiveSearchStore;
+  actions: PredictiveSearchActions;
   searchAction?: string;
 };
 
@@ -115,12 +117,31 @@ export function PredictiveSearchProvider({
     ],
   );
 
+  const storeRef = useRef(store);
+  // Actions outlive store swaps by reading the committed store at call time. Only an insertion
+  // effect is both commit-only and early enough: a render-phase write can point actions at a
+  // store from a render React never commits, and layout and passive effects run child-first,
+  // so a child effect searching in the same commit would still see the old store.
+  useInsertionEffect(() => {
+    storeRef.current = store;
+  }, [store]);
+  const actions = useMemo<PredictiveSearchActions>(
+    () => ({
+      search: (term) => storeRef.current.search(term),
+      clear: () => storeRef.current.clear(),
+    }),
+    [],
+  );
+
   useEffect(() => {
     store.connect();
     return () => store.destroy();
   }, [store]);
 
-  const contextValue = useMemo(() => ({ store, searchAction }), [store, searchAction]);
+  const contextValue = useMemo(
+    () => ({ store, actions, searchAction }),
+    [store, actions, searchAction],
+  );
 
   return createElement(PredictiveSearchContext.Provider, { value: contextValue }, children);
 }
@@ -201,15 +222,7 @@ export function usePredictiveSearch<
 }
 
 export function usePredictiveSearchActions(): PredictiveSearchActions {
-  const store = useRequiredStore("usePredictiveSearchActions");
-
-  return useMemo(
-    () => ({
-      search: store.search,
-      clear: store.clear,
-    }),
-    [store],
-  );
+  return useRequiredContext("usePredictiveSearchActions").actions;
 }
 
 export function usePredictiveSearchForm(): PredictiveSearchFormResult {
