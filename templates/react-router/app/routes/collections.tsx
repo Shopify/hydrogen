@@ -78,9 +78,7 @@ function CollectionsGrid({ collections }: { collections: readonly CollectionNode
     return (
       <div className="border-border bg-surface-secondary rounded-card border p-8 text-center">
         <h2 className="type-heading-md text-on-surface">No collections found</h2>
-        <p className="text-on-surface-secondary mt-2 text-sm">
-          No collections available.
-        </p>
+        <p className="text-on-surface-secondary mt-2 text-sm">No collections available.</p>
       </div>
     );
   }
