@@ -289,6 +289,22 @@ describe('useCustomerPrivacy async initialization', () => {
     expect(onReady).toHaveBeenCalledTimes(1);
   });
 
+  it('stays stable when loadScript rejects', async () => {
+    const scriptError = new Error('net::ERR_BLOCKED_BY_CLIENT');
+    loadScriptMock.mockRejectedValue(scriptError);
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const onReady = vi.fn();
+    const {result} = renderHook(() => useCustomerPrivacy({...PROPS, onReady}));
+    await act(async () => {});
+
+    expect(result.current.customerPrivacy).toBeNull();
+    expect(onReady).not.toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[h2:error:useCustomerPrivacy] Unable to load the Customer Privacy API.',
+    );
+  });
+
   it('does not publish readiness again on repeated consent events or rerenders', async () => {
     const onReady = vi.fn();
     const {rerender} = renderHook(() =>
