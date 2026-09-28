@@ -805,6 +805,34 @@ describe("createDestinationManager", () => {
       expect(deliveredPayloads(destination)).toEqual([{ url: "/1" }]);
     });
 
+    it("stops consulting consent once a callback removes its destination during replay", () => {
+      let canTrack = false;
+      let consentChecksAfterRemoval = 0;
+      let removed = false;
+      const { manager } = createTestManager(() => {
+        if (removed) consentChecksAfterRemoval++;
+        return canTrack;
+      });
+      let removeDestination = noop;
+
+      manager.onPublish("page_viewed", { url: "/1" });
+      manager.onPublish("page_viewed", { url: "/2" });
+      manager.onPublish("page_viewed", { url: "/3" });
+      removeDestination = manager.addDestination({
+        name: "test-destination",
+        setup({ subscribe }) {
+          subscribe("page_viewed", () => {
+            removeDestination();
+            removed = true;
+          });
+        },
+      });
+      canTrack = true;
+      manager.replay();
+
+      expect(consentChecksAfterRemoval).toBe(0);
+    });
+
     it("delivers buffered events before a live event published ahead of replay", () => {
       let canTrack = false;
       const { manager } = createTestManager(() => canTrack);
