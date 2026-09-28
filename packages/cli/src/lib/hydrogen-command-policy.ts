@@ -3,12 +3,14 @@ import {createRequire} from 'node:module';
 import {outputNewline} from '@shopify/cli-kit/node/output';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderError} from '@shopify/cli-kit/node/ui';
+import {AbortError, handler} from '@shopify/cli-kit/node/error';
+import {jsonOutputEnabled} from '@shopify/cli-kit/node/environment';
 
 /**
  * Returns true if the command has been marked as disabled and we've shown an
  * error to the user.
  */
-export function applyHydrogenCommandPolicy({
+export async function applyHydrogenCommandPolicy({
   id,
   projectPath,
 }: {
@@ -23,12 +25,17 @@ export function applyHydrogenCommandPolicy({
     return false;
   }
 
-  outputNewline();
-  renderError({
+  const error = {
     headline: `\`shopify ${id.replace(/:/g, ' ')}\` is not supported by this version of Hydrogen`,
     body: 'The installed version of @shopify/hydrogen disables this command.',
     nextSteps: ['Use your framework or package tooling instead.'],
-  });
+  };
+  if (jsonOutputEnabled()) {
+    await handler(new AbortError(error.headline, error.body, error.nextSteps));
+  } else {
+    outputNewline();
+    renderError(error);
+  }
 
   return true;
 }

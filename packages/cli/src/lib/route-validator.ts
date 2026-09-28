@@ -1,4 +1,4 @@
-import {renderSuccess, renderWarning} from '@shopify/cli-kit/node/ui';
+import {renderSuccess, renderWarning} from './ui.js';
 
 const RESERVED_ROUTES = ['^cdn/', '^_t/'];
 

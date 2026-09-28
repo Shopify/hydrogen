@@ -1,5 +1,5 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {renderSuccess} from '../../lib/ui.js';
 import {outputNewline} from '@shopify/cli-kit/node/output';
 
 import {commonFlags} from '../../lib/flags.js';

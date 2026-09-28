@@ -5,7 +5,7 @@ import {
   renderInfo,
   renderWarning,
   renderSuccess,
-} from '@shopify/cli-kit/node/ui';
+} from '../../../lib/ui.js';
 import {
   outputContent,
   outputInfo,

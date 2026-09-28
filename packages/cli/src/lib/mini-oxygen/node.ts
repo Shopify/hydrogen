@@ -1,6 +1,6 @@
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {readFile} from '@shopify/cli-kit/node/fs';
-import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {renderSuccess} from '../ui.js';
 import colors from '@shopify/cli-kit/node/colors';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import type {MiniOxygenOptions as InternalMiniOxygenOptions} from '~/mini-oxygen/node/index.js';

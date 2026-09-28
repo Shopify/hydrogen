@@ -1,7 +1,7 @@
 import {createRequire} from 'node:module';
 import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
 import {readFile, createFileReadStream} from '@shopify/cli-kit/node/fs';
-import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {renderSuccess} from '../ui.js';
 import {outputNewline} from '@shopify/cli-kit/node/output';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import colors from '@shopify/cli-kit/node/colors';

@@ -4,6 +4,7 @@ import {glob} from 'fast-glob';
 import {
   inTemporaryDirectory,
   isDirectory,
+  mkdir,
   readFile,
 } from '@shopify/cli-kit/node/fs';
 import {setupTemplate} from './index.js';
@@ -24,7 +25,9 @@ describe('local templates', () => {
   });
 
   it('creates basic projects', async () => {
-    await inTemporaryDirectory(async (tmpDir) => {
+    await inTemporaryDirectory(async (tmpRoot) => {
+      const tmpDir = `${tmpRoot}/my-project`;
+      await mkdir(tmpDir);
       await setupTemplate({
         path: tmpDir,
         git: false,

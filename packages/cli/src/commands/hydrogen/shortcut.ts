@@ -1,5 +1,5 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {renderFatalError, renderSuccess} from '@shopify/cli-kit/node/ui';
+import {renderFatalError, renderSuccess} from '../../lib/ui.js';
 import {ALIAS_NAME, createPlatformShortcut} from '../../lib/shell.js';
 
 export default class Shortcut extends Command {

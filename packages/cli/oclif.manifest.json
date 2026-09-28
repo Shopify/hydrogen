@@ -5,6 +5,13 @@
       "args": {},
       "description": "Builds a Hydrogen storefront for production.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -112,6 +119,13 @@
       },
       "description": "Returns diagnostic information about a Hydrogen storefront.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -143,6 +157,13 @@
       "args": {},
       "description": "Generate types for the Storefront API queries found in your project.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -197,6 +218,13 @@
       "args": {},
       "description": "Push project configuration to admin",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -263,6 +291,13 @@
       "args": {},
       "description": "Builds and profiles the server startup time the app.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -312,6 +347,13 @@
       "args": {},
       "description": "Builds and deploys a Hydrogen storefront to Oxygen.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "entry": {
           "description": "Entry file for the worker. Defaults to `./server`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_ENTRY",
@@ -526,6 +568,13 @@
       "args": {},
       "description": "Runs Hydrogen storefront in an Oxygen worker for development.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -682,6 +731,13 @@
       "args": {},
       "description": "List the environments on your linked Hydrogen storefront.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -714,6 +770,13 @@
       "args": {},
       "description": "Populate your .env with variables from your Hydrogen storefront.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "env": {
           "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
           "exclusive": [
@@ -785,6 +848,13 @@
       "args": {},
       "description": "Push environment variables from the local .env file to your linked Hydrogen storefront.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "env": {
           "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
           "exclusive": [
@@ -852,7 +922,15 @@
       "aliases": [],
       "args": {},
       "description": "Shortcut for `hydrogen generate`. See `hydrogen generate --help` for more information.",
-      "flags": {},
+      "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
       "hasDynamicHelp": false,
       "hidden": true,
       "hiddenAliases": [],
@@ -895,6 +973,13 @@
       },
       "description": "Generates a standard Shopify route.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "adapter": {
           "description": "React Router adapter used in the route. The default is `react-router`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_ADAPTER",
@@ -958,6 +1043,13 @@
       "args": {},
       "description": "Generates all supported standard shopify routes.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "adapter": {
           "description": "React Router adapter used in the route. The default is `react-router`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_ADAPTER",
@@ -1020,6 +1112,13 @@
       "args": {},
       "description": "Creates a new Hydrogen storefront.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "force": {
           "char": "f",
           "description": "Overwrites the destination directory and files if they already exist.",
@@ -1140,6 +1239,13 @@
       "args": {},
       "description": "Link a local project to one of your shop's Hydrogen storefronts.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "force": {
           "char": "f",
           "description": "Overwrites the destination directory and files if they already exist.",
@@ -1221,6 +1327,13 @@
       "args": {},
       "description": "Returns a list of Hydrogen storefronts available on a given shop.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1252,6 +1365,13 @@
       "args": {},
       "description": "Login to your Shopify account.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1292,6 +1412,13 @@
       "args": {},
       "description": "Logout of your local session.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1323,6 +1450,13 @@
       "args": {},
       "description": "Runs a Hydrogen storefront in an Oxygen worker for production.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1463,6 +1597,13 @@
       "args": {},
       "description": "Scaffold routes and core functionality.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1534,6 +1675,13 @@
       },
       "description": "Setup CSS strategies for your project.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1591,6 +1739,13 @@
       },
       "description": "Setup support for multiple markets in your project.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1623,6 +1778,13 @@
       "args": {},
       "description": "EXPERIMENTAL: Upgrades the project to use Vite.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1653,7 +1815,15 @@
       "aliases": [],
       "args": {},
       "description": "Creates a global `h2` shortcut for the Hydrogen CLI",
-      "flags": {},
+      "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
       "id": "hydrogen:shortcut",
@@ -1676,6 +1846,13 @@
       "args": {},
       "description": "Unlink a local project from a Hydrogen storefront.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1707,6 +1884,13 @@
       "args": {},
       "description": "Upgrade Remix and Hydrogen npm dependencies.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",

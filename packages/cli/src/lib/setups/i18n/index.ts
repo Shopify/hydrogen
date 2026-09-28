@@ -1,4 +1,4 @@
-import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
+import {renderSelectPrompt} from '../../ui.js';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {getCodeFormatOptions} from '../../format-code.js';

@@ -15,7 +15,7 @@ import {
   ResolvedRRConfig,
   ResolvedRoutes,
 } from './remix-config.js';
-import {renderWarning} from '@shopify/cli-kit/node/ui';
+import {renderWarning} from './ui.js';
 import type {ResolvedConfig, UserConfig} from 'vite';
 
 export const REMIX_COMPILER_ERROR_MESSAGE =

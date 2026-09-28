@@ -1,5 +1,5 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {renderSuccess} from '../../lib/ui.js';
 import colors from '@shopify/cli-kit/node/colors';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {Flags} from '@oclif/core';

@@ -1,7 +1,7 @@
 import {Flags} from '@oclif/core';
-import type {FlagProps} from '@oclif/core/lib/interfaces/parser.js';
+import type {Flag} from '@oclif/core/interfaces';
 import {camelize} from '@shopify/cli-kit/common/string';
-import {renderInfo} from '@shopify/cli-kit/node/ui';
+import {renderInfo} from './ui.js';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
 import colors from '@shopify/cli-kit/node/colors';
 import type {CamelCasedProperties, PartialDeep} from 'type-fest';
@@ -178,7 +178,7 @@ Defaults to the '.env' located in your project path `--path`.",
       env: 'SHOPIFY_HYDROGEN_FLAG_VERBOSE',
     }),
   },
-} satisfies Record<string, Record<Lowercase<string>, FlagProps>>;
+} satisfies Record<string, Record<Lowercase<string>, Flag<any>>>;
 
 export function flagsToCamelObject<T extends Record<string, any>>(obj: T) {
   return Object.entries(obj).reduce((acc, [key, value]) => {
@@ -245,7 +245,7 @@ export function deprecated(name: string, {isBoolean = false} = {}) {
   return {
     ...customFlag(),
     type: (isBoolean ? 'boolean' : 'option') as unknown as 'option',
-  } as FlagProps;
+  } as Flag<any>;
 }
 
 export function overrideFlag<T extends Record<string, Record<string, any>>>(

@@ -1,7 +1,7 @@
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {checkIfIgnoredInGitRepository} from '@shopify/cli-kit/node/git';
-import {renderWarning} from '@shopify/cli-kit/node/ui';
+import {renderWarning} from './ui.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {packageManagers, type PackageManager} from './package-managers.js';
 import {isHydrogenMonorepo} from './build.js';
