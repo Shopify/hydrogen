@@ -1,3 +1,7 @@
+import {writeJsonResult, isJsonOutput} from '../../lib/json-output.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {codegenJsonOutputSchema} from '../../lib/codegen/types.js';
 import Command from '../../lib/hydrogen-command.js';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
@@ -8,12 +12,16 @@ import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {codegen} from '../../lib/codegen.js';
 
 export default class Codegen extends Command {
+  static get jsonOutputSchema(): typeof codegenJsonOutputSchema {
+    return codegenJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown =
     'Automatically generates GraphQL types for your project’s Storefront API queries.';
 
-  static description =
-    'Generate types for the Storefront API queries found in your project.';
+  static description = this.descriptionForHelp();
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
     'codegen-config-path': Flags.string({
       description:
@@ -37,6 +45,11 @@ export default class Codegen extends Command {
     const {flags} = await this.parse(Codegen);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
+    if (flags.json && flags.watch)
+      throw new AbortError(
+        '--json cannot be combined with --watch. Run without --watch for a finite result.',
+      );
+
     await runCodegen({
       ...flagsToCamelObject(flags),
       directory,
@@ -58,7 +71,7 @@ export async function runCodegen({
   const {root} = getProjectPaths(directory);
   const remixConfig = await getRemixConfig(root);
 
-  console.log(''); // New line
+  if (!isJsonOutput()) console.log(''); // New line
 
   const generatedFiles = await codegen({
     ...remixConfig,
@@ -67,7 +80,8 @@ export async function runCodegen({
     watch,
   });
 
-  if (!watch) {
+  const result = {generatedFiles};
+  if (!watch && !writeJsonResult(codegenJsonOutputSchema, result)) {
     renderSuccess({
       headline: 'Generated types for GraphQL:',
       body: {
@@ -82,4 +96,5 @@ export async function runCodegen({
       },
     });
   }
+  return result;
 }
