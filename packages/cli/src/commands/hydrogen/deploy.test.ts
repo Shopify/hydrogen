@@ -1,3 +1,10 @@
+import Deploy, {
+  deploymentLogger,
+  getHydrogenVersion,
+  resolveDeploymentOutputDirs,
+  runDeploy,
+} from './deploy.js';
+import {captureJsonOutput} from '../../../tests/output.js';
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {mkdtempSync, mkdirSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -19,12 +26,6 @@ import {
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
 
-import {
-  deploymentLogger,
-  getHydrogenVersion,
-  resolveDeploymentOutputDirs,
-  runDeploy,
-} from './deploy.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {execAsync} from '../../lib/process.js';
 import {createEnvironmentCliChoiceLabel} from '../../lib/common.js';
@@ -274,6 +275,70 @@ describe('deploy', async () => {
     for (const tempRoot of tempRoots.splice(0)) {
       rmSync(tempRoot, {recursive: true, force: true});
     }
+  });
+
+  it('writes a single deployment result and keeps diagnostics off stdout', async () => {
+    const {stdout, stderr} = await captureJsonOutput(() =>
+      runDeploy({...deployParams, json: true}),
+    );
+    expect(JSON.parse(stdout)).toEqual({
+      url: 'https://a-lovely-deployment.com',
+      authBypassToken: 'some-token',
+    });
+    expect(
+      stderr
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line)),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'diagnostic',
+          message: 'Could not retrieve Git history.',
+        }),
+      ]),
+    );
+    expect(renderSuccess).not.toHaveBeenCalled();
+  });
+
+  it('keeps CI file output independent from the JSON flag and preserves its bytes', async () => {
+    vi.mocked(ciPlatform).mockReturnValue({
+      isCI: true,
+      name: 'test',
+      metadata: {},
+    });
+    const deployment = {
+      authBypassToken: 'some-token',
+      url: 'https://a-lovely-deployment.com',
+    };
+    const {stdout} = await captureJsonOutput(() =>
+      runDeploy({...deployParams, token: 'token', json: true}),
+    );
+    expect(JSON.parse(stdout)).toEqual(deployment);
+    expect(writeFile).toHaveBeenCalledWith(
+      'h2_deploy_log.json',
+      JSON.stringify(deployment),
+    );
+  });
+
+  it('does not encode a successful result after a deployment failure', async () => {
+    vi.mocked(createDeploy).mockRejectedValue(new Error('Upload failed'));
+    const {stdout} = await captureJsonOutput(async () => {
+      await expect(runDeploy({...deployParams, json: true})).rejects.toThrow(
+        'Upload failed',
+      );
+    });
+    expect(stdout).toBe('');
+  });
+
+  it('documents the schema and preserves omission of bypass tokens', () => {
+    expect(Deploy.flags.json).toBeDefined();
+    expect(Deploy.description).toContain(Deploy.jsonOutputSchema.name);
+    expect(
+      JSON.parse(Deploy.jsonOutputSchema.encode({url: 'https://example.com'})),
+    ).toEqual({url: 'https://example.com'});
+    expect(() => Deploy.jsonOutputSchema.encode({url: 1} as any)).toThrow();
+    expect(Deploy.jsonOutputSchema.encode(null)).toBe('null');
   });
 
   it('calls getOxygenDeploymentData with the correct parameters', async () => {
