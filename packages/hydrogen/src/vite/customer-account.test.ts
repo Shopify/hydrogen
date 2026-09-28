@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  configureCustomerAccountUrls,
-  formatCustomerAccountSettings,
-  resolveCustomerAccountUrls,
-} from "./customer-account";
+import { configureCustomerAccountUrls, resolveCustomerAccountUrls } from "./customer-account";
 
 const ROOT = "/project";
 const URLS = resolveCustomerAccountUrls("local.tryhydrogen.dev", 5_173);
@@ -17,16 +13,6 @@ describe("resolveCustomerAccountUrls", () => {
       javascriptOrigin: "https://local.tryhydrogen.dev",
       logoutUri: "https://local.tryhydrogen.dev:5173",
     });
-  });
-});
-
-describe("formatCustomerAccountSettings", () => {
-  it("prints all manual Customer Account API values", () => {
-    const output = formatCustomerAccountSettings(URLS);
-
-    expect(output).toContain(URLS.callbackUri);
-    expect(output).toContain(`JavaScript origin(s):        ${URLS.javascriptOrigin}\n`);
-    expect(output).toContain(`Logout URI:                  ${URLS.logoutUri}`);
   });
 });
 

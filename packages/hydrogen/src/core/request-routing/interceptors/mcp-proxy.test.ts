@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
 import { SHOPIFY_STOREFRONT_ORIGIN_HEADER } from "../../headers";
-import { configureLogging, resetLoggingForTests } from "../../logging";
+import { configureLogging } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
 import { assert, createTestLogger } from "../../test-utils";
 import { handleMcpProxy as handleMcpProxyImpl } from "./mcp-proxy";
@@ -58,7 +58,7 @@ function createTestSessionManager(request: Request) {
 describe("handleMcpProxy", () => {
   let mockFetch: ReturnType<typeof vi.fn>;
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
   });
 
   beforeEach(() => {
@@ -80,20 +80,14 @@ describe("handleMcpProxy", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("does not match /api/mcp/", async () => {
-    const result = await handleMcpProxy(createRequest("/api/mcp/"), defaultStoreUrl);
-    expect(result).toBeNull();
-  });
-
-  it("does not match /api/mcp/foo", async () => {
-    const result = await handleMcpProxy(createRequest("/api/mcp/foo"), defaultStoreUrl);
-    expect(result).toBeNull();
-  });
-
-  it("does not match /api/mcps", async () => {
-    const result = await handleMcpProxy(createRequest("/api/mcps"), defaultStoreUrl);
-    expect(result).toBeNull();
-  });
+  it.each(["/api/mcp/", "/api/mcp/foo", "/api/mcps", "/api/mc"])(
+    "does not match %s",
+    async (path) => {
+      const result = await handleMcpProxy(createRequest(path), defaultStoreUrl);
+      expect(result).toBeNull();
+      expect(mockFetch).not.toHaveBeenCalled();
+    },
+  );
 
   it("forwards request to the correct upstream URL", async () => {
     await handleMcpProxy(createRequest("/api/mcp"), defaultStoreUrl);
@@ -212,14 +206,5 @@ describe("handleMcpProxy", () => {
     assert(result, "expected proxy to return an error response");
     const body = await result.json();
     expect(body.error.message).toBe("Internal proxy error");
-  });
-
-  it("passes AbortSignal.timeout to upstream fetch", async () => {
-    await handleMcpProxy(createRequest("/api/mcp"), defaultStoreUrl);
-
-    const call = mockFetch.mock.calls[0];
-    assert(call, "expected fetch to be called");
-    const [, init] = call;
-    expect(init.signal).toBeDefined();
   });
 });

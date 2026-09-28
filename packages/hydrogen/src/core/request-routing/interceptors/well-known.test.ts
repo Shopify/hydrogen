@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { configureLogging, resetLoggingForTests } from "../../logging";
+import { configureLogging } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
 import { assert, createTestLogger } from "../../test-utils";
 import { handleWellKnownProxy as handleWellKnownProxyImpl } from "./well-known";
@@ -54,7 +54,7 @@ describe("handleWellKnownProxy", () => {
   });
 
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
   });
 
   it("proxies an allowlisted well-known path to the Online Store origin", async () => {

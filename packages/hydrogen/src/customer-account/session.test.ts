@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createStorefrontClient } from "../client/client";
 import { createCartServerHandlers } from "../core/cart/server-handlers";
-import { configureLogging, resetLoggingForTests } from "../core/logging";
+import { configureLogging } from "../core/logging";
 import { createShopifyRequestContext } from "../core/request-context";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../core/request-routing/handle-shopify-routes";
 import { createTestLogger } from "../core/test-utils";
@@ -649,7 +649,7 @@ describe("createCustomerAccountServerHandlers", () => {
   });
 
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
   });
 
   it("exposes literal route metadata", () => {

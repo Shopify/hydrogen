@@ -65,6 +65,30 @@ describe("createProxyInterceptor", () => {
     expect(prepare).toHaveBeenCalledOnce();
   });
 
+  it("bounds upstream fetches with a 30 second timeout signal", async () => {
+    const timeoutSignal = new AbortController().signal;
+    const timeout = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutSignal);
+    const handleProxy = createProxyInterceptor({
+      match: /^\/proxy$/,
+      requestHeaders: { deny: [] },
+      scope: "test-proxy",
+    });
+    const mockFetch = vi.fn().mockResolvedValue(new Response());
+    vi.stubGlobal("fetch", mockFetch);
+    const request = new Request("https://my-app.com/proxy");
+
+    try {
+      await handleProxy(new URL(request.url), createOptions(request));
+
+      expect(timeout).toHaveBeenCalledWith(30_000);
+      const call = mockFetch.mock.calls[0];
+      assert(call, "expected fetch to be called");
+      expect(call[1].signal).toBe(timeoutSignal);
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+
   it("returns the allowed methods when the request method is unsupported", async () => {
     const handleProxy = createProxyInterceptor({
       match: /^\/proxy$/,
