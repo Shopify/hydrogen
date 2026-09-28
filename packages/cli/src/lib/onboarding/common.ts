@@ -1,3 +1,10 @@
+import {isJsonOutput} from '../json-output.js';
+import {errorHandler} from '@shopify/cli-kit/node/error-handler';
+import {
+  flushStdout,
+  outputDebug,
+  formatPackageManagerCommand,
+} from '@shopify/cli-kit/node/output';
 import {readdir, symlink} from 'node:fs/promises';
 import {
   installNodeModules,
@@ -29,10 +36,6 @@ import {
   writeFile,
   copyFile,
 } from '@shopify/cli-kit/node/fs';
-import {
-  outputDebug,
-  formatPackageManagerCommand,
-} from '@shopify/cli-kit/node/output';
 import {currentProcessIsGlobal} from '@shopify/cli-kit/node/is-global';
 import colors from '@shopify/cli-kit/node/colors';
 import {type AdminSession, login, renderLoginSuccess} from '../auth.js';
@@ -740,6 +743,17 @@ export function createAbortHandler(
 
     if (project?.directory) {
       await rmdir(project!.directory, {force: true}).catch(() => {});
+    }
+
+    if (isJsonOutput()) {
+      await errorHandler(
+        new AbortError(
+          'Failed to initialize project: ' + (error?.message ?? ''),
+          error?.tryMessage ?? error?.stack,
+        ),
+      );
+      await flushStdout();
+      process.exit(1);
     }
 
     renderFatalError(

@@ -1,3 +1,6 @@
+import {writeJsonResult} from '../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {linkJsonOutputSchema} from '../../lib/storefronts/types.js';
 import {Flags} from '@oclif/core';
 import Command from '../../lib/hydrogen-command.js';
 import {basename} from '@shopify/cli-kit/node/path';
@@ -28,16 +31,20 @@ import {
 } from '../../lib/onboarding/common.js';
 
 export default class Link extends Command {
+  static get jsonOutputSchema(): typeof linkJsonOutputSchema {
+    return linkJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown = `Links your local development environment to a remote Hydrogen storefront. You can link an unlimited number of development environments to a single Hydrogen storefront.
 
   Linking to a Hydrogen storefront enables you to run [dev](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-dev) and automatically inject your linked Hydrogen storefront's environment variables directly into the server runtime.
 
   After you run the \`link\` command, you can access the [env list](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-list), [env pull](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-pull), and [unlink](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-unlink) commands.`;
 
-  static description =
-    "Link a local project to one of your shop's Hydrogen storefronts.";
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.force,
     ...commonFlags.path,
     ...commonFlags.shop,
@@ -60,7 +67,7 @@ export default class Link extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Link);
-    await runLink(flagsToCamelObject(flags));
+    await runLink(flagsToCamelObject(flags), flags.json);
   }
 }
 
@@ -73,14 +80,17 @@ export interface LinkStorefrontArguments {
   name?: string;
 }
 
-export async function runLink({
-  createStorefront: flagCreateStorefront,
-  force,
-  path: root = process.cwd(),
-  shop,
-  storefront: flagStorefront,
-  name,
-}: LinkStorefrontArguments) {
+export async function runLink(
+  {
+    createStorefront: flagCreateStorefront,
+    force,
+    path: root = process.cwd(),
+    shop,
+    storefront: flagStorefront,
+    name,
+  }: LinkStorefrontArguments,
+  json?: boolean,
+) {
   const [{session, config}, cliCommand] = await Promise.all([
     login(root, shop),
     getCliCommand(),
@@ -94,7 +104,9 @@ export async function runLink({
     cliCommand,
   });
 
-  if (!linkedStore) return;
+  const result = {shop: config.shop!, storefront: linkedStore ?? null};
+  if (writeJsonResult(linkJsonOutputSchema, result, json) || !linkedStore)
+    return result;
 
   renderSuccess({
     body: [{userInput: linkedStore.title}, 'is now linked'],
@@ -106,6 +118,7 @@ export async function runLink({
       ],
     ],
   });
+  return result;
 }
 
 export async function linkStorefront(
