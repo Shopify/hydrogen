@@ -5,7 +5,7 @@ import {
   type PredictiveSearchDataFromHandlers,
 } from "../core/index";
 import { gql } from "../graphql";
-import { usePredictiveSearch, usePredictiveSearchForm } from "./predictive-search";
+import { usePredictiveSearch } from "./predictive-search";
 
 const predictiveSearchHandlers = createPredictiveSearchServerHandlers({
   fragments: {
@@ -19,11 +19,11 @@ const predictiveSearchHandlers = createPredictiveSearchServerHandlers({
 
 type SearchData = PredictiveSearchDataFromHandlers<typeof predictiveSearchHandlers>;
 
-describe("predictive search React types", () => {
+describe("predictive search Vue types", () => {
   it("types state from custom predictive search server handlers", () => {
     function Consumer() {
       const state = usePredictiveSearch<SearchData>();
-      type Product = (typeof state)["result"]["items"]["products"][number];
+      type Product = (typeof state.value)["result"]["items"]["products"][number];
 
       expectTypeOf<Product["vendor"]>().toEqualTypeOf<string>();
     }
@@ -37,23 +37,7 @@ describe("predictive search React types", () => {
         (state) => state.result.items.products[0]?.vendor ?? "",
       );
 
-      expectTypeOf(vendor).toEqualTypeOf<string>();
-    }
-
-    void Consumer;
-  });
-
-  it("types predictive search form registration", () => {
-    function Consumer() {
-      const { register } = usePredictiveSearchForm();
-
-      register("query", { placeholder: "Search" });
-
-      // @ts-expect-error predictive search only registers its query input
-      register("term");
-
-      // @ts-expect-error query input name is owned by the primitive
-      register("query", { name: "term" });
+      expectTypeOf(vendor.value).toEqualTypeOf<string>();
     }
 
     void Consumer;

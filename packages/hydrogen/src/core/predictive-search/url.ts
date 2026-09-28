@@ -35,7 +35,7 @@ type AnyPredictiveSearchItemUrlOptions =
   | PredictiveSearchItemUrlOptions
   | PredictiveSearchQueryItemUrlOptions;
 
-type SearchResultUrlOptions = {
+export type SearchResultUrlOptions = {
   baseUrl: string;
   term: string;
   trackingParameters?: string | null;
