@@ -1,6 +1,6 @@
 import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import Command from '@shopify/cli-kit/node/base-command';
-import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
+import {renderSuccess, renderTasks} from '../../../lib/ui.js';
 import {
   fileExists,
   moveFile,

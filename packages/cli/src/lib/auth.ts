@@ -1,4 +1,4 @@
-import {renderSelectPrompt, renderSuccess} from '@shopify/cli-kit/node/ui';
+import {renderSelectPrompt, renderSuccess} from './ui.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {
   type AdminSession,

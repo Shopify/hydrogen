@@ -332,6 +332,8 @@ describe('upgrade e2e', () => {
     vi.stubEnv('FORCE_CHANGELOG_SOURCE', 'local');
     vi.stubEnv('SHOPIFY_HYDROGEN_FLAG_FORCE', '1');
     vi.stubEnv('CI', '1');
+    // The fixtures use npm; do not inherit pnpm from the test runner.
+    vi.stubEnv('npm_config_user_agent', 'npm');
 
     const changelog = await upgradeModule.getChangelog();
     const matrix = createVersionMatrix(changelog);
