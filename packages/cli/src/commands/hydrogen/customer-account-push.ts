@@ -1,3 +1,6 @@
+import {writeJsonResult} from '../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {customerAccountPushJsonOutputSchema} from '../../lib/customer-account/types.js';
 import Command from '../../lib/hydrogen-command.js';
 import {Flags} from '@oclif/core';
 import {AbortError} from '@shopify/cli-kit/node/error';
@@ -14,9 +17,16 @@ import {
 import {replaceCustomerApplicationUrls} from '../../lib/graphql/admin/customer-application-update.js';
 
 export default class CustomerAccountPush extends Command {
-  static description = 'Push project configuration to admin';
+  static get jsonOutputSchema(): typeof customerAccountPushJsonOutputSchema {
+    return customerAccountPushJsonOutputSchema;
+  }
+
+  static descriptionWithMarkdown = 'Push project configuration to admin';
+
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
     'storefront-id': Flags.string({
       description:
@@ -42,11 +52,27 @@ export default class CustomerAccountPush extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(CustomerAccountPush);
-    await runCustomerAccountPush({...flagsToCamelObject(flags)});
+    const outcome = await pushCustomerAccountConfig({
+      ...flagsToCamelObject(flags),
+      redirectUriRelativeUrl: flags['relative-redirect-uri'],
+      logoutUriRelativeUrl: flags['relative-logout-uri'],
+    });
+    writeJsonResult(
+      customerAccountPushJsonOutputSchema,
+      outcome.result,
+      flags.json,
+    );
   }
 }
 
-export async function runCustomerAccountPush({
+/** Compatibility entry point used by the dev server to remove temporary URLs. */
+export async function runCustomerAccountPush(
+  options: Parameters<typeof pushCustomerAccountConfig>[0],
+) {
+  return (await pushCustomerAccountConfig(options)).cleanup;
+}
+
+export async function pushCustomerAccountConfig({
   path: root = process.cwd(),
   storefrontId: storefrontIdFromFlag,
   devOrigin,
@@ -78,10 +104,6 @@ export async function runCustomerAccountPush({
     const logoutUri = logoutUriRelativeUrl
       ? new URL(logoutUriRelativeUrl, devOrigin).toString()
       : devOrigin;
-
-    if (!redirectUri && !javascriptOrigin && !logoutUri) {
-      return;
-    }
 
     const {session, config} = await login(root);
     const customerAccountConfig = config?.storefront?.customerAccountConfig;
@@ -118,12 +140,20 @@ export async function runCustomerAccountPush({
       logoutUri,
     });
 
-    return () =>
-      cleanupCustomerApplicationUrls(session, storefrontId, {
+    return {
+      result: {
+        storefrontId,
         redirectUri,
         javascriptOrigin,
         logoutUri,
-      });
+      } satisfies import('../../lib/customer-account/types.js').CustomerAccountPushResult,
+      cleanup: () =>
+        cleanupCustomerApplicationUrls(session, storefrontId, {
+          redirectUri,
+          javascriptOrigin,
+          logoutUri,
+        }),
+    };
   } catch (error: any) {
     let confidentialAccessFound = false;
 
