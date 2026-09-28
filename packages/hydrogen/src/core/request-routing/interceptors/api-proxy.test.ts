@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SHOPIFY_STOREFRONT_ORIGIN_HEADER } from "../../headers";
-import { configureLogging, resetLoggingForTests } from "../../logging";
+import { configureLogging } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
 import { assert, createTestLogger } from "../../test-utils";
 import { handleShopifyApiProxy as handleShopifyApiProxyImpl } from "./api-proxy";
@@ -38,7 +38,7 @@ describe("handleShopifyApiProxy", () => {
   let mockFetch: ReturnType<typeof vi.fn>;
 
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
   });
 
   beforeEach(() => {

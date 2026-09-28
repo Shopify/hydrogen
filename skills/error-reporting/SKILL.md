@@ -93,6 +93,6 @@ Inline/CDN scripts that Hydrogen serializes into HTML are compiled to strings vi
 
 ## Test expectations
 
-- Failure paths inject a test logger instead of mocking `console`: `configureLogging({ logger })` with six `vi.fn()` methods, `resetLoggingForTests()` in `afterEach`. Assert `(message, { scope, ...context })` — no prefix strings.
+- Failure paths inject a test logger instead of mocking `console`: `configureLogging({ logger })` with six `vi.fn()` methods, `configureLogging({})` in `afterEach` to restore the defaults. Assert `(message, { scope, ...context })` — no prefix strings.
 - Exceptions that still spy `console`: serialized inline-script import chains (analytics bus/destination-manager, consent) write to `console` directly, and `logging.test.ts` verifies the sink's own `[hydrogen:<level>:<scope>]` formatting.
 - The `no-console` lint rule enforces the policy: the sanctioned `console` call sites are `src/core/logging/logging.ts` and the serialized consent bootstrap `src/core/shopify-scripts/consent-script.ts`, each carrying an inline `oxlint-disable-next-line no-console`. CLI and test files are exempt.

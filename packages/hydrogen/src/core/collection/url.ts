@@ -90,7 +90,7 @@ export function serializeCollectionParams(
 }
 
 /** Returns `true` when the param key is owned by the collection store. */
-export function isStoreOwnedParam(key: string): boolean {
+function isStoreOwnedParam(key: string): boolean {
   return key === "sort_by" || key.startsWith("filter.");
 }
 

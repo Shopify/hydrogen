@@ -11,7 +11,6 @@ import {
   collectionSearchEqual,
   collectionParamsMatchState,
   normalizeCollectionSearch,
-  isStoreOwnedParam,
   filterEquals,
   isFilterInputActive,
 } from "../url";
@@ -716,7 +715,9 @@ describe("collectionSearchEqual", () => {
 
 describe("mergeCollectionParams", () => {
   it("replaces store-owned keys while preserving others", () => {
-    const existing = new URLSearchParams("grid=3&filter.p.tag=men&sort_by=price-ascending");
+    const existing = new URLSearchParams(
+      "grid=3&filter.p.tag=men&filter.v.availability=1&sort_by=price-ascending",
+    );
 
     const merged = mergeCollectionParams(existing, {
       filters: [{ tag: "women" }],
@@ -725,6 +726,7 @@ describe("mergeCollectionParams", () => {
     });
 
     expect(merged.get("grid")).toBe("3");
+    expect(merged.has("filter.v.availability")).toBe(false);
     expect(merged.get("filter.p.tag")).toBe("women");
     expect(merged.get("sort_by")).toBe("title-descending");
     expect(merged.getAll("filter.p.tag")).not.toContain("men");
@@ -837,24 +839,6 @@ describe("collectionParamsMatchState", () => {
   it("returns true for empty state and empty params", () => {
     const state = { filters: [], sortKey: undefined, reverse: false };
     expect(collectionParamsMatchState(params(""), state)).toBe(true);
-  });
-});
-
-describe("isStoreOwnedParam", () => {
-  it("recognizes sort_by as store-owned", () => {
-    expect(isStoreOwnedParam("sort_by")).toBe(true);
-  });
-
-  it("recognizes filter.* keys as store-owned", () => {
-    expect(isStoreOwnedParam("filter.p.tag")).toBe(true);
-    expect(isStoreOwnedParam("filter.v.availability")).toBe(true);
-    expect(isStoreOwnedParam("filter.v.price.gte")).toBe(true);
-  });
-
-  it("does not consider non-store keys as store-owned", () => {
-    expect(isStoreOwnedParam("grid")).toBe(false);
-    expect(isStoreOwnedParam("view")).toBe(false);
-    expect(isStoreOwnedParam("page")).toBe(false);
   });
 });
 

@@ -66,7 +66,10 @@ describe("package metadata", () => {
   });
 
   it("does not ship generated GraphQL assets from src", () => {
-    expect(packageJson.files).not.toContain("src/graphql/generated");
+    const sourceEntries = packageJson.files.filter(
+      (entry: string) => entry === "src" || entry.startsWith("src/"),
+    );
+    expect(sourceEntries).toEqual([]);
   });
 
   it("exports a loadable TypeScript plugin", () => {

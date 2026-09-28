@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createCartStore, type CartStore, type CreateCartStoreOptions } from "../core/cart/cart";
 import type { CartData, CartLine, CartState } from "../core/cart/state";
 import { EMPTY_CART_DATA, EMPTY_CART_STATE, createEmptyCartErrors } from "../core/cart/state";
-import { configureLogging, resetLoggingForTests } from "../core/logging";
+import { configureLogging } from "../core/logging";
 import { createProductFormStore } from "../core/product/product-form";
 import type { ProductInput, ProductVariantInput } from "../core/product/state";
 import { createTestLogger } from "../core/test-utils";
@@ -222,7 +222,7 @@ describe("useProductForm", () => {
     configureCartEndpoint("/api/cart");
   });
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
   });
 
   describe("initial state", () => {
@@ -846,83 +846,72 @@ describe("createProductComponents", () => {
   });
 
   describe("hydration on product change", () => {
-    it("hydrates when the product id changes", () => {
-      const product1 = makeProduct(RED, "gid://shopify/Product/1");
-      const product2 = makeProduct(BLUE, "gid://shopify/Product/2");
+    function makeRerenderableWrapper(getProduct: () => ProductInput) {
+      return ({ children }: { children: ReactNode }) =>
+        createElement(
+          CartProvider,
+          { initialData: { cart: makeCartData() } },
+          createElement(ProductProvider, { product: getProduct() }, children),
+        );
+    }
 
+    it("hydrates when the product id changes", () => {
+      let product = makeProduct(RED, "gid://shopify/Product/1");
       const { result, rerender } = renderHook(() => useFactoryProductForm(), {
-        wrapper: makeFactoryWrapper(product1),
+        wrapper: makeRerenderableWrapper(() => product),
       });
 
       expect(getColorValue(result.current, "Red")?.selected).toBe(true);
 
-      rerender({ children: undefined });
+      product = makeProduct(BLUE, "gid://shopify/Product/2");
+      rerender();
 
-      const Wrapper2 = makeFactoryWrapper(product2);
-      const { result: result2 } = renderHook(() => useFactoryProductForm(), {
-        wrapper: Wrapper2,
-      });
-
-      expect(getColorValue(result2.current, "Blue")?.selected).toBe(true);
+      expect(getColorValue(result.current, "Blue")?.selected).toBe(true);
     });
 
-    it("does not hydrate on mount (avoids double-init)", () => {
-      const { result } = renderHook(() => useFactoryProductForm(), {
-        wrapper: makeFactoryWrapper(makeProduct(RED)),
+    it("keeps the current selection when the product key is unchanged", () => {
+      let product = makeProduct(RED);
+      const { result, rerender } = renderHook(() => useFactoryProductForm(), {
+        wrapper: makeRerenderableWrapper(() => product),
       });
 
       act(() => {
         result.current.selectOption("Color", "Blue");
       });
 
+      product = makeProduct(RED);
+      rerender();
+
       expect(getColorValue(result.current, "Blue")?.selected).toBe(true);
     });
   });
 
   describe("store lifecycle", () => {
-    it("destroys store on unmount", () => {
+    it("unsubscribes from the cart store on unmount", () => {
       const { unmount } = renderHook(() => useFactoryProductForm(), {
         wrapper: makeFactoryWrapper(),
       });
 
+      expect(cartSubscribeListener).not.toBeNull();
       unmount();
-    });
-  });
 
-  describe("StrictMode lifecycle (destroy → connect)", () => {
-    // React StrictMode replays effects: mount → cleanup → mount.
-    // ProductProvider creates the store in useMemo (runs once) and calls
-    // store.destroy() in the cleanup. On the replay mount, connect()
-    // restores the cart subscription so the store stays functional.
-
-    it("connect restores cart subscription after destroy", () => {
-      const mockCart = createMockCartStore(makeCartState());
-      const store = createProductFormStore(makeProduct(RED), mockCart);
-
-      // Simulate StrictMode: cleanup fires, then effect re-runs
-      store.destroy();
-      store.connect();
-
-      // Cart updates must still propagate after reconnect
-      const cartLine = makeCartLine("v-red");
-      mockCart.setState(makeCartState({ lines: [cartLine] }));
-      expect(store.getState().matchedLineItem).toEqual(cartLine);
+      expect(cartSubscribeListener).toBeNull();
     });
 
-    it("connect syncs current cart state immediately", () => {
-      const mockCart = createMockCartStore(makeCartState());
-      const store = createProductFormStore(makeProduct(RED), mockCart);
+    it("keeps cart-derived state live after StrictMode replays effects", () => {
+      const { result } = renderHook(() => useFactoryProductForm(), {
+        wrapper: makeFactoryWrapper(),
+        reactStrictMode: true,
+      });
 
-      store.destroy();
-
-      // Cart changes while destroyed — store misses them
       const cartLine = makeCartLine("v-red");
-      mockCart.setState(makeCartState({ lines: [cartLine] }));
-      expect(store.getState().matchedLineItem).toBeNull();
+      act(() => {
+        for (const { value } of vi.mocked(createCartStore).mock.results) {
+          (value as MockCartStore).setState(makeCartState({ lines: [cartLine] }));
+        }
+      });
 
-      // connect() catches up with current cart state
-      store.connect();
-      expect(store.getState().matchedLineItem).toEqual(cartLine);
+      expect(result.current.matchedLineItem).toEqual(cartLine);
     });
   });
 });
