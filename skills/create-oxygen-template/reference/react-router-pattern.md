@@ -253,15 +253,17 @@ Pass `cache` directly to `createStorefrontClient`'s `config` — the client wrap
 
 ## Env and types
 
-Ship a `.env.example` (committed, blank) and a gitignored `.env`. Only the two real secrets are required; everything
-else public lives in `app/lib/config.ts` (see config split). To smoke-test against the demo store in this repo, run
-`pnpm run examples:secrets:decrypt` from the repository root (needs the ejson key locally). It writes the private token
-and store domain to the gitignored `templates/react-router/.env`.
+Ship a `.env.example` (committed, blank) and a gitignored `.env`. Use the variables and setup steps in the template
+[README](../../../templates/react-router/README.md) and
+[`.env.example`](../../../templates/react-router/.env.example). The store connection and analytics identity
+(`PUBLIC_STORE_DOMAIN`, optional `PUBLIC_STOREFRONT_ID`) come from the Worker `env`, not from `app/lib/config.ts` (see
+config split). `PRIVATE_STOREFRONT_API_TOKEN` and `SESSION_SECRET` are server-only secrets.
 
 ```sh
 SESSION_SECRET="replace-with-a-long-random-secret-32+"
 PRIVATE_STOREFRONT_API_TOKEN=""
-# PUBLIC_STORE_DOMAIN="your-shop.myshopify.com"   # optional override of app/lib/config.ts
+# PUBLIC_STORE_DOMAIN="your-shop.myshopify.com"   # optional; overrides the default store domain
+# PUBLIC_STOREFRONT_ID=""                         # optional; enables Shopify analytics for a real store
 ```
 
 Add or update TypeScript declarations so the Worker env is typed:
@@ -276,6 +278,7 @@ declare global {
     SESSION_SECRET: string;
     PRIVATE_STOREFRONT_API_TOKEN: string;
     PUBLIC_STORE_DOMAIN?: string;
+    PUBLIC_STOREFRONT_ID?: string;
   }
 }
 
@@ -305,15 +308,18 @@ Replace each `@shared/*` import with template-local code:
 
 Additionally, keep `lib/route-templates.ts` unchanged — `routeTemplates` is required by `handleShopifyRedirects({routeTemplates})`, `<ShopifyScripts routes={routeTemplates}>`, and `getPredictiveSearchItemUrl(product, {routes: routeTemplates, …})`.
 
-**Config split (public vs secret).** Do not try to make everything env-driven — `ShopifyScripts` (in the root
-`Layout`) and analytics run on the CLIENT, where the Worker `env` is not available. Split it:
+**Config split (public vs secret).** Do not bundle per-store analytics identity, and do not send the Worker `env` to
+the client. Split it:
 
-- Public identity -> bundled `app/lib/config.ts` (store domain, public Storefront token, shop/storefront IDs,
-  Customer Account client ID, `defaultI18n`, `analyticsShop`, `analyticsConsent`). These are non-secret and safe in the
-  client bundle; default them to the demo store so the template runs out of the box.
-- Real secrets -> Worker `env`, read on the server only: `SESSION_SECRET`, `PRIVATE_STOREFRONT_API_TOKEN`, plus an
-  optional `PUBLIC_STORE_DOMAIN` override. Read them in root middleware, not at module scope.
-
-This avoids a fragile loader->client refactor and keeps every feature working. Note this applies beyond root middleware: route modules also import public identity (e.g. `analyticsShop`) on the client, so keeping it as a bundled `config.ts` constant — rather than something read from `env` — is what makes those client imports work.
+- Shop identity -> resolve it on the server for each request. The template's root `loader` calls
+  `resolveShopIdentity(env, layout.shopId)` from `app/lib/shop.ts`. The shop ID comes from the Storefront API, the
+  storefront ID from optional `PUBLIC_STOREFRONT_ID`, and the domain is the one the storefront client queries. The root
+  `Layout` reads `shopIdentity` with `useRouteLoaderData("root")` and passes it to `ShopifyScripts`.
+- Mock shops, or no storefront ID -> keep analytics local (`headless` channel) and set `shopifyAnalytics: false` with an
+  empty `storefrontId`, so the Shopify analytics SDK and PerfKit do not load. Do not invent demo shop or storefront IDs.
+- Static non-secret defaults -> keep `storefrontConfig.i18n` and `analyticsConsent` in `app/lib/shop.ts`. These can
+  stay in the client bundle.
+- Secrets -> Worker `env`, read on the server only: `PRIVATE_STOREFRONT_API_TOKEN` and `SESSION_SECRET`. Read them in
+  root middleware or loaders, not at module scope. Never return `env` or private tokens from a loader.
 
 Keep Customer Account, cart, search, analytics, and other example features unless the user explicitly asks to remove them.
