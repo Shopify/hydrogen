@@ -2,9 +2,6 @@
 const commandExceptions = [
   // Existing finite commands awaiting migration. Remove entries as they adopt typed JSON output.
   // Do not add new finite commands to this section.
-  'packages/cli/src/commands/hydrogen/build.ts',
-  'packages/cli/src/commands/hydrogen/check.ts',
-  'packages/cli/src/commands/hydrogen/codegen.ts',
   'packages/cli/src/commands/hydrogen/customer-account-push.ts',
   'packages/cli/src/commands/hydrogen/deploy.ts',
   'packages/cli/src/commands/hydrogen/env/list.ts',
