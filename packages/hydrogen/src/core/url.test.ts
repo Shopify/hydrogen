@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 
-import { SFAPI_RE, normalizeStoreDomain } from "./url";
+import {
+  SFAPI_RE,
+  BUY_PERMALINK_RE,
+  isHydrogenServerHandoffPath,
+  normalizeStoreDomain,
+} from "./url";
 
 describe("SFAPI_RE", () => {
   it("matches valid SFAPI paths", () => {
@@ -23,6 +28,48 @@ describe("SFAPI_RE", () => {
   });
 });
 
+describe("BUY_PERMALINK_RE", () => {
+  it.each([
+    "/buy/123:1",
+    "/buy/123:2,456:1",
+    "/buy/sku_ab-1.2:3",
+    "/buy/~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1",
+    "/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1",
+  ])("matches %s", (pathname) => {
+    expect(BUY_PERMALINK_RE.test(pathname)).toBe(true);
+  });
+
+  it.each([
+    "/buy",
+    "/buy/",
+    "/buy/123",
+    "/buy/123:0",
+    "/buy/123:01",
+    "/buy/123:1,",
+    "/buy/~:1",
+    "/buy/123:1/",
+    "/buy/123:1/extra",
+    "/en/buy/123:1",
+  ])("does not match %s", (pathname) => {
+    expect(BUY_PERMALINK_RE.test(pathname)).toBe(false);
+  });
+});
+
+describe("isHydrogenServerHandoffPath", () => {
+  it.each(["/checkout", "/cart/123:1", "/buy/123:1", "/account/login"])(
+    "hands %s off to the server",
+    (pathname) => {
+      expect(isHydrogenServerHandoffPath(pathname)).toBe(true);
+    },
+  );
+
+  it.each(["/cart", "/buy", "/account", "/products/snowboard"])(
+    "keeps %s with the app",
+    (pathname) => {
+      expect(isHydrogenServerHandoffPath(pathname)).toBe(false);
+    },
+  );
+});
 describe("normalizeStoreDomain", () => {
   it("prepends https:// when missing", () => {
     expect(normalizeStoreDomain("my-store.myshopify.com")).toBe("https://my-store.myshopify.com");
