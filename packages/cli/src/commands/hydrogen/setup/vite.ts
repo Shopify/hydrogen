@@ -1,3 +1,6 @@
+import {writeJsonResult} from '../../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {setupViteJsonOutputSchema} from '../../../lib/setups/types.js';
 import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderSuccess, renderTasks} from '../../../lib/ui.js';
@@ -24,9 +27,17 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputNewline} from '@shopify/cli-kit/node/output';
 
 export default class SetupVite extends Command {
-  static description = 'EXPERIMENTAL: Upgrades the project to use Vite.';
+  static get jsonOutputSchema(): typeof setupViteJsonOutputSchema {
+    return setupViteJsonOutputSchema;
+  }
+
+  static descriptionWithMarkdown =
+    'EXPERIMENTAL: Upgrades the project to use Vite.';
+
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
   };
 
@@ -34,10 +45,13 @@ export default class SetupVite extends Command {
     const {flags} = await this.parse(SetupVite);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    await runSetupVite({
-      ...flagsToCamelObject(flags),
-      directory,
-    });
+    await runSetupVite(
+      {
+        ...flagsToCamelObject(flags),
+        directory,
+      },
+      flags.json,
+    );
   }
 }
 
@@ -49,7 +63,7 @@ const tailwindPostCSSConfig = `export default {
 };
 `;
 
-export async function runSetupVite({directory}: {directory: string}) {
+export async function executeSetupVite({directory}: {directory: string}) {
   outputNewline();
   if (await hasViteConfig(directory)) {
     throw new AbortError('This project already has a Vite config file.');
@@ -398,14 +412,43 @@ export async function runSetupVite({directory}: {directory: string}) {
     },
   ]);
 
+  return {
+    directory,
+    viteConfig: resolvePath(directory, 'vite.config.' + fileExt.slice(0, 2)),
+    serverEntryPoint: resolvePath(directory, serverEntry),
+    dependenciesInstalled: true as const,
+    needsMdxSetup: Boolean(rawRemixConfig.mdx),
+  };
+}
+
+export async function runSetupVite(
+  options: {directory: string},
+  json?: boolean,
+) {
+  const result = await executeSetupVite(options);
+  presentSetupVite(result, json);
+  return result;
+}
+
+export function renderSetupVite({
+  needsMdxSetup,
+}: import('../../../lib/setups/types.js').SetupViteResult) {
   renderSuccess({
     headline: `Your Vite project is ready!`,
     body: `We've modified your project to use Vite.\nPlease use Git to review the changes.`,
     nextSteps: [
-      rawRemixConfig.mdx
+      needsMdxSetup
         ? 'Setup MDX support in Vite: https://remix.run/docs/en/main/future/vite#add-mdx-plugin'
         : '',
       `See more information about Vite in Remix at https://remix.run/docs/en/main/future/vite`,
     ].filter(Boolean),
   });
+}
+
+export function presentSetupVite(
+  result: import('../../../lib/setups/types.js').SetupViteResult,
+  json?: boolean,
+) {
+  if (!writeJsonResult(setupViteJsonOutputSchema, result, json))
+    renderSetupVite(result);
 }
