@@ -4,7 +4,7 @@ import {AbortController, AbortSignal} from '@shopify/cli-kit/node/abort';
 import {copyFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {joinPath} from '@shopify/cli-kit/node/path';
-import {renderInfo, renderTasks} from '../ui.js';
+import {renderTasks} from '../ui.js';
 import {
   downloadExternalRepo,
   downloadMonorepoTemplates,
@@ -17,7 +17,6 @@ import {
   handleDependencies,
   handleLanguage,
   handleProjectLocation,
-  renderProjectReady,
   SetupSummary,
   type InitOptions,
 } from './common.js';
@@ -134,17 +133,6 @@ export async function setupRemoteTemplate(
   if (options.git) {
     await commitAll(project.directory, 'Lockfile');
   }
-
-  await renderProjectReady(project, setupSummary);
-
-  renderInfo({
-    headline: `Your project will display inventory from ${
-      options.template.endsWith(DEMO_STORE_REPO)
-        ? 'the Hydrogen Demo Store'
-        : 'Mock.shop'
-    }.`,
-    body: `To connect this project to your Shopify store’s inventory, update \`${project.name}/.env\` with your store ID and Storefront API key.`,
-  });
 
   return {
     ...project,

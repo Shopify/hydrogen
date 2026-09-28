@@ -1,3 +1,6 @@
+import {writeJsonResult} from '../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {logoutJsonOutputSchema} from '../../lib/authentication/types.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderSuccess} from '../../lib/ui.js';
 import {outputNewline} from '@shopify/cli-kit/node/output';
@@ -6,17 +9,22 @@ import {commonFlags} from '../../lib/flags.js';
 import {logout} from '../../lib/auth.js';
 
 export default class Logout extends Command {
+  static get jsonOutputSchema(): typeof logoutJsonOutputSchema {
+    return logoutJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown = 'Log out from the current shop.';
 
-  static description = 'Logout of your local session.';
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Logout);
-    await runLogout(flags);
+    await runLogout(flags, flags.json);
   }
 }
 
@@ -24,8 +32,14 @@ interface LogoutArguments {
   path?: string;
 }
 
-async function runLogout({path: root = process.cwd()}: LogoutArguments) {
+export async function runLogout(
+  {path: root = process.cwd()}: LogoutArguments,
+  json?: boolean,
+) {
   outputNewline();
   await logout(root);
-  renderSuccess({body: 'You are logged out from Shopify.'});
+  const result = {loggedOut: true as const};
+  if (!writeJsonResult(logoutJsonOutputSchema, result, json))
+    renderSuccess({body: 'You are logged out from Shopify.'});
+  return result;
 }
