@@ -6,7 +6,6 @@ import {
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {useRevalidator} from 'react-router';
 import {loadScript} from '@shopify/hydrogen-react/load-script';
-import {isSfapiProxyEnabled} from '../utils/server-timing';
 
 export type ConsentStatus = boolean | undefined;
 
@@ -135,10 +134,10 @@ export type CustomerPrivacyApiProps = {
    */
   onReady?: () => void;
   /**
-   * @deprecated Hydrogen requires the same-origin Storefront API proxy, which
-   * `createRequestHandler` includes. `false` is not supported: without the proxy,
-   * visitor consent and analytics sessions do not persist across page loads.
-   * Leave this unset.
+   * @deprecated This option is ignored: consent requests always use the
+   * same-origin Storefront API proxy that Hydrogen's `createRequestHandler`
+   * includes, as if this were `true`. Consent and analytics do not work
+   * without the proxy, so `false` is no longer supported.
    */
   sameDomainForStorefrontApi?: boolean;
 };
@@ -155,11 +154,11 @@ function logMissingConfig(fieldName: string) {
   );
 }
 
-function logUnsupportedCrossDomainConsent() {
+function logIgnoredCrossDomainConsent() {
   console.warn(
-    '[h2:warn:useCustomerPrivacy] `sameDomainForStorefrontApi: false` is not supported. ' +
-      "Consent and analytics require the same-origin Storefront API proxy included in Hydrogen's `createRequestHandler`; " +
-      'without it, visitor consent and sessions do not persist across page loads.',
+    '[h2:warn:useCustomerPrivacy] `sameDomainForStorefrontApi: false` is ignored. ' +
+      "Consent and analytics require the same-origin Storefront API proxy included in Hydrogen's `createRequestHandler`, " +
+      'so consent requests always use it. Remove this option.',
   );
 }
 
@@ -198,16 +197,16 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       );
     }
 
-    if (sameDomainForStorefrontApi === false)
-      logUnsupportedCrossDomainConsent();
+    if (sameDomainForStorefrontApi === false) logIgnoredCrossDomainConsent();
 
     const commonAncestorDomain = parseStoreDomain(checkoutDomain);
     return {
+      // Always the same-origin proxy: cross-origin consent requests carry no
+      // cookies, so consent and visitor tokens would reset on every page load
+      // (and an opt-out would be forgotten). The server render never sends
+      // consent requests, so it keeps the checkout domain.
       checkoutRootDomain:
-        (sameDomainForStorefrontApi ?? isSfapiProxyEnabled()) &&
-        typeof window !== 'undefined'
-          ? window.location.host
-          : checkoutDomain,
+        typeof window !== 'undefined' ? window.location.host : checkoutDomain,
       storefrontRootDomain: commonAncestorDomain
         ? '.' + commonAncestorDomain
         : undefined,

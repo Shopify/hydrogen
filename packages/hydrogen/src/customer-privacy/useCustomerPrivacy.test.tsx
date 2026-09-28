@@ -35,7 +35,6 @@ vi.mock('@shopify/hydrogen-react/load-script', async () => {
 const PROPS: CustomerPrivacyApiProps = {
   checkoutDomain: 'checkout.shopify.com',
   storefrontAccessToken: '3b580e70970c4528da70c98e097c2fa0',
-  sameDomainForStorefrontApi: false,
 };
 
 const legacyReadyEvent = vi.fn();
@@ -154,27 +153,57 @@ describe('useCustomerPrivacy async initialization', () => {
     },
   );
 
-  it('defaults to checkout domain without a Server-Timing marker', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const {sameDomainForStorefrontApi: _override, ...props} = PROPS;
-    renderHook(() => useCustomerPrivacy(props));
-    await act(async () => {});
-    expect(consentGlobal().config?.consentDomain).toBe(PROPS.checkoutDomain);
-    expect(warn).not.toHaveBeenCalled();
-  });
+  // The jsdom document has no Server-Timing proxy marker, so these also cover
+  // documents where the marker is missing or stripped.
+  it.each([undefined, true, false])(
+    'sends consent to the same origin (sameDomainForStorefrontApi: %s)',
+    async (sameDomainForStorefrontApi) => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const {result} = renderHook(() =>
+        useCustomerPrivacy({...PROPS, sameDomainForStorefrontApi}),
+      );
+      await act(async () => {});
+      expect(consentGlobal().config?.consentDomain).toBe(window.location.host);
 
-  it('warns that disabling the same-origin Storefront API proxy is unsupported', async () => {
+      let api: ReturnType<typeof installConsentApi>;
+      await act(async () => {
+        api = installConsentApi('loaded');
+        document.dispatchEvent(new CustomEvent('consentTrackingApiLoaded'));
+      });
+      const callback = vi.fn();
+      result.current.customerPrivacy!.setTrackingConsent(
+        {analytics: true},
+        callback,
+      );
+      expect(api!.setTrackingConsent).toHaveBeenCalledWith(
+        expect.objectContaining({checkoutRootDomain: window.location.host}),
+        callback,
+      );
+    },
+  );
+
+  it.each([undefined, true])(
+    'does not warn when sameDomainForStorefrontApi is %s',
+    async (sameDomainForStorefrontApi) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      renderHook(() =>
+        useCustomerPrivacy({...PROPS, sameDomainForStorefrontApi}),
+      );
+      await act(async () => {});
+      expect(warn).not.toHaveBeenCalled();
+    },
+  );
+
+  it('warns that sameDomainForStorefrontApi: false is ignored', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    renderHook(() => useCustomerPrivacy(PROPS));
+    renderHook(() =>
+      useCustomerPrivacy({...PROPS, sameDomainForStorefrontApi: false}),
+    );
     await act(async () => {});
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '`sameDomainForStorefrontApi: false` is not supported',
-      ),
+      expect.stringContaining('`sameDomainForStorefrontApi: false` is ignored'),
     );
-    expect(consentGlobal().config?.consentDomain).toBe(PROPS.checkoutDomain);
-    expect(getCustomerPrivacy()).toBeNull();
   });
 
   it('preserves unrelated Shopify and consent configuration and supplies banner localization', async () => {
@@ -389,7 +418,7 @@ describe('useCustomerPrivacy async initialization', () => {
         analytics: true,
         marketing: false,
         headlessStorefront: true,
-        checkoutRootDomain: PROPS.checkoutDomain,
+        checkoutRootDomain: window.location.host,
         storefrontAccessToken: PROPS.storefrontAccessToken,
       }),
       callback,
