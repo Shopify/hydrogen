@@ -1,4 +1,10 @@
-import {setTestStore, test, expect, ACCEPT_ALL_CONSENT} from '../../fixtures';
+import {
+  setTestStore,
+  test,
+  expect,
+  ACCEPT_ALL_CONSENT,
+  type Page,
+} from '../../fixtures';
 
 /**
  * Failure modes of the Customer Privacy API's consent request. Analytics wait
@@ -15,6 +21,27 @@ function isConsentRequest(postData: string | null): boolean {
   return (postData ?? '').includes('consentManagement');
 }
 
+/** Abort every consent request from now on, counting the attempts. */
+async function failConsentRequests(page: Page) {
+  const failures = {count: 0};
+  await page.route(PROXY_URL_PATTERN, (route) => {
+    if (!isConsentRequest(route.request().postData())) return route.continue();
+    failures.count++;
+    return route.abort('failed');
+  });
+  return failures;
+}
+
+/** Deliver every consent response late, after fetching the real one. */
+async function delayConsentResponses(page: Page, delayInMilliseconds: number) {
+  await page.route(PROXY_URL_PATTERN, async (route) => {
+    if (!isConsentRequest(route.request().postData())) return route.continue();
+    const response = await route.fetch();
+    await new Promise((resolve) => setTimeout(resolve, delayInMilliseconds));
+    return route.fulfill({response});
+  });
+}
+
 test.describe('Consent request failures', () => {
   test('keeps analytics and legacy cookies on hold until consent loads', async ({
     storefront,
@@ -28,16 +55,9 @@ test.describe('Consent request failures', () => {
     await storefront.seedLegacyVisitor(legacy);
 
     // === Every consent request fails on this load ===
-    let failedConsentRequests = 0;
-    await storefront.page.route(PROXY_URL_PATTERN, (route) => {
-      if (!isConsentRequest(route.request().postData())) {
-        return route.continue();
-      }
-      failedConsentRequests++;
-      return route.abort('failed');
-    });
+    const failures = await failConsentRequests(storefront.page);
     await storefront.reload();
-    await expect.poll(() => failedConsentRequests).toBeGreaterThan(0);
+    await expect.poll(() => failures.count).toBeGreaterThan(0);
 
     // Consent never loaded: no analytics, no PerfKit, and the legacy cookies
     // stay in place for the next attempt.
@@ -103,17 +123,7 @@ test.describe('Consent request failures', () => {
     ]);
     await storefront.removeHttpOnlyCookies();
 
-    await storefront.page.route(PROXY_URL_PATTERN, async (route) => {
-      if (!isConsentRequest(route.request().postData())) {
-        return route.continue();
-      }
-      // Fetch the real response, hold it, then deliver it late.
-      const response = await route.fetch();
-      await new Promise((resolve) =>
-        setTimeout(resolve, CONSENT_DELAY_IN_MILLISECONDS),
-      );
-      return route.fulfill({response});
-    });
+    await delayConsentResponses(storefront.page, CONSENT_DELAY_IN_MILLISECONDS);
 
     // === Reload with the slow response in flight ===
     storefront.clearRequests();
