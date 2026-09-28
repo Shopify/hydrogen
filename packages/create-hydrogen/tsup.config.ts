@@ -1,4 +1,3 @@
-import {createRequire} from 'node:module';
 import fs from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import {defineConfig} from 'tsup';
@@ -37,12 +36,6 @@ export default defineConfig({
 
     // Copy assets to the dist folder
     await fs.cp(cliAssetsPath, './dist/assets', {recursive: true});
-
-    // This WASM file is used in a dependency, copy it over:
-    await fs.copyFile(
-      createRequire(import.meta.url).resolve('yoga-wasm-web/dist/yoga.wasm'),
-      './dist/yoga.wasm',
-    );
   },
 });
 

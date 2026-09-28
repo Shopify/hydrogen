@@ -1,4 +1,4 @@
-import {renderFatalError, renderInfo} from '@shopify/cli-kit/node/ui';
+import {renderFatalError, renderInfo} from './ui.js';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import type {AdminSession} from './auth.js';
 

@@ -4,7 +4,7 @@ import {AbortController, AbortSignal} from '@shopify/cli-kit/node/abort';
 import {copyFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {joinPath} from '@shopify/cli-kit/node/path';
-import {renderInfo, renderTasks} from '@shopify/cli-kit/node/ui';
+import {renderInfo, renderTasks} from '../ui.js';
 import {
   downloadExternalRepo,
   downloadMonorepoTemplates,

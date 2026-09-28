@@ -1,8 +1,5 @@
-import {
-  renderInfo,
-  renderWarning,
-  renderFatalError,
-} from '@shopify/cli-kit/node/ui';
+import {isJsonOutput} from './json-output.js';
+import {renderInfo, renderWarning, renderFatalError} from './ui.js';
 import {BugError} from '@shopify/cli-kit/node/error';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
@@ -267,6 +264,7 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
 }
 
 export function enhanceAuthLogs(hideInitialLog = false) {
+  if (isJsonOutput()) return;
   injectLogReplacer('log', warningDebouncer);
 
   addMessageReplacers(

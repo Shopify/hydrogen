@@ -171,6 +171,16 @@ describe('patch-cli', () => {
       expect(readFileSync(filePath, 'utf8')).toBe(generatePatchedContent());
     });
 
+    it('refreshes an older patch while preserving the original backup', () => {
+      const filePath = createTempFile(MARKER + '\n// old patch');
+      writeFileSync(filePath + '.backup', 'original launcher');
+      expect(applyPatch(filePath)).toBe(true);
+      expect(readFileSync(filePath, 'utf8')).toBe(generatePatchedContent());
+      expect(readFileSync(filePath + '.backup', 'utf8')).toBe(
+        'original launcher',
+      );
+    });
+
     it('creates a .backup file with original content', () => {
       const original = generateOriginalContent();
       const filePath = createTempFile(original);
