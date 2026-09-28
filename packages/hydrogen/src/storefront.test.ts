@@ -62,6 +62,21 @@ describe('createStorefrontClient', () => {
     });
   });
 
+  it('passes the SWR error hook to the cache layer without changing logErrors', async () => {
+    const onRevalidationError = vi.fn();
+    const {storefront} = createStorefrontClient({
+      storeDomain,
+      publicStorefrontToken,
+      onRevalidationError,
+      logErrors: false,
+    });
+
+    await storefront.query('query {}');
+    expect(vi.mocked(fetchWithServerCache).mock.lastCall?.[2]).toMatchObject({
+      onRevalidationError,
+    });
+  });
+
   describe('headers', () => {
     it('uses private token if provided', async () => {
       const {storefront} = createStorefrontClient({
