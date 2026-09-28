@@ -90,7 +90,8 @@ type PredictiveSearchServerHandlers<
  *
  * Extends {@link CreatePredictiveSearchQueriesOptions} with server-specific
  * defaults. Each search option sets a default that individual requests can
- * override via query parameters.
+ * override via query parameters. These are defaults, not restrictions: any
+ * client can override them.
  */
 export type CreatePredictiveSearchServerHandlersOptions = CreatePredictiveSearchQueriesOptions & {
   /** Route path the handler is registered at. Defaults to `"/api/predictive-search"`. */
@@ -114,11 +115,11 @@ export type CreatePredictiveSearchServerHandlersOptions = CreatePredictiveSearch
  * The handler parses search parameters from the request URL:
  *
  * - `q` for the search term
- * - `limit`, `limitScope`, `types`, `searchableFields`, `unavailableProducts`
+ * - Each option in `CreatePredictiveSearchServerHandlersOptions` can be
+ *   overridden by a query parameter of the same name
  *
- * Query parameters override the defaults from options. The `types` and
- * `searchableFields` parameters accept comma-separated values. Invalid enum
- * values produce an error response with code
+ * The `types` and `searchableFields` parameters accept comma-separated values. Invalid enum
+ * values, and any Storefront API failure, produce an error result with code
  * `"invalid_predictive_search_request"`.
  *
  * The returned handlers object has a `get` method that can be registered

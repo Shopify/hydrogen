@@ -222,14 +222,19 @@ const DEFAULT_QUERY_FRAGMENT = gql(`
 `);
 
 /**
- * Custom GraphQL fragment overrides for each predictive search resource type.
+ * Additional GraphQL fragments that select extra fields on each predictive search result type.
  *
- * Each fragment must use the naming convention and target type enforced at
- * runtime by {@link makePredictiveSearchQueries}. A mismatch throws with the
- * expected name and type.
+ * Each fragment must be named and typed as follows, or
+ * `makePredictiveSearchQueries` throws:
  *
- * Omitted keys use Hydrogen's built-in fragments, which include fields
- * needed for URL generation and display.
+ * - `product`: `fragment PredictiveSearchProductFragment on Product`
+ * - `collection`: `fragment PredictiveSearchCollectionFragment on Collection`
+ * - `page`: `fragment PredictiveSearchPageFragment on Page`
+ * - `article`: `fragment PredictiveSearchArticleFragment on Article`
+ * - `query`: `fragment PredictiveSearchQueryFragment on SearchQuerySuggestion`
+ *
+ * Hydrogen's own fields (used for URL generation, tracking, and display) are
+ * always selected; custom fragments are merged alongside them.
  */
 export type PredictiveSearchFragments = {
   readonly product?: AnyStorefrontQueryString;
@@ -243,7 +248,7 @@ export type PredictiveSearchFragments = {
 export type CreatePredictiveSearchQueriesOptions<
   TFragments extends PredictiveSearchFragments = PredictiveSearchFragments,
 > = {
-  /** Custom fragment overrides. Omit to use Hydrogen's built-in fragments. */
+  /** Extra fields to select per result type. Hydrogen's built-in fields are always included. */
   readonly fragments?: TFragments;
 };
 
@@ -332,8 +337,7 @@ export function makePredictiveSearchQueries(options?: CreatePredictiveSearchQuer
 /**
  * Pre-built predictive search query object using Hydrogen's default fragments.
  *
- * Suitable when no custom fields are needed. Pass to
- * {@link queryPredictiveSearch} or {@link fetchPredictiveSearch} via the
- * `query` option, or use it implicitly by omitting that option.
+ * Suitable when no custom fields are needed. Used as the default when
+ * `query` is omitted from `queryPredictiveSearch` options.
  */
 export const predictiveSearchQueries = makePredictiveSearchQueries();

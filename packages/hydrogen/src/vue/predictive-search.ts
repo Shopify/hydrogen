@@ -44,7 +44,7 @@ export type { PredictiveSearchActions };
 export type PredictiveSearchFormPropsOptions = {
   /** When `true`, prevents the native form submission and triggers a client-side search instead. */
   preventDefault?: boolean;
-  /** Called on submit with the submit event and the extracted search term. Call `event.preventDefault()` to stop the client-side search. */
+  /** Called on submit with the submit event and the extracted search term. Calling `event.preventDefault()` cancels both the native submission and Hydrogen's client-side search. */
   onSubmit?: (event: SubmitEvent, term: string) => void;
   [key: string]: unknown;
 };

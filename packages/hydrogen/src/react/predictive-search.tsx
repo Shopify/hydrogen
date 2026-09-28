@@ -59,7 +59,7 @@ export type PredictiveSearchFormPropsOptions = Omit<
 > & {
   /** When `true`, prevents the native form submission and triggers a client-side search instead. */
   preventDefault?: boolean;
-  /** Called on submit with the submit event and the extracted search term. Call `event.preventDefault()` to stop the client-side search. */
+  /** Called on submit with the submit event and the extracted search term. Calling `event.preventDefault()` cancels both the native submission and Hydrogen's client-side search. */
   onSubmit?: (event: SubmitEvent<HTMLFormElement>, term: string) => void;
 };
 
@@ -68,8 +68,7 @@ export type PredictiveSearchFormPropsOptions = Omit<
  * {@link usePredictiveSearchForm}'s `register` method.
  *
  * Accepts all standard input HTML attributes except those controlled by the
- * form registration (`name`, `type`, `autoComplete`, `autoCapitalize`,
- * `spellCheck`, `onChange`).
+ * form registration.
  */
 export type PredictiveSearchQueryInputPropsOptions = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -81,7 +80,7 @@ export type PredictiveSearchQueryInputPropsOptions = Omit<
 
 type PredictiveSearchFormField = Parameters<CorePredictiveSearchFormRegister>[0];
 
-/** Generates input element attributes for a named form field. Currently supports only `"query"`. */
+/** Generates input element attributes for a named form field. */
 export type PredictiveSearchFormRegister = (
   field: PredictiveSearchFormField,
   options?: PredictiveSearchQueryInputPropsOptions,
@@ -245,8 +244,9 @@ export function usePredictiveSearch<
 }
 
 /**
- * Returns stable `search` and `clear` methods from the predictive search
- * store. These references do not change across re-renders.
+ * Returns `search` and `clear` methods that always target the provider's
+ * current store. Their identity is stable across re-renders, even
+ * when a config prop change recreates the store.
  *
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
@@ -270,7 +270,7 @@ export function usePredictiveSearchActions(): PredictiveSearchActions {
  *
  * `formProps()` generates form element attributes including the search
  * action URL. `register("query")` generates input attributes and triggers
- * a search on every keystroke (debounced by the store). Both support an optional callback
+ * a search on every change event (debounced by the store). Both support an optional callback
  * that receives the event and extracted term, and respect
  * `event.preventDefault()` to cancel the automatic behavior.
  *

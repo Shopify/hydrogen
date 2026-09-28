@@ -50,11 +50,11 @@ export type PredictiveSearchItemUrlOptions = {
  * term and default to the standard search route.
  */
 export type PredictiveSearchQueryItemUrlOptions = {
-  /** Optional path prefix prepended to the search route (e.g., a locale prefix). */
+  /** Optional path prefix prepended to the search route (e.g., a locale prefix). Ignored when `searchPath` is set. */
   pathPrefix?: string;
   /** Route templates. When omitted, the standard search route is used. */
   routes?: ShopifyRouteTemplates;
-  /** Custom search page path. Overrides the standard search route when provided. */
+  /** Custom search page path, used as-is (no `pathPrefix` applied). Takes precedence over `routes` and `pathPrefix`. */
   searchPath?: string;
 };
 
@@ -105,8 +105,9 @@ export function getPredictiveSearchItemUrl(
  * Builds a search result URL from a base URL, search term, and optional
  * extra parameters.
  *
- * Appends the term under the `searchParamName` (defaults to `"q"`) and
- * merges any `trackingParameters`. Returns a relative URL unless the base
+ * Sets the term under `searchParamName` (defaults to `"q"`), replacing any
+ * existing value. `params` are set the same way, and `trackingParameters`
+ * are appended. Returns a relative URL unless the base
  * URL is absolute.
  */
 export function getSearchResultUrl({

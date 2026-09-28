@@ -37,16 +37,16 @@ type PredictiveSearchItemsForQuery<TQuery extends AnyStorefrontQueryString> = No
  * Predictive search result payload returned by {@link queryPredictiveSearch}
  * and {@link fetchPredictiveSearch}.
  *
- * The generic parameter controls the shape of `items` and defaults to the
- * built-in query's result type. Pass a custom query type to narrow `items`
- * to match your custom fragments.
+ * The generic parameter is the shape of `items` and defaults to the
+ * built-in query's items. Supply the items type produced by your custom
+ * fragments to type the result.
  */
 export type PredictiveSearchData<
   TItems = PredictiveSearchItemsForQuery<typeof predictiveSearchQueries.predictiveSearch>,
 > = {
   /** Trimmed search term that produced this result. */
   term: string;
-  /** Total number of items across all resource types. */
+  /** Number of items returned, summed across every array in `items` (including query suggestions). Not a total match count. */
   total: number;
   /** Predictive search items grouped by resource type. */
   items: TItems;
@@ -73,15 +73,15 @@ export type QueryPredictiveSearchOptions<
   storefrontClient: Pick<StorefrontClient, "graphql">;
   /** Search term. Trimmed before use; empty or whitespace-only terms return an empty result without a network request. */
   term: string;
-  /** Custom GraphQL query document. Defaults to the built-in predictive search query created by {@link makePredictiveSearchQueries}. */
+  /** Custom GraphQL query document, usually created with `makePredictiveSearchQueries`. Must declare the same variables as the built-in query (`$term`, `$limit`, `$limitScope`, `$types`, `$searchableFields`, `$unavailableProducts`). */
   query?: TQuery;
-  /** Maximum result count. Clamped to 1–10 and truncated to an integer. Defaults to {@link DEFAULT_PREDICTIVE_SEARCH_LIMIT} (5). */
+  /** Maximum result count. Truncated to an integer, then clamped to the Storefront API's accepted range (1-10). Omitted or non-finite values use Hydrogen's default of 5 (the Storefront API's own default is 10). */
   limit?: number;
-  /** Whether the limit applies to each resource type independently or to all types combined. Defaults to `"EACH"`. */
+  /** Whether the limit applies to each resource type independently or to all types combined. Defaults to `"EACH"` (the Storefront API's own default is `"ALL"`). */
   limitScope?: PredictiveSearchLimitScope;
-  /** Resource types to include. When omitted, the Storefront API searches all types. */
+  /** Resource types to include. When omitted, the Storefront API uses the shop's predictive search type settings, which exclude articles by default. Pass `types` explicitly to control which result arrays are populated. */
   types?: PredictiveSearchType[];
-  /** Fields to search within. When omitted, the Storefront API searches all fields. */
+  /** Fields to search within. When omitted, the Storefront API searches its default field set (title, product type, variant title, and vendor), not every field. */
   searchableFields?: SearchableField[];
   /** How to handle unavailable products. Defaults to `"HIDE"`. */
   unavailableProducts?: SearchUnavailableProductsType;
@@ -117,11 +117,11 @@ type PredictiveSearchGraphql<TItems> = (
 ) => Promise<PredictiveSearchQueryResult<TItems>>;
 
 /**
- * Returns a zero-result {@link PredictiveSearchData} payload with empty arrays
+ * Returns a zero-result `PredictiveSearchData` payload with empty arrays
  * for every resource type.
  *
- * Used internally when the search term is empty, and available for consumers
- * that need a type-safe initial or fallback value.
+ * Used internally for empty terms and for the store's idle state. Typed
+ * with the default items shape.
  */
 export function getEmptyPredictiveSearchResult(term = ""): PredictiveSearchData {
   return {
@@ -141,12 +141,9 @@ export function getEmptyPredictiveSearchResult(term = ""): PredictiveSearchData 
  * Executes a predictive search query against the Storefront API and returns
  * the data payload.
  *
- * This is a convenience wrapper around {@link fetchPredictiveSearch} that
- * discards the response headers. Use `fetchPredictiveSearch` when you need
- * cache or timing headers from the response.
- *
  * @throws {Error} When the Storefront API returns GraphQL errors.
  * @throws {Error} When the response contains no predictive search data.
+ * @throws Errors from `storefrontClient.graphql` (e.g. network failures or an `AbortError` when `signal` aborts).
  */
 export async function queryPredictiveSearch<
   const TQuery extends AnyStorefrontQueryString = typeof predictiveSearchQueries.predictiveSearch,
@@ -159,13 +156,12 @@ export async function queryPredictiveSearch<
  * Executes a predictive search query against the Storefront API and returns
  * both the data payload and response headers.
  *
- * The term is trimmed before use. An empty or whitespace-only term returns
- * an empty result without making a network request. The limit is clamped to
- * 1–10 and truncated to an integer. The `total` in the returned data is the
- * sum of items across all resource type arrays.
+ * See `QueryPredictiveSearchOptions` for option defaults and
+ * `PredictiveSearchData` for the shape of the returned data.
  *
  * @throws {Error} When the Storefront API returns GraphQL errors.
  * @throws {Error} When the response contains no predictive search data.
+ * @throws Errors from `storefrontClient.graphql` (e.g. network failures or an `AbortError` when `signal` aborts).
  */
 export async function fetchPredictiveSearch<
   const TQuery extends AnyStorefrontQueryString = typeof predictiveSearchQueries.predictiveSearch,
