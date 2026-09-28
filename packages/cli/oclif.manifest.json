@@ -1290,7 +1290,7 @@
           "required": true
         }
       },
-      "description": "Generates a standard Shopify route.",
+      "description": "Generates a set of default routes from the starter template.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenGenerateRoutesResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"routes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Route\"\n      }\n    },\n    \"routeGroups\": {\n      \"type\": \"object\",\n      \"additionalProperties\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"isTypescript\": {\n      \"type\": \"boolean\"\n    }\n  },\n  \"required\": [\n    \"routes\",\n    \"routeGroups\",\n    \"isTypescript\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenGenerateRoutesResult\",\n  \"definitions\": {\n    \"Route\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"sourceRoute\": {\n          \"type\": \"string\"\n        },\n        \"destinationRoute\": {\n          \"type\": \"string\"\n        },\n        \"operation\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"created\",\n            \"skipped\",\n            \"replaced\"\n          ]\n        }\n      },\n      \"required\": [\n        \"sourceRoute\",\n        \"destinationRoute\",\n        \"operation\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1319,6 +1319,15 @@
           "env": "SHOPIFY_FLAG_VERBOSE",
           "hidden": false,
           "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1383,7 +1392,7 @@
     "hydrogen:generate:routes": {
       "aliases": [],
       "args": {},
-      "description": "Generates all supported standard shopify routes.",
+      "description": "Generates all supported standard shopify routes.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenGenerateRoutesResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"routes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Route\"\n      }\n    },\n    \"routeGroups\": {\n      \"type\": \"object\",\n      \"additionalProperties\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"isTypescript\": {\n      \"type\": \"boolean\"\n    }\n  },\n  \"required\": [\n    \"routes\",\n    \"routeGroups\",\n    \"isTypescript\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenGenerateRoutesResult\",\n  \"definitions\": {\n    \"Route\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"sourceRoute\": {\n          \"type\": \"string\"\n        },\n        \"destinationRoute\": {\n          \"type\": \"string\"\n        },\n        \"operation\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"created\",\n            \"skipped\",\n            \"replaced\"\n          ]\n        }\n      },\n      \"required\": [\n        \"sourceRoute\",\n        \"destinationRoute\",\n        \"operation\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1412,6 +1421,15 @@
           "env": "SHOPIFY_FLAG_VERBOSE",
           "hidden": false,
           "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1463,6 +1481,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
+      "descriptionWithMarkdown": "Generates all supported standard shopify routes.",
       "isESM": true,
       "relativePath": [
         "dist",
