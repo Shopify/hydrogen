@@ -46,6 +46,14 @@ test("collection filter narrows products", async ({ data, page }) => {
   if (filter.expectedResultCount !== null) {
     expect(resultCount).toBeLessThanOrEqual(filter.expectedResultCount);
   }
+
+  await page.goBack();
+  await expect(page).toHaveURL(beforeUrl);
+  // Confirm the positional locator still points at the same filter before checking its state.
+  await expect
+    .poll(async () => normalizeLabel(await controlText(filter.control)))
+    .toBe(filter.label);
+  await expect(filter.control).not.toBeChecked();
 });
 
 async function uniqueProductLinkCount(page: Page, productPathSegment: string): Promise<number> {
