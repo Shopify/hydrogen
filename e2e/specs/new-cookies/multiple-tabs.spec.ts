@@ -12,6 +12,10 @@ import {
  */
 setTestStore('defaultConsentDisallowed_cookiesEnabled');
 
+// Significant edge case, shipped knowingly: it needs two tabs open with a
+// revocation in one and client-side navigation in the other; the next full
+// page load applies it. A fast follow-up in the Customer Privacy API
+// (consent-tracking-api) will fix it; remove test.fail once it ships.
 const CROSS_TAB_REVOCATION_REASON =
   'Known gap: each tab keeps its in-memory consent cache, so a revocation in another tab is not applied until the next full page load';
 

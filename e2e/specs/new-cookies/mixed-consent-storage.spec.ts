@@ -18,6 +18,11 @@ setTestStore('defaultConsentAllowed_cookiesEnabled');
 // sessionStorage key the Customer Privacy API caches consent headers under.
 const CONSENT_HEADER_STORAGE_KEY = 'consentHeader';
 
+// Significant edge case, shipped knowingly: it needs a tab left open across
+// the deploy that enables async consent, a consent change after the deploy,
+// and a reload in that same tab. A fast follow-up in the Customer Privacy API
+// (consent-tracking-api) will fix it by sending the consent request unless
+// this page already holds a backend response; remove test.fail once it ships.
 const STALE_CONSENT_HEADER_REASON =
   'Known gap: a consentHeader left in sessionStorage counts as stored consent, so the Customer Privacy API marks consent loaded without a request and applies the stale value';
 
