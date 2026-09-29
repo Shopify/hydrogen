@@ -55,8 +55,9 @@ Dependencies:
   uses this template's configured output without relying on a Hydrogen version sniff.
 - **Package manager:** use `pnpm@10.33.0` in the source template so the monorepo has one package manager and lockfile.
   The preview dist compiler changes the standalone template to `npm@11.17.0` before generating `package-lock.json`.
-- **`@shopify/mini-oxygen`: pin `^4.2.0`** — its `oxygen()` plugin adds `configurePreviewServer`, which `vite preview`
-  needs to run the Worker.
+- **`@shopify/mini-oxygen`: use `workspace:*` in this repository**, like `@shopify/hydrogen`. The release flow pins it
+  to the version in `packages/mini-oxygen/package.json` before standalone lockfile generation. Its `oxygen()` plugin
+  adds `configurePreviewServer`, which `vite preview` needs to run the Worker.
 - Add `"engines": {"node": "^22 || ^24"}`.
 - Replace `catalog:` ranges with npm-compatible semver ranges. Keep `@types/node` in `devDependencies` (build tooling
   such as `vite.config.ts` needs it) even though it is dropped from the app tsconfig `types` (see "Env and types").

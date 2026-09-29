@@ -42,8 +42,9 @@ export default {
   },
 };
 
-// Local HTTPS terminates in Vite, so the worker sees `http:`. Customer Account
-// OAuth needs the public `https:` origin.
+// Behind a proxy that terminates TLS, such as a tunnel, the worker sees `http:`
+// with `x-forwarded-proto: https`. Customer Account OAuth needs the public
+// `https:` origin.
 function toPublicRequest(request: Request): Request {
   const url = new URL(request.url);
   if (url.protocol !== "http:" || request.headers.get("x-forwarded-proto") !== "https") {

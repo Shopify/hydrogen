@@ -25,6 +25,7 @@
     "!scripts/copy-hydrogen-to-preview*.ts",
     "!scripts/preview-template-dist*.ts",
     "!scripts/test-local-https.ts",
+    "!scripts/workspace-vite.test.ts",
     "examples/**",
     "!examples/shared/local-cdn-assets-plugin/**/*.ts",
     "examples/hydrogen/**",
