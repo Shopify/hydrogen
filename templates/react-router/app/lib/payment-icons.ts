@@ -26,6 +26,5 @@ const PAYMENT_METHOD_ICON_URLS: Record<PaymentMethodLabel, string | null> = {
 
 /** Returns the official Shopify icon URL for a payment method, or `null` for text only. */
 export function getPaymentMethodIconUrl(method: PaymentMethodLabel): string | null {
-  // Values can arrive untyped at runtime; never return an Object.prototype member.
-  return Object.hasOwn(PAYMENT_METHOD_ICON_URLS, method) ? PAYMENT_METHOD_ICON_URLS[method] : null;
+  return PAYMENT_METHOD_ICON_URLS[method];
 }
