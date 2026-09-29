@@ -1,14 +1,4 @@
 {
-  "mode": "pre",
-  "tag": "preview",
-  "changesets": [
-    "account-script",
-    "cart-metafields-skill",
-    "mock-shop-store-catalog",
-    "product-line-attributes",
-    "quiet-cart-aborts",
-    "skills-check-command",
-    "skills-sync-command",
-    "ucp-mcp-proxy"
-  ]
+  "mode": "exit",
+  "tag": "preview"
 }
