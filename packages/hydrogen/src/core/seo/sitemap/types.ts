@@ -20,16 +20,25 @@ export type SitemapChangeFrequency =
   | "yearly"
   | "never";
 
-/** One resource from the Storefront API sitemap, as passed to URL callbacks. */
-export type SitemapResource = {
-  type: SitemapResourceType;
+type SitemapResourceBase = {
   handle: string;
   updatedAt: string;
-  /** Metaobject definition type, for `metaobjects` only. */
-  metaobjectType?: string;
-  /** Online Store URL handle for the metaobject definition, for `metaobjects` only. */
-  onlineStoreUrlHandle?: string | null;
 };
+
+export type SitemapStandardResource = SitemapResourceBase & {
+  type: Exclude<SitemapResourceType, "metaobjects">;
+};
+
+export type SitemapMetaobjectResource = SitemapResourceBase & {
+  type: "metaobjects";
+  /** Metaobject definition type. */
+  metaobjectType: string;
+  /** Online Store URL handle for the metaobject definition, or `null` when it has none. */
+  onlineStoreUrlHandle: string | null;
+};
+
+/** One resource from the Storefront API sitemap, as passed to URL callbacks. Narrow on `type`. */
+export type SitemapResource = SitemapStandardResource | SitemapMetaobjectResource;
 
 export interface CreateSitemapServerHandlersOptions {
   /**
@@ -82,10 +91,9 @@ export interface CreateSitemapServerHandlersOptions {
    */
   pagePath?: string;
   /**
-   * Caching strategy for the Storefront API sitemap queries and the
-   * `Cache-Control` header on the XML responses. Defaults to `Cache.long()`.
-   * The query cache only applies when the Storefront client was created with a
-   * `cache` instance; the response header always applies.
+   * Caching strategy for the `Cache-Control` header on the XML responses and,
+   * when the Storefront client was created with a `cache` instance, for the
+   * sitemap queries themselves. Defaults to `Cache.long()`.
    */
   cache?: CachingStrategy;
   /**
@@ -112,8 +120,12 @@ export interface CreateRobotsTxtOptions {
   sitemapPath?: string;
   /** The app's route templates, so custom cart, search, collection, and blog paths are covered. */
   routeTemplates?: ShopifyRouteTemplates;
-  /** Locale path prefixes the storefront serves, for example `["/fr-ca", "/es"]`. */
-  pathPrefixes?: readonly string[];
+  /**
+   * Every locale the storefront serves, the same list passed to the sitemap
+   * handlers. When any locale has a `pathPrefix`, each rule is repeated under a
+   * `/*` wildcard prefix, as Shopify's default `robots.txt` does.
+   */
+  locales?: readonly LanguageAlternateLocale[];
   /** Extra `Disallow` paths appended to the `*` group. */
   disallow?: readonly string[];
   /** Extra `Allow` paths appended to the `*` group. */

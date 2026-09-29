@@ -28,7 +28,7 @@ import { createRequestCustomerAccount, customerAccountContext } from "~/lib/cust
 import { envContext } from "~/lib/env";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
-import { createSeoHandlers } from "~/lib/seo";
+import { getSeoHandlers, getSiteOrigin } from "~/lib/seo";
 import { createEphemeralSessionManager } from "~/lib/session";
 import { analyticsConsent, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
 import {
@@ -68,7 +68,7 @@ export const middleware: Route.MiddlewareFunction[] = [
       routeTemplates,
       handlers: [
         cartHandlers,
-        ...createSeoHandlers(env),
+        ...getSeoHandlers(env),
         ...(customerAccount ? [customerAccount.handlers] : []),
       ],
     });
@@ -109,7 +109,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     cartData: cartResult.data,
     shopInfo: layout.shopInfo,
     shopIdentity: resolveShopIdentity(env, layout.shopId),
-    siteOrigin: env.PUBLIC_SITE_ORIGIN || new URL(request.url).origin,
+    siteOrigin: getSiteOrigin(env, request),
   };
 }
 

@@ -47,8 +47,15 @@ describe("createRobotsTxt", () => {
     expect(body).not.toContain("Disallow: /cart\n");
   });
 
-  it("adds locale wildcard variants when path prefixes exist", () => {
-    const body = createRobotsTxt({ origin: ORIGIN, pathPrefixes: ["/fr-ca", "es"] });
+  it("adds locale wildcard variants when any locale has a path prefix", () => {
+    expect(createRobotsTxt({ origin: ORIGIN, locales: [{ hrefLang: "en-US" }] })).not.toContain(
+      "/*/cart",
+    );
+
+    const body = createRobotsTxt({
+      origin: ORIGIN,
+      locales: [{ hrefLang: "en-US" }, { hrefLang: "fr-CA", pathPrefix: "/fr-ca" }],
+    });
 
     expect(body).toContain("Disallow: /cart\nDisallow: /*/cart\n");
     expect(body).toContain("Allow: /account/login\nAllow: /*/account/login\n");

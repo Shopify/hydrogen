@@ -1,3 +1,5 @@
+import type { LanguageAlternate } from "../types";
+
 const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>';
 const SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
@@ -15,31 +17,16 @@ export function escapeXml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => XML_ESCAPES[character] ?? character);
 }
 
-export type SitemapIndexEntry = {
-  loc: string;
-  lastmod?: string;
-};
-
-export type SitemapUrlAlternate = {
-  hrefLang: string;
-  href: string;
-};
-
 export type SitemapUrlEntry = {
   loc: string;
   lastmod?: string;
   changefreq?: string;
-  alternates?: readonly SitemapUrlAlternate[];
+  alternates?: readonly LanguageAlternate[];
 };
 
-/** Renders a `<sitemapindex>` document. */
-export function renderSitemapIndex(entries: readonly SitemapIndexEntry[]): string {
-  const body = entries
-    .map((entry) => {
-      const lastmod = entry.lastmod ? `<lastmod>${escapeXml(entry.lastmod)}</lastmod>` : "";
-      return `  <sitemap><loc>${escapeXml(entry.loc)}</loc>${lastmod}</sitemap>`;
-    })
-    .join("\n");
+/** Renders a `<sitemapindex>` document from child sitemap URLs. */
+export function renderSitemapIndex(locs: readonly string[]): string {
+  const body = locs.map((loc) => `  <sitemap><loc>${escapeXml(loc)}</loc></sitemap>`).join("\n");
 
   return `${XML_DECLARATION}\n<sitemapindex xmlns="${SITEMAP_NS}">\n${body}\n</sitemapindex>\n`;
 }

@@ -48,6 +48,21 @@ export function getCacheRetentionTtl(strategy: CachingStrategy): number {
   );
 }
 
+/**
+ * `Cache-Control` for a browser or CDN response. Unlike the platform header,
+ * stale directives stay separate so downstream caches revalidate correctly.
+ */
+export function getResponseCacheControlHeader(strategy: CachingStrategy): string {
+  if (strategy.mode === NO_STORE) return NO_STORE;
+
+  const directives = [strategy.mode ?? PUBLIC, `max-age=${Math.ceil(strategy.maxAge ?? 0)}`];
+  if (strategy.staleWhileRevalidate) {
+    directives.push(`stale-while-revalidate=${Math.ceil(strategy.staleWhileRevalidate)}`);
+  }
+  if (strategy.staleIfError) directives.push(`stale-if-error=${Math.ceil(strategy.staleIfError)}`);
+  return directives.join(", ");
+}
+
 export function getPlatformCacheControlHeader(strategy: CachingStrategy): string {
   const ttl = getCacheRetentionTtl(strategy);
   if (ttl <= 0) return NO_STORE;

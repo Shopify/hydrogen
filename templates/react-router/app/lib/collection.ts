@@ -80,10 +80,15 @@ export async function loadCollectionPage({
   storefrontClient,
   handle,
   request,
+  siteOrigin,
+  canonicalUrl,
 }: {
   storefrontClient: StorefrontClient;
   handle: string;
   request: Request;
+  /** Trusted site origin for breadcrumb JSON-LD. */
+  siteOrigin: string;
+  canonicalUrl: string;
 }) {
   const url = new URL(request.url);
   const browse = parseCollectionParams(url.searchParams);
@@ -110,6 +115,7 @@ export async function loadCollectionPage({
     pageInfo: data.collection.products.pageInfo,
     currencyCode: data.shop.paymentSettings.currencyCode,
     dataSearch: url.searchParams.toString(),
-    origin: url.origin,
+    origin: siteOrigin,
+    canonicalUrl,
   };
 }

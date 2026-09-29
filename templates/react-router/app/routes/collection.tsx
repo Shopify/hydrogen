@@ -15,13 +15,14 @@ import {
 import { BreadcrumbJsonLd } from "~/components/JsonLd";
 import { ProductCard } from "~/components/ProductCard";
 import { loadCollectionPage } from "~/lib/collection";
-import { canonicalLink } from "~/lib/seo";
+import { envContext } from "~/lib/env";
+import { canonicalLink, getPageCanonicalUrl, getSiteOrigin } from "~/lib/seo";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/collection";
 
-export function meta({ data, location, matches }: Route.MetaArgs) {
+export function meta({ data, matches }: Route.MetaArgs) {
   const shopName = getShopNameFromRootMatch(matches[0]);
   return [
     { title: formatPageTitle(data?.collection.title ?? "Collection", shopName) },
@@ -29,7 +30,7 @@ export function meta({ data, location, matches }: Route.MetaArgs) {
       name: "description",
       content: data?.collection.description || `Shop the ${shopName} collection page.`,
     },
-    ...(data ? [canonicalLink(data.origin, location)] : []),
+    ...(data ? [canonicalLink(data.canonicalUrl)] : []),
   ];
 }
 
@@ -38,7 +39,14 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   if (!handle) throw new Response("Not Found", { status: 404 });
 
   const storefrontClient = context.get(storefrontClientContext);
-  return loadCollectionPage({ storefrontClient, handle, request });
+  const env = context.get(envContext);
+  return loadCollectionPage({
+    storefrontClient,
+    handle,
+    request,
+    siteOrigin: getSiteOrigin(env, request),
+    canonicalUrl: getPageCanonicalUrl(env, request),
+  });
 }
 
 type CollectionData = Route.ComponentProps["loaderData"]["collection"];

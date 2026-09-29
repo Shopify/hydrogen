@@ -3,13 +3,14 @@ import { Link } from "react-router";
 import { CollectionCard } from "~/components/CollectionCard";
 import { BreadcrumbJsonLd } from "~/components/JsonLd";
 import { loadCollectionsPage } from "~/lib/collections";
-import { canonicalLink } from "~/lib/seo";
+import { envContext } from "~/lib/env";
+import { canonicalLink, getPageCanonicalUrl, getSiteOrigin } from "~/lib/seo";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/collections";
 
-export function meta({ data, location, matches }: Route.MetaArgs) {
+export function meta({ data, matches }: Route.MetaArgs) {
   const shopName = getShopNameFromRootMatch(matches[0]);
   return [
     { title: formatPageTitle("Collections", shopName) },
@@ -17,13 +18,19 @@ export function meta({ data, location, matches }: Route.MetaArgs) {
       name: "description",
       content: `Browse all ${shopName} collections.`,
     },
-    ...(data ? [canonicalLink(data.origin, location)] : []),
+    ...(data ? [canonicalLink(data.canonicalUrl)] : []),
   ];
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const storefrontClient = context.get(storefrontClientContext);
-  return loadCollectionsPage({ storefrontClient, request });
+  const env = context.get(envContext);
+  return loadCollectionsPage({
+    storefrontClient,
+    request,
+    siteOrigin: getSiteOrigin(env, request),
+    canonicalUrl: getPageCanonicalUrl(env, request),
+  });
 }
 
 type CollectionNode = Route.ComponentProps["loaderData"]["collections"]["nodes"][number];

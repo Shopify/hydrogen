@@ -54,13 +54,10 @@ function imageUrl(image: string | { url: string }): string {
 }
 
 function nonEmpty(value: string | null | undefined): string | undefined {
-  return value ? value : undefined;
+  return value || undefined;
 }
 
-function createOffer<TVariant extends ProductJsonLdVariant>(
-  variant: TVariant,
-  url: string,
-): Record<string, unknown> {
+function createOffer(variant: ProductJsonLdVariant, url: string): Record<string, unknown> {
   return {
     "@type": "Offer",
     url,
@@ -79,10 +76,10 @@ function orderImages(
   const urls = (images ?? []).map(imageUrl);
   const selectedImage = selectedVariant?.image?.url;
 
-  if (selectedImage) {
+  if (selectedImage && urls[0] !== selectedImage) {
     const index = urls.indexOf(selectedImage);
     if (index > 0) urls.splice(index, 1);
-    if (index !== 0) urls.unshift(selectedImage);
+    urls.unshift(selectedImage);
   }
 
   return urls.length > 0 ? urls : undefined;

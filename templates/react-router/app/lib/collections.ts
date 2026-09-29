@@ -27,9 +27,14 @@ type CollectionsQueryVariables = StorefrontApi.VariablesOf<typeof COLLECTIONS_QU
 export async function loadCollectionsPage({
   storefrontClient,
   request,
+  siteOrigin,
+  canonicalUrl,
 }: {
   storefrontClient: StorefrontClient;
   request: Request;
+  /** Trusted site origin for breadcrumb JSON-LD. */
+  siteOrigin: string;
+  canonicalUrl: string;
 }) {
   const url = new URL(request.url);
   const variables: CollectionsQueryVariables = {
@@ -44,6 +49,7 @@ export async function loadCollectionsPage({
       nodes: [],
       pageInfo: { hasNextPage: false, endCursor: null },
     },
-    origin: url.origin,
+    origin: siteOrigin,
+    canonicalUrl,
   };
 }

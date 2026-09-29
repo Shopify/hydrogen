@@ -3,11 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createStorefrontClient } from "../../client/client";
 import { createShopifyRequestContext } from "../request-context";
 import { handleShopifyRoutes } from "./handle-shopify-routes";
-import {
-  createShopifyRouteHandler,
-  isTemplatePathname,
-  matchTemplatePathname,
-} from "./registered-routes";
+import { createShopifyRouteHandler } from "./registered-routes";
 
 function createTestSessionManager(request: Request) {
   const data = new Map<string, unknown>();
@@ -41,37 +37,6 @@ function handle(request: Request, handlers: Parameters<typeof handleShopifyRoute
     handlers,
   });
 }
-
-describe("matchTemplatePathname", () => {
-  it("captures segments and literal suffixes", () => {
-    expect(matchTemplatePathname("/sitemap/:type/:page.xml", "/sitemap/products/12.xml")).toEqual({
-      type: "products",
-      page: "12",
-    });
-  });
-
-  it("decodes captured segments", () => {
-    expect(matchTemplatePathname("/items/:handle", "/items/caf%C3%A9")).toEqual({
-      handle: "café",
-    });
-  });
-
-  it("does not match across segments or without the suffix", () => {
-    expect(matchTemplatePathname("/sitemap/:type/:page.xml", "/sitemap/products/1")).toBeNull();
-    expect(matchTemplatePathname("/sitemap/:type/:page.xml", "/sitemap/a/b/1.xml")).toBeNull();
-  });
-
-  it("treats regex characters in templates literally", () => {
-    expect(matchTemplatePathname("/feed.:format", "/feedXjson")).toBeNull();
-    expect(matchTemplatePathname("/feed.:format", "/feed.json")).toEqual({ format: "json" });
-  });
-
-  it("detects template pathnames repeatedly", () => {
-    expect(isTemplatePathname("/sitemap/:type/:page.xml")).toBe(true);
-    expect(isTemplatePathname("/sitemap/:type/:page.xml")).toBe(true);
-    expect(isTemplatePathname("/sitemap.xml")).toBe(false);
-  });
-});
 
 describe("registered route handlers", () => {
   it("passes template params to the handler", async () => {

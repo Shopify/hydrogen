@@ -10,14 +10,14 @@ describe("sitemap xml", () => {
   it("renders a sitemap index", () => {
     expect(
       renderSitemapIndex([
-        { loc: "https://example.com/sitemap/products/1.xml" },
-        { loc: "https://example.com/custom.xml?a=1&b=2", lastmod: "2026-01-01T00:00:00Z" },
+        "https://example.com/sitemap/products/1.xml",
+        "https://example.com/custom.xml?a=1&b=2",
       ]),
     ).toBe(
       `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap><loc>https://example.com/sitemap/products/1.xml</loc></sitemap>
-  <sitemap><loc>https://example.com/custom.xml?a=1&amp;b=2</loc><lastmod>2026-01-01T00:00:00Z</lastmod></sitemap>
+  <sitemap><loc>https://example.com/custom.xml?a=1&amp;b=2</loc></sitemap>
 </sitemapindex>
 `,
     );

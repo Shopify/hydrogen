@@ -7,23 +7,40 @@ import type {
   GetCanonicalUrlOptions,
   GetLanguageAlternatesOptions,
   LanguageAlternate,
+  LanguageAlternateLocale,
 } from "./types";
 
-function toUrl(url: string | URL): URL {
-  return typeof url === "string" ? new URL(url) : new URL(url.href);
+/** Reduces a configured origin such as `https://example.com/ignored` to its origin. */
+export function normalizeOrigin(origin: string): string {
+  return new URL(origin).origin;
 }
 
 function applyOrigin(url: URL, origin: string | undefined): URL {
-  if (!origin) return url;
-
-  const trusted = new URL(origin);
-  return new URL(`${url.pathname}${url.search}`, trusted.origin);
+  return origin ? new URL(`${url.pathname}${url.search}`, normalizeOrigin(origin)) : url;
 }
 
 function applyTrailingSlash(pathname: string, trailingSlash: boolean): string {
   const stripped = stripTrailingSlash(pathname);
   if (!trailingSlash || stripped === "/") return stripped;
   return `${stripped}/`;
+}
+
+function toCanonicalUrl(url: string | URL, options: GetCanonicalUrlOptions): URL {
+  const { origin, keepSearchParams = [], trailingSlash = false } = options;
+
+  const canonical = applyOrigin(new URL(url), origin);
+  canonical.hash = "";
+  canonical.pathname = applyTrailingSlash(canonical.pathname, trailingSlash);
+
+  const keep = new Set(keepSearchParams);
+  const kept = new URLSearchParams();
+  for (const [key, value] of canonical.searchParams) {
+    if (keep.has(key)) kept.append(key, value);
+  }
+  kept.sort();
+  canonical.search = kept.toString();
+
+  return canonical;
 }
 
 /**
@@ -41,21 +58,32 @@ function applyTrailingSlash(pathname: string, trailingSlash: boolean): string {
  * ```
  */
 export function getCanonicalUrl(url: string | URL, options: GetCanonicalUrlOptions = {}): string {
-  const { origin, keepSearchParams = [], trailingSlash = false } = options;
+  return toCanonicalUrl(url, options).toString();
+}
 
-  const canonical = applyOrigin(toUrl(url), origin);
-  canonical.hash = "";
-  canonical.pathname = applyTrailingSlash(canonical.pathname, trailingSlash);
+/**
+ * Pairs each locale with its localized href and appends `x-default` for the
+ * locale named by `xDefault`. Shared by `<link rel="alternate">` output and
+ * sitemap `xhtml:link` output so the hreflang rule has one implementation.
+ */
+export function buildLanguageAlternates(
+  locales: readonly LanguageAlternateLocale[],
+  hrefs: readonly string[],
+  xDefault: string | undefined,
+): LanguageAlternate[] {
+  const alternates = locales.map((locale, index) => ({
+    hrefLang: locale.hrefLang,
+    href: hrefs[index] ?? "",
+  }));
 
-  const keep = new Set(keepSearchParams);
-  const kept = new URLSearchParams();
-  for (const [key, value] of canonical.searchParams) {
-    if (keep.has(key)) kept.append(key, value);
+  const defaultAlternate = xDefault
+    ? alternates.find((alternate) => alternate.hrefLang === xDefault)
+    : undefined;
+  if (defaultAlternate) {
+    alternates.push({ hrefLang: "x-default", href: defaultAlternate.href });
   }
-  kept.sort();
-  canonical.search = kept.toString();
 
-  return canonical.toString();
+  return alternates;
 }
 
 /**
@@ -84,20 +112,11 @@ export function getLanguageAlternates(
 ): LanguageAlternate[] {
   const { locales, currentPathPrefix, origin, xDefault } = options;
 
-  const canonical = new URL(getCanonicalUrl(url, { origin }));
+  const canonical = toCanonicalUrl(url, { origin });
   const pathname = stripI18nPathPrefix(canonical.pathname, currentPathPrefix);
+  const hrefs = locales.map((locale) =>
+    new URL(prependPathPrefix(pathname, locale.pathPrefix), canonical.origin).toString(),
+  );
 
-  const alternates = locales.map((locale) => ({
-    hrefLang: locale.hrefLang,
-    href: new URL(prependPathPrefix(pathname, locale.pathPrefix), canonical.origin).toString(),
-  }));
-
-  const defaultAlternate = xDefault
-    ? alternates.find((alternate) => alternate.hrefLang === xDefault)
-    : undefined;
-  if (defaultAlternate) {
-    alternates.push({ hrefLang: "x-default", href: defaultAlternate.href });
-  }
-
-  return alternates;
+  return buildLanguageAlternates(locales, hrefs, xDefault);
 }

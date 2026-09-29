@@ -1,3 +1,8 @@
+import {
+  compileRouteTemplate,
+  isRouteTemplate,
+  matchRouteTemplate,
+} from "../standard-routes/route-template";
 import type {
   CallableRouteHandler,
   HydrogenRouteInterceptor,
@@ -83,60 +88,40 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   return match.handler(context).then((result) => createShopifyRouteResponse(result, request));
 };
 
+const EMPTY_PARAMS: Readonly<Record<string, string>> = Object.freeze({});
+// Template pathnames compile once per process; literal pathnames map to `null`.
+const compiledPathnames = new Map<string, RegExp | null>();
+
+function getCompiledPathname(pathname: string): RegExp | null {
+  let pattern = compiledPathnames.get(pathname);
+  if (pattern === undefined) {
+    pattern = isRouteTemplate(pathname) ? compileRouteTemplate(pathname) : null;
+    compiledPathnames.set(pathname, pattern);
+  }
+  return pattern;
+}
+
 /**
  * Handlers registered with a literal pathname match exactly and win over
  * handlers registered with a template pathname such as `/sitemap/:type/:page.xml`.
  */
 function matchRouteHandlers(routeHandlers: ShopifyRouteHandler[], pathname: string): PathMatch[] {
-  const exactMatches = routeHandlers
-    .filter((handler) => handler.pathname === pathname)
-    .map((handler) => ({ handler, params: {} }));
-  if (exactMatches.length > 0) return exactMatches;
-
+  const exactMatches: PathMatch[] = [];
   const templateMatches: PathMatch[] = [];
-  for (const handler of routeHandlers) {
-    if (!isTemplatePathname(handler.pathname)) continue;
 
-    const params = matchTemplatePathname(handler.pathname, pathname);
+  for (const handler of routeHandlers) {
+    if (handler.pathname === pathname) {
+      exactMatches.push({ handler, params: EMPTY_PARAMS });
+      continue;
+    }
+    if (exactMatches.length > 0) continue;
+
+    const pattern = getCompiledPathname(handler.pathname);
+    const params = pattern ? matchRouteTemplate(pattern, pathname) : null;
     if (params) templateMatches.push({ handler, params });
   }
 
-  return templateMatches;
-}
-
-const TEMPLATE_PARAM_RE = /:([A-Za-z][A-Za-z0-9_]*)/g;
-const HAS_TEMPLATE_PARAM_RE = /:[A-Za-z]/;
-
-export function isTemplatePathname(pathname: string): boolean {
-  return HAS_TEMPLATE_PARAM_RE.test(pathname);
-}
-
-/**
- * Matches a pathname against a handler template. Each `:param` captures one
- * path segment (or the part of a segment before a literal suffix such as
- * `.xml`) and is URL-decoded.
- */
-export function matchTemplatePathname(
-  template: string,
-  pathname: string,
-): Readonly<Record<string, string>> | null {
-  const source = template
-    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    .replace(TEMPLATE_PARAM_RE, (_placeholder, name: string) => `(?<${name}>[^/]+?)`);
-  const match = new RegExp(`^${source}$`).exec(pathname);
-  if (!match) return null;
-
-  const params: Record<string, string> = {};
-  for (const [name, value] of Object.entries(match.groups ?? {})) {
-    if (value === undefined) continue;
-    try {
-      params[name] = decodeURIComponent(value);
-    } catch {
-      params[name] = value;
-    }
-  }
-
-  return params;
+  return exactMatches.length > 0 ? exactMatches : templateMatches;
 }
 
 function createShopifyRouteResponse(result: ShopifyRouteHandlerResult, request: Request): Response {

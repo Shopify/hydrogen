@@ -1,5 +1,7 @@
 import type { StorefrontClient } from "../../../client";
+import { withStorefrontClientCache } from "../../../client/client";
 import { Cache, type CachingStrategy } from "../../cache";
+import { getResponseCacheControlHeader, NO_STORE } from "../../cache/strategies";
 import { getLogger } from "../../logging";
 import type { ShopifyRequestContext } from "../../request-context";
 import { createCallableRouteHandler } from "../../request-routing/registered-routes";
@@ -10,12 +12,23 @@ import type {
 } from "../../request-routing/route-types";
 import { getStandardRoute } from "../../standard-routes/build";
 import { normalizePathPrefix, prependPathPrefix } from "../../standard-routes/path";
+import {
+  getRouteTemplateParamNames,
+  interpolateRouteTemplate,
+} from "../../standard-routes/route-template";
 import type { ShopifyRouteTemplates } from "../../standard-routes/types";
+import { buildLanguageAlternates, normalizeOrigin } from "../canonical";
 import type { LanguageAlternateLocale } from "../types";
 import {
+  DEFAULT_ROBOTS_TXT_PATH,
+  DEFAULT_SITEMAP_INDEX_PATH,
+  DEFAULT_SITEMAP_PAGE_PATH,
+  STATIC_SITEMAP_TYPE,
+} from "./constants";
+import {
+  isSitemapResourceType,
   SITEMAP_INDEX_QUERY,
   SITEMAP_PAGE_QUERY,
-  SITEMAP_RESOURCE_TYPES,
   SITEMAP_TYPE_BY_RESOURCE_TYPE,
 } from "./queries";
 import { createRobotsTxt } from "./robots";
@@ -30,16 +43,11 @@ import { renderSitemapIndex, renderSitemapUrlSet, type SitemapUrlEntry } from ".
 const log = getLogger("sitemap");
 
 const GET = "GET";
-const DEFAULT_INDEX_PATH = "/sitemap.xml";
-const DEFAULT_PAGE_PATH = "/sitemap/:type/:page.xml";
-const DEFAULT_ROBOTS_PATH = "/robots.txt";
 const DEFAULT_TYPES = ["products", "collections", "pages", "blogs"] as const;
-const STATIC_TYPE = "static";
 const HTTP_NOT_FOUND = 404;
 const HTTP_SERVICE_UNAVAILABLE = 503;
 const XML_CONTENT_TYPE = "application/xml; charset=utf-8";
 const TEXT_CONTENT_TYPE = "text/plain; charset=utf-8";
-const NO_STORE = "no-store";
 
 type SitemapHandlerContext = {
   request: Request;
@@ -60,8 +68,8 @@ type SitemapHandler<TPathname extends string> = CallableRouteHandler<
 >;
 
 export type SitemapServerHandlers<
-  TIndexPath extends string = typeof DEFAULT_INDEX_PATH,
-  TPagePath extends string = typeof DEFAULT_PAGE_PATH,
+  TIndexPath extends string = typeof DEFAULT_SITEMAP_INDEX_PATH,
+  TPagePath extends string = typeof DEFAULT_SITEMAP_PAGE_PATH,
 > = {
   /** Serves the sitemap index that links to every child sitemap. */
   index: SitemapHandler<TIndexPath>;
@@ -69,16 +77,16 @@ export type SitemapServerHandlers<
   page: SitemapHandler<TPagePath>;
 };
 
-type ResolvedSitemapOptions = Required<
-  Pick<
-    CreateSitemapServerHandlersOptions,
-    "types" | "routeTemplates" | "indexPath" | "pagePath" | "emptyPageFallbackPath"
-  >
-> &
-  Omit<
-    CreateSitemapServerHandlersOptions,
-    "types" | "routeTemplates" | "indexPath" | "pagePath" | "emptyPageFallbackPath"
-  >;
+type ResolvedSitemapOptions = CreateSitemapServerHandlersOptions & {
+  types: readonly SitemapResourceType[];
+  routeTemplates: ShopifyRouteTemplates;
+  staticPaths: readonly string[];
+  indexPath: string;
+  pagePath: string;
+  emptyPageFallbackPath: string;
+  cache: CachingStrategy;
+  cacheControl: string;
+};
 
 /**
  * Creates request handlers for a sitemap index and paginated child sitemaps
@@ -107,8 +115,8 @@ export function createSitemapServerHandlers<
 >(
   options: TOptions,
 ): SitemapServerHandlers<
-  TOptions["indexPath"] extends string ? TOptions["indexPath"] : typeof DEFAULT_INDEX_PATH,
-  TOptions["pagePath"] extends string ? TOptions["pagePath"] : typeof DEFAULT_PAGE_PATH
+  TOptions["indexPath"] extends string ? TOptions["indexPath"] : typeof DEFAULT_SITEMAP_INDEX_PATH,
+  TOptions["pagePath"] extends string ? TOptions["pagePath"] : typeof DEFAULT_SITEMAP_PAGE_PATH
 >;
 export function createSitemapServerHandlers(
   options: CreateSitemapServerHandlersOptions = {},
@@ -125,42 +133,50 @@ export function createSitemapServerHandlers(
   };
 }
 
-function resolveOptions(options: CreateSitemapServerHandlersOptions): ResolvedSitemapOptions {
-  const pagePath = options.pagePath ?? DEFAULT_PAGE_PATH;
-  if (!pagePath.includes(":type") || !pagePath.includes(":page")) {
+function validateOptions(options: CreateSitemapServerHandlersOptions, pagePath: string): void {
+  const paramNames = getRouteTemplateParamNames(pagePath);
+  if (!paramNames.includes("type") || !paramNames.includes("page")) {
     throw new Error(
       `createSitemapServerHandlers: pagePath "${pagePath}" must contain ":type" and ":page".`,
     );
   }
 
-  const types = options.types ?? DEFAULT_TYPES;
-  for (const type of types) {
-    if (!SITEMAP_RESOURCE_TYPES.includes(type)) {
+  for (const type of options.types ?? []) {
+    if (!isSitemapResourceType(type)) {
       throw new Error(`createSitemapServerHandlers: unknown sitemap type "${type}".`);
     }
   }
-  if (types.includes("articles") && !options.getResourceUrl) {
+  if (options.types?.includes("articles") && !options.getResourceUrl) {
     throw new Error(
       'createSitemapServerHandlers: "articles" requires getResourceUrl, because the Storefront API sitemap does not include the blog handle needed to build article URLs.',
     );
   }
+}
 
+function resolveOptions(options: CreateSitemapServerHandlersOptions): ResolvedSitemapOptions {
+  const pagePath = options.pagePath ?? DEFAULT_SITEMAP_PAGE_PATH;
+  validateOptions(options, pagePath);
+
+  const cache = options.cache ?? Cache.long();
   return {
     ...options,
-    types,
+    types: options.types ?? DEFAULT_TYPES,
     routeTemplates: options.routeTemplates ?? {},
-    indexPath: options.indexPath ?? DEFAULT_INDEX_PATH,
+    staticPaths: options.staticPaths ?? [],
+    indexPath: options.indexPath ?? DEFAULT_SITEMAP_INDEX_PATH,
     pagePath,
     emptyPageFallbackPath: options.emptyPageFallbackPath ?? "/",
+    cache,
+    cacheControl: getResponseCacheControlHeader(cache),
   };
 }
 
 function resolveOrigin(request: Request, origin: string | undefined): string {
-  return origin ? new URL(origin).origin : new URL(request.url).origin;
+  return origin ? normalizeOrigin(origin) : new URL(request.url).origin;
 }
 
 function buildPagePathname(pagePath: string, type: string, page: number): string {
-  return pagePath.replace(":type", type).replace(":page", String(page));
+  return interpolateRouteTemplate(pagePath, { type, page: String(page) });
 }
 
 async function handleIndex(
@@ -173,7 +189,7 @@ async function handleIndex(
   try {
     const { data, errors } = await storefrontClient.graphql(
       SITEMAP_INDEX_QUERY,
-      withCache({ variables: {} }, options.cache),
+      withStorefrontClientCache(storefrontClient, { variables: {} }, options.cache),
     );
     if (errors || !data) return unavailable("Sitemap index query failed", errors);
     pageCounts = Object.fromEntries(
@@ -183,39 +199,30 @@ async function handleIndex(
     return unavailable("Sitemap index query failed", error);
   }
 
-  return xmlResponse(
-    renderSitemapIndex(buildIndexEntries(origin, options, pageCounts)),
-    options.cache,
-  );
+  return xmlResponse(renderSitemapIndex(buildIndexLocs(origin, options, pageCounts)), options);
 }
 
-function buildIndexEntries(
+function buildIndexLocs(
   origin: string,
   options: ResolvedSitemapOptions,
   pageCounts: Partial<Record<SitemapResourceType, number>>,
-): { loc: string }[] {
-  const entries: { loc: string }[] = [];
+): string[] {
+  const locs: string[] = [];
 
   for (const type of options.types) {
     const count = pageCounts[type] ?? 0;
     for (let page = 1; page <= count; page++) {
-      entries.push({ loc: origin + buildPagePathname(options.pagePath, type, page) });
+      locs.push(origin + buildPagePathname(options.pagePath, type, page));
     }
   }
-  if (hasStaticPaths(options)) {
-    entries.push({ loc: origin + buildPagePathname(options.pagePath, STATIC_TYPE, 1) });
+  if (options.staticPaths.length > 0) {
+    locs.push(origin + buildPagePathname(options.pagePath, STATIC_SITEMAP_TYPE, 1));
   }
   for (const sitemap of options.additionalSitemaps ?? []) {
-    entries.push({ loc: new URL(sitemap, origin).toString() });
+    locs.push(new URL(sitemap, origin).toString());
   }
 
-  return entries;
-}
-
-function hasStaticPaths(
-  options: ResolvedSitemapOptions,
-): options is ResolvedSitemapOptions & { staticPaths: readonly string[] } {
-  return Boolean(options.staticPaths && options.staticPaths.length > 0);
+  return locs;
 }
 
 async function handlePage(
@@ -229,11 +236,11 @@ async function handlePage(
 
   const localize = createLocalizer(origin, options, requestContext.i18n.pathPrefix);
 
-  if (type === STATIC_TYPE && hasStaticPaths(options)) {
+  if (type === STATIC_SITEMAP_TYPE && options.staticPaths.length > 0) {
     if (page !== 1) return notFound(`Sitemap page ${page} not found for type "${type}"`);
     return xmlResponse(
       renderSitemapUrlSet(options.staticPaths.flatMap((pathname) => localize(pathname))),
-      options.cache,
+      options,
     );
   }
 
@@ -252,7 +259,7 @@ async function handlePage(
   });
   if (entries.length === 0) entries.push(...localize(options.emptyPageFallbackPath));
 
-  return xmlResponse(renderSitemapUrlSet(entries), options.cache);
+  return xmlResponse(renderSitemapUrlSet(entries), options);
 }
 
 async function fetchResources(
@@ -264,19 +271,24 @@ async function fetchResources(
   try {
     const { data, errors } = await storefrontClient.graphql(
       SITEMAP_PAGE_QUERY,
-      withCache({ variables: { type: SITEMAP_TYPE_BY_RESOURCE_TYPE[type], page } }, options.cache),
+      withStorefrontClientCache(
+        storefrontClient,
+        { variables: { type: SITEMAP_TYPE_BY_RESOURCE_TYPE[type], page } },
+        options.cache,
+      ),
     );
     if (errors || !data) return unavailable(`Sitemap query failed for type "${type}"`, errors);
 
-    return (data.sitemap.resources?.items ?? []).map((item) => ({
-      type,
-      handle: item.handle,
-      updatedAt: item.updatedAt,
-      ...("type" in item ? { metaobjectType: item.type } : {}),
-      ...("onlineStoreUrlHandle" in item
-        ? { onlineStoreUrlHandle: item.onlineStoreUrlHandle }
-        : {}),
-    }));
+    return (data.sitemap.resources?.items ?? []).map((item): SitemapResource => {
+      const base = { handle: item.handle, updatedAt: item.updatedAt };
+      if (type !== "metaobjects") return { type, ...base };
+      return {
+        type,
+        ...base,
+        metaobjectType: "type" in item ? item.type : "",
+        onlineStoreUrlHandle: "onlineStoreUrlHandle" in item ? item.onlineStoreUrlHandle : null,
+      };
+    });
   } catch (error) {
     return unavailable(`Sitemap query failed for type "${type}"`, error);
   }
@@ -318,8 +330,6 @@ function defaultResourcePathname(
     case "articles":
       // Article URLs need the blog handle, which the sitemap query does not return.
       return null;
-    default:
-      return null;
   }
 }
 
@@ -347,7 +357,7 @@ function createLocalizer(
   options: ResolvedSitemapOptions,
   requestPathPrefix: string | undefined,
 ): Localizer {
-  const toLoc = (pathname: string, pathPrefix: string | undefined) =>
+  const toLoc = (pathname: string, pathPrefix: string) =>
     new URL(prependPathPrefix(pathname, pathPrefix), origin).toString();
 
   const locales: readonly LanguageAlternateLocale[] | undefined =
@@ -358,52 +368,19 @@ function createLocalizer(
     return (pathname, extra) => [{ loc: toLoc(pathname, pathPrefix), ...extra }];
   }
 
+  const pathPrefixes = locales.map((locale) => normalizePathPrefix(locale.pathPrefix));
   return (pathname, extra) => {
-    const alternates = locales.map((locale) => ({
-      hrefLang: locale.hrefLang,
-      href: toLoc(pathname, locale.pathPrefix),
-    }));
-    const defaultAlternate = options.xDefault
-      ? alternates.find((alternate) => alternate.hrefLang === options.xDefault)
-      : undefined;
-    if (defaultAlternate) alternates.push({ hrefLang: "x-default", href: defaultAlternate.href });
-
-    return locales.map((locale) => ({
-      loc: toLoc(pathname, locale.pathPrefix),
-      ...extra,
-      alternates,
-    }));
+    const hrefs = pathPrefixes.map((pathPrefix) => toLoc(pathname, pathPrefix));
+    const alternates = buildLanguageAlternates(locales, hrefs, options.xDefault);
+    return hrefs.map((loc) => ({ loc, ...extra, alternates }));
   };
 }
 
-/**
- * The client rejects `cache` when it has no cache instance, so the option is
- * only forwarded when the caller asked for query caching explicitly.
- */
-function withCache<TOptions extends object>(
-  options: TOptions,
-  cache: CachingStrategy | undefined,
-): TOptions & { cache?: CachingStrategy } {
-  return cache ? { ...options, cache } : options;
-}
-
-export function cacheControlHeader(cache: CachingStrategy | undefined): string {
-  const strategy = cache ?? Cache.long();
-  if (strategy.mode === NO_STORE) return NO_STORE;
-
-  const directives = [strategy.mode ?? "public", `max-age=${Math.ceil(strategy.maxAge ?? 0)}`];
-  if (strategy.staleWhileRevalidate) {
-    directives.push(`stale-while-revalidate=${Math.ceil(strategy.staleWhileRevalidate)}`);
-  }
-  if (strategy.staleIfError) directives.push(`stale-if-error=${Math.ceil(strategy.staleIfError)}`);
-  return directives.join(", ");
-}
-
-function xmlResponse(body: string, cache: CachingStrategy | undefined): SitemapHandlerResult {
+function xmlResponse(body: string, options: ResolvedSitemapOptions): SitemapHandlerResult {
   return {
     type: "response",
     response: new Response(body, {
-      headers: { "content-type": XML_CONTENT_TYPE, "cache-control": cacheControlHeader(cache) },
+      headers: { "content-type": XML_CONTENT_TYPE, "cache-control": options.cacheControl },
     }),
   };
 }
@@ -429,14 +406,15 @@ function unavailable(message: string, cause: unknown): ShopifyRouteErrorResult<S
 
 type RobotsHandlerContext = Pick<SitemapHandlerContext, "request">;
 
-export type RobotsTxtServerHandlers<TPath extends string = typeof DEFAULT_ROBOTS_PATH> = {
+export type RobotsTxtServerHandlers<TPath extends string = typeof DEFAULT_ROBOTS_TXT_PATH> = {
   /** Serves `robots.txt`. */
   get: CallableRouteHandler<RobotsHandlerContext, ShopifyRouteResponseResult, TPath, typeof GET>;
 };
 
 /**
  * Creates a request handler that serves `robots.txt` built by {@link createRobotsTxt}.
- * Register the returned group with `handleShopifyRoutes({ handlers })`.
+ * Register the returned group with `handleShopifyRoutes({ handlers })`. The body
+ * is built once per origin and reused.
  *
  * @example
  * ```ts
@@ -449,25 +427,30 @@ export function createRobotsTxtServerHandlers<
 >(
   options: TOptions,
 ): RobotsTxtServerHandlers<
-  TOptions["path"] extends string ? TOptions["path"] : typeof DEFAULT_ROBOTS_PATH
+  TOptions["path"] extends string ? TOptions["path"] : typeof DEFAULT_ROBOTS_TXT_PATH
 >;
 export function createRobotsTxtServerHandlers(
   options: CreateRobotsTxtServerHandlersOptions = {},
 ): RobotsTxtServerHandlers<string> {
-  const { path = DEFAULT_ROBOTS_PATH, cache, origin, ...robotsOptions } = options;
+  const { path = DEFAULT_ROBOTS_TXT_PATH, cache, origin, ...robotsOptions } = options;
+  const cacheControl = getResponseCacheControlHeader(cache ?? Cache.long());
+  const bodies = new Map<string, string>();
+
+  const bodyFor = (resolvedOrigin: string) => {
+    let body = bodies.get(resolvedOrigin);
+    if (body === undefined) {
+      body = createRobotsTxt({ ...robotsOptions, origin: resolvedOrigin });
+      bodies.set(resolvedOrigin, body);
+    }
+    return body;
+  };
 
   return {
     get: createCallableRouteHandler(path, GET, async ({ request }: RobotsHandlerContext) => ({
       type: "response",
-      response: new Response(
-        createRobotsTxt({ ...robotsOptions, origin: resolveOrigin(request, origin) }),
-        {
-          headers: {
-            "content-type": TEXT_CONTENT_TYPE,
-            "cache-control": cacheControlHeader(cache),
-          },
-        },
-      ),
+      response: new Response(bodyFor(resolveOrigin(request, origin)), {
+        headers: { "content-type": TEXT_CONTENT_TYPE, "cache-control": cacheControl },
+      }),
     })),
   };
 }

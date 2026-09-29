@@ -3,7 +3,6 @@ import {
   buildProductSelectionSearchParams,
   canAddToCart,
   createProductJsonLd,
-  getCanonicalUrl,
   getSelectedProductOptions,
   gql,
   type SelectedOption,
@@ -18,7 +17,7 @@ import { openCartDrawer } from "~/lib/cart-drawer";
 import { envContext } from "~/lib/env";
 import { formatPrice, salePercent } from "~/lib/money";
 import { ProductProvider, useProductForm } from "~/lib/product";
-import { canonicalLink } from "~/lib/seo";
+import { canonicalLink, getPageCanonicalUrl, getSiteOrigin } from "~/lib/seo";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
@@ -138,7 +137,7 @@ const PRODUCT_QUERY = gql(
   [PRODUCT_VARIANT_FRAGMENT, PRODUCT_CARD_FRAGMENT],
 );
 
-export function meta({ data, location, matches }: Route.MetaArgs) {
+export function meta({ data, matches }: Route.MetaArgs) {
   const shopName = getShopNameFromRootMatch(matches[0]);
   return [
     { title: formatPageTitle(data?.product.title ?? "Product", shopName) },
@@ -147,7 +146,7 @@ export function meta({ data, location, matches }: Route.MetaArgs) {
       content: data?.product.description || `Shop the ${shopName} product detail page.`,
     },
     // Variant option params never change the canonical (F10).
-    ...(data ? [canonicalLink(data.origin, location)] : []),
+    ...(data ? [canonicalLink(data.canonicalUrl)] : []),
   ];
 }
 
@@ -165,15 +164,15 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
 
   if (!data?.product) throw new Response("Not Found", { status: 404 });
 
-  const origin = context.get(envContext).PUBLIC_SITE_ORIGIN || new URL(request.url).origin;
+  const env = context.get(envContext);
 
   return {
     product: data.product,
     relatedProducts: data.products.nodes
       .filter((product) => product.handle !== data.product?.handle)
       .slice(0, 4),
-    origin,
-    canonicalUrl: getCanonicalUrl(request.url, { origin }),
+    origin: getSiteOrigin(env, request),
+    canonicalUrl: getPageCanonicalUrl(env, request),
   };
 }
 

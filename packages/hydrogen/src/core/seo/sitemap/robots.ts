@@ -1,9 +1,11 @@
 import { DEFAULT_STANDARD_ROUTES } from "../../standard-routes/defaults";
-import { normalizePathPrefix } from "../../standard-routes/path";
+import { normalizePathPrefix, stripTrailingSlash } from "../../standard-routes/path";
+import { ROUTE_TEMPLATE_PARAM_RE } from "../../standard-routes/route-template";
 import type { ShopifyRouteTemplates } from "../../standard-routes/types";
+import { normalizeOrigin } from "../canonical";
+import { DEFAULT_SITEMAP_INDEX_PATH } from "./constants";
 import type { CreateRobotsTxtOptions, RobotsTxtRule } from "./types";
 
-const DEFAULT_SITEMAP_PATH = "/sitemap.xml";
 const UCP_MCP_PATH = "/api/ucp/mcp";
 const MCP_PATH = "/api/mcp";
 
@@ -38,51 +40,48 @@ const QUERY_CRAWL_TRAPS = [
 
 const ADSBOT_ALLOWED_ROUTES = ["product", "collection", "page", "blog"] as const;
 
-function stripTemplateParams(template: string): string {
-  const staticPrefix = template.split("/:")[0] ?? template;
-  return staticPrefix || "/";
-}
+type RuleContext = {
+  routeTemplates: ShopifyRouteTemplates;
+  /** Whether to repeat each path under a `/*` locale wildcard. */
+  localized: boolean;
+};
 
+/** Static path before the first `:param`, for example `/c` for `/c/:collectionHandle`. */
 function routeBase(routeTemplates: ShopifyRouteTemplates, route: keyof ShopifyRouteTemplates) {
-  return stripTemplateParams(routeTemplates[route] ?? DEFAULT_STANDARD_ROUTES[route][0]);
+  const template = routeTemplates[route] ?? DEFAULT_STANDARD_ROUTES[route][0];
+  return stripTrailingSlash(template.split(ROUTE_TEMPLATE_PARAM_RE)[0] || "/");
 }
 
-/** Emits a path both at the root and under any locale prefix, as Shopify's default robots.txt does. */
-function withLocalePrefixes(path: string, pathPrefixes: readonly string[]): string[] {
-  const normalized = pathPrefixes.map(normalizePathPrefix).filter(Boolean);
-  const localized = normalized.length > 0 ? ["/*"] : [];
-  return [path, ...localized.map((prefix) => `${prefix}${path}`)];
+/** Emits a path at the root and, for localized storefronts, under any locale prefix. */
+function withLocalePrefix(path: string, localized: boolean): string[] {
+  return localized ? [path, `/*${path}`] : [path];
 }
 
 function directive(name: "Allow" | "Disallow", path: string): RobotsTxtRule {
   return { directive: name, path };
 }
 
-function defaultRules(
-  routeTemplates: ShopifyRouteTemplates,
-  pathPrefixes: readonly string[],
-): RobotsTxtRule[] {
+function defaultRules({ routeTemplates, localized }: RuleContext): RobotsTxtRule[] {
   const rules: RobotsTxtRule[] = [directive("Allow", "/")];
   const cartBase = routeBase(routeTemplates, "cart");
   const searchBase = routeBase(routeTemplates, "search");
-  const collectionBase = routeBase(routeTemplates, "collection");
-  const blogBase = routeBase(routeTemplates, "blog");
 
   for (const path of [cartBase, `${cartBase}/`, searchBase, ...PRIVATE_PATHS]) {
-    for (const localized of withLocalePrefixes(path, pathPrefixes)) {
-      rules.push(directive("Disallow", localized));
+    for (const localizedPath of withLocalePrefix(path, localized)) {
+      rules.push(directive("Disallow", localizedPath));
     }
   }
 
   // Shopify allows the login page while keeping the rest of the account private.
-  for (const localized of withLocalePrefixes(ACCOUNT_LOGIN_PATH, pathPrefixes)) {
-    rules.push(directive("Allow", localized));
+  for (const localizedPath of withLocalePrefix(ACCOUNT_LOGIN_PATH, localized)) {
+    rules.push(directive("Allow", localizedPath));
   }
 
-  for (const base of [collectionBase, blogBase]) {
+  for (const route of ["collection", "blog"] as const) {
+    const base = routeBase(routeTemplates, route);
     for (const suffix of CRAWL_TRAP_SUFFIXES) {
-      for (const localized of withLocalePrefixes(`${base}/${suffix}`, pathPrefixes)) {
-        rules.push(directive("Disallow", localized));
+      for (const localizedPath of withLocalePrefix(`${base}/${suffix}`, localized)) {
+        rules.push(directive("Disallow", localizedPath));
       }
     }
   }
@@ -97,20 +96,19 @@ function defaultRules(
  * for it. Product, collection, page, and blog routes stay open; checkout and
  * order paths stay closed.
  */
-function adsbotRules(
-  routeTemplates: ShopifyRouteTemplates,
-  pathPrefixes: readonly string[],
-): RobotsTxtRule[] {
+function adsbotRules({ routeTemplates, localized }: RuleContext): RobotsTxtRule[] {
   const rules: RobotsTxtRule[] = [];
   for (const route of ADSBOT_ALLOWED_ROUTES) {
-    const base = routeBase(routeTemplates, route);
-    for (const localized of withLocalePrefixes(`${base}/`, pathPrefixes)) {
-      rules.push(directive("Allow", localized));
+    for (const localizedPath of withLocalePrefix(
+      `${routeBase(routeTemplates, route)}/`,
+      localized,
+    )) {
+      rules.push(directive("Allow", localizedPath));
     }
   }
   for (const path of ["/checkout", "/checkouts/", "/orders"]) {
-    for (const localized of withLocalePrefixes(path, pathPrefixes)) {
-      rules.push(directive("Disallow", localized));
+    for (const localizedPath of withLocalePrefix(path, localized)) {
+      rules.push(directive("Disallow", localizedPath));
     }
   }
   return rules;
@@ -153,13 +151,14 @@ function agentComments(origin: string, options: CreateRobotsTxtOptions): string[
  * ```
  */
 export function createRobotsTxt(options: CreateRobotsTxtOptions): string {
-  const origin = new URL(options.origin).origin;
-  const routeTemplates = options.routeTemplates ?? {};
-  const pathPrefixes = options.pathPrefixes ?? [];
-  const sitemapPath = options.sitemapPath ?? DEFAULT_SITEMAP_PATH;
+  const origin = normalizeOrigin(options.origin);
+  const context: RuleContext = {
+    routeTemplates: options.routeTemplates ?? {},
+    localized: (options.locales ?? []).some((locale) => normalizePathPrefix(locale.pathPrefix)),
+  };
 
   const mainRules = [
-    ...defaultRules(routeTemplates, pathPrefixes),
+    ...defaultRules(context),
     ...(options.disallow ?? []).map((path) => directive("Disallow", path)),
     ...(options.allow ?? []).map((path) => directive("Allow", path)),
   ];
@@ -170,13 +169,13 @@ export function createRobotsTxt(options: CreateRobotsTxtOptions): string {
     renderGroup("*", mainRules),
     "",
     "# Google AdsBot ignores robots.txt unless named, so the essentials are repeated.",
-    renderGroup("adsbot-google", adsbotRules(routeTemplates, pathPrefixes)),
+    renderGroup("adsbot-google", adsbotRules(context)),
     "",
     ...(options.additionalGroups ?? []).flatMap((group) => [
       renderGroup(group.userAgent, group.rules),
       "",
     ]),
-    `Sitemap: ${origin}${sitemapPath}`,
+    `Sitemap: ${origin}${options.sitemapPath ?? DEFAULT_SITEMAP_INDEX_PATH}`,
   ];
 
   return `${sections.join("\n").replace(/^\n+/, "")}\n`;

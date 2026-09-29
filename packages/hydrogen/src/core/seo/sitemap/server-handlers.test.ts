@@ -329,18 +329,21 @@ describe("createSitemapServerHandlers", () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it("forwards the cache strategy to the Storefront API query when set", async () => {
-      mockFetch.mockResolvedValueOnce(mockGqlResponse(pageData([])));
+    it("uses the cache strategy for the response header and, with a cache-enabled client, the query", async () => {
+      mockFetch.mockImplementation(() => Promise.resolve(mockGqlResponse(pageData([]))));
       const handlers = createSitemapServerHandlers({ cache: Cache.short() });
 
-      const response = await handle(createRequest("/sitemap/products/1.xml"), [handlers], {
+      const cached = await handle(createRequest("/sitemap/products/1.xml"), [handlers], {
         cache: true,
       });
-
-      expect(response?.status).toBe(200);
-      expect(response?.headers.get("cache-control")).toBe(
+      expect(cached?.status).toBe(200);
+      expect(cached?.headers.get("cache-control")).toBe(
         "public, max-age=1, stale-while-revalidate=9",
       );
+
+      // A client without a cache instance still serves the page; nothing throws.
+      const uncached = await handle(createRequest("/sitemap/products/1.xml"), [handlers]);
+      expect(uncached?.status).toBe(200);
     });
 
     it("returns 503 when the query throws", async () => {

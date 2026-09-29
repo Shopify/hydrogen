@@ -14,14 +14,15 @@ import {
 } from "~/components/CollectionBrowse";
 import { BreadcrumbJsonLd } from "~/components/JsonLd";
 import { ProductCard } from "~/components/ProductCard";
+import { envContext } from "~/lib/env";
 import { loadSearchPage, type SearchPageData } from "~/lib/search";
-import { canonicalLink } from "~/lib/seo";
+import { canonicalLink, getPageCanonicalUrl, getSiteOrigin } from "~/lib/seo";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/search";
 
-export function meta({ data, location, matches }: Route.MetaArgs) {
+export function meta({ data, matches }: Route.MetaArgs) {
   const shopName = getShopNameFromRootMatch(matches[0]);
   return [
     { title: formatPageTitle("Search", shopName) },
@@ -29,14 +30,20 @@ export function meta({ data, location, matches }: Route.MetaArgs) {
       name: "description",
       content: `Search products at ${shopName}.`,
     },
-    // Keep `q`: a search term changes the primary content; filters and sort do not.
-    ...(data ? [canonicalLink(data.origin, location, ["q"])] : []),
+    ...(data ? [canonicalLink(data.canonicalUrl)] : []),
   ];
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const storefrontClient = context.get(storefrontClientContext);
-  return loadSearchPage({ storefrontClient, request });
+  const env = context.get(envContext);
+  return loadSearchPage({
+    storefrontClient,
+    request,
+    siteOrigin: getSiteOrigin(env, request),
+    // Keep `q`: a search term changes the primary content; filters and sort do not.
+    canonicalUrl: getPageCanonicalUrl(env, request, ["q"]),
+  });
 }
 
 type PerformedSearchData = Extract<SearchPageData, { performed: true }>;

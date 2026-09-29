@@ -11,14 +11,9 @@ export const SITEMAP_TYPE_BY_RESOURCE_TYPE = {
   metaobjects: "METAOBJECT",
 } as const satisfies Record<SitemapResourceType, SitemapType>;
 
-export const SITEMAP_RESOURCE_TYPES = [
-  "products",
-  "collections",
-  "pages",
-  "blogs",
-  "articles",
-  "metaobjects",
-] as const satisfies readonly SitemapResourceType[];
+export function isSitemapResourceType(type: string): type is SitemapResourceType {
+  return Object.hasOwn(SITEMAP_TYPE_BY_RESOURCE_TYPE, type);
+}
 
 export const SITEMAP_INDEX_QUERY = gql(`
   query HydrogenSitemapIndex {

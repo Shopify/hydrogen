@@ -125,12 +125,13 @@ export const sitemapHandlers = createSitemapServerHandlers({
   origin: env.PUBLIC_SITE_ORIGIN, // omit in dev to use the request origin
   routeTemplates,
   staticPaths: ["/", "/collections"],
-  // locales: [{ hrefLang: "en-US" }, { hrefLang: "fr-CA", pathPrefix: "/fr-ca" }],
+  // locales, // the same list you pass to getLanguageAlternates()
 });
 
 export const robotsHandlers = createRobotsTxtServerHandlers({
   origin: env.PUBLIC_SITE_ORIGIN,
   routeTemplates,
+  // locales, // repeats each rule under a /* locale prefix when any locale has one
 });
 
 // request middleware
@@ -149,8 +150,8 @@ What you get:
   `adsbot-google`, points at the sitemap, and advertises the storefront's
   UCP/MCP endpoints to shopping agents.
 - Responses carry `Cache-Control: public, max-age=3600, stale-while-revalidate=82800`
-  by default (`cache` option). Pass `cache` only when the Storefront client was
-  created with a `cache` instance if you also want the queries cached.
+  by default (`cache` option). The same strategy caches the Storefront API
+  queries when the client was created with a `cache` instance.
 
 Rules:
 

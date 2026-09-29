@@ -12,11 +12,14 @@ export type ShopifyRouteSessionManager = {
   commit?(): Awaitable<HeadersInit | void>;
 };
 
-export type ShopifyRouteHandlerContext = {
+type ShopifyRouteRequestContext = {
   request: Request;
   sessionManager: ShopifyRouteSessionManager;
   storefrontClient: StorefrontClient;
   requestContext: ShopifyRequestContext;
+};
+
+export type ShopifyRouteHandlerContext = ShopifyRouteRequestContext & {
   /**
    * Path params captured by a handler registered with a template pathname,
    * for example `{ type: "products", page: "1" }` for `/sitemap/:type/:page.xml`.
@@ -89,7 +92,7 @@ export type ShopifyRouteHandler<
 
 export type ShopifyRouteHandlerGroup = Record<string, ShopifyRouteHandler>;
 
-export type HydrogenRoutesOptions = Omit<ShopifyRouteHandlerContext, "params"> & {
+export type HydrogenRoutesOptions = ShopifyRouteRequestContext & {
   routeTemplates?: ShopifyRouteTemplates;
   handlers?: readonly ShopifyRouteHandlerGroup[];
 };
