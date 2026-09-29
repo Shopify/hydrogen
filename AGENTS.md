@@ -14,6 +14,10 @@ When designing or adjusting APIs for the `hydrogen` package, closely follow the 
 - Non-null assertions (`!`) are still forbidden in tests. Use an assertion helper instead so failures include a useful message.
 - In Hydrogen package tests, import `assert` from `packages/hydrogen/src/core/test-utils.ts` rather than using `!`.
 
+## MiniOxygen
+
+- `packages/mini-oxygen` keeps its existing code style: `oxfmt` skips it, and `.oxlintrc.json` turns off the rules its code breaks, including the testing rules above. Don't reformat or restyle it as part of unrelated changes.
+
 ## Local HTTPS for Examples
 
 - Account-enabled framework examples use `https://local.tryhydrogen.dev:5173` for Customer Account OAuth callback testing.

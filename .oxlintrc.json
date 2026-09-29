@@ -220,6 +220,27 @@
       "rules": {
         "no-console": "off"
       }
+    },
+    {
+      // MiniOxygen's code predates these rules, so the ones it breaks stay off
+      // instead of rewriting it.
+      "files": ["packages/mini-oxygen/**"],
+      "rules": {
+        "complexity": "off",
+        "max-depth": "off",
+        "no-ex-assign": "off",
+        "no-shadow": "off",
+        "no-unused-expressions": "off",
+        "no-unused-vars": "off",
+        "no-useless-escape": "off",
+        "@typescript-eslint/consistent-type-assertions": "off",
+        "@typescript-eslint/consistent-type-imports": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-extraneous-class": "off",
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "unicorn/consistent-function-scoping": "off",
+        "unicorn/no-array-sort": "off"
+      }
     }
   ]
 }
