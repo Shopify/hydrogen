@@ -206,7 +206,6 @@ function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
             <FacetForm
               availableFilters={loaderData.availableFilters}
               extraHiddenInputs={searchTermHiddenInput(loaderData.searchTerm)}
-              remountKey={loaderData.searchTerm}
             />
           </div>
         </aside>
@@ -236,7 +235,6 @@ function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
       <FilterDrawer
         availableFilters={loaderData.availableFilters}
         extraHiddenInputs={searchTermHiddenInput(loaderData.searchTerm)}
-        remountKey={loaderData.searchTerm}
       />
     </>
   );

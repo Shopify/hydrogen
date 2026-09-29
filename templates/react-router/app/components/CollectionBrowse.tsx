@@ -2,6 +2,7 @@ import {
   getFilterRemovalUrl,
   getSortByValue,
   isFilterInputActive,
+  parseCollectionParams,
   serializeCollectionParams,
   type CollectionState,
   type MoneyV2,
@@ -274,7 +275,7 @@ function ListFacet({ filter, state }: { filter: BrowseFilter; state: CollectionS
             type="checkbox"
             name={name}
             value={paramValue}
-            defaultChecked={isActive}
+            checked={isActive}
             className="sr-only"
             onChange={(event) => {
               if (event.currentTarget.checked && isMutuallyExclusive(filter, name)) {
@@ -305,13 +306,45 @@ function ListFacet({ filter, state }: { filter: BrowseFilter; state: CollectionS
 
 function PriceRangeFacet({ state }: { state: CollectionState }) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const minInput = useRef<HTMLInputElement>(null);
+  const maxInput = useRef<HTMLInputElement>(null);
   const idPrefix = useId();
   const minId = `${idPrefix}-price-gte`;
   const maxId = `${idPrefix}-price-lte`;
   const activePrice = priceFilter(state);
+  const min = activePrice?.min ?? "";
+  const max = activePrice?.max ?? "";
 
   useEffect(() => {
+    for (const [input, value] of [
+      [minInput.current, min],
+      [maxInput.current, max],
+    ] as const) {
+      if (!input) continue;
+      const matches =
+        value === "" ? input.value === "" : input.value !== "" && Number(input.value) === value;
+      if (!matches) {
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = null;
+        input.value = String(value);
+      }
+    }
+  }, [min, max]);
+
+  useEffect(() => {
+    function restoreHistoryPrice() {
+      // Cancel the draft before the history loader settles, even when the price is unchanged.
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = null;
+      const { filters } = parseCollectionParams(new URLSearchParams(window.location.search));
+      const price = filters.find((filter) => filter.price != null)?.price;
+      if (minInput.current) minInput.current.value = String(price?.min ?? "");
+      if (maxInput.current) maxInput.current.value = String(price?.max ?? "");
+    }
+
+    window.addEventListener("popstate", restoreHistoryPrice);
     return () => {
+      window.removeEventListener("popstate", restoreHistoryPrice);
       if (timer.current) clearTimeout(timer.current);
     };
   }, []);
@@ -324,11 +357,12 @@ function PriceRangeFacet({ state }: { state: CollectionState }) {
         </label>
         <input
           type="number"
+          ref={minInput}
           id={minId}
           name={PRICE_MIN_PARAM}
           min="0"
           placeholder="Min"
-          defaultValue={activePrice?.min ?? ""}
+          defaultValue={min}
           className="border-border rounded-input bg-surface text-on-surface w-full border px-3 py-2 text-sm"
           onChange={(event) => {
             if (timer.current) clearTimeout(timer.current);
@@ -344,11 +378,12 @@ function PriceRangeFacet({ state }: { state: CollectionState }) {
         </label>
         <input
           type="number"
+          ref={maxInput}
           id={maxId}
           name={PRICE_MAX_PARAM}
           min="0"
           placeholder="Max"
-          defaultValue={activePrice?.max ?? ""}
+          defaultValue={max}
           className="border-border rounded-input bg-surface text-on-surface w-full border px-3 py-2 text-sm"
           onChange={(event) => {
             if (timer.current) clearTimeout(timer.current);
@@ -386,7 +421,7 @@ function ColorSwatchFacet({ filter, state }: { filter: BrowseFilter; state: Coll
             type="checkbox"
             name={name}
             value={paramValue}
-            defaultChecked={isFilterInputActive(state.filters, value.input)}
+            checked={isFilterInputActive(state.filters, value.input)}
             className="sr-only"
             onChange={requestFormSubmit}
           />
@@ -469,10 +504,9 @@ export function Toolbar({
           Sort by
         </label>
         <select
-          key={resolvedSortValue}
           id="sort-by"
           name="sort_by"
-          defaultValue={resolvedSortValue}
+          value={resolvedSortValue}
           className="w-auto max-w-full cursor-pointer font-medium"
           onChange={requestFormSubmit}
         >
@@ -498,34 +532,25 @@ export function Toolbar({
 export function FacetForm({
   availableFilters,
   extraHiddenInputs,
-  remountKey,
 }: {
   availableFilters: readonly BrowseFilter[];
   extraHiddenInputs?: ReactNode;
-  remountKey?: string;
 }) {
   const state: CollectionState = useCollection();
   const { formProps } = useCollectionForm();
-  const serialized = serializeCollectionParams(state);
   const sort = currentSortValue(state);
-  const isLoading = state.status === "loading";
 
   return (
     <form {...formProps()} method="get">
       {sort ? <input type="hidden" name="sort_by" value={sort} /> : null}
       {extraHiddenInputs}
-      <fieldset disabled={isLoading} className="m-0 border-0 p-0">
-        <div
-          key={`${serialized.toString()}:${remountKey ?? ""}`}
-          className="divide-border divide-y"
-        >
-          {availableFilters.map((filter) => (
-            <FacetGroup key={filter.id} filter={filter} state={state}>
-              <FacetBody filter={filter} state={state} />
-            </FacetGroup>
-          ))}
-        </div>
-      </fieldset>
+      <div key={state.handle} className="divide-border divide-y">
+        {availableFilters.map((filter) => (
+          <FacetGroup key={filter.id} filter={filter} state={state}>
+            <FacetBody filter={filter} state={state} />
+          </FacetGroup>
+        ))}
+      </div>
       <noscript>
         <button
           type="submit"
@@ -542,12 +567,10 @@ export function FilterDrawer({
   availableFilters,
   extraHiddenInputs,
   id = FILTER_DRAWER_ID,
-  remountKey,
 }: {
   availableFilters: readonly BrowseFilter[];
   extraHiddenInputs?: ReactNode;
   id?: string;
-  remountKey?: string;
 }) {
   return (
     <dialog
@@ -573,11 +596,7 @@ export function FilterDrawer({
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
-          <FacetForm
-            availableFilters={availableFilters}
-            extraHiddenInputs={extraHiddenInputs}
-            remountKey={remountKey}
-          />
+          <FacetForm availableFilters={availableFilters} extraHiddenInputs={extraHiddenInputs} />
         </div>
       </div>
     </dialog>
