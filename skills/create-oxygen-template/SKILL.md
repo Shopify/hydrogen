@@ -82,15 +82,16 @@ This keeps the canonical template wired to the Hydrogen and MiniOxygen code unde
 E2E tests cover package and template changes together.
 
 The source template is not the standalone distribution artifact. Before generating the standalone lockfile, this
-repository's release flow replaces Hydrogen's `workspace:*` with the version selected by the `preview` dist-tag, and
-every other `workspace:*` dependency with the version in its `packages/*/package.json`. Hydrogen preview cuts use the
-`2026.10.0-preview.<n>` format, and every pinned version must resolve from the registry with an integrity hash.
+repository's release flow replaces each `workspace:*` dependency with the version in its `packages/*/package.json`,
+which a release has already published. Hydrogen's must be a stable `YYYY.Q.P` version, and every pinned version must
+resolve from the registry with an integrity hash.
 
 Repository builds and E2E run MiniOxygen's workspace source, but the distributed template installs the version
 `packages/mini-oxygen/package.json` declares. A template change that relies on unreleased MiniOxygen behavior works
 here and breaks in distribution, so ship the MiniOxygen change with a changeset and release it first.
 
-Do not rely on `shopify hydrogen deploy` recognizing that version format. The template's deploy script passes
+Do not rely on `shopify hydrogen deploy` choosing the build from the installed Hydrogen version: it only recognizes
+`0.0.0-preview-*` versions and treats 2026.10 releases like classic Hydrogen. The template's deploy script passes
 `--assets-dir dist/client --worker-dir dist/server`, which selects the template's `react-router build` output without
 the CLI version sniff. The distributed package must still expose `./customer-account`, `./react`, and `./package.json`.
 
@@ -157,13 +158,13 @@ Remove example-comparison tables, monorepo-only commands, and references to `exa
 
 The README MUST lead with a **Deploy to Oxygen** button. It is the canonical one-click entry point for an Oxygen
 starter; the manual `npm run deploy` (`shopify hydrogen deploy`) flow is a secondary fallback, not the primary path.
-Add it in TWO places, using this exact markup (an absolute raw image URL pinned to the `preview` branch — the
+Add it in TWO places, using this exact markup (an absolute raw image URL pinned to the `main` branch — the
 template ships into users' repos, so it cannot rely on a relative path to the repo's `.github/images/` asset):
 
 1. **At the very top of the README**, immediately under the `#` title line:
 
    ```html
-   <a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src="https://raw.githubusercontent.com/Shopify/hydrogen/preview/.github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
+   <a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src="https://raw.githubusercontent.com/Shopify/hydrogen/main/.github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
    ```
 
 2. **In the "Deploy to Oxygen" section**, leading with the button and the one-click flow, then the manual
@@ -172,17 +173,17 @@ template ships into users' repos, so it cannot rely on a relative path to the re
    ```markdown
    ## Deploy to Oxygen
 
-   <a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src="https://raw.githubusercontent.com/Shopify/hydrogen/preview/.github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
+   <a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src="https://raw.githubusercontent.com/Shopify/hydrogen/main/.github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
 
    The fastest way to deploy is the button above — it creates a new Oxygen project from this template and links it to your Shopify store.
 
    When you deploy from the command line with `npm run deploy`, a linked storefront injects your env vars (`PUBLIC_STORE_DOMAIN`, `PRIVATE_STOREFRONT_API_TOKEN`, `SESSION_SECRET`) automatically, so the deployed site connects to your store with no extra config.
    ```
 
-The button's `template=react-router` query param and the image URL's `preview` branch path are fixed — keep them
+The button's `template=react-router` query param and the image URL's `main` branch path are fixed — keep them
 exactly. Do NOT swap the image `src` for a relative path to a local `.github/images/` file: the template is cloned
 into the user's own repo, which does not contain that asset. (The SVG itself lives at
-`.github/images/deploy-to-oxygen.svg` in the `Shopify/hydrogen` repo on `preview`; the absolute raw URL references it
+`.github/images/deploy-to-oxygen.svg` in the `Shopify/hydrogen` repo on `main`; the absolute raw URL references it
 in place, so the template does not need to ship a copy.)
 
 ## Validation
