@@ -1,5 +1,8 @@
 import {
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
+  startTransition,
   useEffect,
   useState,
   useMemo,
@@ -293,12 +296,20 @@ function AnalyticsProvider({
   const {shop} = useShopAnalytics(shopProp);
   const [consentVersion, setConsentVersion] = useState(0);
   const [privacyReady, setPrivacyReady] = useState(false);
-  const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
+  const [carts, setCartsState] = useState<Carts>({cart: null, prevCart: null});
+
+  // Wrap setCarts in startTransition so that deferred cart resolutions don't
+  // interrupt hydration of Suspense boundaries below this provider.
+  const setCarts = useCallback<Dispatch<SetStateAction<Carts>>>(
+    (update) => startTransition(() => setCartsState(update)),
+    [],
+  );
   const canTrack = customCanTrack ?? hasAnalyticsConsent;
   const onConsentChange = useCallback(() => {
-    setPrivacyReady(true);
-    // Re-evaluate the context when consent changes, including later revocation.
-    setConsentVersion((version) => version + 1);
+    startTransition(() => {
+      setPrivacyReady(true);
+      setConsentVersion((version) => version + 1);
+    });
   }, []);
 
   // eslint-disable-next-line no-extra-boolean-cast
@@ -408,7 +419,9 @@ function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
 
   // resolve the shop analytics that could have been deferred
   useEffect(() => {
-    Promise.resolve(shopProp).then(setShop);
+    Promise.resolve(shopProp).then((resolvedShop) => {
+      startTransition(() => setShop(resolvedShop));
+    });
     return () => {};
   }, [setShop, shopProp]);
 
