@@ -50,7 +50,7 @@ export const AJAX_CART_RE =
 /**
  * Normalizes `target` to a path on `origin` that is safe to use as a redirect location.
  * Returns `undefined` unless `target` is a path starting with `/` or an absolute URL,
- * and stays on `origin`.
+ * stays on `origin`, and its normalized pathname does not start with `//`.
  */
 export function getSameOriginPath(
   target: string | null | undefined,
