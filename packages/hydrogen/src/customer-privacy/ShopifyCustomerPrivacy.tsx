@@ -137,7 +137,8 @@ export type CustomerPrivacyApiProps = {
    * @deprecated This option is ignored: consent requests always use the
    * same-origin Storefront API proxy that Hydrogen's `createRequestHandler`
    * includes, as if this were `true`. Consent and analytics do not work
-   * without the proxy, so `false` is no longer supported.
+   * without the proxy, so `false` is no longer supported,
+   * [notice](https://shopify.dev/changelog/posts/tracking-cookie-deprecation-hydrogen).
    */
   sameDomainForStorefrontApi?: boolean;
 };
@@ -158,7 +159,8 @@ function logIgnoredCrossDomainConsent() {
   console.warn(
     '[h2:warn:useCustomerPrivacy] `sameDomainForStorefrontApi: false` is ignored. ' +
       "Consent and analytics require the same-origin Storefront API proxy included in Hydrogen's `createRequestHandler`, " +
-      'so consent requests always use it. Remove this option.',
+      'so consent requests always use it. Remove this option. ' +
+      'See https://shopify.dev/changelog/posts/tracking-cookie-deprecation-hydrogen',
   );
 }
 
