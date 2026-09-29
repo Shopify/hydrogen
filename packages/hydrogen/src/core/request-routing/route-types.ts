@@ -1,6 +1,7 @@
 import type { StorefrontClient } from "../../client";
 import type { ShopifyRequestContext } from "../request-context";
 import type { ShopifyRouteTemplates } from "../standard-routes/types";
+import type { AppProxyOptions } from "./interceptors/app-proxy";
 
 type Awaitable<T> = T | Promise<T>;
 
@@ -72,6 +73,13 @@ export type ShopifyRouteHandlerGroup = Record<string, ShopifyRouteHandler>;
 export type HydrogenRoutesOptions = ShopifyRouteHandlerContext & {
   routeTemplates?: ShopifyRouteTemplates;
   handlers?: readonly ShopifyRouteHandlerGroup[];
+  /**
+   * Proxy Shopify app proxy paths (`/apps/*`, `/a/*`, `/community/*`, `/tools/*`)
+   * to the configured store so app-rendered pages and endpoints work on the
+   * headless storefront. Off by default because it forwards arbitrary app
+   * responses; pass `true`, or an object to limit the prefixes.
+   */
+  appProxy?: boolean | AppProxyOptions;
 };
 
 export type HydrogenRouteHandler<TExtraOptions extends object = object> = (

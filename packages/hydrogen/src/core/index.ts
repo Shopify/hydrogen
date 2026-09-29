@@ -3,6 +3,7 @@ export { createShopifyRouteTemplates } from "./standard-routes/index";
 export type { ShopifyRouteTemplates } from "./standard-routes/index";
 export { handleShopifyRedirects } from "./request-routing/handle-shopify-redirects";
 export { handleShopifyRoutes } from "./request-routing/handle-shopify-routes";
+export type { AppProxyOptions, AppProxyPrefix } from "./request-routing/interceptors/app-proxy";
 export { createShopifyRouteHandler } from "./request-routing/registered-routes";
 export type {
   CallableRouteHandler,
