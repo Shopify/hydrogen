@@ -47,9 +47,9 @@ Dependencies:
 - Remove `lru-cache`, `@react-router/node`, and `@react-router/serve`.
 - Add `@shopify/mini-oxygen`, `@shopify/oxygen-workers-types`, and `@shopify/cli`.
 - **`@shopify/hydrogen`: use `workspace:*` in this repository** so template builds and E2E exercise the package under
-  development. The `Shopify/hydrogen` release flow replaces it with the version selected by the `preview` dist-tag
-  before standalone lockfile generation. Preview cuts use `2026.10.0-preview.<n>` and must resolve to a registry
-  tarball with an integrity hash.
+  development. The `Shopify/hydrogen` release flow replaces it with the published version in
+  `packages/hydrogen/package.json` before standalone lockfile generation. That version must be a stable `YYYY.Q.P`
+  release and resolve to a registry tarball with an integrity hash.
 - **`@shopify/cli`: pin `4.6.0` (minimum `4.4.0`)**. Those releases support the explicit deploy output flags. Keep
   `--assets-dir dist/client --worker-dir dist/server` in the deploy script so the CLI runs `react-router build` and
   uses this template's configured output without relying on a Hydrogen version sniff.

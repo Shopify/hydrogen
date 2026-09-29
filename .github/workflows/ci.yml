@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [preview]
+    branches: [main]
   pull_request:
-    branches: [preview]
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -35,13 +35,8 @@ jobs:
       - name: Format check
         run: pnpm run format:check
 
-      - name: Ensure prerelease mode
-        # Catch a deleted or exited pre.json at PR time; without it the
-        # release job publishes a plain version to the latest dist-tag
-        run: jq -e '.mode == "pre" and .tag == "preview"' .changeset/pre.json
-
       - name: Changesets check
-        run: node scripts/assert-no-major-changesets.ts
+        run: node scripts/calver.ts check
 
       - name: Lint
         run: pnpm run lint:ci

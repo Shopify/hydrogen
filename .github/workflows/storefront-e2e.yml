@@ -2,9 +2,9 @@ name: Storefront E2E
 
 on:
   push:
-    branches: [preview]
+    branches: [main]
   pull_request:
-    branches: [preview]
+    branches: [main]
 
 concurrency:
   group: storefront-e2e-${{ github.ref }}

@@ -1,6 +1,13 @@
 #!/usr/bin/env node
 
-import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -11,7 +18,7 @@ const DEPENDENCY_FIELDS = ["dependencies", "devDependencies"] as const;
 const SOURCE_ONLY_TEST_DIRECTORY = "__test__";
 // Module-level consts must precede the runCli() call below, which runs at import time.
 const SKILL_HARNESS_DIRECTORIES = [".claude", ".agents"];
-const PUBLISHED_PREVIEW_VERSION = /^2026\.10\.0-preview\.[1-9]\d*$/;
+const STABLE_CALVER_VERSION = /^\d{4}\.\d{1,2}\.\d+$/;
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const defaultRepoRoot = resolve(scriptDir, "..");
 
@@ -46,45 +53,12 @@ if (isDirectInvocation()) {
   void runCli();
 }
 
-export function resolvePublishedHydrogenVersion(publishedPackagesJson: string): string {
-  let publishedPackages: unknown;
-
-  try {
-    publishedPackages = JSON.parse(publishedPackagesJson);
-  } catch {
-    throw new Error("publishedPackages is not valid JSON.");
-  }
-
-  if (!Array.isArray(publishedPackages)) {
-    throw new Error("publishedPackages must be an array.");
-  }
-
-  const versions: string[] = [];
-
-  for (const publishedPackage of publishedPackages) {
-    if (!isRecord(publishedPackage) || publishedPackage.name !== HYDROGEN_PACKAGE) continue;
-    if (typeof publishedPackage.version !== "string") {
-      throw new Error(`${HYDROGEN_PACKAGE} is missing a published version.`);
-    }
-    versions.push(publishedPackage.version);
-  }
-
-  if (versions.length !== 1) {
-    throw new Error(
-      `Expected one published ${HYDROGEN_PACKAGE} version, but found ${versions.length}.`,
-    );
-  }
-
-  assertPublishedPreviewVersion(versions[0]);
-  return versions[0];
-}
-
 export async function preparePreviewTemplateDist(options: PreviewDistOptions): Promise<void> {
   const repoRoot = options.repoRoot ?? defaultRepoRoot;
   const log = options.log ?? console.log;
   const version = options.version;
 
-  assertPublishedPreviewVersion(version);
+  assertStableVersion(version);
   assertHydrogenPackageVersion(repoRoot, version);
   const workspaceVersions = readWorkspaceVersions(repoRoot);
 
@@ -129,7 +103,7 @@ export function validatePreviewTemplateDist(options: PreviewDistOptions): void {
   const log = options.log ?? console.log;
   const version = options.version;
 
-  assertPublishedPreviewVersion(version);
+  assertStableVersion(version);
   assertHydrogenPackageVersion(repoRoot, version);
 
   for (const template of templates) {
@@ -154,10 +128,10 @@ export function validatePreviewTemplateDist(options: PreviewDistOptions): void {
   log(`Validated preview templates for ${HYDROGEN_PACKAGE}@${version}.`);
 }
 
-export function assertPublishedPreviewVersion(version: string): void {
-  if (!PUBLISHED_PREVIEW_VERSION.test(version)) {
+function assertStableVersion(version: string): void {
+  if (!STABLE_CALVER_VERSION.test(version)) {
     throw new Error(
-      `Expected a published 2026.10.0-preview.<n> version, but received ${version || "an empty value"}.`,
+      `Expected a stable YYYY.Q.P ${HYDROGEN_PACKAGE} version, but received ${version || "an empty value"}.`,
     );
   }
 }
@@ -278,12 +252,6 @@ async function runCli(): Promise<void> {
   const [command, version] = process.argv.slice(2);
 
   try {
-    if (command === "resolve") {
-      process.stdout.write(
-        `${resolvePublishedHydrogenVersion(process.env.PUBLISHED_PACKAGES ?? "")}\n`,
-      );
-      return;
-    }
     if (command === "prepare" && version) {
       await preparePreviewTemplateDist({ version });
       return;
@@ -293,7 +261,7 @@ async function runCli(): Promise<void> {
       return;
     }
 
-    throw new Error("Usage: preview-template-dist.ts <resolve|prepare|validate> [version]");
+    throw new Error("Usage: preview-template-dist.ts <prepare|validate> <version>");
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
     process.exitCode = 1;
@@ -302,5 +270,6 @@ async function runCli(): Promise<void> {
 
 function isDirectInvocation(): boolean {
   const entrypoint = process.argv[1];
-  return Boolean(entrypoint && import.meta.url === pathToFileURL(entrypoint).href);
+  // import.meta.url has symlinks resolved, and argv[1] doesn't.
+  return Boolean(entrypoint && import.meta.url === pathToFileURL(realpathSync(entrypoint)).href);
 }
