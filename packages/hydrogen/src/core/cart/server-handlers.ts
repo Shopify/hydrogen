@@ -455,17 +455,7 @@ function appendHeaders(headers: Headers, headersToAppend: Headers | undefined) {
 }
 
 function safeRedirectTarget(request: Request): string {
-  const referer = request.headers.get("referer");
-  if (!referer) return "/";
-  try {
-    const refererUrl = new URL(referer);
-    const requestUrl = new URL(request.url);
-    if (refererUrl.origin !== requestUrl.origin) return "/";
-    const path = `${refererUrl.pathname}${refererUrl.search}${refererUrl.hash}`;
-    return getSameOriginPath(path, requestUrl.origin) ?? "/";
-  } catch {
-    return "/";
-  }
+  return getSameOriginPath(request.headers.get("referer"), new URL(request.url).origin) ?? "/";
 }
 
 type MutationResult = {
