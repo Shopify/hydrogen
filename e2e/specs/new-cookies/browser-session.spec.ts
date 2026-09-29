@@ -1,0 +1,124 @@
+import {setTestStore, test, expect, ACCEPT_ALL_CONSENT} from '../../fixtures';
+
+/**
+ * Reopening the browser drops session cookies. The visitor's consent and
+ * identity must survive through the persistent backend-managed cookies alone,
+ * with no JavaScript-visible cookie to fall back on.
+ */
+test.describe('New browser session, allowed by default', () => {
+  setTestStore('defaultConsentAllowed_cookiesEnabled');
+
+  test('keeps the visitor and session without showing the banner', async ({
+    storefront,
+  }) => {
+    await storefront.setWithPrivacyBanner(true);
+    const tokens = await storefront.expectAllowedConsent(
+      await storefront.withConsentResponse(() => storefront.goto('/')),
+    );
+
+    const session = await storefront.openNewBrowserSession({
+      withPrivacyBanner: true,
+    });
+    try {
+      const response = await session.withConsentResponse(() =>
+        session.goto('/'),
+      );
+      // Within the 30-minute visit window the visit continues as well.
+      expect(await session.expectAllowedConsent(response)).toEqual(tokens);
+      await session.expectPrivacyBannerNotVisible();
+      await session.expectNoLegacyAnalyticsCookies();
+      await session.waitForMonorailRequests();
+      session.verifyMonorailRequests(
+        tokens.uniqueToken!,
+        tokens.visitToken!,
+        'in a new browser session',
+      );
+    } finally {
+      await session.context.close();
+    }
+  });
+});
+
+test.describe('New browser session, declined by default with the banner', () => {
+  setTestStore('defaultConsentDisallowed_cookiesEnabled');
+
+  test('keeps an accepted choice and session', async ({storefront}) => {
+    await storefront.setWithPrivacyBanner(true);
+    await storefront.goto('/');
+    const tokens = await storefront.expectAllowedConsent(
+      await storefront.acceptPrivacyBanner(),
+    );
+
+    const session = await storefront.openNewBrowserSession({
+      withPrivacyBanner: true,
+    });
+    try {
+      const response = await session.withConsentResponse(() =>
+        session.goto('/'),
+      );
+      expect(await session.expectAllowedConsent(response)).toEqual(tokens);
+      await session.expectPrivacyBannerNotVisible();
+    } finally {
+      await session.context.close();
+    }
+  });
+
+  test('keeps a declined choice', async ({storefront}) => {
+    await storefront.setWithPrivacyBanner(true);
+    await storefront.goto('/');
+    await storefront.expectDeclinedConsent(
+      await storefront.declinePrivacyBanner(),
+    );
+
+    const session = await storefront.openNewBrowserSession({
+      withPrivacyBanner: true,
+    });
+    try {
+      const response = await session.withConsentResponse(() =>
+        session.goto('/'),
+      );
+      await session.expectDeclinedConsent(response);
+      await session.expectPrivacyBannerNotVisible();
+      await session.expectNoAnalyticsCookies();
+      session.expectNoMonorailRequests();
+    } finally {
+      await session.context.close();
+    }
+  });
+});
+
+test.describe('New browser session, declined by default without the banner', () => {
+  setTestStore('defaultConsentDisallowed_cookiesEnabled');
+
+  test('keeps an accepted choice and session from cookies alone', async ({
+    storefront,
+  }) => {
+    await storefront.setWithPrivacyBanner(false);
+    await storefront.goto('/');
+    await storefront.waitForConsentLoaded();
+    const accepted = await storefront.setTrackingConsent(ACCEPT_ALL_CONSENT);
+
+    // No localStorage, sessionStorage, or in-memory state carries over.
+    const session = await storefront.openNewBrowserSession({
+      withPrivacyBanner: false,
+      cookiesOnly: true,
+    });
+    try {
+      const response = await session.withConsentResponse(() =>
+        session.goto('/'),
+      );
+      expect(await session.expectAllowedConsent(response)).toEqual({
+        uniqueToken: accepted.uniqueToken,
+        visitToken: accepted.visitToken,
+      });
+      await session.waitForMonorailRequests();
+      session.verifyMonorailRequests(
+        accepted.uniqueToken!,
+        accepted.visitToken!,
+        'in a cookie-only browser session',
+      );
+    } finally {
+      await session.context.close();
+    }
+  });
+});

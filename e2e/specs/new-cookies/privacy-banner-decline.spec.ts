@@ -1,4 +1,4 @@
-import {setTestStore, test, expect} from '../../fixtures';
+import {setTestStore, test} from '../../fixtures';
 
 setTestStore('defaultConsentDisallowed_cookiesEnabled');
 
@@ -6,77 +6,64 @@ test.describe('Privacy Banner - Decline Flow', () => {
   test('should not set analytics cookies or make analytics requests when user declines consent', async ({
     storefront,
   }) => {
-    // Enable privacy banner via JS bundle interception (preserves server-timing)
+    // Enable privacy banner via JS bundle interception
     await storefront.setWithPrivacyBanner(true);
 
-    // 1. Navigate to main page
-    await storefront.goto('/');
+    // 1. Navigate to main page.
+    // Start listening before navigation: the consent request fires during page load.
+    const initialResponse = await storefront.withConsentResponse(() =>
+      storefront.goto('/'),
+    );
+    await storefront.expectDeclinedConsent(initialResponse);
 
-    // 2. Check that server-timing values (_y and _s) are available via Performance API
-    const initialServerTimingValues = await storefront.getServerTimingValues();
-
-    expect(
-      initialServerTimingValues._y,
-      'Initial _y value should be present in server-timing',
-    ).toBeTruthy();
-    expect(
-      initialServerTimingValues._s,
-      'Initial _s value should be present in server-timing',
-    ).toBeTruthy();
-    expect(initialServerTimingValues._y!.length).toBeGreaterThan(0);
-    expect(initialServerTimingValues._s!.length).toBeGreaterThan(0);
-
-    // 3. Verify no analytics cookies are set yet and no analytics requests have been made
+    // 2. Verify no analytics cookies are set yet and no analytics requests have been made
     await storefront.expectNoAnalyticsCookies();
     storefront.expectNoMonorailRequests();
 
-    // 4. Verify perf-kit script is not downloaded yet
+    // 3. Verify perf-kit script is not downloaded yet (it mounts after consent)
     storefront.expectPerfKitNotLoaded();
 
-    // 5. Verify privacy banner appears and click decline
-    await storefront.declinePrivacyBanner();
+    // 4. Verify privacy banner appears, click decline, and confirm analytics
+    // consent is denied
+    await storefront.expectDeclinedConsent(
+      await storefront.declinePrivacyBanner(),
+    );
 
-    // 6. Verify _shopify_essential cookie is set after declining
+    // 5. Verify _shopify_essential cookie is set after declining
     await storefront.expectEssentialCookiePresent();
 
-    // 7. Verify analytics/marketing cookies are NOT set after declining
+    // 6. Verify analytics/marketing cookies are NOT set after declining
     await storefront.expectNoAnalyticsCookies();
 
-    // 8. Verify server-timing values after decline are either absent or contain mock values
-    const updatedServerTimingValues =
-      await storefront.getServerTimingValues(true);
-    storefront.expectMockServerTimingValues(updatedServerTimingValues);
-
-    // 9. Verify perf-kit is downloaded after declining
+    // 7. Verify perf-kit is downloaded after declining (consent settled)
     await storefront.waitForPerfKit();
     storefront.expectPerfKitLoaded();
 
-    // 10. Wait and verify no analytics requests are made
-    await storefront.page.waitForTimeout(1500);
+    // 8. Verify no analytics requests are made
     storefront.expectNoMonorailRequests();
 
-    // 11. Navigate to first product and add to cart to verify server-timing mock values
-    await storefront.navigateToInStockProduct();
+    // 9. Navigate to first product and add to cart to verify consent remains declined
+    const productResponse = await storefront.navigateToInStockProduct({
+      waitForConsent: true,
+    });
+    await storefront.expectDeclinedConsent(productResponse);
 
     // Add item to cart
     await storefront.addToCart();
 
-    // Check server-timing from the latest resource (cart mutation response)
-    const serverTimingAfterCart = await storefront.getServerTimingValues(true);
-
-    // Server-timing _y and _s should be mock values after cart action (consent was declined)
-    storefront.expectMockServerTimingValues(serverTimingAfterCart);
-
     // Verify still no analytics requests after cart action
     storefront.expectNoMonorailRequests();
 
-    // 12. Verify checkout URLs contain MOCK tracking params (consent declined)
+    // 10. Verify checkout URLs contain no real tracking params (consent declined)
     await storefront.expectNoCheckoutUrlTrackingParams(
-      'in cart drawer after declining consent',
+      'in cart drawer with declining consent',
     );
 
-    // 13. Reload the page to verify persistence
-    await storefront.reload();
+    // 11. Reload the page to verify persistence
+    const reloadResponse = await storefront.withConsentResponse(() =>
+      storefront.reload(),
+    );
+    await storefront.expectDeclinedConsent(reloadResponse);
 
     // Verify privacy banner does NOT show up on reload (consent was saved)
     await storefront.expectPrivacyBannerNotVisible();
@@ -87,11 +74,10 @@ test.describe('Privacy Banner - Decline Flow', () => {
     // Verify analytics cookies are still not present after reload
     await storefront.expectNoAnalyticsCookies();
 
-    // Wait for perf-kit to be downloaded after reload
+    // Confirm perf-kit is loaded after reload
     await storefront.waitForPerfKit();
 
-    // Wait and verify no analytics requests after reload
-    await storefront.page.waitForTimeout(1500);
+    // Verify no analytics requests after reload
     storefront.expectNoMonorailRequests();
   });
 });

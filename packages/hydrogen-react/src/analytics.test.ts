@@ -100,6 +100,7 @@ describe('analytics', () => {
     performance = originalPerformance;
     globalThis.PerformanceNavigation = originalPerformanceNavigation;
     /* eslint-enable no-global-assign */
+    delete (window as {Shopify?: unknown}).Shopify;
   });
 
   describe('sendShopifyAnalytics', () => {
@@ -288,6 +289,53 @@ describe('analytics', () => {
         navigationType: 'unknown',
         navigationApi: 'unknown',
       });
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+    });
+
+    it('reads tokens through the Customer Privacy API getters on every call, never requesting fallback generation', () => {
+      /* eslint-disable @typescript-eslint/ban-ts-comment, no-global-assign */
+      // @ts-ignore
+      document = {
+        title: 'test',
+        referrer: '',
+        cookie: '',
+      };
+      /* eslint-enable @typescript-eslint/ban-ts-comment, no-global-assign */
+
+      const uniqueTokenGetter = vi.fn(
+        (_options?: {generateFallback?: boolean; tag?: string}) => 'cta-unique',
+      );
+      const visitTokenGetter = vi.fn(
+        (_options?: {generateFallback?: boolean; tag?: string}) => 'cta-visit',
+      );
+      (window as {Shopify?: unknown}).Shopify = {
+        customerPrivacy: {
+          __internal: {
+            uniqueToken: uniqueTokenGetter,
+            visitToken: visitTokenGetter,
+          },
+        },
+      };
+
+      const consoleErrorSpy = createConsoleErrorSpy();
+      // Call repeatedly: every read must keep the same discipline.
+      getClientBrowserParameters();
+      getClientBrowserParameters();
+
+      expect(uniqueTokenGetter.mock.calls.length).toBeGreaterThan(0);
+      expect(visitTokenGetter.mock.calls.length).toBeGreaterThan(0);
+      for (const call of uniqueTokenGetter.mock.calls) {
+        expect(call[0]).toEqual({
+          generateFallback: false,
+          tag: 'hydrogen:classic',
+        });
+      }
+      for (const call of visitTokenGetter.mock.calls) {
+        expect(call[0]).toEqual({
+          generateFallback: false,
+          tag: 'hydrogen:classic',
+        });
+      }
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
 

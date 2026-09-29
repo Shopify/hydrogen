@@ -7,7 +7,7 @@ import {
 import path from 'node:path';
 import {mkdtemp, readFile, rm, stat, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
-import {StorefrontPage} from './storefront';
+import {StorefrontPage, routeLocalConsentBundles} from './storefront';
 import {CartUtil} from './cart-utils';
 import {DiscountUtil} from './discount-utils';
 import {GiftCardUtil} from './gift-card-utils';
@@ -74,6 +74,7 @@ export const test = base.extend<
   {forEachWorker: void}
 >({
   storefront: async ({page}, use) => {
+    await routeLocalConsentBundles(page.context());
     const storefront = new StorefrontPage(page);
     await use(storefront);
   },
@@ -111,8 +112,6 @@ const TEST_STORE_KEYS = [
   'mockShop',
   'defaultConsentDisallowed_cookiesEnabled',
   'defaultConsentAllowed_cookiesEnabled',
-  'defaultConsentDisallowed_cookiesDisabled',
-  'defaultConsentAllowed_cookiesDisabled',
   'hydrogenPreviewStorefront',
   'customerAccount',
 ] as const;
