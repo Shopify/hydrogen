@@ -255,6 +255,27 @@ export type {
   QueryPredictiveSearchOptions,
 } from "./predictive-search";
 
+export {
+  createBreadcrumbJsonLd,
+  createOrganizationJsonLd,
+  createProductJsonLd,
+  getCanonicalUrl,
+  getLanguageAlternates,
+  serializeJsonLd,
+} from "./seo";
+export type {
+  BreadcrumbItem,
+  CreateProductJsonLdOptions,
+  GetCanonicalUrlOptions,
+  GetLanguageAlternatesOptions,
+  JsonLd,
+  LanguageAlternate,
+  LanguageAlternateLocale,
+  OrganizationJsonLdInput,
+  ProductJsonLdInput,
+  ProductJsonLdVariant,
+} from "./seo";
+
 export { formatMoney } from "./money";
 export { flattenConnection } from "./analytics/utils/flatten-connection";
 export type { FormatMoneyOptions, FormattedMoney, FormattedMoneyRange, MoneyV2 } from "./money";
