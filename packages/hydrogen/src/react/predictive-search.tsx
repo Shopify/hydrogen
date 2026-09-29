@@ -226,7 +226,7 @@ export function usePredictiveSearchActions(): PredictiveSearchActions {
 }
 
 export function usePredictiveSearchForm(): PredictiveSearchFormResult {
-  const { searchAction, store } = useRequiredContext("usePredictiveSearchForm");
+  const { searchAction, actions } = useRequiredContext("usePredictiveSearchForm");
   const coreRegister = useMemo(() => createPredictiveSearchFormRegister(), []);
 
   const register = useCallback<PredictiveSearchFormRegister>(
@@ -241,11 +241,11 @@ export function usePredictiveSearchForm(): PredictiveSearchFormResult {
           const term = event.currentTarget.value;
           onChange?.(event, term);
           if (event.defaultPrevented) return;
-          void store.search(term);
+          void actions.search(term);
         },
       };
     },
-    [coreRegister, store],
+    [coreRegister, actions],
   );
 
   const formProps = useCallback(
@@ -261,11 +261,11 @@ export function usePredictiveSearchForm(): PredictiveSearchFormResult {
           if (event.defaultPrevented) return;
           if (!preventDefault) return;
           event.preventDefault();
-          void store.search(term);
+          void actions.search(term);
         },
       };
     },
-    [searchAction, store],
+    [searchAction, actions],
   );
 
   return { formProps, register };

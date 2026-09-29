@@ -422,6 +422,38 @@ describe("usePredictiveSearchForm", () => {
     expect(latestStore.search).toHaveBeenCalledWith("snow");
   });
 
+  it("keeps captured register and form handlers working after the provider recreates its store", () => {
+    let predictiveSearchEndpoint = "/first";
+    const { result, rerender } = renderHook(() => usePredictiveSearchForm(), {
+      wrapper: ({ children }) =>
+        createElement(PredictiveSearchProvider, { predictiveSearchEndpoint }, children),
+    });
+    const firstStore = latestStore;
+    const { onChange } = result.current.register("query");
+    const { onSubmit } = result.current.formProps({ preventDefault: true });
+    assert(onChange, "Expected register to return an onChange handler");
+    assert(onSubmit, "Expected formProps to return an onSubmit handler");
+
+    predictiveSearchEndpoint = "/second";
+    rerender();
+    expect(latestStore).not.toBe(firstStore);
+
+    render(
+      createElement(
+        "form",
+        { onSubmit },
+        createElement("input", { name: "q", "aria-label": "Search", onChange }),
+      ),
+    );
+    const input = screen.getByLabelText("Search");
+    fireEvent.change(input, { target: { value: "snow" } });
+    fireEvent.submit(input.closest("form") as HTMLFormElement);
+
+    expect(firstStore.search).not.toHaveBeenCalled();
+    expect(latestStore.search).toHaveBeenNthCalledWith(1, "snow");
+    expect(latestStore.search).toHaveBeenNthCalledWith(2, "snow");
+  });
+
   it("lets input change handlers opt out by preventing default", () => {
     function SearchInput() {
       const { register } = usePredictiveSearchForm();
