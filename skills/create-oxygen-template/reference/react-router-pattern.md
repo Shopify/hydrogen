@@ -256,8 +256,8 @@ Pass `cache` directly to `createStorefrontClient`'s `config` — the client wrap
 Ship a `.env.example` (committed, blank) and a gitignored `.env`. Use the variables and setup steps in the template
 [README](../../../templates/react-router/README.md) and
 [`.env.example`](../../../templates/react-router/.env.example). The store connection and analytics identity
-(`PUBLIC_STORE_DOMAIN`, optional `PUBLIC_STOREFRONT_ID`) come from the Worker `env`, not from `app/lib/config.ts` (see
-config split). `PRIVATE_STOREFRONT_API_TOKEN` and `SESSION_SECRET` are server-only secrets.
+(`PUBLIC_STORE_DOMAIN`, optional `PUBLIC_STOREFRONT_ID`) come from the Worker `env` (see config split).
+`PRIVATE_STOREFRONT_API_TOKEN` and `SESSION_SECRET` are server-only secrets.
 
 ```sh
 SESSION_SECRET="replace-with-a-long-random-secret-32+"
@@ -297,7 +297,7 @@ Keep `hydrogen gql check --fail-on-warn` in `typecheck` and preserve the `@shopi
 
 Replace each `@shared/*` import with template-local code:
 
-- config constants -> local `app/lib/config.ts` (see config split below)
+- config constants -> local `app/lib/shop.ts` (see config split below)
 - private token lookup -> local `app/lib/env.ts`
 - buyer IP helper -> local `app/lib/buyer-ip.ts` (replace `process.env.NODE_ENV` with `import.meta.env.PROD`)
 - encrypted customer session -> copy into `app/lib/customer-session.ts` if Customer Account remains enabled (it is
