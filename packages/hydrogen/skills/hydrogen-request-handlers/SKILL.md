@@ -45,7 +45,7 @@ handleShopifyRoutes({
 });
 ```
 
-The app's response is passed through unchanged (status, body, `content-type`, `content-disposition`, redirects). Hydrogen adds `_fd=0` upstream so Shopify does not redirect back to the primary domain, and rewrites store-origin redirects onto the storefront origin. It is off by default: enable it only when the store needs it, and prefer limiting `prefixes`. App proxy paths must not collide with the app's own routes; a registered handler group at the same pathname still wins.
+The app's response is passed through unchanged (status, body, `content-type`, `content-disposition`, redirects). Hydrogen adds `_fd=0` upstream so Shopify does not redirect back to the primary domain, and rewrites store-origin redirects onto the storefront origin. It is off by default: enable it only when the store needs it, and prefer limiting `prefixes`. App proxy paths must not collide with the app's own routes; a registered handler group at the same pathname still wins. Link to app proxy pages with a plain `<a href>` (a full document navigation), not the framework's client-side link component: the proxy runs on the server, so a client-side route change would reach the framework 404 instead.
 
 ## Variant Id Redirects
 

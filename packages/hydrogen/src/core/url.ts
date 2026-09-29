@@ -14,10 +14,7 @@ export const BUY_PERMALINK_RE = new RegExp(`^/buy/${BUY_ITEM_PAIR}(?:,${BUY_ITEM
  * See https://shopify.dev/docs/apps/build/online-store/display-dynamic-data
  */
 export const APP_PROXY_PREFIXES = ["apps", "a", "community", "tools"] as const;
-
-export function createAppProxyPattern(prefixes: readonly string[]): RegExp {
-  return new RegExp(`^/(?:${prefixes.join("|")})(?:/|$)`);
-}
+export const APP_PROXY_RE = /^\/(?:apps|a|community|tools)(?:\/|$)/;
 
 export const CUSTOMER_ACCOUNT_PATHS = {
   authorize: "/account/authorize",

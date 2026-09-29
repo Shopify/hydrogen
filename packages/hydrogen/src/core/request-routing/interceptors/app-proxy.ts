@@ -1,5 +1,6 @@
 import { PROXY_REQUEST_HEADER_DENYLIST } from "../../headers";
-import { APP_PROXY_PREFIXES, createAppProxyPattern } from "../../url";
+import { parseSameOriginUrl } from "../../standard-routes/path";
+import { APP_PROXY_PREFIXES, APP_PROXY_RE } from "../../url";
 import type { HydrogenRouteInterceptor } from "../route-types";
 import { createProxyInterceptor } from "./proxy";
 
@@ -21,57 +22,36 @@ export type AppProxyOptions = {
  * turns the forward off; it is stripped before the request reaches the app.
  */
 const FORWARD_DOMAIN_PARAM = "_fd";
-const FORWARD_DOMAIN_OFF = "0";
 
-// One interceptor per distinct prefix list; the option object may be rebuilt per request.
-const interceptorsByPrefixes = new Map<string, HydrogenRouteInterceptor>();
+const proxyAppRequest = createProxyInterceptor({
+  match: APP_PROXY_RE,
+  requestHeaders: { deny: PROXY_REQUEST_HEADER_DENYLIST },
+  rewriteSearch: (searchParams) => searchParams.set(FORWARD_DOMAIN_PARAM, "0"),
+  responseHeaders: {
+    prepare: (headers, { url, storefrontClient }) => {
+      // Apps redirect within their proxy path; keep those on the storefront origin.
+      const location = headers.get("location");
+      const target = location ? parseSameOriginUrl(location, storefrontClient.storeUrl) : null;
+      if (!target) return;
+      target.searchParams.delete(FORWARD_DOMAIN_PARAM);
+      headers.set("location", `${url.origin}${target.pathname}${target.search}${target.hash}`);
+    },
+  },
+  scope: "app-proxy",
+});
 
-function resolvePrefixes(option: boolean | AppProxyOptions): readonly AppProxyPrefix[] | null {
-  if (option === false) return null;
-  if (option === true) return APP_PROXY_PREFIXES;
+function resolvePrefixes(option: boolean | AppProxyOptions): readonly AppProxyPrefix[] {
+  if (option === false) return [];
+  if (option === true || !option.prefixes) return APP_PROXY_PREFIXES;
 
-  const prefixes = option.prefixes ?? APP_PROXY_PREFIXES;
-  for (const prefix of prefixes) {
+  for (const prefix of option.prefixes) {
     if (!APP_PROXY_PREFIXES.includes(prefix)) {
       throw new Error(
         `appProxy: "${prefix}" is not a Shopify app proxy prefix. Expected one of: ${APP_PROXY_PREFIXES.join(", ")}.`,
       );
     }
   }
-  return prefixes.length > 0 ? prefixes : null;
-}
-
-function createAppProxyInterceptor(prefixes: readonly AppProxyPrefix[]): HydrogenRouteInterceptor {
-  return createProxyInterceptor({
-    match: createAppProxyPattern(prefixes),
-    requestHeaders: { deny: PROXY_REQUEST_HEADER_DENYLIST },
-    rewriteSearch: (searchParams) => searchParams.set(FORWARD_DOMAIN_PARAM, FORWARD_DOMAIN_OFF),
-    responseHeaders: {
-      prepare: (headers, { url, storefrontClient }) => {
-        // Apps redirect within their proxy path; keep those on the storefront origin.
-        const location = headers.get("location");
-        if (!location) return;
-        const target = new URL(location, storefrontClient.storeUrl);
-        if (target.origin !== new URL(storefrontClient.storeUrl).origin) return;
-        target.searchParams.delete(FORWARD_DOMAIN_PARAM);
-        headers.set(
-          "location",
-          new URL(`${target.pathname}${target.search}${target.hash}`, url.origin).toString(),
-        );
-      },
-    },
-    scope: "app-proxy",
-  });
-}
-
-function getAppProxyInterceptor(prefixes: readonly AppProxyPrefix[]): HydrogenRouteInterceptor {
-  const key = prefixes.join(",");
-  let interceptor = interceptorsByPrefixes.get(key);
-  if (!interceptor) {
-    interceptor = createAppProxyInterceptor(prefixes);
-    interceptorsByPrefixes.set(key, interceptor);
-  }
-  return interceptor;
+  return option.prefixes;
 }
 
 /**
@@ -82,8 +62,11 @@ function getAppProxyInterceptor(prefixes: readonly AppProxyPrefix[]): HydrogenRo
  * Downloads URLs, keep working after a move to Hydrogen.
  */
 export const handleAppProxy: HydrogenRouteInterceptor = (url, options) => {
-  const prefixes = resolvePrefixes(options.appProxy ?? false);
-  if (!prefixes) return null;
+  if (!APP_PROXY_RE.test(url.pathname)) return null;
 
-  return getAppProxyInterceptor(prefixes)(url, options);
+  const prefix = url.pathname.split("/")[1] ?? "";
+  const prefixes = resolvePrefixes(options.appProxy ?? false);
+  if (!prefixes.some((enabled) => enabled === prefix)) return null;
+
+  return proxyAppRequest(url, options);
 };
