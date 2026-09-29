@@ -65,7 +65,7 @@ npx create-next-app@latest
 Then add Hydrogen from your project directory:
 
 ```bash
-npx @shopify/hydrogen@preview setup
+npx @shopify/hydrogen setup
 ```
 
 `setup` installs `@shopify/hydrogen` with your project's package manager and copies Hydrogen's agent skills into your project's skills directory — matched to the version you just installed. After upgrading Hydrogen later, run `npx @shopify/hydrogen skills sync` to bring the skills back in line, and `npx @shopify/hydrogen skills check` to verify they are (it exits non-zero when they are not, so it can run in CI). See the [package README](packages/hydrogen/README.md#keeping-skills-in-sync).
