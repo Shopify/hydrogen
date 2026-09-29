@@ -175,7 +175,7 @@ function parsePredictiveSearchRequest(
   };
 }
 
-// Unlike enum params, every limit has a safe fallback, so unparseable values use the default instead of erroring.
+// Invalid enum params return a typed error, but an unparseable limit falls back to the configured default.
 function parseLimit(
   searchParams: URLSearchParams,
   options: CreatePredictiveSearchServerHandlersOptions,
