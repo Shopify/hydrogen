@@ -2,12 +2,7 @@ import { Link } from "react-router";
 
 import { closeMobileNavDrawer, MOBILE_NAV_DRAWER_ID, openDialogFallback } from "~/lib/cart-drawer";
 
-export type NavCollection = {
-  handle: string;
-  title: string;
-};
-
-export function MobileNav({ collections }: { collections: NavCollection[] }) {
+export function MobileNav() {
   return (
     <dialog
       id={MOBILE_NAV_DRAWER_ID}
@@ -39,17 +34,15 @@ export function MobileNav({ collections }: { collections: NavCollection[] }) {
         <div className="flex-1 overflow-y-auto p-4">
           <nav aria-label="Mobile navigation">
             <ul role="list" className="flex flex-col">
-              {collections.map((collection) => (
-                <li key={collection.handle}>
-                  <Link
-                    to={`/collections/${collection.handle}`}
-                    className="min-h-touch-target text-on-surface flex items-center rounded-sm text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
-                    onClick={() => closeMobileNavDrawer()}
-                  >
-                    {collection.title}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link
+                  to="/collections"
+                  className="min-h-touch-target text-on-surface flex items-center rounded-sm text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
+                  onClick={() => closeMobileNavDrawer()}
+                >
+                  Collections
+                </Link>
+              </li>
             </ul>
           </nav>
         </div>
