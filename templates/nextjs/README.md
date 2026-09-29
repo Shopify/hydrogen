@@ -82,8 +82,8 @@ If `PRIVATE_STOREFRONT_API_TOKEN` is unset, the app uses `mock.shop`. If you set
 - `/search`: storefront search with filters, sort, pagination, and predictive search.
 - `/cart`: cart page with Shop Pay and no-JS fallback for the cart drawer.
 - `/account`: Customer Account OAuth page for real stores.
-- `/sitemap.xml`: product and collection sitemap.
-- `/robots.txt`: crawler rules for the storefront.
+- `/sitemap.xml`: sitemap index served by Hydrogen's sitemap handlers (products, collections, pages, blogs, and static pages).
+- `/robots.txt`: crawler rules served by Hydrogen's robots handler, with the sitemap and UCP/MCP endpoints advertised.
 
 ## Deploy to Vercel
 

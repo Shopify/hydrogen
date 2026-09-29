@@ -3,7 +3,9 @@
 import {
   buildProductSelectionSearchParams,
   canAddToCart,
+  createProductJsonLd,
   type SelectedOption,
+  serializeJsonLd,
 } from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
 import Link from "next/link";
@@ -18,7 +20,7 @@ import { shopifyImageUrl, srcSetFor } from "@/lib/image";
 import { formatPrice } from "@/lib/money";
 import { ProductProvider, useProductForm } from "@/lib/product";
 import type { ProductData } from "@/lib/product-query";
-import { canonicalUrl, jsonLdScript } from "@/lib/site";
+import { canonicalUrl } from "@/lib/site";
 
 /**
  * Interactive product details (`hydrogen-variant-form` /
@@ -85,35 +87,25 @@ function ProductPage({ product }: { product: ProductData }) {
     ];
   })();
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.title,
-    description: product.description ?? undefined,
-    image: galleryImages.map((image) => image.url),
-    offers: selectedVariant
-      ? {
-          "@type": "Offer",
-          price: selectedVariant.price.amount,
-          priceCurrency: selectedVariant.price.currencyCode,
-          availability: selectedVariant.availableForSale
-            ? "https://schema.org/InStock"
-            : "https://schema.org/OutOfStock",
-          url: canonicalUrl(`/products/${product.handle}`),
-        }
-      : {
-          "@type": "AggregateOffer",
-          priceCurrency: product.priceRange.minVariantPrice.currencyCode,
-          lowPrice: product.priceRange.minVariantPrice.amount,
-          highPrice: product.priceRange.maxVariantPrice.amount,
-        },
-  };
+  // Product structured data (`hydrogen-seo` skill, F6/F10): one `Offer` for
+  // the selected variant, or an `AggregateOffer` from the price range.
+  const jsonLd = createProductJsonLd(
+    {
+      id: product.id,
+      title: product.title,
+      description: product.description,
+      vendor: product.vendor,
+      images: galleryImages,
+      priceRange: product.priceRange,
+    },
+    { url: canonicalUrl(`/products/${product.handle}`), selectedVariant },
+  );
 
   return (
     <div className="max-w-page px-margin mx-auto w-full py-8">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
 
       <div className="product-grid mb-16 grid grid-cols-1 gap-6 md:gap-12">

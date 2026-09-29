@@ -12,14 +12,16 @@ import {
   Toolbar,
   useLoadMore,
 } from "~/components/CollectionBrowse";
+import { BreadcrumbJsonLd } from "~/components/JsonLd";
 import { ProductCard } from "~/components/ProductCard";
 import { loadSearchPage, type SearchPageData } from "~/lib/search";
+import { canonicalLink } from "~/lib/seo";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/search";
 
-export function meta({ matches }: Route.MetaArgs) {
+export function meta({ data, location, matches }: Route.MetaArgs) {
   const shopName = getShopNameFromRootMatch(matches[0]);
   return [
     { title: formatPageTitle("Search", shopName) },
@@ -27,6 +29,8 @@ export function meta({ matches }: Route.MetaArgs) {
       name: "description",
       content: `Search products at ${shopName}.`,
     },
+    // Keep `q`: a search term changes the primary content; filters and sort do not.
+    ...(data ? [canonicalLink(data.origin, location, ["q"])] : []),
   ];
 }
 
@@ -55,29 +59,6 @@ function SearchViewedTracker({
   }, [searchTerm, totalCount]);
 
   return null;
-}
-
-function BreadcrumbJsonLd({ origin }: { origin: string }) {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: `${origin}/`,
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Search",
-        item: `${origin}/search`,
-      },
-    ],
-  };
-
-  return <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>;
 }
 
 function Breadcrumb() {
@@ -273,7 +254,7 @@ export default function SearchRoute({ loaderData }: Route.ComponentProps) {
       ) : null}
       <main className="flex-1" id="main-content" tabIndex={-1}>
         <div className="max-w-page px-margin mx-auto w-full py-8 md:py-12">
-          <BreadcrumbJsonLd origin={loaderData.origin} />
+          <BreadcrumbJsonLd origin={loaderData.origin} items={[{ name: "Search" }]} />
           <Breadcrumb />
           <SearchHeader term={loaderData.searchTerm} />
           {loaderData.performed ? <SearchResults loaderData={loaderData} /> : null}

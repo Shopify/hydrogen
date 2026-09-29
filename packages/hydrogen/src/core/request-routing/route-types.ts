@@ -17,6 +17,12 @@ export type ShopifyRouteHandlerContext = {
   sessionManager: ShopifyRouteSessionManager;
   storefrontClient: StorefrontClient;
   requestContext: ShopifyRequestContext;
+  /**
+   * Path params captured by a handler registered with a template pathname,
+   * for example `{ type: "products", page: "1" }` for `/sitemap/:type/:page.xml`.
+   * Empty for handlers registered with a literal pathname.
+   */
+  params: Readonly<Record<string, string>>;
 };
 
 export type ShopifyRouteJsonResult<TData = unknown> = {
@@ -47,10 +53,24 @@ export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRo
   headers?: HeadersInit;
 };
 
+/**
+ * A fully formed `Response` for handlers that serve something other than JSON,
+ * such as XML sitemaps or `robots.txt`. Returned as-is, with request-context
+ * response headers applied on top.
+ */
+export type ShopifyRouteResponseResult = {
+  type: "response";
+  response: Response;
+};
+
 export type ShopifyRouteHandlerResult<
   TData = unknown,
   TError extends ShopifyRouteError = ShopifyRouteError,
-> = ShopifyRouteJsonResult<TData> | ShopifyRouteRedirectResult | ShopifyRouteErrorResult<TError>;
+> =
+  | ShopifyRouteJsonResult<TData>
+  | ShopifyRouteRedirectResult
+  | ShopifyRouteErrorResult<TError>
+  | ShopifyRouteResponseResult;
 
 export type CallableRouteHandler<
   TContext,
@@ -69,7 +89,7 @@ export type ShopifyRouteHandler<
 
 export type ShopifyRouteHandlerGroup = Record<string, ShopifyRouteHandler>;
 
-export type HydrogenRoutesOptions = ShopifyRouteHandlerContext & {
+export type HydrogenRoutesOptions = Omit<ShopifyRouteHandlerContext, "params"> & {
   routeTemplates?: ShopifyRouteTemplates;
   handlers?: readonly ShopifyRouteHandlerGroup[];
 };

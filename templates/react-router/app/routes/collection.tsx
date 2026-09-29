@@ -12,21 +12,24 @@ import {
   Toolbar,
   useLoadMore,
 } from "~/components/CollectionBrowse";
+import { BreadcrumbJsonLd } from "~/components/JsonLd";
 import { ProductCard } from "~/components/ProductCard";
 import { loadCollectionPage } from "~/lib/collection";
+import { canonicalLink } from "~/lib/seo";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/collection";
 
-export function meta({ matches }: Route.MetaArgs) {
+export function meta({ data, location, matches }: Route.MetaArgs) {
   const shopName = getShopNameFromRootMatch(matches[0]);
   return [
-    { title: formatPageTitle("Collection", shopName) },
+    { title: formatPageTitle(data?.collection.title ?? "Collection", shopName) },
     {
       name: "description",
-      content: `Shop the ${shopName} collection page.`,
+      content: data?.collection.description || `Shop the ${shopName} collection page.`,
     },
+    ...(data ? [canonicalLink(data.origin, location)] : []),
   ];
 }
 
@@ -52,29 +55,6 @@ function CollectionViewedTracker({ collection }: { collection: CollectionData })
   }, [collection.id, collection.handle]);
 
   return null;
-}
-
-function BreadcrumbJsonLd({ collection, origin }: { collection: CollectionData; origin: string }) {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: `${origin}/`,
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: collection.title,
-        item: `${origin}/collections/${collection.handle}`,
-      },
-    ],
-  };
-
-  return <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>;
 }
 
 function Breadcrumb({ collection }: { collection: CollectionData }) {
@@ -234,7 +214,13 @@ export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
       <CollectionViewedTracker collection={loaderData.collection} />
       <main className="flex-1" id="main-content" tabIndex={-1}>
         <div className="max-w-page px-margin mx-auto w-full py-8 md:py-12">
-          <BreadcrumbJsonLd collection={loaderData.collection} origin={loaderData.origin} />
+          <BreadcrumbJsonLd
+            origin={loaderData.origin}
+            items={[
+              { name: "Collections", url: `${loaderData.origin}/collections` },
+              { name: loaderData.collection.title },
+            ]}
+          />
           <Breadcrumb collection={loaderData.collection} />
           <CollectionHeader collection={loaderData.collection} />
           <div className="lg:grid lg:grid-cols-[15rem_1fr] lg:gap-10">

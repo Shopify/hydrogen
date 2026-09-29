@@ -27,7 +27,9 @@ Request
   -> framework 404 page
 ```
 
-`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, the generic `/__shopify/*` API proxy, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, UCP buy permalinks like `/buy/{itemId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product URLs, and app-registered handler groups such as `createCartServerHandlers()` or `createCustomerAccountServerHandlers()`.
+`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, the generic `/__shopify/*` API proxy, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, UCP buy permalinks like `/buy/{itemId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product URLs, and app-registered handler groups such as `createCartServerHandlers()`, `createCustomerAccountServerHandlers()`, `createSitemapServerHandlers()`, or `createRobotsTxtServerHandlers()`.
+
+Handler groups may register template pathnames such as `/sitemap/:type/:page.xml`; captured segments arrive as `context.params`. Literal pathnames win over template pathnames. Handlers that serve non-JSON bodies (XML, text) return `{ type: "response", response }`.
 
 ## Variant Id Redirects
 
@@ -68,7 +70,8 @@ const redirect = await handleShopifyRedirects({
 - Call `handleShopifyRoutes` without awaiting it immediately. It returns `null` synchronously when no route matches; only return or await the promise after checking that it is truthy.
 - If the app has a request-level `try/catch` that converts errors into a `Response`, use `return await shopifyRoute` inside that boundary so rejected route promises reach the same error handling as synchronous setup failures. If the framework owns request error handling, return `shopifyRoute` directly. Do not add an inline `.catch()` unless the matched route intentionally needs different error handling.
 - Pass `request` and `storefrontClient` into `handleShopifyRedirects`; it does not receive a session manager.
-- Pass registered handler groups explicitly, for example `handlers: [cartHandlers, customerAccountHandlers]`.
+- Pass registered handler groups explicitly, for example `handlers: [cartHandlers, sitemapHandlers, robotsHandlers, customerAccountHandlers]`.
+- Register `createSitemapServerHandlers()` and `createRobotsTxtServerHandlers()` (local `hydrogen-seo` skill) instead of framework `sitemap`/`robots` routes, and pass them the same `routeTemplates`.
 - Pass `routeTemplates` into `handleShopifyRoutes` so Liquid-parity `?variant=` product links resolve to canonical option params instead of passing through as ordinary product-page requests.
 - `handleShopifyRoutes` and `handleShopifyRedirects` apply request-context response headers before returning matched Shopify responses. Return those responses directly without calling `requestContext.applyResponseHeaders()` again.
 - Link and submit to Customer Account routes (`/account/login`, `/account/authorize`, `/account/refresh`, `/account/logout`) with plain HTML `<a>`/`<form>`, never the framework's client-side navigation component (`<Form>`/`<Link>` in React Router, `next/link` in Next.js, `NuxtLink` in Nuxt). The login and logout handlers return raw HTTP redirects to external Shopify URLs, which client-nav cannot process.
@@ -84,7 +87,9 @@ Use public package exports:
 import {
   createCartServerHandlers,
   createPredictiveSearchServerHandlers,
+  createRobotsTxtServerHandlers,
   createShopifyRequestContext,
+  createSitemapServerHandlers,
   createStorefrontClient,
   handleShopifyRedirects,
   handleShopifyRoutes,
@@ -105,3 +110,5 @@ Run the app in dev and production modes, then check:
 7. `GET /products/{handle}?variant={numeric id}` returns a 302 to the option-params URL when `routeTemplates` is passed to `handleShopifyRoutes`; `?variant=garbage` falls through to the product page.
 8. Cart, Customer Account, and consent responses preserve eligible `Set-Cookie` headers. Consent responses remain private and non-cacheable even when personal state is returned only in the body.
 9. Authenticated Customer Account responses do not preserve public or CDN cache-control headers.
+10. `GET /sitemap.xml` returns an XML sitemap index and `GET /sitemap/products/1.xml` returns product URLs that match the app's product route when sitemap handlers are registered.
+11. `GET /robots.txt` returns `text/plain` with a `Sitemap:` line pointing at the app origin when robots handlers are registered.

@@ -14,6 +14,7 @@ export type {
   ShopifyRouteHandlerResult,
   ShopifyRouteJsonResult,
   ShopifyRouteRedirectResult,
+  ShopifyRouteResponseResult,
   ShopifyRedirectStatus,
 } from "./request-routing/registered-routes";
 export { createStorefrontClient } from "../client/client";
@@ -259,6 +260,9 @@ export {
   createBreadcrumbJsonLd,
   createOrganizationJsonLd,
   createProductJsonLd,
+  createRobotsTxt,
+  createRobotsTxtServerHandlers,
+  createSitemapServerHandlers,
   getCanonicalUrl,
   getLanguageAlternates,
   serializeJsonLd,
@@ -266,6 +270,9 @@ export {
 export type {
   BreadcrumbItem,
   CreateProductJsonLdOptions,
+  CreateRobotsTxtOptions,
+  CreateRobotsTxtServerHandlersOptions,
+  CreateSitemapServerHandlersOptions,
   GetCanonicalUrlOptions,
   GetLanguageAlternatesOptions,
   JsonLd,
@@ -274,6 +281,13 @@ export type {
   OrganizationJsonLdInput,
   ProductJsonLdInput,
   ProductJsonLdVariant,
+  RobotsTxtGroup,
+  RobotsTxtRule,
+  RobotsTxtServerHandlers,
+  SitemapChangeFrequency,
+  SitemapResource,
+  SitemapResourceType,
+  SitemapServerHandlers,
 } from "./seo";
 
 export { formatMoney } from "./money";
