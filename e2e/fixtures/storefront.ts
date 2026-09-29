@@ -615,7 +615,14 @@ export class StorefrontPage {
    * Open the storefront in a new browser session: a fresh context that keeps
    * only persistent cookies, like reopening the browser. The caller closes it.
    */
-  async openNewBrowserSession(options: {withPrivacyBanner: boolean}) {
+  async openNewBrowserSession(options: {
+    withPrivacyBanner: boolean;
+    /**
+     * Keep only persistent cookies, dropping localStorage too, to prove that
+     * consent and identity do not depend on any client-side storage.
+     */
+    cookiesOnly?: boolean;
+  }) {
     const browser = this.context.browser();
     assert(browser, 'A browser is required to open a new session');
     const state = await this.context.storageState();
@@ -623,7 +630,7 @@ export class StorefrontPage {
       baseURL: new URL(this.page.url()).origin,
       extraHTTPHeaders: getLoadtestHeaders(),
       storageState: {
-        ...state,
+        origins: options.cookiesOnly ? [] : state.origins,
         cookies: state.cookies.filter(
           (cookie) => cookie.expires !== SESSION_COOKIE_EXPIRY,
         ),
@@ -633,6 +640,43 @@ export class StorefrontPage {
     const session = new StorefrontPage(await context.newPage());
     await session.setWithPrivacyBanner(options.withPrivacyBanner);
     return session;
+  }
+
+  /**
+   * Open the storefront in another tab of the same browser session. It shares
+   * cookies and localStorage, but has its own page state and sessionStorage.
+   */
+  async openTab(options: {withPrivacyBanner: boolean}) {
+    const tab = new StorefrontPage(await this.context.newPage());
+    await tab.setWithPrivacyBanner(options.withPrivacyBanner);
+    return tab;
+  }
+
+  /** The consent and token state the Customer Privacy API currently reports. */
+  async getConsentState() {
+    return this.page.evaluate(() => {
+      const privacy = (window as any).Shopify?.customerPrivacy;
+      return {
+        consentStatus: (privacy?.consentStatus ?? null) as string | null,
+        analyticsAllowed: Boolean(privacy?.analyticsProcessingAllowed?.()),
+        uniqueToken: (privacy?.__internal?.uniqueToken?.() ?? null) as
+          | string
+          | null,
+        visitToken: (privacy?.__internal?.visitToken?.() ?? null) as
+          | string
+          | null,
+      };
+    });
+  }
+
+  /**
+   * Follow a visible in-app link: a client-side navigation that never re-runs
+   * consent initialization. The header renders a hidden mobile-menu copy of
+   * each link, so only the visible one is clicked.
+   */
+  async navigateClientSide(path: '/' | '/collections/all') {
+    await this.page.locator(`a[href="${path}"]:visible`).first().click();
+    await expect(this.page).toHaveURL((url) => new URL(url).pathname === path);
   }
 
   /**

@@ -126,3 +126,79 @@ test.describe('Consent without a Server-Timing proxy marker', () => {
     storefront.expectNoMonorailRequests();
   });
 });
+
+// Long enough to observe the page with the consent request still in flight.
+const CONSENT_DELAY_IN_MILLISECONDS = 3000;
+
+const FRESH_VISITOR_SCENARIOS = [
+  {store: 'defaultConsentAllowed_cookiesEnabled', banner: false, tracked: true},
+  {store: 'defaultConsentAllowed_cookiesEnabled', banner: true, tracked: true},
+  {
+    store: 'defaultConsentDisallowed_cookiesEnabled',
+    banner: false,
+    tracked: false,
+  },
+  {
+    store: 'defaultConsentDisallowed_cookiesEnabled',
+    banner: true,
+    tracked: false,
+  },
+] as const;
+
+for (const {store, banner, tracked} of FRESH_VISITOR_SCENARIOS) {
+  test.describe(`Fresh visitor (${store}, banner: ${banner})`, () => {
+    setTestStore(store);
+
+    test('sends no analytics before consent loads, then follows the store default', async ({
+      storefront,
+    }) => {
+      await storefront.setWithPrivacyBanner(banner);
+      await storefront.page.route(
+        '**/api/unstable/graphql.json',
+        async (route) => {
+          if (
+            !(route.request().postData() ?? '').includes('consentManagement')
+          ) {
+            return route.continue();
+          }
+          const response = await route.fetch();
+          await new Promise((resolve) =>
+            setTimeout(resolve, CONSENT_DELAY_IN_MILLISECONDS),
+          );
+          return route.fulfill({response});
+        },
+      );
+      const consentResponse = storefront.waitForConsentResponse();
+
+      await storefront.page.goto('/');
+      await storefront.page.waitForLoadState('domcontentloaded');
+
+      // === While the consent request is in flight ===
+      expect((await storefront.getConsentState()).consentStatus).not.toBe(
+        'loaded',
+      );
+      storefront.expectNoMonorailRequests();
+      storefront.expectPerfKitNotLoaded();
+      await storefront.expectPrivacyBannerNotVisible();
+
+      // === After consent loads ===
+      const response = await consentResponse;
+      await storefront.waitForConsentLoaded();
+      if (tracked) {
+        const tokens = await storefront.expectAllowedConsent(response);
+        await storefront.waitForMonorailRequests();
+        storefront.verifyMonorailRequests(
+          tokens.uniqueToken,
+          tokens.visitToken,
+          'after consent loaded',
+        );
+        await storefront.expectPrivacyBannerNotVisible();
+        return;
+      }
+      await storefront.expectDeclinedConsent(response);
+      if (banner) await storefront.expectPrivacyBannerVisible();
+      else await storefront.expectPrivacyBannerNotVisible();
+      storefront.expectNoMonorailRequests();
+    });
+  });
+}

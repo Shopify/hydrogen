@@ -13,8 +13,6 @@ import {
  * consent from them once, keeps the visitor's choice and session, and then
  * expires them, so the choice lives only in backend-managed cookies.
  */
-setTestStore('defaultConsentDisallowed_cookiesEnabled');
-
 const CHOICES = [
   {label: 'accepted', choice: ACCEPT_ALL_CONSENT, flipped: DECLINE_ALL_CONSENT},
   {label: 'declined', choice: DECLINE_ALL_CONSENT, flipped: ACCEPT_ALL_CONSENT},
@@ -23,7 +21,25 @@ const SCENARIOS = [false, true].flatMap((withPrivacyBanner) =>
   CHOICES.map((choice) => ({...choice, withPrivacyBanner})),
 );
 
-for (const {label, choice, flipped, withPrivacyBanner} of SCENARIOS) {
+// Both store defaults: on an allowed-by-default store a lost legacy decline
+// would silently start tracking, and on a declined-by-default store a lost
+// legacy acceptance would silently stop it or bring the banner back.
+for (const storeKey of [
+  'defaultConsentAllowed_cookiesEnabled',
+  'defaultConsentDisallowed_cookiesEnabled',
+] as const) {
+  test.describe(storeKey, () => {
+    setTestStore(storeKey);
+    for (const scenario of SCENARIOS) defineMigrationTest(scenario);
+  });
+}
+
+function defineMigrationTest({
+  label,
+  choice,
+  flipped,
+  withPrivacyBanner,
+}: (typeof SCENARIOS)[number]) {
   test(`migrates a legacy ${label} visitor (banner: ${withPrivacyBanner})`, async ({
     storefront,
   }) => {
@@ -86,6 +102,26 @@ for (const {label, choice, flipped, withPrivacyBanner} of SCENARIOS) {
       await storefront.expectNoCheckoutUrlTrackingParams('after migration');
       storefront.expectCheckoutWithoutTracking(checkoutEvents);
     }
+
+    // === The original choice holds on its own after the deletion ===
+    const afterDeletionResponse = await storefront.withConsentResponse(() =>
+      storefront.reload(),
+    );
+    if (tracked) {
+      expect(
+        await storefront.expectAllowedConsent(afterDeletionResponse),
+        'The migrated session survives without the legacy cookies',
+      ).toEqual({
+        uniqueToken: legacy.uniqueToken,
+        visitToken: legacy.visitToken,
+      });
+    } else {
+      await storefront.expectDeclinedConsent(afterDeletionResponse);
+      await storefront.navigateClientSide('/collections/all');
+      storefront.expectNoMonorailRequests();
+    }
+    await storefront.expectPrivacyBannerNotVisible();
+    await storefront.expectNoLegacyCookies();
 
     // === A later change is persisted without the legacy mirror ===
     await storefront.setTrackingConsent(flipped);
