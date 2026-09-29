@@ -149,6 +149,9 @@ export interface ShopifyProviderBase {
   /**
    * Uses the current window.location.origin for Storefront API requests.
    * This requires setting up a proxy for Storefront API requests in your domain.
+   * Without the proxy, cart requests still work, but visitor analytics and
+   * session attribution do not,
+   * [notice](https://shopify.dev/changelog/posts/tracking-cookie-deprecation-hydrogen).
    */
   sameDomainForStorefrontApi?: boolean;
 }
