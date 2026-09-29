@@ -1,3 +1,4 @@
+import {execFileSync} from 'node:child_process';
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {
@@ -7,6 +8,7 @@ import {
   writeFile,
 } from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
+import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 
 import {type AdminSession, login} from '../../../lib/auth.js';
@@ -285,71 +287,81 @@ describe('pullVariables', () => {
   });
 
   describe('environment variable quoting', () => {
+    const mockVariables = (values: Record<string, string>) =>
+      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+        id: SHOPIFY_CONFIG.storefront.id,
+        environmentVariables: Object.entries(values).map(
+          ([key, value], index) => ({
+            id: `gid://shopify/HydrogenStorefrontEnvironmentVariable/${index}`,
+            key,
+            value,
+            readOnly: false,
+            isSecret: false,
+          }),
+        ),
+      });
+
+    // Values that must survive `env pull` unchanged when read back by the
+    // dotenv parser used by `hydrogen dev`, `env push` and `deploy`.
+    const ROUND_TRIP_VALUES: Record<string, string> = {
+      SIMPLE: 'abc123',
+      BRACES_AND_AT: 'IirR{L3T#udhJ@gqKPN}Ne@sLuez73X)',
+      DOLLAR: 'pa$word',
+      DOLLAR_BRACE: 'x${HOME}y',
+      COMMAND_SUBSTITUTION: '$(touch pwned-dollar)',
+      BACKTICK: '`touch pwned-backtick`',
+      BACKSLASH: 'a\\b',
+      DOUBLE_QUOTES: 'value"with"quotes',
+      SINGLE_QUOTE: "it's",
+      SINGLE_QUOTE_AND_DOLLAR: "it's $5",
+      HASH: 'a#b',
+      SPACES: '  padded value  ',
+      TAB: 'a\tb',
+      CONTROL_CHARS: 'value\u0000\u001B[31mevil',
+      BACKSLASH_INJECTION: 'value\\"; rm -rf /',
+      NEWLINE: 'value\necho hacked',
+      CRLF: 'line1\r\nline2',
+      MULTILINE_KEY:
+        '-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA04up8hoqzS1...\n-----END RSA PRIVATE KEY-----',
+      TABS_AND_RETURNS: 'line1\tcolumn2\rreturn\nline2',
+    };
+
     beforeEach(() => {
       vi.mocked(renderConfirmationPrompt).mockResolvedValue(true);
     });
 
-    it('quotes environment variables with shell metacharacters', async () => {
-      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
-        id: SHOPIFY_CONFIG.storefront.id,
-        environmentVariables: [
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
-            key: 'ORDERGROOVE_HASH',
-            value: 'IirR{L3T#udhJ@gqKPN}Ne@sLuez73X)',
-            readOnly: false,
-            isSecret: false,
-          },
-        ],
-      });
+    it('writes values that dotenv parses back unchanged', async () => {
+      mockVariables(ROUND_TRIP_VALUES);
 
       await inTemporaryDirectory(async (tmpDir) => {
         const filePath = joinPath(tmpDir, envFile);
 
         await runEnvPull({path: tmpDir, envFile});
 
-        expect(await readFile(filePath)).toContain(
-          'ORDERGROOVE_HASH="IirR{L3T#udhJ@gqKPN}Ne@sLuez73X)"',
-        );
+        const {variables} = await readAndParseDotEnv(filePath);
+        expect(variables).toEqual(ROUND_TRIP_VALUES);
       });
     });
 
     it('does not quote simple alphanumeric values for backward compatibility', async () => {
-      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
-        id: SHOPIFY_CONFIG.storefront.id,
-        environmentVariables: [
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
-            key: 'SIMPLE_VALUE',
-            value: 'abc123',
-            readOnly: false,
-            isSecret: false,
-          },
-        ],
-      });
+      mockVariables({SIMPLE_VALUE: 'abc123'});
 
       await inTemporaryDirectory(async (tmpDir) => {
         const filePath = joinPath(tmpDir, envFile);
 
         await runEnvPull({path: tmpDir, envFile});
 
-        expect(await readFile(filePath)).toContain('SIMPLE_VALUE=abc123');
-        expect(await readFile(filePath)).not.toContain('SIMPLE_VALUE="abc123"');
+        expect(await readFile(filePath)).toBe('SIMPLE_VALUE=abc123');
       });
     });
 
-    it('escapes internal quotes in values', async () => {
-      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
-        id: SHOPIFY_CONFIG.storefront.id,
-        environmentVariables: [
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
-            key: 'QUOTED_VALUE',
-            value: 'value"with"quotes',
-            readOnly: false,
-            isSecret: false,
-          },
-        ],
+    it('uses single quotes so values are literal', async () => {
+      mockVariables({
+        COMPLEX: 'val{ue}@test',
+        DOLLAR: 'pa$word',
+        BACKTICK: '`id`',
+        BACKSLASH: 'a\\b',
+        DOUBLE_QUOTES: 'say "hi"',
       });
 
       await inTemporaryDirectory(async (tmpDir) => {
@@ -357,9 +369,29 @@ describe('pullVariables', () => {
 
         await runEnvPull({path: tmpDir, envFile});
 
-        expect(await readFile(filePath)).toContain(
-          'QUOTED_VALUE="value\\"with\\"quotes"',
-        );
+        const content = await readFile(filePath);
+        expect(content).toContain("COMPLEX='val{ue}@test'");
+        expect(content).toContain("DOLLAR='pa$word'");
+        expect(content).toContain("BACKTICK='`id`'");
+        expect(content).toContain("BACKSLASH='a\\b'");
+        expect(content).toContain(`DOUBLE_QUOTES='say "hi"'`);
+      });
+    });
+
+    it('uses double quotes with escaped line breaks when single quotes cannot be used', async () => {
+      mockVariables({
+        SINGLE_QUOTE: "it's",
+        MULTILINE: 'line1\nline2\r\nline3',
+      });
+
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, envFile);
+
+        await runEnvPull({path: tmpDir, envFile});
+
+        const content = await readFile(filePath);
+        expect(content).toContain(`SINGLE_QUOTE="it's"`);
+        expect(content).toContain('MULTILINE="line1\\nline2\\r\\nline3"');
       });
     });
 
@@ -387,127 +419,79 @@ describe('pullVariables', () => {
       });
     });
 
-    it('handles mixed simple and complex values correctly', async () => {
-      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
-        id: SHOPIFY_CONFIG.storefront.id,
-        environmentVariables: [
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
-            key: 'SIMPLE',
-            value: 'abc123',
-            readOnly: false,
-            isSecret: false,
-          },
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/2',
-            key: 'COMPLEX',
-            value: 'val{ue}@test',
-            readOnly: false,
-            isSecret: false,
-          },
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/3',
-            key: 'SECRET',
-            value: 'anything',
-            readOnly: false,
-            isSecret: true,
-          },
-        ],
-      });
+    it('round-trips values when patching an existing .env file', async () => {
+      mockVariables(ROUND_TRIP_VALUES);
 
       await inTemporaryDirectory(async (tmpDir) => {
         const filePath = joinPath(tmpDir, envFile);
+        await writeFile(
+          filePath,
+          [
+            '# local overrides',
+            'LOCAL_ONLY=keep-me',
+            'DOLLAR="stale"',
+            'LOCAL_MULTILINE="first',
+            'second"',
+          ].join('\n'),
+        );
 
+        await runEnvPull({path: tmpDir, envFile});
+        // Pulling again should be a no-op
         await runEnvPull({path: tmpDir, envFile});
 
         const content = await readFile(filePath);
-        expect(content).toContain('SIMPLE=abc123');
-        expect(content).toContain('COMPLEX="val{ue}@test"');
-        expect(content).toContain('SECRET=""');
+        expect(content).toContain('# local overrides');
+
+        const {variables} = await readAndParseDotEnv(filePath);
+        expect(variables).toEqual({
+          ...ROUND_TRIP_VALUES,
+          LOCAL_ONLY: 'keep-me',
+          LOCAL_MULTILINE: 'first\nsecond',
+        });
       });
     });
 
-    it('handles potentially malicious values safely', async () => {
-      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
-        id: SHOPIFY_CONFIG.storefront.id,
-        environmentVariables: [
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
-            key: 'BACKSLASH_INJECTION',
-            value: 'value\\"; rm -rf /',
-            readOnly: false,
-            isSecret: false,
-          },
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/2',
-            key: 'CONTROL_CHARS',
-            value: 'value\u0000\u001B[31mevil',
-            readOnly: false,
-            isSecret: false,
-          },
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/3',
-            key: 'NEWLINE_INJECTION',
-            value: 'value\necho hacked',
-            readOnly: false,
-            isSecret: false,
-          },
-        ],
-      });
-
-      await inTemporaryDirectory(async (tmpDir) => {
-        const filePath = joinPath(tmpDir, envFile);
-
-        await runEnvPull({path: tmpDir, envFile});
-
-        const content = await readFile(filePath);
-
-        // Verify malicious values are properly quoted and escaped to prevent injection
-        expect(content).toContain(
-          'BACKSLASH_INJECTION="value\\\\\\"; rm -rf /"',
+    it.skipIf(process.platform === 'win32')(
+      'does not execute single-quoted values when the file is shell-sourced',
+      async () => {
+        const shellSafeValues = Object.fromEntries(
+          Object.entries(ROUND_TRIP_VALUES).filter(
+            ([, value]) => !/['\r\n]/.test(value) && !value.includes('\u0000'),
+          ),
         );
-        expect(content).toContain('CONTROL_CHARS="value\u0000\u001B[31mevil"');
-        expect(content).toContain('NEWLINE_INJECTION="value\\necho hacked"');
-      });
-    });
+        mockVariables(shellSafeValues);
 
-    it('escapes special characters following dotenv standards', async () => {
-      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
-        id: SHOPIFY_CONFIG.storefront.id,
-        environmentVariables: [
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
-            key: 'MULTILINE_KEY',
-            value:
-              '-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA04up8hoqzS1...\n-----END RSA PRIVATE KEY-----',
-            readOnly: false,
-            isSecret: false,
-          },
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/2',
-            key: 'TABS_AND_RETURNS',
-            value: 'line1\tcolumn2\rreturn\nline2',
-            readOnly: false,
-            isSecret: false,
-          },
-        ],
-      });
+        await inTemporaryDirectory(async (tmpDir) => {
+          const filePath = joinPath(tmpDir, envFile);
 
-      await inTemporaryDirectory(async (tmpDir) => {
-        const filePath = joinPath(tmpDir, envFile);
+          await runEnvPull({path: tmpDir, envFile});
 
-        await runEnvPull({path: tmpDir, envFile});
+          const output = execFileSync(
+            'sh',
+            ['-c', `set -a; . ./${envFile}; env -0`],
+            {cwd: tmpDir, env: {PATH: process.env.PATH}},
+          ).toString();
+          const sourced = Object.fromEntries(
+            output
+              .split('\0')
+              .filter(Boolean)
+              .map((entry) => {
+                const index = entry.indexOf('=');
+                return [entry.slice(0, index), entry.slice(index + 1)];
+              }),
+          );
 
-        const content = await readFile(filePath);
-
-        // Verify dotenv-compatible escaping
-        expect(content).toContain(
-          'MULTILINE_KEY="-----BEGIN RSA PRIVATE KEY-----\\nMIIEpAIBAAKCAQEA04up8hoqzS1...\\n-----END RSA PRIVATE KEY-----"',
-        );
-        expect(content).toContain(
-          'TABS_AND_RETURNS="line1\\tcolumn2\\rreturn\\nline2"',
-        );
-      });
-    });
+          for (const [key, value] of Object.entries(shellSafeValues)) {
+            expect(sourced[key]).toBe(value);
+          }
+          expect(await fileExists(joinPath(tmpDir, 'pwned-dollar'))).toBe(
+            false,
+          );
+          expect(await fileExists(joinPath(tmpDir, 'pwned-backtick'))).toBe(
+            false,
+          );
+        });
+      },
+    );
   });
 });

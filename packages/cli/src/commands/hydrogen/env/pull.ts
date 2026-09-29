@@ -50,15 +50,17 @@ function needsQuoting(value: string): boolean {
 function quoteEnvValue(value: string): string {
   if (!needsQuoting(value)) return value;
 
-  // Escape backslashes first, then quotes, then newlines for dotenv compatibility
-  // This prevents: value=\"; evil command\" from becoming "value=\\"; evil command\""
-  const escaped = value
-    .replaceAll('\\', '\\\\') // Escape backslashes first
-    .replaceAll('"', '\\"') // Then escape quotes
-    .replaceAll('\n', '\\n') // Then escape newlines for dotenv compatibility
-    .replaceAll('\r', '\\r') // Also escape carriage returns
-    .replaceAll('\t', '\\t'); // And tabs for completeness
-  return `"${escaped}"`;
+  // dotenv has no general escape syntax: single-quoted values are fully
+  // literal, and double-quoted values only expand `\n` and `\r`. Escaping
+  // backslashes or quotes would leave the escape characters in the parsed
+  // value, so prefer single quotes. They are also inert if the file is
+  // shell-sourced (no `$` or backtick expansion).
+  if (!/['\r\n]/.test(value)) return `'${value}'`;
+
+  // Values containing a single quote or line breaks need double quotes so
+  // that line breaks can be encoded as `\n` / `\r`. Other characters are
+  // written as-is because dotenv does not unescape them.
+  return `"${value.replaceAll('\r', '\\r').replaceAll('\n', '\\n')}"`;
 }
 
 export default class EnvPull extends Command {
