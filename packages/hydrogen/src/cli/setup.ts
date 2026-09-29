@@ -9,7 +9,6 @@ import { getInstalledPackageRoot, syncSkills } from "./skills";
 import { canPromptInTerminal } from "./terminal";
 
 const PACKAGE_NAME = "@shopify/hydrogen";
-const PACKAGE_INSTALL_SPEC = `${PACKAGE_NAME}@preview`;
 const PACKAGE_JSON_FILE_NAME = "package.json";
 const SUCCESS_EXIT_CODE = 0;
 
@@ -22,10 +21,10 @@ const PACKAGE_MANAGER_LOCKFILES = [
 ] as const;
 
 const INSTALL_ARGS = {
-  pnpm: ["add", PACKAGE_INSTALL_SPEC],
-  npm: ["install", PACKAGE_INSTALL_SPEC],
-  yarn: ["add", PACKAGE_INSTALL_SPEC],
-  bun: ["add", PACKAGE_INSTALL_SPEC],
+  pnpm: ["add", PACKAGE_NAME],
+  npm: ["install", PACKAGE_NAME],
+  yarn: ["add", PACKAGE_NAME],
+  bun: ["add", PACKAGE_NAME],
 } as const;
 
 type PackageManager = keyof typeof INSTALL_ARGS;
