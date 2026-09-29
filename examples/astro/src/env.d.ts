@@ -1,6 +1,7 @@
 /// <reference types="astro/client" />
 
 import type {
+  PublicStorefrontClient,
   RequestScopedPrivateStorefrontClient,
   ShopifyRequestContext,
 } from "@shopify/hydrogen";
@@ -8,7 +9,8 @@ import type {
 declare global {
   namespace App {
     interface Locals {
-      storefrontClient: RequestScopedPrivateStorefrontClient;
+      /** Public and tokenless on mock.shop, private with a real store. */
+      storefrontClient: PublicStorefrontClient | RequestScopedPrivateStorefrontClient;
       shopifyRequestContext: ShopifyRequestContext;
     }
   }

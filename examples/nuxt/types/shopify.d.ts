@@ -1,4 +1,5 @@
 import type {
+  PublicStorefrontClient,
   RequestScopedPrivateStorefrontClient,
   ShopifyRequestContext,
 } from "@shopify/hydrogen";
@@ -9,7 +10,8 @@ import type {
 
 declare module "h3" {
   interface H3EventContext {
-    storefrontClient: RequestScopedPrivateStorefrontClient;
+    /** Public and tokenless on mock.shop, private with a real store. */
+    storefrontClient: PublicStorefrontClient | RequestScopedPrivateStorefrontClient;
     shopifyRequestContext?: ShopifyRequestContext;
     customerAccountClient?: CustomerAccountClient;
     customerSessionManager?: WritableCustomerSessionManager;

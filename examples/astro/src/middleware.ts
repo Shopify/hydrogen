@@ -1,10 +1,10 @@
 import { getBuyerIp } from "@shared/buyer-ip";
-import { defaultI18n, storefrontConfig } from "@shared/config";
-import { getPrivateStorefrontToken } from "@shared/private-env";
+import { defaultI18n } from "@shared/config";
 import {
   STOREFRONT_CACHE_MAX_ENTRIES,
   createStorefrontCacheAdapter,
 } from "@shared/storefront-cache";
+import { resolveStorefrontConfig } from "@shared/storefront-config";
 import {
   createCartServerHandlers,
   createStorefrontClient,
@@ -32,7 +32,7 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
     i18n: defaultI18n,
     buyerIp,
   });
-  const storefrontClient = createPrivateStorefrontClient(requestContext);
+  const storefrontClient = createRequestStorefrontClient(requestContext);
   const sessionManager = await createCustomerSessionManager(request);
 
   const shopifyRoute = handleShopifyRoutes({
@@ -78,13 +78,23 @@ function applyStorefrontResponseHeaders(
   }
 }
 
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
+function createRequestStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
+  const config = resolveStorefrontConfig("hydrogen-example-astro");
+
+  if (config.mode === "mock") {
+    return createStorefrontClient({
+      type: "public",
+      requestContext,
+      config: { storeDomain: config.storeDomain, cache: storefrontCache },
+    });
+  }
+
   return createStorefrontClient({
     type: "private",
     requestContext,
     config: {
-      storeDomain: storefrontConfig.storeDomain,
-      privateStorefrontToken: getPrivateStorefrontToken(),
+      storeDomain: config.storeDomain,
+      privateStorefrontToken: config.privateStorefrontToken,
       cache: storefrontCache,
     },
   });
