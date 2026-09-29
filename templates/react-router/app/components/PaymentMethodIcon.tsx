@@ -23,6 +23,10 @@ export function PaymentMethodIcon({ method }: { method: PaymentMethodLabel }) {
       width={38}
       height={24}
       className="block h-6 w-[38px]"
+      // An SSR image can fail before hydration attaches onError, so also check on mount.
+      ref={(img) => {
+        if (img?.complete && img.naturalWidth === 0) setFailedSrc(src);
+      }}
       onError={() => setFailedSrc(src)}
     />
   );

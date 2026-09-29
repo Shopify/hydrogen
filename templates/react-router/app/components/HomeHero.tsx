@@ -18,6 +18,10 @@ export function HomeHero({ hero }: { hero: HomeHeroData }) {
               className="absolute inset-0 h-full w-full object-cover"
               loading="eager"
               fetchPriority="high"
+              // An SSR image can fail before hydration attaches onError, so also check on mount.
+              ref={(img) => {
+                if (img?.complete && img.naturalWidth === 0) setFailedImageUrl(image.url);
+              }}
               onError={() => setFailedImageUrl(image.url)}
             />
             <div className="overlay-dark pointer-events-none absolute inset-0" aria-hidden="true" />

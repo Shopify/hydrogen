@@ -47,6 +47,10 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
                 width={logo.width ?? undefined}
                 height={logo.height ?? undefined}
                 className="h-auto max-h-10 w-auto max-w-full object-contain"
+                // An SSR image can fail before hydration attaches onError, so also check on mount.
+                ref={(img) => {
+                  if (img?.complete && img.naturalWidth === 0) setFailedLogoUrl(logo.url);
+                }}
                 onError={() => setFailedLogoUrl(logo.url)}
               />
             ) : (
