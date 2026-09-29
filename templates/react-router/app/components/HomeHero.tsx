@@ -14,7 +14,7 @@ export function HomeHero({ hero }: { hero: HomeHeroData }) {
           <>
             <img
               src={image.url}
-              alt={image.altText ?? hero.heading}
+              alt={image.altText ?? ""}
               className="absolute inset-0 h-full w-full object-cover"
               loading="eager"
               fetchPriority="high"
