@@ -2,4 +2,4 @@
 "@shopify/hydrogen": patch
 ---
 
-Only accept same-origin paths such as `/account/orders` as Customer Account redirect targets: `return_to` on the login, refresh, and logout handlers, `prepareLoginUrl({returnTo})`, and the `defaultPostLoginRedirectPathname` and `loginFailedRedirectPath` options. Other values, including same-origin absolute URLs, now fall back to the default redirect. If you pass `request.url` as `return_to` or `returnTo`, pass its `pathname`, `search`, and `hash` instead.
+Reject Customer Account redirect targets whose normalized path starts with `//`, which resolved to another host. This covers `return_to` on the login, refresh, and logout handlers, `prepareLoginUrl({returnTo})`, and the `defaultPostLoginRedirectPathname` and `loginFailedRedirectPath` options. Same-origin paths and absolute URLs still work. Values without a leading `/` or a scheme, such as `account/orders`, now fall back to the default redirect.

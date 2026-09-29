@@ -38,19 +38,22 @@ describe("handleQueryParamRedirect", () => {
     expect(result).toBeNull();
   });
 
-  it("redirects to the normalized path rather than the raw value", () => {
-    const result = handleQueryParamRedirect(
-      new Request("https://my-app.com/login?return_to=/x/../dashboard"),
-    );
+  it.each(["/x/../dashboard", "https://my-app.com/dashboard"])(
+    "redirects return_to %s to the normalized path",
+    (returnTo) => {
+      const result = handleQueryParamRedirect(
+        new Request(`https://my-app.com/login?return_to=${encodeURIComponent(returnTo)}`),
+      );
 
-    assert(result, "expected redirect response");
-    expect(result.headers.get("location")).toBe("/dashboard");
-  });
+      assert(result, "expected redirect response");
+      expect(result.headers.get("location")).toBe("/dashboard");
+    },
+  );
 
   it.each([
     "https://evil.com/phishing",
     "javascript:alert(1)",
-    "https://my-app.com/dashboard",
+    "https://my-app.com//evil.com/phishing",
     "https:evil.com/phishing",
     "//evil.com/phishing",
     "/\\evil.com/phishing",

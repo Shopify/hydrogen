@@ -2,4 +2,4 @@
 "@shopify/hydrogen": patch
 ---
 
-Only follow `return_to` and `redirect` query params in `handleShopifyRedirects` when they are same-origin paths such as `/dashboard`, and redirect to the normalized path. Absolute URLs, including same-origin ones, are now ignored.
+Redirect `return_to` and `redirect` query params in `handleShopifyRedirects` to the normalized same-origin path instead of the raw value, so values like `https:other.example/p` or paths that normalize to `//other.example` no longer send shoppers to another host. Values without a leading `/` or a scheme are now ignored.

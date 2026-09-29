@@ -1159,7 +1159,7 @@ describe("createCustomerAccountServerHandlers", () => {
   it.each([
     ["/account/orders?page=2#latest", "/account/orders?page=2#latest"],
     ["/search?q=https://example.org", "/search?q=https://example.org"],
-    [`${ORIGIN}/account/orders`, "/account"],
+    [`${ORIGIN}/account/orders`, "/account/orders"],
     ["//evil.test/p", "/account"],
     [`${ORIGIN}//evil.test/p`, "/account"],
     // Each of these parses as same-origin with a protocol-relative `//evil.test/p` pathname.

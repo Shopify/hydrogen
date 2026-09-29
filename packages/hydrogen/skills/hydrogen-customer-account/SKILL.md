@@ -71,7 +71,7 @@ The Customer Account handlers own:
 - `GET /account/refresh`
 - `POST /account/logout`
 
-Do not reimplement login, authorize, refresh, or logout unless the app needs custom behavior that preserves the same safeguards: `return_to` limited to same-origin paths, same-origin logout POST checks, `cache-control: no-store`, committed session cookies on the returned response, and request-context response headers.
+Do not reimplement login, authorize, refresh, or logout unless the app needs custom behavior that preserves the same safeguards: `return_to` limited to the same origin, same-origin logout POST checks, `cache-control: no-store`, committed session cookies on the returned response, and request-context response headers.
 
 ## Server Rendering
 

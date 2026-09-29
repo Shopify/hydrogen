@@ -49,16 +49,19 @@ export const AJAX_CART_RE =
 
 /**
  * Normalizes `target` to a path on `origin` that is safe to use as a redirect location.
- * Returns `undefined` unless `target` starts with `/` and stays on `origin`.
+ * Returns `undefined` unless `target` is a path starting with `/` or an absolute URL,
+ * and stays on `origin`.
  */
 export function getSameOriginPath(
   target: string | null | undefined,
   origin: string,
 ): string | undefined {
-  if (!target?.startsWith("/")) return undefined;
+  if (!target) return undefined;
 
   try {
-    const url = new URL(target, origin);
+    // Parse absolute URLs without a base so scheme-relative forms like `https:evil.example`
+    // resolve to their own host, as a browser would, instead of onto `origin`.
+    const url = target.startsWith("/") ? new URL(target, origin) : new URL(target);
     if (url.origin !== origin) return undefined;
     const path = `${url.pathname}${url.search}${url.hash}`;
     // The parsed pathname can itself start with `//` (e.g. from `/x/..//evil`),
