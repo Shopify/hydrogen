@@ -95,11 +95,13 @@ Add entries to `ANNOUNCEMENTS` in `app/components/AnnouncementBar.tsx`. An empty
 list hides the bar. Each entry's `content` is a React element, so it can include links:
 
 ```tsx
+import { Link } from "react-router";
+
 const ANNOUNCEMENTS: Announcement[] = [
   {
     content: (
       <p>
-        Discover our <a href="/collections" className="underline">latest collections</a>.
+        Discover our <Link to="/collections" className="underline">latest collections</Link>.
       </p>
     ),
   },
