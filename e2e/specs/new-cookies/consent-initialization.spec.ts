@@ -1,4 +1,9 @@
 import {setTestStore, test, expect, DECLINE_ALL_CONSENT} from '../../fixtures';
+import {
+  holdRequests,
+  isConsentRequest,
+  observeConsentDispatches,
+} from '../../fixtures/consent-test-controls';
 
 /**
  * The Customer Privacy API owns consent initialization: it sends one
@@ -22,15 +27,13 @@ for (const [storeKey, withPrivacyBanner] of [
 
       await storefront.goto('/');
       await storefront.waitForConsentLoaded();
+      expect(consentRequests).toHaveLength(1);
       await storefront.reload();
       await storefront.waitForConsentLoaded();
+      expect(consentRequests).toHaveLength(2);
 
       // Client-side navigations reuse the page's initialized consent.
-      const catalogLink = storefront.page
-        .locator('a[href="/collections/all"]:visible')
-        .first();
-      await catalogLink.click();
-      await expect(storefront.page).toHaveURL(/\/collections\/all/);
+      await storefront.navigateClientSide('/collections/all');
 
       expect(consentRequests).toEqual([
         {sameOrigin: true, hasMarkerHeader: true, hasCookieHeader: true},
@@ -127,9 +130,6 @@ test.describe('Consent without a Server-Timing proxy marker', () => {
   });
 });
 
-// Long enough to observe the page with the consent request still in flight.
-const CONSENT_DELAY_IN_MILLISECONDS = 3000;
-
 const FRESH_VISITOR_SCENARIOS = [
   {store: 'defaultConsentAllowed_cookiesEnabled', banner: false, tracked: true},
   {store: 'defaultConsentAllowed_cookiesEnabled', banner: true, tracked: true},
@@ -153,52 +153,47 @@ for (const {store, banner, tracked} of FRESH_VISITOR_SCENARIOS) {
       storefront,
     }) => {
       await storefront.setWithPrivacyBanner(banner);
-      await storefront.page.route(
-        '**/api/unstable/graphql.json',
-        async (route) => {
-          if (
-            !(route.request().postData() ?? '').includes('consentManagement')
-          ) {
-            return route.continue();
-          }
-          const response = await route.fetch();
-          await new Promise((resolve) =>
-            setTimeout(resolve, CONSENT_DELAY_IN_MILLISECONDS),
-          );
-          return route.fulfill({response});
-        },
-      );
+      const dispatches = await observeConsentDispatches(storefront.page);
+      const heldConsent = await holdRequests(storefront.page, isConsentRequest);
       const consentResponse = storefront.waitForConsentResponse();
-
-      await storefront.page.goto('/');
-      await storefront.page.waitForLoadState('domcontentloaded');
-
-      // === While the consent request is in flight ===
-      expect((await storefront.getConsentState()).consentStatus).not.toBe(
-        'loaded',
-      );
-      storefront.expectNoMonorailRequests();
-      storefront.expectPerfKitNotLoaded();
-      await storefront.expectPrivacyBannerNotVisible();
-
-      // === After consent loads ===
-      const response = await consentResponse;
-      await storefront.waitForConsentLoaded();
-      if (tracked) {
-        const tokens = await storefront.expectAllowedConsent(response);
-        await storefront.waitForMonorailRequests();
-        storefront.verifyMonorailRequests(
-          tokens.uniqueToken,
-          tokens.visitToken,
-          'after consent loaded',
+      try {
+        await storefront.page.goto('/');
+        await heldConsent.waitUntilHeld();
+        heldConsent.expectPending();
+        expect((await storefront.getConsentState()).consentStatus).not.toBe(
+          'loaded',
         );
+        await storefront.navigateClientSide('/collections/all');
+        heldConsent.expectPending();
+        storefront.expectNoMonorailRequests();
+        storefront.expectPerfKitNotLoaded();
         await storefront.expectPrivacyBannerNotVisible();
-        return;
+        heldConsent.release();
+
+        // === After consent loads ===
+        const response = await consentResponse;
+        await storefront.waitForConsentLoaded();
+        await dispatches.expectNoPrematureAnalytics();
+        if (tracked) {
+          const tokens = await storefront.expectAllowedConsent(response);
+          await storefront.waitForMonorailRequests();
+          storefront.verifyMonorailRequests(
+            tokens.uniqueToken,
+            tokens.visitToken,
+            'after consent loaded',
+          );
+          await dispatches.expectNoPrematureAnalytics();
+          await storefront.expectPrivacyBannerNotVisible();
+          return;
+        }
+        await storefront.expectDeclinedConsent(response);
+        if (banner) await storefront.expectPrivacyBannerVisible();
+        else await storefront.expectPrivacyBannerNotVisible();
+        storefront.expectNoMonorailRequests();
+        await dispatches.expectNoPrematureAnalytics();
+      } finally {
+        await heldConsent.dispose();
       }
-      await storefront.expectDeclinedConsent(response);
-      if (banner) await storefront.expectPrivacyBannerVisible();
-      else await storefront.expectPrivacyBannerNotVisible();
-      storefront.expectNoMonorailRequests();
     });
   });
 }

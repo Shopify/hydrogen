@@ -94,22 +94,23 @@ test.describe('SPA route navigation', () => {
       expect.stringMatching(/^_shopify_y=; path=\/; expires=/),
     ]);
 
-    // === Client-side navigations across routes ===
-    // The header renders a hidden mobile-menu copy of each link; only the
-    // visible one can be clicked.
-    const catalogLink = storefront.page
-      .locator('a[href="/collections/all"]:visible')
-      .first();
-    await expect(catalogLink).toBeVisible();
-    await catalogLink.click();
-    await expect(storefront.page).toHaveURL(/\/collections\/all/);
+    await storefront.waitForMonorailRequests();
+    const catalogBaseline = storefront.monorailRequests.length;
+    await storefront.navigateClientSide('/collections/all');
+    await storefront.waitForPageViewAfter(catalogBaseline, '/collections/all');
 
     const productLink = storefront.page
-      .locator('a[href*="/products/"]')
+      .getByRole('link')
+      .filter({visible: true})
+      .and(storefront.page.locator('a[href*="/products/"]'))
       .first();
-    await expect(productLink).toBeVisible();
-    await productLink.click();
-    await expect(storefront.page).toHaveURL(/\/products\//);
+    const productPath = new URL(
+      (await productLink.getAttribute('href'))!,
+      storefront.page.url(),
+    ).pathname;
+    const productBaseline = storefront.monorailRequests.length;
+    await storefront.navigateClientSide(productPath);
+    await storefront.waitForPageViewAfter(productBaseline, productPath);
 
     // Still the same document: the consent request did not fire again and
     // the deprecated cookies were not written again.
@@ -123,7 +124,7 @@ test.describe('SPA route navigation', () => {
     // The tracking values are unchanged: analytics events after the
     // navigations still carry the session tokens.
     expect(await storefront.getTrackingTokens()).toEqual(tokens);
-    await storefront.waitForMonorailRequests();
+    storefront.monorailRequests.splice(0, catalogBaseline);
     storefront.verifyMonorailRequests(
       tokens.uniqueToken,
       tokens.visitToken,

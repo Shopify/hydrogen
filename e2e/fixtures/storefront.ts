@@ -8,6 +8,7 @@ import type {
 import {expect} from '@playwright/test';
 import assert from './assertions';
 import {getLoadtestHeaders} from './test-secrets';
+import {checkoutAnalyticsAllowed} from './checkout-consent';
 
 // Privacy Banner element IDs
 export const PRIVACY_BANNER_DIALOG_ID = 'shopify-pc__banner';
@@ -58,7 +59,7 @@ export type ConsentChoice = typeof ACCEPT_ALL_CONSENT;
 const LEGACY_COOKIE_NAMES = ['_tracking_consent', '_shopify_y', '_shopify_s'];
 // Playwright reports session cookies with this expiry.
 const SESSION_COOKIE_EXPIRY = -1;
-const CHECKOUT_PAGE_VIEW_PUBLISH_SCHEMA = 'web_pixels_manager_event_publish';
+const CHECKOUT_PAGE_VIEW_PUBLISH_SCHEMA = 'web_pixels_manager_event_publish/';
 const CHECKOUT_ANALYTICS_TIMEOUT_IN_MS = 30000;
 
 const CONSENT_API_URL_PATTERN =
@@ -104,6 +105,11 @@ export interface ConsentRequestRecord {
 /** Tracking values and consent flag reported by one analytics event. */
 export interface AnalyticsEventTokens {
   schema: string;
+  phase?: 'initial' | 'interaction' | 'reload';
+  eventName?: string;
+  surface?: string;
+  pageUrl?: string;
+  userCanBeTracked?: boolean;
   uniqueToken?: string;
   visitToken?: string;
   analyticsAllowed?: boolean;
@@ -116,6 +122,15 @@ function eventTokens(
 ): AnalyticsEventTokens {
   return {
     schema,
+    eventName: payload.event_name,
+    surface: payload.surface,
+    pageUrl: payload.page_url ?? payload.event_source_url ?? payload.url,
+    userCanBeTracked:
+      payload.user_can_be_tracked === 'true'
+        ? true
+        : payload.user_can_be_tracked === 'false'
+          ? false
+          : undefined,
     uniqueToken:
       payload.unique_token || payload.uniqToken || payload.tracking_unique,
     visitToken:
@@ -131,16 +146,94 @@ export function parseAnalyticsEvents(
   postData: string | null,
 ): AnalyticsEventTokens[] {
   try {
-    const body = JSON.parse(postData ?? '{}');
-    const events: Array<{schema_id?: string; payload?: any}> = body.events ?? [
-      body,
-    ];
+    type Event = {schema_id?: string; payload?: Record<string, unknown>};
+    const body = JSON.parse(postData ?? '{}') as Event & {events?: Event[]};
+    const events = body.events ?? [body];
     return events.map((event) =>
       eventTokens(event.schema_id ?? 'unknown', event.payload),
     );
   } catch {
     return [];
   }
+}
+
+function isCheckoutPageView(event: AnalyticsEventTokens) {
+  if (
+    !event.schema.startsWith(CHECKOUT_PAGE_VIEW_PUBLISH_SCHEMA) ||
+    event.eventName !== 'page_viewed' ||
+    event.surface !== 'checkout-one' ||
+    !event.pageUrl
+  )
+    return false;
+  try {
+    return /\/checkouts\//.test(new URL(event.pageUrl).pathname);
+  } catch {
+    return false;
+  }
+}
+
+/** Later checkout documents cannot supply evidence missing from the initial handoff. */
+function expectCheckoutPhaseEvidence(
+  events: AnalyticsEventTokens[],
+  allowed: boolean,
+) {
+  const phases = events.some((event) => event.phase)
+    ? ['initial', 'reload']
+    : [undefined];
+  for (const phase of phases) {
+    const current = events.filter((event) => event.phase === phase);
+    expect(
+      current.some(isCheckoutPageView),
+      'Each checkout document must publish its page view',
+    ).toBe(true);
+    expect(
+      current.some((event) => event.analyticsAllowed === allowed),
+      'Each checkout document must explicitly report analytics consent',
+    ).toBe(true);
+    expect(
+      current
+        .filter((event) => event.analyticsAllowed !== undefined)
+        .every((event) => event.analyticsAllowed === allowed),
+      'Checkout consent evidence must not conflict',
+    ).toBe(true);
+    if (!allowed) {
+      expect(
+        current.some((event) => event.uniqueToken || event.visitToken),
+        'Denied checkout must not report tracking tokens',
+      ).toBe(false);
+      continue;
+    }
+    expect(
+      current.some((event) => Boolean(event.uniqueToken)),
+      'Each checkout document must report Y',
+    ).toBe(true);
+    expect(
+      current.some((event) => Boolean(event.visitToken)),
+      'Each checkout document must report S',
+    ).toBe(true);
+  }
+}
+
+async function recordCheckoutConsent(
+  page: Page,
+  events: AnalyticsEventTokens[],
+  phase: AnalyticsEventTokens['phase'],
+) {
+  await page.waitForFunction(
+    () =>
+      typeof (window as any).Shopify?.customerPrivacy?.injectedConsent ===
+      'string',
+  );
+  const analyticsAllowed = checkoutAnalyticsAllowed(
+    await page.evaluate(
+      () => (window as any).Shopify.customerPrivacy.injectedConsent,
+    ),
+  );
+  expect(
+    typeof analyticsAllowed,
+    'Checkout must expose a recognized consent value before its lifecycle is evaluated',
+  ).toBe('boolean');
+  events.push({schema: 'checkout_consent_state', phase, analyticsAllowed});
 }
 
 export interface TrackingTokens {
@@ -674,50 +767,193 @@ export class StorefrontPage {
    * consent initialization. The header renders a hidden mobile-menu copy of
    * each link, so only the visible one is clicked.
    */
-  async navigateClientSide(path: '/' | '/collections/all') {
-    await this.page.locator(`a[href="${path}"]:visible`).first().click();
-    await expect(this.page).toHaveURL((url) => new URL(url).pathname === path);
+  async navigateClientSide(path: string) {
+    const link = this.page
+      .getByRole('link')
+      .filter({visible: true})
+      .and(this.page.locator(`a[href="${path}"]`))
+      .first();
+    const documentBefore = await this.page.evaluateHandle(() => document);
+    try {
+      await link.click();
+      await expect(this.page).toHaveURL((url) => url.pathname === path);
+      expect(
+        await documentBefore.evaluate((previous) => previous === document),
+        'Client-side navigation must preserve the document',
+      ).toBe(true);
+    } finally {
+      await documentBefore.dispose();
+    }
+  }
+
+  /** Require a new destination page view, not a retained event from an earlier load. */
+  async waitForPageViewAfter(requestBaseline: number, pathname: string) {
+    await expect
+      .poll(
+        () =>
+          this.monorailRequests
+            .slice(requestBaseline)
+            .flatMap((request) =>
+              parseAnalyticsEvents(request.postData ?? null),
+            )
+            .some(
+              (event) =>
+                event.eventName === 'page_rendered' &&
+                event.pageUrl &&
+                new URL(event.pageUrl).pathname === pathname,
+            ),
+        {message: 'The destination must emit a new page view'},
+      )
+      .toBe(true);
   }
 
   /**
-   * Open a checkout URL in a new tab of the same browser session and collect
-   * the tracking values and consent flags that checkout's own analytics
-   * events report. A separate tab keeps the storefront page, and any clock
-   * installed on it, untouched.
-   *
-   * Resolves once checkout has published its page view, which it does in
-   * every consent state; token-bearing events are awaited only when expected.
+   * Observe checkout in its own tab through ready UI, interaction, and a reload.
+   * The reload exercises checkout's lifecycle and flushes outgoing telemetry;
+   * one early publish message is not sufficient evidence of a loaded checkout.
    */
   async collectCheckoutAnalytics(
     checkoutUrl: string,
     options: {expectTokens: boolean},
   ) {
     const checkoutPage = await this.context.newPage();
-    const events: AnalyticsEventTokens[] = [];
-    checkoutPage.on('request', (request) => {
-      if (!request.url().includes(MONORAIL_BATCH_URL)) return;
-      events.push(...parseAnalyticsEvents(request.postData()));
-    });
-    await checkoutPage.goto(new URL(checkoutUrl, this.page.url()).href);
-
-    const pageViewPublished = () =>
-      events.some((event) =>
-        event.schema.startsWith(CHECKOUT_PAGE_VIEW_PUBLISH_SCHEMA),
+    try {
+      return await this.collectCheckoutAnalyticsOnPage(
+        checkoutPage,
+        () => checkoutPage.goto(new URL(checkoutUrl, this.page.url()).href),
+        options,
       );
-    const tokenEventSeen = () =>
-      events.some((event) => event.uniqueToken || event.visitToken);
+    } finally {
+      await checkoutPage.close();
+    }
+  }
+
+  /** Exercise the cart link's click handling instead of bypassing it with goto. */
+  async collectCheckoutAnalyticsFromCart(options: {expectTokens: boolean}) {
+    return this.collectCheckoutAnalyticsOnPage(
+      this.page,
+      async () => {
+        const checkoutResponse = this.page.waitForResponse(
+          (response) =>
+            response.request().isNavigationRequest() &&
+            response.request().frame() === this.page.mainFrame() &&
+            /\/checkouts\//.test(new URL(response.url()).pathname) &&
+            response.ok(),
+        );
+        await this.getCheckoutButton().click();
+        return checkoutResponse;
+      },
+      options,
+    );
+  }
+
+  private async collectCheckoutAnalyticsOnPage(
+    checkoutPage: Page,
+    navigate: () => Promise<Response | null>,
+    options: {expectTokens: boolean},
+  ) {
+    const events: AnalyticsEventTokens[] = [];
+    let phase: AnalyticsEventTokens['phase'] = 'initial';
+    const record = (request: import('@playwright/test').Request) => {
+      if (!request.url().includes(MONORAIL_BATCH_URL)) return;
+      // An actual link click can publish storefront events before navigating.
+      // Only requests dispatched from the committed checkout document count.
+      if (!/\/checkouts\//.test(new URL(checkoutPage.url()).pathname)) return;
+      events.push(
+        ...parseAnalyticsEvents(request.postData()).map((event) => ({
+          ...event,
+          phase,
+        })),
+      );
+    };
+    checkoutPage.on('request', record);
+    try {
+      const response = await navigate();
+      expect(response?.ok(), 'Checkout document should load successfully').toBe(
+        true,
+      );
+      await recordCheckoutConsent(checkoutPage, events, phase);
+      await this.waitForCheckoutReady(
+        checkoutPage,
+        events,
+        0,
+        options.expectTokens,
+      );
+      expectCheckoutPhaseEvidence(
+        events.map((event) => ({...event, phase: undefined})),
+        options.expectTokens,
+      );
+      phase = 'interaction';
+      const contact = checkoutPage
+        .getByRole('textbox', {name: /email/i})
+        .first();
+      await contact.focus();
+      await expect(contact).toBeFocused();
+      await contact.press('Tab');
+      await expect(contact).not.toBeFocused();
+
+      expectCheckoutPhaseEvidence(
+        events.map((event) => ({...event, phase: undefined})),
+        options.expectTokens,
+      );
+      phase = 'reload';
+      const reloadBaseline = events.length;
+      const reloadResponse = await checkoutPage.reload();
+      expect(reloadResponse?.ok(), 'Checkout reload should succeed').toBe(true);
+      await recordCheckoutConsent(checkoutPage, events, phase);
+      await this.waitForCheckoutReady(
+        checkoutPage,
+        events,
+        reloadBaseline,
+        options.expectTokens,
+      );
+      return events;
+    } finally {
+      checkoutPage.off('request', record);
+    }
+  }
+
+  private async waitForCheckoutReady(
+    page: Page,
+    events: AnalyticsEventTokens[],
+    baseline: number,
+    expectTokens: boolean,
+  ) {
+    expect(
+      /\/checkouts\//.test(new URL(page.url()).pathname),
+      'The destination must be checkout, not a storefront or error page',
+    ).toBe(true);
+    await expect(
+      page.getByRole('textbox', {name: /email/i}).first(),
+    ).toBeEditable();
     await expect
       .poll(
-        () =>
-          pageViewPublished() && (!options.expectTokens || tokenEventSeen()),
+        () => {
+          const current = events.slice(baseline);
+          const pageView = current.some(
+            (event) =>
+              isCheckoutPageView(event) &&
+              new URL(event.pageUrl!).origin === new URL(page.url()).origin,
+          );
+          const started = current.some(
+            (event) =>
+              event.eventName === 'checkout_started' &&
+              event.surface === 'checkout-one',
+          );
+          const tokens =
+            current.some((event) => event.uniqueToken) &&
+            current.some((event) => event.visitToken);
+          const consent = current.some(
+            (event) => event.analyticsAllowed === expectTokens,
+          );
+          return pageView && started && consent && (!expectTokens || tokens);
+        },
         {
-          message: 'Checkout should publish its analytics events',
+          message: 'Checkout must publish its page view and checkout lifecycle',
           timeout: CHECKOUT_ANALYTICS_TIMEOUT_IN_MS,
         },
       )
       .toBe(true);
-    await checkoutPage.close();
-    return events;
   }
 
   /**
@@ -729,11 +965,20 @@ export class StorefrontPage {
     events: AnalyticsEventTokens[],
     expected: {uniqueToken: string; visitToken: string},
   ) {
+    expect(
+      events.some(isCheckoutPageView),
+      'Checkout must report its own page view',
+    ).toBe(true);
+    expectCheckoutPhaseEvidence(events, true);
     const tokenEvents = events.filter((e) => e.uniqueToken || e.visitToken);
     expect(
-      tokenEvents.length,
-      'Checkout should report tracking values',
-    ).toBeGreaterThan(0);
+      tokenEvents.some((event) => Boolean(event.uniqueToken)),
+      'Checkout should report the unique token',
+    ).toBe(true);
+    expect(
+      tokenEvents.some((event) => Boolean(event.visitToken)),
+      'Checkout should report the visit token',
+    ).toBe(true);
     const mismatches = tokenEvents.flatMap((event) => [
       ...(event.uniqueToken && event.uniqueToken !== expected.uniqueToken
         ? [`${event.schema} unique token`]
@@ -758,8 +1003,17 @@ export class StorefrontPage {
     ]);
   }
 
-  /** Assert that checkout reports no tracking values or analytics consent. */
+  /** Require explicit denied consent, not merely an absence of telemetry. */
   expectCheckoutWithoutTracking(events: AnalyticsEventTokens[]) {
+    expectCheckoutPhaseEvidence(events, false);
+    expect(
+      events.some(isCheckoutPageView),
+      'Checkout must report its own page view',
+    ).toBe(true);
+    expect(
+      events.some((event) => event.analyticsAllowed === false),
+      'Checkout must explicitly report analytics consent as denied',
+    ).toBe(true);
     const tokenEvents = events.filter((e) => e.uniqueToken || e.visitToken);
     expect(
       tokenEvents.map((event) => event.schema),
@@ -1265,72 +1519,6 @@ export class StorefrontPage {
     );
     // Checkout keeps sending requests; networkidle is not guaranteed.
     await this.page.waitForLoadState('domcontentloaded');
-  }
-
-  /**
-   * Verify that the checkout page's Monorail analytics carry the same
-   * tracking values as the storefront's consent response: the session must
-   * survive the cross-domain handoff. Checkout also fires many events
-   * without tracking values (web pixels, performance metrics), so only the
-   * events that carry them are asserted, and at least one must carry both.
-   *
-   * Call after `gotoCheckoutFromCartDrawer` (with request tracking cleared
-   * beforehand), so the tracked requests come from the checkout page.
-   */
-  verifyCheckoutMonorailRequests(
-    expectedY: string,
-    expectedS: string,
-    context: string,
-  ) {
-    const requestsWithData = this.monorailRequests.filter(
-      (req) => req.postData,
-    );
-
-    expect(
-      requestsWithData.length,
-      `Checkout Monorail requests with data ${context}`,
-    ).toBeGreaterThan(0);
-
-    let eventsWithBothTokens = 0;
-    const mismatches: string[] = [];
-
-    for (const request of requestsWithData) {
-      const payload = JSON.parse(request.postData!) as {
-        events?: Array<{payload: MonorailPayload}>;
-      };
-
-      for (const event of payload.events ?? []) {
-        const uniqueToken =
-          event.payload?.unique_token || event.payload?.uniqToken;
-        const visitToken =
-          event.payload?.deprecated_visit_token || event.payload?.visitToken;
-
-        // Events without tracking values (web pixels, metrics) are expected:
-        if (!uniqueToken && !visitToken) continue;
-
-        if (uniqueToken === expectedY && visitToken === expectedS) {
-          eventsWithBothTokens++;
-          continue;
-        }
-
-        // Events carrying only part of the pair must still match their part:
-        if (uniqueToken && uniqueToken !== expectedY) {
-          mismatches.push(`unique_token ${uniqueToken} ≠ ${expectedY}`);
-        }
-        if (visitToken && visitToken !== expectedS) {
-          mismatches.push(`visit_token ${visitToken} ≠ ${expectedS}`);
-        }
-      }
-    }
-
-    expect(
-      mismatches,
-      `Checkout tracking values should match the storefront session ${context}`,
-    ).toEqual([]);
-    expect(
-      eventsWithBothTokens,
-      `At least one checkout event should carry both session tokens ${context}`,
-    ).toBeGreaterThan(0);
   }
 
   /**

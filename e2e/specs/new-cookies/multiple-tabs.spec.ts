@@ -71,7 +71,6 @@ test.describe('Multiple tabs', () => {
     await storefront.page.bringToFront();
     storefront.clearRequests();
     await storefront.navigateClientSide('/collections/all');
-    await storefront.navigateToInStockProduct();
 
     expect(await storefront.getConsentState()).toMatchObject({
       analyticsAllowed: false,

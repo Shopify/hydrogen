@@ -5,6 +5,11 @@ import {
   ACCEPT_ALL_CONSENT,
   type Page,
 } from '../../fixtures';
+import {
+  holdRequests,
+  isConsentRequest as isHeldConsentRequest,
+  observeConsentDispatches,
+} from '../../fixtures/consent-test-controls';
 
 /**
  * Failure modes of the Customer Privacy API's consent request. Analytics wait
@@ -30,16 +35,6 @@ async function failConsentRequests(page: Page) {
     return route.abort('failed');
   });
   return failures;
-}
-
-/** Deliver every consent response late, after fetching the real one. */
-async function delayConsentResponses(page: Page, delayInMilliseconds: number) {
-  await page.route(PROXY_URL_PATTERN, async (route) => {
-    if (!isConsentRequest(route.request().postData())) return route.continue();
-    const response = await route.fetch();
-    await new Promise((resolve) => setTimeout(resolve, delayInMilliseconds));
-    return route.fulfill({response});
-  });
 }
 
 test.describe('Consent request failures', () => {
@@ -103,10 +98,6 @@ test.describe('Consent request failures', () => {
   test('waits for a slow consent response without leaking stale values', async ({
     storefront,
   }) => {
-    // Delay the consent response: analytics and legacy-cookie expiry must
-    // wait for it.
-    const CONSENT_DELAY_IN_MILLISECONDS = 3000;
-
     await storefront.setWithPrivacyBanner(false);
 
     // === Establish the session as a new visitor ===
@@ -123,38 +114,50 @@ test.describe('Consent request failures', () => {
     ]);
     await storefront.removeHttpOnlyCookies();
 
-    await delayConsentResponses(storefront.page, CONSENT_DELAY_IN_MILLISECONDS);
-
-    // === Reload with the slow response in flight ===
-    storefront.clearRequests();
-    await storefront.page.reload();
-    await storefront.page.waitForLoadState('domcontentloaded');
-
-    // While the consent response is still in flight: analytics readiness
-    // has not been reached (perf-kit is not mounted) and no analytics
-    // requests have fired, so nothing can carry stale token values.
-    storefront.expectPerfKitNotLoaded();
-    storefront.expectNoMonorailRequests();
-
-    // The legacy cookies are still in place: they are expired only after a
-    // successful consent response.
-    expect((await storefront.getCookie('_shopify_y'))?.value).toBe(
-      tokens.uniqueToken,
+    const dispatches = await observeConsentDispatches(storefront.page);
+    const heldConsent = await holdRequests(
+      storefront.page,
+      isHeldConsentRequest,
     );
+    try {
+      // === Reload with the slow response in flight ===
+      storefront.clearRequests();
+      await storefront.page.reload();
+      await heldConsent.waitUntilHeld();
+      heldConsent.expectPending();
+      await storefront.navigateClientSide('/collections/all');
+      heldConsent.expectPending();
 
-    // === The slow response settles and everything converges ===
-    await storefront.waitForPerfKit();
-    await storefront.waitForMonorailRequests();
-    storefront.verifyMonorailRequests(
-      tokens.uniqueToken,
-      tokens.visitToken,
-      'after the slow consent response settled',
-    );
+      // While the consent response is still in flight: analytics readiness
+      // has not been reached (perf-kit is not mounted) and no analytics
+      // requests have fired, so nothing can carry stale token values.
+      storefront.expectPerfKitNotLoaded();
+      storefront.expectNoMonorailRequests();
 
-    // The session continued through the slow response's values, and the
-    // deprecated cookies were removed only after it arrived.
-    expect(await storefront.getTrackingTokens()).toEqual(tokens);
-    await storefront.expectNoLegacyAnalyticsCookies();
-    await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+      // The legacy cookies are still in place: they are expired only after a
+      // successful consent response.
+      expect((await storefront.getCookie('_shopify_y'))?.value).toBe(
+        tokens.uniqueToken,
+      );
+
+      heldConsent.release();
+      await storefront.waitForConsentLoaded();
+      await storefront.waitForPerfKit();
+      await storefront.waitForMonorailRequests();
+      storefront.verifyMonorailRequests(
+        tokens.uniqueToken,
+        tokens.visitToken,
+        'after the slow consent response settled',
+      );
+
+      // The session continued through the slow response's values, and the
+      // deprecated cookies were removed only after it arrived.
+      expect(await storefront.getTrackingTokens()).toEqual(tokens);
+      await storefront.expectNoLegacyAnalyticsCookies();
+      await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+      await dispatches.expectNoPrematureAnalytics();
+    } finally {
+      await heldConsent.dispose();
+    }
   });
 });

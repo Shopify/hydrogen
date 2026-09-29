@@ -1,4 +1,15 @@
-import {setTestStore, test, expect, type StorefrontPage} from '../../fixtures';
+import {
+  setTestStore,
+  test,
+  expect,
+  type StorefrontPage,
+  MOCK_VALUE_PATTERN,
+} from '../../fixtures';
+import {
+  holdRequests,
+  isPersistenceRequest,
+  trackSuccessfulPersistence,
+} from '../../fixtures/consent-test-controls';
 
 /**
  * A visit ends after 30 minutes without a new visit token. On a page left
@@ -28,7 +39,8 @@ const UNRETRIED_PERSISTENCE_REASON =
 // Activity shortly before the visit timeout, and shortly after it.
 const BEFORE_TIMEOUT_IN_MILLISECONDS = 28 * 60 * 1000;
 const PAST_TIMEOUT_AFTER_ACTIVITY_IN_MILLISECONDS = 4 * 60 * 1000;
-const PERSISTENCE_DELAY_IN_MILLISECONDS = 5000;
+const TRACKING_TOKEN_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function establishCartSession(storefront: StorefrontPage) {
   await storefront.setWithPrivacyBanner(false);
@@ -42,24 +54,6 @@ async function establishCartSession(storefront: StorefrontPage) {
   });
   await storefront.closeCartAside();
   return tokens;
-}
-
-/** Record the visit tokens sent to persist renewed tracking values. */
-function trackPersistedVisitTokens(storefront: StorefrontPage) {
-  const visitTokens: string[] = [];
-  storefront.page.on('request', (request) => {
-    const url = new URL(request.url());
-    if (!url.pathname.endsWith('graphql.json')) return;
-    const visitToken = url.searchParams.get('_s');
-    if (visitToken) visitTokens.push(visitToken);
-  });
-  return visitTokens;
-}
-
-/** Whether a request persists renewed tracking values to the backend. */
-function isPersistRequest(url: string) {
-  const {pathname, searchParams} = new URL(url);
-  return pathname.endsWith('graphql.json') && searchParams.has('_s');
 }
 
 /** Resume after being idle: one client-side navigation that fires analytics. */
@@ -78,7 +72,7 @@ test.describe('Page open for more than 30 minutes', () => {
     storefront,
   }) => {
     await storefront.page.clock.install();
-    const persistedVisitTokens = trackPersistedVisitTokens(storefront);
+    const persistence = trackSuccessfulPersistence(storefront.page);
     const before = await establishCartSession(storefront);
 
     await storefront.page.clock.fastForward(IDLE_IN_MILLISECONDS);
@@ -90,7 +84,8 @@ test.describe('Page open for more than 30 minutes', () => {
       [...new Set(storefront.getMonorailTokens().map((e) => e.visitToken))],
       'Analytics report the renewed visit',
     ).toEqual([after.visitToken]);
-    await expect.poll(() => persistedVisitTokens).toContain(after.visitToken);
+    await persistence.waitFor(after.visitToken);
+    persistence.stop();
 
     // The backend adopted the renewed visit for the next page load.
     const reloadResponse = await storefront.withConsentResponse(() =>
@@ -117,7 +112,7 @@ test.describe('Page open for more than 30 minutes', () => {
     });
   });
 
-  test('checks out straight from an existing cart with a live visit', async ({
+  test('refreshes an existing cart link after idle without navigation', async ({
     storefront,
   }) => {
     test.fail(true, STALE_CHECKOUT_URL_REASON);
@@ -132,6 +127,11 @@ test.describe('Page open for more than 30 minutes', () => {
     expect(checkout.uniqueToken, 'The visitor continues').toBe(
       before.uniqueToken,
     );
+    expect(
+      checkout.visitToken,
+      'The link must contain a valid replacement visit',
+    ).toMatch(TRACKING_TOKEN_PATTERN);
+    expect(checkout.visitToken).not.toMatch(MOCK_VALUE_PATTERN);
     expect(
       checkout.visitToken,
       'Checkout must not continue the expired visit',
@@ -172,40 +172,33 @@ test.describe('Page open for more than 30 minutes', () => {
     await storefront.waitForConsentLoaded();
     const before = await storefront.getTrackingTokens();
 
-    let persistRequests = 0;
-    let persistedResponses = 0;
-    await storefront.page.route('**/graphql.json**', async (route) => {
-      if (!isPersistRequest(route.request().url())) return route.continue();
-      persistRequests++;
-      const response = await route.fetch();
-      await new Promise((resolve) =>
-        setTimeout(resolve, PERSISTENCE_DELAY_IN_MILLISECONDS),
-      );
-      await route.fulfill({response});
-      persistedResponses++;
-    });
-
-    await storefront.page.clock.fastForward(IDLE_IN_MILLISECONDS);
-    const renewed = await resumeWithNavigation(storefront);
-    expect(renewed.uniqueToken).toBe(before.uniqueToken);
-    expect(renewed.visitToken).not.toBe(before.visitToken);
-
-    // While the persistence is pending, more activity reuses the renewal.
-    await storefront.navigateClientSide('/');
-    expect(await storefront.getTrackingTokens()).toEqual(renewed);
-    await expect.poll(() => persistRequests).toBe(1);
-
-    // Once it lands, the backend continues the renewed visit.
-    await expect
-      .poll(() => persistedResponses, {
-        timeout: PERSISTENCE_DELAY_IN_MILLISECONDS * 3,
-      })
-      .toBe(1);
-    await storefront.page.unroute('**/graphql.json**');
-    const response = await storefront.withConsentResponse(() =>
-      storefront.reload(),
+    const persistence = trackSuccessfulPersistence(storefront.page);
+    const heldPersistence = await holdRequests(
+      storefront.page,
+      isPersistenceRequest,
     );
-    expect(await storefront.expectAllowedConsent(response)).toEqual(renewed);
+    try {
+      await storefront.page.clock.fastForward(IDLE_IN_MILLISECONDS);
+      const renewed = await resumeWithNavigation(storefront);
+      await heldPersistence.waitUntilHeld();
+      heldPersistence.expectPending();
+      expect(renewed.uniqueToken).toBe(before.uniqueToken);
+      expect(renewed.visitToken).not.toBe(before.visitToken);
+
+      // Another navigation must reuse the token while its first write is still held.
+      await storefront.navigateClientSide('/');
+      expect(await storefront.getTrackingTokens()).toEqual(renewed);
+      heldPersistence.expectPending();
+      heldPersistence.release();
+      await persistence.waitFor(renewed.visitToken);
+      const response = await storefront.withConsentResponse(() =>
+        storefront.reload(),
+      );
+      expect(await storefront.expectAllowedConsent(response)).toEqual(renewed);
+    } finally {
+      await heldPersistence.dispose();
+      persistence.stop();
+    }
   });
 
   test('persists a renewal after a failed attempt once the network recovers', async ({
@@ -220,7 +213,7 @@ test.describe('Page open for more than 30 minutes', () => {
 
     let failedPersistRequests = 0;
     await storefront.page.route('**/graphql.json**', (route) => {
-      if (!isPersistRequest(route.request().url())) return route.continue();
+      if (!isPersistenceRequest(route.request())) return route.continue();
       failedPersistRequests++;
       return route.abort('failed');
     });
@@ -234,8 +227,15 @@ test.describe('Page open for more than 30 minutes', () => {
     await storefront.navigateClientSide('/');
     expect(await storefront.getTrackingTokens()).toEqual(renewed);
 
-    // The network recovers: the renewed visit reaches the backend.
+    // Recovery must happen in this document, before a reload discards retry state.
+    const persistence = trackSuccessfulPersistence(storefront.page);
     await storefront.page.unroute('**/graphql.json**');
+    await storefront.page.evaluate(() =>
+      window.dispatchEvent(new Event('online')),
+    );
+    await resumeWithNavigation(storefront);
+    await persistence.waitFor(renewed.visitToken);
+    persistence.stop();
     const response = await storefront.withConsentResponse(() =>
       storefront.reload(),
     );
@@ -277,16 +277,52 @@ test.describe('Page open for more than 30 minutes', () => {
       .not.toContain(before.visitToken);
     await storefront.closeCartAside();
 
-    const after = await resumeWithNavigation(storefront);
-    expect(after.visitToken).not.toBeNull();
-
-    await storefront.openCartAside();
-    const {checkoutUrl} = await storefront.getCheckoutUrlTrackingParams();
-    storefront.expectCheckoutContinuesSession(
-      await storefront.collectCheckoutAnalytics(checkoutUrl, {
-        expectTokens: true,
-      }),
-      {uniqueToken: after.uniqueToken!, visitToken: after.visitToken!},
+    const persistence = trackSuccessfulPersistence(storefront.page);
+    const heldPersistence = await holdRequests(
+      storefront.page,
+      isPersistenceRequest,
     );
+    try {
+      const after = await resumeWithNavigation(storefront);
+      await heldPersistence.waitUntilHeld();
+      heldPersistence.expectPending();
+      expect(after.visitToken).toMatch(TRACKING_TOKEN_PATTERN);
+      expect(after.visitToken).not.toMatch(MOCK_VALUE_PATTERN);
+
+      await storefront.openCartAside();
+      let signalCheckoutClick!: () => void;
+      const checkoutClicked = new Promise<void>((resolve) => {
+        signalCheckoutClick = resolve;
+      });
+      await storefront.page.exposeFunction(
+        '__checkoutClicked',
+        signalCheckoutClick,
+      );
+      await storefront.getCheckoutButton().evaluate((link) => {
+        link.addEventListener(
+          'click',
+          () => {
+            void (window as any).__checkoutClicked();
+          },
+          {capture: true, once: true},
+        );
+      });
+      const checkoutHandoff = storefront.collectCheckoutAnalyticsFromCart({
+        expectTokens: true,
+      });
+      // Observe rejection now, even if a broken immediate navigation cancels persistence.
+      void checkoutHandoff.catch(() => {});
+      await checkoutClicked;
+      heldPersistence.expectPending();
+      heldPersistence.release();
+      await persistence.waitFor(after.visitToken);
+      storefront.expectCheckoutContinuesSession(await checkoutHandoff, {
+        uniqueToken: after.uniqueToken!,
+        visitToken: after.visitToken!,
+      });
+    } finally {
+      await heldPersistence.dispose();
+      persistence.stop();
+    }
   });
 });
