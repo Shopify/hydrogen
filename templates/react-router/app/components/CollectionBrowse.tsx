@@ -345,7 +345,7 @@ function PriceRangeFacet({
   const currencySymbol = formatMoney(
     { amount: "0", currencyCode },
     { locale: "en-US" },
-  ).currencySymbol;
+  ).currencyNarrowSymbol;
 
   useEffect(() => {
     for (const [input, value] of [
@@ -382,11 +382,11 @@ function PriceRangeFacet({
   }, []);
 
   return (
-    <div className="@container min-w-0 pt-2">
-      <div className="grid min-w-0 gap-2 @min-[20rem]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] @min-[20rem]:items-center">
+    <div className="min-w-0 pt-2">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
         <label
           htmlFor={minId}
-          className="border-border rounded-input bg-surface has-[input:focus-visible]:outline-interactive flex min-w-0 items-center gap-1.5 border px-3 py-2 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2"
+          className="border-border rounded-input bg-surface has-[input:focus-visible]:outline-interactive flex min-w-0 items-center gap-1 border px-2 py-2 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2"
         >
           <span className="text-on-surface-secondary shrink-0 text-sm" aria-hidden="true">
             {currencySymbol}
@@ -412,7 +412,7 @@ function PriceRangeFacet({
         <span className="text-on-surface-secondary text-center text-sm">to</span>
         <label
           htmlFor={maxId}
-          className="border-border rounded-input bg-surface has-[input:focus-visible]:outline-interactive flex min-w-0 items-center gap-1.5 border px-3 py-2 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2"
+          className="border-border rounded-input bg-surface has-[input:focus-visible]:outline-interactive flex min-w-0 items-center gap-1 border px-2 py-2 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2"
         >
           <span className="text-on-surface-secondary shrink-0 text-sm" aria-hidden="true">
             {currencySymbol}
