@@ -1,5 +1,8 @@
 import type * as CAAPI from "@shopify/hydrogen/customer-account";
-import type { CustomerAddressInput } from "@shopify/hydrogen/customer-account-api-types";
+import type {
+  CountryCode,
+  CustomerAddressInput,
+} from "@shopify/hydrogen/customer-account-api-types";
 import type { AddressFragment, CustomerFragment } from "customer-accountapi.generated";
 import {
   data,
@@ -39,7 +42,6 @@ const ADDRESS_INPUT_KEYS = [
   "address2",
   "city",
   "company",
-  "territoryCode",
   "firstName",
   "lastName",
   "phoneNumber",
@@ -138,6 +140,12 @@ function parseAddress(form: FormData): CustomerAddressInput {
     if (typeof value === "string") address[key] = value;
   }
 
+  // CountryCode is an enum, and GraphQL matches enum values case-sensitively.
+  const countryCode = form.get("countryCode");
+  if (typeof countryCode === "string") {
+    address.countryCode = countryCode.toUpperCase() as CountryCode;
+  }
+
   return address;
 }
 
@@ -202,7 +210,7 @@ function NewAddressForm() {
     address2: "",
     city: "",
     company: "",
-    territoryCode: "",
+    countryCode: null,
     firstName: "",
     id: "new",
     lastName: "",
@@ -365,13 +373,13 @@ export function AddressForm({
           required
           type="text"
         />
-        <label htmlFor="territoryCode">Country Code*</label>
+        <label htmlFor="countryCode">Country Code*</label>
         <input
           aria-label="Country code"
           autoComplete="country"
-          defaultValue={address?.territoryCode ?? ""}
-          id="territoryCode"
-          name="territoryCode"
+          defaultValue={address?.countryCode ?? ""}
+          id="countryCode"
+          name="countryCode"
           placeholder="Country"
           required
           type="text"

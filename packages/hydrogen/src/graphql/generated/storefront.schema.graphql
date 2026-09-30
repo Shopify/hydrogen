@@ -29,6 +29,11 @@ Contextualizes data based on the additional information provided by the directiv
 """
 directive @inContext(
   """
+  The channel ID used for context. Overrides the channel from API credentials.
+  """
+  channelId: ID
+
+  """
   The country code for context. For example, `CA`.
   """
   country: CountryCode
@@ -465,6 +470,34 @@ type AutomaticDiscountApplication implements DiscountApplication {
   value: PricingValue!
 }
 
+"Captures the intent of a discount source at the time it was applied to a cart.\nThis includes the discount value, how it's allocated across entitled items, and\nwhich line types it targets.\n\nThe actual discounted amounts on specific cart lines are represented by [`CartDiscountAllocation`](https://shopify.dev/docs/api/storefront/current/interfaces/CartDiscountAllocation)\nobjects, which reference this application.\n"
+interface BaseCartDiscountApplication {
+  """
+  The method by which the discount's value is allocated to its entitled items.
+  """
+  allocationMethod: DiscountApplicationAllocationMethod!
+
+  """
+  Which lines of targetType that the discount is allocated over.
+  """
+  targetSelection: DiscountApplicationTargetSelection!
+
+  """
+  The type of line that the discount is applicable towards.
+  """
+  targetType: DiscountApplicationTargetType!
+
+  """
+  The total amount allocated by this discount application across all entitled items.
+  """
+  totalAllocatedAmount: MoneyV2!
+
+  """
+  The value of the discount application.
+  """
+  value: PricingValue!
+}
+
 "Defines the shared fields for items in a shopping cart. Implemented by [`CartLine`](https://shopify.dev/docs/api/storefront/current/objects/CartLine) for individual merchandise and [`ComponentizableCartLine`](https://shopify.dev/docs/api/storefront/current/objects/ComponentizableCartLine) for grouped merchandise like bundles.\n\nEach implementation includes the merchandise being purchased, quantity, cost breakdown, applied discounts, custom attributes, and any associated [`SellingPlan`](https://shopify.dev/docs/api/storefront/current/objects/SellingPlan).\n"
 interface BaseCartLine implements Node {
   """
@@ -490,7 +523,12 @@ interface BaseCartLine implements Node {
   """
   The discounts that have been applied to the cart line.
   """
-  discountAllocations: [CartDiscountAllocation!]!
+  discountAllocations(
+    """
+    When true, returns only line-level (product) discount allocations. When false, returns all discount allocations including order-level discounts.
+    """
+    lineLevelOnly: Boolean = true
+  ): [CartDiscountAllocation!]!
 
   """
   The estimated cost of the merchandise that the buyer will pay for at checkout. The estimated costs are subject to change and changes will be reflected at checkout.
@@ -516,6 +554,11 @@ interface BaseCartLine implements Node {
   The selling plan associated with the cart line and the effect that each selling plan has on variants when they're purchased.
   """
   sellingPlanAllocation: SellingPlanAllocation
+
+  """
+  A stable identifier for the line matching the value exposed in Liquid via the `view_key` filter and accepted as input on `cartLinesUpdate` and `cartLinesRemove`.
+  """
+  viewKey: String
 }
 
 "An auto-generated type for paginating through multiple BaseCartLines.\n"
@@ -903,6 +946,11 @@ type Cart implements HasMetafields & Node {
     )
 
   """
+  The discount applications applied to the cart.
+  """
+  discountApplications: [BaseCartDiscountApplication!]!
+
+  """
   The case-insensitive discount codes that the customer added at checkout.
   """
   discountCodes: [CartDiscountCode!]!
@@ -1042,6 +1090,11 @@ type CartAutomaticDiscountAllocation implements CartDiscountAllocation {
   discountedAmount: MoneyV2!
 
   """
+  The discount application that created this allocation, with corrected value semantics.
+  """
+  sourceDiscountApplication: BaseCartDiscountApplication!
+
+  """
   The type of line that the discount is applicable towards.
   """
   targetType: DiscountApplicationTargetType!
@@ -1050,6 +1103,41 @@ type CartAutomaticDiscountAllocation implements CartDiscountAllocation {
   The title of the allocated discount.
   """
   title: String!
+}
+
+"""
+The discount application automatically applied based on prerequisites.
+"""
+type CartAutomaticDiscountApplication implements BaseCartDiscountApplication {
+  """
+  The method by which the discount's value is allocated to its entitled items.
+  """
+  allocationMethod: DiscountApplicationAllocationMethod!
+
+  """
+  Which lines of targetType that the discount is allocated over.
+  """
+  targetSelection: DiscountApplicationTargetSelection!
+
+  """
+  The type of line that the discount is applicable towards.
+  """
+  targetType: DiscountApplicationTargetType!
+
+  """
+  The title of the discount.
+  """
+  title: String!
+
+  """
+  The total amount allocated by this discount application across all entitled items.
+  """
+  totalAllocatedAmount: MoneyV2!
+
+  """
+  The value of the discount application.
+  """
+  value: PricingValue!
 }
 
 """
@@ -1219,9 +1307,49 @@ type CartCodeDiscountAllocation implements CartDiscountAllocation {
   discountedAmount: MoneyV2!
 
   """
+  The discount application that created this allocation, with corrected value semantics.
+  """
+  sourceDiscountApplication: BaseCartDiscountApplication!
+
+  """
   The type of line that the discount is applicable towards.
   """
   targetType: DiscountApplicationTargetType!
+}
+
+"""
+The discount application applied using a discount code.
+"""
+type CartCodeDiscountApplication implements BaseCartDiscountApplication {
+  """
+  The method by which the discount's value is allocated to its entitled items.
+  """
+  allocationMethod: DiscountApplicationAllocationMethod!
+
+  """
+  The code used to apply the discount.
+  """
+  code: String!
+
+  """
+  Which lines of targetType that the discount is allocated over.
+  """
+  targetSelection: DiscountApplicationTargetSelection!
+
+  """
+  The type of line that the discount is applicable towards.
+  """
+  targetType: DiscountApplicationTargetType!
+
+  """
+  The total amount allocated by this discount application across all entitled items.
+  """
+  totalAllocatedAmount: MoneyV2!
+
+  """
+  The value of the discount application.
+  """
+  value: PricingValue!
 }
 
 """
@@ -1404,6 +1532,11 @@ type CartCustomDiscountAllocation implements CartDiscountAllocation {
   discountedAmount: MoneyV2!
 
   """
+  The discount application that created this allocation, with corrected value semantics.
+  """
+  sourceDiscountApplication: BaseCartDiscountApplication!
+
+  """
   The type of line that the discount is applicable towards.
   """
   targetType: DiscountApplicationTargetType!
@@ -1412,6 +1545,41 @@ type CartCustomDiscountAllocation implements CartDiscountAllocation {
   The title of the allocated discount.
   """
   title: String!
+}
+
+"""
+The discount application applied by a custom script or function.
+"""
+type CartCustomDiscountApplication implements BaseCartDiscountApplication {
+  """
+  The method by which the discount's value is allocated to its entitled items.
+  """
+  allocationMethod: DiscountApplicationAllocationMethod!
+
+  """
+  Which lines of targetType that the discount is allocated over.
+  """
+  targetSelection: DiscountApplicationTargetSelection!
+
+  """
+  The type of line that the discount is applicable towards.
+  """
+  targetType: DiscountApplicationTargetType!
+
+  """
+  The title of the discount.
+  """
+  title: String!
+
+  """
+  The total amount allocated by this discount application across all entitled items.
+  """
+  totalAllocatedAmount: MoneyV2!
+
+  """
+  The value of the discount application.
+  """
+  value: PricingValue!
 }
 
 "The delivery properties of the cart.\n"
@@ -1713,6 +1881,11 @@ type CartDeliveryGroup {
   deliveryOptions: [CartDeliveryOption!]!
 
   """
+  The discount allocations applied to the delivery group.
+  """
+  discountAllocations: [CartDiscountAllocation!]!
+
+  """
   The type of merchandise in the delivery group.
   """
   groupType: CartDeliveryGroupType!
@@ -1891,6 +2064,11 @@ interface CartDiscountAllocation {
   The discounted amount that has been applied to the cart line.
   """
   discountedAmount: MoneyV2!
+
+  """
+  The discount application that created this allocation, with corrected value semantics.
+  """
+  sourceDiscountApplication: BaseCartDiscountApplication!
 
   """
   The type of line that the discount is applicable towards.
@@ -2390,6 +2568,9 @@ input CartInput {
   The input must not contain more than `250` values.
   """
   metafields: [CartInputMetafieldInput!]
+
+  "The source name of the channel to use for order attribution.\nThe value must match the source name of a channel that the client, identified by the storefront access token, owns.\n"
+  sourceName: String
 }
 
 "The input fields for a cart metafield value to set.\n\nCart metafields will be copied to order metafields at order creation time if there is a matching order metafield definition with the [`cart to order copyable`](https://shopify.dev/docs/apps/build/metafields/use-metafield-capabilities#cart-to-order-copyable) capability enabled.\n"
@@ -2431,7 +2612,12 @@ type CartLine implements BaseCartLine & Node {
   """
   The discounts that have been applied to the cart line.
   """
-  discountAllocations: [CartDiscountAllocation!]!
+  discountAllocations(
+    """
+    When true, returns only line-level (product) discount allocations. When false, returns all discount allocations including order-level discounts.
+    """
+    lineLevelOnly: Boolean = true
+  ): [CartDiscountAllocation!]!
 
   """
   The estimated cost of the merchandise that the buyer will pay for at checkout. The estimated costs are subject to change and changes will be reflected at checkout.
@@ -2467,6 +2653,11 @@ type CartLine implements BaseCartLine & Node {
   The selling plan associated with the cart line and the effect that each selling plan has on variants when they're purchased.
   """
   sellingPlanAllocation: SellingPlanAllocation
+
+  """
+  A stable identifier for the line matching the value exposed in Liquid via the `view_key` filter and accepted as input on `cartLinesUpdate` and `cartLinesRemove`.
+  """
+  viewKey: String
 }
 
 "Cost breakdown for a single line item in a [cart](https://shopify.dev/docs/api/storefront/current/objects/Cart). Includes the per-unit price, the subtotal before line-level discounts, and the final total amount the buyer pays.\n\nThe [`compareAtAmountPerQuantity`](https://shopify.dev/docs/api/storefront/current/objects/CartLineCost#field-CartLineCost.fields.compareAtAmountPerQuantity) field shows the original price when the item is on sale, enabling the display of savings to customers.\n"
@@ -2588,9 +2779,14 @@ type CartLineParentRelationship {
 "The input fields for updating a merchandise line in a cart. Used by the [`cartLinesUpdate`](https://shopify.dev/docs/api/storefront/current/mutations/cartLinesUpdate) mutation.\n\nSpecify the line item's [`id`](https://shopify.dev/docs/api/storefront/current/input-objects/CartLineUpdateInput#fields-id) along with any fields to modify. You can change the quantity, swap the merchandise, update custom attributes, or associate a different selling plan.\n"
 input CartLineUpdateInput {
   """
-  The ID of the merchandise line.
+  The ID of the merchandise line. Mutually exclusive with `viewKey`.
   """
-  id: ID!
+  id: ID
+
+  """
+  The `view_key` of the merchandise line, as exposed in Liquid via the cart line `view_key` filter. Mutually exclusive with `id`.
+  """
+  viewKey: String
 
   """
   The quantity of the line item.
@@ -3191,6 +3387,11 @@ enum CartWarningCode {
   Only one-time purchase is available for B2B orders.
   """
   MERCHANDISE_SELLING_PLAN_NOT_APPLICABLE_ON_COMPANY_LOCATION
+
+  """
+  The product is unavailable in the current buyer location.
+  """
+  PRODUCT_UNAVAILABLE_IN_BUYER_LOCATION
 }
 
 "A filter used to view a subset of products in a collection matching a specific category value.\n"
@@ -3680,7 +3881,12 @@ type ComponentizableCartLine implements BaseCartLine & Node {
   """
   The discounts that have been applied to the cart line.
   """
-  discountAllocations: [CartDiscountAllocation!]!
+  discountAllocations(
+    """
+    When true, returns only line-level (product) discount allocations. When false, returns all discount allocations including order-level discounts.
+    """
+    lineLevelOnly: Boolean = true
+  ): [CartDiscountAllocation!]!
 
   """
   The estimated cost of the merchandise that the buyer will pay for at checkout. The estimated costs are subject to change and changes will be reflected at checkout.
@@ -3711,6 +3917,11 @@ type ComponentizableCartLine implements BaseCartLine & Node {
   The selling plan associated with the cart line and the effect that each selling plan has on variants when they're purchased.
   """
   sellingPlanAllocation: SellingPlanAllocation
+
+  """
+  A stable identifier for the line matching the value exposed in Liquid via the `view_key` filter and accepted as input on `cartLinesUpdate` and `cartLinesRemove`.
+  """
+  viewKey: String
 }
 
 """
@@ -3766,7 +3977,7 @@ type Country {
   isoCode: CountryCode!
 
   """
-  The market that includes this country.
+  The market that applies to this country. In cases where multiple markets match, this returns the most-specific country region market.
   """
   market: Market
     @deprecated(reason: "This `market` field will be removed in a future version of the API.")
@@ -5211,6 +5422,11 @@ enum CurrencyCode {
   Cape Verdean escudo (CVE).
   """
   CVE
+
+  """
+  Caribbean Guilder (XCG).
+  """
+  XCG
 
   """
   Cayman Dollars (KYD).
@@ -6939,7 +7155,7 @@ enum FilterPresentation {
   TEXT
 }
 
-"The type of data that the filter group represents.\n\nFor more information, refer to [Filter products in a collection with the Storefront API]\n(https://shopify.dev/custom-storefronts/products-collections/filter-products).\n"
+"The type of data that the filter group represents.\n\nFor more information, refer to [Filter products in a collection with the Storefront API]\n(https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/products-collections/filter-products).\n"
 enum FilterType {
   """
   A list of selectable values.
@@ -8114,7 +8330,7 @@ type Localization {
   language: Language!
 
   """
-  The market including the country of the active localized experience. Use the `@inContext` directive to change this value.
+  The market that applies to the buyer's country. In cases where multiple markets match, this returns the most-specific country region market. Use the `@inContext` directive to change this value.
   """
   market: Market!
     @deprecated(reason: "This `market` field will be removed in a future version of the API.")
@@ -9568,11 +9784,18 @@ type Mutation {
     cartId: ID!
 
     """
-    The merchandise line IDs to remove.
+    The merchandise line IDs to remove. Mutually exclusive with `viewKeys`.
 
     The input must not contain more than `250` values.
     """
-    lineIds: [ID!]!
+    lineIds: [ID!]
+
+    """
+    The merchandise line `view_key` values to remove, as exposed in Liquid via the cart line `view_key` filter. Mutually exclusive with `lineIds`.
+
+    The input must not contain more than `250` values.
+    """
+    viewKeys: [String!]
   ): CartLinesRemovePayload
 
   "Updates one or more merchandise lines on a [`Cart`](https://shopify.dev/docs/api/storefront/current/objects/Cart). You can modify the quantity, swap the merchandise, change custom attributes, or update the selling plan for each line. You can update a maximum of 250 lines per request.\n\nOmitting the [`attributes`](https://shopify.dev/docs/api/storefront/current/mutations/cartLinesUpdate#arguments-lines.fields.attributes) field or setting it to null preserves existing line attributes. Pass an empty array to clear all attributes from a line.\n"
@@ -9864,7 +10087,8 @@ type Mutation {
     """
     A payment request object.
     """
-    paymentRequest: ShopPayPaymentRequestInput!
+    paymentRequest: ShopPayPaymentRequestInput
+      @deprecated(reason: "This argument is deprecated and will be removed in a future version.")
   ): ShopPayPaymentRequestSessionCreatePayload
 
   "Finalizes a [Shop Pay payment request session](https://shopify.dev/docs/api/storefront/current/objects/ShopPayPaymentRequestSession). Call this mutation after creating a session with [`shopPayPaymentRequestSessionCreate`](https://shopify.dev/docs/api/storefront/current/mutations/shopPayPaymentRequestSessionCreate).\n\nThe [`idempotencyKey`](https://shopify.dev/docs/api/storefront/current/mutations/shopPayPaymentRequestSessionSubmit#arguments-idempotencyKey) argument ensures the payment transaction occurs only once, preventing duplicate charges. On success, returns a [`ShopPayPaymentRequestReceipt`](https://shopify.dev/docs/api/storefront/current/objects/ShopPayPaymentRequestReceipt) with the processing status and a receipt token.\n\nFor a complete integration guide including the JavaScript SDK setup and checkout flow, refer to the [Shop Component API documentation](https://shopify.dev/docs/api/commerce-components/pay). For implementation steps, see the [development journey guide](https://shopify.dev/docs/api/commerce-components/pay/development-journey). For common error scenarios, see the [troubleshooting guide](https://shopify.dev/docs/api/commerce-components/pay/troubleshooting-guide).\n"
@@ -10674,7 +10898,7 @@ type PredictiveSearchResult {
   articles: [Article!]!
 
   """
-  The articles that match the search query.
+  The collections that match the search query.
   """
   collections: [Collection!]!
 
@@ -10999,7 +11223,7 @@ type Product implements HasMetafields & Node & OnlineStorePublishable & Trackabl
   publishedAt: DateTime!
 
   """
-  Whether the product can only be purchased with a [selling plan](/docs/apps/build/purchase-options/subscriptions/selling-plans). Products that are sold on subscription (`requiresSellingPlan: true`) can be updated only for online stores. If you update a product to be subscription-only (`requiresSellingPlan:false`), then the product is unpublished from all channels, except the online store.
+  Whether the product can only be purchased with a [selling plan](/docs/apps/build/purchase-options/subscriptions/selling-plans). Products that are sold on subscription (`requiresSellingPlan: true`) can be updated only for online stores. If you update a product to be subscription-only (`requiresSellingPlan: true`), then the product is unpublished from all channels, except the online store.
   """
   requiresSellingPlan: Boolean!
 
@@ -12277,7 +12501,7 @@ type QueryRoot {
     query: String!
 
     """
-    Specifies the list of resource fields to use for search. The default fields searched on are TITLE, PRODUCT_TYPE, VARIANT_TITLE, and VENDOR. For the best search experience, you should search on the default field set.
+    Specifies the list of fields to search for page, article, and collection results. If omitted, pages, articles, and collections are searched by title. Product results always search all product fields and ignore this argument.
 
     The input must not contain more than `250` values.
     """
@@ -12388,7 +12612,7 @@ type QueryRoot {
   "Returns all public Storefront [API versions](https://shopify.dev/docs/api/storefront/current/objects/ApiVersion), including supported, release candidate, and unstable versions.\n"
   publicApiVersions: [ApiVersion!]!
 
-  "Returns paginated search results for [`Product`](https://shopify.dev/docs/api/storefront/current/objects/Product), [`Page`](https://shopify.dev/docs/api/storefront/current/objects/Page), and [`Article`](https://shopify.dev/docs/api/storefront/current/objects/Article) resources based on a query string. Results are sorted by relevance by default.\n\nThe response includes the total result count and available product filters for building [faceted search interfaces](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/products-collections/filter-products). Use the [`prefix`](https://shopify.dev/docs/api/storefront/current/enums/SearchPrefixQueryType) argument to enable partial word matching on the last search term, allowing queries like \"winter snow\" to match \"snowboard\" or \"snowshoe\".\n"
+  "Returns paginated search results for [`Product`](https://shopify.dev/docs/api/storefront/current/objects/Product), [`Page`](https://shopify.dev/docs/api/storefront/current/objects/Page), and [`Article`](https://shopify.dev/docs/api/storefront/current/objects/Article) resources based on a query string. Results are sorted by relevance by default.\n\nThe response includes the total result count and available product filters for building [faceted search interfaces](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/products-collections/filter-products). A search returns up to 1,000 results. Use the [`prefix`](https://shopify.dev/docs/api/storefront/current/enums/SearchPrefixQueryType) argument to enable partial word matching on the last search term, allowing queries like \"winter snow\" to match \"snowboard\" or \"snowshoe\".\n"
   search(
     """
     Returns up to the first `n` elements from the list.
@@ -12593,7 +12817,7 @@ type SearchResultItemConnection {
   productFilters: [Filter!]!
 
   """
-  The total number of results.
+  The total number of results, up to a maximum of 1,000. If a search matches more than 1,000 results, then it returns 1,000, and pagination returns up to the first 1,000 results.
   """
   totalCount: Int!
 }
@@ -13486,6 +13710,7 @@ type ShopPayPaymentRequest {
   The delivery methods for the payment request.
   """
   deliveryMethods: [ShopPayPaymentRequestDeliveryMethod!]!
+    @deprecated(reason: "This field is deprecated and will be removed in a future version.")
 
   """
   The discount codes for the payment request.
@@ -13821,6 +14046,7 @@ input ShopPayPaymentRequestInput {
   The input must not contain more than `250` values.
   """
   deliveryMethods: [ShopPayPaymentRequestDeliveryMethodInput!]
+    @deprecated(reason: "This field is deprecated and will be removed in a future version.")
 
   """
   The delivery method type for the payment request.
@@ -13982,6 +14208,11 @@ type ShopPayPaymentRequestReceipt {
   processingStatusType: String!
 
   """
+  The Shop user that authorized the payment request.
+  """
+  shopUser: ShopPayPaymentRequestShopUser
+
+  """
   The token of the receipt.
   """
   token: String!
@@ -13999,7 +14230,8 @@ type ShopPayPaymentRequestSession {
   """
   The payment request associated with the Shop Pay payment request session.
   """
-  paymentRequest: ShopPayPaymentRequest!
+  paymentRequest: ShopPayPaymentRequest
+    @deprecated(reason: "This field is deprecated and will be removed in a future version.")
 
   """
   The source identifier of the Shop Pay payment request session.
@@ -14080,6 +14312,16 @@ input ShopPayPaymentRequestShippingLineInput {
   The amount for the shipping line.
   """
   amount: MoneyInput
+}
+
+"""
+Represents the Shop user that authorized a Shop Pay payment request.
+"""
+type ShopPayPaymentRequestShopUser {
+  """
+  The public ID of the Shop user.
+  """
+  publicId: String
 }
 
 """
@@ -14339,10 +14581,10 @@ type SocialLoginProvider {
   handle: String!
 }
 
-"Inventory information for a product variant at a physical store location that offers local pickup. Includes stock availability, quantity on hand, and estimated pickup readiness time.\n\nLocal pickup must be [enabled in the store's shipping settings](https://help.shopify.com/manual/shipping/setting-up-and-managing-your-shipping/local-methods/local-pickup) for this data to be returned. Results can be sorted by proximity to a customer's location using the `near` argument on the [`ProductVariant.storeAvailability`](https://shopify.dev/docs/api/storefront/current/objects/ProductVariant#field-ProductVariant.fields.storeAvailability) connection. \n\nLearn more about [supporting local pickup on storefronts](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/products-collections/local-pickup).\n"
+"Inventory information for a product variant at a physical store location. Includes stock availability, quantity on hand, and estimated pickup readiness time. Availability also includes inventory that can be moved to the location through a store transfer route, so a variant can be available for pickup with no on-hand stock at the location.\n\nLocal pickup is [enabled in the store's shipping settings](https://help.shopify.com/manual/shipping/setting-up-and-managing-your-shipping/local-methods/local-pickup), and a returned location isn't guaranteed to offer it. Results can be sorted by proximity to a customer's location using the `near` argument on the [`ProductVariant.storeAvailability`](https://shopify.dev/docs/api/storefront/current/objects/ProductVariant#field-ProductVariant.fields.storeAvailability) connection. \n\nLearn more about [supporting local pickup on storefronts](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/products-collections/local-pickup).\n"
 type StoreAvailability {
   """
-  Whether the product variant is in-stock at this location.
+  Whether the product variant can be picked up at this location. This is `true` when the variant is in stock here, can be supplied through a store transfer from another location, or is sold with untracked or oversellable inventory (its inventory isn't tracked, or its inventory policy allows continuing to sell when out of stock). As a result, `available` can be `true` even when `quantityAvailable` is `0`.
   """
   available: Boolean!
 
@@ -14352,12 +14594,12 @@ type StoreAvailability {
   location: Location!
 
   """
-  Returns the estimated amount of time it takes for pickup to be ready (Example: Usually ready in 24 hours).
+  Returns the estimated amount of time it takes for pickup to be ready (Example: Usually ready in 24 hours). When the variant is out of stock at this location and supplied through a store transfer, this reflects the estimated transfer transit time when available, otherwise it falls back to the location's standard pickup processing time.
   """
   pickUpTime: String!
 
   """
-  The quantity of the product variant in-stock at this location.
+  The quantity of the product variant physically in stock at this location. This counts on-hand inventory only and excludes inventory available through a store transfer, so it can be `0` while `available` is `true`.
   """
   quantityAvailable: Int!
 }

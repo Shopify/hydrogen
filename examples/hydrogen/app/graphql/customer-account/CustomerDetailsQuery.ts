@@ -23,7 +23,7 @@ export const CUSTOMER_FRAGMENT = CAAPI.gql(`
     company
     address1
     address2
-    territoryCode
+    countryCode
     zoneCode
     city
     zip

@@ -201,33 +201,6 @@ export type ApplePayWalletConfig = {
   supportedNetworks: Array<Scalars["String"]["output"]>;
 };
 
-/** The details about the gift card used on the checkout. */
-export type AppliedGiftCard = Node & {
-  __typename?: "AppliedGiftCard";
-  /**
-   * The amount deducted from the gift card.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  amountUsed: MoneyV2;
-  /**
-   * The remaining amount on the gift card.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  balance: MoneyV2;
-  /** A globally-unique ID. */
-  id: Scalars["ID"]["output"];
-  /**
-   * The last characters of the gift card.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  lastCharacters: Scalars["String"]["output"];
-  /**
-   * The amount applied to the checkout in its currency.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  presentmentAmountUsed: MoneyV2;
-};
-
 /**
  * A custom property. Attributes are used to store additional information about a Shopify resource, such as
  * products, customers, or orders. Attributes are stored as key-value pairs.
@@ -258,23 +231,6 @@ export type AutomaticDiscountApplication = DiscountApplication & {
   title: Scalars["String"]["output"];
   /** The value of the discount application. */
   value: PricingValue;
-};
-
-/** A collection of available shipping rates for a checkout. */
-export type AvailableShippingRates = {
-  __typename?: "AvailableShippingRates";
-  /**
-   * Whether the shipping rates are ready.
-   * The `shippingRates` field is `null` when this value is `false`.
-   * This field should be polled until its value becomes `true`.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  ready: Scalars["Boolean"]["output"];
-  /**
-   * The fetched shipping rates. `null` until the `ready` field is `true`.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  shippingRates?: Maybe<Array<ShippingRate>>;
 };
 
 /** The type of bank account holder. */
@@ -461,6 +417,28 @@ export type BuyerExperienceConfiguration = {
   paymentTermsTemplate?: Maybe<PaymentTermsTemplate>;
 };
 
+/** The input fields to calculate the financial outcome of a requested order edit. */
+export type CalculateRequestedOrderEditInput = {
+  /** The line item changes from the order to include in the edit calculation, grouped by the type of change. */
+  lineItems: CalculateRequestedOrderEditLineItemsInput;
+  /** The ID of the order to calculate the requested order edit for. */
+  orderId: Scalars["ID"]["input"];
+};
+
+/** The input fields for a line item removal on a calculated requested order edit. */
+export type CalculateRequestedOrderEditLineItemRemovalInput = {
+  /** The ID of the line item to be removed. */
+  lineItemId: Scalars["ID"]["input"];
+  /** The quantity of the item to be removed. Quantity can't exceed the line item's unfulfilled quantity. */
+  quantity: Scalars["Int"]["input"];
+};
+
+/** The input fields for the line item changes in an edit calculation, grouped by the type of change. */
+export type CalculateRequestedOrderEditLineItemsInput = {
+  /** The line items to be removed in the edit calculation. */
+  removals: Array<CalculateRequestedOrderEditLineItemRemovalInput>;
+};
+
 /** The input fields to calculate return amounts associated with an order. */
 export type CalculateReturnInput = {
   /** The ID of the order that will be returned. */
@@ -475,6 +453,75 @@ export type CalculateReturnLineItemInput = {
   lineItemId: Scalars["ID"]["input"];
   /** The quantity of the item to be returned.Quantity can't exceed the line item's fulfilled quantity. */
   quantity: Scalars["Int"]["input"];
+};
+
+/** The calculated financial outcome of a requested order edit based on the line items requested for editing. */
+export type CalculatedRequestedOrderEdit = {
+  __typename?: "CalculatedRequestedOrderEdit";
+  /** A list of line items being processed for a requested order edit. Use `lineItems` instead. */
+  editLineItems: CalculatedRequestedOrderEditLineItemConnection;
+  /** A breakdown of the monetary values for the calculated edit. */
+  financialSummary: RequestedOrderEditFinancialSummary;
+  /** The line item changes being processed for a requested order edit, grouped by the type of change. */
+  lineItems: CalculatedRequestedOrderEditLineItems;
+};
+
+/** The calculated financial outcome of a requested order edit based on the line items requested for editing. */
+export type CalculatedRequestedOrderEditEditLineItemsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+  reverse?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** The line item being processed for a requested order edit and its calculated monetary values. */
+export type CalculatedRequestedOrderEditLineItem = {
+  __typename?: "CalculatedRequestedOrderEditLineItem";
+  /** The line item being processed for a requested order edit. */
+  lineItem: LineItem;
+  /** The quantity being edited. */
+  quantity: Scalars["Int"]["output"];
+  /** The subtotal of the edit line item. */
+  subtotalSet: MoneyBag;
+  /** The total tax of the edit line item. */
+  totalTaxSet: MoneyBag;
+};
+
+/** An auto-generated type for paginating through multiple CalculatedRequestedOrderEditLineItems. */
+export type CalculatedRequestedOrderEditLineItemConnection = {
+  __typename?: "CalculatedRequestedOrderEditLineItemConnection";
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
+  edges: Array<CalculatedRequestedOrderEditLineItemEdge>;
+  /** A list of nodes that are contained in CalculatedRequestedOrderEditLineItemEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
+  nodes: Array<CalculatedRequestedOrderEditLineItem>;
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
+  pageInfo: PageInfo;
+};
+
+/** An auto-generated type which holds one CalculatedRequestedOrderEditLineItem and a cursor during pagination. */
+export type CalculatedRequestedOrderEditLineItemEdge = {
+  __typename?: "CalculatedRequestedOrderEditLineItemEdge";
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
+  cursor: Scalars["String"]["output"];
+  /** The item at the end of CalculatedRequestedOrderEditLineItemEdge. */
+  node: CalculatedRequestedOrderEditLineItem;
+};
+
+/** The line item changes on a calculated requested order edit, grouped by the type of change. */
+export type CalculatedRequestedOrderEditLineItems = {
+  __typename?: "CalculatedRequestedOrderEditLineItems";
+  /** The line items being removed in the calculated edit. */
+  removals: CalculatedRequestedOrderEditLineItemConnection;
+};
+
+/** The line item changes on a calculated requested order edit, grouped by the type of change. */
+export type CalculatedRequestedOrderEditLineItemsRemovalsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+  reverse?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 /** The calculated financial outcome of a return based on the line items requested for return.Includes the monetary values of the line items, along with applicable taxes, discounts, and otherfees on the order. Financial summary may include return fees depending onthe [return rules](https://help.shopify.com/manual/fulfillment/managing-orders/returns/return-rules)at the time the order was placed. */
@@ -537,210 +584,6 @@ export type CardPaymentDetails = {
   cardBrand: Scalars["String"]["output"];
   /** The last four digits of the credit card used. */
   last4?: Maybe<Scalars["String"]["output"]>;
-};
-
-/** A container for information required to checkout items and pay. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
-export type Checkout = Node & {
-  __typename?: "Checkout";
-  /**
-   * The gift cards used on the checkout.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  appliedGiftCards: Array<AppliedGiftCard>;
-  /**
-   * The available shipping rates for this Checkout.
-   * Should only be used when checkout `requiresShipping` is `true` and
-   * the shipping address is valid.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  availableShippingRates?: Maybe<AvailableShippingRates>;
-  /**
-   * The date and time when the checkout was created.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  createdAt: Scalars["DateTime"]["output"];
-  /**
-   * The currency code for the checkout.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  currencyCode: CurrencyCode;
-  /**
-   * The extra information added to the checkout.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  customAttributes: Array<Attribute>;
-  /**
-   * The discounts applied on the checkout.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  discountApplications: DiscountApplicationConnection;
-  /**
-   * The email associated with this checkout.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  email?: Maybe<Scalars["String"]["output"]>;
-  /** A globally-unique ID. */
-  id: Scalars["ID"]["output"];
-  /**
-   * A list of line item objects, each containing information about an item in the checkout.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  lineItems: CheckoutLineItemConnection;
-  /**
-   * The sum of all the prices of all the items in the checkout,
-   * excluding duties, taxes, shipping, and discounts.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  lineItemsSubtotalPrice: MoneyV2;
-  /**
-   * The note associated with the checkout.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  note?: Maybe<Scalars["String"]["output"]>;
-  /**
-   * The amount left to be paid. This is equal to the cost of the line items, duties, taxes, and shipping, minus discounts and gift cards.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  paymentDue: MoneyV2;
-  /**
-   * Whether the Checkout is ready and can be completed. Checkouts may
-   * have asynchronous operations that can take time to finish. If you want
-   * to complete a checkout or ensure all the fields are populated and up to
-   * date, polling is required until the value is true.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  ready: Scalars["Boolean"]["output"];
-  /**
-   * Whether the fulfillment requires shipping.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  requiresShipping: Scalars["Boolean"]["output"];
-  /**
-   * The address where the line items will be shipped.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  shippingAddress?: Maybe<CustomerMailingAddress>;
-  /**
-   * The discounts allocated to the shipping line by discount applications.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  shippingDiscountAllocations: Array<DiscountAllocation>;
-  /**
-   * The selected shipping rate, transitioned to a `shipping_line` object.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  shippingLine?: Maybe<ShippingRate>;
-  /**
-   * The price at checkout before duties, shipping, and taxes.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  subtotalPrice: MoneyV2;
-  /**
-   * Whether the checkout is tax exempt.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  taxExempt: Scalars["Boolean"]["output"];
-  /**
-   * Whether taxes are included in the line item and shipping line prices.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  taxesIncluded: Scalars["Boolean"]["output"];
-  /**
-   * The sum of all the duties applied to the line items in the checkout.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  totalDuties?: Maybe<MoneyV2>;
-  /**
-   * The sum of all the prices of all the items in the checkout,
-   * duties, taxes, and discounts included.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  totalPrice: MoneyV2;
-  /**
-   * The sum of all the taxes applied to the line items and shipping lines in the checkout.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  totalTax: MoneyV2;
-  /**
-   * The URL for the checkout, accessible from the web.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  webUrl: Scalars["URL"]["output"];
-};
-
-/** A container for information required to checkout items and pay. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
-export type CheckoutDiscountApplicationsArgs = {
-  after?: InputMaybe<Scalars["String"]["input"]>;
-  before?: InputMaybe<Scalars["String"]["input"]>;
-  first?: InputMaybe<Scalars["Int"]["input"]>;
-  last?: InputMaybe<Scalars["Int"]["input"]>;
-  reverse?: InputMaybe<Scalars["Boolean"]["input"]>;
-};
-
-/** A container for information required to checkout items and pay. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
-export type CheckoutLineItemsArgs = {
-  after?: InputMaybe<Scalars["String"]["input"]>;
-  before?: InputMaybe<Scalars["String"]["input"]>;
-  first?: InputMaybe<Scalars["Int"]["input"]>;
-  last?: InputMaybe<Scalars["Int"]["input"]>;
-  reverse?: InputMaybe<Scalars["Boolean"]["input"]>;
-};
-
-/** A line item in the checkout, grouped by variant and attributes. */
-export type CheckoutLineItem = Node & {
-  __typename?: "CheckoutLineItem";
-  /**
-   * An array of Key-Value pairs providing extra information about the line item.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  customAttributes: Array<Attribute>;
-  /** A globally-unique ID. */
-  id: Scalars["ID"]["output"];
-  /**
-   * The price of the line item.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  price?: Maybe<MoneyV2>;
-  /**
-   * The quantity of the line item.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  quantity: Scalars["Int"]["output"];
-  /**
-   * The title of the line item. Defaults to the product's title.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  title: Scalars["String"]["output"];
-  /**
-   * The unit price of the line item.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  unitPrice?: Maybe<MoneyV2>;
-  /**
-   * The name of the variant.
-   * @deprecated This field will be removed in a future version of the API.
-   */
-  variantTitle?: Maybe<Scalars["String"]["output"]>;
-};
-
-/** An auto-generated type for paginating through multiple CheckoutLineItems. */
-export type CheckoutLineItemConnection = {
-  __typename?: "CheckoutLineItemConnection";
-  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
-  edges: Array<CheckoutLineItemEdge>;
-  /** A list of nodes that are contained in CheckoutLineItemEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
-  nodes: Array<CheckoutLineItem>;
-  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
-  pageInfo: PageInfo;
-};
-
-/** An auto-generated type which holds one CheckoutLineItem and a cursor during pagination. */
-export type CheckoutLineItemEdge = {
-  __typename?: "CheckoutLineItemEdge";
-  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
-  cursor: Scalars["String"]["output"];
-  /** The item at the end of CheckoutLineItemEdge. */
-  node: CheckoutLineItem;
 };
 
 /** Represents a company's information. */
@@ -1113,10 +956,12 @@ export type CompanyLocation = HasMetafields &
     /** A globally-unique ID. */
     id: Scalars["ID"]["output"];
     /**
-     * The market that includes the location's shipping address. If the shipping address is empty, the shop's primary market is returned.
+     * The market that applies to the location's shipping address country. In cases where multiple markets match, this returns the most-specific country region market. If the shipping address is empty, the shop's backup region market is returned.
      * @deprecated This `market` field will be removed in a future version of the API.
      */
     market: Market;
+    /** The currency for the company location's market, derived from the location's shipping address. When the location has no shipping address, or no market currency matches the address, this falls back to the shop's currency. Use it to choose which store credit balance to present as the primary one. */
+    marketCurrencyCode: CurrencyCode;
     /** A metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
     /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
@@ -2164,6 +2009,8 @@ export type CurrencyCode =
   | "XAF"
   /** East Caribbean Dollar (XCD). */
   | "XCD"
+  /** Caribbean Guilder (XCG). */
+  | "XCG"
   /** West African CFA franc (XOF). */
   | "XOF"
   /** CFP Franc (XPF). */
@@ -2212,13 +2059,10 @@ export type Customer = HasMetafields &
     id: Scalars["ID"]["output"];
     /** The URL to the avatar image of the customer. */
     imageUrl: Scalars["URL"]["output"];
-    /**
-     * The customer's most recently updated, incomplete checkout.
-     * @deprecated This field will be removed in a future version of the API.
-     */
-    lastIncompleteCheckout?: Maybe<Checkout>;
     /** The last name of the customer. */
     lastName?: Maybe<Scalars["String"]["output"]>;
+    /** The currency for the customer's selected country market, derived from the buyer context (set via the `@inContext` directive). When no buyer context is present (no `@inContext` directive) or no market currency matches the context, this falls back to the shop's currency. Use it to choose which store credit balance to present as the primary one. */
+    marketCurrencyCode: CurrencyCode;
     /** A metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
     /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
@@ -2375,6 +2219,8 @@ export type CustomerAddress = Node & {
   company?: Maybe<Scalars["String"]["output"]>;
   /** The name of the country. */
   country?: Maybe<Scalars["String"]["output"]>;
+  /** The two-letter code for the country of the address. */
+  countryCode?: Maybe<CountryCode>;
   /** The first name of the customer. */
   firstName?: Maybe<Scalars["String"]["output"]>;
   /** A formatted version of the address, customized by the provided arguments. */
@@ -2399,6 +2245,7 @@ export type CustomerAddress = Node & {
    * The two-letter code for the country of the address.
    *
    * For example, US.
+   * @deprecated Use countryCode instead.
    */
   territoryCode?: Maybe<CountryCode>;
   /** The zip or postal code of the address. */
@@ -2470,18 +2317,14 @@ export type CustomerAddressInput = {
   city?: InputMaybe<Scalars["String"]["input"]>;
   /** The name of the customer's company or organization. */
   company?: InputMaybe<Scalars["String"]["input"]>;
+  /** The two-letter code for the country of the address. */
+  countryCode?: InputMaybe<CountryCode>;
   /** The first name of the customer. */
   firstName?: InputMaybe<Scalars["String"]["input"]>;
   /** The last name of the customer. */
   lastName?: InputMaybe<Scalars["String"]["input"]>;
   /** The customer's unique phone number, formatted using E.164 standard. For example, _+16135551111_. */
   phoneNumber?: InputMaybe<Scalars["String"]["input"]>;
-  /**
-   * The country code, in ISO 3166-1 format. Accepts either a two-letter [alpha-2 code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2),
-   * a three-letter [alpha-3 code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3), or a three-digit [numeric code](https://en.wikipedia.org/wiki/ISO_3166-1_numeric).
-   * For example, `US`,  `USA`, or `840` represents the United States.
-   */
-  territoryCode?: InputMaybe<Scalars["String"]["input"]>;
   /** The zip or postal code of the address. */
   zip?: InputMaybe<Scalars["String"]["input"]>;
   /**
@@ -2647,99 +2490,6 @@ export type CustomerEmailMarketingUnsubscribePayload = {
   userErrors: Array<UserErrorsCustomerEmailMarketingUserErrors>;
 };
 
-/**
- * Represents a customer's mailing address.
- * For example, a customer's default address and an order's billing address are both mailing addresses.
- */
-export type CustomerMailingAddress = Node & {
-  __typename?: "CustomerMailingAddress";
-  /** The first line of the address. Typically the street address or PO Box number. */
-  address1?: Maybe<Scalars["String"]["output"]>;
-  /** The second line of the address. This is typically the apartment, suite, or unit number. */
-  address2?: Maybe<Scalars["String"]["output"]>;
-  /** The name of the city, district, village, or town. */
-  city?: Maybe<Scalars["String"]["output"]>;
-  /** The name of the customer's company or organization. */
-  company?: Maybe<Scalars["String"]["output"]>;
-  /** The name of the country. */
-  country?: Maybe<Scalars["String"]["output"]>;
-  /**
-   * The two-letter code for the country of the address.
-   *
-   * For example, US.
-   */
-  countryCode?: Maybe<Scalars["String"]["output"]>;
-  /**
-   * The two-letter code for the country of the address.
-   *
-   * For example, US.
-   */
-  countryCodeV2?: Maybe<CountryCode>;
-  /** Indicates whether the address is the default address or not. */
-  defaultAddress: Scalars["Boolean"]["output"];
-  /** The first name of the customer. */
-  firstName?: Maybe<Scalars["String"]["output"]>;
-  /** A formatted version of the address, customized by the provided arguments. */
-  formatted: Array<Scalars["String"]["output"]>;
-  /** A comma-separated list of the values for city, province, and country. */
-  formattedArea?: Maybe<Scalars["String"]["output"]>;
-  /** A globally-unique ID. */
-  id: Scalars["ID"]["output"];
-  /** The last name of the customer. */
-  lastName?: Maybe<Scalars["String"]["output"]>;
-  /** The latitude coordinate of the customer's address. */
-  latitude?: Maybe<Scalars["Float"]["output"]>;
-  /** The longitude coordinate of the customer's address. */
-  longitude?: Maybe<Scalars["Float"]["output"]>;
-  /** The full name of the customer, based on firstName and lastName. */
-  name?: Maybe<Scalars["String"]["output"]>;
-  /**
-   * The customer's unique phone number.
-   *
-   * Formatted using E.164 standard. For example, _+16135551111_.
-   */
-  phone?: Maybe<Scalars["String"]["output"]>;
-  /**
-   * The customer's unique phone number.
-   *
-   * Formatted using E.164 standard. For example, _+16135551111_.
-   */
-  phoneNumber?: Maybe<Scalars["String"]["output"]>;
-  /** The region of the address, such as the province, state, or district. */
-  province?: Maybe<Scalars["String"]["output"]>;
-  /**
-   * The alphanumeric code for the region.
-   *
-   * For example, ON.
-   */
-  provinceCode?: Maybe<Scalars["String"]["output"]>;
-  /**
-   * The two-letter code for the country of the address.
-   *
-   * For example, US.
-   */
-  territoryCode?: Maybe<CountryCode>;
-  /** Indicates whether the address was geolocated and is a valid address. The field returns `false` if the verification failed, or if the job to verify this address was never started. */
-  verified: Scalars["Boolean"]["output"];
-  /** The zip or postal code of the address. */
-  zip?: Maybe<Scalars["String"]["output"]>;
-  /**
-   * The alphanumeric code for the region.
-   *
-   * For example, ON.
-   */
-  zoneCode?: Maybe<Scalars["String"]["output"]>;
-};
-
-/**
- * Represents a customer's mailing address.
- * For example, a customer's default address and an order's billing address are both mailing addresses.
- */
-export type CustomerMailingAddressFormattedArgs = {
-  withCompany?: InputMaybe<Scalars["Boolean"]["input"]>;
-  withName?: InputMaybe<Scalars["Boolean"]["input"]>;
-};
-
 /** The input fields to create or update a mailing address. */
 export type CustomerMailingAddressInput = {
   /** The first line of the address. Typically the street address or PO Box number. */
@@ -2769,13 +2519,52 @@ export type CustomerMailingAddressInput = {
   zoneCode?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+/**
+ * The marketing consent information for a customer on a specific marketing channel. Channel-specific types like
+ * [`CustomerWhatsAppMarketingConsent`](https://shopify.dev/docs/api/customer/latest/objects/CustomerWhatsAppMarketingConsent) implement this interface.
+ */
+export type CustomerMarketingConsent = {
+  /** The customer's current [marketing consent state](https://shopify.dev/docs/api/customer/latest/enums/MarketingConsentState) for this channel. */
+  state: MarketingConsentState;
+};
+
+/**
+ * The input fields for setting marketing consent on a customer's marketing channel. Channel-specific consent
+ * mutations like [`customerWhatsAppMarketingConsentUpdate`](https://shopify.dev/docs/api/customer/latest/mutations/customerWhatsAppMarketingConsentUpdate) use this input.
+ */
+export type CustomerMarketingConsentInput = {
+  /** The [marketing consent state](https://shopify.dev/docs/api/customer/latest/enums/MarketingConsentState) to set for the customer on this channel. */
+  state: MarketingConsentState;
+};
+
 /** Defines the phone number of the customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerPhoneNumber = {
   __typename?: "CustomerPhoneNumber";
-  /** Indicates whether the customer has subscribed to SMS marketing material. */
+  /**
+   * Indicates whether the customer has subscribed to SMS marketing material.
+   * @deprecated Use `smsMarketingConsent.state` instead.
+   */
   marketingState: SmsMarketingState;
   /** The customer's phone number. */
   phoneNumber: Scalars["String"]["output"];
+  /** The [SMS marketing consent](https://shopify.dev/docs/api/customer/latest/objects/CustomerSmsMarketingConsent) information for the customer's phone number. */
+  smsMarketingConsent: CustomerSmsMarketingConsent;
+  /**
+   * The [WhatsApp marketing consent](https://shopify.dev/docs/api/customer/latest/objects/CustomerWhatsAppMarketingConsent) information for the customer's phone number.
+   * Update it with the [`customerWhatsAppMarketingConsentUpdate`](https://shopify.dev/docs/api/customer/latest/mutations/customerWhatsAppMarketingConsentUpdate) mutation.
+   */
+  whatsAppMarketingConsent: CustomerWhatsAppMarketingConsent;
+};
+
+/**
+ * The SMS marketing consent information for a
+ * [customer phone number](https://shopify.dev/docs/api/customer/latest/objects/CustomerPhoneNumber).
+ * Implements the [`CustomerMarketingConsent`](https://shopify.dev/docs/api/customer/latest/interfaces/CustomerMarketingConsent) interface.
+ */
+export type CustomerSmsMarketingConsent = CustomerMarketingConsent & {
+  __typename?: "CustomerSmsMarketingConsent";
+  /** The customer's current [marketing consent state](https://shopify.dev/docs/api/customer/latest/enums/MarketingConsentState) for this channel. */
+  state: MarketingConsentState;
 };
 
 /** The input fields to update a customer's personal information. */
@@ -2793,6 +2582,33 @@ export type CustomerUpdatePayload = {
   customer?: Maybe<Customer>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<UserErrorsCustomerUserErrors>;
+};
+
+/**
+ * The WhatsApp marketing consent information for a
+ * [customer phone number](https://shopify.dev/docs/api/customer/latest/objects/CustomerPhoneNumber).
+ * Implements the [`CustomerMarketingConsent`](https://shopify.dev/docs/api/customer/latest/interfaces/CustomerMarketingConsent) interface.
+ * Use the [`customerWhatsAppMarketingConsentUpdate`](https://shopify.dev/docs/api/customer/latest/mutations/customerWhatsAppMarketingConsentUpdate) mutation to update it.
+ */
+export type CustomerWhatsAppMarketingConsent = CustomerMarketingConsent & {
+  __typename?: "CustomerWhatsAppMarketingConsent";
+  /** The customer's current [marketing consent state](https://shopify.dev/docs/api/customer/latest/enums/MarketingConsentState) for this channel. */
+  state: MarketingConsentState;
+};
+
+/** The input fields to update the current customer's WhatsApp marketing consent information. */
+export type CustomerWhatsAppMarketingConsentUpdateInput = {
+  /** The WhatsApp marketing consent state to set for the current customer. */
+  whatsAppMarketingConsent: CustomerMarketingConsentInput;
+};
+
+/** Return type for `customerWhatsAppMarketingConsentUpdate` mutation. */
+export type CustomerWhatsAppMarketingConsentUpdatePayload = {
+  __typename?: "CustomerWhatsAppMarketingConsentUpdatePayload";
+  /** The [customer phone number](https://shopify.dev/docs/api/customer/latest/objects/CustomerPhoneNumber) with the updated WhatsApp marketing consent information. */
+  customerPhoneNumber?: Maybe<CustomerPhoneNumber>;
+  /** The list of errors that occurred from executing the mutation. */
+  userErrors: Array<UserErrorsCustomerMarketingConsentError>;
 };
 
 /** The different types of delivery option groups. */
@@ -2949,6 +2765,18 @@ export type Domain = Node & {
 /** A draft order for the customer. Any fields related to money are in the presentment currency. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type DraftOrder = Node & {
   __typename?: "DraftOrder";
+  /**
+   * The amount due later.
+   * When there are payment terms, this is the total price minus the deposit amount (if any).
+   * When there are no payment terms, this is 0.
+   */
+  amountDueLater: MoneyV2;
+  /**
+   * The amount due now.
+   * When there are payment terms this is the value of the deposit (0 by default).
+   * When there are no payment terms, this is the total price.
+   */
+  amountDueNow: MoneyV2;
   /** The billing address of the customer. */
   billingAddress?: Maybe<CustomerAddress>;
   /** Whether the customer who made the draft order has an associated enabled contact. */
@@ -2959,6 +2787,8 @@ export type DraftOrder = Node & {
   currencyCode: CurrencyCode;
   /** The customer who placed the order. */
   customer?: Maybe<Customer>;
+  /** The portion required to be paid at checkout. */
+  deposit?: Maybe<DepositConfiguration>;
   /** List of discounts applied to the draft order. */
   discountApplications: DiscountApplicationConnection;
   /** The discount information for the draft order. */
@@ -3003,6 +2833,8 @@ export type DraftOrder = Node & {
   taxExempt: Scalars["Boolean"]["output"];
   /** Whether the line item prices include taxes. */
   taxesIncluded: Scalars["Boolean"]["output"];
+  /** The total cost of shipping after discounts. */
+  totalDiscountedShipping: MoneyV2;
   /** The total price of line items for this draft order. */
   totalLineItemsPrice: MoneyV2;
   /** The total amount of the draft order (includes taxes, shipping charges, and discounts). */
@@ -3136,7 +2968,7 @@ export type DraftOrderLineItem = Node & {
   discountedTotal: MoneyV2;
   /**
    * The discounted total divided by the quantity, resulting in the value of the discount per unit.
-   * @deprecated Please use `approximateDiscountedUnitPrice` instead. This field will be removed in 2026-07.
+   * @deprecated Please use `approximateDiscountedUnitPrice` instead.
    */
   discountedUnitPrice: MoneyV2;
   /** A globally-unique ID. */
@@ -3155,6 +2987,8 @@ export type DraftOrderLineItem = Node & {
   originalTotal: MoneyV2;
   /** The price of the variant without any discounts applied. */
   originalUnitPrice: MoneyV2;
+  /** The name of the variant, localized to the buyer's language. Falls back to the variant title when no localized value is stored. */
+  presentmentVariantTitle?: Maybe<Scalars["String"]["output"]>;
   /** The quantity of this variant item in the draft order. */
   quantity: Scalars["Int"]["output"];
   /** Whether the variant requires physical shipping. */
@@ -3265,6 +3099,35 @@ export type DutySale = Node &
     /** The total tax amount for the sale. */
     totalTaxAmount: MoneyV2;
   };
+
+/** A line item with at least one unit that is eligible for editing (e.g. cancellation of unfulfilled items). */
+export type EditableLineItem = {
+  __typename?: "EditableLineItem";
+  /** The related line item. */
+  lineItem: LineItem;
+  /** The quantity of units that can be edited. */
+  quantity: Scalars["Int"]["output"];
+};
+
+/** An auto-generated type for paginating through multiple EditableLineItems. */
+export type EditableLineItemConnection = {
+  __typename?: "EditableLineItemConnection";
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
+  edges: Array<EditableLineItemEdge>;
+  /** A list of nodes that are contained in EditableLineItemEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
+  nodes: Array<EditableLineItem>;
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
+  pageInfo: PageInfo;
+};
+
+/** An auto-generated type which holds one EditableLineItem and a cursor during pagination. */
+export type EditableLineItemEdge = {
+  __typename?: "EditableLineItemEdge";
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
+  cursor: Scalars["String"]["output"];
+  /** The item at the end of EditableLineItemEdge. */
+  node: EditableLineItem;
+};
 
 /** Represents the possible email marketing states for a customer. */
 export type EmailMarketingState =
@@ -3823,6 +3686,66 @@ export type ImageTransformInput = {
   scale?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
+/** A line item with at least one unit that is not eligible for return or editing. */
+export type IneligibleLineItem = {
+  __typename?: "IneligibleLineItem";
+  /** The line item associated with the ineligible units. */
+  lineItem: LineItem;
+  /** The number of units that aren't eligible for return or editing. */
+  quantity: Scalars["Int"]["output"];
+  /** Details about ineligible quantities, including the number of units that can't be returned or edited and the reasons for ineligibility, grouped by reason. */
+  quantityDetails: Array<IneligibleQuantityDetail>;
+};
+
+/** An auto-generated type for paginating through multiple IneligibleLineItems. */
+export type IneligibleLineItemConnection = {
+  __typename?: "IneligibleLineItemConnection";
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
+  edges: Array<IneligibleLineItemEdge>;
+  /** A list of nodes that are contained in IneligibleLineItemEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
+  nodes: Array<IneligibleLineItem>;
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
+  pageInfo: PageInfo;
+};
+
+/** An auto-generated type which holds one IneligibleLineItem and a cursor during pagination. */
+export type IneligibleLineItemEdge = {
+  __typename?: "IneligibleLineItemEdge";
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
+  cursor: Scalars["String"]["output"];
+  /** The item at the end of IneligibleLineItemEdge. */
+  node: IneligibleLineItem;
+};
+
+/**
+ * Details about ineligible quantities, including the number of units that can't be returned
+ * or edited and the reasons for ineligibility.
+ */
+export type IneligibleQuantityDetail = {
+  __typename?: "IneligibleQuantityDetail";
+  /** The number of units that aren't eligible for return or editing. */
+  quantity: Scalars["Int"]["output"];
+  /** The reason why this quantity isn't eligible for return or editing. */
+  reasonCode: IneligibleReason;
+};
+
+/** The reason why a line item quantity is not eligible for return or editing. */
+export type IneligibleReason =
+  /** The edit window for this line item quantity has expired. */
+  | "EDIT_WINDOW_EXPIRED"
+  /** The line item quantity is final sale. */
+  | "FINAL_SALE"
+  /** The line item quantity is not eligible for editing. */
+  | "NOT_EDITABLE"
+  /** The line item quantity is ineligible for a reason that has not been predefined. */
+  | "OTHER"
+  /** The line item quantity is part of a pending edit request. */
+  | "PENDING_EDIT_REQUEST"
+  /** The line item quantity has already been returned. */
+  | "RETURNED"
+  /** The return window for this line item quantity has expired. */
+  | "RETURN_WINDOW_EXPIRED";
+
 /** Language codes supported by Shopify. */
 export type LanguageCode =
   /** Afrikaans. */
@@ -4150,8 +4073,12 @@ export type LineItem = Node & {
   legacyFeeTitle?: Maybe<Scalars["String"]["output"]>;
   /** The name of the product. */
   name: Scalars["String"]["output"];
+  /** The name of the product, localized to the order's language. Falls back to the base name when no localized value is stored. */
+  presentmentName: Scalars["String"]["output"];
   /** The title of the line item variant. */
   presentmentTitle?: Maybe<Scalars["String"]["output"]>;
+  /** The name of the variant, localized to the order's language. Falls back to the variant title when no localized value is stored. */
+  presentmentVariantTitle?: Maybe<Scalars["String"]["output"]>;
   /** The product variant price without any discounts applied, in presentment currencies. */
   price?: Maybe<MoneyV2>;
   /** The product's ID. */
@@ -4404,6 +4331,28 @@ export type MarketWebPresenceRootUrl = {
   /** The URL of the homepage. */
   url: Scalars["URL"]["output"];
 };
+
+/**
+ * The valid marketing consent states for a customer on a specific marketing channel. The
+ * [`CustomerMarketingConsent`](https://shopify.dev/docs/api/customer/latest/interfaces/CustomerMarketingConsent) interface and channel-specific consent mutations use these values.
+ */
+export type MarketingConsentState =
+  /**
+   * The customer has never subscribed to marketing on this channel. This is the default state for any channel the
+   * customer hasn't interacted with. Read-only: can't be set as an input.
+   */
+  | "NEVER_SUBSCRIBED"
+  /**
+   * The customer is in the process of subscribing to marketing on this channel, for example, pending an opt-in
+   * confirmation.
+   */
+  | "PENDING"
+  /** The customer's personal data is erased. This value is internally-set and read-only. */
+  | "REDACTED"
+  /** The customer is subscribed to marketing on this channel. */
+  | "SUBSCRIBED"
+  /** The customer isn't currently subscribed to marketing on this channel but was previously subscribed. */
+  | "UNSUBSCRIBED";
 
 /** Represents a media interface. */
 export type Media = {
@@ -4799,6 +4748,13 @@ export type Mutation = {
   customerEmailMarketingUnsubscribe?: Maybe<CustomerEmailMarketingUnsubscribePayload>;
   /** Updates the customer's personal information. */
   customerUpdate?: Maybe<CustomerUpdatePayload>;
+  /**
+   * Updates the current customer's WhatsApp marketing consent information. Shopify identifies the
+   * customer's WhatsApp account by their [phone number](https://shopify.dev/docs/api/customer/latest/objects/CustomerPhoneNumber).
+   *
+   * You can subscribe or unsubscribe the customer from WhatsApp marketing.
+   */
+  customerWhatsAppMarketingConsentUpdate?: Maybe<CustomerWhatsAppMarketingConsentUpdatePayload>;
   /** Adds a new credit card by using Google Pay. */
   googlePayCreditCardAdd?: Maybe<GooglePayCreditCardAddPayload>;
   /** Updates a credit card using Google Pay. */
@@ -4820,6 +4776,15 @@ export type Mutation = {
    * You can opt out of write guarantees by not sending `compareDigest` in the request.
    */
   metafieldsSet?: Maybe<MetafieldsSetPayload>;
+  /**
+   * Request an edit to an order's unfulfilled line items on behalf of a customer.
+   *
+   * > Note:
+   * > This mutation supports an optional idempotency key via the `@idempotent` directive.
+   * > Supplying the same key for a retried request returns the originally created
+   * > edit instead of creating a duplicate.
+   */
+  orderRequestEdit?: Maybe<OrderRequestEditPayload>;
   /** Request a new return on behalf of a customer. */
   orderRequestReturn?: Maybe<OrderRequestReturnPayload>;
   /** Adds a new payment instrument and associates mandates. Returns the created instrument on success. */
@@ -4958,6 +4923,11 @@ export type MutationCustomerUpdateArgs = {
 };
 
 /** This is the schema's entry point for all mutation operations. */
+export type MutationCustomerWhatsAppMarketingConsentUpdateArgs = {
+  input: CustomerWhatsAppMarketingConsentUpdateInput;
+};
+
+/** This is the schema's entry point for all mutation operations. */
 export type MutationGooglePayCreditCardAddArgs = {
   billingAddress: GooglePayBillingAddressInput;
   googlePayTokenizedCard: Scalars["String"]["input"];
@@ -4978,6 +4948,13 @@ export type MutationMetafieldsDeleteArgs = {
 /** This is the schema's entry point for all mutation operations. */
 export type MutationMetafieldsSetArgs = {
   metafields: Array<MetafieldsSetInput>;
+};
+
+/** This is the schema's entry point for all mutation operations. */
+export type MutationOrderRequestEditArgs = {
+  email?: InputMaybe<Scalars["String"]["input"]>;
+  lineItems: RequestedOrderEditLineItemsInput;
+  orderId: Scalars["ID"]["input"];
 };
 
 /** This is the schema's entry point for all mutation operations. */
@@ -5058,7 +5035,6 @@ export type MutationSubscriptionContractChangePaymentInstrumentArgs = {
 /** This is the schema's entry point for all mutation operations. */
 export type MutationSubscriptionContractFetchDeliveryOptionsArgs = {
   address?: InputMaybe<CustomerAddressInput>;
-  deliveryAddress?: InputMaybe<CustomerMailingAddressInput>;
   subscriptionContractId: Scalars["ID"]["input"];
 };
 
@@ -5217,7 +5193,7 @@ export type Order = HasMetafields &
     /** The name of the fulfillment location assigned at the time of order creation. */
     locationName?: Maybe<Scalars["String"]["output"]>;
     /**
-     * The market that includes the order's shipping address. Or the shop's primary market if the shipping address is empty.
+     * The market that applies to the order's shipping address country. In cases where multiple markets match, this returns the most-specific country region market. If the shipping address is empty, the shop's backup region market is returned.
      * @deprecated This `market` field will be removed in a future version of the API.
      */
     market: Market;
@@ -5258,6 +5234,10 @@ export type Order = HasMetafields &
     refunds: Array<Refund>;
     /** The path to recreate the order in the cart and redirect to checkout. Will return nil if the line item count exceeds 100. */
     reorderPath?: Maybe<Scalars["String"]["output"]>;
+    /** The requested edit information for the order, including editable line items. */
+    requestedEditInformation: OrderRequestedEditInformation;
+    /** The buyer's requests to edit the order's line items. */
+    requestedOrderEdits: RequestedOrderEditConnection;
     /** Whether the order requires shipping. */
     requiresShipping: Scalars["Boolean"]["output"];
     /** A Return identified by ID. */
@@ -5274,8 +5254,6 @@ export type Order = HasMetafields &
     shippingLine?: Maybe<ShippingLine>;
     /** The list of shipping line groups for the order. */
     shippingLineGroups: Array<OrderShippingLineGroup>;
-    /** A summary of the shipping titles for the order. */
-    shippingTitle?: Maybe<Scalars["String"]["output"]>;
     /** The various fields for subscribing to order updates via Shop Pay. */
     shopAppLinksAndResources?: Maybe<ShopAppLinksAndResources>;
     /** The totals and quantities for the order, ignoring returns. */
@@ -5359,6 +5337,14 @@ export type OrderMetafieldArgs = {
 /** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
+};
+
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
+export type OrderRequestedOrderEditsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 /** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
@@ -5714,6 +5700,15 @@ export type OrderPickupInformation = {
   updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
 };
 
+/** Return type for `orderRequestEdit` mutation. */
+export type OrderRequestEditPayload = {
+  __typename?: "OrderRequestEditPayload";
+  /** The created requested order edit. */
+  requestedOrderEdit?: Maybe<RequestedOrderEdit>;
+  /** The list of errors that occurred from executing the mutation. */
+  userErrors: Array<RequestedOrderEditUserError>;
+};
+
 /** Return type for `orderRequestReturn` mutation. */
 export type OrderRequestReturnPayload = {
   __typename?: "OrderRequestReturnPayload";
@@ -5721,6 +5716,37 @@ export type OrderRequestReturnPayload = {
   return?: Maybe<Return>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<ReturnUserError>;
+};
+
+/** The requested edit information for a specific order, including editable line items. */
+export type OrderRequestedEditInformation = {
+  __typename?: "OrderRequestedEditInformation";
+  /** The line items that are eligible for editing (e.g. cancellation of unfulfilled items). */
+  editableLineItems: EditableLineItemConnection;
+  /** Whether the order has any line items eligible for editing. */
+  hasEditableLineItems: Scalars["Boolean"]["output"];
+  /** The line items that are not eligible for editing. */
+  ineligibleLineItems: IneligibleLineItemConnection;
+  /** Whether buyer self-serve return or cancellation access is required for this order for compliance reasons. */
+  isSelfServiceRequiredForCompliance: Scalars["Boolean"]["output"];
+};
+
+/** The requested edit information for a specific order, including editable line items. */
+export type OrderRequestedEditInformationEditableLineItemsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+  reverse?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** The requested edit information for a specific order, including editable line items. */
+export type OrderRequestedEditInformationIneligibleLineItemsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+  reverse?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 /** The return information for a specific order. */
@@ -6452,6 +6478,8 @@ export type QueryRoot = {
   extensionApiTokens?: Maybe<ExtensionApiTokens>;
   /** Returns an Order resource by ID. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   order?: Maybe<Order>;
+  /** The calculated financial outcome of a requested order edit. */
+  requestedOrderEditCalculate?: Maybe<CalculatedRequestedOrderEdit>;
   /** Returns a Return resource by ID. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   return?: Maybe<Return>;
   /** The calculated monetary value of the return. */
@@ -6496,6 +6524,11 @@ export type QueryRootOrderArgs = {
 };
 
 /** This acts as the public, top-level API from which all queries start. */
+export type QueryRootRequestedOrderEditCalculateArgs = {
+  input: CalculateRequestedOrderEditInput;
+};
+
+/** This acts as the public, top-level API from which all queries start. */
 export type QueryRootReturnArgs = {
   id: Scalars["ID"]["input"];
 };
@@ -6514,7 +6547,9 @@ export type QueryRootUiExtensionMetafieldsArgs = {
 /** This acts as the public, top-level API from which all queries start. */
 export type QueryRootUiExtensionSessionTokenArgs = {
   appId?: InputMaybe<Scalars["ID"]["input"]>;
+  configurationRecordId?: InputMaybe<Scalars["ID"]["input"]>;
   extensionActivationId?: InputMaybe<Scalars["ID"]["input"]>;
+  registrationUuid?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 /** The record of refunds issued to a customer. */
@@ -6628,6 +6663,155 @@ export type RequestedLineItemInput = {
   quantity: Scalars["Int"]["input"];
   /** The ID of a [`ReturnReasonDefinition`](https://shopify.dev/docs/api/customer/latest/objects/ReturnReasonDefinition). Use [`LineItem.suggestedReturnReasonDefinitions`](https://shopify.dev/docs/api/customer/latest/objects/LineItem#field-LineItem.fields.suggestedReturnReasonDefinitions) to get reasons tailored to the product's category. */
   returnReasonDefinitionId?: InputMaybe<Scalars["ID"]["input"]>;
+};
+
+/** A requested order edit on an order. */
+export type RequestedOrderEdit = Node & {
+  __typename?: "RequestedOrderEdit";
+  /** A globally-unique ID. */
+  id: Scalars["ID"]["output"];
+  /** The line item changes included in the requested order edit, grouped by the type of change. */
+  lineItems: RequestedOrderEditLineItems;
+  /** The line items included in the requested order edit. Use `lineItems` instead. */
+  requestedEditLineItems?: Maybe<RequestedOrderEditLineItemConnection>;
+  /** The status of this requested order edit. */
+  status: RequestedOrderEditStatus;
+};
+
+/** A requested order edit on an order. */
+export type RequestedOrderEditRequestedEditLineItemsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+/** An auto-generated type for paginating through multiple RequestedOrderEdits. */
+export type RequestedOrderEditConnection = {
+  __typename?: "RequestedOrderEditConnection";
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
+  edges: Array<RequestedOrderEditEdge>;
+  /** A list of nodes that are contained in RequestedOrderEditEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
+  nodes: Array<RequestedOrderEdit>;
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
+  pageInfo: PageInfo;
+};
+
+/** An auto-generated type which holds one RequestedOrderEdit and a cursor during pagination. */
+export type RequestedOrderEditEdge = {
+  __typename?: "RequestedOrderEditEdge";
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
+  cursor: Scalars["String"]["output"];
+  /** The item at the end of RequestedOrderEditEdge. */
+  node: RequestedOrderEdit;
+};
+
+/** Possible error codes that can be returned by `RequestedOrderEditUserError`. */
+export type RequestedOrderEditErrorCode =
+  /** The input value is blank. */
+  | "BLANK"
+  /** Unexpected internal error happened. */
+  | "INTERNAL_ERROR"
+  /** The input value is invalid. */
+  | "INVALID"
+  /** The record with the ID used as the input value couldn't be found. */
+  | "NOT_FOUND";
+
+/** The financial breakdown of the requested order edit. */
+export type RequestedOrderEditFinancialSummary = {
+  __typename?: "RequestedOrderEditFinancialSummary";
+  /** The sum of all order level discounts that are target_all. */
+  editOrderLevelDiscountSubtotalSet: MoneyBag;
+  /** The subtotal of all edit line items excluding target_all discounts. */
+  editSubtotalBeforeTargetAllDiscountsSet: MoneyBag;
+  /** The subtotal of all edit line items. */
+  editSubtotalSet: MoneyBag;
+  /** The subtotal of all edit line items with order level discounts applied. */
+  editSubtotalWithCartDiscountSet: MoneyBag;
+  /** The total sum of all edit line items, including subtotals and taxes. */
+  editTotalSet: MoneyBag;
+  /** The total tax sum of all edit line items. */
+  editTotalTaxSet: MoneyBag;
+};
+
+/** A line item included in a buyer-initiated requested order edit. */
+export type RequestedOrderEditLineItem = Node & {
+  __typename?: "RequestedOrderEditLineItem";
+  /** A globally-unique ID. */
+  id: Scalars["ID"]["output"];
+  /** The order line item associated with this requested order edit line item. */
+  lineItem: LineItem;
+  /** The quantity requested for this line item in the requested order edit. */
+  quantity: Scalars["Int"]["output"];
+};
+
+/** An auto-generated type for paginating through multiple RequestedOrderEditLineItems. */
+export type RequestedOrderEditLineItemConnection = {
+  __typename?: "RequestedOrderEditLineItemConnection";
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
+  edges: Array<RequestedOrderEditLineItemEdge>;
+  /** A list of nodes that are contained in RequestedOrderEditLineItemEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
+  nodes: Array<RequestedOrderEditLineItem>;
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
+  pageInfo: PageInfo;
+};
+
+/** An auto-generated type which holds one RequestedOrderEditLineItem and a cursor during pagination. */
+export type RequestedOrderEditLineItemEdge = {
+  __typename?: "RequestedOrderEditLineItemEdge";
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
+  cursor: Scalars["String"]["output"];
+  /** The item at the end of RequestedOrderEditLineItemEdge. */
+  node: RequestedOrderEditLineItem;
+};
+
+/** The input fields for a line item requested for removal in a requested order edit. */
+export type RequestedOrderEditLineItemRemovalInput = {
+  /** The ID of the line item that the customer wants removed. */
+  lineItemId: Scalars["ID"]["input"];
+  /** The quantity of the line item that the customer wants removed. */
+  quantity: Scalars["Int"]["input"];
+};
+
+/** The line item changes on a requested order edit, grouped by the type of change. */
+export type RequestedOrderEditLineItems = {
+  __typename?: "RequestedOrderEditLineItems";
+  /** The line items requested for removal from the order. */
+  removals?: Maybe<RequestedOrderEditLineItemConnection>;
+};
+
+/** The line item changes on a requested order edit, grouped by the type of change. */
+export type RequestedOrderEditLineItemsRemovalsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+/** The input fields for the line item changes in a requested order edit, grouped by the type of change. */
+export type RequestedOrderEditLineItemsInput = {
+  /** The line items requested for removal. */
+  removals: Array<RequestedOrderEditLineItemRemovalInput>;
+};
+
+/** The status of a buyer-initiated requested order edit. */
+export type RequestedOrderEditStatus =
+  /** The requested order edit was declined by the merchant. */
+  | "DECLINED"
+  /** The requested order edit is pending merchant action. */
+  | "REQUESTED"
+  /** The requested order edit has been resolved by the merchant. */
+  | "RESOLVED";
+
+/** The errors that occur while requesting an edit to an order. */
+export type RequestedOrderEditUserError = DisplayableError & {
+  __typename?: "RequestedOrderEditUserError";
+  /** The error code. */
+  code?: Maybe<RequestedOrderEditErrorCode>;
+  /** The path to the input field that caused the error. */
+  field?: Maybe<Array<Scalars["String"]["output"]>>;
+  /** The error message. */
+  message: Scalars["String"]["output"];
 };
 
 /** Return type for `resendGiftCard` mutation. */
@@ -6863,7 +7047,7 @@ export type ReturnFinancialSummary = {
   restockingFeeSubtotalSet: MoneyBag;
   /** The sum of all order level discounts that are target_all?. */
   returnOrderLevelDiscountSubtotalSet: MoneyBag;
-  /** The subtotal of all return line items shipping fees. */
+  /** The subtotal of all return shipping fees. */
   returnShippingFeeSubtotalSet: MoneyBag;
   /** The subtotal of all return line items excluding target_all discounts. */
   returnSubtotalBeforeTargetAllDiscountsSet: MoneyBag;
@@ -6873,7 +7057,7 @@ export type ReturnFinancialSummary = {
   returnSubtotalWithCartDiscountSet: MoneyBag;
   /** The total sum of all return line items, including return line item subtotals, fees and taxes. */
   returnTotalSet: MoneyBag;
-  /** The total tax sum of all return line items. */
+  /** The total tax sum of all return line items and return shipping fees. */
   returnTotalTaxSet: MoneyBag;
 };
 
@@ -7364,17 +7548,6 @@ export type ShippingLineSale = Node &
     totalTaxAmount: MoneyV2;
   };
 
-/** A shipping rate to be applied to a checkout. */
-export type ShippingRate = {
-  __typename?: "ShippingRate";
-  /** The human-readable unique identifier for this shipping rate. */
-  handle: Scalars["String"]["output"];
-  /** The price of this shipping rate. */
-  price: MoneyV2;
-  /** The title of this shipping rate. */
-  title: Scalars["String"]["output"];
-};
-
 /** A collection of the general information about the shop. */
 export type Shop = HasMetafields &
   Node & {
@@ -7688,6 +7861,8 @@ export type StoreCreditSystemEvent =
   | "PAYMENT_FAILURE"
   /** A smaller amount of store credit was captured than was originally authorized. */
   | "PAYMENT_RETURNED"
+  /** Store credit was used as payment for a recurring order. */
+  | "RECURRING_PAYMENT"
   /** Tax finalization affected the store credit payment. */
   | "TAX_FINALIZATION";
 
@@ -8200,8 +8375,6 @@ export type SubscriptionDeliveryMethodLocalDelivery = {
 
 /** The input fields for a local delivery method. */
 export type SubscriptionDeliveryMethodLocalDeliveryInput = {
-  /** The address to deliver to. */
-  address?: InputMaybe<CustomerMailingAddressInput>;
   /** The address to deliver to. */
   deliveryAddress?: InputMaybe<CustomerAddressInput>;
   /** The delivery instructions that the customer can provide to the merchant. */
@@ -9743,6 +9916,8 @@ export type UserErrorsCustomerAddressUserErrorsCode =
   | "ADDRESS_ID_DOES_NOT_EXIST"
   /** Input contains HTML tags. */
   | "CONTAINS_HTML_TAGS"
+  /** The Country Code field is missing. */
+  | "COUNTRY_CODE_MISSING"
   /** The provided country doesn't exist. */
   | "COUNTRY_NOT_EXIST"
   /** The provided customer address already exists. */
@@ -9811,6 +9986,27 @@ export type UserErrorsCustomerEmailMarketingUserErrorsCode =
   | "FAILED_TO_SUBSCRIBE"
   /** Unsubscription failed. */
   | "FAILED_TO_UNSUBSCRIBE";
+
+/**
+ * An error from a customer marketing consent mutation, such as
+ * [`customerWhatsAppMarketingConsentUpdate`](https://shopify.dev/docs/api/customer/latest/mutations/customerWhatsAppMarketingConsentUpdate).
+ */
+export type UserErrorsCustomerMarketingConsentError = DisplayableError & {
+  __typename?: "UserErrorsCustomerMarketingConsentError";
+  /** The error code. */
+  code?: Maybe<UserErrorsCustomerMarketingConsentErrorCode>;
+  /** The path to the input field that caused the error. */
+  field?: Maybe<Array<Scalars["String"]["output"]>>;
+  /** The error message. */
+  message: Scalars["String"]["output"];
+};
+
+/** Possible error codes that can be returned by `UserErrorsCustomerMarketingConsentError`. */
+export type UserErrorsCustomerMarketingConsentErrorCode =
+  /** There was an error. */
+  | "FAILED"
+  /** A phone number is required. */
+  | "PHONE_NUMBER_REQUIRED";
 
 /** Provides error codes for failed personal information mutations. */
 export type UserErrorsCustomerUserErrors = DisplayableError & {

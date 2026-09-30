@@ -156,7 +156,7 @@ const DELIVERY_ADDRESS_SEED_DATA: AddressFragment[] = [
     company: "Shopify",
     address1: "123 Main St",
     address2: "",
-    territoryCode: "CA",
+    countryCode: "CA",
     zoneCode: "ON",
     city: "Anytown",
     zip: "M5V 2H1",
@@ -170,7 +170,7 @@ const DELIVERY_ADDRESS_SEED_DATA: AddressFragment[] = [
     company: "",
     address1: "456 Oak Ave",
     address2: "Apt 2B",
-    territoryCode: "US",
+    countryCode: "US",
     zoneCode: "IL",
     city: "Springfield",
     zip: "62704",
@@ -209,14 +209,14 @@ function createDeliveryAddressesScenario(): MswScenarioMeta {
           formatted: [
             variables.address.address1 ?? "",
             `${variables.address.city ?? ""} ${variables.address.zoneCode ?? ""} ${variables.address.zip ?? ""}`,
-            variables.address.territoryCode ?? "",
+            variables.address.countryCode ?? "",
           ],
           firstName: variables.address.firstName ?? "",
           lastName: variables.address.lastName ?? "",
           company: variables.address.company ?? "",
           address1: variables.address.address1 ?? "",
           address2: variables.address.address2 ?? "",
-          territoryCode: variables.address.territoryCode ?? "",
+          countryCode: variables.address.countryCode ?? null,
           zoneCode: variables.address.zoneCode ?? "",
           city: variables.address.city ?? "",
           zip: variables.address.zip ?? "",
@@ -242,7 +242,7 @@ function createDeliveryAddressesScenario(): MswScenarioMeta {
             formatted: [
               variables.address.address1 ?? addresses[index].address1 ?? "",
               `${variables.address.city ?? addresses[index].city ?? ""} ${variables.address.zoneCode ?? addresses[index].zoneCode ?? ""} ${variables.address.zip ?? addresses[index].zip ?? ""}`,
-              variables.address.territoryCode ?? addresses[index].territoryCode ?? "",
+              variables.address.countryCode ?? addresses[index].countryCode ?? "",
             ],
           };
         }

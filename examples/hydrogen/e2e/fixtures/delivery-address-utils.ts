@@ -11,7 +11,7 @@ export interface AddressFormData {
   city: string;
   zoneCode: string;
   zip: string;
-  territoryCode: string;
+  countryCode: string;
   phoneNumber?: string;
   defaultAddress?: boolean;
 }
@@ -57,7 +57,7 @@ export class DeliveryAddressUtil {
     city: "City",
     zoneCode: "State/Province",
     zip: "Zip",
-    territoryCode: "Country code",
+    countryCode: "Country code",
     phoneNumber: "Phone Number",
   };
 

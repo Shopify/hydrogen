@@ -15,7 +15,7 @@ const NEW_ADDRESS: AddressFormData = {
   city: "Portland",
   zoneCode: "OR",
   zip: "97201",
-  territoryCode: "US",
+  countryCode: "US",
   phoneNumber: "+15035551234",
 };
 
