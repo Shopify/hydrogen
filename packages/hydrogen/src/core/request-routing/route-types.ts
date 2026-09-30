@@ -1,7 +1,6 @@
 import type { StorefrontClient } from "../../client";
 import type { ShopifyRequestContext } from "../request-context";
 import type { ShopifyRouteTemplates } from "../standard-routes/types";
-import type { AppProxyOptions } from "./interceptors/app-proxy";
 
 type Awaitable<T> = T | Promise<T>;
 
@@ -48,11 +47,31 @@ export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRo
   headers?: HeadersInit;
 };
 
+/**
+ * A fully formed `Response` for handlers that pass through or serve something
+ * other than JSON. Returned as-is, with request-context response headers
+ * applied on top.
+ */
+export type ShopifyRouteResponseResult = {
+  type: "response";
+  response: Response;
+};
+
 export type ShopifyRouteHandlerResult<
   TData = unknown,
   TError extends ShopifyRouteError = ShopifyRouteError,
-> = ShopifyRouteJsonResult<TData> | ShopifyRouteRedirectResult | ShopifyRouteErrorResult<TError>;
+> =
+  | ShopifyRouteJsonResult<TData>
+  | ShopifyRouteRedirectResult
+  | ShopifyRouteErrorResult<TError>
+  | ShopifyRouteResponseResult;
 
+/**
+ * A route handler is a callable plus the route it owns. `pathname` matches
+ * exactly, or as a prefix when it ends with `/*` (`/a/*` owns `/a` and
+ * `/a/anything`); literal pathnames win over wildcards. `method` matches one
+ * HTTP method, or every method when it is `"*"`.
+ */
 export type CallableRouteHandler<
   TContext,
   TResult,
@@ -73,13 +92,6 @@ export type ShopifyRouteHandlerGroup = Record<string, ShopifyRouteHandler>;
 export type HydrogenRoutesOptions = ShopifyRouteHandlerContext & {
   routeTemplates?: ShopifyRouteTemplates;
   handlers?: readonly ShopifyRouteHandlerGroup[];
-  /**
-   * Proxy Shopify app proxy paths (`/apps/*`, `/a/*`, `/community/*`, `/tools/*`)
-   * to the configured store so app-rendered pages and endpoints work on the
-   * headless storefront. Off by default because it forwards arbitrary app
-   * responses; pass `true`, or an object to limit the prefixes.
-   */
-  appProxy?: boolean | AppProxyOptions;
 };
 
 export type HydrogenRouteHandler<TExtraOptions extends object = object> = (

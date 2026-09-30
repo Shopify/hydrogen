@@ -1,7 +1,6 @@
 import { handleProductVariantId } from "../product/accept-variant-id";
 import { handleAjaxApi } from "./interceptors/ajax-api";
 import { handleShopifyApiProxy } from "./interceptors/api-proxy";
-import { handleAppProxy } from "./interceptors/app-proxy";
 import { handleBuyPermalinkRedirect, handleCheckoutRedirect } from "./interceptors/checkout";
 import { handleMcpProxy } from "./interceptors/mcp-proxy";
 import { handleSfapiProxy } from "./interceptors/sfapi-proxy";
@@ -16,7 +15,6 @@ const SHOPIFY_ROUTE_INTERCEPTORS = [
   handleSfapiProxy,
   handleProductVariantId,
   handleShopifyRouteHandlers,
-  handleAppProxy,
   handleBuyPermalinkRedirect,
   handleCheckoutRedirect,
   handleWellKnownProxy,

@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createStorefrontClient } from "../../../client/client";
-import { createShopifyRequestContext } from "../../request-context";
-import { assert } from "../../test-utils";
-import { handleShopifyRoutes } from "../handle-shopify-routes";
-import type { HydrogenRoutesOptions } from "../route-types";
-import type { AppProxyOptions } from "./app-proxy";
+import { createStorefrontClient } from "../../client/client";
+import { createShopifyRequestContext } from "../request-context";
+import { handleShopifyRoutes } from "../request-routing/handle-shopify-routes";
+import type { HydrogenRoutesOptions } from "../request-routing/route-types";
+import { assert } from "../test-utils";
+import { createAppProxyServerHandlers } from "./server-handlers";
 
 const STORE_URL = "https://test-store.myshopify.com";
 const APP_ORIGIN = "https://headless.example";
@@ -25,9 +25,7 @@ function createTestSessionManager(request: Request) {
   };
 }
 
-type Overrides = Partial<Pick<HydrogenRoutesOptions, "appProxy" | "handlers">>;
-
-function handle(request: Request, overrides: Overrides = {}) {
+function handle(request: Request, handlers: HydrogenRoutesOptions["handlers"] = []) {
   const storefrontClient = createStorefrontClient({
     type: "public",
     requestContext: createShopifyRequestContext({
@@ -41,7 +39,7 @@ function handle(request: Request, overrides: Overrides = {}) {
     requestContext: storefrontClient.requestContext,
     sessionManager: createTestSessionManager(request),
     storefrontClient,
-    ...overrides,
+    handlers,
   });
 }
 
@@ -51,7 +49,7 @@ function fetchCall(mockFetch: ReturnType<typeof vi.fn>) {
   return { url: call[0] as URL, init: call[1] as RequestInit };
 }
 
-describe("handleAppProxy", () => {
+describe("createAppProxyServerHandlers", () => {
   let mockFetch: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -59,20 +57,32 @@ describe("handleAppProxy", () => {
     vi.stubGlobal("fetch", mockFetch);
   });
 
-  it("is off by default", () => {
+  it("exposes one wildcard, any-method handler per prefix", () => {
+    const handlers = createAppProxyServerHandlers();
+
+    expect(Object.keys(handlers)).toEqual(["apps", "a", "community", "tools"]);
+    assert(handlers.a, "expected a handler for /a");
+    expect(handlers.a.pathname).toBe("/a/*");
+    expect(handlers.a.method).toBe("*");
+
+    const narrowed = createAppProxyServerHandlers({ prefixes: ["a"] });
+    expect(Object.keys(narrowed)).toEqual(["a"]);
+  });
+
+  it("rejects unknown prefixes at creation", () => {
+    expect(() => createAppProxyServerHandlers({ prefixes: ["widgets" as never] })).toThrow(
+      'createAppProxyServerHandlers: "widgets" is not a Shopify app proxy prefix',
+    );
+  });
+
+  it("does nothing when the group is not registered", () => {
     expect(handle(new Request(`${APP_ORIGIN}/a/downloads/-/grant/token`))).toBeNull();
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("stays off when explicitly disabled or given no prefixes", () => {
-    expect(handle(new Request(`${APP_ORIGIN}/apps/reviews`), { appProxy: false })).toBeNull();
-    expect(
-      handle(new Request(`${APP_ORIGIN}/apps/reviews`), { appProxy: { prefixes: [] } }),
-    ).toBeNull();
-    expect(mockFetch).not.toHaveBeenCalled();
-  });
-
   it("proxies every Shopify app proxy prefix with _fd=0 and passes the response through", async () => {
+    const handlers = [createAppProxyServerHandlers()];
+
     for (const prefix of ["apps", "a", "community", "tools"]) {
       mockFetch.mockReset();
       mockFetch.mockResolvedValueOnce(
@@ -89,7 +99,7 @@ describe("handleAppProxy", () => {
         new Request(`${APP_ORIGIN}/${prefix}/downloads/-/grant/token?download=guide.pdf`, {
           headers: { "user-agent": "Mozilla/5.0", accept: "text/html", host: "headless.example" },
         }),
-        { appProxy: true },
+        handlers,
       );
 
       assert(result, `expected a response for /${prefix}`);
@@ -110,34 +120,35 @@ describe("handleAppProxy", () => {
     }
   });
 
+  it("proxies the bare prefix path and every HTTP method", async () => {
+    mockFetch.mockResolvedValue(new Response("ok"));
+    const handlers = [createAppProxyServerHandlers({ prefixes: ["a"] })];
+
+    for (const method of ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]) {
+      const result = await handle(new Request(`${APP_ORIGIN}/a`, { method }), handlers);
+      expect(result?.status, method).toBe(200);
+    }
+    expect(mockFetch).toHaveBeenCalledTimes(7);
+  });
+
   it("does not proxy paths outside the prefixes, or prefix look-alikes", () => {
+    const handlers = [createAppProxyServerHandlers()];
+
     for (const pathname of ["/apple", "/about", "/a-b", "/products/a", "/tooling"]) {
-      expect(
-        handle(new Request(`${APP_ORIGIN}${pathname}`), { appProxy: true }),
-        pathname,
-      ).toBeNull();
+      expect(handle(new Request(`${APP_ORIGIN}${pathname}`), handlers), pathname).toBeNull();
     }
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("limits proxying to the configured prefixes", async () => {
     mockFetch.mockResolvedValueOnce(new Response("ok"));
-    const appProxy = { prefixes: ["a" as const] };
+    const handlers = [createAppProxyServerHandlers({ prefixes: ["a"] })];
 
-    expect(handle(new Request(`${APP_ORIGIN}/apps/reviews`), { appProxy })).toBeNull();
-    const result = await handle(new Request(`${APP_ORIGIN}/a/reviews`), { appProxy });
+    expect(handle(new Request(`${APP_ORIGIN}/apps/reviews`), handlers)).toBeNull();
+    const result = await handle(new Request(`${APP_ORIGIN}/a/reviews`), handlers);
 
     assert(result, "expected a proxied response");
     expect(mockFetch).toHaveBeenCalledTimes(1);
-  });
-
-  it("rejects unknown prefixes on app proxy paths only", () => {
-    const appProxy: AppProxyOptions = { prefixes: ["a", "widgets" as never] };
-
-    expect(() => handle(new Request(`${APP_ORIGIN}/a/x`), { appProxy })).toThrow(
-      'appProxy: "widgets" is not a Shopify app proxy prefix',
-    );
-    expect(handle(new Request(`${APP_ORIGIN}/products/x`), { appProxy })).toBeNull();
   });
 
   it("forwards POST bodies for app forms and endpoints", async () => {
@@ -151,7 +162,7 @@ describe("handleAppProxy", () => {
         headers: { "content-type": "application/x-www-form-urlencoded" },
         body: "rating=5",
       }),
-      { appProxy: true },
+      [createAppProxyServerHandlers()],
     );
 
     assert(result, "expected a proxied response");
@@ -167,9 +178,9 @@ describe("handleAppProxy", () => {
       new Response(null, { status: 302, headers: { location: signedUrl } }),
     );
 
-    const result = await handle(new Request(`${APP_ORIGIN}/a/downloads/-/grant/token/download`), {
-      appProxy: true,
-    });
+    const result = await handle(new Request(`${APP_ORIGIN}/a/downloads/-/grant/token/download`), [
+      createAppProxyServerHandlers(),
+    ]);
 
     assert(result, "expected a proxied response");
     expect(result.status).toBe(302);
@@ -184,9 +195,9 @@ describe("handleAppProxy", () => {
       }),
     );
 
-    const result = await handle(new Request(`${APP_ORIGIN}/a/downloads/-/grant/token`), {
-      appProxy: true,
-    });
+    const result = await handle(new Request(`${APP_ORIGIN}/a/downloads/-/grant/token`), [
+      createAppProxyServerHandlers(),
+    ]);
 
     assert(result, "expected a proxied response");
     expect(result.headers.get("location")).toBe(
@@ -199,25 +210,25 @@ describe("handleAppProxy", () => {
       new Response(null, { status: 303, headers: { location: "/apps/reviews/thanks" } }),
     );
 
-    const result = await handle(new Request(`${APP_ORIGIN}/apps/reviews/submit`), {
-      appProxy: true,
-    });
+    const result = await handle(new Request(`${APP_ORIGIN}/apps/reviews/submit`), [
+      createAppProxyServerHandlers(),
+    ]);
 
     assert(result, "expected a proxied response");
     expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/apps/reviews/thanks`);
   });
 
-  it("does not let registered handlers lose to the proxy", async () => {
+  it("lets a handler at a literal pathname win over the proxy", async () => {
     mockFetch.mockResolvedValueOnce(new Response("proxied"));
     const custom = Object.assign(async () => ({ type: "json" as const, data: "handled" }), {
       pathname: "/a/custom",
       method: "GET",
     });
 
-    const result = await handle(new Request(`${APP_ORIGIN}/a/custom`), {
-      appProxy: true,
-      handlers: [{ custom }],
-    });
+    const result = await handle(new Request(`${APP_ORIGIN}/a/custom`), [
+      createAppProxyServerHandlers(),
+      { custom },
+    ]);
 
     await expect(result?.json()).resolves.toBe("handled");
     expect(mockFetch).not.toHaveBeenCalled();
@@ -226,7 +237,9 @@ describe("handleAppProxy", () => {
   it("returns an uncached 502 when the store is unreachable", async () => {
     mockFetch.mockRejectedValueOnce(new Error("upstream down"));
 
-    const result = await handle(new Request(`${APP_ORIGIN}/a/downloads`), { appProxy: true });
+    const result = await handle(new Request(`${APP_ORIGIN}/a/downloads`), [
+      createAppProxyServerHandlers(),
+    ]);
 
     assert(result, "expected an error response");
     expect(result.status).toBe(502);
