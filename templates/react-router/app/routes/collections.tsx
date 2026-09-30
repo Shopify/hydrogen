@@ -86,7 +86,7 @@ function CollectionsGrid({ collections }: { collections: readonly CollectionNode
   return (
     <>
       <h2 className="sr-only">Browse collections</h2>
-      <div className="contain-paint">
+      <div>
         <ul role="list" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {collections.map((collection, index) => (
             <li key={collection.handle}>

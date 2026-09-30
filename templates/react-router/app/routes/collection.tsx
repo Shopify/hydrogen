@@ -1,7 +1,7 @@
 import { AnalyticsEvent, getSortByValue } from "@shopify/hydrogen";
 import { CollectionProvider } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
 
 import {
   ActiveFilterChips,
@@ -172,6 +172,12 @@ function EmptyState({ collectionPath }: { collectionPath: string }) {
 }
 
 function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["loaderData"] }) {
+  const location = useLocation();
+  const navigation = useNavigation();
+  const isUpdating =
+    navigation.state === "loading" &&
+    navigation.location?.pathname === location.pathname &&
+    navigation.location.search !== location.search;
   const collectionPath = `/collections/${loaderData.collection.handle}`;
   const { nodes, pageInfo, isLoading, loadMore } = useLoadMore(
     loaderData.products,
@@ -194,11 +200,16 @@ function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["l
         currencyCode={loaderData.currencyCode}
       />
       <h2 className="sr-only">Products</h2>
-      {nodes.length > 0 ? (
-        <ProductGrid products={nodes} />
-      ) : (
-        <EmptyState collectionPath={collectionPath} />
-      )}
+      <div
+        aria-busy={isUpdating}
+        className={`motion-safe:transition-opacity motion-safe:duration-150 ${isUpdating ? "opacity-60" : "opacity-100"}`}
+      >
+        {nodes.length > 0 ? (
+          <ProductGrid products={nodes} />
+        ) : (
+          <EmptyState collectionPath={collectionPath} />
+        )}
+      </div>
       <LoadMore
         pageInfo={pageInfo}
         loadedCount={nodes.length}
