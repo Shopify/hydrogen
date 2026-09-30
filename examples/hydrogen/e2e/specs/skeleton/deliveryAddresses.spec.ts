@@ -51,6 +51,17 @@ test.describe("Delivery Addresses", () => {
   });
 
   test.describe("Create", () => {
+    test("rejects a country code that isn't two letters", async ({ addresses }) => {
+      const createForm = addresses.getCreateAddressForm();
+      await addresses.fillAddressForm(createForm, { ...NEW_ADDRESS, countryCode: "1A" });
+      await createForm.getByRole("button", { name: "Create" }).click();
+
+      await expect(
+        createForm.getByText("Enter a valid two-letter country code, such as US or GB."),
+      ).toBeVisible();
+      await addresses.assertAddressCount(DELIVERY_ADDRESS_SEED_COUNT);
+    });
+
     test("creates a new address", async ({ addresses }) => {
       await addresses.assertAddressCount(DELIVERY_ADDRESS_SEED_COUNT);
       await addresses.createAddress(NEW_ADDRESS);

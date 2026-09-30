@@ -37,6 +37,7 @@ export type ActionResponse = {
 
 const NEW_ADDRESS_ID = "NEW_ADDRESS_ID";
 const GENERAL_ACTION_ERROR_ID = "account-addresses";
+const INVALID_COUNTRY_CODE_MESSAGE = "Enter a valid two-letter country code, such as US or GB.";
 const ADDRESS_INPUT_KEYS = [
   "address1",
   "address2",
@@ -92,10 +93,10 @@ export async function action({ request, context }: Route.ActionArgs) {
     const defaultAddress = form.has("defaultAddress")
       ? String(form.get("defaultAddress")) === "on"
       : false;
-    const address = parseAddress(form);
 
     switch (request.method) {
       case "POST": {
+        const address = parseAddress(form);
         const result = await customerAccount.client.graphql(CREATE_ADDRESS_MUTATION, {
           accessToken,
           variables: { address, defaultAddress },
@@ -105,6 +106,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       }
 
       case "PUT": {
+        const address = parseAddress(form);
         const result = await customerAccount.client.graphql(UPDATE_ADDRESS_MUTATION, {
           accessToken,
           variables: { address, addressId: decodeURIComponent(addressId), defaultAddress },
@@ -140,13 +142,24 @@ function parseAddress(form: FormData): CustomerAddressInput {
     if (typeof value === "string") address[key] = value;
   }
 
-  // CountryCode is an enum, and GraphQL matches enum values case-sensitively.
   const countryCode = form.get("countryCode");
-  if (typeof countryCode === "string") {
-    address.countryCode = countryCode.toUpperCase() as CountryCode;
-  }
+  if (typeof countryCode === "string") address.countryCode = parseCountryCode(countryCode);
 
   return address;
+}
+
+// CountryCode is an enum: GraphQL matches its values case-sensitively and rejects unknown ones
+// before the mutation runs. Check the shape here; the API checks that the country exists.
+function parseCountryCode(value: string) {
+  const countryCode = value.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(countryCode)) throw new Error(INVALID_COUNTRY_CODE_MESSAGE);
+  return countryCode as CountryCode;
+}
+
+function getGraphqlErrorMessage(errors: ReadonlyArray<{ message: string }>) {
+  const { message } = errors[0];
+  // An unknown CountryCode fails variable validation with a message listing every valid code.
+  return message.includes("countryCode") ? INVALID_COUNTRY_CODE_MESSAGE : message;
 }
 
 function addressActionError(addressId: string, message: string, status: number) {
@@ -154,7 +167,7 @@ function addressActionError(addressId: string, message: string, status: number) 
 }
 
 function getCustomerAddressCreateResult(result: CustomerAddressCreateResult) {
-  if (result.errors?.length) throw new Error(result.errors[0].message);
+  if (result.errors?.length) throw new Error(getGraphqlErrorMessage(result.errors));
 
   const payload = result.data?.customerAddressCreate;
   if (payload?.userErrors?.length) throw new Error(payload.userErrors[0].message);
@@ -163,7 +176,7 @@ function getCustomerAddressCreateResult(result: CustomerAddressCreateResult) {
 }
 
 function assertCustomerAddressUpdated(result: CustomerAddressUpdateResult) {
-  if (result.errors?.length) throw new Error(result.errors[0].message);
+  if (result.errors?.length) throw new Error(getGraphqlErrorMessage(result.errors));
 
   const payload = result.data?.customerAddressUpdate;
   if (payload?.userErrors?.length) throw new Error(payload.userErrors[0].message);
@@ -212,12 +225,11 @@ function NewAddressForm() {
     company: "",
     countryCode: null,
     firstName: "",
-    id: "new",
     lastName: "",
     phoneNumber: "",
     zoneCode: "",
     zip: "",
-  } as CustomerAddressInput;
+  } satisfies CustomerAddressInput;
 
   return (
     <AddressForm addressId={NEW_ADDRESS_ID} address={newAddress} defaultAddress={null}>
