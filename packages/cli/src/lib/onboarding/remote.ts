@@ -1,19 +1,16 @@
-import {readdir} from 'node:fs/promises';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController, AbortSignal} from '@shopify/cli-kit/node/abort';
-import {copyFile, fileExists} from '@shopify/cli-kit/node/fs';
-import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
+import {copyFile, fileExists, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderInfo, renderTasks} from '@shopify/cli-kit/node/ui';
-import {
-  downloadExternalRepo,
-  downloadMonorepoTemplates,
-} from '../template-downloader.js';
+import {downloadExternalRepo} from '../template-downloader.js';
+import {getStarterDir} from '../build.js';
 import {getCliCommand} from '../shell.js';
 import {
   commitAll,
   createAbortHandler,
   createInitialCommit,
+  getDotEnvContent,
   handleDependencies,
   handleLanguage,
   handleProjectLocation,
@@ -51,7 +48,7 @@ export async function setupRemoteTemplate(
   // Start downloading templates after we have project location.
   const backgroundDownloadPromise = appTemplate.includes('/')
     ? getExternalTemplate(appTemplate, controller.signal).catch(abort)
-    : getMonorepoTemplate(appTemplate, controller.signal).catch(abort);
+    : getMonorepoTemplate(appTemplate).catch(abort);
 
   const downloaded = await backgroundDownloadPromise;
   if (controller.signal.aborted) return;
@@ -62,10 +59,19 @@ export async function setupRemoteTemplate(
       // do not continue if it's already aborted
       if (controller.signal.aborted) return;
 
-      const {sourcePath} = downloaded;
+      const {sourcePath, isBundledSkeleton} = downloaded;
 
       // Always copy the entire template/example
       await copyFile(sourcePath, project.directory);
+
+      if (isBundledSkeleton) {
+        // npm leaves the skeleton's .env out of the published package,
+        // so write the same one as the local starter flow.
+        await writeFile(
+          joinPath(project.directory, '.env'),
+          getDotEnvContent(await getCliCommand(), {mockShop: true}),
+        );
+      }
     })
     .catch(abort);
 
@@ -100,18 +106,21 @@ export async function setupRemoteTemplate(
 
   const tasks = [
     {
-      title: 'Downloading template',
-      task: async () => {
-        await backgroundDownloadPromise;
-      },
-    },
-    {
       title: 'Setting up project',
       task: async () => {
         await backgroundWorkPromise;
       },
     },
   ];
+
+  if (!downloaded.isBundledSkeleton) {
+    tasks.unshift({
+      title: 'Downloading template',
+      task: async () => {
+        await backgroundDownloadPromise;
+      },
+    });
+  }
 
   if (shouldInstallDeps) {
     tasks.push({
@@ -154,7 +163,7 @@ export async function setupRemoteTemplate(
 
 type DownloadedTemplate = {
   sourcePath: string;
-  skeletonPath?: string;
+  isBundledSkeleton?: boolean;
 };
 
 async function getExternalTemplate(
@@ -167,38 +176,19 @@ async function getExternalTemplate(
 
 async function getMonorepoTemplate(
   appTemplate: string,
-  signal: AbortSignal,
 ): Promise<DownloadedTemplate> {
-  const {templatesDir, examplesDir} = await downloadMonorepoTemplates({
-    signal,
-  });
-
-  const skeletonPath = joinPath(templatesDir, 'skeleton');
-  const templatePath = joinPath(templatesDir, appTemplate);
-  const examplePath = joinPath(examplesDir, appTemplate);
-
-  if (await fileExists(templatePath)) {
-    return {skeletonPath, sourcePath: templatePath};
+  if (appTemplate === 'skeleton') {
+    return {sourcePath: await getStarterDir(), isBundledSkeleton: true};
   }
-
-  if (await fileExists(examplePath)) {
-    return {skeletonPath, sourcePath: examplePath};
-  }
-
-  const availableTemplates = (
-    await Promise.all([readdir(examplesDir), readdir(templatesDir)]).catch(
-      () => [],
-    )
-  )
-    .flat()
-    .filter((name) => name !== 'skeleton' && !name.endsWith('.md'))
-    .concat('demo-store') // Note: demo-store is handled as an external template
-    .sort();
 
   throw new AbortError(
-    `Unknown value in \`--template\` flag "${appTemplate}".\nSkip the flag or provide the name of a template or example in the Hydrogen repository or a URL to a git repository.`,
-    availableTemplates.length === 0
-      ? ''
-      : {list: {title: 'Available templates:', items: availableTemplates}},
+    `Unknown value in \`--template\` flag "${appTemplate}".\nSkip the flag or provide the name of a template or a URL to a git repository.`,
+    {
+      list: {
+        title: 'Available templates:',
+        // Note: demo-store is handled as an external template
+        items: ['skeleton', 'demo-store'],
+      },
+    },
   );
 }

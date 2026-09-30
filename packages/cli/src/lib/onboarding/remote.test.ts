@@ -3,10 +3,18 @@ import {describe, it, expect, vi, beforeEach} from 'vitest';
 import glob from 'fast-glob';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {inTemporaryDirectory, readFile} from '@shopify/cli-kit/node/fs';
+import {fetch} from '@shopify/cli-kit/node/http';
 import {setupTemplate} from './index.js';
-import {getSkeletonSourceDir} from '../build.js';
+import {getSkeletonSourceDir, getStarterDir} from '../build.js';
+import {getCliCommand} from '../shell.js';
+import {downloadExternalRepo} from '../template-downloader.js';
 import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {joinPath} from '@shopify/cli-kit/node/path';
+
+vi.mock('@shopify/cli-kit/node/http', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@shopify/cli-kit/node/http')>()),
+  fetch: vi.fn(() => Promise.reject(new Error('Offline'))),
+}));
 
 describe('remote templates', () => {
   const outputMock = mockAndCaptureOutput();
@@ -72,6 +80,49 @@ describe('remote templates', () => {
 
     expect(processExit).toHaveBeenCalled();
     processExit.mockRestore();
+  });
+
+  it('scaffolds the skeleton template from the bundled starter without downloading', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      await setupTemplate({
+        path: tmpDir,
+        git: false,
+        language: 'ts',
+        // In tests the starter is the source skeleton, node_modules included.
+        // Skipping the install would link node_modules before the copy
+        // reaches it, so let the mocked install relink it afterwards.
+        installDeps: true,
+        template: 'skeleton',
+      });
+
+      expect(fetch).not.toHaveBeenCalled();
+      expect(downloadExternalRepo).not.toHaveBeenCalled();
+
+      const starterDir = await getStarterDir();
+      // The mocked install also writes a lockfile
+      const ignore = ['**/node_modules/**', 'package-lock.json'];
+      const starterFiles = await glob('**/*', {
+        cwd: starterDir,
+        dot: true,
+        ignore,
+      });
+      const projectFiles = await glob('**/*', {cwd: tmpDir, dot: true, ignore});
+      expect(projectFiles.sort()).toEqual(starterFiles.sort());
+
+      await expect(readFile(joinPath(tmpDir, 'package.json'))).resolves.toBe(
+        await readFile(joinPath(starterDir, 'package.json')),
+      );
+
+      // The published starter has no .env, so the project gets the one that
+      // `init` writes for mock.shop without a template
+      const cliCommand = await getCliCommand();
+      await expect(readFile(joinPath(tmpDir, '.env'))).resolves.toBe(
+        '# The variables added in this file are only available locally in MiniOxygen.\n' +
+          `# Run \`${cliCommand} link\` to also inject environment variables from your storefront,\n` +
+          `# or \`${cliCommand} env pull\` to populate this file.\n` +
+          'SESSION_SECRET="foobar"\n',
+      );
+    });
   });
 
   // TODO: Re-enable when examples are converted to standalone in Branch 4

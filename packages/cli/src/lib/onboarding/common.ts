@@ -524,6 +524,31 @@ export async function handleDependencies(
   };
 }
 
+/**
+ * The content of a new project's `.env` file. Mock.shop projects need a local
+ * SESSION_SECRET. Linked storefronts get their variables from Oxygen instead.
+ */
+export function getDotEnvContent(
+  cliCommand: CliCommand,
+  {mockShop}: {mockShop: boolean},
+) {
+  const leadingComment =
+    '# The variables added in this file are only available locally in MiniOxygen.\n' +
+    `# Run \`${cliCommand} link\` to also inject environment variables from your storefront,\n` +
+    `# or \`${cliCommand} env pull\` to populate this file.`;
+
+  if (!mockShop) return leadingComment;
+
+  return (
+    leadingComment +
+    '\n' +
+    [['SESSION_SECRET', 'foobar']]
+      .map(([key, value]) => `${key}="${value}"`)
+      .join('\n') +
+    '\n'
+  );
+}
+
 const gitIgnoreContent = `
 node_modules
 /.cache
