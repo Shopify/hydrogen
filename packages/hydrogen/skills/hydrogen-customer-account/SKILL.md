@@ -71,7 +71,7 @@ The Customer Account handlers own:
 - `GET /account/refresh`
 - `POST /account/logout`
 
-Do not reimplement login, authorize, refresh, or logout unless the app needs custom behavior that preserves the same safeguards: sanitized `return_to`, same-origin logout POST checks, `cache-control: no-store`, committed session cookies on the returned response, and request-context response headers.
+Do not reimplement login, authorize, refresh, or logout unless the app needs custom behavior that preserves the same safeguards: `return_to` limited to the same origin, same-origin logout POST checks, `cache-control: no-store`, committed session cookies on the returned response, and request-context response headers.
 
 ## Server Rendering
 
@@ -81,7 +81,7 @@ Server-rendered account UI must keep session reads and token refresh separate:
 - Use `customerSession.getAccessToken()` before Customer Account GraphQL calls. It returns only a currently usable access token.
 - If `isLoggedIn()` is true but `getAccessToken()` returns `undefined`, redirect once to `/account/refresh?return_to=...` from a dynamic server route, then retry the account page after the refresh route commits cookies.
 - If `isLoggedIn()` is false, show login UI or redirect to `/account/login` instead of sending the user to `/account/refresh`.
-- Include a one-shot refresh guard in `return_to`; if the refreshed page still has no usable access token, fall back to login or an account error state.
+- Include a one-shot refresh guard in the `return_to` path, such as `/account?refreshed=1`; if the refreshed page still has no usable access token, fall back to login or an account error state.
 - Server Components and layouts should only receive `ReadonlyCustomerSessionManager`, so they cannot call `getOrRefreshAccessToken()`.
 
 Wrap header/account-link UI in the framework's streaming primitive when possible so the shell can render before session state resolves.

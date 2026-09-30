@@ -1,6 +1,15 @@
 // @vitest-environment happy-dom
 import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
-import { createElement, StrictMode, type ReactNode } from "react";
+import {
+  createElement,
+  startTransition,
+  StrictMode,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type * as PredictiveSearchModule from "../core/predictive-search";
@@ -16,6 +25,7 @@ import {
   usePredictiveSearch,
   usePredictiveSearchActions,
   usePredictiveSearchForm,
+  type PredictiveSearchActions,
 } from "./predictive-search";
 
 vi.mock("../core/predictive-search", async (importOriginal) => {
@@ -74,6 +84,12 @@ function createMockStore(): MockPredictiveSearchStore {
 
   latestStore = store;
   return store;
+}
+
+async function setupActualStore() {
+  const actual = await vi.importActual<typeof PredictiveSearchModule>("../core/predictive-search");
+  vi.mocked(createPredictiveSearchStore).mockImplementation(actual.createPredictiveSearchStore);
+  return { fetch: vi.fn(async () => jsonResponse(getEmptyPredictiveSearchResult("snow"))) };
 }
 
 beforeEach(() => {
@@ -143,12 +159,7 @@ describe("PredictiveSearchProvider", () => {
   });
 
   it("keeps searches working after StrictMode effect replay", async () => {
-    const actual = await vi.importActual<typeof PredictiveSearchModule>(
-      "../core/predictive-search",
-    );
-    const fetch = vi.fn().mockResolvedValue(jsonResponse(getEmptyPredictiveSearchResult("snow")));
-
-    vi.mocked(createPredictiveSearchStore).mockImplementation(actual.createPredictiveSearchStore);
+    const { fetch } = await setupActualStore();
 
     function SearchButton() {
       const { search } = usePredictiveSearchActions();
@@ -257,6 +268,135 @@ describe("usePredictiveSearchActions", () => {
     expect(latestStore.search).toHaveBeenCalledWith("snow");
     expect(latestStore.clear).toHaveBeenCalledWith();
   });
+
+  it("keeps actions stable and working after the provider recreates its store", async () => {
+    const { fetch } = await setupActualStore();
+
+    let predictiveSearchEndpoint = "/first";
+    const { result, rerender } = renderHook(
+      () => ({ actions: usePredictiveSearchActions(), state: usePredictiveSearch() }),
+      {
+        wrapper: ({ children }) =>
+          createElement(
+            PredictiveSearchProvider,
+            { fetch, debounceInMs: IMMEDIATE_DEBOUNCE_IN_MS, predictiveSearchEndpoint },
+            children,
+          ),
+      },
+    );
+    const initialActions = result.current.actions;
+
+    predictiveSearchEndpoint = "/second";
+    rerender();
+    await act(async () => {
+      await initialActions.search("snow");
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      "/second?q=snow",
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+    expect(result.current.state.status).toBe("success");
+
+    act(() => initialActions.clear());
+
+    expect(result.current.state).toMatchObject({ status: "idle", term: "" });
+    expect(result.current.actions).toBe(initialActions);
+  });
+
+  it.each([
+    ["useEffect", useEffect],
+    ["useLayoutEffect", useLayoutEffect],
+  ])(
+    "lets a child %s search the new store in the commit that recreates it",
+    async (_hookName, useChildEffect) => {
+      const { fetch } = await setupActualStore();
+
+      function SearchOnEndpointChange({ endpoint }: { endpoint: string }) {
+        const { search } = usePredictiveSearchActions();
+        useChildEffect(() => {
+          void search("snow");
+        }, [endpoint, search]);
+        return null;
+      }
+
+      function App({ endpoint }: { endpoint: string }) {
+        return createElement(
+          PredictiveSearchProvider,
+          { fetch, debounceInMs: IMMEDIATE_DEBOUNCE_IN_MS, predictiveSearchEndpoint: endpoint },
+          createElement(SearchOnEndpointChange, { endpoint }),
+        );
+      }
+
+      const { rerender } = render(createElement(App, { endpoint: "/first" }));
+      await act(async () => {
+        rerender(createElement(App, { endpoint: "/second" }));
+      });
+
+      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(fetch).toHaveBeenLastCalledWith(
+        "/second?q=snow",
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      );
+    },
+  );
+
+  it("keeps actions on the committed store while a store-recreating transition is suspended", async () => {
+    const { fetch } = await setupActualStore();
+    const neverResolves = new Promise<never>(() => {});
+    let shouldSuspend = false;
+    let setEndpoint: ((endpoint: string) => void) | undefined;
+    let committedActions: PredictiveSearchActions | undefined;
+
+    function SearchStatus() {
+      const actions = usePredictiveSearchActions();
+      const status = usePredictiveSearch((state) => state.status);
+      useLayoutEffect(() => {
+        committedActions = actions;
+      });
+      return createElement("output", null, status);
+    }
+
+    function RouteContent() {
+      if (shouldSuspend) throw neverResolves;
+      return null;
+    }
+
+    function App() {
+      const [predictiveSearchEndpoint, setPredictiveSearchEndpoint] = useState("/first");
+      setEndpoint = setPredictiveSearchEndpoint;
+      return createElement(
+        Suspense,
+        { fallback: null },
+        createElement(
+          PredictiveSearchProvider,
+          { fetch, debounceInMs: IMMEDIATE_DEBOUNCE_IN_MS, predictiveSearchEndpoint },
+          createElement(SearchStatus),
+          createElement(RouteContent),
+        ),
+      );
+    }
+
+    render(createElement(App));
+    assert(setEndpoint, "Expected App to expose its endpoint setter");
+    const changeEndpoint = setEndpoint;
+    shouldSuspend = true;
+    await act(async () => {
+      startTransition(() => changeEndpoint("/second"));
+    });
+
+    assert(committedActions, "Expected the search status to commit its actions");
+    const { search } = committedActions;
+    await act(async () => {
+      await search("snow");
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      "/first?q=snow",
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+    expect(screen.getByRole("status").textContent).toBe("success");
+  });
 });
 
 describe("usePredictiveSearchForm", () => {
@@ -280,6 +420,38 @@ describe("usePredictiveSearchForm", () => {
     expect(input.getAttribute("type")).toBe("search");
     expect(input.getAttribute("autocomplete")).toBe("off");
     expect(latestStore.search).toHaveBeenCalledWith("snow");
+  });
+
+  it("keeps captured register and form handlers working after the provider recreates its store", () => {
+    let predictiveSearchEndpoint = "/first";
+    const { result, rerender } = renderHook(() => usePredictiveSearchForm(), {
+      wrapper: ({ children }) =>
+        createElement(PredictiveSearchProvider, { predictiveSearchEndpoint }, children),
+    });
+    const firstStore = latestStore;
+    const { onChange } = result.current.register("query");
+    const { onSubmit } = result.current.formProps({ preventDefault: true });
+    assert(onChange, "Expected register to return an onChange handler");
+    assert(onSubmit, "Expected formProps to return an onSubmit handler");
+
+    predictiveSearchEndpoint = "/second";
+    rerender();
+    expect(latestStore).not.toBe(firstStore);
+
+    render(
+      createElement(
+        "form",
+        { onSubmit },
+        createElement("input", { name: "q", "aria-label": "Search", onChange }),
+      ),
+    );
+    const input = screen.getByLabelText("Search");
+    fireEvent.change(input, { target: { value: "snow" } });
+    fireEvent.submit(input.closest("form") as HTMLFormElement);
+
+    expect(firstStore.search).not.toHaveBeenCalled();
+    expect(latestStore.search).toHaveBeenNthCalledWith(1, "snow");
+    expect(latestStore.search).toHaveBeenNthCalledWith(2, "snow");
   });
 
   it("lets input change handlers opt out by preventing default", () => {

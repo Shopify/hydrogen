@@ -1,20 +1,16 @@
+import { getSameOriginPath } from "../../url";
+
 export function handleQueryParamRedirect(request: Request): Response | null {
   const url = new URL(request.url);
-  const redirectTo = url.searchParams.get("return_to") || url.searchParams.get("redirect");
+  const location = getSameOriginPath(
+    url.searchParams.get("return_to") || url.searchParams.get("redirect"),
+    url.origin,
+  );
 
-  if (!redirectTo) return null;
-  if (!isSameOrigin(request.url, redirectTo)) return null;
+  if (!location) return null;
 
   return new Response(null, {
     status: 301,
-    headers: { location: redirectTo },
+    headers: { location },
   });
-}
-
-function isSameOrigin(requestUrl: string, redirectUrl: string): boolean {
-  try {
-    return new URL(requestUrl).origin === new URL(redirectUrl, requestUrl).origin;
-  } catch {
-    return false;
-  }
 }

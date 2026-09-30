@@ -287,7 +287,7 @@ export type PredictiveSearchQueriesForOptions<TOptions> = {
 };
 
 function assertFragmentContract(fragment: string, contract: FragmentContract): void {
-  const pattern = new RegExp(`fragment\\s+${contract.name}\\s+on\\s+${contract.typeName}`);
+  const pattern = new RegExp(`fragment\\s+${contract.name}\\s+on\\s+${contract.typeName}\\b`);
   if (pattern.test(fragment)) return;
 
   throw new Error(
