@@ -24,11 +24,10 @@ import {
   DEFAULT_PREDICTIVE_SEARCH_LIMIT_SCOPE,
   DEFAULT_PREDICTIVE_SEARCH_UNAVAILABLE_PRODUCTS,
   fetchPredictiveSearch,
+  type PredictiveSearchData,
   type PredictiveSearchDataForOptions,
   type QueryPredictiveSearchOptions,
 } from "./search";
-
-const predictiveSearchServerHandlersQuery: unique symbol = Symbol("hydrogen.predictiveSearchQuery");
 
 const VALID_LIMIT_SCOPES: readonly PredictiveSearchLimitScope[] = ["ALL", "EACH"];
 const VALID_PREDICTIVE_SEARCH_TYPES: readonly PredictiveSearchType[] = [
@@ -81,9 +80,36 @@ type PredictiveSearchServerHandlers<
   TOptions extends CreatePredictiveSearchServerHandlersOptions = {},
   TData = PredictiveSearchDataForOptions<TOptions>,
 > = {
-  readonly [predictiveSearchServerHandlersQuery]: PredictiveSearchQueriesForOptions<TOptions>["predictiveSearch"];
   get: PredictiveSearchGetHandler<TData>;
 };
+
+type AsyncHandlerResult<THandler> = THandler extends (
+  ...args: infer _Args
+) => Promise<infer TResult>
+  ? TResult
+  : never;
+
+// Rebuilt on PredictiveSearchData: TypeScript compares PredictiveSearchDataForOptions instantiations
+// through their type arguments and can't tell fragment options apart, so handler data would be interchangeable.
+type JsonResultData<TResult> = TResult extends { type: "json"; data: { items: infer TItems } }
+  ? PredictiveSearchData<TItems>
+  : never;
+
+/**
+ * Infers the {@link PredictiveSearchData} shape returned by handlers from {@link createPredictiveSearchServerHandlers}.
+ *
+ * Pass it as the type argument to `usePredictiveSearch` so client state includes the handlers' custom fragment fields.
+ *
+ * @example
+ * ```ts
+ * type SearchData = PredictiveSearchDataFromHandlers<typeof predictiveSearchHandlers>;
+ * ```
+ */
+export type PredictiveSearchDataFromHandlers<
+  THandlers extends {
+    get: (context: never) => Promise<{ type: string; data?: PredictiveSearchData<unknown> }>;
+  },
+> = JsonResultData<AsyncHandlerResult<THandlers["get"]>>;
 
 export type CreatePredictiveSearchServerHandlersOptions = CreatePredictiveSearchQueriesOptions & {
   path?: string;
@@ -109,14 +135,7 @@ export function createPredictiveSearchServerHandlers(
     PREDICTIVE_SEARCH_GET_METHOD,
     (context: PredictiveSearchHandlerContext) => handleGet(context, options, queries),
   );
-  const handlers = {
-    get: handler,
-  } as PredictiveSearchServerHandlers<CreatePredictiveSearchServerHandlersOptions>;
-
-  Object.defineProperty(handlers, predictiveSearchServerHandlersQuery, {
-    value: queries.predictiveSearch,
-  });
-  return handlers;
+  return { get: handler };
 }
 
 async function handleGet(

@@ -3,6 +3,7 @@ import type { ResultOf, VariablesOf } from "gql.tada";
 
 import type { StorefrontClient } from "../../client";
 import { gql } from "../../graphql";
+import type { SearchResultUrlOptions } from "../index";
 import { createShopifyRouteTemplates } from "../standard-routes/index";
 import type {
   PredictiveSearchDataForOptions,
@@ -10,7 +11,7 @@ import type {
   PredictiveSearchQueryItem,
   predictiveSearchQueries,
 } from "./index";
-import { getPredictiveSearchItemUrl, makePredictiveSearchQueries } from "./index";
+import { getPredictiveSearchItemUrl, getSearchResultUrl, makePredictiveSearchQueries } from "./index";
 import { queryPredictiveSearch } from "./search";
 
 const customProductFragment = gql(`
@@ -196,6 +197,12 @@ describe("predictive search URL helper types", () => {
       });
 
     expectTypeOf(callWithCallbackRoutes).toEqualTypeOf<() => string>();
+  });
+
+  it("exports the getSearchResultUrl options type", () => {
+    expectTypeOf<SearchResultUrlOptions>().toEqualTypeOf<
+      Parameters<typeof getSearchResultUrl>[0]
+    >();
   });
 });
 
