@@ -1,7 +1,7 @@
 import { AnalyticsEvent, getSortByValue } from "@shopify/hydrogen";
 import { CollectionProvider } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
 
 import {
   ActiveFilterChips,
@@ -185,6 +185,12 @@ function NoResults({ term }: { term: string }) {
 }
 
 function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
+  const location = useLocation();
+  const navigation = useNavigation();
+  const isUpdating =
+    navigation.state === "loading" &&
+    navigation.location?.pathname === location.pathname &&
+    navigation.location.search !== location.search;
   const { nodes, pageInfo, isLoading, loadMore } = useLoadMore(
     loaderData.products,
     loaderData.pageInfo,
@@ -206,7 +212,6 @@ function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
             <FacetForm
               availableFilters={loaderData.availableFilters}
               extraHiddenInputs={searchTermHiddenInput(loaderData.searchTerm)}
-              remountKey={loaderData.searchTerm}
             />
           </div>
         </aside>
@@ -223,7 +228,12 @@ function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
             currencyCode={loaderData.currencyCode}
           />
           <h2 className="sr-only">Search results</h2>
-          <ProductGrid products={nodes} />
+          <div
+            aria-busy={isUpdating}
+            className={`motion-safe:transition-opacity motion-safe:duration-150 ${isUpdating ? "opacity-60" : "opacity-100"}`}
+          >
+            <ProductGrid products={nodes} />
+          </div>
           <LoadMore
             pageInfo={pageInfo}
             loadedCount={nodes.length}
@@ -236,7 +246,6 @@ function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
       <FilterDrawer
         availableFilters={loaderData.availableFilters}
         extraHiddenInputs={searchTermHiddenInput(loaderData.searchTerm)}
-        remountKey={loaderData.searchTerm}
       />
     </>
   );
