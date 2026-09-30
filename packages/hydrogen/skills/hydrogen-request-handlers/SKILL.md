@@ -44,7 +44,7 @@ const shopifyRoute = handleShopifyRoutes({
 
 Pass `routeTemplates` to `handleShopifyRoutes` so product `?variant=` links can be recognized before framework routing. `pathPrefix` is inferred from `requestContext.i18n.pathPrefix`, so localized product URLs stay in the localized tree.
 
-`handleShopifyRedirects` is a post-routing 404 check for `/admin`, configured standard route redirects, Storefront URL redirects, and same-origin query-param redirects. Do not run it on every request.
+`handleShopifyRedirects` is a post-routing 404 check for `/admin`, configured standard route redirects, Storefront URL redirects, and same-origin `return_to`/`redirect` query params. Do not run it on every request.
 
 ## Standard Route Redirects
 

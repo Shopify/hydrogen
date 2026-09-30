@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   SFAPI_RE,
   BUY_PERMALINK_RE,
+  getSameOriginPath,
   isHydrogenServerHandoffPath,
   normalizeStoreDomain,
 } from "./url";
@@ -92,5 +93,37 @@ describe("normalizeStoreDomain", () => {
   it("throws on missing domain", () => {
     expect(() => normalizeStoreDomain(undefined as unknown as string)).toThrow(/storeDomain/);
     expect(() => normalizeStoreDomain("")).toThrow(/storeDomain/);
+  });
+});
+
+describe("getSameOriginPath", () => {
+  const origin = "https://shop.example";
+
+  it.each([
+    ["/account/orders?page=2#latest", "/account/orders?page=2#latest"],
+    ["/x/../account", "/account"],
+    ["/search?q=https://evil.example", "/search?q=https://evil.example"],
+    [`${origin}/account/orders`, "/account/orders"],
+  ])("accepts %s as %s", (target, expected) => {
+    expect(getSameOriginPath(target, origin)).toBe(expected);
+  });
+
+  it.each([
+    [null],
+    [""],
+    ["account"],
+    ["javascript:alert(1)"],
+    ["https://evil.example/p"],
+    ["https:evil.example/p"],
+    ["//evil.example/p"],
+    ["/\\evil.example/p"],
+    // Each of these stays on `origin` but normalizes to a `//evil.example/p` pathname.
+    [`${origin}//evil.example/p`],
+    ["//shop.example//evil.example/p"],
+    ["/x/..//evil.example/p"],
+    ["/x/../\\evil.example/p"],
+    ["/./\t/evil.example/p"],
+  ])("rejects %s", (target) => {
+    expect(getSameOriginPath(target, origin)).toBeUndefined();
   });
 });
