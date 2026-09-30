@@ -18,6 +18,7 @@ import type {
   ShopifyRouteRedirectResult,
 } from "../request-routing/registered-routes";
 import { createCallableRouteHandler } from "../request-routing/registered-routes";
+import { getSameOriginPath } from "../url";
 import { parseCartRequest } from "./actions";
 import type { CartAction, CartLineAddInput } from "./actions";
 import {
@@ -454,16 +455,7 @@ function appendHeaders(headers: Headers, headersToAppend: Headers | undefined) {
 }
 
 function safeRedirectTarget(request: Request): string {
-  const referer = request.headers.get("referer");
-  if (!referer) return "/";
-  try {
-    const refererUrl = new URL(referer);
-    const requestUrl = new URL(request.url);
-    if (refererUrl.origin !== requestUrl.origin) return "/";
-    return refererUrl.toString().replace(refererUrl.origin, "");
-  } catch {
-    return "/";
-  }
+  return getSameOriginPath(request.headers.get("referer"), new URL(request.url).origin) ?? "/";
 }
 
 type MutationResult = {

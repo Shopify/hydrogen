@@ -15,7 +15,7 @@ import {
   type ShopifyRouteRedirectResult,
   type ShopifyRouteSessionManager,
 } from "../core/request-routing/registered-routes";
-import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
+import { CUSTOMER_ACCOUNT_PATHS, getSameOriginPath } from "../core/url";
 import { CustomerAccountApiError, CustomerAccountOAuthError } from "./errors";
 
 const log = getLogger("customer-account");
@@ -114,8 +114,8 @@ export type PrepareLoginUrlOptions = {
    */
   origin?: string;
   /**
-   * Path to redirect back to after login. Sanitized to same-origin,
-   * max 2 048 bytes. Defaults to `"/account"`.
+   * Same-origin path or URL to redirect back to after login, such as `"/account/orders"`.
+   * Cross-origin values and values over 2 048 bytes fall back to the default, `"/account"`.
    */
   returnTo?: string;
   /** Passed as the `locale` search param on the Shopify OAuth authorize URL. */
@@ -275,7 +275,7 @@ type CreateCustomerAccountServerHandlersBaseOptions<
 > = {
   /** The session object returned by {@link createCustomerSession}. */
   customerSession: TCustomerSession;
-  /** Path to redirect to after a successful login when no `return_to` param is present. Defaults to `"/"`. */
+  /** Path to redirect to after a successful login when `return_to` is missing or cross-origin. Defaults to `"/"`. */
   defaultPostLoginRedirectPathname?: string;
   /** Same-origin path to redirect to when the OAuth callback throws a `CustomerAccountOAuthError` (other errors propagate). Defaults to `"/account?login=failed"`. Cross-origin values fall back to `"/account"`. */
   loginFailedRedirectPath?: string;
@@ -1515,19 +1515,11 @@ function sanitizeReturnTo(
   origin: string,
   fallbackReturnTo = DEFAULT_LOGIN_RETURN_TO_PATH,
 ): string {
-  if (!returnTo) return fallbackReturnTo;
-
-  try {
-    const url = new URL(returnTo, origin);
-    if (url.origin !== origin) return fallbackReturnTo;
-    const sanitizedReturnTo = `${url.pathname}${url.search}${url.hash}`;
-    if (new TextEncoder().encode(sanitizedReturnTo).byteLength > MAX_RETURN_TO_LENGTH_IN_BYTES) {
-      return fallbackReturnTo;
-    }
-    return sanitizedReturnTo;
-  } catch {
+  const path = getSameOriginPath(returnTo, origin);
+  if (!path || new TextEncoder().encode(path).byteLength > MAX_RETURN_TO_LENGTH_IN_BYTES) {
     return fallbackReturnTo;
   }
+  return path;
 }
 
 function absoluteSameOriginUrl(url: string, origin: string): string {
