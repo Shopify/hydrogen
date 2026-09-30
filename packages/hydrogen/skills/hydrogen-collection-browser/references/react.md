@@ -191,7 +191,10 @@ function PriceRangeInput({
   currencyCode: MoneyV2["currencyCode"];
 }) {
   const price = activeFilters.find((filter) => filter.price)?.price;
-  const symbol = formatMoney({ amount: "0", currencyCode }, { locale: LOCALE }).currencySymbol;
+  const symbol = formatMoney(
+    { amount: "0", currencyCode },
+    { locale: LOCALE },
+  ).currencyNarrowSymbol;
   return (
     <>
       <PriceInput
