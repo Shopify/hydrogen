@@ -46,7 +46,6 @@ export type CollectionCardProps = {
   priority?: boolean;
   productCount?: number;
   useProductImageFallback?: boolean;
-  fullCardLink?: boolean;
 };
 
 function productCountText(collection: CollectionCardData, productCount?: number) {
@@ -67,7 +66,6 @@ export function CollectionCard({
   priority = false,
   productCount,
   useProductImageFallback = true,
-  fullCardLink = false,
 }: CollectionCardProps) {
   const fallbackImage = useProductImageFallback
     ? (collection.products.nodes[0]?.featuredImage ?? null)
@@ -76,14 +74,19 @@ export function CollectionCard({
   const imageWidth = collection.image?.width ?? undefined;
   const imageHeight = collection.image?.height ?? undefined;
 
-  const content = (
-    <>
+  return (
+    <Link
+      to={`/collections/${collection.handle}`}
+      className="card group rounded-card focus-visible:outline-accent relative block overflow-hidden no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+      aria-label={collection.title}
+      data-testid="collection-card"
+    >
       <div className="bg-surface-secondary relative block aspect-square overflow-hidden">
         {image ? (
           <div className="h-full w-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04]">
             <img
               src={image.url}
-              alt={fullCardLink ? "" : (image.altText ?? collection.title)}
+              alt=""
               width={imageWidth}
               height={imageHeight}
               className="h-full w-full object-cover"
@@ -95,42 +98,11 @@ export function CollectionCard({
       </div>
       <div className="overlay-dark pointer-events-none absolute inset-0" />
       <div className="text-interactive-text absolute inset-x-0 bottom-0 z-10 p-4 text-left">
-        <h3 className="type-body-lg font-medium">
-          {fullCardLink ? (
-            collection.title
-          ) : (
-            <Link
-              to={`/collections/${collection.handle}`}
-              className="card-link text-interactive-text rounded-card focus-visible:outline-accent"
-              aria-label={collection.title}
-            >
-              {collection.title}
-            </Link>
-          )}
-        </h3>
+        <h3 className="type-body-lg font-medium">{collection.title}</h3>
         <p className="type-body-sm mt-0.5 opacity-80">
           {productCountText(collection, productCount)}
         </p>
       </div>
-    </>
-  );
-
-  return fullCardLink ? (
-    <Link
-      to={`/collections/${collection.handle}`}
-      className="card group rounded-card focus-visible:outline-accent relative block overflow-hidden no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-      aria-label={collection.title}
-      data-testid="collection-card"
-    >
-      {content}
     </Link>
-  ) : (
-    <article
-      className="card group rounded-card relative overflow-hidden"
-      aria-label={collection.title}
-      data-testid="collection-card"
-    >
-      {content}
-    </article>
   );
 }

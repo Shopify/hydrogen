@@ -146,7 +146,7 @@ function ShopByCategory({ collections }: { collections: readonly CollectionCardD
         <ul role="list" className="max-w-page px-margin mx-auto grid grid-cols-1 md:grid-cols-3">
           {collections.map((collection) => (
             <li key={collection.handle}>
-              <CollectionCard collection={collection} fullCardLink />
+              <CollectionCard collection={collection} />
             </li>
           ))}
         </ul>
