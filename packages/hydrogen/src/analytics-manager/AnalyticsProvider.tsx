@@ -9,6 +9,7 @@ import {
   createContext,
   useContext,
   useCallback,
+  useRef,
 } from 'react';
 import {type CartReturn} from '../cart/queries/cart-types';
 import {
@@ -281,6 +282,8 @@ function register(key: string) {
   };
 }
 
+const noopPublish: typeof publish = () => {};
+
 function messageOnError(field: string, envVar: string) {
   return `[h2:error:Analytics.Provider] - ${field} is required. Make sure ${envVar} is defined in your environment variables. See https://h2o.fyi/analytics/consent to learn how to setup environment variables in the Shopify admin.`;
 }
@@ -305,6 +308,21 @@ function AnalyticsProvider({
     [],
   );
   const canTrack = customCanTrack ?? hasAnalyticsConsent;
+
+  // React can hold the consent transition below while a consumer suspends,
+  // keeping the pre-revoke `publish` committed, so consent is re-checked at
+  // call time. AnalyticsPageView keys its page_viewed effect on `publish`, so
+  // its identity must flip only with the consent decision and never with
+  // `canTrack`, which callers may pass inline.
+  const canTrackRef = useRef(canTrack);
+  canTrackRef.current = canTrack;
+  const guardedPublish = useCallback<typeof publish>(
+    (event: any, payload: any) => {
+      if (canTrackRef.current()) publish(event, payload);
+    },
+    [],
+  );
+
   const onConsentChange = useCallback(() => {
     startTransition(() => {
       setPrivacyReady(true);
@@ -357,7 +375,7 @@ function AnalyticsProvider({
       canTrack,
       ...carts,
       customData,
-      publish: canTrack() ? publish : () => {},
+      publish: canTrack() ? guardedPublish : noopPublish,
       shop,
       subscribe,
       register,
@@ -370,7 +388,7 @@ function AnalyticsProvider({
     carts,
     carts.cart?.updatedAt,
     carts.prevCart,
-    publish,
+    guardedPublish,
     subscribe,
     customData,
     shop,
