@@ -151,15 +151,15 @@ function parseAddress(form: FormData): CustomerAddressInput {
 // CountryCode is an enum: GraphQL matches its values case-sensitively and rejects unknown ones
 // before the mutation runs. Check the shape here; the API checks that the country exists.
 function parseCountryCode(value: string) {
-  const countryCode = value.trim().toUpperCase();
-  if (!/^[A-Z]{2}$/.test(countryCode)) throw new Error(INVALID_COUNTRY_CODE_MESSAGE);
-  return countryCode as CountryCode;
+  const countryCode = value.trim();
+  if (!/^[a-z]{2}$/i.test(countryCode)) throw new Error(INVALID_COUNTRY_CODE_MESSAGE);
+  return countryCode.toUpperCase() as CountryCode;
 }
 
 function getGraphqlErrorMessage(errors: ReadonlyArray<{ message: string }>) {
   const { message } = errors[0];
   // An unknown CountryCode fails variable validation with a message listing every valid code.
-  return message.includes("countryCode") ? INVALID_COUNTRY_CODE_MESSAGE : message;
+  return /\bcountryCode \(Expected /.test(message) ? INVALID_COUNTRY_CODE_MESSAGE : message;
 }
 
 function addressActionError(addressId: string, message: string, status: number) {
