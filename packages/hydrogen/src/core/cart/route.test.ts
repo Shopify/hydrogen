@@ -1339,6 +1339,26 @@ describe("createCartServerHandlers", () => {
       expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/cart?page=2`);
     });
 
+    it("redirects to / for a same-origin Referer whose path starts with //", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartLinesRemove: { cart: MOCK_CART, userErrors: [] } }),
+      );
+
+      const result = await handleCartRequest(
+        createFormPostRequest(
+          { intent: "remove", lineId: "gid://shopify/CartLine/1" },
+          {
+            cookies: "cart=123",
+            referer: `${APP_ORIGIN}//evil.com/phishing`,
+          },
+        ),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/`);
+    });
+
     it("redirects to / for cross-origin Referer", async () => {
       mockFetch.mockResolvedValueOnce(
         mockGqlResponse({ cartLinesRemove: { cart: MOCK_CART, userErrors: [] } }),
