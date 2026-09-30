@@ -335,9 +335,9 @@ export function makePredictiveSearchQueries(options?: CreatePredictiveSearchQuer
 }
 
 /**
- * Pre-built predictive search query object using Hydrogen's default fragments.
+ * Internal default query object built from Hydrogen's default fragments;
+ * used when `query` is omitted.
  *
- * Suitable when no custom fields are needed. Used as the default when
- * `query` is omitted from `queryPredictiveSearch` options.
+ * Build custom query documents with {@link makePredictiveSearchQueries}.
  */
 export const predictiveSearchQueries = makePredictiveSearchQueries();

@@ -34,12 +34,18 @@ type PredictiveSearchItemsForQuery<TQuery extends AnyStorefrontQueryString> = No
 >;
 
 /**
- * Predictive search result payload returned by {@link queryPredictiveSearch}
- * and {@link fetchPredictiveSearch}.
+ * Predictive search result payload returned by {@link queryPredictiveSearch}.
  *
  * The generic parameter is the shape of `items` and defaults to the
- * built-in query's items. Supply the items type produced by your custom
- * fragments to type the result.
+ * built-in query's items. For custom fragments, infer the full payload from
+ * `queryPredictiveSearch` and your query document:
+ *
+ * @example
+ * ```ts
+ * type CustomSearchData = Awaited<
+ *   ReturnType<typeof queryPredictiveSearch<typeof queries.predictiveSearch>>
+ * >;
+ * ```
  */
 export type PredictiveSearchData<
   TItems = PredictiveSearchItemsForQuery<typeof predictiveSearchQueries.predictiveSearch>,
@@ -61,7 +67,7 @@ export type PredictiveSearchDataForOptions<TOptions extends CreatePredictiveSear
   PredictiveSearchDataForQuery<PredictiveSearchQueriesForOptions<TOptions>["predictiveSearch"]>;
 
 /**
- * Options for {@link queryPredictiveSearch} and {@link fetchPredictiveSearch}.
+ * Options for {@link queryPredictiveSearch}.
  *
  * The generic parameter accepts a custom query document type and defaults to
  * the built-in predictive search query.
@@ -83,7 +89,7 @@ export type QueryPredictiveSearchOptions<
   types?: PredictiveSearchType[];
   /** Fields to search within. When omitted, the Storefront API searches its default field set (title, product type, variant title, and vendor), not every field. */
   searchableFields?: SearchableField[];
-  /** How to handle unavailable products. Defaults to `"HIDE"`. */
+  /** How to handle unavailable products. Defaults to `"HIDE"` rather than the Storefront API's shop-specific setting (which defaults to `"LAST"`). */
   unavailableProducts?: SearchUnavailableProductsType;
   /** Signal to abort the in-flight request. */
   signal?: AbortSignal;
@@ -120,8 +126,8 @@ type PredictiveSearchGraphql<TItems> = (
  * Returns a zero-result `PredictiveSearchData` payload with empty arrays
  * for every resource type.
  *
- * Used internally for empty terms and for the store's idle state. Typed
- * with the default items shape.
+ * Used internally for blank terms and for the client store's initial and
+ * reset state. Typed with the default items shape.
  */
 export function getEmptyPredictiveSearchResult(term = ""): PredictiveSearchData {
   return {
@@ -140,6 +146,9 @@ export function getEmptyPredictiveSearchResult(term = ""): PredictiveSearchData 
 /**
  * Executes a predictive search query against the Storefront API and returns
  * the data payload.
+ *
+ * To serve results with the Storefront API response headers (e.g. cache
+ * headers), use the `get` handler from `createPredictiveSearchServerHandlers()`.
  *
  * @throws {Error} When the Storefront API returns GraphQL errors.
  * @throws {Error} When the response contains no predictive search data.

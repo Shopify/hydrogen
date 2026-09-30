@@ -96,7 +96,7 @@ type PredictiveSearchServerHandlers<
 export type CreatePredictiveSearchServerHandlersOptions = CreatePredictiveSearchQueriesOptions & {
   /** Route path the handler is registered at. Defaults to `"/api/predictive-search"`. */
   path?: string;
-  /** Default result count. Individual requests override via the `limit` query parameter. Clamped to 1–10 by {@link fetchPredictiveSearch}. */
+  /** Default result count. Requests can override it with the `limit` query parameter; empty or unparseable values fall back to this default. See {@link QueryPredictiveSearchOptions.limit} for normalization and the default when omitted. */
   limit?: number;
   /** Default limit scope. Individual requests override via the `limitScope` query parameter. */
   limitScope?: PredictiveSearchLimitScope;
@@ -115,15 +115,16 @@ export type CreatePredictiveSearchServerHandlersOptions = CreatePredictiveSearch
  * The handler parses search parameters from the request URL:
  *
  * - `q` for the search term
- * - Each option in `CreatePredictiveSearchServerHandlersOptions` can be
- *   overridden by a query parameter of the same name
+ * - Each search option in {@link CreatePredictiveSearchServerHandlersOptions}
+ *   can be overridden by a query parameter of the same name
  *
  * The `types` and `searchableFields` parameters accept comma-separated values. Invalid enum
  * values, and any Storefront API failure, produce an error result with code
  * `"invalid_predictive_search_request"`.
  *
  * The returned handlers object has a `get` method that can be registered
- * as a route handler.
+ * as a route handler. Successful results include the Storefront API response
+ * headers, excluding `content-encoding`, `content-length`, and `server-timing`.
  */
 export function createPredictiveSearchServerHandlers(): PredictiveSearchServerHandlers;
 export function createPredictiveSearchServerHandlers<

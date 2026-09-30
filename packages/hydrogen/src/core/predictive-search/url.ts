@@ -63,10 +63,15 @@ type AnyPredictiveSearchItemUrlOptions =
   | PredictiveSearchQueryItemUrlOptions;
 
 type SearchResultUrlOptions = {
+  /** Search page path or absolute URL. */
   baseUrl: string;
+  /** Search term, set under `searchParamName`. */
   term: string;
+  /** Storefront API `trackingParameters` query string, appended after the other parameters. */
   trackingParameters?: string | null;
+  /** Extra query parameters, set before the term, so a key matching `searchParamName` is overwritten. */
   params?: Record<string, string>;
+  /** Query parameter for the term. Defaults to `"q"`. */
   searchParamName?: string;
 };
 

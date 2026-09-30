@@ -282,10 +282,11 @@ export function usePredictiveSearchActions(): PredictiveSearchActions {
  * search form.
  *
  * `formProps()` generates form element attributes including the search
- * action URL. `register("query")` generates input attributes and triggers
- * a search on every change event (debounced by the store). Both support an optional callback
- * that receives the event and extracted term, and respect
- * `event.preventDefault()` to cancel the automatic behavior.
+ * action URL. `register("query")` generates input attributes and calls the
+ * store's search action on every change event. The store debounces requests
+ * and resets state for terms shorter than `minTermLength`.
+ * Both support an optional callback that receives the event and extracted
+ * term, and respect `event.preventDefault()` to cancel the automatic behavior.
  *
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
