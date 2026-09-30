@@ -33,6 +33,7 @@ Server data should include:
 - `dataSearch`: the exact search string used for the server query.
 - `products`: Storefront API product nodes shaped for the product card.
 - `availableFilters`: normalized filter metadata from `products.filters` or `search.productFilters`.
+- `currencyCode` for `PRICE_RANGE` inputs, loaded by the same query as the products so it matches product prices: `localization.country.currency.isoCode` under `@inContext` in market-aware stores, or `shop.paymentSettings.currencyCode` in single-currency stores.
 - Optional `totalCount` and `pageInfo` for search or pagination UI.
 
 Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass parsed `filters`, `sortKey`, and `reverse` into `collection.products(...)` or `search(...)`.
@@ -43,6 +44,9 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 - The browse form must carry both `method="get"` **and** an explicit `action` (the collection/search route URL, e.g. `action="/collections/shoes"` or the search route) so filters and sort degrade to a real GET submit without JavaScript. `formProps()` only wires the submit handler — it does not set `method` or `action` — so render both literally; the helper cannot infer the route.
 - Choose controls at the filter-group level: `PRICE_RANGE` renders min/max number inputs; `LIST` and `BOOLEAN` render value checkboxes. A price value serializes to two params, so never use the number of serialized entries to decide whether to render the group. Use the fixed `filter.v.price.gte` and `filter.v.price.lte` names for range inputs; continue deriving checkbox names and values from `value.input`.
 - Use `formProps()` on the browse form: spread it, then add the literal `method="get"` and `action`. Submit checkboxes and `<select>` controls on change. Submit price inputs on blur only when the value changed, and let Enter blur the input. Never submit on every keystroke.
+- Make price inputs currency-aware with the explicit server `currencyCode`. Get the prefix with `formatMoney({ amount: "0", currencyCode }, { locale }).currencySymbol` and an explicit, stable `locale` (the resolved market locale, or one fixed locale in single-market stores) so server and client render the same symbol. Do not add a separate `Intl.NumberFormat`, hardcode `$`, infer the currency from the locale, or convert amounts.
+- Render each price input as `type="number"`, `min="0"`, `step="any"` in a wrapper with the symbol as an `aria-hidden="true"` prefix. The symbol is not part of the input value or URL params; params carry plain numbers only (`filter.v.price.gte=10.5`). Give each input an accessible label with minimum or maximum and the currency code, e.g. "Minimum price (CAD)".
+- Verify decimal submission in each supported locale. The current collection parser can treat the canonical `10.5` from a number input as `105` when `window.Shopify.locale` uses `.` as a grouping separator (for example, `de`). Currency display does not fix this parsing limitation.
 - Render a `noscript` submit button for filter sidebars that auto-submit when hydrated.
 - Render "load more" / pagination as a GET link (the framework's link component) carrying the next-page cursor (e.g. `?after=<endCursor>`), so it works without JavaScript. Hydration may upgrade it to append-in-place; the bare link must still load the next page server-side (it replaces the page rather than appending when JS is off).
 - Clear both `before` and `after` whenever filters or sorting change so the new browse state starts from its first page.
@@ -75,6 +79,10 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 
 - Filtering and sorting update the URL without scroll reset when hydrated.
 - Checkbox filters and `PRICE_RANGE` min/max controls both render, apply, and persist after reloading the URL.
+- Price inputs show the symbol for the loaded currency (e.g. `$`, `€`, `CA$`, `¥`), and the symbol does not change after hydration.
+- Decimal bounds such as `10.5` apply, and the URL carries only numeric `filter.v.price.gte`/`filter.v.price.lte` values, with no symbol or currency code.
+- The symbol prefix and input stay aligned and usable at desktop and mobile widths.
+- Accessible names identify minimum or maximum and the currency code; screen readers do not announce the symbol prefix.
 - Reloading the filtered URL server-renders the same filtered state.
 - With JavaScript disabled, checking filters and submitting the form loads the filtered URL.
 - With JavaScript disabled, the load-more / pagination link loads the next page server-side.

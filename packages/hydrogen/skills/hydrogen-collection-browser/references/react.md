@@ -12,6 +12,7 @@ Use the React binding:
 
 ```tsx
 import {
+  formatMoney,
   getFilterRemovalUrl,
   getSortByValue,
   isFilterInputActive,
@@ -19,6 +20,7 @@ import {
   serializeCollectionParams,
   type AvailableFilter,
   type CollectionState,
+  type MoneyV2,
   type ProductFilter,
 } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
@@ -73,12 +75,14 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     collection: data.collection,
     products: data.collection.products.nodes,
     availableFilters: data.collection.products.filters,
+    // Market-aware stores: `data.localization.country.currency.isoCode` under `@inContext`.
+    currencyCode: data.shop.paymentSettings.currencyCode,
     dataSearch: url.searchParams.toString(),
   };
 }
 ```
 
-Keep `dataSearch` exactly aligned with the query used for the server data.
+Keep `dataSearch` exactly aligned with the query used for the server data. Load `currencyCode` in the same query so it matches the product prices.
 
 ## Provider
 
@@ -114,7 +118,7 @@ export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
 Inside the browse UI:
 
 ```tsx
-function CollectionPage({ availableFilters, products }: Props) {
+function CollectionPage({ availableFilters, currencyCode, products }: Props) {
   const state = useCollection();
   const { formProps } = useCollectionForm();
   const isLoading = state.status === "loading";
@@ -124,6 +128,7 @@ function CollectionPage({ availableFilters, products }: Props) {
       <FilterSidebar
         availableFilters={availableFilters}
         activeFilters={state.filters}
+        currencyCode={currencyCode}
         disabled={isLoading}
       />
       <select name="sort_by" defaultValue={currentSortValue(state)} onChange={requestFormSubmit}>
@@ -154,13 +159,15 @@ Choose the control at the filter-group level. `PRICE_RANGE` uses min/max number 
 ```tsx
 function FilterGroup({
   activeFilters,
+  currencyCode,
   filter,
 }: {
   activeFilters: ProductFilter[];
+  currencyCode: MoneyV2["currencyCode"];
   filter: AvailableFilter;
 }) {
   if (filter.type === "PRICE_RANGE") {
-    return <PriceRangeInput activeFilters={activeFilters} />;
+    return <PriceRangeInput activeFilters={activeFilters} currencyCode={currencyCode} />;
   }
 
   return filter.values.map((value) => (
@@ -173,38 +180,71 @@ function FilterGroup({
   ));
 }
 
-function PriceRangeInput({ activeFilters }: { activeFilters: ProductFilter[] }) {
+// Use the resolved market locale in market-aware stores.
+const LOCALE = "en-US";
+
+function PriceRangeInput({
+  activeFilters,
+  currencyCode,
+}: {
+  activeFilters: ProductFilter[];
+  currencyCode: MoneyV2["currencyCode"];
+}) {
   const price = activeFilters.find((filter) => filter.price)?.price;
+  const symbol = formatMoney({ amount: "0", currencyCode }, { locale: LOCALE }).currencySymbol;
   return (
     <>
-      <PriceInput name="filter.v.price.gte" defaultValue={price?.min} label="Minimum price" />
-      <PriceInput name="filter.v.price.lte" defaultValue={price?.max} label="Maximum price" />
+      <PriceInput
+        name="filter.v.price.gte"
+        defaultValue={price?.min}
+        label={`Minimum price (${currencyCode})`}
+        symbol={symbol}
+      />
+      <PriceInput
+        name="filter.v.price.lte"
+        defaultValue={price?.max}
+        label={`Maximum price (${currencyCode})`}
+        symbol={symbol}
+      />
     </>
   );
 }
 
-function PriceInput({ name, defaultValue, label }: { name: string; defaultValue?: number; label: string }) {
+function PriceInput({
+  name,
+  defaultValue,
+  label,
+  symbol,
+}: {
+  name: string;
+  defaultValue?: number;
+  label: string;
+  symbol: string;
+}) {
   const initialValue = defaultValue == null ? "" : String(defaultValue);
   return (
-    <input
-      type="number"
-      name={name}
-      defaultValue={defaultValue}
-      aria-label={label}
-      min="0"
-      step="any"
-      onBlur={(event) => {
-        if (event.currentTarget.value !== initialValue) {
-          event.currentTarget.form?.requestSubmit();
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          event.currentTarget.blur();
-        }
-      }}
-    />
+    <span className="price-input">
+      <span aria-hidden="true">{symbol}</span>
+      <input
+        type="number"
+        name={name}
+        defaultValue={defaultValue}
+        aria-label={label}
+        min="0"
+        step="any"
+        onBlur={(event) => {
+          if (event.currentTarget.value !== initialValue) {
+            event.currentTarget.form?.requestSubmit();
+          }
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            event.currentTarget.blur();
+          }
+        }}
+      />
+    </span>
   );
 }
 
@@ -250,6 +290,20 @@ function CheckboxFilterValue({
       }}
     />
   );
+}
+```
+
+The symbol prefix sits outside the input, so the submitted value stays a plain number. Keep the wrapper simple so the prefix and input share one line at all widths:
+
+```css
+.price-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.price-input input {
+  min-width: 0;
 }
 ```
 
