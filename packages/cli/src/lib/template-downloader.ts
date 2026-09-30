@@ -5,46 +5,46 @@ import gunzipMaybe from 'gunzip-maybe';
 import {extract} from 'tar-fs';
 import {fetch} from '@shopify/cli-kit/node/http';
 import {parseGitHubRepositoryURL} from '@shopify/cli-kit/node/github';
-import {mkdir, fileExists, rmdir} from '@shopify/cli-kit/node/fs';
+import {mkdir, fileExists, readFile, rmdir} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {
   getAssetsDir,
   getSkeletonSourceDir,
+  getStarterDir,
   isHydrogenMonorepo,
 } from './build.js';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {downloadGitRepository} from '@shopify/cli-kit/node/git';
 
-// Note: this skips pre-releases
-const REPO_RELEASES_URL = `https://api.github.com/repos/shopify/hydrogen/releases/latest`;
+// Templates come from the repository at the tag of the skeleton this CLI
+// bundles, so they match the CLI's own starter. GitHub's latest release can't
+// be used: it can point at a newer Hydrogen whose tree lacks these templates.
+const REPO_ARCHIVE_URL =
+  'https://github.com/Shopify/hydrogen/archive/refs/tags';
 
 const getTryMessage = (status: number) =>
   status === 403
     ? `If you are using a VPN, WARP, or similar service, consider disabling it momentarily.`
     : undefined;
 
-async function getLatestReleaseDownloadUrl(signal?: AbortSignal) {
-  const response = await fetch(REPO_RELEASES_URL, {signal});
-  if (!response.ok || response.status >= 400) {
+async function getTemplatesArchive() {
+  const packageJsonPath = joinPath(await getStarterDir(), 'package.json');
+  const {name, version} = JSON.parse(await readFile(packageJsonPath)) as {
+    name?: string;
+    version?: string;
+  };
+
+  // Snapshot builds bundle a skeleton version that was never tagged.
+  if (!name || !version || !/^\d+\.\d+\.\d+$/.test(version)) {
     throw new AbortError(
-      `Failed to fetch the latest release information. Status ${
-        response.status
-      } ${response.statusText.replace(/\.$/, '')}.`,
-      getTryMessage(response.status),
+      `This build of the Hydrogen CLI can't download templates, because its skeleton (${name}@${version}) isn't a released version.`,
+      'Use a released version of the Hydrogen CLI.',
     );
   }
 
-  const release = (await response.json()) as {
-    name: string;
-    tarball_url: string;
-  };
-
-  return {
-    // @shopify/package-name@version => package-name@version
-    version: release.name.split('/').pop() ?? release.name,
-    url: release.tarball_url,
-  };
+  const tag = `${name}@${version}`;
+  return {version: tag, url: `${REPO_ARCHIVE_URL}/${tag}.tar.gz`};
 }
 
 async function downloadMonorepoTarball(
@@ -55,7 +55,7 @@ async function downloadMonorepoTarball(
   const response = await fetch(url, {signal});
   if (!response.ok || response.status >= 400) {
     throw new AbortError(
-      `Failed to download the latest release files. Status ${response.status} ${response.statusText}}`,
+      `Failed to download ${url}. Status ${response.status} ${response.statusText}`,
       getTryMessage(response.status),
     );
   }
@@ -91,8 +91,9 @@ export async function downloadMonorepoTemplates({
     };
   }
 
+  const {version, url} = await getTemplatesArchive();
+
   try {
-    const {version, url} = await getLatestReleaseDownloadUrl(signal);
     const templateStoragePath = await getAssetsDir('internal-templates');
 
     if (!(await fileExists(templateStoragePath))) {
