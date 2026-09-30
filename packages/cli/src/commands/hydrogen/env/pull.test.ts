@@ -436,11 +436,19 @@ describe('pullVariables', () => {
         );
 
         await runEnvPull({path: tmpDir, envFile});
-        // Pulling again should be a no-op
+        const contentAfterFirstPull = await readFile(filePath);
+        expect(contentAfterFirstPull).toContain('# local overrides');
+
+        // Pulling again should be a no-op: no prompt and no rewrite
+        vi.mocked(renderConfirmationPrompt).mockClear();
+        const outputMock = mockAndCaptureOutput();
+        outputMock.clear();
+
         await runEnvPull({path: tmpDir, envFile});
 
-        const content = await readFile(filePath);
-        expect(content).toContain('# local overrides');
+        expect(renderConfirmationPrompt).not.toHaveBeenCalled();
+        expect(outputMock.info()).toMatch(/No changes to your/);
+        expect(await readFile(filePath)).toBe(contentAfterFirstPull);
 
         const {variables} = await readAndParseDotEnv(filePath);
         expect(variables).toEqual({
