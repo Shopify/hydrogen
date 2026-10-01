@@ -12,6 +12,14 @@ type SelectedVariant = {
   readonly variantUrl: string;
 };
 
+type ServerVariantLink = {
+  readonly href: string;
+  readonly link: Locator;
+  readonly linkName: string;
+  readonly productTitle: string;
+  readonly targetUrl: string;
+};
+
 test("product variant selection updates URL", async ({ data, page }) => {
   await selectProductVariant(page, data.products, data.paths);
 });
@@ -28,6 +36,63 @@ test("product variant URL loads selected variant", async ({ data, page }) => {
     page.getByText(selectedVariant.variantLabel, { exact: false }).first(),
   ).toBeVisible();
 });
+
+test.describe("without JavaScript", () => {
+  test.skip(
+    process.env.STOREFRONT_SKIP_NO_JS_VARIANTS === "true",
+    "STOREFRONT_SKIP_NO_JS_VARIANTS=true opts this storefront out of no-JS variant selection",
+  );
+  test.use({ javaScriptEnabled: false });
+
+  test("product variant link loads server-selected variant", async ({ data, page }) => {
+    const variant = await findServerVariantLink(page, data.products, data.paths);
+    expect(variant.targetUrl).not.toBe(page.url());
+
+    await variant.link.click();
+
+    await expect(page).toHaveURL(variant.targetUrl);
+    await expect(page.getByRole("heading", { level: 1, name: variant.productTitle })).toBeVisible();
+    const selectedLink = page
+      .getByRole("link", { name: variant.linkName, exact: true })
+      .and(
+        page.locator(`[href="${variant.href.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"]`),
+      );
+    await expect(selectedLink).toHaveAttribute("aria-current", "true");
+  });
+});
+
+async function findServerVariantLink(
+  page: Page,
+  products: readonly ProductVariantProduct[],
+  paths: Paths,
+): Promise<ServerVariantLink> {
+  const checkedPaths: string[] = [];
+
+  for (const product of products) {
+    const path = paths.product(product.handle);
+    checkedPaths.push(path);
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1, name: product.title })).toBeVisible();
+
+    const link = await findVariantLink(page, product.optionNames);
+    if (link === null) continue;
+
+    const href = await link.getAttribute("href");
+    if (href === null) continue;
+
+    return {
+      href,
+      link,
+      linkName: (await controlText(link)).replace(/\s+/g, " ").trim(),
+      productTitle: product.title,
+      targetUrl: new URL(href, page.url()).href,
+    };
+  }
+
+  throw new Error(
+    `No product page exposed a same-product variant link without JavaScript. Checked: ${checkedPaths.join(", ")}. Render existing option values as links to selected-options URLs so selection works before hydration.`,
+  );
+}
 
 async function selectProductVariant(
   page: Page,

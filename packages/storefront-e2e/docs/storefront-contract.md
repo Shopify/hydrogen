@@ -50,6 +50,10 @@ Supported first-pass controls:
 
 The selected variant must be represented in the URL and must render as visible text after loading that URL directly.
 
+The suite also opens product pages with JavaScript disabled. The product heading must render, and at least one probed product must expose a same-product variant link that is not `aria-current`. A native click on that link must load its selected-options URL, and the server-rendered page must mark the link with the same name and href `aria-current="true"`.
+
+Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip this check for a storefront that needs JavaScript to render the product page. The Next.js template sets it in CI because its product content streams behind a Suspense fallback.
+
 ## Cart Line Items
 
 Cart lines must be visible list items containing the product title.
