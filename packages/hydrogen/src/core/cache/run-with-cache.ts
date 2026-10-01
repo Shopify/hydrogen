@@ -38,9 +38,22 @@ export type RunWithCacheResult<T extends SerializableCacheValue> = {
   cacheStatus: "hit" | "miss" | "bypass";
 };
 
+export type RunWithCacheContext = {
+  /**
+   * True when the callback refreshes a stale entry after the stale value was
+   * already returned (stale-while-revalidate).
+   */
+  background: boolean;
+};
+
+// The context is optional so custom runners that call `run()` keep working.
+type RunCallback<T extends SerializableCacheValue> = (
+  context?: RunWithCacheContext,
+) => MaybePromise<CacheDecision<T>>;
+
 export type RunWithCache = <T extends SerializableCacheValue>(
   options: RunWithCacheOptions,
-  run: () => MaybePromise<CacheDecision<T>>,
+  run: RunCallback<T>,
 ) => Promise<RunWithCacheResult<T>>;
 
 type CacheState = "fresh" | "stale" | "stale-if-error" | "expired";
@@ -56,6 +69,7 @@ type CacheOperation<T extends SerializableCacheValue = SerializableCacheValue> =
 
 type RunAndMaybeStoreOptions = {
   scheduleCacheWrite?: boolean;
+  background?: boolean;
 };
 
 /**
@@ -70,10 +84,13 @@ export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptio
 
   return async function runWithCache<T extends SerializableCacheValue>(
     options: RunWithCacheOptions,
-    run: () => MaybePromise<CacheDecision<T>>,
+    run: RunCallback<T>,
   ): Promise<RunWithCacheResult<T>> {
     if (options.strategy.mode === NO_STORE) {
-      return { data: (await runAndValidate(run)).data, cacheStatus: "bypass" };
+      return {
+        data: (await runAndValidate(run, { background: false })).data,
+        cacheStatus: "bypass",
+      };
     }
 
     const cacheKey = await hashCacheKey(options.key);
@@ -105,9 +122,12 @@ export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptio
   function revalidateInBackground<T extends SerializableCacheValue>(
     cacheKey: string,
     options: RunWithCacheOptions,
-    run: () => MaybePromise<CacheDecision<T>>,
+    run: RunCallback<T>,
   ) {
-    const entry = runAndMaybeStore(cacheKey, options, run, { scheduleCacheWrite: false });
+    const entry = runAndMaybeStore(cacheKey, options, run, {
+      scheduleCacheWrite: false,
+      background: true,
+    });
     schedule(entry.complete);
   }
 
@@ -115,7 +135,7 @@ export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptio
     cacheKey: string,
     staleValue: T,
     options: RunWithCacheOptions,
-    run: () => MaybePromise<CacheDecision<T>>,
+    run: RunCallback<T>,
   ): Promise<RunWithCacheResult<T>> {
     try {
       return await runAndMaybeStore(cacheKey, options, run).result;
@@ -129,8 +149,8 @@ export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptio
   function runAndMaybeStore<T extends SerializableCacheValue>(
     key: string,
     options: RunWithCacheOptions,
-    run: () => MaybePromise<CacheDecision<T>>,
-    { scheduleCacheWrite = true }: RunAndMaybeStoreOptions = {},
+    run: RunCallback<T>,
+    { scheduleCacheWrite = true, background = false }: RunAndMaybeStoreOptions = {},
   ): CacheOperation<T> {
     // Assigned inside `result` once the callback has produced cacheable data.
     // `complete` reads the same variable later, so it follows the actual write
@@ -138,7 +158,7 @@ export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptio
     let storePromise: Promise<void> = Promise.resolve();
 
     const result = Promise.resolve().then(async (): Promise<RunWithCacheResult<T>> => {
-      const decision = await runAndValidate(run);
+      const decision = await runAndValidate(run, { background });
       if (!shouldStore(options.strategy, decision)) {
         return { data: decision.data, cacheStatus: "miss" };
       }
@@ -203,9 +223,10 @@ function shouldFallbackToStale(error: unknown): boolean {
 }
 
 async function runAndValidate<T extends SerializableCacheValue>(
-  run: () => MaybePromise<CacheDecision<T>>,
+  run: RunCallback<T>,
+  context: RunWithCacheContext,
 ): Promise<CacheDecision<T>> {
-  const decision = await run();
+  const decision = await run(context);
 
   if (
     typeof decision !== "object" ||

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import type { CacheInstance } from "../core";
 import { Cache } from "../core/cache";
+import { DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
 import {
   createShopifyRequestContext,
   type ShopifyRequestContext,
@@ -784,6 +785,89 @@ describe("createStorefrontClient", () => {
       expect(originFetch).toHaveBeenCalledTimes(1);
       expect(first.data).toEqual({ shop: { name: "Test Shop" } });
       expect(second.data).toEqual({ shop: { name: "Test Shop" } });
+    });
+  });
+
+  describe("stale-while-revalidate refreshes", () => {
+    async function serveStaleWhileRefreshing(defaultTimeoutInMs: number) {
+      const cache = new MemoryKeyValueCache();
+      const pendingWork: Promise<unknown>[] = [];
+      const refresh = Promise.withResolvers<Response>();
+      const signals: AbortSignal[] = [];
+      const fetch = vi.fn(async (_url: string, init: RequestInit) => {
+        const { signal } = init;
+        assert(signal, "expected a fetch signal");
+        signals.push(signal);
+        if (signals.length === 1) return mockResponse({ data: { shop: { name: "Cached" } } });
+        signal.addEventListener("abort", () => refresh.reject(signal.reason), { once: true });
+        return refresh.promise;
+      });
+      const request = new AbortController();
+      const caller = new AbortController();
+      const client = createStorefrontClient({
+        type: "public",
+        requestContext: createTestRequestContext({
+          headers: new Headers(),
+          signal: request.signal,
+        }),
+        config: {
+          storeDomain: "test.myshopify.com",
+          publicStorefrontToken: "test-pub-token",
+          cache,
+          fetch,
+          defaultTimeoutInMs,
+          waitUntil: (promise) => void pendingWork.push(promise),
+        },
+      });
+      const options = {
+        cache: Cache.short({ maxAge: 1, staleWhileRevalidate: 60 }),
+        signal: caller.signal,
+      };
+
+      await client.graphql(SHOP_QUERY, options);
+      await Promise.all(pendingWork);
+      for (const envelope of cache.store.values()) {
+        (envelope as { storedAt: number }).storedAt -= 5_000;
+      }
+      const stale = await client.graphql(SHOP_QUERY, options);
+      await vi.waitFor(() => expect(signals).toHaveLength(2));
+      const refreshSignal = signals[1];
+      assert(refreshSignal, "expected a refresh signal");
+
+      // A failing origin means any data returned here came from the cache.
+      const readCachedShop = async () => {
+        const reader = createPublicClient({ cache, fetch: async () => Response.error() });
+        return (await reader.graphql(SHOP_QUERY, { cache: options.cache })).data;
+      };
+
+      return { stale, request, caller, refresh, refreshSignal, pendingWork, readCachedShop };
+    }
+
+    it("keeps refreshing after the request and caller abort", async () => {
+      const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
+      const run = await serveStaleWhileRefreshing(0);
+
+      expect(run.stale.data).toEqual({ shop: { name: "Cached" } });
+      run.request.abort();
+      run.caller.abort();
+      expect(run.refreshSignal.aborted).toBe(false);
+      expect(timeoutSpy).toHaveBeenCalledWith(DEFAULT_TIMEOUT_IN_MS);
+
+      run.refresh.resolve(mockResponse({ data: { shop: { name: "Fresh" } } }));
+      await Promise.all(run.pendingWork);
+      await expect(run.readCachedShop()).resolves.toEqual({ shop: { name: "Fresh" } });
+    });
+
+    it("stops a refresh at the client timeout instead of the request abort", async () => {
+      const run = await serveStaleWhileRefreshing(50);
+
+      run.request.abort();
+      run.caller.abort();
+      expect(run.refreshSignal.aborted).toBe(false);
+
+      await Promise.all(run.pendingWork);
+      expect((run.refreshSignal.reason as DOMException).name).toBe("TimeoutError");
+      await expect(run.readCachedShop()).resolves.toEqual({ shop: { name: "Cached" } });
     });
   });
 

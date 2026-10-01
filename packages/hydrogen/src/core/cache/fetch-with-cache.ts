@@ -42,6 +42,12 @@ export type FetchCacheOptions = {
    * and binary/streaming responses are never cached.
    */
   shouldCacheResponse?: (context: FetchCacheResponseContext) => MaybePromise<boolean>;
+  /**
+   * Creates the signal for a stale-while-revalidate refresh, which runs after
+   * the caller already has the stale response. Without it, the refresh reuses
+   * `init.signal`.
+   */
+  backgroundSignal?: () => AbortSignal;
 };
 
 type FetchWithCache = {
@@ -114,8 +120,13 @@ export function createFetchWithCache({
           key: cacheOptions.key,
           strategy: cacheOptions.strategy,
         },
-        async () => {
-          const response = await resolvedFetch(input, init);
+        async (context) => {
+          const response = await resolvedFetch(
+            input,
+            context?.background && cacheOptions.backgroundSignal
+              ? { ...init, signal: cacheOptions.backgroundSignal() }
+              : init,
+          );
 
           if (!response.ok) {
             if (isStaleIfErrorStatus(response.status)) {
