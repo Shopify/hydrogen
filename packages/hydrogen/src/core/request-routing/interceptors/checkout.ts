@@ -1,7 +1,7 @@
 import type { StorefrontClient } from "../../../client";
 import { getCart, getCartId } from "../../cart/get-cart";
 import { getLogger } from "../../logging";
-import { BUY_PERMALINK_RE, CHECKOUT_RE, isHydrogenServerHandoffPath } from "../../url";
+import { BUY_PERMALINK_RE, CART_PERMALINK_RE, CHECKOUT_RE } from "../../url";
 import type { HydrogenRouteInterceptor } from "../route-types";
 
 const log = getLogger("checkout");
@@ -11,7 +11,7 @@ export const handleCheckoutRedirect: HydrogenRouteInterceptor = (
   url,
   { request, storefrontClient },
 ) => {
-  if (!isHydrogenServerHandoffPath(url.pathname)) {
+  if (!CHECKOUT_RE.test(url.pathname) && !CART_PERMALINK_RE.test(url.pathname)) {
     return null;
   }
 
