@@ -401,6 +401,7 @@ type CartStoreContext = {
   mutationRevision: number;
   identityTransportGate: CartIdentityTransportGate;
   cartSyncAttached: boolean;
+  revalidateOnConnect: boolean;
   reservation: TransactionReservation | null;
   lastSnapshotSequence: number;
 };
@@ -1818,10 +1819,13 @@ function markOverlappingTransactionForRevalidation(
   if (
     store.transactions.length === 0 &&
     !store.revalidation.active &&
-    store.activeMutationTransports.size === 0
+    store.activeMutationTransports.size === 0 &&
+    !store.activeCartLoad
   ) {
     return;
   }
+  // Publishing this transaction discards an in-flight load, so the revalidation stands in for it.
+  if (store.activeCartLoad) store.settled = { ...store.settled, loading: false };
   transaction.requiresRevalidation = true;
   for (const pending of store.transactions) pending.requiresRevalidation = true;
   requestCartRevalidation(store);
@@ -2160,6 +2164,10 @@ function connectCartStore(store: CartStoreContext, handlers: CartEventHandlers):
   document.addEventListener("shopify:cart:note-update", handlers.note);
   document.addEventListener("shopify:cart:attributes-update", handlers.attributes);
   void getShopifyStandardActions().catch(() => {});
+  if (store.revalidateOnConnect) {
+    store.revalidateOnConnect = false;
+    refreshCartInStore(store);
+  }
   return true;
 }
 
@@ -2179,7 +2187,6 @@ function clearPendingTransactions(store: CartStoreContext): void {
   store.transactions = [];
   store.projectedErrors = [];
   store.observedPromises.clear();
-  store.activeMutationTransports.clear();
   store.expectedEvents = [];
   store.reservation = null;
   store.identityTransportGate.active = null;
@@ -2191,6 +2198,11 @@ function clearPendingTransactions(store: CartStoreContext): void {
 }
 
 function destroyCartStore(store: CartStoreContext, handlers: CartEventHandlers): void {
+  // Teardown cancels a needed revalidation, which may be the only way back to the server cart
+  // (for example after a change discarded the initial load), so resume it on reconnect. Mutation
+  // transports stay observed: requests the store doesn't own keep running, and the resumed
+  // revalidation must wait for them.
+  store.revalidateOnConnect ||= store.revalidation.requested || store.revalidation.active !== null;
   clearPendingTransactions(store);
   if (typeof document !== "undefined" && store.cartSyncAttached) {
     document.removeEventListener("shopify:cart:lines-update", handlers.lines);
@@ -2301,6 +2313,7 @@ function resetCartStore(store: CartStoreContext): void {
     (hadActiveCartLoad || hasLocalCartData(store.observable.state));
 
   clearPendingTransactions(store);
+  store.activeMutationTransports.clear();
   invalidateActiveCartLoad(store);
   cancelCartRevalidation(store);
   store.lastSnapshotSequence = 0;
@@ -2416,6 +2429,7 @@ export function createCartStore<TData extends CartData = CartData>(
     mutationRevision: 0,
     identityTransportGate: { active: null, waiting: [] },
     cartSyncAttached: false,
+    revalidateOnConnect: false,
     reservation: null,
     lastSnapshotSequence: 0,
   };
