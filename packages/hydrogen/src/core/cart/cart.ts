@@ -1495,18 +1495,23 @@ function trimPendingTransaction<TType extends TransactionType>(
   );
 }
 
+// Lines settle per transaction. Every other field is the cart as of this mutation, including
+// fields selected by a custom CartFragment.
 function addSnapshotFields(state: CartState, result: CartMutationResult): CartState {
   if (!result.cart) return state;
-  const cart = cartResponseFromStandardEvent(result.cart);
+  const {
+    lines: _lines,
+    checkoutUrl,
+    updatedAt,
+    ...fields
+  } = cartResponseFromStandardEvent(result.cart);
   return {
     ...state,
     data: {
       ...state.data,
-      id: cart.id,
-      checkoutUrl: cart.checkoutUrl ?? state.data.checkoutUrl,
-      updatedAt: cart.updatedAt ?? state.data.updatedAt,
-      totalQuantity: cart.totalQuantity,
-      cost: cart.cost,
+      ...fields,
+      checkoutUrl: checkoutUrl ?? state.data.checkoutUrl,
+      updatedAt: updatedAt ?? state.data.updatedAt,
     },
   };
 }
