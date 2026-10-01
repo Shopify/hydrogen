@@ -700,7 +700,15 @@ describe("createCartServerHandlers", () => {
 
       const result = await handleCartRequest(
         createJsonPostRequest(
-          { lines: [{ id: "gid://shopify/CartLine/1", quantity: 3 }] },
+          {
+            lines: [
+              {
+                id: "gid://shopify/CartLine/1",
+                merchandiseId: "gid://shopify/ProductVariant/2",
+                quantity: 3,
+              },
+            ],
+          },
           "cart=123",
         ),
         defaultConfig,
@@ -710,6 +718,14 @@ describe("createCartServerHandlers", () => {
       const body = await result.json();
       expect(body.cart).toEqual(MOCK_CART);
       expect(body.userErrors).toEqual([]);
+      const [, init] = mockFetch.mock.calls[0];
+      expect(JSON.parse(init.body).variables.lines).toEqual([
+        {
+          id: "gid://shopify/CartLine/1",
+          merchandiseId: "gid://shopify/ProductVariant/2",
+          quantity: 3,
+        },
+      ]);
     });
 
     it("uses body cartId for update action without a cart cookie", async () => {

@@ -3919,6 +3919,143 @@ describe("custom cart fields in mutation responses", () => {
   });
 });
 
+describe("variant swap", () => {
+  const OLD = "gid://shopify/ProductVariant/old";
+  const NEW = "gid://shopify/ProductVariant/new";
+  const OTHER = "gid://shopify/ProductVariant/other";
+
+  // Standard Actions update events carry only the line id and quantity, even for a swap.
+  function dispatchSwapEvent() {
+    const response = createDeferred<unknown>();
+    document.dispatchEvent(
+      Object.assign(new Event("shopify:cart:lines-update"), {
+        action: "update",
+        context: "standard-action",
+        lines: [{ id: "line-1", quantity: 1 }],
+        promise: response.promise,
+      }),
+    );
+    return response;
+  }
+
+  function swappedCart(swappedLineId: string, otherQuantity = 1) {
+    return makeCartState({
+      lines: [
+        lineWithMerchandise(swappedLineId, 1, NEW),
+        lineWithMerchandise("line-2", otherQuantity, OTHER),
+      ],
+      totalQuantity: 1 + otherQuantity,
+    });
+  }
+
+  const merchandise = () =>
+    getCartLines(store.getState().data).map((line) => [
+      line.id,
+      line.merchandise?.id,
+      line.quantity,
+    ]);
+
+  beforeEach(() => {
+    store.hydrate(
+      makeCartState({
+        lines: [lineWithMerchandise("line-1", 1, OLD), lineWithMerchandise("line-2", 1, OTHER)],
+        totalQuantity: 2,
+      }),
+    );
+  });
+
+  it.each(["line-1", "line-replacement"])(
+    "shows the swapped variant when Shopify returns it as %s",
+    async (responseId) => {
+      const response = dispatchSwapEvent();
+      response.resolve({ cart: swappedCart(responseId) });
+      await response.promise;
+      await nextTick();
+
+      expect(merchandise()).toEqual([
+        [responseId, NEW, 1],
+        ["line-2", OTHER, 1],
+      ]);
+      expect(store.getState().pending.lines.size).toBe(0);
+      expect(mockGetCart).not.toHaveBeenCalled();
+    },
+  );
+
+  it("revalidates a swap that returns a new line ID while another change is in flight", async () => {
+    mockGetCart.mockResolvedValue({ cart: swappedCart("line-replacement", 2) });
+    const other = mockUpdateCart({ lines: [{ id: "line-2", quantity: 2 }] });
+    const response = dispatchSwapEvent();
+
+    response.resolve({ cart: swappedCart("line-replacement") });
+    resolveUpdate(0, { cart: swappedCart("line-replacement", 2) });
+    await Promise.all([response.promise, other]);
+
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+    expect(mockGetCart).toHaveBeenCalledTimes(1);
+    expect(merchandise()).toEqual([
+      ["line-replacement", NEW, 1],
+      ["line-2", OTHER, 2],
+    ]);
+  });
+
+  it("keeps the swapped line when its new ID overlaps other work and the revalidation fails", async () => {
+    mockGetCart.mockRejectedValue(new Error("Refresh failed"));
+    const other = mockUpdateCart({ lines: [{ id: "line-2", quantity: 2 }] });
+    const response = dispatchSwapEvent();
+
+    response.resolve({ cart: swappedCart("line-replacement") });
+    resolveUpdate(0, { cart: swappedCart("line-replacement", 2) });
+    await Promise.all([response.promise, other]);
+
+    await vi.waitFor(() => expect(store.getState().errors.network).toHaveLength(1));
+    expect(merchandise()).toEqual([
+      ["line-1", OLD, 1],
+      ["line-2", OTHER, 2],
+    ]);
+  });
+
+  it("keeps the only line when its swap overlaps other work and the revalidation fails", async () => {
+    const id = "gid://shopify/Cart/one-line";
+    store.hydrate(
+      makeCartState({ id, lines: [lineWithMerchandise("line-1", 1, OLD)], totalQuantity: 1 }),
+    );
+    mockGetCart.mockRejectedValue(new Error("Refresh failed"));
+    const note = mockUpdateCart({ note: "Gift" });
+    const response = dispatchSwapEvent();
+
+    response.resolve({
+      cart: makeCartState({
+        id,
+        lines: [lineWithMerchandise("line-replacement", 1, NEW)],
+        totalQuantity: 1,
+      }),
+    });
+    resolveUpdate(0, {
+      cart: makeCartState({ id, lines: [lineWithMerchandise("line-1", 1, OLD)], totalQuantity: 1 }),
+    });
+    await Promise.all([response.promise, note]);
+
+    await vi.waitFor(() => expect(store.getState().errors.network).toHaveLength(1));
+    expect(merchandise()).toEqual([["line-1", OLD, 1]]);
+  });
+
+  it("does not restore a removed line from a merged swap response that settles after the removal", async () => {
+    mockGetCart.mockRejectedValue(new Error("Refresh failed"));
+    const response = dispatchSwapEvent();
+    const removal = mockUpdateCart({ lines: [{ id: "line-2", quantity: 0 }] });
+
+    resolveUpdate(0, serverCart(0, []));
+    await removal;
+    response.resolve({
+      cart: makeCartState({ lines: [lineWithMerchandise("line-2", 2, OTHER)], totalQuantity: 2 }),
+    });
+    await response.promise;
+
+    await vi.waitFor(() => expect(store.getState().errors.network).toHaveLength(1));
+    expect(merchandise()).toEqual([["line-1", OLD, 1]]);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Add-to-cart optimistic updates — tests verifying that add events match
 // existing lines by merchandiseId and create optimistic placeholders for new items.

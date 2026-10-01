@@ -18,6 +18,8 @@ export type CartLineAddInput = {
 export type CartLineUpdateInput = {
   /** The `CartLine.id` of the line to update. */
   id: string;
+  /** Storefront API GID of a product variant to swap the line to. */
+  merchandiseId?: string;
   quantity: number;
   attributes?: CartAttributeInput[];
   sellingPlanId?: string;
@@ -30,7 +32,7 @@ export type CartLineUpdateInput = {
  * of these variants. The `intent` field determines the Storefront API mutation:
  *
  * - `"add"` — add new lines (cartLinesAdd, or cartCreate when no cart exists)
- * - `"update"` — change quantity or attributes on existing lines (cartLinesUpdate)
+ * - `"update"` — change quantity, merchandise, or attributes on existing lines (cartLinesUpdate)
  * - `"remove"` — remove lines by ID (cartLinesRemove)
  * - `"discount-update"` — replace all discount codes (cartDiscountCodesUpdate)
  * - `"discount-apply"` — add a single discount code (read-then-write via cartDiscountCodesUpdate)
@@ -201,6 +203,7 @@ function partitionLines(rawLines: unknown[]): CartAction {
     } else if (hasId) {
       updates.push({
         id: line.id as string,
+        ...(hasMerchandiseId && { merchandiseId: line.merchandiseId as string }),
         quantity,
         ...optionalFields,
       });
