@@ -1,7 +1,7 @@
 import { describe, it, expectTypeOf } from "vitest";
 
+import type { MoneyV2 } from "../../graphql/generated/storefront-api-types";
 import type {
-  AnalyticsMoney,
   AnalyticsTrackingValues,
   ShopifyGlobal,
   StorefrontAnalyticsDestinationEventContext,
@@ -41,7 +41,7 @@ export function analyticsPublishTypes() {
   // @ts-expect-error search views require a search term
   analytics.publish(AnalyticsEvent.SEARCH_VIEWED);
 
-  expectTypeOf<ProductPayload["price"]>().toEqualTypeOf<AnalyticsMoney>();
+  expectTypeOf<ProductPayload["price"]>().toEqualTypeOf<MoneyV2>();
 
   analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
     products: [
@@ -64,6 +64,24 @@ export function analyticsPublishTypes() {
         id: "gid://shopify/Product/1",
         title: "T-shirt",
         price: { amount: "10.00", currencyCode: "CAD" },
+        vendor: "Acme",
+        variantId: "gid://shopify/ProductVariant/1",
+        variantTitle: "Default",
+        quantity: 1,
+      },
+    ],
+  });
+
+  analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
+    products: [
+      {
+        id: "gid://shopify/Product/1",
+        title: "T-shirt",
+        price: {
+          amount: "10.00",
+          // @ts-expect-error currencyCode must be a Storefront API CurrencyCode member
+          currencyCode: "usd",
+        },
         vendor: "Acme",
         variantId: "gid://shopify/ProductVariant/1",
         variantTitle: "Default",

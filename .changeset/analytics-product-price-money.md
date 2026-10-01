@@ -11,4 +11,4 @@ price: variant.price.amount,
 price: variant.price,
 ```
 
-This is a breaking type change for anyone publishing `product_viewed` with a string `price`. The new type is exported as `AnalyticsMoney`.
+This is a breaking type change for anyone publishing `product_viewed` with a string `price`. `price` is the generated `MoneyV2` type, so `currencyCode` is the Storefront API `CurrencyCode` union rather than any string. Import `MoneyV2` or `CurrencyCode` from `@shopify/hydrogen/storefront-api-types` when you type a payload by hand.

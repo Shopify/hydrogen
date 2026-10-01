@@ -6,7 +6,6 @@ export type {
   AnalyticsCart,
   AnalyticsCartLine,
   AnalyticsEventMap,
-  AnalyticsMoney,
   AnalyticsTrackingValues,
   CartLineUpdatePayload,
   CartUpdatePayload,

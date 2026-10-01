@@ -54,7 +54,6 @@ export type {
   AnalyticsCartLine,
   AnalyticsEventMap,
   AnalyticsEventName,
-  AnalyticsMoney,
   AnalyticsTrackingValues,
   CartLineUpdatePayload,
   CartUpdatePayload,

@@ -1,3 +1,4 @@
+import type { MoneyV2 } from "../../graphql/generated/storefront-api-types";
 import type { ShopifyScriptsShop } from "../shopify-scripts/types";
 import type { AnalyticsEventName } from "./events";
 
@@ -67,11 +68,6 @@ export type ConsentConfig =
   | { mode?: "no-banner"; setup?: never }
   | { mode: "default-banner"; setup?: never }
   | { mode: "custom-banner"; setup: ConsentSetup };
-
-// --- Money ---
-
-/** Money amount with its currency, matching the Storefront API `MoneyV2` shape. */
-export type AnalyticsMoney = { amount: string; currencyCode: string };
 
 // --- Cart types ---
 
@@ -151,7 +147,7 @@ export type ProductPayload = {
   id: string;
   title: string;
   /** Price of the selected variant (`ProductVariant.price`). The hosted Shopify analytics script reads `currencyCode` as the event's currency. */
-  price: AnalyticsMoney;
+  price: MoneyV2;
   vendor: string;
   variantId: string;
   variantTitle: string;
