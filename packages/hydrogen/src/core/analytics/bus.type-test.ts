@@ -1,12 +1,13 @@
 import { describe, it, expectTypeOf } from "vitest";
 
 import type {
+  AnalyticsMoney,
   AnalyticsTrackingValues,
   ShopifyGlobal,
   StorefrontAnalyticsDestinationEventContext,
 } from "../index";
 import { AnalyticsEvent } from "./events";
-import type { StorefrontAnalytics } from "./types";
+import type { ProductPayload, StorefrontAnalytics } from "./types";
 
 declare const analytics: StorefrontAnalytics;
 declare const privacy: ShopifyGlobal["customerPrivacy"];
@@ -39,6 +40,37 @@ export function analyticsPublishTypes() {
 
   // @ts-expect-error search views require a search term
   analytics.publish(AnalyticsEvent.SEARCH_VIEWED);
+
+  expectTypeOf<ProductPayload["price"]>().toEqualTypeOf<AnalyticsMoney>();
+
+  analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
+    products: [
+      {
+        id: "gid://shopify/Product/1",
+        title: "T-shirt",
+        // @ts-expect-error a bare string price is rejected
+        price: "10.00",
+        vendor: "Acme",
+        variantId: "gid://shopify/ProductVariant/1",
+        variantTitle: "Default",
+        quantity: 1,
+      },
+    ],
+  });
+
+  analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
+    products: [
+      {
+        id: "gid://shopify/Product/1",
+        title: "T-shirt",
+        price: { amount: "10.00", currencyCode: "CAD" },
+        vendor: "Acme",
+        variantId: "gid://shopify/ProductVariant/1",
+        variantTitle: "Default",
+        quantity: 1,
+      },
+    ],
+  });
 
   analytics.addDestination({
     name: "test-destination",

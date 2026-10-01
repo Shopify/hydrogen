@@ -68,6 +68,11 @@ export type ConsentConfig =
   | { mode: "default-banner"; setup?: never }
   | { mode: "custom-banner"; setup: ConsentSetup };
 
+// --- Money ---
+
+/** Money amount with its currency, matching the Storefront API `MoneyV2` shape. */
+export type AnalyticsMoney = { amount: string; currencyCode: string };
+
 // --- Cart types ---
 
 /**
@@ -145,8 +150,8 @@ type UrlPayload = {
 export type ProductPayload = {
   id: string;
   title: string;
-  /** Decimal amount string for the selected variant (e.g. `"19.99"`). */
-  price: string;
+  /** Price of the selected variant (`ProductVariant.price`). The hosted Shopify analytics script reads `currencyCode` as the event's currency. */
+  price: AnalyticsMoney;
   vendor: string;
   variantId: string;
   variantTitle: string;
