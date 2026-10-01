@@ -321,11 +321,13 @@ describe("createStorefrontClient", () => {
   });
 
   describe("i18n", () => {
-    it("auto-injects country and language when declared in query", async () => {
+    it("auto-injects country and language over caller values when declared in query", async () => {
       const client = createPublicClient({
         fetch: mockFetch,
       });
-      await client.graphql(LOCALIZED_QUERY);
+      await client.graphql(LOCALIZED_QUERY as any, {
+        variables: { country: "CA", language: "FR" } as any,
+      });
 
       const body = getBody(mockFetch);
       expect(body.variables).toMatchObject({
@@ -397,6 +399,18 @@ describe("createStorefrontClient", () => {
       const body = getBody(mockFetch);
       expect(body.variables).not.toHaveProperty("country");
       expect(body.variables).toHaveProperty("countryCode", "US");
+    });
+
+    it("keeps caller values for same-named variables of other types", async () => {
+      const client = createPublicClient({ fetch: mockFetch });
+      await client.graphql(
+        gql(
+          `query Promo($country: String!, $language: Int) { shop { metafield(namespace: "promo", key: $country) { value } } }`,
+        ),
+        { variables: { country: "promo-key", language: 2 } },
+      );
+
+      expect(getBody(mockFetch).variables).toEqual({ country: "promo-key", language: 2 });
     });
 
     it("merges user variables with i18n variables", async () => {
