@@ -1946,16 +1946,28 @@ describe("CartStore.handleFormSubmit — concurrency", () => {
         id: cartId,
         lines: [lineA, lineB],
         totalQuantity: lineQuantity * 2,
+        discountCodes: [{ code: "OLD", applicable: true }],
+        buyerIdentity: { countryCode: "CA" },
       }),
     );
 
     const removeA = mockUpdateCart({ lines: [{ id: lineA.id, quantity: removedQuantity }] });
     const removeB = mockUpdateCart({ lines: [{ id: lineB.id, quantity: removedQuantity }] });
-    resolveUpdate(1, serverCart(lineQuantity, [{ id: lineA.id, quantity: lineQuantity }]));
+    resolveUpdate(1, {
+      cart: {
+        ...serverCart(lineQuantity, [{ id: lineA.id, quantity: lineQuantity }]).cart,
+        discountCodes: [],
+        buyerIdentity: { countryCode: "US" },
+      },
+    });
     resolveUpdate(0, serverCart(lineQuantity, [{ id: lineB.id, quantity: lineQuantity }]));
     await Promise.all([removeA, removeB]);
     await vi.waitFor(() => expect(store.getState().errors.network).toHaveLength(1));
 
+    expect(store.getState().data).toMatchObject({
+      discountCodes: [{ code: "OLD", applicable: true }],
+      buyerIdentity: { countryCode: "CA" },
+    });
     expect(getCartLines(store.getState().data)).toEqual([]);
     expect(store.getState().data.totalQuantity).toBe(removedQuantity);
     expect(store.getState().errors.network[0].message).toBe(
@@ -3839,6 +3851,71 @@ describe("event-driven sync", () => {
 
     expect(getCartLines(store.getState().data)[0].quantity).toBe(5);
     expect(store.getState().pending.lines).toContain("line-1");
+  });
+});
+
+describe("custom cart fields in mutation responses", () => {
+  const giftCards = [{ id: "gift-card-1", lastCharacters: "ABCD", amountUsed: { amount: "5.0" } }];
+
+  it("refreshes and clears returned non-line fields across sequential mutations", async () => {
+    store.hydrate(
+      makeCartState({
+        lines: [makeLine({ id: "line-1", quantity: 1 })],
+        totalQuantity: 1,
+        checkoutUrl: "https://shop.example/checkout",
+        note: "Leave at the door",
+        discountCodes: [{ code: "OLD", applicable: true }],
+        buyerIdentity: { countryCode: "CA" },
+      }),
+    );
+    const first = mockUpdateCart({ lines: [{ id: "line-1", quantity: 2 }] });
+    resolveUpdate(0, {
+      cart: {
+        ...serverCart(2, [{ id: "line-1", quantity: 2 }]).cart,
+        appliedGiftCards: giftCards,
+        buyerIdentity: { countryCode: "US" },
+        discountCodes: [{ code: "NEW", applicable: false }],
+      },
+    });
+    await first;
+    expect(store.getState().data).toMatchObject({
+      appliedGiftCards: giftCards,
+      buyerIdentity: { countryCode: "US" },
+      discountCodes: [{ code: "NEW", applicable: false }],
+      checkoutUrl: "https://shop.example/checkout",
+      note: "Leave at the door",
+    });
+    const second = mockUpdateCart({ lines: [{ id: "line-1", quantity: 3 }] });
+    resolveUpdate(1, {
+      cart: {
+        ...serverCart(3, [{ id: "line-1", quantity: 3 }]).cart,
+        appliedGiftCards: [],
+        buyerIdentity: null,
+        discountCodes: [],
+      },
+    });
+    await second;
+    expect(store.getState().data).toMatchObject({
+      appliedGiftCards: [],
+      buyerIdentity: null,
+      discountCodes: [],
+    });
+  });
+
+  it("fills custom fields for a cart created by the first add", async () => {
+    const add = mockUpdateCart({
+      lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+    });
+    resolveUpdate(0, {
+      cart: {
+        ...serverCart(1, [{ id: "line-1", quantity: 1 }]).cart,
+        appliedGiftCards: [],
+      },
+    });
+    await add;
+
+    const data = store.getState().data as CartData & Record<string, unknown>;
+    expect(data.appliedGiftCards).toEqual([]);
   });
 });
 
