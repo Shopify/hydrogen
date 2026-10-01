@@ -29,7 +29,9 @@ export type FormatMoneyOptions = {
    * Intl.NumberFormat currencyDisplay option.
    * 'symbol' (default) | 'narrowSymbol' | 'code' | 'name'
    *
-   * 'narrowSymbol' is useful for disambiguating $ across CAD/AUD/USD.
+   * 'symbol' tells dollar currencies apart where the locale needs it
+   * (en-US: '$' for USD, 'CA$' for CAD). 'narrowSymbol' always renders '$',
+   * so CAD, AUD, and USD look identical.
    */
   currencyDisplay?: Intl.NumberFormatOptions["currencyDisplay"];
 };
