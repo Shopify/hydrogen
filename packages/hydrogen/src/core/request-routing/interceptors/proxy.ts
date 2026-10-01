@@ -1,13 +1,13 @@
 import { extractHeaders } from "../../headers";
 import { getLogger } from "../../logging";
-import type { HydrogenRouteInterceptor, HydrogenRoutesOptions } from "../route-types";
+import type { HydrogenRouteInterceptor, HydrogenRouteInterceptorOptions } from "../route-types";
 
 const PROXY_TIMEOUT_MS = 30_000;
 
 // Proxy errors are transient and may be buyer-specific: never cache them.
 const PROXY_ERROR_CACHE_CONTROL = "no-store";
 
-type ProxyHeaderContext = HydrogenRoutesOptions & { url: URL };
+type ProxyHeaderContext = HydrogenRouteInterceptorOptions & { url: URL };
 
 type PrepareHeaders<ExtraContext extends object = object> = (
   headers: Headers,
