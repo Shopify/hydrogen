@@ -13,7 +13,7 @@ import { useCollection, useCollectionForm } from "@shopify/hydrogen/react";
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link, useFetcher, useLocation } from "react-router";
 
-import { formatPrice } from "~/lib/money";
+import { DEFAULT_MONEY_LOCALE, formatPrice } from "~/lib/money";
 
 export type SortOption = {
   label: string;
@@ -344,7 +344,7 @@ function PriceRangeFacet({
   const max = activePrice?.max ?? "";
   const currencySymbol = formatMoney(
     { amount: "0", currencyCode },
-    { locale: "en-US" },
+    { locale: DEFAULT_MONEY_LOCALE },
   ).currencyNarrowSymbol;
 
   useEffect(() => {
