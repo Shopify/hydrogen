@@ -3,7 +3,8 @@ import { gql, type StorefrontApi, type StorefrontClient } from "@shopify/hydroge
 import { normalizeStorefrontShop, type StorefrontShop } from "~/lib/storefront-shop";
 
 export const ROOT_LAYOUT_QUERY = gql(`
-  query RootLayout {
+  query RootLayout($country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
     shop {
       id
       name
@@ -23,6 +24,13 @@ export const ROOT_LAYOUT_QUERY = gql(`
         supportedDigitalWallets
       }
     }
+    localization {
+      country {
+        currency {
+          isoCode
+        }
+      }
+    }
   }
 `);
 
@@ -31,6 +39,9 @@ export type RootLayoutQueryResult = StorefrontApi.ResultOf<typeof ROOT_LAYOUT_QU
 type RootLayoutLoaderData = {
   shopId: string;
   shopInfo: StorefrontShop;
+  // shopify.js drops analytics events until window.Shopify.currency.active exists, and
+  // the cart tracker only sets it once a cart exists, so the bootstrap needs it up front.
+  currency: string;
 };
 
 export async function loadRootLayout(
@@ -47,9 +58,10 @@ export async function loadRootLayout(
   // Upstream error details are logged above, not exposed through the boundary.
   if (!layoutResult.data) throw new Error("Root layout data is unavailable.");
 
-  const { shop } = layoutResult.data;
+  const { shop, localization } = layoutResult.data;
   return {
     shopId: shop.id,
     shopInfo: normalizeStorefrontShop(shop),
+    currency: localization.country.currency.isoCode,
   };
 }

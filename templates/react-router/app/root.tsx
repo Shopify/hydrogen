@@ -99,6 +99,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     cartData: cartResult.data,
     shopInfo: layout.shopInfo,
     shopIdentity: resolveShopIdentity(env, layout.shopId),
+    currency: layout.currency,
   };
 }
 
@@ -114,7 +115,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {rootData ? (
           <ShopifyScripts
-            i18n={storefrontConfig.i18n}
+            i18n={{ ...storefrontConfig.i18n, currency: rootData.currency }}
             shop={rootData.shopIdentity.scriptShop}
             analytics={{ channel: rootData.shopIdentity.analyticsShop.channel }}
             shopifyAnalytics={rootData.shopIdentity.shopifyAnalytics}
