@@ -24,7 +24,12 @@ import { envContext } from "~/lib/env";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
-import { analyticsConsent, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
+import {
+  analyticsConsent,
+  getAccountWidgetConfig,
+  resolveShopIdentity,
+  storefrontConfig,
+} from "~/lib/shop";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -99,6 +104,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     cartData: cartResult.data,
     shopInfo: layout.shopInfo,
     shopIdentity: resolveShopIdentity(env, layout.shopId),
+    accountWidget: context.get(customerAccountContext) ? getAccountWidgetConfig(env) : null,
   };
 }
 
@@ -114,6 +120,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {rootData ? (
           <ShopifyScripts
+            account={rootData.accountWidget != null}
             i18n={storefrontConfig.i18n}
             shop={rootData.shopIdentity.scriptShop}
             analytics={{ channel: rootData.shopIdentity.analyticsShop.channel }}
@@ -147,7 +154,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <PageViewedTracker />
       <CartAnalyticsTracker />
       <AnnouncementBar />
-      <Header shopInfo={loaderData.shopInfo} />
+      <Header shopInfo={loaderData.shopInfo} accountWidget={loaderData.accountWidget} />
       <Outlet />
       <Footer shopInfo={loaderData.shopInfo} />
       <CartDrawer />

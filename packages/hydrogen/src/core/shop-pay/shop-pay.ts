@@ -1,3 +1,4 @@
+import { escapeAttribute, hasContent } from "../html";
 import { normalizeStoreDomain } from "../url";
 import { parseGid } from "../utils/parse-gid";
 
@@ -475,24 +476,12 @@ function normalizeQuantity(quantity = 1): number {
   return quantity;
 }
 
-function escapeText(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function escapeAttribute(value: string): string {
-  return escapeText(value).replace(/"/g, "&quot;");
-}
-
 function getShopPayAccessibilityLabel(label: string | undefined): string {
   return hasContent(label) ? label.trim() : DEFAULT_ACCESSIBILITY_LABEL;
 }
 
 function getShopPayButtonStyleNonceAttribute(options: Pick<ShopPayButtonOptions, "nonce">): string {
   return hasContent(options.nonce) ? ` nonce="${escapeAttribute(options.nonce.trim())}"` : "";
-}
-
-function hasContent(value: string | undefined): value is string {
-  return typeof value === "string" && value.trim() !== "";
 }
 
 function normalizeCssValue(name: "width" | "borderRadius", value: string): string {
