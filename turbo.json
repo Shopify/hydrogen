@@ -35,7 +35,8 @@
       "passThroughEnv": [
         "PLAYWRIGHT_BROWSER_CHANNEL",
         "STOREFRONT_BASE_URL",
-        "STOREFRONT_E2E_WORKERS"
+        "STOREFRONT_E2E_WORKERS",
+        "STOREFRONT_SKIP_NO_JS_VARIANTS"
       ]
     }
   }
