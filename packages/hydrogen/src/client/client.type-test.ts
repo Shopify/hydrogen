@@ -142,6 +142,74 @@ describe('type tests', () => {
     });
   });
 
+  describe('i18n variable ownership', () => {
+    it('keeps same-named scalar variables caller-owned and required', () => {
+      const QUERY = gql(
+        `query Promo($country: String!, $language: Boolean!, $handle: String! = "all") { product(handle: $handle) { metafield(namespace: "promo", key: $country) @include(if: $language) { value } } }`,
+      );
+      () => publicClient.graphql(QUERY, {variables: {country: 'promo-key', language: true}});
+      // @ts-expect-error — missing required caller-owned variables (country, language)
+      () => publicClient.graphql(QUERY);
+      // @ts-expect-error — country and language stay required when other variables are passed
+      () => publicClient.graphql(QUERY, {variables: {handle: 'all'}});
+      // @ts-expect-error — country is a String here
+      () => publicClient.graphql(QUERY, {variables: {country: 5, language: true}});
+    });
+
+    it('keeps other enums and swapped i18n enums caller-owned', () => {
+      const OTHER_ENUM_QUERY = gql(
+        `query Q($language: ProductSortKeys!) { products(first: 5, sortKey: $language) { nodes { id } } }`,
+      );
+      () => publicClient.graphql(OTHER_ENUM_QUERY, {variables: {language: 'TITLE'}});
+      // @ts-expect-error — missing required caller-owned variable (language)
+      () => publicClient.graphql(OTHER_ENUM_QUERY);
+
+      const SWAPPED_QUERY = gql(
+        `query Q($country: LanguageCode!, $language: CountryCode!) { shop { name } }`,
+      );
+      () => publicClient.graphql(SWAPPED_QUERY, {variables: {country: 'EN', language: 'US'}});
+      // @ts-expect-error — missing required caller-owned variables (country, language)
+      () => publicClient.graphql(SWAPPED_QUERY);
+    });
+
+    it('keeps list variables caller-owned with their nullability', () => {
+      const REQUIRED_LIST_QUERY = gql(`query Q($country: [CountryCode!]!) { shop { name } }`);
+      () => publicClient.graphql(REQUIRED_LIST_QUERY, {variables: {country: ['US', 'CA']}});
+      // @ts-expect-error — missing required caller-owned list (country)
+      () => publicClient.graphql(REQUIRED_LIST_QUERY);
+
+      const OPTIONAL_LIST_QUERY = gql(`query Q($language: [LanguageCode!]) { shop { name } }`);
+      () => publicClient.graphql(OPTIONAL_LIST_QUERY);
+      () => publicClient.graphql(OPTIONAL_LIST_QUERY, {variables: {language: ['EN']}});
+    });
+
+    it('reads declarations past comments and commas, not inside strings', () => {
+      const QUERY = gql(
+        `query Q($handle: String = "$language: LanguageCode",, $country: # market
+          CountryCode!, $language: String!,) @inContext(country: $country) { product(handle: $handle) { title } }`,
+      );
+      () => publicClient.graphql(QUERY, {variables: {language: 'key'}});
+      // @ts-expect-error — language is a caller-owned String here
+      () => publicClient.graphql(QUERY);
+      // @ts-expect-error — country comes from the request context
+      () => publicClient.graphql(QUERY, {variables: {language: 'key', country: 'CA'}});
+    });
+
+    it('matches the exact i18n enums for documents without source text', () => {
+      type Country = StorefrontApi.VariablesOf<typeof OPTIONAL_VARS_QUERY>['country'];
+      type TadaDoc = import('gql.tada').TadaDocumentNode<
+        {shop: {name: string}},
+        {country?: Country; language: string}
+      >;
+      const doc = null as unknown as TadaDoc;
+      () => publicClient.graphql(doc, {variables: {language: 'key'}});
+      // @ts-expect-error — language is a caller-owned String here
+      () => publicClient.graphql(doc);
+      // @ts-expect-error — country comes from the request context
+      () => publicClient.graphql(doc, {variables: {language: 'key', country: 'CA'}});
+    });
+  });
+
   describe('StorefrontApi namespace', () => {
     it('exports ResultOf', () => {
       type R = StorefrontApi.ResultOf<typeof SHOP_QUERY>;
