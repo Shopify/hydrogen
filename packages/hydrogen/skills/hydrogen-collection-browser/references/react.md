@@ -85,6 +85,12 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
 
 Keep `dataSearch` exactly aligned with the query used for the server data. Load `currencyCode` in the same query so it matches the product prices.
 
+For the single-currency loader above, include this root-level selection in `COLLECTION_QUERY`:
+
+```graphql
+shop { paymentSettings { currencyCode } }
+```
+
 ## Provider
 
 Wrap the browse UI in `CollectionProvider` and let it own filter/sort intent:
