@@ -1234,7 +1234,7 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
             );
       return { ...state, data: reconcileCartLines(state.data, lines) };
     },
-    projectPromise: (state, result, payload, addError) => {
+    projectPromise: (state, result, payload, addError, options) => {
       if (hasProjectedErrors(result)) {
         addError((current, timestampMs) =>
           projectLineErrors(current, result, [payload.lineId], timestampMs),
@@ -1245,15 +1245,21 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       const cart = cartResponseFromStandardEvent(result.cart);
       const serverLines = getLines(cart);
       const matching = serverLines.find((line) => line.id === payload.lineId);
+      // A response can return the line under another ID (a variant swap, or a canonicalized GID),
+      // so a missing line only means removal for a removal. With no overlapping work the response
+      // is the whole cart; otherwise keep the line until the scheduled revalidation replaces it.
+      if (!matching && payload.quantity > 0 && options.mergeServerCart) {
+        return { ...state, data: mergeAuthoritativeCartData(state.data, cart) };
+      }
       const previous = getLines(state.data);
-      let lines = previous.filter((line) => line.id !== payload.lineId);
+      let lines = previous;
       if (matching) {
         const prior = previous.find((line) => line.id === payload.lineId);
         lines = previous.map((line) =>
           line.id === payload.lineId ? mergeServerLine(prior, matching) : line,
         );
-      } else if (payload.quantity > 0 && previous.length === 1 && serverLines.length === 1) {
-        lines = [mergeServerLine(previous[0], serverLines[0])];
+      } else if (payload.quantity === 0) {
+        lines = previous.filter((line) => line.id !== payload.lineId);
       }
       return { ...state, data: reconcileCartLines(state.data, lines) };
     },
