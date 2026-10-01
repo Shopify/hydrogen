@@ -204,6 +204,7 @@ const colorOption = product.options.find((o) => o.name === "Color");
     data-title={product.title}
     data-vendor={product.vendor}
     data-price={product.selectedOrFirstAvailableVariant?.price.amount ?? product.priceRange.minVariantPrice.amount}
+    data-currency-code={product.selectedOrFirstAvailableVariant?.price.currencyCode ?? product.priceRange.minVariantPrice.currencyCode}
     data-variant-id={product.selectedOrFirstAvailableVariant?.id ?? product.id}
     data-variant-title={product.selectedOrFirstAvailableVariant?.title ?? product.title}
     data-sku={product.selectedOrFirstAvailableVariant?.sku ?? ""}
@@ -217,7 +218,7 @@ const colorOption = product.options.find((o) => o.name === "Color");
       const id = el.dataset.id ?? "";
       const title = el.dataset.title ?? "";
       const vendor = el.dataset.vendor ?? "";
-      const price = el.dataset.price ?? "";
+      const price = { amount: el.dataset.price ?? "", currencyCode: el.dataset.currencyCode ?? "" };
       const variantId = el.dataset.variantId ?? "";
       const variantTitle = el.dataset.variantTitle ?? "";
       const sku = el.dataset.sku || undefined;
