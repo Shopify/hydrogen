@@ -303,6 +303,14 @@ function cartActionError(cause: CartActionError["cause"], message = "Cart action
   return new Error(message, { cause });
 }
 
+function maximumExceeded(index: number) {
+  return {
+    code: "MAXIMUM_EXCEEDED",
+    field: ["lines", String(index), "quantity"],
+    message: "Only one available",
+  };
+}
+
 let mockUpdateCart: ReturnType<typeof createStandardActionsMock>;
 const mockGetCart = vi.fn();
 let store: CartStore;
@@ -4969,6 +4977,315 @@ describe("add-to-cart concurrency", () => {
 // not "do nothing": it's a fully failed mutation that needs cleanup just
 // like a rejection, plus error surfacing.
 // ---------------------------------------------------------------------------
+
+describe("pending state of a superseded single change", () => {
+  it.each([
+    [
+      "line",
+      { lines: [{ id: "line-1", quantity: 5 }] },
+      { lines: [{ id: "line-1", quantity: 3 }] },
+      serverCart(3, [{ id: "line-1", quantity: 3 }]),
+      (state: CartState) => state.pending.lines.has("line-1"),
+    ],
+    [
+      "note",
+      { note: "old draft" },
+      { note: "new confirmed" },
+      serverResult({ note: "new confirmed" }),
+      (state: CartState) => state.pending.note,
+    ],
+    [
+      "attributes",
+      { attributes: [{ key: "gift", value: "old draft" }] },
+      { attributes: [{ key: "gift", value: "new confirmed" }] },
+      serverResult({ attributes: [{ key: "gift", value: "new confirmed" }] }),
+      (state: CartState) => state.pending.attributes,
+    ],
+  ])(
+    "keeps the older %s change pending while its projection is still shown",
+    async (_kind, older, newer, newerResponse, isPending) => {
+      store.hydrate(
+        makeCartState({ lines: [makeLine({ id: "line-1", quantity: 1 })], totalQuantity: 1 }),
+      );
+      mockUpdateCart(older).catch(() => {});
+      const settled = mockUpdateCart(newer);
+      resolveUpdate(1, newerResponse);
+      await settled;
+
+      expect(isPending(store.getState())).toBe(true);
+    },
+  );
+});
+
+describe("multi-line update and remove events", () => {
+  const lineA = () => makeLine({ id: "line-a", quantity: 2 });
+  const lineB = () => makeLine({ id: "line-b", quantity: 1 });
+  const lineC = () => makeLine({ id: "line-c", quantity: 1 });
+  const lines = () =>
+    getCartLines(store.getState().data).map(({ id, quantity }) => ({ id, quantity }));
+
+  beforeEach(() => {
+    store.hydrate(makeCartState({ lines: [lineA(), lineB(), lineC()], totalQuantity: 4 }));
+  });
+
+  it.each([
+    { kind: "remove", quantity: 0, expected: [{ id: "line-c", quantity: 1 }] },
+    {
+      kind: "update",
+      quantity: 4,
+      expected: [
+        { id: "line-a", quantity: 4 },
+        { id: "line-b", quantity: 4 },
+        { id: "line-c", quantity: 1 },
+      ],
+    },
+  ])(
+    "projects a multi-line $kind and settles it from the response",
+    async ({ quantity, expected }) => {
+      const total = expected.reduce((sum, line) => sum + line.quantity, 0);
+      const change = mockUpdateCart({
+        lines: [
+          { id: "line-a", quantity },
+          { id: "line-b", quantity },
+        ],
+      });
+
+      expect(lines()).toEqual(expected);
+      expect(store.getState().data.totalQuantity).toBe(total);
+      expect([...store.getState().pending.lines].toSorted()).toEqual(["line-a", "line-b"]);
+
+      resolveUpdate(0, serverCart(total, expected));
+      await change;
+
+      expect(lines()).toEqual(expected);
+      expect(store.getState().data.cost.totalAmount.amount).toBe(String(total * 10));
+      expect(store.getState().pending.lines.size).toBe(0);
+    },
+  );
+
+  it("rolls back every line of a failed multi-line change", async () => {
+    const removal = mockUpdateCart({
+      lines: [
+        { id: "line-a", quantity: 0 },
+        { id: "line-b", quantity: 0 },
+      ],
+    });
+    removal.catch(() => {});
+    expect(getCartLines(store.getState().data)).toHaveLength(1);
+
+    rejectUpdate(0, new Error("Network down"));
+    await expect(removal).rejects.toThrow("Network down");
+
+    expect(lines()).toEqual([
+      { id: "line-a", quantity: 2 },
+      { id: "line-b", quantity: 1 },
+      { id: "line-c", quantity: 1 },
+    ]);
+    expect(store.getState().pending.lines.size).toBe(0);
+    expect(store.getState().errors.network).toContainEqual({ message: "Network down" });
+  });
+
+  it("scopes a userError to the line at its field index", async () => {
+    const update = mockUpdateCart({
+      lines: [
+        { id: "line-a", quantity: 5 },
+        { id: "line-b", quantity: 6 },
+      ],
+    });
+
+    resolveUpdate(0, {
+      ...serverCart(4, [
+        { id: "line-a", quantity: 2 },
+        { id: "line-b", quantity: 1 },
+        { id: "line-c", quantity: 1 },
+      ]),
+      userErrors: [maximumExceeded(1)],
+    });
+    await update;
+
+    expect(store.getState().errors.lines.get("line-b")?.userErrors).toEqual([maximumExceeded(1)]);
+    expect(store.getState().errors.lines.has("line-a")).toBe(false);
+    expect(getCartLines(store.getState().data).find((l) => l.id === "line-b")?.quantity).toBe(1);
+  });
+
+  it("keeps the lines and revalidates when the response returns canonical line IDs", async () => {
+    const canonical = [
+      { id: "line-a?cart=123", quantity: 4 },
+      { id: "line-b?cart=123", quantity: 4 },
+      { id: "line-c?cart=123", quantity: 1 },
+    ];
+    const refresh = createDeferred();
+    mockGetCart.mockReturnValue(refresh.promise);
+    const update = mockUpdateCart({
+      lines: [
+        { id: "line-a", quantity: 4 },
+        { id: "line-b", quantity: 4 },
+      ],
+    });
+
+    resolveUpdate(0, serverCart(9, canonical));
+    await update;
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+    expect(lines().map(({ id }) => id)).toEqual(["line-a", "line-b", "line-c"]);
+    expect(store.getState().revalidating).toBe(true);
+
+    refresh.resolve(serverCart(9, canonical));
+    await vi.waitFor(() => expect(lines()).toEqual(canonical));
+  });
+
+  describe("when a newer change supersedes one line", () => {
+    const superseded = [
+      { id: "line-a", quantity: 5 },
+      { id: "line-b", quantity: 3 },
+      { id: "line-c", quantity: 1 },
+    ];
+    const batchResponse = () =>
+      serverCart(11, [
+        { id: "line-a", quantity: 5 },
+        { id: "line-b", quantity: 5 },
+        { id: "line-c", quantity: 1 },
+      ]);
+    const newerResponse = () => serverCart(9, superseded);
+    const startBatch = (quantity: number, options?: { signal: AbortSignal }) => {
+      const batch = mockUpdateCart(
+        {
+          lines: [
+            { id: "line-a", quantity },
+            { id: "line-b", quantity },
+          ],
+        },
+        options,
+      );
+      batch.catch(() => {});
+      const newer = mockUpdateCart({ lines: [{ id: "line-b", quantity: 3 }] });
+      return { batch, newer };
+    };
+
+    it("waits for the batch without aborting it and refreshes once", async () => {
+      const external = new AbortController();
+      mockGetCart.mockResolvedValue(newerResponse());
+      const { batch, newer } = startBatch(5, { signal: external.signal });
+
+      resolveUpdate(1, newerResponse());
+      await newer;
+      expect(mockGetCart).not.toHaveBeenCalled();
+      resolveUpdate(0, batchResponse());
+      await batch;
+
+      await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+      expect(external.signal.aborted).toBe(false);
+      expect(mockGetCart).toHaveBeenCalledTimes(1);
+      expect(lines()).toEqual(superseded);
+      expect(store.getState().pending.lines.size).toBe(0);
+    });
+
+    it.each([
+      ["the batch settles first", [0, 1], ["line-b"]],
+      ["the newer change settles first", [1, 0], ["line-a"]],
+    ])(
+      "keeps each change's own lines when the refresh fails and %s",
+      async (_order, [first, second], pendingBetween) => {
+        mockGetCart.mockRejectedValue(new Error("Refresh failed"));
+        const { batch, newer } = startBatch(5);
+
+        const responses = [batchResponse(), newerResponse()];
+        resolveUpdate(first, responses[first]);
+        await nextTick();
+        expect(lines()).toEqual(superseded);
+        expect([...store.getState().pending.lines]).toEqual(pendingBetween);
+        resolveUpdate(second, responses[second]);
+        await nextTick();
+        expect(lines()).toEqual(superseded);
+        await Promise.all([batch, newer]);
+
+        await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+        expect(mockGetCart).toHaveBeenCalledTimes(1);
+        expect(lines()).toEqual(superseded);
+      },
+    );
+
+    it.each([
+      [
+        "resolves",
+        (failure: { userErrors: unknown[] }) =>
+          resolveUpdate(0, {
+            ...serverCart(4, [
+              { id: "line-a", quantity: 2 },
+              { id: "line-b", quantity: 1 },
+              { id: "line-c", quantity: 1 },
+            ]),
+            ...failure,
+          }),
+      ],
+      [
+        "is rejected",
+        (failure: { userErrors: unknown[] }) =>
+          rejectUpdate(0, cartActionError(failure as CartActionError["cause"])),
+      ],
+    ])(
+      "keeps indexed userErrors only for lines that were not superseded when the batch %s",
+      async (_outcome, settleBatch) => {
+        mockGetCart.mockReturnValue(createDeferred().promise);
+        const { batch, newer } = startBatch(500);
+
+        settleBatch({ userErrors: [maximumExceeded(0), maximumExceeded(1)] });
+        resolveUpdate(
+          1,
+          serverCart(6, [
+            { id: "line-a", quantity: 2 },
+            { id: "line-b", quantity: 3 },
+            { id: "line-c", quantity: 1 },
+          ]),
+        );
+        await Promise.allSettled([batch, newer]);
+        await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+
+        expect(lines()).toEqual([
+          { id: "line-a", quantity: 2 },
+          { id: "line-b", quantity: 3 },
+          { id: "line-c", quantity: 1 },
+        ]);
+        expect(store.getState().pending.lines.size).toBe(0);
+        expect(store.getState().errors.lines.get("line-a")?.userErrors).toEqual([
+          maximumExceeded(0),
+        ]);
+        expect(store.getState().errors.lines.has("line-b")).toBe(false);
+      },
+    );
+  });
+
+  it("keeps one line's batch errors when only another line changes later", async () => {
+    const batch = mockUpdateCart({
+      lines: [
+        { id: "line-a", quantity: 500 },
+        { id: "line-b", quantity: 5 },
+      ],
+    });
+    resolveUpdate(0, {
+      ...serverCart(7, [
+        { id: "line-a", quantity: 2 },
+        { id: "line-b", quantity: 5 },
+        { id: "line-c", quantity: 1 },
+      ]),
+      userErrors: [maximumExceeded(0)],
+    });
+    await batch;
+    expect(store.getState().errors.lines.get("line-a")?.userErrors).toHaveLength(1);
+
+    const later = mockUpdateCart({ lines: [{ id: "line-b", quantity: 3 }] });
+    resolveUpdate(
+      1,
+      serverCart(6, [
+        { id: "line-a", quantity: 2 },
+        { id: "line-b", quantity: 3 },
+        { id: "line-c", quantity: 1 },
+      ]),
+    );
+    await later;
+
+    expect(store.getState().errors.lines.get("line-a")?.userErrors).toHaveLength(1);
+  });
+});
 
 describe("cart: null resolution", () => {
   const VARIANT_123 = "gid://shopify/ProductVariant/123";

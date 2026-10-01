@@ -43,7 +43,7 @@ When overlapping mutations make response snapshots ambiguous, the store sets `st
 
 App-owned cart mutations outside Standard Actions do not emit the events the store normally observes. After such a mutation succeeds, call `CartStore.refresh()` directly or use the framework binding's `useCartActions().refresh()`. The refresh waits for active optimistic work, reconciles custom fragment fields from the configured cart endpoint, and loads the cart when none exists yet (e.g. one just created server-side). Do not call it after ordinary Hydrogen cart forms; their Standard Actions events already synchronize the store. For cart metafields specifically, see the `hydrogen-cart-metafields` skill.
 
-The store supersedes keyed mutations for the same line, discount batch, note, or complete attribute list. Relative additions remain independent so every submitted quantity reaches the server; their projections are reconciled together without disabling controls.
+The store supersedes keyed mutations for the same line, discount batch, note, or complete attribute list. Relative additions remain independent so every submitted quantity reaches the server; their projections are reconciled together without disabling controls. A `Shopify.actions.updateCart` call that updates or removes several lines is keyed per line: each line is projected, pending and rolled back on its own, and a newer change to one of those lines supersedes only that line.
 
 ## Stable selectors
 
