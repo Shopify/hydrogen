@@ -381,6 +381,12 @@ function PriceRangeFacet({
     };
   }, []);
 
+  function submitAfterTyping(event: React.ChangeEvent<HTMLInputElement>) {
+    if (timer.current) clearTimeout(timer.current);
+    const form = event.currentTarget.form;
+    timer.current = setTimeout(() => form?.requestSubmit(), 350);
+  }
+
   return (
     <div className="min-w-0 pt-2">
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
@@ -402,11 +408,7 @@ function PriceRangeFacet({
             placeholder="Min"
             defaultValue={min}
             className="bg-surface text-on-surface w-full min-w-0 flex-1 rounded-none border-0 p-0 text-sm focus-visible:outline-none"
-            onChange={(event) => {
-              if (timer.current) clearTimeout(timer.current);
-              const form = event.currentTarget.form;
-              timer.current = setTimeout(() => form?.requestSubmit(), 350);
-            }}
+            onChange={submitAfterTyping}
           />
         </label>
         <span className="text-on-surface-secondary text-center text-sm">to</span>
@@ -428,11 +430,7 @@ function PriceRangeFacet({
             placeholder="Max"
             defaultValue={max}
             className="bg-surface text-on-surface w-full min-w-0 flex-1 rounded-none border-0 p-0 text-sm focus-visible:outline-none"
-            onChange={(event) => {
-              if (timer.current) clearTimeout(timer.current);
-              const form = event.currentTarget.form;
-              timer.current = setTimeout(() => form?.requestSubmit(), 350);
-            }}
+            onChange={submitAfterTyping}
           />
         </label>
       </div>
