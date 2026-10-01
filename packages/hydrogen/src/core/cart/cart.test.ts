@@ -5287,6 +5287,174 @@ describe("multi-line update and remove events", () => {
   });
 });
 
+describe("changes during the first cart load", () => {
+  const existing = { id: "line-existing", quantity: 1 };
+  const added = { id: "line-added", quantity: 1 };
+  const VARIANT_ADDED = "gid://shopify/ProductVariant/2";
+  const loadedCart = () => makeCartState({ totalQuantity: 1, lines: [makeLine(existing)] });
+  const sortedLineIds = () =>
+    getCartLines(store.getState().data)
+      .map((line) => line.id)
+      .toSorted();
+  const codeAdd = () =>
+    mockUpdateCart(
+      { lines: [{ merchandiseId: VARIANT_ADDED, quantity: 1 }] },
+      withProducts(productDetail(VARIANT_ADDED)),
+    );
+
+  function addedServerCart() {
+    const cart = serverCart(2, [existing, added]).cart;
+    return {
+      cart: {
+        ...cart,
+        lines: cart.lines.map((line) =>
+          line.id === added.id ? { ...line, merchandise: { id: VARIANT_ADDED } } : line,
+        ),
+      },
+    };
+  }
+
+  async function connectWithPendingLoad() {
+    store.destroy();
+    const firstLoad = createDeferred<{ cart: CartData | null }>();
+    mockGetCart.mockReset();
+    mockGetCart.mockReturnValueOnce(firstLoad.promise);
+    mockGetCart.mockResolvedValue({
+      cart: makeCartState({ totalQuantity: 2, lines: [makeLine(existing), makeLine(added)] }),
+    });
+    store = createCartStore();
+    store.connect();
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+    return firstLoad;
+  }
+
+  it.each([
+    ["a code-driven add", codeAdd],
+    [
+      "a form add",
+      () =>
+        store.handleFormSubmit(
+          submitForm({ merchandiseId: VARIANT_ADDED, quantity: "1" }, "intent", "add"),
+          { products: [productDetail(VARIANT_ADDED)] },
+        ),
+    ],
+  ])("revalidates after %s that lands while the first load is in flight", async (_label, add) => {
+    const firstLoad = await connectWithPendingLoad();
+
+    const change = add();
+    await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(1));
+    firstLoad.resolve({ cart: loadedCart() });
+    resolveUpdate(0, addedServerCart());
+    await change;
+
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+    expect(sortedLineIds()).toEqual(["line-added", "line-existing"]);
+    expect(store.getState().data.totalQuantity).toBe(2);
+    expect(store.getState().loading).toBe(false);
+  });
+
+  it("restores the loaded cart after a change that fails while the first load is in flight", async () => {
+    const firstLoad = await connectWithPendingLoad();
+    mockGetCart.mockResolvedValue({ cart: loadedCart() });
+
+    const add = codeAdd();
+    add.catch(() => {});
+    firstLoad.resolve({ cart: loadedCart() });
+    rejectUpdate(0, new Error("Network down"));
+    await expect(add).rejects.toThrow("Network down");
+
+    await vi.waitFor(() => expect(sortedLineIds()).toEqual(["line-existing"]));
+    expect(mockGetCart).toHaveBeenCalledTimes(2);
+    expect(store.getState().loading).toBe(false);
+  });
+
+  describe("across destroy() and connect()", () => {
+    it.each([
+      ["an add", codeAdd],
+      [
+        "a multi-line change",
+        () =>
+          mockUpdateCart({
+            lines: [
+              { id: existing.id, quantity: 1 },
+              { id: added.id, quantity: 1 },
+            ],
+          }),
+      ],
+    ])(
+      "recovers the cart after %s that outlives teardown and reconnect settles",
+      async (_label, change) => {
+        const firstLoad = await connectWithPendingLoad();
+        const after = makeCartState({
+          totalQuantity: 2,
+          lines: [makeLine(existing), makeLine(added)],
+        });
+        let changeSettled = false;
+        mockGetCart.mockImplementation(() =>
+          Promise.resolve({ cart: changeSettled ? after : loadedCart() }),
+        );
+
+        const mutation = change();
+        store.destroy();
+        store.connect();
+        firstLoad.resolve({ cart: loadedCart() });
+        await nextTick();
+        await nextTick();
+        expect(mockGetCart).toHaveBeenCalledTimes(1);
+        expect(store.getState().revalidating).toBe(true);
+
+        changeSettled = true;
+        resolveUpdate(0, addedServerCart());
+        await mutation;
+
+        await vi.waitFor(() => expect(sortedLineIds()).toEqual(["line-added", "line-existing"]));
+        await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+        expect(mockGetCart).toHaveBeenCalledTimes(2);
+        expect(store.getState().loading).toBe(false);
+      },
+    );
+
+    it("recovers the cart when the store reconnects while the replacement refresh is pending", async () => {
+      const firstLoad = await connectWithPendingLoad();
+      const staleRefresh = createDeferred<{ cart: CartData | null }>();
+      mockGetCart.mockReturnValueOnce(staleRefresh.promise);
+
+      const add = codeAdd();
+      firstLoad.resolve({ cart: loadedCart() });
+      resolveUpdate(0, addedServerCart());
+      await add;
+      await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(2));
+
+      store.destroy();
+      store.connect();
+      await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(3));
+      await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+      expect(sortedLineIds()).toEqual(["line-added", "line-existing"]);
+
+      staleRefresh.resolve({ cart: loadedCart() });
+      await nextTick();
+      await nextTick();
+      expect(sortedLineIds()).toEqual(["line-added", "line-existing"]);
+    });
+
+    it("does not fetch or apply obsolete results while the store stays destroyed", async () => {
+      const firstLoad = await connectWithPendingLoad();
+
+      const add = codeAdd();
+      store.destroy();
+      firstLoad.resolve({ cart: loadedCart() });
+      resolveUpdate(0, addedServerCart());
+      await add;
+      await nextTick();
+      await nextTick();
+
+      expect(mockGetCart).toHaveBeenCalledTimes(1);
+      expect(getCartLines(store.getState().data)).toEqual([]);
+    });
+  });
+});
+
 describe("cart: null resolution", () => {
   const VARIANT_123 = "gid://shopify/ProductVariant/123";
   const VARIANT_456 = "gid://shopify/ProductVariant/456";
