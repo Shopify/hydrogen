@@ -218,14 +218,14 @@ function PriceRangeInput({
       <PriceInput
         name="filter.v.price.gte"
         defaultValue={price?.min}
-        label={`Minimum price (${currencyCode})`}
+        label={`Minimum price in ${currencyCode}`}
         symbol={symbol}
         onChange={submitAfterTyping}
       />
       <PriceInput
         name="filter.v.price.lte"
         defaultValue={price?.max}
-        label={`Maximum price (${currencyCode})`}
+        label={`Maximum price in ${currencyCode}`}
         symbol={symbol}
         onChange={submitAfterTyping}
       />
