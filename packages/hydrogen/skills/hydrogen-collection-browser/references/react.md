@@ -25,6 +25,7 @@ import {
 } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
 import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
+import { useEffect, useRef } from "react";
 ```
 
 Use `getSortByValue(...)` for option values so the `sort_by` query param round-trips through `parseCollectionParams()`:
@@ -190,11 +191,28 @@ function PriceRangeInput({
   activeFilters: ProductFilter[];
   currencyCode: MoneyV2["currencyCode"];
 }) {
+  // One timer for both inputs, so editing min then max submits once.
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const price = activeFilters.find((filter) => filter.price)?.price;
   const symbol = formatMoney(
     { amount: "0", currencyCode },
     { locale: LOCALE },
   ).currencyNarrowSymbol;
+
+  // Cancel a pending submission when the filter subtree remounts or unmounts.
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+
+  function submitAfterTyping(event: React.ChangeEvent<HTMLInputElement>) {
+    if (timer.current) clearTimeout(timer.current);
+    const form = event.currentTarget.form;
+    timer.current = setTimeout(() => form?.requestSubmit(), 350);
+  }
+
   return (
     <>
       <PriceInput
@@ -202,12 +220,14 @@ function PriceRangeInput({
         defaultValue={price?.min}
         label={`Minimum price (${currencyCode})`}
         symbol={symbol}
+        onChange={submitAfterTyping}
       />
       <PriceInput
         name="filter.v.price.lte"
         defaultValue={price?.max}
         label={`Maximum price (${currencyCode})`}
         symbol={symbol}
+        onChange={submitAfterTyping}
       />
     </>
   );
@@ -218,13 +238,14 @@ function PriceInput({
   defaultValue,
   label,
   symbol,
+  onChange,
 }: {
   name: string;
   defaultValue?: number;
   label: string;
   symbol: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
-  const initialValue = defaultValue == null ? "" : String(defaultValue);
   return (
     <span className="price-input">
       <span aria-hidden="true">{symbol}</span>
@@ -235,17 +256,7 @@ function PriceInput({
         aria-label={label}
         min="0"
         step="any"
-        onBlur={(event) => {
-          if (event.currentTarget.value !== initialValue) {
-            event.currentTarget.form?.requestSubmit();
-          }
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            event.currentTarget.blur();
-          }
-        }}
+        onChange={onChange}
       />
     </span>
   );
