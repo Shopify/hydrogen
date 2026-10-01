@@ -9,11 +9,12 @@ export async function setupTemplate(options: InitOptions) {
   const controller = new AbortController();
 
   try {
-    const template = options.template;
+    const {template, ...starterOptions} = options;
 
-    return template
+    // `skeleton` is the starter bundled with the CLI, the same one used without a template
+    return template && template !== 'skeleton'
       ? await setupRemoteTemplate({...options, template}, controller)
-      : await setupLocalStarterTemplate(options, controller);
+      : await setupLocalStarterTemplate(starterOptions, controller);
   } catch (error) {
     controller.abort();
     throw error;

@@ -1,16 +1,14 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController, AbortSignal} from '@shopify/cli-kit/node/abort';
-import {copyFile, fileExists, writeFile} from '@shopify/cli-kit/node/fs';
+import {copyFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderInfo, renderTasks} from '@shopify/cli-kit/node/ui';
 import {downloadExternalRepo} from '../template-downloader.js';
-import {getStarterDir} from '../build.js';
 import {getCliCommand} from '../shell.js';
 import {
   commitAll,
   createAbortHandler,
   createInitialCommit,
-  getDotEnvContent,
   handleDependencies,
   handleLanguage,
   handleProjectLocation,
@@ -48,7 +46,7 @@ export async function setupRemoteTemplate(
   // Start downloading templates after we have project location.
   const backgroundDownloadPromise = appTemplate.includes('/')
     ? getExternalTemplate(appTemplate, controller.signal).catch(abort)
-    : getMonorepoTemplate(appTemplate).catch(abort);
+    : rejectUnknownTemplate(appTemplate).catch(abort);
 
   const downloaded = await backgroundDownloadPromise;
   if (controller.signal.aborted) return;
@@ -59,19 +57,10 @@ export async function setupRemoteTemplate(
       // do not continue if it's already aborted
       if (controller.signal.aborted) return;
 
-      const {sourcePath, isBundledSkeleton} = downloaded;
+      const {sourcePath} = downloaded;
 
       // Always copy the entire template/example
       await copyFile(sourcePath, project.directory);
-
-      if (isBundledSkeleton) {
-        // npm leaves the skeleton's .env out of the published package,
-        // so write the same one as the local starter flow.
-        await writeFile(
-          joinPath(project.directory, '.env'),
-          getDotEnvContent(await getCliCommand(), {mockShop: true}),
-        );
-      }
     })
     .catch(abort);
 
@@ -106,21 +95,18 @@ export async function setupRemoteTemplate(
 
   const tasks = [
     {
+      title: 'Downloading template',
+      task: async () => {
+        await backgroundDownloadPromise;
+      },
+    },
+    {
       title: 'Setting up project',
       task: async () => {
         await backgroundWorkPromise;
       },
     },
   ];
-
-  if (!downloaded.isBundledSkeleton) {
-    tasks.unshift({
-      title: 'Downloading template',
-      task: async () => {
-        await backgroundDownloadPromise;
-      },
-    });
-  }
 
   if (shouldInstallDeps) {
     tasks.push({
@@ -163,7 +149,6 @@ export async function setupRemoteTemplate(
 
 type DownloadedTemplate = {
   sourcePath: string;
-  isBundledSkeleton?: boolean;
 };
 
 async function getExternalTemplate(
@@ -174,13 +159,7 @@ async function getExternalTemplate(
   return {sourcePath: templateDir};
 }
 
-async function getMonorepoTemplate(
-  appTemplate: string,
-): Promise<DownloadedTemplate> {
-  if (appTemplate === 'skeleton') {
-    return {sourcePath: await getStarterDir(), isBundledSkeleton: true};
-  }
-
+async function rejectUnknownTemplate(appTemplate: string): Promise<never> {
   throw new AbortError(
     `Unknown value in \`--template\` flag "${appTemplate}".\nSkip the flag or provide the name of a template or a URL to a git repository.`,
     {

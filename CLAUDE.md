@@ -73,7 +73,7 @@ When developers run `npm create @shopify/hydrogen@latest`:
    - This is why `create-hydrogen` must be bumped when skeleton changes
 
 2. **`--template` flag**:
-   - `--template skeleton` copies the same bundled skeleton, so it doesn't need the network either
+   - `--template skeleton` is the same as leaving the flag out
    - `--template demo-store` or a GitHub repository URL clones that repository, for community templates and alternative starters
 
 <details>

@@ -27,7 +27,6 @@ import {
   renderProjectReady,
   commitAll,
   generateProjectEntries,
-  getDotEnvContent,
 } from './common.js';
 import {createStorefront} from '../graphql/admin/create-storefront.js';
 import {waitForJob} from '../graphql/admin/fetch-job.js';
@@ -137,6 +136,11 @@ export async function setupLocalStarterTemplate(
 
   const cliCommand = await getCliCommand();
 
+  const envLeadingComment =
+    '# The variables added in this file are only available locally in MiniOxygen.\n' +
+    `# Run \`${cliCommand} link\` to also inject environment variables from your storefront,\n` +
+    `# or \`${cliCommand} env pull\` to populate this file.`;
+
   backgroundWorkPromise = backgroundWorkPromise.then(() => {
     const promises: Array<Promise<any>> = [
       replaceFileContent(
@@ -163,10 +167,7 @@ export async function setupLocalStarterTemplate(
         // Save linked storefront in project
         setUserAccount(project.directory, storefrontInfo),
         // Write empty dotenv file to fallback to remote Oxygen variables
-        writeFile(
-          joinPath(project.directory, '.env'),
-          getDotEnvContent(cliCommand, {mockShop: false}),
-        ),
+        writeFile(joinPath(project.directory, '.env'), envLeadingComment),
       );
 
       if (storefrontInfo.id) {
@@ -183,7 +184,12 @@ export async function setupLocalStarterTemplate(
         // Set required env vars
         writeFile(
           joinPath(project.directory, '.env'),
-          getDotEnvContent(cliCommand, {mockShop: true}),
+          envLeadingComment +
+            '\n' +
+            [['SESSION_SECRET', 'foobar']]
+              .map(([key, value]) => `${key}="${value}"`)
+              .join('\n') +
+            '\n',
         ),
       );
     }
