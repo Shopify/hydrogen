@@ -264,6 +264,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
         queryText,
         opts.cache,
         opts[SHOULD_CACHE_RESULT],
+        timeoutInMs > 0 ? timeoutInMs : DEFAULT_TIMEOUT_IN_MS,
       );
       const response = await (resolvedFetch as ResolvedStorefrontFetch)(apiUrl, init, cacheOptions);
 
@@ -376,6 +377,7 @@ function createStorefrontCacheOptions(
   queryText: string,
   strategy: CachingStrategy | undefined,
   shouldCacheResult: ShouldCacheResult | undefined,
+  backgroundTimeoutInMs: number,
 ): FetchCacheOptions | undefined {
   if (!strategy) return undefined;
 
@@ -396,6 +398,10 @@ function createStorefrontCacheOptions(
 
       return shouldCacheResult?.(body) ?? true;
     },
+    // A refresh outlives the request that triggered it, so request and caller
+    // aborts must not cancel it. It still needs a deadline, even when the caller
+    // disabled the client timeout to own the foreground one.
+    backgroundSignal: () => AbortSignal.timeout(backgroundTimeoutInMs),
   };
 }
 

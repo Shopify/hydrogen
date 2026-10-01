@@ -311,7 +311,11 @@ describe("createRunWithCache", () => {
     firstRevalidation.resolve({ data: { value: "second" }, shouldCache: true });
     secondRevalidation.resolve({ data: { value: "second" }, shouldCache: true });
     await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
-    expect(run).toHaveBeenCalledTimes(3);
+    expect(run.mock.calls).toEqual([
+      [{ background: false }],
+      [{ background: true }],
+      [{ background: true }],
+    ]);
 
     await expect(runWithCache({ key: "stale", strategy }, run)).resolves.toEqual({
       data: { value: "second" },
