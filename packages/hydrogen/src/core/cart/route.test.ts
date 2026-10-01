@@ -916,6 +916,24 @@ describe("createCartServerHandlers", () => {
       });
     });
 
+    it("returns 400 without calling the Storefront API for a body that combines mutation kinds", async () => {
+      const result = await handleCartRequest(
+        createJsonPostRequest(
+          {
+            lines: [{ id: "gid://shopify/CartLine/1", quantity: 2 }],
+            attributes: [{ key: "gift", value: "yes" }],
+          },
+          "cart=123",
+        ),
+        defaultConfig,
+      );
+      assert(result, "expected a response");
+      expect(result.status).toBe(400);
+      const body = await result.json();
+      expect(body.error).toMatchObject({ code: "invalid_cart_request" });
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
     it("returns 200 with userErrors from SFAPI", async () => {
       mockFetch.mockResolvedValueOnce(
         mockGqlResponse({

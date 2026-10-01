@@ -71,7 +71,8 @@ class CartActionError extends Error {
  * should fall back to the cart cookie.
  *
  * @throws If the content-type is unsupported, the intent is unrecognized,
- * or required fields are missing.
+ * required fields are missing, or a JSON body combines more than one of
+ * `lines`, `discountCodes`, `attributes` and `note`.
  *
  * @example
  * ```ts
@@ -107,9 +108,19 @@ export async function parseCartRequest(request: Request): Promise<ParsedCartRequ
 
 // --- JSON parsing ---
 
+const JSON_MUTATION_FIELDS = ["lines", "discountCodes", "attributes", "note"] as const;
+
 function parseJsonBody(body: unknown): ParsedCartRequest {
   assertObject(body);
   const cartId = typeof body.cartId === "string" ? normalizeCartId(body.cartId) : null;
+
+  // Each request runs one Storefront API mutation, so any other field would be silently dropped.
+  const fields = JSON_MUTATION_FIELDS.filter((field) => body[field] !== undefined);
+  if (fields.length > 1) {
+    throw new CartActionError(
+      `Request body must contain only one of "lines", "discountCodes", "attributes", or "note", got ${fields.join(", ")}.`,
+    );
+  }
 
   if ("note" in body && typeof body.note === "string") {
     return { action: { intent: "note-update", note: body.note }, cartId };
