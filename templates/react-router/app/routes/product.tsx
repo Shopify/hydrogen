@@ -233,7 +233,7 @@ function ProductViewedTracker({ product }: { product: ProductData }) {
         {
           id: product.id,
           title: product.title,
-          price: selectedVariant?.price.amount ?? product.priceRange.minVariantPrice.amount,
+          price: selectedVariant?.price ?? product.priceRange.minVariantPrice,
           vendor: product.vendor ?? "",
           variantId: selectedVariant?.id ?? product.id,
           variantTitle: selectedVariant?.title ?? product.title,
