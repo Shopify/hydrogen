@@ -110,21 +110,61 @@ export type ShopifyRouteHandler<
  */
 export type ShopifyRouteHandlerGroup = Record<string, ShopifyRouteHandler>;
 
-/** The request, its context and session, the Storefront API client, your route templates, and your handler groups. */
-export interface HydrogenRoutesOptions extends ShopifyRouteHandlerContext {
+type ShopifyRouteHandlerGroups = readonly ShopifyRouteHandlerGroup[];
+
+type HandlerContext<THandler> = THandler extends (context: infer TContext) => unknown
+  ? TContext
+  : never;
+
+// Matches the router's `Object.values(group)`, which skips symbol keys.
+type RouteHandlerContext<TGroup> = TGroup extends unknown
+  ? HandlerContext<TGroup[Extract<keyof TGroup, string | number>]>
+  : never;
+
+// An optional `sessionManager` still counts: the router cannot tell which
+// handlers tolerate a missing session, so it never passes `undefined`.
+type RequiresSessionManager<TContext> = TContext extends unknown
+  ? "sessionManager" extends keyof TContext
+    ? true
+    : false
+  : never;
+
+// Each handler declares what it needs through its context parameter, so
+// `sessionManager` is only required when some registered handler reads it.
+type SessionManagerOption<THandlers extends ShopifyRouteHandlerGroups | undefined> =
+  true extends RequiresSessionManager<RouteHandlerContext<NonNullable<THandlers>[number]>>
+    ? { sessionManager: ShopifyRouteSessionManager }
+    : { sessionManager?: ShopifyRouteSessionManager };
+
+type HydrogenRoutesBaseOptions = Omit<ShopifyRouteHandlerContext, "sessionManager"> & {
   /**
    * Your app's route templates. Hydrogen redirects Liquid-style `?variant=` URLs on your product paths and on Shopify's default product paths.
    */
   routeTemplates?: ShopifyRouteTemplates;
-  /** The handler groups for your app's custom endpoints. */
-  handlers?: readonly ShopifyRouteHandlerGroup[];
-}
+};
 
-export type HydrogenRouteHandler<TExtraOptions extends object = object> = (
-  options: HydrogenRoutesOptions & TExtraOptions,
+/** The request, its context, the Storefront API client, your route templates, your handler groups, and the session when a handler needs it. */
+export type HydrogenRoutesOptions<
+  THandlers extends ShopifyRouteHandlerGroups | undefined = ShopifyRouteHandlerGroups,
+> = HydrogenRoutesBaseOptions & {
+  /** The handler groups for your app's custom endpoints. */
+  handlers?: THandlers;
+} & SessionManagerOption<THandlers>;
+
+export type HydrogenRouteHandler<TExtraOptions extends object = object> = <
+  // `undefined` is included so an explicit `handlers: undefined` infers as no handlers.
+  THandlers extends ShopifyRouteHandlerGroups | undefined = readonly [],
+>(
+  options: HydrogenRoutesOptions<THandlers> & TExtraOptions,
 ) => null | Promise<Response>;
+
+/** Options as interceptors see them, where `sessionManager` may be absent. */
+export type HydrogenRouteInterceptorOptions = HydrogenRoutesBaseOptions & {
+  sessionManager?: ShopifyRouteSessionManager;
+  handlers?: ShopifyRouteHandlerGroups;
+};
 
 export type HydrogenRouteInterceptor<TExtraOptions extends object = object> = (
   url: URL,
-  ...args: Parameters<HydrogenRouteHandler<TExtraOptions>>
-) => ReturnType<HydrogenRouteHandler<TExtraOptions>>;
+  options: HydrogenRouteInterceptorOptions & TExtraOptions,
+) => null | Promise<Response>;
