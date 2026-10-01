@@ -7,11 +7,10 @@ import {getSkeletonNodeModules, getSkeletonSourceDir} from '../build.js';
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
 vi.mock('../template-downloader.js', async () => ({
-  downloadExternalRepo: vi.fn(() =>
+  downloadExternalRepo: () =>
     Promise.resolve({
       templateDir: getSkeletonSourceDir(),
     }),
-  ),
 }));
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
