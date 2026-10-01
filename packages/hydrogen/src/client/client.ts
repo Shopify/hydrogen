@@ -23,6 +23,7 @@ import {
 } from "../core/headers";
 import type { I18nConfig, ShopifyRequestContext } from "../core/request-context";
 import { normalizeStoreDomain } from "../core/url";
+import { combineAbortSignals } from "../core/utils/abort-signal";
 import type { AnyStorefrontQueryString } from "../graphql";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";
 import type {
@@ -248,13 +249,15 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       timeoutSignal = AbortSignal.timeout(timeoutInMs);
       externalSignals.push(timeoutSignal);
     }
+    const combinedSignal =
+      externalSignals.length > 0 ? combineAbortSignals(externalSignals) : undefined;
 
     try {
       const init: PlainRequestInit = {
         method: "POST",
         headers: new Headers(requestHeaders),
         body: JSON.stringify({ query: queryText, variables }),
-        signal: externalSignals.length > 0 ? AbortSignal.any(externalSignals) : undefined,
+        signal: combinedSignal?.signal,
       };
 
       const cacheOptions = createStorefrontCacheOptions(
@@ -300,6 +303,8 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
         throw error;
       }
       throw new StorefrontApiError("SFAPI request failed", { cause: error });
+    } finally {
+      combinedSignal?.dispose();
     }
 
     let json: unknown;

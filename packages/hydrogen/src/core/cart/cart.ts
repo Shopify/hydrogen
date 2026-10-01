@@ -23,6 +23,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts/index";
+import { type CombinedAbortSignal, combineAbortSignals } from "../utils/abort-signal";
 import { getCartAttributeFormEntries } from "./form";
 import { DEFAULT_MINIMUM_QUANTITY, sanitizeQuantity } from "./quantity";
 import type {
@@ -1733,13 +1734,13 @@ function reserveTransaction<TType extends TransactionType>(
 function createTransactionSignal(
   store: CartStoreContext,
   reservation: TransactionReservation,
-): AbortSignal {
+): CombinedAbortSignal {
   const signals = [
     store.lifecycleController.signal,
     AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS),
   ];
   if (reservation.owner) signals.push(reservation.owner.controller.signal);
-  return AbortSignal.any(signals);
+  return combineAbortSignals(signals);
 }
 
 async function dispatchTransaction<TType extends TransactionType>(
@@ -1763,7 +1764,7 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   if (generation !== store.generation) return;
   const reservation = reserveTransaction(store, type, payload);
   store.reservation = reservation;
-  const signal = createTransactionSignal(store, reservation);
+  const { signal, dispose: disposeSignal } = createTransactionSignal(store, reservation);
   const eventToken = createTransactionEventToken();
   // Standard Events can arrive asynchronously, so the reservation keeps signal ownership alive
   // until the correlated event consumes it.
@@ -1772,6 +1773,9 @@ async function dispatchTransactionNow<TType extends TransactionType>(
 
   try {
     promise = getTransactionDefinition(type).transport(payload, signal, correlatedUpdateCart);
+  } catch (error) {
+    disposeSignal();
+    throw error;
   } finally {
     store.reservation = null;
   }
@@ -1786,6 +1790,8 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   } catch (error) {
     if (isAbortError(error)) return;
     throw error;
+  } finally {
+    disposeSignal();
   }
 }
 
@@ -1870,7 +1876,7 @@ async function dispatchInitialCartAdd(
   const gate = store.identityTransportGate;
   const deferred = createDeferredCartMutation();
   const reservation = reserveTransaction(store, "add_to_cart", payload);
-  const signal = createTransactionSignal(store, reservation);
+  const { signal, dispose: disposeSignal } = createTransactionSignal(store, reservation);
   const queued = {
     deferred,
     generation: store.generation,
@@ -1897,6 +1903,8 @@ async function dispatchInitialCartAdd(
   } catch (error) {
     if (isAbortError(error)) return;
     throw error;
+  } finally {
+    disposeSignal();
   }
 }
 
@@ -2438,15 +2446,28 @@ async function postCartUpdateToEndpoint(
   options?: UpdateCartOptions,
 ): Promise<UpdateCartResult> {
   const timeoutSignal = AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS);
-  const signal = options?.signal ? AbortSignal.any([options.signal, timeoutSignal]) : timeoutSignal;
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload),
-    signal,
-  });
-  if (!response.ok) throw new CartNetworkError(response.status);
-  return response.json();
+  const combined = options?.signal
+    ? combineAbortSignals([options.signal, timeoutSignal])
+    : undefined;
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: combined?.signal ?? timeoutSignal,
+    });
+    if (!response.ok) throw discardCartErrorResponse(response);
+    return await response.json();
+  } finally {
+    combined?.dispose();
+  }
+}
+
+// The caller stops listening to its abort signals once this throws, so the unread
+// body must be cancelled here or it could keep streaming without a deadline.
+function discardCartErrorResponse(response: Response): CartNetworkError {
+  void response.body?.cancel().catch(() => {});
+  return new CartNetworkError(response.status);
 }
 
 function configureUpdateCartOnce(actions: ShopifyStandardActions): void {
@@ -2515,13 +2536,25 @@ async function fetchCart(
   callerSignal?: AbortSignal,
 ): Promise<{ cart: CartResponse | null }> {
   const timeoutSignal = AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS);
-  const signal = callerSignal ? AbortSignal.any([callerSignal, timeoutSignal]) : timeoutSignal;
+  if (!callerSignal) return fetchCartWithSignal(cartId, timeoutSignal);
+  const { signal, dispose } = combineAbortSignals([callerSignal, timeoutSignal]);
+  try {
+    return await fetchCartWithSignal(cartId, signal);
+  } finally {
+    dispose();
+  }
+}
+
+async function fetchCartWithSignal(
+  cartId: string | null | undefined,
+  signal: AbortSignal,
+): Promise<{ cart: CartResponse | null }> {
   if (configuredCartEndpoint) {
     const response = await fetch(configuredCartEndpoint, {
       cache: "no-store",
       signal,
     });
-    if (!response.ok) throw new CartNetworkError(response.status);
+    if (!response.ok) throw discardCartErrorResponse(response);
     const result = (await response.json()) as { cart: CartResponse | null };
     return { cart: result.cart };
   }
