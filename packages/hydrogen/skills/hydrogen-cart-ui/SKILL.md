@@ -4,8 +4,9 @@ description: >
   Behavioral guide for building cart UI with @shopify/hydrogen: line items,
   quantity and remove controls, optimistic updates, discount, note, and cart
   attribute inputs, and the full-page /cart fallback. Use when writing,
-  modifying, or reviewing cart line-item UI, quantity/remove controls, or cart
-  mutation forms. Framework agnostic.
+  modifying, or reviewing cart line-item UI, quantity/remove controls, cart
+  mutation forms, or code that changes the cart without a form. Framework
+  agnostic.
 ---
 
 # Cart Primitive
@@ -28,6 +29,10 @@ When creating a full cart page, use the app's existing route convention when pre
 
 **The native no-JS add-to-cart POST must set the cart cookie server-side.** With scripting off, the add-to-cart `<form method="post">` submits natively and the cart server handler must respond with the cart cookie so the next `/cart` request server-renders the seeded cart — not only service the hydrated `fetch`. See the `hydrogen-request-handlers` skill for the endpoint contract.
 
+## Prerequisites
+
+The store sends cart changes through Shopify's Standard Actions runtime (`window.Shopify.actions`) and listens for its events. Render `ShopifyScripts` once in the document head. When the app deliberately skips Shopify's other scripts, include only `<script type="module" src="https://cdn.shopify.com/storefront/standard-actions.js"></script>`. Without the runtime, cart actions reject with "Standard Actions not available".
+
 ## How the store works
 
 The store holds a `CartState` and notifies subscribers when it changes. `state.readyPromise` is present while an applicable full-cart load is pending and resolves after the resulting state is published. Mutations flow through Shopify Standard Actions — the store listens for `shopify:cart:lines-update`, `shopify:cart:discount-update`, `shopify:cart:note-update`, and `shopify:cart:attributes-update` DOM events. Each event carries a `promise` that resolves with the server response.
@@ -46,6 +51,20 @@ App-owned cart mutations outside Standard Actions do not emit the events the sto
 The store supersedes keyed mutations for the same line, discount batch, note, or complete attribute list. Relative additions remain independent so every submitted quantity reaches the server; their projections are reconciled together without disabling controls.
 
 The cart store combines its lifecycle, timeout, and caller signals with `AbortSignal.any`, which Safari added in 17.4. The store already requires Safari 16 for `toSorted`, so Safari 16.0 through 17.3 is the gap. To keep add to cart working there, load an `AbortSignal.any` polyfill in the browser bundle before the store is created.
+
+## Code-driven cart changes
+
+Some changes have no form: a free gift added when the cart crosses a threshold, removing a line that became unavailable, an attribute written by a script. Send them with `window.Shopify.actions.updateCart(payload, options)`. The store observes the events it dispatches, so these changes get the same optimistic projection, pending state and rollback as form submissions. Do not hand-roll `fetch` calls to the cart route.
+
+- **Wait for the store.** Call `updateCart` only after both of these hold:
+  - `window.Shopify.actions.updateCart.isDefault()` returns `false`, which happens once a connected cart store has configured it. Before that, Shopify's default handler runs instead of the app's cart route.
+  - The initial cart load has finished: `state.loading` is `false` and `state.readyPromise` is absent (or await it). A change made during that load can hide the shopper's other lines.
+- **One kind of change per call.** Send `lines`, `discountCodes`, `attributes` or `note`, not several. The cart route rejects a combined call and the store rolls back its projections.
+- **Lines.** `{ merchandiseId, quantity }` adds, `{ id, quantity }` updates, `{ id, quantity: 0 }` removes, and `{ id, merchandiseId, quantity }` swaps the line to another variant. Only additions batch: send several adds in one call if needed, but send each update, removal or swap as its own call with one line. The store does not project a call that updates or removes several lines. A swap projects only the quantity; the new variant appears when Shopify responds, possibly under a new line ID, so don't hold on to the old one.
+- **Previews for added lines.** Pass `{ event: { detail: { products: [{ id: merchandiseId, price, ...merchandise }] } } }` so a new line shows before Shopify responds. Events do not carry line attributes or selling plans, so the projected line does not show them.
+- **Rules that react to the cart.** Evaluate them on settled state only (`loading` false, no pending entries, `revalidating` false), and do not start another change while your own is in flight. Otherwise the rule reacts to its own projection and can loop.
+- **Several attribute writers.** `attributes` replaces the whole list. Build each write from the latest list you sent, falling back to `state.data.attributes` when nothing is in flight, so writers in the same tick keep each other's keys.
+- **Analytics.** `trackCartAnalytics` reports every confirmed change, including code-driven ones. Storefronts that keep system changes out of analytics must track shopper changes themselves.
 
 ## Stable selectors
 
@@ -214,6 +233,10 @@ Errors survive unrelated cart work and clear when a new mutation begins for the 
 ### Out-of-band mutations
 
 31. **Refresh custom data** — After an app-owned cart mutation succeeds, request a cart refresh. Every cart consumer receives the updated custom fragment data, `revalidating` represents the refresh, and a refresh failure preserves the confirmed cart while appearing in `errors.network`.
+
+### Code-driven changes
+
+32. **Rule on settled state** — A threshold rule that adds a line runs once per qualifying settled cart, never before the initial load finishes or on its own pending projection.
 
 ---
 
