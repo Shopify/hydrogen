@@ -136,6 +136,13 @@ test.describe("Delivery Addresses", () => {
   });
 
   test.describe("Delete", () => {
+    test("deletes an address with an empty required field", async ({ addresses }) => {
+      const lastForm = addresses.getExistingAddresses().last();
+      await lastForm.getByLabel("Country code").clear();
+
+      await addresses.deleteAddress(lastForm);
+    });
+
     test("deletes an address and decreases count", async ({ addresses }) => {
       const countBefore = await addresses.getExistingAddresses().count();
       expect(countBefore).toBeGreaterThan(0);

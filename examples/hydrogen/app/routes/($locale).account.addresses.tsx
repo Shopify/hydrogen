@@ -274,6 +274,7 @@ function ExistingAddresses({
               <button
                 disabled={stateForMethod("DELETE") !== "idle"}
                 formMethod="DELETE"
+                formNoValidate
                 type="submit"
               >
                 {stateForMethod("DELETE") !== "idle" ? "Deleting" : "Delete"}
