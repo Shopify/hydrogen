@@ -11,7 +11,7 @@ import {
   renderSuccess,
   renderTasks,
   renderWarning,
-} from '@shopify/cli-kit/node/ui';
+} from '../../lib/ui.js';
 import {
   fileExists,
   isDirectory,
@@ -1034,7 +1034,9 @@ export async function upgradeNodeModules({
       task: async () => {
         await uninstallNodeModules({
           directory: appPath,
-          packageManager: await getPackageManager(appPath),
+          packageManager: resolvePackageManagerName(
+            await getPackageManager(appPath),
+          ),
           args: depsToRemove,
         });
       },
@@ -1097,9 +1099,11 @@ export async function upgradeNodeModules({
  * Normalizes the package manager name, falling back to npm for 'unknown'.
  */
 function resolvePackageManagerName(
-  packageManager: 'npm' | 'yarn' | 'pnpm' | 'unknown' | 'bun',
+  packageManager: 'npm' | 'yarn' | 'pnpm' | 'unknown' | 'bun' | 'homebrew',
 ): 'npm' | 'yarn' | 'pnpm' | 'bun' {
-  return packageManager === 'unknown' ? 'npm' : packageManager;
+  return packageManager === 'unknown' || packageManager === 'homebrew'
+    ? 'npm'
+    : packageManager;
 }
 
 /**

@@ -1,13 +1,13 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {renderSuccess} from '../../../lib/ui.js';
 import colors from '@shopify/cli-kit/node/colors';
 import {commonFlags} from '../../../lib/flags.js';
 import {Flags, Args} from '@oclif/core';
 
 // Fix for a TypeScript bug:
 // https://github.com/microsoft/TypeScript/issues/42873
-import type {} from '@oclif/core/lib/interfaces/parser.js';
+import type {} from '@oclif/core/interfaces';
 import {
   ALL_ROUTE_CHOICES,
   generateRoutes,

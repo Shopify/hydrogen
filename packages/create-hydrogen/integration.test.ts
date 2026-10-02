@@ -36,7 +36,8 @@ describe('create-hydrogen', () => {
 
       // Replace the temporary directory with a placeholder to avoid snapshot noise.
       // The directory can wrap to a new line, so we can't use a simple string replace.
-      const output = (await processPromise).stdout
+      // CLI Kit writes terminal UI to stderr, reserving stdout for results.
+      const output = (await processPromise).stderr
         .replace(/^.*╭/ims, '╭')
         .replace(/Run `.*$/s, 'Run `<redacted-command-for-test>`');
 
