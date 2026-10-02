@@ -1,0 +1,87 @@
+[
+  {
+    "file": "e2e/specs/new-cookies/browser-session.spec.ts",
+    "name": "[Hydrogen][Consent] Browser session",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/checkout-handoff.spec.ts",
+    "name": "[Hydrogen][Consent] Checkout handoff",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/consent-failures.spec.ts",
+    "name": "[Hydrogen][Consent] Consent request failures",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/consent-initialization.spec.ts",
+    "name": "[Hydrogen][Consent] Consent initialization",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/consent-tracking-accept.spec.ts",
+    "name": "[Hydrogen][Consent] Consent tracking accept",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/consent-tracking-decline.spec.ts",
+    "name": "[Hydrogen][Consent] Consent tracking decline",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/legacy-consent-migration.spec.ts",
+    "name": "[Hydrogen][Consent] Legacy consent migration",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/long-session.spec.ts",
+    "name": "[Hydrogen][Consent] Long session visit renewal",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/mixed-consent-storage.spec.ts",
+    "name": "[Hydrogen][Consent] Mixed consent storage",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/multiple-tabs.spec.ts",
+    "name": "[Hydrogen][Consent] Multiple tabs",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/privacy-banner-accept.spec.ts",
+    "name": "[Hydrogen][Consent] Privacy banner accept",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/privacy-banner-consent-change.spec.ts",
+    "name": "[Hydrogen][Consent] Privacy banner consent change",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/privacy-banner-decline.spec.ts",
+    "name": "[Hydrogen][Consent] Privacy banner decline",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/privacy-banner-migration.spec.ts",
+    "name": "[Hydrogen][Consent] Privacy banner migration",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/returning-visitor.spec.ts",
+    "name": "[Hydrogen][Consent] Returning visitor",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/saved-decline.spec.ts",
+    "name": "[Hydrogen][Consent] Saved decline",
+    "runInterval": 15
+  },
+  {
+    "file": "e2e/specs/new-cookies/spa-navigation.spec.ts",
+    "name": "[Hydrogen][Consent] SPA navigation",
+    "runInterval": 15
+  }
+]

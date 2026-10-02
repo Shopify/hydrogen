@@ -43,6 +43,10 @@
     "e2e": "playwright test",
     "e2e:new-cookies": "playwright test --project=new-cookies",
     "e2e:smoke": "playwright test --project=smoke",
+    "e2e:observe:build": "node e2e/observe/build.mjs",
+    "e2e:observe:upload": "node e2e/observe/upload.mjs",
+    "e2e:observe:sync": "node e2e/observe/build.mjs && node e2e/observe/upload.mjs",
+    "e2e:observe:alert-rule": "node e2e/observe/alert-rule.mjs",
     "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'"
   },
   "workspaces": [
