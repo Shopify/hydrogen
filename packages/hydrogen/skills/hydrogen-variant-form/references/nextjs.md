@@ -5,6 +5,7 @@
 - Server Page
 - Client Details Component
 - Same-Product And Cross-Product Values
+- No-JavaScript Limits
 - Add To Cart
 
 Product data is fetched in the server page. Variant selection and add-to-cart live in a `"use client"` component because they use `ProductProvider`, browser routing, and cart forms.
@@ -146,11 +147,10 @@ Wrap this tree in the app's `CartProvider` from `hydrogen-cart-ui`; `ProductProv
 
 ## Same-Product And Cross-Product Values
 
-Render same-product option values as GET links (`next/link`) so variant selection degrades without JavaScript (the skill's GET-links rule and accessibility guidance cover the `aria-current` and no-JS rationale). The `href` is the option URL built from `value.selectedOptions`. Enhance the link through `onNavigate`, which `next/link` calls only for a plain client-side navigation after it has already ignored modified clicks: call the registered `onClick` so the provider's `onSelect` runs `router.replace`, then call the `onNavigate` event's `preventDefault()` so the link does not navigate a second time. Do not spread `register(...)` onto the link; its `onClick` would run before the modifier check and change the page on a Cmd-click too. Keep sold-out-but-existing values interactive and derive their visual treatment from `value.available`. Render non-existent combinations (`exists: false`) as a disabled `<button>` instead of a link.
-The `ref` puts focus back on this link after a cross-product navigation; `focusIfPending` is defined under the combined-listing section below.
+Render existing same-product option values as GET links (`next/link`) so variant selection degrades without JavaScript. The `href` is the option URL built from `value.selectedOptions`, with the same `searchParams` base as the provider `onSelect`. Do not spread `register("optionValue", ...)` onto `Link`. Use `onNavigate` instead: call `event.preventDefault()` to cancel the `Link` navigation, then call `registered.onClick()` so the provider `onSelect` is the only navigation. Next.js does not call `onNavigate` for modifier-key clicks, a `target` other than `_self`, or links with `download`, so those clicks stay native. Use `onNavigate` only on same-product values. Keep sold-out-but-existing values interactive and derive their visual treatment from `value.available`. Render non-existent combinations (`exists: false`) as a disabled `<button>` instead of a link.
 
 ```tsx
-const registered = register("optionValue", { optionName: option.name, value: value.name });
+const searchParams = useSearchParams();
 
 <Link
   href={variantUrl(product, value.selectedOptions, value.handle, searchParams)}
@@ -159,8 +159,10 @@ const registered = register("optionValue", { optionName: option.name, value: val
   aria-current={value.selected ? "true" : undefined}
   data-available={value.available ? "true" : "false"}
   onNavigate={(event) => {
-    registered.onClick();
+    // The provider owns URL sync; stop Link from navigating a second time.
     event.preventDefault();
+    const registered = register("optionValue", { optionName: option.name, value: value.name });
+    registered.onClick();
   }}
 >
   {value.name}
@@ -168,7 +170,7 @@ const registered = register("optionValue", { optionName: option.name, value: val
 </Link>
 ```
 
-Cross-product combined-listing values point at a different `value.handle` and navigate to that product. Prefer `next/link`; if using a button for cross-product navigation, keep it clearly outside the add-to-cart form and call `router.replace(...)`. Both use the same URL helper:
+Cross-product combined-listing values point at a different `value.handle` and navigate to that product. Render them as a normal `next/link` with `scroll={false}`. Use `onNavigate` only to record focus for the new page, not to select an option or cancel navigation. Both link types use the same URL helper:
 
 ```tsx
 import { buildProductSelectionSearchParams, type SelectedOption } from "@shopify/hydrogen";
@@ -211,6 +213,10 @@ function focusIfPending(node: HTMLAnchorElement | null, handle: string, optionNa
   {value.name}
 </Link>
 ```
+
+## No-JavaScript Limits
+
+A valid option `href` does not by itself make the product page render without JavaScript. When product content is inside a `<Suspense>` boundary that streams after the first HTML (for example, a root layout that wraps a dynamic app shell in `<Suspense>`), React reveals the streamed content with an inline script. With JavaScript disabled, the shopper can see only the fallback, even though the server resolved the selected variant. Test the no-JS path in your app. If the product page does not render without JavaScript, record that limit; do not report the no-JS option links as verified.
 
 ## Add To Cart
 

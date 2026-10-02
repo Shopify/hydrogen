@@ -11,6 +11,27 @@ type ProductOptionValueSwatch = ProductData["options"][number]["optionValues"][n
 
 const form = useProductForm();
 
+function handleOptionClick(event: MouseEvent, optionName: string, value: string) {
+  const anchor = event.currentTarget;
+  if (
+    event.defaultPrevented ||
+    event.button !== 0 ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey ||
+    !(anchor instanceof HTMLAnchorElement) ||
+    (anchor.target !== "" && anchor.target.toLowerCase() !== "_self") ||
+    anchor.hasAttribute("download")
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+  const registered = form.register("optionValue", { optionName, value });
+  registered.onClick();
+}
+
 function isColor(name: string): boolean {
   return name.toLowerCase() === "color";
 }
@@ -93,6 +114,36 @@ function searchParamsToQuery(params: URLSearchParams) {
             :style="isColor(option.name) ? getSwatchStyle(value.swatch) : undefined"
           >
             <template v-if="!isColor(option.name)">{{ value.name }}</template>
+          </NuxtLink>
+
+          <NuxtLink
+            v-else-if="value.exists"
+            v-slot="{ href }"
+            :to="variantRoute(value.selectedOptions)"
+            custom
+          >
+            <a
+              :href="href"
+              :aria-current="value.selected ? 'true' : undefined"
+              :aria-label="isColor(option.name) ? value.name : undefined"
+              class="inline-flex items-center justify-center"
+              :class="
+                isColor(option.name)
+                  ? value.selected
+                    ? 'h-7 w-7 rounded-full ring-2 ring-black ring-offset-2 disabled:opacity-30'
+                    : 'h-7 w-7 rounded-full disabled:opacity-30'
+                  : value.selected
+                    ? 'h-11 min-w-20 rounded-full bg-black px-5 text-sm font-semibold text-white disabled:opacity-30'
+                    : 'h-11 min-w-20 rounded-full border border-black/15 px-5 text-sm font-semibold hover:border-black disabled:opacity-30'
+              "
+              :style="isColor(option.name) ? getSwatchStyle(value.swatch) : undefined"
+              @click="handleOptionClick($event, option.name, value.name)"
+            >
+              <template v-if="!isColor(option.name)">
+                {{ value.name }}
+                <template v-if="!value.available"> - Sold out</template>
+              </template>
+            </a>
           </NuxtLink>
 
           <button
