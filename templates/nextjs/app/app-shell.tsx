@@ -13,11 +13,12 @@ import { getStorefrontClient } from "@/lib/storefront";
 import { Providers } from "./providers";
 
 /**
- * Async server shell that owns the per-request (dynamic) reads: the cart seed
- * + the shop analytics GID. With `cacheComponents: true`, uncached/dynamic data
- * accessed in a Server Component must sit inside a `<Suspense>` boundary so the
- * static HTML shell prerenders and the per-buyer parts stream
- * (`next/server` `connection()` + `headers()`/`cookies()` are per-request).
+ * Async server shell that owns the per-request (dynamic) read: the cart seed.
+ * It also reads the cached shop identity for the header and footer. With
+ * `cacheComponents: true`, uncached/dynamic data accessed in a Server Component
+ * must sit inside a `<Suspense>` boundary so the static HTML shell prerenders
+ * and the per-buyer parts stream (`next/server` `connection()` +
+ * `headers()`/`cookies()` are per-request).
  *
  * Rendered inside `<Suspense>` from the root layout. `await connection()`
  * opts the subtree into dynamic rendering (resolves immediately on a real

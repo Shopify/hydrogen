@@ -7,15 +7,19 @@ import { SHOP_ANALYTICS_QUERY } from "@/lib/queries";
 import { staticStorefrontClient } from "@/lib/storefront-static";
 
 /**
- * Resolve the shop analytics GID best-effort and non-blocking.
- * The query runs inside a `'use cache'` cache-point (`cacheLife("hours")`,
- * `cacheTag("shop")`) so warm requests resolve instantly. On timeout/error we
- * fall back to the config-derived shop GID/name.
+ * Resolve the shop analytics GID and active currency, best-effort and bounded by
+ * a 2s timeout. The query runs inside a `'use cache'` cache-point
+ * (`cacheLife("hours")`, `cacheTag("shop")`), so it is prerendered and served
+ * from cache in steady state. On timeout/error we fall back to `SHOP_FALLBACK`.
  */
 type ShopIdentity = {
   shopId: string;
   shopName: string;
   shopDescription: string | null;
+  // Browse events carry no price, so shopify.js reads their currency from
+  // window.Shopify.currency.active. The cart tracker only sets that once a cart exists,
+  // so the bootstrap needs it up front.
+  currency: string;
 };
 
 export type AnalyticsShop = ShopAnalytics & ShopIdentity;
@@ -26,6 +30,9 @@ const SHOP_FALLBACK: ShopIdentity = {
   shopId: shopConfig.shopId ? `gid://shopify/Shop/${shopConfig.shopId}` : "",
   shopName: "CORE",
   shopDescription: null,
+  // Browse events read currency from the global, so this degraded path still guesses one.
+  // The cart tracker corrects it once a cart exists.
+  currency: "USD",
 };
 
 /** Cache the shop query result for hours (it almost never changes). */
@@ -38,10 +45,12 @@ async function fetchShopAnalytics(): Promise<ShopIdentity> {
   if (errors) {
     console.error("[hydrogen] Root shop query failed", errors);
   }
+  if (!data) throw new Error("[hydrogen] Root shop query returned no data");
   return {
-    shopId: data?.shop?.id ?? SHOP_FALLBACK.shopId,
-    shopName: data?.shop?.name ?? SHOP_FALLBACK.shopName,
-    shopDescription: data?.shop?.description ?? null,
+    shopId: data.shop.id,
+    shopName: data.shop.name,
+    shopDescription: data.shop.description ?? null,
+    currency: data.localization.country.currency.isoCode,
   };
 }
 
@@ -67,6 +76,7 @@ export async function getAnalyticsShop(): Promise<AnalyticsShop> {
     storefrontId: shopConfig.storefrontId,
     shopName: resolved.shopName,
     shopDescription: resolved.shopDescription,
+    currency: resolved.currency,
   };
 }
 

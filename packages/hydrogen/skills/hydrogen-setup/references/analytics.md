@@ -320,7 +320,7 @@ Per-page view events go in the route's `$effect`. The route loader must include 
       products: [{
         id: data.product.id,
         title: data.product.title,
-        price: variant?.price.amount ?? data.product.priceRange.minVariantPrice.amount,
+        price: variant?.price ?? data.product.priceRange.minVariantPrice,
         vendor: data.product.vendor,
         variantId: variant?.id ?? data.product.id,
         variantTitle: variant?.title ?? data.product.title,
@@ -386,6 +386,7 @@ Per-page trackers are thin client components that take server-resolved data and 
 // app/components/ProductViewedTracker.tsx
 "use client";
 import { useEffect } from "react";
+import type { CurrencyCode } from "@shopify/hydrogen/storefront-api-types";
 import { getAnalytics, AnalyticsEvent } from "../lib/analytics";
 
 type Props = {
@@ -397,10 +398,10 @@ type Props = {
     selectedOrFirstAvailableVariant: {
       id: string;
       title: string;
-      price: { amount: string };
+      price: { amount: string; currencyCode: CurrencyCode };
       sku?: string | null;
     } | null;
-    priceRange: { minVariantPrice: { amount: string } };
+    priceRange: { minVariantPrice: { amount: string; currencyCode: CurrencyCode } };
   };
 };
 
@@ -413,8 +414,8 @@ export function ProductViewedTracker({ product }: Props) {
         id: product.id,
         title: product.title,
         price:
-          product.selectedOrFirstAvailableVariant?.price.amount ??
-          product.priceRange.minVariantPrice.amount,
+          product.selectedOrFirstAvailableVariant?.price ??
+          product.priceRange.minVariantPrice,
         vendor: product.vendor,
         variantId: product.selectedOrFirstAvailableVariant?.id ?? product.id,
         variantTitle:
@@ -482,6 +483,7 @@ const product = await fetchProduct(Astro.params.handle);
     data-title={product.title}
     data-vendor={product.vendor}
     data-price={product.selectedOrFirstAvailableVariant?.price.amount ?? product.priceRange.minVariantPrice.amount}
+    data-currency-code={product.selectedOrFirstAvailableVariant?.price.currencyCode ?? product.priceRange.minVariantPrice.currencyCode}
     data-variant-id={product.selectedOrFirstAvailableVariant?.id ?? product.id}
     data-variant-title={product.selectedOrFirstAvailableVariant?.title ?? product.title}
     data-sku={product.selectedOrFirstAvailableVariant?.sku ?? ""}
@@ -489,6 +491,7 @@ const product = await fetchProduct(Astro.params.handle);
   ></div>
 
   <script>
+    import type { CurrencyCode } from "@shopify/hydrogen/storefront-api-types";
     import { getAnalytics, AnalyticsEvent } from "../../lib/analytics";
     const el = document.getElementById("product-analytics");
     const analytics = getAnalytics();
@@ -497,7 +500,8 @@ const product = await fetchProduct(Astro.params.handle);
         products: [{
           id: el.dataset.id ?? "",
           title: el.dataset.title ?? "",
-          price: el.dataset.price ?? "",
+          // data-* values are strings. This one was rendered from the Storefront API CurrencyCode.
+          price: { amount: el.dataset.price ?? "", currencyCode: el.dataset.currencyCode as CurrencyCode },
           vendor: el.dataset.vendor ?? "",
           variantId: el.dataset.variantId ?? el.dataset.id ?? "",
           variantTitle: el.dataset.variantTitle ?? el.dataset.title ?? "",

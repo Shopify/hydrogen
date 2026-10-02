@@ -204,6 +204,7 @@ const colorOption = product.options.find((o) => o.name === "Color");
     data-title={product.title}
     data-vendor={product.vendor}
     data-price={product.selectedOrFirstAvailableVariant?.price.amount ?? product.priceRange.minVariantPrice.amount}
+    data-currency-code={product.selectedOrFirstAvailableVariant?.price.currencyCode ?? product.priceRange.minVariantPrice.currencyCode}
     data-variant-id={product.selectedOrFirstAvailableVariant?.id ?? product.id}
     data-variant-title={product.selectedOrFirstAvailableVariant?.title ?? product.title}
     data-sku={product.selectedOrFirstAvailableVariant?.sku ?? ""}
@@ -211,13 +212,16 @@ const colorOption = product.options.find((o) => o.name === "Color");
   ></div>
 
   <script>
-      import { getAnalytics, AnalyticsEvent } from "../../lib/analytics";
+    import type { CurrencyCode } from "@shopify/hydrogen/storefront-api-types";
+    import { getAnalytics, AnalyticsEvent } from "../../lib/analytics";
     const el = document.getElementById("product-analytics");
     if (el) {
       const id = el.dataset.id ?? "";
       const title = el.dataset.title ?? "";
       const vendor = el.dataset.vendor ?? "";
-      const price = el.dataset.price ?? "";
+      // Rendered from the Storefront API CurrencyCode. The DOM hands it back as a plain string.
+      const currencyCode = el.dataset.currencyCode as CurrencyCode;
+      const price = { amount: el.dataset.price ?? "", currencyCode };
       const variantId = el.dataset.variantId ?? "";
       const variantTitle = el.dataset.variantTitle ?? "";
       const sku = el.dataset.sku || undefined;
