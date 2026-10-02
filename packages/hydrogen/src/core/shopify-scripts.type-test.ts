@@ -27,6 +27,25 @@ export function shopifyGlobalTypes(shopify: ShopifyGlobal) {
   window.Shopify?.customerPrivacy.config?.debug;
 }
 
+export function privacyBannerTypes(banner: NonNullable<Window["privacyBanner"]>) {
+  const options = {
+    storefrontAccessToken: "public-storefront-token",
+    checkoutRootDomain: "checkout.example.com",
+    storefrontRootDomain: "example.com",
+    locale: "fr",
+    country: "ca",
+  };
+  expectTypeOf(banner.showBanner(options)).toEqualTypeOf<Promise<void>>();
+  expectTypeOf(banner.showPreferences(options)).toEqualTypeOf<Promise<void>>();
+  expectTypeOf(banner.showBanner()).toEqualTypeOf<Promise<void>>();
+  expectTypeOf(banner.showPreferences()).toEqualTypeOf<Promise<void>>();
+
+  // @ts-expect-error the public Storefront API token must be a string
+  void banner.showBanner({ storefrontAccessToken: 123 });
+  // @ts-expect-error locale must be a string
+  void banner.showPreferences({ locale: 123 });
+}
+
 export function shopifyScriptOptionTypes() {
   expectTypeOf<ShopifyScriptTagsOptions["shop"]>().toEqualTypeOf<{
     shopId: string;
