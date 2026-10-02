@@ -514,7 +514,7 @@ function VariantOptions({ product }: { product: ProductData }) {
                   );
                 }
 
-                const pillClass = `option-pill focus-visible:outline-accent motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] ${!variantOption.available ? "opacity-50" : ""}`;
+                const pillClass = `option-pill focus-visible:outline-focus-ring motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] ${!variantOption.available ? "opacity-50" : ""}`;
                 const label = `${valueName}${!variantOption.available ? " (Sold out)" : ""}`;
 
                 if (isCrossProduct) {
@@ -628,7 +628,7 @@ function AddToCart({
         <input type="hidden" {...register("quantity", { value: quantity })} />
         <button
           type="submit"
-          className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+          className="rounded-button button-primary focus-visible:outline-focus-ring inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
           disabled={!addable || pending}
           data-testid="add-to-cart"
         >
