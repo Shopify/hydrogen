@@ -74,6 +74,14 @@ export async function loader(args: Route.LoaderArgs) {
 
   const {storefront, env} = args.context;
 
+  // End-to-end tests (including Observe Synthetic Checks, which run against
+  // deployed storefronts) toggle the privacy banner through this cookie:
+  // deployed builds serve hashed asset bundles, so tests cannot patch the
+  // client code the way they can against a dev server. Inert unless set.
+  const privacyBannerCookie = args.request.headers
+    .get('cookie')
+    ?.match(/(?:^|;\s*)e2e_privacy_banner=([^;]*)/)?.[1];
+
   return {
     ...deferredData,
     ...criticalData,
@@ -85,7 +93,7 @@ export async function loader(args: Route.LoaderArgs) {
     consent: {
       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-      withPrivacyBanner: false,
+      withPrivacyBanner: privacyBannerCookie === '1',
       // localize the privacy banner
       country: args.context.storefront.i18n.country,
       language: args.context.storefront.i18n.language,
