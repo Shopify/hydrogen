@@ -82,6 +82,11 @@ export function getRequiredSecret(key: string): string {
  * Playwright replaces (not merges) extraHTTPHeaders.
  */
 export function getLoadtestHeaders(): Record<string, string> {
+  // Baked in at build time for Observe Synthetic Check bundles, where no
+  // ejson binary or secrets file is available.
+  const bakedHeaderName = process.env.E2E_LOADTEST_HEADER;
+  if (bakedHeaderName) return {[bakedHeaderName]: 'true'};
+
   try {
     const secrets = getTestSecrets();
     const header = secrets.loadtest_header;

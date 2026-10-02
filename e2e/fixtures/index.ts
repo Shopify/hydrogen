@@ -8,6 +8,8 @@ import path from 'node:path';
 import {mkdtemp, readFile, rm, stat, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {StorefrontPage, routeLocalConsentBundles} from './storefront';
+import {observeStoreUrls} from './observe';
+import {getLoadtestHeaders} from './test-secrets';
 import {CartUtil} from './cart-utils';
 import {DiscountUtil} from './discount-utils';
 import {GiftCardUtil} from './gift-card-utils';
@@ -108,6 +110,26 @@ export const test = base.extend<
   },
 });
 
+// The Observe Synthetic Checks runner executes each bundle with no
+// playwright.config: this reproduces the repo config's `use` block for every
+// spec importing `test` from this module. Module scope guarantees it runs
+// before any spec body declares its tests. Gated on observe mode so local
+// and CI runs are untouched.
+if (observeStoreUrls()) {
+  test.use({
+    // Same purpose as the repo config: mark the traffic as internal
+    // Playwright e2e for Shopify's bot-priority system.
+    extraHTTPHeaders: getLoadtestHeaders(),
+    video: {mode: 'retain-on-failure', size: {width: 1920, height: 1080}},
+    actionTimeout: 20_000,
+    navigationTimeout: 20_000,
+    // Match the user agent convention of other Observe synthetics so
+    // bot detection identifies the runner instead of flagging it.
+    userAgent:
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.7778.96 Safari/537.36 (Spider; Shopify-Observe-Synthetic-Checks)',
+  });
+}
+
 const TEST_STORE_KEYS = [
   'mockShop',
   'defaultConsentDisallowed_cookiesEnabled',
@@ -168,7 +190,10 @@ async function createMockEnvFile(envFile: string, scenario: MswScenario) {
  */
 export const configureDevServer = (options: DevServerLifecycleOptions) => {
   const {storeKey, projectPath, mock} = options;
-  const isLocal = !storeKey.startsWith('https://');
+  // Observe Synthetic Checks run against deployed storefronts: the store key
+  // resolves to its deployment URL and no dev server is started.
+  const observeUrl = observeStoreUrls()?.get(storeKey);
+  const isLocal = !storeKey.startsWith('https://') && !observeUrl;
   let server: DevServer | null = null;
   let mockEnvDir: string | undefined;
 
@@ -176,7 +201,7 @@ export const configureDevServer = (options: DevServerLifecycleOptions) => {
 
   test.use({
     baseURL: async ({}, use) => {
-      await use(isLocal ? server?.getUrl() : storeKey);
+      await use(observeUrl ?? (isLocal ? server?.getUrl() : storeKey));
     },
   });
 

@@ -9,6 +9,7 @@ import {expect} from '@playwright/test';
 import assert from './assertions';
 import {getLoadtestHeaders} from './test-secrets';
 import {checkoutAnalyticsAllowed} from './checkout-consent';
+import {PRIVACY_BANNER_COOKIE_NAME, observeStoreUrls} from './observe';
 
 // Privacy Banner element IDs
 export const PRIVACY_BANNER_DIALOG_ID = 'shopify-pc__banner';
@@ -1787,13 +1788,36 @@ export class StorefrontPage {
   }
 
   /**
-   * Set the `withPrivacyBanner` value by intercepting the Hydrogen JS bundle.
-   * This injects code to directly set the value before Hydrogen's default check.
-   * Unlike HTML document interception, this preserves server-timing headers since they come
-   * from the document response, not from JS files.
+   * Set the `withPrivacyBanner` value for the next full page load.
+   *
+   * Against local dev servers this intercepts the Hydrogen JS bundle and
+   * injects code to directly set the value before Hydrogen's default check.
+   * Unlike HTML document interception, this preserves server-timing headers
+   * since they come from the document response, not from JS files.
+   *
+   * Against deployed storefronts (Observe Synthetic Checks) the value is
+   * carried by the `e2e_privacy_banner` cookie, which the skeleton's root
+   * loader reads.
    * @param enable - Whether to enable (true) or disable (false) the privacy banner
    */
   async setWithPrivacyBanner(enable: boolean) {
+    // Deployed storefronts (Observe Synthetic Checks) serve built bundles
+    // under hashed asset URLs, so the dev-server route interception below
+    // cannot match. The skeleton's root loader reads this cookie instead;
+    // it must be set before the next full page load, which every caller
+    // satisfies (the value applies per document, like the route injection).
+    const storeUrls = observeStoreUrls();
+    if (storeUrls) {
+      await this.context.addCookies(
+        [...storeUrls.values()].map((url) => ({
+          name: PRIVACY_BANNER_COOKIE_NAME,
+          value: enable ? '1' : '0',
+          url,
+        })),
+      );
+      return;
+    }
+
     const injectConsentFlag = async (route: Route) => {
       const response = await route.fetch();
       let body = await response.text();
