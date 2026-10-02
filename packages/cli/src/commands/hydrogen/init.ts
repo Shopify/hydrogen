@@ -1,3 +1,5 @@
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {initJsonOutputSchema} from '../../lib/onboarding/types.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
 import {AbortError} from '@shopify/cli-kit/node/error';
@@ -19,9 +21,14 @@ import {LANGUAGES} from '../../lib/onboarding/common.js';
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
 export default class Init extends Command {
+  static get jsonOutputSchema(): typeof initJsonOutputSchema {
+    return initJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown = 'Creates a new Hydrogen storefront.';
-  static description = 'Creates a new Hydrogen storefront.';
+  static description = this.descriptionForHelp();
   static flags = {
+    ...jsonFlag,
     ...commonFlags.force,
     path: Flags.string({
       description: 'The path to the directory of the new Hydrogen storefront.',
