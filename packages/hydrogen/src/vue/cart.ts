@@ -190,6 +190,7 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
  * }
  * </script>
  * ```
+ * @public
  */
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
@@ -208,6 +209,7 @@ export function useCartActions(): CartActions {
  * useCartAnalytics();
  * </script>
  * ```
+ * @public
  */
 export function useCartAnalytics(): void {
   const store = useCartStore("useCartAnalytics");
@@ -340,6 +342,7 @@ export function useCartForm(): {
  *   useCartForm,
  * } = createCartComponents<typeof cartServerHandlers>();
  * ```
+ * @public
  */
 export function createCartComponents<THandlers>(): TypedCartComponents<
   CartDataFromHandlers<THandlers>

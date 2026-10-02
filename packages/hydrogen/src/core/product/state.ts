@@ -14,7 +14,11 @@ export interface ProductPriceRange {
   maxVariantPrice?: Money;
 }
 
-/** A single selected product option, e.g. `{ name: "Color", value: "Red" }`. */
+/**
+ * A single selected product option, e.g. `{ name: "Color", value: "Red" }`.
+ *
+ * @public
+ */
 export interface SelectedOption {
   name: string;
   value: string;
@@ -25,6 +29,8 @@ export interface SelectedOption {
  *
  * Consumers typically pass a wider type from their Storefront API query —
  * `ProductVariantInput` declares only the fields the form logic reads.
+ *
+ * @public
  */
 export interface ProductVariantInput {
   id: string;
@@ -39,13 +45,21 @@ export interface ProductVariantInput {
   sku?: string | null;
 }
 
-/** A product option (e.g. "Size" or "Color") and its available values. */
+/**
+ * A product option (e.g. "Size" or "Color") and its available values.
+ *
+ * @public
+ */
 export interface ProductOptionInput<TVariant extends ProductVariantInput = ProductVariantInput> {
   name: string;
   optionValues: Array<ProductOptionValueInput<TVariant>>;
 }
 
-/** A single option value (e.g. "Small", "Red") within a {@link ProductOptionInput}. */
+/**
+ * A single option value (e.g. "Small", "Red") within a {@link ProductOptionInput}.
+ *
+ * @public
+ */
 export interface ProductOptionValueInput<
   TVariant extends ProductVariantInput = ProductVariantInput,
 > {
@@ -61,6 +75,8 @@ export interface ProductOptionValueInput<
  * Fields mirror the Storefront API `Product` object. Consumers typically
  * pass a wider query result — this interface declares only what the
  * product form logic reads.
+ *
+ * @public
  */
 export interface ProductInput<TVariant extends ProductVariantInput = ProductVariantInput> {
   id: string;
@@ -81,7 +97,11 @@ export interface ProductInput<TVariant extends ProductVariantInput = ProductVari
   adjacentVariants: TVariant[];
 }
 
-/** Extracts the concrete variant type from a {@link ProductInput} subtype. */
+/**
+ * Extracts the concrete variant type from a {@link ProductInput} subtype.
+ *
+ * @public
+ */
 export type ProductVariantFrom<TProduct extends ProductInput> =
   TProduct extends ProductInput<infer TVariant> ? TVariant : ProductVariantInput;
 
@@ -94,6 +114,8 @@ export type ProductOptionValueFrom<TProduct extends ProductInput> =
  *
  * Derived each time the selection changes — fields reflect the current
  * selection context, not static product data.
+ *
+ * @public
  */
 export interface VariantOptionValueState<
   TVariant extends ProductVariantInput = ProductVariantInput,
@@ -115,7 +137,11 @@ export interface VariantOptionValueState<
   handle: string;
 }
 
-/** Computed state for a product option (e.g. "Color"), grouping its {@link VariantOptionValueState} entries. */
+/**
+ * Computed state for a product option (e.g. "Color"), grouping its {@link VariantOptionValueState} entries.
+ *
+ * @public
+ */
 export interface VariantOptionState<
   TVariant extends ProductVariantInput = ProductVariantInput,
   TOptionValue extends ProductOptionValueInput = ProductOptionValueInput,

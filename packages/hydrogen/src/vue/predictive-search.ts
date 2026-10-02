@@ -40,7 +40,11 @@ const PredictiveSearchKey: InjectionKey<PredictiveSearchContextValue> = Symbol("
 
 export type { PredictiveSearchActions };
 
-/** Options for the form props builder returned by {@link usePredictiveSearchForm}. */
+/**
+ * Options for the form props builder returned by {@link usePredictiveSearchForm}.
+ *
+ * @public
+ */
 export type PredictiveSearchFormPropsOptions = {
   /** When `true`, prevents the native form submission and triggers a client-side search instead. */
   preventDefault?: boolean;
@@ -49,14 +53,22 @@ export type PredictiveSearchFormPropsOptions = {
   [key: string]: unknown;
 };
 
-/** Options for the query input props builder returned by {@link usePredictiveSearchForm}'s `register` method. */
+/**
+ * Options for the query input props builder returned by {@link usePredictiveSearchForm}'s `register` method.
+ *
+ * @public
+ */
 export type PredictiveSearchQueryInputPropsOptions = {
   /** Called on input with the input event and the current input value. Call `event.preventDefault()` to skip the automatic search trigger. */
   onInput?: (event: Event, term: string) => void;
   [key: string]: unknown;
 };
 
-/** Return type of {@link usePredictiveSearchForm}, providing methods to build a progressively-enhanced search form. */
+/**
+ * Return type of {@link usePredictiveSearchForm}, providing methods to build a progressively-enhanced search form.
+ *
+ * @public
+ */
 export type PredictiveSearchFormResult = {
   /** Generates form element attributes including the search action and submit handler. */
   formProps(options?: PredictiveSearchFormPropsOptions): Record<string, unknown>;
@@ -73,6 +85,8 @@ export type PredictiveSearchFormResult = {
  *
  * Recreates the store when configuration props change. Connects the store
  * on mount and destroys it on unmount.
+ *
+ * @public
  */
 export const PredictiveSearchProvider = defineComponent({
   name: "PredictiveSearchProvider",
@@ -174,6 +188,7 @@ function useRequiredContext(composableName: string): PredictiveSearchContextValu
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
  * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @public
  */
 export function usePredictiveSearch<
   TData extends PredictiveSearchData = PredictiveSearchData,
@@ -230,6 +245,7 @@ export function usePredictiveSearch<
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
  * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @public
  */
 export function usePredictiveSearchActions(): PredictiveSearchActions {
   const { storeRef } = useRequiredContext("usePredictiveSearchActions");
@@ -254,6 +270,7 @@ export function usePredictiveSearchActions(): PredictiveSearchActions {
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
  * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @public
  */
 export function usePredictiveSearchForm(): PredictiveSearchFormResult {
   const { storeRef, searchActionRef } = useRequiredContext("usePredictiveSearchForm");

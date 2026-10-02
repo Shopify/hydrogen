@@ -22,6 +22,8 @@ const VARIABLE_DEFINITION_RE = /\$([_A-Za-z][_0-9A-Za-z]*)\s*:/g;
  * externally — only `gql()` produces valid instances. Passing a plain object
  * with a `source` property to `CustomerAccountClient.graphql()` will throw
  * a `TypeError` at runtime.
+ *
+ * @public
  */
 export type CustomerAccountDocument<
   Result = unknown,
@@ -32,10 +34,18 @@ export type CustomerAccountDocument<
   readonly source: Source;
 };
 
-/** Widened alias for {@link CustomerAccountDocument}. Use as a constraint when accepting any Customer Account document. */
+/**
+ * Widened alias for {@link CustomerAccountDocument}. Use as a constraint when accepting any Customer Account document.
+ *
+ * @public
+ */
 export type AnyCustomerAccountDocument = CustomerAccountDocument<unknown, never, string>;
 
-/** Extracts the source string literal type from a {@link CustomerAccountDocument}. */
+/**
+ * Extracts the source string literal type from a {@link CustomerAccountDocument}.
+ *
+ * @public
+ */
 export type SourceOf<Doc> = Doc extends { readonly source: infer Source extends string }
   ? Source
   : never;
@@ -44,6 +54,8 @@ export type SourceOf<Doc> = Doc extends { readonly source: infer Source extends 
  * Recursively concatenates the source strings of an array of fragment
  * documents at the type level, joining each with a newline. An empty
  * tuple produces `""`.
+ *
+ * @public
  */
 export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocument[]> =
   Fragments extends readonly []
@@ -60,6 +72,8 @@ export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocumen
 /**
  * Combines an operation source with its {@link FragmentSources} at the type
  * level. When `Fragments` is empty the result is just `Source`.
+ *
+ * @public
  */
 export type ComposedSource<
   Source extends string,
@@ -134,6 +148,7 @@ type CustomerAccountGql = {
  *   }
  * `, [ORDER_FIELDS]);
  * ```
+ * @public
  */
 // oxlint-disable-next-line typescript-eslint/consistent-type-assertions -- gql.tada adds phantom helper properties to the function type that are not used at runtime.
 export const gql = ((source: string, fragments?: readonly CustomerAccountDocument[]) => {

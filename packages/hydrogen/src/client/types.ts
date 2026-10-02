@@ -50,6 +50,8 @@ type StorefrontApiVariablesOf<Doc extends DocLike> = TadaVariablesOf<Doc>;
  * avoid a runtime dependency on the `graphql` package.
  *
  * Present on the `errors` arm of {@link StorefrontGraphqlResult}.
+ *
+ * @public
  */
 export interface GraphQLFormattedError {
   /** Human-readable error description. */
@@ -97,6 +99,8 @@ type AnyFetch = typeof globalThis.fetch | ((...args: never[]) => Promise<Respons
  * Best for: browser or mobile requests where the token is safe to expose.
  * Token-based access is required for some Storefront API fields, including
  * product tags, metaobjects, metafields, menus, and customers.
+ *
+ * @public
  */
 export interface PublicClientOptions<
   Fetch extends AnyFetch | undefined = typeof globalThis.fetch,
@@ -116,6 +120,8 @@ export interface PublicClientOptions<
  * layer and can forward trusted buyer context.
  * Token-based access is required for some Storefront API fields, including
  * product tags, metaobjects, metafields, menus, and customers.
+ *
+ * @public
  */
 export interface PrivateClientOptions<
   Fetch extends AnyFetch | undefined = typeof globalThis.fetch,
@@ -132,6 +138,8 @@ export interface PrivateClientOptions<
  *
  * Best for: background jobs, webhooks, or server contexts where no
  * shopper identity is available.
+ *
+ * @public
  */
 export interface PrivateNoBuyerContextClientOptions<
   Fetch extends AnyFetch | undefined = typeof globalThis.fetch,
@@ -142,7 +150,11 @@ export interface PrivateNoBuyerContextClientOptions<
   privateStorefrontToken: string;
 }
 
-/** Union of all config shapes passed as the `config` field of {@link CreateStorefrontClientArgs}. */
+/**
+ * Union of all config shapes passed as the `config` field of {@link CreateStorefrontClientArgs}.
+ *
+ * @public
+ */
 export type StorefrontClientOptions =
   | PublicClientOptions
   | PrivateClientOptions
@@ -154,6 +166,8 @@ export type StorefrontClientOptions =
  * Discriminated on `type`: `"public"` requires a public (or no) token,
  * `"private"` requires a private token plus a request context with `buyerIp`,
  * and `"private_no_buyer_context"` requires a private token; `buyerIp` is not forwarded.
+ *
+ * @public
  */
 // `Type` and `CacheConfig` are inference holes for `createStorefrontClient`:
 // each member's discriminant is intersected with `Type` (resolving to the plain
@@ -186,7 +200,11 @@ type UserVariables<Doc> = Omit<VariablesOfDoc<Doc>, AutoAddedVariableNames>;
 
 type HasNoRequiredKeys<T> = Record<string, never> extends T ? true : false;
 
-/** Per-call options common to every `storefront.graphql()` invocation. */
+/**
+ * Per-call options common to every `storefront.graphql()` invocation.
+ *
+ * @public
+ */
 export type StorefrontGraphqlOptions = {
   /** Abort signal forwarded to the underlying fetch. Combined with the request-context signal via `AbortSignal.any`. */
   signal?: AbortSignal;
@@ -204,6 +222,8 @@ type MergedOptions<Doc extends DocLike, Extra extends Record<string, unknown>> =
  * Resolves to `[options]` (required) when the document declares required
  * variables, or `[options?]` (optional) when all variables are optional or
  * auto-injected (e.g. `$country`, `$language`).
+ *
+ * @public
  */
 export type GqlRestParam<Doc extends DocLike, Extra extends Record<string, unknown> = {}> =
   HasNoRequiredKeys<MergedOptions<Doc, GraphqlExtraOptionsForDoc<Doc, Extra>>> extends true
@@ -224,17 +244,24 @@ export type GqlRestParam<Doc extends DocLike, Extra extends Record<string, unkno
  * `Partial` is deliberately not used: a non-null `data` never has absent
  * top-level keys — failures surface as `null` values already covered by the
  * schema types.
+ *
+ * @public
  */
 export type StorefrontGraphqlResult<Doc extends DocLike> =
   | { data: ResultOfDoc<Doc>; errors?: undefined; headers: Headers }
   | { data: ResultOfDoc<Doc> | null; errors: GraphQLFormattedError[]; headers: Headers };
 
-/** Base callable signature of `StorefrontClient.graphql` without per-client extra options. Accepts a `gql()` document or a plain string. */
+/**
+ * Base callable signature of `StorefrontClient.graphql` without per-client extra options. Accepts a `gql()` document or a plain string.
+ *
+ * @public
+ */
 export type StorefrontGraphql = <const Doc extends DocLike | string>(
   doc: Doc,
   ...options: GqlRestParam<ResolveDoc<Doc>>
 ) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>;
 
+/** @public */
 export type ClientType =
   /** Public access token or tokenless access. Best for: browser requests. */
   | "public"
@@ -248,6 +275,8 @@ export type ClientType =
  *
  * Call `client.graphql(doc, options?)` to execute a query or mutation against
  * the Storefront API. The result is typed by the document you pass in.
+ *
+ * @public
  */
 export type StorefrontClient<
   Extra extends Record<string, unknown> = {},
@@ -279,23 +308,39 @@ export type StorefrontClient<
   requestContext: RequestContext;
 };
 
-/** A {@link StorefrontClient} narrowed to `type: "public"`. */
+/**
+ * A {@link StorefrontClient} narrowed to `type: "public"`.
+ *
+ * @public
+ */
 export type PublicStorefrontClient<
   Extra extends Record<string, unknown> = {},
   RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
 > = StorefrontClient<Extra, "public", RequestContext>;
 
-/** A {@link StorefrontClient} narrowed to `type: "private"`. Requires a request context with `buyerIp`. */
+/**
+ * A {@link StorefrontClient} narrowed to `type: "private"`. Requires a request context with `buyerIp`.
+ *
+ * @public
+ */
 export type PrivateStorefrontClient<
   Extra extends Record<string, unknown> = {},
   RequestContext extends ShopifyRequestContextWithBuyerIp = ShopifyRequestContextWithBuyerIp,
 > = StorefrontClient<Extra, "private", RequestContext>;
 
-/** Convenience alias: a private client whose request context is always the concrete `ShopifyRequestContextWithBuyerIp`. */
+/**
+ * Convenience alias: a private client whose request context is always the concrete `ShopifyRequestContextWithBuyerIp`.
+ *
+ * @public
+ */
 export type RequestScopedPrivateStorefrontClient<Extra extends Record<string, unknown> = {}> =
   PrivateStorefrontClient<Extra, ShopifyRequestContextWithBuyerIp>;
 
-/** A {@link StorefrontClient} narrowed to `type: "private_no_buyer_context"`. Best for background jobs and webhooks. */
+/**
+ * A {@link StorefrontClient} narrowed to `type: "private_no_buyer_context"`. Best for background jobs and webhooks.
+ *
+ * @public
+ */
 export type PrivateNoBuyerContextStorefrontClient<
   Extra extends Record<string, unknown> = {},
   RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
@@ -313,6 +358,7 @@ export type PrivateNoBuyerContextStorefrontClient<
  * type Product = StorefrontApi.ResultOf<typeof PRODUCT_QUERY>;
  * type Vars = StorefrontApi.VariablesOf<typeof PRODUCT_QUERY>;
  * ```
+ * @public
  */
 export namespace StorefrontApi {
   /** Extracts the typed result shape from a Storefront API document. */

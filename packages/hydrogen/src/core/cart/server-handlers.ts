@@ -46,19 +46,35 @@ const CART_MUTATION_FAILED_STATUS = 500;
 const CART_MUTATION_FAILED_MESSAGE = "Cart mutation failed. Please try again.";
 const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
-/** Response shape from the cart GET handler — the fetched cart plus any GraphQL errors. */
+/**
+ * Response shape from the cart GET handler — the fetched cart plus any GraphQL errors.
+ *
+ * @public
+ */
 export type CartGetData<TCart = CartData> = {
   cart: TCart | null;
   errors?: Array<{ message: string }>;
 };
 
-/** Full route result from the cart GET handler — JSON with {@link CartGetData} payload and response headers. */
+/**
+ * Full route result from the cart GET handler — JSON with {@link CartGetData} payload and response headers.
+ *
+ * @public
+ */
 export type CartGetResult<TCart = CartData> = ShopifyRouteJsonResult<CartGetData<TCart>>;
 
-/** Machine-readable error codes returned by the cart POST handler. */
+/**
+ * Machine-readable error codes returned by the cart POST handler.
+ *
+ * @public
+ */
 export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_mutation_failed";
 
-/** A cart route error carrying a {@link CartErrorCode} for programmatic handling. */
+/**
+ * A cart route error carrying a {@link CartErrorCode} for programmatic handling.
+ *
+ * @public
+ */
 export type CartError = ShopifyRouteError & {
   code: CartErrorCode;
 };
@@ -68,6 +84,8 @@ export type CartError = ShopifyRouteError & {
  * - JSON with the mutation payload (programmatic clients)
  * - 303 redirect back to the referrer (HTML form submissions)
  * - An error with a {@link CartErrorCode}
+ *
+ * @public
  */
 export type CartPostResult =
   | ShopifyRouteJsonResult<Record<string, unknown>>
@@ -105,7 +123,11 @@ type CartCustomerSessionWriteContext = {
 
 type CartCustomerSession = CustomerSession;
 
-/** GET handler for the `/api/cart` route — fetches the current cart from the Storefront API. */
+/**
+ * GET handler for the `/api/cart` route — fetches the current cart from the Storefront API.
+ *
+ * @public
+ */
 export type CartGetHandler<
   TCart = CartData,
   TContext extends CartGetHandlerContext = CartGetHandlerContext,
@@ -116,7 +138,11 @@ export type CartGetHandler<
   typeof CART_GET_METHOD
 >;
 
-/** POST handler for the `/api/cart` route — processes cart mutations from JSON or FormData bodies. */
+/**
+ * POST handler for the `/api/cart` route — processes cart mutations from JSON or FormData bodies.
+ *
+ * @public
+ */
 export type CartPostHandler<TContext extends CartPostHandlerContext = CartPostHandlerContext> =
   CallableRouteHandler<TContext, CartPostResult, typeof CART_API_PATH, typeof CART_POST_METHOD>;
 
@@ -126,6 +152,8 @@ export type CartPostHandler<TContext extends CartPostHandlerContext = CartPostHa
  * Created by {@link createCartServerHandlers}. Register these with your
  * framework's router so the client cart store can communicate with the
  * Storefront API.
+ *
+ * @public
  */
 export type CartServerHandlers<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
@@ -142,6 +170,8 @@ export type CartServerHandlers<
  * manager and request context.
  *
  * Created by passing `customerSession` to {@link createCartServerHandlers}.
+ *
+ * @public
  */
 export type CartServerHandlersWithCustomerSession<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
@@ -181,12 +211,17 @@ type CartDataFromHandlerResult<TResult> = [TResult] extends [never]
  * ```ts
  * type MyCartData = CartDataFromHandlers<typeof cartHandlers>;
  * ```
+ * @public
  */
 export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
   CartGetHandlerResult<THandlers>
 >;
 
-/** Options for {@link createCartServerHandlers}. */
+/**
+ * Options for {@link createCartServerHandlers}.
+ *
+ * @public
+ */
 export type CreateCartServerHandlersOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
 > = {
@@ -232,6 +267,7 @@ type CartServerHandlersForOptions<TOptions> = TOptions extends {
  *   customerSession,
  * });
  * ```
+ * @public
  */
 export function createCartServerHandlers(): CartServerHandlers<typeof cartQueries.cart>;
 export function createCartServerHandlers<const TOptions extends CreateCartServerHandlersOptions>(

@@ -40,7 +40,11 @@ type PredictiveSearchContextValue = {
 
 const PredictiveSearchContext = createContext<PredictiveSearchContextValue | null>(null);
 
-/** Props for the {@link PredictiveSearchProvider} component. */
+/**
+ * Props for the {@link PredictiveSearchProvider} component.
+ *
+ * @public
+ */
 export type PredictiveSearchProviderProps = CreatePredictiveSearchStoreOptions & {
   children?: ReactNode;
   /** Form action URL for progressive enhancement. Used by {@link usePredictiveSearchForm} to set the form's `action` attribute so the search works without JavaScript. Falls back to `"/search"` when omitted. */
@@ -54,6 +58,8 @@ export type { PredictiveSearchActions };
  *
  * Accepts all standard form HTML attributes except `onSubmit`, which is
  * replaced by a version that provides the extracted search term.
+ *
+ * @public
  */
 export type PredictiveSearchFormPropsOptions = Omit<
   FormHTMLAttributes<HTMLFormElement>,
@@ -71,6 +77,8 @@ export type PredictiveSearchFormPropsOptions = Omit<
  *
  * Accepts all standard input HTML attributes except those controlled by the
  * form registration.
+ *
+ * @public
  */
 export type PredictiveSearchQueryInputPropsOptions = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -82,13 +90,21 @@ export type PredictiveSearchQueryInputPropsOptions = Omit<
 
 type PredictiveSearchFormField = Parameters<CorePredictiveSearchFormRegister>[0];
 
-/** Generates input element attributes for a named form field. */
+/**
+ * Generates input element attributes for a named form field.
+ *
+ * @public
+ */
 export type PredictiveSearchFormRegister = (
   field: PredictiveSearchFormField,
   options?: PredictiveSearchQueryInputPropsOptions,
 ) => InputHTMLAttributes<HTMLInputElement>;
 
-/** Return type of {@link usePredictiveSearchForm}, providing methods to build a progressively-enhanced search form. */
+/**
+ * Return type of {@link usePredictiveSearchForm}, providing methods to build a progressively-enhanced search form.
+ *
+ * @public
+ */
 export type PredictiveSearchFormResult = {
   /** Generates form element attributes including the search action and submit handler. */
   formProps(options?: PredictiveSearchFormPropsOptions): FormHTMLAttributes<HTMLFormElement>;
@@ -104,6 +120,7 @@ export type PredictiveSearchFormResult = {
  * on mount and destroys it on unmount.
  *
  * @throws {Error} When no `fetch` implementation is available (neither passed as a prop nor available on `globalThis`).
+ * @public
  */
 export function PredictiveSearchProvider({
   children,
@@ -213,6 +230,7 @@ function useRequiredContext(hookName: string): PredictiveSearchContextValue {
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
  * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @public
  */
 export function usePredictiveSearch<
   TData extends PredictiveSearchData = PredictiveSearchData,
@@ -272,6 +290,7 @@ export function usePredictiveSearch<
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
  * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @public
  */
 export function usePredictiveSearchActions(): PredictiveSearchActions {
   return useRequiredContext("usePredictiveSearchActions").actions;
@@ -291,6 +310,7 @@ export function usePredictiveSearchActions(): PredictiveSearchActions {
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
  * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @public
  */
 export function usePredictiveSearchForm(): PredictiveSearchFormResult {
   const { searchAction, actions } = useRequiredContext("usePredictiveSearchForm");

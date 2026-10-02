@@ -5,6 +5,8 @@ import type { CollectionState } from "./state";
 /**
  * Parsed collection URL parameters — the subset of {@link CollectionState}
  * that is derived from the URL query string.
+ *
+ * @public
  */
 export interface CollectionParams {
   /** Active product filters parsed from `filter.*` URL keys. */
@@ -55,6 +57,7 @@ const STANDARD_EVENTS_COLLECTION_SORT_KEY: Record<string, ProductCollectionSortK
  * and the `sort_by` param (with optional `-descending`/`-ascending` suffix).
  *
  * @param searchParams - URL search params to parse
+ * @public
  */
 export function parseCollectionParams(searchParams: URLSearchParams): CollectionParams {
   const filters = parseProductFilters(searchParams);
@@ -72,6 +75,7 @@ export function parseCollectionParams(searchParams: URLSearchParams): Collection
  * Omits `sort_by` when `sortKey` is `undefined` (collection default).
  *
  * @param state - The filter/sort slice of collection state
+ * @public
  */
 export function serializeCollectionParams(
   state: Pick<CollectionState, "filters" | "sortKey" | "reverse">,
@@ -94,7 +98,11 @@ function isStoreOwnedParam(key: string): boolean {
   return key === "sort_by" || key.startsWith("filter.");
 }
 
-/** Normalizes a router search string for comparison (strips a leading `?`). */
+/**
+ * Normalizes a router search string for comparison (strips a leading `?`).
+ *
+ * @public
+ */
 export function normalizeCollectionSearch(search: string): string {
   return search.startsWith("?") ? search.slice(1) : search;
 }
@@ -158,6 +166,8 @@ export function collectionParamsMatchState(
  * Clears pagination cursors so the changed filter state starts from its first page.
  * Returns `"?"` when removing the filter leaves no params. Useful for
  * rendering "remove filter" links without updating store state.
+ *
+ * @public
  */
 export function getFilterRemovalUrl(currentParams: URLSearchParams, filter: ProductFilter): string {
   const result = new URLSearchParams(currentParams);
@@ -182,6 +192,7 @@ export function isDirectionalSortKey(sortKey: ProductCollectionSortKeys): boolea
  *
  * @param sortKey - Storefront API `ProductCollectionSortKeys` enum value
  * @param reverse - `true` for descending, `false` for ascending
+ * @public
  */
 export function getSortByValue(sortKey: ProductCollectionSortKeys, reverse: boolean): string {
   const base = SORT_KEY_TO_SORT_BY[sortKey] ?? sortKey.toLowerCase();
@@ -196,6 +207,7 @@ export function getSortByValue(sortKey: ProductCollectionSortKeys, reverse: bool
  * sort key and direction. Inverse of {@link getSortByValue}.
  *
  * @param value - A `sort_by` param value (e.g. `"price-ascending"`, `"best-selling"`)
+ * @public
  */
 export function parseSortByValue(value: string): {
   sortKey: ProductCollectionSortKeys | undefined;
@@ -404,7 +416,11 @@ function clearPaginationCursors(params: URLSearchParams): void {
   }
 }
 
-/** Compares two individual {@link ProductFilter} objects for semantic equality. */
+/**
+ * Compares two individual {@link ProductFilter} objects for semantic equality.
+ *
+ * @public
+ */
 export function filterEquals(a: ProductFilter, b: ProductFilter): boolean {
   const kindA = filterKind(a);
   const kindB = filterKind(b);
@@ -454,7 +470,11 @@ export function filterEquals(a: ProductFilter, b: ProductFilter): boolean {
   }
 }
 
-/** Returns `true` when `input` (a Storefront API filter JSON string) matches an active filter. */
+/**
+ * Returns `true` when `input` (a Storefront API filter JSON string) matches an active filter.
+ *
+ * @public
+ */
 export function isFilterInputActive(activeFilters: ProductFilter[], input: string): boolean {
   let parsed: ProductFilter;
   try {

@@ -10,6 +10,8 @@
  * `x-request-id` response header exists. Both are absent on network
  * failures where no response arrived. `retryAfter` is populated only on
  * non-OK responses.
+ *
+ * @public
  */
 export class CustomerAccountApiError extends Error {
   /** HTTP status code from the API response. Present whenever an HTTP response was received (including parse failures), absent on network failures where no response arrived. */
@@ -37,6 +39,8 @@ export class CustomerAccountApiError extends Error {
  * characters (including DEL). Also thrown when the options object is
  * missing. A token the server rejects (e.g. expired or revoked) produces
  * the base {@link CustomerAccountApiError} with `status: 401` instead.
+ *
+ * @public
  */
 export class CustomerAccountAuthenticationError extends CustomerAccountApiError {
   constructor(message = "Customer Account API access token is required") {
@@ -50,6 +54,8 @@ export class CustomerAccountAuthenticationError extends CustomerAccountApiError 
  * `defaultTimeoutInMs`. (OAuth token-request timeouts throw the base
  * {@link CustomerAccountApiError} instead.) Extends
  * {@link CustomerAccountApiError}.
+ *
+ * @public
  */
 export class CustomerAccountTimeoutError extends CustomerAccountApiError {
   /** The timeout threshold (in milliseconds) that was exceeded. */
@@ -76,6 +82,8 @@ export class CustomerAccountTimeoutError extends CustomerAccountApiError {
  * `"invalid_token_response"`, `"nonce_mismatch"`, `"issuer_mismatch"`,
  * `"audience_mismatch"`, `"expired_id_token"`, `"invalid_id_token"`,
  * `"missing_pending_login"`.
+ *
+ * @public
  */
 export class CustomerAccountOAuthError extends Error {
   /** Machine-readable error identifier for programmatic handling. */

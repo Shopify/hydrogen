@@ -1,25 +1,41 @@
 import type { ProductVariantInput } from "./state";
 
-/** Props returned by {@link ProductFormRegister} for the `merchandiseId` input. */
+/**
+ * Props returned by {@link ProductFormRegister} for the `merchandiseId` input.
+ *
+ * @public
+ */
 export interface ProductMerchandiseIdProps {
   name: "merchandiseId";
   /** The currently selected variant ID, or an empty string when no variant is resolved. */
   value: string;
 }
 
-/** Props returned by {@link ProductFormRegister} for a quantity input. */
+/**
+ * Props returned by {@link ProductFormRegister} for a quantity input.
+ *
+ * @public
+ */
 export interface ProductQuantityProps {
   name: "quantity";
   value: string;
 }
 
-/** Props returned by {@link ProductFormRegister} for an uncontrolled quantity input. */
+/**
+ * Props returned by {@link ProductFormRegister} for an uncontrolled quantity input.
+ *
+ * @public
+ */
 export interface ProductQuantityDefaultProps {
   name: "quantity";
   defaultValue: string;
 }
 
-/** Props returned by {@link ProductFormRegister} for a variant option value control. */
+/**
+ * Props returned by {@link ProductFormRegister} for a variant option value control.
+ *
+ * @public
+ */
 export interface ProductOptionValueProps {
   name: string;
   value: string;
@@ -27,7 +43,11 @@ export interface ProductOptionValueProps {
   onClick: () => void;
 }
 
-/** Props returned by {@link ProductFormRegister} for the add-to-cart submit button. */
+/**
+ * Props returned by {@link ProductFormRegister} for the add-to-cart submit button.
+ *
+ * @public
+ */
 export interface ProductAddToCartProps {
   name: "add-to-cart";
   type: "submit";
@@ -35,13 +55,21 @@ export interface ProductAddToCartProps {
 
 type AttributeValueName = `attributes.${string}`;
 
-/** Props returned by {@link ProductFormRegister} for a line-item attribute input. */
+/**
+ * Props returned by {@link ProductFormRegister} for a line-item attribute input.
+ *
+ * @public
+ */
 export interface ProductAttributeValueProps {
   name: AttributeValueName;
   value: string;
 }
 
-/** Props returned by {@link ProductFormRegister} for an uncontrolled line-item attribute input. */
+/**
+ * Props returned by {@link ProductFormRegister} for an uncontrolled line-item attribute input.
+ *
+ * @public
+ */
 export interface ProductAttributeDefaultValueProps {
   name: AttributeValueName;
   defaultValue: string;
@@ -56,6 +84,8 @@ export interface ProductAttributeDefaultValueProps {
  * Option values return form identity and activation handlers. UI props such as
  * `type`, `checked`, `disabled`, and `aria-pressed` belong to the caller — use
  * the state available on `options` (e.g. `value.selected`, `value.available`).
+ *
+ * @public
  */
 export type ProductFormRegister = {
   (field: "merchandiseId", opts: {}): ProductMerchandiseIdProps;
@@ -73,6 +103,8 @@ export type ProductFormRegister = {
 /**
  * Creates a {@link ProductFormRegister} function bound to the current variant
  * state and `selectOption` dispatcher.
+ *
+ * @public
  */
 export function createProductFormRegister(
   selectedVariant: ProductVariantInput | null,

@@ -29,6 +29,7 @@ type StorefrontRequest = Pick<Request, "headers"> &
 export type ShopifyLanguageCode = Extract<StorefrontLanguageCode, CustomerAccountLanguageCode>;
 export type ShopifyCountryCode = Extract<StorefrontCountryCode, CustomerAccountCountryCode>;
 
+/** @public */
 export type I18nConfig = {
   language: ShopifyLanguageCode;
   country: ShopifyCountryCode;
@@ -105,11 +106,13 @@ type ShopifyRequestContextBase = {
   applyResponseHeaders(headers: Headers): void;
 };
 
+/** @public */
 export type ShopifyRequestContext<I18n extends I18nConfig = I18nConfig> =
   ShopifyRequestContextBase & {
     i18n: NormalizedI18nConfig<I18n>;
   };
 
+/** @public */
 export type ShopifyRequestContextWithBuyerIp<I18n extends I18nConfig = I18nConfig> =
   ShopifyRequestContext<I18n> & { readonly buyerIp: string };
 
@@ -125,6 +128,12 @@ type Context<I18n extends I18nConfig = I18nConfig> = {
   documentRequest?: boolean;
 };
 
+/**
+ * Creates the per-request context that Hydrogen's server APIs take. It normalizes the i18n config
+ * and owns the request and response headers a Shopify storefront needs.
+ *
+ * @public
+ */
 export function createShopifyRequestContext<const I18n extends I18nConfig>(
   input: ShopifyRequestContextWithBuyerIpInput<I18n>,
 ): ShopifyRequestContextWithBuyerIp<I18n>;

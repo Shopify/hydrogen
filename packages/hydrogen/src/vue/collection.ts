@@ -54,6 +54,7 @@ const CollectionStoreKey: InjectionKey<ShallowRef<CollectionStore>> = Symbol("Co
  *   </CollectionProvider>
  * </template>
  * ```
+ * @public
  */
 export const CollectionProvider = defineComponent({
   name: "CollectionProvider",
@@ -147,6 +148,7 @@ function useRequiredStoreRef(composableName: string): ShallowRef<CollectionStore
  *   <p>{{ state.status }}</p>
  * </template>
  * ```
+ * @public
  */
 export function useCollection(): Readonly<ShallowRef<CollectionState>>;
 /**
@@ -198,6 +200,8 @@ export function useCollection<S>(
  * Returns methods that change filters and sort. The store's `onBrowseChange`
  * callback (set by {@link CollectionProvider}) handles emitting `change` with a
  * serialized search string.
+ *
+ * @public
  */
 export function useCollectionActions(): CollectionActions {
   const storeRef = useRequiredStoreRef("useCollectionActions");
@@ -229,6 +233,7 @@ export function useCollectionActions(): CollectionActions {
  *   </form>
  * </template>
  * ```
+ * @public
  */
 export function useCollectionForm(): {
   formProps: (opts?: {
