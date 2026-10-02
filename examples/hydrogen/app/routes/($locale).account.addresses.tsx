@@ -1,3 +1,4 @@
+import type { GraphQLFormattedError } from "@shopify/hydrogen";
 import type * as CAAPI from "@shopify/hydrogen/customer-account";
 import type {
   CountryCode,
@@ -156,10 +157,17 @@ function parseCountryCode(value: string) {
   return countryCode.toUpperCase() as CountryCode;
 }
 
-function getGraphqlErrorMessage(errors: ReadonlyArray<{ message: string }>) {
-  const { message } = errors[0];
-  // An unknown CountryCode fails variable validation with a message listing every valid code.
-  return /\bcountryCode \(Expected /.test(message) ? INVALID_COUNTRY_CODE_MESSAGE : message;
+// An unknown CountryCode fails variable validation with a message listing every valid code.
+function getGraphqlErrorMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
+  const [error] = errors;
+  const problems = error.extensions?.problems;
+  const hasCountryCodeProblem = Array.isArray(problems) && problems.some(isCountryCodeProblem);
+  return hasCountryCodeProblem ? INVALID_COUNTRY_CODE_MESSAGE : error.message;
+}
+
+function isCountryCodeProblem(problem: unknown) {
+  if (typeof problem !== "object" || problem === null || !("path" in problem)) return false;
+  return Array.isArray(problem.path) && problem.path.at(-1) === "countryCode";
 }
 
 function addressActionError(addressId: string, message: string, status: number) {

@@ -1,6 +1,6 @@
 import { setTestStore, test, expect, MSW_SCENARIOS } from "../../fixtures";
 import type { AddressFormData } from "../../fixtures/delivery-address-utils";
-import { DELIVERY_ADDRESS_SEED_COUNT } from "../../fixtures/msw/handlers";
+import { DELIVERY_ADDRESS_SEED_COUNT, UNKNOWN_COUNTRY_CODE } from "../../fixtures/msw/handlers";
 
 setTestStore("mockShop", {
   mock: { scenario: MSW_SCENARIOS.deliveryAddresses },
@@ -59,6 +59,23 @@ test.describe("Delivery Addresses", () => {
       await expect(
         createForm.getByText("Enter a valid two-letter country code, such as US or GB."),
       ).toBeVisible();
+      await addresses.assertAddressCount(DELIVERY_ADDRESS_SEED_COUNT);
+    });
+
+    test("shows a friendly message when the API rejects the country code", async ({
+      addresses,
+    }) => {
+      const createForm = addresses.getCreateAddressForm();
+      await addresses.fillAddressForm(createForm, {
+        ...NEW_ADDRESS,
+        countryCode: UNKNOWN_COUNTRY_CODE,
+      });
+      await createForm.getByRole("button", { name: "Create" }).click();
+
+      await expect(
+        createForm.getByText("Enter a valid two-letter country code, such as US or GB."),
+      ).toBeVisible();
+      await expect(createForm.getByText("to be one of")).toHaveCount(0);
       await addresses.assertAddressCount(DELIVERY_ADDRESS_SEED_COUNT);
     });
 
