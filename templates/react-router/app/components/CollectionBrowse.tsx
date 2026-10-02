@@ -506,7 +506,7 @@ export function Toolbar({
           type="button"
           commandfor={filterDrawerId}
           command="show-modal"
-          className="button-outline rounded-button focus-visible:outline-accent min-h-touch-target inline-flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] lg:hidden"
+          className="button-outline rounded-button focus-visible:outline-focus-ring min-h-touch-target inline-flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] lg:hidden"
           aria-controls={filterDrawerId}
           aria-haspopup="dialog"
           onClick={() => openDialogFallback(filterDrawerId)}
@@ -548,7 +548,7 @@ export function Toolbar({
         <noscript>
           <button
             type="submit"
-            className="button-outline rounded-button focus-visible:outline-accent min-h-touch-target inline-flex shrink-0 cursor-pointer items-center justify-center px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="button-outline rounded-button focus-visible:outline-focus-ring min-h-touch-target inline-flex shrink-0 cursor-pointer items-center justify-center px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             Sort
           </button>
@@ -581,7 +581,7 @@ export function FacetForm({
       <noscript>
         <button
           type="submit"
-          className="rounded-button button-primary focus-visible:outline-accent mt-4 inline-flex h-11 items-center justify-center px-4 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="rounded-button button-primary focus-visible:outline-focus-ring mt-4 inline-flex h-11 items-center justify-center px-4 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           Apply filters
         </button>
@@ -615,7 +615,7 @@ export function FilterDrawer({
             type="button"
             commandfor={id}
             command="close"
-            className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+            className="button-icon focus-visible:outline-focus-ring inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
             aria-label="Close"
             onClick={() => closeDialog(id)}
           >
@@ -751,7 +751,7 @@ export function LoadMore({
         to={href}
         preventScrollReset
         aria-disabled={isLoading}
-        className={`button-outline rounded-button focus-visible:outline-accent inline-flex h-11 items-center justify-center gap-2 px-6 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] ${isLoading ? "pointer-events-none opacity-50" : ""}`}
+        className={`button-outline rounded-button focus-visible:outline-focus-ring inline-flex h-11 items-center justify-center gap-2 px-6 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] ${isLoading ? "pointer-events-none opacity-50" : ""}`}
         onClick={(event) => {
           event.preventDefault();
           if (!isLoading) onLoad(href, nextSearch);

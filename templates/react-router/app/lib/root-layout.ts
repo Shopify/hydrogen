@@ -17,6 +17,12 @@ export const ROOT_LAYOUT_QUERY = gql(`
             height
           }
         }
+        colors {
+          primary {
+            background
+            foreground
+          }
+        }
       }
       paymentSettings {
         acceptedCardBrands

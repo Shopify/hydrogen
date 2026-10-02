@@ -16,10 +16,18 @@ export type StorefrontShopLogo = {
   height: number | null;
 };
 
+export type StorefrontShopBrandColor = {
+  background: string;
+  /** Text color the merchant paired with `background`, or `null` when none is set. */
+  foreground: string | null;
+};
+
 export type StorefrontShop = {
   name: string;
   /** Brand logo from the shop's brand settings, or `null` when none is set. */
   logo: StorefrontShopLogo | null;
+  /** First primary color from the shop's brand palette, or `null` when none is set. */
+  primaryColor: StorefrontShopBrandColor | null;
   /** Human-readable accepted card brands, then digital wallets, deduplicated. */
   paymentMethods: PaymentMethodLabel[];
 };
@@ -84,11 +92,21 @@ function normalizeLogo(
   };
 }
 
+function normalizePrimaryColor(
+  colors: NonNullable<StorefrontShopQueryData["brand"]>["colors"] | undefined,
+): StorefrontShopBrandColor | null {
+  const background = nonEmpty(colors?.primary[0]?.background);
+  if (!background) return null;
+
+  return { background, foreground: nonEmpty(colors?.primary[0]?.foreground) };
+}
+
 /** Normalizes the root query's `shop` selection for the layout and metadata. */
 export function normalizeStorefrontShop(shop: StorefrontShopQueryData): StorefrontShop {
   return {
     name: nonEmpty(shop.name) ?? FALLBACK_SHOP_NAME,
     logo: normalizeLogo(shop.brand?.logo),
+    primaryColor: normalizePrimaryColor(shop.brand?.colors),
     paymentMethods: getPaymentMethodLabels(shop.paymentSettings),
   };
 }
