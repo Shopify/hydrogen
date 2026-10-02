@@ -165,7 +165,8 @@ async function rejectUnknownTemplate(appTemplate: string): Promise<never> {
     {
       list: {
         title: 'Available templates:',
-        // Note: demo-store is handled as an external template
+        // Note: skeleton uses the local starter flow, and demo-store is
+        // handled as an external template
         items: ['skeleton', 'demo-store'],
       },
     },

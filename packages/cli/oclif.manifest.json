@@ -1045,7 +1045,7 @@
           "type": "option"
         },
         "template": {
-          "description": "Scaffolds project based on an existing template or a URL to a git repository.",
+          "description": "Scaffolds project based on a template: `skeleton` (the default), `demo-store` or a URL to a git repository.",
           "env": "SHOPIFY_HYDROGEN_FLAG_TEMPLATE",
           "name": "template",
           "hasDynamicHelp": false,

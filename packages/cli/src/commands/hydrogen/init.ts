@@ -34,7 +34,7 @@ export default class Init extends Command {
     }),
     template: Flags.string({
       description:
-        'Scaffolds project based on an existing template or a URL to a git repository.',
+        'Scaffolds project based on a template: `skeleton` (the default), `demo-store` or a URL to a git repository.',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
     ...commonFlags.installDeps,
