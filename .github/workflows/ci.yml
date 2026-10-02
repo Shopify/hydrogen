@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [preview]
+  pull_request:
+    branches: [preview]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, Format, Typecheck, Test, Build
+    runs-on: ubuntu-latest
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format check
+        run: pnpm run format:check
+
+      - name: Ensure prerelease mode
+        # Catch a deleted or exited pre.json at PR time; without it the
+        # release job publishes a plain version to the latest dist-tag
+        run: jq -e '.mode == "pre" and .tag == "preview"' .changeset/pre.json
+
+      - name: Changesets check
+        run: node scripts/assert-no-major-changesets.ts
+
+      - name: Lint
+        run: pnpm run lint:ci
+
+      - name: Build packages
+        run: pnpm run build
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Test
+        run: pnpm run test
+
+  local-https:
+    name: Local HTTPS (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Provision local HTTPS certificate
+        if: runner.os != 'Windows'
+        run: pnpm turbo run build --filter=@shopify/hydrogen && node packages/hydrogen/bin/hydrogen.mjs certs install
+
+      - name: Provision local HTTPS certificate on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          # GitHub-hosted runners cannot accept Windows' root-store prompt.
+          # Generate the same CA and provide it directly to Node's TLS verifier.
+          TRUST_STORES: none
+        run: |
+          pnpm turbo run build --filter=@shopify/hydrogen
+          node packages/hydrogen/bin/hydrogen.mjs certs install
+          $rootCertificate = Join-Path $env:LOCALAPPDATA 'mkcert\rootCA.pem'
+          if (!(Test-Path $rootCertificate)) {
+            throw "mkcert root CA was not created at $rootCertificate"
+          }
+          Add-Content -Path $env:GITHUB_ENV -Value "NODE_EXTRA_CA_CERTS=$rootCertificate"
+
+      - name: Verify trusted local HTTPS
+        run: pnpm run test:local-https

@@ -1,0 +1,55 @@
+import { gql, type StorefrontApi, type StorefrontClient } from "@shopify/hydrogen";
+
+import { normalizeStorefrontShop, type StorefrontShop } from "~/lib/storefront-shop";
+
+export const ROOT_LAYOUT_QUERY = gql(`
+  query RootLayout {
+    shop {
+      id
+      name
+      brand {
+        logo {
+          alt
+          image {
+            url
+            altText
+            width
+            height
+          }
+        }
+      }
+      paymentSettings {
+        acceptedCardBrands
+        supportedDigitalWallets
+      }
+    }
+  }
+`);
+
+export type RootLayoutQueryResult = StorefrontApi.ResultOf<typeof ROOT_LAYOUT_QUERY>;
+
+type RootLayoutLoaderData = {
+  shopId: string;
+  shopInfo: StorefrontShop;
+};
+
+export async function loadRootLayout(
+  storefrontClient: Pick<StorefrontClient, "graphql">,
+): Promise<RootLayoutLoaderData> {
+  const layoutResult = await storefrontClient.graphql(ROOT_LAYOUT_QUERY);
+
+  if (layoutResult.errors) {
+    console.error(
+      `Root layout query failed: ${layoutResult.errors.map(({ message }) => message).join("\n")}`,
+    );
+  }
+
+  // Upstream error details are logged above, not exposed through the boundary.
+  if (!layoutResult.data) throw new Error("Root layout data is unavailable.");
+
+  const { shop } = layoutResult.data;
+  return {
+    shopId: shop.id,
+    shopInfo: normalizeStorefrontShop(shop),
+  };
+}
