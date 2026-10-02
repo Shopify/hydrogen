@@ -1,3 +1,4 @@
+import type { GraphQLFormattedError } from "@shopify/hydrogen";
 import type { RequestHandler } from "msw";
 import { graphql, HttpResponse } from "msw";
 
@@ -13,7 +14,7 @@ import type {
   CustomerDetailsQuery,
   CustomerOrdersQuery,
 } from "../../../customer-accountapi.generated";
-import { mockCustomerAccountOperation } from "./graphql";
+import { graphqlErrors, mockCustomerAccountOperation } from "./graphql";
 import { MSW_SCENARIOS, MswScenario } from "./scenarios";
 
 const customerDetailsMock: CustomerDetailsQuery = {
@@ -156,7 +157,7 @@ const DELIVERY_ADDRESS_SEED_DATA: AddressFragment[] = [
     company: "Shopify",
     address1: "123 Main St",
     address2: "",
-    territoryCode: "CA",
+    countryCode: "CA",
     zoneCode: "ON",
     city: "Anytown",
     zip: "M5V 2H1",
@@ -170,7 +171,7 @@ const DELIVERY_ADDRESS_SEED_DATA: AddressFragment[] = [
     company: "",
     address1: "456 Oak Ave",
     address2: "Apt 2B",
-    territoryCode: "US",
+    countryCode: "US",
     zoneCode: "IL",
     city: "Springfield",
     zip: "62704",
@@ -179,6 +180,26 @@ const DELIVERY_ADDRESS_SEED_DATA: AddressFragment[] = [
 ];
 
 export const DELIVERY_ADDRESS_SEED_COUNT = DELIVERY_ADDRESS_SEED_DATA.length;
+
+/** Two letters, but not a `CountryCode` value. (`ZZ` is one: "Unknown Region".) */
+export const UNKNOWN_COUNTRY_CODE = "XX";
+
+// The shape the API returns when a nested enum input fails variable validation.
+function unknownCountryCodeError(address: unknown): GraphQLFormattedError {
+  return {
+    message: `Variable $address of type CustomerAddressInput! was provided invalid value for countryCode (Expected "${UNKNOWN_COUNTRY_CODE}" to be one of: AF, AX, AL, ...)`,
+    locations: [{ line: 1, column: 31 }],
+    extensions: {
+      value: address,
+      problems: [
+        {
+          path: ["countryCode"],
+          explanation: `Expected "${UNKNOWN_COUNTRY_CODE}" to be one of: AF, AX, AL, ...`,
+        },
+      ],
+    },
+  };
+}
 
 function createDeliveryAddressesScenario(): MswScenarioMeta {
   let nextAddressId = DELIVERY_ADDRESS_SEED_DATA.length + 1;
@@ -203,20 +224,23 @@ function createDeliveryAddressesScenario(): MswScenarioMeta {
       })),
       mockCustomerAccountOperation(CUSTOMER_ORDERS_QUERY, () => customerOrdersMock),
       mockCustomerAccountOperation(CREATE_ADDRESS_MUTATION, ({ variables }) => {
+        if (String(variables.address.countryCode) === UNKNOWN_COUNTRY_CODE) {
+          return graphqlErrors([unknownCountryCodeError(variables.address)]);
+        }
         const id = `gid://shopify/CustomerAddress/${nextAddressId++}`;
         const newAddress: AddressFragment = {
           id,
           formatted: [
             variables.address.address1 ?? "",
             `${variables.address.city ?? ""} ${variables.address.zoneCode ?? ""} ${variables.address.zip ?? ""}`,
-            variables.address.territoryCode ?? "",
+            variables.address.countryCode ?? "",
           ],
           firstName: variables.address.firstName ?? "",
           lastName: variables.address.lastName ?? "",
           company: variables.address.company ?? "",
           address1: variables.address.address1 ?? "",
           address2: variables.address.address2 ?? "",
-          territoryCode: variables.address.territoryCode ?? "",
+          countryCode: variables.address.countryCode ?? null,
           zoneCode: variables.address.zoneCode ?? "",
           city: variables.address.city ?? "",
           zip: variables.address.zip ?? "",
@@ -242,7 +266,7 @@ function createDeliveryAddressesScenario(): MswScenarioMeta {
             formatted: [
               variables.address.address1 ?? addresses[index].address1 ?? "",
               `${variables.address.city ?? addresses[index].city ?? ""} ${variables.address.zoneCode ?? addresses[index].zoneCode ?? ""} ${variables.address.zip ?? addresses[index].zip ?? ""}`,
-              variables.address.territoryCode ?? addresses[index].territoryCode ?? "",
+              variables.address.countryCode ?? addresses[index].countryCode ?? "",
             ],
           };
         }
