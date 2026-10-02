@@ -12,6 +12,7 @@ Use the React binding:
 
 ```tsx
 import {
+  formatMoney,
   getFilterRemovalUrl,
   getSortByValue,
   isFilterInputActive,
@@ -19,10 +20,12 @@ import {
   serializeCollectionParams,
   type AvailableFilter,
   type CollectionState,
+  type MoneyV2,
   type ProductFilter,
 } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
 import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
+import { useEffect, useRef } from "react";
 ```
 
 Use `getSortByValue(...)` for option values so the `sort_by` query param round-trips through `parseCollectionParams()`:
@@ -73,12 +76,20 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     collection: data.collection,
     products: data.collection.products.nodes,
     availableFilters: data.collection.products.filters,
+    // Market-aware stores: `data.localization.country.currency.isoCode` under `@inContext`.
+    currencyCode: data.shop.paymentSettings.currencyCode,
     dataSearch: url.searchParams.toString(),
   };
 }
 ```
 
-Keep `dataSearch` exactly aligned with the query used for the server data.
+Keep `dataSearch` exactly aligned with the query used for the server data. Load `currencyCode` in the same query so it matches the product prices.
+
+For the single-currency loader above, include this root-level selection in `COLLECTION_QUERY`:
+
+```graphql
+shop { paymentSettings { currencyCode } }
+```
 
 ## Provider
 
@@ -114,7 +125,7 @@ export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
 Inside the browse UI:
 
 ```tsx
-function CollectionPage({ availableFilters, products }: Props) {
+function CollectionPage({ availableFilters, currencyCode, products }: Props) {
   const state = useCollection();
   const { formProps } = useCollectionForm();
   const isLoading = state.status === "loading";
@@ -124,9 +135,9 @@ function CollectionPage({ availableFilters, products }: Props) {
       <FilterSidebar
         availableFilters={availableFilters}
         activeFilters={state.filters}
-        disabled={isLoading}
+        currencyCode={currencyCode}
       />
-      <select name="sort_by" defaultValue={currentSortValue(state)} onChange={requestFormSubmit}>
+      <select name="sort_by" value={currentSortValue(state)} onChange={requestFormSubmit}>
         {COLLECTION_SORT_OPTIONS.map((option) => (
           <option key={option.label} value={option.value}>
             {option.label}
@@ -145,7 +156,7 @@ function requestFormSubmit(event: React.ChangeEvent<HTMLInputElement | HTMLSelec
 
 Pass `method="get"` and an explicit `action={collectionPath}` (the current `/collections/:handle` or `/search` route URL) literally — `formProps()` only wires the submit handler (see the SKILL.md UI rule).
 
-Use uncontrolled form controls. When a route needs to remount them after external navigation, put `key={serializeCollectionParams({ filters: state.filters, sortKey: undefined, reverse: false }).toString()}` on the filter subtree (for search, include the term in the key) — keyed by serialized **filter state**, not the live URL. The URL clears before the `CollectionProvider` reconciler settles `state.filters`, so a URL-keyed remount bakes in stale defaults. This resets checkbox and price-input DOM state without coupling active filter chips to the form remount.
+Keep every filter control mounted and enabled during submission and loading, and show loading on the product grid (`pending`). Keep the filter subtree key stable across filter updates, so focused controls stay mounted. Bind the sort `value` and checkbox `checked` to browse state so chips and back/forward navigation update them in place. Keep price inputs uncontrolled and sync external bounds through input refs, as below.
 
 ## Filters
 
@@ -154,13 +165,15 @@ Choose the control at the filter-group level. `PRICE_RANGE` uses min/max number 
 ```tsx
 function FilterGroup({
   activeFilters,
+  currencyCode,
   filter,
 }: {
   activeFilters: ProductFilter[];
+  currencyCode: MoneyV2["currencyCode"];
   filter: AvailableFilter;
 }) {
   if (filter.type === "PRICE_RANGE") {
-    return <PriceRangeInput activeFilters={activeFilters} />;
+    return <PriceRangeInput activeFilters={activeFilters} currencyCode={currencyCode} />;
   }
 
   return filter.values.map((value) => (
@@ -173,38 +186,130 @@ function FilterGroup({
   ));
 }
 
-function PriceRangeInput({ activeFilters }: { activeFilters: ProductFilter[] }) {
+// Use the resolved market locale in market-aware stores.
+const LOCALE = "en-US";
+
+function PriceRangeInput({
+  activeFilters,
+  currencyCode,
+}: {
+  activeFilters: ProductFilter[];
+  currencyCode: MoneyV2["currencyCode"];
+}) {
+  // One timer for both inputs, so editing min then max submits once.
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const minInput = useRef<HTMLInputElement>(null);
+  const maxInput = useRef<HTMLInputElement>(null);
   const price = activeFilters.find((filter) => filter.price)?.price;
+  const min = price?.min ?? "";
+  const max = price?.max ?? "";
+  const symbol = formatMoney(
+    { amount: "0", currencyCode },
+    { locale: LOCALE },
+  ).currencyNarrowSymbol;
+
+  useEffect(() => {
+    for (const [input, value] of [
+      [minInput.current, min],
+      [maxInput.current, max],
+    ] as const) {
+      if (!input) continue;
+      const matches =
+        value === "" ? input.value === "" : input.value !== "" && Number(input.value) === value;
+      if (!matches) {
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = null;
+        input.value = String(value);
+      }
+    }
+  }, [min, max]);
+
+  useEffect(() => {
+    function cancelPendingSubmit() {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = null;
+    }
+
+    function restoreHistoryPrice() {
+      // Cancel drafts before history data loads, even if the price is unchanged.
+      cancelPendingSubmit();
+      const { filters } = parseCollectionParams(new URLSearchParams(window.location.search));
+      const price = filters.find((filter) => filter.price)?.price;
+      if (minInput.current) minInput.current.value = String(price?.min ?? "");
+      if (maxInput.current) maxInput.current.value = String(price?.max ?? "");
+    }
+
+    // Any form submission (native Enter included) already carries the typed price.
+    const form = minInput.current?.form;
+    form?.addEventListener("submit", cancelPendingSubmit);
+    window.addEventListener("popstate", restoreHistoryPrice);
+    return () => {
+      form?.removeEventListener("submit", cancelPendingSubmit);
+      window.removeEventListener("popstate", restoreHistoryPrice);
+      cancelPendingSubmit();
+    };
+  }, []);
+
+  function submitAfterTyping(event: React.ChangeEvent<HTMLInputElement>) {
+    if (timer.current) clearTimeout(timer.current);
+    const form = event.currentTarget.form;
+    timer.current = setTimeout(() => {
+      timer.current = null;
+      form?.requestSubmit();
+    }, 350);
+  }
+
   return (
     <>
-      <PriceInput name="filter.v.price.gte" defaultValue={price?.min} label="Minimum price" />
-      <PriceInput name="filter.v.price.lte" defaultValue={price?.max} label="Maximum price" />
+      <PriceInput
+        inputRef={minInput}
+        name="filter.v.price.gte"
+        defaultValue={min}
+        label={`Minimum price in ${currencyCode}`}
+        symbol={symbol}
+        onChange={submitAfterTyping}
+      />
+      <PriceInput
+        inputRef={maxInput}
+        name="filter.v.price.lte"
+        defaultValue={max}
+        label={`Maximum price in ${currencyCode}`}
+        symbol={symbol}
+        onChange={submitAfterTyping}
+      />
     </>
   );
 }
 
-function PriceInput({ name, defaultValue, label }: { name: string; defaultValue?: number; label: string }) {
-  const initialValue = defaultValue == null ? "" : String(defaultValue);
+function PriceInput({
+  inputRef,
+  name,
+  defaultValue,
+  label,
+  symbol,
+  onChange,
+}: {
+  inputRef: React.Ref<HTMLInputElement>;
+  name: string;
+  defaultValue: number | "";
+  label: string;
+  symbol: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
   return (
-    <input
-      type="number"
-      name={name}
-      defaultValue={defaultValue}
-      aria-label={label}
-      min="0"
-      step="any"
-      onBlur={(event) => {
-        if (event.currentTarget.value !== initialValue) {
-          event.currentTarget.form?.requestSubmit();
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          event.currentTarget.blur();
-        }
-      }}
-    />
+    <span className="price-input">
+      <span aria-hidden="true">{symbol}</span>
+      <input
+        ref={inputRef}
+        type="number"
+        name={name}
+        defaultValue={defaultValue}
+        aria-label={label}
+        min="0"
+        step="any"
+        onChange={onChange}
+      />
+    </span>
   );
 }
 
@@ -241,7 +346,7 @@ function CheckboxFilterValue({
       type="checkbox"
       name={name}
       value={paramValue}
-      defaultChecked={isFilterInputActive(activeFilters, value.input)}
+      checked={isFilterInputActive(activeFilters, value.input)}
       onChange={(event) => {
         if (isMutuallyExclusive(filter) && event.currentTarget.checked) {
           uncheckSiblings(event.currentTarget);
@@ -250,6 +355,20 @@ function CheckboxFilterValue({
       }}
     />
   );
+}
+```
+
+The symbol prefix sits outside the input, so the submitted value stays a plain number. Keep the wrapper simple so the prefix and input share one line at all widths:
+
+```css
+.price-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.price-input input {
+  min-width: 0;
 }
 ```
 
@@ -298,4 +417,4 @@ Use the same binding with a synthetic handle:
 </CollectionProvider>
 ```
 
-When the search term changes, include it in the browse form `key` so old unchecked/checked inputs do not carry over.
+Use a stable form identity while filters update, so controls keep focus. Use the submitted search term as the key when the form must reset for a new search. Keep that identity unchanged while the shopper types.

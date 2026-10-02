@@ -1,6 +1,8 @@
 import { formatMoney, type MoneyV2 } from "@shopify/hydrogen";
 
-export function formatPrice(money: MoneyV2, locale = "en-US"): string {
+export const DEFAULT_MONEY_LOCALE = "en-US";
+
+export function formatPrice(money: MoneyV2, locale = DEFAULT_MONEY_LOCALE): string {
   return formatMoney(money, { locale }).toString();
 }
 

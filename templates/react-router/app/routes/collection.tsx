@@ -217,7 +217,10 @@ function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["l
         isLoading={isLoading}
         onLoad={loadMore}
       />
-      <FilterDrawer availableFilters={loaderData.availableFilters} />
+      <FilterDrawer
+        availableFilters={loaderData.availableFilters}
+        currencyCode={loaderData.currencyCode}
+      />
     </>
   );
 }
@@ -252,7 +255,10 @@ export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
             <aside className="hidden lg:block" aria-label="Filters">
               <div className="sticky top-8">
                 <h2 className="type-heading-sm text-on-surface mb-2">Filters</h2>
-                <FacetForm availableFilters={loaderData.availableFilters} />
+                <FacetForm
+                  availableFilters={loaderData.availableFilters}
+                  currencyCode={loaderData.currencyCode}
+                />
               </div>
             </aside>
             <div>
