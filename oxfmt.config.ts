@@ -25,6 +25,8 @@ export default defineConfig({
     "**/.last-run.json",
     "pnpm-lock.yaml",
     "patches/**",
+    // MiniOxygen keeps its existing formatting instead of being reformatted.
+    "packages/mini-oxygen/**",
     "*.md",
     "*.svg",
     "*.ico",

@@ -10,7 +10,7 @@ description: >
 
 ## Goal
 
-Maintain `templates/react-router` as the canonical source for a professional starter that runs on Oxygen/MiniOxygen through Vite. Keep the app decoupled from monorepo-only shared code and development-only plugins while using the workspace Hydrogen package for local integration coverage.
+Maintain `templates/react-router` as the canonical source for a professional starter that runs on Oxygen/MiniOxygen through Vite. Keep the app decoupled from monorepo-only shared code and development-only plugins while using the workspace Hydrogen and MiniOxygen packages for local integration coverage.
 
 ## Workflow
 
@@ -34,13 +34,14 @@ Maintain `templates/react-router` as the canonical source for a professional sta
    - no `lru-cache` for Hydrogen primitives on Oxygen
    - no `catalog:` dependency ranges in the final template package
    - use `@shopify/hydrogen: workspace:*` in this repository so template E2E exercises the package under development
-     (see "Hydrogen dependency" below). Do not use repo-local `file:` dependencies or vendored package tarballs.
+     (see "Workspace dependencies" below). Do not use repo-local `file:` dependencies or vendored package tarballs.
 
 Keep `lib/route-templates.ts` unchanged. It defines `routeTemplates` via `createShopifyRouteTemplates`, which is a REQUIRED arg on `handleShopifyRedirects`, `ShopifyScripts` (`routes` prop), and `getPredictiveSearchItemUrl` (`routes` option).
 
 4. Add Oxygen/MiniOxygen support:
-   - `@shopify/mini-oxygen`: pin `^4.2.0` — its `oxygen()` plugin adds `configurePreviewServer`, which `vite preview`
-     needs to run the Worker.
+   - `@shopify/mini-oxygen: workspace:*`, so the template runs on the MiniOxygen in `packages/mini-oxygen` (see
+     "Workspace dependencies" below). Its `oxygen()` plugin adds `configurePreviewServer`, which `vite preview` needs
+     to run the Worker.
    - `@shopify/oxygen-workers-types`
    - `@shopify/cli` only for the deploy script. Pin `4.6.0` (minimum `4.4.0`) because deploy must support the explicit `--assets-dir` and `--worker-dir` flags.
    - a Worker entrypoint, usually root `server.ts`
@@ -64,23 +65,30 @@ Implementation details (exact per-file shape) live in [reference/react-router-pa
 
 - **Use `CI=true` for installs** in this repo (installs abort without a TTY: `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`),
   and `--no-frozen-lockfile` on the first install after adding the template or changing dependencies.
-- **Build the local Hydrogen package first**: `pnpm --filter @shopify/hydrogen build`. The source template consumes
-  `@shopify/hydrogen: workspace:*`, so its runtime imports, packed TypeScript plugin, and schemas use the package built in this repository.
+- **Build the local packages first**: `pnpm run build:pkgs`. The source template consumes
+  `@shopify/hydrogen: workspace:*` and `@shopify/mini-oxygen: workspace:*`, so its runtime imports, packed TypeScript
+  plugin, schemas, and Vite plugin use the packages built in this repository.
 
-## Hydrogen dependency
+## Workspace dependencies
 
-Use the workspace package in this repository:
+Use the workspace packages in this repository:
 
 ```json
-"@shopify/hydrogen": "workspace:*"
+"@shopify/hydrogen": "workspace:*",
+"@shopify/mini-oxygen": "workspace:*"
 ```
 
-This keeps the canonical template wired to the Hydrogen code under development, so repository builds and E2E tests
-cover package and template changes together.
+This keeps the canonical template wired to the Hydrogen and MiniOxygen code under development, so repository builds and
+E2E tests cover package and template changes together.
 
-The source template is not the standalone distribution artifact. This repository's release flow replaces
-`workspace:*` with the version selected by the `preview` dist-tag before generating the standalone lockfile. Preview
-cuts use the `2026.10.0-preview.<n>` format and must resolve from the registry with an integrity hash.
+The source template is not the standalone distribution artifact. Before generating the standalone lockfile, this
+repository's release flow replaces Hydrogen's `workspace:*` with the version selected by the `preview` dist-tag, and
+every other `workspace:*` dependency with the version in its `packages/*/package.json`. Hydrogen preview cuts use the
+`2026.10.0-preview.<n>` format, and every pinned version must resolve from the registry with an integrity hash.
+
+Repository builds and E2E run MiniOxygen's workspace source, but the distributed template installs the version
+`packages/mini-oxygen/package.json` declares. A template change that relies on unreleased MiniOxygen behavior works
+here and breaks in distribution, so ship the MiniOxygen change with a changeset and release it first.
 
 Do not rely on `shopify hydrogen deploy` recognizing that version format. The template's deploy script passes
 `--assets-dir dist/client --worker-dir dist/server`, which selects the template's `react-router build` output without
@@ -100,11 +108,10 @@ The source template declares `"packageManager": "pnpm@10.33.0"` so local develop
 manager and root lockfile. It does not commit a template lockfile; the root `.gitignore` keeps source-template
 lockfiles out of this repository.
 
-During distribution, the release flow changes the template to `"packageManager": "npm@11.17.0"`, replaces
-`workspace:*` with the version selected by the `preview` dist-tag, and generates `package-lock.json`. Oxygen requires
-that generated lockfile for `npm ci`. Verify its
-`node_modules/@shopify/hydrogen` entry resolves to a registry tarball with an integrity hash, not a `link:`,
-`workspace:`, or vendored `file:` entry. Independently verify the template deploy script includes
+During distribution, the release flow changes the template to `"packageManager": "npm@11.17.0"`, pins its
+`workspace:*` dependencies (see "Workspace dependencies"), and generates `package-lock.json`. Oxygen requires that
+generated lockfile for `npm ci`. Verify its `node_modules/@shopify/hydrogen` and `node_modules/@shopify/mini-oxygen`
+entries resolve to registry tarballs with integrity hashes, not `link:`, `workspace:`, or vendored `file:` entries. Independently verify the template deploy script includes
 `--assets-dir dist/client --worker-dir dist/server`; the lockfile does not prove the CLI will use those outputs.
 
 ### `minimumReleaseAge` supply-chain policy (org environments)
@@ -192,9 +199,9 @@ Before finishing:
 6. **Actually drive both runtimes, don't just check that a server starts** (static assets can serve even when the Worker isn't exercised):
    - `npm run dev`: request `/`, a product, a collection, `/search`, `/account`, `/cart` — expect HTTP 200 and live data.
    - `npm run preview` (= `react-router build && vite preview`, requires MiniOxygen `>= 4.2.0`): same requests through the built Worker. Confirm `.env` is loaded (root routes need real env, or they 500).
-7. For distribution validation, copy the template to a temporary directory, replace `workspace:*` with the version
-   selected by the `preview` dist-tag, generate `package-lock.json`, and verify Hydrogen resolves to a registry tarball
-   with integrity. Leave the source template lockfile-free.
+7. For distribution validation, copy the template to a temporary directory, pin its `workspace:*` dependencies as
+   "Workspace dependencies" describes, generate `package-lock.json`, and verify Hydrogen and MiniOxygen resolve to
+   registry tarballs with integrity. Leave the source template lockfile-free.
 8. Report any validation not run and why (e.g. an org `minimumReleaseAge` policy blocked install — that is an environment gate, not a template defect).
 
 Expected local noise / environment gotchas (do not treat as template bugs):

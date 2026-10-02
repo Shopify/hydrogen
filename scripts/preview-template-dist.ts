@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { syncSkills } from "../packages/hydrogen/src/cli/skills.ts";
 
 const HYDROGEN_PACKAGE = "@shopify/hydrogen";
+const DEPENDENCY_FIELDS = ["dependencies", "devDependencies"] as const;
 const SOURCE_ONLY_TEST_DIRECTORY = "__test__";
 // Module-level consts must precede the runCli() call below, which runs at import time.
 const SKILL_HARNESS_DIRECTORIES = [".claude", ".agents"];
@@ -33,6 +34,12 @@ interface PreviewDistOptions {
   repoRoot?: string;
   version: string;
   log?: (message: string) => void;
+}
+
+interface WorkspacePin {
+  dependencies: Record<string, unknown>;
+  name: string;
+  version: string;
 }
 
 if (isDirectInvocation()) {
@@ -79,6 +86,7 @@ export async function preparePreviewTemplateDist(options: PreviewDistOptions): P
 
   assertPublishedPreviewVersion(version);
   assertHydrogenPackageVersion(repoRoot, version);
+  const workspaceVersions = readWorkspaceVersions(repoRoot);
 
   const templatePackages = templates.map((template) => {
     const templateRoot = join(repoRoot, "templates", template.directory);
@@ -93,7 +101,8 @@ export async function preparePreviewTemplateDist(options: PreviewDistOptions): P
       );
     }
 
-    return { dependencies, packageJson, packageJsonPath, template, templateRoot };
+    const workspacePins = resolveWorkspacePins(template.name, packageJson, workspaceVersions);
+    return { packageJson, packageJsonPath, template, templateRoot, workspacePins };
   });
 
   await syncTemplateSkills(
@@ -103,8 +112,10 @@ export async function preparePreviewTemplateDist(options: PreviewDistOptions): P
   );
 
   for (const templatePackage of templatePackages) {
-    const { dependencies, packageJson, packageJsonPath, template, templateRoot } = templatePackage;
-    dependencies[HYDROGEN_PACKAGE] = version;
+    const { packageJson, packageJsonPath, template, templateRoot, workspacePins } = templatePackage;
+    for (const pin of workspacePins) {
+      pin.dependencies[pin.name] = pin.version;
+    }
     packageJson.packageManager = template.distributionPackageManager;
     writeJsonObject(packageJsonPath, packageJson);
     rmSync(join(templateRoot, SOURCE_ONLY_TEST_DIRECTORY), { recursive: true, force: true });
@@ -182,6 +193,55 @@ async function syncTemplateSkills(
     }
     await syncSkills({ cwd: templateRoot, packageRoot, log });
   }
+}
+
+/** Versions of the packages in packages/ that publish to npm. */
+function readWorkspaceVersions(repoRoot: string): Map<string, string> {
+  const packagesRoot = join(repoRoot, "packages");
+  const versions = new Map<string, string>();
+
+  for (const entry of readdirSync(packagesRoot, { withFileTypes: true })) {
+    const packageJsonPath = join(packagesRoot, entry.name, "package.json");
+    if (!entry.isDirectory() || !existsSync(packageJsonPath)) continue;
+
+    const { name, version, private: isPrivate } = readJsonObject(packageJsonPath);
+    if (typeof name === "string" && typeof version === "string" && isPrivate !== true) {
+      versions.set(name, version);
+    }
+  }
+
+  return versions;
+}
+
+/**
+ * Standalone templates install from npm, which rejects the `workspace:` protocol,
+ * so each workspace dependency is pinned to the version its workspace package declares.
+ */
+function resolveWorkspacePins(
+  templateName: string,
+  packageJson: Record<string, unknown>,
+  workspaceVersions: ReadonlyMap<string, string>,
+): WorkspacePin[] {
+  const pins: WorkspacePin[] = [];
+
+  for (const field of DEPENDENCY_FIELDS) {
+    const dependencies = packageJson[field];
+    if (!isRecord(dependencies)) continue;
+
+    for (const [name, range] of Object.entries(dependencies)) {
+      if (typeof range !== "string" || !range.startsWith("workspace:")) continue;
+
+      const version = workspaceVersions.get(name);
+      if (version === undefined) {
+        throw new Error(
+          `${templateName} depends on ${name}@${range}, which isn't a published package in packages/.`,
+        );
+      }
+      pins.push({ dependencies, name, version });
+    }
+  }
+
+  return pins;
 }
 
 function readDependencies(
