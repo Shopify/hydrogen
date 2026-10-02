@@ -1,3 +1,6 @@
+import {writeJsonResult} from '../../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {envListJsonOutputSchema} from '../../../lib/environments/types.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {pluralize} from '@shopify/cli-kit/common/string';
 import {
@@ -14,19 +17,23 @@ import {getCliCommand} from '../../../lib/shell.js';
 import {verifyLinkedStorefront} from '../../../lib/verify-linked-storefront.js';
 
 export default class EnvList extends Command {
+  static get jsonOutputSchema(): typeof envListJsonOutputSchema {
+    return envListJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown =
     'Lists all environments available on the linked Hydrogen storefront.';
 
-  static description =
-    'List the environments on your linked Hydrogen storefront.';
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(EnvList);
-    await runEnvList(flags);
+    await runEnvList(flags, flags.json);
   }
 }
 
@@ -34,7 +41,18 @@ interface EnvListOptions {
   path?: string;
 }
 
-export async function runEnvList({path: root = process.cwd()}: EnvListOptions) {
+export async function runEnvList(options: EnvListOptions, json?: boolean) {
+  const result = await listEnvironments(options);
+  if (!writeJsonResult(envListJsonOutputSchema, result, json) && result)
+    renderEnvironments(result);
+  return result;
+}
+
+export async function listEnvironments({
+  path: root = process.cwd(),
+}: EnvListOptions): Promise<
+  import('../../../lib/environments/types.js').EnvListResult
+> {
   const [{session, config}, cliCommand] = await Promise.all([
     login(root),
     getCliCommand(),
@@ -47,7 +65,7 @@ export async function runEnvList({path: root = process.cwd()}: EnvListOptions) {
     cliCommand,
   });
 
-  if (!linkedStorefront) return;
+  if (!linkedStorefront) return null;
 
   config.storefront = linkedStorefront;
 
@@ -63,24 +81,32 @@ export async function runEnvList({path: root = process.cwd()}: EnvListOptions) {
       cliCommand,
     });
 
-    return;
+    return null;
   }
 
   // Make sure we always show the preview environment last because it doesn't
   // have a branch or a URL.
-  const previewEnvironmentIndex = storefront.environments.findIndex(
-    (env) => env.type === 'PREVIEW',
-  );
-  const previewEnvironment = storefront.environments.splice(
-    previewEnvironmentIndex,
-    1,
-  );
-  storefront.environments.push(previewEnvironment[0]!);
+  const environments = [
+    ...storefront.environments.filter((env) => env.type !== 'PREVIEW'),
+    ...storefront.environments.filter((env) => env.type === 'PREVIEW'),
+  ];
+  return {
+    id: storefront.id,
+    title: config.storefront.title,
+    productionUrl: storefront.productionUrl,
+    environments,
+  };
+}
 
+function renderEnvironments(
+  storefront: NonNullable<
+    import('../../../lib/environments/types.js').EnvListResult
+  >,
+) {
   outputInfo(
     pluralizedEnvironments({
       environments: storefront.environments,
-      storefrontTitle: config.storefront.title,
+      storefrontTitle: storefront.title,
     }).toString(),
   );
 

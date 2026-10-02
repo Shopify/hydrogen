@@ -1,3 +1,11 @@
+import {
+  outputInfo,
+  outputContent,
+  outputToken,
+} from '@shopify/cli-kit/node/output';
+import {writeJsonResult} from '../../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {envPullJsonOutputSchema} from '../../../lib/environments/types.js';
 import {diffLines} from 'diff';
 import Command from '@shopify/cli-kit/node/base-command';
 import {
@@ -6,11 +14,6 @@ import {
   renderWarning,
   renderSuccess,
 } from '../../../lib/ui.js';
-import {
-  outputContent,
-  outputInfo,
-  outputToken,
-} from '@shopify/cli-kit/node/output';
 import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {patchEnvFile} from '@shopify/cli-kit/node/dot-env';
@@ -64,12 +67,16 @@ function quoteEnvValue(value: string): string {
 }
 
 export default class EnvPull extends Command {
+  static get jsonOutputSchema(): typeof envPullJsonOutputSchema {
+    return envPullJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown =
     'Pulls environment variables from the linked Hydrogen storefront and writes them to an `.env` file.';
-  static description =
-    'Populate your .env with variables from your Hydrogen storefront.';
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.env,
     ...commonFlags.envBranch,
     ...commonFlags.envFile,
@@ -79,7 +86,7 @@ export default class EnvPull extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(EnvPull);
-    await runEnvPull({...flagsToCamelObject(flags)});
+    await runEnvPull({...flagsToCamelObject(flags)}, flags.json);
   }
 }
 
@@ -91,13 +98,16 @@ interface EnvPullOptions {
   path?: string;
 }
 
-export async function runEnvPull({
+export async function pullEnvironmentVariables({
   env: envHandle,
   envBranch,
   path: root = process.cwd(),
   envFile,
   force,
-}: EnvPullOptions) {
+}: EnvPullOptions): Promise<
+  import('../../../lib/environments/types.js').EnvPullResult
+> {
+  const empty = {file: resolvePath(root, envFile), variables: []};
   const [{session, config}, cliCommand] = await Promise.all([
     login(root),
     getCliCommand(),
@@ -110,7 +120,7 @@ export async function runEnvPull({
     cliCommand,
   });
 
-  if (!linkedStorefront) return;
+  if (!linkedStorefront) return {...empty, status: 'cancelled'};
 
   config.storefront = linkedStorefront;
 
@@ -141,16 +151,23 @@ export async function runEnvPull({
       cliCommand,
     });
 
-    return;
-  }
-
-  if (!storefront.environmentVariables.length) {
-    outputInfo(`No environment variables found.`);
-    return;
+    return {...empty, status: 'cancelled'};
   }
 
   const variables = storefront.environmentVariables;
-  if (!variables.length) return;
+  const result = {
+    ...empty,
+    storefrontId: config.storefront.id,
+    storefrontTitle: config.storefront.title,
+    environment: envHandle,
+    variables: variables.map(({id, key, isSecret, readOnly}) => ({
+      id,
+      key,
+      isSecret,
+      readOnly,
+    })),
+  };
+  if (!variables.length) return {...result, status: 'empty'};
 
   const fileName = colors.whiteBright(envFile);
   const dotEnvPath = resolvePath(root, envFile);
@@ -167,10 +184,7 @@ export async function runEnvPull({
     const patchedEnv = patchEnvFile(existingEnv, fetchedEnv);
 
     if (existingEnv === patchedEnv) {
-      renderInfo({
-        body: `No changes to your ${fileName} file`,
-      });
-      return;
+      return {...result, status: 'unchanged'};
     }
 
     const diff = diffLines(existingEnv, patchedEnv);
@@ -185,9 +199,7 @@ ${outputToken.linesDiff(diff)}
 Continue?`.value,
     });
 
-    if (!overwrite) {
-      return;
-    }
+    if (!overwrite) return {...result, status: 'cancelled'};
 
     await writeFile(dotEnvPath, patchedEnv);
   } else {
@@ -195,15 +207,26 @@ Continue?`.value,
     await writeFile(dotEnvPath, newEnv);
   }
 
-  const hasSecretVariables = variables.some(({isSecret}) => isSecret);
+  return {...result, status: 'pulled'};
+}
 
-  if (hasSecretVariables) {
-    renderWarning({
-      body: `${config.storefront.title} contains environment variables marked as secret, so their values weren’t pulled.`,
+export async function runEnvPull(options: EnvPullOptions, json?: boolean) {
+  const result = await pullEnvironmentVariables(options);
+  if (writeJsonResult(envPullJsonOutputSchema, result, json)) return result;
+  const fileName = colors.whiteBright(options.envFile);
+  if (result.status === 'empty') {
+    outputInfo('No environment variables found.');
+  } else if (result.status === 'unchanged') {
+    renderInfo({body: `No changes to your ${fileName} file`});
+  } else if (result.status === 'pulled') {
+    if (result.variables.some(({isSecret}) => isSecret)) {
+      renderWarning({
+        body: `${result.storefrontTitle} contains environment variables marked as secret, so their values weren’t pulled.`,
+      });
+    }
+    renderSuccess({
+      body: ['Changes have been made to your', {filePath: fileName}, 'file'],
     });
   }
-
-  renderSuccess({
-    body: ['Changes have been made to your', {filePath: fileName}, 'file'],
-  });
+  return result;
 }
