@@ -20,7 +20,7 @@ export function ProductViewedTracker({ product }: { product: ProductData }) {
         {
           id: product.id,
           title: product.title,
-          price: variant?.price.amount ?? product.priceRange.minVariantPrice.amount,
+          price: variant?.price ?? product.priceRange.minVariantPrice,
           vendor: product.vendor,
           variantId: variant?.id ?? product.id,
           variantTitle: variant?.title ?? product.title,

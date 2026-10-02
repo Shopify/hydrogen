@@ -166,8 +166,7 @@ export default function Product() {
         {
           id: p.id,
           title: p.title,
-          price:
-            p.selectedOrFirstAvailableVariant?.price.amount ?? p.priceRange.minVariantPrice.amount,
+          price: p.selectedOrFirstAvailableVariant?.price ?? p.priceRange.minVariantPrice,
           vendor: p.vendor,
           variantId: p.selectedOrFirstAvailableVariant?.id ?? p.id,
           variantTitle: p.selectedOrFirstAvailableVariant?.title ?? p.title,

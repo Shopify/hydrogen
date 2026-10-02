@@ -16,8 +16,8 @@
 					id: data.product.id,
 					title: data.product.title,
 					price:
-						data.product.selectedOrFirstAvailableVariant?.price.amount ??
-						data.product.priceRange.minVariantPrice.amount,
+						data.product.selectedOrFirstAvailableVariant?.price ??
+						data.product.priceRange.minVariantPrice,
 					vendor: data.product.vendor,
 					variantId: data.product.selectedOrFirstAvailableVariant?.id ?? data.product.id,
 					variantTitle:
