@@ -3,12 +3,21 @@
     "hydrogen:build": {
       "aliases": [],
       "args": {},
-      "description": "Builds a Hydrogen storefront for production.",
+      "description": "Builds a Hydrogen storefront for production. The client and app worker files are compiled to a `/dist` folder in your Hydrogen project directory.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenBuildResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"directory\": {\n      \"type\": \"string\"\n    },\n    \"clientDirectory\": {\n      \"type\": \"string\"\n    },\n    \"serverDirectory\": {\n      \"type\": \"string\"\n    },\n    \"serverFile\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"directory\",\n    \"clientDirectory\",\n    \"serverDirectory\",\n    \"serverFile\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenBuildResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -117,12 +126,21 @@
           "required": true
         }
       },
-      "description": "Returns diagnostic information about a Hydrogen storefront.",
+      "description": "Checks whether your Hydrogen app includes a set of standard Shopify routes.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenCheckResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"missingRoutes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"reservedRoutes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    }\n  },\n  \"required\": [\n    \"missingRoutes\",\n    \"reservedRoutes\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenCheckResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -155,12 +173,21 @@
     "hydrogen:codegen": {
       "aliases": [],
       "args": {},
-      "description": "Generate types for the Storefront API queries found in your project.",
+      "description": "Automatically generates GraphQL types for your project’s Storefront API queries.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenCodegenResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"generatedFiles\": {\n      \"type\": \"object\",\n      \"additionalProperties\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"string\"\n        }\n      }\n    }\n  },\n  \"required\": [\n    \"generatedFiles\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenCodegenResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
