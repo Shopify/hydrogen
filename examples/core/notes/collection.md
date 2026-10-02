@@ -129,11 +129,16 @@ inputs**: two same-`name`d inputs in one GET form submit duplicate query
 params.
 The filter landmark is labeled with `aria-labelledby` pointing at the
 visually-hidden "Filters" `<h2>`. Price-range chips and labels are formatted
-with `formatPrice` in the store currency (not raw numbers); the price range
-submits on **blur/Enter, not per keystroke** (see `hydrogen-collection-browser`).
-While loading,
-facet inputs are `disabled` (`aria-disabled` on the container alone does not
-cascade to inputs).
+with `formatPrice` in the store currency (not raw numbers). Submit price changes
+after a **350 ms** pause: the min and max inputs share one timer, each input
+event restarts it, and unmount clears it. Preserve native Enter behavior. Cancel
+the pending timer whenever the form submits (see `hydrogen-collection-browser`).
+Checkboxes and the sort `<select>` submit immediately on change. While loading,
+keep all filter controls mounted and enabled, keep stable keys across filter
+updates, and show a pending visual state. Update externally changed
+checked/selected values in place, so a focused control that stays in the results
+keeps focus. Keep native keyboard activation (Space on checkboxes, arrow keys on
+the select).
 
 ## Without JavaScript
 

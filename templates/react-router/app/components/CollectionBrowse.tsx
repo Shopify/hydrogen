@@ -1,4 +1,5 @@
 import {
+  formatMoney,
   getFilterRemovalUrl,
   getSortByValue,
   isFilterInputActive,
@@ -12,7 +13,7 @@ import { useCollection, useCollectionForm } from "@shopify/hydrogen/react";
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link, useFetcher, useLocation } from "react-router";
 
-import { formatPrice } from "~/lib/money";
+import { DEFAULT_MONEY_LOCALE, formatPrice } from "~/lib/money";
 
 export type SortOption = {
   label: string;
@@ -215,7 +216,15 @@ function CheckIcon() {
   );
 }
 
-function FacetGroup({ filter, state }: { filter: BrowseFilter; state: CollectionState }) {
+function FacetGroup({
+  filter,
+  state,
+  currencyCode,
+}: {
+  filter: BrowseFilter;
+  state: CollectionState;
+  currencyCode: string;
+}) {
   const selectedCount = activeValueCount(filter, state);
   const labelId = useId();
 
@@ -246,7 +255,7 @@ function FacetGroup({ filter, state }: { filter: BrowseFilter; state: Collection
         </span>
       </summary>
       <div className="pb-4">
-        <FacetBody filter={filter} state={state} labelId={labelId} />
+        <FacetBody filter={filter} state={state} labelId={labelId} currencyCode={currencyCode} />
       </div>
     </details>
   );
@@ -317,7 +326,13 @@ function ListFacet({
   );
 }
 
-function PriceRangeFacet({ state }: { state: CollectionState }) {
+function PriceRangeFacet({
+  state,
+  currencyCode,
+}: {
+  state: CollectionState;
+  currencyCode: string;
+}) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const minInput = useRef<HTMLInputElement>(null);
   const maxInput = useRef<HTMLInputElement>(null);
@@ -327,6 +342,10 @@ function PriceRangeFacet({ state }: { state: CollectionState }) {
   const activePrice = priceFilter(state);
   const min = activePrice?.min ?? "";
   const max = activePrice?.max ?? "";
+  const currencySymbol = formatMoney(
+    { amount: "0", currencyCode },
+    { locale: DEFAULT_MONEY_LOCALE },
+  ).currencyNarrowSymbol;
 
   useEffect(() => {
     for (const [input, value] of [
@@ -362,44 +381,58 @@ function PriceRangeFacet({ state }: { state: CollectionState }) {
     };
   }, []);
 
+  function submitAfterTyping(event: React.ChangeEvent<HTMLInputElement>) {
+    if (timer.current) clearTimeout(timer.current);
+    const form = event.currentTarget.form;
+    timer.current = setTimeout(() => form?.requestSubmit(), 350);
+  }
+
   return (
-    <div className="flex items-center gap-2 pt-2">
-      <div className="flex-1">
-        <input
-          type="number"
-          ref={minInput}
-          id={minId}
-          aria-label="Min price"
-          name={PRICE_MIN_PARAM}
-          min="0"
-          placeholder="Min"
-          defaultValue={min}
-          className="border-border rounded-input bg-surface text-on-surface w-full border px-3 py-2 text-sm"
-          onChange={(event) => {
-            if (timer.current) clearTimeout(timer.current);
-            const form = event.currentTarget.form;
-            timer.current = setTimeout(() => form?.requestSubmit(), 350);
-          }}
-        />
-      </div>
-      <span className="text-on-surface-secondary text-sm">to</span>
-      <div className="flex-1">
-        <input
-          type="number"
-          ref={maxInput}
-          id={maxId}
-          aria-label="Max price"
-          name={PRICE_MAX_PARAM}
-          min="0"
-          placeholder="Max"
-          defaultValue={max}
-          className="border-border rounded-input bg-surface text-on-surface w-full border px-3 py-2 text-sm"
-          onChange={(event) => {
-            if (timer.current) clearTimeout(timer.current);
-            const form = event.currentTarget.form;
-            timer.current = setTimeout(() => form?.requestSubmit(), 350);
-          }}
-        />
+    <div className="min-w-0 pt-2">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+        <label
+          htmlFor={minId}
+          className="border-border rounded-input bg-surface has-[input:focus-visible]:outline-interactive flex min-w-0 items-center gap-1 border px-2 py-2 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2"
+        >
+          <span className="text-on-surface-secondary shrink-0 text-sm" aria-hidden="true">
+            {currencySymbol}
+          </span>
+          <input
+            type="number"
+            ref={minInput}
+            id={minId}
+            aria-label={`Minimum price in ${currencyCode}`}
+            name={PRICE_MIN_PARAM}
+            min="0"
+            step="any"
+            placeholder="Min"
+            defaultValue={min}
+            className="bg-surface text-on-surface w-full min-w-0 flex-1 rounded-none border-0 p-0 text-sm focus-visible:outline-none"
+            onChange={submitAfterTyping}
+          />
+        </label>
+        <span className="text-on-surface-secondary text-center text-sm">to</span>
+        <label
+          htmlFor={maxId}
+          className="border-border rounded-input bg-surface has-[input:focus-visible]:outline-interactive flex min-w-0 items-center gap-1 border px-2 py-2 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2"
+        >
+          <span className="text-on-surface-secondary shrink-0 text-sm" aria-hidden="true">
+            {currencySymbol}
+          </span>
+          <input
+            type="number"
+            ref={maxInput}
+            id={maxId}
+            aria-label={`Maximum price in ${currencyCode}`}
+            name={PRICE_MAX_PARAM}
+            min="0"
+            step="any"
+            placeholder="Max"
+            defaultValue={max}
+            className="bg-surface text-on-surface w-full min-w-0 flex-1 rounded-none border-0 p-0 text-sm focus-visible:outline-none"
+            onChange={submitAfterTyping}
+          />
+        </label>
       </div>
     </div>
   );
@@ -470,12 +503,15 @@ function FacetBody({
   filter,
   state,
   labelId,
+  currencyCode,
 }: {
   filter: BrowseFilter;
   state: CollectionState;
   labelId: string;
+  currencyCode: string;
 }) {
-  if (filter.type === "PRICE_RANGE") return <PriceRangeFacet state={state} />;
+  if (filter.type === "PRICE_RANGE")
+    return <PriceRangeFacet state={state} currencyCode={currencyCode} />;
   if (isSwatchFilter(filter))
     return <ColorSwatchFacet filter={filter} state={state} labelId={labelId} />;
   return <ListFacet filter={filter} state={state} labelId={labelId} />;
@@ -560,9 +596,11 @@ export function Toolbar({
 
 export function FacetForm({
   availableFilters,
+  currencyCode,
   extraHiddenInputs,
 }: {
   availableFilters: readonly BrowseFilter[];
+  currencyCode: string;
   extraHiddenInputs?: ReactNode;
 }) {
   const state: CollectionState = useCollection();
@@ -575,7 +613,7 @@ export function FacetForm({
       {extraHiddenInputs}
       <div key={state.handle} className="divide-border divide-y">
         {availableFilters.map((filter) => (
-          <FacetGroup key={filter.id} filter={filter} state={state} />
+          <FacetGroup key={filter.id} filter={filter} state={state} currencyCode={currencyCode} />
         ))}
       </div>
       <noscript>
@@ -592,10 +630,12 @@ export function FacetForm({
 
 export function FilterDrawer({
   availableFilters,
+  currencyCode,
   extraHiddenInputs,
   id = FILTER_DRAWER_ID,
 }: {
   availableFilters: readonly BrowseFilter[];
+  currencyCode: string;
   extraHiddenInputs?: ReactNode;
   id?: string;
 }) {
@@ -623,7 +663,11 @@ export function FilterDrawer({
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
-          <FacetForm availableFilters={availableFilters} extraHiddenInputs={extraHiddenInputs} />
+          <FacetForm
+            availableFilters={availableFilters}
+            currencyCode={currencyCode}
+            extraHiddenInputs={extraHiddenInputs}
+          />
         </div>
       </div>
     </dialog>

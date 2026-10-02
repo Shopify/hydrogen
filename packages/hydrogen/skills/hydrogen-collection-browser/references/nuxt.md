@@ -95,7 +95,7 @@ const isLoading = computed(() => state.value.status === "loading");
 </template>
 ```
 
-Apply form helper props with `v-bind`. Branch on `filter.type`: render min/max number inputs for `PRICE_RANGE`, and value checkboxes for `LIST` and `BOOLEAN`. Submit price inputs on blur only when the value changed; let Enter blur the input.
+Apply form helper props with `v-bind`. Branch on `filter.type`: render min/max number inputs for `PRICE_RANGE`, and value checkboxes for `LIST` and `BOOLEAN`. Submit price inputs on change with a 350 ms debounce. Share one timer between the min and max inputs, clear any pending timer before scheduling a submission, and clear the timer when the component unmounts. Preserve native Enter behavior, and cancel the pending timer whenever the form submits. Submit checkboxes and the sort `<select>` immediately on change. Keep all filter controls mounted and enabled while `isLoading` is true, and use it for a pending visual state. Bind `:checked` and the select `:value` to browse state, and keep `:key` values stable across filter updates, so external changes update the controls in place.
 
 ## Search Pages
 
