@@ -1,5 +1,13 @@
 # @shopify/hydrogen
 
+## 2026.4.7
+
+### Patch Changes
+
+- Fix React hydration interruption caused by Analytics.Provider state updates. Deferred cart, shop, and consent state updates are now wrapped in `startTransition`, preventing React from abandoning server-rendered HTML when Suspense boundaries are still dehydrating. ([#4111](https://github.com/Shopify/hydrogen/pull/4111)) by [@andguy95](https://github.com/andguy95)
+
+  `publish` from `useAnalytics()` also re-checks consent when called. If a visitor revokes consent while React is still holding that update, events published in the meantime no longer reach subscribers.
+
 ## 2026.4.6
 
 ### Patch Changes

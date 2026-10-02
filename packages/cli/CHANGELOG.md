@@ -1,5 +1,13 @@
 # @shopify/cli-hydrogen
 
+## 13.0.6
+
+### Patch Changes
+
+- Fix `h2 env pull` corrupting environment variable values that contain backslashes, double quotes or tabs. Values are now single-quoted where possible so they are read back exactly by dotenv, and `$` and backticks are no longer expanded if the `.env` file is sourced by a shell. ([#4115](https://github.com/Shopify/hydrogen/pull/4115)) by [@stephanie-shopify](https://github.com/stephanie-shopify)
+
+- `h2 init --template skeleton` and `npm create @shopify/hydrogen -- --template skeleton` now do the same as leaving the flag out, instead of downloading GitHub's latest release. The new project's dependencies install, its `.env` and name are set up, and every other flag is honoured. Scripted or non-interactive runs that use `--template skeleton` should now pass the same prompt-skipping flags as the default init flow, such as `--mock-shop`, `--markets`, `--styling`, and `--shortcut`/`--no-shortcut`, or use `--quickstart` with any needed overrides. Any other template name that isn't `demo-store` or a Git URL fails with an error listing the available templates. ([#4119](https://github.com/Shopify/hydrogen/pull/4119)) by [@fredericoo](https://github.com/fredericoo)
+
 ## 13.0.5
 
 ### Patch Changes
