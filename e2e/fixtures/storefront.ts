@@ -620,12 +620,22 @@ export class StorefrontPage {
     this.page.on('request', (request) => {
       if (request.method() !== 'POST') return;
       if (!isConsentTokenQuery(request.postData())) return;
-      const headers = request.headers();
-      records.push({
+      const snapshot = request.headers();
+      const record: ConsentRequestRecord = {
         sameOrigin:
           new URL(request.url()).origin === new URL(this.page.url()).origin,
-        hasMarkerHeader: CONSENT_MANAGEMENT_MARKER_HEADER in headers,
-        hasCookieHeader: 'cookie' in headers,
+        hasMarkerHeader: CONSENT_MANAGEMENT_MARKER_HEADER in snapshot,
+        hasCookieHeader: 'cookie' in snapshot,
+      };
+      records.push(record);
+      // The synchronous headers() snapshot omits browser-attached headers
+      // (like Cookie) depending on timing, which made these fields flaky.
+      // Patch with the complete set once it settles; callers assert the
+      // header fields only after waiting for the response, never in the
+      // same tick as the request.
+      void request.allHeaders().then((headers) => {
+        record.hasMarkerHeader = CONSENT_MANAGEMENT_MARKER_HEADER in headers;
+        record.hasCookieHeader = 'cookie' in headers;
       });
     });
     return records;
