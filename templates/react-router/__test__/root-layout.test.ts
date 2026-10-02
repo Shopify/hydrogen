@@ -25,7 +25,7 @@ const MOCK_SHOP_LAYOUT = {
   localization: { country: { currency: { isoCode: "CAD" } } },
 };
 
-test("root layout exposes the Storefront API currency even when it differs from the configured country", async () => {
+test("root layout exposes the Storefront API localization currency", async () => {
   const layout = await loadRootLayout({
     graphql: async () => ({ data: MOCK_SHOP_LAYOUT }),
   } as Pick<import("@shopify/hydrogen").StorefrontClient, "graphql">);

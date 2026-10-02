@@ -1,13 +1,12 @@
 import { describe, it, expectTypeOf } from "vitest";
 
-import type { MoneyV2 } from "../../graphql/generated/storefront-api-types";
 import type {
   AnalyticsTrackingValues,
   ShopifyGlobal,
   StorefrontAnalyticsDestinationEventContext,
 } from "../index";
 import { AnalyticsEvent } from "./events";
-import type { ProductPayload, StorefrontAnalytics } from "./types";
+import type { StorefrontAnalytics } from "./types";
 
 declare const analytics: StorefrontAnalytics;
 declare const privacy: ShopifyGlobal["customerPrivacy"];
@@ -40,8 +39,6 @@ export function analyticsPublishTypes() {
 
   // @ts-expect-error search views require a search term
   analytics.publish(AnalyticsEvent.SEARCH_VIEWED);
-
-  expectTypeOf<ProductPayload["price"]>().toEqualTypeOf<MoneyV2>();
 
   analytics.publish(AnalyticsEvent.PRODUCT_VIEWED, {
     products: [

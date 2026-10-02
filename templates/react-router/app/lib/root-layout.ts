@@ -39,8 +39,9 @@ export type RootLayoutQueryResult = StorefrontApi.ResultOf<typeof ROOT_LAYOUT_QU
 type RootLayoutLoaderData = {
   shopId: string;
   shopInfo: StorefrontShop;
-  // shopify.js drops analytics events until window.Shopify.currency.active exists, and
-  // the cart tracker only sets it once a cart exists, so the bootstrap needs it up front.
+  // Browse events carry no price, so shopify.js reads their currency from
+  // window.Shopify.currency.active. The cart tracker only sets that once a cart exists,
+  // so the bootstrap needs it up front.
   currency: string;
 };
 

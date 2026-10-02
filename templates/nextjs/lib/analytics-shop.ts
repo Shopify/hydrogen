@@ -16,8 +16,9 @@ type ShopIdentity = {
   shopId: string;
   shopName: string;
   shopDescription: string | null;
-  // shopify.js drops analytics events until window.Shopify.currency.active exists, and
-  // the cart tracker only sets it once a cart exists, so the bootstrap needs it up front.
+  // Browse events carry no price, so shopify.js reads their currency from
+  // window.Shopify.currency.active. The cart tracker only sets that once a cart exists,
+  // so the bootstrap needs it up front.
   currency: string;
 };
 
@@ -29,8 +30,8 @@ const SHOP_FALLBACK: ShopIdentity = {
   shopId: shopConfig.shopId ? `gid://shopify/Shop/${shopConfig.shopId}` : "",
   shopName: "CORE",
   shopDescription: null,
-  // A guessed currency on this degraded path keeps events flowing instead of letting
-  // shopify.js drop them. The cart tracker corrects it once a cart exists.
+  // Browse events read currency from the global, so this degraded path still guesses one.
+  // The cart tracker corrects it once a cart exists.
   currency: "USD",
 };
 
@@ -44,7 +45,7 @@ async function fetchShopAnalytics(): Promise<ShopIdentity> {
   if (errors) {
     console.error("[hydrogen] Root shop query failed", errors);
   }
-  if (!data) return SHOP_FALLBACK;
+  if (!data) throw new Error("[hydrogen] Root shop query returned no data");
   return {
     shopId: data.shop.id,
     shopName: data.shop.name,
