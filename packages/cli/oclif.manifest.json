@@ -1733,12 +1733,21 @@
     "hydrogen:setup": {
       "aliases": [],
       "args": {},
-      "description": "Scaffold routes and core functionality.",
+      "description": "Scaffold routes and core functionality.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenSetupResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"directory\": {\n      \"type\": \"string\"\n    },\n    \"name\": {\n      \"type\": \"string\"\n    },\n    \"location\": {\n      \"type\": \"string\"\n    },\n    \"i18n\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"subfolders\",\n        \"domains\",\n        \"subdomains\"\n      ]\n    },\n    \"routes\": {\n      \"type\": \"object\",\n      \"additionalProperties\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"shortcut\": {\n      \"type\": \"boolean\"\n    }\n  },\n  \"required\": [\n    \"directory\",\n    \"name\",\n    \"location\",\n    \"shortcut\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenSetupResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1789,6 +1798,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
+      "descriptionWithMarkdown": "Scaffold routes and core functionality.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1811,12 +1821,21 @@
           ]
         }
       },
-      "description": "Setup CSS strategies for your project.",
+      "description": "Adds support for certain CSS strategies to your project.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenSetupCssResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"configured\",\n        \"built-in\",\n        \"cancelled\"\n      ]\n    },\n    \"directory\": {\n      \"type\": \"string\"\n    },\n    \"strategy\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"tailwind\",\n        \"vanilla-extract\",\n        \"css-modules\",\n        \"postcss\"\n      ]\n    },\n    \"files\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"dependenciesInstalled\": {\n      \"type\": \"boolean\"\n    },\n    \"needsNpmReinstall\": {\n      \"type\": \"boolean\"\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"directory\",\n    \"strategy\",\n    \"files\",\n    \"dependenciesInstalled\",\n    \"needsNpmReinstall\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenSetupCssResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1875,12 +1894,21 @@
           ]
         }
       },
-      "description": "Setup support for multiple markets in your project.",
+      "description": "Adds support for multiple \"markets\" (https://shopify.dev/docs/custom-storefronts/hydrogen/markets) to your project by using the URL structure.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenSetupMarketsResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"directory\": {\n      \"type\": \"string\"\n    },\n    \"strategy\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"subfolders\",\n        \"domains\",\n        \"subdomains\"\n      ]\n    },\n    \"serverEntryPoint\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"directory\",\n    \"strategy\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenSetupMarketsResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1914,12 +1942,21 @@
     "hydrogen:setup:vite": {
       "aliases": [],
       "args": {},
-      "description": "EXPERIMENTAL: Upgrades the project to use Vite.",
+      "description": "EXPERIMENTAL: Upgrades the project to use Vite.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenSetupViteResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"directory\": {\n      \"type\": \"string\"\n    },\n    \"viteConfig\": {\n      \"type\": \"string\"\n    },\n    \"serverEntryPoint\": {\n      \"type\": \"string\"\n    },\n    \"dependenciesInstalled\": {\n      \"type\": \"boolean\",\n      \"const\": true\n    },\n    \"needsMdxSetup\": {\n      \"type\": \"boolean\"\n    }\n  },\n  \"required\": [\n    \"directory\",\n    \"viteConfig\",\n    \"serverEntryPoint\",\n    \"dependenciesInstalled\",\n    \"needsMdxSetup\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenSetupViteResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1940,6 +1977,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
+      "descriptionWithMarkdown": "EXPERIMENTAL: Upgrades the project to use Vite.",
       "isESM": true,
       "relativePath": [
         "dist",

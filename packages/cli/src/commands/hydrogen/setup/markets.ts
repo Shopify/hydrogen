@@ -1,3 +1,6 @@
+import {writeJsonResult} from '../../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {setupMarketsJsonOutputSchema} from '../../../lib/setups/types.js';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
@@ -13,12 +16,17 @@ import {
 } from '../../../lib/setups/i18n/index.js';
 
 export default class SetupMarkets extends Command {
+  static get jsonOutputSchema(): typeof setupMarketsJsonOutputSchema {
+    return setupMarketsJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown =
     'Adds support for multiple [markets](https://shopify.dev/docs/custom-storefronts/hydrogen/markets) to your project by using the URL structure.';
 
-  static description = 'Setup support for multiple markets in your project.';
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
   };
 
@@ -34,15 +42,18 @@ export default class SetupMarkets extends Command {
     const {flags, args} = await this.parse(SetupMarkets);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    await runSetupMarkets({
-      ...flagsToCamelObject(flags),
-      strategy: args.strategy as I18nStrategy,
-      directory,
-    });
+    await runSetupMarkets(
+      {
+        ...flagsToCamelObject(flags),
+        strategy: args.strategy as I18nStrategy,
+        directory,
+      },
+      flags.json,
+    );
   }
 }
 
-export async function runSetupMarkets({
+export async function executeSetupMarkets({
   strategy: flagStrategy,
   directory,
 }: {
@@ -64,12 +75,33 @@ export async function runSetupMarkets({
     },
   ]);
 
+  return {
+    directory: remixConfig.rootDirectory,
+    strategy,
+    serverEntryPoint: remixConfig.serverEntryPoint,
+  };
+}
+
+export async function runSetupMarkets(
+  options: Parameters<typeof executeSetupMarkets>[0],
+  json?: boolean,
+) {
+  const result = await executeSetupMarkets(options);
+  if (!writeJsonResult(setupMarketsJsonOutputSchema, result, json))
+    renderSetupMarkets(result);
+  return result;
+}
+
+export function renderSetupMarkets({
+  strategy,
+  serverEntryPoint,
+}: import('../../../lib/setups/types.js').SetupMarketsResult) {
   renderSuccess({
     headline: `Markets support setup complete with strategy ${I18N_STRATEGY_NAME_MAP[
       strategy
     ].toLowerCase()}.`,
     body: `You can now modify the supported locales in ${
-      remixConfig.serverEntryPoint ?? 'your server entry file.'
+      serverEntryPoint ?? 'your server entry file.'
     }\n`,
   });
 }
