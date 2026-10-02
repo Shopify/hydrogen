@@ -345,21 +345,31 @@ describe("handleShopifyRedirects", () => {
     expect(result).toBeNull();
   });
 
-  it("logs error and falls through when Storefront API fails", async () => {
+  const networkError = new Error("Network error");
+  const throttledError = { message: "Throttled", extensions: { code: "THROTTLED" } };
+
+  it.each([
+    {
+      failure: "the Storefront API request fails",
+      lookup: () => Promise.reject(networkError),
+      error: { message: "SFAPI request failed", cause: networkError },
+    },
+    {
+      failure: "the lookup returns GraphQL errors",
+      lookup: async () => new Response(JSON.stringify({ errors: [throttledError] })),
+      error: { message: "Storefront API errors: Throttled", cause: [throttledError] },
+    },
+  ])("logs error and falls through when $failure", async ({ lookup, error }) => {
     const logger = createTestLogger();
     configureLogging({ logger });
-    const networkError = new Error("Network error");
-    mockFetch.mockRejectedValueOnce(networkError);
+    mockFetch.mockImplementationOnce(lookup);
 
     const request = new Request("https://my-app.com/old-page");
     const result = await handleShopifyRedirects(redirectOptions(request));
 
     expect(logger.error).toHaveBeenCalledWith(
       "failed to resolve Shopify redirects for route /old-page",
-      {
-        scope: "redirects",
-        error: expect.objectContaining({ message: "SFAPI request failed", cause: networkError }),
-      },
+      { scope: "redirects", error: expect.objectContaining(error) },
     );
     expect(result).toBeNull();
   });
