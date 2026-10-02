@@ -243,12 +243,21 @@
     "hydrogen:customer-account-push": {
       "aliases": [],
       "args": {},
-      "description": "Push project configuration to admin",
+      "description": "Push project configuration to admin\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenCustomerAccountPushResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"storefrontId\": {\n      \"type\": \"string\"\n    },\n    \"redirectUri\": {\n      \"type\": \"string\"\n    },\n    \"javascriptOrigin\": {\n      \"type\": \"string\"\n    },\n    \"logoutUri\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"storefrontId\",\n    \"redirectUri\",\n    \"javascriptOrigin\",\n    \"logoutUri\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenCustomerAccountPushResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -305,6 +314,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
+      "descriptionWithMarkdown": "Push project configuration to admin",
       "isESM": true,
       "relativePath": [
         "dist",
