@@ -57,9 +57,18 @@ export type ShopifyGlobal = {
   [key: string]: unknown;
 };
 
+/** Headless storefronts must supply the public Storefront API token and both root domains. */
+type ShopifyPrivacyBannerOptions = {
+  storefrontAccessToken?: string;
+  checkoutRootDomain?: string;
+  storefrontRootDomain?: string;
+  locale?: string;
+  country?: string;
+};
+
 type ShopifyPrivacyBanner = {
-  showPreferences: () => Promise<void>;
-  showBanner: () => Promise<void>;
+  showPreferences: (options?: ShopifyPrivacyBannerOptions) => Promise<void>;
+  showBanner: (options?: ShopifyPrivacyBannerOptions) => Promise<void>;
 };
 
 declare global {
