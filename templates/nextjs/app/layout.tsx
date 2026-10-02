@@ -23,7 +23,8 @@ import { AppShell } from "./app-shell";
  * `metadataBase` is set here for canonical/OG URL resolution (F10). The `<title>`
  * template uses the live `shop.name` (via `getAnalyticsShop`, which is cached
  * for hours) so the browser tab/OG titles match the header brand (N28) instead
- * of a hardcoded "CORE".
+ * of a hardcoded "CORE". The same cached query supplies the active currency the
+ * `<head>` Shopify bootstrap needs before any analytics event can send.
  */
 export async function generateMetadata(): Promise<Metadata> {
   const { shopName } = await getAnalyticsShop();
@@ -48,11 +49,12 @@ export async function generateMetadata(): Promise<Metadata> {
 // middleware/parent server component instead.
 const htmlLang = defaultI18n.language.toLowerCase();
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { currency } = await getAnalyticsShop();
   return (
     <html lang={htmlLang}>
       <head>
-        <ShopifyScriptsWithNavigation shop={shop} />
+        <ShopifyScriptsWithNavigation shop={shop} currency={currency} />
       </head>
       <body className="bg-surface text-on-surface font-body flex min-h-svh flex-col antialiased">
         <div
