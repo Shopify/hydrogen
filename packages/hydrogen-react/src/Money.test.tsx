@@ -91,6 +91,20 @@ describe('<Money />', () => {
     expect(screen.getByText(money.amount)).toBeInTheDocument();
   });
 
+  it(`keeps the minus sign when the currency symbol is removed`, () => {
+    const money = getPrice({
+      currencyCode: 'EUR',
+      amount: '-19.99',
+    });
+    render(<Money data={money} withoutCurrency />, {
+      wrapper: ({children}) => (
+        <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
+      ),
+    });
+
+    expect(screen.getByText('-19.99')).toBeInTheDocument();
+  });
+
   it(`removes the currency symbol and trailing zeros when the props are both passed`, () => {
     const money = getPrice({
       currencyCode: 'EUR',
