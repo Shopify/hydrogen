@@ -81,7 +81,7 @@ describe("createStorefrontClient", () => {
       });
 
       expect(client.storeUrl).toBe("https://my-store.myshopify.com");
-      expect(client.apiUrl).toBe("https://my-store.myshopify.com/api/2026-04/graphql.json");
+      expect(client.apiUrl).toBe("https://my-store.myshopify.com/api/2026-10/graphql.json");
     });
 
     it("constructs apiUrl from explicit apiVersion", () => {
@@ -101,7 +101,7 @@ describe("createStorefrontClient", () => {
         fetch: mockFetch,
       });
       expect(client.storeUrl).toBe("https://my-store.myshopify.com");
-      expect(client.apiUrl).toBe("https://my-store.myshopify.com/api/2026-04/graphql.json");
+      expect(client.apiUrl).toBe("https://my-store.myshopify.com/api/2026-10/graphql.json");
     });
 
     it("throws when no fetch available", () => {
@@ -196,7 +196,7 @@ describe("createStorefrontClient", () => {
       const headers = getHeaders(mockFetch);
       expect(headers.get("X-SDK-Variant")).toBe("hydrogen");
       expect(headers.get("X-SDK-Variant-Source")).toBe("kit");
-      expect(headers.get("X-SDK-Version")).toBe("2026-04");
+      expect(headers.get("X-SDK-Version")).toBe("2026-10");
     });
 
     it("sends hydrogen version header", async () => {
@@ -632,7 +632,7 @@ describe("createStorefrontClient", () => {
       const firstCall = fetch.mock.calls[0];
       assert(firstCall, "Expected origin fetch to be called");
       const [url, init] = firstCall;
-      expect(url).toBe("https://test.myshopify.com/api/2026-04/graphql.json");
+      expect(url).toBe("https://test.myshopify.com/api/2026-10/graphql.json");
       expect(JSON.parse(init.body as string)).toMatchObject({ query: SHOP_QUERY });
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(first.data).toEqual({ shop: { name: "Test Shop" } });

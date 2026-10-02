@@ -374,6 +374,28 @@ export type AutomaticDiscountApplication = DiscountApplication & {
 };
 
 /**
+ * Captures the intent of a discount source at the time it was applied to a cart.
+ * This includes the discount value, how it's allocated across entitled items, and
+ * which line types it targets.
+ *
+ * The actual discounted amounts on specific cart lines are represented by [`CartDiscountAllocation`](https://shopify.dev/docs/api/storefront/current/interfaces/CartDiscountAllocation)
+ * objects, which reference this application.
+ *
+ */
+export type BaseCartDiscountApplication = {
+  /** The method by which the discount's value is allocated to its entitled items. */
+  allocationMethod: DiscountApplicationAllocationMethod;
+  /** Which lines of targetType that the discount is allocated over. */
+  targetSelection: DiscountApplicationTargetSelection;
+  /** The type of line that the discount is applicable towards. */
+  targetType: DiscountApplicationTargetType;
+  /** The total amount allocated by this discount application across all entitled items. */
+  totalAllocatedAmount: MoneyV2;
+  /** The value of the discount application. */
+  value: PricingValue;
+};
+
+/**
  * Defines the shared fields for items in a shopping cart. Implemented by [`CartLine`](https://shopify.dev/docs/api/storefront/current/objects/CartLine) for individual merchandise and [`ComponentizableCartLine`](https://shopify.dev/docs/api/storefront/current/objects/ComponentizableCartLine) for grouped merchandise like bundles.
  *
  * Each implementation includes the merchandise being purchased, quantity, cost breakdown, applied discounts, custom attributes, and any associated [`SellingPlan`](https://shopify.dev/docs/api/storefront/current/objects/SellingPlan).
@@ -401,6 +423,8 @@ export type BaseCartLine = {
   quantity: Scalars["Int"]["output"];
   /** The selling plan associated with the cart line and the effect that each selling plan has on variants when they're purchased. */
   sellingPlanAllocation?: Maybe<SellingPlanAllocation>;
+  /** A stable identifier for the line matching the value exposed in Liquid via the `view_key` filter and accepted as input on `cartLinesUpdate` and `cartLinesRemove`. */
+  viewKey?: Maybe<Scalars["String"]["output"]>;
 };
 
 /**
@@ -411,6 +435,16 @@ export type BaseCartLine = {
  */
 export type BaseCartLineAttributeArgs = {
   key: Scalars["String"]["input"];
+};
+
+/**
+ * Defines the shared fields for items in a shopping cart. Implemented by [`CartLine`](https://shopify.dev/docs/api/storefront/current/objects/CartLine) for individual merchandise and [`ComponentizableCartLine`](https://shopify.dev/docs/api/storefront/current/objects/ComponentizableCartLine) for grouped merchandise like bundles.
+ *
+ * Each implementation includes the merchandise being purchased, quantity, cost breakdown, applied discounts, custom attributes, and any associated [`SellingPlan`](https://shopify.dev/docs/api/storefront/current/objects/SellingPlan).
+ *
+ */
+export type BaseCartLineDiscountAllocationsArgs = {
+  lineLevelOnly?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 /**
@@ -672,6 +706,8 @@ export type Cart = HasMetafields &
      * @deprecated Use `cart.lines[].discountAllocations(lineLevelOnly: false)` and `cart.deliveryGroups[].discountAllocations` instead.
      */
     discountAllocations: Array<CartDiscountAllocation>;
+    /** The discount applications applied to the cart. */
+    discountApplications: Array<BaseCartDiscountApplication>;
     /** The case-insensitive discount codes that the customer added at checkout. */
     discountCodes: Array<CartDiscountCode>;
     /**
@@ -804,10 +840,29 @@ export type CartAutomaticDiscountAllocation = CartDiscountAllocation & {
   discountApplication: CartDiscountApplication;
   /** The discounted amount that has been applied to the cart line. */
   discountedAmount: MoneyV2;
+  /** The discount application that created this allocation, with corrected value semantics. */
+  sourceDiscountApplication: BaseCartDiscountApplication;
   /** The type of line that the discount is applicable towards. */
   targetType: DiscountApplicationTargetType;
   /** The title of the allocated discount. */
   title: Scalars["String"]["output"];
+};
+
+/** The discount application automatically applied based on prerequisites. */
+export type CartAutomaticDiscountApplication = BaseCartDiscountApplication & {
+  __typename?: "CartAutomaticDiscountApplication";
+  /** The method by which the discount's value is allocated to its entitled items. */
+  allocationMethod: DiscountApplicationAllocationMethod;
+  /** Which lines of targetType that the discount is allocated over. */
+  targetSelection: DiscountApplicationTargetSelection;
+  /** The type of line that the discount is applicable towards. */
+  targetType: DiscountApplicationTargetType;
+  /** The title of the discount. */
+  title: Scalars["String"]["output"];
+  /** The total amount allocated by this discount application across all entitled items. */
+  totalAllocatedAmount: MoneyV2;
+  /** The value of the discount application. */
+  value: PricingValue;
 };
 
 /** Return type for `cartBillingAddressUpdate` mutation. */
@@ -953,8 +1008,27 @@ export type CartCodeDiscountAllocation = CartDiscountAllocation & {
   discountApplication: CartDiscountApplication;
   /** The discounted amount that has been applied to the cart line. */
   discountedAmount: MoneyV2;
+  /** The discount application that created this allocation, with corrected value semantics. */
+  sourceDiscountApplication: BaseCartDiscountApplication;
   /** The type of line that the discount is applicable towards. */
   targetType: DiscountApplicationTargetType;
+};
+
+/** The discount application applied using a discount code. */
+export type CartCodeDiscountApplication = BaseCartDiscountApplication & {
+  __typename?: "CartCodeDiscountApplication";
+  /** The method by which the discount's value is allocated to its entitled items. */
+  allocationMethod: DiscountApplicationAllocationMethod;
+  /** The code used to apply the discount. */
+  code: Scalars["String"]["output"];
+  /** Which lines of targetType that the discount is allocated over. */
+  targetSelection: DiscountApplicationTargetSelection;
+  /** The type of line that the discount is applicable towards. */
+  targetType: DiscountApplicationTargetType;
+  /** The total amount allocated by this discount application across all entitled items. */
+  totalAllocatedAmount: MoneyV2;
+  /** The value of the discount application. */
+  value: PricingValue;
 };
 
 /** The completion action to checkout a cart. */
@@ -1080,10 +1154,29 @@ export type CartCustomDiscountAllocation = CartDiscountAllocation & {
   discountApplication: CartDiscountApplication;
   /** The discounted amount that has been applied to the cart line. */
   discountedAmount: MoneyV2;
+  /** The discount application that created this allocation, with corrected value semantics. */
+  sourceDiscountApplication: BaseCartDiscountApplication;
   /** The type of line that the discount is applicable towards. */
   targetType: DiscountApplicationTargetType;
   /** The title of the allocated discount. */
   title: Scalars["String"]["output"];
+};
+
+/** The discount application applied by a custom script or function. */
+export type CartCustomDiscountApplication = BaseCartDiscountApplication & {
+  __typename?: "CartCustomDiscountApplication";
+  /** The method by which the discount's value is allocated to its entitled items. */
+  allocationMethod: DiscountApplicationAllocationMethod;
+  /** Which lines of targetType that the discount is allocated over. */
+  targetSelection: DiscountApplicationTargetSelection;
+  /** The type of line that the discount is applicable towards. */
+  targetType: DiscountApplicationTargetType;
+  /** The title of the discount. */
+  title: Scalars["String"]["output"];
+  /** The total amount allocated by this discount application across all entitled items. */
+  totalAllocatedAmount: MoneyV2;
+  /** The value of the discount application. */
+  value: PricingValue;
 };
 
 /**
@@ -1293,6 +1386,8 @@ export type CartDeliveryGroup = {
   deliveryAddress: MailingAddress;
   /** The delivery options available for the delivery group. */
   deliveryOptions: Array<CartDeliveryOption>;
+  /** The discount allocations applied to the delivery group. */
+  discountAllocations: Array<CartDiscountAllocation>;
   /** The type of merchandise in the delivery group. */
   groupType: CartDeliveryGroupType;
   /** The ID for the delivery group. */
@@ -1454,6 +1549,8 @@ export type CartDiscountAllocation = {
   discountApplication: CartDiscountApplication;
   /** The discounted amount that has been applied to the cart line. */
   discountedAmount: MoneyV2;
+  /** The discount application that created this allocation, with corrected value semantics. */
+  sourceDiscountApplication: BaseCartDiscountApplication;
   /** The type of line that the discount is applicable towards. */
   targetType: DiscountApplicationTargetType;
 };
@@ -1736,6 +1833,12 @@ export type CartInput = {
    *
    */
   note?: InputMaybe<Scalars["String"]["input"]>;
+  /**
+   * The source name of the channel to use for order attribution.
+   * The value must match the source name of a channel that the client, identified by the storefront access token, owns.
+   *
+   */
+  sourceName?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 /**
@@ -1794,6 +1897,8 @@ export type CartLine = BaseCartLine &
     quantity: Scalars["Int"]["output"];
     /** The selling plan associated with the cart line and the effect that each selling plan has on variants when they're purchased. */
     sellingPlanAllocation?: Maybe<SellingPlanAllocation>;
+    /** A stable identifier for the line matching the value exposed in Liquid via the `view_key` filter and accepted as input on `cartLinesUpdate` and `cartLinesRemove`. */
+    viewKey?: Maybe<Scalars["String"]["output"]>;
   };
 
 /**
@@ -1804,6 +1909,16 @@ export type CartLine = BaseCartLine &
  */
 export type CartLineAttributeArgs = {
   key: Scalars["String"]["input"];
+};
+
+/**
+ * An item in a customer's [`Cart`](https://shopify.dev/docs/api/storefront/current/objects/Cart) representing a product variant they intend to purchase. Each cart line tracks the merchandise, quantity, cost breakdown, and any applied discounts.
+ *
+ * Cart lines can include custom attributes for additional information like gift wrapping requests, and can be associated with a [`SellingPlanAllocation`](https://shopify.dev/docs/api/storefront/current/objects/SellingPlanAllocation) for purchase options like subscriptions, pre-orders, or try-before-you-buy. The [`instructions`](https://shopify.dev/docs/api/storefront/current/objects/CartLine#field-CartLine.fields.instructions) field indicates whether the line can be removed or have its quantity updated.
+ *
+ */
+export type CartLineDiscountAllocationsArgs = {
+  lineLevelOnly?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 /**
@@ -1901,14 +2016,16 @@ export type CartLineUpdateInput = {
    * The input must not contain more than `250` values.
    */
   attributes?: InputMaybe<Array<AttributeInput>>;
-  /** The ID of the merchandise line. */
-  id: Scalars["ID"]["input"];
+  /** The ID of the merchandise line. Mutually exclusive with `viewKey`. */
+  id?: InputMaybe<Scalars["ID"]["input"]>;
   /** The ID of the merchandise for the line item. */
   merchandiseId?: InputMaybe<Scalars["ID"]["input"]>;
   /** The quantity of the line item. */
   quantity?: InputMaybe<Scalars["Int"]["input"]>;
   /** The ID of the selling plan that the merchandise is being purchased with. */
   sellingPlanId?: InputMaybe<Scalars["ID"]["input"]>;
+  /** The `view_key` of the merchandise line, as exposed in Liquid via the cart line `view_key` filter. Mutually exclusive with `id`. */
+  viewKey?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 /** Return type for `cartLinesAdd` mutation. */
@@ -2299,7 +2416,9 @@ export type CartWarningCode =
   /** Only one-time purchase is available for B2B orders. */
   | "MERCHANDISE_SELLING_PLAN_NOT_APPLICABLE_ON_COMPANY_LOCATION"
   /** Gift cards are not available as a payment method. */
-  | "PAYMENTS_GIFT_CARDS_UNAVAILABLE";
+  | "PAYMENTS_GIFT_CARDS_UNAVAILABLE"
+  /** The product is unavailable in the current buyer location. */
+  | "PRODUCT_UNAVAILABLE_IN_BUYER_LOCATION";
 
 /**
  * A filter used to view a subset of products in a collection matching a specific category value.
@@ -2664,11 +2783,18 @@ export type ComponentizableCartLine = BaseCartLine &
     quantity: Scalars["Int"]["output"];
     /** The selling plan associated with the cart line and the effect that each selling plan has on variants when they're purchased. */
     sellingPlanAllocation?: Maybe<SellingPlanAllocation>;
+    /** A stable identifier for the line matching the value exposed in Liquid via the `view_key` filter and accepted as input on `cartLinesUpdate` and `cartLinesRemove`. */
+    viewKey?: Maybe<Scalars["String"]["output"]>;
   };
 
 /** Represents information about the grouped merchandise in the cart. */
 export type ComponentizableCartLineAttributeArgs = {
   key: Scalars["String"]["input"];
+};
+
+/** Represents information about the grouped merchandise in the cart. */
+export type ComponentizableCartLineDiscountAllocationsArgs = {
+  lineLevelOnly?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 /** Details for count of elements. */
@@ -2704,7 +2830,7 @@ export type Country = {
   /** The ISO code of the country. */
   isoCode: CountryCode;
   /**
-   * The market that includes this country.
+   * The market that applies to this country. In cases where multiple markets match, this returns the most-specific country region market.
    * @deprecated This `market` field will be removed in a future version of the API.
    */
   market?: Maybe<Market>;
@@ -3554,6 +3680,8 @@ export type CurrencyCode =
   | "XAF"
   /** East Caribbean Dollar (XCD). */
   | "XCD"
+  /** Caribbean Guilder (XCG). */
+  | "XCG"
   /** West African CFA franc (XOF). */
   | "XOF"
   /** CFP Franc (XPF). */
@@ -4301,7 +4429,7 @@ export type FilterPresentation =
  * The type of data that the filter group represents.
  *
  * For more information, refer to [Filter products in a collection with the Storefront API]
- * (https://shopify.dev/custom-storefronts/products-collections/filter-products).
+ * (https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/products-collections/filter-products).
  *
  */
 export type FilterType =
@@ -5015,7 +5143,7 @@ export type Localization = {
   /** The language of the active localized experience. Use the `@inContext` directive to change this value. */
   language: Language;
   /**
-   * The market including the country of the active localized experience. Use the `@inContext` directive to change this value.
+   * The market that applies to the buyer's country. In cases where multiple markets match, this returns the most-specific country region market. Use the `@inContext` directive to change this value.
    * @deprecated This `market` field will be removed in a future version of the API.
    */
   market: Market;
@@ -6283,7 +6411,8 @@ export type MutationCartLinesAddArgs = {
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartLinesRemoveArgs = {
   cartId: Scalars["ID"]["input"];
-  lineIds: Array<Scalars["ID"]["input"]>;
+  lineIds?: InputMaybe<Array<Scalars["ID"]["input"]>>;
+  viewKeys?: InputMaybe<Array<Scalars["String"]["input"]>>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
@@ -6423,7 +6552,7 @@ export type MutationCustomerUpdateArgs = {
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationShopPayPaymentRequestSessionCreateArgs = {
-  paymentRequest: ShopPayPaymentRequestInput;
+  paymentRequest?: InputMaybe<ShopPayPaymentRequestInput>;
   sourceIdentifier: Scalars["String"]["input"];
 };
 
@@ -6917,7 +7046,7 @@ export type PredictiveSearchResult = {
   __typename?: "PredictiveSearchResult";
   /** The articles that match the search query. */
   articles: Array<Article>;
-  /** The articles that match the search query. */
+  /** The collections that match the search query. */
   collections: Array<Collection>;
   /** The pages that match the search query. */
   pages: Array<Page>;
@@ -7132,7 +7261,7 @@ export type Product = HasMetafields &
     productType: Scalars["String"]["output"];
     /** The date and time when the product was published to the channel. */
     publishedAt: Scalars["DateTime"]["output"];
-    /** Whether the product can only be purchased with a [selling plan](/docs/apps/build/purchase-options/subscriptions/selling-plans). Products that are sold on subscription (`requiresSellingPlan: true`) can be updated only for online stores. If you update a product to be subscription-only (`requiresSellingPlan:false`), then the product is unpublished from all channels, except the online store. */
+    /** Whether the product can only be purchased with a [selling plan](/docs/apps/build/purchase-options/subscriptions/selling-plans). Products that are sold on subscription (`requiresSellingPlan: true`) can be updated only for online stores. If you update a product to be subscription-only (`requiresSellingPlan: true`), then the product is unpublished from all channels, except the online store. */
     requiresSellingPlan: Scalars["Boolean"]["output"];
     /**
      * Find an active product variant based on selected options, availability or the first variant.
@@ -8174,7 +8303,7 @@ export type QueryRoot = {
   /**
    * Returns paginated search results for [`Product`](https://shopify.dev/docs/api/storefront/current/objects/Product), [`Page`](https://shopify.dev/docs/api/storefront/current/objects/Page), and [`Article`](https://shopify.dev/docs/api/storefront/current/objects/Article) resources based on a query string. Results are sorted by relevance by default.
    *
-   * The response includes the total result count and available product filters for building [faceted search interfaces](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/products-collections/filter-products). Use the [`prefix`](https://shopify.dev/docs/api/storefront/current/enums/SearchPrefixQueryType) argument to enable partial word matching on the last search term, allowing queries like "winter snow" to match "snowboard" or "snowshoe".
+   * The response includes the total result count and available product filters for building [faceted search interfaces](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/products-collections/filter-products). A search returns up to 1,000 results. Use the [`prefix`](https://shopify.dev/docs/api/storefront/current/enums/SearchPrefixQueryType) argument to enable partial word matching on the last search term, allowing queries like "winter snow" to match "snowboard" or "snowshoe".
    *
    */
   search: SearchResultItemConnection;
@@ -8701,7 +8830,7 @@ export type SearchResultItemConnection = {
   pageInfo: PageInfo;
   /** A list of available filters. */
   productFilters: Array<Filter>;
-  /** The total number of results. */
+  /** The total number of results, up to a maximum of 1,000. If a search matches more than 1,000 results, then it returns 1,000, and pagination returns up to the first 1,000 results. */
   totalCount: Scalars["Int"]["output"];
 };
 
@@ -9241,7 +9370,10 @@ export type ShopPayInstallmentsProductVariantPricing = Node & {
 /** Represents a Shop Pay payment request. */
 export type ShopPayPaymentRequest = {
   __typename?: "ShopPayPaymentRequest";
-  /** The delivery methods for the payment request. */
+  /**
+   * The delivery methods for the payment request.
+   * @deprecated This field is deprecated and will be removed in a future version.
+   */
   deliveryMethods: Array<ShopPayPaymentRequestDeliveryMethod>;
   /** The discount codes for the payment request. */
   discountCodes: Array<Scalars["String"]["output"]>;
@@ -9380,6 +9512,7 @@ export type ShopPayPaymentRequestInput = {
    * The delivery methods for the payment request.
    *
    * The input must not contain more than `250` values.
+   * @deprecated This field is deprecated and will be removed in a future version.
    */
   deliveryMethods?: InputMaybe<Array<ShopPayPaymentRequestDeliveryMethodInput>>;
   /**
@@ -9492,6 +9625,8 @@ export type ShopPayPaymentRequestReceipt = {
   paymentRequest: ShopPayPaymentRequest;
   /** The processing status. */
   processingStatusType: Scalars["String"]["output"];
+  /** The Shop user that authorized the payment request. */
+  shopUser?: Maybe<ShopPayPaymentRequestShopUser>;
   /** The token of the receipt. */
   token: Scalars["String"]["output"];
 };
@@ -9501,8 +9636,11 @@ export type ShopPayPaymentRequestSession = {
   __typename?: "ShopPayPaymentRequestSession";
   /** The checkout URL of the Shop Pay payment request session. */
   checkoutUrl: Scalars["URL"]["output"];
-  /** The payment request associated with the Shop Pay payment request session. */
-  paymentRequest: ShopPayPaymentRequest;
+  /**
+   * The payment request associated with the Shop Pay payment request session.
+   * @deprecated This field is deprecated and will be removed in a future version.
+   */
+  paymentRequest?: Maybe<ShopPayPaymentRequest>;
   /** The source identifier of the Shop Pay payment request session. */
   sourceIdentifier: Scalars["String"]["output"];
   /** The token of the Shop Pay payment request session. */
@@ -9546,6 +9684,13 @@ export type ShopPayPaymentRequestShippingLineInput = {
   code?: InputMaybe<Scalars["String"]["input"]>;
   /** The label of the shipping line. */
   label?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** Represents the Shop user that authorized a Shop Pay payment request. */
+export type ShopPayPaymentRequestShopUser = {
+  __typename?: "ShopPayPaymentRequestShopUser";
+  /** The public ID of the Shop user. */
+  publicId?: Maybe<Scalars["String"]["output"]>;
 };
 
 /** Represents a shipping total for a Shop Pay payment request. */
@@ -9718,22 +9863,22 @@ export type SocialLoginProvider = {
 };
 
 /**
- * Inventory information for a product variant at a physical store location that offers local pickup. Includes stock availability, quantity on hand, and estimated pickup readiness time.
+ * Inventory information for a product variant at a physical store location. Includes stock availability, quantity on hand, and estimated pickup readiness time. Availability also includes inventory that can be moved to the location through a store transfer route, so a variant can be available for pickup with no on-hand stock at the location.
  *
- * Local pickup must be [enabled in the store's shipping settings](https://help.shopify.com/manual/shipping/setting-up-and-managing-your-shipping/local-methods/local-pickup) for this data to be returned. Results can be sorted by proximity to a customer's location using the `near` argument on the [`ProductVariant.storeAvailability`](https://shopify.dev/docs/api/storefront/current/objects/ProductVariant#field-ProductVariant.fields.storeAvailability) connection.
+ * Local pickup is [enabled in the store's shipping settings](https://help.shopify.com/manual/shipping/setting-up-and-managing-your-shipping/local-methods/local-pickup), and a returned location isn't guaranteed to offer it. Results can be sorted by proximity to a customer's location using the `near` argument on the [`ProductVariant.storeAvailability`](https://shopify.dev/docs/api/storefront/current/objects/ProductVariant#field-ProductVariant.fields.storeAvailability) connection.
  *
  * Learn more about [supporting local pickup on storefronts](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/products-collections/local-pickup).
  *
  */
 export type StoreAvailability = {
   __typename?: "StoreAvailability";
-  /** Whether the product variant is in-stock at this location. */
+  /** Whether the product variant can be picked up at this location. This is `true` when the variant is in stock here, can be supplied through a store transfer from another location, or is sold with untracked or oversellable inventory (its inventory isn't tracked, or its inventory policy allows continuing to sell when out of stock). As a result, `available` can be `true` even when `quantityAvailable` is `0`. */
   available: Scalars["Boolean"]["output"];
   /** The location where this product variant is stocked at. */
   location: Location;
-  /** Returns the estimated amount of time it takes for pickup to be ready (Example: Usually ready in 24 hours). */
+  /** Returns the estimated amount of time it takes for pickup to be ready (Example: Usually ready in 24 hours). When the variant is out of stock at this location and supplied through a store transfer, this reflects the estimated transfer transit time when available, otherwise it falls back to the location's standard pickup processing time. */
   pickUpTime: Scalars["String"]["output"];
-  /** The quantity of the product variant in-stock at this location. */
+  /** The quantity of the product variant physically in stock at this location. This counts on-hand inventory only and excludes inventory available through a store transfer, so it can be `0` while `available` is `true`. */
   quantityAvailable: Scalars["Int"]["output"];
 };
 

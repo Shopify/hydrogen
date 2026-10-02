@@ -279,7 +279,7 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("x-custom")).toBe("preserved");
     expect(headers.get(SDK_VARIANT_HEADER)).toBe("hydrogen");
     expect(headers.get(SDK_VARIANT_SOURCE_HEADER)).toBe("kit");
-    expect(headers.get(SDK_VERSION_HEADER)).toBe("2026-04");
+    expect(headers.get(SDK_VERSION_HEADER)).toBe("2026-10");
     expect(headers.get(HYDROGEN_VERSION_HEADER)).toBeTruthy();
     expect(headers.get("cookie")).toBe("_shopify_y=unique-token; _shopify_s=visit-token");
     expect(headers.get(REQUEST_GROUP_ID_HEADER)).toBe("incoming-request-id");
