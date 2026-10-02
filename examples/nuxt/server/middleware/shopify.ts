@@ -1,6 +1,6 @@
 import { getBuyerIp } from "@shared/buyer-ip";
-import { defaultI18n, storefrontConfig } from "@shared/config";
-import { getPrivateStorefrontToken } from "@shared/private-env";
+import { defaultI18n } from "@shared/config";
+import { resolveStorefrontConfig } from "@shared/storefront-config";
 import { handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createStorefrontClient,
@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     i18n: defaultI18n,
     buyerIp,
   });
-  const storefrontClient = createPrivateStorefrontClient(requestContext);
+  const storefrontClient = createRequestStorefrontClient(requestContext);
   const sessionManager = await createCustomerSessionManager(request);
   const customerAccountClient = createRequestCustomerAccountClient(requestContext);
 
@@ -47,13 +47,23 @@ export default defineEventHandler(async (event) => {
   event.context.customerAccountClient = customerAccountClient;
 });
 
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
+function createRequestStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
+  const config = resolveStorefrontConfig("hydrogen-example-nuxt");
+
+  if (config.mode === "mock") {
+    return createStorefrontClient({
+      type: "public",
+      requestContext,
+      config: { storeDomain: config.storeDomain },
+    });
+  }
+
   return createStorefrontClient({
     type: "private",
     requestContext,
     config: {
-      storeDomain: storefrontConfig.storeDomain,
-      privateStorefrontToken: getPrivateStorefrontToken(),
+      storeDomain: config.storeDomain,
+      privateStorefrontToken: config.privateStorefrontToken,
     },
   });
 }
