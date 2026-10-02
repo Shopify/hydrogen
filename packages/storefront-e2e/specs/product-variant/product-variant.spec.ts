@@ -4,16 +4,21 @@ import { expect, test, type ProductVariantProduct, type ProductVariantTestData }
 
 const MAX_VARIANT_CONTROL_PROBES = 30;
 
+// A non-option query param that variant selection must keep.
+const QUERY_SENTINEL_NAME = "storefront_e2e_ref";
+const QUERY_SENTINEL_VALUE = "variant-check";
+
 type Paths = ProductVariantTestData["paths"];
 
 type SelectedVariant = {
+  /** The clicked link's resolved href URL, or null when the control is a button. */
+  readonly href: string | null;
+  readonly name: string;
   readonly productTitle: string;
-  readonly variantLabel: string;
   readonly variantUrl: string;
 };
 
 type ServerVariantLink = {
-  readonly href: string;
   readonly link: Locator;
   readonly linkName: string;
   readonly productTitle: string;
@@ -32,9 +37,8 @@ test("product variant URL loads selected variant", async ({ data, page }) => {
   await expect(
     page.getByRole("heading", { level: 1, name: selectedVariant.productTitle }),
   ).toBeVisible();
-  await expect(
-    page.getByText(selectedVariant.variantLabel, { exact: false }).first(),
-  ).toBeVisible();
+  expectQuerySentinel(page.url());
+  await expectSelectedControl(page, selectedVariant);
 });
 
 test.describe("without JavaScript", () => {
@@ -51,13 +55,9 @@ test.describe("without JavaScript", () => {
     await variant.link.click();
 
     await expect(page).toHaveURL(variant.targetUrl);
+    expectQuerySentinel(page.url());
     await expect(page.getByRole("heading", { level: 1, name: variant.productTitle })).toBeVisible();
-    const selectedLink = page
-      .getByRole("link", { name: variant.linkName, exact: true })
-      .and(
-        page.locator(`[href="${variant.href.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"]`),
-      );
-    await expect(selectedLink).toHaveAttribute("aria-current", "true");
+    await expectCurrentVariantLinks(page, variant.linkName, variant.targetUrl);
   });
 });
 
@@ -69,7 +69,7 @@ async function findServerVariantLink(
   const checkedPaths: string[] = [];
 
   for (const product of products) {
-    const path = paths.product(product.handle);
+    const path = productPathWithSentinel(paths, product);
     checkedPaths.push(path);
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1, name: product.title })).toBeVisible();
@@ -81,9 +81,8 @@ async function findServerVariantLink(
     if (href === null) continue;
 
     return {
-      href,
       link,
-      linkName: (await controlText(link)).replace(/\s+/g, " ").trim(),
+      linkName: normalizeWhitespace(await controlText(link)),
       productTitle: product.title,
       targetUrl: new URL(href, page.url()).href,
     };
@@ -112,27 +111,118 @@ async function selectVariantForProduct(
   product: ProductVariantProduct,
   paths: Paths,
 ): Promise<SelectedVariant | null> {
-  await page.goto(paths.product(product.handle));
+  await page.goto(productPathWithSentinel(paths, product));
   await expect(page.getByRole("heading", { level: 1, name: product.title })).toBeVisible();
 
   const control = await findVariantControl(page, product.optionNames);
   if (control === null) return null;
 
-  const variantLabel = normalizeLabel(await controlText(control));
+  const name = normalizeWhitespace(await controlText(control));
   const beforeUrl = page.url();
+  const rawHref = await control.getAttribute("href");
+  const href = rawHref === null ? null : new URL(rawHref, beforeUrl).href;
+  const pressedBefore = href === null ? await pressedButtons(page, name).count() : 0;
   await control.click();
 
-  await expect.poll(() => page.url()).not.toBe(beforeUrl);
-  expect(hasVariantUrlSignal(beforeUrl, page.url())).toBe(true);
-  await expect(page.getByText(variantLabel, { exact: false }).first()).toBeVisible();
+  if (href === null) {
+    await expect.poll(() => page.url()).not.toBe(beforeUrl);
+    expect(hasVariantUrlSignal(beforeUrl, page.url(), product.optionNames)).toBe(true);
+  } else {
+    // A hydrated link selection must go to the same URL as the link's own href.
+    await expect.poll(() => comparableUrl(page.url())).toBe(comparableUrl(href));
+  }
+  expectQuerySentinel(page.url());
 
-  return { productTitle: product.title, variantLabel, variantUrl: page.url() };
+  const selectedVariant = { href, name, productTitle: product.title, variantUrl: page.url() };
+  await expectSelectedControl(page, selectedVariant, pressedBefore);
+
+  return selectedVariant;
 }
 
-function hasVariantUrlSignal(beforeUrl: string, afterUrl: string): boolean {
+function productPathWithSentinel(paths: Paths, product: ProductVariantProduct): string {
+  const query = new URLSearchParams({ [QUERY_SENTINEL_NAME]: QUERY_SENTINEL_VALUE });
+  return `${paths.product(product.handle)}?${query}`;
+}
+
+function expectQuerySentinel(url: string): void {
+  expect(
+    new URL(url).searchParams.get(QUERY_SENTINEL_NAME),
+    `Variant selection must keep the non-option query param ${QUERY_SENTINEL_NAME}`,
+  ).toBe(QUERY_SENTINEL_VALUE);
+}
+
+/** Compares URLs without depending on query param order. */
+function comparableUrl(url: string): string {
+  const { origin, pathname, searchParams } = new URL(url);
+  const query = [...searchParams]
+    .map(([key, value]) => new URLSearchParams([[key, value]]).toString())
+    .toSorted();
+  return `${origin}${pathname}?${query.join("&")}`;
+}
+
+function hasVariantUrlSignal(
+  beforeUrl: string,
+  afterUrl: string,
+  optionNames: readonly string[],
+): boolean {
   const before = new URL(beforeUrl);
   const after = new URL(afterUrl);
-  return before.pathname !== after.pathname || after.searchParams.size > 0;
+  return (
+    before.pathname !== after.pathname || optionNames.some((name) => after.searchParams.has(name))
+  );
+}
+
+async function expectSelectedControl(
+  page: Page,
+  selectedVariant: SelectedVariant,
+  pressedBefore = 0,
+): Promise<void> {
+  if (selectedVariant.href !== null) {
+    await expectCurrentVariantLinks(page, selectedVariant.name, selectedVariant.href);
+    return;
+  }
+
+  // Buttons have no href to tell repeated labels apart, so this only proves that
+  // one more button with the clicked label became pressed.
+  await expect
+    .poll(() => pressedButtons(page, selectedVariant.name).count())
+    .toBeGreaterThan(pressedBefore);
+}
+
+/**
+ * Every link with this name whose href resolves to the same URL as `targetUrl`
+ * (query param order can differ) must be current, and there must be at least one.
+ */
+async function expectCurrentVariantLinks(
+  page: Page,
+  name: string,
+  targetUrl: string,
+): Promise<void> {
+  const expectedUrl = comparableUrl(targetUrl);
+  const links = page.getByRole("link", { name, exact: true });
+
+  await expect
+    .poll(async () => {
+      const pageUrl = page.url();
+      const states = await links.evaluateAll((elements) =>
+        elements.map((element) => ({
+          current: element.getAttribute("aria-current"),
+          href: element.getAttribute("href"),
+        })),
+      );
+      const matches = states.filter(
+        (state) =>
+          state.href !== null && comparableUrl(new URL(state.href, pageUrl).href) === expectedUrl,
+      );
+      if (matches.length === 0) return `no "${name}" link to ${targetUrl}`;
+      if (matches.every((state) => state.current === "true")) return "all current";
+      return `aria-current values: ${matches.map((state) => String(state.current)).join(", ")}`;
+    })
+    .toBe("all current");
+}
+
+function pressedButtons(page: Page, name: string): Locator {
+  return page.getByRole("button", { name, exact: true, pressed: true });
 }
 
 async function findVariantControl(
@@ -157,11 +247,8 @@ async function controlText(control: Locator): Promise<string> {
   });
 }
 
-function normalizeLabel(value: string | null): string {
-  return (value ?? "")
-    .replace(/\s+/g, " ")
-    .replace(/ - Sold out$/i, "")
-    .trim();
+function normalizeWhitespace(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
 }
 
 async function findUnselectedVariantButton(page: Page): Promise<Locator | null> {

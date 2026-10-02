@@ -65,6 +65,29 @@ export function ProductPurchasePanel(props: { product: ProductData }) {
     if (result.status !== "invalid") handleSelect(result);
   }
 
+  function handleOptionClick(
+    event: MouseEvent & { currentTarget: HTMLAnchorElement },
+    name: string,
+    value: string,
+  ) {
+    const link = event.currentTarget;
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      (link.target !== "" && link.target.toLowerCase() !== "_self") ||
+      link.hasAttribute("download")
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    selectOption(name, value);
+  }
+
   function handleSelect(result: ValidProductSelectionResult) {
     const targetHandle = result.selectedVariant?.product?.handle ?? props.product.handle;
     navigate(`/products/${targetHandle}${variantSearch(result.selectedOptions)}`, {
@@ -152,30 +175,60 @@ export function ProductPurchasePanel(props: { product: ProductData }) {
                         </a>
                       }
                     >
-                      <button
-                        type="button"
-                        name={option.name}
-                        value={value.name}
-                        aria-pressed={value.selected}
-                        disabled={!value.exists}
-                        aria-label={isColor(option.name) ? value.name : undefined}
-                        onClick={() => selectOption(option.name, value.name)}
-                        class={
-                          isColor(option.name)
-                            ? value.selected
-                              ? "h-7 w-7 rounded-full ring-2 ring-black ring-offset-2 disabled:opacity-30"
-                              : "h-7 w-7 rounded-full disabled:opacity-30"
-                            : value.selected
-                              ? "h-11 min-w-20 rounded-full bg-black px-5 text-sm font-semibold text-white disabled:opacity-30"
-                              : "h-11 min-w-20 rounded-full border border-black/15 px-5 text-sm font-semibold hover:border-black disabled:opacity-30"
+                      <Show
+                        when={value.exists}
+                        fallback={
+                          <button
+                            type="button"
+                            name={option.name}
+                            value={value.name}
+                            aria-pressed={value.selected}
+                            disabled={!value.exists}
+                            aria-label={isColor(option.name) ? value.name : undefined}
+                            onClick={() => selectOption(option.name, value.name)}
+                            class={
+                              isColor(option.name)
+                                ? value.selected
+                                  ? "h-7 w-7 rounded-full ring-2 ring-black ring-offset-2 disabled:opacity-30"
+                                  : "h-7 w-7 rounded-full disabled:opacity-30"
+                                : value.selected
+                                  ? "h-11 min-w-20 rounded-full bg-black px-5 text-sm font-semibold text-white disabled:opacity-30"
+                                  : "h-11 min-w-20 rounded-full border border-black/15 px-5 text-sm font-semibold hover:border-black disabled:opacity-30"
+                            }
+                            style={isColor(option.name) ? getSwatchStyle(value.swatch) : undefined}
+                          >
+                            <Show when={!isColor(option.name)}>
+                              {value.name}
+                              <Show when={value.exists && !value.available}> - Sold out</Show>
+                            </Show>
+                          </button>
                         }
-                        style={isColor(option.name) ? getSwatchStyle(value.swatch) : undefined}
                       >
-                        <Show when={!isColor(option.name)}>
-                          {value.name}
-                          <Show when={value.exists && !value.available}> - Sold out</Show>
-                        </Show>
-                      </button>
+                        <a
+                          href={variantHref(value.selectedOptions, value.handle)}
+                          aria-current={value.selected ? "true" : undefined}
+                          aria-label={isColor(option.name) ? value.name : undefined}
+                          on:click={(event) => handleOptionClick(event, option.name, value.name)}
+                          class={
+                            "inline-flex items-center justify-center " +
+                            (isColor(option.name)
+                              ? value.selected
+                                ? "h-7 w-7 rounded-full ring-2 ring-black ring-offset-2 disabled:opacity-30"
+                                : "h-7 w-7 rounded-full disabled:opacity-30"
+                              : value.selected
+                                ? "h-11 min-w-20 rounded-full bg-black px-5 text-sm font-semibold text-white disabled:opacity-30"
+                                : "h-11 min-w-20 rounded-full border border-black/15 px-5 text-sm font-semibold hover:border-black disabled:opacity-30")
+                          }
+                          style={isColor(option.name) ? getSwatchStyle(value.swatch) : undefined}
+                        >
+                          <Show when={!isColor(option.name)}>
+                            <span>
+                              {value.name}
+                              <Show when={!value.available}> - Sold out</Show>
+                            </span>
+                          </Show>
+                        </a>
+                      </Show>
                     </Show>
                   )}
                 </For>

@@ -30,18 +30,14 @@ import { canonicalUrl, jsonLdScript } from "@/lib/site";
  */
 export function ProductDetails({ product }: { product: ProductData }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   return (
     <ProductProvider
       product={product}
       onSelect={(result) => {
         const targetHandle = result.selectedVariant?.product?.handle ?? product.handle;
-        const next = variantUrl(
-          product,
-          result.selectedOptions,
-          targetHandle,
-          new URLSearchParams(),
-        );
+        const next = variantUrl(product, result.selectedOptions, targetHandle, searchParams);
         router.replace(next, { scroll: false });
       }}
     >
@@ -194,8 +190,9 @@ function ProductPage({ product }: { product: ProductData }) {
                         // Same-product value — a real GET `<Link>` to the option
                         // URL so selection works without JS (the server page
                         // resolves the variant). Hydration enhances the same
-                        // element via `register("optionValue", ...)`; the
-                        // provider `onSelect` syncs the URL client-side.
+                        // element via `onNavigate` so modified clicks keep their
+                        // native behavior. Only the provider `onSelect` syncs
+                        // the URL client-side.
                         // `aria-current` marks the selected link (`aria-pressed`
                         // is invalid on a link).
                         <Link
@@ -211,10 +208,14 @@ function ProductPage({ product }: { product: ProductData }) {
                           aria-current={value.selected ? "true" : undefined}
                           data-available={value.available ? "true" : "false"}
                           className="option-pill no-underline"
-                          {...register("optionValue", {
-                            optionName: option.name,
-                            value: value.name,
-                          })}
+                          onNavigate={(event) => {
+                            event.preventDefault();
+                            const registered = register("optionValue", {
+                              optionName: option.name,
+                              value: value.name,
+                            });
+                            registered.onClick();
+                          }}
                         >
                           {value.name}
                           {!value.available ? (
