@@ -17,9 +17,15 @@ export type {
   ShopifyRouteHandlerResult,
   ShopifyRouteJsonResult,
   ShopifyRouteRedirectResult,
+  ShopifyRouteResponseResult,
   ShopifyRedirectStatus,
   ShopifyRouteSessionManager,
 } from "./route-types";
+
+/** `method` value that matches every HTTP method. */
+export const ANY_METHOD = "*";
+/** `pathname` suffix that turns a handler into a prefix match. */
+export const WILDCARD_PATHNAME_SUFFIX = "/*";
 
 const HTTP_OK_STATUS = 200;
 const HTTP_SEE_OTHER_STATUS = 303;
@@ -61,10 +67,12 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   const routeHandlers = handlers.flatMap((group) => Object.values(group));
   if (routeHandlers.length === 0) return null;
 
-  const pathMatches = routeHandlers.filter((entry) => entry.pathname === url.pathname);
+  const pathMatches = matchRouteHandlers(routeHandlers, url.pathname);
   if (pathMatches.length === 0) return null;
 
-  const match = pathMatches.find((candidate) => candidate.method === request.method);
+  const match = pathMatches.find(
+    (candidate) => candidate.method === request.method || candidate.method === ANY_METHOD,
+  );
   if (!match)
     return Promise.resolve(
       new Response("Method Not Allowed", { status: HTTP_METHOD_NOT_ALLOWED_STATUS }),
@@ -73,7 +81,27 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   return match(context).then((result) => createShopifyRouteResponse(result, request));
 };
 
+/** Literal pathnames match exactly and win over `/*` wildcard pathnames. */
+function matchRouteHandlers(
+  routeHandlers: ShopifyRouteHandler[],
+  pathname: string,
+): ShopifyRouteHandler[] {
+  const exactMatches = routeHandlers.filter((handler) => handler.pathname === pathname);
+  if (exactMatches.length > 0) return exactMatches;
+
+  return routeHandlers.filter((handler) => matchesWildcardPathname(handler.pathname, pathname));
+}
+
+function matchesWildcardPathname(handlerPathname: string, pathname: string): boolean {
+  if (!handlerPathname.endsWith(WILDCARD_PATHNAME_SUFFIX)) return false;
+
+  const base = handlerPathname.slice(0, -WILDCARD_PATHNAME_SUFFIX.length);
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
+
 function createShopifyRouteResponse(result: ShopifyRouteHandlerResult, request: Request): Response {
+  if (result.type === "response") return result.response;
+
   if (result.type === "redirect") {
     const headers = new Headers(result.headers);
     headers.set("location", resolveRedirectLocation(result.location, request));

@@ -8,6 +8,13 @@ export const CART_PERMALINK_RE = /^\/cart\/\d+:\d+(?:,\d+:\d+)*$/;
 const BUY_ITEM_PAIR = String.raw`(?:[A-Za-z0-9._-]+|~[A-Za-z0-9_-]+):[1-9]\d*`;
 // Items are required so a storefront's own /buy pages keep routing to the app.
 export const BUY_PERMALINK_RE = new RegExp(`^/buy/${BUY_ITEM_PAIR}(?:,${BUY_ITEM_PAIR})*$`);
+/**
+ * Subpath prefixes Shopify allows for app proxies. An app's proxy URL is
+ * `/<prefix>/<subpath>`, for example `/a/downloads` or `/apps/reviews`.
+ * See https://shopify.dev/docs/apps/build/online-store/display-dynamic-data
+ */
+export const APP_PROXY_PREFIXES = ["apps", "a", "community", "tools"] as const;
+
 export const CUSTOMER_ACCOUNT_PATHS = {
   authorize: "/account/authorize",
   login: "/account/login",

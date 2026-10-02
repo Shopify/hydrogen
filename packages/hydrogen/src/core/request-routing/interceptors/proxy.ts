@@ -32,6 +32,8 @@ type ProxyDescriptor = {
   redirect?: RequestRedirect;
   scope: string;
   rewritePathname?: (pathname: string) => string;
+  /** Adjusts the query string sent upstream; the storefront request URL is untouched. */
+  rewriteSearch?: (searchParams: URLSearchParams) => void;
   requestHeaders: ProxyRequestHeaderOptions;
   responseHeaders?: ProxyResponseHeaderOptions;
 };
@@ -76,6 +78,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
     try {
       const upstreamPathname = descriptor.rewritePathname?.(url.pathname) ?? url.pathname;
       upstreamUrl = new URL(upstreamPathname + url.search, storefrontClient.storeUrl);
+      descriptor.rewriteSearch?.(upstreamUrl.searchParams);
 
       init = {
         method: request.method,
