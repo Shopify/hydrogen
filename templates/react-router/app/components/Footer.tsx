@@ -5,7 +5,7 @@ import type { StorefrontShop } from "~/lib/storefront-shop";
 import { PaymentMethodIcon } from "./PaymentMethodIcon";
 
 const linkClass =
-  "min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors";
+  "min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-focus-ring inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors";
 
 export function Footer({ shopInfo }: { shopInfo: StorefrontShop }) {
   return (

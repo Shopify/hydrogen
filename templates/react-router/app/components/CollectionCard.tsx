@@ -77,7 +77,7 @@ export function CollectionCard({
   return (
     <Link
       to={`/collections/${collection.handle}`}
-      className="card group rounded-card focus-visible:outline-accent relative block overflow-hidden no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+      className="card group rounded-card focus-visible:outline-focus-ring relative block overflow-hidden no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
       aria-label={collection.title}
       data-testid="collection-card"
     >
@@ -97,7 +97,7 @@ export function CollectionCard({
         ) : null}
       </div>
       <div className="overlay-dark pointer-events-none absolute inset-0" />
-      <div className="text-interactive-text absolute inset-x-0 bottom-0 z-10 p-4 text-left">
+      <div className="text-on-fill absolute inset-x-0 bottom-0 z-10 p-4 text-left">
         <h3 className="type-body-lg font-medium">{collection.title}</h3>
         <p className="type-body-sm mt-0.5 opacity-80">
           {productCountText(collection, productCount)}
