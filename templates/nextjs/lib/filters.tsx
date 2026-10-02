@@ -1,10 +1,11 @@
 import {
   isFilterInputActive,
+  parseCollectionParams,
   serializeCollectionParams,
   type AvailableFilter,
   type ProductFilter,
 } from "@shopify/hydrogen";
-import type { CSSProperties } from "react";
+import { useCallback, useEffect, useRef, type CSSProperties, type ChangeEvent } from "react";
 
 import { content } from "./content";
 
@@ -64,12 +65,12 @@ export function FilterValueInput({
   filter,
   value,
   activeFilters,
-  disabled,
+  isLoading,
 }: {
   filter: VisualAvailableFilter;
   value: FilterValueWithVisuals;
   activeFilters: ProductFilter[];
-  disabled?: boolean;
+  isLoading?: boolean;
 }) {
   const entries = filterValueInputParamEntries(value.input);
   if (entries.length !== 1) return null;
@@ -83,10 +84,20 @@ export function FilterValueInput({
         type="checkbox"
         name={name}
         value={paramValue}
-        defaultChecked={isFilterInputActive(activeFilters, value.input)}
-        onChange={(event) => event.currentTarget.form?.requestSubmit()}
+        checked={isFilterInputActive(activeFilters, value.input)}
+        onChange={(event) => {
+          const input = event.currentTarget;
+          if (input.checked && (filter.type === "BOOLEAN" || name === "filter.v.availability")) {
+            for (const sibling of input.form?.querySelectorAll<HTMLInputElement>(
+              'input[type="checkbox"]',
+            ) ?? []) {
+              if (sibling !== input && sibling.name === name) sibling.checked = false;
+            }
+          }
+          input.form?.requestSubmit();
+        }}
         className={isSwatch ? "sr-only" : "size-4"}
-        disabled={disabled}
+        aria-busy={isLoading}
         autoComplete="off"
       />
       {isSwatch ? <FilterValueSwatch value={value} /> : null}
@@ -123,18 +134,94 @@ function getFilterSwatchStyle(value: FilterValueWithVisuals): CSSProperties {
 export function PriceRangeFilter({
   filter,
   activeFilters,
-  disabled,
   currencyCode,
+  isLoading,
 }: {
   filter: VisualAvailableFilter;
   activeFilters: ProductFilter[];
-  disabled?: boolean;
+  isLoading?: boolean;
   currencyCode?: string;
 }) {
   const { min, max } = activePriceRange(activeFilters);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const minInput = useRef<HTMLInputElement>(null);
+  const maxInput = useRef<HTMLInputElement>(null);
+  const cancelPriceSubmit = useCallback(() => {
+    if (timer.current !== null) clearTimeout(timer.current);
+    timer.current = null;
+  }, []);
+
+  useEffect(() => {
+    const input = minInput.current;
+    if (!input) return;
+    const matches =
+      min === "" ? input.value === "" : input.value !== "" && Number(input.value) === Number(min);
+    if (!matches) {
+      cancelPriceSubmit();
+      input.value = min;
+    }
+  }, [min, cancelPriceSubmit]);
+
+  useEffect(() => {
+    const input = maxInput.current;
+    if (!input) return;
+    const matches =
+      max === "" ? input.value === "" : input.value !== "" && Number(input.value) === Number(max);
+    if (!matches) {
+      cancelPriceSubmit();
+      input.value = max;
+    }
+  }, [max, cancelPriceSubmit]);
+
+  useEffect(() => {
+    const form = minInput.current?.form;
+    function restoreHistoryPrice() {
+      cancelPriceSubmit();
+      const { filters } = parseCollectionParams(new URLSearchParams(window.location.search));
+      const price = activePriceRange(filters);
+      if (minInput.current) minInput.current.value = price.min;
+      if (maxInput.current) maxInput.current.value = price.max;
+    }
+    function cancelOnNavigation(event: MouseEvent) {
+      // Stop the draft before a link navigation waits for its server response.
+      const link =
+        event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
+      if (
+        event.button === 0 &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.shiftKey &&
+        !event.altKey &&
+        link &&
+        (!link.target || link.target === "_self") &&
+        !link.hasAttribute("download")
+      ) {
+        restoreHistoryPrice();
+      }
+    }
+    form?.addEventListener("submit", cancelPriceSubmit, true);
+    document.addEventListener("click", cancelOnNavigation, true);
+    window.addEventListener("popstate", restoreHistoryPrice);
+    return () => {
+      cancelPriceSubmit();
+      form?.removeEventListener("submit", cancelPriceSubmit, true);
+      document.removeEventListener("click", cancelOnNavigation, true);
+      window.removeEventListener("popstate", restoreHistoryPrice);
+    };
+  }, [cancelPriceSubmit]);
+
+  function submitAfterTyping(event: ChangeEvent<HTMLInputElement>) {
+    cancelPriceSubmit();
+    const form = event.currentTarget.form;
+    timer.current = setTimeout(() => {
+      timer.current = null;
+      if (form?.isConnected) form.requestSubmit();
+    }, 350);
+  }
+
   const currency = currencyCode ?? "USD";
   return (
-    <fieldset className="flex flex-col gap-2">
+    <fieldset className="flex flex-col gap-2" aria-busy={isLoading}>
       <legend className="type-body-sm text-on-surface mb-1 font-medium">
         {filter.label} ({currency})
       </legend>
@@ -143,20 +230,14 @@ export function PriceRangeFilter({
           <span className="text-on-surface-secondary sr-only">{content.collection.priceMin}</span>
           <input
             type="number"
+            ref={minInput}
             name="filter.v.price.gte"
             min={0}
             defaultValue={min}
             placeholder={content.collection.priceMin}
             inputMode="numeric"
             autoComplete="off"
-            disabled={disabled}
-            onBlur={(event) => event.currentTarget.form?.requestSubmit()}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                event.currentTarget.form?.requestSubmit();
-              }
-            }}
+            onChange={submitAfterTyping}
             className="number-reset rounded-button border-border h-9 w-full border px-2 text-sm"
           />
         </label>
@@ -165,20 +246,14 @@ export function PriceRangeFilter({
           <span className="text-on-surface-secondary sr-only">{content.collection.priceMax}</span>
           <input
             type="number"
+            ref={maxInput}
             name="filter.v.price.lte"
             min={0}
             defaultValue={max}
             placeholder={content.collection.priceMax}
             inputMode="numeric"
             autoComplete="off"
-            disabled={disabled}
-            onBlur={(event) => event.currentTarget.form?.requestSubmit()}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                event.currentTarget.form?.requestSubmit();
-              }
-            }}
+            onChange={submitAfterTyping}
             className="number-reset rounded-button border-border h-9 w-full border px-2 text-sm"
           />
         </label>
@@ -191,12 +266,12 @@ export function PriceRangeFilter({
 export function FilterGroup({
   filter,
   activeFilters,
-  disabled,
+  isLoading,
   currencyCode,
 }: {
   filter: VisualAvailableFilter;
   activeFilters: ProductFilter[];
-  disabled?: boolean;
+  isLoading?: boolean;
   currencyCode?: string;
 }) {
   if (filter.type === "PRICE_RANGE") {
@@ -204,13 +279,13 @@ export function FilterGroup({
       <PriceRangeFilter
         filter={filter}
         activeFilters={activeFilters}
-        disabled={disabled}
+        isLoading={isLoading}
         currencyCode={currencyCode}
       />
     );
   }
   return (
-    <fieldset className="flex flex-col gap-2" aria-disabled={disabled}>
+    <fieldset className="flex flex-col gap-2" aria-busy={isLoading}>
       <legend className="type-body-sm text-on-surface mb-1 font-medium">{filter.label}</legend>
       {filter.values.map((value) => (
         <FilterValueInput
@@ -218,7 +293,7 @@ export function FilterGroup({
           filter={filter}
           value={value}
           activeFilters={activeFilters}
-          disabled={disabled}
+          isLoading={isLoading}
         />
       ))}
     </fieldset>

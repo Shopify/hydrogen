@@ -4,6 +4,7 @@ import {
   getSortByValue,
   getFilterRemovalUrl,
   isFilterInputActive,
+  parseCollectionParams,
   serializeCollectionParams,
 } from "@shopify/hydrogen";
 
@@ -55,15 +56,72 @@ function activePriceValue(bound: "min" | "max") {
   return state.value.filters.find((filter) => filter.price)?.price?.[bound] ?? "";
 }
 
-function onPriceBlur(event: FocusEvent, bound: "min" | "max") {
-  const input = event.target as HTMLInputElement;
-  if (input.value !== String(activePriceValue(bound))) input.form?.requestSubmit();
+const router = useRouter();
+const priceDraft = reactive({
+  min: String(activePriceValue("min")),
+  max: String(activePriceValue("max")),
+});
+let priceTimer: ReturnType<typeof setTimeout> | null = null;
+
+function cancelPriceSubmit() {
+  if (priceTimer !== null) clearTimeout(priceTimer);
+  priceTimer = null;
 }
 
-function onPriceKeydown(event: KeyboardEvent) {
-  if (event.key !== "Enter") return;
-  event.preventDefault();
-  (event.target as HTMLInputElement).blur();
+for (const bound of ["min", "max"] as const) {
+  watch(
+    () => activePriceValue(bound),
+    (value) => {
+      const draft = priceDraft[bound];
+      const matches = value === "" ? draft === "" : draft !== "" && Number(draft) === value;
+      if (!matches) {
+        cancelPriceSubmit();
+        priceDraft[bound] = String(value);
+      }
+    },
+    { flush: "sync" },
+  );
+}
+
+function restoreHistoryPrice() {
+  cancelPriceSubmit();
+  const { filters } = parseCollectionParams(new URLSearchParams(window.location.search));
+  const price = filters.find((filter) => filter.price)?.price;
+  priceDraft.min = String(price?.min ?? "");
+  priceDraft.max = String(price?.max ?? "");
+}
+
+let removeNavigationGuard: (() => void) | undefined;
+onMounted(() => {
+  removeNavigationGuard = router.beforeEach((to, from) => {
+    const params = new URL(to.fullPath, window.location.origin).searchParams;
+    // A form-driven navigation already applied these bounds. Keep newer typing.
+    if (
+      to.path !== from.path ||
+      to.query.q !== from.query.q ||
+      serializeCollectionParams(parseCollectionParams(params)).toString() !==
+        currentParams.value.toString()
+    ) {
+      restoreHistoryPrice();
+    }
+  });
+  window.addEventListener("popstate", restoreHistoryPrice);
+});
+onBeforeUnmount(() => {
+  cancelPriceSubmit();
+  removeNavigationGuard?.();
+  window.removeEventListener("popstate", restoreHistoryPrice);
+});
+
+function onPriceInput(event: Event, bound: "min" | "max") {
+  const input = event.target as HTMLInputElement;
+  priceDraft[bound] = input.value;
+  cancelPriceSubmit();
+  const form = input.form;
+  priceTimer = setTimeout(() => {
+    priceTimer = null;
+    if (form?.isConnected) form.requestSubmit();
+  }, 350);
 }
 
 function uncheckSiblings(checkbox: HTMLInputElement) {
@@ -172,9 +230,9 @@ function visibleFilters(filters: AvailableFilter[]) {
     <form
       v-else
       v-bind="fProps"
-      :key="`${term}|${serializeCollectionParams(state).toString()}`"
       method="get"
       class="mt-12 flex gap-12"
+      @submit.capture="cancelPriceSubmit"
     >
       <input type="hidden" name="q" :value="term" />
 
@@ -185,7 +243,7 @@ function visibleFilters(filters: AvailableFilter[]) {
           <fieldset
             v-for="filter in visibleFilters(availableFilters)"
             :key="filter.id"
-            :disabled="isLoading"
+            :aria-busy="isLoading"
             :class="isLoading ? 'opacity-60' : undefined"
           >
             <legend class="text-sm font-semibold">{{ filter.label }}</legend>
@@ -197,10 +255,9 @@ function visibleFilters(filters: AvailableFilter[]) {
                 step="any"
                 placeholder="Min"
                 aria-label="Minimum price"
-                :value="activePriceValue('min')"
+                :value="priceDraft.min"
                 class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
-                @blur="onPriceBlur($event, 'min')"
-                @keydown="onPriceKeydown"
+                @input="onPriceInput($event, 'min')"
               />
               <span class="text-sm text-black/40">to</span>
               <input
@@ -210,10 +267,9 @@ function visibleFilters(filters: AvailableFilter[]) {
                 step="any"
                 placeholder="Max"
                 aria-label="Maximum price"
-                :value="activePriceValue('max')"
+                :value="priceDraft.max"
                 class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
-                @blur="onPriceBlur($event, 'max')"
-                @keydown="onPriceKeydown"
+                @input="onPriceInput($event, 'max')"
               />
             </div>
             <div v-else-if="visibleValues(filter).length > 0" class="mt-3 space-y-2">
@@ -256,6 +312,7 @@ function visibleFilters(filters: AvailableFilter[]) {
             <NuxtLink
               v-if="hasActiveFilters"
               :to="searchPath"
+              @click="restoreHistoryPrice"
               class="text-sm text-black/60 underline hover:text-black"
             >
               Clear all
@@ -270,7 +327,8 @@ function visibleFilters(filters: AvailableFilter[]) {
             <select
               name="sort_by"
               :value="currentSortValue"
-              :disabled="isLoading"
+              :aria-busy="isLoading"
+              :class="isLoading ? 'opacity-50' : undefined"
               class="rounded border border-black/15 bg-white px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
               @change="onSortChange"
             >
@@ -287,6 +345,7 @@ function visibleFilters(filters: AvailableFilter[]) {
             v-for="filter in state.filters"
             :key="JSON.stringify(filter)"
             :to="filterRemovalHref(filter)"
+            @click="restoreHistoryPrice"
             class="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1 text-sm hover:bg-black/10"
           >
             {{ describeFilter(filter) }}
@@ -308,6 +367,7 @@ function visibleFilters(filters: AvailableFilter[]) {
           <NuxtLink
             v-if="hasActiveFilters"
             :to="searchPath"
+            @click="restoreHistoryPrice"
             class="mt-4 inline-block text-sm font-semibold underline"
           >
             Clear all filters

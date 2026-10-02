@@ -211,6 +211,7 @@ function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
             <h2 className="type-heading-sm text-on-surface mb-2">Filters</h2>
             <FacetForm
               availableFilters={loaderData.availableFilters}
+              currencyCode={loaderData.currencyCode}
               extraHiddenInputs={searchTermHiddenInput(loaderData.searchTerm)}
             />
           </div>
@@ -245,6 +246,7 @@ function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
       </div>
       <FilterDrawer
         availableFilters={loaderData.availableFilters}
+        currencyCode={loaderData.currencyCode}
         extraHiddenInputs={searchTermHiddenInput(loaderData.searchTerm)}
       />
     </>
