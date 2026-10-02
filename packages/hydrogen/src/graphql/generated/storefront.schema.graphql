@@ -5751,7 +5751,7 @@ enum CurrencyCode {
   """
   Netherlands Antillean Guilder.
   """
-  ANG
+  ANG @deprecated(reason: "`ANG` is deprecated. Use `XCG` instead.")
 
   """
   New Zealand Dollars (NZD).

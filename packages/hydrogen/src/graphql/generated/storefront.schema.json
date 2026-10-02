@@ -13411,8 +13411,8 @@
           {
             "name": "ANG",
             "description": "Netherlands Antillean Guilder.",
-            "isDeprecated": false,
-            "deprecationReason": null
+            "isDeprecated": true,
+            "deprecationReason": "`ANG` is deprecated. Use `XCG` instead."
           },
           {
             "name": "AOA",
