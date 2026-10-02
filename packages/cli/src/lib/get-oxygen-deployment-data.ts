@@ -1,3 +1,5 @@
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {isJsonOutput} from './json-output.js';
 import {outputWarn} from '@shopify/cli-kit/node/output';
 
 import {login} from './auth.js';
@@ -50,6 +52,8 @@ export async function getOxygenDeploymentData({
   }
 
   if (!storefront.oxygenDeploymentToken) {
+    if (isJsonOutput())
+      throw new AbortError('Could not retrieve a deployment token.');
     outputWarn(`Could not retrieve a deployment token.`);
     return;
   }
