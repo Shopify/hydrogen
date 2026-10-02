@@ -7,7 +7,7 @@ import {
   type SelectedOption,
 } from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 
 import { ProductCard, PRODUCT_CARD_FRAGMENT } from "~/components/ProductCard";
@@ -447,6 +447,23 @@ function VariantOptions({ product }: { product: ProductData }) {
                   variantOption.handle,
                   baseParams,
                 );
+                const onSelectLink = (event: MouseEvent<HTMLAnchorElement>) => {
+                  if (
+                    event.defaultPrevented ||
+                    event.button !== 0 ||
+                    event.metaKey ||
+                    event.altKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    (event.currentTarget.target && event.currentTarget.target !== "_self")
+                  ) {
+                    return;
+                  }
+
+                  // The provider owns URL sync; stop Link from navigating a second time.
+                  event.preventDefault();
+                  registered.onClick();
+                };
 
                 if (renderSwatches) {
                   const swatch = swatches.get(`${option.name}:${valueName}`);
@@ -482,15 +499,17 @@ function VariantOptions({ product }: { product: ProductData }) {
                     </>
                   );
 
-                  if (isCrossProduct) {
+                  if (isCrossProduct || variantOption.exists) {
                     return (
                       <Link
                         key={valueName}
                         to={toRouterLocation(linkTarget)}
+                        replace={!isCrossProduct}
                         preventScrollReset
+                        onClick={isCrossProduct ? undefined : onSelectLink}
                         className={`min-h-touch-target min-w-touch-target relative inline-flex cursor-pointer items-center justify-center motion-safe:transition-transform motion-safe:active:scale-[0.93] ${!variantOption.available ? "opacity-50" : ""}`}
                         aria-label={valueName}
-                        aria-pressed={variantOption.selected}
+                        aria-current={variantOption.selected ? "true" : undefined}
                         data-testid={isColorOption ? "color-swatch" : undefined}
                       >
                         {content}
@@ -514,17 +533,19 @@ function VariantOptions({ product }: { product: ProductData }) {
                   );
                 }
 
-                const pillClass = `option-pill focus-visible:outline-accent motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] ${!variantOption.available ? "opacity-50" : ""}`;
+                const pillClass = `option-pill focus-visible:outline-accent motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] ${variantOption.selected ? "is-selected" : ""} ${!variantOption.available ? "opacity-50" : ""}`;
                 const label = `${valueName}${!variantOption.available ? " (Sold out)" : ""}`;
 
-                if (isCrossProduct) {
+                if (isCrossProduct || variantOption.exists) {
                   return (
                     <Link
                       key={valueName}
                       to={toRouterLocation(linkTarget)}
+                      replace={!isCrossProduct}
                       preventScrollReset
+                      onClick={isCrossProduct ? undefined : onSelectLink}
                       className={pillClass}
-                      aria-pressed={variantOption.selected}
+                      aria-current={variantOption.selected ? "true" : undefined}
                       data-testid={isColorOption ? "color-swatch" : undefined}
                     >
                       {label}

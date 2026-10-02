@@ -1,4 +1,6 @@
-# React Product Bindings
+# React Router Product Bindings
+
+This reference uses React Router (`Link`, `useNavigate`, `useLocation`). For Next.js App Router, read `nextjs.md`.
 
 Create typed React product bindings once from `@shopify/hydrogen/react`, usually in a shared product module:
 
@@ -10,19 +12,29 @@ export const { ProductProvider, useProductForm } =
   createProductComponents<ProductData>();
 ```
 
-Use the provider's `onSelect` callback for same-product URL sync:
+Use the provider's `onSelect` callback for same-product URL sync. Pass the current search params as the `variantUrl` base, so the URL keeps unrelated params and matches the option link `to`:
 
 ```tsx
+const navigate = useNavigate();
+const location = useLocation();
+
 <ProductProvider
   product={product}
   onSelect={(result) => {
     void navigate(
       toRouterLocation(
-        variantUrl(product, result.selectedOptions, result.selectedVariant?.product?.handle),
+        variantUrl(
+          product,
+          result.selectedOptions,
+          result.selectedVariant?.product?.handle,
+          new URLSearchParams(location.search),
+        ),
       ),
       {
         replace: true,
         preventScrollReset: true,
+        // Optional: skip loader revalidation when the variant resolved locally.
+        ...(result.status === "resolved" ? { defaultShouldRevalidate: false } : {}),
       },
     );
   }}
@@ -31,18 +43,42 @@ Use the provider's `onSelect` callback for same-product URL sync:
 </ProductProvider>
 ```
 
-If a route should skip loader revalidation for locally resolved selections, use the framework's supported route-level revalidation API. Do not pass unsupported revalidation flags to `navigate()`.
+`variantUrl(product, selectedOptions, handle, base)` calls `buildProductSelectionSearchParams` with the product option names and `base`, then returns `/products/{handle}?{params}`.
 
-Same-product option values are GET links so selection works without JavaScript (the skill's GET-links rule and accessibility guidance cover the `aria-current`, idempotent-`onSelect`, and no-JS rationale). The `to` is the option URL built from `value.selectedOptions`; spreading the registered handlers enhances the link so a hydrated click selects client-side through the provider's `onSelect`. Keep sold-out-but-existing values interactive and derive their visual treatment from `value.available`:
+If the installed React Router supports the `defaultShouldRevalidate` navigate option (React Router 7.15.1 does), `onSelect` can pass `defaultShouldRevalidate: false` for `resolved` selections. Do this only when no other UI on the route needs fresh loader data (see the skill's refetch rule). Leave it out for `unresolved` selections, so the loader resolves the exact variant.
+
+Same-product option values are GET links so selection works without JavaScript. The `to` is the option URL built from `value.selectedOptions` with the same base as `onSelect`. Do not spread the registration onto `Link`. Pass a guarded `onClick` instead: for a plain primary click it calls `event.preventDefault()` and then `registered.onClick()`. React Router's `Link` does not navigate when the event is already prevented, so the provider `onSelect` is the only navigation. Other clicks keep native link behavior. Keep sold-out-but-existing values interactive and derive their visual treatment from `value.available`:
 
 ```tsx
+const location = useLocation();
+const baseParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+
+const registered = register("optionValue", { optionName: option.name, value: value.name });
+const onSelectLink = (event: MouseEvent<HTMLAnchorElement>) => {
+  if (
+    event.defaultPrevented ||
+    event.button !== 0 ||
+    event.metaKey ||
+    event.altKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    (event.currentTarget.target && event.currentTarget.target !== "_self")
+  ) {
+    return;
+  }
+
+  // The provider owns URL sync; stop Link from navigating a second time.
+  event.preventDefault();
+  registered.onClick();
+};
+
 <Link
-  to={toRouterLocation(variantUrl(product, value.selectedOptions, value.handle))}
+  to={toRouterLocation(variantUrl(product, value.selectedOptions, value.handle, baseParams))}
   replace
   preventScrollReset
   aria-current={value.selected ? "true" : undefined}
   data-available={value.available ? "true" : "false"}
-  {...register("optionValue", { optionName: option.name, value: value.name })}
+  onClick={onSelectLink}
 >
   {value.name}
   {!value.available ? <span className="sr-only"> (Sold out)</span> : null}
@@ -57,11 +93,11 @@ Non-existent combinations (`exists: false`) render as a disabled `<button>` inst
 </button>
 ```
 
-Cross-product option values are framework links that reuse the same URL helper:
+Cross-product option values are framework links that reuse the same URL helper and base. They do not call the registered handler:
 
 ```tsx
 <Link
-  to={toRouterLocation(variantUrl(product, value.selectedOptions, value.handle))}
+  to={toRouterLocation(variantUrl(product, value.selectedOptions, value.handle, baseParams))}
   preventScrollReset
   data-available={value.available ? "true" : "false"}
 >

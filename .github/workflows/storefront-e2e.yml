@@ -78,6 +78,7 @@ jobs:
         run: pnpm test:e2e:storefront
         env:
           STOREFRONT_BASE_URL: http://localhost:${{ matrix.template.port }}/
+          STOREFRONT_SKIP_NO_JS_VARIANTS: ${{ matrix.template.directory == 'nextjs' }}
 
       - name: Stop dev server
         if: always()
