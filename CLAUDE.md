@@ -72,9 +72,9 @@ When developers run `npm create @shopify/hydrogen@latest`:
    - No network fetch required—the template is pre-bundled at build time
    - This is why `create-hydrogen` must be bumped when skeleton changes
 
-2. **Custom templates** (`--template` flag): Downloads from GitHub
-   - Uses GitHub API to fetch the specified template
-   - Supports community templates and alternative starters
+2. **`--template` flag**:
+   - `--template skeleton` is the same as leaving the flag out
+   - `--template demo-store` or a GitHub repository URL clones that repository, for community templates and alternative starters
 
 <details>
 <summary>Technical Details: The Bundling Chain</summary>

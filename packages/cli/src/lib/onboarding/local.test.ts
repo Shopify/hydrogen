@@ -81,6 +81,25 @@ describe('local templates', () => {
     });
   });
 
+  it('scaffolds --template skeleton from the bundled starter', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      await setupTemplate({
+        path: tmpDir,
+        git: false,
+        language: 'ts',
+        mockShop: true,
+        template: 'skeleton',
+      });
+
+      await expect(readFile(`${tmpDir}/package.json`)).resolves.toMatch(
+        `"name": "${basename(tmpDir)}"`,
+      );
+      await expect(readFile(`${tmpDir}/.env`)).resolves.toMatch(
+        'SESSION_SECRET="foobar"',
+      );
+    });
+  });
+
   it('creates project prompting for package-manager', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await setupTemplate({

@@ -35,6 +35,9 @@ describe('remote templates', () => {
 
     // The error message is printed asynchronously
     await vi.waitFor(() => expect(outputMock.error()).toMatch('--template'));
+    expect(outputMock.error()).toMatch('Available templates:');
+    expect(outputMock.error()).toMatch('skeleton');
+    expect(outputMock.error()).toMatch('demo-store');
 
     expect(processExit).toHaveBeenCalledWith(1);
 
