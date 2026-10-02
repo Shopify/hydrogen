@@ -1,10 +1,12 @@
 import { setTestStore, test, expect, MSW_SCENARIOS } from "../../fixtures";
 import type { AddressFormData } from "../../fixtures/delivery-address-utils";
-import { DELIVERY_ADDRESS_SEED_COUNT } from "../../fixtures/msw/handlers";
+import { DELIVERY_ADDRESS_SEED_COUNT, UNKNOWN_COUNTRY_CODE } from "../../fixtures/msw/handlers";
 
 setTestStore("mockShop", {
   mock: { scenario: MSW_SCENARIOS.deliveryAddresses },
 });
+
+const INVALID_COUNTRY_CODE_MESSAGE = "Enter a valid two-letter country code, such as US or GB.";
 
 const NEW_ADDRESS: AddressFormData = {
   firstName: "New",
@@ -15,7 +17,7 @@ const NEW_ADDRESS: AddressFormData = {
   city: "Portland",
   zoneCode: "OR",
   zip: "97201",
-  territoryCode: "US",
+  countryCode: "US",
   phoneNumber: "+15035551234",
 };
 
@@ -51,6 +53,36 @@ test.describe("Delivery Addresses", () => {
   });
 
   test.describe("Create", () => {
+    test("rejects a country code that isn't two letters", async ({ addresses }) => {
+      const createForm = addresses.getCreateAddressForm();
+      const countryCodeError = createForm.getByText(INVALID_COUNTRY_CODE_MESSAGE);
+      await expect(countryCodeError).toHaveCount(0);
+
+      await addresses.fillAddressForm(createForm, { ...NEW_ADDRESS, countryCode: "1A" });
+      await createForm.getByRole("button", { name: "Create" }).click();
+
+      await expect(countryCodeError).toBeVisible();
+      await addresses.assertAddressCount(DELIVERY_ADDRESS_SEED_COUNT);
+    });
+
+    test("shows a friendly message when the API rejects the country code", async ({
+      addresses,
+    }) => {
+      const createForm = addresses.getCreateAddressForm();
+      const countryCodeError = createForm.getByText(INVALID_COUNTRY_CODE_MESSAGE);
+      await expect(countryCodeError).toHaveCount(0);
+
+      await addresses.fillAddressForm(createForm, {
+        ...NEW_ADDRESS,
+        countryCode: UNKNOWN_COUNTRY_CODE,
+      });
+      await createForm.getByRole("button", { name: "Create" }).click();
+
+      await expect(countryCodeError).toBeVisible();
+      await expect(createForm.getByText("to be one of")).toHaveCount(0);
+      await addresses.assertAddressCount(DELIVERY_ADDRESS_SEED_COUNT);
+    });
+
     test("creates a new address", async ({ addresses }) => {
       await addresses.assertAddressCount(DELIVERY_ADDRESS_SEED_COUNT);
       await addresses.createAddress(NEW_ADDRESS);
@@ -104,6 +136,13 @@ test.describe("Delivery Addresses", () => {
   });
 
   test.describe("Delete", () => {
+    test("deletes an address with an empty required field", async ({ addresses }) => {
+      const lastForm = addresses.getExistingAddresses().last();
+      await lastForm.getByLabel("Country code").clear();
+
+      await addresses.deleteAddress(lastForm);
+    });
+
     test("deletes an address and decreases count", async ({ addresses }) => {
       const countBefore = await addresses.getExistingAddresses().count();
       expect(countBefore).toBeGreaterThan(0);
