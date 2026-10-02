@@ -35,12 +35,20 @@ const log = getLogger("product");
 
 export type { ValidProductSelectionResult } from "../core/product";
 
-/** Options for {@link useProductForm}. */
+/**
+ * Options for {@link useProductForm}.
+ *
+ * @public
+ */
 export interface UseProductFormOptions<TProduct extends ProductInput> {
   onSelect?: (result: ValidProductSelectionResult<TProduct>) => void;
 }
 
-/** Return value of {@link useProductForm}. */
+/**
+ * Return value of {@link useProductForm}.
+ *
+ * @public
+ */
 export interface UseProductFormResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
   selectedVariant: ProductVariantFrom<TProduct> | null;
@@ -59,7 +67,11 @@ export interface UseProductFormResult<TProduct extends ProductInput> {
   ) => VariantSelectionResult<ProductVariantFrom<TProduct>>;
 }
 
-/** Return value of the `useProduct` composable from {@link createProductComponents}. */
+/**
+ * Return value of the `useProduct` composable from {@link createProductComponents}.
+ *
+ * @public
+ */
 export interface UseProductResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
   selectedVariant: ProductVariantFrom<TProduct> | null;
@@ -169,6 +181,8 @@ function useProductFormImpl<TProduct extends ProductInput>(
  * lifecycle. Create the store with `createProductFormStore` and manage its
  * lifecycle (hydration, destruction) yourself, or use
  * `createProductComponents` for a provider-based approach.
+ *
+ * @public
  */
 export function useProductForm<TProduct extends ProductInput>(
   store: ProductFormStore<TProduct>,
@@ -191,6 +205,8 @@ export function useProductForm<TProduct extends ProductInput>(
  * - `useProductForm` provides form-binding utilities (register, formProps, pending)
  *
  * Requires a `<CartProvider>` ancestor.
+ *
+ * @public
  */
 export function createProductComponents<TProduct extends ProductInput>(): {
   ProductProvider: ReturnType<typeof defineComponent>;

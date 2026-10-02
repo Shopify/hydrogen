@@ -9,6 +9,7 @@ import { safeApplyResponseHeaders } from "./safe-apply-response-headers";
 
 const log = getLogger("redirects");
 
+/** @public */
 export type RedirectOptions = {
   request: Request;
   storefrontClient: StorefrontClient;
@@ -18,6 +19,8 @@ export type RedirectOptions = {
 /**
  * Resolves Shopify redirects after framework routing returns a 404. Matched
  * responses already include request-context response headers.
+ *
+ * @public
  */
 export async function handleShopifyRedirects(options: RedirectOptions): Promise<Response | null> {
   const { request, storefrontClient } = options;

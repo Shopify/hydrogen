@@ -8,7 +8,11 @@ export interface Money {
   currencyCode: string;
 }
 
-/** Cart-level cost breakdown returned by the Storefront API. */
+/**
+ * Cart-level cost breakdown returned by the Storefront API.
+ *
+ * @public
+ */
 export interface CartCost {
   /** The amount, before taxes and cart-level discounts, for the customer to pay. */
   subtotalAmount: Money;
@@ -18,6 +22,7 @@ export interface CartCost {
   checkoutChargeAmount: Money;
 }
 
+/** @public */
 export interface CartLineCost {
   /** Line total after all applicable discounts. */
   totalAmount: Money;
@@ -29,7 +34,11 @@ export interface CartLineCost {
   compareAtAmountPerQuantity: Money | null;
 }
 
-/** Product variant information attached to a {@link CartLine}. */
+/**
+ * Product variant information attached to a {@link CartLine}.
+ *
+ * @public
+ */
 export interface CartLineMerchandise {
   /** Storefront API GID of the product variant. */
   id: string;
@@ -60,6 +69,8 @@ export interface CartLineMerchandise {
  * Each line represents a product variant at a given quantity. Lines may carry
  * custom {@link Attribute | attributes}, a selling plan allocation (subscriptions),
  * or nested {@link CartLine.lineComponents | line components} (bundles).
+ *
+ * @public
  */
 export interface CartLine {
   /** Storefront API GID of this cart line — used as the key in {@link CartPending.lines}. */
@@ -78,19 +89,28 @@ export interface CartLine {
   lineComponents?: CartLine[];
 }
 
+/** @public */
 export interface CartLineConnection {
   nodes: CartLine[];
   [key: string]: unknown;
 }
 
-/** A discount code applied to the cart. */
+/**
+ * A discount code applied to the cart.
+ *
+ * @public
+ */
 export interface DiscountCode {
   code: string;
   /** Whether the code is applicable to the cart's current contents. Set optimistically to `false` for newly added codes until the server confirms. */
   applicable: boolean;
 }
 
-/** A validation error returned by a Storefront API cart mutation. */
+/**
+ * A validation error returned by a Storefront API cart mutation.
+ *
+ * @public
+ */
 export interface CartUserError {
   /** Machine-readable error code, or `null` for unclassified errors. */
   code: CartErrorCode | null;
@@ -99,26 +119,42 @@ export interface CartUserError {
   field?: string[];
 }
 
-/** A non-blocking warning returned by a Storefront API cart mutation. */
+/**
+ * A non-blocking warning returned by a Storefront API cart mutation.
+ *
+ * @public
+ */
 export interface CartWarning {
   code: CartWarningCode;
   message: string;
 }
 
-/** Errors and warnings from a single cart mutation response. */
+/**
+ * Errors and warnings from a single cart mutation response.
+ *
+ * @public
+ */
 export interface CartErrorGroup {
   userErrors: CartUserError[];
   warnings: CartWarning[];
 }
 
-/** A network-level error encountered during a cart operation (e.g. non-2xx response, timeout). Aborted requests are not recorded. */
+/**
+ * A network-level error encountered during a cart operation (e.g. non-2xx response, timeout). Aborted requests are not recorded.
+ *
+ * @public
+ */
 export interface CartNetworkEntry {
   message: string;
   /** HTTP status code when available. */
   status?: number;
 }
 
-/** A key-value pair attached to the cart or to an individual {@link CartLine}. */
+/**
+ * A key-value pair attached to the cart or to an individual {@link CartLine}.
+ *
+ * @public
+ */
 export interface Attribute {
   key: string;
   value: string | null;
@@ -146,6 +182,7 @@ export interface Attribute {
  *   dimTotalDisplay();
  * }
  * ```
+ * @public
  */
 export interface CartPending {
   /** Line IDs with in-flight add, quantity, or remove mutations. New lines use their `optimistic:` ID until the server confirms. */
@@ -168,6 +205,8 @@ export interface CartPending {
  *
  * `network` collects transport-level failures (timeouts, 5xx) separately from
  * Storefront API user errors.
+ *
+ * @public
  */
 export interface CartErrorState {
   /** Cross-cutting cart errors not attributable to a specific resource. */
@@ -195,6 +234,8 @@ export interface CartErrorState {
  * This is the server's authoritative snapshot — prices, discount applicability,
  * and totals come exclusively from here, never from client-side computation.
  * The index signature allows custom cart query fields to pass through.
+ *
+ * @public
  */
 export interface CartData {
   /** Storefront API Cart GID, or `null` when no cart exists yet. */
@@ -242,6 +283,7 @@ export interface CartData {
  *   // Network errors occurred — show retry prompt
  * }
  * ```
+ * @public
  */
 export interface CartState<TData extends CartData = CartData> {
   /** The latest server-confirmed cart data, with optimistic projections applied on top. */
@@ -268,12 +310,20 @@ export function createEmptyPending(): CartPending {
   };
 }
 
-/** Creates an empty {@link CartErrorGroup} — no user errors, no warnings. */
+/**
+ * Creates an empty {@link CartErrorGroup} — no user errors, no warnings.
+ *
+ * @public
+ */
 export function createEmptyErrorGroup(): CartErrorGroup {
   return { userErrors: [], warnings: [] };
 }
 
-/** Creates an empty {@link CartErrorState} — all timestamps at `0`, all buckets empty. */
+/**
+ * Creates an empty {@link CartErrorState} — all timestamps at `0`, all buckets empty.
+ *
+ * @public
+ */
 export function createEmptyCartErrors(): CartErrorState {
   return {
     cart: createEmptyErrorGroup(),
@@ -295,6 +345,8 @@ export function createEmptyCartErrors(): CartErrorState {
 /**
  * Frozen {@link CartData} representing an empty cart — `id: null`, zero quantities,
  * zero-amount costs. Used as the initial/fallback value before the first server response.
+ *
+ * @public
  */
 export const EMPTY_CART_DATA: CartData = Object.freeze({
   id: null,
@@ -335,5 +387,9 @@ export function createEmptyCartState({ loading = true }: { loading?: boolean } =
   );
 }
 
-/** Shared empty {@link CartState} — backed by {@link EMPTY_CART_DATA}, defaults to `loading: true`. */
+/**
+ * Shared empty {@link CartState} — backed by {@link EMPTY_CART_DATA}, defaults to `loading: true`.
+ *
+ * @public
+ */
 export const EMPTY_CART_STATE: CartState = createEmptyCartState();

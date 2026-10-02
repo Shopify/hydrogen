@@ -12,7 +12,11 @@ import {
   serializeCollectionParams,
 } from "./url";
 
-/** Snapshot from the framework loader for a single collection fetch. */
+/**
+ * Snapshot from the framework loader for a single collection fetch.
+ *
+ * @public
+ */
 export type CollectionData = {
   /** URL-safe collection slug (e.g. `"shoes"`). */
   handle: string;
@@ -44,6 +48,7 @@ export type CollectionData = {
  * // ...framework fetches...
  * store.settle(); // status → "idle"
  * ```
+ * @public
  */
 export type CollectionStore = {
   /** Returns the current snapshot of collection browse state. */
@@ -137,7 +142,11 @@ export type CollectionStore = {
   setSortByValue(sortByValue: string): void;
 };
 
-/** Mutation methods exposed by the collection store. */
+/**
+ * Mutation methods exposed by the collection store.
+ *
+ * @public
+ */
 export type CollectionActions = Pick<
   CollectionStore,
   | "setFilters"
@@ -149,7 +158,11 @@ export type CollectionActions = Pick<
   | "handleFormSubmit"
 >;
 
-/** Options for creating a new {@link CollectionStore}. */
+/**
+ * Options for creating a new {@link CollectionStore}.
+ *
+ * @public
+ */
 export type CreateCollectionStoreOptions = {
   /** Collection metadata from the framework loader. */
   data: CollectionData;
@@ -188,6 +201,7 @@ type CollectionStoreContext = {
  *
  * store.subscribe((state) => renderFilters(state.filters));
  * ```
+ * @public
  */
 export function createCollectionStore(options: CreateCollectionStoreOptions): CollectionStore {
   const initialState = buildInitialState(options);

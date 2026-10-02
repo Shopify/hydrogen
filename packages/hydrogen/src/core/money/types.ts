@@ -3,12 +3,15 @@
  * Uses `string` for currencyCode instead of the generated CurrencyCode enum
  * so the utility also accepts Customer Account API currencies (e.g. USDC)
  * that may not be in the Storefront API's enum.
+ *
+ * @public
  */
 export type MoneyV2 = {
   amount: string;
   currencyCode: string;
 };
 
+/** @public */
 export type FormatMoneyOptions = {
   /** BCP 47 locale string. e.g. 'en-US', 'fr-CA', 'ja-JP'. */
   locale: string;
@@ -34,6 +37,7 @@ export type FormatMoneyOptions = {
   currencyDisplay?: Intl.NumberFormatOptions["currencyDisplay"];
 };
 
+/** @public */
 export type FormattedMoney = {
   /** The full locale-formatted string. Also returned by toString(). */
   localizedString: string;
@@ -66,6 +70,7 @@ export type FormattedMoney = {
   toString(): string;
 };
 
+/** @public */
 export type FormattedMoneyRange = {
   /** The full locale-formatted range string. Also returned by toString(). */
   localizedString: string;

@@ -14,6 +14,7 @@ import {
 } from "./customer-account";
 import { provisionCertificates } from "./mkcert";
 
+/** @public */
 export const LOCAL_HTTPS_DEFAULTS = {
   host: "local.tryhydrogen.dev",
   port: 5_173,
@@ -33,7 +34,11 @@ const HTTP1_ONLY_RESPONSE_HEADERS = new Set([
 const emittedMissingCertificateWarnings = new Set<string>();
 const startedCustomerAccountSetups = new Set<string>();
 
-/** Options for Hydrogen's local HTTPS Vite plugin. */
+/**
+ * Options for Hydrogen's local HTTPS Vite plugin.
+ *
+ * @public
+ */
 export type LocalHttpsOptions = {
   /** Enable trusted local HTTPS for the dev server. */
   enabled: boolean;
@@ -47,6 +52,7 @@ export type LocalHttpsOptions = {
   keyPath?: string | URL;
 };
 
+/** @public */
 export type LocalHttpsPlugin = Plugin & {
   api: {
     /** Returns host, port, and TLS file paths for frameworks that terminate HTTPS outside Vite. */
@@ -54,6 +60,7 @@ export type LocalHttpsPlugin = Plugin & {
   };
 };
 
+/** @public */
 export type LocalHttpsDevServerConfig = {
   host: string;
   port: number;
@@ -65,6 +72,8 @@ export type LocalHttpsDevServerConfig = {
 
 /**
  * Configures Vite for trusted local HTTPS on Hydrogen's default development host.
+ *
+ * @public
  */
 export function localHttps(options: LocalHttpsOptions): LocalHttpsPlugin {
   const settings = options.enabled ? resolveLocalHttpsSettings(options) : undefined;
@@ -134,6 +143,7 @@ export function localHttps(options: LocalHttpsOptions): LocalHttpsPlugin {
   };
 }
 
+/** @public */
 export type ProvisionLocalHttpsOptions = Omit<LocalHttpsOptions, "enabled" | "port">;
 
 /**
@@ -141,6 +151,8 @@ export type ProvisionLocalHttpsOptions = Omit<LocalHttpsOptions, "enabled" | "po
  * trusted local certificate files when they do not exist yet. The Vite plugin
  * runs this automatically on `vite dev`; call it directly for frameworks that
  * read certificate paths before Vite starts or from setup scripts.
+ *
+ * @public
  */
 export async function provisionLocalHttps(options: ProvisionLocalHttpsOptions = {}) {
   const settings = resolveLocalHttpsSettings({ enabled: true, ...options });

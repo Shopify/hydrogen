@@ -27,14 +27,22 @@ import type {
 // Public types
 // ---------------------------------------------------------------------------
 
-/** Cart and line-item errors surfaced by a {@link ProductFormStore}. */
+/**
+ * Cart and line-item errors surfaced by a {@link ProductFormStore}.
+ *
+ * @public
+ */
 export interface ProductFormErrors {
   userErrors: CartUserError[];
   warnings: CartWarning[];
   networkErrors: CartNetworkEntry[];
 }
 
-/** Live state snapshot emitted by a {@link ProductFormStore}. */
+/**
+ * Live state snapshot emitted by a {@link ProductFormStore}.
+ *
+ * @public
+ */
 export interface ProductFormStoreState<
   TVariant extends ProductVariantInput = ProductVariantInput,
   TOptionValue extends ProductOptionValueInput = ProductOptionValueInput,
@@ -46,7 +54,11 @@ export interface ProductFormStoreState<
   matchedLineItem: CartLine | null;
 }
 
-/** The reactive options array from a {@link ProductFormStoreState}, typed to a specific product. */
+/**
+ * The reactive options array from a {@link ProductFormStoreState}, typed to a specific product.
+ *
+ * @public
+ */
 export type ProductFormOptions<TProduct extends ProductInput = ProductInput> =
   ProductFormStoreState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>["options"];
 
@@ -56,6 +68,8 @@ export type ProductFormOptions<TProduct extends ProductInput = ProductInput> =
  * - `resolved` — a specific variant was matched for the full selection.
  * - `unresolved` — the selection is valid but not yet complete.
  * - `invalid` — the option name or value does not exist on the product.
+ *
+ * @public
  */
 export type VariantSelectionResult<TVariant extends ProductVariantInput = ProductVariantInput> =
   | {
@@ -75,19 +89,31 @@ export type VariantSelectionResult<TVariant extends ProductVariantInput = Produc
       reason: string;
     };
 
-/** A selection result that is not invalid — either resolved or unresolved. */
+/**
+ * A selection result that is not invalid — either resolved or unresolved.
+ *
+ * @public
+ */
 export type ValidProductSelectionResult<TProduct extends ProductInput = ProductInput> = Exclude<
   VariantSelectionResult<ProductVariantFrom<TProduct>>,
   { status: "invalid" }
 >;
 
-/** Options for {@link createProductFormStore}. */
+/**
+ * Options for {@link createProductFormStore}.
+ *
+ * @public
+ */
 export type CreateProductFormStoreOptions = {
   /** Fallback selection used when the product has no `selectedOrFirstAvailableVariant`. */
   selectedOptions?: SelectedOption[];
 };
 
-/** Manages variant selection + cart integration for a product form. */
+/**
+ * Manages variant selection + cart integration for a product form.
+ *
+ * @public
+ */
 export interface ProductFormStore<
   TProduct extends ProductInput = ProductInput,
   TVariant extends ProductVariantInput = ProductVariantFrom<TProduct>,
@@ -116,14 +142,22 @@ export interface ProductFormStore<
 // Utilities
 // ---------------------------------------------------------------------------
 
-/** Returns the selected variant, or `null` when the selection is partial or the variant wasn't part of the query result. */
+/**
+ * Returns the selected variant, or `null` when the selection is partial or the variant wasn't part of the query result.
+ *
+ * @public
+ */
 export function getSelectedVariant<TVariant extends ProductVariantInput>(
   options: VariantOptionState<TVariant, ProductOptionValueInput>[],
 ): TVariant | null {
   return options[0]?.values.find((v) => v.selected)?.variant ?? null;
 }
 
-/** Guards whether the current selection can be added to cart — a variant must be resolved and available, and the product must not require a selling plan. */
+/**
+ * Guards whether the current selection can be added to cart — a variant must be resolved and available, and the product must not require a selling plan.
+ *
+ * @public
+ */
 export function canAddToCart<TProduct extends ProductInput>(
   product: TProduct,
   options: VariantOptionState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>[],
@@ -138,6 +172,8 @@ export function canAddToCart<TProduct extends ProductInput>(
  * When selling plans are used, the same merchandise ID can appear on multiple
  * cart lines — this returns the first match. Future attribute-based matching
  * will narrow to the exact line.
+ *
+ * @public
  */
 export function findCartLineByMerchandiseId(
   lines: CartLine[],
@@ -186,6 +222,7 @@ type ProductFormStoreContext<TProduct extends ProductInput> = {
  *
  * store.selectOption("Color", "Red");
  * ```
+ * @public
  */
 export function createProductFormStore<TProduct extends ProductInput>(
   product: TProduct,

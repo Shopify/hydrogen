@@ -86,6 +86,7 @@ type TypedCartComponents<TData extends CartData> = {
  *   useCartForm,
  * } = createCartComponents<typeof cartServerHandlers>();
  * ```
+ * @public
  */
 export function createCartComponents<THandlers>(): TypedCartComponents<
   CartDataFromHandlers<THandlers>
@@ -246,6 +247,7 @@ export function useCartActions(): CartActions {
  *   return <Layout />;
  * }
  * ```
+ * @public
  */
 export function useCartAnalytics(): void {
   const store = useCartStore("useCartAnalytics");

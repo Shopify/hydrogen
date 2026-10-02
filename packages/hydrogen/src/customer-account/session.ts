@@ -20,13 +20,29 @@ import { CustomerAccountApiError, CustomerAccountOAuthError } from "./errors";
 
 const log = getLogger("customer-account");
 
-/** OAuth callback route path: `"/account/authorize"`. */
+/**
+ * OAuth callback route path: `"/account/authorize"`.
+ *
+ * @public
+ */
 export const CUSTOMER_ACCOUNT_AUTHORIZE_PATH = CUSTOMER_ACCOUNT_PATHS.authorize;
-/** Login route path: `"/account/login"`. */
+/**
+ * Login route path: `"/account/login"`.
+ *
+ * @public
+ */
 export const CUSTOMER_ACCOUNT_LOGIN_PATH = CUSTOMER_ACCOUNT_PATHS.login;
-/** Logout route path: `"/account/logout"`. */
+/**
+ * Logout route path: `"/account/logout"`.
+ *
+ * @public
+ */
 export const CUSTOMER_ACCOUNT_LOGOUT_PATH = CUSTOMER_ACCOUNT_PATHS.logout;
-/** Token refresh route path: `"/account/refresh"`. */
+/**
+ * Token refresh route path: `"/account/refresh"`.
+ *
+ * @public
+ */
 export const CUSTOMER_ACCOUNT_REFRESH_PATH = CUSTOMER_ACCOUNT_PATHS.refresh;
 
 const CUSTOMER_ACCOUNT_SESSION_KEY = "customerAccount";
@@ -57,15 +73,27 @@ const CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON = "customer-session-a
 const CUSTOMER_SESSION_MUTATION_PERSONALIZATION_REASON = "customer-session-mutation";
 const CUSTOMER_SESSION_INTERNAL_BRAND: unique symbol = Symbol("hydrogen.customerSessionInternal");
 
-/** A value that is either `T` or a `Promise<T>`, used as the return type of session manager methods. */
+/**
+ * A value that is either `T` or a `Promise<T>`, used as the return type of session manager methods.
+ *
+ * @public
+ */
 export type Awaitable<T> = T | Promise<T>;
 
-/** Read-only Customer Account session storage for UI state and strict access-token reads. */
+/**
+ * Read-only Customer Account session storage for UI state and strict access-token reads.
+ *
+ * @public
+ */
 export type ReadonlyCustomerSessionManager = {
   getSessionItem(key: string): Awaitable<unknown>;
 };
 
-/** Writable Customer Account session storage for OAuth, refresh, and logout response boundaries. */
+/**
+ * Writable Customer Account session storage for OAuth, refresh, and logout response boundaries.
+ *
+ * @public
+ */
 export type WritableCustomerSessionManager = ShopifyRouteSessionManager;
 
 type CustomerAccountSessionData = {
@@ -85,7 +113,11 @@ type CustomerAccountSessionData = {
   };
 };
 
-/** Options for {@link createCustomerSession}. */
+/**
+ * Options for {@link createCustomerSession}.
+ *
+ * @public
+ */
 export type CreateCustomerSessionOptions = {
   /** Numeric Shopify shop ID as a string (digits only, e.g. `"12345"`). Validated against `/^\d+$/`. */
   shopId: string;
@@ -105,7 +137,11 @@ export type CreateCustomerSessionOptions = {
   defaultTimeoutInMs?: number;
 };
 
-/** Options for {@link CustomerSession.prepareLoginUrl}. */
+/**
+ * Options for {@link CustomerSession.prepareLoginUrl}.
+ *
+ * @public
+ */
 export type PrepareLoginUrlOptions = {
   /**
    * Overrides the origin used for the OAuth redirect URI. Must be HTTPS —
@@ -134,13 +170,19 @@ export type PrepareLoginUrlOptions = {
  * Origin override accepted by {@link CustomerSession.getOrRefreshAccessToken}
  * and {@link CustomerSession.logout}. Falls back to the session manager's
  * `getSessionOrigin()`.
+ *
+ * @public
  */
 export type RequestOriginOptions = {
   /** HTTPS origin string. */
   origin?: string;
 };
 
-/** Options for {@link CustomerSession.logout}. */
+/**
+ * Options for {@link CustomerSession.logout}.
+ *
+ * @public
+ */
 export type LogoutOptions = RequestOriginOptions & {
   /**
    * URL to redirect to after Shopify's IdP logout completes.
@@ -152,6 +194,8 @@ export type LogoutOptions = RequestOriginOptions & {
 /**
  * Core session interface returned by {@link createCustomerSession}. Server-only.
  * All methods require a session manager and request context.
+ *
+ * @public
  */
 export type CustomerSession = {
   /**
@@ -228,6 +272,8 @@ export type CustomerSession = {
 /**
  * Route handler objects returned by {@link createCustomerAccountServerHandlers}.
  * Register these with `handleShopifyRoutes` to serve the Customer Account OAuth flow.
+ *
+ * @public
  */
 export type CustomerAccountServerHandlers<
   TContext extends CustomerAccountRouteHandlerContext = CustomerAccountRouteHandlerContext,
@@ -262,7 +308,11 @@ export type CustomerAccountServerHandlers<
   >;
 };
 
-/** Customer Account handlers that also synchronize cart buyer identity, so their context requires `storefrontClient`. */
+/**
+ * Customer Account handlers that also synchronize cart buyer identity, so their context requires `storefrontClient`.
+ *
+ * @public
+ */
 export type CustomerAccountServerHandlersWithCartSync =
   CustomerAccountServerHandlers<ShopifyRouteHandlerContext>;
 
@@ -285,7 +335,11 @@ type CreateCustomerAccountServerHandlersBaseOptions<
   postLogoutRedirectUri?: string;
 };
 
-/** Options for {@link createCustomerAccountServerHandlers}. */
+/**
+ * Options for {@link createCustomerAccountServerHandlers}.
+ *
+ * @public
+ */
 export type CreateCustomerAccountServerHandlersOptions =
   | (CreateCustomerAccountServerHandlersBaseOptions & { cartServerHandlers?: undefined })
   | (CreateCustomerAccountServerHandlersBaseOptions<CustomerSessionWithInternals> & {
@@ -390,6 +444,7 @@ type TokenRequestParams = {
  * ```
  *
  * @throws {Error} When called in a browser context, when an option fails validation, or when no `fetch` is available.
+ * @public
  */
 export function createCustomerSession({
   shopId,
@@ -609,6 +664,8 @@ export async function getCustomerSessionRefreshResult(
  * redirect back to the app (same-origin `return_to`). Invoke these paths via
  * full-page navigation (plain `<a>`/`<form>`), not a framework client-side
  * navigation component — client-nav cannot follow these raw redirects.
+ *
+ * @public
  */
 export function createCustomerAccountServerHandlers<
   const TOptions extends CreateCustomerAccountServerHandlersOptions,

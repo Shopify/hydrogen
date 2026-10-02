@@ -8,6 +8,11 @@ import {
   type ShopPayButtonOptions,
 } from "../core/shop-pay/shop-pay";
 
+/**
+ * Props accepted by the Vue `ShopPayButton` component.
+ *
+ * @public
+ */
 export type ShopPayButtonProps = ShopPayButtonOptions;
 
 type CompletePropOptions<T> = {
@@ -17,6 +22,12 @@ type CompletePropOptions<T> = {
 const canUseDom = typeof document !== "undefined";
 defineShopPayButton();
 
+/**
+ * Vue component that renders the Shop Pay button custom element. On the server it includes
+ * declarative shadow DOM markup so the button renders before scripts load.
+ *
+ * @public
+ */
 export const ShopPayButton = defineComponent(
   (props: ShopPayButtonProps) => {
     return () => {

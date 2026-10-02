@@ -1,12 +1,3 @@
-/**
- * Normalizes Shopify's GraphQL connection format into a flat array.
- *
- * Shopify's Storefront API returns list fields (like cart `lines`) in a
- * "connection" wrapper — either `{ nodes: [...] }` or `{ edges: [{ node: ... }] }`.
- * Hydrogen queries typically use `nodes`, but queries written with the `edges`
- * pattern are supported too.
- */
-
 import { getLogger } from "../../logging";
 
 const log = getLogger("analytics");
@@ -16,6 +7,16 @@ type Connection<T> = {
   edges?: Array<{ node: T }>;
 };
 
+/**
+ * Normalizes Shopify's GraphQL connection format into a flat array.
+ *
+ * Shopify's Storefront API returns list fields (like cart `lines`) in a
+ * "connection" wrapper — either `{ nodes: [...] }` or `{ edges: [{ node: ... }] }`.
+ * Hydrogen queries typically use `nodes`, but queries written with the `edges`
+ * pattern are supported too.
+ *
+ * @public
+ */
 export function flattenConnection<T>(connection?: Connection<T> | null): T[] {
   if (!connection) {
     if (connection === null) {

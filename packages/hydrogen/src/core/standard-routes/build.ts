@@ -34,6 +34,7 @@ import type {
  *   policy: "/legal/:policyHandle",
  * });
  * ```
+ * @public
  */
 export function createShopifyRouteTemplates<const TRoutes extends ShopifyRouteTemplates>(
   routes: TRoutes,

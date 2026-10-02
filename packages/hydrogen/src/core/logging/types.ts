@@ -6,13 +6,19 @@
  * specific logging library.
  */
 
-/** Log severities, ordered. `silent` disables all output. */
+/**
+ * Log severities, ordered. `silent` disables all output.
+ *
+ * @public
+ */
 export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal" | "silent";
 
 /**
  * Structured details attached to a log entry. `scope` names the Hydrogen
  * subsystem (`cart`, `analytics`, `shop-pay`, ...). `error` carries the caught
  * value when the entry reports a failure.
+ *
+ * @public
  */
 export type LogContext = {
   scope?: string;
@@ -29,6 +35,8 @@ type LogFn = (message: string, context?: LogContext) => void;
  * Messages arrive unprefixed; `context.scope` identifies the subsystem so
  * custom sinks control their own formatting. The built-in console logger
  * formats entries as `[hydrogen:<level>:<scope>] <message>`.
+ *
+ * @public
  */
 export interface HydrogenLogger {
   trace: LogFn;

@@ -13,6 +13,8 @@ const log = getLogger("consent");
  * This is the browser hydration half of `getShopifyScriptTags()`: framework bindings combine both
  * into a `ShopifyScripts` component, while custom integrations can render script tags during SSR
  * and call this helper from their browser lifecycle.
+ *
+ * @public
  */
 export function initializeShopifyScripts({
   consent,

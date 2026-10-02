@@ -14,10 +14,18 @@ export const DEFAULT_PREDICTIVE_SEARCH_DEBOUNCE_IN_MS = 150;
 /** Default minimum trimmed term length required before predictive search sends a request. */
 const DEFAULT_PREDICTIVE_SEARCH_MIN_TERM_LENGTH = 1;
 
-/** Lifecycle state for the predictive search client store. */
+/**
+ * Lifecycle state for the predictive search client store.
+ *
+ * @public
+ */
 export type PredictiveSearchStatus = "idle" | "loading" | "success" | "error";
 
-/** Current predictive search snapshot exposed to UI bindings. */
+/**
+ * Current predictive search snapshot exposed to UI bindings.
+ *
+ * @public
+ */
 export type PredictiveSearchState<TData extends PredictiveSearchData = PredictiveSearchData> = {
   /** Latest trimmed search term known to the store. */
   term: string;
@@ -29,7 +37,11 @@ export type PredictiveSearchState<TData extends PredictiveSearchData = Predictiv
   error: string | null;
 };
 
-/** Options for creating a framework-neutral predictive search client store. */
+/**
+ * Options for creating a framework-neutral predictive search client store.
+ *
+ * @public
+ */
 export type CreatePredictiveSearchStoreOptions = {
   /**
    * Same-origin JSON endpoint used for browser predictive-search requests.
@@ -56,7 +68,11 @@ export type CreatePredictiveSearchStoreOptions = {
   unavailableProducts?: SearchUnavailableProductsType;
 };
 
-/** Framework-neutral predictive search store used by UI bindings. */
+/**
+ * Framework-neutral predictive search store used by UI bindings.
+ *
+ * @public
+ */
 export type PredictiveSearchStore<TData extends PredictiveSearchData = PredictiveSearchData> = {
   /** Reactivates store updates after destroy(). */
   connect(): void;
@@ -72,7 +88,11 @@ export type PredictiveSearchStore<TData extends PredictiveSearchData = Predictiv
   destroy(): void;
 };
 
-/** Search methods exposed by the predictive search store. */
+/**
+ * Search methods exposed by the predictive search store.
+ *
+ * @public
+ */
 export type PredictiveSearchActions = Pick<PredictiveSearchStore, "search" | "clear">;
 
 type PredictiveSearchStoreContext<TData extends PredictiveSearchData> = {
@@ -103,6 +123,14 @@ type StoreSearchOptions = Pick<
   "limit" | "limitScope" | "types" | "searchableFields" | "unavailableProducts"
 >;
 
+/**
+ * Creates a framework-agnostic predictive search store with debounced searching, request
+ * cancellation, and a subscribable state snapshot.
+ *
+ * Building block for the framework bindings. Use it directly on a framework without one.
+ *
+ * @public
+ */
 export function createPredictiveSearchStore<
   TData extends PredictiveSearchData = PredictiveSearchData,
 >(options: CreatePredictiveSearchStoreOptions = {}): PredictiveSearchStore<TData> {

@@ -10,6 +10,8 @@ const FIRST_SUBMIT_BUTTON_SELECTOR = "button:not([type=button])";
  * The form must contain a `"set"` button as its first submit element — use
  * `register("set")` from `createCartFormRegister` to produce it.
  *
+ * Building block for the framework bindings. Use it directly on a framework without one.
+ *
  * @throws If the form's first submit button is not a `name="intent" value="set"` button.
  *
  * @example
@@ -25,6 +27,7 @@ const FIRST_SUBMIT_BUTTON_SELECTOR = "button:not([type=button])";
  *   detach();
  * }
  * ```
+ * @public
  */
 export function attachQuantityInput(
   inputEl: HTMLInputElement,

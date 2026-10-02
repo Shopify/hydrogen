@@ -5,6 +5,13 @@ const DEFAULT_SOURCE = "hydrogen";
 const DEFAULT_ACCESSIBILITY_LABEL = "Buy with Shop Pay";
 const ERROR_PREFIX = "[hydrogen:error:ShopPay]";
 const CAN_USE_DOM = typeof document !== "undefined";
+/**
+ * Tag name of the Shop Pay custom element that `defineShopPayButton` registers.
+ *
+ * Building block for the framework bindings. Use it directly on a framework without one.
+ *
+ * @public
+ */
 export const SHOP_PAY_BUTTON_TAG_NAME = "hydrogen-shop-pay-button";
 export const SHOP_PAY_BUTTON_CLASS_NAME = "shop-pay-button";
 const SHOP_PAY_BUTTON_OBSERVED_ATTRIBUTES = [
@@ -113,6 +120,7 @@ type ShopPayVariantWithQuantity = {
 type ShopPayVariant = string | ShopPayVariantWithQuantity;
 type ShopPayVariants = readonly string[] | readonly ShopPayVariantWithQuantity[];
 
+/** @public */
 export type ShopPayButtonOptions = ShopPayButtonBaseOptions & {
   /**
    * Variants to check out immediately via a Shopify cart permalink. Omit this
@@ -125,6 +133,8 @@ export type ShopPayButtonOptions = ShopPayButtonBaseOptions & {
  * Builds the checkout URL the Shop Pay button navigates to, or `null` when the
  * button is disabled. Variant mode produces a cart permalink; otherwise the
  * current cart checks out.
+ *
+ * @public
  */
 export function getShopPayButtonUrl(options: ShopPayButtonOptions): string | null {
   if (options.disabled) return null;
@@ -152,6 +162,8 @@ export function getShopPayButtonUrl(options: ShopPayButtonOptions): string | nul
  * element carrying the styles and anchor it needs to work without client
  * JavaScript. Use it from server templates or frameworks without a Hydrogen
  * binding.
+ *
+ * @public
  */
 export function renderShopPayButton(options: ShopPayButtonOptions): string {
   defineShopPayButton();
@@ -163,6 +175,8 @@ export function renderShopPayButton(options: ShopPayButtonOptions): string {
 /**
  * Creates the Shop Pay button as a detached DOM element. The returned element
  * carries the button styles with it.
+ *
+ * @public
  */
 export function createShopPayButton(options: ShopPayButtonOptions): HTMLElement {
   defineShopPayButton();
@@ -189,7 +203,13 @@ export function initializeShopPayButtonElement(
   renderShopPayButtonShadowRoot(shadowRoot, options);
 }
 
-/** Registers the Shop Pay custom element. No-ops during SSR or when already registered. */
+/**
+ * Registers the Shop Pay custom element. No-ops during SSR or when already registered.
+ *
+ * Building block for the framework bindings. Use it directly on a framework without one.
+ *
+ * @public
+ */
 export function defineShopPayButton(): void {
   if (
     typeof customElements === "undefined" ||

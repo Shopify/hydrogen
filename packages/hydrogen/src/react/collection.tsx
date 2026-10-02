@@ -26,7 +26,11 @@ import type { CollectionState } from "../core/collection";
 
 const CollectionContext = createContext<CollectionStore | null>(null);
 
-/** Props for the {@link CollectionProvider} component. */
+/**
+ * Props for the {@link CollectionProvider} component.
+ *
+ * @public
+ */
 export interface CollectionProviderProps {
   /** Collection metadata from the framework data fetch (`handle`, `dataSearch`). */
   data: CollectionData;
@@ -53,6 +57,8 @@ export interface CollectionProviderProps {
  * Manages the lifecycle of a {@link CollectionStore}: creates on mount and
  * syncs with URL changes. Recreates the store when `data.handle` changes
  * (navigating to a different collection).
+ *
+ * @public
  */
 export function CollectionProvider({
   data,
@@ -116,6 +122,7 @@ function useRequiredStore(hookName: string): CollectionStore {
  * ```tsx
  * const { status, filters } = useCollection();
  * ```
+ * @public
  */
 export function useCollection(): CollectionState;
 /**
@@ -178,6 +185,8 @@ export function useCollection<S>(
  * Returns methods that change filters and sort. The store's `onBrowseChange`
  * callback (set by {@link CollectionProvider}) handles calling `onChange` with
  * a serialized search string.
+ *
+ * @public
  */
 export function useCollectionActions(): CollectionActions {
   const store = useRequiredStore("useCollectionActions");
@@ -209,6 +218,7 @@ export function useCollectionActions(): CollectionActions {
  *   </form>
  * );
  * ```
+ * @public
  */
 export function useCollectionForm() {
   const actions = useCollectionActions();
