@@ -1,4 +1,9 @@
-import { type CacheInstance, handleShopifyRoutes } from "@shopify/hydrogen";
+import {
+  type CacheInstance,
+  createRobotsTxtServerHandlers,
+  createSitemapServerHandlers,
+  handleShopifyRoutes,
+} from "@shopify/hydrogen";
 import { getCache } from "@vercel/functions";
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 
@@ -11,6 +16,7 @@ import {
 import { getCustomerSessionHandlers } from "@/lib/customer-session-handlers";
 import { predictiveSearchHandlers } from "@/lib/predictive-search-handlers";
 import { routeTemplates } from "@/lib/route-templates";
+import { SITE_ORIGIN } from "@/lib/site";
 import { createRequestStorefrontClient } from "@/lib/storefront-client";
 import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/storefront-config";
 
@@ -18,7 +24,8 @@ import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/stor
  * Next.js request lifecycle (`hydrogen-request-handlers` /
  * `references/nextjs.md`). `proxy.ts` runs `handleShopifyRoutes` before framework
  * routing — Hydrogen-owned routes (`/api/cart`, `/api/predictive-search`,
- * `/api/{ver}/graphql.json`, `/admin`, …) short-circuit here. Storefront URL
+ * `/api/{ver}/graphql.json`, `/sitemap.xml`, `/robots.txt`, `/admin`, …)
+ * short-circuit here. Storefront URL
  * redirects run in `app/not-found.tsx` (post-404), never here.
  *
  * The original request URL is forwarded to Server Components via
@@ -30,6 +37,19 @@ import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/stor
  * shared `resolveStorefrontConfig()` falls back to `mock.shop` with tokenless
  * public access so the example runs with zero secrets.
  */
+/**
+ * Sitemap + robots.txt (`hydrogen-seo` skill). Served by Hydrogen instead of
+ * `app/sitemap.ts` / `app/robots.ts`, so URLs follow `routeTemplates` and the
+ * index scales past a single 250-product query. `SITE_ORIGIN` keeps `<loc>` off
+ * request headers (F6/F10).
+ */
+const sitemapHandlers = createSitemapServerHandlers({
+  origin: SITE_ORIGIN,
+  routeTemplates,
+  staticPaths: ["/", "/collections", "/search"],
+});
+const robotsHandlers = createRobotsTxtServerHandlers({ origin: SITE_ORIGIN, routeTemplates });
+
 export async function proxy(request: NextRequest, event: NextFetchEvent) {
   const cache: CacheInstance | undefined = process.env.VERCEL
     ? getCache({
@@ -58,6 +78,8 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
   const handlers = [
     cartHandlers,
     predictiveSearchHandlers,
+    sitemapHandlers,
+    robotsHandlers,
     ...(customerAccountsAvailable ? [getCustomerSessionHandlers()] : []),
   ];
 

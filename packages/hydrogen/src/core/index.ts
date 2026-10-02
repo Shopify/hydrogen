@@ -14,6 +14,7 @@ export type {
   ShopifyRouteHandlerResult,
   ShopifyRouteJsonResult,
   ShopifyRouteRedirectResult,
+  ShopifyRouteResponseResult,
   ShopifyRedirectStatus,
 } from "./request-routing/registered-routes";
 export { createStorefrontClient } from "../client/client";
@@ -254,6 +255,40 @@ export type {
   PredictiveSearchStore,
   QueryPredictiveSearchOptions,
 } from "./predictive-search";
+
+export {
+  createBreadcrumbJsonLd,
+  createOrganizationJsonLd,
+  createProductJsonLd,
+  createRobotsTxt,
+  createRobotsTxtServerHandlers,
+  createSitemapServerHandlers,
+  getCanonicalUrl,
+  getLanguageAlternates,
+  serializeJsonLd,
+} from "./seo";
+export type {
+  BreadcrumbItem,
+  CreateProductJsonLdOptions,
+  CreateRobotsTxtOptions,
+  CreateRobotsTxtServerHandlersOptions,
+  CreateSitemapServerHandlersOptions,
+  GetCanonicalUrlOptions,
+  GetLanguageAlternatesOptions,
+  JsonLd,
+  LanguageAlternate,
+  LanguageAlternateLocale,
+  OrganizationJsonLdInput,
+  ProductJsonLdInput,
+  ProductJsonLdVariant,
+  RobotsTxtGroup,
+  RobotsTxtRule,
+  RobotsTxtServerHandlers,
+  SitemapChangeFrequency,
+  SitemapResource,
+  SitemapResourceType,
+  SitemapServerHandlers,
+} from "./seo";
 
 export { formatMoney } from "./money";
 export { flattenConnection } from "./analytics/utils/flatten-connection";

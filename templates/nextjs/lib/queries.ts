@@ -170,22 +170,3 @@ export const SHOP_ANALYTICS_QUERY = gql(`
     }
   }
 `);
-
-/** Sitemap query — all products + collections with `updatedAt`. */
-export const SITEMAP_QUERY = gql(`
-  query Sitemap($country: CountryCode, $language: LanguageCode)
-  @inContext(country: $country, language: $language) {
-    products(first: 250) {
-      nodes {
-        handle
-        updatedAt
-      }
-    }
-    collections(first: 250) {
-      nodes {
-        handle
-        updatedAt
-      }
-    }
-  }
-`);

@@ -1,3 +1,8 @@
+import {
+  compileRouteTemplate,
+  isRouteTemplate,
+  matchRouteTemplate,
+} from "../standard-routes/route-template";
 import type {
   CallableRouteHandler,
   HydrogenRouteInterceptor,
@@ -17,6 +22,7 @@ export type {
   ShopifyRouteHandlerResult,
   ShopifyRouteJsonResult,
   ShopifyRouteRedirectResult,
+  ShopifyRouteResponseResult,
   ShopifyRedirectStatus,
   ShopifyRouteSessionManager,
 } from "./route-types";
@@ -53,27 +59,74 @@ export function createCallableRouteHandler<
   return Object.assign(handler, { pathname, method });
 }
 
+type PathMatch = { handler: ShopifyRouteHandler; params: Readonly<Record<string, string>> };
+
 export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   url,
   { request, sessionManager, storefrontClient, requestContext, handlers = [] },
 ) => {
-  const context = { request, sessionManager, storefrontClient, requestContext };
   const routeHandlers = handlers.flatMap((group) => Object.values(group));
   if (routeHandlers.length === 0) return null;
 
-  const pathMatches = routeHandlers.filter((entry) => entry.pathname === url.pathname);
+  const pathMatches = matchRouteHandlers(routeHandlers, url.pathname);
   if (pathMatches.length === 0) return null;
 
-  const match = pathMatches.find((candidate) => candidate.method === request.method);
+  const match = pathMatches.find((candidate) => candidate.handler.method === request.method);
   if (!match)
     return Promise.resolve(
       new Response("Method Not Allowed", { status: HTTP_METHOD_NOT_ALLOWED_STATUS }),
     );
 
-  return match(context).then((result) => createShopifyRouteResponse(result, request));
+  const context = {
+    request,
+    sessionManager,
+    storefrontClient,
+    requestContext,
+    params: match.params,
+  };
+
+  return match.handler(context).then((result) => createShopifyRouteResponse(result, request));
 };
 
+const EMPTY_PARAMS: Readonly<Record<string, string>> = Object.freeze({});
+// Template pathnames compile once per process; literal pathnames map to `null`.
+const compiledPathnames = new Map<string, RegExp | null>();
+
+function getCompiledPathname(pathname: string): RegExp | null {
+  let pattern = compiledPathnames.get(pathname);
+  if (pattern === undefined) {
+    pattern = isRouteTemplate(pathname) ? compileRouteTemplate(pathname) : null;
+    compiledPathnames.set(pathname, pattern);
+  }
+  return pattern;
+}
+
+/**
+ * Handlers registered with a literal pathname match exactly and win over
+ * handlers registered with a template pathname such as `/sitemap/:type/:page.xml`.
+ */
+function matchRouteHandlers(routeHandlers: ShopifyRouteHandler[], pathname: string): PathMatch[] {
+  const exactMatches: PathMatch[] = [];
+  const templateMatches: PathMatch[] = [];
+
+  for (const handler of routeHandlers) {
+    if (handler.pathname === pathname) {
+      exactMatches.push({ handler, params: EMPTY_PARAMS });
+      continue;
+    }
+    if (exactMatches.length > 0) continue;
+
+    const pattern = getCompiledPathname(handler.pathname);
+    const params = pattern ? matchRouteTemplate(pattern, pathname) : null;
+    if (params) templateMatches.push({ handler, params });
+  }
+
+  return exactMatches.length > 0 ? exactMatches : templateMatches;
+}
+
 function createShopifyRouteResponse(result: ShopifyRouteHandlerResult, request: Request): Response {
+  if (result.type === "response") return result.response;
+
   if (result.type === "redirect") {
     const headers = new Headers(result.headers);
     headers.set("location", resolveRedirectLocation(result.location, request));

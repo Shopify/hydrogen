@@ -13,12 +13,3 @@ export const SITE_ORIGIN =
 export function canonicalUrl(path: string): string {
   return new URL(path, SITE_ORIGIN).toString();
 }
-
-/**
- * Serialize JSON-LD and escape it for safe embedding in a
- * `<script type="application/ld+json">` tag. It escapes `<` so the payload
- * cannot break out of the script element.
- */
-export function jsonLdScript(data: object): string {
-  return JSON.stringify(data).replace(/</g, "\\u003c");
-}

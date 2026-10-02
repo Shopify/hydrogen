@@ -86,6 +86,7 @@ type SearchPageEmptyData = {
   totalCount: 0;
   dataSearch: string;
   origin: string;
+  canonicalUrl: string;
 };
 
 type SearchPagePerformedData = {
@@ -98,6 +99,7 @@ type SearchPagePerformedData = {
   totalCount: number;
   dataSearch: string;
   origin: string;
+  canonicalUrl: string;
 };
 
 export type SearchPageData = SearchPageEmptyData | SearchPagePerformedData;
@@ -105,9 +107,14 @@ export type SearchPageData = SearchPageEmptyData | SearchPagePerformedData;
 export async function loadSearchPage({
   storefrontClient,
   request,
+  siteOrigin,
+  canonicalUrl,
 }: {
   storefrontClient: StorefrontClient;
   request: Request;
+  /** Trusted site origin for breadcrumb JSON-LD. */
+  siteOrigin: string;
+  canonicalUrl: string;
 }): Promise<SearchPageData> {
   const url = new URL(request.url);
   const searchTerm = (url.searchParams.get("q") ?? "").trim();
@@ -122,7 +129,8 @@ export async function loadSearchPage({
       currencyCode: null,
       totalCount: 0,
       dataSearch: url.searchParams.toString(),
-      origin: url.origin,
+      origin: siteOrigin,
+      canonicalUrl,
     };
   }
 
@@ -157,6 +165,7 @@ export async function loadSearchPage({
     currencyCode: data.shop.paymentSettings.currencyCode,
     totalCount: data.search.totalCount,
     dataSearch: url.searchParams.toString(),
-    origin: url.origin,
+    origin: siteOrigin,
+    canonicalUrl,
   };
 }

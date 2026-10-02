@@ -1,5 +1,6 @@
 import { DEFAULT_STANDARD_ROUTES, isStandardRouteParamName } from "./defaults";
 import { prependPathPrefix } from "./path";
+import { interpolateRouteTemplate } from "./route-template";
 import type {
   ShopifyRouteTemplates,
   StandardRouteName,
@@ -60,14 +61,8 @@ export function buildStandardRouteTarget(
   params: StandardRouteParams,
   pathPrefix: string | undefined,
 ): string {
-  return prependPathPrefix(interpolateRouteTemplate(template, params), pathPrefix);
-}
-
-function interpolateRouteTemplate(template: string, params: StandardRouteParams): string {
-  return template.replace(/:([A-Za-z][A-Za-z0-9_]*)/g, (placeholder, name: string) => {
-    if (!isStandardRouteParamName(name)) return placeholder;
-
-    const value = params[name];
-    return value === undefined ? placeholder : encodeURIComponent(value);
-  });
+  return prependPathPrefix(
+    interpolateRouteTemplate(template, params, isStandardRouteParamName),
+    pathPrefix,
+  );
 }

@@ -2,6 +2,7 @@ import {
   AnalyticsEvent,
   buildProductSelectionSearchParams,
   canAddToCart,
+  createProductJsonLd,
   getSelectedProductOptions,
   gql,
   type SelectedOption,
@@ -10,10 +11,13 @@ import { ShopPayButton } from "@shopify/hydrogen/react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 
+import { JsonLdScript } from "~/components/JsonLd";
 import { ProductCard, PRODUCT_CARD_FRAGMENT } from "~/components/ProductCard";
 import { openCartDrawer } from "~/lib/cart-drawer";
+import { envContext } from "~/lib/env";
 import { formatPrice, salePercent } from "~/lib/money";
 import { ProductProvider, useProductForm } from "~/lib/product";
+import { canonicalLink, getPageCanonicalUrl, getSiteOrigin } from "~/lib/seo";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
@@ -133,14 +137,16 @@ const PRODUCT_QUERY = gql(
   [PRODUCT_VARIANT_FRAGMENT, PRODUCT_CARD_FRAGMENT],
 );
 
-export function meta({ matches }: Route.MetaArgs) {
+export function meta({ data, matches }: Route.MetaArgs) {
   const shopName = getShopNameFromRootMatch(matches[0]);
   return [
-    { title: formatPageTitle("Product", shopName) },
+    { title: formatPageTitle(data?.product.title ?? "Product", shopName) },
     {
       name: "description",
-      content: `Shop the ${shopName} product detail page.`,
+      content: data?.product.description || `Shop the ${shopName} product detail page.`,
     },
+    // Variant option params never change the canonical (F10).
+    ...(data ? [canonicalLink(data.canonicalUrl)] : []),
   ];
 }
 
@@ -158,11 +164,15 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
 
   if (!data?.product) throw new Response("Not Found", { status: 404 });
 
+  const env = context.get(envContext);
+
   return {
     product: data.product,
     relatedProducts: data.products.nodes
       .filter((product) => product.handle !== data.product?.handle)
       .slice(0, 4),
+    origin: getSiteOrigin(env, request),
+    canonicalUrl: getPageCanonicalUrl(env, request),
   };
 }
 
@@ -776,6 +786,7 @@ export default function ProductRoute({ loaderData }: Route.ComponentProps) {
   const { product, relatedProducts } = loaderData;
   const navigate = useNavigate();
   const location = useLocation();
+  const selectedVariant = product.selectedOrFirstAvailableVariant;
 
   return (
     <ProductProvider
@@ -797,6 +808,24 @@ export default function ProductRoute({ loaderData }: Route.ComponentProps) {
       }}
     >
       <ProductViewedTracker product={product} />
+      <JsonLdScript
+        data={createProductJsonLd(
+          {
+            id: product.id,
+            title: product.title,
+            description: product.description,
+            vendor: product.vendor,
+            images: product.images.nodes,
+            priceRange: product.priceRange,
+          },
+          {
+            url: loaderData.canonicalUrl,
+            selectedVariant,
+            getVariantUrl: (variant) =>
+              new URL(variantUrl(product, variant.selectedOptions), loaderData.origin).toString(),
+          },
+        )}
+      />
       <main className="flex-1" id="main-content" tabIndex={-1}>
         <ProductPageContent product={product} />
         <RelatedProducts products={relatedProducts} />

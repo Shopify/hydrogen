@@ -1,4 +1,8 @@
-import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
+import {
+  createOrganizationJsonLd,
+  handleShopifyRedirects,
+  handleShopifyRoutes,
+} from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import type { ReactNode } from "react";
 import {
@@ -17,12 +21,14 @@ import { AnnouncementBar } from "~/components/AnnouncementBar";
 import { CartDrawer } from "~/components/CartDrawer";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
+import { JsonLdScript } from "~/components/JsonLd";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { createRequestCustomerAccount, customerAccountContext } from "~/lib/customer-account";
 import { envContext } from "~/lib/env";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
+import { getSeoHandlers, getSiteOrigin } from "~/lib/seo";
 import { createEphemeralSessionManager } from "~/lib/session";
 import { analyticsConsent, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
 import {
@@ -60,7 +66,11 @@ export const middleware: Route.MiddlewareFunction[] = [
       sessionManager,
       storefrontClient,
       routeTemplates,
-      handlers: customerAccount ? [cartHandlers, customerAccount.handlers] : [cartHandlers],
+      handlers: [
+        cartHandlers,
+        ...getSeoHandlers(env),
+        ...(customerAccount ? [customerAccount.handlers] : []),
+      ],
     });
 
     if (shopifyRoute) return shopifyRoute;
@@ -99,6 +109,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     cartData: cartResult.data,
     shopInfo: layout.shopInfo,
     shopIdentity: resolveShopIdentity(env, layout.shopId),
+    siteOrigin: getSiteOrigin(env, request),
   };
 }
 
@@ -125,6 +136,15 @@ export function Layout({ children }: { children: ReactNode }) {
         ) : null}
         <Meta />
         <Links />
+        {rootData ? (
+          <JsonLdScript
+            data={createOrganizationJsonLd({
+              name: rootData.shopInfo.name,
+              url: rootData.siteOrigin,
+              logo: rootData.shopInfo.logo?.url,
+            })}
+          />
+        ) : null}
       </head>
       <body className="bg-surface text-on-surface font-body flex min-h-svh flex-col antialiased">
         <a

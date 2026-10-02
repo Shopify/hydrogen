@@ -190,6 +190,7 @@ You won't hand‑write most of this — your agent will. Setup copies these skil
 | `hydrogen-routing` | Storefront routes and navigation wiring |
 | `hydrogen-image` | Storefront images and responsive loading |
 | `hydrogen-money` | Currency‑correct money formatting |
+| `hydrogen-seo` | Canonical URLs, hreflang, and JSON‑LD structured data |
 | `hydrogen-shop-pay` | Shop Pay buttons |
 | `hydrogen-markets` | Localization with Shopify Markets |
 | `hydrogen-analytics` | Storefront analytics & consent |

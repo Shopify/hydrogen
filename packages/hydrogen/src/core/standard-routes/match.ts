@@ -1,6 +1,7 @@
 import { buildStandardRouteTarget } from "./build";
 import { DEFAULT_STANDARD_ROUTES, isStandardRouteName, isStandardRouteParamName } from "./defaults";
 import { parseSameOriginUrl, stripI18nPathPrefix, stripTrailingSlash } from "./path";
+import { compileRouteTemplate, decodePathSegment } from "./route-template";
 import type {
   ShopifyRouteTemplates,
   ShopifyPageTemplateName,
@@ -142,36 +143,9 @@ function matchRouteTemplate(pathname: string, template: string): StandardRoutePa
 }
 
 /**
- * Converts a route template into a regular expression with named capture groups.
- *
- * Static path text is escaped first so regex metacharacters in templates are treated literally.
- * Then known placeholders such as `:productHandle` become segment-safe captures like
- * `(?<productHandle>[^/]+)`.
+ * Compiles a route template, capturing only known standard route params such
+ * as `:productHandle`; other placeholders stay literal text.
  */
 function templateToPattern(template: string): RegExp {
-  const source = escapeRegExp(stripTrailingSlash(template)).replace(
-    /:([A-Za-z][A-Za-z0-9_]*)/g,
-    (placeholder, name: string) =>
-      isStandardRouteParamName(name) ? `(?<${name}>[^/]+)` : placeholder,
-  );
-
-  return new RegExp(`^${source}$`);
-}
-
-/**
- * Escapes regex metacharacters so template text can be embedded in a `RegExp` literally.
- *
- * For example, `/products/:productHandle.json` must match a literal `.json` suffix; without
- * escaping, `.` would mean "any character" in the generated regex.
- */
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function decodePathSegment(segment: string): string {
-  try {
-    return decodeURIComponent(segment);
-  } catch {
-    return segment;
-  }
+  return compileRouteTemplate(stripTrailingSlash(template), isStandardRouteParamName);
 }
