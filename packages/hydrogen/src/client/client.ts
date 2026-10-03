@@ -23,6 +23,7 @@ import {
 } from "../core/headers";
 import type { I18nConfig, ShopifyRequestContext } from "../core/request-context";
 import { normalizeStoreDomain } from "../core/url";
+import { combineAbortSignals } from "../core/utils/abort-signal";
 import type { AnyStorefrontQueryString } from "../graphql";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";
 import type {
@@ -248,13 +249,15 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       timeoutSignal = AbortSignal.timeout(timeoutInMs);
       externalSignals.push(timeoutSignal);
     }
+    const combinedSignal =
+      externalSignals.length > 0 ? combineAbortSignals(externalSignals) : undefined;
 
     try {
       const init: PlainRequestInit = {
         method: "POST",
         headers: new Headers(requestHeaders),
         body: JSON.stringify({ query: queryText, variables }),
-        signal: externalSignals.length > 0 ? AbortSignal.any(externalSignals) : undefined,
+        signal: combinedSignal?.signal,
       };
 
       const cacheOptions = createStorefrontCacheOptions(
@@ -263,6 +266,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
         queryText,
         opts.cache,
         opts[SHOULD_CACHE_RESULT],
+        timeoutInMs > 0 ? timeoutInMs : DEFAULT_TIMEOUT_IN_MS,
       );
       const response = await (resolvedFetch as ResolvedStorefrontFetch)(apiUrl, init, cacheOptions);
 
@@ -299,6 +303,8 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
         throw error;
       }
       throw new StorefrontApiError("SFAPI request failed", { cause: error });
+    } finally {
+      combinedSignal?.dispose();
     }
 
     let json: unknown;
@@ -375,6 +381,7 @@ function createStorefrontCacheOptions(
   queryText: string,
   strategy: CachingStrategy | undefined,
   shouldCacheResult: ShouldCacheResult | undefined,
+  backgroundTimeoutInMs: number,
 ): FetchCacheOptions | undefined {
   if (!strategy) return undefined;
 
@@ -395,6 +402,10 @@ function createStorefrontCacheOptions(
 
       return shouldCacheResult?.(body) ?? true;
     },
+    // A refresh outlives the request that triggered it, so request and caller
+    // aborts must not cancel it. It still needs a deadline, even when the caller
+    // disabled the client timeout to own the foreground one.
+    backgroundSignal: () => AbortSignal.timeout(backgroundTimeoutInMs),
   };
 }
 

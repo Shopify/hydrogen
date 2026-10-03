@@ -78,7 +78,10 @@ type CommonOptions = {
    * controls type inference, so queries against fields outside that schema need their own typing.
    */
   apiVersion?: string;
-  /** Per-request timeout in milliseconds. `0` disables the timeout. Defaults to 30,000 ms. */
+  /**
+   * Per-request timeout in milliseconds. `0` disables the timeout. Defaults to 30,000 ms.
+   * Stale-while-revalidate refreshes use the same timeout, or 30,000 ms when it is `0`.
+   */
   defaultTimeoutInMs?: number;
   /** Shared cache instance that enables per-query caching via the `cache` option on `graphql()`. */
   // Mirrored by the `cache?: CacheConfig` inference hole in

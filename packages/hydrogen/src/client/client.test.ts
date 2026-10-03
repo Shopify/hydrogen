@@ -1,13 +1,16 @@
+import { getEventListeners } from "node:events";
+
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import type { CacheInstance } from "../core";
 import { Cache } from "../core/cache";
+import { DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
 import {
   createShopifyRequestContext,
   type ShopifyRequestContext,
   type ShopifyRequestContextWithBuyerIp,
 } from "../core/request-context";
-import { assert } from "../core/test-utils";
+import { assert, stubAbortSignalWithoutAny } from "../core/test-utils";
 import { gql } from "../graphql";
 import { createStorefrontClient } from "./client";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";
@@ -60,6 +63,7 @@ describe("createStorefrontClient", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe("construction", () => {
@@ -787,7 +791,165 @@ describe("createStorefrontClient", () => {
     });
   });
 
+  describe.each([
+    ["with native AbortSignal.any", false],
+    ["without AbortSignal.any", true],
+  ])("stale-while-revalidate refreshes %s", (_label, withoutNative) => {
+    async function serveStaleWhileRefreshing(defaultTimeoutInMs: number) {
+      if (withoutNative) stubAbortSignalWithoutAny();
+      const cache = new MemoryKeyValueCache();
+      const pendingWork: Promise<unknown>[] = [];
+      const refresh = Promise.withResolvers<Response>();
+      const signals: AbortSignal[] = [];
+      const fetch = vi.fn(async (_url: string, init: RequestInit) => {
+        const { signal } = init;
+        assert(signal, "expected a fetch signal");
+        signals.push(signal);
+        if (signals.length === 1) return mockResponse({ data: { shop: { name: "Cached" } } });
+        signal.addEventListener("abort", () => refresh.reject(signal.reason), { once: true });
+        return refresh.promise;
+      });
+      const request = new AbortController();
+      const caller = new AbortController();
+      const client = createStorefrontClient({
+        type: "public",
+        requestContext: createTestRequestContext({
+          headers: new Headers(),
+          signal: request.signal,
+        }),
+        config: {
+          storeDomain: "test.myshopify.com",
+          publicStorefrontToken: "test-pub-token",
+          cache,
+          fetch,
+          defaultTimeoutInMs,
+          waitUntil: (promise) => void pendingWork.push(promise),
+        },
+      });
+      const options = {
+        cache: Cache.short({ maxAge: 1, staleWhileRevalidate: 60 }),
+        signal: caller.signal,
+      };
+
+      await client.graphql(SHOP_QUERY, options);
+      await Promise.all(pendingWork);
+      for (const envelope of cache.store.values()) {
+        (envelope as { storedAt: number }).storedAt -= 5_000;
+      }
+      const stale = await client.graphql(SHOP_QUERY, options);
+      await vi.waitFor(() => expect(signals).toHaveLength(2));
+      const refreshSignal = signals[1];
+      assert(refreshSignal, "expected a refresh signal");
+
+      // A failing origin means any data returned here came from the cache.
+      const readCachedShop = async () => {
+        const reader = createPublicClient({ cache, fetch: async () => Response.error() });
+        return (await reader.graphql(SHOP_QUERY, { cache: options.cache })).data;
+      };
+
+      return { stale, request, caller, refresh, refreshSignal, pendingWork, readCachedShop };
+    }
+
+    it("keeps refreshing after the request and caller abort", async () => {
+      const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
+      const run = await serveStaleWhileRefreshing(0);
+
+      expect(run.stale.data).toEqual({ shop: { name: "Cached" } });
+      run.request.abort();
+      run.caller.abort();
+      expect(run.refreshSignal.aborted).toBe(false);
+      expect(timeoutSpy).toHaveBeenCalledWith(DEFAULT_TIMEOUT_IN_MS);
+
+      run.refresh.resolve(mockResponse({ data: { shop: { name: "Fresh" } } }));
+      await Promise.all(run.pendingWork);
+      await expect(run.readCachedShop()).resolves.toEqual({ shop: { name: "Fresh" } });
+    });
+
+    it("stops a refresh at the client timeout instead of the request abort", async () => {
+      const run = await serveStaleWhileRefreshing(50);
+
+      run.request.abort();
+      run.caller.abort();
+      expect(run.refreshSignal.aborted).toBe(false);
+
+      await Promise.all(run.pendingWork);
+      expect((run.refreshSignal.reason as DOMException).name).toBe("TimeoutError");
+      await expect(run.readCachedShop()).resolves.toEqual({ shop: { name: "Cached" } });
+    });
+  });
+
   describe("timeout and signals", () => {
+    describe("without AbortSignal.any", () => {
+      beforeEach(() => {
+        stubAbortSignalWithoutAny();
+      });
+
+      function createClientWithReusedSignals(fetch: typeof globalThis.fetch, timeout?: number) {
+        const request = new AbortController();
+        const caller = new AbortController();
+        const client = createPublicClient({
+          fetch,
+          defaultTimeoutInMs: timeout,
+          requestContext: createTestRequestContext({
+            headers: new Headers(),
+            signal: request.signal,
+          }),
+        });
+        const listenerCount = () =>
+          getEventListeners(request.signal, "abort").length +
+          getEventListeners(caller.signal, "abort").length;
+        return { client, request, caller, listenerCount };
+      }
+
+      it.each([
+        ["the default timeout", undefined],
+        ["the timeout disabled", 0],
+      ])("removes listeners from reused signals after calls with %s", async (_label, timeout) => {
+        const { client, caller, listenerCount } = createClientWithReusedSignals(mockFetch, timeout);
+
+        await client.graphql(SHOP_QUERY, { signal: caller.signal });
+
+        expect(listenerCount()).toBe(0);
+      });
+
+      it("removes listeners from reused signals after failed calls", async () => {
+        const { client, caller, listenerCount } = createClientWithReusedSignals(mockFetch, 0);
+        mockFetch
+          .mockResolvedValueOnce(new Response("boom", { status: 500 }))
+          .mockRejectedValueOnce(new TypeError("network down"));
+
+        for (let i = 0; i < 2; i++) {
+          await expect(client.graphql(SHOP_QUERY, { signal: caller.signal })).rejects.toThrow(
+            StorefrontApiError,
+          );
+        }
+
+        expect(listenerCount()).toBe(0);
+      });
+
+      it("keeps the request cancellable until the response body is read", async () => {
+        const bodyRequested = Promise.withResolvers<void>();
+        const fetch = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+          const body = new ReadableStream<Uint8Array>({
+            pull(controller) {
+              bodyRequested.resolve();
+              init?.signal?.addEventListener("abort", () => controller.error(init.signal?.reason));
+              return new Promise(() => {});
+            },
+          });
+          return new Response(body, { headers: { "content-type": "application/json" } });
+        });
+        const { client, request, listenerCount } = createClientWithReusedSignals(fetch, 0);
+
+        const promise = client.graphql(SHOP_QUERY);
+        await bodyRequested.promise;
+        request.abort(new DOMException("client went away", "AbortError"));
+
+        await expect(promise).rejects.toThrow("client went away");
+        expect(listenerCount()).toBe(0);
+      });
+    });
+
     it("throws StorefrontTimeoutError after timeout", async () => {
       mockFetch.mockImplementationOnce(
         (_url: string, init: RequestInit) =>
@@ -839,7 +1001,11 @@ describe("createStorefrontClient", () => {
       expect(fetchInit.signal).toBeInstanceOf(AbortSignal);
     });
 
-    it("aborts when per-call signal aborts", async () => {
+    it.each([
+      ["with native AbortSignal.any", false],
+      ["without AbortSignal.any", true],
+    ])("aborts when per-call signal aborts %s", async (_label, withoutNative) => {
+      if (withoutNative) stubAbortSignalWithoutAny();
       const controller = new AbortController();
       mockFetch.mockImplementationOnce(
         (_url: string, init: RequestInit) =>

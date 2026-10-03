@@ -1,6 +1,7 @@
 import type { GraphQLFormattedError } from "../client/types";
 import { CUSTOMER_ACCOUNT_API_VERSION, DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
 import type { ShopifyRequestContext } from "../core/request-context";
+import { combineAbortSignals } from "../core/utils/abort-signal";
 import { isObjectRecord } from "../core/utils/record";
 import {
   CustomerAccountApiError,
@@ -256,7 +257,7 @@ export function createCustomerAccountClient({
     const { signal: timeoutSignal, cleanup: cleanupTimeout } =
       createCustomerAccountTimeoutSignal(defaultTimeoutInMs);
     externalSignals.push(timeoutSignal);
-    const signal = AbortSignal.any(externalSignals);
+    const { signal, dispose: disposeSignal } = combineAbortSignals(externalSignals);
 
     try {
       const variables = getVariables(
@@ -284,6 +285,7 @@ export function createCustomerAccountClient({
       );
     } finally {
       cleanupTimeout();
+      disposeSignal();
     }
   }
 

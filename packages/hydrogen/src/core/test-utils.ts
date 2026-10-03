@@ -18,3 +18,10 @@ export function createTestLogger(): TestLogger {
     fatal: vi.fn(),
   };
 }
+
+/** Simulates a runtime without `AbortSignal.any`. Undo with `vi.unstubAllGlobals()`. */
+export function stubAbortSignalWithoutAny(): void {
+  const AbortSignalWithoutAny = class extends AbortSignal {};
+  Object.defineProperty(AbortSignalWithoutAny, "any", { value: undefined });
+  vi.stubGlobal("AbortSignal", AbortSignalWithoutAny);
+}

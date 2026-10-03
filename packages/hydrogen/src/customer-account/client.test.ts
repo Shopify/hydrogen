@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getEventListeners } from "node:events";
+
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { STOREFRONT_URL_HEADER } from "../core/headers";
 import {
@@ -6,6 +8,7 @@ import {
   type I18nConfig,
   type ShopifyRequestContext,
 } from "../core/request-context";
+import { stubAbortSignalWithoutAny } from "../core/test-utils";
 import {
   createCustomerAccountClient,
   CustomerAccountApiError,
@@ -81,6 +84,10 @@ function getFetchRequest(fetchMock: ReturnType<typeof vi.fn>) {
 describe("createCustomerAccountClient", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("derives the Customer Account API URL from shop ID and default version", () => {
@@ -372,7 +379,11 @@ describe("createCustomerAccountClient", () => {
     }
   });
 
-  it("aborts when per-call signal aborts", async () => {
+  it.each([
+    ["with native AbortSignal.any", false],
+    ["without AbortSignal.any", true],
+  ])("aborts when per-call signal aborts %s", async (_label, withoutNative) => {
+    if (withoutNative) stubAbortSignalWithoutAny();
     const controller = new AbortController();
     const fetchMock = vi.fn(
       (_url: RequestInfo | URL, init?: RequestInit) =>
@@ -563,5 +574,79 @@ describe("createCustomerAccountClient", () => {
 
     const { init } = getFetchRequest(fetchMock);
     expect(init.cache).toBe("no-store");
+  });
+});
+
+describe("createCustomerAccountClient without AbortSignal.any", () => {
+  beforeEach(() => {
+    stubAbortSignalWithoutAny();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function createClientWithReusedSignals(fetch: typeof globalThis.fetch) {
+    const request = new AbortController();
+    const caller = new AbortController();
+    const client = createClient({
+      fetch,
+      requestContext: createShopifyRequestContext({
+        request: {
+          url: "https://example.com/account",
+          headers: new Headers(),
+          signal: request.signal,
+        },
+        i18n: DEFAULT_I18N,
+      }),
+    });
+    const listenerCount = () =>
+      getEventListeners(request.signal, "abort").length +
+      getEventListeners(caller.signal, "abort").length;
+    return { client, request, caller, listenerCount };
+  }
+
+  it("removes listeners from reused signals after a successful call", async () => {
+    const fetchMock = vi.fn(async () => mockResponse({ data: { customer: { firstName: "Ada" } } }));
+    const { client, caller, listenerCount } = createClientWithReusedSignals(fetchMock);
+
+    await client.graphql(CUSTOMER_QUERY, graphqlOptions({ signal: caller.signal }));
+
+    expect(listenerCount()).toBe(0);
+  });
+
+  it.each([
+    ["an HTTP error", () => Promise.resolve(new Response("nope", { status: 500 }))],
+    ["a network error", () => Promise.reject(new TypeError("network down"))],
+    ["invalid JSON", () => Promise.resolve(new Response("not json"))],
+  ])("removes listeners from reused signals after %s", async (_label, respond) => {
+    const { client, caller, listenerCount } = createClientWithReusedSignals(vi.fn(respond));
+
+    await expect(
+      client.graphql(CUSTOMER_QUERY, graphqlOptions({ signal: caller.signal })),
+    ).rejects.toThrow(CustomerAccountApiError);
+
+    expect(listenerCount()).toBe(0);
+  });
+
+  it("keeps the request cancellable until the response body is read", async () => {
+    const jsonRequested = Promise.withResolvers<void>();
+    const fetchMock = vi.fn(async () => {
+      const response = new Response(new ReadableStream({ pull: () => new Promise(() => {}) }));
+      const json = response.json.bind(response);
+      vi.spyOn(response, "json").mockImplementation(() => {
+        jsonRequested.resolve();
+        return json();
+      });
+      return response;
+    });
+    const { client, request, listenerCount } = createClientWithReusedSignals(fetchMock);
+
+    const promise = client.graphql(CUSTOMER_QUERY, graphqlOptions());
+    await jsonRequested.promise;
+    request.abort(new DOMException("client went away", "AbortError"));
+
+    await expect(promise).rejects.toThrow("client went away");
+    expect(listenerCount()).toBe(0);
   });
 });

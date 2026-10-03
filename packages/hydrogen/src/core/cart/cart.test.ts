@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
 
 import type { CartActionError } from "../../../vendor/standard-actions";
 import { configureLogging } from "../logging";
@@ -8,7 +8,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts";
-import { assert, createTestLogger } from "../test-utils";
+import { assert, createTestLogger, stubAbortSignalWithoutAny } from "../test-utils";
 import {
   configureCartEndpoint,
   getShopifyStandardActions,
@@ -868,6 +868,108 @@ describe("CartStore lifecycle", () => {
     expect(discountSignal.aborted).toBe(true);
     await expect(linePromise).resolves.toBeUndefined();
     await expect(discountPromise).resolves.toBeUndefined();
+  });
+});
+
+type AbortListenerSpy = MockInstance<
+  AbortSignal["addEventListener"] | AbortSignal["removeEventListener"]
+>;
+
+function countAbortListenersByTarget(spy: AbortListenerSpy): Map<unknown, number> {
+  const counts = new Map<unknown, number>();
+  spy.mock.calls.forEach(([type], index) => {
+    if (type !== "abort") return;
+    const target = spy.mock.contexts[index];
+    counts.set(target, (counts.get(target) ?? 0) + 1);
+  });
+  return counts;
+}
+
+// Signals handed to the transport are ignored: the mocked transport may listen to them.
+function expectNoRetainedAbortListeners(
+  addSpy: AbortListenerSpy,
+  removeSpy: AbortListenerSpy,
+  transportSignals: unknown[] = [],
+): void {
+  const removed = countAbortListenersByTarget(removeSpy);
+  const sources = [...countAbortListenersByTarget(addSpy)].filter(
+    ([target]) => !transportSignals.includes(target),
+  );
+  expect(sources).not.toHaveLength(0);
+  for (const [target, count] of sources) expect(removed.get(target)).toBe(count);
+}
+
+// Call before stubAbortSignalWithoutAny so the spies sit on the real prototype.
+function spyOnAbortListeners() {
+  return {
+    addSpy: vi.spyOn(AbortSignal.prototype, "addEventListener"),
+    removeSpy: vi.spyOn(AbortSignal.prototype, "removeEventListener"),
+  };
+}
+
+function updateCartSignals(): unknown[] {
+  return mockUpdateCart.mock.calls.map(([, options]) => options?.signal);
+}
+
+function createStreamingErrorResponse(status: number, cancel: () => void): Response {
+  return new Response(new ReadableStream({ pull: () => new Promise(() => {}), cancel }), {
+    status,
+  });
+}
+
+describe("CartStore without AbortSignal.any", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("removes mutation listeners from their source signals once the mutation settles", async () => {
+    const { addSpy, removeSpy } = spyOnAbortListeners();
+    stubAbortSignalWithoutAny();
+    const line = makeLine({ id: "line-1", quantity: 1 });
+    store.hydrate(makeCartState({ lines: [line], totalQuantity: 1 }));
+
+    const submission = store.handleFormSubmit(
+      submitForm({ lineId: "line-1" }, "intent", "increase"),
+    );
+    await nextTick();
+    resolveUpdate(0, serverCart(2, [{ id: "line-1", quantity: 2 }]));
+    await submission;
+
+    expectNoRetainedAbortListeners(addSpy, removeSpy, updateCartSignals());
+  });
+
+  it("removes first-cart-add listeners from their source signals once the add settles", async () => {
+    const { addSpy, removeSpy } = spyOnAbortListeners();
+    stubAbortSignalWithoutAny();
+
+    const submission = store.handleFormSubmit(
+      submitForm({ merchandiseId: "gid://shopify/ProductVariant/1" }, "intent", "add"),
+    );
+    await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledOnce());
+    resolveUpdate(0, serverResult({ id: "gid://shopify/Cart/new", totalQuantity: 1 }));
+    await submission;
+
+    expectNoRetainedAbortListeners(addSpy, removeSpy, updateCartSignals());
+  });
+
+  it("cancels an unread error body from the cart endpoint and removes its listeners", async () => {
+    const { addSpy, removeSpy } = spyOnAbortListeners();
+    stubAbortSignalWithoutAny();
+    const cancel = vi.fn(() => {
+      throw new Error("cancel failed");
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => createStreamingErrorResponse(503, cancel)),
+    );
+    configureCartEndpoint("/api/cart");
+
+    store.refresh();
+
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeUndefined());
+    expect(cancel).toHaveBeenCalledOnce();
+    expectNoRetainedAbortListeners(addSpy, removeSpy);
   });
 });
 
@@ -5605,6 +5707,7 @@ describe("configureCartEndpoint", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
     Object.defineProperty(window, "Shopify", {
       value: { actions: { updateCart: mockUpdateCart, getCart: mockGetCart } },
       configurable: true,
@@ -5708,6 +5811,26 @@ describe("configureCartEndpoint", () => {
     await expect(handler(vi.fn(), { lines: [{ id: "x", quantity: 1 }] })).rejects.toThrow(
       CartNetworkError,
     );
+  });
+
+  it("handler cancels an unread error body and removes its listeners without AbortSignal.any", async () => {
+    const { addSpy, removeSpy } = spyOnAbortListeners();
+    stubAbortSignalWithoutAny();
+    vi.stubGlobal("fetch", mockFetch);
+    configureCartEndpoint("/api/cart");
+    const handler = extractConfiguredHandler();
+    const cancel = vi.fn();
+    mockFetch.mockResolvedValueOnce(createStreamingErrorResponse(500, cancel));
+    const caller = new AbortController();
+
+    await expect(
+      handler(vi.fn(), { lines: [{ id: "x", quantity: 1 }] }, { signal: caller.signal }),
+    ).rejects.toMatchObject({ name: "CartNetworkError", status: 500 });
+
+    expect(cancel).toHaveBeenCalledOnce();
+    const callerListeners = countAbortListenersByTarget(addSpy).get(caller.signal);
+    expect(callerListeners).toBeGreaterThan(0);
+    expect(countAbortListenersByTarget(removeSpy).get(caller.signal)).toBe(callerListeners);
   });
 
   it("same endpoint is a no-op", () => {
