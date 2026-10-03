@@ -17,6 +17,8 @@ export type CartLineAddInput = {
 export type CartLineUpdateInput = {
   /** The `CartLine.id` of the line to update. */
   id: string;
+  /** Storefront API GID of a product variant to swap the line to. */
+  merchandiseId?: string;
   quantity: number;
   attributes?: CartAttributeInput[];
   sellingPlanId?: string;
@@ -29,7 +31,7 @@ export type CartLineUpdateInput = {
  * of these variants. The `intent` field determines the Storefront API mutation:
  *
  * - `"add"` — add new lines (cartLinesAdd, or cartCreate when no cart exists)
- * - `"update"` — change quantity or attributes on existing lines (cartLinesUpdate)
+ * - `"update"` — change quantity, merchandise, or attributes on existing lines (cartLinesUpdate)
  * - `"remove"` — remove lines by ID (cartLinesRemove)
  * - `"discount-update"` — replace all discount codes (cartDiscountCodesUpdate)
  * - `"discount-apply"` — add a single discount code (read-then-write via cartDiscountCodesUpdate)
@@ -71,7 +73,8 @@ class CartActionError extends Error {
  * should fall back to the cart cookie.
  *
  * @throws If the content-type is unsupported, the intent is unrecognized,
- * or required fields are missing.
+ * required fields are missing, or a JSON body combines more than one of
+ * `lines`, `discountCodes`, `attributes` and `note`.
  *
  * @example
  * ```ts
@@ -107,9 +110,19 @@ export async function parseCartRequest(request: Request): Promise<ParsedCartRequ
 
 // --- JSON parsing ---
 
+const JSON_MUTATION_FIELDS = ["lines", "discountCodes", "attributes", "note"] as const;
+
 function parseJsonBody(body: unknown): ParsedCartRequest {
   assertObject(body);
   const cartId = typeof body.cartId === "string" ? normalizeCartId(body.cartId) : null;
+
+  // Each request runs one Storefront API mutation, so any other field would be silently dropped.
+  const fields = JSON_MUTATION_FIELDS.filter((field) => body[field] !== undefined);
+  if (fields.length > 1) {
+    throw new CartActionError(
+      `Request body must contain only one of "lines", "discountCodes", "attributes", or "note", got ${fields.join(", ")}.`,
+    );
+  }
 
   if ("note" in body && typeof body.note === "string") {
     return { action: { intent: "note-update", note: body.note }, cartId };
@@ -186,6 +199,7 @@ function partitionLines(rawLines: unknown[]): CartAction {
     } else if (hasId) {
       updates.push({
         id: line.id as string,
+        ...(hasMerchandiseId && { merchandiseId: line.merchandiseId as string }),
         quantity,
         ...optionalFields,
       });

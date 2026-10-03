@@ -700,7 +700,15 @@ describe("createCartServerHandlers", () => {
 
       const result = await handleCartRequest(
         createJsonPostRequest(
-          { lines: [{ id: "gid://shopify/CartLine/1", quantity: 3 }] },
+          {
+            lines: [
+              {
+                id: "gid://shopify/CartLine/1",
+                merchandiseId: "gid://shopify/ProductVariant/2",
+                quantity: 3,
+              },
+            ],
+          },
           "cart=123",
         ),
         defaultConfig,
@@ -710,6 +718,14 @@ describe("createCartServerHandlers", () => {
       const body = await result.json();
       expect(body.cart).toEqual(MOCK_CART);
       expect(body.userErrors).toEqual([]);
+      const [, init] = mockFetch.mock.calls[0];
+      expect(JSON.parse(init.body).variables.lines).toEqual([
+        {
+          id: "gid://shopify/CartLine/1",
+          merchandiseId: "gid://shopify/ProductVariant/2",
+          quantity: 3,
+        },
+      ]);
     });
 
     it("uses body cartId for update action without a cart cookie", async () => {
@@ -914,6 +930,24 @@ describe("createCartServerHandlers", () => {
         message:
           "Mixed line operations are not allowed. Separate add, update, and remove into distinct requests.",
       });
+    });
+
+    it("returns 400 without calling the Storefront API for a body that combines mutation kinds", async () => {
+      const result = await handleCartRequest(
+        createJsonPostRequest(
+          {
+            lines: [{ id: "gid://shopify/CartLine/1", quantity: 2 }],
+            attributes: [{ key: "gift", value: "yes" }],
+          },
+          "cart=123",
+        ),
+        defaultConfig,
+      );
+      assert(result, "expected a response");
+      expect(result.status).toBe(400);
+      const body = await result.json();
+      expect(body.error).toMatchObject({ code: "invalid_cart_request" });
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it("returns 200 with userErrors from SFAPI", async () => {
