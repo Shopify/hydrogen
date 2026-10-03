@@ -232,7 +232,7 @@ export type ProductCardData =
 
 ### Variables and i18n auto-injection
 
-`$country` and `$language` variables are auto-injected from `requestContext.i18n` when declared in the query. Static clients still create a request context, usually with empty headers plus the resolved locale. You only pass the variables you own:
+`$country` and `$language` are auto-injected from `requestContext.i18n` when the query declares them as `$country: CountryCode` and `$language: LanguageCode` (nullable or `!`). Static clients still create a request context, usually with empty headers plus the resolved locale. You only pass the variables you own:
 
 ```ts
 const PRODUCTS = gql(`
@@ -247,7 +247,9 @@ const { data } = await client.graphql(PRODUCTS, {
 });
 ```
 
-User-provided values take precedence over auto-injected ones.
+For those declarations the request context wins: the variables type rejects `country` and `language`, and the client overwrites any value passed anyway. To query another market, create the client with a request context for that `i18n`.
+
+A same-named variable of any other type stays yours and keeps its nullability, for example `$country: String!` as a metafield key, `$country: [CountryCode!]!`, or `$language: ProductSortKeys`. Only the first operation's declarations count.
 
 ### Request state storage
 
