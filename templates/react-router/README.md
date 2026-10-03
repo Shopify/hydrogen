@@ -14,7 +14,8 @@ analytics, and a consent banner wired up.
 - `/products/:handle` — product detail (gallery, variants, add to cart, Shop Pay)
 - `/collections` — all collections
 - `/collections/:handle` — collection with filters, sort, and pagination
-- `/search` — product search with the same filtering
+- `/search` — product search with the same filtering (also the no-JS fallback for the
+  predictive search drawer)
 - `/cart` — cart with Shop Pay (also the no-JS fallback for the cart drawer)
 - `/account` — Customer Account sign-in, log out, and order history
 
@@ -25,6 +26,9 @@ analytics, and a consent banner wired up.
 - A real cart: storefront client + request handlers + `/api/cart` + an accessible
   cart drawer wired to Shopify Standard Actions.
 - A shared layout (header with mobile nav, footer, optional announcement bar).
+- Predictive search: Hydrogen's `/api/predictive-search` handler + an accessible
+  search drawer that suggests products as you type and falls back to the
+  `/search` page without JavaScript.
 - Analytics + a consent banner.
 - Customer Accounts: Hydrogen's `/account/login`, `/account/authorize`,
   `/account/refresh`, and `/account/logout` handlers, backed by a signed cookie
