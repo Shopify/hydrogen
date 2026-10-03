@@ -60,7 +60,11 @@ type VendorWarning = NonNullable<CartActionFailure["warnings"]>[number];
 type KeyResult = string | string[] | undefined;
 type ErrorProjector = (state: CartState, timestampMs: number) => CartState;
 type AddError = (project: ErrorProjector, keys?: string[]) => void;
-type TransactionSettlementOptions = { mergeServerCart: boolean };
+type TransactionSettlementOptions = {
+  mergeServerCart: boolean;
+  ownsKey(key: string): boolean;
+  requestRevalidation(): void;
+};
 type UpdateCartTransport = (
   payload: UpdateCartPayload,
   options?: UpdateCartOptions,
@@ -221,6 +225,10 @@ type ChangeLineQuantityPayload = {
   quantity: number;
 };
 
+type ChangeLinesQuantityPayload = {
+  lines: ChangeLineQuantityPayload[];
+};
+
 type SetDiscountCodesPayload = {
   discountCodes: string[];
 };
@@ -240,7 +248,7 @@ type TransactionDefinition<TPayload> = {
     signal: AbortSignal,
     updateCart: UpdateCartTransport,
   ): Promise<UpdateCartResult>;
-  projectPayload(state: CartState, payload: TPayload): CartState;
+  projectPayload(state: CartState, payload: TPayload, ownsKey: (key: string) => boolean): CartState;
   projectPromise(
     state: CartState,
     result: CartMutationResult,
@@ -287,8 +295,14 @@ type PendingTransaction = {
   requiresRevalidation: boolean;
   owner: TransactionOwner | null;
   promise: PromiseLike<CartMutationResult>;
-  projectPayload(state: CartState): CartState;
-  projectPromise(state: CartState, result: CartMutationResult, addError: AddError): CartState;
+  projectPayload(state: CartState, ownsKey: (key: string) => boolean): CartState;
+  projectPromise(
+    state: CartState,
+    result: CartMutationResult,
+    addError: AddError,
+    ownsKey: (key: string) => boolean,
+    requestRevalidation: () => void,
+  ): CartState;
   trimAfter(successful: PendingTransaction): PendingTransaction | undefined;
 };
 
@@ -375,6 +389,7 @@ type CartStoreContext = {
   mutationRevision: number;
   identityTransportGate: CartIdentityTransportGate;
   cartSyncAttached: boolean;
+  revalidateOnConnect: boolean;
   reservation: TransactionReservation | null;
   lastSnapshotSequence: number;
 };
@@ -582,15 +597,24 @@ function reuseVisibleReferences(previous: CartState, next: CartState): CartState
   return { ...next, data, pending };
 }
 
-function derivePending(state: CartState, transactions: PendingTransaction[]): CartState["pending"] {
+// Only batches stop projecting lines a newer change superseded, so only they drop those keys.
+function getVisiblePendingKeys(store: CartStoreContext, transaction: PendingTransaction): string[] {
+  if (transaction.type !== "change_lines_quantity") return transaction.pendingKeys;
+  const ownedKeys = getOwnedSignalKeys(store, transaction);
+  return transaction.pendingKeys.filter(
+    (key) => !transaction.signalKeys.includes(key) || ownedKeys.includes(key),
+  );
+}
+
+function derivePending(store: CartStoreContext, state: CartState): CartState["pending"] {
   const lines = new Set<string>();
   const discountCodes = new Set<string>();
   let note = false;
   let attributes = false;
   let cost = false;
 
-  for (const transaction of transactions) {
-    for (const key of transaction.pendingKeys) {
+  for (const transaction of store.transactions) {
+    for (const key of getVisiblePendingKeys(store, transaction)) {
       if (key === NOTE_KEY) note = true;
       if (key === ATTRIBUTES_KEY) attributes = true;
       if (key.startsWith(LINE_KEY_PREFIX)) {
@@ -614,8 +638,11 @@ function derivePending(state: CartState, transactions: PendingTransaction[]): Ca
 
 function projectVisibleState(store: CartStoreContext): CartState {
   let state = store.settled;
-  for (const transaction of store.transactions) state = transaction.projectPayload(state);
-  state = { ...state, pending: derivePending(state, store.transactions) };
+  for (const transaction of store.transactions) {
+    const ownedKeys = getOwnedSignalKeys(store, transaction);
+    state = transaction.projectPayload(state, (key) => ownedKeys.includes(key));
+  }
+  state = { ...state, pending: derivePending(store, state) };
   for (const error of store.projectedErrors) state = error.project(state);
   if (store.revalidation.visible) state = { ...state, revalidating: true };
   return state;
@@ -668,9 +695,9 @@ function createOwner(store: CartStoreContext, keys: string[]): TransactionOwner 
   return owner;
 }
 
-function ownsSignalKeys(store: CartStoreContext, transaction: PendingTransaction): boolean {
-  if (!transaction.owner) return true;
-  return transaction.signalKeys.every(
+function getOwnedSignalKeys(store: CartStoreContext, transaction: PendingTransaction): string[] {
+  if (!transaction.owner) return transaction.signalKeys;
+  return transaction.signalKeys.filter(
     (key) => store.keyedOwners.get(key)?.token === transaction.owner?.token,
   );
 }
@@ -848,7 +875,14 @@ function projectLineErrors(
   timestampMs: number,
 ): CartState {
   if (!failure) return state;
-  const grouped = groupLineErrors(failure, lineIds);
+  return writeLineErrors(state, groupLineErrors(failure, lineIds), timestampMs);
+}
+
+function writeLineErrors(
+  state: CartState,
+  grouped: { lines: Map<string, CartErrorGroup>; cart: CartErrorGroup },
+  timestampMs: number,
+): CartState {
   return {
     ...state,
     errors: {
@@ -1102,6 +1136,32 @@ function mergeServerLine(previous: CartLine | undefined, next: CartLine): CartLi
   return { ...previous, ...next, ...(merchandise ? { merchandise } : {}) };
 }
 
+// Keys each line's errors to that line alone, so a later change to one line keeps the others'
+// errors. Errors for lines a newer change has superseded are dropped.
+function addOwnedLineErrors(
+  failure: CartActionFailure,
+  lineIds: string[],
+  ownedLineIds: Set<string>,
+  addError: AddError,
+): void {
+  const grouped = groupLineErrors(failure, lineIds);
+  for (const [lineId, group] of grouped.lines) {
+    if (lineIds.includes(lineId) && !ownedLineIds.has(lineId)) continue;
+    const lines = new Map([[lineId, group]]);
+    addError(
+      (current, timestampMs) =>
+        writeLineErrors(current, { lines, cart: createEmptyErrorGroup() }, timestampMs),
+      [lineKey(lineId)],
+    );
+  }
+  if (grouped.cart.userErrors.length === 0 && grouped.cart.warnings.length === 0) return;
+  addError(
+    (current, timestampMs) =>
+      writeLineErrors(current, { lines: new Map(), cart: grouped.cart }, timestampMs),
+    [...ownedLineIds].map(lineKey),
+  );
+}
+
 function hasProjectedErrors(result: CartActionFailure | undefined): boolean {
   return (result?.userErrors?.length ?? 0) > 0 || (result?.warnings?.length ?? 0) > 0;
 }
@@ -1119,6 +1179,38 @@ function transportAddToCart(
       ...(payload.eventDetail && { event: { detail: payload.eventDetail } }),
     },
   );
+}
+
+function projectLineQuantity(state: CartState, payload: ChangeLineQuantityPayload): CartState {
+  const previous = getLines(state.data);
+  if (!previous.some((line) => line.id === payload.lineId)) return state;
+  const lines =
+    payload.quantity === 0
+      ? previous.filter((line) => line.id !== payload.lineId)
+      : previous.map((line) =>
+          line.id === payload.lineId ? { ...line, quantity: payload.quantity } : line,
+        );
+  return { ...state, data: reconcileCartLines(state.data, lines) };
+}
+
+// A response can return a line under another ID (Standard Actions may add a `?cart=` suffix), so a
+// missing line only means removal for a removal. Otherwise keep it and revalidate.
+function settleLineQuantity(
+  state: CartState,
+  serverLines: CartLine[],
+  payload: ChangeLineQuantityPayload,
+  requestRevalidation: () => void,
+): CartState {
+  const previous = getLines(state.data);
+  const matching = serverLines.find((line) => line.id === payload.lineId);
+  if (!matching && payload.quantity > 0) {
+    requestRevalidation();
+    return state;
+  }
+  const lines = matching
+    ? previous.map((line) => (line.id === payload.lineId ? mergeServerLine(line, matching) : line))
+    : previous.filter((line) => line.id !== payload.lineId);
+  return { ...state, data: reconcileCartLines(state.data, lines) };
 }
 
 export const CART_TRANSACTION_TYPES = defineTransactionTypes({
@@ -1258,6 +1350,40 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       return { ...state, data: reconcileCartLines(state.data, lines) };
     },
     getSignalKeys: (_state, payload) => lineKey(payload.lineId),
+  },
+  // Created only from Standard Actions events, so the store never owns this transport. A newer
+  // change can supersede some of its lines; the rest still project and settle, and the overlap
+  // revalidates.
+  change_lines_quantity: {
+    payload: {} as ChangeLinesQuantityPayload,
+    transport: (payload, signal, updateCart) =>
+      updateCart(
+        { lines: payload.lines.map(({ lineId, quantity }) => ({ id: lineId, quantity })) },
+        { signal },
+      ),
+    projectPayload: (state, payload, ownsKey) =>
+      payload.lines
+        .filter(({ lineId }) => ownsKey(lineKey(lineId)))
+        .reduce(projectLineQuantity, state),
+    projectPromise: (state, result, payload, addError, { ownsKey, requestRevalidation }) => {
+      const owned = payload.lines.filter(({ lineId }) => ownsKey(lineKey(lineId)));
+      if (hasProjectedErrors(result)) {
+        addOwnedLineErrors(
+          result,
+          payload.lines.map(({ lineId }) => lineId),
+          new Set(owned.map(({ lineId }) => lineId)),
+          addError,
+        );
+      }
+      if (!result.cart) return state;
+
+      const serverLines = getLines(cartResponseFromStandardEvent(result.cart));
+      return owned.reduce(
+        (current, line) => settleLineQuantity(current, serverLines, line, requestRevalidation),
+        state,
+      );
+    },
+    getSignalKeys: (_state, payload) => payload.lines.map(({ lineId }) => lineKey(lineId)),
   },
   set_discount_codes: {
     payload: {} as SetDiscountCodesPayload,
@@ -1432,10 +1558,12 @@ function createPendingTransaction<TType extends TransactionType>(
     requiresRevalidation,
     owner,
     promise,
-    projectPayload: (current) => definition.projectPayload(current, payload),
-    projectPromise: (current, result, addError) =>
+    projectPayload: (current, ownsKey) => definition.projectPayload(current, payload, ownsKey),
+    projectPromise: (current, result, addError, ownsKey, requestRevalidation) =>
       definition.projectPromise(current, result, payload, addError, {
         mergeServerCart: !transaction.requiresRevalidation,
+        ownsKey,
+        requestRevalidation,
       }),
     trimAfter: (successful) =>
       trimPendingTransaction(
@@ -1546,19 +1674,25 @@ function fulfillTransaction(
   const transaction = store.transactions.find((candidate) => candidate.id === transactionId);
   if (!transaction || transaction.generation !== store.generation) return;
   store.observedPromises.delete(transaction.promise);
-  if (!ownsSignalKeys(store, transaction)) {
+  const ownedKeys = getOwnedSignalKeys(store, transaction);
+  if (ownedKeys.length === 0 && transaction.signalKeys.length > 0) {
     removeTransaction(store, transactionId);
     publishVisibleState(store);
     revalidateCartWhenIdle(store);
     return;
   }
 
-  store.settled = transaction.projectPromise(store.settled, result, (projector, keys) =>
-    addProjectedError(store, keys ?? transaction.errorKeys, projector),
+  store.settled = transaction.projectPromise(
+    store.settled,
+    result,
+    (projector, keys) => addProjectedError(store, keys ?? transaction.errorKeys, projector),
+    (key) => ownedKeys.includes(key),
+    () => requestCartRevalidation(store),
   );
   store.settled = addSnapshotIdentity(store.settled, result);
   if (
     result.cart &&
+    ownedKeys.length === transaction.signalKeys.length &&
     !transaction.requiresRevalidation &&
     transaction.sequence >= store.lastSnapshotSequence
   ) {
@@ -1580,19 +1714,25 @@ function rejectTransaction(store: CartStoreContext, transactionId: number, error
   const transaction = store.transactions.find((candidate) => candidate.id === transactionId);
   if (!transaction || transaction.generation !== store.generation) return;
   store.observedPromises.delete(transaction.promise);
-  const owned = ownsSignalKeys(store, transaction);
+  const ownedKeys = getOwnedSignalKeys(store, transaction);
+  const ownsAllKeys = ownedKeys.length === transaction.signalKeys.length;
   removeTransaction(store, transactionId);
   releaseSignalKeys(store, transaction);
 
-  if (owned) {
+  if (ownedKeys.length > 0 || ownsAllKeys) {
     const failure = extractCartActionFailure(error);
     if (failure) {
-      transaction.projectPromise(store.settled, rejectedResult(failure), (projector, keys) =>
-        addProjectedError(store, keys ?? transaction.errorKeys, projector),
+      transaction.projectPromise(
+        store.settled,
+        rejectedResult(failure),
+        (projector, keys) => addProjectedError(store, keys ?? transaction.errorKeys, projector),
+        (key) => ownedKeys.includes(key),
+        NOOP,
       );
     }
     if (!failure && !isAbortError(error)) {
-      addProjectedError(store, transaction.errorKeys, (state, timestampMs) =>
+      const errorKeys = ownsAllKeys ? transaction.errorKeys : ownedKeys;
+      addProjectedError(store, errorKeys, (state, timestampMs) =>
         writeNetworkError(state, error, timestampMs),
       );
     }
@@ -1654,10 +1794,13 @@ function markOverlappingTransactionForRevalidation(
   if (
     store.transactions.length === 0 &&
     !store.revalidation.active &&
-    store.activeMutationTransports.size === 0
+    store.activeMutationTransports.size === 0 &&
+    !store.activeCartLoad
   ) {
     return;
   }
+  // Publishing this transaction discards an in-flight load, so the revalidation stands in for it.
+  if (store.activeCartLoad) store.settled = { ...store.settled, loading: false };
   transaction.requiresRevalidation = true;
   for (const pending of store.transactions) pending.requiresRevalidation = true;
   requestCartRevalidation(store);
@@ -1925,12 +2068,26 @@ function handleLinesEvent(store: CartStoreContext, event: CartLinesUpdateEvent):
     );
     return;
   }
-  if (event.lines.length !== 1) return;
-  const line = event.lines[0] as { id: string; quantity: number };
+  const lines = (event.lines as Array<{ id: string; quantity: number }>).map((line) => ({
+    lineId: line.id,
+    quantity: line.quantity,
+  }));
+  if (lines.length === 0) return;
+  if (lines.length === 1) {
+    enqueueTransaction(
+      store,
+      "change_line_quantity",
+      lines[0],
+      event.promise,
+      undefined,
+      eventToken,
+    );
+    return;
+  }
   enqueueTransaction(
     store,
-    "change_line_quantity",
-    { lineId: line.id, quantity: line.quantity },
+    "change_lines_quantity",
+    { lines },
     event.promise,
     undefined,
     eventToken,
@@ -1982,6 +2139,10 @@ function connectCartStore(store: CartStoreContext, handlers: CartEventHandlers):
   document.addEventListener("shopify:cart:note-update", handlers.note);
   document.addEventListener("shopify:cart:attributes-update", handlers.attributes);
   void getShopifyStandardActions().catch(() => {});
+  if (store.revalidateOnConnect) {
+    store.revalidateOnConnect = false;
+    refreshCartInStore(store);
+  }
   return true;
 }
 
@@ -2001,7 +2162,6 @@ function clearPendingTransactions(store: CartStoreContext): void {
   store.transactions = [];
   store.projectedErrors = [];
   store.observedPromises.clear();
-  store.activeMutationTransports.clear();
   store.expectedEvents = [];
   store.reservation = null;
   store.identityTransportGate.active = null;
@@ -2013,6 +2173,11 @@ function clearPendingTransactions(store: CartStoreContext): void {
 }
 
 function destroyCartStore(store: CartStoreContext, handlers: CartEventHandlers): void {
+  // Teardown cancels a needed revalidation, which may be the only way back to the server cart
+  // (for example after a change discarded the initial load), so resume it on reconnect. Mutation
+  // transports stay observed: requests the store doesn't own keep running, and the resumed
+  // revalidation must wait for them.
+  store.revalidateOnConnect ||= store.revalidation.requested || store.revalidation.active !== null;
   clearPendingTransactions(store);
   if (typeof document !== "undefined" && store.cartSyncAttached) {
     document.removeEventListener("shopify:cart:lines-update", handlers.lines);
@@ -2123,6 +2288,7 @@ function resetCartStore(store: CartStoreContext): void {
     (hadActiveCartLoad || hasLocalCartData(store.observable.state));
 
   clearPendingTransactions(store);
+  store.activeMutationTransports.clear();
   invalidateActiveCartLoad(store);
   cancelCartRevalidation(store);
   store.lastSnapshotSequence = 0;
@@ -2237,6 +2403,7 @@ export function createCartStore<TData extends CartData = CartData>(
     mutationRevision: 0,
     identityTransportGate: { active: null, waiting: [] },
     cartSyncAttached: false,
+    revalidateOnConnect: false,
     reservation: null,
     lastSnapshotSequence: 0,
   };
