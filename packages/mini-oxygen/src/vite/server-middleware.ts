@@ -114,6 +114,9 @@ export function startMiniOxygenRuntime({
           __VITE_INVOKE_MODULE: wrappedViteInvoke,
           ...(wrappedHook && {__VITE_REQUEST_HOOK: wrappedHook}),
         } satisfies OnlyServices<ViteEnv>,
+        durableObjects: {
+          __VITE_RUNNER_OBJECT: 'ViteModuleRunnerObject',
+        },
         bindings: {
           ...env,
           __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,

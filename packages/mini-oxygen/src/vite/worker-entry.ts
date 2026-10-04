@@ -9,6 +9,7 @@
 import {
   EvaluatedModuleNode,
   ModuleRunner,
+  ssrDynamicImportKey,
   ssrModuleExportsKey,
   type ModuleRunnerContext,
 } from 'vite/module-runner';
@@ -18,6 +19,12 @@ import {withRequestHook} from '../worker/handler.js';
 
 export interface ViteEnv {
   __VITE_INVOKE_MODULE: {fetch: typeof fetch};
+  __VITE_RUNNER_OBJECT__: {
+    get(id: string): {
+      importModule(moduleId: string, callbackId: number): Promise<void>;
+      executeCallback(callbackId: number): Promise<void>;
+    };
+  };
   __VITE_RUNTIME_EXECUTE_URL: string;
   __VITE_WARMUP_PATHNAME: string;
   __VITE_REQUEST_HOOK?: {fetch: typeof fetch};
@@ -86,127 +93,191 @@ function createUserEnv(env: ViteEnv) {
  * across all the requests to workerd and it's stateful (module cache).
  */
 let runtime: ModuleRunner;
+let nextCallbackId = 0;
+const pendingCallbacks = new Map<number, () => Promise<unknown>>();
+const callbackResults = new Map<number, unknown>();
 
 /**
- * Initialize the Vite module runner the first time this function is called.
- * Server updates are then picked up on the next request after Vite invalidates
- * the SSR module graph, so this stays request-driven instead of using push HMR.
- *
- * Note: we can use the `env` object from the first request for subsequent
- * requests too, so there's no need to refresh the pointer.
+ * Fetch the app's entry module from the shared runner object. Server updates
+ * are picked up after Vite invalidates the SSR module graph, so this stays
+ * request-driven instead of using push HMR.
  *
  * @returns The app's entry module.
  */
 function fetchEntryModule(env: ViteEnv) {
-  if (!runtime) {
-    runtime = new ModuleRunner(
-      {
-        sourcemapInterceptor: 'prepareStackTrace',
-        transport: {
-          invoke: async (payload) => {
-            // Do not use WS here because the payload can exceed the limit
-            // of WS in workerd. Instead, use a service binding to forward
-            // runner RPC payloads back to Vite's built-in invoke handlers.
-            if (
-              payload.type === 'custom' &&
-              payload.event === 'vite:invoke' &&
-              isViteInvokePayload(payload.data)
-            ) {
-              // TODO: Remove this shim when Vite 6 support is dropped.
-              // workerd has no Node builtins; return empty list directly
-              // so Vite 6 servers (which have no getBuiltins handler) still work.
-              // Vite 7+ handles getBuiltins internally.
-              if (payload.data.name === 'getBuiltins') {
-                return Promise.resolve({result: []});
-              }
+  return importFromRunnerObject(env, env.__VITE_RUNTIME_EXECUTE_URL)
+    .then((module) => module as {default: {fetch: ExportedHandlerFetchHandler}})
+    .catch((error: Error) => {
+      let errorResponseBody = error.stack ?? error.message ?? 'Internal error';
+      const message = error.message ?? error.stack?.split('\n')[0];
 
-              return env.__VITE_INVOKE_MODULE
-                .fetch(
-                  new Request('http://mini-oxygen', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload),
-                  }),
-                )
-                .then((res) => res.json());
-            }
+      if (message && message.includes(env.__VITE_RUNTIME_EXECUTE_URL)) {
+        const missingEntryMessage = `No Oxygen worker entry was found. Use \`oxygen({ entry: "${env.__VITE_RUNTIME_EXECUTE_URL}" })\` in Vite or make sure the entry module exists.`;
+        errorResponseBody = `${missingEntryMessage}\n\n${errorResponseBody}`;
+      }
 
-            return Promise.resolve({
-              error: {message: `Error - invoke: ${JSON.stringify(payload)}`},
-            });
-          },
-        },
-        hmr: false,
-      },
-      {
-        // Adopted from https://github.com/cloudflare/workers-sdk/blob/main/packages/vite-plugin-cloudflare/src/runner-worker/module-runner.ts#L77-L91
-        runExternalModule(filepath: string): Promise<any> {
-          if (
-            filepath.includes('/node_modules') &&
-            !filepath.includes('/node_modules/.vite')
-          ) {
-            throw new Error(
-              `[Error] Trying to import non-prebundled module (only prebundled modules are allowed): ${filepath}` +
-                '\n\n(have you externalized the module via `resolve.external`?)',
-            );
-          }
+      return {
+        errorResponse: new globalThis.Response(errorResponseBody, {
+          status: 503,
+          statusText: 'executeEntrypoint error',
+        }),
+      };
+    });
+}
 
-          filepath = filepath.replace(/^file:\/\//, '');
-          return import(filepath);
-        },
+async function importFromRunnerObject(env: ViteEnv, moduleId: string) {
+  const callbackId = nextCallbackId++;
+  await env.__VITE_RUNNER_OBJECT__
+    .get('singleton')
+    .importModule(moduleId, callbackId);
 
-        async runInlinedModule(
-          context: ModuleRunnerContext,
-          code: string,
-          module: Readonly<EvaluatedModuleNode>,
-        ): Promise<any> {
-          if (!env.__VITE_UNSAFE_EVAL) {
-            throw new Error(`${O2_PREFIX} unsafeEval module is not set`);
-          }
+  const result = callbackResults.get(callbackId);
+  callbackResults.delete(callbackId);
+  return result;
+}
 
-          // We can't use `newAsyncFunction` here because it uses the `id`
-          // as the function name AND for sourcemaps. The `id` contains
-          // symbols like `@`, `/` or `.` to make the sourcemaps work, but
-          // these symbols are not allowed in function names. Therefore,
-          // use `eval` instead with an anonymous function:
-          const initModule = env.__VITE_UNSAFE_EVAL.eval(
-            // 'use strict' is implied in ESM so we enable it here. Also, we
-            // add an extra block scope (`{}`) to allow redeclaring variables
-            // with the same name as the parameters.
-            `'use strict';async (${Object.keys(context).join(
-              ',',
-            )})=>{{${code}\n}}`,
-            module.id,
-          );
+async function runInRunnerObject(
+  env: ViteEnv,
+  callback: () => Promise<unknown>,
+) {
+  const callbackId = nextCallbackId++;
+  pendingCallbacks.set(callbackId, callback);
 
-          await initModule(...Object.values(context));
+  try {
+    await env.__VITE_RUNNER_OBJECT__
+      .get('singleton')
+      .executeCallback(callbackId);
 
-          Object.freeze(context[ssrModuleExportsKey]);
-        },
-      },
-    );
+    return callbackResults.get(callbackId);
+  } finally {
+    pendingCallbacks.delete(callbackId);
+    callbackResults.delete(callbackId);
   }
+}
 
-  return (
-    runtime.import(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
-      default: {fetch: ExportedHandlerFetchHandler};
-    }>
-  ).catch((error: Error) => {
-    let errorResponseBody = error.stack ?? error.message ?? 'Internal error';
-    const message = error.message ?? error.stack?.split('\n')[0];
+/**
+ * Durable Object that owns Vite's module runner I/O context.
+ * Module information promises can be shared by concurrent requests only when
+ * their I/O is owned by the same workerd invocation context.
+ */
+export class ViteModuleRunnerObject {
+  constructor(
+    _state: DurableObjectState,
+    private env: ViteEnv,
+  ) {}
 
-    if (message && message.includes(env.__VITE_RUNTIME_EXECUTE_URL)) {
-      const missingEntryMessage = `No Oxygen worker entry was found. Use \`oxygen({ entry: "${env.__VITE_RUNTIME_EXECUTE_URL}" })\` in Vite or make sure the entry module exists.`;
-      errorResponseBody = `${missingEntryMessage}\n\n${errorResponseBody}`;
+  async importModule(moduleId: string, callbackId: number) {
+    if (!runtime) {
+      runtime = createModuleRunner(this.env);
     }
 
-    return {
-      errorResponse: new globalThis.Response(errorResponseBody, {
-        status: 503,
-        statusText: 'executeEntrypoint error',
-      }),
-    };
-  });
+    const module = await runtime.import(moduleId);
+    callbackResults.set(callbackId, module);
+  }
+
+  async executeCallback(callbackId: number) {
+    const callback = pendingCallbacks.get(callbackId);
+    pendingCallbacks.delete(callbackId);
+
+    if (!callback) {
+      throw new Error(`No pending callback with id ${callbackId}`);
+    }
+
+    callbackResults.set(callbackId, await callback());
+  }
+}
+
+function createModuleRunner(env: ViteEnv) {
+  return new ModuleRunner(
+    {
+      sourcemapInterceptor: 'prepareStackTrace',
+      transport: {
+        invoke: async (payload) => {
+          // Do not use WS here because the payload can exceed the limit
+          // of WS in workerd. Instead, use a service binding to forward
+          // runner RPC payloads back to Vite's built-in invoke handlers.
+          if (
+            payload.type === 'custom' &&
+            payload.event === 'vite:invoke' &&
+            isViteInvokePayload(payload.data)
+          ) {
+            // TODO: Remove this shim when Vite 6 support is dropped.
+            // workerd has no Node builtins; return empty list directly
+            // so Vite 6 servers (which have no getBuiltins handler) still work.
+            // Vite 7+ handles getBuiltins internally.
+            if (payload.data.name === 'getBuiltins') {
+              return Promise.resolve({result: []});
+            }
+
+            return env.__VITE_INVOKE_MODULE
+              .fetch(
+                new Request('http://mini-oxygen', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify(payload),
+                }),
+              )
+              .then((res) => res.json());
+          }
+
+          return Promise.resolve({
+            error: {message: `Error - invoke: ${JSON.stringify(payload)}`},
+          });
+        },
+      },
+      hmr: false,
+    },
+    {
+      // Adopted from https://github.com/cloudflare/workers-sdk/blob/main/packages/vite-plugin-cloudflare/src/runner-worker/module-runner.ts#L77-L91
+      runExternalModule(filepath: string): Promise<any> {
+        if (
+          filepath.includes('/node_modules') &&
+          !filepath.includes('/node_modules/.vite')
+        ) {
+          throw new Error(
+            `[Error] Trying to import non-prebundled module (only prebundled modules are allowed): ${filepath}` +
+              '\n\n(have you externalized the module via `resolve.external`?)',
+          );
+        }
+
+        filepath = filepath.replace(/^file:\/\//, '');
+        return import(filepath);
+      },
+
+      async runInlinedModule(
+        context: ModuleRunnerContext,
+        code: string,
+        module: Readonly<EvaluatedModuleNode>,
+      ): Promise<any> {
+        const originalDynamicImport = context[ssrDynamicImportKey];
+        context[ssrDynamicImportKey] = (dependency) =>
+          runInRunnerObject(env, () => originalDynamicImport(dependency));
+
+        if (!env.__VITE_UNSAFE_EVAL) {
+          throw new Error(`${O2_PREFIX} unsafeEval module is not set`);
+        }
+
+        // We can't use `newAsyncFunction` here because it uses the `id`
+        // as the function name AND for sourcemaps. The `id` contains
+        // symbols like `@`, `/` or `.` to make the sourcemaps work, but
+        // these symbols are not allowed in function names. Therefore,
+        // use `eval` instead with an anonymous function:
+        const initModule = env.__VITE_UNSAFE_EVAL.eval(
+          // 'use strict' is implied in ESM so we enable it here. Also, we
+          // add an extra block scope (`{}`) to allow redeclaring variables
+          // with the same name as the parameters.
+          `'use strict';async (${Object.keys(context).join(
+            ',',
+          )})=>{{${code}\n}}`,
+          module.id,
+        );
+
+        await initModule(...Object.values(context));
+
+        Object.freeze(context[ssrModuleExportsKey]);
+      },
+    },
+  );
 }
 
 function isViteInvokePayload(payload: unknown): payload is ViteInvokePayload {
