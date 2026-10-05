@@ -61,6 +61,66 @@ test.describe("without JavaScript", () => {
   });
 });
 
+test.describe("variant control helpers", () => {
+  test("reads variant control accessible names from the browser", async ({ page }) => {
+    const href = "http://127.0.0.1/products/shirt?Size=Small";
+    const cases = [
+      {
+        expected: "Size Small",
+        html: `<span id="size-small">Size Small</span><a href="${href}" aria-labelledby="size-small" aria-label="Wrong">S</a>`,
+        role: "link",
+      },
+      {
+        expected: "Small",
+        html: `<a href="${href}"><span aria-hidden="true">✓</span> Small</a>`,
+        role: "link",
+      },
+      {
+        expected: "Blue swatch",
+        html: `<a href="${href}"><img alt="Blue swatch" src="data:,"></a>`,
+        role: "link",
+      },
+      {
+        expected: `L'été "Grande" \\ size: 10½`,
+        html: `<a href="${href}" aria-label="L'été &quot;Grande&quot; \\ size: 10½">G</a>`,
+        role: "link",
+      },
+      {
+        expected: "Red: dark",
+        html: `<button aria-pressed="true"><span aria-hidden="true">•</span> Red: dark</button>`,
+        role: "button",
+      },
+    ] as const;
+    await page.setContent(`<ul>${cases.map((item) => `<li>${item.html}</li>`).join("")}</ul>`);
+
+    for (const [index, item] of cases.entries()) {
+      const control = page.getByRole("listitem").nth(index).getByRole(item.role);
+      await expect(control).toHaveAccessibleName(item.expected);
+      expect(await accessibleName(control)).toBe(item.expected);
+    }
+    await expect(pressedButtons(page, "Red: dark")).toHaveCount(1);
+  });
+
+  test("matches current variant links by accessible name and href", async ({ page }) => {
+    const target = "http://127.0.0.1/products/shirt?Size=Small&Color=Blue";
+    const variantLinks = (peerCurrent: string) => `
+      <a href="${target}" aria-current="true"><span aria-hidden="true">✓</span> Small</a>
+      <a href="http://127.0.0.1/products/shirt?Color=Blue&Size=Small" aria-current="${peerCurrent}"><img alt="Small" src="data:,"></a>
+      <a href="${target}" aria-label="Small fit">Small</a>
+      <a href="http://127.0.0.1/products/shirt?Size=Small&Color=Red">Small</a>`;
+
+    await page.setContent(variantLinks("true"));
+    const name = await accessibleName(page.getByRole("link").first());
+    expect(name).toBe("Small");
+    await expectCurrentVariantLinks(page, name, target);
+
+    await page.setContent(variantLinks("false"));
+    expect(await currentVariantLinksState(page, name, target)).toBe(
+      "aria-current values: true, false",
+    );
+  });
+});
+
 async function findServerVariantLink(
   page: Page,
   products: readonly ProductVariantProduct[],
@@ -82,7 +142,7 @@ async function findServerVariantLink(
 
     return {
       link,
-      linkName: normalizeWhitespace(await controlText(link)),
+      linkName: await accessibleName(link),
       productTitle: product.title,
       targetUrl: new URL(href, page.url()).href,
     };
@@ -117,7 +177,7 @@ async function selectVariantForProduct(
   const control = await findVariantControl(page, product.optionNames);
   if (control === null) return null;
 
-  const name = normalizeWhitespace(await controlText(control));
+  const name = await accessibleName(control);
   const beforeUrl = page.url();
   const rawHref = await control.getAttribute("href");
   const href = rawHref === null ? null : new URL(rawHref, beforeUrl).href;
@@ -198,27 +258,30 @@ async function expectCurrentVariantLinks(
   name: string,
   targetUrl: string,
 ): Promise<void> {
-  const expectedUrl = comparableUrl(targetUrl);
-  const links = page.getByRole("link", { name, exact: true });
+  await expect.poll(() => currentVariantLinksState(page, name, targetUrl)).toBe("all current");
+}
 
-  await expect
-    .poll(async () => {
-      const pageUrl = page.url();
-      const states = await links.evaluateAll((elements) =>
-        elements.map((element) => ({
-          current: element.getAttribute("aria-current"),
-          href: element.getAttribute("href"),
-        })),
-      );
-      const matches = states.filter(
-        (state) =>
-          state.href !== null && comparableUrl(new URL(state.href, pageUrl).href) === expectedUrl,
-      );
-      if (matches.length === 0) return `no "${name}" link to ${targetUrl}`;
-      if (matches.every((state) => state.current === "true")) return "all current";
-      return `aria-current values: ${matches.map((state) => String(state.current)).join(", ")}`;
-    })
-    .toBe("all current");
+/** Returns "all current", or a description of why the matching links are not all current. */
+async function currentVariantLinksState(
+  page: Page,
+  name: string,
+  targetUrl: string,
+): Promise<string> {
+  const expectedUrl = comparableUrl(targetUrl);
+  const pageUrl = page.url();
+  const states = await page.getByRole("link", { name, exact: true }).evaluateAll((elements) =>
+    elements.map((element) => ({
+      current: element.getAttribute("aria-current"),
+      href: element.getAttribute("href"),
+    })),
+  );
+  const matches = states.filter(
+    (state) =>
+      state.href !== null && comparableUrl(new URL(state.href, pageUrl).href) === expectedUrl,
+  );
+  if (matches.length === 0) return `no "${name}" link to ${targetUrl}`;
+  if (matches.every((state) => state.current === "true")) return "all current";
+  return `aria-current values: ${matches.map((state) => String(state.current)).join(", ")}`;
 }
 
 function pressedButtons(page: Page, name: string): Locator {
@@ -235,20 +298,36 @@ async function findVariantControl(
   return findUnselectedVariantButton(page);
 }
 
-async function controlText(control: Locator): Promise<string> {
-  const ariaLabel = await control.getAttribute("aria-label");
-  if (ariaLabel !== null && ariaLabel.trim() !== "") return ariaLabel;
+/**
+ * Reads the browser-computed accessible name from the root line of Playwright's
+ * public ARIA snapshot, for example `- link "Small":` or `- 'button "Red: dark" [pressed]'`.
+ */
+async function accessibleName(control: Locator): Promise<string> {
+  const [rootLine = ""] = (await control.ariaSnapshot()).split("\n", 1);
+  const name = decodeAriaSnapshotRootName(rootLine);
+  if (name === null) {
+    throw new Error(
+      `Could not read an accessible name from the ARIA snapshot root ${JSON.stringify(rootLine)}. Give the variant control a non-empty accessible name of at most 900 characters.`,
+    );
+  }
 
-  return control.evaluate((element) => {
-    if (element instanceof HTMLInputElement)
-      return element.labels?.[0]?.textContent ?? element.value;
-
-    return element.textContent ?? "";
-  });
+  return name;
 }
 
-function normalizeWhitespace(value: string): string {
-  return value.replace(/\s+/g, " ").trim();
+function decodeAriaSnapshotRootName(rootLine: string): string | null {
+  // When YAML needs it, Playwright wraps the whole key in single quotes and doubles inner ones.
+  const quoted = /^- '((?:[^']|'')*)'(?::.*)?$/.exec(rootLine);
+  const key = quoted
+    ? quoted[1].replaceAll("''", "'")
+    : /^- (.*?)(?::(?: .*)?)?$/.exec(rootLine)?.[1];
+  if (key === undefined) return null;
+
+  // The name is a JSON string, or raw when it starts and ends with "/". Flags such as [pressed] follow.
+  const match = /^\w+ (?:("(?:[^"\\]|\\.)*")|(\/(?:.*\/)?))(?: \[[^\]]+\])*$/.exec(key);
+  if (match === null) return null;
+
+  const json = match[1];
+  return json === undefined ? match[2] : (JSON.parse(json) as string);
 }
 
 async function findUnselectedVariantButton(page: Page): Promise<Locator | null> {

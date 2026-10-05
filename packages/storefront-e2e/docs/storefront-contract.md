@@ -54,12 +54,12 @@ The suite opens product pages with a non-option query param (`storefront_e2e_ref
 
 After a JavaScript-enabled click, the selected variant must be represented in the URL, and the clicked value must show its selected state:
 
-- For a link, the URL must match the link's href (query param order can differ). Every link with the clicked name and href must have `aria-current="true"`, and there must be at least one.
-- For a button, one more button with the clicked name must have `aria-pressed="true"`. Buttons have no href, so this check cannot tell repeated labels in different option groups apart.
+- For a link, the URL must match the link's href (query param order can differ). Every link with the clicked accessible name and href must have `aria-current="true"`, and there must be at least one.
+- For a button, one more button with the clicked accessible name must have `aria-pressed="true"`. Buttons have no href, so this check cannot tell repeated labels in different option groups apart.
 
 Loading the selected URL directly must render the product heading and the same selected state.
 
-The suite also opens product pages with JavaScript disabled. The product heading must render, and at least one probed product must expose a same-product variant link that is not `aria-current`. A native click on that link must load its href, keep the non-option query param, and the server-rendered page must mark every link with the same name and href `aria-current="true"`.
+The suite also opens product pages with JavaScript disabled. The product heading must render, and at least one probed product must expose a same-product variant link that is not `aria-current`. A native click on that link must load its href, keep the non-option query param, and the server-rendered page must mark every link with the same accessible name and href `aria-current="true"`.
 
 The suite does not check how many navigations or requests a selection makes, and it does not check that a hydrated click avoids a full document load.
 
