@@ -38,7 +38,7 @@ export type { ValidProductSelectionResult } from "../core/product";
 /**
  * Options for {@link useProductForm}.
  *
- * @public
+ * @publicDocs
  */
 export interface UseProductFormOptions<TProduct extends ProductInput> {
   onSelect?: (result: ValidProductSelectionResult<TProduct>) => void;
@@ -47,7 +47,7 @@ export interface UseProductFormOptions<TProduct extends ProductInput> {
 /**
  * Return value of {@link useProductForm}.
  *
- * @public
+ * @publicDocs
  */
 export interface UseProductFormResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
@@ -70,7 +70,7 @@ export interface UseProductFormResult<TProduct extends ProductInput> {
 /**
  * Return value of the `useProduct` composable from {@link createProductComponents}.
  *
- * @public
+ * @publicDocs
  */
 export interface UseProductResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
@@ -182,7 +182,7 @@ function useProductFormImpl<TProduct extends ProductInput>(
  * lifecycle (hydration, destruction) yourself, or use
  * `createProductComponents` for a provider-based approach.
  *
- * @public
+ * @publicDocs
  */
 export function useProductForm<TProduct extends ProductInput>(
   store: ProductFormStore<TProduct>,
@@ -206,7 +206,7 @@ export function useProductForm<TProduct extends ProductInput>(
  *
  * Requires a `<CartProvider>` ancestor.
  *
- * @public
+ * @publicDocs
  */
 export function createProductComponents<TProduct extends ProductInput>(): {
   ProductProvider: ReturnType<typeof defineComponent>;

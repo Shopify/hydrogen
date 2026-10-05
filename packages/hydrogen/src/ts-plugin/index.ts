@@ -11,7 +11,7 @@ const SCHEMA_DIRECTORY = resolve(__dirname, "..");
  * TypeScript language service plugin that configures gql.tada with Hydrogen's bundled Storefront and
  * Customer Account API schemas.
  *
- * @public
+ * @publicDocs
  */
 const init: ts.server.PluginModuleFactory = (modules) => {
   const plugin = gqlTadaPlugin(modules);

@@ -46,7 +46,7 @@ type PredictiveSearchItemsForQuery<TQuery extends AnyStorefrontQueryString> = No
  *   ReturnType<typeof queryPredictiveSearch<typeof queries.predictiveSearch>>
  * >;
  * ```
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchData<
   TItems = PredictiveSearchItemsForQuery<typeof predictiveSearchQueries.predictiveSearch>,
@@ -73,7 +73,7 @@ export type PredictiveSearchDataForOptions<TOptions extends CreatePredictiveSear
  * The generic parameter accepts a custom query document type and defaults to
  * the built-in predictive search query.
  *
- * @public
+ * @publicDocs
  */
 export type QueryPredictiveSearchOptions<
   TQuery extends AnyStorefrontQueryString = typeof predictiveSearchQueries.predictiveSearch,
@@ -156,7 +156,7 @@ export function getEmptyPredictiveSearchResult(term = ""): PredictiveSearchData 
  * @throws {Error} When the Storefront API returns GraphQL errors.
  * @throws {Error} When the response contains no predictive search data.
  * @throws Errors from `storefrontClient.graphql` (e.g. network failures or an `AbortError` when `signal` aborts).
- * @public
+ * @publicDocs
  */
 export async function queryPredictiveSearch<
   const TQuery extends AnyStorefrontQueryString = typeof predictiveSearchQueries.predictiveSearch,

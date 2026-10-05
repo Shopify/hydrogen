@@ -3,7 +3,7 @@ import { PREDICTIVE_SEARCH_QUERY_PARAM } from "./constants";
 /**
  * Props returned by {@link PredictiveSearchFormRegister} for the query input.
  *
- * @public
+ * @publicDocs
  */
 export interface PredictiveSearchQueryInputAttributes {
   name: "q";
@@ -16,7 +16,7 @@ export interface PredictiveSearchQueryInputAttributes {
 /**
  * Props returned by {@link getPredictiveSearchFormAttributes} for the search form.
  *
- * @public
+ * @publicDocs
  */
 export interface PredictiveSearchFormAttributes {
   action: string;
@@ -31,7 +31,7 @@ export interface PredictiveSearchFormAttributes {
  *
  * Building block for the framework bindings. Use it directly on a framework without one.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchFormRegister = {
   (field: "query"): PredictiveSearchQueryInputAttributes;
@@ -42,7 +42,7 @@ export type PredictiveSearchFormRegister = {
  *
  * Building block for the framework bindings. Use it directly on a framework without one.
  *
- * @public
+ * @publicDocs
  */
 export function createPredictiveSearchFormRegister(): PredictiveSearchFormRegister {
   return registerPredictiveSearchFormField;
@@ -67,7 +67,7 @@ function registerPredictiveSearchFormField(field: string): PredictiveSearchQuery
  *
  * Building block for the framework bindings. Use it directly on a framework without one.
  *
- * @public
+ * @publicDocs
  */
 export function getPredictiveSearchFormAttributes(
   action: string = "/search",
@@ -84,7 +84,7 @@ export function getPredictiveSearchFormAttributes(
  *
  * Building block for the framework bindings. Use it directly on a framework without one.
  *
- * @public
+ * @publicDocs
  */
 export function readPredictiveSearchFormTerm(formData: FormData): string {
   const value = formData.get(PREDICTIVE_SEARCH_QUERY_PARAM);

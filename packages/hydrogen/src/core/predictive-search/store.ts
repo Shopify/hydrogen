@@ -17,14 +17,14 @@ const DEFAULT_PREDICTIVE_SEARCH_MIN_TERM_LENGTH = 1;
 /**
  * Lifecycle state for the predictive search client store.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchStatus = "idle" | "loading" | "success" | "error";
 
 /**
  * Current predictive search snapshot exposed to UI bindings.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchState<TData extends PredictiveSearchData = PredictiveSearchData> = {
   /** Latest trimmed search term known to the store. */
@@ -40,7 +40,7 @@ export type PredictiveSearchState<TData extends PredictiveSearchData = Predictiv
 /**
  * Options for creating a framework-neutral predictive search client store.
  *
- * @public
+ * @publicDocs
  */
 export type CreatePredictiveSearchStoreOptions = {
   /**
@@ -71,7 +71,7 @@ export type CreatePredictiveSearchStoreOptions = {
 /**
  * Framework-neutral predictive search store used by UI bindings.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchStore<TData extends PredictiveSearchData = PredictiveSearchData> = {
   /** Reactivates store updates after destroy(). */
@@ -91,7 +91,7 @@ export type PredictiveSearchStore<TData extends PredictiveSearchData = Predictiv
 /**
  * Search methods exposed by the predictive search store.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchActions = Pick<PredictiveSearchStore, "search" | "clear">;
 
@@ -129,7 +129,7 @@ type StoreSearchOptions = Pick<
  *
  * Building block for the framework bindings. Use it directly on a framework without one.
  *
- * @public
+ * @publicDocs
  */
 export function createPredictiveSearchStore<
   TData extends PredictiveSearchData = PredictiveSearchData,

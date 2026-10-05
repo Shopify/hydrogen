@@ -10,7 +10,7 @@ import {
   type ShopifyScriptTagsOptions,
 } from "../core/shopify-scripts";
 
-/** @public */
+/** @publicDocs */
 export type ShopifyScriptsProps = ShopifyScriptTagsOptions & {
   navigate?: ShopifyRoutesOptions["navigate"];
   routes?: ShopifyRoutesOptions["routes"];
@@ -28,7 +28,7 @@ declare module "react" {
 /**
  * Renders Shopify's script tags during SSR and runs their browser initialization once after mount.
  *
- * @public
+ * @publicDocs
  */
 export function ShopifyScripts(options: ShopifyScriptsProps) {
   const { consent, navigate, routes, webMcp = true, ...scriptOptions } = options;

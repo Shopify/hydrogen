@@ -11,7 +11,7 @@ import {
 /**
  * Props accepted by the `ShopPayButton` component.
  *
- * @public
+ * @publicDocs
  */
 export type ShopPayButtonProps = ShopPayButtonOptions;
 
@@ -22,7 +22,7 @@ defineShopPayButton();
  * Renders the Shop Pay button custom element. On the server it includes declarative shadow DOM
  * markup so the button renders before scripts load.
  *
- * @public
+ * @publicDocs
  */
 export function ShopPayButton(options: ShopPayButtonProps): ReactElement {
   return createElement(SHOP_PAY_BUTTON_TAG_NAME, {

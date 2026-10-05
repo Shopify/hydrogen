@@ -43,7 +43,7 @@ export type { PredictiveSearchActions };
 /**
  * Options for the form props builder returned by {@link usePredictiveSearchForm}.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchFormPropsOptions = {
   /** When `true`, prevents the native form submission and triggers a client-side search instead. */
@@ -56,7 +56,7 @@ export type PredictiveSearchFormPropsOptions = {
 /**
  * Options for the query input props builder returned by {@link usePredictiveSearchForm}'s `register` method.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchQueryInputPropsOptions = {
   /** Called on input with the input event and the current input value. Call `event.preventDefault()` to skip the automatic search trigger. */
@@ -67,7 +67,7 @@ export type PredictiveSearchQueryInputPropsOptions = {
 /**
  * Return type of {@link usePredictiveSearchForm}, providing methods to build a progressively-enhanced search form.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchFormResult = {
   /** Generates form element attributes including the search action and submit handler. */
@@ -86,7 +86,7 @@ export type PredictiveSearchFormResult = {
  * Recreates the store when configuration props change. Connects the store
  * on mount and destroys it on unmount.
  *
- * @public
+ * @publicDocs
  */
 export const PredictiveSearchProvider = defineComponent({
   name: "PredictiveSearchProvider",
@@ -188,7 +188,7 @@ function useRequiredContext(composableName: string): PredictiveSearchContextValu
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
  * @throws {Error} When called outside a PredictiveSearchProvider.
- * @public
+ * @publicDocs
  */
 export function usePredictiveSearch<
   TData extends PredictiveSearchData = PredictiveSearchData,
@@ -245,7 +245,7 @@ export function usePredictiveSearch<
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
  * @throws {Error} When called outside a PredictiveSearchProvider.
- * @public
+ * @publicDocs
  */
 export function usePredictiveSearchActions(): PredictiveSearchActions {
   const { storeRef } = useRequiredContext("usePredictiveSearchActions");
@@ -270,7 +270,7 @@ export function usePredictiveSearchActions(): PredictiveSearchActions {
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
  * @throws {Error} When called outside a PredictiveSearchProvider.
- * @public
+ * @publicDocs
  */
 export function usePredictiveSearchForm(): PredictiveSearchFormResult {
   const { storeRef, searchActionRef } = useRequiredContext("usePredictiveSearchForm");

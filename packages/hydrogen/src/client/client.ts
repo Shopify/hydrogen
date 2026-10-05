@@ -102,7 +102,7 @@ export function withStorefrontClientCache<TOptions extends object>(
  * client only in trusted server code where the token cannot leak to browsers.
  *
  * @see {@link https://shopify.dev/docs/api/storefront#authentication | Storefront API authentication}
- * @public
+ * @publicDocs
  */
 export function createStorefrontClient<
   const Type extends ClientType,

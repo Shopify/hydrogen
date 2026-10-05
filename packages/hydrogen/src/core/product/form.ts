@@ -3,7 +3,7 @@ import type { ProductVariantInput } from "./state";
 /**
  * Props returned by {@link ProductFormRegister} for the `merchandiseId` input.
  *
- * @public
+ * @publicDocs
  */
 export interface ProductMerchandiseIdProps {
   name: "merchandiseId";
@@ -14,7 +14,7 @@ export interface ProductMerchandiseIdProps {
 /**
  * Props returned by {@link ProductFormRegister} for a quantity input.
  *
- * @public
+ * @publicDocs
  */
 export interface ProductQuantityProps {
   name: "quantity";
@@ -24,7 +24,7 @@ export interface ProductQuantityProps {
 /**
  * Props returned by {@link ProductFormRegister} for an uncontrolled quantity input.
  *
- * @public
+ * @publicDocs
  */
 export interface ProductQuantityDefaultProps {
   name: "quantity";
@@ -34,7 +34,7 @@ export interface ProductQuantityDefaultProps {
 /**
  * Props returned by {@link ProductFormRegister} for a variant option value control.
  *
- * @public
+ * @publicDocs
  */
 export interface ProductOptionValueProps {
   name: string;
@@ -46,7 +46,7 @@ export interface ProductOptionValueProps {
 /**
  * Props returned by {@link ProductFormRegister} for the add-to-cart submit button.
  *
- * @public
+ * @publicDocs
  */
 export interface ProductAddToCartProps {
   name: "add-to-cart";
@@ -58,7 +58,7 @@ type AttributeValueName = `attributes.${string}`;
 /**
  * Props returned by {@link ProductFormRegister} for a line-item attribute input.
  *
- * @public
+ * @publicDocs
  */
 export interface ProductAttributeValueProps {
   name: AttributeValueName;
@@ -68,7 +68,7 @@ export interface ProductAttributeValueProps {
 /**
  * Props returned by {@link ProductFormRegister} for an uncontrolled line-item attribute input.
  *
- * @public
+ * @publicDocs
  */
 export interface ProductAttributeDefaultValueProps {
   name: AttributeValueName;
@@ -85,7 +85,7 @@ export interface ProductAttributeDefaultValueProps {
  * `type`, `checked`, `disabled`, and `aria-pressed` belong to the caller — use
  * the state available on `options` (e.g. `value.selected`, `value.available`).
  *
- * @public
+ * @publicDocs
  */
 export type ProductFormRegister = {
   (field: "merchandiseId", opts: {}): ProductMerchandiseIdProps;
@@ -104,7 +104,7 @@ export type ProductFormRegister = {
  * Creates a {@link ProductFormRegister} function bound to the current variant
  * state and `selectOption` dispatcher.
  *
- * @public
+ * @publicDocs
  */
 export function createProductFormRegister(
   selectedVariant: ProductVariantInput | null,

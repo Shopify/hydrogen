@@ -13,7 +13,7 @@ interface StorefrontApiErrorOptions {
  * In development, `queryText` and `variables` are attached when available.
  * GraphQL errors (including `THROTTLED`) are not thrown; read them from `result.errors`.
  *
- * @public
+ * @publicDocs
  */
 export class StorefrontApiError extends Error {
   /** Shopify `x-request-id` header, when available. Useful for support requests. */
@@ -58,7 +58,7 @@ export class StorefrontApiError extends Error {
  * Subclass of {@link StorefrontApiError}, so catching `StorefrontApiError` also handles timeouts.
  * Aborts from the request context or a per-call `signal` are rethrown as-is, not wrapped.
  *
- * @public
+ * @publicDocs
  */
 export class StorefrontTimeoutError extends StorefrontApiError {
   /** The timeout threshold that was exceeded, in milliseconds. */

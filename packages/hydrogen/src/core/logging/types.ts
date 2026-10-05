@@ -9,7 +9,7 @@
 /**
  * Log severities, ordered. `silent` disables all output.
  *
- * @public
+ * @publicDocs
  */
 export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal" | "silent";
 
@@ -18,7 +18,7 @@ export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal" |
  * subsystem (`cart`, `analytics`, `shop-pay`, ...). `error` carries the caught
  * value when the entry reports a failure.
  *
- * @public
+ * @publicDocs
  */
 export type LogContext = {
   scope?: string;
@@ -36,7 +36,7 @@ type LogFn = (message: string, context?: LogContext) => void;
  * custom sinks control their own formatting. The built-in console logger
  * formats entries as `[hydrogen:<level>:<scope>] <message>`.
  *
- * @public
+ * @publicDocs
  */
 export interface HydrogenLogger {
   trace: LogFn;

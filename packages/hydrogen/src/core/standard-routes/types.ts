@@ -6,7 +6,7 @@ type StandardRouteTemplateWithParam<Param extends string> =
 
 type StandardRouteTemplate = `/${string}`;
 
-/** @public */
+/** @publicDocs */
 export type ShopifyRouteTemplates = {
   /**
    * Redirects Shopify article routes, for example

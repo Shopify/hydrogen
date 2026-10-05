@@ -5,7 +5,7 @@
  * literals are type-checked and narrow the payload the same way; the constants add
  * autocomplete and a single place to rename.
  *
- * @public
+ * @publicDocs
  */
 export const AnalyticsEvent = {
   PAGE_VIEWED: "page_viewed" as const,
@@ -19,5 +19,5 @@ export const AnalyticsEvent = {
   PRODUCT_REMOVED_FROM_CART: "product_removed_from_cart" as const,
 };
 
-/** @public */
+/** @publicDocs */
 export type AnalyticsEventName = (typeof AnalyticsEvent)[keyof typeof AnalyticsEvent];

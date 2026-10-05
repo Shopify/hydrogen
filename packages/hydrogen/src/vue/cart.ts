@@ -112,6 +112,7 @@ function useOptionalCartStore(): CartStore | null {
  *   <App />
  * </CartProvider>
  * ```
+ * @publicDocs
  */
 export const CartProvider = defineComponent({
   name: "CartProvider",
@@ -158,6 +159,7 @@ export const CartProvider = defineComponent({
  * const isPending = useCart((s) => s.pending.lines.has(lineId));
  * </script>
  * ```
+ * @publicDocs
  */
 export function useCart(): Readonly<ShallowRef<CartState>>;
 export function useCart<TData extends CartData = CartData, S = unknown>(
@@ -190,7 +192,7 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
  * }
  * </script>
  * ```
- * @public
+ * @publicDocs
  */
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
@@ -209,7 +211,7 @@ export function useCartActions(): CartActions {
  * useCartAnalytics();
  * </script>
  * ```
- * @public
+ * @publicDocs
  */
 export function useCartAnalytics(): void {
   const store = useCartStore("useCartAnalytics");
@@ -282,6 +284,7 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
  *   </form>
  * </template>
  * ```
+ * @publicDocs
  */
 export function useCartForm(): {
   formProps: (opts?: {
@@ -342,7 +345,7 @@ export function useCartForm(): {
  *   useCartForm,
  * } = createCartComponents<typeof cartServerHandlers>();
  * ```
- * @public
+ * @publicDocs
  */
 export function createCartComponents<THandlers>(): TypedCartComponents<
   CartDataFromHandlers<THandlers>

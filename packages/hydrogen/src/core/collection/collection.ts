@@ -15,7 +15,7 @@ import {
 /**
  * Snapshot from the framework loader for a single collection fetch.
  *
- * @public
+ * @publicDocs
  */
 export type CollectionData = {
   /** URL-safe collection slug (e.g. `"shoes"`). */
@@ -48,7 +48,7 @@ export type CollectionData = {
  * // ...framework fetches...
  * store.settle(); // status → "idle"
  * ```
- * @public
+ * @publicDocs
  */
 export type CollectionStore = {
   /** Returns the current snapshot of collection browse state. */
@@ -145,7 +145,7 @@ export type CollectionStore = {
 /**
  * Mutation methods exposed by the collection store.
  *
- * @public
+ * @publicDocs
  */
 export type CollectionActions = Pick<
   CollectionStore,
@@ -161,7 +161,7 @@ export type CollectionActions = Pick<
 /**
  * Options for creating a new {@link CollectionStore}.
  *
- * @public
+ * @publicDocs
  */
 export type CreateCollectionStoreOptions = {
   /** Collection metadata from the framework loader. */
@@ -201,7 +201,7 @@ type CollectionStoreContext = {
  *
  * store.subscribe((state) => renderFilters(state.filters));
  * ```
- * @public
+ * @publicDocs
  */
 export function createCollectionStore(options: CreateCollectionStoreOptions): CollectionStore {
   const initialState = buildInitialState(options);

@@ -4,14 +4,14 @@ import { getCartAttributeFormEntries } from "./form";
 /**
  * A key-value pair attached to the cart or an individual cart line.
  *
- * @public
+ * @publicDocs
  */
 export type CartAttributeInput = { key: string; value: string };
 
 /**
  * Input for adding a line to the cart.
  *
- * @public
+ * @publicDocs
  */
 export type CartLineAddInput = {
   /** Storefront API GID of the product variant to add. */
@@ -25,7 +25,7 @@ export type CartLineAddInput = {
 /**
  * Input for updating an existing cart line. Setting `quantity` to `0` removes the line.
  *
- * @public
+ * @publicDocs
  */
 export type CartLineUpdateInput = {
   /** The `CartLine.id` of the line to update. */
@@ -50,7 +50,7 @@ export type CartLineUpdateInput = {
  * - `"attributes-update"` — set cart-level attributes (cartAttributesUpdate)
  * - `"note-update"` — set the cart note (cartNoteUpdate)
  *
- * @public
+ * @publicDocs
  */
 export type CartAction =
   | { intent: "add"; lines: CartLineAddInput[] }
@@ -100,7 +100,7 @@ class CartActionError extends Error {
  *   // ...
  * }
  * ```
- * @public
+ * @publicDocs
  */
 export async function parseCartRequest(request: Request): Promise<ParsedCartRequest> {
   const contentType = request.headers.get("content-type") ?? "";

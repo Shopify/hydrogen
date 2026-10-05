@@ -5,7 +5,7 @@ import { collectionSearchEqual, mergeCollectionParams, normalizeCollectionSearch
  * Adapter-supplied hooks that let the reconciler read framework state and
  * push navigation side-effects without depending on any specific framework.
  *
- * @public
+ * @publicDocs
  */
 export type ReconcilerCallbacks = {
   /** Returns the current collection store instance. */
@@ -20,7 +20,7 @@ export type ReconcilerCallbacks = {
  * State machine that keeps the URL, server data, and `CollectionStore` in
  * sync during browse-change chains. Created by `createCollectionReconciler`.
  *
- * @public
+ * @publicDocs
  */
 export type CollectionReconciler = {
   /**
@@ -45,7 +45,7 @@ export type CollectionReconciler = {
  * Framework adapters delegate to this so the reconciliation logic
  * lives in one place.
  *
- * @public
+ * @publicDocs
  */
 export function createCollectionReconciler(
   callbacks: ReconcilerCallbacks,

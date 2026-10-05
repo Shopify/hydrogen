@@ -15,7 +15,7 @@ type Connection<T> = {
  * Hydrogen queries typically use `nodes`, but queries written with the `edges`
  * pattern are supported too.
  *
- * @public
+ * @publicDocs
  */
 export function flattenConnection<T>(connection?: Connection<T> | null): T[] {
   if (!connection) {

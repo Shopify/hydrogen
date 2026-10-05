@@ -475,7 +475,7 @@ export type InferVariablesForSchema<T extends string, Schema extends SchemaLike>
  * a component prop type. Takes a raw query source literal: for `gql()` documents use
  * `StorefrontApi.ResultOf`, since `InferResult<typeof doc>` resolves to `never`.
  *
- * @public
+ * @publicDocs
  */
 export type InferResult<T extends string> = InferResultForSchema<T, StorefrontSchema>;
 
@@ -486,7 +486,7 @@ export type InferResult<T extends string> = InferResultForSchema<T, StorefrontSc
  * a loader param type. Takes a raw query source literal: for `gql()` documents use
  * `StorefrontApi.VariablesOf`, since `InferVariables<typeof doc>` resolves to `never`.
  *
- * @public
+ * @publicDocs
  */
 export type InferVariables<T extends string> = InferVariablesForSchema<T, StorefrontSchema>;
 

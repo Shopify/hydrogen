@@ -86,7 +86,7 @@ type TypedCartComponents<TData extends CartData> = {
  *   useCartForm,
  * } = createCartComponents<typeof cartServerHandlers>();
  * ```
- * @public
+ * @publicDocs
  */
 export function createCartComponents<THandlers>(): TypedCartComponents<
   CartDataFromHandlers<THandlers>
@@ -158,6 +158,7 @@ function useOptionalCartStore(): CartStore | null {
  *   <App />
  * </CartProvider>
  * ```
+ * @publicDocs
  */
 export function CartProvider({
   initialData,
@@ -201,6 +202,7 @@ export function CartProvider({
  *   (a, b) => a.amount === b.amount,
  * );
  * ```
+ * @publicDocs
  */
 export function useCart<TData extends CartData = CartData, S = unknown>(
   selector: (state: CartState<TData>) => S,
@@ -226,6 +228,7 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
  *   refresh(); // re-fetch the cart
  * }
  * ```
+ * @publicDocs
  */
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
@@ -247,7 +250,7 @@ export function useCartActions(): CartActions {
  *   return <Layout />;
  * }
  * ```
- * @public
+ * @publicDocs
  */
 export function useCartAnalytics(): void {
   const store = useCartStore("useCartAnalytics");
@@ -329,6 +332,7 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
  *   );
  * }
  * ```
+ * @publicDocs
  */
 export function useCartForm() {
   const store = useCartStore("useCartForm");

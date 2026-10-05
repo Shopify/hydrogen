@@ -11,7 +11,7 @@
  * failures where no response arrived. `retryAfter` is populated only on
  * non-OK responses.
  *
- * @public
+ * @publicDocs
  */
 export class CustomerAccountApiError extends Error {
   /** HTTP status code from the API response. Present whenever an HTTP response was received (including parse failures), absent on network failures where no response arrived. */
@@ -40,7 +40,7 @@ export class CustomerAccountApiError extends Error {
  * missing. A token the server rejects (e.g. expired or revoked) produces
  * the base {@link CustomerAccountApiError} with `status: 401` instead.
  *
- * @public
+ * @publicDocs
  */
 export class CustomerAccountAuthenticationError extends CustomerAccountApiError {
   constructor(message = "Customer Account API access token is required") {
@@ -55,7 +55,7 @@ export class CustomerAccountAuthenticationError extends CustomerAccountApiError 
  * {@link CustomerAccountApiError} instead.) Extends
  * {@link CustomerAccountApiError}.
  *
- * @public
+ * @publicDocs
  */
 export class CustomerAccountTimeoutError extends CustomerAccountApiError {
   /** The timeout threshold (in milliseconds) that was exceeded. */
@@ -83,7 +83,7 @@ export class CustomerAccountTimeoutError extends CustomerAccountApiError {
  * `"audience_mismatch"`, `"expired_id_token"`, `"invalid_id_token"`,
  * `"missing_pending_login"`.
  *
- * @public
+ * @publicDocs
  */
 export class CustomerAccountOAuthError extends Error {
   /** Machine-readable error identifier for programmatic handling. */

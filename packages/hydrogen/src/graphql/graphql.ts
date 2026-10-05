@@ -21,7 +21,7 @@ type StorefrontQueryMetadata<Source extends string = string> = {
  * which claims to be an AST). Implements `DocumentDecoration` so
  * `ResultOf<>` and `VariablesOf<>` work on it.
  *
- * @public
+ * @publicDocs
  */
 export type StorefrontQueryString<
   Result = any,
@@ -36,7 +36,7 @@ export type StorefrontQueryString<
 /**
  * Any `gql()`-branded string, regardless of inferred Result/Variables. Used in constraints that accept any Storefront document.
  *
- * @public
+ * @publicDocs
  */
 export type AnyStorefrontQueryString = string & StorefrontQueryMetadata;
 
@@ -128,7 +128,7 @@ type StorefrontGql = {
  *   console.log(result.data.product?.title);
  * }
  * ```
- * @public
+ * @publicDocs
  */
 // oxlint-disable-next-line typescript-eslint/consistent-type-assertions -- gql.tada adds phantom helper properties to the function type that are not used at runtime.
 export const gql = ((source: string, fragments?: Array<string>) => {

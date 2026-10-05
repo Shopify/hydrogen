@@ -5,7 +5,7 @@
  * must be the first submit button in the form for `attachQuantityInput`
  * to auto-submit on quantity changes.
  *
- * @public
+ * @publicDocs
  */
 export interface SetButtonAttributes {
   name: "intent";
@@ -21,7 +21,7 @@ export interface SetButtonAttributes {
  * `type: "text"` with `inputMode: "numeric"` for mobile number keyboards
  * without the native spinner arrows.
  *
- * @public
+ * @publicDocs
  */
 export interface QuantityInputAttributes {
   name: "quantity";
@@ -63,7 +63,7 @@ type AttributeValueName = `attributes.${string}`;
  * ```
  *
  * @throws `TypeError` when called with `"attributeValue"` and no non-empty `key`.
- * @public
+ * @publicDocs
  */
 export type CartFormRegister = {
   (field: "lineId", opts: { value: string }): { name: "lineId"; value: string; readOnly: true };
@@ -180,7 +180,7 @@ function createFieldAttributes(name: string, opts?: RegisterOptions) {
  * const addAttrs = register("add");
  * // → { name: "intent", value: "add" }
  * ```
- * @public
+ * @publicDocs
  */
 export function createCartFormRegister(): CartFormRegister {
   return ((nameOrAction: string, opts?: RegisterOptions) => {

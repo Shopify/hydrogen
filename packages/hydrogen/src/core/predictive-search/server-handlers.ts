@@ -93,7 +93,7 @@ type PredictiveSearchServerHandlers<
  * override via query parameters. These are defaults, not restrictions: any
  * client can override them.
  *
- * @public
+ * @publicDocs
  */
 export type CreatePredictiveSearchServerHandlersOptions = CreatePredictiveSearchQueriesOptions & {
   /** Route path the handler is registered at. Defaults to `"/api/predictive-search"`. */
@@ -128,7 +128,7 @@ export type CreatePredictiveSearchServerHandlersOptions = CreatePredictiveSearch
  * as a route handler. Successful results include the Storefront API response
  * headers, excluding `content-encoding`, `content-length`, and `server-timing`.
  *
- * @public
+ * @publicDocs
  */
 export function createPredictiveSearchServerHandlers(): PredictiveSearchServerHandlers;
 export function createPredictiveSearchServerHandlers<

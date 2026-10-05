@@ -11,7 +11,7 @@ export interface Money {
 /**
  * Cart-level cost breakdown returned by the Storefront API.
  *
- * @public
+ * @publicDocs
  */
 export interface CartCost {
   /** The amount, before taxes and cart-level discounts, for the customer to pay. */
@@ -22,7 +22,7 @@ export interface CartCost {
   checkoutChargeAmount: Money;
 }
 
-/** @public */
+/** @publicDocs */
 export interface CartLineCost {
   /** Line total after all applicable discounts. */
   totalAmount: Money;
@@ -37,7 +37,7 @@ export interface CartLineCost {
 /**
  * Product variant information attached to a {@link CartLine}.
  *
- * @public
+ * @publicDocs
  */
 export interface CartLineMerchandise {
   /** Storefront API GID of the product variant. */
@@ -70,7 +70,7 @@ export interface CartLineMerchandise {
  * custom {@link Attribute | attributes}, a selling plan allocation (subscriptions),
  * or nested {@link CartLine.lineComponents | line components} (bundles).
  *
- * @public
+ * @publicDocs
  */
 export interface CartLine {
   /** Storefront API GID of this cart line — used as the key in {@link CartPending.lines}. */
@@ -89,7 +89,7 @@ export interface CartLine {
   lineComponents?: CartLine[];
 }
 
-/** @public */
+/** @publicDocs */
 export interface CartLineConnection {
   nodes: CartLine[];
   [key: string]: unknown;
@@ -98,7 +98,7 @@ export interface CartLineConnection {
 /**
  * A discount code applied to the cart.
  *
- * @public
+ * @publicDocs
  */
 export interface DiscountCode {
   code: string;
@@ -109,7 +109,7 @@ export interface DiscountCode {
 /**
  * A validation error returned by a Storefront API cart mutation.
  *
- * @public
+ * @publicDocs
  */
 export interface CartUserError {
   /** Machine-readable error code, or `null` for unclassified errors. */
@@ -122,7 +122,7 @@ export interface CartUserError {
 /**
  * A non-blocking warning returned by a Storefront API cart mutation.
  *
- * @public
+ * @publicDocs
  */
 export interface CartWarning {
   code: CartWarningCode;
@@ -132,7 +132,7 @@ export interface CartWarning {
 /**
  * Errors and warnings from a single cart mutation response.
  *
- * @public
+ * @publicDocs
  */
 export interface CartErrorGroup {
   userErrors: CartUserError[];
@@ -142,7 +142,7 @@ export interface CartErrorGroup {
 /**
  * A network-level error encountered during a cart operation (e.g. non-2xx response, timeout). Aborted requests are not recorded.
  *
- * @public
+ * @publicDocs
  */
 export interface CartNetworkEntry {
   message: string;
@@ -153,7 +153,7 @@ export interface CartNetworkEntry {
 /**
  * A key-value pair attached to the cart or to an individual {@link CartLine}.
  *
- * @public
+ * @publicDocs
  */
 export interface Attribute {
   key: string;
@@ -182,7 +182,7 @@ export interface Attribute {
  *   dimTotalDisplay();
  * }
  * ```
- * @public
+ * @publicDocs
  */
 export interface CartPending {
   /** Line IDs with in-flight add, quantity, or remove mutations. New lines use their `optimistic:` ID until the server confirms. */
@@ -206,7 +206,7 @@ export interface CartPending {
  * `network` collects transport-level failures (timeouts, 5xx) separately from
  * Storefront API user errors.
  *
- * @public
+ * @publicDocs
  */
 export interface CartErrorState {
   /** Cross-cutting cart errors not attributable to a specific resource. */
@@ -235,7 +235,7 @@ export interface CartErrorState {
  * and totals come exclusively from here, never from client-side computation.
  * The index signature allows custom cart query fields to pass through.
  *
- * @public
+ * @publicDocs
  */
 export interface CartData {
   /** Storefront API Cart GID, or `null` when no cart exists yet. */
@@ -283,7 +283,7 @@ export interface CartData {
  *   // Network errors occurred — show retry prompt
  * }
  * ```
- * @public
+ * @publicDocs
  */
 export interface CartState<TData extends CartData = CartData> {
   /** The latest server-confirmed cart data, with optimistic projections applied on top. */
@@ -313,7 +313,7 @@ export function createEmptyPending(): CartPending {
 /**
  * Creates an empty {@link CartErrorGroup} — no user errors, no warnings.
  *
- * @public
+ * @publicDocs
  */
 export function createEmptyErrorGroup(): CartErrorGroup {
   return { userErrors: [], warnings: [] };
@@ -322,7 +322,7 @@ export function createEmptyErrorGroup(): CartErrorGroup {
 /**
  * Creates an empty {@link CartErrorState} — all timestamps at `0`, all buckets empty.
  *
- * @public
+ * @publicDocs
  */
 export function createEmptyCartErrors(): CartErrorState {
   return {
@@ -346,7 +346,7 @@ export function createEmptyCartErrors(): CartErrorState {
  * Frozen {@link CartData} representing an empty cart — `id: null`, zero quantities,
  * zero-amount costs. Used as the initial/fallback value before the first server response.
  *
- * @public
+ * @publicDocs
  */
 export const EMPTY_CART_DATA: CartData = Object.freeze({
   id: null,
@@ -390,6 +390,6 @@ export function createEmptyCartState({ loading = true }: { loading?: boolean } =
 /**
  * Shared empty {@link CartState} — backed by {@link EMPTY_CART_DATA}, defaults to `loading: true`.
  *
- * @public
+ * @publicDocs
  */
 export const EMPTY_CART_STATE: CartState = createEmptyCartState();

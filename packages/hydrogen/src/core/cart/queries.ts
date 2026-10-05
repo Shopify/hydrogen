@@ -659,6 +659,6 @@ export function makeCartQueries(options?: CreateCartQueriesOptions) {
 /**
  * Default cart GraphQL queries and mutations.
  *
- * @public
+ * @publicDocs
  */
 export const cartQueries = makeCartQueries();

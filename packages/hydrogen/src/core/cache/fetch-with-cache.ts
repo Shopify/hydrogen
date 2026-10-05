@@ -86,7 +86,7 @@ class ServerResponseError extends Error {
  * Creates a `fetch`-like function whose responses are cached under a caching strategy. Pass an
  * existing `runWithCache` to share its cache, or a cache to create one.
  *
- * @public
+ * @publicDocs
  */
 export function createFetchWithCache({
   fetch: customFetch,

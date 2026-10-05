@@ -36,7 +36,7 @@ export function getCartIdFromCookie(input: CartCookieSource): string | null {
  *
  * headers.append("Set-Cookie", cookie);
  * ```
- * @public
+ * @publicDocs
  */
 export function createCartCookie(cartId: string): string {
   const token = cartId.startsWith(CART_GID_PREFIX) ? cartId.slice(CART_GID_PREFIX.length) : cartId;

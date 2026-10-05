@@ -10,7 +10,7 @@ const CAN_USE_DOM = typeof document !== "undefined";
  *
  * Building block for the framework bindings. Use it directly on a framework without one.
  *
- * @public
+ * @publicDocs
  */
 export const SHOP_PAY_BUTTON_TAG_NAME = "hydrogen-shop-pay-button";
 export const SHOP_PAY_BUTTON_CLASS_NAME = "shop-pay-button";
@@ -120,7 +120,7 @@ type ShopPayVariantWithQuantity = {
 type ShopPayVariant = string | ShopPayVariantWithQuantity;
 type ShopPayVariants = readonly string[] | readonly ShopPayVariantWithQuantity[];
 
-/** @public */
+/** @publicDocs */
 export type ShopPayButtonOptions = ShopPayButtonBaseOptions & {
   /**
    * Variants to check out immediately via a Shopify cart permalink. Omit this
@@ -134,7 +134,7 @@ export type ShopPayButtonOptions = ShopPayButtonBaseOptions & {
  * button is disabled. Variant mode produces a cart permalink; otherwise the
  * current cart checks out.
  *
- * @public
+ * @publicDocs
  */
 export function getShopPayButtonUrl(options: ShopPayButtonOptions): string | null {
   if (options.disabled) return null;
@@ -163,7 +163,7 @@ export function getShopPayButtonUrl(options: ShopPayButtonOptions): string | nul
  * JavaScript. Use it from server templates or frameworks without a Hydrogen
  * binding.
  *
- * @public
+ * @publicDocs
  */
 export function renderShopPayButton(options: ShopPayButtonOptions): string {
   defineShopPayButton();
@@ -176,7 +176,7 @@ export function renderShopPayButton(options: ShopPayButtonOptions): string {
  * Creates the Shop Pay button as a detached DOM element. The returned element
  * carries the button styles with it.
  *
- * @public
+ * @publicDocs
  */
 export function createShopPayButton(options: ShopPayButtonOptions): HTMLElement {
   defineShopPayButton();
@@ -208,7 +208,7 @@ export function initializeShopPayButtonElement(
  *
  * Building block for the framework bindings. Use it directly on a framework without one.
  *
- * @public
+ * @publicDocs
  */
 export function defineShopPayButton(): void {
   if (

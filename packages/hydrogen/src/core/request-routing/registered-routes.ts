@@ -33,7 +33,7 @@ const VALID_REDIRECT_STATUSES = [
  * Defines a handler for one pathname and HTTP method. Pass handler groups to `handleShopifyRoutes`
  * through its `handlers` option.
  *
- * @public
+ * @publicDocs
  */
 export function createShopifyRouteHandler<
   const TPathname extends string,

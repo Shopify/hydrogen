@@ -15,7 +15,7 @@ export type ShopAnalyticsChannel = "hydrogen" | "headless";
  * the `"headless"` variant omits it, because analytics for the Headless channel
  * isn't attributed to a specific storefront.
  *
- * @public
+ * @publicDocs
  */
 export type ShopAnalytics =
   | (ShopAnalyticsBase & {
@@ -32,7 +32,7 @@ export type ShopAnalytics =
 
 // --- Consent ---
 
-/** @public */
+/** @publicDocs */
 export type ConsentPreferences = {
   analytics: boolean;
   marketing: boolean;
@@ -48,7 +48,7 @@ export type ConsentPreferences = {
  * allowed events. Rejection keeps delivery blocked. The integration stays active
  * across component unmounts.
  *
- * @public
+ * @publicDocs
  */
 export type ConsentSetup = () => Promise<void>;
 
@@ -68,7 +68,7 @@ export type ConsentSetup = () => Promise<void>;
  * In every mode, destinations only receive events while analytics processing is
  * allowed.
  *
- * @public
+ * @publicDocs
  */
 export type ConsentConfig =
   | { mode?: "no-banner"; setup?: never }
@@ -84,7 +84,7 @@ export type ConsentConfig =
  * depending on the cart store's `CartData` type, so the analytics bus stays
  * framework-agnostic.
  *
- * @public
+ * @publicDocs
  */
 export type AnalyticsCartLine = {
   id: string;
@@ -116,7 +116,7 @@ export type AnalyticsCartLine = {
  * Accepts both `nodes` and `edges` connection shapes so the analytics layer
  * works regardless of which Storefront API query pattern the storefront uses.
  *
- * @public
+ * @publicDocs
  */
 export type AnalyticsCart = {
   id: string;
@@ -141,7 +141,7 @@ export type AnalyticsCart = {
 /**
  * Index signature that allows arbitrary extra keys on a payload.
  *
- * @public
+ * @publicDocs
  */
 export type OtherData = {
   [key: string]: unknown;
@@ -159,7 +159,7 @@ type UrlPayload = {
 /**
  * Describes a single product for `product_viewed` payloads.
  *
- * @public
+ * @publicDocs
  */
 export type ProductPayload = {
   id: string;
@@ -205,37 +205,37 @@ type CartLinePayload = {
 /**
  * Payload for `page_viewed` events.
  *
- * @public
+ * @publicDocs
  */
 export type PageViewPayload = UrlPayload & BasePayload;
 /**
  * Payload for `product_viewed` events.
  *
- * @public
+ * @publicDocs
  */
 export type ProductViewPayload = ProductsPayload & UrlPayload & BasePayload;
 /**
  * Payload for `collection_viewed` events.
  *
- * @public
+ * @publicDocs
  */
 export type CollectionViewPayload = CollectionPayload & UrlPayload & BasePayload;
 /**
  * Payload for `cart_viewed` events.
  *
- * @public
+ * @publicDocs
  */
 export type CartViewPayload = CartPayload & UrlPayload & BasePayload;
 /**
  * Payload for `search_viewed` events.
  *
- * @public
+ * @publicDocs
  */
 export type SearchViewPayload = SearchPayload & UrlPayload & BasePayload;
 /**
  * Payload for `cart_updated` events. `prevCart` is `null` when there was no earlier snapshot.
  *
- * @public
+ * @publicDocs
  */
 export type CartUpdatePayload = CartChangePayload & BasePayload & OtherData;
 /**
@@ -243,7 +243,7 @@ export type CartUpdatePayload = CartChangePayload & BasePayload & OtherData;
  * New lines have only `currentLine`, removed lines have only `prevLine`, and
  * quantity changes have both.
  *
- * @public
+ * @publicDocs
  */
 export type CartLineUpdatePayload = CartLinePayload & CartChangePayload & BasePayload & OtherData;
 
@@ -255,7 +255,7 @@ export type CartLineUpdatePayload = CartLinePayload & CartChangePayload & BasePa
  * TypeScript uses this to infer the correct payload when you call
  * `publish()` or a destination's `subscribe()` with a specific event name.
  *
- * @public
+ * @publicDocs
  */
 export interface AnalyticsEventMap {
   page_viewed: PageViewPayload;
@@ -271,7 +271,7 @@ export interface AnalyticsEventMap {
 /**
  * Resolves the payload type for a supported analytics event name.
  *
- * @public
+ * @publicDocs
  */
 export type PayloadFor<E extends AnalyticsEventName> = AnalyticsEventMap[E];
 
@@ -284,7 +284,7 @@ export type PublishPayloadArgs<E extends AnalyticsEventName> =
  * Analytics bus configuration, built by `ShopifyScripts` from its `shop`,
  * `consent`, and `analytics` options.
  *
- * @public
+ * @publicDocs
  */
 export type StorefrontAnalyticsConfig = {
   /** Shop identity and channel for analytics payloads. */
@@ -302,7 +302,7 @@ export type StorefrontAnalyticsConfig = {
  * Visitor identifiers from Shopify's Customer Privacy API, used to correlate
  * analytics events. See `getTrackingValues` for when they are empty.
  *
- * @public
+ * @publicDocs
  */
 export type AnalyticsTrackingValues = {
   /** Long-lived browser identifier; persists across visits. */
@@ -314,7 +314,7 @@ export type AnalyticsTrackingValues = {
 /**
  * Context provided to destination callbacks alongside each event payload.
  *
- * @public
+ * @publicDocs
  */
 export type StorefrontAnalyticsDestinationEventContext = {
   /**
@@ -327,7 +327,7 @@ export type StorefrontAnalyticsDestinationEventContext = {
 /**
  * Context passed into a destination's `setup()` function.
  *
- * @public
+ * @publicDocs
  */
 export type StorefrontAnalyticsDestinationSetupContext = {
   /** Subscribe to an analytics event. Returns an unsubscribe function. */
@@ -348,7 +348,7 @@ export type StorefrontAnalyticsDestinationSetupContext = {
  * removed via the function returned by `addDestination()`. The bus itself lives
  * for the page's lifetime.
  *
- * @public
+ * @publicDocs
  */
 export type StorefrontAnalyticsDestination = {
   /** Unique name for this destination — duplicates are rejected with a warning. */
@@ -372,7 +372,7 @@ export type StorefrontAnalyticsDestination = {
  * `publish()`. Consent-gated tracking integrations register through
  * `addDestination()` and receive buffered events once consent is granted.
  *
- * @public
+ * @publicDocs
  */
 export type StorefrontAnalytics = {
   /**

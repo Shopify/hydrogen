@@ -30,7 +30,7 @@ const SHOPIFY_ROUTE_INTERCEPTORS = [
  * framework routing. Matched responses already include request-context
  * response headers.
  *
- * @public
+ * @publicDocs
  */
 export const handleShopifyRoutes: HydrogenRouteHandler = (options) => {
   if (options.requestContext !== options.storefrontClient.requestContext) {

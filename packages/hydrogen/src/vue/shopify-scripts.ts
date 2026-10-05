@@ -9,7 +9,7 @@ import {
   type ShopifyRoutesOptions,
 } from "../core/shopify-scripts/index";
 
-/** @public */
+/** @publicDocs */
 export type ShopifyScriptsProps = ShopifyScriptTagsOptions & {
   navigate?: ShopifyRoutesOptions["navigate"];
   routes?: ShopifyRoutesOptions["routes"];
@@ -34,7 +34,7 @@ const accountProp: PropType<ShopifyScriptTagsOptions["account"]> = Boolean;
  * Vue component that renders Shopify's script tags during SSR and runs their browser initialization
  * once after mount.
  *
- * @public
+ * @publicDocs
  */
 export const ShopifyScripts = defineComponent({
   name: "ShopifyScripts",

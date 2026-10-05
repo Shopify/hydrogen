@@ -1,4 +1,4 @@
 export const STOREFRONT_API_VERSION = "2026-10";
-/** @public */
+/** @publicDocs */
 export const CUSTOMER_ACCOUNT_API_VERSION = "2026-10";
 export const DEFAULT_TIMEOUT_IN_MS = 30_000;

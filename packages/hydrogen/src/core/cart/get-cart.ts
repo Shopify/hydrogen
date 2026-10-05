@@ -14,7 +14,7 @@ type MergeCartData<TCart> = Omit<CartData, keyof TCart> & TCart;
  * `cart` field from the query's result type and merges it with the base
  * {@link CartData} interface, so the returned data is fully typed to your query.
  *
- * @public
+ * @publicDocs
  */
 export type CartDataFromQuery<TQuery extends AnyStorefrontQueryString> =
   TQuery extends StorefrontQueryString<infer Result, infer _Variables, string>
@@ -26,7 +26,7 @@ export type CartDataFromQuery<TQuery extends AnyStorefrontQueryString> =
 /**
  * Result of a {@link getCart} call — the cart data (or `null`), any errors, and response headers.
  *
- * @public
+ * @publicDocs
  */
 export type CartResult<TCart extends CartData = CartData> = {
   /** The cart, or `null` when no cart exists or the query failed. */
@@ -68,7 +68,7 @@ type CartIdSource = Request | Pick<ShopifyRequestContext, "cookie" | "url">;
  *   const { cart } = await getCart(cartId, storefront);
  * }
  * ```
- * @public
+ * @publicDocs
  */
 export function getCartId(input: CartIdSource): string | null {
   if (input.url) {
@@ -96,7 +96,7 @@ export function getCartId(input: CartIdSource): string | null {
  * // With a custom query
  * const { cart } = await getCart(cartId, storefront, CUSTOM_CART_QUERY);
  * ```
- * @public
+ * @publicDocs
  */
 export async function getCart<TQuery extends AnyStorefrontQueryString = typeof cartQueries.cart>(
   cartId: string | null,

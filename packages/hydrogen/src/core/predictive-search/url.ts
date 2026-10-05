@@ -8,38 +8,38 @@ type PredictiveSearchItems = PredictiveSearchData["items"];
 /**
  * A product returned by predictive search.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchProductItem = PredictiveSearchItems["products"][number];
 /**
  * A collection returned by predictive search.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchCollectionItem = PredictiveSearchItems["collections"][number];
 /**
  * A page returned by predictive search.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchPageItem = PredictiveSearchItems["pages"][number];
 /**
  * An article returned by predictive search. Includes a nested `blog.handle` used for URL generation via {@link getPredictiveSearchItemUrl}.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchArticleItem = PredictiveSearchItems["articles"][number];
 /**
  * A search query suggestion returned by predictive search. Uses `text` as the search term when generating its URL via {@link getPredictiveSearchItemUrl}.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchQueryItem = PredictiveSearchItems["queries"][number];
 
 /**
  * Union of product, collection, page, and article items. Excludes query suggestions.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchResourceItem =
   | PredictiveSearchProductItem
@@ -50,7 +50,7 @@ export type PredictiveSearchResourceItem =
 /**
  * Any item returned by predictive search, including query suggestions.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchItem = PredictiveSearchResourceItem | PredictiveSearchQueryItem;
 
@@ -61,7 +61,7 @@ export type PredictiveSearchItem = PredictiveSearchResourceItem | PredictiveSear
  * Required for resource items because their URLs depend on route templates
  * and the current search term.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchItemUrlOptions = {
   /** Optional path prefix prepended to the generated route (e.g., a locale prefix). */
@@ -79,7 +79,7 @@ export type PredictiveSearchItemUrlOptions = {
  * Optional because query suggestions use their own `text` as the search
  * term and default to the standard search route.
  *
- * @public
+ * @publicDocs
  */
 export type PredictiveSearchQueryItemUrlOptions = {
   /** Optional path prefix prepended to the search route (e.g., a locale prefix). Ignored when `searchPath` is set. */
@@ -118,7 +118,7 @@ type SearchResultUrlOptions = {
  * Always appends the item's `trackingParameters` when present.
  *
  * @throws {Error} When a resource item is passed without `routes` and `term` in options.
- * @public
+ * @publicDocs
  */
 export function getPredictiveSearchItemUrl(
   item: PredictiveSearchQueryItem,
@@ -148,7 +148,7 @@ export function getPredictiveSearchItemUrl(
  * are appended. Returns a relative URL unless the base
  * URL is absolute.
  *
- * @public
+ * @publicDocs
  */
 export function getSearchResultUrl({
   baseUrl,

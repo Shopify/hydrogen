@@ -30,7 +30,7 @@ import type {
 /**
  * Cart and line-item errors surfaced by a {@link ProductFormStore}.
  *
- * @public
+ * @publicDocs
  */
 export interface ProductFormErrors {
   userErrors: CartUserError[];
@@ -41,7 +41,7 @@ export interface ProductFormErrors {
 /**
  * Live state snapshot emitted by a {@link ProductFormStore}.
  *
- * @public
+ * @publicDocs
  */
 export interface ProductFormStoreState<
   TVariant extends ProductVariantInput = ProductVariantInput,
@@ -57,7 +57,7 @@ export interface ProductFormStoreState<
 /**
  * The reactive options array from a {@link ProductFormStoreState}, typed to a specific product.
  *
- * @public
+ * @publicDocs
  */
 export type ProductFormOptions<TProduct extends ProductInput = ProductInput> =
   ProductFormStoreState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>["options"];
@@ -69,7 +69,7 @@ export type ProductFormOptions<TProduct extends ProductInput = ProductInput> =
  * - `unresolved` — the selection is valid but not yet complete.
  * - `invalid` — the option name or value does not exist on the product.
  *
- * @public
+ * @publicDocs
  */
 export type VariantSelectionResult<TVariant extends ProductVariantInput = ProductVariantInput> =
   | {
@@ -92,7 +92,7 @@ export type VariantSelectionResult<TVariant extends ProductVariantInput = Produc
 /**
  * A selection result that is not invalid — either resolved or unresolved.
  *
- * @public
+ * @publicDocs
  */
 export type ValidProductSelectionResult<TProduct extends ProductInput = ProductInput> = Exclude<
   VariantSelectionResult<ProductVariantFrom<TProduct>>,
@@ -102,7 +102,7 @@ export type ValidProductSelectionResult<TProduct extends ProductInput = ProductI
 /**
  * Options for {@link createProductFormStore}.
  *
- * @public
+ * @publicDocs
  */
 export type CreateProductFormStoreOptions = {
   /** Fallback selection used when the product has no `selectedOrFirstAvailableVariant`. */
@@ -112,7 +112,7 @@ export type CreateProductFormStoreOptions = {
 /**
  * Manages variant selection + cart integration for a product form.
  *
- * @public
+ * @publicDocs
  */
 export interface ProductFormStore<
   TProduct extends ProductInput = ProductInput,
@@ -145,7 +145,7 @@ export interface ProductFormStore<
 /**
  * Returns the selected variant, or `null` when the selection is partial or the variant wasn't part of the query result.
  *
- * @public
+ * @publicDocs
  */
 export function getSelectedVariant<TVariant extends ProductVariantInput>(
   options: VariantOptionState<TVariant, ProductOptionValueInput>[],
@@ -156,7 +156,7 @@ export function getSelectedVariant<TVariant extends ProductVariantInput>(
 /**
  * Guards whether the current selection can be added to cart — a variant must be resolved and available, and the product must not require a selling plan.
  *
- * @public
+ * @publicDocs
  */
 export function canAddToCart<TProduct extends ProductInput>(
   product: TProduct,
@@ -173,7 +173,7 @@ export function canAddToCart<TProduct extends ProductInput>(
  * cart lines — this returns the first match. Future attribute-based matching
  * will narrow to the exact line.
  *
- * @public
+ * @publicDocs
  */
 export function findCartLineByMerchandiseId(
   lines: CartLine[],
@@ -222,7 +222,7 @@ type ProductFormStoreContext<TProduct extends ProductInput> = {
  *
  * store.selectOption("Color", "Red");
  * ```
- * @public
+ * @publicDocs
  */
 export function createProductFormStore<TProduct extends ProductInput>(
   product: TProduct,

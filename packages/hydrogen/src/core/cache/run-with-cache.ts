@@ -12,7 +12,7 @@ type MaybePromise<T> = T | Promise<T>;
 
 export type WaitUntil = (promise: Promise<unknown>) => void;
 
-/** @public */
+/** @publicDocs */
 export type CacheInstance = WebCacheLike | KeyValueCacheLike;
 
 export type CreateRunWithCacheOptions = {
@@ -70,7 +70,7 @@ export class StaleFallbackDisabledError extends Error {}
  * Creates a `runWithCache` function bound to a cache. It runs an async operation under a caching
  * strategy and reports the resulting cache status.
  *
- * @public
+ * @publicDocs
  */
 export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptions): RunWithCache {
   const store = createNormalizedCacheStore(cache);

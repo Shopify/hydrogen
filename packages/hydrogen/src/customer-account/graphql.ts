@@ -23,7 +23,7 @@ const VARIABLE_DEFINITION_RE = /\$([_A-Za-z][_0-9A-Za-z]*)\s*:/g;
  * with a `source` property to `CustomerAccountClient.graphql()` will throw
  * a `TypeError` at runtime.
  *
- * @public
+ * @publicDocs
  */
 export type CustomerAccountDocument<
   Result = unknown,
@@ -37,14 +37,14 @@ export type CustomerAccountDocument<
 /**
  * Widened alias for {@link CustomerAccountDocument}. Use as a constraint when accepting any Customer Account document.
  *
- * @public
+ * @publicDocs
  */
 export type AnyCustomerAccountDocument = CustomerAccountDocument<unknown, never, string>;
 
 /**
  * Extracts the source string literal type from a {@link CustomerAccountDocument}.
  *
- * @public
+ * @publicDocs
  */
 export type SourceOf<Doc> = Doc extends { readonly source: infer Source extends string }
   ? Source
@@ -55,7 +55,7 @@ export type SourceOf<Doc> = Doc extends { readonly source: infer Source extends 
  * documents at the type level, joining each with a newline. An empty
  * tuple produces `""`.
  *
- * @public
+ * @publicDocs
  */
 export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocument[]> =
   Fragments extends readonly []
@@ -73,7 +73,7 @@ export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocumen
  * Combines an operation source with its {@link FragmentSources} at the type
  * level. When `Fragments` is empty the result is just `Source`.
  *
- * @public
+ * @publicDocs
  */
 export type ComposedSource<
   Source extends string,
@@ -148,7 +148,7 @@ type CustomerAccountGql = {
  *   }
  * `, [ORDER_FIELDS]);
  * ```
- * @public
+ * @publicDocs
  */
 // oxlint-disable-next-line typescript-eslint/consistent-type-assertions -- gql.tada adds phantom helper properties to the function type that are not used at runtime.
 export const gql = ((source: string, fragments?: readonly CustomerAccountDocument[]) => {

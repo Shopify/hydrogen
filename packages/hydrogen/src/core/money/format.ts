@@ -379,7 +379,7 @@ class FormattedMoneyRangeValue implements FormattedMoneyRange {
  * toString(). Structured fields on single prices are computed lazily when
  * accessed, so the common string path stays cheap.
  *
- * @public
+ * @publicDocs
  */
 export function formatMoney(money: MoneyV2, options: FormatMoneyOptions): FormattedMoney;
 export function formatMoney(

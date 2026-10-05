@@ -12,7 +12,7 @@ export type ShopifyRouteSessionManager = {
   commit?(): Awaitable<HeadersInit | void>;
 };
 
-/** @public */
+/** @publicDocs */
 export type ShopifyRouteHandlerContext = {
   request: Request;
   sessionManager: ShopifyRouteSessionManager;
@@ -20,17 +20,17 @@ export type ShopifyRouteHandlerContext = {
   requestContext: ShopifyRequestContext;
 };
 
-/** @public */
+/** @publicDocs */
 export type ShopifyRouteJsonResult<TData = unknown> = {
   type: "json";
   data: TData;
   headers?: HeadersInit;
 };
 
-/** @public */
+/** @publicDocs */
 export type ShopifyRedirectStatus = 301 | 302 | 303 | 307 | 308;
 
-/** @public */
+/** @publicDocs */
 export type ShopifyRouteRedirectResult = {
   type: "redirect";
   location: string;
@@ -39,13 +39,13 @@ export type ShopifyRouteRedirectResult = {
   headers?: HeadersInit;
 };
 
-/** @public */
+/** @publicDocs */
 export type ShopifyRouteError = {
   code: string;
   message: string;
 };
 
-/** @public */
+/** @publicDocs */
 export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRouteError> = {
   type: "error";
   error: TError;
@@ -53,13 +53,13 @@ export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRo
   headers?: HeadersInit;
 };
 
-/** @public */
+/** @publicDocs */
 export type ShopifyRouteHandlerResult<
   TData = unknown,
   TError extends ShopifyRouteError = ShopifyRouteError,
 > = ShopifyRouteJsonResult<TData> | ShopifyRouteRedirectResult | ShopifyRouteErrorResult<TError>;
 
-/** @public */
+/** @publicDocs */
 export type CallableRouteHandler<
   TContext,
   TResult,
@@ -70,13 +70,13 @@ export type CallableRouteHandler<
   readonly method: TMethod;
 };
 
-/** @public */
+/** @publicDocs */
 export type ShopifyRouteHandler<
   TPathname extends string = string,
   TMethod extends string = string,
 > = CallableRouteHandler<ShopifyRouteHandlerContext, ShopifyRouteHandlerResult, TPathname, TMethod>;
 
-/** @public */
+/** @publicDocs */
 export type ShopifyRouteHandlerGroup = Record<string, ShopifyRouteHandler>;
 
 export type HydrogenRoutesOptions = ShopifyRouteHandlerContext & {

@@ -14,7 +14,7 @@ const log = getLogger("consent");
  * into a `ShopifyScripts` component, while custom integrations can render script tags during SSR
  * and call this helper from their browser lifecycle.
  *
- * @public
+ * @publicDocs
  */
 export function initializeShopifyScripts({
   consent,

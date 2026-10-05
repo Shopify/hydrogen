@@ -12,7 +12,7 @@ type HydrogenRoutesDevOptions = {
  * Development build of `handleShopifyRoutes`: serves the production routes and
  * adds the GraphiQL explorer.
  *
- * @public
+ * @publicDocs
  */
 export const handleShopifyRoutesDev: HydrogenRouteHandler<HydrogenRoutesDevOptions> = (options) => {
   const productionResult = handleShopifyRoutes(options);

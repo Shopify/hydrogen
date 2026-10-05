@@ -7,13 +7,13 @@ import type {
 import type { I18nConfig } from "../request-context";
 import type { ShopifyRouteTemplates } from "../standard-routes/index";
 
-/** @public */
+/** @publicDocs */
 export type ShopifyScriptsAnalyticsConfig = {
   channel?: ShopAnalyticsChannel;
   customData?: StorefrontAnalyticsConfig["customData"];
 };
 
-/** @public */
+/** @publicDocs */
 export type ShopifyScriptsI18n = Pick<I18nConfig, "country" | "language"> &
   Partial<Pick<I18nConfig, "pathPrefix">> & {
     currency?: string;
@@ -58,10 +58,10 @@ export type ShopifyLinkDescriptor = {
   innerHTML?: never;
 };
 
-/** @public */
+/** @publicDocs */
 export type ShopifyScriptTagDescriptor = ShopifyScriptDescriptor | ShopifyLinkDescriptor;
 
-/** @public */
+/** @publicDocs */
 export type ShopifyScriptTagDescriptors = {
   /** Link descriptors for framework head APIs that split links from scripts. */
   readonly links: readonly ShopifyLinkDescriptor[];
@@ -71,7 +71,7 @@ export type ShopifyScriptTagDescriptors = {
   readonly tags: readonly ShopifyScriptTagDescriptor[];
 };
 
-/** @public */
+/** @publicDocs */
 export type ShopifyScriptsShop = {
   shopId: string;
   storefrontId: string;
@@ -79,7 +79,7 @@ export type ShopifyScriptsShop = {
   myshopifyDomain: string;
 };
 
-/** @public */
+/** @publicDocs */
 export type ShopifyScriptTagsOptions = {
   /**
    * Loads the customer account component. Render `<shopify-account>` where you want the account UI to appear.
@@ -104,7 +104,7 @@ export type ShopifyScriptTagsOptions = {
  * Route wiring for Shopify's scripts: the storefront's route templates and a `navigate` callback
  * for client-side navigation.
  *
- * @public
+ * @publicDocs
  */
 export type ShopifyRoutesOptions = {
   navigate?: ShopifyGlobal["routes"]["navigate"];
@@ -117,4 +117,10 @@ export type InitializeShopifyScriptsOptions = ShopifyRoutesOptions & {
   webMcp?: boolean;
 };
 
+/**
+ * One options object for both `renderShopifyScriptTags` and `initializeShopifyScripts`. Build it
+ * once and pass it to both calls.
+ *
+ * @publicDocs
+ */
 export type ShopifyScriptsOptions = ShopifyScriptTagsOptions & InitializeShopifyScriptsOptions;

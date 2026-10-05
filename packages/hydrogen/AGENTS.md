@@ -7,8 +7,8 @@
 ## When writing documentation
 - Do not over-document. If the Typescript LSP covers it, do not add thorough documentation. E.g.: listing the entire list of exports of a module, interfaces etc.
 - Write packaged skills from the consumer project's perspective. Do not reference repository-only paths under `examples/` or `templates/`.
-- Tag an export `@public` when a storefront developer could use it, including the low-level pieces the framework bindings are built on. An export that is only an implementation detail stays untagged. Declarations in generated or vendored files are exempt.
-- `@internal` marks fields and helpers that no entry point exports. Never put it on an entry-point export: `stripInternal` would drop its types while the runtime export remains.
+- Tag a declaration `@publicDocs` when a storefront developer could use it. That covers entry-point exports, the low-level pieces the framework bindings are built on, and what a public factory such as `createCartComponents()` returns. An implementation detail stays untagged. Declarations in generated or vendored files are exempt. `@shopify/generate-docs` harvests this tag for shopify.dev.
+- `@private` on a field of a tagged type hides it from shopify.dev. `@internal` does not hide anything there. It marks fields and helpers that no entry point exports. Never put `@internal` on an entry-point export: tools that filter on it, such as API reports or TypeDoc `excludeInternal`, would hide the declaration while the runtime export remains.
 
 ## When writing code
 - Keep bundle size to a minimum: no unnecessary libraries, no unnecessary guards, no verbosity. Use tree-shaking and lazy loading to your advantage.

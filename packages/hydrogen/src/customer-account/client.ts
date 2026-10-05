@@ -41,7 +41,7 @@ type FetchCustomerAccountGraphqlParams = {
  * The client validates `shopId`, `customerApiVersion`, and `defaultTimeoutInMs`
  * at construction time and throws synchronously on invalid values.
  *
- * @public
+ * @publicDocs
  */
 export type CreateCustomerAccountClientOptions = {
   /** Numeric Shopify shop ID as a string (e.g. `"12345"`). Validated against `/^\d+$/`. */
@@ -74,7 +74,7 @@ export type CreateCustomerAccountClientOptions = {
  * Per-call options passed to {@link CustomerAccountClient.graphql}.
  * See `variables` for automatic `$language` injection.
  *
- * @public
+ * @publicDocs
  */
 export type CustomerAccountGraphqlOptions<Variables = Record<string, unknown>> = {
   /** Customer Account API access token, e.g. from `CustomerSession.getAccessToken()` or `getOrRefreshAccessToken()`. */
@@ -116,7 +116,7 @@ type HasNoRequiredKeys<T> = Record<string, never> extends T ? true : false;
  * Both arms expose the raw response `headers` for inspecting
  * `x-request-id` or rate-limit metadata.
  *
- * @public
+ * @publicDocs
  */
 export type CustomerAccountGraphqlResult<Result = unknown> =
   | { data: Result; errors?: undefined; headers: Headers }
@@ -130,7 +130,7 @@ export type CustomerAccountGraphqlResult<Result = unknown> =
  * document declares required variables, the type forces the caller to supply
  * them, turning a missing-variables bug into a compile error.
  *
- * @public
+ * @publicDocs
  */
 export type CustomerAccountGqlRestParam<Doc extends AnyCustomerAccountDocument> =
   HasNoRequiredKeys<UserVariables<Doc>> extends true
@@ -150,7 +150,7 @@ export type CustomerAccountGqlRestParam<Doc extends AnyCustomerAccountDocument> 
  * variable from i18n context when applicable, and marks the response as
  * personalized so the app response is sent with private, no-store cache headers.
  *
- * @public
+ * @publicDocs
  */
 export type CustomerAccountClient = {
   /** Constructed endpoint: `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`. */
@@ -218,7 +218,7 @@ export type CustomerAccountClient = {
  * ```
  *
  * @throws {Error} When called in a browser context, when `shopId`, `customerApiVersion`, or `defaultTimeoutInMs` is invalid, when no `fetch` is available, or when `requestContext.url` is missing or not HTTPS.
- * @public
+ * @publicDocs
  */
 export function createCustomerAccountClient({
   shopId,

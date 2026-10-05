@@ -47,7 +47,7 @@ export const consoleLogger: HydrogenLogger = {
   fatal: (message, context) => writeToConsole("fatal", message, context),
 };
 
-/** @public */
+/** @publicDocs */
 export type ConfigureLoggingOptions = {
   /** Receives all entries at or above `level`. Defaults to the built-in console logger. */
   logger?: HydrogenLogger;
@@ -75,7 +75,7 @@ const state: LoggingState = {
  * (analytics, consent) run outside the app bundle and always write to the
  * console with the standard prefix; they cannot receive a custom logger.
  *
- * @public
+ * @publicDocs
  */
 export function configureLogging(options: ConfigureLoggingOptions): void {
   const logger = options.logger ?? consoleLogger;

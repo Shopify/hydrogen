@@ -49,7 +49,7 @@ const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 /**
  * Response shape from the cart GET handler — the fetched cart plus any GraphQL errors.
  *
- * @public
+ * @publicDocs
  */
 export type CartGetData<TCart = CartData> = {
   cart: TCart | null;
@@ -59,21 +59,21 @@ export type CartGetData<TCart = CartData> = {
 /**
  * Full route result from the cart GET handler — JSON with {@link CartGetData} payload and response headers.
  *
- * @public
+ * @publicDocs
  */
 export type CartGetResult<TCart = CartData> = ShopifyRouteJsonResult<CartGetData<TCart>>;
 
 /**
  * Machine-readable error codes returned by the cart POST handler.
  *
- * @public
+ * @publicDocs
  */
 export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_mutation_failed";
 
 /**
  * A cart route error carrying a {@link CartErrorCode} for programmatic handling.
  *
- * @public
+ * @publicDocs
  */
 export type CartError = ShopifyRouteError & {
   code: CartErrorCode;
@@ -85,7 +85,7 @@ export type CartError = ShopifyRouteError & {
  * - 303 redirect back to the referrer (HTML form submissions)
  * - An error with a {@link CartErrorCode}
  *
- * @public
+ * @publicDocs
  */
 export type CartPostResult =
   | ShopifyRouteJsonResult<Record<string, unknown>>
@@ -126,7 +126,7 @@ type CartCustomerSession = CustomerSession;
 /**
  * GET handler for the `/api/cart` route — fetches the current cart from the Storefront API.
  *
- * @public
+ * @publicDocs
  */
 export type CartGetHandler<
   TCart = CartData,
@@ -141,7 +141,7 @@ export type CartGetHandler<
 /**
  * POST handler for the `/api/cart` route — processes cart mutations from JSON or FormData bodies.
  *
- * @public
+ * @publicDocs
  */
 export type CartPostHandler<TContext extends CartPostHandlerContext = CartPostHandlerContext> =
   CallableRouteHandler<TContext, CartPostResult, typeof CART_API_PATH, typeof CART_POST_METHOD>;
@@ -153,7 +153,7 @@ export type CartPostHandler<TContext extends CartPostHandlerContext = CartPostHa
  * framework's router so the client cart store can communicate with the
  * Storefront API.
  *
- * @public
+ * @publicDocs
  */
 export type CartServerHandlers<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
@@ -171,7 +171,7 @@ export type CartServerHandlers<
  *
  * Created by passing `customerSession` to {@link createCartServerHandlers}.
  *
- * @public
+ * @publicDocs
  */
 export type CartServerHandlersWithCustomerSession<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
@@ -211,7 +211,7 @@ type CartDataFromHandlerResult<TResult> = [TResult] extends [never]
  * ```ts
  * type MyCartData = CartDataFromHandlers<typeof cartHandlers>;
  * ```
- * @public
+ * @publicDocs
  */
 export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
   CartGetHandlerResult<THandlers>
@@ -220,7 +220,7 @@ export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
 /**
  * Options for {@link createCartServerHandlers}.
  *
- * @public
+ * @publicDocs
  */
 export type CreateCartServerHandlersOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
@@ -267,7 +267,7 @@ type CartServerHandlersForOptions<TOptions> = TOptions extends {
  *   customerSession,
  * });
  * ```
- * @public
+ * @publicDocs
  */
 export function createCartServerHandlers(): CartServerHandlers<typeof cartQueries.cart>;
 export function createCartServerHandlers<const TOptions extends CreateCartServerHandlersOptions>(

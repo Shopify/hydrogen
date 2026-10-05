@@ -42,7 +42,7 @@ export type { ValidProductSelectionResult } from "../core/product";
 /**
  * Options for {@link useProductForm}.
  *
- * @public
+ * @publicDocs
  */
 export interface UseProductFormOptions<TProduct extends ProductInput> {
   onSelect?: (result: ValidProductSelectionResult<TProduct>) => void;
@@ -51,7 +51,7 @@ export interface UseProductFormOptions<TProduct extends ProductInput> {
 /**
  * Return value of {@link useProductForm}.
  *
- * @public
+ * @publicDocs
  */
 export interface UseProductFormResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
@@ -74,7 +74,7 @@ export interface UseProductFormResult<TProduct extends ProductInput> {
 /**
  * Props for the `ProductProvider` returned by {@link createProductComponents}.
  *
- * @public
+ * @publicDocs
  */
 export interface ProductProviderProps<TProduct extends ProductInput> {
   product: TProduct;
@@ -85,7 +85,7 @@ export interface ProductProviderProps<TProduct extends ProductInput> {
 /**
  * Return value of the `useProduct` hook from {@link createProductComponents}.
  *
- * @public
+ * @publicDocs
  */
 export interface UseProductResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
@@ -114,7 +114,7 @@ export interface UseProductResult<TProduct extends ProductInput> {
  * (hydration, destruction) yourself, or use `createProductComponents` for a
  * provider-based approach.
  *
- * @public
+ * @publicDocs
  */
 export function useProductForm<TProduct extends ProductInput>(
   store: ProductFormStore<TProduct>,
@@ -210,7 +210,7 @@ interface ProductContextValue<TProduct extends ProductInput> {
  * const { ProductProvider, useProduct, useProductForm } =
  *   createProductComponents<MyProductType>();
  * ```
- * @public
+ * @publicDocs
  */
 export function createProductComponents<TProduct extends ProductInput>(): {
   ProductProvider: (props: ProductProviderProps<TProduct>) => ReactNode;

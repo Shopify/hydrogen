@@ -58,7 +58,7 @@ export type {
  * component. Frameworks without a binding can render these descriptors during SSR and call
  * `initializeShopifyScripts()` during browser hydration.
  *
- * @public
+ * @publicDocs
  */
 // oxlint-disable-next-line complexity -- ordered assembly of optional Shopify script tags; each flag adds one branch and splitting would obscure the required load order
 export function getShopifyScriptTags({
@@ -211,7 +211,7 @@ export function getShopifyScriptTags({
 /**
  * Renders all Shopify storefront script/link descriptors to HTML strings.
  *
- * @public
+ * @publicDocs
  */
 export function renderShopifyScriptTags(options: ShopifyScriptTagsOptions): string[] {
   return getShopifyScriptTags(options).tags.map(renderShopifyScriptTag);

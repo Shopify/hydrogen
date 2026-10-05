@@ -92,7 +92,7 @@ export const STANDARD_ACTION_TIMEOUT_IN_MS = 30_000;
  * Carries the HTTP {@link CartNetworkError.status | status} code so callers
  * can distinguish transient failures from permanent ones.
  *
- * @public
+ * @publicDocs
  */
 export class CartNetworkError extends Error {
   readonly status: number;
@@ -129,7 +129,7 @@ export class CartNetworkError extends Error {
  *
  * store.destroy();
  * ```
- * @public
+ * @publicDocs
  */
 export type CartStore = {
   /**
@@ -187,7 +187,7 @@ export type CartStore = {
 /**
  * Actions for reconciling cart state after updates outside Standard Actions.
  *
- * @public
+ * @publicDocs
  */
 export type CartActions = Pick<CartStore, "refresh">;
 
@@ -199,7 +199,7 @@ type CartInitialData<TData extends CartData = CartData> = {
 /**
  * Options for {@link createCartStore}.
  *
- * @public
+ * @publicDocs
  */
 export type CreateCartStoreOptions<TData extends CartData = CartData> = {
   /**
@@ -2214,7 +2214,7 @@ function loadCartInStore(
  * // Empty — loads the cart on connect()
  * const store = createCartStore();
  * ```
- * @public
+ * @publicDocs
  */
 export function createCartStore<TData extends CartData = CartData>(
   options: CreateCartStoreOptions<TData> = {},
@@ -2433,7 +2433,7 @@ async function handleFormSubmitInStore(
  * ```ts
  * configureCartEndpoint("/storefront/cart");
  * ```
- * @public
+ * @publicDocs
  */
 export function configureCartEndpoint(endpoint: string): void {
   if (configuredCartEndpoint === endpoint) return;

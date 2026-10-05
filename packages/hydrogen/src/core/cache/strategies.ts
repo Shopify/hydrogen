@@ -15,7 +15,7 @@ export type CacheDuration =
       days?: number;
     };
 
-/** @public */
+/** @publicDocs */
 export interface CachingStrategy {
   mode?: CacheMode;
   maxAge?: number;
@@ -23,7 +23,7 @@ export interface CachingStrategy {
   staleIfError?: number;
 }
 
-/** @public */
+/** @publicDocs */
 export type CacheOptions = {
   mode?: ExpirableCacheMode;
   maxAge?: CacheDuration;
@@ -39,7 +39,7 @@ type NoStoreStrategy = CachingStrategy & {
  * Builds caching strategies. Call `Cache(options)` for a custom strategy, or use the `Cache.none`,
  * `Cache.short`, and `Cache.long` presets.
  *
- * @public
+ * @publicDocs
  */
 export const Cache = Object.assign(createCache, {
   none: cacheNone,

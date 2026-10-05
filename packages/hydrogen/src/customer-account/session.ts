@@ -23,25 +23,25 @@ const log = getLogger("customer-account");
 /**
  * OAuth callback route path: `"/account/authorize"`.
  *
- * @public
+ * @publicDocs
  */
 export const CUSTOMER_ACCOUNT_AUTHORIZE_PATH = CUSTOMER_ACCOUNT_PATHS.authorize;
 /**
  * Login route path: `"/account/login"`.
  *
- * @public
+ * @publicDocs
  */
 export const CUSTOMER_ACCOUNT_LOGIN_PATH = CUSTOMER_ACCOUNT_PATHS.login;
 /**
  * Logout route path: `"/account/logout"`.
  *
- * @public
+ * @publicDocs
  */
 export const CUSTOMER_ACCOUNT_LOGOUT_PATH = CUSTOMER_ACCOUNT_PATHS.logout;
 /**
  * Token refresh route path: `"/account/refresh"`.
  *
- * @public
+ * @publicDocs
  */
 export const CUSTOMER_ACCOUNT_REFRESH_PATH = CUSTOMER_ACCOUNT_PATHS.refresh;
 
@@ -76,14 +76,14 @@ const CUSTOMER_SESSION_INTERNAL_BRAND: unique symbol = Symbol("hydrogen.customer
 /**
  * A value that is either `T` or a `Promise<T>`, used as the return type of session manager methods.
  *
- * @public
+ * @publicDocs
  */
 export type Awaitable<T> = T | Promise<T>;
 
 /**
  * Read-only Customer Account session storage for UI state and strict access-token reads.
  *
- * @public
+ * @publicDocs
  */
 export type ReadonlyCustomerSessionManager = {
   getSessionItem(key: string): Awaitable<unknown>;
@@ -92,7 +92,7 @@ export type ReadonlyCustomerSessionManager = {
 /**
  * Writable Customer Account session storage for OAuth, refresh, and logout response boundaries.
  *
- * @public
+ * @publicDocs
  */
 export type WritableCustomerSessionManager = ShopifyRouteSessionManager;
 
@@ -116,7 +116,7 @@ type CustomerAccountSessionData = {
 /**
  * Options for {@link createCustomerSession}.
  *
- * @public
+ * @publicDocs
  */
 export type CreateCustomerSessionOptions = {
   /** Numeric Shopify shop ID as a string (digits only, e.g. `"12345"`). Validated against `/^\d+$/`. */
@@ -140,7 +140,7 @@ export type CreateCustomerSessionOptions = {
 /**
  * Options for {@link CustomerSession.prepareLoginUrl}.
  *
- * @public
+ * @publicDocs
  */
 export type PrepareLoginUrlOptions = {
   /**
@@ -171,7 +171,7 @@ export type PrepareLoginUrlOptions = {
  * and {@link CustomerSession.logout}. Falls back to the session manager's
  * `getSessionOrigin()`.
  *
- * @public
+ * @publicDocs
  */
 export type RequestOriginOptions = {
   /** HTTPS origin string. */
@@ -181,7 +181,7 @@ export type RequestOriginOptions = {
 /**
  * Options for {@link CustomerSession.logout}.
  *
- * @public
+ * @publicDocs
  */
 export type LogoutOptions = RequestOriginOptions & {
   /**
@@ -195,7 +195,7 @@ export type LogoutOptions = RequestOriginOptions & {
  * Core session interface returned by {@link createCustomerSession}. Server-only.
  * All methods require a session manager and request context.
  *
- * @public
+ * @publicDocs
  */
 export type CustomerSession = {
   /**
@@ -273,7 +273,7 @@ export type CustomerSession = {
  * Route handler objects returned by {@link createCustomerAccountServerHandlers}.
  * Register these with `handleShopifyRoutes` to serve the Customer Account OAuth flow.
  *
- * @public
+ * @publicDocs
  */
 export type CustomerAccountServerHandlers<
   TContext extends CustomerAccountRouteHandlerContext = CustomerAccountRouteHandlerContext,
@@ -311,7 +311,7 @@ export type CustomerAccountServerHandlers<
 /**
  * Customer Account handlers that also synchronize cart buyer identity, so their context requires `storefrontClient`.
  *
- * @public
+ * @publicDocs
  */
 export type CustomerAccountServerHandlersWithCartSync =
   CustomerAccountServerHandlers<ShopifyRouteHandlerContext>;
@@ -338,7 +338,7 @@ type CreateCustomerAccountServerHandlersBaseOptions<
 /**
  * Options for {@link createCustomerAccountServerHandlers}.
  *
- * @public
+ * @publicDocs
  */
 export type CreateCustomerAccountServerHandlersOptions =
   | (CreateCustomerAccountServerHandlersBaseOptions & { cartServerHandlers?: undefined })
@@ -444,7 +444,7 @@ type TokenRequestParams = {
  * ```
  *
  * @throws {Error} When called in a browser context, when an option fails validation, or when no `fetch` is available.
- * @public
+ * @publicDocs
  */
 export function createCustomerSession({
   shopId,
@@ -665,7 +665,7 @@ export async function getCustomerSessionRefreshResult(
  * full-page navigation (plain `<a>`/`<form>`), not a framework client-side
  * navigation component — client-nav cannot follow these raw redirects.
  *
- * @public
+ * @publicDocs
  */
 export function createCustomerAccountServerHandlers<
   const TOptions extends CreateCustomerAccountServerHandlersOptions,

@@ -35,7 +35,7 @@ type CartTrackerState = {
  * @throws {Error} If `window.Shopify.analytics` is not set (including on the server).
  *   Render `ShopifyScripts` (or the `getShopifyScriptTags()` output) first.
  * @returns An unsubscribe function that stops tracking.
- * @public
+ * @publicDocs
  */
 export function trackCartAnalytics(store: CartAnalyticsStore): () => void {
   const analytics = getGlobalAnalytics();

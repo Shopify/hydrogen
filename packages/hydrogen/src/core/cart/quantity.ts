@@ -1,14 +1,14 @@
 /**
  * Default lower bound for {@link sanitizeQuantity} when no `min` is given.
  *
- * @public
+ * @publicDocs
  */
 export const DEFAULT_MINIMUM_QUANTITY = 1;
 
 /**
  * Sentinel upper bound for {@link sanitizeQuantity} meaning "no maximum".
  *
- * @public
+ * @publicDocs
  */
 export const NO_QUANTITY_LIMIT = Infinity;
 
@@ -26,7 +26,7 @@ export const NO_QUANTITY_LIMIT = Infinity;
  * sanitizeQuantity(5, { max: 3 }) // → 3
  * sanitizeQuantity(0, { min: 1 }) // → 1
  * ```
- * @public
+ * @publicDocs
  */
 export function sanitizeQuantity(raw: unknown, options?: { min?: number; max?: number }): number {
   const min = options?.min ?? DEFAULT_MINIMUM_QUANTITY;
