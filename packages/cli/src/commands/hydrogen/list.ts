@@ -1,6 +1,9 @@
 import {writeJsonResult} from '../../lib/json-output.js';
 import {jsonFlag} from '@shopify/cli-kit/node/cli';
-import {listJsonOutputSchema} from '../../lib/storefronts/types.js';
+import {
+  listJsonOutputSchema,
+  toListResult,
+} from '../../lib/storefronts/types.js';
 import Command from '../../lib/hydrogen-command.js';
 import {pluralize} from '@shopify/cli-kit/common/string';
 import colors from '@shopify/cli-kit/node/colors';
@@ -14,6 +17,7 @@ import {commonFlags} from '../../lib/flags.js';
 import {parseGid} from '../../lib/gid.js';
 import {
   type Deployment,
+  type HydrogenStorefront,
   getStorefrontsWithDeployment,
 } from '../../lib/graphql/admin/list-storefronts.js';
 import {newHydrogenStorefrontUrl} from '../../lib/admin-urls.js';
@@ -45,9 +49,7 @@ interface Flags {
   path?: string;
 }
 
-export async function listStorefronts({
-  path: root = process.cwd(),
-}: Flags): Promise<import('../../lib/storefronts/types.js').ListResult> {
+export async function listStorefronts({path: root = process.cwd()}: Flags) {
   const {session} = await login(root);
 
   const storefronts = await getStorefrontsWithDeployment(session);
@@ -57,13 +59,13 @@ export async function listStorefronts({
 
 export async function runList(options: Flags, json?: boolean) {
   const result = await listStorefronts(options);
-  if (!writeJsonResult(listJsonOutputSchema, result, json))
+  if (!writeJsonResult(listJsonOutputSchema, toListResult(result), json))
     await renderStorefronts(result, options.path);
   return result;
 }
 
 async function renderStorefronts(
-  {shop, storefronts}: import('../../lib/storefronts/types.js').ListResult,
+  {shop, storefronts}: {shop: string; storefronts: HydrogenStorefront[]},
   root?: string,
 ) {
   if (storefronts.length > 0) {
@@ -142,7 +144,7 @@ const pluralizedStorefronts = ({
   storefronts,
   shop,
 }: {
-  storefronts: import('../../lib/storefronts/types.js').ListResult['storefronts'];
+  storefronts: HydrogenStorefront[];
   shop: string;
 }) => {
   return pluralize(

@@ -8,9 +8,8 @@ import type {setupLocalStarterTemplate} from './local.js';
 type TemplateResult = Awaited<ReturnType<typeof setupLocalStarterTemplate>>;
 
 export function toInitResult(result: TemplateResult): InitResult {
-  if (!result) return null;
+  if (!result) return {status: 'cancelled', project: null, failures: []};
   const {
-    location,
     name,
     directory,
     storefrontTitle,
@@ -26,16 +25,18 @@ export function toInitResult(result: TemplateResult): InitResult {
   if (result.i18nError) failures.push('markets');
   if (result.routesError) failures.push('routes');
   return {
-    location,
-    name,
-    directory,
-    storefrontTitle,
-    language,
-    packageManager,
-    depsInstalled,
-    cssStrategy,
-    i18n,
-    routes,
+    status: failures.length ? 'partial' : 'success',
+    project: {
+      name,
+      directory,
+      storefrontName: storefrontTitle || null,
+      language: language ?? null,
+      packageManager,
+      dependenciesInstalled: depsInstalled,
+      cssStrategy: cssStrategy ?? null,
+      i18n: i18n ?? null,
+      routes: routes ?? null,
+    },
     failures,
   };
 }
@@ -53,8 +54,9 @@ export async function presentTemplateResult(
       if (error) outputWarn(error.message);
     }
   }
-  if (writeJsonResult(initJsonOutputSchema, toInitResult(result)) || !result)
-    return;
+  const projection = toInitResult(result);
+  if (projection.status === 'partial') process.exitCode = 1;
+  if (writeJsonResult(initJsonOutputSchema, projection) || !result) return;
   await renderProjectReady(result, result);
   if (template)
     renderInfo({

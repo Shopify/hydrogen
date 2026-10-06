@@ -38,7 +38,7 @@ export async function runLogout(
 ) {
   outputNewline();
   await logout(root);
-  const result = {loggedOut: true as const};
+  const result = {status: 'success' as const, loggedOut: true as const};
   if (!writeJsonResult(logoutJsonOutputSchema, result, json))
     renderSuccess({body: 'You are logged out from Shopify.'});
   return result;

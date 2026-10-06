@@ -127,7 +127,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Builds a Hydrogen storefront for production. The client and app worker files are compiled to a `/dist` folder in your Hydrogen project directory.",
       "isESM": true,
       "relativePath": [
@@ -206,7 +205,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Checks whether your Hydrogen app includes a set of standard Shopify routes.",
       "isESM": true,
       "relativePath": [
@@ -299,7 +297,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Automatically generates GraphQL types for your project’s Storefront API queries.",
       "isESM": true,
       "relativePath": [
@@ -405,7 +402,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Push project configuration to admin",
       "isESM": true,
       "relativePath": [
@@ -483,7 +479,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Builds the app and runs the resulting code to profile the server startup time, watching for changes. This command can be used to [debug slow app startup times](https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/cpu-startup) that cause failed deployments in Oxygen.\n\n  The profiling results are written to a `.cpuprofile` file that can be viewed with certain tools such as [Flame Chart Visualizer for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-js-profile-flame).",
       "isESM": true,
       "relativePath": [
@@ -737,7 +732,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Builds and deploys your Hydrogen storefront to Oxygen. Requires an Oxygen deployment token to be set with the `--token` flag or an environment variable (`SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN`). If the storefront is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) then the Oxygen deployment token for the linked storefront will be used automatically.",
       "isESM": true,
       "relativePath": [
@@ -915,7 +909,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.\n\n  If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.",
       "isESM": true,
       "relativePath": [
@@ -985,7 +978,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Lists all environments available on the linked Hydrogen storefront.",
       "isESM": true,
       "relativePath": [
@@ -1095,7 +1087,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Pulls environment variables from the linked Hydrogen storefront and writes them to an `.env` file.",
       "isESM": true,
       "relativePath": [
@@ -1203,7 +1194,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Push environment variables from the local .env file to your linked Hydrogen storefront.",
       "isESM": true,
       "relativePath": [
@@ -1258,7 +1248,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": false,
-      "enableJsonFlag": false,
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1378,7 +1367,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Generates a set of default routes from the starter template.",
       "isESM": true,
       "relativePath": [
@@ -1480,7 +1468,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Generates all supported standard shopify routes.",
       "isESM": true,
       "relativePath": [
@@ -1494,7 +1481,7 @@
     "hydrogen:init": {
       "aliases": [],
       "args": {},
-      "description": "Creates a new Hydrogen storefront.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenInitResult` schema.\n\n```json\n{\n  \"anyOf\": [\n    {\n      \"type\": \"object\",\n      \"properties\": {\n        \"location\": {\n          \"type\": \"string\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"directory\": {\n          \"type\": \"string\"\n        },\n        \"storefrontTitle\": {\n          \"type\": \"string\"\n        },\n        \"language\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"js\",\n            \"ts\"\n          ]\n        },\n        \"packageManager\": {\n          \"type\": \"string\"\n        },\n        \"depsInstalled\": {\n          \"type\": \"boolean\"\n        },\n        \"cssStrategy\": {\n          \"type\": \"string\"\n        },\n        \"i18n\": {\n          \"type\": \"string\"\n        },\n        \"routes\": {\n          \"type\": \"object\",\n          \"additionalProperties\": {\n            \"anyOf\": [\n              {\n                \"type\": \"string\"\n              },\n              {\n                \"type\": \"array\",\n                \"items\": {\n                  \"type\": \"string\"\n                }\n              }\n            ]\n          }\n        },\n        \"failures\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\",\n            \"enum\": [\n              \"dependencies\",\n              \"markets\",\n              \"routes\"\n            ]\n          }\n        }\n      },\n      \"required\": [\n        \"location\",\n        \"name\",\n        \"directory\",\n        \"packageManager\",\n        \"depsInstalled\",\n        \"failures\"\n      ],\n      \"additionalProperties\": false\n    },\n    {\n      \"type\": \"null\"\n    }\n  ],\n  \"title\": \"HydrogenInitResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
+      "description": "Creates a new Hydrogen storefront.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenInitResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"partial\",\n        \"skipped\",\n        \"cancelled\"\n      ]\n    },\n    \"project\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/Project\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ],\n      \"description\": \"All projected fields are present; unavailable settings are null. Route values are relative route names.\"\n    },\n    \"failures\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\",\n        \"enum\": [\n          \"dependencies\",\n          \"markets\",\n          \"routes\"\n        ]\n      }\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"project\",\n    \"failures\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenInitResult\",\n  \"definitions\": {\n    \"Project\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"directory\": {\n          \"type\": \"string\"\n        },\n        \"storefrontName\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"language\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"enum\": [\n                \"js\",\n                \"ts\"\n              ]\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"packageManager\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"npm\",\n            \"pnpm\",\n            \"yarn\",\n            \"bun\",\n            \"unknown\"\n          ]\n        },\n        \"dependenciesInstalled\": {\n          \"type\": \"boolean\"\n        },\n        \"cssStrategy\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"enum\": [\n                \"none\",\n                \"tailwind\",\n                \"vanilla-extract\",\n                \"css-modules\",\n                \"postcss\"\n              ]\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"i18n\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"enum\": [\n                \"none\",\n                \"subfolders\",\n                \"domains\",\n                \"subdomains\"\n              ]\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"routes\": {\n          \"anyOf\": [\n            {\n              \"type\": \"object\",\n              \"additionalProperties\": {\n                \"anyOf\": [\n                  {\n                    \"type\": \"string\"\n                  },\n                  {\n                    \"type\": \"array\",\n                    \"items\": {\n                      \"type\": \"string\"\n                    }\n                  }\n                ]\n              }\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"name\",\n        \"directory\",\n        \"storefrontName\",\n        \"language\",\n        \"packageManager\",\n        \"dependenciesInstalled\",\n        \"cssStrategy\",\n        \"i18n\",\n        \"routes\"\n      ],\n      \"additionalProperties\": false,\n      \"description\": \"All projected fields are present; unavailable settings are null. Route values are relative route names.\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1640,7 +1627,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Creates a new Hydrogen storefront.",
       "isESM": true,
       "relativePath": [
@@ -1653,7 +1639,7 @@
     "hydrogen:link": {
       "aliases": [],
       "args": {},
-      "description": "Links your local development environment to a remote Hydrogen storefront. You can link an unlimited number of development environments to a single Hydrogen storefront.\n\n  Linking to a Hydrogen storefront enables you to run \"dev\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-dev) and automatically inject your linked Hydrogen storefront's environment variables directly into the server runtime.\n\n  After you run the `link` command, you can access the \"env list\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-list), \"env pull\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-pull), and \"unlink\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-unlink) commands.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenLinkResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"shop\": {\n      \"type\": \"string\"\n    },\n    \"storefront\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/Storefront\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    }\n  },\n  \"required\": [\n    \"shop\",\n    \"storefront\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenLinkResult\",\n  \"definitions\": {\n    \"Storefront\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"title\": {\n          \"type\": \"string\"\n        },\n        \"productionUrl\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"parsedId\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"title\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
+      "description": "Links your local development environment to a remote Hydrogen storefront. You can link an unlimited number of development environments to a single Hydrogen storefront.\n\n  Linking to a Hydrogen storefront enables you to run \"dev\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-dev) and automatically inject your linked Hydrogen storefront's environment variables directly into the server runtime.\n\n  After you run the `link` command, you can access the \"env list\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-list), \"env pull\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-pull), and \"unlink\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-unlink) commands.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenLinkResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"partial\",\n        \"skipped\",\n        \"cancelled\"\n      ]\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"storeDomain\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"pattern\": \"^[a-z0-9][a-z0-9-]*\\\\.myshopify\\\\.com$\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"storefront\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/Storefront\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ],\n      \"description\": \"All projected fields are present; unavailable productionUrl is null.\"\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"storeDomain\",\n    \"storefront\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenLinkResult\",\n  \"definitions\": {\n    \"Storefront\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefront GID.\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"productionUrl\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"format\": \"uri\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"name\",\n        \"productionUrl\"\n      ],\n      \"additionalProperties\": false,\n      \"description\": \"All projected fields are present; unavailable productionUrl is null.\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1760,7 +1746,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Links your local development environment to a remote Hydrogen storefront. You can link an unlimited number of development environments to a single Hydrogen storefront.\n\n  Linking to a Hydrogen storefront enables you to run [dev](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-dev) and automatically inject your linked Hydrogen storefront's environment variables directly into the server runtime.\n\n  After you run the `link` command, you can access the [env list](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-list), [env pull](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-pull), and [unlink](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-unlink) commands.",
       "isESM": true,
       "relativePath": [
@@ -1773,7 +1758,7 @@
     "hydrogen:list": {
       "aliases": [],
       "args": {},
-      "description": "Lists all remote Hydrogen storefronts available to link to your local development environment.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenListResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"shop\": {\n      \"type\": \"string\"\n    },\n    \"storefronts\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Storefront\"\n      }\n    }\n  },\n  \"required\": [\n    \"shop\",\n    \"storefronts\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenListResult\",\n  \"definitions\": {\n    \"Storefront\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"title\": {\n          \"type\": \"string\"\n        },\n        \"productionUrl\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"parsedId\": {\n          \"type\": \"string\"\n        },\n        \"currentProductionDeployment\": {\n          \"anyOf\": [\n            {\n              \"$ref\": \"#/definitions/Deployment\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"title\",\n        \"currentProductionDeployment\"\n      ],\n      \"additionalProperties\": false\n    },\n    \"Deployment\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"id\": {\n          \"type\": \"string\"\n        },\n        \"createdAt\": {\n          \"type\": \"string\"\n        },\n        \"commitMessage\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        }\n      },\n      \"required\": [\n        \"id\",\n        \"createdAt\",\n        \"commitMessage\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
+      "description": "Lists all remote Hydrogen storefronts available to link to your local development environment.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenListResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"storeDomain\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"pattern\": \"^[a-z0-9][a-z0-9-]*\\\\.myshopify\\\\.com$\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"storefronts\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Storefront\"\n      }\n    }\n  },\n  \"required\": [\n    \"storeDomain\",\n    \"storefronts\"\n  ],\n  \"additionalProperties\": false,\n  \"description\": \"The complete list of Hydrogen storefronts for the store.\",\n  \"title\": \"HydrogenListResult\",\n  \"definitions\": {\n    \"Storefront\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefront GID.\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"productionUrl\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"format\": \"uri\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"currentProductionDeployment\": {\n          \"anyOf\": [\n            {\n              \"$ref\": \"#/definitions/Deployment\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"name\",\n        \"productionUrl\",\n        \"currentProductionDeployment\"\n      ],\n      \"additionalProperties\": false,\n      \"description\": \"All projected fields are present; unavailable productionUrl is null.\"\n    },\n    \"Deployment\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefrontDeployment\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefrontDeployment GID.\"\n        },\n        \"createdAt\": {\n          \"type\": \"string\",\n          \"format\": \"date-time\"\n        },\n        \"commitMessage\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"createdAt\",\n        \"commitMessage\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1830,7 +1815,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Lists all remote Hydrogen storefronts available to link to your local development environment.",
       "isESM": true,
       "relativePath": [
@@ -1843,7 +1827,7 @@
     "hydrogen:login": {
       "aliases": [],
       "args": {},
-      "description": "Logs in to the specified shop and saves the shop domain to the project.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenLoginResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"shop\": {\n      \"type\": \"string\"\n    },\n    \"shopName\": {\n      \"type\": \"string\"\n    },\n    \"email\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"shop\",\n    \"shopName\",\n    \"email\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenLoginResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
+      "description": "Logs in to the specified shop and saves the shop domain to the project.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenLoginResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"storeDomain\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"pattern\": \"^[a-z0-9][a-z0-9-]*\\\\.myshopify\\\\.com$\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"name\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"email\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"format\": \"email\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    }\n  },\n  \"required\": [\n    \"storeDomain\",\n    \"name\",\n    \"email\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenLoginResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1909,7 +1893,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Logs in to the specified shop and saves the shop domain to the project.",
       "isESM": true,
       "relativePath": [
@@ -1922,7 +1905,7 @@
     "hydrogen:logout": {
       "aliases": [],
       "args": {},
-      "description": "Log out from the current shop.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenLogoutResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"loggedOut\": {\n      \"type\": \"boolean\",\n      \"const\": true\n    }\n  },\n  \"required\": [\n    \"loggedOut\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenLogoutResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
+      "description": "Log out from the current shop.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenLogoutResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"const\": \"success\"\n    },\n    \"loggedOut\": {\n      \"type\": \"boolean\",\n      \"const\": true\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"loggedOut\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenLogoutResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1979,7 +1962,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Log out from the current shop.",
       "isESM": true,
       "relativePath": [
@@ -2141,7 +2123,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Runs a server in your local development environment that serves your Hydrogen app's production build. Requires running the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first.",
       "isESM": true,
       "relativePath": [
@@ -2232,7 +2213,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "isESM": true,
       "relativePath": [
         "dist",
@@ -2318,7 +2298,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Adds support for certain CSS strategies to your project.",
       "isESM": true,
       "relativePath": [
@@ -2390,7 +2369,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Adds support for multiple [markets](https://shopify.dev/docs/custom-storefronts/hydrogen/markets) to your project by using the URL structure.",
       "isESM": true,
       "relativePath": [
@@ -2452,7 +2430,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "isESM": true,
       "relativePath": [
         "dist",
@@ -2505,7 +2482,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Creates a global h2 shortcut for Shopify CLI using shell aliases.\n\n  The following shells are supported:\n\n  - Bash (using `~/.bashrc`)\n  - ZSH (using `~/.zshrc`)\n  - Fish (using `~/.config/fish/functions`)\n  - PowerShell (added to `$PROFILE`)\n\n  After the alias is created, you can call Shopify CLI from anywhere in your project using `h2 <command>`.",
       "isESM": true,
       "relativePath": [
@@ -2518,7 +2494,7 @@
     "hydrogen:unlink": {
       "aliases": [],
       "args": {},
-      "description": "Unlinks your local development environment from a remote Hydrogen storefront.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenUnlinkResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"unlinked\": {\n      \"type\": \"boolean\"\n    },\n    \"storefront\": {\n      \"anyOf\": [\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"id\": {\n              \"type\": \"string\"\n            },\n            \"title\": {\n              \"type\": \"string\"\n            }\n          },\n          \"required\": [\n            \"id\",\n            \"title\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    }\n  },\n  \"required\": [\n    \"unlinked\",\n    \"storefront\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenUnlinkResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
+      "description": "Unlinks your local development environment from a remote Hydrogen storefront.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenUnlinkResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"const\": \"success\"\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"storefront\": {\n      \"anyOf\": [\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"gid\": {\n              \"type\": \"string\",\n              \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n              \"description\": \"A Shopify HydrogenStorefront GID.\"\n            },\n            \"name\": {\n              \"type\": \"string\"\n            }\n          },\n          \"required\": [\n            \"gid\",\n            \"name\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"storefront\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenUnlinkResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -2575,7 +2551,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Unlinks your local development environment from a remote Hydrogen storefront.",
       "isESM": true,
       "relativePath": [
@@ -2653,7 +2628,6 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
-      "enableJsonFlag": false,
       "descriptionWithMarkdown": "Upgrade Hydrogen project dependencies, preview features, fixes and breaking changes. The command also generates an instruction file for each upgrade.",
       "isESM": true,
       "relativePath": [

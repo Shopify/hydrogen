@@ -1,6 +1,10 @@
+import {toStoreDomain} from '../../lib/json-contract.js';
 import {writeJsonResult} from '../../lib/json-output.js';
 import {jsonFlag} from '@shopify/cli-kit/node/cli';
-import {linkJsonOutputSchema} from '../../lib/storefronts/types.js';
+import {
+  linkJsonOutputSchema,
+  toStorefront,
+} from '../../lib/storefronts/types.js';
 import {Flags} from '@oclif/core';
 import Command from '../../lib/hydrogen-command.js';
 import {basename} from '@shopify/cli-kit/node/path';
@@ -104,7 +108,12 @@ export async function runLink(
     cliCommand,
   });
 
-  const result = {shop: config.shop!, storefront: linkedStore ?? null};
+  const result = {
+    status: linkedStore ? ('success' as const) : ('cancelled' as const),
+    changed: Boolean(linkedStore),
+    storeDomain: toStoreDomain(config.shop),
+    storefront: linkedStore ? toStorefront(linkedStore) : null,
+  };
   if (writeJsonResult(linkJsonOutputSchema, result, json) || !linkedStore)
     return result;
 
