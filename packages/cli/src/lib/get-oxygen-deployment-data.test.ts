@@ -1,3 +1,4 @@
+import {captureJsonOutput} from '../../tests/output.js';
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 
@@ -118,6 +119,15 @@ describe('getOxygenDeploymentData', () => {
       vi.mocked(getOxygenData).mockResolvedValue({
         storefront: {oxygenDeploymentToken: '', environments: []},
       });
+    });
+
+    it('throws instead of returning a successful JSON result without a deployment token', async () => {
+      const {stdout} = await captureJsonOutput(async () => {
+        await expect(
+          getOxygenDeploymentData({root: 'test-root'}),
+        ).rejects.toThrow('Could not retrieve a deployment token.');
+      });
+      expect(stdout).toBe('');
     });
 
     it('returns nothing', async () => {

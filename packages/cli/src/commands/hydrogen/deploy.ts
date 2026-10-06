@@ -709,8 +709,9 @@ Continue?`.value,
     config.buildCommand = buildCommand ?? DEFAULT_BUILD_COMMAND;
     if (isJsonOutput()) {
       hooks.buildFunction = async (assetPath) => {
+        let output: {stdout?: string; stderr?: string} = {};
         try {
-          const {stdout, stderr} = await execAsync(config.buildCommand!, {
+          output = await execAsync(config.buildCommand!, {
             cwd: root,
             env: {
               ...process.env,
@@ -718,21 +719,24 @@ Continue?`.value,
             },
             maxBuffer: 64 * 1024 * 1024,
           });
-          if (stdout.trim())
+        } catch (error) {
+          buildError = error as Error;
+          // Node's exec rejection carries the output collected before failure.
+          output = error as typeof output;
+          throw error;
+        } finally {
+          if (output.stdout?.trim())
             emitCommandEvent({
               type: 'diagnostic',
               level: 'info',
-              message: stdout.trim(),
+              message: output.stdout.trim(),
             });
-          if (stderr.trim())
+          if (output.stderr?.trim())
             emitCommandEvent({
               type: 'diagnostic',
               level: 'warning',
-              message: stderr.trim(),
+              message: output.stderr.trim(),
             });
-        } catch (error) {
-          buildError = error as Error;
-          throw error;
         }
       };
     }
