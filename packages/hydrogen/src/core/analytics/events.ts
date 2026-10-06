@@ -4,6 +4,8 @@
  * Use these as the `event` argument to `publish()` and a destination's `subscribe()`. Raw string
  * literals are type-checked and narrow the payload the same way; the constants add
  * autocomplete and a single place to rename.
+ *
+ * @publicDocs
  */
 export const AnalyticsEvent = {
   PAGE_VIEWED: "page_viewed" as const,
@@ -17,4 +19,5 @@ export const AnalyticsEvent = {
   PRODUCT_REMOVED_FROM_CART: "product_removed_from_cart" as const,
 };
 
+/** @publicDocs */
 export type AnalyticsEventName = (typeof AnalyticsEvent)[keyof typeof AnalyticsEvent];

@@ -14,6 +14,7 @@ import {
 } from "./customer-account";
 import { provisionCertificates } from "./mkcert";
 
+/** @publicDocs */
 export const LOCAL_HTTPS_DEFAULTS = {
   host: "local.tryhydrogen.dev",
   port: 5_173,
@@ -65,6 +66,8 @@ export type LocalHttpsDevServerConfig = {
 
 /**
  * Configures Vite for trusted local HTTPS on Hydrogen's default development host.
+ *
+ * @publicDocs
  */
 export function localHttps(options: LocalHttpsOptions): LocalHttpsPlugin {
   const settings = options.enabled ? resolveLocalHttpsSettings(options) : undefined;
@@ -141,6 +144,8 @@ export type ProvisionLocalHttpsOptions = Omit<LocalHttpsOptions, "enabled" | "po
  * trusted local certificate files when they do not exist yet. The Vite plugin
  * runs this automatically on `vite dev`; call it directly for frameworks that
  * read certificate paths before Vite starts or from setup scripts.
+ *
+ * @publicDocs
  */
 export async function provisionLocalHttps(options: ProvisionLocalHttpsOptions = {}) {
   const settings = resolveLocalHttpsSettings({ enabled: true, ...options });

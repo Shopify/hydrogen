@@ -125,6 +125,8 @@ export type CreatePredictiveSearchServerHandlersOptions = CreatePredictiveSearch
  * The returned handlers object has a `get` method that can be registered
  * as a route handler. Successful results include the Storefront API response
  * headers, excluding `content-encoding`, `content-length`, and `server-timing`.
+ *
+ * @publicDocs
  */
 export function createPredictiveSearchServerHandlers(): PredictiveSearchServerHandlers;
 export function createPredictiveSearchServerHandlers<

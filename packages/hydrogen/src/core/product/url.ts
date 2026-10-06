@@ -63,6 +63,7 @@ export type ProductSelectionLinkStyle = "options" | "variant";
  * });
  * const url = `/products/${handle}${searchParams.size ? `?${searchParams}` : ""}`;
  * ```
+ * @publicDocs
  */
 export function buildProductSelectionSearchParams({
   style = "options",

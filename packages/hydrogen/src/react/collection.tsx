@@ -53,6 +53,8 @@ export interface CollectionProviderProps {
  * Manages the lifecycle of a {@link CollectionStore}: creates on mount and
  * syncs with URL changes. Recreates the store when `data.handle` changes
  * (navigating to a different collection).
+ *
+ * @publicDocs
  */
 export function CollectionProvider({
   data,
@@ -116,6 +118,7 @@ function useRequiredStore(hookName: string): CollectionStore {
  * ```tsx
  * const { status, filters } = useCollection();
  * ```
+ * @publicDocs
  */
 export function useCollection(): CollectionState;
 /**
@@ -128,6 +131,7 @@ export function useCollection(): CollectionState;
  * const status = useCollection(s => s.status);
  * const filters = useCollection(s => s.filters, shallowEqual);
  * ```
+ * @publicDocs
  */
 export function useCollection<S>(
   selector: (state: CollectionState) => S,
@@ -178,6 +182,8 @@ export function useCollection<S>(
  * Returns methods that change filters and sort. The store's `onBrowseChange`
  * callback (set by {@link CollectionProvider}) handles calling `onChange` with
  * a serialized search string.
+ *
+ * @publicDocs
  */
 export function useCollectionActions(): CollectionActions {
   const store = useRequiredStore("useCollectionActions");
@@ -209,6 +215,7 @@ export function useCollectionActions(): CollectionActions {
  *   </form>
  * );
  * ```
+ * @publicDocs
  */
 export function useCollectionForm() {
   const actions = useCollectionActions();

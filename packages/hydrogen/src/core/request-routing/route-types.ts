@@ -35,6 +35,7 @@ export type ShopifyRouteRedirectResult = {
   headers?: HeadersInit;
 };
 
+/** @publicDocs */
 export type ShopifyRouteError = {
   code: string;
   message: string;
@@ -67,6 +68,7 @@ export type ShopifyRouteHandler<
   TMethod extends string = string,
 > = CallableRouteHandler<ShopifyRouteHandlerContext, ShopifyRouteHandlerResult, TPathname, TMethod>;
 
+/** @publicDocs */
 export type ShopifyRouteHandlerGroup = Record<string, ShopifyRouteHandler>;
 
 export type HydrogenRoutesOptions = ShopifyRouteHandlerContext & {

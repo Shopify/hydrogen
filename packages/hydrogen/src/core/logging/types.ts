@@ -13,6 +13,8 @@ export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal" |
  * Structured details attached to a log entry. `scope` names the Hydrogen
  * subsystem (`cart`, `analytics`, `shop-pay`, ...). `error` carries the caught
  * value when the entry reports a failure.
+ *
+ * @publicDocs
  */
 export type LogContext = {
   scope?: string;

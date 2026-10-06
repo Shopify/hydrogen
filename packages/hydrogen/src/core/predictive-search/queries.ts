@@ -323,6 +323,7 @@ function resolveFragments(fragments: PredictiveSearchFragments | undefined) {
  * with full type inference from the provided fragments.
  *
  * @throws {Error} When a custom fragment does not match its required name or target type.
+ * @publicDocs
  */
 export function makePredictiveSearchQueries<
   const TOptions extends CreatePredictiveSearchQueriesOptions,

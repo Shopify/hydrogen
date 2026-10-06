@@ -36,6 +36,8 @@ export type AvailableFilterValue<
 /**
  * A filter facet available for the current collection, returned by the
  * Storefront API. Used to render filter UI (checkboxes, swatches, sliders).
+ *
+ * @publicDocs
  */
 export interface AvailableFilter<
   TValue extends BaseAvailableFilterValue = BaseAvailableFilterValue,
@@ -79,6 +81,7 @@ export interface CollectionState {
  * All browse fields start at their zero values.
  *
  * @param handle - URL-safe collection slug (e.g. `"shoes"`)
+ * @publicDocs
  */
 export function createInitialCollectionState(handle: string): CollectionState {
   return {

@@ -474,6 +474,8 @@ export type InferVariablesForSchema<T extends string, Schema extends SchemaLike>
  * Useful when you need the result shape outside of `storefront.graphql()` — e.g. for
  * a component prop type. Takes a raw query source literal: for `gql()` documents use
  * `StorefrontApi.ResultOf`, since `InferResult<typeof doc>` resolves to `never`.
+ *
+ * @publicDocs
  */
 export type InferResult<T extends string> = InferResultForSchema<T, StorefrontSchema>;
 
@@ -483,6 +485,8 @@ export type InferResult<T extends string> = InferResultForSchema<T, StorefrontSc
  * Useful when you need the variables shape outside of `storefront.graphql()` — e.g. for
  * a loader param type. Takes a raw query source literal: for `gql()` documents use
  * `StorefrontApi.VariablesOf`, since `InferVariables<typeof doc>` resolves to `never`.
+ *
+ * @publicDocs
  */
 export type InferVariables<T extends string> = InferVariablesForSchema<T, StorefrontSchema>;
 

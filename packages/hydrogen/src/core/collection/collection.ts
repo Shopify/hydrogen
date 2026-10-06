@@ -188,6 +188,7 @@ type CollectionStoreContext = {
  *
  * store.subscribe((state) => renderFilters(state.filters));
  * ```
+ * @publicDocs
  */
 export function createCollectionStore(options: CreateCollectionStoreOptions): CollectionStore {
   const initialState = buildInitialState(options);

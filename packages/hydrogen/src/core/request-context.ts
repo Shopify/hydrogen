@@ -125,6 +125,12 @@ type Context<I18n extends I18nConfig = I18nConfig> = {
   documentRequest?: boolean;
 };
 
+/**
+ * Creates the per-request context that Hydrogen's server APIs take. It normalizes the i18n config
+ * and owns the request and response headers a Shopify storefront needs.
+ *
+ * @publicDocs
+ */
 export function createShopifyRequestContext<const I18n extends I18nConfig>(
   input: ShopifyRequestContextWithBuyerIpInput<I18n>,
 ): ShopifyRequestContextWithBuyerIp<I18n>;
