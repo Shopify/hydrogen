@@ -1,3 +1,4 @@
+import type {GeneratedRoute} from './types.js';
 import {readdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {
@@ -17,7 +18,7 @@ import {
 } from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
-import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
+import {isTTY, renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {transpileFile} from '../../transpile/index.js';
 import {
   type FormatOptions,
@@ -94,12 +95,6 @@ export async function getResolvedRoutes(
 
 export const ALL_ROUTE_CHOICES = [...Object.keys(ROUTE_MAP), 'all'];
 
-type GenerateRoutesResult = {
-  sourceRoute: string;
-  destinationRoute: string;
-  operation: 'created' | 'skipped' | 'replaced';
-};
-
 type GenerateRoutesOptions = Omit<
   GenerateProjectFileOptions,
   'localePrefix'
@@ -139,7 +134,23 @@ export async function generateRoutes(
     (await fileExists(joinPath(rootDirectory, 'tsconfig.json')))
   );
 
-  const routes: GenerateRoutesResult[] = [];
+  if (!options.force && options.overwriteFileDeps !== false && !isTTY()) {
+    for (const route of routesArray) {
+      const destination = joinPath(
+        appDirectory,
+        getDestinationRoute(route, localePrefix, options) +
+          (typescript ? '.tsx' : '.jsx'),
+      );
+      if (await fileExists(destination)) {
+        throw new AbortError(
+          'Generating routes requires confirmation before replacing existing files.',
+          'Use --force to replace them, or run in an interactive terminal.',
+        );
+      }
+    }
+  }
+
+  const routes: GeneratedRoute[] = [];
   for (const route of routesArray) {
     routes.push(
       await generateProjectFile(route, {
@@ -154,13 +165,17 @@ export async function generateRoutes(
   }
 
   if (localePrefix) {
-    await copyLocaleNamelessRoute({
-      typescript,
-      localePrefix,
-      routesDirectory,
-      formatOptions,
-      adapter: options.adapter,
-    });
+    routes.push(
+      await copyLocaleNamelessRoute({
+        typescript,
+        localePrefix,
+        routesDirectory,
+        rootDirectory,
+        formatOptions,
+        adapter: options.adapter,
+        force: options.force,
+      }),
+    );
   }
 
   return {
@@ -232,7 +247,7 @@ export async function generateProjectFile(
     formatOptions?: FormatOptions;
     v1RouteConvention?: boolean;
   },
-): Promise<GenerateRoutesResult> {
+): Promise<GeneratedRoute> {
   templatesRoot ??= await getStarterDir();
 
   const extension = (routeFrom.match(/(\.[jt]sx?)$/) ?? [])[1] ?? '.tsx';
@@ -244,13 +259,14 @@ export async function generateProjectFile(
       (typescript ? extension : extension.replace('.ts', '.js')),
   );
 
-  const result: GenerateRoutesResult = {
-    operation: 'created',
+  const exists = await fileExists(routeDestinationPath);
+  const result: GeneratedRoute = {
+    operation: exists ? 'replaced' : 'created',
     sourceRoute: routeFrom,
     destinationRoute: relativizePath(routeDestinationPath, rootDirectory),
   };
 
-  if (!force && (await fileExists(routeDestinationPath))) {
+  if (!force && exists && overwriteFileDeps) {
     const shouldOverwrite = await renderConfirmationPrompt({
       message: `The file ${result.destinationRoute} already exists. Do you want to replace it?`,
       defaultValue: false,
@@ -259,9 +275,8 @@ export async function generateProjectFile(
       abortSignal: signal,
     });
 
-    if (!shouldOverwrite) return {...result, operation: 'skipped'};
-
-    result.operation = 'replaced';
+    if (!shouldOverwrite)
+      return {...result, operation: 'skipped', skipReason: 'declined'};
   }
 
   const routeTemplatePath = await getTemplateAppFile(
@@ -283,6 +298,10 @@ export async function generateProjectFile(
         );
 
     if (!overwriteFileDeps && (await fileExists(destinationPath))) {
+      if (isRoute) {
+        result.operation = 'skipped';
+        result.skipReason = 'exists';
+      }
       continue;
     }
 
@@ -456,22 +475,32 @@ function copyLocaleNamelessRoute({
 }
 
 type RouteTemplateOptions = {
+  rootDirectory: string;
   routesDirectory: string;
   templateName: string;
   routeName: string;
   formatOptions?: FormatOptions;
-} & Pick<GenerateProjectFileOptions, 'adapter' | 'typescript'>;
+} & Pick<GenerateProjectFileOptions, 'adapter' | 'typescript' | 'force'>;
 
 async function copyRouteTemplate({
+  rootDirectory,
   templateName,
   routeName,
   routesDirectory,
   formatOptions,
   typescript,
   adapter,
-}: RouteTemplateOptions) {
+  force,
+}: RouteTemplateOptions): Promise<GeneratedRoute> {
   const routePath = joinPath(routesDirectory, routeName);
-  if (await fileExists(routePath)) return;
+  const exists = await fileExists(routePath);
+  const result: GeneratedRoute = {
+    sourceRoute: 'routes/' + templateName.replace(/\.tsx?$/, ''),
+    destinationRoute: relativizePath(routePath, rootDirectory),
+    operation: exists ? 'replaced' : 'created',
+  };
+  if (exists && !force)
+    return {...result, operation: 'skipped', skipReason: 'exists'};
 
   const templatePath = await getAssetsDir('routes', templateName);
 
@@ -492,4 +521,5 @@ async function copyRouteTemplate({
   templateContent = await formatCode(templateContent, formatOptions, routePath);
 
   await writeFile(routePath, templateContent);
+  return result;
 }

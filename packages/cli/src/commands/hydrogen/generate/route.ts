@@ -92,7 +92,22 @@ export async function runGenerate(
     v1RouteConvention: isV1RouteConventionInstalled(),
   });
 
-  const result = {routes, routeGroups, isTypescript};
+  const changed = routes.some(({operation}) => operation !== 'skipped');
+  const result = {
+    status:
+      !changed && routes.length ? ('skipped' as const) : ('success' as const),
+    changed,
+    routes: routes.map(
+      ({sourceRoute, destinationRoute, operation, skipReason}) => ({
+        sourceRoute,
+        destinationRoute,
+        operation,
+        ...(skipReason ? {skipReason} : {}),
+      }),
+    ),
+    routeGroups,
+    isTypescript,
+  };
   if (!writeJsonResult(generateRoutesJsonOutputSchema, result, json))
     renderGeneratedRoutes(result);
   return result;

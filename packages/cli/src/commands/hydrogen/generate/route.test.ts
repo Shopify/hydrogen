@@ -88,7 +88,11 @@ it('encodes created, replaced and skipped routes without the success banner', as
   const {stdout, stderr} = await captureJsonOutput(() =>
     runGenerate({routeName: 'all', directory: '/project'}),
   );
-  expect(JSON.parse(stdout)).toEqual(result);
+  expect(JSON.parse(stdout)).toEqual({
+    ...result,
+    status: 'success',
+    changed: true,
+  });
   expect(stderr).toBe('');
   expect(() =>
     GenerateRoute.jsonOutputSchema.encode({
@@ -112,6 +116,8 @@ it('forwards all-route flags without reconstructing false boolean arguments', as
   try {
     const {stdout} = await captureJsonOutput(() => command.run());
     expect(JSON.parse(stdout)).toEqual({
+      status: 'success',
+      changed: false,
       routes: [],
       routeGroups: {},
       isTypescript: false,
