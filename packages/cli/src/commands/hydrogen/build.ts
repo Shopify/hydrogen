@@ -1,6 +1,7 @@
 import {writeJsonResult, isJsonOutput} from '../../lib/json-output.js';
 import {
   flushStdout,
+  unstyled,
   outputWarn,
   collectLog,
   outputInfo,
@@ -38,6 +39,7 @@ import {importVite} from '../../lib/import-utils.js';
 import {deferPromise, type DeferredPromise} from '../../lib/defer.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {realpath} from 'node:fs/promises';
 
 export default class Build extends Command {
   static get jsonOutputSchema(): typeof buildJsonOutputSchema {
@@ -113,6 +115,7 @@ export default class Build extends Command {
 const WORKER_BUILD_SIZE_LIMIT = 5;
 
 type RunBuildOptions = {
+  json?: boolean;
   entry?: string;
   directory?: string;
   useCodegen?: boolean;
@@ -129,6 +132,7 @@ type RunBuildOptions = {
 };
 
 export async function runBuild({
+  json = isJsonOutput(),
   entry: ssrEntry,
   directory,
   useCodegen = false,
@@ -149,7 +153,9 @@ export async function runBuild({
 
   assetPath = assetPath ?? process.env.HYDROGEN_ASSET_BASE_URL ?? '/';
 
-  const root = directory ?? process.cwd();
+  // Vite resolves source files through symlinks. Use the same root for both
+  // builds so Remix can match its client manifest to the server entry points.
+  const root = await realpath(directory ?? process.cwd());
 
   if (lockfileCheck) {
     await checkLockfileStatus(root, isCI());
@@ -173,14 +179,26 @@ export async function runBuild({
     customLogger.error = (msg) => collectLog('error', msg);
   }
 
-  if (isJsonOutput()) {
+  if (json) {
     customLogger.info = (message) =>
-      emitCommandEvent({type: 'diagnostic', level: 'info', message});
+      emitCommandEvent({
+        type: 'diagnostic',
+        level: 'info',
+        message: unstyled(message),
+      });
     customLogger.warn = (message) =>
-      emitCommandEvent({type: 'diagnostic', level: 'warning', message});
+      emitCommandEvent({
+        type: 'diagnostic',
+        level: 'warning',
+        message: unstyled(message),
+      });
     customLogger.warnOnce = customLogger.warn;
     customLogger.error = (message) =>
-      emitCommandEvent({type: 'diagnostic', level: 'error', message});
+      emitCommandEvent({
+        type: 'diagnostic',
+        level: 'error',
+        message: unstyled(message),
+      });
   }
 
   const serverMinify = userViteConfig.build?.minify ?? true;
@@ -189,6 +207,8 @@ export async function runBuild({
     mode: process.env.NODE_ENV,
     base: assetPath,
     customLogger,
+    // Vite’s reporter writes TTY progress directly to stdout at info level.
+    ...(json ? {logLevel: 'warn' as const} : {}),
   };
 
   let clientBuildStatus: DeferredPromise;
@@ -229,7 +249,7 @@ export async function runBuild({
     ],
   });
 
-  if (!isJsonOutput()) console.log('');
+  if (!json) console.log('');
 
   let serverBuildStatus: DeferredPromise;
 
@@ -370,10 +390,10 @@ export async function runBuild({
 
   return {
     result: {
-      directory: root,
-      clientDirectory: clientOutDir,
-      serverDirectory: serverOutDir,
-      serverFile: serverOutFile,
+      directory: resolvePath(root),
+      clientDirectory: resolvePath(clientOutDir),
+      serverDirectory: resolvePath(serverOutDir),
+      serverPath: resolvePath(serverOutFile),
     } satisfies import('../../lib/build-tooling/types.js').BuildResult,
     async close() {
       codegenProcess?.removeAllListeners('close');

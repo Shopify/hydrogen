@@ -62,16 +62,18 @@ export async function runCodegen({
   codegenConfigPath,
   forceSfapiVersion,
   watch,
+  json = isJsonOutput(),
 }: {
   directory?: string;
   codegenConfigPath?: string;
   forceSfapiVersion?: string;
   watch?: boolean;
+  json?: boolean;
 }) {
   const {root} = getProjectPaths(directory);
   const remixConfig = await getRemixConfig(root);
 
-  if (!isJsonOutput()) console.log(''); // New line
+  if (!json) console.log(''); // New line
 
   const generatedFiles = await codegen({
     ...remixConfig,
@@ -80,8 +82,13 @@ export async function runCodegen({
     watch,
   });
 
-  const result = {generatedFiles};
-  if (!watch && !writeJsonResult(codegenJsonOutputSchema, result)) {
+  const result = {
+    files: Object.entries(generatedFiles).map(([path, sources]) => ({
+      path: resolvePath(root, path),
+      sources,
+    })),
+  };
+  if (!watch && !writeJsonResult(codegenJsonOutputSchema, result, json)) {
     renderSuccess({
       headline: 'Generated types for GraphQL:',
       body: {

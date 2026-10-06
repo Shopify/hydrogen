@@ -67,8 +67,11 @@ export async function checkRoutes({
   directory: string;
 }): Promise<import('../../lib/check/types.js').CheckResult> {
   const remixConfig = await getRemixConfig(directory);
+  const missingRoutes = findMissingRoutes(remixConfig);
+  const reservedRoutes = findReservedRoutes(remixConfig);
   return {
-    missingRoutes: findMissingRoutes(remixConfig),
-    reservedRoutes: findReservedRoutes(remixConfig),
+    valid: missingRoutes.length === 0 && reservedRoutes.length === 0,
+    missingRoutes,
+    reservedRoutes,
   };
 }
