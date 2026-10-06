@@ -57,7 +57,7 @@ After a JavaScript-enabled click, the selected variant must be represented in th
 - For a link, the URL must match the link's href (query param order can differ). Every link with the clicked accessible name and href must have `aria-current="true"`, and there must be at least one.
 - For a button, one more button with the clicked accessible name must have `aria-pressed="true"`. Buttons have no href, so this check cannot tell repeated labels in different option groups apart.
 
-Loading the selected URL directly must render the product heading and the same selected state.
+Loading the selected URL directly must render the product heading and the same selected state. Selected values must be visibly indicated (styling or text). The suite checks selected-control semantics, not that visible indication.
 
 The suite also opens product pages with JavaScript disabled. The product heading must render, and at least one probed product must expose a same-product variant link that is not `aria-current`. A native click on that link must load its href, keep the non-option query param, and the server-rendered page must mark every link with the same accessible name and href `aria-current="true"`.
 

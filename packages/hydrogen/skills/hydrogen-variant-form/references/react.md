@@ -43,9 +43,9 @@ const location = useLocation();
 </ProductProvider>
 ```
 
-`variantUrl(product, selectedOptions, handle, base)` calls `buildProductSelectionSearchParams` with the product option names and `base`, then returns `/products/{handle}?{params}`.
+`variantUrl(product, selectedOptions, handle, base)` calls `buildProductSelectionSearchParams` with the product option names and `base`, then returns `/products/{handle}?{params}`; `handle` defaults to `product.handle`.
 
-If the installed React Router supports the `defaultShouldRevalidate` navigate option (React Router 7.15.1 does), `onSelect` can pass `defaultShouldRevalidate: false` for `resolved` selections. Do this only when no other UI on the route needs fresh loader data (see the skill's refetch rule). Leave it out for `unresolved` selections, so the loader resolves the exact variant.
+`defaultShouldRevalidate: false` is optional. Use it only for `resolved` selections, only when no other UI on the route needs fresh loader data, and only if the installed React Router supports it. Leave it out for `unresolved` selections, so the loader resolves the exact variant. A route `shouldRevalidate` export still makes the final decision.
 
 Same-product option values are GET links so selection works without JavaScript. The `to` is the option URL built from `value.selectedOptions` with the same base as `onSelect`. Do not spread the registration onto `Link`. Pass a guarded `onClick` instead: for a plain primary click it calls `event.preventDefault()` and then `registered.onClick()`. React Router's `Link` does not navigate when the event is already prevented, so the provider `onSelect` is the only navigation. Other clicks keep native link behavior. Keep sold-out-but-existing values interactive and derive their visual treatment from `value.available`:
 
