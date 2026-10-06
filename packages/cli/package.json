@@ -129,9 +129,6 @@
       "hydrogen:setup": {
         "description": "Scaffolds new functionality."
       }
-    },
-    "plugins": [
-      "@shopify/plugin-cloudflare"
-    ]
+    }
   }
 }
