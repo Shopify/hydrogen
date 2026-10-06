@@ -112,6 +112,7 @@ function useOptionalCartStore(): CartStore | null {
  *   <App />
  * </CartProvider>
  * ```
+ * @publicDocs
  */
 export const CartProvider = defineComponent({
   name: "CartProvider",
@@ -158,6 +159,7 @@ export const CartProvider = defineComponent({
  * const isPending = useCart((s) => s.pending.lines.has(lineId));
  * </script>
  * ```
+ * @publicDocs
  */
 export function useCart(): Readonly<ShallowRef<CartState>>;
 export function useCart<TData extends CartData = CartData, S = unknown>(
@@ -190,6 +192,7 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
  * }
  * </script>
  * ```
+ * @publicDocs
  */
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
@@ -208,6 +211,7 @@ export function useCartActions(): CartActions {
  * useCartAnalytics();
  * </script>
  * ```
+ * @publicDocs
  */
 export function useCartAnalytics(): void {
   const store = useCartStore("useCartAnalytics");
@@ -221,8 +225,24 @@ export function useCartAnalytics(): void {
 }
 
 /**
- * Like `useCart`, but returns `undefined` when rendered outside a `<CartProvider>`.
- * @internal
+ * Like `useCart`, but returns a ref holding `undefined` instead of throwing when used
+ * outside a `<CartProvider>`.
+ *
+ * Use it for a component that renders both inside and outside the provider, such as a
+ * header cart badge that also appears on an error page mounted above `<CartProvider>`.
+ * Prefer `useCart` wherever the provider is guaranteed, so a missing provider fails loudly.
+ *
+ * @example
+ * ```vue
+ * <script setup>
+ * const count = useOptionalCart((state) => state.data.totalQuantity);
+ * </script>
+ *
+ * <template>
+ *   <span v-if="count !== undefined">Cart ({{ count }})</span>
+ * </template>
+ * ```
+ * @publicDocs
  */
 export function useOptionalCart<TData extends CartData = CartData, S = unknown>(
   selector: (state: CartState<TData>) => S,
@@ -280,6 +300,7 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
  *   </form>
  * </template>
  * ```
+ * @publicDocs
  */
 export function useCartForm(): {
   formProps: (opts?: {
@@ -340,6 +361,7 @@ export function useCartForm(): {
  *   useCartForm,
  * } = createCartComponents<typeof cartServerHandlers>();
  * ```
+ * @publicDocs
  */
 export function createCartComponents<THandlers>(): TypedCartComponents<
   CartDataFromHandlers<THandlers>

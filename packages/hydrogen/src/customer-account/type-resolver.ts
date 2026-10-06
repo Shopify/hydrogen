@@ -23,6 +23,7 @@ type CustomerAccountSchema = GraphQLSchemaFor<introspection, CustomerAccountScal
  * type Result = InferResult<typeof QUERY>;
  * type Variables = InferVariables<typeof QUERY>;
  * ```
+ * @publicDocs
  */
 export type InferResult<T extends string> = InferResultForSchema<T, CustomerAccountSchema>;
 
@@ -32,5 +33,7 @@ export type InferResult<T extends string> = InferResultForSchema<T, CustomerAcco
  * Uses the Customer Account API introspection schema and scalar mappings. This is
  * the Customer Account counterpart of `InferVariables` from `@shopify/hydrogen`
  * (Storefront API). See {@link InferResult} for an example.
+ *
+ * @publicDocs
  */
 export type InferVariables<T extends string> = InferVariablesForSchema<T, CustomerAccountSchema>;

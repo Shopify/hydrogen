@@ -29,6 +29,8 @@ const SHOPIFY_ROUTE_INTERCEPTORS = [
  * `null` when none do. Use it as the first step of request handling, before
  * framework routing. Matched responses already include request-context
  * response headers.
+ *
+ * @publicDocs
  */
 export const handleShopifyRoutes: HydrogenRouteHandler = (options) => {
   if (options.requestContext !== options.storefrontClient.requestContext) {

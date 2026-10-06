@@ -169,6 +169,8 @@ function useProductFormImpl<TProduct extends ProductInput>(
  * lifecycle. Create the store with `createProductFormStore` and manage its
  * lifecycle (hydration, destruction) yourself, or use
  * `createProductComponents` for a provider-based approach.
+ *
+ * @publicDocs
  */
 export function useProductForm<TProduct extends ProductInput>(
   store: ProductFormStore<TProduct>,
@@ -191,6 +193,8 @@ export function useProductForm<TProduct extends ProductInput>(
  * - `useProductForm` provides form-binding utilities (register, formProps, pending)
  *
  * Requires a `<CartProvider>` ancestor.
+ *
+ * @publicDocs
  */
 export function createProductComponents<TProduct extends ProductInput>(): {
   ProductProvider: ReturnType<typeof defineComponent>;

@@ -88,7 +88,9 @@ export type PredictiveSearchFormRegister = (
   options?: PredictiveSearchQueryInputPropsOptions,
 ) => InputHTMLAttributes<HTMLInputElement>;
 
-/** Return type of {@link usePredictiveSearchForm}, providing methods to build a progressively-enhanced search form. */
+/**
+ * Return type of {@link usePredictiveSearchForm}, providing methods to build a progressively-enhanced search form.
+ */
 export type PredictiveSearchFormResult = {
   /** Generates form element attributes including the search action and submit handler. */
   formProps(options?: PredictiveSearchFormPropsOptions): FormHTMLAttributes<HTMLFormElement>;
@@ -104,6 +106,7 @@ export type PredictiveSearchFormResult = {
  * on mount and destroys it on unmount.
  *
  * @throws {Error} When no `fetch` implementation is available (neither passed as a prop nor available on `globalThis`).
+ * @publicDocs
  */
 export function PredictiveSearchProvider({
   children,
@@ -213,6 +216,7 @@ function useRequiredContext(hookName: string): PredictiveSearchContextValue {
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
  * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @publicDocs
  */
 export function usePredictiveSearch<
   TData extends PredictiveSearchData = PredictiveSearchData,
@@ -272,6 +276,7 @@ export function usePredictiveSearch<
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
  * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @publicDocs
  */
 export function usePredictiveSearchActions(): PredictiveSearchActions {
   return useRequiredContext("usePredictiveSearchActions").actions;
@@ -291,6 +296,7 @@ export function usePredictiveSearchActions(): PredictiveSearchActions {
  * Must be used inside a {@link PredictiveSearchProvider}.
  *
  * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @publicDocs
  */
 export function usePredictiveSearchForm(): PredictiveSearchFormResult {
   const { searchAction, actions } = useRequiredContext("usePredictiveSearchForm");

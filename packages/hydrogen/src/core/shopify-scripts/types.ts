@@ -94,6 +94,10 @@ export type ShopifyScriptTagsOptions = {
   shopifyAnalytics?: boolean;
 };
 
+/**
+ * Route wiring for Shopify's scripts: the storefront's route templates and a `navigate` callback
+ * for client-side navigation.
+ */
 export type ShopifyRoutesOptions = {
   navigate?: ShopifyGlobal["routes"]["navigate"];
   routes?: ShopifyRouteTemplates;
@@ -105,4 +109,10 @@ export type InitializeShopifyScriptsOptions = ShopifyRoutesOptions & {
   webMcp?: boolean;
 };
 
+/**
+ * One options object for both `renderShopifyScriptTags` and `initializeShopifyScripts`. Build it
+ * once and pass it to both calls.
+ *
+ * @publicDocs
+ */
 export type ShopifyScriptsOptions = ShopifyScriptTagsOptions & InitializeShopifyScriptsOptions;

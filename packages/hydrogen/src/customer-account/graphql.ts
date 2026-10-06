@@ -32,7 +32,9 @@ export type CustomerAccountDocument<
   readonly source: Source;
 };
 
-/** Widened alias for {@link CustomerAccountDocument}. Use as a constraint when accepting any Customer Account document. */
+/**
+ * Widened alias for {@link CustomerAccountDocument}. Use as a constraint when accepting any Customer Account document.
+ */
 export type AnyCustomerAccountDocument = CustomerAccountDocument<unknown, never, string>;
 
 /** Extracts the source string literal type from a {@link CustomerAccountDocument}. */
@@ -60,6 +62,8 @@ export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocumen
 /**
  * Combines an operation source with its {@link FragmentSources} at the type
  * level. When `Fragments` is empty the result is just `Source`.
+ *
+ * @publicDocs
  */
 export type ComposedSource<
   Source extends string,
@@ -134,6 +138,7 @@ type CustomerAccountGql = {
  *   }
  * `, [ORDER_FIELDS]);
  * ```
+ * @publicDocs
  */
 // oxlint-disable-next-line typescript-eslint/consistent-type-assertions -- gql.tada adds phantom helper properties to the function type that are not used at runtime.
 export const gql = ((source: string, fragments?: readonly CustomerAccountDocument[]) => {

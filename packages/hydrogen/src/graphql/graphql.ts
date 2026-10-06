@@ -31,7 +31,9 @@ export type StorefrontQueryString<
     readonly __hydrogenQuerySource?: Source;
   };
 
-/** Any `gql()`-branded string, regardless of inferred Result/Variables. Used in constraints that accept any Storefront document. */
+/**
+ * Any `gql()`-branded string, regardless of inferred Result/Variables. Used in constraints that accept any Storefront document.
+ */
 export type AnyStorefrontQueryString = string & StorefrontQueryMetadata;
 
 /** Extracts the literal source text from a `gql()`-branded document type. Resolves to `never` for unbranded strings. */
@@ -122,6 +124,7 @@ type StorefrontGql = {
  *   console.log(result.data.product?.title);
  * }
  * ```
+ * @publicDocs
  */
 // oxlint-disable-next-line typescript-eslint/consistent-type-assertions -- gql.tada adds phantom helper properties to the function type that are not used at runtime.
 export const gql = ((source: string, fragments?: Array<string>) => {

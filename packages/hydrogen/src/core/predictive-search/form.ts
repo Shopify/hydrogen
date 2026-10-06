@@ -1,6 +1,10 @@
 import { PREDICTIVE_SEARCH_QUERY_PARAM } from "./constants";
 
-/** Props returned by {@link PredictiveSearchFormRegister} for the query input. */
+/**
+ * Props returned by {@link PredictiveSearchFormRegister} for the query input.
+ *
+ * @publicDocs
+ */
 export interface PredictiveSearchQueryInputAttributes {
   name: "q";
   type: "search";
@@ -17,15 +21,23 @@ export interface PredictiveSearchFormAttributes {
 }
 
 /**
- * Register function returned by predictive search form bindings.
+ * Register function for predictive search forms.
  *
  * Predictive search forms only register the Storefront API query input.
+ *
+ * Building block for the framework bindings. Use it directly on a framework without one.
  */
 export type PredictiveSearchFormRegister = {
   (field: "query"): PredictiveSearchQueryInputAttributes;
 };
 
-/** Creates a {@link PredictiveSearchFormRegister} for framework-neutral form fields. */
+/**
+ * Creates a {@link PredictiveSearchFormRegister} for framework-neutral form fields.
+ *
+ * Building block for the framework bindings. Use it directly on a framework without one.
+ *
+ * @publicDocs
+ */
 export function createPredictiveSearchFormRegister(): PredictiveSearchFormRegister {
   return registerPredictiveSearchFormField;
 }
@@ -44,7 +56,13 @@ function registerPredictiveSearchFormField(field: string): PredictiveSearchQuery
   };
 }
 
-/** Returns progressive-enhancement attributes for a predictive search form. */
+/**
+ * Returns progressive-enhancement attributes for a predictive search form.
+ *
+ * Building block for the framework bindings. Use it directly on a framework without one.
+ *
+ * @publicDocs
+ */
 export function getPredictiveSearchFormAttributes(
   action: string = "/search",
 ): PredictiveSearchFormAttributes {
@@ -55,7 +73,13 @@ export function getPredictiveSearchFormAttributes(
   };
 }
 
-/** Reads the search term from form data submitted by a predictive search form. Returns an empty string when the `"q"` field is absent or not a string. */
+/**
+ * Reads the search term from form data submitted by a predictive search form. Returns an empty string when the `"q"` field is absent or not a string.
+ *
+ * Building block for the framework bindings. Use it directly on a framework without one.
+ *
+ * @publicDocs
+ */
 export function readPredictiveSearchFormTerm(formData: FormData): string {
   const value = formData.get(PREDICTIVE_SEARCH_QUERY_PARAM);
   return typeof value === "string" ? value : "";

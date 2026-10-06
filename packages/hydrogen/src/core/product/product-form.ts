@@ -116,14 +116,22 @@ export interface ProductFormStore<
 // Utilities
 // ---------------------------------------------------------------------------
 
-/** Returns the selected variant, or `null` when the selection is partial or the variant wasn't part of the query result. */
+/**
+ * Returns the selected variant, or `null` when the selection is partial or the variant wasn't part of the query result.
+ *
+ * @publicDocs
+ */
 export function getSelectedVariant<TVariant extends ProductVariantInput>(
   options: VariantOptionState<TVariant, ProductOptionValueInput>[],
 ): TVariant | null {
   return options[0]?.values.find((v) => v.selected)?.variant ?? null;
 }
 
-/** Guards whether the current selection can be added to cart — a variant must be resolved and available, and the product must not require a selling plan. */
+/**
+ * Guards whether the current selection can be added to cart — a variant must be resolved and available, and the product must not require a selling plan.
+ *
+ * @publicDocs
+ */
 export function canAddToCart<TProduct extends ProductInput>(
   product: TProduct,
   options: VariantOptionState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>[],
@@ -138,6 +146,8 @@ export function canAddToCart<TProduct extends ProductInput>(
  * When selling plans are used, the same merchandise ID can appear on multiple
  * cart lines — this returns the first match. Future attribute-based matching
  * will narrow to the exact line.
+ *
+ * @publicDocs
  */
 export function findCartLineByMerchandiseId(
   lines: CartLine[],
@@ -186,6 +196,7 @@ type ProductFormStoreContext<TProduct extends ProductInput> = {
  *
  * store.selectOption("Color", "Red");
  * ```
+ * @publicDocs
  */
 export function createProductFormStore<TProduct extends ProductInput>(
   product: TProduct,

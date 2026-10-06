@@ -73,6 +73,8 @@ const state: LoggingState = {
  * wins). Inline bootstrap scripts that Hydrogen serializes into HTML
  * (analytics, consent) run outside the app bundle and always write to the
  * console with the standard prefix; they cannot receive a custom logger.
+ *
+ * @publicDocs
  */
 export function configureLogging(options: ConfigureLoggingOptions): void {
   const logger = options.logger ?? consoleLogger;

@@ -40,6 +40,8 @@ export type CollectionReconciler = {
  *
  * Framework adapters delegate to this so the reconciliation logic
  * lives in one place.
+ *
+ * @publicDocs
  */
 export function createCollectionReconciler(
   callbacks: ReconcilerCallbacks,

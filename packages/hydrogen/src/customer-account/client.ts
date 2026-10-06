@@ -208,6 +208,7 @@ export type CustomerAccountClient = {
  * ```
  *
  * @throws {Error} When called in a browser context, when `shopId`, `customerApiVersion`, or `defaultTimeoutInMs` is invalid, when no `fetch` is available, or when `requestContext.url` is missing or not HTTPS.
+ * @publicDocs
  */
 export function createCustomerAccountClient({
   shopId,

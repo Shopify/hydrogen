@@ -86,6 +86,7 @@ type TypedCartComponents<TData extends CartData> = {
  *   useCartForm,
  * } = createCartComponents<typeof cartServerHandlers>();
  * ```
+ * @publicDocs
  */
 export function createCartComponents<THandlers>(): TypedCartComponents<
   CartDataFromHandlers<THandlers>
@@ -157,6 +158,7 @@ function useOptionalCartStore(): CartStore | null {
  *   <App />
  * </CartProvider>
  * ```
+ * @publicDocs
  */
 export function CartProvider({
   initialData,
@@ -200,6 +202,7 @@ export function CartProvider({
  *   (a, b) => a.amount === b.amount,
  * );
  * ```
+ * @publicDocs
  */
 export function useCart<TData extends CartData = CartData, S = unknown>(
   selector: (state: CartState<TData>) => S,
@@ -225,6 +228,7 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
  *   refresh(); // re-fetch the cart
  * }
  * ```
+ * @publicDocs
  */
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
@@ -246,6 +250,7 @@ export function useCartActions(): CartActions {
  *   return <Layout />;
  * }
  * ```
+ * @publicDocs
  */
 export function useCartAnalytics(): void {
   const store = useCartStore("useCartAnalytics");
@@ -254,8 +259,22 @@ export function useCartAnalytics(): void {
 }
 
 /**
- * Like `useCart`, but returns `undefined` when rendered outside a `<CartProvider>`.
- * @internal
+ * Like `useCart`, but returns `undefined` instead of throwing when rendered outside a
+ * `<CartProvider>`.
+ *
+ * Use it for a component that renders both inside and outside the provider, such as a
+ * header cart badge that also appears on an error page mounted above `<CartProvider>`.
+ * Prefer `useCart` wherever the provider is guaranteed, so a missing provider fails loudly.
+ *
+ * @example
+ * ```tsx
+ * function CartBadge() {
+ *   const count = useOptionalCart((state) => state.data.totalQuantity);
+ *   if (count === undefined) return null;
+ *   return <span>Cart ({count})</span>;
+ * }
+ * ```
+ * @publicDocs
  */
 export function useOptionalCart<TData extends CartData = CartData, S = unknown>(
   selector: (state: CartState<TData>) => S,
@@ -327,6 +346,7 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
  *   );
  * }
  * ```
+ * @publicDocs
  */
 export function useCartForm() {
   const store = useCartStore("useCartForm");

@@ -115,7 +115,9 @@ export interface VariantOptionValueState<
   handle: string;
 }
 
-/** Computed state for a product option (e.g. "Color"), grouping its {@link VariantOptionValueState} entries. */
+/**
+ * Computed state for a product option (e.g. "Color"), grouping its {@link VariantOptionValueState} entries.
+ */
 export interface VariantOptionState<
   TVariant extends ProductVariantInput = ProductVariantInput,
   TOptionValue extends ProductOptionValueInput = ProductOptionValueInput,

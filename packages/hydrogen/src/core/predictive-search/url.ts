@@ -11,9 +11,13 @@ export type PredictiveSearchProductItem = PredictiveSearchItems["products"][numb
 export type PredictiveSearchCollectionItem = PredictiveSearchItems["collections"][number];
 /** A page returned by predictive search. */
 export type PredictiveSearchPageItem = PredictiveSearchItems["pages"][number];
-/** An article returned by predictive search. Includes a nested `blog.handle` used for URL generation via {@link getPredictiveSearchItemUrl}. */
+/**
+ * An article returned by predictive search. Includes a nested `blog.handle` used for URL generation via {@link getPredictiveSearchItemUrl}.
+ */
 export type PredictiveSearchArticleItem = PredictiveSearchItems["articles"][number];
-/** A search query suggestion returned by predictive search. Uses `text` as the search term when generating its URL via {@link getPredictiveSearchItemUrl}. */
+/**
+ * A search query suggestion returned by predictive search. Uses `text` as the search term when generating its URL via {@link getPredictiveSearchItemUrl}.
+ */
 export type PredictiveSearchQueryItem = PredictiveSearchItems["queries"][number];
 
 /** Union of product, collection, page, and article items. Excludes query suggestions. */
@@ -86,6 +90,7 @@ type SearchResultUrlOptions = {
  * Always appends the item's `trackingParameters` when present.
  *
  * @throws {Error} When a resource item is passed without `routes` and `term` in options.
+ * @publicDocs
  */
 export function getPredictiveSearchItemUrl(
   item: PredictiveSearchQueryItem,
@@ -114,6 +119,8 @@ export function getPredictiveSearchItemUrl(
  * existing value. `params` are set the same way, and `trackingParameters`
  * are appended. Returns a relative URL unless the base
  * URL is absolute.
+ *
+ * @publicDocs
  */
 export function getSearchResultUrl({
   baseUrl,

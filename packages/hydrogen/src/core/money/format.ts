@@ -378,6 +378,8 @@ class FormattedMoneyRangeValue implements FormattedMoneyRange {
  * Returns an object that stringifies to the locale-formatted price via
  * toString(). Structured fields on single prices are computed lazily when
  * accessed, so the common string path stays cheap.
+ *
+ * @publicDocs
  */
 export function formatMoney(money: MoneyV2, options: FormatMoneyOptions): FormattedMoney;
 export function formatMoney(
