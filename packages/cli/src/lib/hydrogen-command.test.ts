@@ -2,6 +2,10 @@ import {mkdirSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import type {Config} from '@oclif/core';
+import {isTerminalInteractive} from '@shopify/cli-kit/node/context/local';
+import {terminalSupportsPrompting} from '@shopify/cli-kit/node/system';
+import {renderTextPrompt} from '@shopify/cli-kit/node/ui';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
 import ShopifyCommand from '@shopify/cli-kit/node/base-command';
 import {withCapturedStandardStreams} from '@shopify/cli-kit/node/testing/output';
 import {afterEach, beforeEach, expect, it, vi} from 'vitest';
@@ -35,6 +39,9 @@ beforeEach(() => {
     ShopifyCommand.prototype as unknown as {init(): Promise<unknown>},
     'init',
   ).mockResolvedValue(undefined);
+  vi.stubEnv('CI', undefined);
+  vi.stubEnv('TERM', 'xterm');
+  vi.stubEnv('SHOPIFY_FLAG_NO_INPUT', undefined);
   vi.stubEnv('SHOPIFY_FLAG_JSON', undefined);
   vi.stubEnv('SHOPIFY_FLAG_JSON_SCHEMA', undefined);
   vi.stubEnv('SHOPIFY_HYDROGEN_FLAG_PATH', undefined);
@@ -164,5 +171,89 @@ it.each(['hydrogen:init', 'theme:dev'])(
     const subject = command([], id);
     await subject.execute();
     expect(subject.ran).toBe(true);
+  },
+);
+
+class PromptCommand extends TestCommand {
+  static flags = {...jsonFlag};
+
+  async run(): Promise<void> {
+    await this.parse(PromptCommand);
+    await renderTextPrompt({message: 'Storefront name'});
+  }
+}
+
+it.each([
+  {json: false, noInput: false},
+  {json: true, noInput: false},
+  {json: false, noInput: true},
+  {json: true, noInput: true},
+])('keeps output format independent from prompting: %j', ({json, noInput}) => {
+  const stdinDescriptor = Object.getOwnPropertyDescriptor(
+    process.stdin,
+    'isTTY',
+  );
+  const stdoutDescriptor = Object.getOwnPropertyDescriptor(
+    process.stdout,
+    'isTTY',
+  );
+  Object.defineProperty(process.stdin, 'isTTY', {
+    value: true,
+    configurable: true,
+  });
+  Object.defineProperty(process.stdout, 'isTTY', {
+    value: true,
+    configurable: true,
+  });
+  process.argv = [
+    process.execPath,
+    'shopify',
+    ...(json ? ['--json'] : []),
+    ...(noInput ? ['--no-input'] : []),
+  ];
+  try {
+    expect(terminalSupportsPrompting()).toBe(!noInput);
+    expect(isTerminalInteractive()).toBe(!noInput);
+  } finally {
+    if (stdinDescriptor)
+      Object.defineProperty(process.stdin, 'isTTY', stdinDescriptor);
+    else Reflect.deleteProperty(process.stdin, 'isTTY');
+    if (stdoutDescriptor)
+      Object.defineProperty(process.stdout, 'isTTY', stdoutDescriptor);
+    else Reflect.deleteProperty(process.stdout, 'isTTY');
+  }
+});
+
+it.each([false, true])(
+  'reports missing required input with no-input and json=%s',
+  async (json) => {
+    createProject();
+    const argv = ['--no-input', ...(json ? ['--json'] : [])];
+    const subject = new PromptCommand(argv, {
+      runHook: async () => ({successes: [], failures: []}),
+    } as unknown as Config);
+    subject.id = 'hydrogen:build';
+    vi.spyOn(
+      subject as unknown as {removeEnvVar(): void},
+      'removeEnvVar',
+    ).mockImplementation(() => {});
+    process.argv = [process.execPath, 'shopify', 'hydrogen:build', ...argv];
+    await withCapturedStandardStreams(async ({stdout, stderr}) => {
+      await subject.execute();
+      if (json) {
+        expect(JSON.parse(stdout())).toEqual({
+          error: {
+            type: 'abort',
+            message: expect.stringContaining('Storefront name'),
+            tryMessage: expect.any(String),
+          },
+        });
+        expect(stderr()).toBe('');
+      } else {
+        expect(stdout()).toBe('');
+        expect(stderr()).toContain('Storefront name');
+      }
+      expect(process.exitCode).toBe(1);
+    });
   },
 );
