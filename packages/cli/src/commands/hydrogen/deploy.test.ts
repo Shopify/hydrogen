@@ -304,6 +304,103 @@ describe('deploy', async () => {
     expect(renderSuccess).not.toHaveBeenCalled();
   });
 
+  it('emits custom build output as diagnostics before the deployment result', async () => {
+    vi.mocked(execAsync).mockResolvedValue({
+      stdout: '\u001b[32mBuilt assets\u001b[0m\n',
+      stderr: '\u001b[33mBuild warning\u001b[0m\n',
+    });
+    vi.mocked(createDeploy).mockImplementationOnce(async ({hooks}) => {
+      await hooks?.buildFunction?.('/assets/');
+      return {url: 'https://a-lovely-deployment.com'};
+    });
+    const {stdout, stderr} = await captureJsonOutput(() =>
+      runDeploy({...deployParams, buildCommand: 'npm run build', json: true}),
+    );
+    expect(JSON.parse(stdout)).toEqual({
+      status: 'success',
+      deployment: {
+        url: 'https://a-lovely-deployment.com',
+        authBypassToken: null,
+      },
+    });
+    expect(
+      stderr
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line)),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'diagnostic',
+          level: 'info',
+          message: 'Built assets',
+        }),
+        expect.objectContaining({
+          type: 'diagnostic',
+          level: 'warning',
+          message: 'Build warning',
+        }),
+      ]),
+    );
+    expect(execAsync).toHaveBeenCalledWith(
+      'npm run build',
+      expect.objectContaining({
+        cwd: deployParams.path,
+        env: expect.objectContaining({HYDROGEN_ASSET_BASE_URL: '/assets/'}),
+      }),
+    );
+  });
+
+  it('reports a custom build failure without repeating its output in the error', async () => {
+    const error = Object.assign(
+      new Error('Command failed: npm run build\nCompiler failure'),
+      {
+        stdout: 'Missing module from stdout\n',
+        stderr: 'Compiler failure\n',
+      },
+    );
+    vi.mocked(execAsync).mockRejectedValue(error);
+    vi.mocked(createDeploy).mockImplementationOnce(async ({hooks}) => {
+      try {
+        await hooks?.buildFunction?.('/assets/');
+      } catch {
+        throw new Error('Wrapped Oxygen build failure');
+      }
+      return {url: 'https://a-lovely-deployment.com'};
+    });
+    const {stdout, stderr} = await captureJsonOutput(async () => {
+      const deployment = runDeploy({
+        ...deployParams,
+        buildCommand: 'npm run build',
+        json: true,
+      });
+      await expect(deployment).rejects.toBeInstanceOf(AbortError);
+      await expect(deployment).rejects.toMatchObject({
+        message: 'Build command failed.',
+      });
+    });
+    expect(stdout).toBe('');
+    expect(
+      stderr
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line)),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'diagnostic',
+          level: 'info',
+          message: 'Missing module from stdout',
+        }),
+        expect.objectContaining({
+          type: 'diagnostic',
+          level: 'warning',
+          message: 'Compiler failure',
+        }),
+      ]),
+    );
+  });
+
   it('keeps CI file output independent from the JSON flag and preserves its bytes', async () => {
     vi.mocked(ciPlatform).mockReturnValue({
       isCI: true,
@@ -319,12 +416,66 @@ describe('deploy', async () => {
     );
     expect(JSON.parse(stdout)).toEqual({
       status: 'success',
-      deployment: {...deployment, authBypassToken: null},
+      deployment,
     });
     expect(writeFile).toHaveBeenCalledWith(
       'h2_deploy_log.json',
       JSON.stringify(deployment),
     );
+  });
+
+  it('returns the successful JSON deployment if the CI log cannot be written', async () => {
+    vi.mocked(ciPlatform).mockReturnValue({
+      isCI: true,
+      name: 'test',
+      metadata: {},
+    });
+    vi.mocked(writeFile).mockRejectedValueOnce(
+      new Error('Read-only directory'),
+    );
+
+    const {stdout, stderr} = await captureJsonOutput(() =>
+      runDeploy({...deployParams, token: 'token', json: true}),
+    );
+
+    expect(JSON.parse(stdout)).toEqual({
+      status: 'success',
+      deployment: {
+        url: 'https://a-lovely-deployment.com',
+        authBypassToken: 'some-token',
+      },
+    });
+    expect(
+      stderr
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line)),
+    ).toContainEqual(
+      expect.objectContaining({
+        type: 'diagnostic',
+        level: 'warning',
+        message:
+          'Deployment succeeded, but could not write h2_deploy_log.json.',
+      }),
+    );
+  });
+
+  it('does not advertise a missing CI log after a successful text deployment', async () => {
+    vi.mocked(ciPlatform).mockReturnValue({
+      isCI: true,
+      name: 'test',
+      metadata: {},
+    });
+    vi.mocked(writeFile).mockRejectedValueOnce(
+      new Error('Read-only directory'),
+    );
+
+    await runDeploy({...deployParams, token: 'token', json: false});
+
+    expect(renderSuccess).toHaveBeenCalledWith({
+      body: ['Successfully deployed to Oxygen'],
+      nextSteps: [],
+    });
   });
 
   it('does not encode a successful result after a deployment failure', async () => {
