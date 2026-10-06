@@ -45,7 +45,7 @@ function handleSelect(result: ValidProductSelectionResult<ProductData>) {
 
 ## Variant Selector
 
-Same-product option values are GET links so selection degrades without JavaScript; non-existent combinations render as a disabled `<button>`, and cross-product combined-listing values are normal `NuxtLink` links.
+Same-product option values are GET links so selection degrades without JavaScript; non-existent combinations render as a disabled `<button>`, and cross-product combined-listing values are normal `NuxtLink` links. See the skill's GET-links and Accessibility rules for the no-JS fallback and `aria-current`, and its "provider `onSelect` is the only client navigation" rule for `onSelect`.
 
 For existing same-product values, use `NuxtLink` with `custom` and render the anchor yourself from the slot `href`. Put a guarded `@click` on that anchor: for a plain primary click it calls `event.preventDefault()` and then `onClick()` from `form.register("optionValue", ...)`, so the provider `onSelect` is the only navigation. Other clicks keep native link behavior. Do not call the slot `navigate`. Do not put `@click` on a regular `NuxtLink` to cancel its navigation, and do not `v-bind` the registration onto it; the order of your listener and the link's own navigation is not something to rely on.
 
