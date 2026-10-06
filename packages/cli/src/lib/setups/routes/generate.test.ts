@@ -104,10 +104,55 @@ describe('generate/route', () => {
           }),
         );
 
-        expect(result.routes).toHaveLength(1);
+        expect(result.routes).toHaveLength(2);
         expect(result.routes[0]).toMatchObject({
           destinationRoute: expect.stringContaining('($locale).pages.$handle'),
         });
+      });
+    });
+
+    it('reports the locale helper even when the requested route is skipped', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        const directories = await createHydrogenFixture(tmpDir, {
+          files: [
+            [
+              'app/routes/($locale).pages.$handle.tsx',
+              'export const existing = true;',
+            ],
+          ],
+          templates: [
+            ['routes/pages.$handle.tsx', 'export const replacement = true;'],
+          ],
+        });
+        vi.mocked(getRemixConfig).mockResolvedValue(directories as any);
+        vi.mocked(renderConfirmationPrompt).mockResolvedValue(false);
+        const options = {
+          routeName: 'page',
+          directory: directories.rootDirectory,
+          templatesRoot: directories.templatesRoot,
+          localePrefix: 'locale',
+          typescript: true,
+        };
+        const result = await generateRoutes(options);
+        expect(result.routes).toEqual([
+          expect.objectContaining({operation: 'skipped'}),
+          expect.objectContaining({
+            destinationRoute: expect.stringContaining('($locale).tsx'),
+            operation: 'created',
+          }),
+        ]);
+        expect(
+          await readProjectFile(directories, 'routes/($locale).pages.$handle'),
+        ).toContain('existing');
+        expect(
+          await fileExists(
+            joinPath(directories.appDirectory, 'routes/($locale).tsx'),
+          ),
+        ).toBe(true);
+        const repeated = await generateRoutes(options);
+        expect(
+          repeated.routes.every(({operation}) => operation === 'skipped'),
+        ).toBe(true);
       });
     });
   });
@@ -280,13 +325,17 @@ describe('generate/route', () => {
         });
 
         // When
-        await generateProjectFile(route, {
+        const result = await generateProjectFile(route, {
           ...directories,
           force: true,
         });
 
         // Then
         expect(renderConfirmationPrompt).not.toHaveBeenCalled();
+        expect(result.operation).toBe('replaced');
+        expect(await readProjectFile(directories, route, 'jsx')).toContain(
+          'hello world',
+        );
       });
     });
 
