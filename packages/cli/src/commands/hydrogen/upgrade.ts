@@ -151,16 +151,16 @@ export async function presentUpgradeResult(
   json?: boolean,
 ) {
   if (writeJsonResult(upgradeJsonOutputSchema, result, json)) return;
-  if (result.status === 'unchanged') {
+  if (!result.changed) {
     renderSuccess({
       headline: `You are on the latest Hydrogen version: ${result.version}`,
     });
   } else {
     await displayUpgradeSummary({
       appPath: result.directory,
-      currentVersion: result.currentVersion,
+      currentVersion: result.previousVersion,
       selectedRelease: selectedRelease!,
-      instrunctionsFilePath: result.instructionsFile,
+      instrunctionsFilePath: result.instructionsPath ?? undefined,
     });
   }
 }
@@ -231,9 +231,11 @@ export async function executeUpgrade({
     const version = getAbsoluteVersion(currentVersion);
     return {
       result: {
-        status: 'unchanged',
-        directory: appPath,
-        currentVersion: version,
+        status: 'success',
+        changed: false,
+        directory: resolvePath(appPath),
+        previousVersion: version,
+        instructionsPath: null,
         version,
         packages: [],
         removedPackages: [],
@@ -301,11 +303,14 @@ export async function executeUpgrade({
   return {
     selectedRelease,
     result: {
-      status: 'upgraded',
-      directory: appPath,
-      currentVersion: getAbsoluteVersion(currentVersion),
+      status: 'success',
+      changed: true,
+      directory: resolvePath(appPath),
+      previousVersion: getAbsoluteVersion(currentVersion),
       version: getAbsoluteVersion(selectedRelease.version),
-      instructionsFile: instrunctionsFilePath,
+      instructionsPath: instrunctionsFilePath
+        ? resolvePath(appPath, instrunctionsFilePath)
+        : null,
       packages: buildUpgradeCommandArgs({
         selectedRelease,
         currentDependencies,

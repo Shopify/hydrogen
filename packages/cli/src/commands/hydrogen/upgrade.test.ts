@@ -458,7 +458,8 @@ describe('upgrade', async () => {
           );
           const {stdout} = await captureJsonOutput(() => runUpgrade({appPath}));
           expect(JSON.parse(stdout)).toMatchObject({
-            status: 'unchanged',
+            status: 'success',
+            changed: false,
             packages: [],
             removedPackages: [],
           });

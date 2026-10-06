@@ -39,7 +39,18 @@ export async function runCreateShortcut(json?: boolean) {
     if (
       writeJsonResult(
         shortcutJsonOutputSchema,
-        {alias: ALIAS_NAME, shells: shortcuts},
+        {
+          alias: ALIAS_NAME,
+          shells: shortcuts.map((shell) =>
+            shell === 'CMD'
+              ? ('cmd' as const)
+              : shell === 'PowerShell'
+                ? ('powershell' as const)
+                : shell === 'PowerShell 7+'
+                  ? ('powershell-7' as const)
+                  : shell,
+          ),
+        },
         json,
       )
     )

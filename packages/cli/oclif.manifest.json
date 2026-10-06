@@ -1217,7 +1217,7 @@
     "hydrogen:g": {
       "aliases": [],
       "args": {},
-      "description": "Shortcut for `hydrogen generate`. See `hydrogen generate --help` for more information.",
+      "description": "Shortcut for `hydrogen generate`. See `hydrogen generate --help` for more information.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenGenerateRoutesResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"partial\",\n        \"skipped\",\n        \"cancelled\"\n      ]\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"routes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Route\"\n      }\n    },\n    \"routeGroups\": {\n      \"type\": \"object\",\n      \"additionalProperties\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"isTypescript\": {\n      \"type\": \"boolean\"\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"routes\",\n    \"routeGroups\",\n    \"isTypescript\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenGenerateRoutesResult\",\n  \"definitions\": {\n    \"Route\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"sourceRoute\": {\n          \"type\": \"string\"\n        },\n        \"destinationRoute\": {\n          \"type\": \"string\"\n        },\n        \"operation\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"created\",\n            \"skipped\",\n            \"replaced\"\n          ]\n        }\n      },\n      \"required\": [\n        \"sourceRoute\",\n        \"destinationRoute\",\n        \"operation\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1248,6 +1248,15 @@
           "name": "verbose",
           "allowNo": false,
           "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
@@ -1259,6 +1268,7 @@
       "pluginType": "core",
       "strict": false,
       "enableJsonFlag": false,
+      "descriptionWithMarkdown": "Shortcut for `hydrogen generate`. See `hydrogen generate --help` for more information.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -2503,7 +2513,7 @@
     "hydrogen:shortcut": {
       "aliases": [],
       "args": {},
-      "description": "Creates a global h2 shortcut for Shopify CLI using shell aliases.\n\n  The following shells are supported:\n\n  - Bash (using `~/.bashrc`)\n  - ZSH (using `~/.zshrc`)\n  - Fish (using `~/.config/fish/functions`)\n  - PowerShell (added to `$PROFILE`)\n\n  After the alias is created, you can call Shopify CLI from anywhere in your project using `h2 <command>`.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenShortcutResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"alias\": {\n      \"type\": \"string\"\n    },\n    \"shells\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"minItems\": 1\n    }\n  },\n  \"required\": [\n    \"alias\",\n    \"shells\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenShortcutResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
+      "description": "Creates a global h2 shortcut for Shopify CLI using shell aliases.\n\n  The following shells are supported:\n\n  - Bash (using `~/.bashrc`)\n  - ZSH (using `~/.zshrc`)\n  - Fish (using `~/.config/fish/functions`)\n  - PowerShell (added to `$PROFILE`)\n\n  After the alias is created, you can call Shopify CLI from anywhere in your project using `h2 <command>`.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenShortcutResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"alias\": {\n      \"type\": \"string\"\n    },\n    \"shells\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\",\n        \"enum\": [\n          \"bash\",\n          \"zsh\",\n          \"fish\",\n          \"powershell\",\n          \"powershell-7\",\n          \"cmd\"\n        ]\n      },\n      \"minItems\": 1\n    }\n  },\n  \"required\": [\n    \"alias\",\n    \"shells\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenShortcutResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -2635,7 +2645,7 @@
     "hydrogen:upgrade": {
       "aliases": [],
       "args": {},
-      "description": "Upgrade Hydrogen project dependencies, preview features, fixes and breaking changes. The command also generates an instruction file for each upgrade.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenUpgradeResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"upgraded\",\n        \"unchanged\"\n      ]\n    },\n    \"directory\": {\n      \"type\": \"string\"\n    },\n    \"currentVersion\": {\n      \"type\": \"string\"\n    },\n    \"version\": {\n      \"type\": \"string\"\n    },\n    \"packages\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"removedPackages\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"instructionsFile\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"directory\",\n    \"currentVersion\",\n    \"version\",\n    \"packages\",\n    \"removedPackages\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenUpgradeResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
+      "description": "Upgrade Hydrogen project dependencies, preview features, fixes and breaking changes. The command also generates an instruction file for each upgrade.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenUpgradeResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"const\": \"success\"\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"directory\": {\n      \"type\": \"string\"\n    },\n    \"previousVersion\": {\n      \"type\": \"string\"\n    },\n    \"version\": {\n      \"type\": \"string\"\n    },\n    \"packages\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"removedPackages\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"instructionsPath\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/HydrogenUpgradeResult/properties/directory\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"directory\",\n    \"previousVersion\",\n    \"version\",\n    \"packages\",\n    \"removedPackages\",\n    \"instructionsPath\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenUpgradeResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
