@@ -24,17 +24,18 @@ it('keeps unsupported shells on the fatal-error path in JSON mode', async () => 
   expect(stdout).toBe('');
 });
 
-it.each(['upgraded', 'unchanged'] as const)(
+it.each([true, false])(
   'encodes %s results through the real upgrade presenter and writer',
-  async (status) => {
+  async (changed) => {
     const result = {
-      status,
+      status: 'success' as const,
+      changed,
       directory: '/project',
-      currentVersion: '2026.1.0',
+      previousVersion: '2026.1.0',
       version: '2026.4.0',
       packages: ['@shopify/hydrogen@2026.4.0'],
       removedPackages: ['@remix-run/react'],
-      instructionsFile: '.hydrogen/upgrade.md',
+      instructionsPath: '/project/.hydrogen/upgrade.md',
     };
     const {stdout, stderr} = await captureJsonOutput(() =>
       presentUpgradeResult(result),
