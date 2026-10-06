@@ -35,6 +35,7 @@ export type ShopifyRouteRedirectResult = {
   headers?: HeadersInit;
 };
 
+/** @publicDocs */
 export type ShopifyRouteError = {
   code: string;
   message: string;

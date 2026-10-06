@@ -247,6 +247,7 @@ export type StorefrontGraphql = <const Doc extends DocLike | string>(
   ...options: GqlRestParam<ResolveDoc<Doc>>
 ) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>;
 
+/** @publicDocs */
 export type ClientType =
   /** Public access token or tokenless access. Best for: browser requests. */
   | "public"
@@ -303,6 +304,8 @@ export type PublicStorefrontClient<
 
 /**
  * A {@link StorefrontClient} narrowed to `type: "private"`. Requires a request context with `buyerIp`.
+ *
+ * @publicDocs
  */
 export type PrivateStorefrontClient<
   Extra extends Record<string, unknown> = {},

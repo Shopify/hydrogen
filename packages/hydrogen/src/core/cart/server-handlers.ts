@@ -46,7 +46,11 @@ const CART_MUTATION_FAILED_STATUS = 500;
 const CART_MUTATION_FAILED_MESSAGE = "Cart mutation failed. Please try again.";
 const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
-/** Response shape from the cart GET handler — the fetched cart plus any GraphQL errors. */
+/**
+ * Response shape from the cart GET handler — the fetched cart plus any GraphQL errors.
+ *
+ * @publicDocs
+ */
 export type CartGetData<TCart = CartData> = {
   cart: TCart | null;
   errors?: Array<{ message: string }>;
@@ -54,13 +58,19 @@ export type CartGetData<TCart = CartData> = {
 
 /**
  * Full route result from the cart GET handler — JSON with {@link CartGetData} payload and response headers.
+ *
+ * @publicDocs
  */
 export type CartGetResult<TCart = CartData> = ShopifyRouteJsonResult<CartGetData<TCart>>;
 
 /** Machine-readable error codes returned by the cart POST handler. */
 export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_mutation_failed";
 
-/** A cart route error carrying a {@link CartErrorCode} for programmatic handling. */
+/**
+ * A cart route error carrying a {@link CartErrorCode} for programmatic handling.
+ *
+ * @publicDocs
+ */
 export type CartError = ShopifyRouteError & {
   code: CartErrorCode;
 };
@@ -70,6 +80,8 @@ export type CartError = ShopifyRouteError & {
  * - JSON with the mutation payload (programmatic clients)
  * - 303 redirect back to the referrer (HTML form submissions)
  * - An error with a {@link CartErrorCode}
+ *
+ * @publicDocs
  */
 export type CartPostResult =
   | ShopifyRouteJsonResult<Record<string, unknown>>

@@ -184,7 +184,7 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     expect(declaration).toMatch(/\/\*\* @private \*\/\s+resolve\?:/);
     expect(declaration).toMatch(/resolve\?: \(url: string\) => string;\s+navigate\?:/);
     expect(declaration).not.toMatch(/@internal \*\/\s+navigate\?:/);
-    expect(declaration).not.toMatch(/@publicDocs\s+\*\/\s+type ShopifyGlobal = \{/);
+    expect(declaration).toMatch(/@publicDocs\s+\*\/\s+type ShopifyGlobal = \{/);
     expect(declaration).toContain("type ShopifyGlobal = {");
     expect(declaration).toContain("Shopify?: ShopifyGlobal;");
     expect(declaration).toContain("export { ShopifyGlobal };");

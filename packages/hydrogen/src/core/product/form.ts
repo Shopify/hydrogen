@@ -1,25 +1,41 @@
 import type { ProductVariantInput } from "./state";
 
-/** Props returned by {@link ProductFormRegister} for the `merchandiseId` input. */
+/**
+ * Props returned by {@link ProductFormRegister} for the `merchandiseId` input.
+ *
+ * @publicDocs
+ */
 export interface ProductMerchandiseIdProps {
   name: "merchandiseId";
   /** The currently selected variant ID, or an empty string when no variant is resolved. */
   value: string;
 }
 
-/** Props returned by {@link ProductFormRegister} for a quantity input. */
+/**
+ * Props returned by {@link ProductFormRegister} for a quantity input.
+ *
+ * @publicDocs
+ */
 export interface ProductQuantityProps {
   name: "quantity";
   value: string;
 }
 
-/** Props returned by {@link ProductFormRegister} for an uncontrolled quantity input. */
+/**
+ * Props returned by {@link ProductFormRegister} for an uncontrolled quantity input.
+ *
+ * @publicDocs
+ */
 export interface ProductQuantityDefaultProps {
   name: "quantity";
   defaultValue: string;
 }
 
-/** Props returned by {@link ProductFormRegister} for a variant option value control. */
+/**
+ * Props returned by {@link ProductFormRegister} for a variant option value control.
+ *
+ * @publicDocs
+ */
 export interface ProductOptionValueProps {
   name: string;
   value: string;
@@ -27,7 +43,11 @@ export interface ProductOptionValueProps {
   onClick: () => void;
 }
 
-/** Props returned by {@link ProductFormRegister} for the add-to-cart submit button. */
+/**
+ * Props returned by {@link ProductFormRegister} for the add-to-cart submit button.
+ *
+ * @publicDocs
+ */
 export interface ProductAddToCartProps {
   name: "add-to-cart";
   type: "submit";
@@ -35,13 +55,21 @@ export interface ProductAddToCartProps {
 
 type AttributeValueName = `attributes.${string}`;
 
-/** Props returned by {@link ProductFormRegister} for a line-item attribute input. */
+/**
+ * Props returned by {@link ProductFormRegister} for a line-item attribute input.
+ *
+ * @publicDocs
+ */
 export interface ProductAttributeValueProps {
   name: AttributeValueName;
   value: string;
 }
 
-/** Props returned by {@link ProductFormRegister} for an uncontrolled line-item attribute input. */
+/**
+ * Props returned by {@link ProductFormRegister} for an uncontrolled line-item attribute input.
+ *
+ * @publicDocs
+ */
 export interface ProductAttributeDefaultValueProps {
   name: AttributeValueName;
   defaultValue: string;

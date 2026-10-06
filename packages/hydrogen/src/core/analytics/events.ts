@@ -19,4 +19,5 @@ export const AnalyticsEvent = {
   PRODUCT_REMOVED_FROM_CART: "product_removed_from_cart" as const,
 };
 
+/** @publicDocs */
 export type AnalyticsEventName = (typeof AnalyticsEvent)[keyof typeof AnalyticsEvent];

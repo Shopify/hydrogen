@@ -1,6 +1,10 @@
 import { PREDICTIVE_SEARCH_QUERY_PARAM } from "./constants";
 
-/** Props returned by {@link PredictiveSearchFormRegister} for the query input. */
+/**
+ * Props returned by {@link PredictiveSearchFormRegister} for the query input.
+ *
+ * @publicDocs
+ */
 export interface PredictiveSearchQueryInputAttributes {
   name: "q";
   type: "search";

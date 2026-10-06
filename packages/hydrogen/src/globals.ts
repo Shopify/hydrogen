@@ -3,7 +3,11 @@ import type { StorefrontAnalytics } from "./core/analytics/types";
 import type { I18nConfig } from "./core/request-context";
 import type { ShopifyStandardRouteMatch } from "./core/standard-routes/index";
 
-/** Shape of the `window.Shopify` global that Shopify's scripts and Hydrogen share in the browser. */
+/**
+ * Shape of the `window.Shopify` global that Shopify's scripts and Hydrogen share in the browser.
+ *
+ * @publicDocs
+ */
 export type ShopifyGlobal = {
   actions: ShopifyStandardActions;
   analytics?: StorefrontAnalytics;
