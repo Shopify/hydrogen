@@ -7,6 +7,7 @@ import {
   mkdir,
   readFile,
 } from '@shopify/cli-kit/node/fs';
+import {hyphenate} from '@shopify/cli-kit/common/string';
 import {setupTemplate} from './index.js';
 import {getSkeletonSourceDir} from '../build.js';
 import {basename} from '@shopify/cli-kit/node/path';
@@ -62,7 +63,7 @@ describe('local templates', () => {
 
       // Replaces package.json#name
       await expect(readFile(`${tmpDir}/package.json`)).resolves.toMatch(
-        `"name": "${basename(tmpDir)}"`,
+        `"name": "${hyphenate(basename(tmpDir))}"`,
       );
 
       // Creates .env without mock.shop
@@ -95,7 +96,7 @@ describe('local templates', () => {
       });
 
       await expect(readFile(`${tmpDir}/package.json`)).resolves.toMatch(
-        `"name": "${basename(tmpDir)}"`,
+        `"name": "${hyphenate(basename(tmpDir))}"`,
       );
       await expect(readFile(`${tmpDir}/.env`)).resolves.toMatch(
         'SESSION_SECRET="foobar"',
