@@ -104,6 +104,12 @@ export async function pushCustomerAccountConfig({
     const logoutUri = logoutUriRelativeUrl
       ? new URL(logoutUriRelativeUrl, devOrigin).toString()
       : devOrigin;
+    const result = customerAccountPushJsonOutputSchema.validate({
+      storefrontGid: storefrontId,
+      redirectUri,
+      javascriptOrigin,
+      logoutUri,
+    });
 
     const {session, config} = await login(root);
     const customerAccountConfig = config?.storefront?.customerAccountConfig;
@@ -112,15 +118,15 @@ export async function pushCustomerAccountConfig({
       storefrontId,
       {
         redirectUri: {
-          add: redirectUri ? [redirectUri] : undefined,
+          add: [redirectUri],
           removeRegex: customerAccountConfig?.redirectUri,
         },
         javascriptOrigin: {
-          add: javascriptOrigin ? [javascriptOrigin] : undefined,
+          add: [javascriptOrigin],
           removeRegex: customerAccountConfig?.javascriptOrigin,
         },
         logoutUris: {
-          add: logoutUri ? [logoutUri] : undefined,
+          add: [logoutUri],
           removeRegex: customerAccountConfig?.logoutUri,
         },
       },
@@ -141,12 +147,7 @@ export async function pushCustomerAccountConfig({
     });
 
     return {
-      result: {
-        storefrontId,
-        redirectUri,
-        javascriptOrigin,
-        logoutUri,
-      } satisfies import('../../lib/customer-account/types.js').CustomerAccountPushResult,
+      result,
       cleanup: () =>
         cleanupCustomerApplicationUrls(session, storefrontId, {
           redirectUri,
