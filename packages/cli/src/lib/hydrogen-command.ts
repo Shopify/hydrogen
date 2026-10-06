@@ -1,4 +1,5 @@
 import Command from '@shopify/cli-kit/node/base-command';
+import {globalFlags} from '@shopify/cli-kit/node/cli';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {cwd, resolvePath} from '@shopify/cli-kit/node/path';
 import {isTruthy} from '@shopify/cli-kit/node/context/utilities';
@@ -8,6 +9,8 @@ import {
 } from './hydrogen-command-policy.js';
 
 export default abstract class HydrogenCommand extends Command {
+  static baseFlags = {...Command.baseFlags, ...globalFlags};
+
   protected async init(): Promise<unknown> {
     await super.init();
 

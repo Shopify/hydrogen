@@ -12,6 +12,29 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -126,6 +149,29 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -161,6 +207,29 @@
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
           "allowNo": false,
           "type": "boolean"
         },
@@ -222,6 +291,29 @@
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
           "allowNo": false,
           "type": "boolean"
         },
@@ -298,6 +390,29 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -351,6 +466,29 @@
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
           "allowNo": false,
           "type": "boolean"
         },
@@ -575,6 +713,29 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Outputs more information about the command's execution.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",
+          "name": "verbose",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -686,14 +847,6 @@
           "allowNo": false,
           "type": "boolean"
         },
-        "verbose": {
-          "description": "Outputs more information about the command's execution.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",
-          "name": "verbose",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        },
         "host": {
           "description": "Expose the server to the local network",
           "name": "host",
@@ -738,6 +891,29 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -774,6 +950,29 @@
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
           "allowNo": false,
           "type": "boolean"
         },
@@ -855,6 +1054,29 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "env": {
           "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
           "exclusive": [
@@ -929,6 +1151,29 @@
           "name": "json-schema",
           "allowNo": false,
           "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
@@ -977,6 +1222,29 @@
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1050,6 +1318,29 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "adapter": {
           "description": "React Router adapter used in the route. The default is `react-router`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_ADAPTER",
@@ -1116,6 +1407,29 @@
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1246,6 +1560,29 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "force": {
           "char": "f",
           "description": "Overwrites the destination directory and files if they already exist.",
@@ -1334,6 +1671,29 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1369,6 +1729,29 @@
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1419,6 +1802,29 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1454,6 +1860,29 @@
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Outputs more information about the command's execution.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",
+          "name": "verbose",
+          "required": false,
           "allowNo": false,
           "type": "boolean"
         },
@@ -1516,14 +1945,6 @@
           "description": "Enables inspector connections to the server with a debugger such as Visual Studio Code or Chrome DevTools.",
           "env": "SHOPIFY_HYDROGEN_FLAG_DEBUG",
           "name": "debug",
-          "allowNo": false,
-          "type": "boolean"
-        },
-        "verbose": {
-          "description": "Outputs more information about the command's execution.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",
-          "name": "verbose",
-          "required": false,
           "allowNo": false,
           "type": "boolean"
         },
@@ -1601,6 +2022,29 @@
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1682,6 +2126,29 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1746,6 +2213,29 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1782,6 +2272,29 @@
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1822,6 +2335,29 @@
           "name": "json-schema",
           "allowNo": false,
           "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
@@ -1850,6 +2386,29 @@
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1888,6 +2447,29 @@
           "description": "Print the command's JSON schemas.",
           "env": "SHOPIFY_FLAG_JSON_SCHEMA",
           "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
           "allowNo": false,
           "type": "boolean"
         },

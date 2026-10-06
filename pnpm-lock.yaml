@@ -27,7 +27,7 @@ catalogs:
 
 overrides:
   '@oclif/core': 4.8.3
-  '@shopify/cli-kit': 0.0.0-nightly-20260929144221
+  '@shopify/cli-kit': 0.0.0-nightly-20261006062007
   form-data: '>=4.0.4'
   '@types/node': 22.19.15
   vite: ^8.0.1
@@ -90,8 +90,8 @@ importers:
         specifier: 7.16.0
         version: 7.16.0(@react-router/dev@7.16.0(@react-router/serve@7.16.0(react-router@7.16.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.6.1)(react-router@7.16.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@8.0.8(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.6.1)(yaml@2.8.3))(yaml@2.8.3))(typescript@5.9.2)
       '@shopify/cli':
-        specifier: 0.0.0-nightly-20260928062710
-        version: 0.0.0-nightly-20260928062710
+        specifier: 0.0.0-nightly-20261006062007
+        version: 0.0.0-nightly-20261006062007
       '@shopify/eslint-plugin-cli':
         specifier: 4.0.0
         version: 4.0.0(@types/eslint@9.6.1)(@typescript-eslint/utils@8.70.0(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@9.39.5(jiti@2.6.1))(prettier@3.8.1)(typescript@5.9.2)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(esbuild@0.27.4)(happy-dom@20.8.9)(jiti@2.6.1)(msw@2.12.10(@types/node@22.19.15)(typescript@5.9.2))(yaml@2.8.3))
@@ -306,8 +306,8 @@ importers:
         specifier: 4.8.3
         version: 4.8.3
       '@shopify/cli-kit':
-        specifier: 0.0.0-nightly-20260929144221
-        version: 0.0.0-nightly-20260929144221(@types/react@18.3.28)
+        specifier: 0.0.0-nightly-20261006062007
+        version: 0.0.0-nightly-20261006062007(@types/react@18.3.28)
       '@shopify/hydrogen-codegen':
         specifier: workspace:*
         version: link:../hydrogen-codegen
@@ -316,7 +316,7 @@ importers:
         version: link:../mini-oxygen
       '@shopify/oxygen-cli':
         specifier: 4.6.18
-        version: 4.6.18(@oclif/core@4.8.3)(@shopify/cli-kit@0.0.0-nightly-20260929144221(@types/react@18.3.28))(graphql@16.14.2)
+        version: 4.6.18(@oclif/core@4.8.3)(@shopify/cli-kit@0.0.0-nightly-20261006062007(@types/react@18.3.28))(graphql@16.14.2)
       '@shopify/plugin-cloudflare':
         specifier: ^3.78.1
         version: 3.90.1(@types/react@18.3.28)
@@ -2855,13 +2855,13 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
-  '@shopify/cli-kit@0.0.0-nightly-20260929144221':
-    resolution: {integrity: sha512-Fbqj+k+KMfIFuQISn0MXfRYDkOHOFSpCvdUnUab16eeTeXXlwWyJIOcF0E2c4Cd8u1L0mQWMuyhjQgDOTLgk4g==, tarball: https://registry.npmjs.org/@shopify/cli-kit/-/cli-kit-0.0.0-nightly-20260929144221.tgz}
+  '@shopify/cli-kit@0.0.0-nightly-20261006062007':
+    resolution: {integrity: sha512-z8wfZm4uizih6wugbp4RexKhQs9NFqGUsZmzdWBGJ+EZo5DP/YqRHPY+/je4QdzIeIpbpzXO8JYL+MGloMVAMw==, tarball: https://registry.npmjs.org/@shopify/cli-kit/-/cli-kit-0.0.0-nightly-20261006062007.tgz}
     engines: {node: '>=22.12.0'}
     os: [darwin, linux, win32]
 
-  '@shopify/cli@0.0.0-nightly-20260928062710':
-    resolution: {integrity: sha512-DUIoqC+ScYlOWmrJqMivx9K+StbLwRZigzwfA8CslZUF4mj2W1k67p8GymMGroYHRQuIBQkpZDII4J2h4YyVvw==, tarball: https://registry.npmjs.org/@shopify/cli/-/cli-0.0.0-nightly-20260928062710.tgz}
+  '@shopify/cli@0.0.0-nightly-20261006062007':
+    resolution: {integrity: sha512-g5cZd5CZPeyZBjnXurz/RdkJ72Hp550STs7cbF2aKQfM2br/Z4QJwrXNm8Kc1Tq5IkGd8DG9dZ9/+BTCCpYzsA==, tarball: https://registry.npmjs.org/@shopify/cli/-/cli-0.0.0-nightly-20261006062007.tgz}
     engines: {node: '>=22.12.0'}
     os: [darwin, linux, win32]
     hasBin: true
@@ -2902,7 +2902,7 @@ packages:
     hasBin: true
     peerDependencies:
       '@oclif/core': 4.8.3
-      '@shopify/cli-kit': 0.0.0-nightly-20260929144221
+      '@shopify/cli-kit': 0.0.0-nightly-20261006062007
 
   '@shopify/oxygen-workers-types@4.2.0':
     resolution: {integrity: sha512-iBc+pK5CfLSrF+Wl6WBYsPdJubSii78EWI/YVzGpr9/gKYVRHMsW2t+kOvY9Vg6BOytF0dB5B4hYkCLH3cAY/g==}
@@ -11522,7 +11522,7 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
-  '@shopify/cli-kit@0.0.0-nightly-20260929144221(@types/react@18.3.28)':
+  '@shopify/cli-kit@0.0.0-nightly-20261006062007(@types/react@18.3.28)':
     dependencies:
       '@apidevtools/json-schema-ref-parser': 11.9.3
       '@bugsnag/js': 8.9.0
@@ -11585,7 +11585,7 @@ snapshots:
       - react-devtools-core
       - utf-8-validate
 
-  '@shopify/cli@0.0.0-nightly-20260928062710':
+  '@shopify/cli@0.0.0-nightly-20261006062007':
     dependencies:
       '@ast-grep/napi': 0.43.0
       clipboardy: 4.0.0
@@ -11683,13 +11683,13 @@ snapshots:
       - encoding
       - graphql-sock
 
-  '@shopify/oxygen-cli@4.6.18(@oclif/core@4.8.3)(@shopify/cli-kit@0.0.0-nightly-20260929144221(@types/react@18.3.28))(graphql@16.14.2)':
+  '@shopify/oxygen-cli@4.6.18(@oclif/core@4.8.3)(@shopify/cli-kit@0.0.0-nightly-20261006062007(@types/react@18.3.28))(graphql@16.14.2)':
     dependencies:
       '@bugsnag/core': 8.8.0
       '@bugsnag/js': 8.8.1
       '@bugsnag/node': 8.8.0
       '@oclif/core': 4.8.3
-      '@shopify/cli-kit': 0.0.0-nightly-20260929144221(@types/react@18.3.28)
+      '@shopify/cli-kit': 0.0.0-nightly-20261006062007(@types/react@18.3.28)
       async: 3.2.6
       graphql-request: 7.4.0(graphql@16.14.2)
     transitivePeerDependencies:
@@ -11700,7 +11700,7 @@ snapshots:
   '@shopify/plugin-cloudflare@3.90.1(@types/react@18.3.28)':
     dependencies:
       '@oclif/core': 4.8.3
-      '@shopify/cli-kit': 0.0.0-nightly-20260929144221(@types/react@18.3.28)
+      '@shopify/cli-kit': 0.0.0-nightly-20261006062007(@types/react@18.3.28)
     transitivePeerDependencies:
       - '@types/react'
       - bufferutil

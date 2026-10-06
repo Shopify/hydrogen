@@ -12,7 +12,7 @@ packages:
 
 overrides:
   '@oclif/core': '4.8.3'
-  '@shopify/cli-kit': '0.0.0-nightly-20260929144221'
+  '@shopify/cli-kit': '0.0.0-nightly-20261006062007'
   form-data: '>=4.0.4'
   '@types/node': 'catalog:'
   vite: '^8.0.1'
