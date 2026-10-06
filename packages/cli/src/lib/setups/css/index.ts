@@ -1,4 +1,4 @@
-import {renderSelectPrompt} from '../../ui.js';
+import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import type {CssSetupConfig} from './common.js';
 import {type CssStrategy, SETUP_CSS_STRATEGIES} from './assets.js';

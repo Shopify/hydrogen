@@ -5,7 +5,7 @@ import {
   findUpAndReadPackageJson,
   packageManagerFromUserAgent,
 } from '@shopify/cli-kit/node/node-package-manager';
-import {renderInfo} from './ui.js';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {} from '@shopify/cli-kit/node/path';
 import {isHydrogenMonorepo} from './build.js';
 import {inferPackageManagerForGlobalCLI} from '@shopify/cli-kit/node/is-global';

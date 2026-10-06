@@ -25,7 +25,7 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
     renderTextPrompt: vi.fn(),
     renderTasks: vi.fn(async (args) => {
       await original.renderTasks(args);
-      renderTasksHook();
+      await renderTasksHook();
     }),
   };
 });

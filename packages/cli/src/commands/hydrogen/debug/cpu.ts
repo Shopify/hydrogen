@@ -71,7 +71,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
 
   let times = 0;
   let sourceEntrypoint: string;
-  const profiler = await createCpuStartupProfiler(directory);
+  const profiler = await createCpuStartupProfiler();
 
   const hooks = {
     onServerBuildStart() {
@@ -130,7 +130,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
 
   return {
     async close() {
-      await Promise.allSettled([buildProcess.close(), profiler.close()]);
+      await buildProcess.close();
     },
   };
 }

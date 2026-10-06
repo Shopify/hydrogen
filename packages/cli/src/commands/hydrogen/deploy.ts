@@ -25,7 +25,7 @@ import {
   renderSuccess,
   renderTasks,
   renderWarning,
-} from '../../lib/ui.js';
+} from '@shopify/cli-kit/node/ui';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
 import {
   CompletedDeployment,

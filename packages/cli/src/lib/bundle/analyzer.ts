@@ -1,7 +1,7 @@
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {writeFile, readFile, fileExists} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
-import {renderWarning} from '../ui.js';
+import {renderWarning} from '@shopify/cli-kit/node/ui';
 import {getAssetsDir} from '../build.js';
 
 export const BUNDLE_ANALYZER_JSON_FILE = 'metafile.server.json';

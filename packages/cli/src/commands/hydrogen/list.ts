@@ -6,7 +6,7 @@ import {
   outputInfo,
   outputNewline,
 } from '@shopify/cli-kit/node/output';
-import {renderInfo} from '../../lib/ui.js';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {commonFlags} from '../../lib/flags.js';
 import {parseGid} from '../../lib/gid.js';
 import {

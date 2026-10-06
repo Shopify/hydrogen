@@ -12,7 +12,7 @@ import {
   renderConfirmationPrompt,
   renderFatalError,
   renderWarning,
-} from '../ui.js';
+} from '@shopify/cli-kit/node/ui';
 import {capitalize, hyphenate} from '@shopify/cli-kit/common/string';
 import {basename, resolvePath, joinPath} from '@shopify/cli-kit/node/path';
 import {

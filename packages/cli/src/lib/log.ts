@@ -1,5 +1,9 @@
 import {isJsonOutput} from './json-output.js';
-import {renderInfo, renderWarning, renderFatalError} from './ui.js';
+import {
+  renderInfo,
+  renderWarning,
+  renderFatalError,
+} from '@shopify/cli-kit/node/ui';
 import {BugError} from '@shopify/cli-kit/node/error';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';

@@ -10,7 +10,7 @@ import {
   renderSelectPrompt,
   renderInfo,
   renderSuccess,
-} from '../../../lib/ui.js';
+} from '@shopify/cli-kit/node/ui';
 import {
   outputContent,
   outputToken,

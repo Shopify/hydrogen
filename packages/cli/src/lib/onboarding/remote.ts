@@ -2,7 +2,7 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController, AbortSignal} from '@shopify/cli-kit/node/abort';
 import {copyFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
-import {renderInfo, renderTasks} from '../ui.js';
+import {renderInfo, renderTasks} from '@shopify/cli-kit/node/ui';
 import {downloadExternalRepo} from '../template-downloader.js';
 import {getCliCommand} from '../shell.js';
 import {

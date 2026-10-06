@@ -8,7 +8,7 @@ import {
   renderTasks,
   renderTextPrompt,
   renderWarning,
-} from '../../lib/ui.js';
+} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';

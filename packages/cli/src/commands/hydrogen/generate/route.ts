@@ -1,6 +1,6 @@
 import Command from '../../../lib/hydrogen-command.js';
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {renderSuccess} from '../../../lib/ui.js';
+import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {commonFlags} from '../../../lib/flags.js';
 import {Flags, Args} from '@oclif/core';

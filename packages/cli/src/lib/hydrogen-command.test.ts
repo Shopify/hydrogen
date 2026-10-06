@@ -6,6 +6,8 @@ import {isTerminalInteractive} from '@shopify/cli-kit/node/context/local';
 import {terminalSupportsPrompting} from '@shopify/cli-kit/node/system';
 import {renderTextPrompt} from '@shopify/cli-kit/node/ui';
 import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {outputResult} from '@shopify/cli-kit/node/output';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import ShopifyCommand from '@shopify/cli-kit/node/base-command';
 import {withCapturedStandardStreams} from '@shopify/cli-kit/node/testing/output';
 import {afterEach, beforeEach, expect, it, vi} from 'vitest';
@@ -81,6 +83,94 @@ function createProject(path = projectPath, disabledCommands: string[] = []) {
     JSON.stringify({shopify: {cli: {disabledCommands}}}),
   );
 }
+
+it.each(['--json', '-j', 'environment'])(
+  'keeps dependency console output out of the JSON result: %s',
+  async (mode) => {
+    createProject();
+    if (mode === 'environment') vi.stubEnv('SHOPIFY_FLAG_JSON', '1');
+    const subject = command(mode === 'environment' ? [] : [mode]);
+    const original = console.log;
+    vi.spyOn(subject, 'run').mockImplementation(async () => {
+      console.log('Future Flag Warning: %s', 'React Router');
+      console.info('Dependency info');
+      console.debug('Dependency debug');
+      outputResult(JSON.stringify({ok: true}));
+    });
+    await withCapturedStandardStreams(async ({stdout, stderr}) => {
+      await subject.execute();
+      expect(JSON.parse(stdout())).toEqual({ok: true});
+      expect(
+        stderr()
+          .trim()
+          .split('\n')
+          .map((line) => JSON.parse(line)),
+      ).toEqual([
+        expect.objectContaining({
+          type: 'diagnostic',
+          message: 'Future Flag Warning: React Router',
+        }),
+        expect.objectContaining({
+          type: 'diagnostic',
+          message: 'Dependency info',
+        }),
+        expect.objectContaining({
+          type: 'diagnostic',
+          message: 'Dependency debug',
+        }),
+      ]);
+    });
+    expect(console.log).toBe(original);
+  },
+);
+
+it('restores console methods after a failed command', async () => {
+  createProject();
+  const subject = command(['--json']);
+  const original = console.log;
+  vi.spyOn(subject, 'run').mockImplementation(async () => {
+    console.log('Before failure');
+    throw new AbortError('Build failed');
+  });
+  await withCapturedStandardStreams(async ({stdout, stderr}) => {
+    await subject.execute();
+    expect(JSON.parse(stdout()).error.message).toBe('Build failed');
+    expect(JSON.parse(stderr()).message).toBe('Before failure');
+  });
+  expect(console.log).toBe(original);
+});
+
+it('preserves dependency console output in text mode', async () => {
+  createProject();
+  const subject = command();
+  const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+  vi.spyOn(subject, 'run').mockImplementation(async () => {
+    console.log('Normal log', 42);
+  });
+  await subject.execute();
+  expect(log).toHaveBeenCalledWith('Normal log', 42);
+  expect(console.log).toBe(log);
+});
+
+it.each([false, true])(
+  'preserves console filters installed during startup (json: %s)',
+  async (json) => {
+    createProject();
+    const subject = command(json ? ['--json'] : [], 'hydrogen:dev');
+    const original = console.log;
+    const filter = vi.fn();
+    vi.spyOn(subject, 'run').mockImplementation(async () => {
+      console.log = filter;
+    });
+    try {
+      await subject.execute();
+      console.log('After startup');
+      expect(filter).toHaveBeenCalledWith('After startup');
+    } finally {
+      console.log = original;
+    }
+  },
+);
 
 it.each(['--json', '-j', 'environment'])(
   'uses the command error lifecycle for non-project JSON errors: %s',
@@ -189,22 +279,16 @@ it.each([
   {json: false, noInput: true},
   {json: true, noInput: true},
 ])('keeps output format independent from prompting: %j', ({json, noInput}) => {
-  const stdinDescriptor = Object.getOwnPropertyDescriptor(
-    process.stdin,
-    'isTTY',
+  const streams = [process.stdin, process.stdout, process.stderr];
+  const descriptors = streams.map((stream) =>
+    Object.getOwnPropertyDescriptor(stream, 'isTTY'),
   );
-  const stdoutDescriptor = Object.getOwnPropertyDescriptor(
-    process.stdout,
-    'isTTY',
-  );
-  Object.defineProperty(process.stdin, 'isTTY', {
-    value: true,
-    configurable: true,
-  });
-  Object.defineProperty(process.stdout, 'isTTY', {
-    value: true,
-    configurable: true,
-  });
+  for (const stream of streams) {
+    Object.defineProperty(stream, 'isTTY', {
+      value: true,
+      configurable: true,
+    });
+  }
   process.argv = [
     process.execPath,
     'shopify',
@@ -215,12 +299,11 @@ it.each([
     expect(terminalSupportsPrompting()).toBe(!noInput);
     expect(isTerminalInteractive()).toBe(!noInput);
   } finally {
-    if (stdinDescriptor)
-      Object.defineProperty(process.stdin, 'isTTY', stdinDescriptor);
-    else Reflect.deleteProperty(process.stdin, 'isTTY');
-    if (stdoutDescriptor)
-      Object.defineProperty(process.stdout, 'isTTY', stdoutDescriptor);
-    else Reflect.deleteProperty(process.stdout, 'isTTY');
+    streams.forEach((stream, index) => {
+      const descriptor = descriptors[index];
+      if (descriptor) Object.defineProperty(stream, 'isTTY', descriptor);
+      else Reflect.deleteProperty(stream, 'isTTY');
+    });
   }
 });
 

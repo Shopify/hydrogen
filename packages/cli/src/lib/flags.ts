@@ -1,7 +1,7 @@
 import {Flags} from '@oclif/core';
 import type {Flag} from '@oclif/core/interfaces';
 import {camelize} from '@shopify/cli-kit/common/string';
-import {renderInfo} from './ui.js';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
 import colors from '@shopify/cli-kit/node/colors';
 import type {CamelCasedProperties, PartialDeep} from 'type-fest';

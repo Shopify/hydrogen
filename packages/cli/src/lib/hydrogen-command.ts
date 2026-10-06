@@ -3,6 +3,7 @@ import {globalFlags} from '@shopify/cli-kit/node/cli';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {cwd, resolvePath} from '@shopify/cli-kit/node/path';
 import {isTruthy} from '@shopify/cli-kit/node/context/utilities';
+import {withJsonConsole} from './json-output.js';
 import {
   applyHydrogenCommandPolicy,
   isHydrogenProject,
@@ -10,6 +11,10 @@ import {
 
 export default abstract class HydrogenCommand extends Command {
   static baseFlags = {...Command.baseFlags, ...globalFlags};
+
+  async _run<T>() {
+    return withJsonConsole(() => super._run<T>());
+  }
 
   protected async init(): Promise<unknown> {
     await super.init();

@@ -1,5 +1,5 @@
 import Command from '../../lib/hydrogen-command.js';
-import {renderSuccess} from '../../lib/ui.js';
+import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {outputNewline} from '@shopify/cli-kit/node/output';
 
 import {commonFlags} from '../../lib/flags.js';

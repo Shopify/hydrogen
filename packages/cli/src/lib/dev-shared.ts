@@ -5,7 +5,7 @@ import {
   outputContent,
   outputToken,
 } from '@shopify/cli-kit/node/output';
-import {renderInfo} from './ui.js';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {
   getStorefrontId,
