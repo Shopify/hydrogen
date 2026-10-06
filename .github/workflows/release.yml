@@ -1,5 +1,8 @@
-# We use this singular file for all of our releases because we can only
-# specify a singular GitHub workflow file in npm's Trusted Publishing configuration.
+# Every npm publish for this repo lives in this file because it is the workflow
+# registered as the npm Trusted Publisher for all of our packages. PR snapshots
+# are published from here too, via workflow_dispatch: npm rejects OIDC token
+# exchanges for issue_comment-triggered runs, so snapit.yml only validates the
+# /snapit request and dispatches this workflow on the PR branch.
 name: Release
 
 on:
@@ -11,14 +14,28 @@ on:
       # release for the 2025-01 CalVer branch
       - 2025-01
 
-concurrency:
-  group: release-${{ github.ref_name }}
-  cancel-in-progress: true
+  # PR snapshot releases. Dispatched by snapit.yml on `/snapit`, or manually:
+  # Actions -> Release -> Run workflow -> pick the branch
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: 'Optional: fail unless the branch head is this commit'
+        required: false
+        type: string
+      requested_by:
+        description: 'Set by snapit.yml: who commented /snapit'
+        required: false
+        type: string
 
-permissions:
-  contents: write
-  pull-requests: write
-  id-token: write # Required for npm OIDC Trusted Publishing
+concurrency:
+  # Snapshots get their own group so a dispatch can never cancel a production
+  # release (workflow-level concurrency applies before any job `if:`), and so a
+  # second snapshot never cancels one that is halfway through publishing.
+  group: ${{ github.event_name == 'workflow_dispatch' && format('snapshot-{0}', github.ref_name) || format('release-{0}', github.ref_name) }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
+
+# Every job declares its own permissions, so none silently inherits id-token.
+permissions: {}
 
 jobs:
   # ============================================
@@ -294,6 +311,8 @@ jobs:
     if: needs.release.outputs.published == 'true' && needs.release.outputs.latest == 'true'
     runs-on: ubuntu-latest
     name: Compile the typescript templates and push them to main
+    permissions:
+      contents: write # force-push the compiled templates to the dist branch
     steps:
       - name: Checkout the code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -331,3 +350,328 @@ jobs:
           git show-ref
           git commit -m "Update templates for dist"
           git push origin HEAD:dist --force
+
+  # ============================================
+  # PR SNAPSHOT RELEASE (workflow_dispatch, see snapit.yml)
+  # ============================================
+  # Unlike the push jobs above, snapshots build branches whose dependency and
+  # build changes nobody has reviewed yet (e.g. a Dependabot PR). So the branch
+  # is built in a job with no publish credential, and a separate job that runs
+  # no repository code validates the packed tarballs and publishes them.
+  # This only guards against a malicious dependency or build step: anyone who
+  # can push a branch can still edit this file on it.
+  snapshot-build:
+    name: Build snapshot
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'shopify' && github.event_name == 'workflow_dispatch' && github.ref_type == 'branch'
+    permissions:
+      contents: read
+    steps:
+      - name: Verify the dispatched commit
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          ACTUAL_SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$EXPECTED_SHA" ]; then
+            exit 0
+          fi
+          if ! [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::expected_sha must be a full 40-character commit SHA"
+            exit 1
+          fi
+          if [ "$EXPECTED_SHA" != "$ACTUAL_SHA" ]; then
+            echo "::error::The branch moved after /snapit was requested (expected $EXPECTED_SHA, got $ACTUAL_SHA). Comment /snapit again."
+            exit 1
+          fi
+
+      - name: Checkout the branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          run_install: false
+
+      # No dependency cache: this job builds unreviewed code and shouldn't write one
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 24
+
+      - name: Install the packages
+        run: pnpm install --frozen-lockfile
+
+      - name: Create snapshot versions
+        run: |
+          printf -- "---\n'@shopify/hydrogen': patch\n'@shopify/cli-hydrogen': patch\n'@shopify/create-hydrogen': patch\n---\n\nForce snapshot build.\n" > .changeset/force-snapshot-build.md
+          pnpm exec changeset version --snapshot snapshot
+          pnpm run version:hydrogen
+        env:
+          # Read-only; the changelog generator looks up commit/PR links
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # The CLI build also regenerates oclif.manifest.json with the snapshot version
+      - name: Build
+        run: pnpm run build
+
+      - name: Pack snapshot packages
+        run: |
+          mkdir -p "$RUNNER_TEMP/snapshots"
+          for manifest in packages/*/package.json; do
+            if node -e 'const p = require(require("path").resolve(process.argv[1])); process.exit(!p.private && p.version.includes("-snapshot-") ? 0 : 1)' "$manifest"; then
+              pnpm --dir "$(dirname "$manifest")" pack --pack-destination "$RUNNER_TEMP/snapshots"
+            fi
+          done
+          ls -l "$RUNNER_TEMP/snapshots"
+
+      - name: Upload snapshot tarballs
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: snapshot-tarballs
+          path: ${{ runner.temp }}/snapshots/*.tgz
+          if-no-files-found: error
+          retention-days: 1
+
+  # Runs no repository code: no checkout, no install, no package scripts.
+  # Everything it reads from the artifact is treated as untrusted.
+  # snapit.yml looks for this job name to decide whether a branch can snapshot.
+  snapshot-publish:
+    name: Publish snapshot
+    needs: snapshot-build
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'shopify' && github.event_name == 'workflow_dispatch' && github.ref_type == 'branch'
+    permissions:
+      id-token: write # npm Trusted Publishing
+    outputs:
+      published: ${{ steps.validate.outputs.published }}
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          registry-url: 'https://registry.npmjs.org'
+          node-version: 24 # npm@11 for Trusted Publishing
+
+      - name: Download snapshot tarballs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: snapshot-tarballs
+          path: ${{ runner.temp }}/snapshots
+
+      # A dist-tag doesn't stop semver ranges from matching, so a poisoned build
+      # that shipped e.g. @shopify/hydrogen@2026.99.0 under `snapshot` would still
+      # reach every `^2026` consumer. The version check below is what prevents that.
+      # Inline on purpose: a script file would come from the (untrusted) branch.
+      - name: Validate snapshot tarballs
+        id: validate
+        env:
+          SNAPSHOT_DIR: ${{ runner.temp }}/snapshots
+        run: |
+          node --input-type=module <<'EOF'
+          import {execFileSync} from 'node:child_process';
+          import {appendFileSync, lstatSync, readdirSync} from 'node:fs';
+          import {join} from 'node:path';
+
+          const REGISTRY = 'https://registry.npmjs.org';
+          // npm Trusted Publishing is the real limit on which packages this
+          // workflow can publish; this list is a second safety net.
+          const ALLOWED_NAMES = new Set([
+            '@shopify/cli-hydrogen',
+            '@shopify/create-hydrogen',
+            '@shopify/hydrogen',
+            '@shopify/hydrogen-codegen',
+            '@shopify/hydrogen-react',
+            '@shopify/mini-oxygen',
+            '@shopify/remix-oxygen',
+          ]);
+          const SNAPSHOT_VERSION = /^0\.0\.0-snapshot-\d{14}$/;
+          // publishConfig can override the registry and tag, so only the exact
+          // value every package uses today is accepted. If you add a
+          // publishConfig field to a package, update this too.
+          const PUBLISH_CONFIG = {access: 'public', '@shopify:registry': REGISTRY};
+
+          const dir = process.env.SNAPSHOT_DIR;
+          const fail = (message) => {
+            console.log(`::error::${message}`);
+            process.exit(1);
+          };
+          const lines = (text) => text.split('\n').filter(Boolean);
+          const tar = (...args) =>
+            execFileSync('tar', args, {encoding: 'utf8', maxBuffer: 64 * 1024 * 1024});
+
+          const files = readdirSync(dir).sort();
+          if (files.length === 0 || files.length > ALLOWED_NAMES.size) {
+            fail(`Expected 1-${ALLOWED_NAMES.size} tarballs, found ${files.length}`);
+          }
+
+          const published = [];
+          for (const file of files) {
+            const path = join(dir, file);
+            if (!/^[A-Za-z0-9._-]+\.tgz$/.test(file) || !lstatSync(path).isFile()) {
+              fail(`Unexpected artifact entry: ${JSON.stringify(file)}`);
+            }
+
+            // npm strips the first path segment whatever it is called and lets
+            // later entries overwrite earlier ones, so the manifest read below is
+            // only trustworthy if the layout is exactly package/**.
+            const entries = lines(tar('-tzf', path));
+            const verbose = lines(tar('-tvzf', path));
+            if (entries.length === 0 || entries.length !== verbose.length) {
+              fail(`${file}: could not list tarball entries`);
+            }
+            for (const [i, entry] of entries.entries()) {
+              const type = verbose[i][0];
+              if (type !== '-' && type !== 'd') {
+                fail(`${file}: entry ${JSON.stringify(entry)} is not a regular file or directory`);
+              }
+              if (
+                !entry.startsWith('package/') ||
+                entry.includes('\\') ||
+                entry.includes('//') ||
+                /(^|\/)\.\.?(\/|$)/.test(entry)
+              ) {
+                fail(`${file}: unexpected path ${JSON.stringify(entry)}`);
+              }
+            }
+            if (entries.filter((entry) => entry === 'package/package.json').length !== 1) {
+              fail(`${file}: must contain exactly one package/package.json`);
+            }
+
+            let manifest;
+            try {
+              manifest = JSON.parse(tar('-xzOf', path, 'package/package.json'));
+            } catch (error) {
+              fail(`${file}: package.json is not valid JSON (${error.message})`);
+            }
+            const {name, version, publishConfig} = manifest;
+            if (!ALLOWED_NAMES.has(name)) {
+              fail(`${file}: ${JSON.stringify(name)} is not a package this workflow publishes`);
+            }
+            if (published.some((pkg) => pkg.name === name)) {
+              fail(`${file}: duplicate tarball for ${name}`);
+            }
+            if (typeof version !== 'string' || !SNAPSHOT_VERSION.test(version)) {
+              fail(`${name}: version ${JSON.stringify(version)} is not a snapshot version`);
+            }
+            const configKeys = Object.keys(publishConfig ?? {});
+            if (
+              configKeys.length !== Object.keys(PUBLISH_CONFIG).length ||
+              configKeys.some((key) => publishConfig[key] !== PUBLISH_CONFIG[key])
+            ) {
+              fail(`${name}: publishConfig ${JSON.stringify(publishConfig)} does not match the expected value in release.yml`);
+            }
+
+            // Ask npm what it would publish from these exact bytes, in case its
+            // tarball parsing differs from tar's.
+            const dryRun = JSON.parse(
+              execFileSync(
+                'npm',
+                ['publish', path, '--dry-run', '--json', '--ignore-scripts', '--tag', 'snapshot', '--access', 'public', '--registry', REGISTRY],
+                {encoding: 'utf8', maxBuffer: 64 * 1024 * 1024},
+              ),
+            );
+            // Newer npm 11 releases key the result by package name; older ones don't.
+            const keys = Object.keys(dryRun);
+            const report = 'name' in dryRun ? dryRun : keys.length === 1 && keys[0] === name ? dryRun[name] : undefined;
+            if (!report || report.name !== name || report.version !== version) {
+              fail(`${file}: npm would publish ${JSON.stringify(report ? `${report.name}@${report.version}` : keys)}, expected ${name}@${version}`);
+            }
+
+            published.push({name, version, file});
+          }
+
+          console.log(published.map(({name, version}) => `${name}@${version}`).join('\n'));
+          appendFileSync(process.env.GITHUB_OUTPUT, `published=${JSON.stringify(published)}\n`);
+          EOF
+
+      - name: Publish to npm
+        env:
+          SNAPSHOT_DIR: ${{ runner.temp }}/snapshots
+          PUBLISHED: ${{ steps.validate.outputs.published }}
+        run: |
+          node --input-type=module <<'EOF'
+          import {execFileSync} from 'node:child_process';
+          import {join} from 'node:path';
+
+          for (const {name, version, file} of JSON.parse(process.env.PUBLISHED)) {
+            console.log(`Publishing ${name}@${version}`);
+            execFileSync(
+              'npm',
+              ['publish', join(process.env.SNAPSHOT_DIR, file), '--tag', 'snapshot', '--access', 'public', '--ignore-scripts', '--registry', 'https://registry.npmjs.org'],
+              {stdio: 'inherit'},
+            );
+          }
+          EOF
+
+  snapshot-report:
+    name: Report snapshot
+    needs: [snapshot-build, snapshot-publish]
+    runs-on: ubuntu-latest
+    if: ${{ !cancelled() && github.repository_owner == 'shopify' && github.event_name == 'workflow_dispatch' && github.ref_type == 'branch' }}
+    permissions:
+      pull-requests: write # comment on the PR
+    steps:
+      - name: Comment on the PR
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          PUBLISHED: ${{ needs.snapshot-publish.outputs.published }}
+          PUBLISH_RESULT: ${{ needs.snapshot-publish.result }}
+          BRANCH: ${{ github.ref_name }}
+          TRIGGERING_ACTOR: ${{ github.triggering_actor }}
+          REQUESTED_BY: ${{ inputs.requested_by }}
+        with:
+          script: |
+            const {owner, repo} = context.repo;
+            const {BRANCH, PUBLISH_RESULT, PUBLISHED, REQUESTED_BY, TRIGGERING_ACTOR} = process.env;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const shortSha = context.sha.slice(0, 7);
+
+            // requested_by is free text on manual runs, so only trust it when
+            // snapit.yml dispatched the run, and only if it looks like a login.
+            // null means nobody is thanked by name.
+            let requester = TRIGGERING_ACTOR;
+            if (TRIGGERING_ACTOR === 'github-actions[bot]') {
+              requester = /^[A-Za-z0-9-]{1,39}$/.test(REQUESTED_BY) ? REQUESTED_BY : null;
+            }
+
+            let body;
+            if (PUBLISH_RESULT === 'success') {
+              const published = JSON.parse(PUBLISHED);
+              const highlighted = ['@shopify/hydrogen', '@shopify/cli-hydrogen', '@shopify/hydrogen-codegen', '@shopify/mini-oxygen'];
+              const shown = published.filter(({name}) => highlighted.includes(name));
+              const versions = (shown.length ? shown : published)
+                .map(({name, version}) => `"${name}": "${version}"`)
+                .join(',\n');
+              body = [
+                `🫰✨ **${requester ? `Thanks @${requester}! ` : ''}Your snapshots have been published to npm.**`,
+                '',
+                'Test the snapshots by updating your `package.json` with the newly published versions:',
+                '```json',
+                versions,
+                '```',
+                '',
+                '> Create a new project with all the released packages running `pnpm create @shopify/hydrogen@<snapshot_version>`',
+                '> To try a new CLI plugin version, add `@shopify/cli-hydrogen` as a dependency to your project using the snapshot version.',
+                '',
+                `<sub>Built from ${shortSha} · [workflow run](${runUrl})</sub>`,
+              ].join('\n');
+            } else {
+              body = `❌ The snapshot for ${shortSha} failed; if it failed while publishing, some packages may already be on npm. See the [workflow run](${runUrl}).`;
+            }
+
+            await core.summary.addRaw(body).write();
+
+            const pulls = await github.paginate(github.rest.pulls.list, {
+              owner,
+              repo,
+              state: 'open',
+              head: `${owner}:${BRANCH}`,
+            });
+            const pr = pulls.find((pull) => pull.head.repo?.full_name === `${owner}/${repo}`);
+            if (!pr) {
+              core.info(`No open PR for ${BRANCH}; result is in the job summary.`);
+              return;
+            }
+            await github.rest.issues.createComment({owner, repo, issue_number: pr.number, body});
