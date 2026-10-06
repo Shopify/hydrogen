@@ -9,6 +9,7 @@ import {envPullJsonOutputSchema} from '../../../lib/environments/types.js';
 import {diffLines} from 'diff';
 import Command from '../../../lib/hydrogen-command.js';
 import {
+  isTTY,
   renderConfirmationPrompt,
   renderInfo,
   renderWarning,
@@ -29,6 +30,8 @@ import {renderMissingStorefront} from '../../../lib/render-errors.js';
 import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
 import {getStorefrontEnvVariables} from '../../../lib/graphql/admin/pull-variables.js';
 import {verifyLinkedStorefront} from '../../../lib/verify-linked-storefront.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {randomUUID} from 'node:crypto';
 
 function needsQuoting(value: string): boolean {
   // Check for shell metacharacters that require quoting to prevent parsing errors
@@ -60,10 +63,39 @@ function quoteEnvValue(value: string): string {
   // shell-sourced (no `$` or backtick expansion).
   if (!/['\r\n]/.test(value)) return `'${value}'`;
 
-  // Values containing a single quote or line breaks need double quotes so
-  // that line breaks can be encoded as `\n` / `\r`. Other characters are
-  // written as-is because dotenv does not unescape them.
-  return `"${value.replaceAll('\r', '\\r').replaceAll('\n', '\\n')}"`;
+  // Double quotes can encode line breaks, but must not change literal \n or
+  // \r sequences, close early, or enable shell expansion when sourced.
+  if (!/["\\$`]/.test(value)) {
+    return `"${value.replaceAll('\r', '\\r').replaceAll('\n', '\\n')}"`;
+  }
+  // dotenv also supports literal multiline single-quoted values.
+  // Carriage returns require double quotes because dotenv normalizes raw CRLF.
+  if (!/['\r]/.test(value)) return `'${value}'`;
+  throw new AbortError(
+    'An environment variable cannot be represented in dotenv format without changing its value.',
+    'The value combines incompatible quotes, backslashes, or carriage returns. Update its format before pulling it.',
+  );
+}
+
+function patchQuotedEnvFile(
+  content: string | null,
+  values: Record<string, string>,
+) {
+  // patchEnvFile quotes raw multiline values itself. These values are already
+  // quoted, so substitute markers while patching to avoid a second quote layer.
+  const replacements = new Map<string, string>();
+  const patch = Object.fromEntries(
+    Object.entries(values).map(([key, value]) => {
+      if (!value.includes('\n')) return [key, value];
+      const marker = `__HYDROGEN_ENV_${randomUUID()}__`;
+      replacements.set(marker, value);
+      return [key, marker];
+    }),
+  );
+  let result = patchEnvFile(content, patch);
+  for (const [marker, value] of replacements)
+    result = result.replaceAll(marker, () => value);
+  return result;
 }
 
 export default class EnvPull extends Command {
@@ -107,7 +139,14 @@ export async function pullEnvironmentVariables({
 }: EnvPullOptions): Promise<
   import('../../../lib/environments/types.js').EnvPullResult
 > {
-  const empty = {file: resolvePath(root, envFile), variables: []};
+  const empty = {
+    path: resolvePath(root, envFile),
+    variables: [],
+    changed: false,
+    storefrontGid: null,
+    storefrontName: null,
+    environment: envHandle ?? null,
+  };
   const [{session, config}, cliCommand] = await Promise.all([
     login(root),
     getCliCommand(),
@@ -157,17 +196,19 @@ export async function pullEnvironmentVariables({
   const variables = storefront.environmentVariables;
   const result = {
     ...empty,
-    storefrontId: config.storefront.id,
-    storefrontTitle: config.storefront.title,
-    environment: envHandle,
+    storefrontGid: config.storefront.id,
+    storefrontName: config.storefront.title,
+    environment: envHandle ?? null,
     variables: variables.map(({id, key, isSecret, readOnly}) => ({
-      id,
-      key,
+      id: id.startsWith('gid://shopify/HydrogenStorefrontEnvironmentVariable/')
+        ? id.split('/').at(-1)!
+        : id,
+      name: key,
       isSecret,
       readOnly,
     })),
   };
-  if (!variables.length) return {...result, status: 'empty'};
+  if (!variables.length) return {...result, status: 'success'};
 
   const fileName = colors.whiteBright(envFile);
   const dotEnvPath = resolvePath(root, envFile);
@@ -181,10 +222,19 @@ export async function pullEnvironmentVariables({
 
   if ((await fileExists(dotEnvPath)) && !force) {
     const existingEnv = await readFile(dotEnvPath);
-    const patchedEnv = patchEnvFile(existingEnv, fetchedEnv);
+    const patchedEnv = patchQuotedEnvFile(existingEnv, fetchedEnv);
 
     if (existingEnv === patchedEnv) {
-      return {...result, status: 'unchanged'};
+      return {...result, status: 'success'};
+    }
+
+    // CLI Kit includes the prompt message in non-interactive errors. Keep
+    // environment values out of that error by checking before creating the diff.
+    if (!isTTY()) {
+      throw new AbortError(
+        'Pulling environment variables requires confirmation.',
+        'Use --force to overwrite the environment file, or run in an interactive terminal.',
+      );
     }
 
     const diff = diffLines(existingEnv, patchedEnv);
@@ -203,25 +253,25 @@ Continue?`.value,
 
     await writeFile(dotEnvPath, patchedEnv);
   } else {
-    const newEnv = patchEnvFile(null, fetchedEnv);
+    const newEnv = patchQuotedEnvFile(null, fetchedEnv);
     await writeFile(dotEnvPath, newEnv);
   }
 
-  return {...result, status: 'pulled'};
+  return {...result, status: 'success', changed: true};
 }
 
 export async function runEnvPull(options: EnvPullOptions, json?: boolean) {
   const result = await pullEnvironmentVariables(options);
   if (writeJsonResult(envPullJsonOutputSchema, result, json)) return result;
   const fileName = colors.whiteBright(options.envFile);
-  if (result.status === 'empty') {
+  if (result.status === 'success' && result.variables.length === 0) {
     outputInfo('No environment variables found.');
-  } else if (result.status === 'unchanged') {
+  } else if (result.status === 'success' && !result.changed) {
     renderInfo({body: `No changes to your ${fileName} file`});
-  } else if (result.status === 'pulled') {
+  } else if (result.status === 'success' && result.changed) {
     if (result.variables.some(({isSecret}) => isSecret)) {
       renderWarning({
-        body: `${result.storefrontTitle} contains environment variables marked as secret, so their values weren’t pulled.`,
+        body: `${result.storefrontName} contains environment variables marked as secret, so their values weren’t pulled.`,
       });
     }
     renderSuccess({

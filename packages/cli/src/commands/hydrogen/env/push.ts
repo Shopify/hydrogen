@@ -1,6 +1,9 @@
 import {writeJsonResult} from '../../../lib/json-output.js';
 import {jsonFlag} from '@shopify/cli-kit/node/cli';
-import {envPushJsonOutputSchema} from '../../../lib/environments/types.js';
+import {
+  envPushJsonOutputSchema,
+  toEnvironment,
+} from '../../../lib/environments/types.js';
 import Command from '../../../lib/hydrogen-command.js';
 import {Flags} from '@oclif/core';
 import {diffLines} from 'diff';
@@ -9,6 +12,7 @@ import {login} from '../../../lib/auth.js';
 import {getCliCommand} from '../../../lib/shell.js';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {
+  isTTY,
   renderConfirmationPrompt,
   renderSelectPrompt,
   renderInfo,
@@ -109,7 +113,15 @@ export async function pushEnvironmentVariables({
   });
 
   if (!linkedStorefront)
-    return {status: 'cancelled', file: dotEnvPath, variables: [], skipped: []};
+    return {
+      status: 'cancelled',
+      changed: false,
+      dryRun,
+      path: dotEnvPath,
+      environment: null,
+      variables: [],
+      skipped: [],
+    };
 
   config.storefront = linkedStorefront;
 
@@ -160,8 +172,13 @@ export async function pushEnvironmentVariables({
     )) ?? {};
 
   // Normalize variables
+  const protectedKeys = new Set(
+    environmentVariables
+      .filter(({isSecret, readOnly}) => isSecret || readOnly)
+      .map(({key}) => key),
+  );
   const remoteVars = environmentVariables.filter(
-    ({isSecret, readOnly}) => !isSecret && !readOnly,
+    ({key}) => !protectedKeys.has(key),
   );
   const comparableRemoteVars =
     remoteVars
@@ -173,9 +190,7 @@ export async function pushEnvironmentVariables({
     Object.keys(localVariables)
       .sort((a, b) => a.localeCompare(b))
       .reduce((acc, key) => {
-        const {isSecret, readOnly} =
-          environmentVariables.find((variable) => variable.key === key) ?? {};
-        if (isSecret || readOnly) return acc;
+        if (protectedKeys.has(key)) return acc;
         return [...acc, createDotEnvFileLine(key, localVariables[key])];
       }, [] as string[])
       .join('\n') + '\n';
@@ -207,18 +222,32 @@ export async function pushEnvironmentVariables({
   }
 
   const result = {
-    file: dotEnvPath,
-    environment: validatedEnvironment,
-    variables: Object.keys(localVariables),
-    skipped: remoteReadOnlyOrSecrets,
+    path: dotEnvPath,
+    changed: false,
+    dryRun,
+    environment: toEnvironment(validatedEnvironment),
+    variables: Object.keys(localVariables)
+      .filter((name) => !protectedKeys.has(name))
+      .map((name) => ({name})),
+    skipped: Object.keys(localVariables)
+      .filter((name) => protectedKeys.has(name))
+      .map((name) => ({name})),
   };
   if (compareableLocalVars === comparableRemoteVars)
-    return {...result, status: 'unchanged'};
+    return {...result, status: 'success'};
 
   const diff = diffLines(comparableRemoteVars, compareableLocalVars);
-  if (dryRun) return {...result, status: 'dry-run', diff};
+  if (dryRun) return {...result, status: 'success', diff};
 
   if (!force) {
+    // Do not let CLI Kit include the variable diff in a non-interactive error.
+    if (!isTTY()) {
+      throw new AbortError(
+        'Pushing environment variables requires confirmation.',
+        'Use --force to push the changes, --dry-run to preview them, or run in an interactive terminal.',
+      );
+    }
+
     const confirmPush = await renderConfirmationPrompt({
       confirmationMessage: 'Yes, confirm changes',
       cancellationMessage: 'No, make changes later',
@@ -240,7 +269,9 @@ Continue?`.value,
     session,
     config.storefront.id,
     validatedEnvironment.id,
-    Object.entries(localVariables).map(([key, value]) => ({key, value})),
+    Object.entries(localVariables)
+      .filter(([key]) => !protectedKeys.has(key))
+      .map(([key, value]) => ({key, value})),
   );
 
   if (userErrors.length) {
@@ -250,22 +281,29 @@ Continue?`.value,
     );
   }
 
-  return {...result, status: 'pushed'};
+  return {...result, status: 'success', changed: true};
 }
 
 export async function runEnvPush(options: EnvPushOptions, json?: boolean) {
   const result = await pushEnvironmentVariables(options);
-  if (writeJsonResult(envPushJsonOutputSchema, result, json)) return result;
-  if (result.status === 'unchanged')
+  if (
+    writeJsonResult(
+      envPushJsonOutputSchema,
+      (({diff, ...projection}) => projection)(result),
+      json,
+    )
+  )
+    return result;
+  if (result.status === 'success' && !result.changed && !result.diff)
     renderInfo({body: 'No changes to your environment variables.'});
-  if (result.status === 'dry-run')
+  if (result.status === 'success' && result.dryRun && result.diff)
     renderInfo({
       body: outputContent`The following changes would be made to your environment variables for ${result.environment!.name}:
 
-${outputToken.linesDiff(result.diff!)}
+${outputToken.linesDiff(result.diff)}
 No changes were pushed because --dry-run was used.`.value,
     });
-  if (result.status === 'pushed')
+  if (result.status === 'success' && result.changed)
     renderSuccess({
       body: `Environment variables push to ${result.environment?.name ?? 'Preview'} was successful.`,
     });

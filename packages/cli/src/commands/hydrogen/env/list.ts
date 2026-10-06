@@ -1,6 +1,9 @@
 import {writeJsonResult} from '../../../lib/json-output.js';
 import {jsonFlag} from '@shopify/cli-kit/node/cli';
-import {envListJsonOutputSchema} from '../../../lib/environments/types.js';
+import {
+  envListJsonOutputSchema,
+  toEnvironment,
+} from '../../../lib/environments/types.js';
 import Command from '../../../lib/hydrogen-command.js';
 import {pluralize} from '@shopify/cli-kit/common/string';
 import {
@@ -43,7 +46,10 @@ interface EnvListOptions {
 
 export async function runEnvList(options: EnvListOptions, json?: boolean) {
   const result = await listEnvironments(options);
-  if (!writeJsonResult(envListJsonOutputSchema, result, json) && result)
+  if (
+    !writeJsonResult(envListJsonOutputSchema, result, json) &&
+    result.storefront
+  )
     renderEnvironments(result);
   return result;
 }
@@ -65,7 +71,8 @@ export async function listEnvironments({
     cliCommand,
   });
 
-  if (!linkedStorefront) return null;
+  if (!linkedStorefront)
+    return {status: 'cancelled', storefront: null, environments: []};
 
   config.storefront = linkedStorefront;
 
@@ -81,7 +88,7 @@ export async function listEnvironments({
       cliCommand,
     });
 
-    return null;
+    return {status: 'skipped', storefront: null, environments: []};
   }
 
   // Make sure we always show the preview environment last because it doesn't
@@ -91,10 +98,13 @@ export async function listEnvironments({
     ...storefront.environments.filter((env) => env.type === 'PREVIEW'),
   ];
   return {
-    id: storefront.id,
-    title: config.storefront.title,
-    productionUrl: storefront.productionUrl,
-    environments,
+    status: 'success',
+    storefront: {
+      gid: storefront.id,
+      name: config.storefront.title,
+      productionUrl: storefront.productionUrl || null,
+    },
+    environments: environments.map(toEnvironment),
   };
 }
 
@@ -106,7 +116,7 @@ function renderEnvironments(
   outputInfo(
     pluralizedEnvironments({
       environments: storefront.environments,
-      storefrontTitle: storefront.title,
+      storefrontTitle: storefront.storefront!.name,
     }).toString(),
   );
 
@@ -116,7 +126,7 @@ function renderEnvironments(
     // If a custom domain is set it will be available on the storefront itself
     // so we want to use that value instead.
     const environmentUrl =
-      type === 'PRODUCTION' ? storefront.productionUrl : url;
+      type === 'PRODUCTION' ? storefront.storefront!.productionUrl : url;
 
     outputInfo(
       outputContent`${createEnvironmentCliChoiceLabel(name, handle, branch)}`

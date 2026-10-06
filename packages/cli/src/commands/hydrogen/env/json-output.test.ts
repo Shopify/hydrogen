@@ -2,7 +2,7 @@ import {mkdtemp, rm, writeFile, readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {afterEach, beforeEach, expect, it, vi} from 'vitest';
-import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
+import {isTTY, renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {captureJsonOutput} from '../../../../tests/output.js';
 import {login} from '../../../lib/auth.js';
 import {verifyLinkedStorefront} from '../../../lib/verify-linked-storefront.js';
@@ -21,6 +21,7 @@ vi.mock('../../../lib/graphql/admin/push-variables.js');
 vi.mock('../../../lib/shell.js', () => ({getCliCommand: () => 'h2'}));
 vi.mock('@shopify/cli-kit/node/ui', async (original) => ({
   ...(await original<any>()),
+  isTTY: vi.fn(),
   renderConfirmationPrompt: vi.fn(),
 }));
 
@@ -30,11 +31,11 @@ const storefront = {
   productionUrl: 'https://example.com',
 };
 const environment = {
-  id: '1',
+  id: 'gid://shopify/HydrogenStorefrontEnvironment/1',
   name: 'Production',
   handle: 'production',
   branch: 'main',
-  createdAt: '2026-01-01',
+  createdAt: '2026-01-01T10:30:00.999+02:00',
   type: 'PRODUCTION' as const,
   url: null,
 };
@@ -42,6 +43,7 @@ let directory: string;
 
 beforeEach(async () => {
   vi.clearAllMocks();
+  vi.mocked(isTTY).mockReturnValue(true);
   directory = await mkdtemp(join(tmpdir(), 'hydrogen-env-json-'));
   vi.mocked(login).mockResolvedValue({
     session: {token: 'secret', storeFqdn: 'example.myshopify.com'},
@@ -74,8 +76,23 @@ it('lists every environment field and handles a missing preview environment', as
     runEnvList({path: directory}),
   );
   expect(JSON.parse(stdout)).toEqual({
-    ...storefront,
-    environments: [environment],
+    status: 'success',
+    storefront: {
+      gid: storefront.id,
+      name: storefront.title,
+      productionUrl: storefront.productionUrl,
+    },
+    environments: [
+      {
+        gid: environment.id,
+        name: environment.name,
+        handle: environment.handle,
+        branch: environment.branch,
+        createdAt: '2026-01-01T08:30:00Z',
+        type: environment.type,
+        url: null,
+      },
+    ],
   });
   expect(stderr).toBe('');
 });
@@ -113,9 +130,10 @@ it('pulls values into the file and emits a receipt without values on stdout', as
     runEnvPull({path: directory, envFile: '.env', force: true}),
   );
   expect(JSON.parse(stdout)).toMatchObject({
-    status: 'pulled',
-    file: join(directory, '.env'),
-    variables: [{key: 'PUBLIC_KEY'}, {key: 'SECRET_KEY'}],
+    status: 'success',
+    changed: true,
+    path: join(directory, '.env'),
+    variables: [{name: 'PUBLIC_KEY'}, {name: 'SECRET_KEY'}],
   });
   expect(stdout).not.toContain('public-value');
   expect(stdout).not.toContain('secret-value');
@@ -135,6 +153,42 @@ it('preserves confirmation prompts in JSON mode and reports cancellation', async
   expect(pushStorefrontEnvVariables).not.toHaveBeenCalled();
 });
 
+it.each([
+  ['pull', runEnvPull],
+  ['push', runEnvPush],
+] as const)(
+  'rejects non-interactive %s confirmation without leaking values',
+  async (name, run) => {
+    vi.mocked(isTTY).mockReturnValue(false);
+    const original = 'KEY=local-private-value\n';
+    await writeFile(join(directory, '.env'), original);
+    vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+      id: storefront.id,
+      environmentVariables: [
+        {
+          id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
+          key: 'KEY',
+          value: 'remote-private-value',
+          isSecret: false,
+          readOnly: false,
+        },
+      ],
+    });
+    const {stdout, stderr} = await captureJsonOutput(async () => {
+      await expect(
+        run({path: directory, envFile: '.env', env: 'production'}),
+      ).rejects.toMatchObject({
+        message: `${name === 'pull' ? 'Pulling' : 'Pushing'} environment variables requires confirmation.`,
+        tryMessage: expect.stringContaining('--force'),
+      });
+    });
+    expect(stdout + stderr).not.toContain('private-value');
+    expect(renderConfirmationPrompt).not.toHaveBeenCalled();
+    expect(pushStorefrontEnvVariables).not.toHaveBeenCalled();
+    expect(await readFile(join(directory, '.env'), 'utf8')).toBe(original);
+  },
+);
+
 it('reports dry runs without exposing diff values or making a mutation', async () => {
   await writeFile(join(directory, '.env'), 'KEY=private-value\n');
   const {stdout} = await captureJsonOutput(() =>
@@ -146,9 +200,11 @@ it('reports dry runs without exposing diff values or making a mutation', async (
     }),
   );
   expect(JSON.parse(stdout)).toMatchObject({
-    status: 'dry-run',
-    environment,
-    variables: ['KEY'],
+    status: 'success',
+    changed: false,
+    dryRun: true,
+    environment: {gid: environment.id, createdAt: '2026-01-01T08:30:00Z'},
+    variables: [{name: 'KEY'}],
     skipped: [],
   });
   expect(stdout).not.toContain('private-value');
@@ -171,6 +227,53 @@ it('propagates upload failures without a successful document', async () => {
     ).rejects.toThrow('Failed to upload');
   });
   expect(stdout).toBe('');
+});
+
+it('reports protected local variables as skipped even when their values match', async () => {
+  await writeFile(
+    join(directory, '.env'),
+    'READ_ONLY=same\nSECRET=\nKEY=updated\n',
+  );
+  vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+    id: storefront.id,
+    environmentVariables: [
+      {
+        id: '1',
+        key: 'READ_ONLY',
+        value: 'same',
+        readOnly: true,
+        isSecret: false,
+      },
+      {id: '2', key: 'SECRET', value: '', readOnly: false, isSecret: true},
+      {
+        id: '3',
+        key: 'KEY',
+        value: 'original',
+        readOnly: false,
+        isSecret: false,
+      },
+    ],
+  });
+  const {stdout} = await captureJsonOutput(() =>
+    runEnvPush({
+      path: directory,
+      envFile: '.env',
+      env: 'production',
+      force: true,
+    }),
+  );
+  expect(JSON.parse(stdout)).toMatchObject({
+    status: 'success',
+    changed: true,
+    variables: [{name: 'KEY'}],
+    skipped: [{name: 'READ_ONLY'}, {name: 'SECRET'}],
+  });
+  expect(pushStorefrontEnvVariables).toHaveBeenCalledWith(
+    expect.anything(),
+    storefront.id,
+    environment.id,
+    [{key: 'KEY', value: 'updated'}],
+  );
 });
 
 it.each([EnvList, EnvPull, EnvPush])(
