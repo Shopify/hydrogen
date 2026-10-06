@@ -1,5 +1,5 @@
 import {Flags} from '@oclif/core';
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../lib/hydrogen-command.js';
 import {basename} from '@shopify/cli-kit/node/path';
 
 import {

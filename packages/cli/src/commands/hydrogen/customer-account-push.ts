@@ -1,4 +1,4 @@
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../lib/hydrogen-command.js';
 import {Flags} from '@oclif/core';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputDebug} from '@shopify/cli-kit/node/output';

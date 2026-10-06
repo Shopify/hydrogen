@@ -1,4 +1,4 @@
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../../lib/hydrogen-command.js';
 import {pluralize} from '@shopify/cli-kit/common/string';
 import {
   outputContent,

@@ -3,7 +3,7 @@ import semver from 'semver';
 import cliTruncate from 'cli-truncate';
 import {Flags} from '@oclif/core';
 import {isClean, ensureInsideGitDirectory} from '@shopify/cli-kit/node/git';
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../lib/hydrogen-command.js';
 import {
   renderConfirmationPrompt,
   renderInfo,

@@ -1,4 +1,4 @@
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../../lib/hydrogen-command.js';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {renderSuccess} from '../../../lib/ui.js';
 import colors from '@shopify/cli-kit/node/colors';

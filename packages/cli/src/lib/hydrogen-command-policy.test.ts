@@ -58,21 +58,15 @@ describe('Hydrogen command policy', () => {
       });
       writeDisabledCommands('hydrogen:setup:vite');
 
-      const isDisabled = await applyHydrogenCommandPolicy({
-        id: 'hydrogen:setup:vite',
-        projectPath,
-      });
-
-      expect(isDisabled).toBe(true);
-      expect(outputMock.output()).toContain(
+      await expect(
+        applyHydrogenCommandPolicy({
+          id: 'hydrogen:setup:vite',
+          projectPath,
+        }),
+      ).rejects.toThrow(
         '`shopify hydrogen setup vite` is not supported by this version of Hydrogen',
       );
-      expect(outputMock.output()).toContain(
-        'The installed version of @shopify/hydrogen disables this command.',
-      );
-      expect(outputMock.output()).toContain(
-        'Use your framework or package tooling instead.',
-      );
+      expect(outputMock.output()).toBe('');
     });
   });
 
