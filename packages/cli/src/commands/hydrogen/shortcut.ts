@@ -1,9 +1,9 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {writeJsonResult, isJsonOutput} from '../../lib/json-output.js';
+import {writeJsonResult} from '../../lib/json-output.js';
 import {jsonFlag} from '@shopify/cli-kit/node/cli';
 import {shortcutJsonOutputSchema} from '../../lib/maintenance/types.js';
 import Command from '../../lib/hydrogen-command.js';
-import {renderFatalError, renderSuccess} from '@shopify/cli-kit/node/ui';
+import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {ALIAS_NAME, createPlatformShortcut} from '../../lib/shell.js';
 
 export default class Shortcut extends Command {
@@ -33,13 +33,15 @@ export default class Shortcut extends Command {
 }
 
 export async function runCreateShortcut(json?: boolean) {
-  const shortcuts = await createPlatformShortcut();
+  const {shells: shortcuts, changed} = await createPlatformShortcut();
 
   if (shortcuts.length > 0) {
     if (
       writeJsonResult(
         shortcutJsonOutputSchema,
         {
+          status: 'success',
+          changed,
           alias: ALIAS_NAME,
           shells: shortcuts.map((shell) =>
             shell === 'CMD'
@@ -61,17 +63,9 @@ export async function runCreateShortcut(json?: boolean) {
       )}.\nRestart your terminal session and run \`${ALIAS_NAME}\` from your local project.`,
     });
   } else {
-    if (json ?? isJsonOutput())
-      throw new AbortError(
-        'No supported shell found.',
-        'Please create a shortcut manually.',
-      );
-    renderFatalError({
-      name: 'error',
-      type: 0,
-      message: 'No supported shell found.',
-      skipOclifErrorHandling: true,
-      tryMessage: 'Please create a shortcut manually.',
-    });
+    throw new AbortError(
+      'No supported shell found.',
+      'Please create a shortcut manually.',
+    );
   }
 }

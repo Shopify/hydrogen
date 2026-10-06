@@ -100,7 +100,10 @@ it.each([
   {shells: ['zsh' as const], shortcut: true},
   {shells: [], shortcut: false},
 ])('reports shortcut creation accurately: %j', async ({shells, shortcut}) => {
-  vi.mocked(createPlatformShortcut).mockResolvedValue(shells);
+  vi.mocked(createPlatformShortcut).mockResolvedValue({
+    shells,
+    changed: shells.length > 0,
+  });
   const {stdout} = await captureJsonOutput(() =>
     runSetup({
       directory: '/project',

@@ -38,6 +38,11 @@ import {getSkeletonSourceDir} from '../../lib/build.js';
 const TEST_VERSION_DEPENDENCY_UPGRADE = '9999.99.99';
 const TEST_VERSION_DEV_DEPENDENCY_UPGRADE = '9999.99.98';
 
+vi.mock('@shopify/cli-kit/node/system', async (original) => {
+  const actual =
+    await original<typeof import('@shopify/cli-kit/node/system')>();
+  return {...actual, exec: vi.fn(actual.exec)};
+});
 vi.mock('@shopify/cli-kit/node/session');
 vi.mock('@shopify/cli-kit/node/node-package-manager', async () => {
   const original = await vi.importActual<
@@ -67,8 +72,12 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
 
 const outputMock = mockAndCaptureOutput();
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.restoreAllMocks();
+  const system = await vi.importActual<
+    typeof import('@shopify/cli-kit/node/system')
+  >('@shopify/cli-kit/node/system');
+  vi.mocked(exec).mockImplementation(system.exec);
   vi.resetModules();
   vi.clearAllMocks();
   outputMock.clear();
@@ -2408,7 +2417,113 @@ describe('dependency removal', () => {
   });
 });
 
+it('reports installed and removed packages and the generated instructions after a JSON upgrade', async () => {
+  await inTemporaryHydrogenRepo(
+    async (appPath) => {
+      const ui = await vi.importActual<
+        typeof import('@shopify/cli-kit/node/ui')
+      >('@shopify/cli-kit/node/ui');
+      vi.mocked(renderTasks).mockImplementationOnce(ui.renderTasks);
+      vi.mocked(exec).mockResolvedValueOnce(undefined);
+      vi.mocked(exec).mockImplementationOnce(async () => {
+        await writeFile(
+          joinPath(appPath, 'package.json'),
+          JSON.stringify({
+            dependencies: {'@shopify/hydrogen': '2025.7.0'},
+          }),
+        );
+      });
+      const {stdout} = await captureJsonOutput(() =>
+        runUpgrade({
+          appPath,
+          version: '2025.7.0',
+          force: true,
+        }),
+      );
+      const result = JSON.parse(stdout);
+      expect(exec).toHaveBeenCalledWith(
+        'pnpm',
+        ['remove', ...result.removedPackages],
+        {cwd: appPath},
+      );
+      expect(exec).toHaveBeenCalledWith('pnpm', ['add', ...result.packages], {
+        cwd: appPath,
+      });
+      expect(result).toEqual({
+        status: 'success',
+        changed: true,
+        directory: appPath,
+        previousVersion: '2025.5.1',
+        version: '2025.7.0',
+        packages: expect.arrayContaining([
+          '@shopify/hydrogen@2025.7.0',
+          'react-router@7.9.2',
+          'react-router-dom@7.9.2',
+          '@react-router/dev@7.9.2',
+        ]),
+        removedPackages: ['@remix-run/react', '@remix-run/dev'],
+        instructionsPath: joinPath(
+          appPath,
+          '.hydrogen/upgrade-2025.5.1-to-2025.7.0.md',
+        ),
+      });
+      expect(
+        result.packages.every(
+          (name: string) => !name.startsWith('@remix-run/'),
+        ),
+      ).toBe(true);
+      expect(await readFile(result.instructionsPath, 'utf8')).toContain(
+        '## Removed packages',
+      );
+    },
+    {
+      cleanGitRepo: false,
+      packageJson: {
+        dependencies: {
+          '@shopify/hydrogen': '2025.5.1',
+          '@remix-run/react': '2.16.1',
+        },
+        devDependencies: {'@remix-run/dev': '2.16.1'},
+      },
+    },
+  );
+});
+
 describe('--version=next functionality', () => {
+  it('reports the next target instead of the stable release version in JSON', async () => {
+    await inTemporaryHydrogenRepo(
+      async (appPath) => {
+        const ui = await vi.importActual<
+          typeof import('@shopify/cli-kit/node/ui')
+        >('@shopify/cli-kit/node/ui');
+        vi.mocked(renderTasks).mockImplementationOnce(ui.renderTasks);
+        const system = await vi.importActual<
+          typeof import('@shopify/cli-kit/node/system')
+        >('@shopify/cli-kit/node/system');
+        vi.mocked(exec).mockImplementation(async (command, args, options) => {
+          if (command !== 'pnpm') return system.exec(command, args, options);
+          if (args?.[0] === 'remove') return;
+          expect(args?.[0]).toBe('add');
+          await writeFile(
+            joinPath(appPath, 'package.json'),
+            JSON.stringify({dependencies: {'@shopify/hydrogen': 'next'}}),
+          );
+        });
+        const {stdout} = await captureJsonOutput(() =>
+          runUpgrade({appPath, version: 'next', force: true}),
+        );
+        expect(JSON.parse(stdout)).toMatchObject({
+          status: 'success',
+          changed: true,
+          previousVersion: '2025.5.1',
+          version: 'next',
+          packages: expect.arrayContaining(['@shopify/hydrogen@next']),
+        });
+      },
+      {packageJson: {dependencies: {'@shopify/hydrogen': '2025.5.1'}}},
+    );
+  });
+
   describe('monorepo-only restrictions', () => {
     it('should allow --version=next in tests and CI environments', async () => {
       await inTemporaryHydrogenRepo(
