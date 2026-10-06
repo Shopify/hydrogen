@@ -29,6 +29,12 @@ const VALID_REDIRECT_STATUSES = [
   301, 302, 303, 307, 308,
 ] as const satisfies readonly ShopifyRedirectStatus[];
 
+/**
+ * Defines a handler for one pathname and HTTP method. Pass handler groups to `handleShopifyRoutes`
+ * through its `handlers` option.
+ *
+ * @publicDocs
+ */
 export function createShopifyRouteHandler<
   const TPathname extends string,
   const TMethod extends string,

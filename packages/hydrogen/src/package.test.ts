@@ -158,6 +158,15 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     TS_PLUGIN_PACK_TIMEOUT_MS,
   );
 
+  it("keeps @publicDocs on the declarations the docs harvester seeds from", () => {
+    const scriptsTypes = readFileSync(
+      resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/types.d.mts"),
+      "utf8",
+    );
+
+    expect(scriptsTypes).toMatch(/\* @publicDocs\s+\*\/\s+type ShopifyScriptsOptions = /);
+  });
+
   it("centralizes Shopify globals in global types", () => {
     const declaration = readFileSync(resolve(PACKAGE_ROOT, "dist/globals.d.mts"), "utf8");
 
@@ -170,10 +179,12 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     expect(declaration).toContain("customerPrivacy: {");
     expect(declaration).toContain("routes: {");
     expect(declaration).toContain("root: string;");
-    expect(declaration).toMatch(/\/\*\* @internal \*\/\s+apiProxyPrefix\?:/);
-    expect(declaration).toMatch(/\/\*\* @internal \*\/\s+match\?:/);
-    expect(declaration).toMatch(/\/\*\* @internal \*\/\s+resolve\?:/);
-    expect(declaration).toMatch(/\/\*\* @internal \*\/\s+navigate\?:/);
+    expect(declaration).toMatch(/\/\*\* @private \*\/\s+apiProxyPrefix\?:/);
+    expect(declaration).toMatch(/\/\*\* @private \*\/\s+match\?:/);
+    expect(declaration).toMatch(/\/\*\* @private \*\/\s+resolve\?:/);
+    expect(declaration).toMatch(/resolve\?: \(url: string\) => string;\s+navigate\?:/);
+    expect(declaration).not.toMatch(/@internal \*\/\s+navigate\?:/);
+    expect(declaration).toMatch(/@publicDocs\s+\*\/\s+type ShopifyGlobal = \{/);
     expect(declaration).toContain("type ShopifyGlobal = {");
     expect(declaration).toContain("Shopify?: ShopifyGlobal;");
     expect(declaration).toContain("export { ShopifyGlobal };");

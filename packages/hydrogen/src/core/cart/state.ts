@@ -111,7 +111,9 @@ export interface CartErrorGroup {
   warnings: CartWarning[];
 }
 
-/** A network-level error encountered during a cart operation (e.g. non-2xx response, timeout). Aborted requests are not recorded. */
+/**
+ * A network-level error encountered during a cart operation (e.g. non-2xx response, timeout). Aborted requests are not recorded.
+ */
 export interface CartNetworkEntry {
   message: string;
   /** HTTP status code when available. */
@@ -268,12 +270,20 @@ export function createEmptyPending(): CartPending {
   };
 }
 
-/** Creates an empty {@link CartErrorGroup} — no user errors, no warnings. */
+/**
+ * Creates an empty {@link CartErrorGroup} — no user errors, no warnings.
+ *
+ * @publicDocs
+ */
 export function createEmptyErrorGroup(): CartErrorGroup {
   return { userErrors: [], warnings: [] };
 }
 
-/** Creates an empty {@link CartErrorState} — all timestamps at `0`, all buckets empty. */
+/**
+ * Creates an empty {@link CartErrorState} — all timestamps at `0`, all buckets empty.
+ *
+ * @publicDocs
+ */
 export function createEmptyCartErrors(): CartErrorState {
   return {
     cart: createEmptyErrorGroup(),
@@ -295,6 +305,8 @@ export function createEmptyCartErrors(): CartErrorState {
 /**
  * Frozen {@link CartData} representing an empty cart — `id: null`, zero quantities,
  * zero-amount costs. Used as the initial/fallback value before the first server response.
+ *
+ * @publicDocs
  */
 export const EMPTY_CART_DATA: CartData = Object.freeze({
   id: null,
@@ -335,5 +347,9 @@ export function createEmptyCartState({ loading = true }: { loading?: boolean } =
   );
 }
 
-/** Shared empty {@link CartState} — backed by {@link EMPTY_CART_DATA}, defaults to `loading: true`. */
+/**
+ * Shared empty {@link CartState} — backed by {@link EMPTY_CART_DATA}, defaults to `loading: true`.
+ *
+ * @publicDocs
+ */
 export const EMPTY_CART_STATE: CartState = createEmptyCartState();

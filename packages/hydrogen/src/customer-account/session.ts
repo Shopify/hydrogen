@@ -20,13 +20,29 @@ import { CustomerAccountApiError, CustomerAccountOAuthError } from "./errors";
 
 const log = getLogger("customer-account");
 
-/** OAuth callback route path: `"/account/authorize"`. */
+/**
+ * OAuth callback route path: `"/account/authorize"`.
+ *
+ * @publicDocs
+ */
 export const CUSTOMER_ACCOUNT_AUTHORIZE_PATH = CUSTOMER_ACCOUNT_PATHS.authorize;
-/** Login route path: `"/account/login"`. */
+/**
+ * Login route path: `"/account/login"`.
+ *
+ * @publicDocs
+ */
 export const CUSTOMER_ACCOUNT_LOGIN_PATH = CUSTOMER_ACCOUNT_PATHS.login;
-/** Logout route path: `"/account/logout"`. */
+/**
+ * Logout route path: `"/account/logout"`.
+ *
+ * @publicDocs
+ */
 export const CUSTOMER_ACCOUNT_LOGOUT_PATH = CUSTOMER_ACCOUNT_PATHS.logout;
-/** Token refresh route path: `"/account/refresh"`. */
+/**
+ * Token refresh route path: `"/account/refresh"`.
+ *
+ * @publicDocs
+ */
 export const CUSTOMER_ACCOUNT_REFRESH_PATH = CUSTOMER_ACCOUNT_PATHS.refresh;
 
 const CUSTOMER_ACCOUNT_SESSION_KEY = "customerAccount";
@@ -57,7 +73,9 @@ const CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON = "customer-session-a
 const CUSTOMER_SESSION_MUTATION_PERSONALIZATION_REASON = "customer-session-mutation";
 const CUSTOMER_SESSION_INTERNAL_BRAND: unique symbol = Symbol("hydrogen.customerSessionInternal");
 
-/** A value that is either `T` or a `Promise<T>`, used as the return type of session manager methods. */
+/**
+ * A value that is either `T` or a `Promise<T>`, used as the return type of session manager methods.
+ */
 export type Awaitable<T> = T | Promise<T>;
 
 /** Read-only Customer Account session storage for UI state and strict access-token reads. */
@@ -152,6 +170,8 @@ export type LogoutOptions = RequestOriginOptions & {
 /**
  * Core session interface returned by {@link createCustomerSession}. Server-only.
  * All methods require a session manager and request context.
+ *
+ * @publicDocs
  */
 export type CustomerSession = {
   /**
@@ -262,7 +282,9 @@ export type CustomerAccountServerHandlers<
   >;
 };
 
-/** Customer Account handlers that also synchronize cart buyer identity, so their context requires `storefrontClient`. */
+/**
+ * Customer Account handlers that also synchronize cart buyer identity, so their context requires `storefrontClient`.
+ */
 export type CustomerAccountServerHandlersWithCartSync =
   CustomerAccountServerHandlers<ShopifyRouteHandlerContext>;
 
@@ -390,6 +412,7 @@ type TokenRequestParams = {
  * ```
  *
  * @throws {Error} When called in a browser context, when an option fails validation, or when no `fetch` is available.
+ * @publicDocs
  */
 export function createCustomerSession({
   shopId,
@@ -609,6 +632,8 @@ export async function getCustomerSessionRefreshResult(
  * redirect back to the app (same-origin `return_to`). Invoke these paths via
  * full-page navigation (plain `<a>`/`<form>`), not a framework client-side
  * navigation component — client-nav cannot follow these raw redirects.
+ *
+ * @publicDocs
  */
 export function createCustomerAccountServerHandlers<
   const TOptions extends CreateCustomerAccountServerHandlersOptions,

@@ -65,6 +65,12 @@ type RunAndMaybeStoreOptions = {
  */
 export class StaleFallbackDisabledError extends Error {}
 
+/**
+ * Creates a `runWithCache` function bound to a cache. It runs an async operation under a caching
+ * strategy and reports the resulting cache status.
+ *
+ * @publicDocs
+ */
 export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptions): RunWithCache {
   const store = createNormalizedCacheStore(cache);
 

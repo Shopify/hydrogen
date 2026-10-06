@@ -7,6 +7,8 @@
 ## When writing documentation
 - Do not over-document. If the Typescript LSP covers it, do not add thorough documentation. E.g.: listing the entire list of exports of a module, interfaces etc.
 - Write packaged skills from the consumer project's perspective. Do not reference repository-only paths under `examples/` or `templates/`.
+- Tag a declaration `@publicDocs` when a storefront developer could use it: functions, components, and constants from the entry points, the low-level pieces the framework bindings are built on, and what a public factory such as `createCartComponents()` returns. `@shopify/generate-docs` harvests the tag for shopify.dev and pulls in the types it can read out of a tagged signature's text. That crawl is a regex over PascalCase names, so it misses indexed-access types, call-signature object types, and the generic arguments of an async return. Tag a type only when the harvester output lacks it, such as `RequestScopedPrivateStorefrontClient` or `ShopifyGlobal`; run the harvester on a scratch copy and diff the entry keys to check, because TypeScript reachability is not the test. A plain `const` takes its page from its annotation type and has no entry of its own. Declarations in generated or vendored files are exempt.
+- `@private` on a field of a tagged type hides it from shopify.dev. `@internal` does not hide anything there. It marks fields and helpers that no entry point exports. Never put `@internal` on an entry-point export: tools that filter on it, such as API reports or TypeDoc `excludeInternal`, would hide the declaration while the runtime export remains.
 
 ## When writing code
 - Keep bundle size to a minimum: no unnecessary libraries, no unnecessary guards, no verbosity. Use tree-shaking and lazy loading to your advantage.

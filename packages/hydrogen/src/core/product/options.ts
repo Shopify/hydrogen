@@ -50,6 +50,7 @@ type EncodedVariantConstraint = {
  *   allowedOptionNames: product.options.map((option) => option.name),
  * });
  * ```
+ * @publicDocs
  */
 export function getSelectedProductOptions({
   searchParams,
