@@ -7,7 +7,7 @@ import {
   type SelectedOption,
 } from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 
 import { ProductCard, PRODUCT_CARD_FRAGMENT } from "~/components/ProductCard";
@@ -414,6 +414,12 @@ function InventoryHint({ selectedVariant }: { selectedVariant: ProductVariant | 
   );
 }
 
+// Mirrors React Router's own Link guard: a modified or non-primary click belongs to
+// the browser (new tab, new window), so the href must stay in charge of it.
+function isPlainActivation(event: MouseEvent<HTMLAnchorElement>) {
+  return event.button === 0 && !event.metaKey && !event.altKey && !event.ctrlKey && !event.shiftKey;
+}
+
 function VariantOptions({ product }: { product: ProductData }) {
   const { options, register } = useProductForm();
   const swatches = useMemo(() => buildSwatchLookup(product), [product]);
@@ -447,103 +453,92 @@ function VariantOptions({ product }: { product: ProductData }) {
                   variantOption.handle,
                   baseParams,
                 );
+                const soldOut = !variantOption.available;
+                const testId = isColorOption ? "color-swatch" : undefined;
+                const swatch = renderSwatches ? swatches.get(`${option.name}:${valueName}`) : null;
+                const swatchStyle = swatch?.imageUrl
+                  ? { backgroundImage: `url("${swatch.imageUrl}")` }
+                  : { backgroundColor: swatch?.color ?? undefined };
 
-                if (renderSwatches) {
-                  const swatch = swatches.get(`${option.name}:${valueName}`);
-                  const swatchStyle = swatch?.imageUrl
-                    ? { backgroundImage: `url("${swatch.imageUrl}")` }
-                    : { backgroundColor: swatch?.color ?? undefined };
-                  const content = (
-                    <>
-                      <span
-                        className={`swatch-md border-border relative inline-flex items-center justify-center overflow-hidden rounded-full border-2 ring-offset-2 ${variantOption.selected ? "border-interactive" : ""}`}
-                        style={swatchStyle}
-                      >
-                        {variantOption.selected ? (
-                          <span className="swatch-scrim absolute inset-0" />
-                        ) : null}
-                        {!variantOption.available ? (
-                          <svg
-                            className="absolute inset-0 h-full w-full"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            aria-hidden="true"
-                          >
-                            <line x1="4" y1="4" x2="20" y2="20" />
-                          </svg>
-                        ) : null}
-                      </span>
-                      <span className="sr-only">
-                        {valueName}
-                        {!variantOption.available ? " (Sold out)" : ""}
-                      </span>
-                    </>
-                  );
+                const className = renderSwatches
+                  ? `min-h-touch-target min-w-touch-target relative inline-flex cursor-pointer items-center justify-center motion-safe:transition-transform motion-safe:active:scale-[0.93] ${soldOut ? "opacity-50" : ""}`
+                  : `option-pill focus-visible:outline-accent motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] ${soldOut ? "opacity-50" : ""}`;
+                const content = renderSwatches ? (
+                  <>
+                    <span
+                      className={`swatch-md border-border relative inline-flex items-center justify-center overflow-hidden rounded-full border-2 ring-offset-2 ${variantOption.selected ? "border-interactive" : ""}`}
+                      style={swatchStyle}
+                    >
+                      {variantOption.selected ? (
+                        <span className="swatch-scrim absolute inset-0" />
+                      ) : null}
+                      {soldOut ? (
+                        <svg
+                          className="absolute inset-0 h-full w-full"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          aria-hidden="true"
+                        >
+                          <line x1="4" y1="4" x2="20" y2="20" />
+                        </svg>
+                      ) : null}
+                    </span>
+                    <span className="sr-only">
+                      {valueName}
+                      {soldOut ? " (Sold out)" : ""}
+                    </span>
+                  </>
+                ) : (
+                  `${valueName}${soldOut ? " (Sold out)" : ""}`
+                );
 
-                  if (isCrossProduct) {
-                    return (
-                      <Link
-                        key={valueName}
-                        to={toRouterLocation(linkTarget)}
-                        preventScrollReset
-                        className={`min-h-touch-target min-w-touch-target relative inline-flex cursor-pointer items-center justify-center motion-safe:transition-transform motion-safe:active:scale-[0.93] ${!variantOption.available ? "opacity-50" : ""}`}
-                        aria-label={valueName}
-                        aria-pressed={variantOption.selected}
-                        data-testid={isColorOption ? "color-swatch" : undefined}
-                      >
-                        {content}
-                      </Link>
-                    );
-                  }
-
+                if (!isCrossProduct && !variantOption.exists) {
                   return (
                     <button
                       key={valueName}
                       type="button"
-                      {...registered}
-                      className={`min-h-touch-target min-w-touch-target relative inline-flex cursor-pointer items-center justify-center motion-safe:transition-transform motion-safe:active:scale-[0.93] ${!variantOption.available ? "opacity-50" : ""}`}
-                      aria-label={valueName}
+                      disabled
+                      className={className}
+                      aria-label={renderSwatches ? valueName : undefined}
                       aria-pressed={variantOption.selected}
-                      disabled={!variantOption.exists}
-                      data-testid={isColorOption ? "color-swatch" : undefined}
+                      data-testid={testId}
                     >
                       {content}
                     </button>
                   );
                 }
 
-                const pillClass = `option-pill focus-visible:outline-accent motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] ${!variantOption.available ? "opacity-50" : ""}`;
-                const label = `${valueName}${!variantOption.available ? " (Sold out)" : ""}`;
-
-                if (isCrossProduct) {
-                  return (
-                    <Link
-                      key={valueName}
-                      to={toRouterLocation(linkTarget)}
-                      preventScrollReset
-                      className={pillClass}
-                      aria-pressed={variantOption.selected}
-                      data-testid={isColorOption ? "color-swatch" : undefined}
-                    >
-                      {label}
-                    </Link>
-                  );
-                }
-
+                // Every selectable value is an <a> whichever product it belongs to. The
+                // activated value flips from cross-product to same-product after the
+                // navigation, and a change of element type there would remount the
+                // focused control and drop focus to <body>.
                 return (
-                  <button
+                  <Link
                     key={valueName}
-                    type="button"
-                    {...registered}
-                    className={pillClass}
-                    aria-pressed={variantOption.selected}
-                    disabled={!variantOption.exists}
-                    data-testid={isColorOption ? "color-swatch" : undefined}
+                    to={toRouterLocation(linkTarget)}
+                    preventScrollReset
+                    className={className}
+                    aria-label={renderSwatches ? valueName : undefined}
+                    aria-current={variantOption.selected ? "true" : undefined}
+                    data-testid={testId}
+                    {...(isCrossProduct
+                      ? {}
+                      : {
+                          replace: true,
+                          onClick: (event: MouseEvent<HTMLAnchorElement>) => {
+                            if (!isPlainActivation(event)) return;
+                            registered.onClick();
+                            // onSelect has already navigated with the provider's replace
+                            // and revalidation settings. Letting Link navigate too would
+                            // refetch the loader that a resolved selection just skipped.
+                            event.preventDefault();
+                          },
+                        })}
                   >
-                    {label}
-                  </button>
+                    {content}
+                  </Link>
                 );
               })}
             </div>
