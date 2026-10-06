@@ -2,7 +2,7 @@
 "@shopify/hydrogen": patch
 ---
 
-**Breaking:** Remove the standalone `useCartActions` export from `@shopify/hydrogen/vue`. It was the last cart composable still exported directly after `@shopify/hydrogen/react` dropped its standalone cart hooks, and like them it carried no custom `CartFragment` types. Use the typed version from `createCartComponents()` instead:
+**Breaking:** Remove the standalone `useCartActions` export from `@shopify/hydrogen/vue`, matching the React entry after #4056. It dropped custom `CartFragment` types. Use the typed version from `createCartComponents()` instead:
 
 ```ts
 import { createCartComponents } from "@shopify/hydrogen/vue";
