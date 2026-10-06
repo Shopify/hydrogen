@@ -36,8 +36,6 @@ export function getVariantSearchParamValue(variantId: string): string | null {
  *
  * - `"options"` — one param per option, e.g. `?Color=Red&Size=M`.
  * - `"variant"` — a single `?variant=<numeric id>` param (Liquid parity).
- *
- * @publicDocs
  */
 export type ProductSelectionLinkStyle = "options" | "variant";
 

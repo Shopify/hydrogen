@@ -46,11 +46,7 @@ const CART_MUTATION_FAILED_STATUS = 500;
 const CART_MUTATION_FAILED_MESSAGE = "Cart mutation failed. Please try again.";
 const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
-/**
- * Response shape from the cart GET handler — the fetched cart plus any GraphQL errors.
- *
- * @publicDocs
- */
+/** Response shape from the cart GET handler — the fetched cart plus any GraphQL errors. */
 export type CartGetData<TCart = CartData> = {
   cart: TCart | null;
   errors?: Array<{ message: string }>;
@@ -58,23 +54,13 @@ export type CartGetData<TCart = CartData> = {
 
 /**
  * Full route result from the cart GET handler — JSON with {@link CartGetData} payload and response headers.
- *
- * @publicDocs
  */
 export type CartGetResult<TCart = CartData> = ShopifyRouteJsonResult<CartGetData<TCart>>;
 
-/**
- * Machine-readable error codes returned by the cart POST handler.
- *
- * @publicDocs
- */
+/** Machine-readable error codes returned by the cart POST handler. */
 export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_mutation_failed";
 
-/**
- * A cart route error carrying a {@link CartErrorCode} for programmatic handling.
- *
- * @publicDocs
- */
+/** A cart route error carrying a {@link CartErrorCode} for programmatic handling. */
 export type CartError = ShopifyRouteError & {
   code: CartErrorCode;
 };
@@ -84,8 +70,6 @@ export type CartError = ShopifyRouteError & {
  * - JSON with the mutation payload (programmatic clients)
  * - 303 redirect back to the referrer (HTML form submissions)
  * - An error with a {@link CartErrorCode}
- *
- * @publicDocs
  */
 export type CartPostResult =
   | ShopifyRouteJsonResult<Record<string, unknown>>
@@ -123,11 +107,7 @@ type CartCustomerSessionWriteContext = {
 
 type CartCustomerSession = CustomerSession;
 
-/**
- * GET handler for the `/api/cart` route — fetches the current cart from the Storefront API.
- *
- * @publicDocs
- */
+/** GET handler for the `/api/cart` route — fetches the current cart from the Storefront API. */
 export type CartGetHandler<
   TCart = CartData,
   TContext extends CartGetHandlerContext = CartGetHandlerContext,
@@ -138,11 +118,7 @@ export type CartGetHandler<
   typeof CART_GET_METHOD
 >;
 
-/**
- * POST handler for the `/api/cart` route — processes cart mutations from JSON or FormData bodies.
- *
- * @publicDocs
- */
+/** POST handler for the `/api/cart` route — processes cart mutations from JSON or FormData bodies. */
 export type CartPostHandler<TContext extends CartPostHandlerContext = CartPostHandlerContext> =
   CallableRouteHandler<TContext, CartPostResult, typeof CART_API_PATH, typeof CART_POST_METHOD>;
 
@@ -152,8 +128,6 @@ export type CartPostHandler<TContext extends CartPostHandlerContext = CartPostHa
  * Created by {@link createCartServerHandlers}. Register these with your
  * framework's router so the client cart store can communicate with the
  * Storefront API.
- *
- * @publicDocs
  */
 export type CartServerHandlers<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
@@ -170,8 +144,6 @@ export type CartServerHandlers<
  * manager and request context.
  *
  * Created by passing `customerSession` to {@link createCartServerHandlers}.
- *
- * @publicDocs
  */
 export type CartServerHandlersWithCustomerSession<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
@@ -211,17 +183,12 @@ type CartDataFromHandlerResult<TResult> = [TResult] extends [never]
  * ```ts
  * type MyCartData = CartDataFromHandlers<typeof cartHandlers>;
  * ```
- * @publicDocs
  */
 export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
   CartGetHandlerResult<THandlers>
 >;
 
-/**
- * Options for {@link createCartServerHandlers}.
- *
- * @publicDocs
- */
+/** Options for {@link createCartServerHandlers}. */
 export type CreateCartServerHandlersOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
 > = {

@@ -13,8 +13,6 @@ type MergeCartData<TCart> = Omit<CartData, keyof TCart> & TCart;
  * When you pass a custom cart query to {@link getCart}, this type extracts the
  * `cart` field from the query's result type and merges it with the base
  * {@link CartData} interface, so the returned data is fully typed to your query.
- *
- * @publicDocs
  */
 export type CartDataFromQuery<TQuery extends AnyStorefrontQueryString> =
   TQuery extends StorefrontQueryString<infer Result, infer _Variables, string>
@@ -23,11 +21,7 @@ export type CartDataFromQuery<TQuery extends AnyStorefrontQueryString> =
       : CartData
     : CartData;
 
-/**
- * Result of a {@link getCart} call — the cart data (or `null`), any errors, and response headers.
- *
- * @publicDocs
- */
+/** Result of a {@link getCart} call — the cart data (or `null`), any errors, and response headers. */
 export type CartResult<TCart extends CartData = CartData> = {
   /** The cart, or `null` when no cart exists or the query failed. */
   cart: TCart | null;

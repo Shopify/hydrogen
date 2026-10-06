@@ -12,7 +12,6 @@ export type ShopifyRouteSessionManager = {
   commit?(): Awaitable<HeadersInit | void>;
 };
 
-/** @publicDocs */
 export type ShopifyRouteHandlerContext = {
   request: Request;
   sessionManager: ShopifyRouteSessionManager;
@@ -20,17 +19,14 @@ export type ShopifyRouteHandlerContext = {
   requestContext: ShopifyRequestContext;
 };
 
-/** @publicDocs */
 export type ShopifyRouteJsonResult<TData = unknown> = {
   type: "json";
   data: TData;
   headers?: HeadersInit;
 };
 
-/** @publicDocs */
 export type ShopifyRedirectStatus = 301 | 302 | 303 | 307 | 308;
 
-/** @publicDocs */
 export type ShopifyRouteRedirectResult = {
   type: "redirect";
   location: string;
@@ -39,13 +35,11 @@ export type ShopifyRouteRedirectResult = {
   headers?: HeadersInit;
 };
 
-/** @publicDocs */
 export type ShopifyRouteError = {
   code: string;
   message: string;
 };
 
-/** @publicDocs */
 export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRouteError> = {
   type: "error";
   error: TError;
@@ -53,13 +47,11 @@ export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRo
   headers?: HeadersInit;
 };
 
-/** @publicDocs */
 export type ShopifyRouteHandlerResult<
   TData = unknown,
   TError extends ShopifyRouteError = ShopifyRouteError,
 > = ShopifyRouteJsonResult<TData> | ShopifyRouteRedirectResult | ShopifyRouteErrorResult<TError>;
 
-/** @publicDocs */
 export type CallableRouteHandler<
   TContext,
   TResult,
@@ -70,7 +62,6 @@ export type CallableRouteHandler<
   readonly method: TMethod;
 };
 
-/** @publicDocs */
 export type ShopifyRouteHandler<
   TPathname extends string = string,
   TMethod extends string = string,

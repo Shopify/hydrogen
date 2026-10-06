@@ -47,7 +47,6 @@ export const consoleLogger: HydrogenLogger = {
   fatal: (message, context) => writeToConsole("fatal", message, context),
 };
 
-/** @publicDocs */
 export type ConfigureLoggingOptions = {
   /** Receives all entries at or above `level`. Defaults to the built-in console logger. */
   logger?: HydrogenLogger;

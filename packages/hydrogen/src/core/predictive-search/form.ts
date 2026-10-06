@@ -1,10 +1,6 @@
 import { PREDICTIVE_SEARCH_QUERY_PARAM } from "./constants";
 
-/**
- * Props returned by {@link PredictiveSearchFormRegister} for the query input.
- *
- * @publicDocs
- */
+/** Props returned by {@link PredictiveSearchFormRegister} for the query input. */
 export interface PredictiveSearchQueryInputAttributes {
   name: "q";
   type: "search";
@@ -13,11 +9,7 @@ export interface PredictiveSearchQueryInputAttributes {
   spellCheck: false;
 }
 
-/**
- * Props returned by {@link getPredictiveSearchFormAttributes} for the search form.
- *
- * @publicDocs
- */
+/** Props returned by {@link getPredictiveSearchFormAttributes} for the search form. */
 export interface PredictiveSearchFormAttributes {
   action: string;
   method: "get";
@@ -30,8 +22,6 @@ export interface PredictiveSearchFormAttributes {
  * Predictive search forms only register the Storefront API query input.
  *
  * Building block for the framework bindings. Use it directly on a framework without one.
- *
- * @publicDocs
  */
 export type PredictiveSearchFormRegister = {
   (field: "query"): PredictiveSearchQueryInputAttributes;

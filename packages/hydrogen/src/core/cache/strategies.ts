@@ -15,7 +15,6 @@ export type CacheDuration =
       days?: number;
     };
 
-/** @publicDocs */
 export interface CachingStrategy {
   mode?: CacheMode;
   maxAge?: number;

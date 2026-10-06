@@ -27,22 +27,14 @@ import type {
 // Public types
 // ---------------------------------------------------------------------------
 
-/**
- * Cart and line-item errors surfaced by a {@link ProductFormStore}.
- *
- * @publicDocs
- */
+/** Cart and line-item errors surfaced by a {@link ProductFormStore}. */
 export interface ProductFormErrors {
   userErrors: CartUserError[];
   warnings: CartWarning[];
   networkErrors: CartNetworkEntry[];
 }
 
-/**
- * Live state snapshot emitted by a {@link ProductFormStore}.
- *
- * @publicDocs
- */
+/** Live state snapshot emitted by a {@link ProductFormStore}. */
 export interface ProductFormStoreState<
   TVariant extends ProductVariantInput = ProductVariantInput,
   TOptionValue extends ProductOptionValueInput = ProductOptionValueInput,
@@ -54,11 +46,7 @@ export interface ProductFormStoreState<
   matchedLineItem: CartLine | null;
 }
 
-/**
- * The reactive options array from a {@link ProductFormStoreState}, typed to a specific product.
- *
- * @publicDocs
- */
+/** The reactive options array from a {@link ProductFormStoreState}, typed to a specific product. */
 export type ProductFormOptions<TProduct extends ProductInput = ProductInput> =
   ProductFormStoreState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>["options"];
 
@@ -68,8 +56,6 @@ export type ProductFormOptions<TProduct extends ProductInput = ProductInput> =
  * - `resolved` — a specific variant was matched for the full selection.
  * - `unresolved` — the selection is valid but not yet complete.
  * - `invalid` — the option name or value does not exist on the product.
- *
- * @publicDocs
  */
 export type VariantSelectionResult<TVariant extends ProductVariantInput = ProductVariantInput> =
   | {
@@ -89,31 +75,19 @@ export type VariantSelectionResult<TVariant extends ProductVariantInput = Produc
       reason: string;
     };
 
-/**
- * A selection result that is not invalid — either resolved or unresolved.
- *
- * @publicDocs
- */
+/** A selection result that is not invalid — either resolved or unresolved. */
 export type ValidProductSelectionResult<TProduct extends ProductInput = ProductInput> = Exclude<
   VariantSelectionResult<ProductVariantFrom<TProduct>>,
   { status: "invalid" }
 >;
 
-/**
- * Options for {@link createProductFormStore}.
- *
- * @publicDocs
- */
+/** Options for {@link createProductFormStore}. */
 export type CreateProductFormStoreOptions = {
   /** Fallback selection used when the product has no `selectedOrFirstAvailableVariant`. */
   selectedOptions?: SelectedOption[];
 };
 
-/**
- * Manages variant selection + cart integration for a product form.
- *
- * @publicDocs
- */
+/** Manages variant selection + cart integration for a product form. */
 export interface ProductFormStore<
   TProduct extends ProductInput = ProductInput,
   TVariant extends ProductVariantInput = ProductVariantFrom<TProduct>,

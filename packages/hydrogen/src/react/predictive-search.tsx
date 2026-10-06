@@ -40,11 +40,7 @@ type PredictiveSearchContextValue = {
 
 const PredictiveSearchContext = createContext<PredictiveSearchContextValue | null>(null);
 
-/**
- * Props for the {@link PredictiveSearchProvider} component.
- *
- * @publicDocs
- */
+/** Props for the {@link PredictiveSearchProvider} component. */
 export type PredictiveSearchProviderProps = CreatePredictiveSearchStoreOptions & {
   children?: ReactNode;
   /** Form action URL for progressive enhancement. Used by {@link usePredictiveSearchForm} to set the form's `action` attribute so the search works without JavaScript. Falls back to `"/search"` when omitted. */
@@ -58,8 +54,6 @@ export type { PredictiveSearchActions };
  *
  * Accepts all standard form HTML attributes except `onSubmit`, which is
  * replaced by a version that provides the extracted search term.
- *
- * @publicDocs
  */
 export type PredictiveSearchFormPropsOptions = Omit<
   FormHTMLAttributes<HTMLFormElement>,
@@ -77,8 +71,6 @@ export type PredictiveSearchFormPropsOptions = Omit<
  *
  * Accepts all standard input HTML attributes except those controlled by the
  * form registration.
- *
- * @publicDocs
  */
 export type PredictiveSearchQueryInputPropsOptions = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -90,11 +82,7 @@ export type PredictiveSearchQueryInputPropsOptions = Omit<
 
 type PredictiveSearchFormField = Parameters<CorePredictiveSearchFormRegister>[0];
 
-/**
- * Generates input element attributes for a named form field.
- *
- * @publicDocs
- */
+/** Generates input element attributes for a named form field. */
 export type PredictiveSearchFormRegister = (
   field: PredictiveSearchFormField,
   options?: PredictiveSearchQueryInputPropsOptions,
@@ -102,8 +90,6 @@ export type PredictiveSearchFormRegister = (
 
 /**
  * Return type of {@link usePredictiveSearchForm}, providing methods to build a progressively-enhanced search form.
- *
- * @publicDocs
  */
 export type PredictiveSearchFormResult = {
   /** Generates form element attributes including the search action and submit handler. */

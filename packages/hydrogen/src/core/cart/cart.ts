@@ -129,7 +129,6 @@ export class CartNetworkError extends Error {
  *
  * store.destroy();
  * ```
- * @publicDocs
  */
 export type CartStore = {
   /**
@@ -184,11 +183,7 @@ export type CartStore = {
   handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;
 };
 
-/**
- * Actions for reconciling cart state after updates outside Standard Actions.
- *
- * @publicDocs
- */
+/** Actions for reconciling cart state after updates outside Standard Actions. */
 export type CartActions = Pick<CartStore, "refresh">;
 
 type CartInitialData<TData extends CartData = CartData> = {
@@ -196,11 +191,7 @@ type CartInitialData<TData extends CartData = CartData> = {
   errors?: Array<{ message: string }>;
 };
 
-/**
- * Options for {@link createCartStore}.
- *
- * @publicDocs
- */
+/** Options for {@link createCartStore}. */
 export type CreateCartStoreOptions<TData extends CartData = CartData> = {
   /**
    * Server-loaded cart data to hydrate the store with on creation.

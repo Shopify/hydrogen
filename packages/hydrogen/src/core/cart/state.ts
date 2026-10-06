@@ -8,11 +8,7 @@ export interface Money {
   currencyCode: string;
 }
 
-/**
- * Cart-level cost breakdown returned by the Storefront API.
- *
- * @publicDocs
- */
+/** Cart-level cost breakdown returned by the Storefront API. */
 export interface CartCost {
   /** The amount, before taxes and cart-level discounts, for the customer to pay. */
   subtotalAmount: Money;
@@ -22,7 +18,6 @@ export interface CartCost {
   checkoutChargeAmount: Money;
 }
 
-/** @publicDocs */
 export interface CartLineCost {
   /** Line total after all applicable discounts. */
   totalAmount: Money;
@@ -34,11 +29,7 @@ export interface CartLineCost {
   compareAtAmountPerQuantity: Money | null;
 }
 
-/**
- * Product variant information attached to a {@link CartLine}.
- *
- * @publicDocs
- */
+/** Product variant information attached to a {@link CartLine}. */
 export interface CartLineMerchandise {
   /** Storefront API GID of the product variant. */
   id: string;
@@ -69,8 +60,6 @@ export interface CartLineMerchandise {
  * Each line represents a product variant at a given quantity. Lines may carry
  * custom {@link Attribute | attributes}, a selling plan allocation (subscriptions),
  * or nested {@link CartLine.lineComponents | line components} (bundles).
- *
- * @publicDocs
  */
 export interface CartLine {
   /** Storefront API GID of this cart line — used as the key in {@link CartPending.lines}. */
@@ -89,28 +78,19 @@ export interface CartLine {
   lineComponents?: CartLine[];
 }
 
-/** @publicDocs */
 export interface CartLineConnection {
   nodes: CartLine[];
   [key: string]: unknown;
 }
 
-/**
- * A discount code applied to the cart.
- *
- * @publicDocs
- */
+/** A discount code applied to the cart. */
 export interface DiscountCode {
   code: string;
   /** Whether the code is applicable to the cart's current contents. Set optimistically to `false` for newly added codes until the server confirms. */
   applicable: boolean;
 }
 
-/**
- * A validation error returned by a Storefront API cart mutation.
- *
- * @publicDocs
- */
+/** A validation error returned by a Storefront API cart mutation. */
 export interface CartUserError {
   /** Machine-readable error code, or `null` for unclassified errors. */
   code: CartErrorCode | null;
@@ -119,21 +99,13 @@ export interface CartUserError {
   field?: string[];
 }
 
-/**
- * A non-blocking warning returned by a Storefront API cart mutation.
- *
- * @publicDocs
- */
+/** A non-blocking warning returned by a Storefront API cart mutation. */
 export interface CartWarning {
   code: CartWarningCode;
   message: string;
 }
 
-/**
- * Errors and warnings from a single cart mutation response.
- *
- * @publicDocs
- */
+/** Errors and warnings from a single cart mutation response. */
 export interface CartErrorGroup {
   userErrors: CartUserError[];
   warnings: CartWarning[];
@@ -141,8 +113,6 @@ export interface CartErrorGroup {
 
 /**
  * A network-level error encountered during a cart operation (e.g. non-2xx response, timeout). Aborted requests are not recorded.
- *
- * @publicDocs
  */
 export interface CartNetworkEntry {
   message: string;
@@ -150,11 +120,7 @@ export interface CartNetworkEntry {
   status?: number;
 }
 
-/**
- * A key-value pair attached to the cart or to an individual {@link CartLine}.
- *
- * @publicDocs
- */
+/** A key-value pair attached to the cart or to an individual {@link CartLine}. */
 export interface Attribute {
   key: string;
   value: string | null;
@@ -182,7 +148,6 @@ export interface Attribute {
  *   dimTotalDisplay();
  * }
  * ```
- * @publicDocs
  */
 export interface CartPending {
   /** Line IDs with in-flight add, quantity, or remove mutations. New lines use their `optimistic:` ID until the server confirms. */
@@ -205,8 +170,6 @@ export interface CartPending {
  *
  * `network` collects transport-level failures (timeouts, 5xx) separately from
  * Storefront API user errors.
- *
- * @publicDocs
  */
 export interface CartErrorState {
   /** Cross-cutting cart errors not attributable to a specific resource. */
@@ -234,8 +197,6 @@ export interface CartErrorState {
  * This is the server's authoritative snapshot — prices, discount applicability,
  * and totals come exclusively from here, never from client-side computation.
  * The index signature allows custom cart query fields to pass through.
- *
- * @publicDocs
  */
 export interface CartData {
   /** Storefront API Cart GID, or `null` when no cart exists yet. */
@@ -283,7 +244,6 @@ export interface CartData {
  *   // Network errors occurred — show retry prompt
  * }
  * ```
- * @publicDocs
  */
 export interface CartState<TData extends CartData = CartData> {
   /** The latest server-confirmed cart data, with optimistic projections applied on top. */

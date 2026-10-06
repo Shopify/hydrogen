@@ -20,8 +20,6 @@ type StorefrontQueryMetadata<Source extends string = string> = {
  * Honest about being a `string` at runtime (unlike `TadaDocumentNode`
  * which claims to be an AST). Implements `DocumentDecoration` so
  * `ResultOf<>` and `VariablesOf<>` work on it.
- *
- * @publicDocs
  */
 export type StorefrontQueryString<
   Result = any,
@@ -35,8 +33,6 @@ export type StorefrontQueryString<
 
 /**
  * Any `gql()`-branded string, regardless of inferred Result/Variables. Used in constraints that accept any Storefront document.
- *
- * @publicDocs
  */
 export type AnyStorefrontQueryString = string & StorefrontQueryMetadata;
 

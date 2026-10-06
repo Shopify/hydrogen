@@ -92,8 +92,6 @@ type PredictiveSearchServerHandlers<
  * defaults. Each search option sets a default that individual requests can
  * override via query parameters. These are defaults, not restrictions: any
  * client can override them.
- *
- * @publicDocs
  */
 export type CreatePredictiveSearchServerHandlersOptions = CreatePredictiveSearchQueriesOptions & {
   /** Route path the handler is registered at. Defaults to `"/api/predictive-search"`. */

@@ -235,8 +235,6 @@ const DEFAULT_QUERY_FRAGMENT = gql(`
  *
  * Hydrogen's own fields (used for URL generation, tracking, and display) are
  * always selected; custom fragments are merged alongside them.
- *
- * @publicDocs
  */
 export type PredictiveSearchFragments = {
   readonly product?: AnyStorefrontQueryString;
@@ -246,11 +244,7 @@ export type PredictiveSearchFragments = {
   readonly query?: AnyStorefrontQueryString;
 };
 
-/**
- * Options for {@link makePredictiveSearchQueries}.
- *
- * @publicDocs
- */
+/** Options for {@link makePredictiveSearchQueries}. */
 export type CreatePredictiveSearchQueriesOptions<
   TFragments extends PredictiveSearchFragments = PredictiveSearchFragments,
 > = {

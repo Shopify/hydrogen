@@ -39,20 +39,12 @@ const log = getLogger("product");
 
 export type { ValidProductSelectionResult } from "../core/product";
 
-/**
- * Options for {@link useProductForm}.
- *
- * @publicDocs
- */
+/** Options for {@link useProductForm}. */
 export interface UseProductFormOptions<TProduct extends ProductInput> {
   onSelect?: (result: ValidProductSelectionResult<TProduct>) => void;
 }
 
-/**
- * Return value of {@link useProductForm}.
- *
- * @publicDocs
- */
+/** Return value of {@link useProductForm}. */
 export interface UseProductFormResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
   selectedVariant: ProductVariantFrom<TProduct> | null;
@@ -71,22 +63,14 @@ export interface UseProductFormResult<TProduct extends ProductInput> {
   ) => VariantSelectionResult<ProductVariantFrom<TProduct>>;
 }
 
-/**
- * Props for the `ProductProvider` returned by {@link createProductComponents}.
- *
- * @publicDocs
- */
+/** Props for the `ProductProvider` returned by {@link createProductComponents}. */
 export interface ProductProviderProps<TProduct extends ProductInput> {
   product: TProduct;
   onSelect?: (result: ValidProductSelectionResult<TProduct>) => void;
   children?: ReactNode;
 }
 
-/**
- * Return value of the `useProduct` hook from {@link createProductComponents}.
- *
- * @publicDocs
- */
+/** Return value of the `useProduct` hook from {@link createProductComponents}. */
 export interface UseProductResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
   selectedVariant: ProductVariantFrom<TProduct> | null;

@@ -9,7 +9,6 @@ import { safeApplyResponseHeaders } from "./safe-apply-response-headers";
 
 const log = getLogger("redirects");
 
-/** @publicDocs */
 export type RedirectOptions = {
   request: Request;
   storefrontClient: StorefrontClient;

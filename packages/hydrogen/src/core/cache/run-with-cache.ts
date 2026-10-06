@@ -12,7 +12,6 @@ type MaybePromise<T> = T | Promise<T>;
 
 export type WaitUntil = (promise: Promise<unknown>) => void;
 
-/** @publicDocs */
 export type CacheInstance = WebCacheLike | KeyValueCacheLike;
 
 export type CreateRunWithCacheOptions = {

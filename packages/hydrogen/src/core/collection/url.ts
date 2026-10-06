@@ -5,8 +5,6 @@ import type { CollectionState } from "./state";
 /**
  * Parsed collection URL parameters — the subset of {@link CollectionState}
  * that is derived from the URL query string.
- *
- * @publicDocs
  */
 export interface CollectionParams {
   /** Active product filters parsed from `filter.*` URL keys. */

@@ -120,7 +120,6 @@ type ShopPayVariantWithQuantity = {
 type ShopPayVariant = string | ShopPayVariantWithQuantity;
 type ShopPayVariants = readonly string[] | readonly ShopPayVariantWithQuantity[];
 
-/** @publicDocs */
 export type ShopPayButtonOptions = ShopPayButtonBaseOptions & {
   /**
    * Variants to check out immediately via a Shopify cart permalink. Omit this

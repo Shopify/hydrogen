@@ -40,11 +40,7 @@ const PredictiveSearchKey: InjectionKey<PredictiveSearchContextValue> = Symbol("
 
 export type { PredictiveSearchActions };
 
-/**
- * Options for the form props builder returned by {@link usePredictiveSearchForm}.
- *
- * @publicDocs
- */
+/** Options for the form props builder returned by {@link usePredictiveSearchForm}. */
 export type PredictiveSearchFormPropsOptions = {
   /** When `true`, prevents the native form submission and triggers a client-side search instead. */
   preventDefault?: boolean;
@@ -55,8 +51,6 @@ export type PredictiveSearchFormPropsOptions = {
 
 /**
  * Options for the query input props builder returned by {@link usePredictiveSearchForm}'s `register` method.
- *
- * @publicDocs
  */
 export type PredictiveSearchQueryInputPropsOptions = {
   /** Called on input with the input event and the current input value. Call `event.preventDefault()` to skip the automatic search trigger. */
@@ -66,8 +60,6 @@ export type PredictiveSearchQueryInputPropsOptions = {
 
 /**
  * Return type of {@link usePredictiveSearchForm}, providing methods to build a progressively-enhanced search form.
- *
- * @publicDocs
  */
 export type PredictiveSearchFormResult = {
   /** Generates form element attributes including the search action and submit handler. */

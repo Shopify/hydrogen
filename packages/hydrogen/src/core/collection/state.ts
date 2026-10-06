@@ -3,18 +3,10 @@ import type { ProductCollectionSortKeys } from "../../graphql/generated/storefro
 
 export type { ProductCollectionSortKeys, ProductFilter };
 
-/**
- * How a filter option is visually presented in the storefront UI.
- *
- * @publicDocs
- */
+/** How a filter option is visually presented in the storefront UI. */
 export type FilterPresentation = "IMAGE" | "SWATCH" | "TEXT";
 
-/**
- * The input mechanism a filter uses — e.g. boolean toggle, multi-select list, or price range.
- *
- * @publicDocs
- */
+/** The input mechanism a filter uses — e.g. boolean toggle, multi-select list, or price range. */
 export type FilterType = "BOOLEAN" | "LIST" | "PRICE_RANGE" | (string & {});
 
 interface BaseAvailableFilterValue {
@@ -36,8 +28,6 @@ type PickIfPresent<TValue, TKey extends PropertyKey> = TKey extends keyof TValue
  *
  * Pass your Storefront API query value type as `TValue` to expose query-selected
  * visual fields such as `swatch`.
- *
- * @publicDocs
  */
 export type AvailableFilterValue<
   TValue extends BaseAvailableFilterValue = BaseAvailableFilterValue,
@@ -71,8 +61,6 @@ export interface AvailableFilter<
  *
  * Server response data (productsCount, availableFilters, collection id) lives
  * in the framework's loader data, not in the store.
- *
- * @publicDocs
  */
 export interface CollectionState {
   /** URL-safe slug identifying the collection (e.g. `"shoes"`). */

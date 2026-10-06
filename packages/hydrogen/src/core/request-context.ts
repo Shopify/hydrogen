@@ -29,7 +29,6 @@ type StorefrontRequest = Pick<Request, "headers"> &
 export type ShopifyLanguageCode = Extract<StorefrontLanguageCode, CustomerAccountLanguageCode>;
 export type ShopifyCountryCode = Extract<StorefrontCountryCode, CustomerAccountCountryCode>;
 
-/** @publicDocs */
 export type I18nConfig = {
   language: ShopifyLanguageCode;
   country: ShopifyCountryCode;
@@ -106,13 +105,11 @@ type ShopifyRequestContextBase = {
   applyResponseHeaders(headers: Headers): void;
 };
 
-/** @publicDocs */
 export type ShopifyRequestContext<I18n extends I18nConfig = I18nConfig> =
   ShopifyRequestContextBase & {
     i18n: NormalizedI18nConfig<I18n>;
   };
 
-/** @publicDocs */
 export type ShopifyRequestContextWithBuyerIp<I18n extends I18nConfig = I18nConfig> =
   ShopifyRequestContext<I18n> & { readonly buyerIp: string };
 

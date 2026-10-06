@@ -4,8 +4,6 @@
  * Used by {@link CartFormRegister} when `register("set")` is called. The button
  * must be the first submit button in the form for `attachQuantityInput`
  * to auto-submit on quantity changes.
- *
- * @publicDocs
  */
 export interface SetButtonAttributes {
   name: "intent";
@@ -20,8 +18,6 @@ export interface SetButtonAttributes {
  * Returned by `register("quantity", { value, interactive: true })`. Uses
  * `type: "text"` with `inputMode: "numeric"` for mobile number keyboards
  * without the native spinner arrows.
- *
- * @publicDocs
  */
 export interface QuantityInputAttributes {
   name: "quantity";
@@ -63,7 +59,6 @@ type AttributeValueName = `attributes.${string}`;
  * ```
  *
  * @throws `TypeError` when called with `"attributeValue"` and no non-empty `key`.
- * @publicDocs
  */
 export type CartFormRegister = {
   (field: "lineId", opts: { value: string }): { name: "lineId"; value: string; readOnly: true };

@@ -7,13 +7,11 @@ import type {
 import type { I18nConfig } from "../request-context";
 import type { ShopifyRouteTemplates } from "../standard-routes/index";
 
-/** @publicDocs */
 export type ShopifyScriptsAnalyticsConfig = {
   channel?: ShopAnalyticsChannel;
   customData?: StorefrontAnalyticsConfig["customData"];
 };
 
-/** @publicDocs */
 export type ShopifyScriptsI18n = Pick<I18nConfig, "country" | "language"> &
   Partial<Pick<I18nConfig, "pathPrefix">> & {
     currency?: string;
@@ -58,10 +56,8 @@ export type ShopifyLinkDescriptor = {
   innerHTML?: never;
 };
 
-/** @publicDocs */
 export type ShopifyScriptTagDescriptor = ShopifyScriptDescriptor | ShopifyLinkDescriptor;
 
-/** @publicDocs */
 export type ShopifyScriptTagDescriptors = {
   /** Link descriptors for framework head APIs that split links from scripts. */
   readonly links: readonly ShopifyLinkDescriptor[];
@@ -71,7 +67,6 @@ export type ShopifyScriptTagDescriptors = {
   readonly tags: readonly ShopifyScriptTagDescriptor[];
 };
 
-/** @publicDocs */
 export type ShopifyScriptsShop = {
   shopId: string;
   storefrontId: string;
@@ -79,7 +74,6 @@ export type ShopifyScriptsShop = {
   myshopifyDomain: string;
 };
 
-/** @publicDocs */
 export type ShopifyScriptTagsOptions = {
   /**
    * Loads the customer account component. Render `<shopify-account>` where you want the account UI to appear.
@@ -103,8 +97,6 @@ export type ShopifyScriptTagsOptions = {
 /**
  * Route wiring for Shopify's scripts: the storefront's route templates and a `navigate` callback
  * for client-side navigation.
- *
- * @publicDocs
  */
 export type ShopifyRoutesOptions = {
   navigate?: ShopifyGlobal["routes"]["navigate"];

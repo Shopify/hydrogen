@@ -26,11 +26,7 @@ import type { CollectionState } from "../core/collection";
 
 const CollectionContext = createContext<CollectionStore | null>(null);
 
-/**
- * Props for the {@link CollectionProvider} component.
- *
- * @publicDocs
- */
+/** Props for the {@link CollectionProvider} component. */
 export interface CollectionProviderProps {
   /** Collection metadata from the framework data fetch (`handle`, `dataSearch`). */
   data: CollectionData;

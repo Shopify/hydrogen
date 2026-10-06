@@ -12,11 +12,7 @@ import {
   serializeCollectionParams,
 } from "./url";
 
-/**
- * Snapshot from the framework loader for a single collection fetch.
- *
- * @publicDocs
- */
+/** Snapshot from the framework loader for a single collection fetch. */
 export type CollectionData = {
   /** URL-safe collection slug (e.g. `"shoes"`). */
   handle: string;
@@ -48,7 +44,6 @@ export type CollectionData = {
  * // ...framework fetches...
  * store.settle(); // status → "idle"
  * ```
- * @publicDocs
  */
 export type CollectionStore = {
   /** Returns the current snapshot of collection browse state. */
@@ -142,11 +137,7 @@ export type CollectionStore = {
   setSortByValue(sortByValue: string): void;
 };
 
-/**
- * Mutation methods exposed by the collection store.
- *
- * @publicDocs
- */
+/** Mutation methods exposed by the collection store. */
 export type CollectionActions = Pick<
   CollectionStore,
   | "setFilters"
@@ -158,11 +149,7 @@ export type CollectionActions = Pick<
   | "handleFormSubmit"
 >;
 
-/**
- * Options for creating a new {@link CollectionStore}.
- *
- * @publicDocs
- */
+/** Options for creating a new {@link CollectionStore}. */
 export type CreateCollectionStoreOptions = {
   /** Collection metadata from the framework loader. */
   data: CollectionData;

@@ -22,8 +22,6 @@ const VARIABLE_DEFINITION_RE = /\$([_A-Za-z][_0-9A-Za-z]*)\s*:/g;
  * externally — only `gql()` produces valid instances. Passing a plain object
  * with a `source` property to `CustomerAccountClient.graphql()` will throw
  * a `TypeError` at runtime.
- *
- * @publicDocs
  */
 export type CustomerAccountDocument<
   Result = unknown,
@@ -36,16 +34,10 @@ export type CustomerAccountDocument<
 
 /**
  * Widened alias for {@link CustomerAccountDocument}. Use as a constraint when accepting any Customer Account document.
- *
- * @publicDocs
  */
 export type AnyCustomerAccountDocument = CustomerAccountDocument<unknown, never, string>;
 
-/**
- * Extracts the source string literal type from a {@link CustomerAccountDocument}.
- *
- * @publicDocs
- */
+/** Extracts the source string literal type from a {@link CustomerAccountDocument}. */
 export type SourceOf<Doc> = Doc extends { readonly source: infer Source extends string }
   ? Source
   : never;
@@ -54,8 +46,6 @@ export type SourceOf<Doc> = Doc extends { readonly source: infer Source extends 
  * Recursively concatenates the source strings of an array of fragment
  * documents at the type level, joining each with a newline. An empty
  * tuple produces `""`.
- *
- * @publicDocs
  */
 export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocument[]> =
   Fragments extends readonly []

@@ -34,11 +34,7 @@ const HTTP1_ONLY_RESPONSE_HEADERS = new Set([
 const emittedMissingCertificateWarnings = new Set<string>();
 const startedCustomerAccountSetups = new Set<string>();
 
-/**
- * Options for Hydrogen's local HTTPS Vite plugin.
- *
- * @publicDocs
- */
+/** Options for Hydrogen's local HTTPS Vite plugin. */
 export type LocalHttpsOptions = {
   /** Enable trusted local HTTPS for the dev server. */
   enabled: boolean;
@@ -52,7 +48,6 @@ export type LocalHttpsOptions = {
   keyPath?: string | URL;
 };
 
-/** @publicDocs */
 export type LocalHttpsPlugin = Plugin & {
   api: {
     /** Returns host, port, and TLS file paths for frameworks that terminate HTTPS outside Vite. */
@@ -60,7 +55,6 @@ export type LocalHttpsPlugin = Plugin & {
   };
 };
 
-/** @publicDocs */
 export type LocalHttpsDevServerConfig = {
   host: string;
   port: number;
@@ -143,7 +137,6 @@ export function localHttps(options: LocalHttpsOptions): LocalHttpsPlugin {
   };
 }
 
-/** @publicDocs */
 export type ProvisionLocalHttpsOptions = Omit<LocalHttpsOptions, "enabled" | "port">;
 
 /**

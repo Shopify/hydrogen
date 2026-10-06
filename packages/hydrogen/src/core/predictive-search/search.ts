@@ -46,7 +46,6 @@ type PredictiveSearchItemsForQuery<TQuery extends AnyStorefrontQueryString> = No
  *   ReturnType<typeof queryPredictiveSearch<typeof queries.predictiveSearch>>
  * >;
  * ```
- * @publicDocs
  */
 export type PredictiveSearchData<
   TItems = PredictiveSearchItemsForQuery<typeof predictiveSearchQueries.predictiveSearch>,
@@ -72,8 +71,6 @@ export type PredictiveSearchDataForOptions<TOptions extends CreatePredictiveSear
  *
  * The generic parameter accepts a custom query document type and defaults to
  * the built-in predictive search query.
- *
- * @publicDocs
  */
 export type QueryPredictiveSearchOptions<
   TQuery extends AnyStorefrontQueryString = typeof predictiveSearchQueries.predictiveSearch,

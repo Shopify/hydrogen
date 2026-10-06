@@ -1,18 +1,10 @@
 import { normalizeCartId } from "./cookie";
 import { getCartAttributeFormEntries } from "./form";
 
-/**
- * A key-value pair attached to the cart or an individual cart line.
- *
- * @publicDocs
- */
+/** A key-value pair attached to the cart or an individual cart line. */
 export type CartAttributeInput = { key: string; value: string };
 
-/**
- * Input for adding a line to the cart.
- *
- * @publicDocs
- */
+/** Input for adding a line to the cart. */
 export type CartLineAddInput = {
   /** Storefront API GID of the product variant to add. */
   merchandiseId: string;
@@ -22,11 +14,7 @@ export type CartLineAddInput = {
   sellingPlanId?: string;
 };
 
-/**
- * Input for updating an existing cart line. Setting `quantity` to `0` removes the line.
- *
- * @publicDocs
- */
+/** Input for updating an existing cart line. Setting `quantity` to `0` removes the line. */
 export type CartLineUpdateInput = {
   /** The `CartLine.id` of the line to update. */
   id: string;
