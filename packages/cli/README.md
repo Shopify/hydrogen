@@ -17,7 +17,9 @@ shopify hydrogen deploy --json-schema
 Results, including cancelled and skipped operations, are written as one JSON object to stdout. Progress and
 diagnostics use JSON events on stderr. Fatal errors use the CLI's shared error
 document and a nonzero exit status. JSON output does not change confirmation
-prompts or authentication requirements.
+prompts or authentication requirements. Add `--no-input` to disable prompts and
+browser authentication; missing required input is an error. This flag also works
+without `--json`.
 
 Environment pull and push return `variables: [{name, id?, isSecret?, readOnly?}]`
 metadata and absolute file paths without printing variable values. Status is

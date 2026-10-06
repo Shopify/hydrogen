@@ -2408,7 +2408,94 @@ describe('dependency removal', () => {
   });
 });
 
+it('reports installed and removed packages and the generated instructions after a JSON upgrade', async () => {
+  await inTemporaryHydrogenRepo(
+    async (appPath) => {
+      // Model the package manager boundary; keep release selection, receipt
+      // construction, validation and instruction-file generation real.
+      vi.mocked(renderTasks).mockImplementationOnce(async () => {
+        await writeFile(
+          joinPath(appPath, 'package.json'),
+          JSON.stringify({
+            dependencies: {'@shopify/hydrogen': '2025.7.0'},
+          }),
+        );
+        return {};
+      });
+      const {stdout} = await captureJsonOutput(() =>
+        runUpgrade({
+          appPath,
+          version: '2025.7.0',
+          force: true,
+        }),
+      );
+      const result = JSON.parse(stdout);
+      expect(result).toEqual({
+        status: 'success',
+        changed: true,
+        directory: appPath,
+        previousVersion: '2025.5.1',
+        version: '2025.7.0',
+        packages: expect.arrayContaining([
+          '@shopify/hydrogen@2025.7.0',
+          'react-router@7.9.2',
+          'react-router-dom@7.9.2',
+          '@react-router/dev@7.9.2',
+        ]),
+        removedPackages: ['@remix-run/react', '@remix-run/dev'],
+        instructionsPath: joinPath(
+          appPath,
+          '.hydrogen/upgrade-2025.5.1-to-2025.7.0.md',
+        ),
+      });
+      expect(
+        result.packages.every(
+          (name: string) => !name.startsWith('@remix-run/'),
+        ),
+      ).toBe(true);
+      expect(await readFile(result.instructionsPath, 'utf8')).toContain(
+        '## Removed packages',
+      );
+    },
+    {
+      cleanGitRepo: false,
+      packageJson: {
+        dependencies: {
+          '@shopify/hydrogen': '2025.5.1',
+          '@remix-run/react': '2.16.1',
+        },
+        devDependencies: {'@remix-run/dev': '2.16.1'},
+      },
+    },
+  );
+});
+
 describe('--version=next functionality', () => {
+  it('reports the next target instead of the stable release version in JSON', async () => {
+    await inTemporaryHydrogenRepo(
+      async (appPath) => {
+        vi.mocked(renderTasks).mockImplementationOnce(async () => {
+          await writeFile(
+            joinPath(appPath, 'package.json'),
+            JSON.stringify({dependencies: {'@shopify/hydrogen': 'next'}}),
+          );
+          return {};
+        });
+        const {stdout} = await captureJsonOutput(() =>
+          runUpgrade({appPath, version: 'next', force: true}),
+        );
+        expect(JSON.parse(stdout)).toMatchObject({
+          status: 'success',
+          changed: true,
+          previousVersion: '2025.5.1',
+          version: 'next',
+          packages: expect.arrayContaining(['@shopify/hydrogen@next']),
+        });
+      },
+      {packageJson: {dependencies: {'@shopify/hydrogen': '2025.5.1'}}},
+    );
+  });
+
   describe('monorepo-only restrictions', () => {
     it('should allow --version=next in tests and CI environments', async () => {
       await inTemporaryHydrogenRepo(

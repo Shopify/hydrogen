@@ -1,18 +1,11 @@
-import {jsonFlag} from '@shopify/cli-kit/node/cli';
 import Command from '../../lib/hydrogen-command.js';
 import GenerateRoute from './generate/route.js';
 
+// Hidden compatibility alias; the JSON contract belongs to generate route.
+// eslint-disable-next-line @shopify/cli/command-json-output
 export default class GenerateRouteShortcut extends Command {
-  static flags = {...jsonFlag};
-
-  static get jsonOutputSchema(): typeof GenerateRoute.jsonOutputSchema {
-    return GenerateRoute.jsonOutputSchema;
-  }
-
-  static descriptionWithMarkdown =
+  static description =
     'Shortcut for `hydrogen generate`. See `hydrogen generate --help` for more information.';
-
-  static description = this.descriptionForHelp();
 
   static strict = false;
 

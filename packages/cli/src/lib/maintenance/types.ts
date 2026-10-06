@@ -30,6 +30,7 @@ export type ShortcutResult = InferJsonOutputSchema<
 >;
 export const upgradeJsonOutputSchema = defineJsonOutputSchema({
   name: 'HydrogenUpgradeResult',
+  definitions: {AbsolutePath: absolutePath},
   schema: zod
     .object({
       status: zod.literal('success'),

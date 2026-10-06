@@ -1,7 +1,10 @@
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {writeJsonResult} from '../../lib/json-output.js';
 import {jsonFlag} from '@shopify/cli-kit/node/cli';
-import {upgradeJsonOutputSchema} from '../../lib/maintenance/types.js';
+import {
+  upgradeJsonOutputSchema,
+  type UpgradeResult,
+} from '../../lib/maintenance/types.js';
 import {createRequire} from 'node:module';
 import semver from 'semver';
 import cliTruncate from 'cli-truncate';
@@ -140,27 +143,31 @@ type UpgradeOptions = {
   force?: boolean;
 };
 
+type UpgradeExecution =
+  | {result: UpgradeResult & {changed: false}}
+  | {result: UpgradeResult & {changed: true}; selectedRelease: Release};
+
 export async function runUpgrade(options: UpgradeOptions, json?: boolean) {
-  const {result, selectedRelease} = await executeUpgrade(options);
-  await presentUpgradeResult(result, selectedRelease, json);
+  const execution = await executeUpgrade(options);
+  await presentUpgradeResult(execution, json);
 }
 
 export async function presentUpgradeResult(
-  result: import('../../lib/maintenance/types.js').UpgradeResult,
-  selectedRelease?: Release,
+  execution: UpgradeExecution,
   json?: boolean,
 ) {
+  const {result} = execution;
   if (writeJsonResult(upgradeJsonOutputSchema, result, json)) return;
-  if (!result.changed) {
-    renderSuccess({
-      headline: `You are on the latest Hydrogen version: ${result.version}`,
-    });
-  } else {
+  if ('selectedRelease' in execution) {
     await displayUpgradeSummary({
       appPath: result.directory,
       currentVersion: result.previousVersion,
-      selectedRelease: selectedRelease!,
+      selectedRelease: execution.selectedRelease,
       instrunctionsFilePath: result.instructionsPath ?? undefined,
+    });
+  } else {
+    renderSuccess({
+      headline: `You are on the latest Hydrogen version: ${result.version}`,
     });
   }
 }
@@ -169,10 +176,7 @@ export async function executeUpgrade({
   appPath,
   version: targetVersion,
   force = false,
-}: UpgradeOptions): Promise<{
-  result: import('../../lib/maintenance/types.js').UpgradeResult;
-  selectedRelease?: Release;
-}> {
+}: UpgradeOptions): Promise<UpgradeExecution> {
   // --version=next is only available when running from monorepo, tests, or CI
   if (targetVersion === 'next') {
     const isInTests = process.env.SHOPIFY_UNIT_TEST === '1';
@@ -307,7 +311,11 @@ export async function executeUpgrade({
       changed: true,
       directory: resolvePath(appPath),
       previousVersion: getAbsoluteVersion(currentVersion),
-      version: getAbsoluteVersion(selectedRelease.version),
+      version: getPackageVersion(
+        '@shopify/hydrogen',
+        selectedRelease.version,
+        targetVersion,
+      ),
       instructionsPath: instrunctionsFilePath
         ? resolvePath(appPath, instrunctionsFilePath)
         : null,
