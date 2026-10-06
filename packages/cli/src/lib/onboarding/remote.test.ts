@@ -2,10 +2,16 @@ import './setup-template.mocks.js';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import glob from 'fast-glob';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
-import {inTemporaryDirectory, readFile} from '@shopify/cli-kit/node/fs';
+import {
+  inTemporaryDirectory,
+  mkdir,
+  readFile,
+  writeFile,
+} from '@shopify/cli-kit/node/fs';
 import {setupTemplate} from './index.js';
 import {getSkeletonSourceDir} from '../build.js';
 import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
+import {captureJsonOutput} from '../../../tests/output.js';
 import {joinPath} from '@shopify/cli-kit/node/path';
 
 describe('remote templates', () => {
@@ -15,6 +21,45 @@ describe('remote templates', () => {
     vi.clearAllMocks();
     vi.unstubAllEnvs();
     outputMock.clear();
+  });
+
+  it('keeps remote settings unavailable and shows inventory guidance in text', async () => {
+    await inTemporaryDirectory(async (tmpRoot) => {
+      const sourcePath = joinPath(tmpRoot, 'template');
+      await mkdir(sourcePath);
+      await writeFile(
+        joinPath(sourcePath, 'package.json'),
+        '{"name":"remote"}',
+      );
+      const download = vi.spyOn(
+        await import('../template-downloader.js'),
+        'downloadExternalRepo',
+      );
+      download.mockResolvedValue({templateDir: sourcePath});
+      try {
+        const options = {
+          template: 'example/storefront',
+          git: false,
+          installDeps: false,
+        };
+        const {stdout} = await captureJsonOutput(() =>
+          setupTemplate({...options, path: joinPath(tmpRoot, 'json-project')}),
+        );
+        expect(JSON.parse(stdout)).toMatchObject({
+          status: 'success',
+          project: {cssStrategy: null, i18n: null, routes: null},
+        });
+
+        await setupTemplate({
+          ...options,
+          path: joinPath(tmpRoot, 'text-project'),
+        });
+        expect(outputMock.info()).toContain('Mock.shop');
+        expect(outputMock.info()).toContain('Storefront API key');
+      } finally {
+        download.mockRestore();
+      }
+    });
   });
 
   it('throws for unknown templates', async () => {

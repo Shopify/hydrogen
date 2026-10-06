@@ -14,7 +14,6 @@ import {
   renderSuccess,
   renderTasks,
   renderTextPrompt,
-  renderWarning,
 } from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
@@ -111,7 +110,7 @@ export async function runLink(
   const result = {
     status: linkedStore ? ('success' as const) : ('cancelled' as const),
     changed: Boolean(linkedStore),
-    storeDomain: toStoreDomain(config.shop),
+    storeDomain: toStoreDomain(session.storeFqdn),
     storefront: linkedStore ? toStorefront(linkedStore) : null,
   };
   if (writeJsonResult(linkJsonOutputSchema, result, json) || !linkedStore)
@@ -185,21 +184,10 @@ export async function linkStorefront(
     );
 
     if (!selectedStorefront) {
-      renderWarning({
-        headline: `Couldn't find ${flagStorefront}`,
-        body: [
-          "There's no storefront matching",
-          {userInput: flagStorefront},
-          'on your',
-          {userInput: config.shop},
-          'shop. To see all available Hydrogen storefronts, run',
-          {
-            command: `${cliCommand} list`,
-          },
-        ],
-      });
-
-      return;
+      throw new AbortError(
+        `Couldn't find ${flagStorefront}`,
+        `No storefront with that name exists on ${config.shop}. Run ${cliCommand} list to see available storefronts.`,
+      );
     }
   } else if (flagCreateStorefront || storefrontName) {
     selectedStorefront = await createNewStorefront(
@@ -262,11 +250,7 @@ async function createNewStorefront(
     {
       title: 'Creating API tokens',
       task: async () => {
-        try {
-          await waitForJob(session, jobId!);
-        } catch (_err) {
-          storefront = undefined;
-        }
+        await waitForJob(session, jobId!);
       },
       skip: () => !jobId,
     },
@@ -274,7 +258,7 @@ async function createNewStorefront(
 
   if (!storefront) {
     throw new AbortError(
-      'Unknown error ocurred. Please try again or contact support if the error persists.',
+      'Unknown error occurred. Please try again or contact support if the error persists.',
     );
   }
 

@@ -73,13 +73,17 @@ it('encodes empty storefront collections', async () => {
 });
 
 it('encodes the selected storefront after linking', async () => {
+  vi.mocked(login).mockResolvedValue({
+    session: {token: 'secret', storeFqdn: 'authenticated.myshopify.com'},
+    config,
+  });
   const {stdout} = await captureJsonOutput(() =>
     runLink({storefront: 'Example', force: true}),
   );
   expect(JSON.parse(stdout)).toEqual({
     status: 'success',
     changed: true,
-    storeDomain: config.shop,
+    storeDomain: 'authenticated.myshopify.com',
     storefront: {
       gid: storefront.id,
       name: storefront.title,
@@ -185,3 +189,12 @@ it.each([List, Link, Login, Logout, Unlink, Init])(
     expect(command.description).toContain(command.jsonOutputSchema.name);
   },
 );
+
+it('rejects an unknown storefront name without returning a cancelled JSON result', async () => {
+  const {stdout} = await captureJsonOutput(async () => {
+    await expect(runLink({storefront: 'Typo', force: true})).rejects.toThrow(
+      "Couldn't find Typo",
+    );
+  });
+  expect(stdout).toBe('');
+});

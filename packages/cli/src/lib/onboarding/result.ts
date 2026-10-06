@@ -1,6 +1,6 @@
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {writeJsonResult, isJsonOutput} from '../json-output.js';
-import {renderInfo} from '../ui.js';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {renderProjectReady} from './common.js';
 import {initJsonOutputSchema, type InitResult} from './types.js';
 import type {setupLocalStarterTemplate} from './local.js';
@@ -34,7 +34,7 @@ export function toInitResult(result: TemplateResult): InitResult {
       packageManager,
       dependenciesInstalled: depsInstalled,
       cssStrategy: cssStrategy ?? null,
-      i18n: i18n ?? null,
+      i18n: result.i18nError ? null : (i18n ?? null),
       routes: routes ?? null,
     },
     failures,
@@ -60,7 +60,7 @@ export async function presentTemplateResult(
   await renderProjectReady(result, result);
   if (template)
     renderInfo({
-      headline: `Your project will display inventory from ${template.endsWith('shopify/hydrogen-demo-store') ? 'the Hydrogen Demo Store' : 'Mock.shop'}.`,
+      headline: `Your project will display inventory from ${template === 'demo-store' || template.endsWith('shopify/hydrogen-demo-store') ? 'the Hydrogen Demo Store' : 'Mock.shop'}.`,
       body:
         'To connect this project to your Shopify store’s inventory, update `' +
         result.name +

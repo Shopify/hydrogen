@@ -247,7 +247,7 @@ export async function setupLocalStarterTemplate(
   const setupSummary: SetupSummary = {
     language,
     packageManager,
-    cssStrategy,
+    cssStrategy: cssStrategy ?? 'none',
     depsInstalled: false,
     cliCommand: await getCliCommand('', packageManager),
   };
@@ -303,7 +303,7 @@ export async function setupLocalStarterTemplate(
   // If running in --quickstart mode, skip this success banner
   if (options.quickstart) {
     if (!isJsonOutput()) console.log('\n');
-  } else {
+  } else if (!isJsonOutput()) {
     renderSuccess({
       headline: [
         {userInput: storefrontInfo?.title ?? project.name},
@@ -320,7 +320,7 @@ export async function setupLocalStarterTemplate(
 
   const {setupRoutes} = handleRouteGeneration(controller);
 
-  setupSummary.i18n = i18nStrategy;
+  setupSummary.i18n = i18nStrategy ?? 'none';
   backgroundWorkPromise = backgroundWorkPromise.then(async () => {
     // These tasks need to be performed in
     // sequence to ensure commits are clean.

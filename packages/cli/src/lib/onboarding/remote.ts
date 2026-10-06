@@ -77,6 +77,10 @@ export async function setupRemoteTemplate(
       options.git ? createInitialCommit(project.directory) : undefined,
     );
 
+  // Dependency setup can write project files, so finish copying the template first.
+  await backgroundWorkPromise;
+  if (controller.signal.aborted) return;
+
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(
       project.directory,
