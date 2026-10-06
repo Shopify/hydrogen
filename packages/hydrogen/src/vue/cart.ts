@@ -225,8 +225,24 @@ export function useCartAnalytics(): void {
 }
 
 /**
- * Like `useCart`, but returns `undefined` when rendered outside a `<CartProvider>`.
- * @internal
+ * Like `useCart`, but returns a ref holding `undefined` instead of throwing when used
+ * outside a `<CartProvider>`.
+ *
+ * Use it for a component that renders both inside and outside the provider, such as a
+ * header cart badge that also appears on an error page mounted above `<CartProvider>`.
+ * Prefer `useCart` wherever the provider is guaranteed, so a missing provider fails loudly.
+ *
+ * @example
+ * ```vue
+ * <script setup>
+ * const count = useOptionalCart((state) => state.data.totalQuantity);
+ * </script>
+ *
+ * <template>
+ *   <span v-if="count !== undefined">Cart ({{ count }})</span>
+ * </template>
+ * ```
+ * @publicDocs
  */
 export function useOptionalCart<TData extends CartData = CartData, S = unknown>(
   selector: (state: CartState<TData>) => S,

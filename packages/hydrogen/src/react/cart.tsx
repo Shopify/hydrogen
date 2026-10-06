@@ -259,8 +259,22 @@ export function useCartAnalytics(): void {
 }
 
 /**
- * Like `useCart`, but returns `undefined` when rendered outside a `<CartProvider>`.
- * @internal
+ * Like `useCart`, but returns `undefined` instead of throwing when rendered outside a
+ * `<CartProvider>`.
+ *
+ * Use it for a component that renders both inside and outside the provider, such as a
+ * header cart badge that also appears on an error page mounted above `<CartProvider>`.
+ * Prefer `useCart` wherever the provider is guaranteed, so a missing provider fails loudly.
+ *
+ * @example
+ * ```tsx
+ * function CartBadge() {
+ *   const count = useOptionalCart((state) => state.data.totalQuantity);
+ *   if (count === undefined) return null;
+ *   return <span>Cart ({count})</span>;
+ * }
+ * ```
+ * @publicDocs
  */
 export function useOptionalCart<TData extends CartData = CartData, S = unknown>(
   selector: (state: CartState<TData>) => S,
