@@ -31,6 +31,11 @@ export async function handleUrlRedirects({
     variables: { query: `path:${queryPath}` },
   });
 
+  if (result.errors) {
+    const messages = result.errors.map(({ message }) => message).join(", ");
+    throw new Error(`Storefront API errors: ${messages}`, { cause: result.errors });
+  }
+
   const target = result.data?.urlRedirects?.edges[0]?.node.target;
   if (!target) return null;
 
