@@ -38,6 +38,7 @@ import {importVite} from '../../lib/import-utils.js';
 import {deferPromise, type DeferredPromise} from '../../lib/defer.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {realpath} from 'node:fs/promises';
 
 export default class Build extends Command {
   static get jsonOutputSchema(): typeof buildJsonOutputSchema {
@@ -149,7 +150,9 @@ export async function runBuild({
 
   assetPath = assetPath ?? process.env.HYDROGEN_ASSET_BASE_URL ?? '/';
 
-  const root = directory ?? process.cwd();
+  // Vite resolves source files through symlinks. Use the same root for both
+  // builds so Remix can match its client manifest to the server entry points.
+  const root = await realpath(directory ?? process.cwd());
 
   if (lockfileCheck) {
     await checkLockfileStatus(root, isCI());
@@ -189,6 +192,8 @@ export async function runBuild({
     mode: process.env.NODE_ENV,
     base: assetPath,
     customLogger,
+    // Vite’s reporter writes TTY progress directly to stdout at info level.
+    ...(isJsonOutput() ? {logLevel: 'warn' as const} : {}),
   };
 
   let clientBuildStatus: DeferredPromise;
@@ -370,10 +375,10 @@ export async function runBuild({
 
   return {
     result: {
-      directory: root,
-      clientDirectory: clientOutDir,
-      serverDirectory: serverOutDir,
-      serverFile: serverOutFile,
+      directory: resolvePath(root),
+      clientDirectory: resolvePath(clientOutDir),
+      serverDirectory: resolvePath(serverOutDir),
+      serverPath: resolvePath(serverOutFile),
     } satisfies import('../../lib/build-tooling/types.js').BuildResult,
     async close() {
       codegenProcess?.removeAllListeners('close');
