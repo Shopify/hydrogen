@@ -221,6 +221,13 @@ describe('link', () => {
 
       await expect(runLink({})).rejects.toThrow(Error);
     });
+
+    it('preserves the reason storefront provisioning failed', async () => {
+      vi.mocked(waitForJob).mockRejectedValue(
+        new Error('Reinstall the Hydrogen app'),
+      );
+      await expect(runLink({})).rejects.toThrow('Reinstall the Hydrogen app');
+    });
   });
 
   describe('when a linked storefront already exists', () => {

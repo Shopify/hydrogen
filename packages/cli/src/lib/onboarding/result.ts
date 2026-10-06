@@ -1,6 +1,6 @@
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {writeJsonResult, isJsonOutput} from '../json-output.js';
-import {renderInfo} from '../ui.js';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {renderProjectReady} from './common.js';
 import {initJsonOutputSchema, type InitResult} from './types.js';
 import type {setupLocalStarterTemplate} from './local.js';

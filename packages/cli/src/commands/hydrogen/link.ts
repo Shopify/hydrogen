@@ -111,7 +111,7 @@ export async function runLink(
   const result = {
     status: linkedStore ? ('success' as const) : ('cancelled' as const),
     changed: Boolean(linkedStore),
-    storeDomain: toStoreDomain(config.shop),
+    storeDomain: toStoreDomain(session.storeFqdn),
     storefront: linkedStore ? toStorefront(linkedStore) : null,
   };
   if (writeJsonResult(linkJsonOutputSchema, result, json) || !linkedStore)
@@ -264,7 +264,8 @@ async function createNewStorefront(
       task: async () => {
         try {
           await waitForJob(session, jobId!);
-        } catch (_err) {
+        } catch (error) {
+          if (error instanceof Error) throw error;
           storefront = undefined;
         }
       },

@@ -13,6 +13,7 @@ import {exec} from '@shopify/cli-kit/node/system';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {
   fileExists,
+  inTemporaryDirectory,
   mkdirSync,
   readFile,
   removeFile,
@@ -23,6 +24,7 @@ import {runCodegen} from './codegen.js';
 import {setupTemplate} from '../../lib/onboarding/index.js';
 import path from 'node:path';
 import {realpath} from 'node:fs/promises';
+import {captureJsonOutput} from '../../../tests/output.js';
 
 vi.mock('../../lib/check-cli-version.js');
 
@@ -80,6 +82,31 @@ describe('init', () => {
       git: true,
       // TODO: enable Tailwind once v4 is stable
       styling: 'none',
+    });
+  });
+
+  it.each([
+    {quickstart: true},
+    {styling: 'none' as const, i18n: 'none' as const},
+  ])('preserves none choices in JSON for %j', async (options) => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      const {stdout} = await captureJsonOutput(() =>
+        runInit({
+          ...options,
+          path: tmpDir,
+          language: 'ts',
+          mockShop: true,
+          git: false,
+          shortcut: false,
+          installDeps: false,
+        }),
+      );
+      expect(JSON.parse(stdout)).toMatchObject({
+        status: 'success',
+        project: {cssStrategy: 'none', i18n: 'none'},
+      });
+      expect(await fileExists(`${tmpDir}/app/lib/i18n.ts`)).toBe(false);
+      expect(await fileExists(`${tmpDir}/app/styles/tailwind.css`)).toBe(false);
     });
   });
 

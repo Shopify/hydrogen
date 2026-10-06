@@ -73,13 +73,17 @@ it('encodes empty storefront collections', async () => {
 });
 
 it('encodes the selected storefront after linking', async () => {
+  vi.mocked(login).mockResolvedValue({
+    session: {token: 'secret', storeFqdn: 'authenticated.myshopify.com'},
+    config,
+  });
   const {stdout} = await captureJsonOutput(() =>
     runLink({storefront: 'Example', force: true}),
   );
   expect(JSON.parse(stdout)).toEqual({
     status: 'success',
     changed: true,
-    storeDomain: config.shop,
+    storeDomain: 'authenticated.myshopify.com',
     storefront: {
       gid: storefront.id,
       name: storefront.title,

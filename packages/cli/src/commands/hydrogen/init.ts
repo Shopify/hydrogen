@@ -1,4 +1,9 @@
 import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {
+  commandEventOutputMode,
+  runWithCommandEventsForCommand,
+} from '@shopify/cli-kit/node/command-events';
+import {withJsonConsole} from '../../lib/json-output.js';
 import {initJsonOutputSchema} from '../../lib/onboarding/types.js';
 import Command from '../../lib/hydrogen-command.js';
 import {Flags} from '@oclif/core';
@@ -78,6 +83,15 @@ export default class Init extends Command {
 }
 
 export async function runInit(
+  options?: InitOptions & {markets?: InitOptions['i18n']},
+) {
+  const execute = () => withJsonConsole(() => executeInit(options));
+  return commandEventOutputMode()
+    ? execute()
+    : runWithCommandEventsForCommand(process.argv.slice(2), execute);
+}
+
+async function executeInit(
   {
     markets,
     ...options

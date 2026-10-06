@@ -421,6 +421,9 @@ importers:
         specifier: 0.34.1
         version: 0.34.1
     devDependencies:
+      '@shopify/cli-kit':
+        specifier: 4.9.0
+        version: 4.9.0(@types/react@18.3.28)
       '@types/node':
         specifier: 22.19.15
         version: 22.19.15

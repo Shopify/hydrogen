@@ -9,6 +9,7 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {hyphenate} from '@shopify/cli-kit/common/string';
 import {setupTemplate} from './index.js';
+import {captureJsonOutput} from '../../../tests/output.js';
 import {getSkeletonSourceDir} from '../build.js';
 import {basename} from '@shopify/cli-kit/node/path';
 import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
@@ -78,10 +79,35 @@ describe('local templates', () => {
       expect(output).toMatch('Routes');
       expect(output).toMatch(/Language:\s*TypeScript/);
       expect(output).toMatch('Next steps');
+      expect(output).not.toMatch(/Styling:|Markets:/);
       expect(output).toMatch(
         // Output contains banner characters. USe [^\w]*? to match them.
         /Run `cd .*? &&[^\w]*?npm[^\w]*?install[^\w]*?&&[^\w]*?npm[^\w]*?run[^\w]*?dev`/ims,
       );
+    });
+  });
+
+  it('writes one JSON result when creating a project without success banners', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      const {stdout, stderr} = await captureJsonOutput(() =>
+        setupTemplate({
+          path: tmpDir,
+          git: false,
+          language: 'ts',
+          mockShop: true,
+          installDeps: false,
+          shortcut: false,
+        }),
+      );
+      expect(JSON.parse(stdout)).toMatchObject({
+        status: 'success',
+        project: {name: basename(tmpDir), storefrontName: 'Mock.shop'},
+        failures: [],
+      });
+      for (const line of stderr.split('\n').filter(Boolean)) {
+        expect(() => JSON.parse(line)).not.toThrow();
+      }
+      expect(stderr).not.toContain('is ready to build.');
     });
   });
 
@@ -101,6 +127,8 @@ describe('local templates', () => {
       await expect(readFile(`${tmpDir}/.env`)).resolves.toMatch(
         'SESSION_SECRET="foobar"',
       );
+      expect(outputMock.info()).not.toContain('Your project will display');
+      expect(outputMock.info()).not.toContain('Storefront API key');
     });
   });
 
