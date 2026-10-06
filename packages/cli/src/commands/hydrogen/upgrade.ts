@@ -11,7 +11,7 @@ import {
   renderSuccess,
   renderTasks,
   renderWarning,
-} from '../../lib/ui.js';
+} from '@shopify/cli-kit/node/ui';
 import {
   fileExists,
   isDirectory,

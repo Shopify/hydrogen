@@ -4,7 +4,7 @@ import {linesToColumns} from '@shopify/cli-kit/common/string';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {type AbortError} from '@shopify/cli-kit/node/error';
-import {renderWarning} from './ui.js';
+import {renderWarning} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {getStorefrontEnvVariables} from './graphql/admin/pull-variables.js';
 import {getStorefrontEnvironments} from './graphql/admin/list-environments.js';

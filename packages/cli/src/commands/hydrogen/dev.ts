@@ -8,7 +8,7 @@ import {
   type AlertCustomSection,
   renderSuccess,
   renderInfo,
-} from '../../lib/ui.js';
+} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {removeFile} from '@shopify/cli-kit/node/fs';
 import {

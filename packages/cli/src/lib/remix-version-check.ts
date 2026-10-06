@@ -1,5 +1,5 @@
 import {createRequire} from 'node:module';
-import {renderWarning} from './ui.js';
+import {renderWarning} from '@shopify/cli-kit/node/ui';
 
 export const REQUIRED_REMIX_VERSION = '^2.16.1';
 

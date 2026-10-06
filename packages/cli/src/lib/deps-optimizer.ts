@@ -1,6 +1,6 @@
 import {AbortError, BugError} from '@shopify/cli-kit/node/error';
 import {extname} from '@shopify/cli-kit/node/path';
-import {renderFatalError} from './ui.js';
+import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {type FormatOptions} from './format-code.js';
 import {importLangAstGrep} from './ast.js';

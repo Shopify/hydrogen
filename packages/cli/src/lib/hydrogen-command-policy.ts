@@ -6,20 +6,14 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 /**
  * Rejects commands disabled by the installed Hydrogen version.
  */
-export async function applyHydrogenCommandPolicy({
+export function applyHydrogenCommandPolicy({
   id,
   projectPath,
 }: {
   id?: string;
   projectPath: string;
 }) {
-  if (
-    !id ||
-    !isHydrogenProject(projectPath) ||
-    !isHydrogenCommandDisabled(projectPath, id)
-  ) {
-    return false;
-  }
+  if (!id || !isHydrogenCommandDisabled(projectPath, id)) return;
 
   throw new AbortError(
     `\`shopify ${id.replace(/:/g, ' ')}\` is not supported by this version of Hydrogen`,

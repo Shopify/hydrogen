@@ -1,7 +1,7 @@
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import Command from '../../../lib/hydrogen-command.js';
-import {renderSuccess, renderTasks} from '../../../lib/ui.js';
+import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
 import {Args} from '@oclif/core';
 import {getRemixConfig} from '../../../lib/remix-config.js';
 import {

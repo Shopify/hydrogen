@@ -1,6 +1,6 @@
 import Command from '../../lib/hydrogen-command.js';
 import {AbortController} from '@shopify/cli-kit/node/abort';
-import {renderTasks} from '../../lib/ui.js';
+import {renderTasks} from '@shopify/cli-kit/node/ui';
 import {basename, joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {copyFile, fileExists, glob} from '@shopify/cli-kit/node/fs';
 import {

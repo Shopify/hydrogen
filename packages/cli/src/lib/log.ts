@@ -1,5 +1,9 @@
 import {isJsonOutput} from './json-output.js';
-import {renderInfo, renderWarning, renderFatalError} from './ui.js';
+import {
+  renderInfo,
+  renderWarning,
+  renderFatalError,
+} from '@shopify/cli-kit/node/ui';
 import {BugError} from '@shopify/cli-kit/node/error';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
@@ -72,6 +76,8 @@ function injectLogReplacer(
 ) {
   if (!methodsReplaced.has(method)) {
     methodsReplaced.add(method);
+    // Preserve output routing installed by the command (including JSON mode).
+    const original = console[method];
     console[method] = (...args: unknown[]) => {
       if (debouncer !== false && debounceMessage(args, debouncer?.(args))) {
         return;
@@ -82,14 +88,14 @@ function injectLogReplacer(
         return acc;
       }, [] as Replacer[]);
 
-      if (replacers.length === 0) return originalConsole[method](...args);
+      if (replacers.length === 0) return original(...args);
 
       const result = replacers.reduce(
         (resultArgs, replacer) => resultArgs && replacer(resultArgs),
         args as void | string[],
       );
 
-      if (result) return originalConsole[method](...result);
+      if (result) return original(...result);
     };
   }
 }
@@ -225,6 +231,7 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
           );
 
           if (
+            !isJsonOutput() &&
             !isLastLineBlank &&
             ((isRequestLog && !isLastLineRequestLog) ||
               (!isRequestLog && isLastLineRequestLog))

@@ -1,6 +1,6 @@
 import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
-import {renderConfirmationPrompt} from '../../ui.js';
+import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {type AssetsDir, getAssetsDir} from '../../build.js';
 
 export type CssStrategy =

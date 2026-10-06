@@ -1,9 +1,11 @@
-import {isAbsolute} from 'node:path';
+import {isAbsolute, resolve} from 'node:path';
 import {zod} from '@shopify/cli-kit/node/schema';
 
+// CLI Kit uses forward slashes on Windows; public paths use native separators.
 export const absolutePath = zod
   .string()
-  .refine(isAbsolute, 'Expected an absolute native filesystem path');
+  .refine(isAbsolute, 'Expected an absolute native filesystem path')
+  .transform((value) => resolve(value));
 export const utcInstant = zod.string().datetime({precision: 0});
 export const storefrontGid = zod
   .string()

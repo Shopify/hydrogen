@@ -10,7 +10,7 @@ import {
   renderSelectPrompt,
   renderConfirmationPrompt,
   renderTasks,
-} from '../ui.js';
+} from '@shopify/cli-kit/node/ui';
 import {
   createAbortHandler,
   handleCssStrategy,

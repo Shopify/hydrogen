@@ -367,7 +367,7 @@ describe('upgrade e2e', () => {
           `scaffold. Check changelog.json commit hashes or run with UPGRADE_TEST_FROM/TO.`,
       );
     }
-  }, 600000);
+  });
 });
 
 async function testUpgrade(
