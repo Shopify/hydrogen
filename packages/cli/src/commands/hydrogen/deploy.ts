@@ -272,7 +272,11 @@ export async function runDeploy(options: OxygenDeploymentOptions) {
   const isCI = ciPlatform().isCI;
   const {jsonOutput} = options;
   if (!completedDeployment) {
-    writeJsonResult(deployJsonOutputSchema, null, options.json);
+    writeJsonResult(
+      deployJsonOutputSchema,
+      {status: 'cancelled', deployment: null},
+      options.json,
+    );
     return;
   }
   if (isCI && jsonOutput) {
@@ -282,7 +286,17 @@ export async function runDeploy(options: OxygenDeploymentOptions) {
     );
   }
   if (
-    !writeJsonResult(deployJsonOutputSchema, completedDeployment, options.json)
+    !writeJsonResult(
+      deployJsonOutputSchema,
+      {
+        status: 'success',
+        deployment: {
+          url: completedDeployment.url,
+          authBypassToken: completedDeployment.authBypassToken ?? null,
+        },
+      },
+      options.json,
+    )
   ) {
     const nextSteps: (string | {subdued: string} | {link: {url: string}})[][] =
       [];

@@ -282,8 +282,11 @@ describe('deploy', async () => {
       runDeploy({...deployParams, json: true}),
     );
     expect(JSON.parse(stdout)).toEqual({
-      url: 'https://a-lovely-deployment.com',
-      authBypassToken: 'some-token',
+      status: 'success',
+      deployment: {
+        url: 'https://a-lovely-deployment.com',
+        authBypassToken: 'some-token',
+      },
     });
     expect(
       stderr
@@ -314,7 +317,10 @@ describe('deploy', async () => {
     const {stdout} = await captureJsonOutput(() =>
       runDeploy({...deployParams, token: 'token', json: true}),
     );
-    expect(JSON.parse(stdout)).toEqual(deployment);
+    expect(JSON.parse(stdout)).toEqual({
+      status: 'success',
+      deployment: {...deployment, authBypassToken: null},
+    });
     expect(writeFile).toHaveBeenCalledWith(
       'h2_deploy_log.json',
       JSON.stringify(deployment),
@@ -335,10 +341,18 @@ describe('deploy', async () => {
     expect(Deploy.flags.json).toBeDefined();
     expect(Deploy.description).toContain(Deploy.jsonOutputSchema.name);
     expect(
-      JSON.parse(Deploy.jsonOutputSchema.encode({url: 'https://example.com'})),
-    ).toEqual({url: 'https://example.com'});
+      JSON.parse(
+        Deploy.jsonOutputSchema.encode({
+          status: 'success',
+          deployment: {url: 'https://example.com', authBypassToken: null},
+        }),
+      ),
+    ).toEqual({
+      status: 'success',
+      deployment: {url: 'https://example.com', authBypassToken: null},
+    });
     expect(() => Deploy.jsonOutputSchema.encode({url: 1} as any)).toThrow();
-    expect(Deploy.jsonOutputSchema.encode(null)).toBe('null');
+    expect(() => Deploy.jsonOutputSchema.encode(null as any)).toThrow();
   });
 
   it('calls getOxygenDeploymentData with the correct parameters', async () => {
