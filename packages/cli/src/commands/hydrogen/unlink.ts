@@ -38,7 +38,7 @@ export async function unlinkStorefront(options: LinkFlags, json?: boolean) {
   if (!writeJsonResult(unlinkJsonOutputSchema, result, json)) {
     if (result.storefront)
       renderSuccess({
-        body: ['You are no longer linked to', {bold: result.storefront.title}],
+        body: ['You are no longer linked to', {bold: result.storefront.name}],
       });
     else outputWarn("This project isn't linked to a Hydrogen storefront.");
   }
@@ -51,10 +51,12 @@ export async function removeStorefrontLink({
   const actualPath = path ?? process.cwd();
   const {storefront: configStorefront} = await getConfig(actualPath);
 
-  if (!configStorefront) return {unlinked: false, storefront: null};
+  if (!configStorefront)
+    return {status: 'success', changed: false, storefront: null};
   await unsetStorefront(actualPath);
   return {
-    unlinked: true,
-    storefront: {id: configStorefront.id, title: configStorefront.title},
+    status: 'success',
+    changed: true,
+    storefront: {gid: configStorefront.id, name: configStorefront.title},
   };
 }

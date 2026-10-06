@@ -49,8 +49,15 @@ beforeEach(() => {
 it('lists full storefront and deployment fields without authentication tokens', async () => {
   const {stdout, stderr} = await captureJsonOutput(() => runList({}));
   expect(JSON.parse(stdout)).toEqual({
-    shop: config.shop,
-    storefronts: [{...storefront, currentProductionDeployment: null}],
+    storeDomain: config.shop,
+    storefronts: [
+      {
+        gid: storefront.id,
+        name: storefront.title,
+        productionUrl: storefront.productionUrl,
+        currentProductionDeployment: null,
+      },
+    ],
   });
   expect(stdout).not.toContain('secret');
   expect(stderr).toBe('');
@@ -59,23 +66,42 @@ it('lists full storefront and deployment fields without authentication tokens', 
 it('encodes empty storefront collections', async () => {
   vi.mocked(getStorefrontsWithDeployment).mockResolvedValue([]);
   const {stdout} = await captureJsonOutput(() => runList({}));
-  expect(JSON.parse(stdout)).toEqual({shop: config.shop, storefronts: []});
+  expect(JSON.parse(stdout)).toEqual({
+    storeDomain: config.shop,
+    storefronts: [],
+  });
 });
 
 it('encodes the selected storefront after linking', async () => {
   const {stdout} = await captureJsonOutput(() =>
     runLink({storefront: 'Example', force: true}),
   );
-  expect(JSON.parse(stdout)).toEqual({shop: config.shop, storefront});
+  expect(JSON.parse(stdout)).toEqual({
+    status: 'success',
+    changed: true,
+    storeDomain: config.shop,
+    storefront: {
+      gid: storefront.id,
+      name: storefront.title,
+      productionUrl: storefront.productionUrl,
+    },
+  });
 });
 
 it('reports authentication and logout results without exposing session data', async () => {
   const loggedIn = await captureJsonOutput(() => runLogin({shop: config.shop}));
-  expect(JSON.parse(loggedIn.stdout)).toEqual(config);
+  expect(JSON.parse(loggedIn.stdout)).toEqual({
+    storeDomain: config.shop,
+    name: config.shopName,
+    email: config.email,
+  });
   const loggedOut = await captureJsonOutput(() =>
     runLogout({path: '/project'}),
   );
-  expect(JSON.parse(loggedOut.stdout)).toEqual({loggedOut: true});
+  expect(JSON.parse(loggedOut.stdout)).toEqual({
+    status: 'success',
+    loggedOut: true,
+  });
   expect(logout).toHaveBeenCalledWith('/project');
 });
 
@@ -84,14 +110,16 @@ it('reports both unlinking and an already unlinked project', async () => {
     unlinkStorefront({path: '/project'}),
   );
   expect(JSON.parse(unlinked.stdout)).toEqual({
-    unlinked: true,
-    storefront: {id: storefront.id, title: storefront.title},
+    status: 'success',
+    changed: true,
+    storefront: {gid: storefront.id, name: storefront.title},
   });
   expect(unsetStorefront).toHaveBeenCalledWith('/project');
   vi.mocked(getConfig).mockResolvedValue({});
   const alreadyUnlinked = await captureJsonOutput(() => unlinkStorefront({}));
   expect(JSON.parse(alreadyUnlinked.stdout)).toEqual({
-    unlinked: false,
+    status: 'success',
+    changed: false,
     storefront: null,
   });
 });
@@ -107,16 +135,25 @@ it('encodes initialization outcomes and emits partial failures as diagnostics', 
     cliCommand: 'h2' as const,
     depsError: new Error('Install failed'),
   };
+  const previousExitCode = process.exitCode;
   const {stdout, stderr} = await captureJsonOutput(() =>
     presentTemplateResult(project),
   );
+  expect(process.exitCode).toBe(1);
+  process.exitCode = previousExitCode;
   expect(JSON.parse(stdout)).toEqual({
-    location: 'example',
-    name: 'example',
-    directory: '/example',
-    language: 'ts',
-    packageManager: 'npm',
-    depsInstalled: false,
+    status: 'partial',
+    project: {
+      name: 'example',
+      directory: '/example',
+      storefrontName: null,
+      language: 'ts',
+      packageManager: 'npm',
+      dependenciesInstalled: false,
+      cssStrategy: null,
+      i18n: null,
+      routes: null,
+    },
     failures: ['dependencies'],
   });
   expect(JSON.parse(stderr)).toMatchObject({
@@ -126,7 +163,11 @@ it('encodes initialization outcomes and emits partial failures as diagnostics', 
   const cancelled = await captureJsonOutput(() =>
     presentTemplateResult(undefined),
   );
-  expect(JSON.parse(cancelled.stdout)).toBeNull();
+  expect(JSON.parse(cancelled.stdout)).toEqual({
+    status: 'cancelled',
+    project: null,
+    failures: [],
+  });
 });
 
 it('does not produce success output on authentication failure', async () => {

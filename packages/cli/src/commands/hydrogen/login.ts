@@ -1,3 +1,4 @@
+import {toStoreDomain} from '../../lib/json-contract.js';
 import {writeJsonResult} from '../../lib/json-output.js';
 import {jsonFlag} from '@shopify/cli-kit/node/cli';
 import {loginJsonOutputSchema} from '../../lib/authentication/types.js';
@@ -42,7 +43,11 @@ export async function runLogin(
   enhanceAuthLogs(true);
   const {config} = await login(root, shopFlag ?? true);
   const {shop, shopName, email} = config;
-  const result = {shop, shopName, email};
+  const result = {
+    storeDomain: toStoreDomain(shop),
+    name: shopName || null,
+    email: email || null,
+  };
   if (!writeJsonResult(loginJsonOutputSchema, result, json))
     renderLoginSuccess(config);
   return result;
