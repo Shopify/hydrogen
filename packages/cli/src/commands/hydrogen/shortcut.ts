@@ -1,4 +1,4 @@
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../lib/hydrogen-command.js';
 import {renderFatalError, renderSuccess} from '../../lib/ui.js';
 import {ALIAS_NAME, createPlatformShortcut} from '../../lib/shell.js';
 

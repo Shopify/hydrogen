@@ -1,4 +1,4 @@
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../../lib/hydrogen-command.js';
 import {Flags} from '@oclif/core';
 import {diffLines} from 'diff';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';

@@ -1,4 +1,4 @@
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../lib/hydrogen-command.js';
 import {outputNewline} from '@shopify/cli-kit/node/output';
 import {commonFlags} from '../../lib/flags.js';
 import {login, renderLoginSuccess} from '../../lib/auth.js';

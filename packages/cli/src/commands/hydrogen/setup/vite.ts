@@ -1,5 +1,5 @@
 import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../../lib/hydrogen-command.js';
 import {renderSuccess, renderTasks} from '../../../lib/ui.js';
 import {
   fileExists,

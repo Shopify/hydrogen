@@ -4,7 +4,7 @@ import {
   overrideFlag,
   flagsToCamelObject,
 } from '../../../lib/flags.js';
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../../lib/hydrogen-command.js';
 import {renderSuccess, renderTasks, renderWarning} from '../../../lib/ui.js';
 import {
   getPackageManager,
