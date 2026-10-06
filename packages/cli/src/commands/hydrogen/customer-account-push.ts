@@ -142,7 +142,7 @@ export async function pushCustomerAccountConfig({
 
     return {
       result: {
-        storefrontId,
+        storefrontGid: storefrontId,
         redirectUri,
         javascriptOrigin,
         logoutUri,

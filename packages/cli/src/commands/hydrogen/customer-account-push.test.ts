@@ -65,7 +65,7 @@ describe('runCustomerAccountPush', () => {
     try {
       const {stdout, stderr} = await captureJsonOutput(() => command.run());
       expect(JSON.parse(stdout)).toEqual({
-        storefrontId: STOREFRONT_ID,
+        storefrontGid: STOREFRONT_ID,
         redirectUri: `${DEV_ORIGIN}/custom/callback`,
         javascriptOrigin: JAVASCRIPT_ORIGIN,
         logoutUri: `${DEV_ORIGIN}/logout`,
