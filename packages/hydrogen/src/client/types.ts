@@ -199,7 +199,10 @@ type HasNoRequiredKeys<T> = Record<string, never> extends T ? true : false;
  * @publicDocs
  */
 export type StorefrontGraphqlOptions = {
-  /** Abort signal forwarded to the underlying fetch. Combined with the request-context signal via `AbortSignal.any`. */
+  /**
+   * Abort signal forwarded to the underlying fetch. Combined with the request-context signal via `AbortSignal.any`.
+   * Does not cancel a stale-while-revalidate refresh, which is bounded by `defaultTimeoutInMs` instead.
+   */
   signal?: AbortSignal;
 };
 
