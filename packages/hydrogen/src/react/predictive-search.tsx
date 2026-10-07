@@ -45,14 +45,22 @@ const PredictiveSearchContext = createContext<PredictiveSearchContextValue | nul
  *
  * Changing a store option clears the current term and results. The provider compares `types` and `searchableFields` by value, which lets you pass new arrays on each render.
  */
-export type PredictiveSearchProviderProps = CreatePredictiveSearchStoreOptions & {
+export interface PredictiveSearchProviderProps extends CreatePredictiveSearchStoreOptions {
   /** Content that uses the predictive search hooks. */
   children?: ReactNode;
   /** Search page path that forms from usePredictiveSearchForm submit to. Defaults to `"/search"`. */
   searchAction?: string;
-};
+}
 
 export type { PredictiveSearchActions };
+
+/** Submit behavior for the search form. */
+interface PredictiveSearchFormSubmitOptions {
+  /** Pass `true` to run the search in the browser on submit and stay on the current page. Defaults to `false`. */
+  preventDefault?: boolean;
+  /** Runs on submit with the event and the search term. Call `event.preventDefault()` to cancel both the page navigation and the browser search. */
+  onSubmit?: (event: SubmitEvent<HTMLFormElement>, term: string) => void;
+}
 
 /**
  * Form attributes and submit behavior for the search form.
@@ -62,12 +70,8 @@ export type { PredictiveSearchActions };
 export type PredictiveSearchFormPropsOptions = Omit<
   FormHTMLAttributes<HTMLFormElement>,
   "onSubmit"
-> & {
-  /** Pass `true` to run the search in the browser on submit and stay on the current page. Defaults to `false`. */
-  preventDefault?: boolean;
-  /** Runs on submit with the event and the search term. Call `event.preventDefault()` to cancel both the page navigation and the browser search. */
-  onSubmit?: (event: SubmitEvent<HTMLFormElement>, term: string) => void;
-};
+> &
+  PredictiveSearchFormSubmitOptions;
 
 /**
  * Input attributes and a change callback for the search input.
@@ -77,10 +81,14 @@ export type PredictiveSearchFormPropsOptions = Omit<
 export type PredictiveSearchQueryInputPropsOptions = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   "autoCapitalize" | "autoComplete" | "name" | "onChange" | "spellCheck" | "type"
-> & {
+> &
+  PredictiveSearchQueryInputChangeOptions;
+
+/** Change behavior for the search input. */
+interface PredictiveSearchQueryInputChangeOptions {
   /** Runs on every change with the event and the input value. Call `event.preventDefault()` to skip the search for that change. */
   onChange?: (event: ChangeEvent<HTMLInputElement>, term: string) => void;
-};
+}
 
 type PredictiveSearchFormField = Parameters<CorePredictiveSearchFormRegister>[0];
 

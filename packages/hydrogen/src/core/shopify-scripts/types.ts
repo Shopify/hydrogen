@@ -16,11 +16,11 @@ export type ShopifyScriptsAnalyticsConfig = {
 };
 
 /** The locale that Shopify's scripts read from the browser's Shopify global. */
-export type ShopifyScriptsI18n = Pick<I18nConfig, "country" | "language"> &
-  Partial<Pick<I18nConfig, "pathPrefix">> & {
-    /** The active currency code. Hydrogen converts it to uppercase. */
-    currency?: string;
-  };
+export interface ShopifyScriptsI18n
+  extends Pick<I18nConfig, "country" | "language">, Partial<Pick<I18nConfig, "pathPrefix">> {
+  /** The active currency code. Hydrogen converts it to uppercase. */
+  currency?: string;
+}
 
 // DOM types expose element properties such as `crossOrigin`, but these descriptors represent
 // serialized HTML attributes such as `crossorigin` so they work outside React. Attribute values are
@@ -144,12 +144,12 @@ export type ShopifyRoutesOptions = {
 };
 
 /** The route, consent, and WebMCP settings for starting Shopify's scripts in the browser. */
-export type InitializeShopifyScriptsOptions = ShopifyRoutesOptions & {
+export interface InitializeShopifyScriptsOptions extends ShopifyRoutesOptions {
   /** The consent configuration that you passed to the script tags. The bus runs the setup callback once. */
   consent?: ConsentConfig;
   /** Loads Shopify WebMCP tools when the browser supports WebMCP. Defaults to `true`. */
   webMcp?: boolean;
-};
+}
 
 /**
  * Options for both getShopifyScriptTags and initializeShopifyScripts. Build one object and pass

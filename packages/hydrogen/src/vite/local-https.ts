@@ -53,16 +53,23 @@ export type LocalHttpsOptions = {
 };
 
 /** The local HTTPS Vite plugin, with an API for frameworks that start their own HTTPS server. */
-export type LocalHttpsPlugin = Plugin & {
-  api: {
-    /**
-     * Returns the host, port, and certificate paths for frameworks that serve HTTPS outside Vite, such as Nuxt.
-     *
-     * Returns `undefined` when `enabled` is `false` or a certificate file is missing.
-     */
-    getDevServerConfig(): LocalHttpsDevServerConfig | undefined;
-  };
-};
+export type LocalHttpsPlugin = Plugin & LocalHttpsPluginExtension;
+
+/** The API that the local HTTPS Vite plugin adds to the Vite plugin object. */
+interface LocalHttpsPluginExtension {
+  /** Methods for frameworks that start their own HTTPS server. */
+  api: LocalHttpsPluginApi;
+}
+
+/** Methods for frameworks that start their own HTTPS server. */
+interface LocalHttpsPluginApi {
+  /**
+   * Returns the host, port, and certificate paths for frameworks that serve HTTPS outside Vite, such as Nuxt.
+   *
+   * Returns `undefined` when `enabled` is `false` or a certificate file is missing.
+   */
+  getDevServerConfig(): LocalHttpsDevServerConfig | undefined;
+}
 
 /** Host, port, and certificate file paths for serving local HTTPS outside Vite. */
 export type LocalHttpsDevServerConfig = {

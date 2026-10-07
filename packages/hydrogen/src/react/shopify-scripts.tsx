@@ -19,14 +19,14 @@ import {
  *
  * @publicDocs
  */
-export type ShopifyScriptsProps = ShopifyScriptTagsOptions & {
+export interface ShopifyScriptsProps extends ShopifyScriptTagsOptions {
   /** Navigates after Shopify's scripts resolve a URL to your app's route. Defaults to a full page load. */
   navigate?: ShopifyRoutesOptions["navigate"];
   /** Your app's custom route templates, which Shopify's scripts use to match storefront URLs. */
   routes?: ShopifyRoutesOptions["routes"];
   /** Loads Shopify's WebMCP tools when the browser supports WebMCP. Defaults to `true`. */
   webMcp?: boolean;
-};
+}
 
 declare module "react" {
   namespace JSX {

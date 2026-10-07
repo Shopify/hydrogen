@@ -18,18 +18,22 @@ export type ShopAnalyticsChannel = "hydrogen" | "headless";
  *
  * @publicDocs
  */
-export type ShopAnalytics =
-  | (ShopAnalyticsBase & {
-      /** The Hydrogen sales channel serves the storefront. */
-      channel: "hydrogen";
-      /** The Hydrogen storefront's ID. */
-      storefrontId: ShopifyScriptsShop["storefrontId"];
-    })
-  | (ShopAnalyticsBase & {
-      /** The Headless sales channel serves the storefront. */
-      channel: "headless";
-      storefrontId?: never;
-    });
+export type ShopAnalytics = HydrogenShopAnalytics | HeadlessShopAnalytics;
+
+/** The shop and storefront for a storefront on the Hydrogen sales channel. */
+interface HydrogenShopAnalytics extends ShopAnalyticsBase {
+  /** The Hydrogen sales channel serves the storefront. */
+  channel: "hydrogen";
+  /** The Hydrogen storefront's ID. */
+  storefrontId: ShopifyScriptsShop["storefrontId"];
+}
+
+/** The shop for a storefront on the Headless sales channel. */
+interface HeadlessShopAnalytics extends ShopAnalyticsBase {
+  /** The Headless sales channel serves the storefront. */
+  channel: "headless";
+  storefrontId?: never;
+}
 
 // --- Consent ---
 
@@ -216,10 +220,10 @@ type CartPayload = {
   cart: AnalyticsCart | null;
 };
 
-type CartChangePayload = CartPayload & {
+interface CartChangePayload extends CartPayload {
   /** The cart before the change, or `null` when cart tracking has no earlier snapshot. */
   prevCart: AnalyticsCart | null;
-};
+}
 
 type CartLinePayload = {
   /** The line before the change. */

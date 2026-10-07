@@ -495,7 +495,7 @@ const DEFAULT_CART_QUERIES = {
   cartNoteUpdate: CART_NOTE_UPDATE_MUTATION,
   /** Mutation that sets a cart's custom attributes. */
   cartAttributesUpdate: CART_ATTRIBUTES_UPDATE_MUTATION,
-} as const;
+} as const satisfies CartQueriesForDocs;
 
 type DefaultCartQueries = typeof DEFAULT_CART_QUERIES;
 
@@ -677,4 +677,21 @@ export const cartQueries = makeCartQueries();
  *
  * @publicDocs
  */
-export interface CartQueriesForDocs extends DefaultCartQueries {}
+export interface CartQueriesForDocs {
+  /** Query that fetches a cart by ID. */
+  readonly cart: StorefrontQueryString;
+  /** Mutation that creates a cart from a cart input. */
+  readonly cartCreate: StorefrontQueryString;
+  /** Mutation that adds merchandise lines to a cart. */
+  readonly cartLinesAdd: StorefrontQueryString;
+  /** Mutation that updates existing lines in a cart. */
+  readonly cartLinesUpdate: StorefrontQueryString;
+  /** Mutation that removes lines from a cart by line ID. */
+  readonly cartLinesRemove: StorefrontQueryString;
+  /** Mutation that replaces a cart's discount codes. */
+  readonly cartDiscountCodesUpdate: StorefrontQueryString;
+  /** Mutation that sets a cart's note. */
+  readonly cartNoteUpdate: StorefrontQueryString;
+  /** Mutation that sets a cart's custom attributes. */
+  readonly cartAttributesUpdate: StorefrontQueryString;
+}

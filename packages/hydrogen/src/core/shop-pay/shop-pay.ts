@@ -128,7 +128,7 @@ type ShopPayVariant = string | ShopPayVariantWithQuantity;
 type ShopPayVariants = readonly string[] | readonly ShopPayVariantWithQuantity[];
 
 /** Checkout target, variants, attribution, and display settings for a Shop Pay button. */
-export type ShopPayButtonOptions = ShopPayButtonBaseOptions & {
+export interface ShopPayButtonOptions extends ShopPayButtonBaseOptions {
   /**
    * Variants that the customer buys right away through a Shopify cart permalink. Omit the variants
    * to check out the current cart.
@@ -136,7 +136,7 @@ export type ShopPayButtonOptions = ShopPayButtonBaseOptions & {
    * Pass either all variant ID strings or all objects with an `id` and an optional `quantity`. Each quantity must be a positive integer. The Shop Pay functions throw an error for product IDs, non-numeric variant IDs, invalid quantities, and mixed formats.
    */
   variants?: ShopPayVariants;
-};
+}
 
 /**
  * Returns the checkout URL for a Shop Pay button. Use the URL to build your own Shop Pay link.

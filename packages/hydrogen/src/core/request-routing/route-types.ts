@@ -111,14 +111,14 @@ export type ShopifyRouteHandler<
 export type ShopifyRouteHandlerGroup = Record<string, ShopifyRouteHandler>;
 
 /** The request, its context and session, the Storefront API client, your route templates, and your handler groups. */
-export type HydrogenRoutesOptions = ShopifyRouteHandlerContext & {
+export interface HydrogenRoutesOptions extends ShopifyRouteHandlerContext {
   /**
    * Your app's route templates. Hydrogen redirects Liquid-style `?variant=` URLs on your product paths and on Shopify's default product paths.
    */
   routeTemplates?: ShopifyRouteTemplates;
   /** The handler groups for your app's custom endpoints. */
   handlers?: readonly ShopifyRouteHandlerGroup[];
-};
+}
 
 export type HydrogenRouteHandler<TExtraOptions extends object = object> = (
   options: HydrogenRoutesOptions & TExtraOptions,

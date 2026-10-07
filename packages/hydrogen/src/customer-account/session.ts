@@ -155,12 +155,12 @@ export type RequestOriginOptions = {
 };
 
 /** Options for logging the customer out. */
-export type LogoutOptions = RequestOriginOptions & {
+export interface LogoutOptions extends RequestOriginOptions {
   /**
    * The URL to send the customer to after logout. A relative URL resolves against the origin. Defaults to the origin, and a cross-origin URL falls back to the origin.
    */
   postLogoutRedirectUri?: string;
-};
+}
 
 /**
  * Signs customers in and out with Shopify customer accounts, and gives your server their Customer Account API access tokens. Use the session on the server only.
@@ -283,11 +283,7 @@ type CustomerSessionWithInternals = CustomerSession & {
 };
 
 /** Options for the customer account routes. */
-type CreateCustomerAccountServerHandlersBaseOptions<
-  TCustomerSession extends CustomerSession = CustomerSession,
-> = {
-  /** The customer session from createCustomerSession. */
-  customerSession: TCustomerSession;
+type CreateCustomerAccountServerHandlersBaseOptions = {
   /** The path to send the customer to after sign-in when the login request has no same-origin `return_to` search param. Defaults to `"/"`. */
   defaultPostLoginRedirectPathname?: string;
   /** The same-origin path to send the customer to when sign-in fails with CustomerAccountOAuthError. Defaults to `"/account?login=failed"`. A cross-origin value falls back to `"/account"`. The authorize route rethrows other errors. */
@@ -298,28 +294,38 @@ type CreateCustomerAccountServerHandlersBaseOptions<
   postLogoutRedirectUri?: string;
 };
 
+/** Options for the customer account routes without cart buyer identity sync. */
+interface CustomerAccountServerHandlersOptionsWithoutCart extends CreateCustomerAccountServerHandlersBaseOptions {
+  /** The customer session from createCustomerSession. */
+  customerSession: CustomerSession;
+  /**
+   * The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.
+   *
+   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the cart cookie. The sync needs `storefrontClient` in the handler context.
+   *
+   * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession.
+   */
+  cartServerHandlers?: undefined;
+}
+
+/** Options for the customer account routes that keep the cart's buyer identity in step with the signed-in customer. */
+interface CustomerAccountServerHandlersOptionsWithCart extends CreateCustomerAccountServerHandlersBaseOptions {
+  /** The customer session from createCustomerSession. */
+  customerSession: CustomerSessionWithInternals;
+  /**
+   * The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.
+   *
+   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the cart cookie. The sync needs `storefrontClient` in the handler context.
+   *
+   * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession.
+   */
+  cartServerHandlers: CartBuyerIdentitySyncSource;
+}
+
 /** Options for the customer account routes, with optional cart buyer identity sync. */
 export type CreateCustomerAccountServerHandlersOptions =
-  | (CreateCustomerAccountServerHandlersBaseOptions & {
-      /**
-       * The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.
-       *
-       * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the cart cookie. The sync needs `storefrontClient` in the handler context.
-       *
-       * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession.
-       */
-      cartServerHandlers?: undefined;
-    })
-  | (CreateCustomerAccountServerHandlersBaseOptions<CustomerSessionWithInternals> & {
-      /**
-       * The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.
-       *
-       * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the cart cookie. The sync needs `storefrontClient` in the handler context.
-       *
-       * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession.
-       */
-      cartServerHandlers: CartBuyerIdentitySyncSource;
-    });
+  | CustomerAccountServerHandlersOptionsWithoutCart
+  | CustomerAccountServerHandlersOptionsWithCart;
 
 type CustomerAccountTokens = NonNullable<CustomerAccountSessionData["tokens"]>;
 type PendingLogin = NonNullable<CustomerAccountSessionData["pendingLogin"]>;

@@ -228,10 +228,10 @@ export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
   CartGetHandlerResult<THandlers>
 >;
 
-/** Options for creating cart server handlers. */
-export type CreateCartServerHandlersOptions<
+/** The cart fragment option for cart server handlers. */
+interface CartServerHandlersBaseOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
-> = {
+> {
   /**
    * A cart fragment that adds fields to the cart in every cart query and mutation response.
    * Name the fragment `CartFragment` on the `Cart` type.
@@ -239,13 +239,30 @@ export type CreateCartServerHandlersOptions<
    * createCartServerHandlers throws for any other fragment name or type.
    */
   readonly fragment?: TCartFragment;
-} & (
-  | {
-      /** The customer session from createCustomerSession. Pass the session to attach the logged-in customer to new carts. */
-      readonly customerSession: CartCustomerSession;
-    }
-  | { readonly customerSession?: undefined }
-);
+}
+
+/** Options for cart server handlers that attach the logged-in customer to new carts. */
+interface CartServerHandlersOptionsWithCustomerSession<
+  TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
+> extends CartServerHandlersBaseOptions<TCartFragment> {
+  /** The customer session from createCustomerSession. Pass the session to attach the logged-in customer to new carts. */
+  readonly customerSession: CartCustomerSession;
+}
+
+/** Options for cart server handlers without a customer session. */
+interface CartServerHandlersOptionsWithoutCustomerSession<
+  TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
+> extends CartServerHandlersBaseOptions<TCartFragment> {
+  /** Leave the option out to create carts without a customer. */
+  readonly customerSession?: undefined;
+}
+
+/** Options for creating cart server handlers. */
+export type CreateCartServerHandlersOptions<
+  TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
+> =
+  | CartServerHandlersOptionsWithCustomerSession<TCartFragment>
+  | CartServerHandlersOptionsWithoutCustomerSession<TCartFragment>;
 
 type CartServerHandlersForOptions<TOptions> = TOptions extends {
   readonly customerSession: CartCustomerSession;
