@@ -45,6 +45,8 @@ App-owned cart mutations outside Standard Actions do not emit the events the sto
 
 The store supersedes keyed mutations for the same line, discount batch, note, or complete attribute list. Relative additions remain independent so every submitted quantity reaches the server; their projections are reconciled together without disabling controls.
 
+The cart store combines its lifecycle, timeout, and caller signals with `AbortSignal.any`, which Safari added in 17.4. The store already requires Safari 16 for `toSorted`, so Safari 16.0 through 17.3 is the gap. To keep add to cart working there, load an `AbortSignal.any` polyfill in the browser bundle before the store is created.
+
 ## Stable selectors
 
 Store selectors should select primitives or stable references from the store. Do not allocate arrays, objects, maps, sets, or derived view models inside a selector unless the framework binding also accepts an equality function.

@@ -196,6 +196,18 @@ describe("cache type tests", () => {
         });
     });
 
+    it("accepts custom runners with or without the background context", () => {
+      createFetchWithCache({
+        runWithCache: async (_options, run) => ({ data: (await run()).data, cacheStatus: "miss" }),
+      });
+      createFetchWithCache({
+        runWithCache: async (_options, run) => ({
+          data: (await run({ background: true })).data,
+          cacheStatus: "miss",
+        }),
+      });
+    });
+
     it("accepts an existing runWithCache instance", () => {
       const runWithCache = createRunWithCache({ cache: keyValueCache });
       const fetchWithExistingRunCache = createFetchWithCache({

@@ -370,33 +370,57 @@ describe("createFetchWithCache", () => {
       .mockResolvedValueOnce(Response.json({ version: 1 }))
       .mockResolvedValueOnce(Response.json({ version: 2 }));
     const fetchWithCache = createFetchWithCache({ cache, fetch, waitUntil });
-    const shortStrategy = Cache.long({ maxAge: 1, staleWhileRevalidate: 60 });
-
-    await fetchWithCache("https://example.com/products", undefined, {
+    const caller = new AbortController();
+    const background = new AbortController();
+    const init = { signal: caller.signal };
+    const options = {
       key: "stale-fetch",
-      strategy: shortStrategy,
-    });
+      strategy: Cache.long({ maxAge: 1, staleWhileRevalidate: 60 }),
+      backgroundSignal: vi.fn(() => background.signal),
+    };
+
+    await fetchWithCache("https://example.com/products", init, options);
     await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
 
     vi.advanceTimersByTime(2000);
 
-    const staleResponse = await fetchWithCache("https://example.com/products", undefined, {
-      key: "stale-fetch",
-      strategy: shortStrategy,
-    });
+    const staleResponse = await fetchWithCache("https://example.com/products", init, options);
 
     expect(staleResponse.headers.get("cache-status")).toBe("Hydrogen; hit");
     await expect(staleResponse.json()).resolves.toEqual({ version: 1 });
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch.mock.calls.map(([, fetchInit]) => fetchInit?.signal)).toEqual([
+      caller.signal,
+      background.signal,
+    ]);
+    expect(options.backgroundSignal).toHaveBeenCalledOnce();
 
     await waitUntil.mock.calls.at(-1)?.[0];
 
-    const freshResponse = await fetchWithCache("https://example.com/products", undefined, {
-      key: "stale-fetch",
-      strategy: shortStrategy,
-    });
+    const freshResponse = await fetchWithCache("https://example.com/products", init, options);
 
     await expect(freshResponse.json()).resolves.toEqual({ version: 2 });
+  });
+
+  it("treats a custom runner that calls run() without a context as foreground work", async () => {
+    const caller = new AbortController();
+    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      Response.json({ ok: true }),
+    );
+    const backgroundSignal = vi.fn(() => new AbortController().signal);
+    const fetchWithCache = createFetchWithCache({
+      runWithCache: async (_options, run) => ({ data: (await run()).data, cacheStatus: "miss" }),
+      fetch,
+    });
+
+    const response = await fetchWithCache(
+      "https://example.com/products",
+      { signal: caller.signal },
+      { key: "custom-runner", strategy, backgroundSignal },
+    );
+
+    await expect(response.json()).resolves.toEqual({ ok: true });
+    expect(fetch.mock.calls[0]?.[1]?.signal).toBe(caller.signal);
+    expect(backgroundSignal).not.toHaveBeenCalled();
   });
 
   it("calls normal fetch when cache options are omitted", async () => {
