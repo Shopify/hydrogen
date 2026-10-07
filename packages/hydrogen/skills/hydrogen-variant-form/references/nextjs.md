@@ -146,16 +146,22 @@ Wrap this tree in the app's `CartProvider` from `hydrogen-cart-ui`; `ProductProv
 
 ## Same-Product And Cross-Product Values
 
-Render same-product option values as GET links (`next/link`) so variant selection degrades without JavaScript (the skill's GET-links rule and accessibility guidance cover the `aria-current`, idempotent-`onSelect`, and no-JS rationale). The `href` is the option URL built from `value.selectedOptions`; spread `register("optionValue", ...)` to enhance the link so a hydrated click selects client-side via the provider's `onSelect`. Keep sold-out-but-existing values interactive and derive their visual treatment from `value.available`. Render non-existent combinations (`exists: false`) as a disabled `<button>` instead of a link.
+Render same-product option values as GET links (`next/link`) so variant selection degrades without JavaScript (the skill's GET-links rule and accessibility guidance cover the `aria-current` and no-JS rationale). The `href` is the option URL built from `value.selectedOptions`. Enhance the link through `onNavigate`, which `next/link` calls only for a plain client-side navigation after it has already ignored modified clicks: call the registered `onClick` so the provider's `onSelect` runs `router.replace`, then call the `onNavigate` event's `preventDefault()` so the link does not navigate a second time. Do not spread `register(...)` onto the link; its `onClick` would run before the modifier check and change the page on a Cmd-click too. Keep sold-out-but-existing values interactive and derive their visual treatment from `value.available`. Render non-existent combinations (`exists: false`) as a disabled `<button>` instead of a link.
+The `ref` puts focus back on this link after a cross-product navigation; `focusIfPending` is defined under the combined-listing section below.
 
 ```tsx
+const registered = register("optionValue", { optionName: option.name, value: value.name });
+
 <Link
   href={variantUrl(product, value.selectedOptions, value.handle, searchParams)}
-  replace
   scroll={false}
+  ref={(node) => focusIfPending(node, product.handle, option.name, value.name)}
   aria-current={value.selected ? "true" : undefined}
   data-available={value.available ? "true" : "false"}
-  {...register("optionValue", { optionName: option.name, value: value.name })}
+  onNavigate={(event) => {
+    registered.onClick();
+    event.preventDefault();
+  }}
 >
   {value.name}
   {!value.available ? <span className="sr-only"> (Sold out)</span> : null}
@@ -181,6 +187,29 @@ function variantUrl(
   const query = params.toString();
   return `/products/${handle}${query ? `?${query}` : ""}`;
 }
+```
+
+Next.js keys the `[handle]` segment by its value, so a cross-product navigation unmounts the product component and the focused link with it, and `scroll={false}` also turns off the router's own focus handling. Keep focus on the activated value by recording it in module state from the cross-product link's `onNavigate`, which does not fire for a Cmd-click, and focusing its same-product link through a callback `ref` as the new page mounts. Module state outlives the remount. A ref or `useState` inside the component does not.
+
+```tsx
+let pendingFocus: { handle: string; optionName: string; value: string } | null = null;
+
+function focusIfPending(node: HTMLAnchorElement | null, handle: string, optionName: string, value: string) {
+  if (!node || pendingFocus?.handle !== handle || pendingFocus.optionName !== optionName || pendingFocus.value !== value) return;
+  pendingFocus = null;
+  node.focus();
+}
+
+<Link
+  href={variantUrl(product, value.selectedOptions, value.handle, searchParams)}
+  scroll={false}
+  onNavigate={() => {
+    pendingFocus = { handle: value.handle, optionName: option.name, value: value.name };
+  }}
+  data-available={value.available ? "true" : "false"}
+>
+  {value.name}
+</Link>
 ```
 
 ## Add To Cart
