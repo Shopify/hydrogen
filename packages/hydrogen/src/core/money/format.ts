@@ -6,7 +6,10 @@ import type { FormatMoneyOptions, FormattedMoney, FormattedMoneyRange, MoneyV2 }
  * Used to extract "19.99" from a formatted string like "$19.99" (or
  * "-19.99" from "-$19.99") by filtering out currency symbols and other
  * non-numeric parts. The minus sign is kept so negative amounts such as
- * refunds and discounts don't render as positive.
+ * refunds and discounts don't render as positive. Literals stay in the set
+ * because RTL locales such as he-IL and ar-EG emit the bidi marks that bind
+ * the minus sign to the digits as literals. Only the literal next to the
+ * currency part, the spacer between number and symbol, is dropped.
  */
 const NUMERIC_PART_TYPES = new Set([
   "decimal",
@@ -108,8 +111,12 @@ function appendUnsupportedCurrencyCode(formatted: string, currencyCode: string):
 }
 
 function extractNumericAmount(parts: Intl.NumberFormatPart[]): string {
+  const currency = parts.findIndex((part) => part.type === "currency");
+  const isCurrencySpacer = (part: Intl.NumberFormatPart, index: number) =>
+    currency !== -1 && part.type === "literal" && Math.abs(index - currency) === 1;
+
   return parts
-    .filter((part) => NUMERIC_PART_TYPES.has(part.type))
+    .filter((part, index) => NUMERIC_PART_TYPES.has(part.type) && !isCurrencySpacer(part, index))
     .map((part) => part.value)
     .join("");
 }
