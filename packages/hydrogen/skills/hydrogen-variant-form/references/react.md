@@ -62,7 +62,7 @@ Non-existent combinations (`exists: false`) render as a disabled `<button>` inst
 </button>
 ```
 
-Cross-product option values are framework links that reuse the same URL helper:
+Cross-product option values are framework links that reuse the same URL helper. Rendering them as `<Link>` like the same-product values is what keeps focus across the switch. React Router keeps the route component mounted when only `:handle` changes, so React reconciles the activated link in place. A cross-product `<Link>` next to a same-product `<button>` would change element type on the activated control after the navigation, React would remount it, and focus would drop to `<body>`.
 
 ```tsx
 <Link

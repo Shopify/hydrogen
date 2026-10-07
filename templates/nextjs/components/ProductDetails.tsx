@@ -20,6 +20,31 @@ import { ProductProvider, useProductForm } from "@/lib/product";
 import type { ProductData } from "@/lib/product-query";
 import { canonicalUrl, jsonLdScript } from "@/lib/site";
 
+// Next.js keys the `[handle]` segment by its value, so a combined-listing switch
+// unmounts this whole component and the focused link with it. Module state
+// outlives that remount where a ref or state inside the page would not. The
+// cross-product link records the value it activated, and that value, now a
+// same-product link on the new product page, takes focus as it mounts.
+let pendingFocus: { handle: string; optionName: string; value: string } | null = null;
+
+function focusIfPending(
+  node: HTMLAnchorElement | null,
+  handle: string,
+  optionName: string,
+  value: string,
+) {
+  if (
+    !node ||
+    pendingFocus?.handle !== handle ||
+    pendingFocus.optionName !== optionName ||
+    pendingFocus.value !== value
+  ) {
+    return;
+  }
+  pendingFocus = null;
+  node.focus();
+}
+
 /**
  * Interactive product details (`hydrogen-variant-form` /
  * `references/nextjs.md`). Wraps the server-fetched product in `ProductProvider`;
@@ -173,6 +198,8 @@ function ProductPage({ product }: { product: ProductData }) {
                         // Cross-product value — navigates to the other product
                         // (hydrogen-variant-form combined-listings rule). Uses the
                         // live `useSearchParams` base so unrelated params survive.
+                        // `onNavigate` fires only for a plain client-side click, so
+                        // a Cmd-click that opens a new tab records nothing.
                         <Link
                           key={value.name}
                           href={variantUrl(
@@ -182,6 +209,13 @@ function ProductPage({ product }: { product: ProductData }) {
                             searchParams,
                           )}
                           scroll={false}
+                          onNavigate={() => {
+                            pendingFocus = {
+                              handle: value.handle,
+                              optionName: option.name,
+                              value: value.name,
+                            };
+                          }}
                           data-available={value.available ? "true" : "false"}
                           className="option-pill no-underline"
                         >
@@ -207,6 +241,9 @@ function ProductPage({ product }: { product: ProductData }) {
                             searchParams,
                           )}
                           scroll={false}
+                          ref={(node) =>
+                            focusIfPending(node, product.handle, option.name, value.name)
+                          }
                           aria-current={value.selected ? "true" : undefined}
                           data-available={value.available ? "true" : "false"}
                           className="option-pill no-underline"
