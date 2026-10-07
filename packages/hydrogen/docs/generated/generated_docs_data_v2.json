@@ -1350,7 +1350,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@19161",
+          "name": "__@toStringTag@19580",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         },
@@ -1432,7 +1432,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@19161",
+          "name": "__@toStringTag@19580",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         },
@@ -6964,7 +6964,7 @@
         {
           "filePath": "src/core/cart/buyer-identity-sync.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@21725",
+          "name": "__@cartBuyerIdentitySync@22144",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to createCustomerAccountServerHandlers through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         }
@@ -7374,7 +7374,7 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@23241",
+          "name": "__@cartServerHandlersCartQuery@23660",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -7424,14 +7424,14 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@21725",
+          "name": "__@cartBuyerIdentitySync@22144",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to createCustomerAccountServerHandlers through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         },
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@23241",
+          "name": "__@cartServerHandlersCartQuery@23660",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -10087,7 +10087,7 @@
         {
           "filePath": "src/core/predictive-search/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@predictiveSearchServerHandlersQuery@26167",
+          "name": "__@predictiveSearchServerHandlersQuery@26586",
           "value": "PredictiveSearchQueryForOptions<TOptions>",
           "description": "Query that the handlers run, with any custom fragments."
         },
@@ -11024,10 +11024,10 @@
       "returns": {
         "filePath": "src/react/cart.tsx",
         "description": "The cart provider, the cart state hooks, and the cart actions and form hooks.",
-        "name": "TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n>",
-        "value": "TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n>"
+        "name": "TypedCartComponents<CartDataFromHandlers<THandlers>>",
+        "value": "TypedCartComponents<CartDataFromHandlers<THandlers>>"
       },
-      "value": "export function createCartComponents<THandlers>(): TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n> {\n  type TData = CartDataFromHandlers<THandlers>;\n\n  function TypedCartProvider({ initialData, children }: TypedCartProviderProps<TData>) {\n    return (\n      <CartProvider initialData={initialData as CartInitialData | undefined}>\n        {children}\n      </CartProvider>\n    );\n  }\n\n  function useTypedCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    return useCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useTypedOptionalCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S | undefined {\n    return useOptionalCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useSuspenseCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    const readyPromise = useCart((state) => state.readyPromise);\n    if (readyPromise) throw readyPromise;\n    return useCart(selector, isEqual);\n  }\n\n  return {\n    CartProvider: TypedCartProvider,\n    useCart: useTypedCart,\n    useSuspenseCart,\n    useOptionalCart: useTypedOptionalCart,\n    useCartActions,\n    useCartForm,\n  } as const;\n}",
+      "value": "export function createCartComponents<THandlers>(): TypedCartComponents<CartDataFromHandlers<THandlers>> {\n  type TData = CartDataFromHandlers<THandlers>;\n\n  function TypedCartProvider({ initialData, children }: TypedCartProviderProps<TData>) {\n    return (\n      <CartProvider initialData={initialData as CartInitialData | undefined}>\n        {children}\n      </CartProvider>\n    );\n  }\n\n  function useTypedCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    return useCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useTypedOptionalCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S | undefined {\n    return useOptionalCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useSuspenseCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    const readyPromise = useCart((state) => state.readyPromise);\n    if (readyPromise) throw readyPromise;\n    return useCart(selector, isEqual);\n  }\n\n  return {\n    CartProvider: TypedCartProvider,\n    useCart: useTypedCart,\n    useSuspenseCart,\n    useOptionalCart: useTypedOptionalCart,\n    useCartActions,\n    useCartForm,\n  } as const;\n}",
       "examples": [
         {
           "title": "Example",
