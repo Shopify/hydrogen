@@ -7,7 +7,7 @@ import {
   type SelectedOption,
 } from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 
 import { ProductCard, PRODUCT_CARD_FRAGMENT } from "~/components/ProductCard";
@@ -555,11 +555,9 @@ function VariantOptions({ product }: { product: ProductData }) {
 }
 
 function QuantitySelector({
-  formId,
   quantity,
   setQuantity,
 }: {
-  formId: string;
   quantity: number;
   setQuantity: (quantity: number) => void;
 }) {
@@ -587,7 +585,6 @@ function QuantitySelector({
         <input
           type="number"
           id="quantity"
-          form={formId}
           {...register("quantity", { value: quantity })}
           min={1}
           max={99}
@@ -613,14 +610,14 @@ function QuantitySelector({
 }
 
 function AddToCart({
-  formId,
   product,
   quantity,
+  setQuantity,
   selectedVariant,
 }: {
-  formId: string;
   product: ProductData;
   quantity: number;
+  setQuantity: (quantity: number) => void;
   selectedVariant: ProductVariant | null;
 }) {
   const { options, register, formProps, errors, pending } = useProductForm();
@@ -629,7 +626,10 @@ function AddToCart({
 
   return (
     <>
-      <form id={formId} {...formProps({ afterSubmit: openCartDrawer })}>
+      <form {...formProps({ afterSubmit: openCartDrawer })}>
+        <div className="mt-6 mb-10 flex items-center gap-4">
+          <QuantitySelector quantity={quantity} setQuantity={setQuantity} />
+        </div>
         <input type="hidden" {...register("merchandiseId", {})} />
         <button
           {...register("addToCart", {})}
@@ -681,7 +681,6 @@ function ProductInfo({
   selectedVariant: ProductVariant | null;
 }) {
   const [quantity, setQuantity] = useState(1);
-  const addToCartFormId = useId();
 
   return (
     <div className="flex flex-col gap-6 md:sticky md:top-8 md:self-start">
@@ -707,17 +706,10 @@ function ProductInfo({
       <div data-product-form>
         <span className="sr-only" aria-live="polite" data-add-to-cart-status />
         <VariantOptions product={product} />
-        <div className="mt-6 mb-10 flex items-center gap-4">
-          <QuantitySelector
-            formId={addToCartFormId}
-            quantity={quantity}
-            setQuantity={setQuantity}
-          />
-        </div>
         <AddToCart
-          formId={addToCartFormId}
           product={product}
           quantity={quantity}
+          setQuantity={setQuantity}
           selectedVariant={selectedVariant}
         />
       </div>
