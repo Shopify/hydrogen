@@ -17,10 +17,12 @@ import { AnnouncementBar } from "~/components/AnnouncementBar";
 import { CartDrawer } from "~/components/CartDrawer";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
+import { SearchDrawer } from "~/components/SearchDrawer";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { createRequestCustomerAccount, customerAccountContext } from "~/lib/customer-account";
 import { envContext } from "~/lib/env";
+import { predictiveSearchHandlers } from "~/lib/predictive-search-handlers";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
@@ -60,7 +62,9 @@ export const middleware: Route.MiddlewareFunction[] = [
       sessionManager,
       storefrontClient,
       routeTemplates,
-      handlers: customerAccount ? [cartHandlers, customerAccount.handlers] : [cartHandlers],
+      handlers: customerAccount
+        ? [cartHandlers, predictiveSearchHandlers, customerAccount.handlers]
+        : [cartHandlers, predictiveSearchHandlers],
     });
 
     if (shopifyRoute) return shopifyRoute;
@@ -152,6 +156,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <Outlet />
       <Footer shopInfo={loaderData.shopInfo} />
       <CartDrawer />
+      <SearchDrawer />
     </CartProvider>
   );
 }

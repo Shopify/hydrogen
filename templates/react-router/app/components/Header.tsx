@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 
 import { useCart } from "~/lib/cart";
-import { CART_DRAWER_ID, openCartDrawer } from "~/lib/cart-drawer";
+import { CART_DRAWER_ID, SEARCH_DRAWER_ID, openDialogFromLinkClick } from "~/lib/cart-drawer";
 import type { StorefrontShop } from "~/lib/storefront-shop";
 
 import { MobileNav, MobileNavTrigger } from "./MobileNav";
@@ -77,6 +77,10 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
             to="/search"
             className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center gap-2 rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
             aria-label="Search"
+            aria-controls={SEARCH_DRAWER_ID}
+            aria-haspopup="dialog"
+            data-testid="search-trigger"
+            onClick={(event) => openDialogFromLinkClick(event, SEARCH_DRAWER_ID)}
           >
             <img src="/icons/icon-search.svg" alt="" className="size-5" aria-hidden="true" />
           </Link>
@@ -94,14 +98,7 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
             aria-controls={CART_DRAWER_ID}
             aria-haspopup="dialog"
             data-testid="cart-trigger"
-            onClick={(event) => {
-              const isModifiedClick =
-                event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
-              if (event.button !== 0 || isModifiedClick) return;
-              if (!(document.getElementById(CART_DRAWER_ID) instanceof HTMLDialogElement)) return;
-              event.preventDefault();
-              openCartDrawer();
-            }}
+            onClick={(event) => openDialogFromLinkClick(event, CART_DRAWER_ID)}
           >
             <span
               className="relative inline-flex size-5 shrink-0 items-center justify-center"
