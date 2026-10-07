@@ -8,8 +8,9 @@ import { Breadcrumbs, type Crumb } from "@/components/Breadcrumbs";
 import { ProductCard, type ProductCardData } from "@/components/ProductCard";
 import { ProductDetails } from "@/components/ProductDetails";
 import { content } from "@/lib/content";
+import { galleryImages } from "@/lib/product-gallery";
 import { PRODUCT_QUERY, RELATED_PRODUCTS_QUERY, type ProductData } from "@/lib/product-query";
-import { canonicalUrl } from "@/lib/site";
+import { canonicalUrl, jsonLdScript } from "@/lib/site";
 import { staticStorefrontClient } from "@/lib/storefront-static";
 import { toURLSearchParams } from "@/lib/url-params";
 
@@ -66,6 +67,38 @@ async function fetchProduct(
   return { product: data?.product ?? null };
 }
 
+/**
+ * JSON-LD `Product` for the server-resolved variant. Built on the server because
+ * `canonicalUrl` reads `SITE_ORIGIN`, which the browser bundle does not have, so
+ * a client render hydrates with a different `offers.url` than the server sent.
+ */
+function productJsonLd(product: ProductData) {
+  const variant = product.selectedOrFirstAvailableVariant;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: product.description ?? undefined,
+    image: galleryImages(product, variant?.image ?? null).map((image) => image.url),
+    offers: variant
+      ? {
+          "@type": "Offer",
+          price: variant.price.amount,
+          priceCurrency: variant.price.currencyCode,
+          availability: variant.availableForSale
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+          url: canonicalUrl(`/products/${product.handle}`),
+        }
+      : {
+          "@type": "AggregateOffer",
+          priceCurrency: product.priceRange.minVariantPrice.currencyCode,
+          lowPrice: product.priceRange.minVariantPrice.amount,
+          highPrice: product.priceRange.maxVariantPrice.amount,
+        },
+  };
+}
+
 export default async function ProductPage({ params, searchParams }: Props) {
   const { handle } = await params;
   const urlSearch = toURLSearchParams(await searchParams);
@@ -91,6 +124,10 @@ export default async function ProductPage({ params, searchParams }: Props) {
       <div className="max-w-page px-margin mx-auto w-full pt-8">
         <Breadcrumbs items={breadcrumbItems} />
       </div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(productJsonLd(product)) }}
+      />
       <ProductDetails product={product} />
       {/* Best-effort related products (F14): a separate async server child in a
           <Suspense> boundary that degrades silently — never blocks the PDP. */}

@@ -17,8 +17,8 @@ import { content } from "@/lib/content";
 import { shopifyImageUrl, srcSetFor } from "@/lib/image";
 import { formatPrice } from "@/lib/money";
 import { ProductProvider, useProductForm } from "@/lib/product";
+import { galleryImages } from "@/lib/product-gallery";
 import type { ProductData } from "@/lib/product-query";
-import { canonicalUrl, jsonLdScript } from "@/lib/site";
 
 // Next.js keys the `[handle]` segment by its value, so a combined-listing switch
 // unmounts this whole component and the focused link with it. Module state
@@ -90,61 +90,14 @@ function ProductPage({ product }: { product: ProductData }) {
   const compareAt = selectedVariant?.compareAtPrice ?? null;
   const onSale = compareAt && Number(compareAt.amount) > Number(price.amount);
 
-  const allGalleryImages = product.media.nodes
-    .map((node) => (node.__typename === "MediaImage" && node.image ? node.image : null))
-    .filter((image): image is NonNullable<typeof image> => image !== null);
-
-  // Reorder so the selected variant's image is first (feedback Round 3 #4 /
-  // Round 4 gallery). If the variant image isn't in the media set, prepend it.
-  const variantImage = selectedVariant?.image ?? null;
-  const galleryImages = (() => {
-    if (!variantImage) return allGalleryImages;
-    const matchIndex = allGalleryImages.findIndex((image) => image.url === variantImage.url);
-    if (matchIndex <= 0) {
-      return matchIndex === 0 ? allGalleryImages : [variantImage, ...allGalleryImages];
-    }
-    return [
-      allGalleryImages[matchIndex],
-      ...allGalleryImages.slice(0, matchIndex),
-      ...allGalleryImages.slice(matchIndex + 1),
-    ];
-  })();
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.title,
-    description: product.description ?? undefined,
-    image: galleryImages.map((image) => image.url),
-    offers: selectedVariant
-      ? {
-          "@type": "Offer",
-          price: selectedVariant.price.amount,
-          priceCurrency: selectedVariant.price.currencyCode,
-          availability: selectedVariant.availableForSale
-            ? "https://schema.org/InStock"
-            : "https://schema.org/OutOfStock",
-          url: canonicalUrl(`/products/${product.handle}`),
-        }
-      : {
-          "@type": "AggregateOffer",
-          priceCurrency: product.priceRange.minVariantPrice.currencyCode,
-          lowPrice: product.priceRange.minVariantPrice.amount,
-          highPrice: product.priceRange.maxVariantPrice.amount,
-        },
-  };
+  const images = galleryImages(product, selectedVariant?.image ?? null);
 
   return (
     <div className="max-w-page px-margin mx-auto w-full py-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
-      />
-
       <div className="product-grid mb-16 grid grid-cols-1 gap-6 md:gap-12">
         {/* Gallery */}
         <div className="grid grid-cols-2 gap-2">
-          {galleryImages.map((image, index) => (
+          {images.map((image, index) => (
             <div key={image.url} className="bg-surface-secondary aspect-square overflow-hidden">
               <img
                 src={shopifyImageUrl(image.url, { width: index === 0 ? 800 : 400 })}
