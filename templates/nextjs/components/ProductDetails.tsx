@@ -55,18 +55,14 @@ function focusIfPending(
  */
 export function ProductDetails({ product }: { product: ProductData }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   return (
     <ProductProvider
       product={product}
       onSelect={(result) => {
         const targetHandle = result.selectedVariant?.product?.handle ?? product.handle;
-        const next = variantUrl(
-          product,
-          result.selectedOptions,
-          targetHandle,
-          new URLSearchParams(),
-        );
+        const next = variantUrl(product, result.selectedOptions, targetHandle, searchParams);
         router.replace(next, { scroll: false });
       }}
     >
