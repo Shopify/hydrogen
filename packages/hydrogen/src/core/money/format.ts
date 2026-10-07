@@ -133,16 +133,17 @@ function buildRangeOptions(
   currencyCode: string,
   supported: boolean,
   options: FormatMoneyOptions,
-  amounts: number[],
+  min: number,
+  max: number,
 ): Intl.NumberFormatOptions {
-  const wholeRange = amounts.every(hasTrailingZeros);
+  const wholeRange = hasTrailingZeros(min) && hasTrailingZeros(max);
   const rangeOptions = {
     ...options,
     withoutTrailingZeros:
-      options.withoutTrailingZeros ?? (wholeRange && !hasExplicitFractionDigits(options)),
+      wholeRange && (options.withoutTrailingZeros ?? !hasExplicitFractionDigits(options)),
   };
 
-  return buildFormatOptions(currencyCode, supported, rangeOptions, amounts[0] ?? 0);
+  return buildFormatOptions(currencyCode, supported, rangeOptions, min);
 }
 
 function sortMoneyRangeEntries(entries: MoneyRangeEntry[]): MoneyRangeEntry[] {
@@ -352,12 +353,7 @@ class FormattedMoneyRangeValue implements FormattedMoneyRange {
     const supported = isWellFormedCurrencyCode(first.currencyCode);
     const formatter = getFormatter(
       options.locale,
-      buildRangeOptions(
-        first.currencyCode,
-        supported,
-        options,
-        entries.map((entry) => entry.amount),
-      ),
+      buildRangeOptions(first.currencyCode, supported, options, first.amount, last.amount),
     );
 
     const formatted = formatRange(formatter, first.amount, last.amount);
