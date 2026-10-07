@@ -34,8 +34,8 @@ type LogFn =
   (message: string, context?: LogContext) => void;
 
 /**
- * Receives Hydrogen log entries. Pass a custom logger to configureLogging, or use the built-in
- * console logger.
+ * A logger that receives Hydrogen's log entries. Pass your logger to configureLogging. Without
+ * one, Hydrogen writes to the console.
  *
  * Messages arrive without a prefix, and the context scope names the subsystem. The built-in
  * console logger formats entries as `[hydrogen:<level>:<scope>] <message>`. The console logger

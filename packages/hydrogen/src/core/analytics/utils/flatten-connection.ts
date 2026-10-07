@@ -11,12 +11,9 @@ type Connection<T> = {
 };
 
 /**
- * Returns the items of a Storefront API connection as a flat array.
+ * Returns the items of a Storefront API connection, such as cart lines, as a flat array.
  *
- * The Storefront API wraps list fields, such as cart lines, in a connection. The function
- * accepts the `{ nodes: [...] }` shape and the `{ edges: [{ node: ... }] }` shape.
- *
- * For the nodes shape, the function returns the nodes array itself. Copy the result before you sort or change the array. The function returns an empty array for `undefined`, `null`, or a connection with neither field. A `null` input also logs a warning. Convert a `null` field to `undefined` to keep the warning out of your logs.
+ * The function accepts the `nodes` shape and the `edges` shape. For the `nodes` shape, the function returns the original array. Copy the result before you sort or change it. The function returns an empty array for `undefined`, `null`, or a connection with neither field. A `null` input also logs a warning.
  *
  * @param connection The Storefront API connection field to flatten.
  * @returns The connection's items as a flat array, or an empty array when there are none.

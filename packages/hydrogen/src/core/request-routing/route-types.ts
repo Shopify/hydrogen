@@ -5,9 +5,9 @@ import type { ShopifyRouteTemplates } from "../standard-routes/types";
 /** A value or a promise for that value. */
 type Awaitable<T> = T | Promise<T>;
 
-/** The session storage that route handlers read and write, backed by your app's session implementation. */
+/** The session storage that route handlers and the customer session read and write. Implement the methods with your app's session. */
 export type ShopifyRouteSessionManager = {
-  /** Returns the storefront origin that customer account sign-in uses for its OAuth redirect URL. */
+  /** Returns your storefront's HTTPS origin. Customer account sign-in builds its OAuth redirect URL from the origin. */
   getSessionOrigin(): Awaitable<string>;
   /** Returns the session value stored under a key. */
   getSessionItem(key: string): Awaitable<unknown>;
@@ -23,7 +23,7 @@ export type ShopifyRouteSessionManager = {
 export type ShopifyRouteHandlerContext = {
   /** The incoming request that matched the handler's pathname and method. */
   request: Request;
-  /** The session storage for reading and writing customer session data. */
+  /** Your app's session storage for the current request. */
   sessionManager: ShopifyRouteSessionManager;
   /** The Storefront API client for the current request. */
   storefrontClient: StorefrontClient;
@@ -110,13 +110,13 @@ export type ShopifyRouteHandler<
  */
 export type ShopifyRouteHandlerGroup = Record<string, ShopifyRouteHandler>;
 
-/** The request, its context, and the route templates and handler groups to match against. */
+/** The request, its context and session, the Storefront API client, your route templates, and your handler groups. */
 export type HydrogenRoutesOptions = ShopifyRouteHandlerContext & {
   /**
-   * Your app's custom route templates. The `?variant=` redirect matches product URLs against your product templates and Shopify's default product paths.
+   * Your app's route templates. Hydrogen redirects Liquid-style `?variant=` URLs on your product paths and on Shopify's default product paths.
    */
   routeTemplates?: ShopifyRouteTemplates;
-  /** The route handler groups for your app's custom endpoints. */
+  /** The handler groups for your app's custom endpoints. */
   handlers?: readonly ShopifyRouteHandlerGroup[];
 };
 

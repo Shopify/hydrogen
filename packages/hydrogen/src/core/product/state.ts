@@ -1,17 +1,17 @@
 // TODO: derive these types from the generated SFAPI d.ts (storefront-api-types.d.ts / gql.tada)
 // instead of maintaining them by hand.
 
-/** Monetary amount in a specific currency, mirroring the Storefront API `MoneyV2` type. */
+/** An amount and its currency, matching the Storefront API `MoneyV2` type. */
 export interface Money {
   amount: string;
   currencyCode: string;
 }
 
-/** Minimum and maximum variant prices for a product, mirroring the Storefront API product price range. */
+/** Lowest and highest variant prices for a product, matching the Storefront API product price range. */
 export interface ProductPriceRange {
   /** Lowest variant price. */
   minVariantPrice: Money;
-  /** Highest variant price. Optional for queries that select only the lowest price. */
+  /** Highest variant price. Leave the field out of queries that need only the lowest price. */
   maxVariantPrice?: Money;
 }
 
@@ -24,36 +24,36 @@ export interface SelectedOption {
 }
 
 /**
- * Minimum variant shape that the product form system requires.
+ * Variant fields that the product form needs from your Storefront API query.
  *
- * You typically pass a wider type from your Storefront API query.
+ * Pass your full query type, which can include more fields.
  */
 export interface ProductVariantInput {
-  /** Variant ID. The merchandise ID field submits it, and the store matches cart lines by it. */
+  /** Variant ID that the product form adds to the cart. */
   id: string;
-  /** Variant title that the store includes in the add-to-cart event detail. */
+  /** Variant title. The cart shows the title on an added line before the server responds. */
   title: string;
-  /** Whether the customer can add the variant to the cart. Option value availability falls back to this field when the product has no encoded availability data. */
+  /** Whether the customer can buy the variant. Option value availability falls back to this field when your query doesn't select the encoded variant availability. */
   availableForSale: boolean;
-  /** Option names and values that define the variant. The store matches selections to loaded variants by these options. */
+  /** Option names and values that make up the variant. */
   selectedOptions: SelectedOption[];
-  /** Variant price that the store includes in the add-to-cart event detail. */
+  /** Variant price. The cart shows the price on an added line before the server responds. */
   price: Money;
-  /** Compare-at price from your query, or `null` when the variant has none. */
+  /** Compare-at price, or `null` when the variant has none. */
   compareAtPrice?: Money | null;
-  /** Variant image that the store includes in the add-to-cart event detail. */
+  /** Variant image. The cart shows the image on an added line before the server responds. */
   image?: unknown;
-  /** Parent product handle and title, which the store includes in the add-to-cart event detail. A handle that differs from the current product marks a variant from another combined-listing product. */
+  /** Handle and title of the variant's product. A handle that differs from the current product marks a variant of another product in a combined listing. */
   product?: { handle: string; title?: string | null } | null;
-  /** Variant SKU from your query. */
+  /** Variant SKU. */
   sku?: string | null;
 }
 
-/** A product option, such as "Size" or "Color", and its available values. */
+/** A product option, such as "Size" or "Color", and its values. */
 export interface ProductOptionInput<TVariant extends ProductVariantInput = ProductVariantInput> {
   /** Option name, such as "Size" or "Color". */
   name: string;
-  /** Values for the option, in the order that the encoded variant fields index them. */
+  /** Option values in the order that the Storefront API returns them. Keep that order, because the encoded variant fields refer to values by position. */
   optionValues: Array<ProductOptionValueInput<TVariant>>;
 }
 
@@ -63,54 +63,54 @@ export interface ProductOptionValueInput<
 > {
   /** Option value name, such as "Small" or "Red". */
   name: string;
-  /** The variant that combines this value with the lowest-position values of every other option. Include this field in your query. The store reads the variant to resolve option values and to detect combined-listing products. */
+  /** Variant that combines this value with the lowest-position values of every other option. Include this field in your query. The store uses the variant to resolve option values and to find values that belong to other products in a combined listing. */
   firstSelectableVariant?: TVariant | null;
-  /** Swatch data from your query. The store copies the data unchanged into the option value state. */
+  /** Swatch data from your query. The option value state returns the swatch unchanged. */
   swatch?: unknown;
 }
 
 /**
- * Minimum product shape that the product form store requires.
+ * Product fields that the product form store needs from your Storefront API query.
  *
- * Fields mirror the Storefront API product object. You typically pass a wider query result.
+ * The fields match the Storefront API product object. Pass your full query type, which can include more fields.
  */
 export interface ProductInput<TVariant extends ProductVariantInput = ProductVariantInput> {
-  /** Product ID. The product provider rehydrates the store when this ID or the selected variant's ID changes. */
+  /** Product ID. The product provider reloads the product into the store when this ID or the selected variant's ID changes. */
   id: string;
-  /** Product title from your query. */
+  /** Product title. */
   title: string;
-  /** Product handle. Option values link to it, and variants with a different handle belong to other combined-listing products. */
+  /** Product handle for option value links. Variants with a different handle belong to other products in a combined listing. */
   handle: string;
-  /** Product vendor from your query. */
+  /** Product vendor. */
   vendor?: string | null;
   /** Lowest and highest variant prices. Show the range until the selection resolves to a variant. */
   priceRange?: ProductPriceRange;
   /** When `true`, the customer can't add the product to the cart without a selling plan. */
   requiresSellingPlan?: boolean | null;
-  /** Encoded representation of which option value combinations map to real variants. Treat it as opaque. */
+  /** Encoded list of the option value combinations that exist as variants. Pass the field unchanged from your query. */
   encodedVariantExistence?: string | null;
-  /** Encoded representation of which existing variants are currently available for sale. Treat it as opaque. */
+  /** Encoded list of the variants that are available for sale. Pass the field unchanged from your query. */
   encodedVariantAvailability?: string | null;
-  /** Product options and their values. The store lists option state in this order. */
+  /** Product options and their values. The option state keeps this order. */
   options: ProductOptionInput<TVariant>[];
-  /** The variant that matches the query's `selectedOptions` argument, or else the first available variant, or else the first variant, which can be unavailable. The store takes its initial selection from this variant. */
+  /** The variant that matches the query's `selectedOptions` argument, or else the first available variant, or else the first variant, which can be unavailable. The store starts with this variant selected. */
   selectedOrFirstAvailableVariant: TVariant | null;
-  /** Variants adjacent to the selected variant. The store resolves option values from these variants without a full variant list. */
+  /** Variants that differ from the selected variant by one option value. The store resolves option values from these variants, and you don't need to query every variant. */
   adjacentVariants: TVariant[];
 }
 
-/** Extracts the concrete variant type from a product input subtype. */
+/** Variant type from your product query type. */
 export type ProductVariantFrom<TProduct extends ProductInput> =
   TProduct extends ProductInput<infer TVariant> ? TVariant : ProductVariantInput;
 
-/** Extracts the concrete option value type from a product input subtype. */
+/** Option value type from your product query type. */
 export type ProductOptionValueFrom<TProduct extends ProductInput> =
   TProduct["options"][number]["optionValues"][number];
 
 /**
- * Computed state for a single option value, such as "Red" under "Color".
+ * State of one option value, such as "Red" under "Color", for the current selection.
  *
- * The store recomputes the state each time the selection changes.
+ * Render the value's control and link from this state.
  */
 export interface VariantOptionValueState<
   TVariant extends ProductVariantInput = ProductVariantInput,
@@ -118,24 +118,24 @@ export interface VariantOptionValueState<
 > {
   /** Option value name, such as "Red". */
   name: string;
-  /** Swatch data copied from the option value in your query. */
+  /** Swatch data from the option value in your query. */
   swatch?: TOptionValue["swatch"];
-  /** Whether this value is the current selection for its option. */
+  /** Whether the customer has selected the value. */
   selected: boolean;
-  /** Whether a variant exists for the target selection. Defaults to `true` when your query doesn't select the encoded variant existence field. */
+  /** Whether a variant exists for the selection that the value targets. Defaults to `true` when your query doesn't select the encoded variant existence field. */
   exists: boolean;
-  /** Whether the target selection is available for sale. The store reads the encoded variant availability when your query includes it. Otherwise the store reads the loaded variant's availability, or returns `false` when the query result doesn't include the variant. */
+  /** Whether the variant for the targeted selection is available for sale. Without the encoded variant availability in your query, the value comes from the loaded variant, or reads `false` when your query didn't load that variant. */
   available: boolean;
-  /** The loaded variant for the target selection, or `null` when the selection is partial or the query result doesn't include that variant. */
+  /** Variant for the targeted selection, or `null` when the selection is partial or your query didn't load that variant. */
   variant: TVariant | null;
-  /** The selection that this value targets. Build option links from this selection. Selecting the value can produce a different selection. */
+  /** Selection that the value targets. Build the option link from this selection. Selecting the value can produce a different selection. */
   selectedOptions: SelectedOption[];
-  /** Product handle for the option link. A value from another combined-listing product uses that product's handle. Selected values use the current product's handle. */
+  /** Product handle for the option link. A value from another product in a combined listing uses that product's handle. Selected values use the current product's handle. */
   handle: string;
 }
 
 /**
- * Computed state for a product option, such as "Color", and its values.
+ * State of one product option, such as "Color", and its values.
  */
 export interface VariantOptionState<
   TVariant extends ProductVariantInput = ProductVariantInput,
@@ -143,6 +143,6 @@ export interface VariantOptionState<
 > {
   /** Option name, such as "Color". */
   name: string;
-  /** Computed state for each of the option's values, in the product's value order. */
+  /** State of each value, in the product's value order. */
   values: VariantOptionValueState<TVariant, TOptionValue>[];
 }

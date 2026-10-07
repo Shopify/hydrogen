@@ -8,9 +8,9 @@ import type { CartData } from "./state";
 type MergeCartData<TCart> = Omit<CartData, keyof TCart> & TCart;
 
 /**
- * Infers the cart data type from a custom Storefront API cart query.
+ * Gets the cart data type from a custom Storefront API cart query.
  *
- * The type takes the cart field from the query's result type and merges it with the base cart data type. getCart and the cart server handlers use it to type a cart that matches your query's fields.
+ * The type adds the cart fields from your query to the base cart data type.
  *
  * @publicDocs
  */
@@ -22,16 +22,16 @@ export type CartDataFromQuery<TQuery extends AnyStorefrontQueryString> =
     : CartData;
 
 /**
- * The result that getCart returns.
+ * The cart that getCart returns, with any GraphQL errors and the Storefront API response headers.
  *
  * @publicDocs
  */
 export type CartResult<TCart extends CartData = CartData> = {
   /** The cart, or `null` when the cart ID is missing, the cart doesn't exist, or the query fails. */
   cart: TCart | null;
-  /** GraphQL errors from the Storefront API when the cart query fails. */
+  /** GraphQL errors from the cart query. */
   errors?: Array<{ message: string }>;
-  /** Response headers from the Storefront API, such as cache directives. The headers are empty when the function skips the request. */
+  /** The Storefront API response headers, such as cache directives. The headers are empty when getCart skips the request. */
   headers: Headers;
 };
 
@@ -41,7 +41,7 @@ type CartQueryResult = {
   headers: Headers;
 };
 
-/** A Storefront API client. The cart functions use only its GraphQL method. */
+/** The Storefront API client that runs the cart query. */
 type StorefrontCartClient = Pick<StorefrontClient, "graphql">;
 
 type CartQueryDocument = AnyStorefrontQueryString;
@@ -51,15 +51,15 @@ type CartQueryGraphql = (
   options: { variables: { id: string } },
 ) => Promise<CartQueryResult>;
 
-/** A request, or a request context with a cookie header and URL, to read the cart ID from. */
+/** A request, or a request context with a cookie header and a URL. */
 type CartIdSource = Request | Pick<ShopifyRequestContext, "cookie" | "url">;
 
 /**
  * Reads the cart ID from a request.
  *
- * The function reads the `cartId` search parameter first, and the `cart` cookie when the URL has no cart ID. The function returns a search parameter value unchanged and adds the `gid://shopify/Cart/` prefix to a cookie value.
+ * The function checks the `cartId` search parameter first, then the `cart` cookie. The function returns a search parameter value unchanged and adds the `gid://shopify/Cart/` prefix to a cookie value.
  *
- * @param input The request or request context to read the cart ID from.
+ * @param input The request or request context that carries the cart ID.
  * @returns The cart ID, or `null` when neither the search parameter nor the cookie has one.
  * @example
  * ```ts
@@ -84,7 +84,7 @@ export function getCartId(input: CartIdSource): string | null {
 /**
  * Fetches a cart by ID from the Storefront API.
  *
- * A custom cart query returns a cart with that query's fields. The function passes the cart ID as the query's only variable. Declare an `$id` variable in a custom query.
+ * Pass a custom cart query to get a cart with that query's fields. Declare an `$id` variable in the query. The function passes the cart ID as the query's only variable.
  *
  * When the cart ID is `null`, the function returns a `null` cart without a network request. The function throws when the Storefront API request fails.
  *
@@ -131,7 +131,7 @@ export async function getCart<TQuery extends AnyStorefrontQueryString = typeof c
 /**
  * Fetches a cart by ID from the Storefront API.
  *
- * A custom cart query returns a cart with that query's fields. The function passes the cart ID as the query's only variable. Declare an `$id` variable in a custom query.
+ * Pass a custom cart query to get a cart with that query's fields. Declare an `$id` variable in the query. The function passes the cart ID as the query's only variable.
  *
  * When the cart ID is `null`, the function returns a `null` cart without a network request. The function throws when the Storefront API request fails.
  *

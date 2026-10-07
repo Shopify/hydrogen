@@ -82,7 +82,7 @@ export function withStorefrontClientCache<TOptions extends object>(
 }
 
 /**
- * Creates a type-safe Storefront API client.
+ * Creates a Storefront API client that runs typed queries and mutations against your store.
  *
  * Set `type` based on where your code runs and whether customer context is available:
  *
@@ -93,15 +93,15 @@ export function withStorefrontClientCache<TOptions extends object>(
  * | Customer context | Browser request context      | You forward trusted `buyerIp` | None                      |
  * | Best for         | Client-side fetches          | SSR with customer context     | Webhooks, background jobs |
  *
- * Pass `requestContext` to give Storefront API requests the request-scoped
- * headers and abort signal of the incoming request. The client also reads the
- * resolved country and language from the context to fill `$country` and
- * `$language` query variables.
+ * Pass a request context from createShopifyRequestContext. The client forwards the incoming
+ * request's cookies and Global Privacy Control header to the Storefront API, and fills `$country`
+ * and `$language` variables from the context's locale. The client reads the request headers once,
+ * when you create the client. Create a client for each incoming request, and create a client at
+ * module scope only with a static request context.
  *
- * Use a private client only in
- * trusted server code where the token can't leak to browsers.
- *
- * The function throws when you create either private client type in a browser. The function throws a TypeError for a private client when the request context has no buyer IP. Create private clients, and any client that reads a real incoming request, inside the request lifecycle. Create only static public clients and private clients without buyer context at module scope.
+ * Keep private clients in server code, where the token can't reach browsers. The function throws an
+ * error when you create either private client type in a browser. The function throws a TypeError
+ * when the request context of a `"private"` client has no `buyerIp`.
  *
  * @see [Storefront API authentication](https://shopify.dev/docs/api/storefront#authentication)
  * @publicDocs
@@ -125,7 +125,7 @@ export function createStorefrontClient<
 >;
 /**
  * @param args The client type, request context, and store configuration for the new client.
- * @returns A Storefront API client bound to the store, client type, and request context.
+ * @returns The client, with a `graphql()` method that runs queries and mutations.
  */
 export function createStorefrontClient(args: CreateStorefrontClientArgs): StorefrontClient {
   const { config, requestContext, type: clientType } = args;

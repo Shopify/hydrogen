@@ -287,7 +287,7 @@ type FirstOperation<Defs> = Defs extends readonly [infer Def, ...infer Rest]
     : FirstOperation<Rest>
   : never;
 
-/** Returns the document's only operation definition, or `never` when the document has zero or several operations. */
+/** The document's only operation, or `never` when the document has no operations or several. */
 type SingleOperation<Defs, Operation = never> = Defs extends readonly [infer Def, ...infer Rest]
   ? Def extends { kind: "OperationDefinition" }
     ? [Operation] extends [never]
@@ -439,7 +439,7 @@ type VariablesType<Doc, Schema extends SchemaLike> = Doc extends {
     : {}
   : {};
 
-/** Reads the operation kind from a parsed document with exactly one operation. Resolves to `"unknown"` otherwise. */
+/** The operation kind of a parsed document with one operation. Resolves to `"unknown"` for any other document. */
 type OperationKindType<Doc> = Doc extends {
   kind: "Document";
   definitions: infer Defs extends readonly unknown[];
@@ -470,28 +470,28 @@ export type InferVariablesForSchema<T extends string, Schema extends SchemaLike>
     : never;
 
 /**
- * Infers the result type of a Storefront API query string from Hydrogen's bundled schema.
+ * The result type of a Storefront API query string, from Hydrogen's bundled schema.
  *
- * Use the type for a result shape outside a GraphQL call, such as a component prop type.
- * Pass the raw query source as a string literal type. The type resolves to `never` for a
- * `gql` document. Use `StorefrontApi.ResultOf` for a `gql` document.
+ * Use the type for a result shape outside a GraphQL call, such as a component prop type. Pass the
+ * query text as a string literal type. For a `gql` document, use `StorefrontApi.ResultOf`. The
+ * type resolves to `never` for a `gql` document.
  *
  * @publicDocs
  */
 export type InferResult<T extends string> = InferResultForSchema<T, StorefrontSchema>;
 
 /**
- * Infers the variables type of a Storefront API query string from Hydrogen's bundled schema.
+ * The variables type of a Storefront API query string, from Hydrogen's bundled schema.
  *
- * Use the type for a variables shape outside a GraphQL call, such as a loader parameter type.
- * Pass the raw query source as a string literal type. The type resolves to `never` for a
- * `gql` document. Use `StorefrontApi.VariablesOf` for a `gql` document.
+ * Use the type for a variables shape outside a GraphQL call, such as a loader parameter type. Pass
+ * the query text as a string literal type. For a `gql` document, use `StorefrontApi.VariablesOf`.
+ * The type resolves to `never` for a `gql` document.
  *
  * @publicDocs
  */
 export type InferVariables<T extends string> = InferVariablesForSchema<T, StorefrontSchema>;
 
-/** Resolves a query source literal to its operation kind, or `"unknown"` unless the source parses to exactly one operation. */
+/** The operation kind of a query string, such as `"query"`. Resolves to `"unknown"` unless the query text has exactly one operation. */
 export type InferOperationKind<T extends string> =
   parseDocument<T> extends infer Doc
     ? [Doc] extends [never]

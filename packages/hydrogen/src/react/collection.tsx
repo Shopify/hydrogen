@@ -27,20 +27,20 @@ import type { CollectionState } from "../core/collection";
 const CollectionContext = createContext<CollectionStore | null>(null);
 
 /**
- * Props for the collection provider. The provider creates a collection store and keeps its filters and sort in sync with the URL.
+ * Props for CollectionProvider.
  */
 export interface CollectionProviderProps {
-  /** Collection handle and the search string your loader fetched the collection for. */
+  /** The collection handle and the search string that your loader fetched products for. */
   data: CollectionData;
   /**
    * Current URL search string from your router, with or without a leading `?`. Defaults to an empty string.
-   * The provider reads the initial filters and sort from the string on mount. When the string changes, including on back and forward navigation, the provider updates the store.
+   * The provider reads the starting filters and sort from the string. When the string changes, including on back and forward navigation, the provider updates the filters and sort.
    */
   urlSearch?: string;
   /**
-   * Receives the search string after a customer changes filters or sort. Navigate to the search string with your router.
+   * Receives the new search string after the customer changes filters or sort. Navigate to the search string with your router.
    *
-   * The search string starts with `?`, or is empty when no parameters remain.
+   * The search string starts with `?`, or is empty when no params remain.
    */
   onChange?: (searchString: string) => void;
   /** Content that reads and changes collection state through the collection hooks. */
@@ -48,11 +48,12 @@ export interface CollectionProviderProps {
 }
 
 /**
- * Creates a collection store and keeps its filters and sort in sync with the URL.
- * The provider creates a new store when the collection handle changes, such as on navigation to a different collection.
+ * Shares the customer's filter and sort choices with the collection hooks and keeps the choices in sync with the URL.
+ *
+ * The provider sets the status back to `"idle"` when your loader data matches the URL. When the collection handle changes, such as on navigation to a different collection, the provider reads the filters and sort from the URL again.
  *
  * @param props - The collection data, the URL search string, the change callback, and the content that uses the collection hooks.
- * @returns A context provider that shares the collection store with its children.
+ * @returns A provider for the collection hooks.
  * @publicDocs
  */
 export function CollectionProvider({
@@ -111,7 +112,7 @@ function useRequiredStore(hookName: string): CollectionStore {
 }
 
 /**
- * Returns the collection state and re-renders the component when the state changes.
+ * Returns the customer's filter and sort choices and the loading status, and re-renders the component when the state changes. The hook throws outside CollectionProvider.
  *
  * @returns The current collection state.
  *
@@ -123,8 +124,8 @@ function useRequiredStore(hookName: string): CollectionStore {
  */
 export function useCollection(): CollectionState;
 /**
- * With a selector, the hook returns the selector's value and re-renders the component when that value changes.
- * Pass an `isEqual` comparator to skip re-renders for equal values. The hook throws outside the collection provider.
+ * With a selector, the hook returns the selected value and re-renders the component when the selected value changes.
+ * Pass an `isEqual` comparator to skip re-renders for equal values. The hook throws outside CollectionProvider.
  *
  * @returns The value your selector derives from the current collection state.
  *
@@ -186,11 +187,11 @@ export function useCollection<S>(
 }
 
 /**
- * Returns methods that change filters and sort. After each change, the collection provider passes the new search string to its `onChange` callback.
+ * Returns methods that change the filters and sort. After each change, CollectionProvider passes the new search string to its `onChange` callback.
  *
- * The hook throws outside the collection provider.
+ * The hook throws outside CollectionProvider.
  *
- * @returns Methods that set, toggle, and reset filters, set the sort, and apply submitted filter forms.
+ * @returns Methods that set, toggle, and reset filters, change the sort, and apply submitted filter forms.
  *
  * @publicDocs
  */
@@ -212,14 +213,14 @@ export function useCollectionActions(): CollectionActions {
 }
 
 /**
- * Returns form props that progressively enhance collection filter forms.
+ * Returns props that make a collection filter form update the results without a full page load.
  *
- * Spread the result of `formProps()` on the form. Its submit handler cancels the native submission and applies the form's filter and sort fields to the store.
- * The handler runs `beforeSubmit` first and skips the store update when that callback prevents the default action. The handler runs `afterSubmit` after the store update.
+ * Spread the result of `formProps()` on the form. On submit, the props cancel the browser submission and apply the form's filter and sort fields.
+ * The `beforeSubmit` callback runs first, and calling `preventDefault()` in `beforeSubmit` skips the update. The `afterSubmit` callback runs after the update.
  *
- * Render the form with `method="get"` and an explicit `action`. On search pages, keep `q` as a hidden input inside the form. The hook throws outside the collection provider.
+ * Render the form with `method="get"` and an explicit `action`, which keeps the form working before JavaScript loads. On search pages, keep `q` as a hidden input inside the form. The hook throws outside CollectionProvider.
  *
- * @returns An object with a `formProps` function. The function takes optional `beforeSubmit` and `afterSubmit` callbacks and returns form props that hold the form's submit handler.
+ * @returns An object with a `formProps` function. Call the function with optional `beforeSubmit` and `afterSubmit` callbacks, and spread the result on the form.
  * @example
  * ```tsx
  * const { formProps } = useCollectionForm();

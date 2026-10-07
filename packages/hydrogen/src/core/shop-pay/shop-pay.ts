@@ -6,9 +6,9 @@ const DEFAULT_ACCESSIBILITY_LABEL = "Buy with Shop Pay";
 const ERROR_PREFIX = "[hydrogen:error:ShopPay]";
 const CAN_USE_DOM = typeof document !== "undefined";
 /**
- * Tag name of the Shop Pay custom element, `hydrogen-shop-pay-button`.
+ * Tag name of the Shop Pay button custom element, `hydrogen-shop-pay-button`.
  *
- * The framework bindings render this element. Use the tag directly on a framework without a Hydrogen binding.
+ * Use the tag directly on a framework without a Hydrogen binding.
  *
  * @publicDocs
  */
@@ -47,60 +47,57 @@ const SHOP_PAY_LOGO_SVG =
 /** Checkout target, attribution, and display settings shared by every Shop Pay button. */
 type ShopPayButtonBaseOptions = {
   /**
-   * Absolute checkout base URL. Omit it to link to the same-origin `/checkout` and
+   * Absolute checkout base URL. Omit the URL to link to the same-origin `/checkout` and
    * `/cart` permalink paths, which Hydrogen's Shopify route handler redirects to the
    * store's checkout.
    *
-   * Pass the cart's checkout URL when your app doesn't route same-origin checkout paths through the Shopify route handler. The Shop Pay URL keeps the existing query parameters of the checkout URL, lets Shop Pay parameters override them, and drops the hash. A bare domain such as `my-store.myshopify.com` gets an HTTPS scheme. The Shop Pay helpers throw when the value isn't a valid URL.
+   * Pass the cart's checkout URL when your app doesn't send same-origin checkout paths through the Shopify route handler. The button URL keeps the query params of the checkout URL, replaces any params that Shop Pay sets, and drops the hash. A bare domain such as `my-store.myshopify.com` gets an HTTPS scheme. The Shop Pay functions throw an error when the value isn't a valid URL.
    */
   checkoutUrl?: string;
   /**
    * Checkout payment mode. Defaults to `"shop_pay"`. Use
-   * `"shop_pay_installments"` only when checkout should open Shop Pay
-   * Installments.
-   *
-   * The Shop Pay helpers append the mode to the checkout URL as the payment parameter.
+   * `"shop_pay_installments"` to open Shop Pay Installments at checkout.
    */
   paymentOption?: "shop_pay" | "shop_pay_installments";
   /**
-   * Attribution source. The Shop Pay helpers append it to the checkout URL as `source`.
-   * Defaults to `"hydrogen"`. Most storefronts shouldn't override it.
+   * Attribution source that the checkout URL carries as `source`.
+   * Defaults to `"hydrogen"`. Most storefronts shouldn't change the source.
    */
   source?: string;
   /**
-   * Attribution token. The Shop Pay helpers append it to the checkout URL as `source_token`.
+   * Attribution token that the checkout URL carries as `source_token`.
    */
   sourceToken?: string;
   /**
-   * Content Security Policy nonce for the style element in the shadow root.
+   * Content Security Policy nonce for the button's style element.
    *
    * The nonce covers only the style element. Custom width and border radius values render as an inline style attribute, which a strict Content Security Policy must allow.
    */
   nonce?: string;
   /**
-   * Sales channel for checkout attribution. The Shop Pay helpers append it to the checkout URL
-   * as `channel`. Omit it unless checkout needs explicit `"headless"` or `"hydrogen"` attribution.
+   * Sales channel that the checkout URL carries as `channel`. Omit the channel unless
+   * checkout needs explicit `"headless"` or `"hydrogen"` attribution.
    */
   channel?: "headless" | "hydrogen";
   /**
-   * Disables the button. A disabled button renders a link without an `href` and with
+   * Disables the button. A disabled button renders without an `href` and with
    * `aria-disabled="true"`.
    */
   disabled?: boolean;
   /**
-   * CSS width of the button link, for example `"100%"`. Defaults to `260px`.
+   * CSS width of the button, such as `"100%"`. Defaults to `260px`.
    *
-   * Pass a single CSS value. The Shop Pay helpers throw when the width contains a semicolon or a curly brace.
+   * Pass a single CSS value. The Shop Pay functions throw an error when the width contains a semicolon or a curly brace.
    */
   width?: string;
   /**
-   * CSS border radius of the button link, for example `"8px"`. Defaults to `12px`.
+   * CSS border radius of the button, such as `"8px"`. Defaults to `12px`.
    *
-   * Pass a single CSS value. The Shop Pay helpers throw when the radius contains a semicolon or a curly brace.
+   * Pass a single CSS value. The Shop Pay functions throw an error when the radius contains a semicolon or a curly brace.
    */
   borderRadius?: string;
   /**
-   * Localized accessible label for the button link. Defaults to `"Buy with Shop Pay"`.
+   * Localized accessible label for the button. Defaults to `"Buy with Shop Pay"`.
    * Keep the brand name Shop Pay untranslated and in Latin script in every locale.
    *
    * @example English
@@ -118,34 +115,35 @@ type ShopPayButtonBaseOptions = {
   accessibilityLabel?: string;
 };
 
-/** A product variant ID with an optional quantity for a Shop Pay cart permalink. */
+/** A variant ID and an optional quantity for a Shop Pay checkout. */
 type ShopPayVariantWithQuantity = {
-  /** ProductVariant GID or bare numeric ProductVariant ID. Product IDs are invalid. */
+  /** Product variant GID or numeric variant ID. Product IDs throw an error. */
   id: string;
-  /** Quantity for this variant. Defaults to `1`. */
+  /** Quantity of the variant. Defaults to `1`. */
   quantity?: number;
 };
 
 type ShopPayVariant = string | ShopPayVariantWithQuantity;
-/** Variants for a Shop Pay checkout, as all ID strings or all objects with an ID and quantity. */
+/** Variants for a Shop Pay checkout, as all ID strings or all objects with an ID and a quantity. */
 type ShopPayVariants = readonly string[] | readonly ShopPayVariantWithQuantity[];
 
 /** Checkout target, variants, attribution, and display settings for a Shop Pay button. */
 export type ShopPayButtonOptions = ShopPayButtonBaseOptions & {
   /**
-   * Variants to check out immediately through a Shopify cart permalink. Omit them
-   * for cart checkout mode, where `/checkout` checks out the current cart.
+   * Variants that the customer buys right away through a Shopify cart permalink. Omit the variants
+   * to check out the current cart.
    *
-   * Pass either all variant ID strings or all objects with an `id` and an optional `quantity`. Each quantity must be a positive integer. The Shop Pay helpers throw for product IDs, non-numeric variant IDs, invalid quantities, and mixed formats.
+   * Pass either all variant ID strings or all objects with an `id` and an optional `quantity`. Each quantity must be a positive integer. The Shop Pay functions throw an error for product IDs, non-numeric variant IDs, invalid quantities, and mixed formats.
    */
   variants?: ShopPayVariants;
 };
 
 /**
- * Builds the checkout URL that the Shop Pay button links to. With variants, the URL is a cart
- * permalink. Without variants, the URL checks out the current cart.
+ * Returns the checkout URL for a Shop Pay button. Use the URL to build your own Shop Pay link.
  *
- * @param options The variants, checkout URL, payment mode, and disabled state that shape the checkout URL.
+ * With variants, the URL is a cart permalink that checks out those variants. Without variants, the URL checks out the current cart.
+ *
+ * @param options The variants, checkout URL, payment mode, attribution, and disabled state for the checkout URL.
  * @returns The checkout URL, or `null` when `disabled` is `true`.
  * @publicDocs
  */
@@ -171,15 +169,12 @@ export function getShopPayButtonUrl(options: ShopPayButtonOptions): string | nul
 }
 
 /**
- * Renders the Shop Pay button as an HTML string. On the server, the markup
- * includes the styles and link in a declarative shadow root, and the button works
- * without client JavaScript. Use it from server templates or frameworks without a
- * Hydrogen binding.
+ * Returns the Shop Pay button as an HTML string for server templates and frameworks without a Hydrogen binding.
  *
- * In the browser, the function returns the markup of an empty host element. The element builds its shadow root when it connects to the document.
+ * On the server, the markup includes the button's styles and link, and the button works without client JavaScript. In the browser, the function returns an empty element that renders the button when you add the element to the page.
  *
- * @param options The variants, checkout URL, and display settings for the rendered button.
- * @returns The Shop Pay custom element markup.
+ * @param options The variants, checkout URL, and display settings for the button.
+ * @returns The Shop Pay button markup.
  * @publicDocs
  */
 export function renderShopPayButton(options: ShopPayButtonOptions): string {
@@ -190,12 +185,12 @@ export function renderShopPayButton(options: ShopPayButtonOptions): string {
 }
 
 /**
- * Creates the Shop Pay button as a detached DOM element that carries the button styles.
+ * Creates a Shop Pay button element in the browser. Append the element to the page.
  *
- * The function requires a DOM. Use `renderShopPayButton` during server rendering.
+ * The function requires a DOM. Use renderShopPayButton during server rendering.
  *
- * @param options The variants, checkout URL, and display settings for the button element.
- * @returns The Shop Pay custom element with its shadow root rendered, ready to append to the page.
+ * @param options The variants, checkout URL, and display settings for the button.
+ * @returns The Shop Pay button element, ready to append to the page.
  * @publicDocs
  */
 export function createShopPayButton(options: ShopPayButtonOptions): HTMLElement {
@@ -224,11 +219,11 @@ export function initializeShopPayButtonElement(
 }
 
 /**
- * Registers the Shop Pay custom element. Does nothing during server rendering or when the element is already registered.
+ * Registers the Shop Pay button custom element in the browser. Call the function when you use the `hydrogen-shop-pay-button` tag directly on a framework without a Hydrogen binding.
  *
- * The framework bindings and the create and render helpers register the element for you. Call the function directly on a framework without a Hydrogen binding.
+ * The Hydrogen Shop Pay components, createShopPayButton, and renderShopPayButton register the element for you. The function does nothing during server rendering or when the browser already has the element.
  *
- * @returns Nothing. The function registers the element in the browser's custom element registry.
+ * @returns Nothing.
  * @publicDocs
  */
 export function defineShopPayButton(): void {

@@ -1,26 +1,26 @@
 import { PREDICTIVE_SEARCH_QUERY_PARAM } from "./constants";
 
 /**
- * Attributes for the predictive search query input.
+ * Attributes to spread on the search input of a predictive search form.
  *
  * @publicDocs
  */
 export interface PredictiveSearchQueryInputAttributes {
-  /** Field name for the search term. The search page, the predictive search route, and the form term reader all read this name. */
+  /** Sends the search term as the `q` URL parameter when the form submits. */
   name: "q";
   /** Renders the input as a search field. */
   type: "search";
-  /** Turns off browser autocomplete for the query input. */
+  /** Turns off browser autocomplete. */
   autoComplete: "off";
   /** Turns off automatic capitalization of the search term. */
   autoCapitalize: "off";
-  /** Turns off spell checking for the query input. */
+  /** Turns off spell checking. */
   spellCheck: false;
 }
 
-/** Attributes for the predictive search form. */
+/** Attributes to spread on a predictive search form. */
 export interface PredictiveSearchFormAttributes {
-  /** Search page path that the form submits to. Defaults to `/search`. */
+  /** Search page path that receives the submitted search term. Defaults to `/search`. */
   action: string;
   /** Submits the form as a GET request, which puts the search term in the URL. */
   method: "get";
@@ -29,18 +29,18 @@ export interface PredictiveSearchFormAttributes {
 }
 
 /**
- * Returns the attributes for a predictive search form field.
+ * Returns the attributes for the search input of a predictive search form.
  *
- * The function accepts only `query` and throws for any other field name. The returned attributes name the input `q`, make the input a search field, and turn off autocomplete, autocapitalization, and spell checking. The attribute keys use React casing. In DOM code, assign each value to the matching lowercase property, such as `autocomplete`.
+ * Pass `"query"`. Any other field name throws an error. The attribute keys use React casing. In DOM code, set each value on the matching lowercase property, such as `autocomplete`.
  */
 export type PredictiveSearchFormRegister = {
   (field: "query"): PredictiveSearchQueryInputAttributes;
 };
 
 /**
- * Creates a register function that returns the attributes for the predictive search query input.
+ * Creates a function that returns the attributes for the search input of a predictive search form. Use the function in DOM code or in UI frameworks without Hydrogen bindings. In React and Vue, use usePredictiveSearchForm.
  *
- * @returns A register function that accepts the `query` field name.
+ * @returns A function that takes `"query"` and returns the search input attributes.
  *
  * @publicDocs
  */
@@ -66,7 +66,7 @@ function registerPredictiveSearchFormField(field: string): PredictiveSearchQuery
  * Returns the attributes for a predictive search form that works without JavaScript.
  *
  * @param action Search page path that the form submits to. Defaults to `/search`.
- * @returns Attributes that make the form submit a GET request to the action path, with a search role.
+ * @returns Attributes that submit the search term to the search page as a GET request.
  * @publicDocs
  */
 export function getPredictiveSearchFormAttributes(
@@ -80,10 +80,10 @@ export function getPredictiveSearchFormAttributes(
 }
 
 /**
- * Reads the search term from submitted predictive search form data.
+ * Reads the search term from a submitted predictive search form.
  *
- * @param formData The submitted form data. The function reads the `q` field.
- * @returns The search term, or an empty string when the field is absent or isn't a string.
+ * @param formData Form data from the submitted search form.
+ * @returns The search term, or an empty string when the form data has no `q` text value.
  * @publicDocs
  */
 export function readPredictiveSearchFormTerm(formData: FormData): string {

@@ -3,7 +3,7 @@ import { getCartAttributeFormEntries } from "./form";
 
 /** A custom key-value pair for the cart or a cart line. */
 export type CartAttributeInput = {
-  /** The attribute name. The request parser rejects an empty name. */
+  /** The attribute name. parseCartRequest throws for an empty name in cart attributes and in form submissions. */
   key: string;
   /** The attribute value. */
   value: string;
@@ -11,13 +11,13 @@ export type CartAttributeInput = {
 
 /** Input for adding a line to the cart. */
 export type CartLineAddInput = {
-  /** Storefront API GID of the product variant to add. */
+  /** The Storefront API GID of the product variant to add. */
   merchandiseId: string;
-  /** Number of units to add. Form submissions without a quantity add `1`. */
+  /** Number of units to add. A form submission without a quantity adds `1`. */
   quantity: number;
   /** Custom key-value attributes to set on the new line. */
   attributes?: CartAttributeInput[];
-  /** Selling plan GID for subscription line items. */
+  /** The selling plan GID for a subscription line. */
   sellingPlanId?: string;
 };
 
@@ -29,14 +29,14 @@ export type CartLineUpdateInput = {
   quantity: number;
   /** Custom key-value attributes to set on the line. */
   attributes?: CartAttributeInput[];
-  /** Selling plan GID to assign to the line for subscriptions. */
+  /** The selling plan GID to assign to the line for a subscription. */
   sellingPlanId?: string;
 };
 
 /**
- * A cart mutation that the cart request parser reads from a JSON or form data request.
+ * A cart change that parseCartRequest reads from a JSON or form request.
  *
- * The `intent` field selects the Storefront API mutation:
+ * The `intent` field names the change and the Storefront API mutation that applies the change:
  *
  * - `add` adds new lines with cartLinesAdd, or creates a cart with cartCreate when none exists.
  * - `update` changes quantity or attributes on existing lines with cartLinesUpdate.
@@ -59,10 +59,10 @@ export type CartAction =
   | { intent: "attributes-update"; attributes: CartAttributeInput[] }
   | { intent: "note-update"; note: string };
 
-/** The parsed cart action and the cart ID from the request body. */
+/** The cart change and the cart ID that parseCartRequest reads from the request body. */
 type ParsedCartRequest = {
   action: CartAction;
-  /** The cart GID from a JSON body with the GID prefix added, or `null` for form data and bodies without one. */
+  /** The cart GID from a JSON body, or `null` for a form submission or a JSON body without a cart ID. The function adds the `gid://shopify/Cart/` prefix to a bare cart token. */
   cartId: string | null;
 };
 
@@ -74,17 +74,17 @@ class CartActionError extends Error {
 }
 
 /**
- * Parses a cart mutation request into a typed cart action.
+ * Reads the cart change from a cart request body. Use the function in a custom cart route.
  *
  * The function accepts `application/json`, `application/x-www-form-urlencoded`, and
  * `multipart/form-data` requests. A JSON request can replace every discount code, and a form submission applies or removes one code.
  *
- * A form data request always returns a `null` cart ID. Read the cart ID from the cart cookie with getCartId for a form data request.
+ * A form submission always returns a `null` cart ID. Read the cart ID for a form submission with getCartId.
  *
- * The function consumes the request body. The function throws when the request has an unsupported content type, an unknown intent, or a missing required field, and when a JSON body mixes added, updated, and removed lines.
+ * The function reads the request body, and you can't read the body again afterward. The function throws when the request has an unsupported content type, an unknown intent, or a missing required field, and when a JSON body mixes added, updated, and removed lines.
  *
- * @param request The incoming cart mutation request whose body the function reads.
- * @returns The parsed cart action and the cart ID from a JSON body.
+ * @param request The incoming cart request.
+ * @returns The cart change and, for a JSON body, the cart ID.
  * @throws If the request has an unsupported content type, an unrecognized intent,
  * or missing required fields, or if a JSON body mixes added, updated, and removed lines.
  *

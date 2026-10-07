@@ -15,7 +15,7 @@ import {
 import { provisionCertificates } from "./mkcert";
 
 /**
- * The local HTTPS plugin's default host, `local.tryhydrogen.dev`, and default port, `5173`.
+ * Default host, `local.tryhydrogen.dev`, and port, `5173`, for local HTTPS. Pass the values to frameworks that set their own dev server host and port, such as Astro.
  *
  * @publicDocs
  */
@@ -38,17 +38,17 @@ const HTTP1_ONLY_RESPONSE_HEADERS = new Set([
 const emittedMissingCertificateWarnings = new Set<string>();
 const startedCustomerAccountSetups = new Set<string>();
 
-/** Options for Hydrogen's local HTTPS Vite plugin. */
+/** Switch, host, port, and certificate files for local HTTPS. */
 export type LocalHttpsOptions = {
-  /** Turns on trusted local HTTPS for the dev server. When `false`, the plugin leaves the Vite config unchanged. */
+  /** Turns on local HTTPS for the dev server. When `false`, the plugin leaves the Vite config unchanged. */
   enabled: boolean;
-  /** The local hostname that you register in the Shopify admin. Defaults to `local.tryhydrogen.dev`. */
+  /** Hostname for the dev server and the Customer Account API URLs. Defaults to `local.tryhydrogen.dev`. */
   host?: string;
-  /** The local port that you register in the Shopify admin. Defaults to `5173`. */
+  /** Port for the dev server. Vite exits when another process uses the port. Defaults to `5173`. */
   port?: number;
-  /** The certificate file path. Defaults to `~/.shopify/hydrogen/certs/<host>.pem`. Hydrogen expands a leading `~/` to your home directory and resolves a relative path against the current working directory. */
+  /** Path to the certificate file. Defaults to `~/.shopify/hydrogen/certs/<host>.pem`. A leading `~/` points to your home directory, and a relative path starts from the current working directory. */
   certPath?: string | URL;
-  /** The private key file path. Defaults to `~/.shopify/hydrogen/certs/<host>-key.pem`. Hydrogen resolves the path the same way as `certPath`. */
+  /** Path to the private key file. Defaults to `~/.shopify/hydrogen/certs/<host>-key.pem`. Accepts the same path forms as `certPath`. */
   keyPath?: string | URL;
 };
 
@@ -56,9 +56,9 @@ export type LocalHttpsOptions = {
 export type LocalHttpsPlugin = Plugin & {
   api: {
     /**
-     * Returns the host, port, and TLS file paths for frameworks that terminate HTTPS outside Vite.
+     * Returns the host, port, and certificate paths for frameworks that serve HTTPS outside Vite, such as Nuxt.
      *
-     * Returns `undefined` when `enabled` is `false` or a certificate file doesn't exist.
+     * Returns `undefined` when `enabled` is `false` or a certificate file is missing.
      */
     getDevServerConfig(): LocalHttpsDevServerConfig | undefined;
   };
@@ -68,7 +68,7 @@ export type LocalHttpsPlugin = Plugin & {
 export type LocalHttpsDevServerConfig = {
   /** Local hostname that the dev server serves, such as `local.tryhydrogen.dev`. */
   host: string;
-  /** The configured local port for the dev server. */
+  /** Port for the dev server. */
   port: number;
   /** Absolute paths to the certificate file and the private key file. */
   https: {
@@ -78,15 +78,15 @@ export type LocalHttpsDevServerConfig = {
 };
 
 /**
- * Serves the Vite dev server over trusted local HTTPS on the configured host and port. The plugin
- * forces HTTP/1.1 and sets a strict port, which makes Vite exit when the port is already in use.
+ * Serves your Vite dev server over trusted HTTPS on a fixed host and port, and adds the dev server URLs to your Customer Account API settings.
+ * Vite exits when another process uses the port. The dev server speaks HTTP/1.1 only.
  *
- * When `vite dev` starts without certificate files, the plugin asks for confirmation in the terminal and then provisions the certificates. The plugin skips provisioning without an interactive terminal, and when the `CI` environment variable holds any value other than an empty string, `false`, or `0`. When certificate files are still missing, the plugin emits a warning and leaves HTTPS off.
+ * When `vite dev` starts without certificate files, the plugin asks for permission in the terminal, then creates the files. The plugin skips the prompt without an interactive terminal and in CI. Hydrogen treats any `CI` environment variable value other than an empty string, `false`, or `0` as CI. While certificate files are missing, the plugin prints a warning and leaves HTTPS off.
  *
- * Outside CI, the plugin uses Shopify CLI to push the callback, JavaScript origin, and logout URLs to your Customer Account API settings. The push requires a Shopify CLI that includes `@shopify/cli-hydrogen` 13.0.4 or later. When the project has no linked Hydrogen storefront, Shopify CLI starts the linking flow first. When Shopify CLI is missing or outdated, or the push fails, the plugin prints the URLs to configure by hand and keeps the dev server running. In CI, the plugin prints the URLs and skips Shopify CLI.
+ * After the dev server starts, the plugin runs Shopify CLI to update your Customer Account API settings with the dev server URLs. The update needs a Shopify CLI that includes `@shopify/cli-hydrogen` 13.0.4 or later. When the project has no linked Hydrogen storefront, Shopify CLI asks you to link one first. When Shopify CLI is missing or outdated, or the update fails, the plugin prints the URLs to enter by hand and the dev server keeps running. In CI, the plugin prints the URLs and skips Shopify CLI.
  *
- * @param options The switch that enables local HTTPS, with the host, port, and certificate paths.
- * @returns A Vite plugin that also exposes its HTTPS host, port, and certificate paths to other frameworks.
+ * @param options Switch, host, port, and certificate paths for local HTTPS.
+ * @returns A Vite plugin. Its `api.getDevServerConfig()` method returns the HTTPS settings for frameworks that serve HTTPS outside Vite.
  * @publicDocs
  */
 export function localHttps(options: LocalHttpsOptions): LocalHttpsPlugin {
@@ -157,18 +157,20 @@ export function localHttps(options: LocalHttpsOptions): LocalHttpsPlugin {
   };
 }
 
-/** Host and certificate file paths for provisioning local HTTPS certificates outside the Vite plugin. */
+/** Host and certificate paths for provisionLocalHttps. */
 export type ProvisionLocalHttpsOptions = Omit<LocalHttpsOptions, "enabled" | "port">;
 
 /**
- * Creates trusted local certificate files when they don't exist yet. The function downloads a
- * pinned, checksum-verified mkcert release, installs the mkcert local certificate authority, and
- * generates the certificate and private key. When both files already exist, the function returns
- * their paths without changes. Call the function from setup scripts, or for frameworks that read
- * certificate paths before Vite starts.
+ * Creates trusted certificate files for local HTTPS. Call the function from a setup script, or
+ * before you start a framework that reads certificate paths when its config loads, such as Nuxt.
  *
- * @param options The host and certificate file paths to provision, each with a Hydrogen default.
- * @returns The host with absolute paths to the certificate file and the private key file.
+ * When both files exist, the function returns their paths and changes nothing. Otherwise, the
+ * function downloads a pinned, checksum-verified mkcert release, adds the mkcert certificate
+ * authority to your system trust store, and creates the certificate and private key. mkcert can
+ * ask for your password.
+ *
+ * @param options Host and certificate paths. Each option has a Hydrogen default.
+ * @returns The host and the absolute paths to the certificate and the private key.
  * @publicDocs
  */
 export async function provisionLocalHttps(options: ProvisionLocalHttpsOptions = {}) {

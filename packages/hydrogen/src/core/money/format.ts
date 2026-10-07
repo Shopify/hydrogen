@@ -373,11 +373,11 @@ class FormattedMoneyRangeValue implements FormattedMoneyRange {
 }
 
 /**
- * Formats a price, or a same-currency range of prices, for display.
+ * Formats a price or a price range for display. Pass a MoneyV2 price, or an array of MoneyV2 prices in one currency for a range, with the active market's locale.
  *
- * The returned object converts to the formatted string in template literals and string concatenation. For a range, the function sorts the prices and formats the lowest and highest. A range whose prices are all equal formats as a single price.
+ * The returned object converts to the formatted string in template literals and string concatenation. For custom price layouts, read the parts of the formatted price. A range shows the lowest and highest prices. When every price in the range matches, the output shows one price.
  *
- * Throws when an amount isn't numeric, when a range is empty, and when range values have different currency codes.
+ * The function throws an error when an amount isn't numeric, when a range is empty, or when the prices in a range use different currencies.
  *
  * @publicDocs
  */
@@ -390,9 +390,9 @@ export function formatMoney(
 // This is the implementation of the formatMoney function overloading the other two.
 // It checks if the input is a range and creates the appropriate object.
 /**
- * @param money The price, or a same-currency array of prices for a range, to format.
- * @param options The locale and display settings for the formatted output.
- * @returns A formatted price for a single value, or a formatted range for an array of values.
+ * @param money A price, or an array of prices in one currency for a range.
+ * @param options Locale and display settings.
+ * @returns The formatted price or range, which converts to a string in template literals.
  */
 export function formatMoney(
   money: MoneyV2 | readonly MoneyV2[],

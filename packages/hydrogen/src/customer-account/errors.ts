@@ -1,18 +1,16 @@
 /**
- * Base error for Customer Account API failures. A GraphQL request throws this error for a non-OK HTTP status, a body that isn't a valid GraphQL response, a response without data, or a network failure.
+ * The error that a Customer Account API request throws when the request fails. The client throws this error for a non-OK HTTP status, a response that isn't valid GraphQL, a response without data, or a network failure. The OAuth callback also throws this error when its token request times out.
  *
- * The OAuth callback also throws this error when its token request times out.
- *
- * The fields depend on the failure. The status is present whenever a response arrives. The request ID is present when the response has an `x-request-id` header. Network failures have neither. The retry-after value is present only on non-OK responses.
+ * Catch this class to handle every Customer Account API failure, including authentication and timeout errors. Read `status`, `requestId`, and `retryAfter` to handle the failure. Network failures have no status or request ID, and only non-OK responses include a retry-after value.
  *
  * @publicDocs
  */
 export class CustomerAccountApiError extends Error {
-  /** HTTP status code of the response, including a response that fails to parse. Missing on network failures. */
+  /** The HTTP status of the response, including a response that Hydrogen can't parse. */
   readonly status?: number;
-  /** Value of the `x-request-id` response header. Include it in Shopify support requests. */
+  /** The response's `x-request-id` header. Include the ID in Shopify support requests. */
   readonly requestId?: string;
-  /** Value of the `retry-after` header on a non-OK response. Read it to schedule a retry of a rate-limited request. */
+  /** The `retry-after` header on a non-OK response. Use the value to schedule a retry of a rate-limited request. */
   readonly retryAfter?: string;
 
   constructor(
@@ -28,9 +26,9 @@ export class CustomerAccountApiError extends Error {
 }
 
 /**
- * A GraphQL request throws this error before it calls the API when the access token is missing, empty, padded with whitespace, or contains ASCII control characters or DEL. The request also throws this error when you omit the options object.
+ * The error that a Customer Account API request throws when the access token is missing or malformed. The client throws this error before it sends the request when the token is empty, has leading or trailing whitespace, or contains control characters. The client also throws this error when you omit the options argument.
  *
- * When the API rejects a token, the request throws the base Customer Account API error with the response status.
+ * When the API rejects a token, the client throws CustomerAccountApiError with the response status.
  *
  * @publicDocs
  */
@@ -42,12 +40,12 @@ export class CustomerAccountAuthenticationError extends CustomerAccountApiError 
 }
 
 /**
- * A Customer Account API GraphQL request throws this error when the request exceeds the client's timeout. The timeout also covers reading the response body and a custom fetch that ignores abort signals.
+ * The error that a Customer Account API request throws when the request takes longer than the client's timeout. The timeout covers the whole request, including reading the response body.
  *
  * @publicDocs
  */
 export class CustomerAccountTimeoutError extends CustomerAccountApiError {
-  /** Timeout that the request exceeded, in milliseconds. */
+  /** The timeout that the request exceeded, in milliseconds. */
   readonly timeoutInMs: number;
 
   constructor(timeoutInMs: number) {
@@ -58,14 +56,14 @@ export class CustomerAccountTimeoutError extends CustomerAccountApiError {
 }
 
 /**
- * The OAuth callback throws this error when the callback parameters, the pending login, the code exchange, the token response, or the ID token claims fail validation. Token refreshes never throw this error. A failed refresh returns `undefined`.
+ * The error that the OAuth callback throws when customer sign-in fails. Sign-in fails when the callback doesn't match the sign-in that prepareLoginUrl started, when that sign-in started more than 10 minutes earlier, when the code exchange fails, or when Shopify's tokens fail validation. The authorize route catches this error and redirects the customer to the failed-login path. Token refreshes never throw this error, and a failed refresh returns `undefined`.
  *
  * Read `code` to handle each failure. The codes are `"missing_callback_params"`, `"state_mismatch"`, `"missing_pending_login"`, `"token_exchange_rejected"`, `"token_exchange_failed"`, `"invalid_token_response"`, `"nonce_mismatch"`, `"issuer_mismatch"`, `"audience_mismatch"`, `"expired_id_token"`, and `"invalid_id_token"`.
  *
  * @publicDocs
  */
 export class CustomerAccountOAuthError extends Error {
-  /** Identifies the failure with one of the codes in the class description. */
+  /** The failure code, one of the codes in the class description. */
   readonly code: string;
 
   constructor(code: string, message: string, options?: { cause?: unknown }) {

@@ -39,73 +39,73 @@ const log = getLogger("product");
 
 export type { ValidProductSelectionResult } from "../core/product";
 
-/** Options for the standalone product form hook. */
+/** Options for the useProductForm hook. */
 export interface UseProductFormOptions<TProduct extends ProductInput> {
-  /** Runs after each resolved or unresolved option selection. Invalid selections skip the callback. */
+  /** Runs after each resolved or unresolved selection. Invalid selections skip the callback. */
   onSelect?: (result: ValidProductSelectionResult<TProduct>) => void;
 }
 
-/** Return value of the product form hooks. */
+/** Product form state and bindings that the product form hooks return. */
 export interface UseProductFormResult<TProduct extends ProductInput> {
-  /** The product's options, with each value's selection, existence, and availability for the current selection. */
+  /** Each product option and its values, with the selection, existence, and availability of each value. */
   options: ProductFormOptions<TProduct>;
-  /** Variant for the current selection, or `null` when the selection is partial or the query result doesn't include the variant. */
+  /** Variant that matches the current selection, or `null` when the selection is partial or your query didn't load that variant. */
   selectedVariant: ProductVariantFrom<TProduct> | null;
-  /** Returns props for a product form field. The hook creates a new register function each time the store state changes. */
+  /** Returns the props for a product form field. Spread the props on the matching input or button. */
   register: ProductFormRegister;
   /**
-   * Returns form attributes that post to the cart endpoint and add the selected variant on submit.
-   * A `beforeSubmit` callback that prevents the default action cancels the submission. The `afterSubmit` callback runs after the cart store's form handler resolves. A rejected submission logs an error and skips the callback.
+   * Returns props for the product form element. Submitting the form adds the selected variant to the cart, and the form posts to the cart endpoint before JavaScript loads.
+   * Call `preventDefault()` in `beforeSubmit` to cancel the submission. The `afterSubmit` callback runs after the cart store handles the submission. Cart errors appear in the errors field. When the cart store throws an error, the hook logs the error and skips `afterSubmit`.
    */
   formProps: (opts?: {
     beforeSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;
     afterSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;
   }) => FormHTMLAttributes<HTMLFormElement>;
-  /** Cart-level errors and warnings, merged with the errors and warnings of the matched cart line. */
+  /** Cart errors and warnings to show near the add-to-cart button. */
   errors: ProductFormErrors;
-  /** First cart line whose merchandise ID matches the selected variant, or `null` when no line matches. */
+  /** First cart line that holds the selected variant, or `null` when no cart line holds the variant. */
   matchedLineItem: CartLine | null;
   /**
-   * Whether a form submission is in flight. Disable the submit button while the value is `true`.
+   * Whether the cart is handling a form submission. Disable the add-to-cart button while the value is `true`.
    */
   pending: boolean;
-  /** Selects an option value and returns the selection result. Valid selections call the `onSelect` callback. */
+  /** Selects an option value and returns the result. Resolved and unresolved selections run the `onSelect` callback. */
   selectOption: (
     name: string,
     value: string,
   ) => VariantSelectionResult<ProductVariantFrom<TProduct>>;
 }
 
-/** Props for the product provider that the product components factory returns. */
+/** Props for the product provider from createProductComponents. */
 export interface ProductProviderProps<TProduct extends ProductInput> {
   /**
-   * The product that the provider's store manages. The provider connects the store on mount and destroys the store on unmount.
-   * The provider rehydrates the store when the product ID or the selected or first available variant ID changes. Customer selections persist through re-renders that keep both IDs.
+   * The product from your Storefront API query.
+   * The provider reloads the product into the store when the product ID or the selected or first available variant ID changes. The customer's selection persists through re-renders that keep both IDs.
    */
   product: TProduct;
   /**
-   * Runs after each resolved or unresolved selection. Invalid selections skip the callback. Put URL navigation in this callback, and keep navigation logic out of option controls.
-   * Make the callback idempotent. A hydrated click on an option link runs the callback and also follows the link.
+   * Runs after each resolved or unresolved selection. Invalid selections skip the callback. Navigate to the new product URL in this callback, and keep navigation out of option controls.
+   * Make the callback safe to run twice. A click on a hydrated option link runs the callback and also follows the link.
    */
   onSelect?: (result: ValidProductSelectionResult<TProduct>) => void;
   /** Content that reads product state through the product hooks. */
   children?: ReactNode;
 }
 
-/** Return value of the product state hook that the product components factory returns. */
+/** Product state that the useProduct hook from createProductComponents returns. */
 export interface UseProductResult<TProduct extends ProductInput> {
-  /** The product's options, with each value's selection, existence, and availability for the current selection. */
+  /** Each product option and its values, with the selection, existence, and availability of each value. */
   options: ProductFormOptions<TProduct>;
-  /** Variant for the current selection, or `null` when the selection is partial or the query result doesn't include the variant. */
+  /** Variant that matches the current selection, or `null` when the selection is partial or your query didn't load that variant. */
   selectedVariant: ProductVariantFrom<TProduct> | null;
-  /** Selects an option value and returns the selection result. Valid selections call the `onSelect` callback. */
+  /** Selects an option value and returns the result. Resolved and unresolved selections run the `onSelect` callback. */
   selectOption: (
     name: string,
     value: string,
   ) => VariantSelectionResult<ProductVariantFrom<TProduct>>;
-  /** Cart-level errors and warnings, merged with the errors and warnings of the matched cart line. */
+  /** Cart errors and warnings to show near the add-to-cart button. */
   errors: ProductFormErrors;
-  /** First cart line whose merchandise ID matches the selected variant, or `null` when no line matches. */
+  /** First cart line that holds the selected variant, or `null` when no cart line holds the variant. */
   matchedLineItem: CartLine | null;
 }
 
@@ -118,13 +118,13 @@ export interface UseProductResult<TProduct extends ProductInput> {
 // ---------------------------------------------------------------------------
 
 /**
- * Returns form state from a product form store and re-renders on each store change.
+ * Returns product form state and bindings from a product form store that you manage, and re-renders when the state changes.
  *
- * The hook subscribes to the store and leaves the store lifecycle to you. Create the store with createProductFormStore. Connect the store on mount, hydrate the store when the product data changes, and destroy the store on unmount. For a provider that manages the store, use createProductComponents.
+ * Create the store with createProductFormStore. Call `connect()` on mount, `hydrate()` when the product data changes, and `destroy()` on unmount. To skip the store setup, use the product provider from createProductComponents.
  *
- * @param store The product form store that createProductFormStore returns.
- * @param options Options with an `onSelect` callback for each valid option selection.
- * @returns Option state, the selected variant, cart errors, the matched cart line, pending state, and form bindings.
+ * @param store The store that createProductFormStore returns.
+ * @param options An `onSelect` callback that runs after each resolved or unresolved selection.
+ * @returns The option state, the selected variant, cart errors, the matching cart line, the pending state, the register function, and the form props.
  * @publicDocs
  */
 export function useProductForm<TProduct extends ProductInput>(
@@ -207,13 +207,13 @@ interface ProductContextValue<TProduct extends ProductInput> {
 }
 
 /**
- * Returns a product provider and hooks typed to your product query.
+ * Creates a product provider and product hooks typed to your product query.
  *
- * The provider creates a product form store, hydrates the store when the product changes, and destroys the store on unmount. The product hook returns option state and variant selection. The form hook adds field registration, form props, and pending state.
+ * The provider creates the product form store, reloads the product into the store when the product changes, and destroys the store on unmount. The useProduct hook returns the option state and variant selection. The useProductForm hook adds field props, form props, and the pending state.
  *
- * Pass your Storefront API product query type as the type argument to type the selected variant and option values. The provider throws an error without a cart provider ancestor. Each hook throws an error outside the product provider.
+ * Pass your Storefront API product query type as the type argument to type the selected variant and option values. Render the provider inside a cart provider. The provider throws an error without a cart provider ancestor, and each hook throws an error outside the product provider.
  *
- * @returns The typed product provider, the product state hook, and the product form hook.
+ * @returns The typed ProductProvider component and the useProduct and useProductForm hooks.
  *
  * @example
  * ```ts
@@ -309,17 +309,17 @@ export function createProductComponents<TProduct extends ProductInput>(): {
 }
 
 /**
- * Returns form state from a product form store and re-renders on each store change.
+ * Returns product form state and bindings from a product form store that you manage, and re-renders when the state changes.
  *
- * The hook subscribes to the store and leaves the store lifecycle to you. Create the store with createProductFormStore. Connect the store on mount, hydrate the store when the product data changes, and destroy the store on unmount. For a provider that manages the store, use createProductComponents.
+ * Create the store with createProductFormStore. Call `connect()` on mount, `hydrate()` when the product data changes, and `destroy()` on unmount. To skip the store setup, use the product provider from createProductComponents.
  *
  * @publicDocs
  */
 export type UseProductFormForDocs =
   /**
-   * @param store - The product form store that createProductFormStore returns.
-   * @param options - Options with an `onSelect` callback for each valid option selection.
-   * @returns Option state, the selected variant, cart errors, the matching cart line, pending state, and form bindings.
+   * @param store - The store that createProductFormStore returns.
+   * @param options - An `onSelect` callback that runs after each resolved or unresolved selection.
+   * @returns The option state, the selected variant, cart errors, the matching cart line, the pending state, the register function, and the form props.
    */
   (
     store: ProductFormStore,

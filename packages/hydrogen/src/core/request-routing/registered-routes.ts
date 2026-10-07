@@ -30,15 +30,15 @@ const VALID_REDIRECT_STATUSES = [
 ] as const satisfies readonly ShopifyRedirectStatus[];
 
 /**
- * Defines a handler for one pathname and HTTP method. Group handlers in an object, and pass the
- * groups to handleShopifyRoutes in its `handlers` option.
+ * Creates a custom endpoint in your app for one pathname and HTTP method. Collect handlers in an
+ * object, and pass an array of handler objects to handleShopifyRoutes in its `handlers` option.
  *
- * Register custom endpoints at paths other than `/api/cart`, which the cart server handlers use. Hydrogen sends a JSON result as a 200 response. An error result defaults to status 400, and a redirect result defaults to status 303. When a redirect result uses a status other than 301, 302, 303, 307, or 308, the promise from handleShopifyRoutes rejects.
+ * Use paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status 200, an error result with status 400 by default, and a redirect result with status 303 by default. When a redirect result uses a status other than 301, 302, 303, 307, or 308, the promise from handleShopifyRoutes rejects.
  *
  * @param pathname The exact URL pathname that the handler matches. Hydrogen doesn't match path parameters or prefixes.
- * @param method The HTTP method that the handler matches, in uppercase, such as `POST`. Hydrogen compares it exactly with the request method.
- * @param handler The function that receives the route context and returns a JSON, redirect, or error result.
- * @returns The handler function, tagged with its pathname and method for route matching.
+ * @param method The HTTP method that the handler matches, in uppercase, such as `POST`.
+ * @param handler The function that receives the request, its context, the session, and the Storefront API client, and returns a JSON, redirect, or error result.
+ * @returns The handler to add to a handler object.
  * @publicDocs
  */
 export function createShopifyRouteHandler<

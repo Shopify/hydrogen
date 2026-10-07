@@ -52,21 +52,21 @@ const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
  * @publicDocs
  */
 export type CartGetData<TCart = CartData> = {
-  /** The cart, or `null` when no cart exists or the cart query returns GraphQL errors. */
+  /** The cart, or `null` when the request has no cart ID, the cart doesn't exist, or the cart query returns GraphQL errors. */
   cart: TCart | null;
-  /** GraphQL errors from the Storefront API cart query. The handler also logs them on the server. */
+  /** GraphQL errors from the cart query. The handler also logs the errors on the server. */
   errors?: Array<{ message: string }>;
 };
 
 /**
- * The route result that the cart GET handler returns. The handler sets private cache headers on the result.
+ * The JSON result that the cart GET handler returns. The handler sets private cache headers that keep CDNs and shared caches from storing the cart.
  *
  * @publicDocs
  */
 export type CartGetResult<TCart = CartData> = ShopifyRouteJsonResult<CartGetData<TCart>>;
 
 /**
- * Error codes that the cart POST handler returns. The handler returns `invalid_cart_request` when it can't parse a JSON request and `missing_cart` when a JSON request changes a cart that doesn't exist. The handler returns `cart_mutation_failed` when a mutation fails after a customer session refresh.
+ * Error codes that the cart POST handler returns. The handler returns `invalid_cart_request` when it can't parse a JSON request, and `missing_cart` when a JSON request changes the cart but has no cart ID. With `customerSession`, the handler returns `cart_mutation_failed` when a mutation fails after the handler refreshes the customer's access token.
  */
 export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_mutation_failed";
 
@@ -101,37 +101,42 @@ type ParsedCartRequestResult =
   | { type: "action"; action: CartAction; bodyCartId: string | null }
   | { type: "response"; response: CartPostResult };
 
-/** Context for the cart GET handler. Without a request, the handler reads the cart ID from the client's request context. */
+/** The context that you pass to the cart GET handler. */
 type CartGetHandlerContext = {
+  /** The Storefront API client that runs the cart query. */
   storefrontClient: StorefrontClient;
+  /** The incoming request. Omit the request to read the cart ID from the Storefront API client's request context. */
   request?: Request;
 };
 
-/** Context for the cart POST handler: the incoming request and the Storefront API client. */
+/** The context that you pass to the cart POST handler. */
 type CartPostHandlerContext = {
+  /** The cart request, with a JSON, URL-encoded form, or multipart form body. */
   request: Request;
+  /** The Storefront API client that runs the cart mutation. */
   storefrontClient: StorefrontClient;
 };
 
-/** Session context that the GET handler requires when the handlers sync buyer identity. */
+/** The extra context that the GET handler needs when you create the handlers with `customerSession`. */
 type CartCustomerSessionReadContext = {
+  /** The session storage that holds the customer's tokens. */
   sessionManager: ReadonlyCustomerSessionManager;
-  /** The current request's context, which the handler uses to check the customer's login state. */
+  /** The current request's context, for checking the customer's login state. */
   requestContext: ShopifyRequestContext;
 };
 
-/** Session context that the POST handler requires when the handlers sync buyer identity. */
+/** The extra context that the POST handler needs when you create the handlers with `customerSession`. */
 type CartCustomerSessionWriteContext = {
-  /** A writable session manager. The handler commits it after refreshing the customer access token. */
+  /** The session storage that holds the customer's tokens. After a token refresh, the handler commits the session and adds its `Set-Cookie` headers to the response. */
   sessionManager: WritableCustomerSessionManager;
-  /** The current request's context, which the handler uses to read or refresh the customer access token. */
+  /** The current request's context, for reading or refreshing the customer's access token. */
   requestContext: ShopifyRequestContext;
 };
 
-/** The customer session that supplies login state and access tokens for buyer identity sync. */
+/** The customer session from createCustomerSession. The cart handlers read the customer's login state and access token from the session. */
 type CartCustomerSession = CustomerSession;
 
-/** The GET handler for the `/api/cart` route. The handler fetches the current cart from the Storefront API. */
+/** Handles GET requests to `/api/cart` and returns the current cart. */
 export type CartGetHandler<
   TCart = CartData,
   TContext extends CartGetHandlerContext = CartGetHandlerContext,
@@ -142,14 +147,14 @@ export type CartGetHandler<
   typeof CART_GET_METHOD
 >;
 
-/** The POST handler for the `/api/cart` route. The handler runs a cart mutation from a JSON or form data body. */
+/** Handles POST requests to `/api/cart` and runs the cart change that the request body describes. */
 export type CartPostHandler<TContext extends CartPostHandlerContext = CartPostHandlerContext> =
   CallableRouteHandler<TContext, CartPostResult, typeof CART_API_PATH, typeof CART_POST_METHOD>;
 
 /**
- * The GET and POST handlers for the `/api/cart` route that createCartServerHandlers returns.
+ * The cart route handlers that createCartServerHandlers returns.
  *
- * Register the handlers with handleShopifyRoutes to connect the browser cart store to the Storefront API.
+ * Register the handlers with handleShopifyRoutes to serve the `/api/cart` route that the cart store calls.
  */
 export type CartServerHandlers<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
@@ -158,19 +163,23 @@ export type CartServerHandlers<
   /** The cart query document that the handlers run. */
   readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;
   /**
-   * Reads the cart ID from the request, or from the client's request context when you omit the request, and fetches the cart. The handler logs GraphQL errors on the server and returns them in the data's errors field. The handler throws when the Storefront API request fails.
+   * Returns the current cart. The handler reads the cart ID from the request's `cartId` search parameter or `cart` cookie. Without a request, the handler reads the cart ID from the Storefront API client's request context.
+   *
+   * GraphQL errors return a `null` cart with the errors in the response body. The handler throws when the Storefront API request fails.
    */
   get: CartGetHandler<TCart>;
   /**
-   * Parses the request and runs the matching Storefront API mutation. An add without a cart creates a cart. Other intents without a cart return a `missing_cart` error for a JSON request and a redirect for a form submission. The handler sets the `cart` cookie when the mutation returns a new cart ID, unless the request body names a cart other than the cookie's cart. The handler rethrows GraphQL and transport errors from a mutation.
+   * Runs the cart change that the request describes and returns the updated cart. An add without a cart creates a cart and sets the `cart` cookie. Other changes without a cart return a `missing_cart` error for a JSON request and a redirect for a form submission.
+   *
+   * When a JSON body names a cart other than the cookie's cart, the handler leaves the cookie unchanged. The handler throws GraphQL and network errors from the mutation.
    */
   post: CartPostHandler;
 };
 
 /**
- * The cart server handlers that createCartServerHandlers returns when you pass `customerSession`. The handlers sync the cart's buyer identity with the customer session.
+ * The cart route handlers that createCartServerHandlers returns when you pass `customerSession`. The handlers connect carts to the logged-in customer.
  *
- * Each handler context requires a session manager and the request context. The handlers throw when the context lacks either one.
+ * Pass `sessionManager` and `requestContext` in each handler's context. A handler throws when it reads the customer session and either value is missing.
  */
 export type CartServerHandlersWithCustomerSession<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
@@ -179,10 +188,10 @@ export type CartServerHandlersWithCustomerSession<
   /** The cart query document that the handlers run. */
   readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;
   readonly [cartBuyerIdentitySync]: CartBuyerIdentitySync;
-  /** Fetches the cart like the plain GET handler. For a logged-in customer, the handler adds `logged_in=true` to the checkout URL. */
+  /** Returns the cart like the GET handler in CartServerHandlers. For a logged-in customer, the handler adds `logged_in=true` to the checkout URL. */
   get: CartGetHandler<TCart, CartGetHandlerContext & CartCustomerSessionReadContext>;
   /**
-   * Runs cart mutations like the plain POST handler. When an add creates a cart for a logged-in customer, the handler attaches the customer's access token to the new cart. When the handler refreshes the session and the mutation then fails, the handler logs the error and returns a `cart_mutation_failed` error with status 500.
+   * Runs cart changes like the POST handler in CartServerHandlers. When an add creates a cart for a logged-in customer, the handler attaches the customer to the new cart. When the handler refreshes the customer's access token and the mutation then fails, the handler returns a `cart_mutation_failed` error with status 500.
    */
   post: CartPostHandler<CartPostHandlerContext & CartCustomerSessionWriteContext>;
 };
@@ -206,9 +215,9 @@ type CartDataFromHandlerResult<TResult> = [TResult] extends [never]
     : CartData;
 
 /**
- * Infers the cart data shape from the type of your cart server handlers.
+ * Gets the cart data type from the type of your cart server handlers, including the fields from your custom cart fragment.
  *
- * Use the type to give framework components and hooks the cart fields from your custom cart query.
+ * Pass `typeof cartHandlers` to type cart data in your own components and functions.
  *
  * @example
  * ```ts
@@ -224,13 +233,19 @@ export type CreateCartServerHandlersOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
 > = {
   /**
-   * A cart fragment that the handlers spread into every cart query and mutation response.
-   * Name the fragment `CartFragment` and target the `Cart` type.
+   * A cart fragment that adds fields to the cart in every cart query and mutation response.
+   * Name the fragment `CartFragment` on the `Cart` type.
    *
-   * Creating the handlers throws an error for any other fragment name or type.
+   * createCartServerHandlers throws for any other fragment name or type.
    */
   readonly fragment?: TCartFragment;
-} & ({ readonly customerSession: CartCustomerSession } | { readonly customerSession?: undefined });
+} & (
+  | {
+      /** The customer session from createCustomerSession. Pass the session to attach the logged-in customer to new carts. */
+      readonly customerSession: CartCustomerSession;
+    }
+  | { readonly customerSession?: undefined }
+);
 
 type CartServerHandlersForOptions<TOptions> = TOptions extends {
   readonly customerSession: CartCustomerSession;
@@ -242,11 +257,11 @@ type CartServerHandlersForOptions<TOptions> = TOptions extends {
   : CartServerHandlers<CartQueriesForOptions<TOptions>["cart"], CartDataForOptions<TOptions>>;
 
 /**
- * Creates the GET and POST handlers for the `/api/cart` route.
+ * Creates the handlers for the `/api/cart` route, which loads and changes the customer's cart.
  *
- * The handlers find the cart through the `cart` cookie and run the matching Storefront API query or mutation. A JSON request gets a JSON response, and a form submission gets a 303 redirect to the referring page.
+ * The handlers read the cart ID from the `cart` cookie and set the cookie when they create a cart. A JSON request gets a JSON response, and a form submission gets a 303 redirect to the referring page.
  *
- * Pass `customerSession` to sync the cart's buyer identity with the logged-in customer. The handlers then require a session manager in their context.
+ * Pass `customerSession` to connect carts to the logged-in customer. The handlers then need `sessionManager` and `requestContext` in their context.
  *
  * @example
  * ```ts
@@ -270,8 +285,8 @@ export function createCartServerHandlers<const TOptions extends CreateCartServer
   options: TOptions,
 ): CartServerHandlersForOptions<TOptions>;
 /**
- * @param options The custom cart fragment and the customer session to sync with the cart.
- * @returns GET and POST handlers for the cart route to register with your framework's router.
+ * @param options A custom cart fragment and the customer session.
+ * @returns The GET and POST handlers to register with handleShopifyRoutes.
  */
 export function createCartServerHandlers(
   options?: CreateCartServerHandlersOptions,

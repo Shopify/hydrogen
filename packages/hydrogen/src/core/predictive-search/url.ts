@@ -11,13 +11,9 @@ export type PredictiveSearchProductItem = PredictiveSearchItems["products"][numb
 export type PredictiveSearchCollectionItem = PredictiveSearchItems["collections"][number];
 /** A page result from predictive search. */
 export type PredictiveSearchPageItem = PredictiveSearchItems["pages"][number];
-/**
- * An article result from predictive search. The item URL function builds the article URL from the article's blog handle.
- */
+/** An article result from predictive search. */
 export type PredictiveSearchArticleItem = PredictiveSearchItems["articles"][number];
-/**
- * A query suggestion from predictive search. The item URL function uses the suggestion's text as the search term.
- */
+/** A suggested search term from predictive search. */
 export type PredictiveSearchQueryItem = PredictiveSearchItems["queries"][number];
 
 /** A product, collection, page, or article result. Excludes query suggestions. */
@@ -31,35 +27,30 @@ export type PredictiveSearchResourceItem =
 export type PredictiveSearchItem = PredictiveSearchResourceItem | PredictiveSearchQueryItem;
 
 /**
- * Options for the URL of a product, collection, page, or article result.
+ * Options for the link of a product, collection, page, or article result.
  *
- * Resource URLs need the route templates and the current search term.
+ * Pass the route templates and the customer's search term.
  */
 export type PredictiveSearchItemUrlOptions = {
-  /** Path prefix, such as a locale prefix, to add before the generated route. */
+  /** Prefix to add before the route path, such as a locale prefix. */
   pathPrefix?: string;
-  /**
-   * Route templates that build the resource URL.
-   *
-   * Create the route templates with createShopifyRouteTemplates.
-   */
+  /** Route templates for product, collection, page, and article paths, from createShopifyRouteTemplates. */
   routes: ShopifyRouteTemplates;
-  /** Search term that the function adds to the URL as the `q` query parameter. */
+  /** Search term that the customer typed. The link carries the term in the `q` URL parameter. */
   term: string;
 };
 
 /**
- * Options for the URL of a query suggestion.
+ * Options for the link of a query suggestion.
  *
- * Every option is optional. Each suggestion uses its text as the search
- * term and links to the standard search route by default.
+ * By default, a suggestion links to the standard search route and searches for the suggestion's text.
  */
 export type PredictiveSearchQueryItemUrlOptions = {
-  /** Path prefix, such as a locale prefix, to add before the search route. The function ignores the prefix when you set a search path. */
+  /** Prefix to add before the search route, such as a locale prefix. Has no effect when you set a search path. */
   pathPrefix?: string;
-  /** Route templates. The function uses the standard search route when you omit the templates. */
+  /** Route templates that set the search page path. Defaults to Hydrogen's standard search route. */
   routes?: ShopifyRouteTemplates;
-  /** Custom search page path. The function uses the path as is and skips the route templates and the path prefix. */
+  /** Search page path or URL to use as is, without the route templates or the path prefix. */
   searchPath?: string;
 };
 
@@ -72,29 +63,23 @@ type AnyPredictiveSearchItemUrlOptions =
 type SearchResultUrlOptions = {
   /** Search page path or absolute URL. */
   baseUrl: string;
-  /** Search term that the function sets under the search parameter name. */
+  /** Search term to add to the URL. */
   term: string;
-  /**
-   * Storefront API tracking parameters as a query string.
-   *
-   * The function appends each tracking parameter after the other parameters and doesn't encode the values twice.
-   */
+  /** Tracking parameters from a Storefront API search result. Pass the result's `trackingParameters` value unchanged. */
   trackingParameters?: string | null;
-  /** Extra query parameters. The function sets the extra parameters before the term, and the term overwrites a key that matches the search parameter name. */
+  /** Extra URL parameters, such as a result type filter. The search term replaces an extra parameter with the same name. */
   params?: Record<string, string>;
-  /** Query parameter name for the term. Defaults to `"q"`. */
+  /** URL parameter that carries the search term. Defaults to `"q"`. */
   searchParamName?: string;
 };
 
 /**
- * Builds a URL for a predictive search result.
+ * Builds the link for a predictive search result. A product, collection, page, or
+ * article result links to the resource's page with the search term. A query suggestion links to
+ * the search page and searches for the suggestion's text. Every link keeps the
+ * result's tracking parameters.
  *
- * For a query suggestion, the function builds a search page URL with the suggestion's
- * text as the search term. For a product, collection, page, or article, the function
- * builds the resource URL from the route templates and adds the search term.
- * The function appends the result's tracking parameters when the result has them.
- *
- * The function throws when you pass a product, collection, page, or article without route templates and a term.
+ * For a product, collection, page, or article, pass the route templates and the search term. The function throws an error without them.
  *
  * @throws {Error} When you pass a resource item without `routes` and `term` in the options.
  * @publicDocs
@@ -108,9 +93,9 @@ export function getPredictiveSearchItemUrl(
   options: PredictiveSearchItemUrlOptions,
 ): string;
 /**
- * @param item The predictive search result to build a URL for.
- * @param options The route templates, search term, and path settings for the URL.
- * @returns The result URL with the search term and the result's tracking parameters. The URL is relative unless the custom search path is absolute.
+ * @param item The predictive search result to link to.
+ * @param options Route templates, search term, and path settings for the link.
+ * @returns The link URL. The URL is relative unless you pass an absolute search path.
  */
 export function getPredictiveSearchItemUrl(
   item: PredictiveSearchItem,
@@ -124,11 +109,11 @@ export function getPredictiveSearchItemUrl(
 }
 
 /**
- * Builds a search result URL from a base URL, a search term, and optional
- * extra parameters.
+ * Builds a search page URL from a path, a search term, and optional extra
+ * parameters. Use the function for search page links, such as a link to every
+ * result for the current term.
  *
- * The function sets the extra parameters, then sets the term, then appends the tracking parameters.
- * The term and the extra parameters replace existing values with the same name in the base URL.
+ * The search term and the extra parameters replace values with the same names in the base URL.
  *
  * @param options - The base URL, the search term, the extra and tracking parameters, and the search parameter name.
  * @returns A relative URL, or an absolute URL when the base URL is absolute.

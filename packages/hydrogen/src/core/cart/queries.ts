@@ -664,9 +664,9 @@ export function makeCartQueries(options?: CreateCartQueriesOptions) {
 }
 
 /**
- * Default cart GraphQL queries and mutations.
+ * The default cart query and mutations that createCartServerHandlers runs.
  *
- * Each document spreads the default Hydrogen cart fragment and declares country and language variables with the `@inContext` directive. The Storefront API client fills both variables from the request context's locale. The fragment leaves out the variant's available quantity, which requires the `unauthenticated_read_product_inventory` Storefront API scope.
+ * Each document returns the cart in the request's country and language through the `@inContext` directive. The Storefront API client fills both values from the request context's locale. The default cart fragment leaves out the variant's available quantity, which needs the `unauthenticated_read_product_inventory` Storefront API scope. Select the field in a custom cart fragment to cap quantities at available stock.
  *
  * @publicDocs
  */

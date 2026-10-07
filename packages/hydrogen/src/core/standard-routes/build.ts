@@ -9,24 +9,19 @@ import type {
 } from "./types";
 
 /**
- * Creates a typed map from Shopify standard storefront routes to your app's path templates.
+ * Tells Hydrogen where your app serves products, collections, and other Shopify resources. Pass
+ * the returned object to handleShopifyRoutes, handleShopifyRedirects, the ShopifyScripts `routes`
+ * option, and the predictive search URL helpers.
  *
- * Pass the returned object anywhere Hydrogen needs your app's URL shape. That includes route and
- * redirect handling, the Shopify scripts `routes` option, and predictive search URL helpers.
+ * Add a key only for a route that your app serves at a non-standard path. Hydrogen uses Shopify's
+ * default path for each key that you leave out. Pass an empty object when your app serves every
+ * route at its default path. Each template starts with `/` and includes the handle placeholders
+ * for its route. Leave the locale path prefix out of templates. Hydrogen adds the prefix for you.
  *
- * Each key names a Shopify standard route, and each value is your app's path template. Templates
- * start with `/` and include the handle placeholders for routes that identify a resource. Leave the
- * locale path prefix out of templates. Hydrogen applies the prefix when it resolves routes. Add a
- * key only when the app serves that route at a non-standard path. Hydrogen uses Shopify's default
- * path for each key that you leave out. Pass an empty object when the app serves every route at
- * its default path. The empty object gives the app one place to update if its routes change.
+ * TypeScript checks the shape of each template. The function returns the object that you pass.
  *
- * When Hydrogen matches the current page, a standard storefront path keeps its standard page
- * template name, even when a custom template resolves another route to the same path. TypeScript
- * checks template shapes at compile time. At runtime, the function returns its argument unchanged.
- *
- * @param routes The non-standard route paths your app serves, keyed by standard route name.
- * @returns The same route templates object, typed for Hydrogen's routing and redirect helpers.
+ * @param routes The non-standard paths that your app serves, keyed by standard route name.
+ * @returns The route templates, typed for Hydrogen's route, redirect, and URL helpers.
  * @example
  * ```ts
  * const routeTemplates = createShopifyRouteTemplates({

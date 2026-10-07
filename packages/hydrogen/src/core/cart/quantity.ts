@@ -6,20 +6,20 @@
 export const DEFAULT_MINIMUM_QUANTITY = 1;
 
 /**
- * The maximum quantity that sanitizeQuantity uses when you omit `max`. The value is `Infinity`, which means no limit.
+ * The maximum quantity that sanitizeQuantity uses when you omit `max`. The value, `Infinity`, sets no upper limit.
  *
  * @publicDocs
  */
 export const NO_QUANTITY_LIMIT = Infinity;
 
 /**
- * Clamps a raw value to a whole-number quantity between a minimum and a maximum.
+ * Turns a raw value, such as text from a quantity input, into a whole-number quantity between a minimum and a maximum.
  *
- * The function parses strings, rounds decimals, and returns the minimum for input that it can't parse. The cart store clamps quantities from a set submission with this function. The store removes the line when the submitted quantity is empty or zero.
+ * The function parses strings and rounds decimals. Input that the function can't parse returns the minimum.
  *
- * @param raw The quantity to sanitize, such as a value typed into a quantity input.
- * @param options The lower and upper bounds. The `min` option defaults to `1`, and `max` has no default limit. Pass the variant's available quantity as `max` when your cart fragment selects it.
- * @returns The rounded quantity, clamped between the minimum and maximum.
+ * @param raw The value to turn into a quantity.
+ * @param options The lower and upper bounds. The `min` option defaults to `1`, and `max` defaults to no limit. To stop at available stock, pass the variant's available quantity as `max`.
+ * @returns The rounded quantity, between the minimum and the maximum.
  * @example
  * ```ts
  * sanitizeQuantity("3")           // → 3

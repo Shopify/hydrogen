@@ -51,12 +51,11 @@ export type ConsentPreferences = {
 };
 
 /**
- * Connects a consent provider once per analytics bus, after Shopify's consent API loads.
- * Synchronize consent through `window.Shopify.customerPrivacy`. Resolve after the provider
- * has a saved choice or the customer interacts, and after Shopify receives the choice.
- * Hydrogen then checks consent and replays the events that consent allows. A rejection keeps delivery blocked,
- * and Hydrogen doesn't run the callback again. The integration stays active across component
- * unmounts.
+ * Connects a third-party consent provider to Shopify's Customer Privacy API. Hydrogen calls the
+ * function once, after the Customer Privacy API loads. Pass the provider's choice to
+ * `window.Shopify.customerPrivacy`, and resolve after Shopify receives the choice. Hydrogen then
+ * delivers the events that consent allows. When the promise rejects, Hydrogen logs the error,
+ * keeps events blocked, and doesn't call the function again.
  */
 export type ConsentSetup =
   /**
@@ -126,11 +125,10 @@ export type AnalyticsCart = {
   /** The cart ID. */
   id: string;
   /**
-   * The cart's last update time as an ISO 8601 string. Cart tracking deduplicates cart events on
-   * this value, and uses the current time when the cart data has no update time.
+   * The time of the cart's last update, as an ISO 8601 string.
    */
   updatedAt: string;
-  /** Cart tracking reads the currency code from this field and sets the active currency on `window.Shopify`. */
+  /** The currency codes of the cart's subtotal and total. */
   cost?: {
     subtotalAmount?: { currencyCode?: string };
     totalAmount?: { currencyCode?: string };
@@ -318,9 +316,9 @@ export type PublishPayloadArgs<E extends AnalyticsEventName> =
  * @publicDocs
  */
 export type StorefrontAnalyticsConfig = {
-  /** Shop identity and channel for analytics payloads. */
+  /** The shop and sales channel for analytics payloads. */
   shop: ShopAnalytics | null;
-  /** The consent mode. The configuration leaves out the setup callback, which can't serialize into HTML. */
+  /** The consent mode, without the setup callback. */
   consent: Pick<ConsentConfig, "mode">;
   /**
    * Extra key-value pairs that destinations read from the bus configuration. Cart tracking
@@ -376,10 +374,9 @@ export type StorefrontAnalyticsDestinationSetupContext = {
 /**
  * An analytics integration that receives events once consent allows tracking.
  *
- * The destination subscribes to events in its setup function. After consent allows tracking,
- * the destination receives the buffered earlier events and then live events. Return a cleanup
- * function from setup to tear down side effects when you remove the destination. The bus lives
- * for the page's lifetime.
+ * Subscribe to events in the setup function. After consent allows tracking, the destination
+ * receives the earlier events from the buffer and then new events. Return a cleanup function
+ * from setup to undo side effects when you remove the destination.
  *
  * @publicDocs
  */

@@ -53,9 +53,9 @@ export interface CartLineMerchandise {
     height?: number | null;
     [key: string]: unknown;
   } | null;
-  /** Units available for sale. The store caps typed quantity submissions at this value when your cart query selects it. */
+  /** Units available for sale. When your cart fragment selects the field, the store caps the quantity of a `set` submission at this number. */
   quantityAvailable?: number | null;
-  /** Extra variant fields from your custom cart query pass through unchanged. */
+  /** Extra variant fields from your custom cart fragment, unchanged. */
   [key: string]: unknown;
 }
 
@@ -67,7 +67,7 @@ export interface CartLineMerchandise {
  * for a bundle.
  */
 export interface CartLine {
-  /** Storefront API GID of the cart line. The store keys pending state and line errors by this ID. */
+  /** The cart line's Storefront API GID. Look up the line's pending state and errors with this ID. */
   id: string;
   /** Number of units of this merchandise in the cart. */
   quantity: number;
@@ -89,15 +89,15 @@ export interface CartLine {
 export interface CartLineConnection {
   /** The cart lines that the cart query returns. */
   nodes: CartLine[];
-  /** Extra connection fields from your custom cart query pass through unchanged. */
+  /** Extra connection fields from your custom cart fragment, unchanged. */
   [key: string]: unknown;
 }
 
 /** A discount code applied to the cart. */
 export interface DiscountCode {
-  /** The discount code text. The store keys pending state and discount errors by this value. */
+  /** The discount code text. Look up the code's pending state and errors with this value. */
   code: string;
-  /** Whether the code applies to the cart's current contents. The store sets `false` for a new code until the server responds. */
+  /** Whether the code applies to the cart's current contents. A new code reads `false` until the server responds. */
   applicable: boolean;
 }
 
@@ -119,7 +119,7 @@ export interface CartWarning {
   message: string;
 }
 
-/** Errors and warnings from a single cart mutation response. */
+/** Errors and warnings from one cart change. */
 export interface CartErrorGroup {
   /** Validation errors that the mutation returned. */
   userErrors: CartUserError[];
@@ -128,30 +128,29 @@ export interface CartErrorGroup {
 }
 
 /**
- * A network error from a cart request, such as a non-2xx response or a timeout. The store doesn't record aborted requests.
+ * A failed cart request, such as a non-2xx response or a timeout. Canceled requests add no entry.
  */
 export interface CartNetworkEntry {
   /** The error message, or a generic message when the failure has no message of its own. */
   message: string;
-  /** HTTP status code when available. */
+  /** The HTTP status code, when the endpoint returned a non-2xx response. */
   status?: number;
 }
 
 /** A key-value pair attached to the cart or to an individual cart line. */
 export interface Attribute {
-  /** The attribute name. The store keys attribute errors by this value. */
+  /** The attribute name. Look up the attribute's errors with this name. */
   key: string;
   /** The attribute value. */
   value: string | null;
 }
 
 /**
- * Tracks which parts of the cart have in-flight mutations.
+ * Shows which parts of the cart have changes in flight.
  *
- * The store tracks pending lines by line ID and pending discount codes by code,
- * which supports a pending indicator for each item. The cost flag is one boolean
- * because any line or discount change affects the total. Use the cost flag to show
- * pending UI on price displays without computing optimistic amounts.
+ * Check a line ID or a discount code to show a pending indicator on that item.
+ * Check `cost` to show pending UI on prices, which update only when the server
+ * responds.
  *
  * @example
  * ```ts
@@ -169,26 +168,25 @@ export interface Attribute {
  * ```
  */
 export interface CartPending {
-  /** Line IDs with in-flight add, quantity, or remove mutations. New lines use their `optimistic:` ID until the server confirms. */
+  /** Line IDs with an add, quantity change, or removal in flight. A new line has an ID that starts with `optimistic:` until the server confirms the line. */
   lines: Set<string>;
   /** `true` while a note update is in flight. */
   note: boolean;
   /** `true` while an attribute update is in flight. */
   attributes: boolean;
-  /** Discount codes with in-flight apply or remove mutations. */
+  /** Discount codes with an apply or remove in flight. */
   discountCodes: Set<string>;
-  /** `true` while a mutation that can change cart pricing is in flight. */
+  /** `true` while a change that can affect cart prices is in flight. */
   cost?: boolean;
 }
 
 /**
- * Per-resource error tracking for the cart.
+ * The cart's errors, grouped by the part of the cart that they affect: lines, the note,
+ * attributes, discount codes, or the cart as a whole. Each group has a timestamp in
+ * milliseconds since the epoch. Use the timestamps to flag stale errors or dismiss
+ * errors after a timeout.
  *
- * The store groups errors by the resource they affect: lines, the note, attributes,
- * discount codes, or the cart as a whole. Each group has a timestamp in milliseconds
- * since the epoch. Use the timestamps to flag stale errors or dismiss them after a timeout.
- *
- * A separate network list collects transport failures apart from Storefront API user errors.
+ * Failed requests go in a network list, apart from Storefront API user errors.
  */
 export interface CartErrorState {
   /** Errors that don't belong to a line, the note, an attribute, or a discount code. */
@@ -202,7 +200,7 @@ export interface CartErrorState {
   /** Errors keyed by discount code. */
   discountCodes: Map<string, CartErrorGroup>;
   /**
-   * When a cart mutation request fails, the store adds an entry. The entry has an HTTP status only when the endpoint returned a non-2xx response. When a refresh fails, the store adds an entry with a generic message and no status. The store logs failed initial loads and reset loads without adding entries.
+   * Failed cart requests. A failed cart change adds an entry, with an HTTP status when the endpoint returned a non-2xx response. A failed refresh adds an entry with a generic message and no status. A failed first load or a failed load after a reset adds no entry.
    */
   network: CartNetworkEntry[];
   /** Time in milliseconds since the epoch when the store last recorded any error, or `0` before the first. */
@@ -222,17 +220,17 @@ export interface CartErrorState {
 }
 
 /**
- * Cart data returned by the Storefront API.
+ * The customer's cart, in the shape that the Storefront API returns.
  *
- * Cart costs come only from the server. Extra fields from your custom cart query
- * pass through unchanged.
+ * Cart costs come only from the server. Extra fields from your custom cart
+ * fragment appear unchanged.
  */
 export interface CartData {
-  /** Storefront API Cart GID, or `null` when no cart exists yet. */
+  /** The cart's Storefront API GID, or `null` when no cart exists yet. */
   id: string | null;
   /** The cart's last update time in ISO 8601 format. Absent until the first server response. */
   updatedAt?: string;
-  /** The Shopify checkout URL. The URL changes when the buyer identity or consent state changes. */
+  /** The Shopify checkout URL. The URL can change when the customer logs in or out, or changes tracking consent. */
   checkoutUrl?: string | null;
   /** Sum of all line quantities. */
   totalQuantity: number;
@@ -246,15 +244,15 @@ export interface CartData {
   lines: CartLineConnection;
   /** Discount codes applied to the cart, with their applicability. */
   discountCodes: DiscountCode[];
-  /** Extra cart fields from your custom cart query pass through unchanged. */
+  /** Extra cart fields from your custom cart fragment, unchanged. */
   [key: string]: unknown;
 }
 
 /**
- * The state of the cart store.
+ * The cart, plus what's loading, pending, and failed.
  *
- * The React and Vue cart hooks read this state. The data type matches the cart
- * query in your cart server handlers.
+ * The cart hooks return values from this state. The data type matches the cart
+ * fragment in your cart server handlers.
  *
  * @example
  * ```ts
@@ -274,15 +272,15 @@ export interface CartData {
  * ```
  */
 export interface CartState<TData extends CartData = CartData> {
-  /** The cart data from the server, with changes from unconfirmed mutations applied. */
+  /** The cart, including changes that the server hasn't confirmed yet. */
   data: TData;
-  /** `true` during a full-cart fetch: the initial load, a load after reset, or before connecting without initial data. */
+  /** `true` while the store loads the full cart: the first load, a load after `reset()`, or before `connect()` when the store has no initial data. */
   loading: boolean;
-  /** A promise that resolves, and never rejects, when the current full cart load settles or the store discards the load. */
+  /** Present while a full cart load runs. The promise resolves, and never rejects, when the load finishes or the store drops the load. */
   readonly readyPromise?: PromiseLike<void>;
-  /** The parts of the cart with mutations in flight. */
+  /** The parts of the cart with changes in flight. */
   pending: CartPending;
-  /** `true` while a background revalidation runs after overlapping mutations or a refresh. */
+  /** `true` while the store reloads the cart in the background after overlapping cart changes or a `refresh()` call. */
   revalidating?: boolean;
   /** Errors and warnings, grouped by the part of the cart that they affect. */
   errors: CartErrorState;
@@ -309,11 +307,11 @@ export function createEmptyErrorGroup(): CartErrorGroup {
 }
 
 /**
- * Creates an empty cart error state with every timestamp at `0` and every group empty.
+ * Creates a cart error state with no errors and every timestamp at `0`.
  *
  * Each call returns new groups, maps, and arrays.
  *
- * @returns A new error state that shares no groups, maps, or arrays with earlier calls.
+ * @returns A new, empty error state.
  * @publicDocs
  */
 export function createEmptyCartErrors(): CartErrorState {
@@ -336,7 +334,7 @@ export function createEmptyCartErrors(): CartErrorState {
 
 /**
  * Frozen cart data for an empty cart, with a `null` ID, zero quantities, and
- * zero-amount costs. Serves as the initial and fallback value before the first server response.
+ * zero-amount costs. A cart store without initial data starts from this cart.
  *
  * @publicDocs
  */

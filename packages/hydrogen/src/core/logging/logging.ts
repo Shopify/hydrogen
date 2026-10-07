@@ -66,16 +66,17 @@ const state: LoggingState = {
 };
 
 /**
- * Sets the logger and minimum log level for every Hydrogen helper in the current JavaScript
- * context. Call the function once at startup. In the browser, call it at app entry. On the server,
- * call it during module initialization.
+ * Sends Hydrogen's log entries to your logger at the minimum level you choose. Use the function to
+ * forward Hydrogen errors to a monitoring service or to reduce console output.
  *
+ * Call the function once at startup. In the browser, call the function at app entry. On the
+ * server, call the function during module initialization. The configuration applies to every
+ * Hydrogen helper in the current JavaScript context, including helpers that loaded before the call.
  * Each call replaces the previous configuration, and options that the call omits reset to their
- * defaults. The new configuration also applies to helpers that loaded before the call. The inline
- * analytics and consent scripts that Hydrogen serializes into HTML run outside the app bundle.
- * These scripts always write to the console with the standard prefix and ignore a custom logger.
+ * defaults. Hydrogen's inline analytics and consent scripts run outside your app bundle, and they
+ * always write to the console.
  *
- * @param options The logger that receives entries and the minimum severity to forward.
+ * @param options The logger that receives entries, and the minimum severity to send to the logger.
  * @returns Nothing.
  * @publicDocs
  */

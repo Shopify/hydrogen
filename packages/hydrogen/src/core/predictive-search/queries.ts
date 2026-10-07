@@ -222,29 +222,29 @@ const DEFAULT_QUERY_FRAGMENT = gql(`
 `);
 
 /**
- * GraphQL fragments that add fields to each predictive search result type.
+ * GraphQL fragments that add fields to each type of predictive search result.
  *
- * Each fragment must use its required name and type. Otherwise, creating the queries throws.
- * The query keeps Hydrogen's own fields for URLs, tracking, and display, and adds the fields from each custom fragment.
+ * Each fragment needs the name and type that its option lists, or makePredictiveSearchQueries throws an error.
+ * Results keep Hydrogen's built-in fields for links, tracking, and display.
  */
 export type PredictiveSearchFragments = {
-  /** Fragment for product results. Declare the fragment as `fragment PredictiveSearchProductFragment on Product`. */
+  /** Adds fields to product results. Start the fragment with `fragment PredictiveSearchProductFragment on Product`. */
   readonly product?: AnyStorefrontQueryString;
-  /** Fragment for collection results. Declare the fragment as `fragment PredictiveSearchCollectionFragment on Collection`. */
+  /** Adds fields to collection results. Start the fragment with `fragment PredictiveSearchCollectionFragment on Collection`. */
   readonly collection?: AnyStorefrontQueryString;
-  /** Fragment for page results. Declare the fragment as `fragment PredictiveSearchPageFragment on Page`. */
+  /** Adds fields to page results. Start the fragment with `fragment PredictiveSearchPageFragment on Page`. */
   readonly page?: AnyStorefrontQueryString;
-  /** Fragment for article results. Declare the fragment as `fragment PredictiveSearchArticleFragment on Article`. */
+  /** Adds fields to article results. Start the fragment with `fragment PredictiveSearchArticleFragment on Article`. */
   readonly article?: AnyStorefrontQueryString;
-  /** Fragment for query suggestions. Declare the fragment as `fragment PredictiveSearchQueryFragment on SearchQuerySuggestion`. */
+  /** Adds fields to query suggestions. Start the fragment with `fragment PredictiveSearchQueryFragment on SearchQuerySuggestion`. */
   readonly query?: AnyStorefrontQueryString;
 };
 
-/** Options for the predictive search query document. */
+/** Options for a custom predictive search query. */
 export type CreatePredictiveSearchQueriesOptions<
   TFragments extends PredictiveSearchFragments = PredictiveSearchFragments,
 > = {
-  /** Fragments that add fields to each result type. The query always keeps Hydrogen's built-in fields. */
+  /** Fragments that add fields to each result type. Results keep Hydrogen's built-in fields. */
   readonly fragments?: TFragments;
 };
 
@@ -271,14 +271,14 @@ type PredictiveSearchQuerySourceForOptions<TOptions> = ComposedSource<
   PredictiveSearchQueryFragmentsForOptions<TOptions>
 >;
 
-/** Query document type for a set of query options. TypeScript infers the result and variable types from the custom fragments. */
+/** Type of a custom predictive search query, with result types from your fragments. */
 type PredictiveSearchQueryForOptions<TOptions> = StorefrontQueryString<
   InferResult<PredictiveSearchQuerySourceForOptions<TOptions>>,
   InferVariables<PredictiveSearchQuerySourceForOptions<TOptions>>,
   PredictiveSearchQuerySourceForOptions<TOptions>
 >;
 
-/** Query object type for a set of query options. The type keeps the inferred types from the custom fragments. */
+/** Type of the object that makePredictiveSearchQueries returns, with result types from your fragments. */
 export type PredictiveSearchQueriesForOptions<TOptions> = {
   readonly predictiveSearch: PredictiveSearchQueryForOptions<TOptions>;
 };
@@ -309,10 +309,10 @@ function resolveFragments(fragments: PredictiveSearchFragments | undefined) {
 }
 
 /**
- * Builds the predictive search query document with your custom fragments.
+ * Builds a predictive search query that adds the fields from your fragments to the results.
  *
- * TypeScript infers the query's result type from the fragments that you pass.
- * The function throws when a custom fragment doesn't use its required name and target type.
+ * Pass the query to queryPredictiveSearch, or pass the same fragments to createPredictiveSearchServerHandlers. TypeScript types the results from your fragments.
+ * The function throws an error when a fragment doesn't use its required name and type.
  *
  * @throws {Error} When a custom fragment does not match its required name or target type.
  * @publicDocs
@@ -322,8 +322,8 @@ export function makePredictiveSearchQueries<
 >(options: TOptions): PredictiveSearchQueriesForOptions<TOptions>;
 export function makePredictiveSearchQueries(): PredictiveSearchQueriesForOptions<undefined>;
 /**
- * @param options The custom fragments that add fields to each result type.
- * @returns An object that holds the composed query under `predictiveSearch`.
+ * @param options Fragments that add fields to each result type.
+ * @returns An object with the query under `predictiveSearch`.
  */
 export function makePredictiveSearchQueries(options?: CreatePredictiveSearchQueriesOptions) {
   return {
@@ -332,9 +332,9 @@ export function makePredictiveSearchQueries(options?: CreatePredictiveSearchQuer
 }
 
 /**
- * Default query object that Hydrogen builds from its default fragments.
- * The query function uses the object when you omit the `query` option.
+ * Hydrogen's built-in predictive search query, under `predictiveSearch`.
+ * queryPredictiveSearch uses the query when you omit the `query` option.
  *
- * Build custom query documents with makePredictiveSearchQueries.
+ * To add fields to the results, use makePredictiveSearchQueries.
  */
 export const predictiveSearchQueries = makePredictiveSearchQueries();

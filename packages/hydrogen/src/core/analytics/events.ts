@@ -1,14 +1,13 @@
 /**
- * Canonical event names for the Hydrogen analytics bus.
+ * The names of the analytics events that Hydrogen supports.
  *
- * Pass the constants as the event name when you publish an event or subscribe a destination.
- * TypeScript checks string literal names and narrows the payload the same way. The constants add
- * autocomplete and a single place to rename an event.
+ * Pass a constant as the event name when you publish an event or subscribe a destination.
+ * TypeScript narrows the payload to match the event name.
  *
  * @publicDocs
  */
 export const AnalyticsEvent = {
-  /** Publish when a customer views a page. The bus fills in the current URL when the payload omits it. */
+  /** Publish when a customer views a page. Hydrogen fills in the current URL when the payload has none. */
   PAGE_VIEWED: "page_viewed" as const,
   /** Publish when a customer views a product. The payload lists the viewed products. */
   PRODUCT_VIEWED: "product_viewed" as const,
@@ -19,11 +18,11 @@ export const AnalyticsEvent = {
   /** Publish when a customer views search results. The payload carries the search term. */
   SEARCH_VIEWED: "search_viewed" as const,
 
-  /** Cart tracking publishes the event when the confirmed cart's update time changes. */
+  /** Cart tracking publishes this event when the cart changes. */
   CART_UPDATED: "cart_updated" as const,
-  /** Cart tracking publishes the event when the cart gains a line or a line's quantity increases. */
+  /** Cart tracking publishes this event when the customer adds a line or raises a line's quantity. */
   PRODUCT_ADD_TO_CART: "product_added_to_cart" as const,
-  /** Cart tracking publishes the event when the cart loses a line or a line's quantity decreases. */
+  /** Cart tracking publishes this event when the customer removes a line or lowers a line's quantity. */
   PRODUCT_REMOVED_FROM_CART: "product_removed_from_cart" as const,
 };
 
@@ -31,7 +30,7 @@ export const AnalyticsEvent = {
 type AnalyticsEventMap = typeof AnalyticsEvent;
 
 /**
- * Pass these values as the event name when you publish an event or subscribe a destination. TypeScript type-checks string literal event names and narrows the payload the same way.
+ * The names of the analytics events that Hydrogen supports. Pass a value as the event name when you publish an event or subscribe a destination. TypeScript narrows the payload to match the event name.
  *
  * @publicDocs
  */

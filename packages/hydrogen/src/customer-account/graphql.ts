@@ -14,11 +14,9 @@ const CUSTOMER_ACCOUNT_DOCUMENT = Symbol("CustomerAccountDocument");
 const VARIABLE_DEFINITION_RE = /\$([_A-Za-z][_0-9A-Za-z]*)\s*:/g;
 
 /**
- * Branded document type that gql() in `@shopify/hydrogen/customer-account` returns.
+ * A Customer Account API query or mutation that gql from `@shopify/hydrogen/customer-account` returns. TypeScript infers the result and variables types from the document's GraphQL source.
  *
- * The document carries its GraphQL source as a string literal type. TypeScript derives the result and variables types from that source.
- *
- * The brand is private, and only gql() creates valid documents. The client throws a `TypeError` at runtime for a plain object with a `source` property.
+ * Create documents only with the Customer Account gql function. The client throws a `TypeError` for any other object.
  */
 export type CustomerAccountDocument<
   Result = unknown,
@@ -29,7 +27,7 @@ export type CustomerAccountDocument<
   readonly source: Source;
 };
 
-/** Customer Account document with any result, variables, and source. Use it as a constraint when you accept any document. */
+/** Any Customer Account API document. Use the type as a constraint when a function accepts any document. */
 export type AnyCustomerAccountDocument = CustomerAccountDocument<unknown, never, string>;
 
 /** Extracts the source string literal type from a Customer Account document. */
@@ -85,11 +83,9 @@ type CustomerAccountGql = {
 } & CustomerAccountTadaGql;
 
 /**
- * Creates a branded Customer Account document from a GraphQL source string. Call gql as a regular function. The function doesn't support tagged template syntax.
+ * Creates a typed Customer Account API query or mutation from a GraphQL source string. Pass the document to the Customer Account API client. Call gql as a regular function. Tagged template syntax doesn't work.
  *
- * The client checks the private brand at runtime and throws a `TypeError` for a plain object with a `source` property.
- *
- * Pass an array of fragment documents as the second argument to append the fragments to the operation. Fragments with identical source text appear once. Fragments that share a name but differ in source text all appear. A fragment that another function created throws a `TypeError`.
+ * Pass an array of fragment documents as the second argument to append the fragments to the operation. Each fragment must come from this gql function, or the call throws a `TypeError`.
  *
  * @example
  * ```ts
@@ -172,9 +168,9 @@ function getVariableNames(source: string): ReadonlySet<string> {
 }
 
 /**
- * Creates a typed Customer Account API document from a GraphQL source string. Call gql as a regular function.
+ * Creates a typed Customer Account API query or mutation from a GraphQL source string. Pass the document to the Customer Account API client. Call gql as a regular function.
  *
- * Pass an array of fragment documents as the second argument to append the fragments to the operation. Fragments with identical source text appear once. Each fragment must come from this gql function, or the call throws a `TypeError`.
+ * Pass an array of fragment documents as the second argument to append the fragments to the operation. Each fragment must come from this gql function, or the call throws a `TypeError`.
  *
  * To validate documents, run `hydrogen gql check` in your `typecheck` script with the `@shopify/hydrogen/ts-plugin` setup. Framework typecheck commands don't validate the documents.
  *
@@ -182,8 +178,8 @@ function getVariableNames(source: string): ReadonlySet<string> {
  */
 export type CustomerAccountGqlForDocs =
   /**
-   * @param source - GraphQL source text of an operation or a fragment.
-   * @param fragments - Fragment documents that the operation references.
-   * @returns A branded document that the Customer Account API client accepts.
+   * @param source - The GraphQL source of an operation or a fragment.
+   * @param fragments - The fragment documents that the operation uses.
+   * @returns A typed document to pass to the Customer Account API client.
    */
   (source: string, fragments?: readonly AnyCustomerAccountDocument[]) => AnyCustomerAccountDocument;

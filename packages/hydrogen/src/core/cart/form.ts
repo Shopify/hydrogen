@@ -1,38 +1,38 @@
 /**
- * HTML attributes for the hidden submit button that runs the `set` intent.
+ * HTML attributes for the hidden submit button that sets a line to the quantity in the form's quantity input.
  *
- * The form register returns the attributes for `register("set")`. A quantity input submits on change only when the set button is the form's first submit button.
+ * `register("set")` returns the attributes. Make the set button the form's first submit button. A quantity input submits on change only when the set button comes first.
  *
  * @publicDocs
  */
 export interface SetButtonAttributes {
-  /** The form field name that carries the cart intent. */
+  /** The form field that names the cart change. */
   name: "intent";
-  /** The intent that sets a line to the quantity in the form's quantity input. */
+  /** Sets the line to the quantity in the form's quantity input. */
   value: "set";
-  /** Makes the button the submitter that quantity input changes trigger. */
+  /** Makes the button the one that submits the form when the quantity changes. */
   type: "submit";
   /** Hides the button from view. */
   hidden: true;
 }
 
 /**
- * HTML attributes for an interactive quantity input.
+ * HTML attributes for a quantity input that submits the form when the customer changes the quantity.
  *
- * The form register returns the attributes for `register("quantity", { value, interactive: true })`. The attributes make a text input with a numeric input mode, which shows a number keyboard on mobile devices and hides the native spinner arrows.
+ * `register("quantity", { value, interactive: true })` returns the attributes. The input shows a number keyboard on mobile devices and has no spinner arrows.
  *
  * @publicDocs
  */
 export interface QuantityInputAttributes {
-  /** The form field name that the cart reads the quantity from. */
+  /** The form field that holds the quantity. */
   name: "quantity";
   /** The current quantity as a string. */
   value: string;
-  /** A text input, which avoids the native number spinner arrows. */
+  /** Renders a text input, which has no number spinner arrows. */
   type: "text";
   /** Shows a numeric keyboard on mobile devices. */
   inputMode: "numeric";
-  /** The `\d+` pattern, which accepts digits only. */
+  /** Accepts digits only. */
   pattern: string;
   /** Turns off browser autocomplete for the input. */
   autoComplete: "off";
@@ -51,7 +51,7 @@ type AttributeValueName = `attributes.${string}`;
  * `increase`, `decrease`, `remove`, `set`, `discount-apply`, `discount-remove`,
  * `note-update`, or `attributes-update`.
  *
- * For an attribute value, the function builds the `attributes.<key>` field name from the key option. The line ID input is read-only. Add `type="hidden"` to hide it.
+ * For an attribute value, pass a `key` option. The function names the field `attributes.<key>` and throws a type error when the key is missing or empty. The line ID input is read-only. Add `type="hidden"` to hide the line ID input.
  *
  * @example
  * ```tsx
@@ -173,7 +173,9 @@ function createFieldAttributes(name: string, opts?: RegisterOptions) {
 /**
  * Creates a register function that returns the HTML attributes for cart form fields and action buttons.
  *
- * The register function holds no state. Share one register function across components. The React and Vue cart form hooks wrap the register function and add form props. The React hook also attaches auto-submit to an interactive quantity input.
+ * Use the function to build cart forms without a framework binding. In React, useCartForm returns a register function and form props for you. To submit an interactive quantity input on change, call attachQuantityInput.
+ *
+ * The register function holds no state. Share one register function across components.
  *
  * @example
  * ```ts
@@ -185,7 +187,7 @@ function createFieldAttributes(name: string, opts?: RegisterOptions) {
  * const addAttrs = register("add");
  * // → { name: "intent", value: "add" }
  * ```
- * @returns A register function that returns attributes for cart form fields and action buttons.
+ * @returns A register function for cart form fields and action buttons.
  * @publicDocs
  */
 export function createCartFormRegister(): CartFormRegister {

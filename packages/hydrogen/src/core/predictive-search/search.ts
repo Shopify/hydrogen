@@ -12,13 +12,13 @@ import {
   type PredictiveSearchQueriesForOptions,
 } from "./queries";
 
-/** Minimum result count that the Storefront API predictive search query accepts. The search raises lower limits to this value. */
+/** Smallest result limit. Predictive search raises lower limits to this value. */
 export const MIN_PREDICTIVE_SEARCH_LIMIT = 1;
-/** Maximum result count that the Storefront API predictive search query accepts. The search lowers higher limits to this value. */
+/** Largest result limit. Predictive search lowers higher limits to this value. */
 export const MAX_PREDICTIVE_SEARCH_LIMIT = 10;
-/** Default result count when you don't set a limit. */
+/** Result limit that predictive search uses when you don't set one. */
 export const DEFAULT_PREDICTIVE_SEARCH_LIMIT = 5;
-/** Default limit scope, applying the limit to each resource type independently. */
+/** Default limit scope, which applies the limit to each result type separately. */
 export const DEFAULT_PREDICTIVE_SEARCH_LIMIT_SCOPE = "EACH" satisfies PredictiveSearchLimitScope;
 /** Default unavailable product behavior, which hides unavailable products. */
 export const DEFAULT_PREDICTIVE_SEARCH_UNAVAILABLE_PRODUCTS =
@@ -34,11 +34,11 @@ type PredictiveSearchItemsForQuery<TQuery extends AnyStorefrontQueryString> = No
 >;
 
 /**
- * Predictive search results with the search term and the item count.
+ * Predictive search results, with the search term and the result count.
  *
- * The type parameter sets the items shape and defaults to the items of the
- * built-in query. To type the results of a custom query, read the awaited
- * return type of queryPredictiveSearch for that query document.
+ * The type parameter sets the shape of the results and defaults to the
+ * results of Hydrogen's built-in query. For a custom query, use the awaited
+ * return type of queryPredictiveSearch for that query.
  *
  * @example
  * ```ts
@@ -50,48 +50,43 @@ type PredictiveSearchItemsForQuery<TQuery extends AnyStorefrontQueryString> = No
 export type PredictiveSearchData<
   TItems = PredictiveSearchItemsForQuery<typeof predictiveSearchQueries.predictiveSearch>,
 > = {
-  /** Trimmed search term that produced this result. */
+  /** Search term for the results, without surrounding whitespace. */
   term: string;
-  /** Number of returned items across every items array, including query suggestions. The count covers returned items only. */
+  /** Number of results in the response across every result type, including query suggestions. The count leaves out matches beyond the limit. */
   total: number;
-  /** Predictive search items grouped by resource type. */
+  /** Results grouped by type. */
   items: TItems;
 };
 
-/** Predictive search data for a custom query document. TypeScript infers the items shape from the query's result type. */
+/** Predictive search results typed from a custom query. The results take their shape from the query's fields. */
 export type PredictiveSearchDataForQuery<TQuery extends AnyStorefrontQueryString> =
   PredictiveSearchData<PredictiveSearchItemsForQuery<TQuery>>;
 
-/** Predictive search data for a set of query options. The items shape includes the fields from the custom fragments. */
+/** Predictive search results typed from query options. The results include the fields from your custom fragments. */
 export type PredictiveSearchDataForOptions<TOptions extends CreatePredictiveSearchQueriesOptions> =
   PredictiveSearchDataForQuery<PredictiveSearchQueriesForOptions<TOptions>["predictiveSearch"]>;
 
-/**
- * Options for a predictive search query.
- *
- * The type parameter accepts a custom query document type and defaults to
- * the built-in predictive search query.
- */
+/** Storefront client, search term, custom query, and search settings for queryPredictiveSearch. */
 export type QueryPredictiveSearchOptions<
   TQuery extends AnyStorefrontQueryString = typeof predictiveSearchQueries.predictiveSearch,
 > = {
-  /** Storefront client. The function calls only the client's GraphQL method. */
+  /** Storefront client that sends the query. Any object with a `graphql` method works. */
   storefrontClient: Pick<StorefrontClient, "graphql">;
-  /** Search term. The function trims the term. An empty trimmed term returns an empty result and sends no request. */
+  /** Search term. A blank term returns empty results without a Storefront API request. */
   term: string;
-  /** Custom query document, usually from makePredictiveSearchQueries. The function passes the term, limit, limit scope, types, searchable fields, and unavailable products as query variables. */
+  /** Custom query, usually from makePredictiveSearchQueries. Defaults to Hydrogen's built-in query. A hand-written query receives the term, limit, limit scope, types, searchable fields, and unavailable products as variables. */
   query?: TQuery;
-  /** Maximum result count. The function truncates the count and clamps it to the Storefront API's range of 1 to 10. An omitted or non-finite count uses 5, which differs from the Storefront API default of 10. */
+  /** Maximum number of results, from 1 to 10. Predictive search clamps other values to that range. Defaults to 5, which differs from the Storefront API default of 10. */
   limit?: number;
-  /** Whether the limit applies to each resource type independently or to all types combined. Defaults to `"EACH"`. */
+  /** Whether the limit applies to each result type or to all result types combined. Defaults to `"EACH"`. */
   limitScope?: PredictiveSearchLimitScope;
-  /** Resource types to include. */
+  /** Result types to include. */
   types?: PredictiveSearchType[];
-  /** Fields to search for page, article, and collection results. When omitted, the Storefront API searches those results by title. Product results always search every product field. */
+  /** Fields to search for page, article, and collection results. Defaults to the title. Product results always search every product field. */
   searchableFields?: SearchableField[];
-  /** How the results treat unavailable products. Defaults to `"HIDE"`, which differs from the Storefront API default of `"LAST"`. */
+  /** Whether results hide unavailable products, show them, or list them last. Defaults to `"HIDE"`, which differs from the Storefront API default of `"LAST"`. */
   unavailableProducts?: SearchUnavailableProductsType;
-  /** Signal that aborts the request. */
+  /** Cancels the request when the signal aborts. */
   signal?: AbortSignal;
 };
 
@@ -144,14 +139,14 @@ export function getEmptyPredictiveSearchResult(term = ""): PredictiveSearchData 
 }
 
 /**
- * Runs a predictive search query against the Storefront API and returns the results.
+ * Queries the Storefront API for predictive search results. Use the function in server code, such as a route loader. Pass the Storefront client and the search term.
  *
- * The function throws when the Storefront API returns GraphQL errors or no predictive search data. Errors from the Storefront client, such as network failures and aborts, reach the caller unchanged.
+ * The function throws an error when the Storefront API returns GraphQL errors or no predictive search data. Network failures and aborts from the Storefront client also throw.
  *
- * To serve results with the Storefront API response headers, such as cache headers, use the predictive search server handlers.
+ * To serve results to the browser with the Storefront API response headers, use createPredictiveSearchServerHandlers.
  *
  * @param options - The Storefront client, the search term, a custom query, and search settings.
- * @returns The trimmed term, the item count, and the items grouped by resource type.
+ * @returns The search term, the result count, and the results grouped by type.
  * @throws {Error} When the Storefront API returns GraphQL errors.
  * @throws {Error} When the response contains no predictive search data.
  * @throws Errors from the Storefront client, such as network failures or an abort error when the signal aborts.
@@ -165,10 +160,9 @@ export async function queryPredictiveSearch<
 }
 
 /**
- * Runs a predictive search query against the Storefront API and returns the
- * results and the response headers.
+ * Queries the Storefront API for predictive search results and returns the results with the Storefront API response headers.
  *
- * The function takes the same options and returns the same data as the predictive search query function, plus the response headers.
+ * The function takes the same options as queryPredictiveSearch.
  *
  * @throws {Error} When the Storefront API returns GraphQL errors.
  * @throws {Error} When the response contains no predictive search data.
@@ -254,11 +248,11 @@ function formatGraphQLErrors(errors: GraphQLFormattedError[]): string {
 }
 
 /**
- * Runs a predictive search query against the Storefront API and returns the results.
+ * Queries the Storefront API for predictive search results. Use the function in server code, such as a route loader. Pass the Storefront client and the search term.
  *
- * The function throws when the Storefront API returns GraphQL errors or no predictive search data. Errors from the Storefront client, such as network failures and aborts, reach the caller unchanged.
+ * The function throws an error when the Storefront API returns GraphQL errors or no predictive search data. Network failures and aborts from the Storefront client also throw.
  *
- * To serve results with the Storefront API response headers, such as cache headers, use the predictive search server handlers.
+ * To serve results to the browser with the Storefront API response headers, use createPredictiveSearchServerHandlers.
  *
  * @throws {Error} When the Storefront API returns GraphQL errors.
  * @throws {Error} When the response contains no predictive search data.
@@ -268,6 +262,6 @@ function formatGraphQLErrors(errors: GraphQLFormattedError[]): string {
 export type QueryPredictiveSearchForDocs =
   /**
    * @param options - The Storefront client, the search term, a custom query, and search settings.
-   * @returns The trimmed term, the item count, and the items grouped by resource type.
+   * @returns The search term, the result count, and the results grouped by type.
    */
   (options: QueryPredictiveSearchOptions) => Promise<PredictiveSearchData>;

@@ -136,7 +136,7 @@ export type ShopifyScriptTagsOptions = {
 export type ShopifyRoutesOptions = {
   /**
    * Navigates to a URL after Shopify's scripts resolve it to your app's route. Defaults to a full
-   * page load. Checkout, cart permalink, and customer account paths always use a full page load.
+   * page load. Checkout, cart permalink, buy permalink, and customer account paths always use a full page load.
    */
   navigate?: ShopifyGlobal["routes"]["navigate"];
   /** Your app's custom route templates, which Shopify's scripts use to match and resolve storefront URLs. */

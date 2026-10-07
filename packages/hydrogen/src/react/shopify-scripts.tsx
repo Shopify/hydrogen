@@ -13,7 +13,7 @@ import {
 /**
  * Props for the ShopifyScripts component in React and Vue. The component renders Shopify's script
  * tags and starts the scripts in the browser after hydration. The component starts the scripts
- * once, with the first props, and later prop changes don't restart them.
+ * once, with the first props. Later prop changes don't restart the scripts.
  *
  * In Next.js App Router, render the component from a client component when you pass a consent `setup` function. Function props can't cross the server-to-client boundary.
  *
@@ -37,7 +37,7 @@ declare module "react" {
 }
 
 /**
- * Renders Shopify's script tags and starts the scripts in the browser after hydration. The component starts the scripts once, with the first props, and later prop changes don't restart them.
+ * Renders Shopify's script tags and starts the scripts in the browser after hydration. The component starts the scripts once, with the first props. Later prop changes don't restart the scripts.
  *
  * ShopifyScripts is a client component. In Next.js App Router, render it from a client component when you pass a consent `setup` function. Function props can't cross the server-to-client boundary.
  *

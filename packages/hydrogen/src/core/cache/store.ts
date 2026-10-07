@@ -5,8 +5,8 @@ import {
 } from "./strategies";
 
 /**
- * A plain object that the cache stores. Web Cache stores serialize each entry with
- * `JSON.stringify`. Return data that survives a round trip through `JSON.stringify`.
+ * The plain object that you cache. Web Cache stores save the object as JSON. Return data that
+ * survives a round trip through `JSON.stringify`.
  */
 export type SerializableCacheValue = Record<string, unknown>;
 
@@ -17,22 +17,22 @@ export type CacheEnvelope<T extends SerializableCacheValue = SerializableCacheVa
   strategy: CachingStrategy;
 };
 
-/** A store that implements the match, put, and delete methods of the Web Cache API. */
+/** A cache with the `match()`, `put()`, and `delete()` methods of the Web Cache API, such as a cache from `caches.open()`. */
 export type WebCacheLike = Pick<Cache, "match" | "put" | "delete">;
 
 /** Options that Hydrogen passes when it writes an entry to a key-value store. */
 export type KeyValueCacheSetOptions = {
-  /** Seconds to keep the entry. Hydrogen adds the strategy's fresh, stale, and error windows and rounds up. */
+  /** How many seconds to keep the entry. Hydrogen passes the sum of the strategy's `maxAge`, `staleWhileRevalidate`, and `staleIfError`, rounded up. */
   ttl?: number;
 };
 
-/** A key-value store with get, set, and optional delete methods. Hydrogen writes entry objects as values without serializing them. */
+/** A key-value store with `get()`, `set()`, and an optional `delete()` method. Hydrogen passes each entry to `set()` as an object. Serialize the object in your store when the store saves only strings. */
 export type KeyValueCacheLike = {
-  /** Returns the value stored under the key. Hydrogen ignores values that don't match its entry shape. */
+  /** Returns the value under the key. Hydrogen treats a value that it didn't write as a cache miss. */
   get(key: string): unknown | Promise<unknown>;
-  /** Stores the value under the key. Hydrogen passes the retention time in seconds as the ttl option. */
+  /** Saves the value under the key. Expire the entry after the `ttl` option, in seconds. */
   set(key: string, value: unknown, options?: KeyValueCacheSetOptions): unknown | Promise<unknown>;
-  /** Removes the value stored under the key. */
+  /** Removes the value under the key. */
   delete?(key: string): unknown | Promise<unknown>;
 };
 

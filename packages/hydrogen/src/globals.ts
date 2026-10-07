@@ -4,7 +4,7 @@ import type { I18nConfig } from "./core/request-context";
 import type { ShopifyStandardRouteMatch } from "./core/standard-routes/index";
 
 /**
- * Shape of the `window.Shopify` global that Shopify's scripts and Hydrogen share in the browser.
+ * The `window.Shopify` object that Shopify's scripts and Hydrogen share in the browser.
  *
  * @publicDocs
  */

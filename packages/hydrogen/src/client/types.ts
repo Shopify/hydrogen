@@ -15,28 +15,28 @@ import type { InferOperationKind } from "../graphql/type-resolver";
 
 export type { I18nConfig } from "../core/request-context";
 
-/** A gql.tada document node or a Storefront API document from `gql`. */
+/** A document that the client's GraphQL method accepts, from `gql` or from gql.tada. */
 type DocLike = TadaDocumentNode<any, any> | AnyStorefrontQueryString;
-/** A typed Storefront API document inferred from a raw query string literal. */
+/** The typed document that Hydrogen infers from a plain query string. */
 type InferredDoc<T extends string> = StorefrontQueryString<InferResult<T>, InferVariables<T>, T>;
-/** Resolves a document argument to a typed document, inferring types when the argument is a plain string. */
+/** The typed document for a GraphQL call. Hydrogen infers the types when you pass a plain query string. */
 type ResolveDoc<D> = D extends DocLike ? D : D extends string ? InferredDoc<D> : never;
-/** Extracts a document's literal source text, or the string itself for an unbranded string. */
+/** The query text of a document as a string literal type. A plain string resolves to itself. */
 type SourceText<Doc> = [SourceOf<Doc>] extends [never]
   ? Doc extends string
     ? Doc
     : never
   : SourceOf<Doc>;
-/** Resolves a document to its operation kind, or `"unknown"` when the source text isn't a literal. */
+/** The operation kind of a document, such as `"query"`. Resolves to `"unknown"` when the query text isn't a string literal type. */
 type OperationKindOfDoc<Doc> = [SourceText<Doc>] extends [never]
   ? "unknown"
   : string extends SourceText<Doc>
     ? "unknown"
     : InferOperationKind<SourceText<Doc>>;
-/** Removes the `cache` option for any document that the type system can't identify as a query. */
+/** Offers the `cache` option only for documents that TypeScript recognizes as queries. */
 type GraphqlExtraOptionsForDoc<Doc, Extra extends Record<string, unknown>> =
   OperationKindOfDoc<Doc> extends "query" ? Extra : Omit<Extra, "cache">;
-/** Extracts the result type from a Storefront API document or a gql.tada document node. */
+/** The result type of a `gql` document or a gql.tada document node. */
 type ResultOfDoc<Doc> =
   Doc extends StorefrontQueryString<infer Result, infer _Variables, string>
     ? Result
@@ -53,110 +53,105 @@ type StorefrontApiResultOf<Doc extends DocLike> = TadaResultOf<Doc>;
 type StorefrontApiVariablesOf<Doc extends DocLike> = TadaVariablesOf<Doc>;
 
 /**
- * An error in the GraphQL spec's error format. A Storefront API result lists these
- * errors in its errors field.
+ * A GraphQL error from the Storefront API. The result of a GraphQL call lists GraphQL errors
+ * in its `errors` field.
  */
 export interface GraphQLFormattedError {
-  /** Human-readable error description. */
+  /** The error message. */
   readonly message: string;
-  /** Source locations in the query where the error originated. */
+  /** The lines and columns in the query where the error occurs. */
   readonly locations?: ReadonlyArray<{ line: number; column: number }>;
-  /** Response path to the field that triggered the error. */
+  /** The path to the response field that failed. */
   readonly path?: ReadonlyArray<string | number>;
-  /** Vendor-specific details that the API attaches to the error. */
+  /** Extra details that the Storefront API adds to the error. */
   readonly extensions?: Record<string, unknown>;
 }
 
 type CommonOptions = {
   /**
-   * Shopify store domain, such as `"my-store.myshopify.com"`. The client adds
-   * an HTTPS protocol when the domain has none and removes trailing slashes.
-   * Creating the client throws an error when the domain is empty.
+   * Your store's domain, such as `"my-store.myshopify.com"`. Hydrogen adds `https://` when the
+   * domain has no protocol, and removes trailing slashes. createStorefrontClient throws an error
+   * for an empty domain.
    */
   storeDomain: string;
   /**
-   * Identifies the Hydrogen storefront that makes Storefront API requests. Shopify uses
-   * the ID to attribute cart analytics to the storefront.
+   * Your Hydrogen storefront's ID. The client sends the ID in the `Shopify-Storefront-Id` header
+   * of every request.
    */
   storefrontId?: string;
   /**
-   * Storefront API version in the GraphQL endpoint path, `/api/<version>/graphql.json`.
-   * Defaults to the version that the package bundles. To send some queries to another
-   * version, such as `unstable`, create a second client with that version. Type inference
-   * still uses Hydrogen's bundled schema. Write your own types for fields outside that schema.
+   * The Storefront API version that the client queries. Defaults to the version that Hydrogen
+   * bundles. To send some queries to another version, such as `unstable`, create a second client
+   * with that version. Type inference always uses Hydrogen's bundled schema. Write your own types
+   * for fields outside the bundled schema.
    */
   apiVersion?: string;
   /**
-   * Per-request timeout in milliseconds. Defaults to 30,000. Set `0` to disable the timeout.
-   * Stale-while-revalidate refreshes use the same timeout, or 30,000 when the timeout is `0`.
-   * Creating the client throws an error for a negative value.
+   * How long a request can run before the client throws a StorefrontTimeoutError, in
+   * milliseconds. Defaults to 30,000. Set `0` to turn off the timeout. Stale-while-revalidate
+   * refreshes use the same timeout, or 30,000 when the timeout is `0`. createStorefrontClient
+   * throws an error for a negative value.
    */
   defaultTimeoutInMs?: number;
   /**
-   * Cache store for query results.
-   *
-   * The client caches only queries that set a `cache` strategy on the call. Mutations always skip the cache. The client never caches a response with GraphQL errors.
+   * The cache that stores query results. The client caches only queries that pass a `cache`
+   * strategy. The client never caches mutations or results with GraphQL errors.
    */
   // Mirrored by the `cache?: CacheConfig` inference hole in
   // CreateStorefrontClientArgs — keep the key and type in sync.
   cache?: CacheInstance;
-  /** Extends the request lifetime for background cache writes, such as the worker `waitUntil` function. */
+  /** Keeps the runtime alive while the client writes to the cache in the background, such as a worker's `waitUntil` function. Without the function, each cached query waits for its cache write before it resolves. */
   waitUntil?: WaitUntil;
 };
 
-/** Any fetch-compatible function that resolves to a Response. */
+/** A fetch function, or any function with a compatible signature that resolves to a `Response`. */
 type AnyFetch = typeof globalThis.fetch | ((...args: never[]) => Promise<Response>);
 
 /**
- * Options for a public client. The client sends a public Storefront API access token,
- * or makes tokenless requests when you omit the token.
+ * Options for a public client, which runs in the browser or a mobile app. Pass a public access
+ * token, or omit the token for tokenless access.
  *
- * Use a public client for browser or mobile requests where the token is safe to expose.
- * Some Storefront API fields require token-based access, including product tags,
- * metaobjects, metafields, menus, and customers.
+ * Tokenless access can't read some Storefront API fields, including product tags, metaobjects,
+ * metafields, menus, and customers.
  */
 export interface PublicClientOptions<
   Fetch extends AnyFetch | undefined = typeof globalThis.fetch,
 > extends CommonOptions {
-  /** Custom fetch implementation. Defaults to `globalThis.fetch`. Creating the client throws an error when neither exists. */
+  /** The fetch function that the client calls. Defaults to `globalThis.fetch`. createStorefrontClient throws an error when neither exists. */
   fetch?: Fetch;
-  /** Public Storefront API access token. Omit the token for tokenless access to fewer fields. Creating the client throws an error for an empty string. */
+  /** Your public Storefront API access token. Omit the token for tokenless access. createStorefrontClient throws an error for an empty string. */
   publicStorefrontToken?: string | undefined;
 }
 
 /**
- * Options for a private client, which sends a private Storefront API access token.
- *
- * Use a private client for server-side rendering where you control the fetch layer
- * and can forward trusted customer context. Resolve `buyerIp` on the request context
- * before you create the client.
+ * Options for a private client, which runs during server-side rendering and forwards the
+ * customer's IP address to the Storefront API. Set `buyerIp` on the request context before you
+ * create the client.
  */
 export interface PrivateClientOptions<
   Fetch extends AnyFetch | undefined = typeof globalThis.fetch,
 > extends CommonOptions {
-  /** Custom fetch implementation. Defaults to `globalThis.fetch`. Creating the client throws an error when neither exists. */
+  /** The fetch function that the client calls. Defaults to `globalThis.fetch`. createStorefrontClient throws an error when neither exists. */
   fetch?: Fetch;
-  /** Private Storefront API access token. Never expose the token to browsers. Creating the client throws an error when the token is missing. */
+  /** Your private Storefront API access token. Keep the token out of browser code. createStorefrontClient throws an error when the token is missing. */
   privateStorefrontToken: string;
 }
 
 /**
- * Options for a private client without buyer context. The client sends a private
- * Storefront API access token and doesn't forward the customer IP.
- *
- * Use this client type for background jobs, webhooks, or server code with no customer identity.
+ * Options for a private client without buyer context, for background jobs, webhooks, and other
+ * server code with no customer. The client sends a private access token and no customer IP address.
  */
 export interface PrivateNoBuyerContextClientOptions<
   Fetch extends AnyFetch | undefined = typeof globalThis.fetch,
 > extends CommonOptions {
-  /** Custom fetch implementation. Defaults to `globalThis.fetch`. Creating the client throws an error when neither exists. */
+  /** The fetch function that the client calls. Defaults to `globalThis.fetch`. createStorefrontClient throws an error when neither exists. */
   fetch?: Fetch;
-  /** Private Storefront API access token. Never expose the token to browsers. Creating the client throws an error when the token is missing. */
+  /** Your private Storefront API access token. Keep the token out of browser code. createStorefrontClient throws an error when the token is missing. */
   privateStorefrontToken: string;
 }
 
 /**
- * The store configuration that you pass as `config` when you create a client. Each client type takes a different options shape.
+ * The store settings that you pass as `config` when you create a client. The options depend on the client type.
  *
  * @publicDocs
  */
@@ -166,11 +161,11 @@ export type StorefrontClientOptions =
   | PrivateNoBuyerContextClientOptions;
 
 /**
- * Arguments for creating a Storefront API client. Set `type` to choose the client.
+ * The arguments for createStorefrontClient. Set `type` to choose the client, then pass a request
+ * context and the matching store settings.
  *
- * A public client takes a public token or none. A private client takes a private token
- * and a request context with `buyerIp`. A private client without buyer context takes a
- * private token and doesn't forward the customer IP.
+ * A public client takes a public token or none. A private client takes a private token and a
+ * request context with `buyerIp`. A private client without buyer context takes a private token.
  */
 // `Type` and `CacheConfig` are inference holes for `createStorefrontClient`:
 // each member's discriminant is intersected with `Type` (resolving to the plain
@@ -199,26 +194,26 @@ export type CreateStorefrontClientArgs<
       config: PrivateNoBuyerContextClientOptions<AnyFetch | undefined> & { cache?: CacheConfig };
     };
 type AutoAddedVariableNames = "country" | "language";
-/** Variables a caller passes for a document. The type omits `country` and `language`, which the client fills. */
+/** The variables that you pass for a document, without `country` and `language`. The client fills both from the request context. */
 type UserVariables<Doc> = Omit<VariablesOfDoc<Doc>, AutoAddedVariableNames>;
 
 /** Resolves to `true` when an object type has no required keys. */
 type HasNoRequiredKeys<T> = Record<string, never> extends T ? true : false;
 
 /**
- * Per-call options that every Storefront API GraphQL call accepts.
+ * Options that every Storefront API GraphQL call accepts.
  *
  * @publicDocs
  */
 export type StorefrontGraphqlOptions = {
   /**
-   * Abort signal for the request. The client combines it with the request context's signal and the timeout.
-   * The signal doesn't cancel a stale-while-revalidate refresh. `defaultTimeoutInMs` bounds the refresh.
+   * Cancels the request when the signal aborts. The request context's signal and the client timeout
+   * also cancel the request. The signal doesn't cancel a stale-while-revalidate refresh.
    */
   signal?: AbortSignal;
 };
 
-/** Full options object for a GraphQL call. The type requires variables only when the document declares required variables. */
+/** The options for a GraphQL call. The call needs `variables` only when the document declares a required variable. */
 type MergedOptions<Doc extends DocLike, Extra extends Record<string, unknown>> = Extra &
   StorefrontGraphqlOptions &
   (HasNoRequiredKeys<UserVariables<Doc>> extends true
@@ -226,11 +221,9 @@ type MergedOptions<Doc extends DocLike, Extra extends Record<string, unknown>> =
     : { variables: UserVariables<Doc> });
 
 /**
- * Rest-parameter tuple for a Storefront API GraphQL call.
- *
- * The call needs the options argument when the document declares required variables.
- * The argument is optional when every variable is optional or is one that the client fills,
- * `$country` or `$language`.
+ * The options argument of a GraphQL call. Pass the options argument when the document declares a
+ * required variable. You can leave the options argument out when every variable is optional, or
+ * when the only required variables are `$country` and `$language`, which the client fills.
  */
 export type GqlRestParam<Doc extends DocLike, Extra extends Record<string, unknown> = {}> =
   HasNoRequiredKeys<MergedOptions<Doc, GraphqlExtraOptionsForDoc<Doc, Extra>>> extends true
@@ -238,25 +231,26 @@ export type GqlRestParam<Doc extends DocLike, Extra extends Record<string, unkno
     : [options: MergedOptions<Doc, GraphqlExtraOptionsForDoc<Doc, Extra>>];
 
 /**
- * Result of a Storefront API GraphQL call. Check `errors` before you read the data.
+ * The result of a GraphQL call, with the data, any GraphQL errors, and the response headers. Check
+ * `errors` before you read `data`.
  *
- * Without errors, the data is non-null and matches the document's types. With errors, the data is `null` after a request-level error or after a non-null field error that reaches the root. Otherwise the data is partial, and a nullable ancestor of each failed field holds `null`.
- *
- * Non-null data always has every top-level key. Failed fields hold `null`, which the schema types already allow.
+ * Without errors, `data` holds the full result, typed from your document. With errors, `data` is
+ * `null` after a request error or after a failed non-null field at the root. Otherwise, `data`
+ * holds a partial result, and `null` replaces each failed field or its nearest nullable parent.
  */
 export type StorefrontGraphqlResult<Doc extends DocLike> =
   | { data: ResultOfDoc<Doc>; errors?: undefined; headers: Headers }
   | { data: ResultOfDoc<Doc> | null; errors: GraphQLFormattedError[]; headers: Headers };
 
 /**
- * Base call signature of the client's GraphQL method, without per-client extra options. Accepts a `gql` document or a plain string.
+ * Runs a Storefront API query or mutation. Pass a `gql` document or a plain query string.
  *
  * @publicDocs
  */
 export type StorefrontGraphql =
   /**
    * @param doc - The `gql` document or query string to run.
-   * @param options - The variables and abort signal for the call. The call needs this argument when the document declares required variables.
+   * @param options - The variables and abort signal for the call. Pass the options when the document declares a required variable.
    * @returns The response data, any GraphQL errors, and the response headers.
    */
   <const Doc extends DocLike | string>(
@@ -265,58 +259,57 @@ export type StorefrontGraphql =
   ) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>;
 
 /**
- * The client type that you set as `type` when you create a client. A `"public"` client uses a public access token or none, for browser requests. A `"private"` client uses a private token and trusted customer context, for server-side rendering. A `"private_no_buyer_context"` client uses a private token without customer context, for background jobs and webhooks.
+ * Chooses the kind of Storefront API client to create. Use `"public"` in the browser, with a public access token or none. Use `"private"` during server-side rendering, with a private token and the customer's IP address. Use `"private_no_buyer_context"` in background jobs and webhooks, with a private token and no customer.
  *
  * @publicDocs
  */
 export type ClientType =
-  /** Public access token or tokenless access, for browser requests. */
+  /** Runs in the browser with a public access token or none. */
   | "public"
-  /** Private token with trusted customer context, for server-side rendering. */
+  /** Runs during server-side rendering with a private token and the customer's IP address. */
   | "private"
-  /** Private token without customer context, for background jobs and webhooks. */
+  /** Runs in background jobs and webhooks with a private token and no customer. */
   | "private_no_buyer_context";
 
 /**
- * A type-safe Storefront API client.
- *
- * Pass a document and options to the client's GraphQL method to run a query or
- * mutation. The document you pass types the result.
+ * A Storefront API client. Call `graphql()` with a document to run a query or mutation and get a
+ * typed result.
  */
 export type StorefrontClient<
   Extra extends Record<string, unknown> = {},
   Type extends ClientType = ClientType,
   RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
 > = {
-  /** The client type that you passed when you created the client. */
+  /** The client type that you passed to createStorefrontClient. */
   type: Type;
-  /** The country and language from the request context. The client fills `$country` and `$language` variables with these values. */
+  /** The country and language that the client sends for `$country` and `$language` variables. */
   i18n: RequestContext["i18n"];
   /**
-   * Runs a Storefront API GraphQL operation.
+   * Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a
+   * plain query string. When the operation declares `$country` or `$language`, the client sets the
+   * variable from the request context and overrides any value you pass.
    *
-   * Accepts a `gql` document or a plain query string. When the operation declares
-   * `$country` or `$language`, the client fills the variable from its resolved locale
-   * and replaces any value you pass.
-   *
-   * The method throws a configuration error when a query sets a `cache` strategy and the client has no cache, or when the strategy uses private mode. The configuration error doesn't extend StorefrontApiError. To cache customer-specific work, use createRunWithCache with a key unique to that customer.
+   * The method throws an error when a query passes a `cache` strategy and the client has no cache,
+   * or when the strategy uses `private` mode. A catch block for StorefrontApiError doesn't catch
+   * this configuration error. To cache customer-specific data, use createRunWithCache with a key
+   * unique to the customer.
    */
   graphql: <const Doc extends DocLike | string>(
     doc: Doc,
     ...options: GqlRestParam<ResolveDoc<Doc>, Extra>
   ) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>;
-  /** Full Storefront API GraphQL endpoint URL. */
+  /** The Storefront API GraphQL endpoint that the client calls. */
   apiUrl: string;
-  /** Normalized store URL, such as `"https://my-store.myshopify.com"`. */
+  /** Your store's URL with its protocol, such as `"https://my-store.myshopify.com"`. */
   storeUrl: string;
-  /** The storefront ID from the client options, for cart analytics attribution. */
+  /** The storefront ID from the client options. */
   storefrontId?: string;
-  /** The request context that supplies request-scoped headers, the abort signal, and i18n. */
+  /** The request context that you passed to createStorefrontClient. */
   requestContext: RequestContext;
 };
 
 /**
- * A Storefront API client narrowed to the public client type.
+ * The type of a client that you create with `type: "public"`.
  *
  * @publicDocs
  */
@@ -326,7 +319,7 @@ export type PublicStorefrontClient<
 > = StorefrontClient<Extra, "public", RequestContext>;
 
 /**
- * A Storefront API client narrowed to the private client type. The request context includes `buyerIp`.
+ * The type of a client that you create with `type: "private"`. The client's request context includes `buyerIp`.
  *
  * @publicDocs
  */
@@ -336,7 +329,7 @@ export type PrivateStorefrontClient<
 > = StorefrontClient<Extra, "private", RequestContext>;
 
 /**
- * A private Storefront API client typed with the base request context plus a buyer IP. Use the type to annotate a private client without naming a request context type.
+ * The type of a private client with the default request context. Use the type to annotate a private client without naming your request context type.
  *
  * @publicDocs
  */
@@ -344,7 +337,7 @@ export type RequestScopedPrivateStorefrontClient<Extra extends Record<string, un
   PrivateStorefrontClient<Extra, ShopifyRequestContextWithBuyerIp>;
 
 /**
- * A Storefront API client narrowed to the private type without buyer context. Use the type for clients in background jobs and webhooks.
+ * The type of a client that you create with `type: "private_no_buyer_context"`, for background jobs and webhooks.
  *
  * @publicDocs
  */
@@ -354,7 +347,7 @@ export type PrivateNoBuyerContextStorefrontClient<
 > = StorefrontClient<Extra, "private_no_buyer_context", RequestContext>;
 
 /**
- * Namespace for extracting result and variable types from Storefront API documents.
+ * Type helpers that read the result and variables types of a Storefront API document.
  *
  * @example
  * ```ts
@@ -368,9 +361,9 @@ export type PrivateNoBuyerContextStorefrontClient<
  * @publicDocs
  */
 export namespace StorefrontApi {
-  /** Extracts the typed result shape from a Storefront API document. */
+  /** The result type of a document. */
   export type ResultOf<Doc extends DocLike> = StorefrontApiResultOf<Doc>;
-  /** Extracts the typed variables shape from a Storefront API document. */
+  /** The variables type of a document. */
   export type VariablesOf<Doc extends DocLike> = StorefrontApiVariablesOf<Doc>;
   /** A typed Storefront API document from `gql`, or a gql.tada document node. */
   export type DocumentNode = DocLike;

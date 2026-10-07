@@ -28,48 +28,48 @@ import type {
 // ---------------------------------------------------------------------------
 
 /**
- * Cart and cart line errors that a product form store reports.
+ * Cart errors and warnings to show near the add-to-cart button.
  *
- * The store merges cart-level errors and warnings with the errors and warnings of the matched cart line. Render the user errors and warnings near the add-to-cart button.
+ * Each list starts with cart-level messages, followed by the messages for the cart line that holds the selected variant.
  */
 export interface ProductFormErrors {
-  /** Cart-level user errors, followed by user errors for the matched cart line. */
+  /** User errors for the cart, then for the cart line that holds the selected variant. */
   userErrors: CartUserError[];
-  /** Cart-level warnings, followed by warnings for the matched cart line. */
+  /** Warnings for the cart, then for the cart line that holds the selected variant. */
   warnings: CartWarning[];
-  /** Network failures from the cart store. Each failure has a message and, when available, an HTTP status. */
+  /** Failed cart requests. Each entry has a message and, when available, an HTTP status. */
   networkErrors: CartNetworkEntry[];
 }
 
-/** State snapshot that a product form store emits. */
+/** The product form's option state, selection, cart errors, and matching cart line. */
 export interface ProductFormStoreState<
   TVariant extends ProductVariantInput = ProductVariantInput,
   TOptionValue extends ProductOptionValueInput = ProductOptionValueInput,
 > {
-  /** Computed state for each product option and its values under the current selection. */
+  /** Each product option and its values, with the selection, existence, and availability of each value. */
   options: VariantOptionState<TVariant, TOptionValue>[];
   /** Option names and values in the current selection, which can be partial. */
   selectedOptions: SelectedOption[];
-  /** Variant for the current selection, or `null` when the selection is partial or the query result doesn't include the variant. */
+  /** Variant that matches the current selection, or `null` when the selection is partial or your query didn't load that variant. */
   selectedVariant: TVariant | null;
-  /** Cart-level errors and warnings, merged with the errors and warnings of the matched cart line. */
+  /** Cart errors and warnings to show near the add-to-cart button. */
   errors: ProductFormErrors;
-  /** First cart line whose merchandise ID matches the selected variant, or `null` when no line matches. */
+  /** First cart line that holds the selected variant, or `null` when no cart line holds the variant. */
   matchedLineItem: CartLine | null;
 }
 
-/** Options array from the product form store state, typed to a specific product. */
+/** Option state from the product form, typed to your product query. */
 export type ProductFormOptions<TProduct extends ProductInput = ProductInput> =
   ProductFormStoreState<ProductVariantFrom<TProduct>, ProductOptionValueFrom<TProduct>>["options"];
 
 /**
- * Result that selecting an option returns.
+ * Result of selecting an option value. Build the next product URL from the selected options in the result.
  *
- * - `resolved`: a loaded variant matches the selection.
- * - `unresolved`: the selection is valid, but no loaded variant matches it yet.
- * - `invalid`: the product has no such option name or value, or no variant exists for the selection with that value.
+ * - `resolved`: the selection matches a variant that your query loaded.
+ * - `unresolved`: the selection is valid, but your query didn't load a matching variant.
+ * - `invalid`: the product has no such option name or value, or no variant combines the value with the rest of the selection.
  *
- * A complete selection returns `unresolved` when the product query result doesn't include the matching variant. Query the exact variant from the Storefront API with the returned selected options.
+ * When a complete selection returns `unresolved`, query the exact variant from the Storefront API with the returned selected options.
  */
 export type VariantSelectionResult<TVariant extends ProductVariantInput = ProductVariantInput> =
   | {
@@ -89,7 +89,7 @@ export type VariantSelectionResult<TVariant extends ProductVariantInput = Produc
       reason: string;
     };
 
-/** A selection result that's resolved or unresolved. */
+/** A selection result with a `resolved` or `unresolved` status. Selection callbacks receive this result. */
 export type ValidProductSelectionResult<TProduct extends ProductInput = ProductInput> = Exclude<
   VariantSelectionResult<ProductVariantFrom<TProduct>>,
   { status: "invalid" }
@@ -97,40 +97,44 @@ export type ValidProductSelectionResult<TProduct extends ProductInput = ProductI
 
 /** Options for creating a product form store. */
 export type CreateProductFormStoreOptions = {
-  /** Fallback selection that the store uses when the product has no selected or first available variant. */
+  /** Selection to start from when the product has no selected or first available variant. */
   selectedOptions?: SelectedOption[];
 };
 
-/** Manages variant selection and cart integration for a product form. */
+/** Tracks the customer's option selection for one product and adds the selected variant to the cart. */
 export interface ProductFormStore<
   TProduct extends ProductInput = ProductInput,
   TVariant extends ProductVariantInput = ProductVariantFrom<TProduct>,
 > {
-  /** Returns the current state snapshot. */
+  /** Returns the current product form state. */
   getState(): ProductFormStoreState<TVariant, ProductOptionValueFrom<TProduct>>;
-  /** Registers a listener that runs on every state change and returns an unsubscribe function. */
+  /** Calls the listener on every state change. Returns a function that unsubscribes the listener. */
   subscribe(
     listener: (state: ProductFormStoreState<TVariant, ProductOptionValueFrom<TProduct>>) => void,
   ): () => void;
   /**
-   * Selects an option value and resolves the new variant.
+   * Selects an option value and returns the result.
    *
-   * Resolved and unresolved selections update the store state. An invalid selection leaves the state unchanged and returns a reason. Build the next product URL from the selected options in the returned result.
+   * Resolved and unresolved selections update the state. An invalid selection leaves the state unchanged and returns a reason. Build the next product URL from the selected options in the result.
    */
   selectOption(name: string, value: string): VariantSelectionResult<TVariant>;
   /**
-   * Replaces the product data and recomputes the state. Create the store once and hydrate it each time the server reloads the product.
+   * Loads new product data into the store. Create the store once and call `hydrate()` each time the server reloads the product.
    *
-   * The store keeps its subscribers and its cart subscription. The new selection comes from the product's selected or first available variant, then the selected options that you pass, then the current selection.
+   * The store keeps its subscribers. The new selection comes from the product's selected or first available variant, then from the selected options that you pass, then from the current selection.
    */
   hydrate(product: TProduct, opts?: { selectedOptions?: SelectedOption[] }): void;
-  /** Restores the product and the selection that the store started with. */
+  /** Restores the product data and the selection that the store started with. */
   reset(): void;
-  /** Re-subscribes to the cart store and recomputes the cart errors and matched cart line. The store subscribes when you create it. Call this method only to reuse the store after you destroy it, such as in React Strict Mode effects. */
+  /** Reconnects the store to the cart after you call `destroy()`, such as in React Strict Mode effects. The store connects to the cart when you create it. */
   connect(): void;
-  /** Removes the cart subscription and clears the decoded variant cache. */
+  /** Disconnects the store from the cart. Call `destroy()` when the product form unmounts. */
   destroy(): void;
-  /** Passes a native submit event to the cart store's form handler, with the selected variant's details as the add-to-cart event detail. The cart adds a line when the submit button has no value and the form has a merchandise ID field. */
+  /**
+   * Adds the selected variant to the cart from the product form's native submit event.
+   *
+   * The cart adds the variant when the clicked button has no value and the form includes a merchandise ID field. The cart uses the variant's title, image, and price to show the change before the server responds. The returned promise rejects when the event target isn't a form or the event has no submitter.
+   */
   handleFormSubmit(event: SubmitEvent): Promise<void>;
 }
 
@@ -139,12 +143,12 @@ export interface ProductFormStore<
 // ---------------------------------------------------------------------------
 
 /**
- * Finds the selected variant in the option state of a product form store.
+ * Returns the variant that matches the customer's current option selection.
  *
- * The product form store derives its selected variant with this function. Show the product's price range until the selection resolves to a variant. When every option has a selection and the result is `null`, query the exact variant from the Storefront API.
+ * Show the product's price range until the selection resolves to a variant. When every option has a selection and the function returns `null`, query the exact variant from the Storefront API.
  *
- * @param options The options array from the product form store state.
- * @returns The selected variant, or `null` when the selection is partial or the query result doesn't include the variant.
+ * @param options The `options` array from the product form state.
+ * @returns The matching variant, or `null` when the selection is partial or your query didn't load that variant.
  * @publicDocs
  */
 export function getSelectedVariant<TVariant extends ProductVariantInput>(
@@ -154,10 +158,10 @@ export function getSelectedVariant<TVariant extends ProductVariantInput>(
 }
 
 /**
- * Checks whether the customer can add the current selection to the cart.
+ * Checks whether the customer can add the current selection to the cart. Use the result to enable or disable the add-to-cart button.
  *
- * @param product The product data. A product that requires a selling plan always returns `false`.
- * @param options The options array from the product form store state.
+ * @param product The product from your query. A product that requires a selling plan always returns `false`.
+ * @param options The `options` array from the product form state.
  * @returns `true` when the selection resolves to a variant that's available for sale and the product doesn't require a selling plan.
  * @publicDocs
  */
@@ -171,13 +175,13 @@ export function canAddToCart<TProduct extends ProductInput>(
 }
 
 /**
- * Finds the first cart line whose merchandise ID matches a variant ID.
+ * Finds the cart line that holds a variant. Use the line to show the quantity that's already in the cart.
  *
- * Several cart lines can share a merchandise ID when the lines have different selling plans or attributes. The function returns the first of those lines. The product form store derives its matched cart line with this function.
+ * When several cart lines hold the variant with different selling plans or attributes, the function returns the first line.
  *
- * @param lines The cart lines, such as `data.lines.nodes` from the cart store state.
- * @param merchandiseId The variant ID to match against the merchandise ID of each cart line.
- * @returns The first matching cart line, or `null` when no line matches.
+ * @param lines The cart lines, such as `data.lines.nodes` from the cart state.
+ * @param merchandiseId The variant ID to look for.
+ * @returns The first cart line that holds the variant, or `null` when no cart line holds the variant.
  * @publicDocs
  */
 export function findCartLineByMerchandiseId(
@@ -211,16 +215,14 @@ type ProductFormStoreContext<TProduct extends ProductInput> = {
 // ---------------------------------------------------------------------------
 
 /**
- * Creates a store that manages variant selection and cart integration for a product form.
+ * Creates a store that tracks the customer's option selection for one product and adds the selected variant to the cart.
  *
- * The store subscribes to the cart store to keep the cart errors and the matched cart line in sync. Destroy the store when the form unmounts to remove the subscription.
+ * The store resolves variants from the product data that you pass and leaves the URL to you. Build the product URL from the result of `selectOption()`. Call `destroy()` when the product form unmounts. The product provider from createProductComponents creates and destroys the store for you.
  *
- * The store computes option existence and availability from the product data without network requests. The store doesn't update the URL. Build the URL from the selection result.
- *
- * @param product The product data from your Storefront API query.
- * @param cartStore The cart store that supplies cart lines and errors and handles form submissions.
- * @param options The fallback selection to use when the product has no selected or first available variant.
- * @returns A product form store whose initial selection comes from the product's selected or first available variant, or else the fallback selection.
+ * @param product The product from your Storefront API query.
+ * @param cartStore The cart store that the form adds variants to and reads cart errors from.
+ * @param options The selection to start from when the product has no selected or first available variant.
+ * @returns A product form store. The starting selection comes from the product's selected or first available variant, or else from the selection in the options.
  * @example
  * ```ts
  * const store = createProductFormStore(product, cartStore);
@@ -493,11 +495,9 @@ function invalid<TVariant extends ProductVariantInput>(
 }
 
 /**
- * Creates a store that manages variant selection and cart integration for a product form.
+ * Creates a store that tracks the customer's option selection for one product and adds the selected variant to the cart.
  *
- * The store subscribes to the cart store to keep the cart errors and the matched cart line in sync. Destroy the store when the form unmounts to remove the subscription.
- *
- * The store computes option existence and availability from the product data without network requests. The store doesn't update the URL. Build the URL from the selection result.
+ * The store resolves variants from the product data that you pass and leaves the URL to you. Build the product URL from the result of `selectOption()`. Call `destroy()` when the product form unmounts. The product provider from createProductComponents creates and destroys the store for you.
  *
  * @example
  * ```ts
@@ -513,10 +513,10 @@ function invalid<TVariant extends ProductVariantInput>(
  */
 export type CreateProductFormStoreForDocs =
   /**
-   * @param product - The product data from your Storefront API query.
-   * @param cartStore - The cart store that supplies cart lines and errors and handles form submissions.
-   * @param options - The fallback selection to use when the product has no selected or first available variant.
-   * @returns A product form store whose initial selection comes from the product's selected or first available variant, or else the fallback selection.
+   * @param product - The product from your Storefront API query.
+   * @param cartStore - The cart store that the form adds variants to and reads cart errors from.
+   * @param options - The selection to start from when the product has no selected or first available variant.
+   * @returns A product form store. The starting selection comes from the product's selected or first available variant, or else from the selection in the options.
    */
   (
     product: ProductInput,

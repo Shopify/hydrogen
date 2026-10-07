@@ -11,9 +11,9 @@ type HydrogenRoutesDevOptions = {
 };
 
 /**
- * Replaces handleShopifyRoutes under the package's `development` export
- * condition. Serves the production routes first, then the GraphiQL explorer at
- * `/graphiql`.
+ * The development build of handleShopifyRoutes. Your bundler uses it when it
+ * resolves the package's `development` export condition. The function serves the
+ * same routes as handleShopifyRoutes, then the GraphiQL explorer at `/graphiql`.
  *
  * @publicDocs
  */
