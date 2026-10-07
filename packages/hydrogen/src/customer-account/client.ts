@@ -57,7 +57,7 @@ export type CreateCustomerAccountClientOptions = {
   /** Custom fetch implementation. Defaults to the global fetch. */
   fetch?: typeof globalThis.fetch;
   /**
-   * Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to 30,000.
+   * Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`.
    */
   defaultTimeoutInMs?: number;
 };
@@ -66,7 +66,7 @@ export type CreateCustomerAccountClientOptions = {
  * Options for a single Customer Account API request.
  */
 export type CustomerAccountGraphqlOptions<Variables = Record<string, unknown>> = {
-  /** The customer's access token, such as one from the customer session's getOrRefreshAccessToken method. */
+  /** The customer's access token, such as one from the customer session's `getOrRefreshAccessToken()` method. */
   accessToken: string;
   /**
    * The document's variables. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.
@@ -94,7 +94,7 @@ type HasNoRequiredKeys<T> = Record<string, never> extends T ? true : false;
 /**
  * Result of a Customer Account API request. Check `errors` to tell the outcomes apart.
  *
- * On success, `data` holds the result and `errors` is undefined. When the response has GraphQL errors, `errors` holds them and `data` can be `null`. Every result includes the raw response headers.
+ * On success, `data` holds the result and `errors` is `undefined`. When the response has GraphQL errors, `errors` holds them and `data` can be `null`. Every result includes the raw response headers.
  */
 export type CustomerAccountGraphqlResult<Result = unknown> =
   | { data: Result; errors?: undefined; headers: Headers }

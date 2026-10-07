@@ -18,5 +18,6 @@
   "PredictiveSearchQueryForOptions": "The predictive search query document for your options. The query's result type includes the fields from your custom fragments.",
   "PredictiveSearchGetHandler": "Handles GET requests to the predictive search route and returns the results as JSON. An invalid setting or a failed Storefront API query returns an error with HTTP status 400.",
   "AnalyticsEventName": "The name of a supported analytics event, such as `\"page_viewed\"`.",
-  "PayloadFor": "The payload type for an analytics event name, such as `PayloadFor<\"product_viewed\">`."
+  "PayloadFor": "The payload type for an analytics event name, such as `PayloadFor<\"product_viewed\">`.",
+  "StorefrontQueryString": "A GraphQL document that `gql` returns. At runtime, the document is the plain query text. The document's type carries the query's result and variables types, which `StorefrontApi.ResultOf` and `StorefrontApi.VariablesOf` read."
 }

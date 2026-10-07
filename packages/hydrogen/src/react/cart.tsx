@@ -22,7 +22,7 @@ import {
   type CartActions,
   type CartStore,
 } from "../core/cart/cart";
-import { createCartFormRegister } from "../core/cart/form";
+import { createCartFormRegister, type CartFormRegister } from "../core/cart/form";
 import type { CartDataFromHandlers } from "../core/cart/server-handlers";
 import { type CartData, type CartState } from "../core/cart/state";
 
@@ -58,6 +58,40 @@ type CartInitialData<TData extends CartData = CartData> =
 
 export type { CartActions };
 
+/** A hook that returns the slice of cart state that your selector picks. */
+type CartStateHook<TData extends CartData> =
+  /**
+   * @param selector - Picks the value to return from the cart state.
+   * @param isEqual - Compares the previous and next selected values. Return `true` to skip the re-render. Without the function, the hook compares the values by reference.
+   * @returns The selected value.
+   */
+  <S>(selector: (state: CartState<TData>) => S, isEqual?: (a: S, b: S) => boolean) => S;
+
+/** A hook that returns the slice of cart state that your selector picks, or `undefined` outside the cart provider. */
+type OptionalCartStateHook<TData extends CartData> =
+  /**
+   * @param selector - Picks the value to return from the cart state.
+   * @param isEqual - Compares the previous and next selected values. Return `true` to skip the re-render. Without the function, the hook compares the values by reference.
+   * @returns The selected value, or `undefined` outside the cart provider.
+   */
+  <S>(selector: (state: CartState<TData>) => S, isEqual?: (a: S, b: S) => boolean) => S | undefined;
+
+/** Callbacks that run around a cart form submission. */
+interface CartFormPropsOptions {
+  /** Runs before the cart store handles the submission. Call `event.preventDefault()` to skip the cart submission. */
+  beforeSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;
+  /** Runs as soon as the cart change starts, before the server responds. */
+  afterSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;
+}
+
+/** The form props function and the register function for a cart form. */
+interface CartFormBindings {
+  /** Returns the `method`, `action`, and `onSubmit` props to spread on the form. The form posts to the cart endpoint, and the cart store handles each submission. */
+  formProps: (opts?: CartFormPropsOptions) => FormHTMLAttributes<HTMLFormElement>;
+  /** Returns the attributes for a cart field or action button. Register the quantity field with `interactive: true` to submit the form when the quantity changes. The interactive input takes the quantity as a default value and stays uncontrolled. */
+  register: CartFormRegister;
+}
+
 /**
  * The cart provider and hooks that createCartComponents returns, typed with the custom cart fields from your cart server handlers.
  */
@@ -67,24 +101,16 @@ type TypedCartComponents<TData extends CartData> = {
   /**
    * Returns the slice of cart state that the selector picks. The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.
    */
-  useCart: <S>(selector: (state: CartState<TData>) => S, isEqual?: (a: S, b: S) => boolean) => S;
+  useCart: CartStateHook<TData>;
   /** Suspends while the full cart loads, then returns the slice of cart state that the selector picks. Wrap the component in a `Suspense` boundary. */
-  useSuspenseCart: <S>(
-    selector: (state: CartState<TData>) => S,
-    isEqual?: (a: S, b: S) => boolean,
-  ) => S;
+  useSuspenseCart: CartStateHook<TData>;
   /**
    * Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page.
    */
-  useOptionalCart: <S>(
-    selector: (state: CartState<TData>) => S,
-    isEqual?: (a: S, b: S) => boolean,
-  ) => S | undefined;
+  useOptionalCart: OptionalCartStateHook<TData>;
   /** Returns the `refresh` action. Call `refresh` after a server-side cart change that skips cart forms. */
   useCartActions: typeof useCartActions;
-  /**
-   * Returns form props and a register function for cart forms. The form props post to the cart endpoint and send each submission through the cart store. To skip the cart submission, call `event.preventDefault()` in a `beforeSubmit` callback. Register the quantity field with `interactive: true` to submit the form when the quantity changes. The interactive input takes the quantity as a default value and stays uncontrolled.
-   */
+  /** Returns form props and a register function for cart forms. */
   useCartForm: typeof useCartForm;
 };
 
@@ -377,7 +403,7 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
  * ```
  * @publicDocs
  */
-export function useCartForm() {
+export function useCartForm(): CartFormBindings {
   const store = useCartStore("useCartForm");
   const coreRegister = useMemo(() => createCartFormRegister(), []);
 
@@ -406,10 +432,7 @@ export function useCartForm() {
     return wrapped;
   }, [coreRegister]);
 
-  const formProps = (opts?: {
-    beforeSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;
-    afterSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;
-  }): FormHTMLAttributes<HTMLFormElement> => ({
+  const formProps = (opts?: CartFormPropsOptions): FormHTMLAttributes<HTMLFormElement> => ({
     onSubmit: (e: SubmitEvent<HTMLFormElement>) => {
       opts?.beforeSubmit?.(e);
       if (e.defaultPrevented) return;

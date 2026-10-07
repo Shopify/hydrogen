@@ -88,7 +88,7 @@ type CommonOptions = {
   apiVersion?: string;
   /**
    * How long a request can run before the client throws a StorefrontTimeoutError, in
-   * milliseconds. Defaults to 30,000. Set `0` to turn off the timeout. Stale-while-revalidate
+   * milliseconds. Defaults to `30000`. Set `0` to turn off the timeout. Stale-while-revalidate
    * refreshes use the same timeout, or 30,000 when the timeout is `0`. createStorefrontClient
    * throws an error for a negative value.
    */

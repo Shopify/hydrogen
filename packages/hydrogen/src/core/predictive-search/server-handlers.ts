@@ -97,7 +97,7 @@ type PredictiveSearchServerHandlers<
 export interface CreatePredictiveSearchServerHandlersOptions extends CreatePredictiveSearchQueriesOptions {
   /** Route path that the GET handler serves. Defaults to `"/api/predictive-search"`. */
   path?: string;
-  /** Default maximum number of results, from 1 to 10. Applies when a request has no numeric `limit` parameter. Predictive search clamps other values to that range. Defaults to 5. */
+  /** Default maximum number of results, from 1 to 10. Applies when a request has no numeric `limit` parameter. Predictive search clamps other values to that range. Defaults to `5`. */
   limit?: number;
   /** Default limit scope. Defaults to `"EACH"`. */
   limitScope?: PredictiveSearchLimitScope;

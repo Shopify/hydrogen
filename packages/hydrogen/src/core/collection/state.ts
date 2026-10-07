@@ -9,6 +9,7 @@ export type FilterPresentation = "IMAGE" | "SWATCH" | "TEXT";
 /** The kind of input a filter takes, such as a boolean toggle, a multi-select list, or a price range. */
 export type FilterType = "BOOLEAN" | "LIST" | "PRICE_RANGE" | (string & {});
 
+/** The ID, label, product count, and filter input that every filter value has. */
 interface BaseAvailableFilterValue {
   /** ID of the filter value. */
   id: string;
@@ -20,6 +21,7 @@ interface BaseAvailableFilterValue {
   input: string;
 }
 
+/** Copies a field from your query's value type when your query selects the field. Otherwise, the type adds no fields. */
 type PickIfPresent<TValue, TKey extends PropertyKey> = TKey extends keyof TValue
   ? Pick<TValue, TKey>
   : {};

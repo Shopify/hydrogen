@@ -74,7 +74,7 @@ export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRo
   type: "error";
   /** The error that Hydrogen serializes as the response body's `error` field. */
   error: TError;
-  /** The HTTP status for the error response. Defaults to 400. */
+  /** The HTTP status for the error response. Defaults to `400`. */
   status?: number;
   /** Extra headers for the error response. Hydrogen sets `content-type` to `application/json` and overrides any value you pass. */
   headers?: HeadersInit;

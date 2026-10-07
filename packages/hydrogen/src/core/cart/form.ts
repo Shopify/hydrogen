@@ -173,7 +173,7 @@ function createFieldAttributes(name: string, opts?: RegisterOptions) {
 /**
  * Creates a register function that returns the HTML attributes for cart form fields and action buttons.
  *
- * Use the function to build cart forms without a framework binding. In React, useCartForm returns a register function and form props for you. To submit an interactive quantity input on change, call attachQuantityInput.
+ * Use the function to build cart forms without a framework binding. In React, useCartForm returns a register function and form props for you. To submit an interactive quantity input on change, call `attachQuantityInput()`.
  *
  * The register function holds no state. Share one register function across components.
  *

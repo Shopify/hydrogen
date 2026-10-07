@@ -86,15 +86,15 @@ export function withStorefrontClientCache<TOptions extends object>(
  *
  * Set `type` based on where your code runs and whether customer context is available:
  *
- * |                  | public                       | private                       | private_no_buyer_context  |
- * |------------------|------------------------------|-------------------------------|---------------------------|
+ * |                  | `"public"`                   | `"private"`                   | `"private_no_buyer_context"` |
+ * |------------------|------------------------------|-------------------------------|------------------------------|
  * | Runs in          | Browser or mobile            | Server-side rendering         | Background server code    |
  * | Token            | Public access token, or none | Private access token          | Private access token      |
  * | Customer context | Browser request context      | You forward trusted `buyerIp` | None                      |
  * | Best for         | Client-side fetches          | SSR with customer context     | Webhooks, background jobs |
  *
  * Pass a request context from createShopifyRequestContext. The client forwards the incoming
- * request's cookies and Global Privacy Control header to the Storefront API, and fills `$country`
+ * request's cookies and `Sec-GPC` header to the Storefront API, and fills `$country`
  * and `$language` variables from the context's locale. The client reads the request headers once,
  * when you create the client. Create a client for each incoming request, and create a client at
  * module scope only with a static request context.

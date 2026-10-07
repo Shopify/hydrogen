@@ -69,9 +69,13 @@ export type RunWithCacheContext = {
 };
 
 // The context is optional so custom runners that call `run()` keep working.
-type RunCallback<T extends SerializableCacheValue> = (
-  context?: RunWithCacheContext,
-) => MaybePromise<CacheDecision<T>>;
+/** Produces the data for a cached run and decides whether to cache the data. */
+type RunCallback<T extends SerializableCacheValue> =
+  /**
+   * @param context - Tells the callback whether it refreshes a stale entry in the background.
+   * @returns The data and whether to cache the data, or a promise that resolves to both.
+   */
+  (context?: RunWithCacheContext) => MaybePromise<CacheDecision<T>>;
 
 /**
  * Returns cached data for the key, or runs the callback and caches the result. Resolves with the

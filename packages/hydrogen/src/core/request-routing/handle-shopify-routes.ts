@@ -62,7 +62,7 @@ export const handleShopifyRoutes: HydrogenRouteHandler = (options) => {
  *
  * The function checks these routes in order and returns the first match: the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.
  *
- * Some routes answer unsupported methods with a 405 response. A registered handler path returns 405 for any method that no handler on that path registers. Checkout and cart permalinks accept only GET and HEAD. Buy permalinks accept only GET, and the UCP MCP proxy accepts only POST.
+ * Some routes answer unsupported methods with a 405 response. A registered handler path returns 405 for any method that no handler on that path registers. Checkout and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.
  *
  * When your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.
  *

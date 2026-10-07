@@ -5,6 +5,7 @@ import { getCartIdFromCookie } from "./cookie";
 import { cartQueries } from "./queries";
 import type { CartData } from "./state";
 
+/** The cart data type with the fields from your cart query. Your query's field types replace the matching default cart fields. */
 type MergeCartData<TCart> = Omit<CartData, keyof TCart> & TCart;
 
 /**
@@ -51,7 +52,7 @@ type CartQueryGraphql = (
   options: { variables: { id: string } },
 ) => Promise<CartQueryResult>;
 
-/** A request, or a request context with a cookie header and a URL. */
+/** A request, or a request context with a `Cookie` header and a URL. */
 type CartIdSource = Request | Pick<ShopifyRequestContext, "cookie" | "url">;
 
 /**

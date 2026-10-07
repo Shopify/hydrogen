@@ -4,7 +4,7 @@ import type { StorefrontClient } from "../../client";
 // runtime, so it must not pull the cart handler graph into their bundle.
 export const cartBuyerIdentitySync: unique symbol = Symbol("hydrogen.cartBuyerIdentitySync");
 
-/** The request with the cart cookie and the Storefront API client that updates the cart. */
+/** The request with the `cart` cookie and the Storefront API client that updates the cart. */
 export type CartBuyerIdentitySyncContext = {
   /** The incoming request. The `cart` cookie on the request identifies the cart. */
   request: Request;

@@ -32,6 +32,7 @@ interface HydrogenShopAnalytics extends ShopAnalyticsBase {
 interface HeadlessShopAnalytics extends ShopAnalyticsBase {
   /** The Headless sales channel serves the storefront. */
   channel: "headless";
+  /** Leave the storefront ID out. The Headless sales channel has no storefront ID. */
   storefrontId?: never;
 }
 
@@ -157,6 +158,7 @@ export type OtherData = {
   [key: string]: unknown;
 };
 
+/** The shop and custom data that every analytics event payload carries. */
 type BasePayload = {
   /**
    * The shop and sales channel. The bus fills in the configured shop when the payload omits
@@ -167,6 +169,7 @@ type BasePayload = {
   customData?: Record<string, unknown>;
 };
 
+/** The page URL that every view event payload carries. */
 type UrlPayload = {
   /** The page URL. For view events, the bus fills in the current URL when the payload omits it. */
   url?: string;
@@ -198,16 +201,19 @@ export type ProductPayload = {
   productType?: string;
 };
 
+/** The products in a `product_viewed` event. */
 type ProductsPayload = {
   /** The products that the customer views. */
   products: Array<ProductPayload & OtherData>;
 };
 
+/** The collection in a `collection_viewed` event. */
 type CollectionPayload = {
   /** The ID and handle of the collection that the customer views. */
   collection: { id: string; handle: string };
 };
 
+/** The search term and results in a `search_viewed` event. */
 type SearchPayload = {
   /** The customer's search query. */
   searchTerm: string;
@@ -215,16 +221,19 @@ type SearchPayload = {
   searchResults?: unknown;
 };
 
+/** The current cart in a cart event. */
 type CartPayload = {
   /** The current cart. */
   cart: AnalyticsCart | null;
 };
 
+/** The current cart and the cart before the change, in a cart update or cart line event. */
 interface CartChangePayload extends CartPayload {
   /** The cart before the change, or `null` when cart tracking has no earlier snapshot. */
   prevCart: AnalyticsCart | null;
 }
 
+/** The cart line before and after the change, in a `product_added_to_cart` or `product_removed_from_cart` event. */
 type CartLinePayload = {
   /** The line before the change. */
   prevLine?: AnalyticsCartLine;

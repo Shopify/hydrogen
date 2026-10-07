@@ -78,13 +78,13 @@ const CUSTOMER_SESSION_INTERNAL_BRAND: unique symbol = Symbol("hydrogen.customer
  */
 export type Awaitable<T> = T | Promise<T>;
 
-/** The session storage that isLoggedIn and getAccessToken read. */
+/** The session storage that `isLoggedIn()` and `getAccessToken()` read. */
 export type ReadonlyCustomerSessionManager = {
   /** Returns the session value for a key. The customer session keeps its data under the `customerAccount` key. */
   getSessionItem(key: string): Awaitable<unknown>;
 };
 
-/** The session storage that sign-in, the OAuth callback, token refresh, and logout write to. Commit the session to the response after prepareLoginUrl, handleOAuthCallback, getOrRefreshAccessToken, or logout runs. */
+/** The session storage that sign-in, the OAuth callback, token refresh, and logout write to. Commit the session to the response after you call `prepareLoginUrl()`, `handleOAuthCallback()`, `getOrRefreshAccessToken()`, or `logout()`. */
 export type WritableCustomerSessionManager = ShopifyRouteSessionManager;
 
 type CustomerAccountSessionData = {
@@ -118,7 +118,7 @@ export type CreateCustomerSessionOptions = {
   customerAccountApiUrl?: string;
   /** A custom fetch implementation. Defaults to the global fetch. */
   fetch?: typeof globalThis.fetch;
-  /** The timeout for OAuth token requests in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to 30,000. */
+  /** The timeout for OAuth token requests in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`. */
   defaultTimeoutInMs?: number;
 };
 
@@ -173,14 +173,14 @@ export type CustomerSession = {
   /**
    * Returns `true` when the customer has a usable access token or a refresh token. The method never refreshes tokens.
    *
-   * Use the result for UI state, such as an account link. Gate Customer Account API data on an access token from getOrRefreshAccessToken.
+   * Use the result for UI state, such as an account link. Gate Customer Account API data on an access token from `getOrRefreshAccessToken()`.
    */
   isLoggedIn(
     sessionManager: ReadonlyCustomerSessionManager,
     requestContext: ShopifyRequestContext,
   ): Promise<boolean>;
   /**
-   * Returns the customer's stored access token, or `undefined` when the token is missing or expired. The method never refreshes the token or writes to the session. Call getOrRefreshAccessToken to refresh an expired token.
+   * Returns the customer's stored access token, or `undefined` when the token is missing or expired. The method never refreshes the token or writes to the session. Call `getOrRefreshAccessToken()` to refresh an expired token.
    */
   getAccessToken(
     sessionManager: ReadonlyCustomerSessionManager,
@@ -237,14 +237,14 @@ export type CustomerSession = {
 export type CustomerAccountServerHandlers<
   TContext extends CustomerAccountRouteHandlerContext = CustomerAccountRouteHandlerContext,
 > = {
-  /** Completes sign-in at `/account/authorize`, the OAuth callback, and redirects the customer to the return path. Accepts GET. */
+  /** Completes sign-in at `/account/authorize`, the OAuth callback, and redirects the customer to the return path. Accepts `GET`. */
   authorize: CallableRouteHandler<
     TContext,
     CustomerAccountRouteResult,
     typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH,
     "GET"
   >;
-  /** Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts GET. Pass `return_to`, `locale`, `acr_values`, `login_hint`, and `login_hint_mode` as search params. The route sends the request context's country to Shopify. */
+  /** Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts `GET`. Pass `return_to`, `locale`, `acr_values`, `login_hint`, and `login_hint_mode` as search params. The route sends the request context's country to Shopify. */
   login: CallableRouteHandler<
     TContext,
     CustomerAccountRouteResult,
@@ -252,7 +252,7 @@ export type CustomerAccountServerHandlers<
     "GET"
   >;
   /**
-   * Logs the customer out at `/account/logout`. Accepts POST. For CSRF protection, the route returns a 403 response unless the `Origin` or `Referer` header matches your storefront's origin.
+   * Logs the customer out at `/account/logout`. Accepts `POST`. For CSRF protection, the route returns a 403 response unless the `Origin` or `Referer` header matches your storefront's origin.
    *
    * Through handleShopifyRoutes, a GET request to the logout path returns a 405 response. Log out with a `<form method="post" action="/account/logout">` and a submit button, which works without JavaScript.
    */
@@ -262,7 +262,7 @@ export type CustomerAccountServerHandlers<
     typeof CUSTOMER_ACCOUNT_LOGOUT_PATH,
     "POST"
   >;
-  /** Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts GET. */
+  /** Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts `GET`. */
   refresh: CallableRouteHandler<
     TContext,
     CustomerAccountRouteResult,
@@ -301,7 +301,7 @@ interface CustomerAccountServerHandlersOptionsWithoutCart extends CreateCustomer
   /**
    * The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.
    *
-   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the cart cookie. The sync needs `storefrontClient` in the handler context.
+   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.
    *
    * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession.
    */
@@ -315,7 +315,7 @@ interface CustomerAccountServerHandlersOptionsWithCart extends CreateCustomerAcc
   /**
    * The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.
    *
-   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the cart cookie. The sync needs `storefrontClient` in the handler context.
+   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.
    *
    * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession.
    */

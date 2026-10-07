@@ -44,13 +44,13 @@ export type CreatePredictiveSearchStoreOptions = {
   /**
    * Milliseconds to wait after the latest term change before searching.
    *
-   * Defaults to 150. Pass `0` to search right away. Negative and non-finite values use the default.
+   * Defaults to `150`. Pass `0` to search right away. Negative and non-finite values use the default.
    */
   debounceInMs?: number;
   /**
    * Number of characters a term needs, after trimming, before the store searches.
    *
-   * Defaults to 1. Negative and non-finite values use the default.
+   * Defaults to `1`. Negative and non-finite values use the default.
    */
   minTermLength?: number;
   /** Function that sends search requests. Defaults to the global `fetch`. Pass a function for tests or for runtimes without a global `fetch`. */

@@ -76,7 +76,7 @@ export type QueryPredictiveSearchOptions<
   term: string;
   /** Custom query, usually from makePredictiveSearchQueries. Defaults to Hydrogen's built-in query. A hand-written query receives the term, limit, limit scope, types, searchable fields, and unavailable products as variables. */
   query?: TQuery;
-  /** Maximum number of results, from 1 to 10. Predictive search clamps other values to that range. Defaults to 5, which differs from the Storefront API default of 10. */
+  /** Maximum number of results, from 1 to 10. Predictive search clamps other values to that range. Defaults to `5`, which differs from the Storefront API default of 10. */
   limit?: number;
   /** Whether the limit applies to each result type or to all result types combined. Defaults to `"EACH"`. */
   limitScope?: PredictiveSearchLimitScope;

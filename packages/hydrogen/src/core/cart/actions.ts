@@ -38,14 +38,14 @@ export type CartLineUpdateInput = {
  *
  * The `intent` field names the change and the Storefront API mutation that applies the change:
  *
- * - `add` adds new lines with cartLinesAdd, or creates a cart with cartCreate when none exists.
- * - `update` changes quantity or attributes on existing lines with cartLinesUpdate.
- * - `remove` removes lines by ID with cartLinesRemove.
- * - `discount-update` replaces all discount codes with cartDiscountCodesUpdate.
- * - `discount-apply` adds one discount code. The handler reads the current codes, then writes the new list with cartDiscountCodesUpdate.
+ * - `add` adds new lines with `cartLinesAdd`, or creates a cart with `cartCreate` when none exists.
+ * - `update` changes quantity or attributes on existing lines with `cartLinesUpdate`.
+ * - `remove` removes lines by ID with `cartLinesRemove`.
+ * - `discount-update` replaces all discount codes with `cartDiscountCodesUpdate`.
+ * - `discount-apply` adds one discount code. The handler reads the current codes, then writes the new list with `cartDiscountCodesUpdate`.
  * - `discount-remove` removes one discount code with the same read-then-write approach.
- * - `attributes-update` sets cart-level attributes with cartAttributesUpdate.
- * - `note-update` sets the cart note with cartNoteUpdate.
+ * - `attributes-update` sets cart-level attributes with `cartAttributesUpdate`.
+ * - `note-update` sets the cart note with `cartNoteUpdate`.
  *
  * @publicDocs
  */

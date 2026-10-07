@@ -31,7 +31,7 @@ export function getCartIdFromCookie(input: CartCookieSource): string | null {
  * other cookies.
  *
  * @param cartId The cart GID or cart token to store.
- * @returns The header value that sets the cart cookie.
+ * @returns The header value that sets the `cart` cookie.
  * @example
  * ```ts
  * const cookie = createCartCookie("gid://shopify/Cart/abc123");

@@ -12,7 +12,6 @@ import type { ShopifyRequestContext } from "../request-context";
 import { createProxyResponseHeaders } from "../request-routing/interceptors/proxy";
 import type {
   CallableRouteHandler,
-  ShopifyRouteError,
   ShopifyRouteErrorResult,
   ShopifyRouteJsonResult,
   ShopifyRouteRedirectResult,
@@ -75,15 +74,18 @@ export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_muta
  *
  * @publicDocs
  */
-export type CartError = ShopifyRouteError & {
+export type CartError = {
+  /** The code that identifies the failure. */
   code: CartErrorCode;
+  /** A human-readable error message. */
+  message: string;
 };
 
 /**
- * The route result that the cart POST handler returns. The result is one of these:
- * - JSON with the mutation's cart, user errors, and warnings, for a JSON request
- * - A 303 redirect to the referring page, for a form submission
- * - A cart error with an error code
+ * The route result that the cart POST handler returns. Check `type` to tell the results apart:
+ * - `"json"` answers a JSON request. The result's `data` holds the mutation's `cart`, `userErrors`, and `warnings`.
+ * - `"redirect"` answers a form submission with a 303 redirect to the referring page.
+ * - `"error"` holds a cart error with a code that identifies the failure.
  *
  * @publicDocs
  */

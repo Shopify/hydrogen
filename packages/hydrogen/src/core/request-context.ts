@@ -74,7 +74,7 @@ type ShopifyRequestContextBase = {
    */
   readonly __hydrogenShopifyRequestContextBrand: never;
   /**
-   * The incoming request's cookie header. Hydrogen forwards the header to the Storefront API.
+   * The incoming request's `Cookie` header. Hydrogen forwards the header to the Storefront API.
    * @internal
    */
   cookie?: string;
@@ -111,7 +111,7 @@ type ShopifyRequestContextBase = {
   applyStorefrontRequestHeaders(headers: Headers): void;
   /**
    * Saves the cookies from the first Storefront API response that sets cookies. The Storefront API
-   * client calls the method for you, and applyResponseHeaders can add the cookies to your response.
+   * client calls the method for you, and `applyResponseHeaders()` can add the cookies to your response.
    * @internal
    */
   captureSubrequestHeaders(headers: Headers): void;
@@ -142,7 +142,7 @@ type ShopifyRequestContextBase = {
   /**
    * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from handleShopifyRoutes and handleShopifyRedirects already carry these headers.
    *
-   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses that hold customer data private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than GET and HEAD.
+   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses that hold customer data private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.
    */
   applyResponseHeaders(headers: Headers): void;
 };
@@ -159,9 +159,9 @@ export type ShopifyRequestContextWithBuyerIp<I18n extends I18nConfig = I18nConfi
 
 /** The values that the request context reads from the incoming request. */
 type Context<I18n extends I18nConfig = I18nConfig> = {
-  /** The incoming request's cookie header. */
+  /** The incoming request's `Cookie` header. */
   cookie?: string;
-  /** The incoming request's Global Privacy Control header value. */
+  /** The incoming request's `Sec-GPC` header value, which carries the customer's Global Privacy Control signal. */
   globalPrivacyControl?: string;
   /** The customer's trusted IP address. */
   buyerIp?: string;
