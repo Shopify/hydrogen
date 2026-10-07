@@ -14,6 +14,23 @@ Assume the deterministic Hydrogen setup command has already installed `@shopify/
 
 Read each step file and complete it fully before opening the next. Every step ends each of its phases with a "Continue when" checklist of observable criteria — do not move to the next phase or step until every criterion passes. Reusable domain knowledge lives in the standalone `hydrogen-*` skills the steps invoke; setup-specific details live in `references/`.
 
+## Example Storefronts On GitHub
+
+The Hydrogen repository ships working storefront examples for several frameworks, including frameworks with no official Shopify template. Read the matching one when a step leaves a framework-specific choice open — especially when the `hydrogen-*` skill has no `references/` file for the detected framework:
+
+https://github.com/Shopify/hydrogen/tree/preview/examples
+
+| Framework | Reference implementation |
+| --- | --- |
+| Astro | `examples/astro/` |
+| Nuxt | `examples/nuxt/` |
+| SolidStart | `examples/solid-start/` |
+| SvelteKit | `examples/sveltekit/` |
+| React Router | `templates/react-router/`, plus `examples/hydrogen/` |
+| Next.js | `templates/nextjs/` |
+
+The examples are reference implementations, not starter kits: read them for how Hydrogen APIs are wired into a framework's request lifecycle, routing, and data loading, then follow the conventions of the app you are setting up. Do not copy their structure wholesale, and do not treat every pattern in them as production-ready. The supported starters are the ones under `templates/`.
+
 ## Verification Discipline
 
 - A "Continue when" checkbox passes only when you observed it pass: run the command, curl the route, or exercise the UI in this session. Reading code you just wrote is not verification.
