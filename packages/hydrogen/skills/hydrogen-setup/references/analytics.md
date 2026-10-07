@@ -60,6 +60,7 @@ What it does **not** do:
 - Server-side analytics dispatch.
 - Third-party destination integrations (GA4, Meta Pixel, Klaviyo) — wire those with `addDestination()`.
 - Cart event publishing without `trackCartAnalytics()`. App code should not manually publish `cart_updated` etc.
+- Forwarding `cart_viewed`, `cart_updated`, or `product_removed_from_cart` to Monorail. They stay on the bus for your own destinations.
 - DOM event ingestion or Standard Events. Explicit `publish()` is the API.
 
 ---
@@ -109,11 +110,11 @@ Resolve shop metadata on the server and pass it to ShopifyScripts. Shopify analy
 
 ### `i18n`
 
-Pass the app's resolved `country` and `language` market values. Optional `currency` sets `window.Shopify.currency.active` for Shopify runtime scripts and Shopify analytics. Shopify analytics reads its content language from `window.Shopify.locale`.
+Pass the app's resolved `country` and `language` market values. Optional `currency` sets `window.Shopify.currency.active` for Shopify runtime scripts and Shopify analytics. For `product_viewed`, Shopify analytics reads the currency from `products[].price.currencyCode`. For `product_added_to_cart`, it reads the cart line's `cost.amountPerQuantity.currencyCode`. Both fall back to `window.Shopify.currency.active`. Page, collection, and search views take only the global. When it is unset, Shopify analytics sends them without a currency. The cart tracker also writes the global from cart cost once a cart exists. Shopify analytics reads its content language from `window.Shopify.locale`.
 
 ### `analytics`
 
-The analytics bus is enabled by default. Pass `analytics` only when you need optional bus configuration such as `customData`. Shopify analytics reads currency from `window.Shopify.currency.active`, which is seeded by `i18n.currency` and updated from cart currency when available.
+The analytics bus is enabled by default. Pass `analytics` only when you need optional bus configuration such as `customData`.
 
 ### `consent`
 
@@ -613,6 +614,7 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Astro inline scripts cannot reference component scope.** Astro hoists `<script>` tags at build time. Bridge SSR data through hidden DOM (`data-*` attributes) and read it from the script. Trying to interpolate `{product.id}` directly into a script body silently fails — the script ships as a static string.
 - **Astro page-view fires only on full loads.** Astro is MPA-by-default. If you adopt View Transitions, listen for `astro:after-swap` instead of relying on the inline-script-runs-on-load behavior — otherwise SPA-nav transitions skip `page_viewed`.
 - **Required product fields silently drop the Monorail leg.** Missing `id`/`title`/`vendor`/`variantId`/`variantTitle`/`price` causes the Shopify analytics subscriber to skip Monorail dispatch and log a field-specific error. The bus event still fires for your subscribers — the loss is only in Shopify analytics. Watch the console.
+- **A product event without a currency logs a warning. Shopify analytics still sends it.** `[shopify:warn:analytics] product_added_to_cart was sent without a currency` means the cart fragment's `cost.amountPerQuantity` has no `currencyCode` and `window.Shopify.currency.active` is unset. Select `currencyCode` in the fragment or pass `i18n.currency`. `product_viewed` cannot reach this warning through the typed `ProductPayload`, whose `price` is `MoneyV2`.
 - **Register destinations once per page lifetime.** Hydrogen owns the shared bus. Removing and re-adding a destination resets its replay position, so component remounts can deliver retained events again.
 - **Lighthouse skip is silent.** Monorail dispatch is skipped for Chrome Lighthouse user-agents. If your synthetic monitoring runs Lighthouse, you will see no Monorail requests in those runs — this is intentional.
 
