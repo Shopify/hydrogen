@@ -1600,3 +1600,46 @@ describe("createProductFormRegister — attributeValue", () => {
     expect(props.value).toBe("5");
   });
 });
+
+describe("createProductFormRegister — addToCart", () => {
+  it("returns submit props with the selected variant signifier", () => {
+    expect(createProductFormRegister(RED, noop)("addToCart", {})).toEqual({
+      name: "add-to-cart",
+      type: "submit",
+      "data-h3": "product-add-to-cart",
+      "data-h3-variant-id": "v-red",
+      "data-h3-available": "true",
+    });
+  });
+
+  it("marks an unavailable selected variant", () => {
+    const props = createProductFormRegister(BLUE, noop)("addToCart", {});
+    expect(props["data-h3-variant-id"]).toBe("v-blue");
+    expect(props["data-h3-available"]).toBe("false");
+  });
+
+  it("uses an empty variant id and false when no variant is selected", () => {
+    expect(createProductFormRegister(null, noop)("addToCart", {})).toEqual({
+      name: "add-to-cart",
+      type: "submit",
+      "data-h3": "product-add-to-cart",
+      "data-h3-variant-id": "",
+      "data-h3-available": "false",
+    });
+  });
+
+  it("follows the live selected variant of a product form store", () => {
+    const store = createStore(makeSingleOptionProduct(RED));
+    const register = () =>
+      createProductFormRegister(store.getState().selectedVariant, store.selectOption);
+
+    expect(register()("addToCart", {})["data-h3-variant-id"]).toBe("v-red");
+
+    store.selectOption("Color", "Blue");
+
+    expect(register()("addToCart", {})).toMatchObject({
+      "data-h3-variant-id": "v-blue",
+      "data-h3-available": "false",
+    });
+  });
+});

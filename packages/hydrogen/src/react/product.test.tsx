@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { act, renderHook } from "@testing-library/react";
+import { act, render, renderHook } from "@testing-library/react";
 import { createElement, type ReactNode, type SubmitEvent as ReactSubmitEvent } from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
@@ -9,7 +9,8 @@ import { EMPTY_CART_DATA, EMPTY_CART_STATE, createEmptyCartErrors } from "../cor
 import { configureLogging } from "../core/logging";
 import { createProductFormStore } from "../core/product/product-form";
 import type { ProductInput, ProductVariantInput } from "../core/product/state";
-import { createTestLogger } from "../core/test-utils";
+import { signifierSelector } from "../core/signifiers";
+import { assert, createTestLogger } from "../core/test-utils";
 import { CartProvider, configureCartEndpoint } from "./cart";
 import { createProductComponents, useProductForm } from "./product";
 
@@ -463,7 +464,37 @@ describe("useProductForm", () => {
         expect(result.current.register("addToCart", {})).toEqual({
           name: "add-to-cart",
           type: "submit",
+          "data-h3": "product-add-to-cart",
+          "data-h3-variant-id": "v-red",
+          "data-h3-available": "true",
         });
+      });
+
+      it("renders the live selected variant signifier on the button", () => {
+        const { store } = makeStore();
+        let selectOption: ((name: string, value: string) => unknown) | undefined;
+        function Consumer() {
+          const form = useProductForm(store);
+          selectOption = form.selectOption;
+          return createElement("button", form.register("addToCart", {}));
+        }
+        const { container } = render(createElement(Consumer));
+        const button = container.querySelector(
+          signifierSelector("product-add-to-cart", { variantId: "v-red", available: true }),
+        );
+        assert(button, "expected the add-to-cart button to carry the RED signifier");
+
+        act(() => {
+          selectOption?.("Color", "Green");
+        });
+
+        expect(button.getAttribute("data-h3-variant-id")).toBe("v-green");
+        expect(button.getAttribute("data-h3-available")).toBe("false");
+        expect(
+          container.querySelector(
+            signifierSelector("product-add-to-cart", { variantId: "v-green", available: false }),
+          ),
+        ).toBe(button);
       });
     });
 

@@ -1,7 +1,13 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes } from "react";
 import { describe, expectTypeOf, it } from "vitest";
 
-import type { ProductFormStore, ProductInput, ProductVariantInput } from "../core/product";
+import type { SignifierAttributes } from "../core";
+import type {
+  ProductAddToCartProps,
+  ProductFormStore,
+  ProductInput,
+  ProductVariantInput,
+} from "../core/product";
 import { useProductForm } from "./product";
 
 declare const store: ProductFormStore<ProductInput<ProductVariantInput>>;
@@ -74,6 +80,15 @@ describe("react product form types", () => {
       expectTypeOf(addToCartProps.type).toEqualTypeOf<
         ButtonHTMLAttributes<HTMLButtonElement>["type"]
       >();
+
+      const addToCart = register("addToCart", {});
+      expectTypeOf(addToCart).toEqualTypeOf<ProductAddToCartProps>();
+      expectTypeOf(addToCart.name).toEqualTypeOf<"add-to-cart">();
+      expectTypeOf(addToCart.type).toEqualTypeOf<"submit">();
+      expectTypeOf(addToCart["data-h3"]).toEqualTypeOf<"product-add-to-cart">();
+      expectTypeOf(addToCart["data-h3-variant-id"]).toEqualTypeOf<string>();
+      expectTypeOf(addToCart["data-h3-available"]).toEqualTypeOf<string>();
+      expectTypeOf<ProductAddToCartProps>().toExtend<SignifierAttributes<"product-add-to-cart">>();
 
       // @ts-expect-error product register only accepts product-relevant fields
       register("add");

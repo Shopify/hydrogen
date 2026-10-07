@@ -1,3 +1,4 @@
+import { signifier, type SignifierAttributes } from "../signifiers";
 import type { ProductVariantInput } from "./state";
 
 /**
@@ -54,10 +55,11 @@ export interface ProductOptionValueProps {
 
 /**
  * Props for the button that submits the product form and adds the selected variant to the cart.
+ * They include the `product-add-to-cart` signifier for the selected variant.
  *
  * @publicDocs
  */
-export interface ProductAddToCartProps {
+export interface ProductAddToCartProps extends SignifierAttributes<"product-add-to-cart"> {
   /** Identifies the add-to-cart button. The button has no value, which tells the cart to add the variant from the merchandise ID field. */
   name: "add-to-cart";
   /** Makes the button submit the product form. */
@@ -156,7 +158,14 @@ export function createProductFormRegister(
     }
 
     if (field === "addToCart") {
-      return { name: "add-to-cart", type: "submit" } satisfies ProductAddToCartProps;
+      return {
+        name: "add-to-cart",
+        type: "submit",
+        ...signifier("product-add-to-cart", {
+          variantId: selectedVariant?.id ?? "",
+          available: selectedVariant?.availableForSale ?? false,
+        }),
+      } satisfies ProductAddToCartProps;
     }
 
     throw new Error(`Unknown product form field: "${field}".`);
