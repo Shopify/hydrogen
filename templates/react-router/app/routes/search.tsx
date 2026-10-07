@@ -139,7 +139,7 @@ function SearchHeader({ term }: { term: string }) {
             <Link
               to="/search"
               aria-label="Clear search"
-              className="text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent min-h-touch-target min-w-touch-target absolute end-1 top-1/2 inline-flex -translate-y-1/2 cursor-pointer items-center justify-center rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors"
+              className="text-on-surface-secondary hover:text-on-surface focus-visible:outline-focus-ring min-h-touch-target min-w-touch-target absolute end-1 top-1/2 inline-flex -translate-y-1/2 cursor-pointer items-center justify-center rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors"
             >
               <img src="/icons/icon-x.svg" alt="" className="size-4" aria-hidden="true" />
             </Link>

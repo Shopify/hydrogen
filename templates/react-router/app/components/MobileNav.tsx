@@ -24,7 +24,7 @@ export function MobileNav() {
             type="button"
             commandfor={MOBILE_NAV_DRAWER_ID}
             command="close"
-            className="button-icon focus-visible:outline-accent ms-auto inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+            className="button-icon focus-visible:outline-focus-ring ms-auto inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
             aria-label="Close"
             onClick={() => closeMobileNavDrawer()}
           >
@@ -57,7 +57,7 @@ export function MobileNavTrigger() {
       type="button"
       commandfor={MOBILE_NAV_DRAWER_ID}
       command="show-modal"
-      className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center gap-2 rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+      className="button-icon focus-visible:outline-focus-ring inline-flex h-11 w-11 cursor-pointer items-center justify-center gap-2 rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
       aria-label="Menu"
       aria-controls={MOBILE_NAV_DRAWER_ID}
       aria-haspopup="dialog"

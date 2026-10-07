@@ -16,34 +16,62 @@
   --color-border: #e5e7eb;
 
   /* ─── Brand: the single source of truth ────────────────────────────────
-     Change THIS one value to recolor the entire storefront. Every interactive
-     surface below — buttons, the cart-icon count badge, focus rings, selected
-     filter swatches and variant option pills — is DERIVED from it with modern
-     CSS: color-mix() in perceptual oklab space for the hover/active state
-     shades, and relative-color oklch() for the softer accent tint. Nothing
-     hard-codes the burgundy a second time, so the whole UI re-harmonizes from
-     this one knob. */
-  --color-primary: #5d0707;
+     root.tsx overrides --color-primary (and --color-primary-foreground) with
+     the shop's brand palette from the Storefront API; this near-black is the
+     default when the shop has none. Every interactive surface below (buttons,
+     the cart-icon count badge, focus rings, selected filter swatches and
+     variant option pills) is DERIVED from it, so the whole UI re-harmonizes
+     from this one knob. */
+  --color-primary: oklch(0.2 0 0);
+  /* Text on the brand where contrast-color() is unsupported (see @supports below). */
+  --color-primary-foreground: #ffffff;
+  /* Black or white, whichever contrasts with the brand. State shades mix toward
+     it, so hover/active stay visible on light and dark brands alike. */
+  --color-primary-contrast: var(--color-primary-foreground);
 
-  /* Interactive — derived from --color-primary.
-     -hover and -active are the brand darkened one and two steps in oklab; this
-     is the ONLY place the pressed/hover brand shades are defined. */
+  /* Interactive — derived from --color-primary with color-mix() in oklch.
+     This is the ONLY place the state shades are defined. Each state has its
+     own text color, picked per background by contrast-color() below. */
   --color-interactive: var(--color-primary);
-  --color-interactive-hover: color-mix(in oklab, var(--color-primary) 85%, black);
-  --color-interactive-active: color-mix(in oklab, var(--color-primary) 72%, black);
-  --color-interactive-text: #ffffff;
+  --color-interactive-hover: color-mix(
+    in oklch,
+    var(--color-primary) 85%,
+    var(--color-primary-contrast)
+  );
+  --color-interactive-active: color-mix(
+    in oklch,
+    var(--color-primary) 70%,
+    var(--color-primary-contrast)
+  );
+  --color-interactive-disabled: color-mix(in oklch, var(--color-primary) 35%, var(--color-surface));
+  --color-interactive-text: var(--color-primary-foreground);
+  --color-interactive-hover-text: var(--color-primary-foreground);
+  --color-interactive-active-text: var(--color-primary-foreground);
+  --color-interactive-disabled-text: var(--color-on-surface);
+
+  /* Text on fixed fills that don't follow the brand: status badges and imagery. */
+  --color-on-fill: #ffffff;
 
   /* Accent — a lighter, desaturated tint of the brand, used for focus rings
      and the accent badge. Relative-color oklch: lift lightness, cut chroma to
      ~40%, ease the hue a touch. Tracks --color-primary automatically. */
   --color-accent: oklch(from var(--color-primary) calc(l + 0.17) calc(c * 0.39) calc(h - 9));
 
+  /* Focus ring — the brand's hue and chroma at a FIXED lightness, made
+     translucent. Pinning lightness keeps the ring visible on the white surface
+     whether the brand is near-black, navy, or a light yellow. */
+  --color-focus-ring: oklch(from var(--color-primary) 0.5 c h / 0.8);
+
   /* Button variants — every brand button maps onto the interactive ramp, so
      they share one hover/active definition rather than re-deriving shades. */
   --color-button-primary: var(--color-interactive);
   --color-button-primary-hover: var(--color-interactive-hover);
   --color-button-primary-active: var(--color-interactive-active);
+  --color-button-primary-disabled: var(--color-interactive-disabled);
   --color-button-primary-text: var(--color-interactive-text);
+  --color-button-primary-hover-text: var(--color-interactive-hover-text);
+  --color-button-primary-active-text: var(--color-interactive-active-text);
+  --color-button-primary-disabled-text: var(--color-interactive-disabled-text);
   --color-button-secondary: var(--color-surface-secondary);
   --color-button-secondary-text: var(--color-on-surface);
   --color-button-outline-border: var(--color-interactive);
@@ -128,6 +156,18 @@
   --aspect-landscape: 16/9;
 }
 
+/* contrast-color() resolves to black or white, whichever contrasts more with
+   its argument. Unlayered, so it wins over the @theme fallbacks above. */
+@supports (color: contrast-color(red)) {
+  :root {
+    --color-primary-contrast: contrast-color(var(--color-primary));
+    --color-interactive-text: contrast-color(var(--color-interactive));
+    --color-interactive-hover-text: contrast-color(var(--color-interactive-hover));
+    --color-interactive-active-text: contrast-color(var(--color-interactive-active));
+    --color-interactive-disabled-text: contrast-color(var(--color-interactive-disabled));
+  }
+}
+
 :root {
   --type-paragraph-lg-font: var(--font-body);
   --type-paragraph-lg-size: 18px;
@@ -195,7 +235,7 @@
   input:focus-visible,
   textarea:focus-visible,
   select:focus-visible {
-    outline: 2px solid var(--color-interactive);
+    outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
   }
 
@@ -339,7 +379,7 @@
   input:focus-visible + .filter-swatch,
   label:has(input:focus-visible) .filter-checkbox,
   label:has(input:focus-visible) .filter-swatch {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
   }
   .filter-checkbox[aria-disabled="true"],
@@ -407,7 +447,7 @@
     cursor: not-allowed;
   }
   .option-pill:focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
   }
   @media (hover: hover) {
@@ -429,7 +469,7 @@
     .chip-filled:hover,
     .chip-outlined:hover {
       background: color-mix(
-        in oklab,
+        in oklch,
         var(--chip-bg, var(--color-surface-secondary)) 90%,
         var(--color-on-surface)
       );
@@ -442,23 +482,23 @@
   }
   .badge-sale {
     background: var(--color-badge-sale, var(--color-sale));
-    color: var(--color-badge-sale-text, var(--color-interactive-text));
+    color: var(--color-badge-sale-text, var(--color-on-fill));
   }
   .badge-accent {
     background: var(--color-badge-accent, var(--color-accent));
-    color: var(--color-badge-accent-text, var(--color-interactive-text));
+    color: var(--color-badge-accent-text, var(--color-on-fill));
   }
   .badge-info {
     background: var(--color-badge-info, var(--color-info));
-    color: var(--color-badge-info-text, var(--color-interactive-text));
+    color: var(--color-badge-info-text, var(--color-on-fill));
   }
   .badge-success {
     background: var(--color-badge-success, var(--color-success));
-    color: var(--color-badge-success-text, var(--color-interactive-text));
+    color: var(--color-badge-success-text, var(--color-on-fill));
   }
   .badge-warning {
     background: var(--color-badge-warning, var(--color-warning));
-    color: var(--color-badge-warning-text, var(--color-interactive-text));
+    color: var(--color-badge-warning-text, var(--color-on-fill));
   }
   .badge-soldout {
     background: var(--color-badge-soldout, var(--color-on-surface));
@@ -502,42 +542,48 @@
     color: var(--color-on-surface);
   }
   @media (hover: hover) {
-    .button-primary:hover {
+    .button-primary:hover:not(:disabled) {
       background: var(--color-button-primary-hover);
+      color: var(--color-button-primary-hover-text);
     }
     .button-secondary:hover {
-      background: color-mix(in oklab, var(--color-button-secondary) 90%, black);
+      background: color-mix(in oklch, var(--color-button-secondary) 90%, black);
     }
     .button-shop-pay:hover {
-      background: color-mix(in oklab, var(--color-button-shop-pay) 88%, black);
+      background: color-mix(in oklch, var(--color-button-shop-pay) 88%, black);
     }
     .button-outline:hover,
     .button-ghost:hover {
       background: var(--color-surface-secondary);
     }
     .button-surface:hover {
-      background: color-mix(in oklab, var(--color-surface) 90%, transparent);
+      background: color-mix(in oklch, var(--color-surface) 90%, transparent);
     }
     .button-icon:hover {
       opacity: 0.7;
     }
   }
 
-  /* Press / active color states — the brand darkened one step beyond hover.
+  /* Press / active color states — one step beyond hover.
      Kept OUT of the (hover: hover) block so touch devices get press feedback
      too; this complements the motion-safe active:scale transform on controls. */
-  .button-primary:active {
+  .button-primary:active:not(:disabled) {
     background: var(--color-button-primary-active);
+    color: var(--color-button-primary-active-text);
+  }
+  .button-primary:disabled {
+    background: var(--color-button-primary-disabled);
+    color: var(--color-button-primary-disabled-text);
   }
   .button-secondary:active {
-    background: color-mix(in oklab, var(--color-button-secondary) 82%, black);
+    background: color-mix(in oklch, var(--color-button-secondary) 82%, black);
   }
   .button-shop-pay:active {
-    background: color-mix(in oklab, var(--color-button-shop-pay) 78%, black);
+    background: color-mix(in oklch, var(--color-button-shop-pay) 78%, black);
   }
   .button-outline:active,
   .button-ghost:active {
-    background: color-mix(in oklab, var(--color-surface-secondary) 88%, black);
+    background: color-mix(in oklch, var(--color-surface-secondary) 88%, black);
   }
 
   .quantity-selector-outlined {
@@ -607,7 +653,7 @@
     inset: 0;
   }
   .card-link:focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
   }
 
@@ -697,7 +743,7 @@
     opacity: 1;
   }
   .nav-dropdown-item:focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
