@@ -100,6 +100,8 @@ Hydrogen ships no account UI yet — the app owns it. A storefront with the hand
 
 Use `gql` and `createCustomerAccountClient` from `@shopify/hydrogen/customer-account` in server code only. Pass the access token per GraphQL call.
 
+`requestContext.signal`, per-call `signal`, and the client's timeout signal are raced with `AbortSignal.any`. The Next.js edge sandbox does not have it, so an edge route or middleware that calls this client needs an `AbortSignal.any` polyfill installed before the first request.
+
 The same `@shopify/hydrogen/ts-plugin` and `hydrogen gql check` setup from the `hydrogen-storefront-client` skill validates Customer Account API documents too. If the check is not already chained into the app's `typecheck` package script, add it there (create the script if the app has none), then run it before treating setup as complete — framework typecheck commands do not validate `gql()` documents on their own.
 
 ## Local OAuth
