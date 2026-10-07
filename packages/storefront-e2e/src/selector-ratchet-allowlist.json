@@ -1,0 +1,172 @@
+[
+  {
+    "file": "specs/cart/cart.spec.ts",
+    "rule": "get-by-locator",
+    "code": "await expect(line.getByText(expectation.variantLabel, { exact: false })).toBeVisible();"
+  },
+  {
+    "file": "specs/cart/cart.spec.ts",
+    "rule": "get-by-locator",
+    "code": "return page.getByRole(\"dialog\").getByRole(\"listitem\").filter({ hasText: productTitle }).first();"
+  },
+  {
+    "file": "specs/cart/cart.spec.ts",
+    "rule": "get-by-locator",
+    "code": "return page.getByRole(\"dialog\").getByRole(\"listitem\").filter({ hasText: productTitle }).first();"
+  },
+  {
+    "file": "specs/cart/cart.spec.ts",
+    "rule": "get-by-locator",
+    "code": "await page.getByRole(\"button\", { name: CART_CONTROL_NAME }).first().click();"
+  },
+  {
+    "file": "specs/cart/cart.spec.ts",
+    "rule": "get-by-locator",
+    "code": "await expect(page.getByRole(\"status\").filter({ hasText: message }).first()).toBeAttached({"
+  },
+  {
+    "file": "specs/cart/cart.spec.ts",
+    "rule": "get-by-locator",
+    "code": "return page.getByRole(\"main\").getByRole(\"listitem\").filter({ hasText: productTitle }).first();"
+  },
+  {
+    "file": "specs/cart/cart.spec.ts",
+    "rule": "get-by-locator",
+    "code": "return page.getByRole(\"main\").getByRole(\"listitem\").filter({ hasText: productTitle }).first();"
+  },
+  {
+    "file": "specs/cart/cart.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const textbox = line.getByRole(\"textbox\").first();"
+  },
+  {
+    "file": "specs/cart/cart.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const spinbutton = line.getByRole(\"spinbutton\").first();"
+  },
+  {
+    "file": "specs/cart/cart.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const button = line.getByRole(\"button\", { name }).first();"
+  },
+  {
+    "file": "specs/checkout/checkout.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const checkout = page.getByRole(\"link\", { name: CHECKOUT_CONTROL_NAME }).first();"
+  },
+  {
+    "file": "specs/checkout/checkout.spec.ts",
+    "rule": "get-by-locator",
+    "code": ".getByRole(\"main\")"
+  },
+  {
+    "file": "specs/checkout/checkout.spec.ts",
+    "rule": "get-by-locator",
+    "code": ".getByRole(\"listitem\")"
+  },
+  {
+    "file": "specs/checkout/checkout.spec.ts",
+    "rule": "get-by-locator",
+    "code": "await expect(line.getByText(expectation.variantLabel, { exact: false })).toBeVisible();"
+  },
+  {
+    "file": "specs/checkout/checkout.spec.ts",
+    "rule": "get-by-locator",
+    "code": "return page.getByRole(\"dialog\").getByRole(\"listitem\").filter({ hasText: productTitle }).first();"
+  },
+  {
+    "file": "specs/checkout/checkout.spec.ts",
+    "rule": "get-by-locator",
+    "code": "return page.getByRole(\"dialog\").getByRole(\"listitem\").filter({ hasText: productTitle }).first();"
+  },
+  {
+    "file": "specs/collection-filter/collection-filter.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const applyFilters = page.getByRole(\"button\", { name: /apply filters|show results/i }).first();"
+  },
+  {
+    "file": "specs/collection-filter/collection-filter.spec.ts",
+    "rule": "raw-locator",
+    "code": "const wrappingLabel = filter.control.locator(\"xpath=ancestor::label[1]\");"
+  },
+  {
+    "file": "specs/collection-filter/collection-filter.spec.ts",
+    "rule": "xpath",
+    "code": "const wrappingLabel = filter.control.locator(\"xpath=ancestor::label[1]\");"
+  },
+  {
+    "file": "specs/collection-filter/collection-filter.spec.ts",
+    "rule": "dom-query",
+    "code": "const links = [...document.querySelectorAll<HTMLAnchorElement>(\"a[href]\")].slice("
+  },
+  {
+    "file": "specs/collection-filter/collection-filter.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const controls = page.getByRole(\"checkbox\");"
+  },
+  {
+    "file": "specs/collection/collection-page.spec.ts",
+    "rule": "get-by-locator",
+    "code": "page.getByRole(\"link\", { name: new RegExp(escapeRegExp(firstProduct.title), \"i\") }).first(),"
+  },
+  {
+    "file": "specs/product-variant/product-variant.spec.ts",
+    "rule": "get-by-locator",
+    "code": "page.getByRole(\"heading\", { level: 1, name: selectedVariant.productTitle }),"
+  },
+  {
+    "file": "specs/product-variant/product-variant.spec.ts",
+    "rule": "get-by-locator",
+    "code": "page.getByText(selectedVariant.variantLabel, { exact: false }).first(),"
+  },
+  {
+    "file": "specs/product-variant/product-variant.spec.ts",
+    "rule": "get-by-locator",
+    "code": "await expect(page.getByRole(\"heading\", { level: 1, name: product.title })).toBeVisible();"
+  },
+  {
+    "file": "specs/product-variant/product-variant.spec.ts",
+    "rule": "get-by-locator",
+    "code": "await expect(page.getByText(variantLabel, { exact: false }).first()).toBeVisible();"
+  },
+  {
+    "file": "specs/product-variant/product-variant.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const buttons = page.getByRole(\"button\");"
+  },
+  {
+    "file": "specs/product-variant/product-variant.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const links = page.getByRole(\"link\");"
+  },
+  {
+    "file": "specs/product/product-page.spec.ts",
+    "rule": "get-by-locator",
+    "code": "await expect(page.getByRole(\"heading\", { level: 1, name: firstProduct.title })).toBeVisible();"
+  },
+  {
+    "file": "specs/search/search.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const searchbox = page.getByRole(\"searchbox\").first();"
+  },
+  {
+    "file": "specs/search/search.spec.ts",
+    "rule": "raw-locator",
+    "code": "const form = searchbox.locator(\"xpath=ancestor::form[1]\");"
+  },
+  {
+    "file": "specs/search/search.spec.ts",
+    "rule": "xpath",
+    "code": "const form = searchbox.locator(\"xpath=ancestor::form[1]\");"
+  },
+  {
+    "file": "specs/search/search.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const searchButton = form.getByRole(\"button\", { name: /search/i }).first();"
+  },
+  {
+    "file": "specs/search/search.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const productLinks = page.getByRole(\"link\", { name: productTitleMatcher });"
+  }
+]
