@@ -273,7 +273,7 @@ function ProductPurchasePanel({ product }: { product: ProductData }) {
 Framework notes:
 
 - Next.js App Router: fetch in the server page; put `ProductProvider` and the form in a `"use client"` component. Use `router.replace(url, { scroll: false })` in `onSelect`.
-- React Router: put URL sync in provider `onSelect`. Same-product option values are GET `<Link>`s that spread `register("optionValue", ...)` (no-JS fallback). Cross-product values use `<Link preventScrollReset>`. See the `hydrogen-variant-form` React reference.
+- React Router: put URL sync in provider `onSelect`. Same-product option values are GET `<Link>`s whose plain click runs the `register("optionValue", ...)` handler and cancels the link's own navigation (no-JS fallback via `href`). Cross-product values use `<Link preventScrollReset>`. See the `hydrogen-variant-form` React reference.
 
 ### Vue
 

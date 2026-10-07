@@ -523,19 +523,18 @@ function VariantOptions({ product }: { product: ProductData }) {
                     aria-label={renderSwatches ? valueName : undefined}
                     aria-current={variantOption.selected ? "true" : undefined}
                     data-testid={testId}
-                    {...(isCrossProduct
-                      ? {}
-                      : {
-                          replace: true,
-                          onClick: (event: MouseEvent<HTMLAnchorElement>) => {
+                    onClick={
+                      isCrossProduct
+                        ? undefined
+                        : (event) => {
                             if (!isPlainActivation(event)) return;
                             registered.onClick();
                             // onSelect has already navigated with the provider's replace
                             // and revalidation settings. Letting Link navigate too would
                             // refetch the loader that a resolved selection just skipped.
                             event.preventDefault();
-                          },
-                        })}
+                          }
+                    }
                   >
                     {content}
                   </Link>

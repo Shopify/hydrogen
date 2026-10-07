@@ -41,7 +41,7 @@ Wrap the UI:
 
 ## Variant Selector
 
-Same-product option values are GET links (`NuxtLink`) so selection degrades without JavaScript; non-existent combinations render as a disabled `<button>`, and cross-product combined-listing values are also links. The skill's GET-links rule and accessibility guidance cover the `aria-current`, idempotent-`onSelect`, and no-JS rationale:
+Same-product option values are GET links (`NuxtLink`) so selection degrades without JavaScript; non-existent combinations render as a disabled `<button>`, and cross-product combined-listing values are also links. The skill's GET-links rule and accessibility guidance cover the `aria-current` and no-JS rationale. The GET-links rule also requires a plain click to run the registered handler and cancel the link's own navigation; this reference does not yet show that guard for `NuxtLink`, so with the binding below both navigations run and `onSelect` must tolerate the repeat:
 
 ```vue
 <!-- cross-product: navigate to a different product -->
