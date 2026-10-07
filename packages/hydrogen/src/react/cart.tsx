@@ -114,6 +114,7 @@ type TypedCartComponents<TData extends CartData> = {
   useCartForm: typeof useCartForm;
 };
 
+// prettier-ignore
 /**
  * Returns a cart provider and cart hooks typed to the cart fragment in your cart server handlers.
  * Pass `typeof cartServerHandlers` as the `THandlers` type argument. Every hook's cart state then includes your custom cart fields.
@@ -137,9 +138,7 @@ type TypedCartComponents<TData extends CartData> = {
  * ```
  * @publicDocs
  */
-export function createCartComponents<THandlers>(): TypedCartComponents<
-  CartDataFromHandlers<THandlers>
-> {
+export function createCartComponents<THandlers>(): TypedCartComponents<CartDataFromHandlers<THandlers>> {
   type TData = CartDataFromHandlers<THandlers>;
 
   function TypedCartProvider({ initialData, children }: TypedCartProviderProps<TData>) {
