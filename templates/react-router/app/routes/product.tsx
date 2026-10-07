@@ -7,7 +7,7 @@ import {
   type SelectedOption,
 } from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 
 import { ProductCard, PRODUCT_CARD_FRAGMENT } from "~/components/ProductCard";
@@ -555,12 +555,15 @@ function VariantOptions({ product }: { product: ProductData }) {
 }
 
 function QuantitySelector({
+  formId,
   quantity,
   setQuantity,
 }: {
+  formId: string;
   quantity: number;
   setQuantity: (quantity: number) => void;
 }) {
+  const { register } = useProductForm();
   const clamp = (value: number) => Math.min(99, Math.max(1, value));
 
   return (
@@ -584,7 +587,8 @@ function QuantitySelector({
         <input
           type="number"
           id="quantity"
-          value={quantity}
+          form={formId}
+          {...register("quantity", { value: quantity })}
           min={1}
           max={99}
           step={1}
@@ -609,10 +613,12 @@ function QuantitySelector({
 }
 
 function AddToCart({
+  formId,
   product,
   quantity,
   selectedVariant,
 }: {
+  formId: string;
   product: ProductData;
   quantity: number;
   selectedVariant: ProductVariant | null;
@@ -623,11 +629,10 @@ function AddToCart({
 
   return (
     <>
-      <form {...formProps({ afterSubmit: openCartDrawer })}>
+      <form id={formId} {...formProps({ afterSubmit: openCartDrawer })}>
         <input type="hidden" {...register("merchandiseId", {})} />
-        <input type="hidden" {...register("quantity", { value: quantity })} />
         <button
-          type="submit"
+          {...register("addToCart", {})}
           className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
           disabled={!addable || pending}
           data-testid="add-to-cart"
@@ -676,6 +681,7 @@ function ProductInfo({
   selectedVariant: ProductVariant | null;
 }) {
   const [quantity, setQuantity] = useState(1);
+  const addToCartFormId = useId();
 
   return (
     <div className="flex flex-col gap-6 md:sticky md:top-8 md:self-start">
@@ -702,9 +708,18 @@ function ProductInfo({
         <span className="sr-only" aria-live="polite" data-add-to-cart-status />
         <VariantOptions product={product} />
         <div className="mt-6 mb-10 flex items-center gap-4">
-          <QuantitySelector quantity={quantity} setQuantity={setQuantity} />
+          <QuantitySelector
+            formId={addToCartFormId}
+            quantity={quantity}
+            setQuantity={setQuantity}
+          />
         </div>
-        <AddToCart product={product} quantity={quantity} selectedVariant={selectedVariant} />
+        <AddToCart
+          formId={addToCartFormId}
+          product={product}
+          quantity={quantity}
+          selectedVariant={selectedVariant}
+        />
       </div>
 
       <h2 className="sr-only">Product details</h2>
