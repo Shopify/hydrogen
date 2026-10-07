@@ -89,9 +89,6 @@ function SearchDialog() {
                 },
               })}
             />
-            <button type="submit" className="sr-only">
-              Search
-            </button>
           </form>
           <button
             type="button"
