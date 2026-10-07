@@ -1,4 +1,8 @@
-import { AnalyticsEvent, getSortByValue } from "@shopify/hydrogen";
+import {
+  AnalyticsEvent,
+  createPredictiveSearchFormRegister,
+  getSortByValue,
+} from "@shopify/hydrogen";
 import { CollectionProvider } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
 import { Link, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
@@ -105,6 +109,8 @@ function Breadcrumb() {
   );
 }
 
+const registerSearchForm = createPredictiveSearchFormRegister();
+
 function SearchHeader({ term }: { term: string }) {
   return (
     <div className="mb-8">
@@ -128,8 +134,7 @@ function SearchHeader({ term }: { term: string }) {
           </span>
           <input
             key={term}
-            type="search"
-            name="q"
+            {...registerSearchForm("query")}
             id="search-q"
             defaultValue={term}
             placeholder="Search"
