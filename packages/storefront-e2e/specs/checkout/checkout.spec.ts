@@ -1,10 +1,10 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { createContractError } from "../../src/contract";
+import { requireH3 } from "../../src/signifiers";
 import { test, type CheckoutTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
-const ADD_TO_CART_NAME = /add to cart/i;
 const CHECKOUT_CONTROL_NAME = /check\s*out|checkout|continue to checkout/i;
 
 type CartExpectation = {
@@ -24,26 +24,23 @@ async function addProductToCart(
   products: readonly CheckoutTestProduct[],
   cartPath: string,
 ): Promise<CartExpectation> {
-  for (const product of products) {
-    const expectation = await tryAddProductToCart(page, product, cartPath);
-    if (expectation !== null) return expectation;
-  }
+  const [product] = products;
+  if (product !== undefined) return addVariantToCart(page, product, cartPath);
 
   throw createContractError({
     capability: "product-cart",
     routePath: cartPath,
-    expectation: "At least one cart enabled product page exposes an enabled Add to cart button.",
-    likelyFix:
-      "Ensure the test store has an in-stock product variant with an enabled Add to cart button.",
+    expectation: "At least one cart enabled product variant is discovered.",
+    likelyFix: "Ensure the test store has an in-stock product variant.",
     docsAnchor: "#cart-line-items",
   });
 }
 
-async function tryAddProductToCart(
+async function addVariantToCart(
   page: Page,
   product: CheckoutTestProduct,
   cartPath: string,
-): Promise<CartExpectation | null> {
+): Promise<CartExpectation> {
   await page.goto(product.path);
 
   const expectation = {
@@ -51,12 +48,7 @@ async function tryAddProductToCart(
     productTitle: product.productTitle,
     variantLabel: product.variantLabel,
   };
-  const addToCart = page.getByRole("button", { name: ADD_TO_CART_NAME }).first();
-  const isCartEnabled =
-    (await addToCart.isVisible().catch(() => false)) &&
-    (await addToCart.isEnabled().catch(() => false));
-  if (!isCartEnabled) return null;
-
+  const addToCart = await requireH3(page, "product-add-to-cart", { available: true });
   await addToCart.click();
   await expect(cartOverlayLineFor(page, expectation.productTitle)).toBeVisible({
     timeout: CART_SETTLE_TIMEOUT_MS,

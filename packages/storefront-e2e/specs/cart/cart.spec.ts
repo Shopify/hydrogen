@@ -1,10 +1,10 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { createContractError } from "../../src/contract";
+import { requireH3 } from "../../src/signifiers";
 import { test, type CartTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
-const ADD_TO_CART_NAME = /add to cart/i;
 const CART_CONTROL_NAME = /^(?:open |view )?cart\b/i;
 const REMOVE_CONTROL_NAME = /remove/i;
 const INCREASE_CONTROL_NAME = /increase|^\+$/i;
@@ -49,16 +49,7 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
     return;
   }
 
-  const expectation = await tryAddProductToCart(page, product, data.paths.cart);
-  if (!expectation) {
-    throw createContractError({
-      capability: "product-cart",
-      routePath: product.path,
-      expectation: "The discovered stock-limit product exposes an enabled Add to cart button.",
-      likelyFix: "Keep the discovered in-stock variant available on its product page.",
-      docsAnchor: "#cart-line-items",
-    });
-  }
+  const expectation = await addVariantToCart(page, product, data.paths.cart);
   await setCartLineQuantity(page, expectation, product.maxQuantity);
   await page.goto(product.path);
 
@@ -68,7 +59,7 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
     await route.continue();
   });
 
-  const addToCart = page.getByRole("button", { name: ADD_TO_CART_NAME }).first();
+  const addToCart = await requireH3(page, "product-add-to-cart", { available: true });
 
   try {
     await addToCart.click();
@@ -108,26 +99,23 @@ async function addProductToCart(
   products: readonly CartTestProduct[],
   cartPath: string,
 ): Promise<CartExpectation> {
-  for (const product of products) {
-    const expectation = await tryAddProductToCart(page, product, cartPath);
-    if (expectation !== null) return expectation;
-  }
+  const [product] = products;
+  if (product !== undefined) return addVariantToCart(page, product, cartPath);
 
   throw createContractError({
     capability: "product-cart",
     routePath: cartPath,
-    expectation: "At least one cart enabled product page exposes an enabled Add to cart button.",
-    likelyFix:
-      "Ensure the test store has an in-stock product variant with an enabled Add to cart button.",
+    expectation: "At least one cart enabled product variant is discovered.",
+    likelyFix: "Ensure the test store has an in-stock product variant.",
     docsAnchor: "#cart-line-items",
   });
 }
 
-async function tryAddProductToCart(
+async function addVariantToCart(
   page: Page,
   product: CartTestProduct,
   cartPath: string,
-): Promise<CartExpectation | null> {
+): Promise<CartExpectation> {
   await page.goto(product.path);
 
   const expectation = {
@@ -135,14 +123,7 @@ async function tryAddProductToCart(
     productTitle: product.productTitle,
     variantLabel: product.variantLabel,
   };
-  const addToCart = page.getByRole("button", { name: ADD_TO_CART_NAME }).first();
-  const isCartVisible = await addToCart
-    .waitFor({ state: "visible", timeout: CART_SETTLE_TIMEOUT_MS })
-    .then(() => true)
-    .catch(() => false);
-  const isCartEnabled = isCartVisible && (await addToCart.isEnabled().catch(() => false));
-  if (!isCartEnabled) return null;
-
+  const addToCart = await requireH3(page, "product-add-to-cart", { available: true });
   await addToCart.click();
   const line = cartOverlayLineFor(page, expectation.productTitle);
   await expect(line).toBeVisible({
