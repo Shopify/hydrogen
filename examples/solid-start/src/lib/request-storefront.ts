@@ -1,10 +1,14 @@
 import type {
+  PublicStorefrontClient,
   RequestScopedPrivateStorefrontClient,
   ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import { getRequestEvent } from "solid-js/web";
 
-export function getRequestStorefrontClient(): RequestScopedPrivateStorefrontClient {
+/** Public and tokenless on mock.shop, private with a real store. */
+export type RequestStorefrontClient = PublicStorefrontClient | RequestScopedPrivateStorefrontClient;
+
+export function getRequestStorefrontClient(): RequestStorefrontClient {
   const event = getRequestEvent();
   const storefrontClient = event?.locals.storefrontClient;
 
@@ -16,6 +20,6 @@ export function getRequestStorefrontClient(): RequestScopedPrivateStorefrontClie
 }
 
 export type StorefrontLocals = {
-  storefrontClient: RequestScopedPrivateStorefrontClient;
+  storefrontClient: RequestStorefrontClient;
   shopifyRequestContext: ShopifyRequestContext;
 };
