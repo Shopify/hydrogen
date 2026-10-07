@@ -11,7 +11,9 @@ import type {
 } from "../core/request-context";
 import type { AnyStorefrontQueryString, SourceOf, StorefrontQueryString } from "../graphql";
 import type { InferResult, InferVariables } from "../graphql";
-import type { InferOperationKind } from "../graphql/type-resolver";
+import type { introspection } from "../graphql/generated/graphql-env";
+import type { InferOperationKind, InferVariableNamesDeclaredAs } from "../graphql/type-resolver";
+import type { I18N_VARIABLE_TYPES } from "./i18n-variables";
 
 export type { I18nConfig } from "../core/request-context";
 
@@ -185,8 +187,27 @@ export type CreateStorefrontClientArgs<
       requestContext: RequestContext;
       config: PrivateNoBuyerContextClientOptions<AnyFetch | undefined> & { cache?: CacheConfig };
     };
-type AutoAddedVariableNames = "country" | "language";
-type UserVariables<Doc> = Omit<VariablesOfDoc<Doc>, AutoAddedVariableNames>;
+type I18nVariableTypes = typeof I18N_VARIABLE_TYPES;
+type I18nEnum<K extends keyof I18nVariableTypes> =
+  introspection["types"][I18nVariableTypes[K]]["enumValues"];
+type IsExactly<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+// Documents without source text only expose resolved variable types, so an
+// exact enum match stands in for the declared type.
+type I18nVariableNamesByValue<Variables> = {
+  [K in keyof Variables & keyof I18nVariableTypes]-?: IsExactly<
+    NonNullable<Variables[K]>,
+    I18nEnum<K>
+  > extends true
+    ? K
+    : never;
+}[keyof Variables & keyof I18nVariableTypes];
+type I18nVariableNamesOfDoc<Doc> = [SourceText<Doc>] extends [never]
+  ? I18nVariableNamesByValue<VariablesOfDoc<Doc>>
+  : string extends SourceText<Doc>
+    ? I18nVariableNamesByValue<VariablesOfDoc<Doc>>
+    : InferVariableNamesDeclaredAs<SourceText<Doc>, I18nVariableTypes>;
+/** Variables the caller passes: everything except the i18n variables the client injects. */
+type UserVariables<Doc> = Omit<VariablesOfDoc<Doc>, I18nVariableNamesOfDoc<Doc>>;
 
 type HasNoRequiredKeys<T> = Record<string, never> extends T ? true : false;
 
@@ -275,8 +296,8 @@ export type StorefrontClient<
    * Execute a Storefront API GraphQL operation.
    *
    * Accepts a `gql()` document or a plain query string. Variables
-   * declared as `$country` / `$language` are auto-injected from the client's
-   * i18n config.
+   * declared as `$country: CountryCode` / `$language: LanguageCode` are
+   * auto-injected from the client's i18n config.
    */
   graphql: <const Doc extends DocLike | string>(
     doc: Doc,

@@ -25,6 +25,7 @@ import type { I18nConfig, ShopifyRequestContext } from "../core/request-context"
 import { normalizeStoreDomain } from "../core/url";
 import type { AnyStorefrontQueryString } from "../graphql";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";
+import { getI18nVariableNames } from "./i18n-variables";
 import type {
   ClientType,
   CreateStorefrontClientArgs,
@@ -42,8 +43,6 @@ type ResolvedStorefrontFetch = (
   cacheOptions: FetchCacheOptions | undefined,
 ) => Promise<Response>;
 
-const COUNTRY_VAR_RE = /\$country\s*:/;
-const LANGUAGE_VAR_RE = /\$language\s*:/;
 const REQUEST_CACHE_KEY_HEADERS = new Set([
   "content-type",
   "user-agent",
@@ -358,11 +357,8 @@ function buildVariables(
 ): Record<string, unknown> {
   const variables: Record<string, unknown> = { ...userVariables };
 
-  if (COUNTRY_VAR_RE.test(queryText)) {
-    variables.country = resolvedI18n.country;
-  }
-  if (LANGUAGE_VAR_RE.test(queryText)) {
-    variables.language = resolvedI18n.language;
+  for (const name of getI18nVariableNames(queryText)) {
+    variables[name] = resolvedI18n[name];
   }
 
   return variables;
