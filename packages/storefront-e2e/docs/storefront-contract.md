@@ -74,6 +74,31 @@ Cart totals must expose a `role="status"` region that says `Updating cart totals
 
 Accessible labels are preferred. Broad data-testid attributes should only be used when a semantic role or label cannot express the user-facing concept.
 
+## Signifiers
+
+Some controls use a standard signifier: a `data-h3` attribute with the signifier name, plus `data-h3-*` state attributes. Signifiers are present in production too. Use `signifier()` or a Hydrogen form binding to write them. Do not write them by hand. See [ADR 0001](adr/0001-standard-signifiers.md) for the design.
+
+The suite finds a signifier like this:
+
+- One visible match among several attached matches wins.
+- If no match is visible, exactly one attached match wins. A visually hidden control is usable.
+- More than one visible match, or more than one hidden match with no visible match, fails as ambiguous.
+
+The minimum Hydrogen version with signifiers is not released yet.
+
+### product-add-to-cart
+
+The add-to-cart submit control on product detail pages.
+
+State: `variantId` (string) and `available` (boolean). Both are required. When no variant is selected, the state is `variantId: ''` and `available: false` (boolean). The DOM then has `data-h3-variant-id=""` and `data-h3-available="false"` (string).
+
+Fix a missing or ambiguous signifier:
+
+- With Hydrogen form bindings: spread `register('addToCart', {})` on the control. It adds live attributes.
+- Without bindings: spread `signifier('product-add-to-cart', { variantId, available })` from `@shopify/hydrogen` on the control.
+- If a wrapper component renders the control, make sure it forwards props to the rendered element.
+- Keep only one visible add-to-cart control per product page.
+
 ## Checkout Handoff
 
 The checkout test verifies only the storefront-owned side of the checkout handoff.
@@ -104,4 +129,4 @@ Operational expectations:
 
 When the storefront contract changes, update the relevant spec matcher, shared helper, and this document together.
 
-Generated examples should migrate toward explicit storefront-owned signifiers for product results, variant options, cart lines, and checkout summaries. Until then, the suite assumes label strings and semantic roles.
+The suite consumes the `product-add-to-cart` signifier. Other areas still use label strings and semantic roles. Generated examples should migrate toward explicit storefront-owned signifiers for product results, variant options, cart lines, and checkout summaries. Add a signifier only when a spec consumes it, and update the [Signifiers](#signifiers) section in the same change.
