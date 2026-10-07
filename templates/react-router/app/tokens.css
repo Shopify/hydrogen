@@ -395,6 +395,7 @@
     cursor: pointer;
   }
   .option-pill[aria-pressed="true"],
+  .option-pill[aria-current="true"],
   .option-pill.is-selected {
     background: var(--color-interactive);
     color: var(--color-interactive-text);
@@ -411,7 +412,7 @@
     outline-offset: 2px;
   }
   @media (hover: hover) {
-    .option-pill:not([aria-pressed="true"]):not(.is-selected):not(:disabled):hover {
+    .option-pill:not([aria-pressed="true"], [aria-current="true"], .is-selected, :disabled):hover {
       background: var(--color-surface-secondary);
     }
   }
