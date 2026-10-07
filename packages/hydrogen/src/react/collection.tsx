@@ -26,34 +26,33 @@ import type { CollectionState } from "../core/collection";
 
 const CollectionContext = createContext<CollectionStore | null>(null);
 
-/** Props for the {@link CollectionProvider} component. */
+/**
+ * Props for the collection provider. The provider creates a collection store and keeps its filters and sort in sync with the URL.
+ */
 export interface CollectionProviderProps {
-  /** Collection metadata from the framework data fetch (`handle`, `dataSearch`). */
+  /** Collection handle and the search string your loader fetched the collection for. */
   data: CollectionData;
   /**
-   * Live URL search string from the framework router (with or without leading `?`).
-   * Seeds the store on mount and keeps browse state in sync with back/forward.
+   * Current URL search string from your router, with or without a leading `?`. Defaults to an empty string.
+   * The provider reads the initial filters and sort from the string on mount. When the string changes, including on back and forward navigation, the provider updates the store.
    */
   urlSearch?: string;
   /**
-   * Called after user-initiated filter/sort changes with a ready-to-use
-   * search string. The consumer's only job is to navigate:
+   * Receives the search string after a customer changes filters or sort. Navigate to the search string with your router.
    *
-   * ```tsx
-   * onChange={(search) =>
-   *   navigate({ search }, { replace: searchParams.size > 0, preventScrollReset: true })
-   * }
-   * ```
+   * The search string starts with `?`, or is empty when no parameters remain.
    */
   onChange?: (searchString: string) => void;
+  /** Content that reads and changes collection state through the collection hooks. */
   children?: ReactNode;
 }
 
 /**
- * Manages the lifecycle of a {@link CollectionStore}: creates on mount and
- * syncs with URL changes. Recreates the store when `data.handle` changes
- * (navigating to a different collection).
+ * Creates a collection store and keeps its filters and sort in sync with the URL.
+ * The provider creates a new store when the collection handle changes, such as on navigation to a different collection.
  *
+ * @param props - The collection data, the URL search string, the change callback, and the content that uses the collection hooks.
+ * @returns A context provider that shares the collection store with its children.
  * @publicDocs
  */
 export function CollectionProvider({
@@ -112,7 +111,9 @@ function useRequiredStore(hookName: string): CollectionStore {
 }
 
 /**
- * Subscribes to the collection store and returns the full state snapshot.
+ * Returns the collection state and re-renders the component when the state changes.
+ *
+ * @returns The current collection state.
  *
  * @example
  * ```tsx
@@ -122,9 +123,10 @@ function useRequiredStore(hookName: string): CollectionStore {
  */
 export function useCollection(): CollectionState;
 /**
- * Subscribes to the collection store and returns a derived value via `selector`.
- * Optionally accepts an `isEqual` comparator to skip re-renders when the
- * derived value is structurally unchanged.
+ * With a selector, the hook returns the selector's value and re-renders the component when that value changes.
+ * Pass an `isEqual` comparator to skip re-renders for equal values. The hook throws outside the collection provider.
+ *
+ * @returns The value your selector derives from the current collection state.
  *
  * @example
  * ```tsx
@@ -137,6 +139,11 @@ export function useCollection<S>(
   selector: (state: CollectionState) => S,
   isEqual?: (a: S, b: S) => boolean,
 ): S;
+/**
+ * @param selector The function that derives the returned value from the collection state.
+ * @param isEqual The comparator that skips a re-render when it returns `true` for two derived values.
+ * @returns The collection state, or the selector's value when you pass a selector.
+ */
 export function useCollection<S>(
   selector?: (state: CollectionState) => S,
   isEqual?: (a: S, b: S) => boolean,
@@ -179,9 +186,11 @@ export function useCollection<S>(
 }
 
 /**
- * Returns methods that change filters and sort. The store's `onBrowseChange`
- * callback (set by {@link CollectionProvider}) handles calling `onChange` with
- * a serialized search string.
+ * Returns methods that change filters and sort. After each change, the collection provider passes the new search string to its `onChange` callback.
+ *
+ * The hook throws outside the collection provider.
+ *
+ * @returns Methods that set, toggle, and reset filters, set the sort, and apply submitted filter forms.
  *
  * @publicDocs
  */
@@ -203,8 +212,14 @@ export function useCollectionActions(): CollectionActions {
 }
 
 /**
- * Returns form props for progressive-enhancement of collection filter forms.
+ * Returns form props that progressively enhance collection filter forms.
  *
+ * Spread the result of `formProps()` on the form. Its submit handler cancels the native submission and applies the form's filter and sort fields to the store.
+ * The handler runs `beforeSubmit` first and skips the store update when that callback prevents the default action. The handler runs `afterSubmit` after the store update.
+ *
+ * Render the form with `method="get"` and an explicit `action`. On search pages, keep `q` as a hidden input inside the form. The hook throws outside the collection provider.
+ *
+ * @returns An object with a `formProps` function. The function takes optional `beforeSubmit` and `afterSubmit` callbacks and returns form props that hold the form's submit handler.
  * @example
  * ```tsx
  * const { formProps } = useCollectionForm();

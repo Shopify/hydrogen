@@ -36,61 +36,50 @@ type FetchCustomerAccountGraphqlParams = {
 };
 
 /**
- * Options for {@link createCustomerAccountClient}.
- *
- * The client validates `shopId`, `customerApiVersion`, and `defaultTimeoutInMs`
- * at construction time and throws synchronously on invalid values.
+ * Options for creating a Customer Account API client.
  */
 export type CreateCustomerAccountClientOptions = {
-  /** Numeric Shopify shop ID as a string (e.g. `"12345"`). Validated against `/^\d+$/`. */
+  /** Numeric Shopify shop ID as a string of digits, such as `"12345"`. */
   shopId: string;
   /**
-   * Customer Account API version in `YYYY-MM` format.
-   * Defaults to {@link CUSTOMER_ACCOUNT_API_VERSION}.
+   * Customer Account API version in `YYYY-MM` format. Defaults to `2026-10`.
    */
   customerApiVersion?: string;
   /**
-   * Request-scoped context created by `createShopifyRequestContext`. Must
-   * have a `url` property (throws at construction when missing or non-HTTPS;
-   * `http://localhost`, `127.0.0.1` and `::1` are accepted and sent as
-   * HTTPS). Supplies the i18n language for automatic `$language` variable
-   * injection, an abort signal that propagates request cancellation, and a
-   * personalization marker (sets `private, no-store` and removes CDN cache
-   * headers).
+   * Request context from createShopifyRequestContext for the current request.
+   *
+   * The context URL must use HTTPS, or creating the client throws. The client also accepts local `http://` URLs on localhost, 127.0.0.1, and ::1, and sends their origin as HTTPS.
+   *
+   * The client fills `$language` from the context's language and stops requests when the context aborts.
    */
   requestContext: ShopifyRequestContext;
-  /** Custom `fetch` implementation. Falls back to `globalThis.fetch`. */
+  /** Custom fetch implementation. Defaults to the global fetch. */
   fetch?: typeof globalThis.fetch;
   /**
-   * Per-request timeout in milliseconds. Must be a positive safe integer no
-   * greater than 2,147,483,647. Defaults to 30,000 ms.
+   * Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to 30,000.
    */
   defaultTimeoutInMs?: number;
 };
 
 /**
- * Per-call options passed to {@link CustomerAccountClient.graphql}.
- * See `variables` for automatic `$language` injection.
+ * Options for a single Customer Account API request.
  */
 export type CustomerAccountGraphqlOptions<Variables = Record<string, unknown>> = {
-  /** Customer Account API access token, e.g. from `CustomerSession.getAccessToken()` or `getOrRefreshAccessToken()`. */
+  /** Customer Account API access token, such as one from the customer session. */
   accessToken: string;
   /**
-   * Query variables. When the GraphQL document declares a `$language` variable
-   * and you omit it here, the client injects it automatically from
-   * `requestContext.i18n.language`.
+   * Query variables as an object. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.
    */
   variables?: Variables;
   /**
-   * Optional abort signal. Combined with the request context signal and the
-   * per-request timeout signal via `AbortSignal.any`, so cancellation from any
-   * source stops the request.
+   * Abort signal for this request. The request stops when this signal, the request context's signal, or the timeout aborts.
    */
   signal?: AbortSignal;
 };
 
 type ResultOfDoc<Doc> =
   Doc extends CustomerAccountDocument<infer Result, never, string> ? Result : never;
+/** Extracts the variables type from a Customer Account document. */
 type VariablesOfDoc<Doc> =
   Doc extends CustomerAccountDocument<unknown, infer Variables, string> ? Variables : never;
 type OptionalAutoVariables<Variables> = "language" extends keyof Variables
@@ -101,28 +90,18 @@ type UserVariables<Doc> = Omit<VariablesOfDoc<Doc>, "language"> &
 type HasNoRequiredKeys<T> = Record<string, never> extends T ? true : false;
 
 /**
- * Discriminated union returned by {@link CustomerAccountClient.graphql}.
+ * Result of a Customer Account API request. Check `errors` to tell the outcomes apart.
  *
- * Discriminate on the presence of `errors`, not via `Partial`:
- *
- * - **Success:** `data` is always present, `errors` is `undefined`.
- * - **Partial or error:** `errors` is a non-empty array of
- *   {@link GraphQLFormattedError}, and `data` may be `null`.
- *
- * Both arms expose the raw response `headers` for inspecting
- * `x-request-id` or rate-limit metadata.
+ * On success, `data` holds the result and `errors` is undefined. When the response has GraphQL errors, `errors` holds them and `data` can be `null`. Every result includes the raw response headers.
  */
 export type CustomerAccountGraphqlResult<Result = unknown> =
   | { data: Result; errors?: undefined; headers: Headers }
   | { data: Result | null; errors: GraphQLFormattedError[]; headers: Headers };
 
 /**
- * Conditional rest parameter for {@link CustomerAccountClient.graphql}.
+ * Options argument for a Customer Account API request.
  *
- * When the document has no required user variables (after `language` is
- * excluded from the requirement), `options.variables` is optional. When the
- * document declares required variables, the type forces the caller to supply
- * them, turning a missing-variables bug into a compile error.
+ * Variables are optional when the document has no required variables other than `language`. Otherwise a missing required variable is a type error.
  */
 export type CustomerAccountGqlRestParam<Doc extends AnyCustomerAccountDocument> =
   HasNoRequiredKeys<UserVariables<Doc>> extends true
@@ -134,34 +113,22 @@ export type CustomerAccountGqlRestParam<Doc extends AnyCustomerAccountDocument> 
       ];
 
 /**
- * A server-side GraphQL client for the Shopify Customer Account API.
- *
- * Created by {@link createCustomerAccountClient}. Each call to `graphql()`
- * validates that the document was produced by `gql()` (runtime branded with a
- * private Symbol), validates the access token, auto-injects the `language`
- * variable from i18n context when applicable, and marks the response as
- * personalized so the app response is sent with private, no-store cache headers.
+ * Server-side GraphQL client for the Customer Account API.
  */
 export type CustomerAccountClient = {
-  /** Constructed endpoint: `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`. */
+  /** The GraphQL endpoint, `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`. */
   readonly apiUrl: string;
   /**
-   * Send a GraphQL request to the Customer Account API.
+   * Sends a GraphQL request to the Customer Account API.
    *
-   * The document must be created by `gql()`. At call time the client:
-   * 1. Validates the document brand and options object.
-   * 2. Marks the response as personalized (sets `private, no-store`).
-   * 3. Validates the access token.
-   * 4. Throws if a signal is already aborted.
-   * 5. Combines the request context signal, the caller's signal, and a timeout
-   *    signal via `AbortSignal.any`.
-   * 6. Auto-injects the `language` variable from `requestContext.i18n.language`
-   *    when the document declares `$language` and the caller omits it.
+   * Before it sends the request, the client checks the document and the options object, marks the response as personalized, and validates the access token. The client then combines the request context's signal, your signal, and the timeout, and fills the `language` variable when the document declares it and you omit it. After you apply the request context's response headers, a personalized response carries `private, no-store` cache headers.
    *
-   * @throws {TypeError} When the document is not a branded `gql()` result.
-   * @throws {CustomerAccountAuthenticationError} When the access token fails pre-flight validation.
-   * @throws {CustomerAccountTimeoutError} When the request exceeds `defaultTimeoutInMs`.
-   * @throws {CustomerAccountApiError} On non-OK HTTP status, unparseable JSON, or missing `data`.
+   * The method throws a `TypeError` for a document from any other gql function, including the Storefront API gql function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. Token, timeout, and response failures throw the Customer Account error classes.
+   *
+   * @throws {TypeError} When another gql function created the document, or when the variables aren't an object.
+   * @throws {CustomerAccountAuthenticationError} When the options object is missing or the access token fails validation.
+   * @throws {CustomerAccountTimeoutError} When the request exceeds the client's timeout.
+   * @throws {CustomerAccountApiError} On a non-OK HTTP status, unparseable JSON, a response without data, or a network failure.
    *
    * @example
    * ```ts
@@ -184,13 +151,9 @@ export type CustomerAccountClient = {
 };
 
 /**
- * Creates a server-only {@link CustomerAccountClient} for the Shopify Customer
- * Account API.
+ * Creates a server-only client for the Customer Account API.
  *
- * Validates `shopId`, `customerApiVersion`, and `defaultTimeoutInMs` at
- * construction time. The returned client auto-injects the `language` variable
- * from `requestContext.i18n.language` when applicable, composes abort signals,
- * and marks responses as personalized (sets `private, no-store` cache headers).
+ * The function validates the shop ID, API version, timeout, and request context URL when it runs, and throws on an invalid value. The function also throws in a browser or when no fetch implementation is available.
  *
  * @example
  * ```ts
@@ -207,7 +170,9 @@ export type CustomerAccountClient = {
  * );
  * ```
  *
- * @throws {Error} When called in a browser context, when `shopId`, `customerApiVersion`, or `defaultTimeoutInMs` is invalid, when no `fetch` is available, or when `requestContext.url` is missing or not HTTPS.
+ * @param options - The shop ID, the API version, the request context, a custom fetch, and the request timeout.
+ * @returns A client with the GraphQL endpoint URL and a method that sends Customer Account API requests.
+ * @throws {Error} When called in a browser, when the shop ID, API version, or timeout is invalid, when no fetch is available, or when the request context URL is missing or not HTTPS.
  * @publicDocs
  */
 export function createCustomerAccountClient({

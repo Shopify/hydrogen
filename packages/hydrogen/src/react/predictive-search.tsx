@@ -40,72 +40,83 @@ type PredictiveSearchContextValue = {
 
 const PredictiveSearchContext = createContext<PredictiveSearchContextValue | null>(null);
 
-/** Props for the {@link PredictiveSearchProvider} component. */
+/**
+ * Props for the predictive search provider.
+ *
+ * The provider connects the store on mount and destroys the store on unmount. A change to a store option prop replaces the store with a new one. The provider compares the types and searchable fields arrays by their values.
+ *
+ * The provider throws when neither the fetch prop nor a global fetch function exists.
+ */
 export type PredictiveSearchProviderProps = CreatePredictiveSearchStoreOptions & {
+  /** Content that uses the predictive search hooks. */
   children?: ReactNode;
-  /** Form action URL for progressive enhancement. Used by {@link usePredictiveSearchForm} to set the form's `action` attribute so the search works without JavaScript. Falls back to `"/search"` when omitted. */
+  /** Search page path for the form action. The form hook sets the path on the form, which keeps search working without JavaScript. Defaults to `"/search"`. */
   searchAction?: string;
 };
 
 export type { PredictiveSearchActions };
 
 /**
- * Options for the form props builder returned by {@link usePredictiveSearchForm}.
+ * Options for the form props function of the predictive search form hook.
  *
- * Accepts all standard form HTML attributes except `onSubmit`, which is
- * replaced by a version that provides the extracted search term.
+ * Accepts every standard form attribute. Attributes that you pass override the default action, method, and role.
  */
 export type PredictiveSearchFormPropsOptions = Omit<
   FormHTMLAttributes<HTMLFormElement>,
   "onSubmit"
 > & {
-  /** When `true`, prevents the native form submission and triggers a client-side search instead. */
+  /** Set to `true` to cancel the native submission and run a client-side search with the submitted term. */
   preventDefault?: boolean;
-  /** Called on submit with the submit event and the extracted search term. Calling `event.preventDefault()` cancels both the native submission and Hydrogen's client-side search. */
+  /** Runs on submit with the submit event and the search term. Calling preventDefault on the event cancels the native submission and the client-side search. */
   onSubmit?: (event: SubmitEvent<HTMLFormElement>, term: string) => void;
 };
 
 /**
- * Options for the query input props builder returned by
- * {@link usePredictiveSearchForm}'s `register` method.
+ * Options for the query input attributes that the register function returns.
  *
- * Accepts all standard input HTML attributes except those controlled by the
- * form registration.
+ * Accepts every standard input attribute except the attributes that the register function sets.
  */
 export type PredictiveSearchQueryInputPropsOptions = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   "autoCapitalize" | "autoComplete" | "name" | "onChange" | "spellCheck" | "type"
 > & {
-  /** Called on change with the change event and the current input value. Call `event.preventDefault()` to skip the automatic search trigger. */
+  /** Runs on change with the change event and the input value. Calling preventDefault on the event skips the automatic search. */
   onChange?: (event: ChangeEvent<HTMLInputElement>, term: string) => void;
 };
 
 type PredictiveSearchFormField = Parameters<CorePredictiveSearchFormRegister>[0];
 
-/** Generates input element attributes for a named form field. */
+/** Returns the input attributes for a form field, merged with the options that you pass. */
 export type PredictiveSearchFormRegister = (
   field: PredictiveSearchFormField,
   options?: PredictiveSearchQueryInputPropsOptions,
 ) => InputHTMLAttributes<HTMLInputElement>;
 
-/**
- * Return type of {@link usePredictiveSearchForm}, providing methods to build a progressively-enhanced search form.
- */
+/** Functions that build a predictive search form that works without JavaScript. */
 export type PredictiveSearchFormResult = {
-  /** Generates form element attributes including the search action and submit handler. */
+  /**
+   * Returns the form attributes, including the search action and a submit handler.
+   *
+   * By default, the form submits natively with the GET method to the provider's search action.
+   * Pass `preventDefault: true` to cancel the native submission and search on the client.
+   */
   formProps(options?: PredictiveSearchFormPropsOptions): FormHTMLAttributes<HTMLFormElement>;
-  /** Generates input element attributes for a named form field and wires up the search trigger. */
+  /**
+   * Returns the query input attributes, including a change handler that searches on every change.
+   *
+   * The function accepts only the `query` field and throws for any other field name.
+   */
   register: PredictiveSearchFormRegister;
 };
 
 /**
- * Creates and manages a predictive search store, providing it to descendant
- * hooks via React context.
+ * Creates a predictive search store and shares the store with the predictive search hooks inside the provider.
  *
- * Recreates the store when configuration props change. Connects the store
- * on mount and destroys it on unmount.
+ * The provider connects the store on mount and destroys the store on unmount. A change to a store option prop replaces the store with a new one.
  *
- * @throws {Error} When no `fetch` implementation is available (neither passed as a prop nor available on `globalThis`).
+ * @param props - The store options, the search page path, and the content that uses the predictive search hooks.
+ * @returns A context provider that shares the predictive search store and actions with its children.
+ * @throws {Error} When neither the fetch prop nor a global fetch function exists.
  * @publicDocs
  */
 export function PredictiveSearchProvider({
@@ -206,16 +217,12 @@ function useRequiredContext(hookName: string): PredictiveSearchContextValue {
 }
 
 /**
- * Subscribes to the predictive search store's state.
+ * Returns the predictive search state and re-renders the component when the state changes.
  *
- * Without arguments, returns the full {@link PredictiveSearchState}. With a
- * `selector`, returns a derived value that only triggers re-renders when the
- * selected value changes (reference equality by default, or a custom
- * `isEqual`).
+ * With a selector, the hook returns the selected value and re-renders only when that value changes. To re-render on status changes only, pass a selector that returns the status.
+ * The hook compares values by reference unless you pass an equality function.
  *
- * Must be used inside a {@link PredictiveSearchProvider}.
- *
- * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @throws {Error} When you call the hook outside a PredictiveSearchProvider.
  * @publicDocs
  */
 export function usePredictiveSearch<
@@ -225,6 +232,11 @@ export function usePredictiveSearch<
   TData extends PredictiveSearchData = PredictiveSearchData,
   S = PredictiveSearchState<TData>,
 >(selector: (state: PredictiveSearchState<TData>) => S, isEqual?: (a: S, b: S) => boolean): S;
+/**
+ * @param selector - The function that derives the returned value from the predictive search state.
+ * @param isEqual - The comparator that skips a re-render when it returns `true` for two derived values.
+ * @returns The full predictive search state, or the value your selector derives from it.
+ */
 export function usePredictiveSearch<
   TData extends PredictiveSearchData = PredictiveSearchData,
   S = PredictiveSearchState<TData>,
@@ -269,13 +281,12 @@ export function usePredictiveSearch<
 }
 
 /**
- * Returns `search` and `clear` methods that always target the provider's
- * current store. Their identity is stable across re-renders, even
- * when a config prop change recreates the store.
+ * Returns methods that search and clear results in the provider's current store.
  *
- * Must be used inside a {@link PredictiveSearchProvider}.
+ * The methods keep the same identity across re-renders. After a store option prop change replaces the store, the methods act on the new store.
  *
- * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @returns Search and clear methods bound to the provider's current store.
+ * @throws {Error} When you call the hook outside a PredictiveSearchProvider.
  * @publicDocs
  */
 export function usePredictiveSearchActions(): PredictiveSearchActions {
@@ -283,19 +294,13 @@ export function usePredictiveSearchActions(): PredictiveSearchActions {
 }
 
 /**
- * Returns `formProps` and `register` for building a progressively-enhanced
- * search form.
+ * Returns functions that build a predictive search form that works without JavaScript.
  *
- * `formProps()` generates form element attributes including the search
- * action URL. `register("query")` generates input attributes and calls the
- * store's search action on every change event. The store debounces requests
- * and resets state for terms shorter than `minTermLength`.
- * Both support an optional callback that receives the event and extracted
- * term, and respect `event.preventDefault()` to cancel the automatic behavior.
+ * The form props function returns the form attributes. The register function returns the query input attributes and searches on every change.
+ * Both functions accept a callback that receives the event and the search term. Calling preventDefault on the event cancels the automatic behavior.
  *
- * Must be used inside a {@link PredictiveSearchProvider}.
- *
- * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @returns Functions that generate the search form's attributes and the query input's attributes.
+ * @throws {Error} When you call the hook outside a PredictiveSearchProvider.
  * @publicDocs
  */
 export function usePredictiveSearchForm(): PredictiveSearchFormResult {
@@ -343,3 +348,23 @@ export function usePredictiveSearchForm(): PredictiveSearchFormResult {
 
   return { formProps, register };
 }
+
+/**
+ * Returns the predictive search state and re-renders the component when the state changes.
+ *
+ * With a selector, the hook returns the selected value and re-renders only when that value changes. To re-render on status changes only, pass a selector that returns the status.
+ * The hook compares values by reference unless you pass an equality function.
+ *
+ * @throws {Error} When you call the hook outside a PredictiveSearchProvider.
+ * @publicDocs
+ */
+export type UsePredictiveSearchForDocs =
+  /**
+   * @param selector - The function that derives the returned value from the predictive search state.
+   * @param isEqual - The comparator that skips a re-render when it returns `true` for two derived values.
+   * @returns The full predictive search state, or the value your selector derives from it.
+   */
+  <S = PredictiveSearchState>(
+    selector?: (state: PredictiveSearchState) => S,
+    isEqual?: (a: S, b: S) => boolean,
+  ) => S;

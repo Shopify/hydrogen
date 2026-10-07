@@ -182,7 +182,9 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     expect(declaration).toMatch(/\/\*\* @private \*\/\s+apiProxyPrefix\?:/);
     expect(declaration).toMatch(/\/\*\* @private \*\/\s+match\?:/);
     expect(declaration).toMatch(/\/\*\* @private \*\/\s+resolve\?:/);
-    expect(declaration).toMatch(/resolve\?: \(url: string\) => string;\s+navigate\?:/);
+    expect(declaration).toMatch(
+      /resolve\?: \(url: string\) => string;\s+(?:\/\*\*[\s\S]*?\*\/\s+)?navigate\?:/,
+    );
     expect(declaration).not.toMatch(/@internal \*\/\s+navigate\?:/);
     expect(declaration).toMatch(/@publicDocs\s+\*\/\s+type ShopifyGlobal = \{/);
     expect(declaration).toContain("type ShopifyGlobal = {");

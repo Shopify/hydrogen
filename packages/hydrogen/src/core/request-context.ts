@@ -23,25 +23,39 @@ import { normalizePathPrefix } from "./standard-routes/path";
 
 const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
 
+/** The incoming request's headers, plus its method, abort signal, and URL when the framework provides them. */
 type StorefrontRequest = Pick<Request, "headers"> &
   Partial<Pick<Request, "method" | "signal" | "url">>;
 
+/** A language code that both the Storefront API and the Customer Account API accept. */
 export type ShopifyLanguageCode = Extract<StorefrontLanguageCode, CustomerAccountLanguageCode>;
+/** A country code that both the Storefront API and the Customer Account API accept. */
 export type ShopifyCountryCode = Extract<StorefrontCountryCode, CustomerAccountCountryCode>;
 
+/** The locale for a request: its language, country, and optional localized path prefix. */
 export type I18nConfig = {
+  /** The request's language. Creating a request context without one throws. */
   language: ShopifyLanguageCode;
+  /** The request's country. Creating a request context without one throws. */
   country: ShopifyCountryCode;
-  /** Optional app route prefix for localized paths, for example "/es-es". */
+  /**
+   * The app route prefix for localized paths, for example `"/es-es"`. Hydrogen applies it to standard route redirects and product variant URLs.
+   */
   pathPrefix?: string;
 };
 
+/** The request's locale with the path prefix normalized to a string. */
 type NormalizedI18nConfig<I18n extends I18nConfig = I18nConfig> = Omit<I18n, "pathPrefix"> & {
   pathPrefix: string;
 };
 
+/** The incoming request and locale that create a request context. */
 type ShopifyRequestContextInputBase<I18n extends I18nConfig = I18nConfig> = {
+  /**
+   * Pass the framework's `Request` when one exists. When the framework exposes no request, such as during prerendering, pass `{ headers: new Headers() }`.
+   */
   request: StorefrontRequest;
+  /** The request's language and country, and an optional path prefix for localized routes. */
   i18n: I18n;
 };
 
@@ -51,83 +65,123 @@ type ShopifyRequestContextInput<I18n extends I18nConfig = I18nConfig> =
 type ShopifyRequestContextWithBuyerIpInput<I18n extends I18nConfig = I18nConfig> =
   ShopifyRequestContextInputBase<I18n> & { buyerIp: string };
 
+/** The request context fields and methods that every request context has. */
 type ShopifyRequestContextBase = {
   // -- Private fields --
   /**
-   * Compile-time brand so callers use createShopifyRequestContext().
+   * A compile-time brand that limits request contexts to those that createShopifyRequestContext returns.
    * @internal
    */
   readonly __hydrogenShopifyRequestContextBrand: never;
-  /** @internal */
+  /**
+   * The incoming request's cookie header, forwarded on storefront subrequests.
+   * @internal
+   */
   cookie?: string;
-  /** @internal */
+  /**
+   * The customer's trusted IP address, which private Storefront API clients require.
+   * @internal
+   */
   readonly buyerIp?: string;
-  /** @internal */
+  /**
+   * The ID that groups this request's subrequests, read from request headers or generated.
+   * @internal
+   */
   requestGroupId: string;
   /** @internal */
   signal?: AbortSignal;
-  /** @internal */
+  /**
+   * The incoming request's URL.
+   * @internal
+   */
   url?: string;
-  /** @internal */
+  /**
+   * The origin of the incoming request's URL, forwarded on storefront subrequests.
+   * @internal
+   */
   storefrontOrigin?: string;
   /**
-   * Apply request-scoped headers required by every Shopify storefront subrequest.
+   * Sets the Hydrogen SDK headers, the request group ID, and the incoming cookie, Global Privacy
+   * Control, and storefront origin headers on a Storefront API subrequest.
    * @internal
    */
   applyStorefrontRequestHeaders(headers: Headers): void;
   /**
-   * Capture cookies from the first fresh storefront response that sets them for replay.
+   * Saves the `set-cookie` headers from the first Storefront API response that sets cookies, for
+   * replay on the final response.
    * @internal
    */
   captureSubrequestHeaders(headers: Headers): void;
   /**
-   * Consume storefront proxy cookies for gated replay onto the final app response.
+   * Saves the cookies from a proxied Storefront API response, then removes `set-cookie` from that
+   * response.
    * @internal
    */
   consumeStorefrontResponseHeaders(headers: Headers): void;
   /**
-   * Mark the final app response as influenced by private customer state.
+   * Marks the final response as private and uncacheable because it depends on customer state. The
+   * method keeps the first reason.
    * @internal
    */
   markResponseAsPersonalized(reason: string): void;
   /**
-   * Mark this request as a sanctioned session-establishing endpoint (like the
-   * consent flow), permitting Shopify state to return even on a cold session.
+   * Marks the request as an endpoint that can start a Shopify session, such as the consent flow.
+   * The final response can then return Shopify cookies without an existing session cookie, and
+   * becomes private and uncacheable.
    * @internal
    */
   markResponseAsSessionEstablishing(reason: string): void;
 
   // -- Public fields --
+  /** The request's locale, with the path prefix normalized. */
   i18n: NormalizedI18nConfig;
-  /** Return incoming request headers plus request lifecycle headers for proxy/origin handoff. */
+  /** Returns the incoming request headers plus the Shopify request headers, for handing a request to a proxy or origin. */
   getForwardedRequestHeaders(): Headers;
-  /** Apply important response headers for the correct functioning of Hydrogen storefronts. */
+  /**
+   * Applies the response headers that a Hydrogen storefront needs. Call the method on the final response.
+   *
+   * Append committed session headers first, because the method marks any response that sets a cookie as private and uncacheable. The method sets the `powered-by` header and marks personalized responses as private and uncacheable. The method replays eligible Storefront API cookies only on non-document responses to requests other than GET and HEAD.
+   */
   applyResponseHeaders(headers: Headers): void;
 };
 
+/** The per-request context that Storefront API clients, Customer Account API clients, and route handlers share. */
 export type ShopifyRequestContext<I18n extends I18nConfig = I18nConfig> =
   ShopifyRequestContextBase & {
     i18n: NormalizedI18nConfig<I18n>;
   };
 
+/** A request context created with the customer's IP address, as private Storefront API clients require. */
 export type ShopifyRequestContextWithBuyerIp<I18n extends I18nConfig = I18nConfig> =
   ShopifyRequestContext<I18n> & { readonly buyerIp: string };
 
+/** The request values that the request context reads once from the incoming request. */
 type Context<I18n extends I18nConfig = I18nConfig> = {
+  /** The incoming request's cookie header. */
   cookie?: string;
+  /** The incoming request's Global Privacy Control header value. */
   globalPrivacyControl?: string;
+  /** The customer's trusted IP address. */
   buyerIp?: string;
+  /** The ID that groups this request's subrequests, read from request headers or generated. */
   requestGroupId: string;
   signal?: AbortSignal;
+  /** The incoming request's URL. */
   url?: string;
+  /** The origin of the incoming request's URL. */
   storefrontOrigin?: string;
+  /** The request's locale, with the path prefix normalized. */
   i18n: NormalizedI18nConfig<I18n>;
+  /** Whether the incoming request asks for an HTML document. */
   documentRequest?: boolean;
 };
 
 /**
- * Creates the per-request context that Hydrogen's server APIs take. It normalizes the i18n config
- * and owns the request and response headers a Shopify storefront needs.
+ * Creates the per-request context that Storefront API clients, Customer Account API clients, and
+ * route handlers share. The context normalizes the locale and manages the request and response
+ * headers that a Shopify storefront needs.
+ *
+ * Pass `buyerIp` with the customer's trusted IP address. Private Storefront API clients require a buyer IP. The function throws when `i18n` lacks a country or language, and when `buyerIp` is an empty string.
  *
  * @publicDocs
  */
@@ -137,6 +191,10 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
 export function createShopifyRequestContext<const I18n extends I18nConfig>(
   input: ShopifyRequestContextInput<I18n>,
 ): ShopifyRequestContext<I18n>;
+/**
+ * @param input The incoming request, its locale, and an optional IP address for the customer.
+ * @returns The request context to pass to Hydrogen's server APIs for this request.
+ */
 export function createShopifyRequestContext<const I18n extends I18nConfig>(
   input: ShopifyRequestContextInputBase<I18n> & { buyerIp?: string },
 ): ShopifyRequestContext<I18n> {

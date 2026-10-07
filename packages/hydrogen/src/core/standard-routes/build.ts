@@ -9,21 +9,24 @@ import type {
 } from "./types";
 
 /**
- * Creates a typed map of custom route templates for Shopify standard storefront routes.
+ * Creates a typed map from Shopify standard storefront routes to your app's path templates.
  *
- * Use the returned object anywhere Hydrogen needs to understand the app's URL shape for
- * Shopify resources and utility pages: `handleShopifyRedirects({routeTemplates})`, `ShopifyScripts`
- * `routes={routeTemplates}`, and predictive search URL helpers.
+ * Pass the returned object anywhere Hydrogen needs your app's URL shape. That includes route and
+ * redirect handling, the Shopify scripts `routes` option, and predictive search URL helpers.
  *
- * Each key represents a Shopify standard route identity, while each value is the app's custom
- * pathname template. Templates must start with `/` and include the required named handle
- * placeholders for routes that identify a resource. Do not include an i18n path prefix in the
- * template; Hydrogen applies `i18n.pathPrefix` separately when resolving routes. Pass an empty
- * object when the app uses standard storefront routes so there is still one app-owned routing
- * manifest to update if routes change later. When matching the current page, standard storefront
- * routes retain their page-template identities even if a configured template resolves another
- * route to the same pathname.
+ * Each key names a Shopify standard route, and each value is your app's path template. Templates
+ * start with `/` and include the handle placeholders for routes that identify a resource. Leave the
+ * locale path prefix out of templates. Hydrogen applies the prefix when it resolves routes. Add a
+ * key only when the app serves that route at a non-standard path. Hydrogen uses Shopify's default
+ * path for each key that you leave out. Pass an empty object when the app serves every route at
+ * its default path. The empty object gives the app one place to update if its routes change.
  *
+ * When Hydrogen matches the current page, a standard storefront path keeps its standard page
+ * template name, even when a custom template resolves another route to the same path. TypeScript
+ * checks template shapes at compile time. At runtime, the function returns its argument unchanged.
+ *
+ * @param routes The non-standard route paths your app serves, keyed by standard route name.
+ * @returns The same route templates object, typed for Hydrogen's routing and redirect helpers.
  * @example
  * ```ts
  * const routeTemplates = createShopifyRouteTemplates({

@@ -10,10 +10,21 @@ import {
   type ShopifyScriptTagsOptions,
 } from "../core/shopify-scripts";
 
-/** @publicDocs */
+/**
+ * Props for the ShopifyScripts component in React and Vue. The component renders Shopify's script
+ * tags and starts the scripts in the browser after hydration. The component starts the scripts
+ * once, with the first props, and later prop changes don't restart them.
+ *
+ * In Next.js App Router, render the component from a client component when you pass a consent `setup` function. Function props can't cross the server-to-client boundary.
+ *
+ * @publicDocs
+ */
 export type ShopifyScriptsProps = ShopifyScriptTagsOptions & {
+  /** Navigates after Shopify's scripts resolve a URL to your app's route. Defaults to a full page load. */
   navigate?: ShopifyRoutesOptions["navigate"];
+  /** Your app's custom route templates, which Shopify's scripts use to match storefront URLs. */
   routes?: ShopifyRoutesOptions["routes"];
+  /** Loads Shopify's WebMCP tools when the browser supports WebMCP. Defaults to `true`. */
   webMcp?: boolean;
 };
 
@@ -26,8 +37,12 @@ declare module "react" {
 }
 
 /**
- * Renders Shopify's script tags during SSR and runs their browser initialization once after mount.
+ * Renders Shopify's script tags and starts the scripts in the browser after hydration. The component starts the scripts once, with the first props, and later prop changes don't restart them.
  *
+ * ShopifyScripts is a client component. In Next.js App Router, render it from a client component when you pass a consent `setup` function. Function props can't cross the server-to-client boundary.
+ *
+ * @param options - The script tag options, plus the consent, route, and WebMCP settings for starting the scripts.
+ * @returns Shopify's link and script tags, with the link tags first.
  * @publicDocs
  */
 export function ShopifyScripts(options: ShopifyScriptsProps) {

@@ -9,7 +9,9 @@ import {
 } from "../core/shop-pay/shop-pay";
 
 /**
- * Props accepted by the `ShopPayButton` component.
+ * Props for the ShopPayButton component in React and Vue. The props match the options of
+ * createShopPayButton. During server rendering, the component outputs declarative shadow DOM,
+ * which displays the button before scripts load. The component doesn't accept class or style props.
  *
  * @publicDocs
  */
@@ -19,9 +21,12 @@ const canUseDom = typeof document !== "undefined";
 defineShopPayButton();
 
 /**
- * Renders the Shop Pay button custom element. On the server it includes declarative shadow DOM
- * markup so the button renders before scripts load.
+ * Renders the Shop Pay button custom element. During server rendering, the component outputs
+ * declarative shadow DOM, which displays the button before scripts load. The component takes the
+ * options of createShopPayButton and doesn't accept `className` or `style` props.
  *
+ * @param options - The checkout target, variants, attribution, and display settings for the button.
+ * @returns The Shop Pay button custom element, with declarative shadow DOM during server rendering.
  * @publicDocs
  */
 export function ShopPayButton(options: ShopPayButtonProps): ReactElement {

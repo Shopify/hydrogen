@@ -7,22 +7,24 @@ interface StorefrontApiErrorOptions {
 }
 
 /**
- * Thrown when a Storefront API request fails — HTTP error, network failure,
- * or an unparseable or unexpected response body.
+ * The client throws this error when a Storefront API request fails with an HTTP error, a
+ * network failure, or an unparseable or unexpected response body.
  *
- * In development, `queryText` and `variables` are attached when available.
- * GraphQL errors (including `THROTTLED`) are not thrown; read them from `result.errors`.
+ * In development, the error carries the query text and variables when available.
+ * The client doesn't throw GraphQL errors, including `THROTTLED`. Read GraphQL errors from the result's `errors` field.
+ *
+ * When the request context or a per-call `signal` has already aborted, the client throws the signal's reason and sends no request. During a request, the client rethrows an `AbortError` DOMException unchanged. A request that aborts with any other reason throws this error.
  *
  * @publicDocs
  */
 export class StorefrontApiError extends Error {
-  /** Shopify `x-request-id` header, when available. Useful for support requests. */
+  /** Value of Shopify's `x-request-id` response header, when available. Include it in support requests. */
   readonly requestId?: string;
   /** HTTP response status code, when the request reached the server. */
   readonly status?: number;
-  /** The GraphQL query text. Only populated in development builds. */
+  /** The GraphQL query text. Hydrogen sets the value only in development builds. */
   readonly queryText?: string;
-  /** The variables sent with the request. Only populated in development builds. */
+  /** The variables that the client sent with the request. Hydrogen sets the value only in development builds. */
   readonly variables?: Record<string, unknown>;
 
   constructor(message: string, options?: StorefrontApiErrorOptions) {
@@ -37,11 +39,12 @@ export class StorefrontApiError extends Error {
     }
   }
 
+  /** Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`. */
   get [Symbol.toStringTag]() {
     return this.name;
   }
 
-  /** Serializes the error. `queryText`, `variables`, `cause`, and `stack` are always omitted. */
+  /** Serializes the error name, message, request ID, and status. The output never includes the query text, variables, cause, or stack. */
   toJSON(): { name: string; message: string; requestId?: string; status?: number } {
     return {
       name: this.name,
@@ -53,15 +56,16 @@ export class StorefrontApiError extends Error {
 }
 
 /**
- * Thrown when a Storefront API request exceeds the configured `defaultTimeoutInMs`.
+ * The client throws this error when a Storefront API request exceeds the client's
+ * `defaultTimeoutInMs` setting. Aborts from the request context or a per-call `signal`
+ * throw other errors.
  *
- * Subclass of {@link StorefrontApiError}, so catching `StorefrontApiError` also handles timeouts.
- * Aborts from the request context or a per-call `signal` are rethrown as-is, not wrapped.
+ * Catching StorefrontApiError also catches timeouts because this class extends it.
  *
  * @publicDocs
  */
 export class StorefrontTimeoutError extends StorefrontApiError {
-  /** The timeout threshold that was exceeded, in milliseconds. */
+  /** The client timeout that the request exceeded, in milliseconds. */
   readonly timeoutInMs: number;
 
   constructor(timeoutInMs: number, options?: Omit<StorefrontApiErrorOptions, "cause">) {

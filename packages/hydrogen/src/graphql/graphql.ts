@@ -9,17 +9,20 @@ type StorefrontTadaGql = InitGraphQLTada<{
   scalars: StorefrontScalars;
 }>;
 
+/** Phantom brand properties that mark a string as a Storefront API document from `gql`. */
 type StorefrontQueryMetadata<Source extends string = string> = {
+  /** Type-level marker for strings that `gql` returns. The property doesn't exist at runtime. */
   readonly __hydrogenQueryBrand: true;
+  /** Literal source text of the document, used for type inference. The property doesn't exist at runtime. */
   readonly __hydrogenQuerySource?: Source;
 };
 
 /**
- * A branded string that carries phantom Result and Variables types.
+ * A branded string that carries phantom result and variables types.
  *
- * Honest about being a `string` at runtime (unlike `TadaDocumentNode`
- * which claims to be an AST). Implements `DocumentDecoration` so
- * `ResultOf<>` and `VariablesOf<>` work on it.
+ * At runtime the value is a plain string. A gql.tada document node claims to be an AST
+ * instead. The type implements gql.tada's document decoration, which lets ResultOf and
+ * VariablesOf work on it.
  */
 export type StorefrontQueryString<
   Result = any,
@@ -32,11 +35,11 @@ export type StorefrontQueryString<
   };
 
 /**
- * Any `gql()`-branded string, regardless of inferred Result/Variables. Used in constraints that accept any Storefront document.
+ * Any document from `gql`, regardless of its inferred result and variables types. Use it in constraints that accept any Storefront API document.
  */
 export type AnyStorefrontQueryString = string & StorefrontQueryMetadata;
 
-/** Extracts the literal source text from a `gql()`-branded document type. Resolves to `never` for unbranded strings. */
+/** Extracts the literal source text from a document type that `gql` returns. Resolves to `never` for unbranded strings. */
 export type SourceOf<Doc> = Doc extends {
   readonly __hydrogenQuerySource?: infer Source extends string;
 }
@@ -98,12 +101,12 @@ type StorefrontGql = {
 /**
  * Tags a Storefront API query string for type-safe inference.
  *
- * At runtime, returns the source string (concatenated with any fragments).
- * At the type level, the return type carries phantom `Result` and `Variables`
- * types inferred from the Storefront API schema via gql.tada.
+ * At runtime, the function returns the source string with any fragments appended.
+ * At the type level, the return type carries phantom result and variables types
+ * that gql.tada infers from the Storefront API schema.
  *
- * Pass an array of previously declared `gql()` fragments as the second
- * argument to compose documents while preserving full type inference.
+ * Pass an array of earlier fragment documents as the second argument to compose
+ * documents and keep full type inference.
  *
  * @example
  * ```ts
@@ -120,7 +123,7 @@ type StorefrontGql = {
  * });
  *
  * if (!result.errors) {
- *   // result.data.product is typed as `{ title: string } | null`
+ *   // result.data.product has the type `{ title: string } | null`
  *   console.log(result.data.product?.title);
  * }
  * ```
@@ -142,3 +145,18 @@ export const gql = ((source: string, fragments?: Array<string>) => {
 
   return query;
 }) as unknown as StorefrontGql;
+
+/**
+ * Tags a Storefront API query string for type inference. At runtime, the function returns the source text with the fragments appended. The function skips a fragment that appears twice in the fragments array.
+ *
+ * The result and variables types come from Hydrogen's bundled Storefront API schema, even when the client targets a different `apiVersion`. Read the types with `StorefrontApi.ResultOf` and `StorefrontApi.VariablesOf`. To type a fragment, compose the fragment into a throwaway query and read the result type from that query. The FragmentOf helper from gql.tada doesn't accept the branded string.
+ *
+ * @publicDocs
+ */
+export type StorefrontGqlForDocs =
+  /**
+   * @param source - The Storefront API query, mutation, or fragment source text.
+   * @param fragments - The earlier `gql` fragments that the query source references.
+   * @returns The source text with each unique fragment appended, typed as a Storefront API document.
+   */
+  (source: string, fragments?: readonly AnyStorefrontQueryString[]) => AnyStorefrontQueryString;

@@ -1,5 +1,7 @@
+/** One entry of an array cache key. Hydrogen serializes each entry with its type, and `1` and `"1"` produce different keys. */
 export type CacheKeyPrimitive = string | number | boolean | null;
 
+/** Identifies a cache entry. Hydrogen hashes the string or array with SHA-256 before it reads or writes the cache. */
 export type CacheKey = string | readonly CacheKeyPrimitive[];
 
 const textEncoder = new TextEncoder();

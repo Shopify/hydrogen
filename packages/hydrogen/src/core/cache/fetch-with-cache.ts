@@ -34,12 +34,15 @@ export type FetchCacheResponseContext = {
 };
 
 export type FetchCacheOptions = {
+  /** Identifies the cached response. */
   key: CacheKey;
+  /** Sets how long the response stays fresh, stale while revalidating, and stale after an error. */
   strategy: CachingStrategy;
+  /** Set to `false` to skip the Cache-Status response header. */
   annotateCacheStatus?: boolean;
   /**
-   * Runs only for OK responses with text-serializable bodies. Non-OK responses
-   * and binary/streaming responses are never cached.
+   * Runs only for OK responses with text bodies. Return `false` to skip caching the response.
+   * The function never caches non-OK, binary, or streaming responses.
    */
   shouldCacheResponse?: (context: FetchCacheResponseContext) => MaybePromise<boolean>;
   /**
@@ -50,11 +53,13 @@ export type FetchCacheOptions = {
   backgroundSignal?: () => AbortSignal;
 };
 
+/** A fetch function that caches the response when you pass cache options as the third argument. */
 type FetchWithCache = {
   (input: FetchInput, init?: FetchInit): Promise<Response>;
   (input: FetchInput, init: FetchInit | undefined, options: FetchCacheOptions): Promise<Response>;
 };
 
+/** Takes a cache, or an existing cached run helper to share its cache. Set `fetch` to replace the global fetch function. */
 type CreateFetchWithCacheOptions = (
   | CreateRunWithCacheOptions
   | {
@@ -89,9 +94,15 @@ class ServerResponseError extends Error {
 }
 
 /**
- * Creates a `fetch`-like function whose responses are cached under a caching strategy. Pass an
- * existing `runWithCache` to share its cache, or a cache to create one.
+ * Creates a fetch function that caches responses under a caching strategy. Pass an existing cached
+ * run helper to share its cache, or pass a cache to create one.
  *
+ * Pass a `key` and `strategy` in the third argument to cache a response. Calls without the third argument skip the cache. Return `false` from a `shouldCacheResponse` option to skip caching one response.
+ *
+ * The function caches only OK responses with no body or with a JSON, text, XML, HTML, GraphQL, or JavaScript content type. Other responses bypass the cache. The function removes the `set-cookie` and `server-timing` headers from each cached response, including the response that it returns on a miss. With `staleIfError`, the function serves a stale entry only after a 500, 502, 503, or 504 status, or when the fetch throws.
+ *
+ * @param options - The cache store or an existing cached run helper, plus an optional fetch implementation.
+ * @returns A fetch function that adds a Cache-Status header to calls with cache options unless `annotateCacheStatus` is `false`.
  * @publicDocs
  */
 export function createFetchWithCache({

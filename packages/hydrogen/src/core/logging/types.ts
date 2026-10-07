@@ -6,38 +6,55 @@
  * specific logging library.
  */
 
-/** Log severities, ordered. `silent` disables all output. */
+/** The log severities, from lowest to highest. Set `silent` to turn off all output. */
 export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal" | "silent";
 
 /**
- * Structured details attached to a log entry. `scope` names the Hydrogen
- * subsystem (`cart`, `analytics`, `shop-pay`, ...). `error` carries the caught
- * value when the entry reports a failure.
+ * Structured details attached to a log entry. Extra fields pass through to the logger.
  *
  * @publicDocs
  */
 export type LogContext = {
+  /** The Hydrogen subsystem that wrote the entry, such as `cart` or `analytics`. */
   scope?: string;
+  /** The caught value when the entry reports a failure. */
   error?: unknown;
   [key: string]: unknown;
 };
 
-type LogFn = (message: string, context?: LogContext) => void;
+/**
+ * Writes one log entry at the severity of the logger method.
+ */
+type LogFn =
+  /**
+   * @param message - The entry text, without a prefix.
+   * @param context - Structured details about the entry, including the subsystem scope.
+   * @returns Nothing. Hydrogen ignores the return value.
+   */
+  (message: string, context?: LogContext) => void;
 
 /**
- * Sink that receives Hydrogen log entries. Pass your own logger to
- * `configureLogging`, or rely on the built-in console logger.
+ * Receives Hydrogen log entries. Pass a custom logger to configureLogging, or use the built-in
+ * console logger.
  *
- * Messages arrive unprefixed; `context.scope` identifies the subsystem so
- * custom sinks control their own formatting. The built-in console logger
- * formats entries as `[hydrogen:<level>:<scope>] <message>`.
+ * Messages arrive without a prefix, and the context scope names the subsystem. The built-in
+ * console logger formats entries as `[hydrogen:<level>:<scope>] <message>`. The console logger
+ * writes trace entries with `console.debug` and fatal entries with `console.error`.
+ *
+ * When a custom logger throws, Hydrogen reports the failure through the console logger and continues the operation that logged the entry. Catch network errors inside a custom logger to keep a monitoring outage from writing a console error for every entry.
  */
 export interface HydrogenLogger {
+  /** Receives trace entries, the lowest severity. */
   trace: LogFn;
+  /** Receives debug entries. */
   debug: LogFn;
+  /** Receives info entries. Info is the default minimum severity. */
   info: LogFn;
+  /** Receives warning entries. */
   warn: LogFn;
+  /** Receives error entries. */
   error: LogFn;
+  /** Receives fatal entries, the highest severity. */
   fatal: LogFn;
 }
 
@@ -53,7 +70,7 @@ const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
   silent: Number.POSITIVE_INFINITY,
 };
 
-/** Severity actually emitted by a log entry (everything except `silent`). */
+/** The severity of a log entry. Every level except `silent`. */
 export type LogSeverity = Exclude<LogLevel, "silent">;
 
 export function isLevelEnabled(level: LogSeverity, threshold: LogLevel): boolean {

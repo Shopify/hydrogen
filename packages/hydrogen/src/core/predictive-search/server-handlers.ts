@@ -70,6 +70,7 @@ type PredictiveSearchError = ShopifyRouteError & {
   code: PredictiveSearchErrorCode;
 };
 
+/** GET route handler that returns predictive search data, or an invalid request error result. */
 type PredictiveSearchGetHandler<TData = PredictiveSearchDataForOptions<{}>> = CallableRouteHandler<
   PredictiveSearchHandlerContext,
   PredictiveSearchGetResult<TData>,
@@ -77,54 +78,47 @@ type PredictiveSearchGetHandler<TData = PredictiveSearchDataForOptions<{}>> = Ca
   typeof PREDICTIVE_SEARCH_GET_METHOD
 >;
 
+/** Predictive search handlers to register with the Shopify routes handler. */
 type PredictiveSearchServerHandlers<
   TOptions extends CreatePredictiveSearchServerHandlersOptions = {},
   TData = PredictiveSearchDataForOptions<TOptions>,
 > = {
+  /** Query document that the handlers send, including any custom fragments. */
   readonly [predictiveSearchServerHandlersQuery]: PredictiveSearchQueriesForOptions<TOptions>["predictiveSearch"];
+  /** GET handler that reads search settings from the request URL and returns predictive search results as JSON. */
   get: PredictiveSearchGetHandler<TData>;
 };
 
 /**
- * Options for {@link createPredictiveSearchServerHandlers}.
+ * Options for the predictive search server handlers.
  *
- * Extends {@link CreatePredictiveSearchQueriesOptions} with server-specific
- * defaults. Each search option sets a default that individual requests can
- * override via query parameters. These are defaults, not restrictions: any
- * client can override them.
+ * Each search option sets a server default. Any client can override a default with a query parameter of the same name.
  */
 export type CreatePredictiveSearchServerHandlersOptions = CreatePredictiveSearchQueriesOptions & {
-  /** Route path the handler is registered at. Defaults to `"/api/predictive-search"`. */
+  /** Route path that the GET handler serves. Defaults to `"/api/predictive-search"`. */
   path?: string;
-  /** Default result count. Requests can override it with the `limit` query parameter; empty or unparseable values fall back to this default. See {@link QueryPredictiveSearchOptions.limit} for normalization and the default when omitted. */
+  /** Default result count. The handler uses the default when the `limit` query parameter is empty or isn't a number. The search truncates the count and clamps it to the range of 1 to 10. Defaults to 5. */
   limit?: number;
-  /** Default limit scope. Individual requests override via the `limitScope` query parameter. */
+  /** Default limit scope. Defaults to `"EACH"`. */
   limitScope?: PredictiveSearchLimitScope;
-  /** Default resource types to search. Individual requests override via the `types` query parameter (comma-separated). */
+  /** Default resource types to search. The `types` query parameter accepts comma-separated values. */
   types?: PredictiveSearchType[];
-  /** Default fields to search. Individual requests override via the `searchableFields` query parameter (comma-separated). */
+  /** Default fields to search. The `searchableFields` query parameter accepts comma-separated values. */
   searchableFields?: SearchableField[];
-  /** Default unavailable-product behavior. Individual requests override via the `unavailableProducts` query parameter. */
+  /** Default treatment of unavailable products. Defaults to `"HIDE"`. */
   unavailableProducts?: SearchUnavailableProductsType;
 };
 
 /**
- * Creates a GET request handler that serves predictive search results from
- * the Storefront API.
+ * Creates a GET route handler that serves predictive search results from
+ * the Storefront API as JSON.
  *
- * The handler parses search parameters from the request URL:
+ * The handler reads the search term from the `q` query parameter. A query parameter with the same name as a search option overrides the option's default.
  *
- * - `q` for the search term
- * - Each search option in {@link CreatePredictiveSearchServerHandlersOptions}
- *   can be overridden by a query parameter of the same name
+ * An invalid enum value or a Storefront API failure returns HTTP status 400 with a JSON body of `{error: {code, message}}`. The error code is `"invalid_predictive_search_request"`.
+ * A successful response carries the Storefront API response headers except the content encoding, content length, and server timing headers. An error response carries no Storefront API headers.
  *
- * The `types` and `searchableFields` parameters accept comma-separated values. Invalid enum
- * values, and any Storefront API failure, produce an error result with code
- * `"invalid_predictive_search_request"`.
- *
- * The returned handlers object has a `get` method that can be registered
- * as a route handler. Successful results include the Storefront API response
- * headers, excluding `content-encoding`, `content-length`, and `server-timing`.
+ * Register the handlers with handleShopifyRoutes.
  *
  * @publicDocs
  */
@@ -132,6 +126,10 @@ export function createPredictiveSearchServerHandlers(): PredictiveSearchServerHa
 export function createPredictiveSearchServerHandlers<
   const TOptions extends CreatePredictiveSearchServerHandlersOptions,
 >(options: TOptions): PredictiveSearchServerHandlers<TOptions>;
+/**
+ * @param options The route path, custom fragments, and default search settings for the handler.
+ * @returns A handlers object with the GET route handler.
+ */
 export function createPredictiveSearchServerHandlers(
   options: CreatePredictiveSearchServerHandlersOptions = {},
 ): PredictiveSearchServerHandlers<CreatePredictiveSearchServerHandlersOptions> {

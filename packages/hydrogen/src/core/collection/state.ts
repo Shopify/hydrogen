@@ -3,19 +3,20 @@ import type { ProductCollectionSortKeys } from "../../graphql/generated/storefro
 
 export type { ProductCollectionSortKeys, ProductFilter };
 
-/** How a filter option is visually presented in the storefront UI. */
+/** How the storefront UI displays a filter's values. */
 export type FilterPresentation = "IMAGE" | "SWATCH" | "TEXT";
 
-/** The input mechanism a filter uses — e.g. boolean toggle, multi-select list, or price range. */
+/** The kind of input a filter takes, such as a boolean toggle, a multi-select list, or a price range. */
 export type FilterType = "BOOLEAN" | "LIST" | "PRICE_RANGE" | (string & {});
 
 interface BaseAvailableFilterValue {
+  /** Unique identifier of the filter value. */
   id: string;
-  /** Human-readable label (e.g. "Red", "Nike", "$50–$100"). */
+  /** Label to display, such as "Red" or "Nike". */
   label: string;
-  /** Number of products matching this value in the current result set. */
+  /** Number of products in the current results that match the value. */
   count: number;
-  /** JSON-encoded `ProductFilter` input to apply this value. */
+  /** Product filter input as a JSON string. Pass it to `toggleFilterInput` or `isFilterInputActive`. */
   input: string;
 }
 
@@ -24,63 +25,62 @@ type PickIfPresent<TValue, TKey extends PropertyKey> = TKey extends keyof TValue
   : {};
 
 /**
- * A single selectable value within an {@link AvailableFilter}.
+ * A value that a customer can select within an available filter.
  *
- * Pass your Storefront API query value type as `TValue` to expose query-selected
- * visual fields such as `swatch`.
+ * Pass your Storefront API query's value type as `TValue` to expose the `swatch` field when your query selects it.
  */
 export type AvailableFilterValue<
   TValue extends BaseAvailableFilterValue = BaseAvailableFilterValue,
 > = BaseAvailableFilterValue & PickIfPresent<TValue, "swatch">;
 
 /**
- * A filter facet available for the current collection, returned by the
- * Storefront API. Used to render filter UI (checkboxes, swatches, sliders).
+ * A filter that the Storefront API returns for the current collection or search results.
+ * Render filter controls, such as checkboxes, swatches, and sliders, from its values.
  *
  * @publicDocs
  */
 export interface AvailableFilter<
   TValue extends BaseAvailableFilterValue = BaseAvailableFilterValue,
 > {
+  /** Unique identifier of the filter. */
   id: string;
-  /** Human-readable name (e.g. "Color", "Size", "Price"). */
+  /** Name to display, such as "Color", "Size", or "Price". */
   label: string;
-  /** Input mechanism — e.g. boolean toggle, multi-select list, or price range. */
+  /** Kind of input, such as a boolean toggle, a multi-select list, or a price range. */
   type: FilterType;
   /**
-   * Visual presentation hint for the storefront UI. Populated only for `LIST`
-   * filters; `null` otherwise.
+   * How the storefront UI displays the filter's values. The Storefront API
+   * returns a value only for `LIST` filters and `null` for other filters.
    */
   presentation?: FilterPresentation | null;
+  /** Values that a customer can select, each with a label, a product count, and a filter input. */
   values: AvailableFilterValue<TValue>[];
 }
 
 /**
- * Pure browse-intent state for a collection store. Represents what the user
- * wants to see (filters, sort), not what the server returned.
+ * The customer's filter and sort choices in a collection store.
  *
- * Server response data (productsCount, availableFilters, collection id) lives
- * in the framework's loader data, not in the store.
+ * Your framework's loader data holds the server response, such as product counts, available filters, and the collection ID.
  */
 export interface CollectionState {
-  /** URL-safe slug identifying the collection (e.g. `"shoes"`). */
+  /** URL-safe collection slug, such as `"shoes"`. */
   handle: string;
 
-  /** Active product filters, synced bidirectionally with URL params (`filter.*`). */
+  /** Active product filters. The store keeps them in sync with the `filter.*` URL parameters. */
   filters: ProductFilter[];
-  /** Storefront API sort key. `undefined` means the collection's default sort order. */
+  /** Storefront API sort key. Reads `undefined` for the collection's default sort order. */
   sortKey: ProductCollectionSortKeys | undefined;
-  /** When `true`, the sort direction is descending (maps to `sort_by` suffix `-descending`). */
+  /** When `true`, the sort is descending and the URL's sort value ends in `-descending`. */
   reverse: boolean;
-  /** `"idle"` when browse state matches the last-loaded data, `"loading"` after a browse change before the framework fetch settles. */
+  /** Reads `"loading"` from a filter or sort change until the store settles. Reads `"idle"` when the filters and sort match the last loaded data. */
   status: "idle" | "loading";
 }
 
 /**
- * Creates a blank {@link CollectionState} for the given collection handle.
- * All browse fields start at their zero values.
+ * Creates a blank collection state for the given collection handle.
  *
- * @param handle - URL-safe collection slug (e.g. `"shoes"`)
+ * @param handle - URL-safe collection slug, such as `"shoes"`.
+ * @returns A state with no filters, the collection's default sort, an ascending direction, and an idle status.
  * @publicDocs
  */
 export function createInitialCollectionState(handle: string): CollectionState {

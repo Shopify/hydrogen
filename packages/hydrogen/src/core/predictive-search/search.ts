@@ -12,15 +12,15 @@ import {
   type PredictiveSearchQueriesForOptions,
 } from "./queries";
 
-/** Minimum result count accepted by the Storefront API predictive search query. Values below this are clamped up. */
+/** Minimum result count that the Storefront API predictive search query accepts. The search raises lower limits to this value. */
 export const MIN_PREDICTIVE_SEARCH_LIMIT = 1;
-/** Maximum result count accepted by the Storefront API predictive search query. Values above this are clamped down. */
+/** Maximum result count that the Storefront API predictive search query accepts. The search lowers higher limits to this value. */
 export const MAX_PREDICTIVE_SEARCH_LIMIT = 10;
-/** Default result count used when no limit is specified. */
+/** Default result count when you don't set a limit. */
 export const DEFAULT_PREDICTIVE_SEARCH_LIMIT = 5;
 /** Default limit scope, applying the limit to each resource type independently. */
 export const DEFAULT_PREDICTIVE_SEARCH_LIMIT_SCOPE = "EACH" satisfies PredictiveSearchLimitScope;
-/** Default unavailable-product behavior, hiding them from results. */
+/** Default unavailable product behavior, which hides unavailable products. */
 export const DEFAULT_PREDICTIVE_SEARCH_UNAVAILABLE_PRODUCTS =
   "HIDE" satisfies SearchUnavailableProductsType;
 
@@ -34,11 +34,11 @@ type PredictiveSearchItemsForQuery<TQuery extends AnyStorefrontQueryString> = No
 >;
 
 /**
- * Predictive search result payload returned by {@link queryPredictiveSearch}.
+ * Predictive search results with the search term and the item count.
  *
- * The generic parameter is the shape of `items` and defaults to the
- * built-in query's items. For custom fragments, infer the full payload from
- * `queryPredictiveSearch` and your query document:
+ * The type parameter sets the items shape and defaults to the items of the
+ * built-in query. To type the results of a custom query, read the awaited
+ * return type of queryPredictiveSearch for that query document.
  *
  * @example
  * ```ts
@@ -52,46 +52,46 @@ export type PredictiveSearchData<
 > = {
   /** Trimmed search term that produced this result. */
   term: string;
-  /** Number of items returned, summed across every array in `items` (including query suggestions). Not a total match count. */
+  /** Number of returned items across every items array, including query suggestions. The count covers returned items only. */
   total: number;
   /** Predictive search items grouped by resource type. */
   items: TItems;
 };
 
-/** Resolves {@link PredictiveSearchData} from a custom query document type, inferring the items shape from the query's result type. */
+/** Predictive search data for a custom query document. TypeScript infers the items shape from the query's result type. */
 export type PredictiveSearchDataForQuery<TQuery extends AnyStorefrontQueryString> =
   PredictiveSearchData<PredictiveSearchItemsForQuery<TQuery>>;
 
-/** Resolves {@link PredictiveSearchData} from {@link CreatePredictiveSearchQueriesOptions}, reflecting the items shape produced by custom fragments. */
+/** Predictive search data for a set of query options. The items shape includes the fields from the custom fragments. */
 export type PredictiveSearchDataForOptions<TOptions extends CreatePredictiveSearchQueriesOptions> =
   PredictiveSearchDataForQuery<PredictiveSearchQueriesForOptions<TOptions>["predictiveSearch"]>;
 
 /**
- * Options for {@link queryPredictiveSearch}.
+ * Options for a predictive search query.
  *
- * The generic parameter accepts a custom query document type and defaults to
+ * The type parameter accepts a custom query document type and defaults to
  * the built-in predictive search query.
  */
 export type QueryPredictiveSearchOptions<
   TQuery extends AnyStorefrontQueryString = typeof predictiveSearchQueries.predictiveSearch,
 > = {
-  /** Storefront client instance. Only the `graphql` method is used. */
+  /** Storefront client. The function calls only the client's GraphQL method. */
   storefrontClient: Pick<StorefrontClient, "graphql">;
-  /** Search term. Trimmed before use; empty or whitespace-only terms return an empty result without a network request. */
+  /** Search term. The function trims the term. An empty trimmed term returns an empty result and sends no request. */
   term: string;
-  /** Custom GraphQL query document, usually created with `makePredictiveSearchQueries`. Must declare the same variables as the built-in query (`$term`, `$limit`, `$limitScope`, `$types`, `$searchableFields`, `$unavailableProducts`). */
+  /** Custom query document, usually from makePredictiveSearchQueries. The function passes the term, limit, limit scope, types, searchable fields, and unavailable products as query variables. */
   query?: TQuery;
-  /** Maximum result count. Truncated to an integer, then clamped to the Storefront API's accepted range (1-10). Omitted or non-finite values use Hydrogen's default of 5 (the Storefront API's own default is 10). */
+  /** Maximum result count. The function truncates the count and clamps it to the Storefront API's range of 1 to 10. An omitted or non-finite count uses 5, which differs from the Storefront API default of 10. */
   limit?: number;
-  /** Whether the limit applies to each resource type independently or to all types combined. Defaults to `"EACH"` (the Storefront API's own default is `"ALL"`). */
+  /** Whether the limit applies to each resource type independently or to all types combined. Defaults to `"EACH"`. */
   limitScope?: PredictiveSearchLimitScope;
-  /** Resource types to include. When omitted, the Storefront API uses the shop's predictive search type settings, which exclude articles by default. Pass `types` explicitly to control which result arrays are populated. */
+  /** Resource types to include. */
   types?: PredictiveSearchType[];
-  /** Fields to search within. When omitted, the Storefront API searches its default field set (title, product type, variant title, and vendor), not every field. */
+  /** Fields to search for page, article, and collection results. When omitted, the Storefront API searches those results by title. Product results always search every product field. */
   searchableFields?: SearchableField[];
-  /** How to handle unavailable products. Defaults to `"HIDE"` rather than the Storefront API's shop-specific setting (which defaults to `"LAST"`). */
+  /** How the results treat unavailable products. Defaults to `"HIDE"`, which differs from the Storefront API default of `"LAST"`. */
   unavailableProducts?: SearchUnavailableProductsType;
-  /** Signal to abort the in-flight request. */
+  /** Signal that aborts the request. */
   signal?: AbortSignal;
 };
 
@@ -123,11 +123,11 @@ type PredictiveSearchGraphql<TItems> = (
 ) => Promise<PredictiveSearchQueryResult<TItems>>;
 
 /**
- * Returns a zero-result `PredictiveSearchData` payload with empty arrays
- * for every resource type.
+ * Returns an empty predictive search result with an empty array for every
+ * resource type.
  *
- * Used internally for blank terms and for the client store's initial and
- * reset state. Typed with the default items shape.
+ * The query function returns the empty result for blank terms. The client
+ * store uses the empty result for its initial and reset state.
  */
 export function getEmptyPredictiveSearchResult(term = ""): PredictiveSearchData {
   return {
@@ -144,15 +144,17 @@ export function getEmptyPredictiveSearchResult(term = ""): PredictiveSearchData 
 }
 
 /**
- * Executes a predictive search query against the Storefront API and returns
- * the data payload.
+ * Runs a predictive search query against the Storefront API and returns the results.
  *
- * To serve results with the Storefront API response headers (e.g. cache
- * headers), use the `get` handler from `createPredictiveSearchServerHandlers()`.
+ * The function throws when the Storefront API returns GraphQL errors or no predictive search data. Errors from the Storefront client, such as network failures and aborts, reach the caller unchanged.
  *
+ * To serve results with the Storefront API response headers, such as cache headers, use the predictive search server handlers.
+ *
+ * @param options - The Storefront client, the search term, a custom query, and search settings.
+ * @returns The trimmed term, the item count, and the items grouped by resource type.
  * @throws {Error} When the Storefront API returns GraphQL errors.
  * @throws {Error} When the response contains no predictive search data.
- * @throws Errors from `storefrontClient.graphql` (e.g. network failures or an `AbortError` when `signal` aborts).
+ * @throws Errors from the Storefront client, such as network failures or an abort error when the signal aborts.
  * @publicDocs
  */
 export async function queryPredictiveSearch<
@@ -163,15 +165,14 @@ export async function queryPredictiveSearch<
 }
 
 /**
- * Executes a predictive search query against the Storefront API and returns
- * both the data payload and response headers.
+ * Runs a predictive search query against the Storefront API and returns the
+ * results and the response headers.
  *
- * See `QueryPredictiveSearchOptions` for option defaults and
- * `PredictiveSearchData` for the shape of the returned data.
+ * The function takes the same options and returns the same data as the predictive search query function, plus the response headers.
  *
  * @throws {Error} When the Storefront API returns GraphQL errors.
  * @throws {Error} When the response contains no predictive search data.
- * @throws Errors from `storefrontClient.graphql` (e.g. network failures or an `AbortError` when `signal` aborts).
+ * @throws Errors from the Storefront client, such as network failures or an abort error when the signal aborts.
  */
 export async function fetchPredictiveSearch<
   const TQuery extends AnyStorefrontQueryString = typeof predictiveSearchQueries.predictiveSearch,
@@ -251,3 +252,22 @@ function countPredictiveSearchItems(items: unknown): number {
 function formatGraphQLErrors(errors: GraphQLFormattedError[]): string {
   return errors.map(({ message }) => message).join(", ");
 }
+
+/**
+ * Runs a predictive search query against the Storefront API and returns the results.
+ *
+ * The function throws when the Storefront API returns GraphQL errors or no predictive search data. Errors from the Storefront client, such as network failures and aborts, reach the caller unchanged.
+ *
+ * To serve results with the Storefront API response headers, such as cache headers, use the predictive search server handlers.
+ *
+ * @throws {Error} When the Storefront API returns GraphQL errors.
+ * @throws {Error} When the response contains no predictive search data.
+ * @throws Errors from the Storefront client, such as network failures or an abort error when the signal aborts.
+ * @publicDocs
+ */
+export type QueryPredictiveSearchForDocs =
+  /**
+   * @param options - The Storefront client, the search term, a custom query, and search settings.
+   * @returns The trimmed term, the item count, and the items grouped by resource type.
+   */
+  (options: QueryPredictiveSearchOptions) => Promise<PredictiveSearchData>;

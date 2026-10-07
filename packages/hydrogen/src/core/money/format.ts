@@ -43,8 +43,8 @@ function normalizeCurrencyCode(currencyCode: string): string {
 }
 
 /**
- * Intl accepts well-formed three-letter currency codes. Non-standard but
- * well-formed codes render as codes; malformed codes such as USDC throw.
+ * Intl accepts well-formed three-letter currency codes and renders unknown ones as codes.
+ * Intl throws for malformed codes such as USDC. The formatter formats those as decimals.
  */
 function isWellFormedCurrencyCode(currencyCode: string): boolean {
   return WELL_FORMED_CURRENCY_CODE.test(currencyCode);
@@ -373,11 +373,11 @@ class FormattedMoneyRangeValue implements FormattedMoneyRange {
 }
 
 /**
- * Format a MoneyV2 value or a same-currency range of MoneyV2 values for display.
+ * Formats a price, or a same-currency range of prices, for display.
  *
- * Returns an object that stringifies to the locale-formatted price via
- * toString(). Structured fields on single prices are computed lazily when
- * accessed, so the common string path stays cheap.
+ * The returned object converts to the formatted string in template literals and string concatenation. For a range, the function sorts the prices and formats the lowest and highest. A range whose prices are all equal formats as a single price.
+ *
+ * Throws when an amount isn't numeric, when a range is empty, and when range values have different currency codes.
  *
  * @publicDocs
  */
@@ -389,6 +389,11 @@ export function formatMoney(
 
 // This is the implementation of the formatMoney function overloading the other two.
 // It checks if the input is a range and creates the appropriate object.
+/**
+ * @param money The price, or a same-currency array of prices for a range, to format.
+ * @param options The locale and display settings for the formatted output.
+ * @returns A formatted price for a single value, or a formatted range for an array of values.
+ */
 export function formatMoney(
   money: MoneyV2 | readonly MoneyV2[],
   options: FormatMoneyOptions,

@@ -12,27 +12,28 @@ import {
   serializeCollectionParams,
 } from "./url";
 
-/** Snapshot from the framework loader for a single collection fetch. */
+/** Collection details from the framework loader for one collection fetch. */
 export type CollectionData = {
-  /** URL-safe collection slug (e.g. `"shoes"`). */
+  /**
+   * URL-safe collection slug, such as `"shoes"`.
+   *
+   * On search pages, pass a handle such as `search:${term}` to keep separate filter and sort state for each search term. The collection provider creates a new store when the handle changes.
+   */
   handle: string;
   /**
-   * Search string this data snapshot was fetched for (with or without leading `?`).
-   * Compared against live {@link CreateCollectionStoreOptions.urlSearch} before settling.
+   * Search string that your loader fetched the data for, with or without a leading `?`.
+   *
+   * Pass the exact search string that your loader used for the Storefront API query. The reconciler settles the store only when this string and the live URL search describe the same filters, sort key, and sort direction.
    */
   dataSearch: string;
 };
 
 /**
- * A reactive, framework-agnostic store for collection browse state.
+ * A reactive, framework-agnostic store for the customer's filter and sort choices.
  *
- * Manages filters and sorting — the user's *intent*. Server response
- * data (products, productsCount, availableFilters) lives in the framework's
- * loader data, not here.
+ * Each mutation updates state synchronously and sets the status to `"loading"`. The framework adapter then navigates, the loader runs again, and the adapter settles the store when fresh data arrives.
  *
- * Mutations are synchronous state changes that set `status: "loading"`.
- * The framework adapter navigates (URL change), the framework loader re-runs,
- * and the adapter calls {@link settle} when fresh data arrives.
+ * The store keeps the sort direction only for the price, title, created, and ID sort keys. For other sort keys, the store sets `reverse` to `false`. The store keeps at most one availability filter. Adding a second availability filter removes both availability filters.
  *
  * @example
  * ```ts
@@ -50,94 +51,95 @@ export type CollectionStore = {
   getState(): CollectionState;
 
   /**
-   * Registers a listener invoked on every state change. Returns an unsubscribe function.
-   * @param listener - Callback receiving the new state snapshot
+   * Registers a listener that runs on every state change and returns an unsubscribe function.
+   * @param listener - Callback that receives the new state.
    */
   subscribe(listener: (state: CollectionState) => void): () => void;
 
   /**
-   * Replaces the active product filters.
-   * Sets `status: "loading"` — call {@link settle} when the framework fetch completes.
+   * Replaces the active product filters and sets the status to `"loading"`.
+   * Settle the store when the framework fetch completes.
    */
   setFilters(filters: ProductFilter[]): void;
 
   /**
-   * Adds the filter if not active, removes it if already active.
-   * Sets `status: "loading"` — call {@link settle} when the framework fetch completes.
+   * Adds the filter when it isn't active and removes it when it is, then sets the status to `"loading"`.
+   * Settle the store when the framework fetch completes.
    */
   toggleFilter(filter: ProductFilter): void;
 
   /**
-   * Changes the sort order.
-   * Sets `status: "loading"` — call {@link settle} when the framework fetch completes.
+   * Changes the sort key and direction, then sets the status to `"loading"`.
+   * The store sorts in ascending order when you omit `reverse`. Settle the store when the framework fetch completes.
    */
   setSortKey(sortKey: ProductCollectionSortKeys, reverse?: boolean): void;
 
   /**
-   * Resets filters and sort to defaults.
-   * Sets `status: "loading"` — call {@link settle} when the framework fetch completes.
+   * Clears all filters, restores the collection's default sort, and sets the status to `"loading"`.
+   * Settle the store when the framework fetch completes.
    */
   reset(): void;
 
   /**
-   * Returns `true` when URL params and current browse state describe the same filters and sort.
+   * Returns `true` when the URL search parameters and the current state describe the same filters and sort.
    */
   matchesParams(searchParams: URLSearchParams): boolean;
 
   /**
-   * Applies URL search params to the store when they differ from current state.
-   * Used when the framework router reports an external URL change (back/forward).
+   * Applies URL search parameters to the store when they differ from the current state.
+   * Call the method when the router reports an external URL change, such as back or forward navigation. The store sets the status to `"loading"` and doesn't run the browse change callback.
    */
   syncFromParams(searchParams: URLSearchParams): void;
 
   /**
-   * Signals that the framework fetch completed and fresh data is available.
-   * Resets `status` to `"idle"`.
+   * Sets the status back to `"idle"`. Call the method when the framework fetch completes.
    */
   settle(): void;
 
   /**
-   * Serializes the store's current filter/sort state into URL search params.
-   * Only includes store-owned keys (`filter.*`, `sort_by`).
+   * Returns the current filters and sort as URL search parameters.
+   * The result includes only the `filter.*` and `sort_by` keys.
    */
   serializeToParams(): URLSearchParams;
 
   /**
-   * Builds a URL string that removes the given filter from the current params.
-   * Useful for rendering "remove filter" links/buttons.
+   * Builds a URL query string from the store's filters and sort, minus the given filter.
+   * Use the query string in remove-filter links and buttons.
+   *
+   * The result starts with `?` and omits URL parameters that the store doesn't manage.
    */
   getFilterRemovalUrl(filter: ProductFilter): string;
 
   /**
-   * Parses `FormData` from the submitted form into collection params and applies them.
-   * Doesn't cancel the event: call `event.preventDefault()` first, or the browser
-   * submits the form natively and navigates away.
+   * Applies the submitted form's filter and sort fields to the store.
+   * The form's filter fields replace the active filters. The sort changes only when the form includes a `sort_by` field.
    *
-   * @throws {TypeError} If `event.target` is not an `HTMLFormElement`.
+   * The method doesn't cancel the event. Call `event.preventDefault()` first, or the browser submits the form and navigates away.
+   *
+   * @throws {TypeError} When the event target isn't a form element.
    */
   handleFormSubmit(event: SubmitEvent): void;
 
   /**
-   * Replaces the callback that runs after user filter/sort changes. Framework
-   * adapters use this to trigger navigation. Pass `null` to remove.
+   * Replaces the callback that runs after filter and sort changes. Framework
+   * adapters use the callback to navigate. Pass `null` to remove the callback.
    */
   setOnBrowseChange(callback: (() => void) | null): void;
 
   /**
-   * Parses a Storefront API filter input JSON string (e.g. from
-   * `FilterValue.input`) and toggles the resulting filter.
-   * No-op if `input` is not valid JSON.
+   * Parses a filter value's `input` JSON string from the Storefront API and toggles the resulting filter.
+   * Does nothing when the string isn't valid JSON.
    */
   toggleFilterInput(input: string): void;
 
   /**
-   * Parses a Liquid-compatible `sort_by` value (e.g. `"price-ascending"`) and
-   * applies the corresponding sort key and direction.
+   * Parses a Liquid-compatible `sort_by` value, such as `"price-ascending"`, and
+   * applies its sort key and direction. An unrecognized value sets the sort key to `COLLECTION_DEFAULT`.
    */
   setSortByValue(sortByValue: string): void;
 };
 
-/** Mutation methods exposed by the collection store. */
+/** Collection store methods that change filters and sort. */
 export type CollectionActions = Pick<
   CollectionStore,
   | "setFilters"
@@ -149,19 +151,18 @@ export type CollectionActions = Pick<
   | "handleFormSubmit"
 >;
 
-/** Options for creating a new {@link CollectionStore}. */
+/** Options for creating a collection store. */
 export type CreateCollectionStoreOptions = {
   /** Collection metadata from the framework loader. */
   data: CollectionData;
   /**
-   * Live URL search string from the framework router (with or without leading `?`).
-   * Falls back to `data.dataSearch` when omitted.
+   * Live URL search string from the framework router, with or without a leading `?`.
+   * Defaults to the `dataSearch` string from `data`.
    */
   urlSearch?: string;
   /**
-   * Called after user-initiated filter/sort changes.
-   * Framework adapters use this to trigger navigation. Not called by
-   * {@link CollectionStore.syncFromParams} or {@link CollectionStore.settle}.
+   * Runs after each filter or sort change from a store method.
+   * Framework adapters use the callback to navigate. Syncing from URL parameters and settling the store don't run the callback.
    */
   onBrowseChange?: () => void;
 };
@@ -173,11 +174,12 @@ type CollectionStoreContext = {
 };
 
 /**
- * Creates a new collection store for the given collection handle.
+ * Creates a store that holds the filter and sort choices for one collection. The store holds no products. Your framework's loader fetches the products.
  *
- * The store manages browse intent (filters, sort) only.
- * Server response data lives in the framework's loader.
+ * The store reads its initial filters and sort from the URL search string. Without a URL search string, the store reads them from the data's search string.
  *
+ * @param options The collection data, live URL search string, and browse change callback for the store.
+ * @returns A store with methods that read, change, and settle the filters and sort.
  * @example
  * ```ts
  * const store = createCollectionStore({

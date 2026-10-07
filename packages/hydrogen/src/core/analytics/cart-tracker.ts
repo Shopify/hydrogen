@@ -10,6 +10,7 @@ import type {
 import { flattenConnection } from "./utils/flatten-connection";
 
 type CartTrackerAnalytics = Pick<StorefrontAnalytics, "publish" | "getConfig">;
+/** A cart store that cart tracking can read and subscribe to. */
 type CartAnalyticsStore = Pick<CartStore, "getState" | "subscribe">;
 
 type CartStorage = {
@@ -23,17 +24,23 @@ type CartTrackerState = {
 };
 
 /**
- * Subscribes to a cart store and publishes analytics events when the cart changes.
+ * Subscribes to a cart store and publishes analytics events when the confirmed cart changes.
  *
- * Emits `cart_updated` whenever a settled cart's `updatedAt` changes, plus
- * `product_added_to_cart` / `product_removed_from_cart` for each line that was
- * added, removed, or changed quantity. Deduplicates on `updatedAt` with an
- * in-memory cursor (within this subscription) and `localStorage` (across full
- * page loads and tabs). A store filled from your own cart query must select
- * `updatedAt`, or deduplication can't work.
+ * The function publishes `cart_updated` when the cart's update time changes. The function also
+ * publishes `product_added_to_cart` or `product_removed_from_cart` for each added line, removed
+ * line, and quantity change. An in-memory cursor and local storage deduplicate the events
+ * across page loads and tabs. A store that you fill from your own cart query must select
+ * `updatedAt`. Without the update time, the function publishes on every confirmed cart state.
  *
- * @throws {Error} If `window.Shopify.analytics` is not set (including on the server).
- *   Render `ShopifyScripts` (or the `getShopifyScriptTags()` output) first.
+ * The function skips cart states while the cart revalidates or while a line, discount code, note,
+ * or attribute mutation is pending. Analytics payloads leave out cart lines without merchandise.
+ *
+ * The function throws when the analytics bus isn't available, including during server rendering.
+ * Start tracking in a client-only effect, such as `useEffect` or `onMounted`.
+ *
+ * @param store The cart store whose state changes the function reports as analytics events.
+ * @throws {Error} If `window.Shopify.analytics` isn't set, including on the server.
+ *   Render Shopify's script tags first.
  * @returns An unsubscribe function that stops tracking.
  * @publicDocs
  */

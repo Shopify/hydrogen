@@ -52,12 +52,14 @@ export type {
 } from "./types";
 
 /**
- * Returns grouped Shopify storefront script/link descriptors for SSR frameworks and bindings.
+ * Returns Shopify's storefront script and link tags as descriptors.
  *
- * Framework bindings wrap this with `initializeShopifyScripts()` to form their `ShopifyScripts`
- * component. Frameworks without a binding can render these descriptors during SSR and call
- * `initializeShopifyScripts()` during browser hydration.
+ * Render the descriptors in the document head during server rendering, then call
+ * initializeShopifyScripts in the browser. Keep the tags in the returned order. The inline
+ * scripts set up globals that later scripts read.
  *
+ * @param options - The shop details, the localization, the consent configuration, and the features whose scripts to load.
+ * @returns The link tags, the script tags, and a combined list with links first.
  * @publicDocs
  */
 // oxlint-disable-next-line complexity -- ordered assembly of optional Shopify script tags; each flag adds one branch and splitting would obscure the required load order
@@ -209,8 +211,12 @@ export function getShopifyScriptTags({
 }
 
 /**
- * Renders all Shopify storefront script/link descriptors to HTML strings.
+ * Renders Shopify's storefront script and link tags to HTML strings.
  *
+ * Use the function when your framework accepts raw HTML in the document head.
+ *
+ * @param options The shop details and the features, such as account and analytics, whose scripts to load.
+ * @returns One HTML string per tag, with link tags first.
  * @publicDocs
  */
 export function renderShopifyScriptTags(options: ShopifyScriptTagsOptions): string[] {

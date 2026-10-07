@@ -35,12 +35,13 @@ const log = getLogger("product");
 
 export type { ValidProductSelectionResult } from "../core/product";
 
-/** Options for {@link useProductForm}. */
+/** Options for the standalone product form composable. */
 export interface UseProductFormOptions<TProduct extends ProductInput> {
+  /** Runs after each resolved or unresolved option selection. The composable captures the callback at setup time. */
   onSelect?: (result: ValidProductSelectionResult<TProduct>) => void;
 }
 
-/** Return value of {@link useProductForm}. */
+/** Return value of the product form composables. */
 export interface UseProductFormResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
   selectedVariant: ProductVariantFrom<TProduct> | null;
@@ -51,7 +52,7 @@ export interface UseProductFormResult<TProduct extends ProductInput> {
   }) => Record<string, unknown>;
   errors: ProductFormErrors;
   matchedLineItem: CartLine | null;
-  /** Reactive ref that is `true` while a form submission is in flight. */
+  /** Shallow ref that holds `true` while a form submission is in flight. */
   pending: ShallowRef<boolean>;
   selectOption: (
     name: string,
@@ -59,7 +60,7 @@ export interface UseProductFormResult<TProduct extends ProductInput> {
   ) => VariantSelectionResult<ProductVariantFrom<TProduct>>;
 }
 
-/** Return value of the `useProduct` composable from {@link createProductComponents}. */
+/** Return value of the product state composable that the product components factory returns. */
 export interface UseProductResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
   selectedVariant: ProductVariantFrom<TProduct> | null;
@@ -163,12 +164,11 @@ function useProductFormImpl<TProduct extends ProductInput>(
 // ---------------------------------------------------------------------------
 
 /**
- * Subscribes to a {@link ProductFormStore} and returns form-ready state.
+ * Returns form state from a product form store and updates on each store change.
  *
- * This is a pure subscription composable — it does **not** manage store
- * lifecycle. Create the store with `createProductFormStore` and manage its
- * lifecycle (hydration, destruction) yourself, or use
- * `createProductComponents` for a provider-based approach.
+ * The composable subscribes to the store and leaves the store lifecycle to you. Create the store with createProductFormStore, then hydrate and destroy the store yourself. For a provider that manages the store, use createProductComponents.
+ *
+ * Read properties from the returned object. Destructuring reads each getter once and loses reactivity.
  *
  * @publicDocs
  */
@@ -185,14 +185,11 @@ export function useProductForm<TProduct extends ProductInput>(
 // ---------------------------------------------------------------------------
 
 /**
- * Creates a typed set of product components bound to a specific product type.
+ * Returns a product provider and composables typed to your product query.
  *
- * Returns `{ ProductProvider, useProduct, useProductForm }` where:
- * - `ProductProvider` manages store lifecycle (creation, hydration, cleanup)
- * - `useProduct` provides read-only state and variant selection
- * - `useProductForm` provides form-binding utilities (register, formProps, pending)
+ * The provider creates a product form store, hydrates the store when the product changes, and destroys the store on unmount. The product composable returns option state and variant selection. The form composable adds field registration, form props, and pending state. Both composables read the latest `onSelect` prop.
  *
- * Requires a `<CartProvider>` ancestor.
+ * The provider throws an error without a cart provider ancestor. Each composable throws an error outside the product provider.
  *
  * @publicDocs
  */

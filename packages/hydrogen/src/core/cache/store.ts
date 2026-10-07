@@ -5,9 +5,8 @@ import {
 } from "./strategies";
 
 /**
- * Cache values must be JSON-serializable because Web Cache stores serialize
- * envelopes before persistence. Callers are responsible for returning data that
- * can safely round-trip through `JSON.stringify`.
+ * A plain object that the cache stores. Web Cache stores serialize each entry with
+ * `JSON.stringify`. Return data that survives a round trip through `JSON.stringify`.
  */
 export type SerializableCacheValue = Record<string, unknown>;
 
@@ -18,15 +17,22 @@ export type CacheEnvelope<T extends SerializableCacheValue = SerializableCacheVa
   strategy: CachingStrategy;
 };
 
+/** A store that implements the match, put, and delete methods of the Web Cache API. */
 export type WebCacheLike = Pick<Cache, "match" | "put" | "delete">;
 
+/** Options that Hydrogen passes when it writes an entry to a key-value store. */
 export type KeyValueCacheSetOptions = {
+  /** Seconds to keep the entry. Hydrogen adds the strategy's fresh, stale, and error windows and rounds up. */
   ttl?: number;
 };
 
+/** A key-value store with get, set, and optional delete methods. Hydrogen writes entry objects as values without serializing them. */
 export type KeyValueCacheLike = {
+  /** Returns the value stored under the key. Hydrogen ignores values that don't match its entry shape. */
   get(key: string): unknown | Promise<unknown>;
+  /** Stores the value under the key. Hydrogen passes the retention time in seconds as the ttl option. */
   set(key: string, value: unknown, options?: KeyValueCacheSetOptions): unknown | Promise<unknown>;
+  /** Removes the value stored under the key. */
   delete?(key: string): unknown | Promise<unknown>;
 };
 

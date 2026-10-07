@@ -1,42 +1,51 @@
 import { normalizeCartId } from "./cookie";
 import { getCartAttributeFormEntries } from "./form";
 
-/** A key-value pair attached to the cart or an individual cart line. */
-export type CartAttributeInput = { key: string; value: string };
+/** A custom key-value pair for the cart or a cart line. */
+export type CartAttributeInput = {
+  /** The attribute name. The request parser rejects an empty name. */
+  key: string;
+  /** The attribute value. */
+  value: string;
+};
 
 /** Input for adding a line to the cart. */
 export type CartLineAddInput = {
   /** Storefront API GID of the product variant to add. */
   merchandiseId: string;
+  /** Number of units to add. Form submissions without a quantity add `1`. */
   quantity: number;
+  /** Custom key-value attributes to set on the new line. */
   attributes?: CartAttributeInput[];
   /** Selling plan GID for subscription line items. */
   sellingPlanId?: string;
 };
 
-/** Input for updating an existing cart line. Setting `quantity` to `0` removes the line. */
+/** Input for updating an existing cart line. A quantity of `0` removes the line. */
 export type CartLineUpdateInput = {
-  /** The `CartLine.id` of the line to update. */
+  /** The ID of the cart line to update. */
   id: string;
+  /** The line's new quantity. */
   quantity: number;
+  /** Custom key-value attributes to set on the line. */
   attributes?: CartAttributeInput[];
+  /** Selling plan GID to assign to the line for subscriptions. */
   sellingPlanId?: string;
 };
 
 /**
- * Discriminated union of all cart mutation intents.
+ * A cart mutation that the cart request parser reads from a JSON or form data request.
  *
- * {@link parseCartRequest} normalizes both JSON and FormData requests into one
- * of these variants. The `intent` field determines the Storefront API mutation:
+ * The `intent` field selects the Storefront API mutation:
  *
- * - `"add"` — add new lines (cartLinesAdd, or cartCreate when no cart exists)
- * - `"update"` — change quantity or attributes on existing lines (cartLinesUpdate)
- * - `"remove"` — remove lines by ID (cartLinesRemove)
- * - `"discount-update"` — replace all discount codes (cartDiscountCodesUpdate)
- * - `"discount-apply"` — add a single discount code (read-then-write via cartDiscountCodesUpdate)
- * - `"discount-remove"` — remove a single discount code (read-then-write via cartDiscountCodesUpdate)
- * - `"attributes-update"` — set cart-level attributes (cartAttributesUpdate)
- * - `"note-update"` — set the cart note (cartNoteUpdate)
+ * - `add` adds new lines with cartLinesAdd, or creates a cart with cartCreate when none exists.
+ * - `update` changes quantity or attributes on existing lines with cartLinesUpdate.
+ * - `remove` removes lines by ID with cartLinesRemove.
+ * - `discount-update` replaces all discount codes with cartDiscountCodesUpdate.
+ * - `discount-apply` adds one discount code. The handler reads the current codes, then writes the new list with cartDiscountCodesUpdate.
+ * - `discount-remove` removes one discount code with the same read-then-write approach.
+ * - `attributes-update` sets cart-level attributes with cartAttributesUpdate.
+ * - `note-update` sets the cart note with cartNoteUpdate.
  *
  * @publicDocs
  */
@@ -50,8 +59,10 @@ export type CartAction =
   | { intent: "attributes-update"; attributes: CartAttributeInput[] }
   | { intent: "note-update"; note: string };
 
+/** The parsed cart action and the cart ID from the request body. */
 type ParsedCartRequest = {
   action: CartAction;
+  /** The cart GID from a JSON body with the GID prefix added, or `null` for form data and bodies without one. */
   cartId: string | null;
 };
 
@@ -63,18 +74,19 @@ class CartActionError extends Error {
 }
 
 /**
- * Parses an incoming cart mutation request into a typed {@link CartAction}.
+ * Parses a cart mutation request into a typed cart action.
  *
- * Accepts `application/json` and `application/x-www-form-urlencoded` /
- * `multipart/form-data` content types. JSON and FormData each support a
- * different subset of intents — JSON produces `discount-update` while
- * FormData produces `discount-apply` / `discount-remove`.
+ * The function accepts `application/json`, `application/x-www-form-urlencoded`, and
+ * `multipart/form-data` requests. A JSON request can replace every discount code, and a form submission applies or removes one code.
  *
- * FormData requests always return `cartId: null` — the server handler
- * should fall back to the cart cookie.
+ * A form data request always returns a `null` cart ID. Read the cart ID from the cart cookie with getCartId for a form data request.
  *
- * @throws If the content-type is unsupported, the intent is unrecognized,
- * or required fields are missing.
+ * The function consumes the request body. The function throws when the request has an unsupported content type, an unknown intent, or a missing required field, and when a JSON body mixes added, updated, and removed lines.
+ *
+ * @param request The incoming cart mutation request whose body the function reads.
+ * @returns The parsed cart action and the cart ID from a JSON body.
+ * @throws If the request has an unsupported content type, an unrecognized intent,
+ * or missing required fields, or if a JSON body mixes added, updated, and removed lines.
  *
  * @example
  * ```ts

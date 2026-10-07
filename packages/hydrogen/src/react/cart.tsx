@@ -41,8 +41,15 @@ export function getCartEndpoint(): string {
   return cartEndpoint;
 }
 
+/**
+ * Props for the typed cart provider that the cart components factory returns.
+ */
 type TypedCartProviderProps<TData extends CartData> = {
+  /**
+   * Pass the `data` property of the cart server handler's get result, or a promise of it. Without this prop, the store loads the cart from `/api/cart` after the provider mounts, and the server-rendered page shows an empty cart. The provider creates its store once from the first value and ignores later changes.
+   */
   initialData?: CartInitialData<TData>;
+  /** Content that can read the cart through the cart hooks. */
   children?: ReactNode;
 };
 
@@ -51,27 +58,43 @@ type CartInitialData<TData extends CartData = CartData> =
 
 export type { CartActions };
 
+/**
+ * Cart provider and hooks whose cart state carries the custom fields from your cart server handlers.
+ */
 type TypedCartComponents<TData extends CartData> = {
+  /** The provider that creates the cart store. The provider connects the store on mount and destroys the store on unmount. */
   CartProvider: (props: TypedCartProviderProps<TData>) => ReactNode;
+  /**
+   * Returns the slice of cart state that the selector picks. The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.
+   */
   useCart: <S>(selector: (state: CartState<TData>) => S, isEqual?: (a: S, b: S) => boolean) => S;
+  /** Suspends while a full cart load runs, then returns the slice of cart state that the selector picks. */
   useSuspenseCart: <S>(
     selector: (state: CartState<TData>) => S,
     isEqual?: (a: S, b: S) => boolean,
   ) => S;
+  /**
+   * Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page.
+   */
   useOptionalCart: <S>(
     selector: (state: CartState<TData>) => S,
     isEqual?: (a: S, b: S) => boolean,
   ) => S | undefined;
+  /** Returns the `refresh` action. Call `refresh` after a server-side cart mutation that bypasses cart forms. */
   useCartActions: typeof useCartActions;
+  /**
+   * Returns form props and a register function for cart forms. The form props post to the cart endpoint and send each submission through the cart store. A `beforeSubmit` callback that prevents the event's default skips the cart submission. Register the quantity field with `interactive: true` to submit the form when the quantity changes. The interactive input takes the quantity as a default value and stays uncontrolled.
+   */
   useCartForm: typeof useCartForm;
 };
 
 /**
- * Factory that returns typed cart components and hooks matched to your server handler's
- * cart query shape.
+ * Returns a cart provider and hooks typed to the cart query in your cart server handlers.
+ * Pass the type of your cart server handlers as the `THandlers` type argument. Every hook's cart state then includes your custom cart fields.
  *
- * The generic `THandlers` parameter is inferred from your `createCartServerHandlers`
- * call, so every hook's {@link CartState} carries your custom cart fields end-to-end.
+ * On mount, the provider points cart requests at `/api/cart` and connects the store. Every hook except the optional cart hook throws when you call it outside the provider.
+ *
+ * @returns The typed cart provider, the cart state hooks, and the cart actions and form hooks.
  *
  * @example
  * ```tsx
@@ -145,11 +168,9 @@ function useOptionalCartStore(): CartStore | null {
 }
 
 /**
- * React context provider that creates and manages a {@link CartStore} instance.
+ * Creates a cart store and shares the store with the cart hooks below the provider.
  *
- * Calls {@link CartStore.connect} on mount and {@link CartStore.destroy} on unmount.
- * All cart hooks (`useCart`, `useCartForm`, `useCartActions`) must be rendered
- * inside this provider.
+ * The provider connects the store on mount and destroys the store on unmount. Render every cart hook inside the provider. The provider creates its store once from the first initial data and ignores later changes.
  *
  * @example
  * ```tsx
@@ -158,6 +179,8 @@ function useOptionalCartStore(): CartStore | null {
  *   <App />
  * </CartProvider>
  * ```
+ * @param props - The initial cart data and the content that uses the cart hooks.
+ * @returns A context provider that shares the cart store with its children.
  * @publicDocs
  */
 export function CartProvider({
@@ -182,11 +205,13 @@ export function CartProvider({
 }
 
 /**
- * Subscribes to a slice of {@link CartState} via `useSyncExternalStore`.
+ * Returns the slice of cart state that the selector picks.
  *
- * The component re-renders only when the selected value changes (by reference,
- * or by a custom `isEqual`). Always pass a selector — subscribing to the full
- * state object defeats memoization.
+ * The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.
+ *
+ * @param selector The function that picks a value from the cart state.
+ * @param isEqual The function that compares the previous and next selected values. Return `true` to skip the re-render.
+ * @returns The selected value.
  *
  * @example
  * ```tsx
@@ -213,11 +238,11 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 }
 
 /**
- * Returns cart actions for reconciling state after out-of-band mutations.
+ * Returns the cart action that syncs the cart after a mutation outside cart forms.
  *
- * Currently exposes {@link CartStore.refresh} — call it after server-side cart
- * mutations that bypass the form system (e.g. a server action that creates the
- * cart before the client knows about it).
+ * Call `refresh` after a server-side cart mutation that bypasses cart forms, such as a server action that creates the cart.
+ *
+ * @returns The `refresh` action.
  *
  * @example
  * ```tsx
@@ -237,11 +262,11 @@ export function useCartActions(): CartActions {
 }
 
 /**
- * Subscribes the {@link CartStore} to the analytics event dispatcher.
+ * Publishes cart analytics events when the cart changes.
  *
- * Call once near the root of your app — it subscribes on mount and
- * cleans up on unmount. Publishes `CART_UPDATED`, `PRODUCT_ADD_TO_CART`,
- * and `PRODUCT_REMOVED_FROM_CART` analytics events automatically.
+ * Call the hook once near the root of your app. The hook starts tracking on mount and stops on unmount. The hook publishes cart updated, product added to cart, and product removed from cart events. The hook throws when you call it outside the cart provider.
+ *
+ * @returns Nothing. The hook tracks cart analytics for the lifetime of the calling component.
  *
  * @example
  * ```tsx
@@ -259,12 +284,14 @@ export function useCartAnalytics(): void {
 }
 
 /**
- * Like `useCart`, but returns `undefined` instead of throwing when rendered outside a
- * `<CartProvider>`.
+ * Returns a selected slice of cart state, or `undefined` when the component renders outside the cart provider.
  *
- * Use it for a component that renders both inside and outside the provider, such as a
- * header cart badge that also appears on an error page mounted above `<CartProvider>`.
- * Prefer `useCart` wherever the provider is guaranteed, so a missing provider fails loudly.
+ * Use the hook in a component that also renders above the provider, such as a header cart badge on an error page.
+ * Wherever the provider always exists, use the cart hook that throws. A missing provider then fails with an error.
+ *
+ * @param selector The function that picks a value from the cart state.
+ * @param isEqual The function that compares the previous and next selected values. Return `true` to skip the re-render.
+ * @returns The selected value, or `undefined` outside the provider.
  *
  * @example
  * ```tsx
@@ -320,14 +347,12 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
 /**
  * Returns form props and a field register function for building cart forms.
  *
- * `formProps()` returns `<form>` attributes that intercept submission, call
- * {@link CartStore.handleFormSubmit}, and prevent the default browser navigation.
- * `register()` returns the correct HTML attributes for each field type — see
- * `CartFormRegister` for the full field/action list.
+ * The form props post to the cart endpoint. On submit, the form props prevent browser navigation and send the form through the cart store.
+ * A `beforeSubmit` callback that prevents the event's default skips the cart submission. The register function returns the HTML attributes for each cart field and action.
  *
- * When `register("quantity", { interactive: true })` is called, the returned
- * attributes include a `ref` callback that attaches {@link attachQuantityInput}
- * for auto-submit-on-change behavior.
+ * Register the quantity field with `interactive: true` to submit the form when the quantity changes. The interactive input takes the quantity as a default value and stays uncontrolled.
+ *
+ * @returns The form props function and the register function.
  *
  * @example
  * ```tsx
