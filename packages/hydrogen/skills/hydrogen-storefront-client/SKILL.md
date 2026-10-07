@@ -258,7 +258,7 @@ const { data } = await client.graphql(QUERY);
 const { data } = await client.graphql(QUERY, { signal });
 ```
 
-`requestContext.signal`, per-call `signal`, and the client's timeout signal are raced automatically. At the final response boundary, append committed session headers first, then call `requestContext.applyResponseHeaders(response.headers)`.
+`requestContext.signal`, per-call `signal`, and the client's timeout signal are raced automatically. They are combined with `AbortSignal.any`, which the Next.js edge sandbox does not have, so an edge route or middleware that calls this client needs an `AbortSignal.any` polyfill installed before the first request. At the final response boundary, append committed session headers first, then call `requestContext.applyResponseHeaders(response.headers)`.
 
 Read `references/caching.md` to cache catalog reads across sub-requests on Oxygen-style runtimes.
 
