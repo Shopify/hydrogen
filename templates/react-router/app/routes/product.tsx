@@ -417,7 +417,15 @@ function InventoryHint({ selectedVariant }: { selectedVariant: ProductVariant | 
 // Mirrors React Router's own Link guard: a modified or non-primary click belongs to
 // the browser (new tab, new window), so the href must stay in charge of it.
 function isPlainActivation(event: MouseEvent<HTMLAnchorElement>) {
-  return event.button === 0 && !event.metaKey && !event.altKey && !event.ctrlKey && !event.shiftKey;
+  return (
+    !event.defaultPrevented &&
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    (!event.currentTarget.target || event.currentTarget.target === "_self")
+  );
 }
 
 function VariantOptions({ product }: { product: ProductData }) {
@@ -462,7 +470,7 @@ function VariantOptions({ product }: { product: ProductData }) {
 
                 const className = renderSwatches
                   ? `min-h-touch-target min-w-touch-target relative inline-flex cursor-pointer items-center justify-center motion-safe:transition-transform motion-safe:active:scale-[0.93] ${soldOut ? "opacity-50" : ""}`
-                  : `option-pill focus-visible:outline-accent motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] ${soldOut ? "opacity-50" : ""}`;
+                  : `option-pill focus-visible:outline-accent motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97] ${variantOption.selected ? "is-selected" : ""} ${soldOut ? "opacity-50" : ""}`;
                 const content = renderSwatches ? (
                   <>
                     <span
@@ -518,6 +526,7 @@ function VariantOptions({ product }: { product: ProductData }) {
                   <Link
                     key={valueName}
                     to={toRouterLocation(linkTarget)}
+                    replace={!isCrossProduct}
                     preventScrollReset
                     className={className}
                     aria-label={renderSwatches ? valueName : undefined}
