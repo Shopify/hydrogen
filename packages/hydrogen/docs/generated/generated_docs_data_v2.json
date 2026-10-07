@@ -769,11 +769,11 @@
     "src/core/cache/run-with-cache.ts": {
       "filePath": "src/core/cache/run-with-cache.ts",
       "name": "RunCallback",
-      "description": "",
+      "description": "Produces the data for a cached run and decides whether to cache the data.",
       "params": [
         {
           "name": "context",
-          "description": "",
+          "description": "Tells the callback whether it refreshes a stale entry in the background.",
           "value": "RunWithCacheContext",
           "isOptional": true,
           "filePath": "src/core/cache/run-with-cache.ts"
@@ -781,11 +781,11 @@
       ],
       "returns": {
         "filePath": "src/core/cache/run-with-cache.ts",
-        "description": "",
+        "description": "The data and whether to cache the data, or a promise that resolves to both.",
         "name": "MaybePromise<CacheDecision<T>>",
         "value": "MaybePromise<CacheDecision<T>>"
       },
-      "value": "(\n  context?: RunWithCacheContext,\n) => MaybePromise<CacheDecision<T>>"
+      "value": "(context?: RunWithCacheContext) => MaybePromise<CacheDecision<T>>"
     }
   },
   "RunWithCacheContext": {
@@ -1017,7 +1017,7 @@
       "filePath": "src/core/request-context.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyRequestContextBase",
-      "value": "{\n  // -- Private fields --\n  /**\n   * A type-only marker. Create request contexts only with createShopifyRequestContext.\n   * @internal\n   */\n  readonly __hydrogenShopifyRequestContextBrand: never;\n  /**\n   * The incoming request's cookie header. Hydrogen forwards the header to the Storefront API.\n   * @internal\n   */\n  cookie?: string;\n  /**\n   * The customer's trusted IP address. Private Storefront API clients require it.\n   * @internal\n   */\n  readonly buyerIp?: string;\n  /**\n   * The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one.\n   * @internal\n   */\n  requestGroupId: string;\n  /**\n   * The incoming request's abort signal. Hydrogen's API clients stop their requests when the signal aborts.\n   * @internal\n   */\n  signal?: AbortSignal;\n  /**\n   * The incoming request's URL.\n   * @internal\n   */\n  url?: string;\n  /**\n   * The origin of the incoming request's URL. Hydrogen forwards the origin to the Storefront API.\n   * @internal\n   */\n  storefrontOrigin?: string;\n  /**\n   * Adds the Hydrogen SDK headers and the customer's cookie, privacy, and origin headers to a\n   * Storefront API request. The Storefront API client and the API proxies call the method for you.\n   * @internal\n   */\n  applyStorefrontRequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from the first Storefront API response that sets cookies. The Storefront API\n   * client calls the method for you, and applyResponseHeaders can add the cookies to your response.\n   * @internal\n   */\n  captureSubrequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from a proxied Storefront API response and removes the `set-cookie` header\n   * from that response. The API proxies in handleShopifyRoutes call the method for you.\n   * @internal\n   */\n  consumeStorefrontResponseHeaders(headers: Headers): void;\n  /**\n   * Marks the final response as private and uncacheable because the response holds customer data.\n   * The Customer Account API client and the customer session call the method for you.\n   * @internal\n   */\n  markResponseAsPersonalized(reason: string): void;\n  /**\n   * Lets the final response set Shopify cookies before the customer has a Shopify session, and\n   * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.\n   * @internal\n   */\n  markResponseAsSessionEstablishing(reason: string): void;\n\n  // -- Public fields --\n  /** The request's language, country, and path prefix. The path prefix starts with `/` and has no trailing slash, or is an empty string when you don't set one. */\n  i18n: NormalizedI18nConfig;\n  /** Returns the incoming request's headers with Shopify's request headers added. Pass the headers when you forward the request to a proxy or another origin. */\n  getForwardedRequestHeaders(): Headers;\n  /**\n   * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from handleShopifyRoutes and handleShopifyRedirects already carry these headers.\n   *\n   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses that hold customer data private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than GET and HEAD.\n   */\n  applyResponseHeaders(headers: Headers): void;\n}",
+      "value": "{\n  // -- Private fields --\n  /**\n   * A type-only marker. Create request contexts only with createShopifyRequestContext.\n   * @internal\n   */\n  readonly __hydrogenShopifyRequestContextBrand: never;\n  /**\n   * The incoming request's `Cookie` header. Hydrogen forwards the header to the Storefront API.\n   * @internal\n   */\n  cookie?: string;\n  /**\n   * The customer's trusted IP address. Private Storefront API clients require it.\n   * @internal\n   */\n  readonly buyerIp?: string;\n  /**\n   * The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one.\n   * @internal\n   */\n  requestGroupId: string;\n  /**\n   * The incoming request's abort signal. Hydrogen's API clients stop their requests when the signal aborts.\n   * @internal\n   */\n  signal?: AbortSignal;\n  /**\n   * The incoming request's URL.\n   * @internal\n   */\n  url?: string;\n  /**\n   * The origin of the incoming request's URL. Hydrogen forwards the origin to the Storefront API.\n   * @internal\n   */\n  storefrontOrigin?: string;\n  /**\n   * Adds the Hydrogen SDK headers and the customer's cookie, privacy, and origin headers to a\n   * Storefront API request. The Storefront API client and the API proxies call the method for you.\n   * @internal\n   */\n  applyStorefrontRequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from the first Storefront API response that sets cookies. The Storefront API\n   * client calls the method for you, and `applyResponseHeaders()` can add the cookies to your response.\n   * @internal\n   */\n  captureSubrequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from a proxied Storefront API response and removes the `set-cookie` header\n   * from that response. The API proxies in handleShopifyRoutes call the method for you.\n   * @internal\n   */\n  consumeStorefrontResponseHeaders(headers: Headers): void;\n  /**\n   * Marks the final response as private and uncacheable because the response holds customer data.\n   * The Customer Account API client and the customer session call the method for you.\n   * @internal\n   */\n  markResponseAsPersonalized(reason: string): void;\n  /**\n   * Lets the final response set Shopify cookies before the customer has a Shopify session, and\n   * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.\n   * @internal\n   */\n  markResponseAsSessionEstablishing(reason: string): void;\n\n  // -- Public fields --\n  /** The request's language, country, and path prefix. The path prefix starts with `/` and has no trailing slash, or is an empty string when you don't set one. */\n  i18n: NormalizedI18nConfig;\n  /** Returns the incoming request's headers with Shopify's request headers added. Pass the headers when you forward the request to a proxy or another origin. */\n  getForwardedRequestHeaders(): Headers;\n  /**\n   * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from handleShopifyRoutes and handleShopifyRedirects already carry these headers.\n   *\n   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses that hold customer data private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.\n   */\n  applyResponseHeaders(headers: Headers): void;\n}",
       "description": "The fields and methods on every request context.",
       "members": [
         {
@@ -1032,7 +1032,7 @@
           "syntaxKind": "MethodSignature",
           "name": "applyResponseHeaders",
           "value": "(headers: Headers) => void",
-          "description": "Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from handleShopifyRoutes and handleShopifyRedirects already carry these headers.\n\nAppend your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses that hold customer data private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than GET and HEAD."
+          "description": "Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from handleShopifyRoutes and handleShopifyRedirects already carry these headers.\n\nAppend your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses that hold customer data private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`."
         },
         {
           "filePath": "src/core/request-context.ts",
@@ -1054,7 +1054,7 @@
           "syntaxKind": "MethodSignature",
           "name": "captureSubrequestHeaders",
           "value": "(headers: Headers) => void",
-          "description": "Saves the cookies from the first Storefront API response that sets cookies. The Storefront API client calls the method for you, and applyResponseHeaders can add the cookies to your response."
+          "description": "Saves the cookies from the first Storefront API response that sets cookies. The Storefront API client calls the method for you, and `applyResponseHeaders()` can add the cookies to your response."
         },
         {
           "filePath": "src/core/request-context.ts",
@@ -1068,7 +1068,7 @@
           "syntaxKind": "PropertySignature",
           "name": "cookie",
           "value": "string",
-          "description": "The incoming request's cookie header. Hydrogen forwards the header to the Storefront API.",
+          "description": "The incoming request's `Cookie` header. Hydrogen forwards the header to the Storefront API.",
           "isOptional": true
         },
         {
@@ -1350,7 +1350,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@18727",
+          "name": "__@toStringTag@19161",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         },
@@ -1432,7 +1432,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@18727",
+          "name": "__@toStringTag@19161",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         },
@@ -1499,7 +1499,7 @@
           "syntaxKind": "PropertySignature",
           "name": "defaultTimeoutInMs",
           "value": "number",
-          "description": "How long a request can run before the client throws a StorefrontTimeoutError, in milliseconds. Defaults to 30,000. Set `0` to turn off the timeout. Stale-while-revalidate refreshes use the same timeout, or 30,000 when the timeout is `0`. createStorefrontClient throws an error for a negative value.",
+          "description": "How long a request can run before the client throws a StorefrontTimeoutError, in milliseconds. Defaults to `30000`. Set `0` to turn off the timeout. Stale-while-revalidate refreshes use the same timeout, or 30,000 when the timeout is `0`. createStorefrontClient throws an error for a negative value.",
           "isOptional": true
         },
         {
@@ -1572,7 +1572,7 @@
           "syntaxKind": "PropertySignature",
           "name": "defaultTimeoutInMs",
           "value": "number",
-          "description": "How long a request can run before the client throws a StorefrontTimeoutError, in milliseconds. Defaults to 30,000. Set `0` to turn off the timeout. Stale-while-revalidate refreshes use the same timeout, or 30,000 when the timeout is `0`. createStorefrontClient throws an error for a negative value.",
+          "description": "How long a request can run before the client throws a StorefrontTimeoutError, in milliseconds. Defaults to `30000`. Set `0` to turn off the timeout. Stale-while-revalidate refreshes use the same timeout, or 30,000 when the timeout is `0`. createStorefrontClient throws an error for a negative value.",
           "isOptional": true
         },
         {
@@ -1644,7 +1644,7 @@
           "syntaxKind": "PropertySignature",
           "name": "defaultTimeoutInMs",
           "value": "number",
-          "description": "How long a request can run before the client throws a StorefrontTimeoutError, in milliseconds. Defaults to 30,000. Set `0` to turn off the timeout. Stale-while-revalidate refreshes use the same timeout, or 30,000 when the timeout is `0`. createStorefrontClient throws an error for a negative value.",
+          "description": "How long a request can run before the client throws a StorefrontTimeoutError, in milliseconds. Defaults to `30000`. Set `0` to turn off the timeout. Stale-while-revalidate refreshes use the same timeout, or 30,000 when the timeout is `0`. createStorefrontClient throws an error for a negative value.",
           "isOptional": true
         },
         {
@@ -1938,12 +1938,12 @@
     }
   },
   "StorefrontQueryString": {
-    "src/graphql/graphql.ts": {
-      "filePath": "src/graphql/graphql.ts",
-      "syntaxKind": "TypeAliasDeclaration",
+    "unknown": {
+      "description": "",
       "name": "StorefrontQueryString",
-      "value": "string & DocumentDecoration<Result, Variables> & {\n    readonly __hydrogenQueryBrand: true;\n    readonly __hydrogenQuerySource?: Source;\n  }",
-      "description": "The type of a `gql` document, a query string that carries its result and variables types.\n\nAt runtime, the document is a plain string. Read the types with `StorefrontApi.ResultOf` and `StorefrontApi.VariablesOf`."
+      "value": "StorefrontQueryString",
+      "members": [],
+      "override": "A GraphQL document that `gql` returns. At runtime, the document is the plain query text. The document's type carries the query's result and variables types, which `StorefrontApi.ResultOf` and `StorefrontApi.VariablesOf` read."
     }
   },
   "GraphQLFormattedError": {
@@ -2177,7 +2177,7 @@
     "src/client/client.ts": {
       "filePath": "src/client/client.ts",
       "name": "CreateStorefrontClientGeneratedType",
-      "description": "Creates a Storefront API client that runs typed queries and mutations against your store.\n\nSet `type` based on where your code runs and whether customer context is available:\n\n|                  | public                       | private                       | private_no_buyer_context  |\n|------------------|------------------------------|-------------------------------|---------------------------|\n| Runs in          | Browser or mobile            | Server-side rendering         | Background server code    |\n| Token            | Public access token, or none | Private access token          | Private access token      |\n| Customer context | Browser request context      | You forward trusted `buyerIp` | None                      |\n| Best for         | Client-side fetches          | SSR with customer context     | Webhooks, background jobs |\n\nPass a request context from createShopifyRequestContext. The client forwards the incoming request's cookies and Global Privacy Control header to the Storefront API, and fills `$country` and `$language` variables from the context's locale. The client reads the request headers once, when you create the client. Create a client for each incoming request, and create a client at module scope only with a static request context.\n\nKeep private clients in server code, where the token can't reach browsers. The function throws an error when you create either private client type in a browser. The function throws a TypeError when the request context of a `\"private\"` client has no `buyerIp`.",
+      "description": "Creates a Storefront API client that runs typed queries and mutations against your store.\n\nSet `type` based on where your code runs and whether customer context is available:\n\n|                  | `\"public\"`                   | `\"private\"`                   | `\"private_no_buyer_context\"` |\n|------------------|------------------------------|-------------------------------|------------------------------|\n| Runs in          | Browser or mobile            | Server-side rendering         | Background server code    |\n| Token            | Public access token, or none | Private access token          | Private access token      |\n| Customer context | Browser request context      | You forward trusted `buyerIp` | None                      |\n| Best for         | Client-side fetches          | SSR with customer context     | Webhooks, background jobs |\n\nPass a request context from createShopifyRequestContext. The client forwards the incoming request's cookies and `Sec-GPC` header to the Storefront API, and fills `$country` and `$language` variables from the context's locale. The client reads the request headers once, when you create the client. Create a client for each incoming request, and create a client at module scope only with a static request context.\n\nKeep private clients in server code, where the token can't reach browsers. The function throws an error when you create either private client type in a browser. The function throws a TypeError when the request context of a `\"private\"` client has no `buyerIp`.",
       "isPublicDocs": true,
       "params": [
         {
@@ -2716,7 +2716,7 @@
       ],
       "returns": {
         "filePath": "src/core/cart/cookie.ts",
-        "description": "The header value that sets the cart cookie.",
+        "description": "The header value that sets the `cart` cookie.",
         "name": "string",
         "value": "string"
       },
@@ -3074,7 +3074,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "MergeCartData",
       "value": "Omit<CartData, keyof TCart> & TCart",
-      "description": ""
+      "description": "The cart data type with the fields from your cart query. Your query's field types replace the matching default cart fields."
     }
   },
   "CartData": {
@@ -3528,7 +3528,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartIdSource",
       "value": "Request | Pick<ShopifyRequestContext, \"cookie\" | \"url\">",
-      "description": "A request, or a request context with a cookie header and a URL."
+      "description": "A request, or a request context with a `Cookie` header and a URL."
     }
   },
   "GetCartGeneratedType": {
@@ -3873,7 +3873,7 @@
       "filePath": "src/core/request-routing/route-types.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyRouteErrorResult",
-      "value": "{\n  /** Set to `\"error\"` for an error response. */\n  type: \"error\";\n  /** The error that Hydrogen serializes as the response body's `error` field. */\n  error: TError;\n  /** The HTTP status for the error response. Defaults to 400. */\n  status?: number;\n  /** Extra headers for the error response. Hydrogen sets `content-type` to `application/json` and overrides any value you pass. */\n  headers?: HeadersInit;\n}",
+      "value": "{\n  /** Set to `\"error\"` for an error response. */\n  type: \"error\";\n  /** The error that Hydrogen serializes as the response body's `error` field. */\n  error: TError;\n  /** The HTTP status for the error response. Defaults to `400`. */\n  status?: number;\n  /** Extra headers for the error response. Hydrogen sets `content-type` to `application/json` and overrides any value you pass. */\n  headers?: HeadersInit;\n}",
       "description": "A route handler result that Hydrogen sends as a JSON error response.",
       "members": [
         {
@@ -3896,7 +3896,7 @@
           "syntaxKind": "PropertySignature",
           "name": "status",
           "value": "number",
-          "description": "The HTTP status for the error response. Defaults to 400.",
+          "description": "The HTTP status for the error response. Defaults to `400`.",
           "isOptional": true
         },
         {
@@ -3922,7 +3922,7 @@
     "src/core/request-routing/handle-shopify-routes.ts": {
       "filePath": "src/core/request-routing/handle-shopify-routes.ts",
       "name": "HandleShopifyRoutesForDocs",
-      "description": "Serves Shopify's storefront endpoints and your custom route handlers from your app. Call the function at the start of request handling, before your framework's router.\n\nWhen a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. Inside a `try` block, use `return await` on the result.\n\nThe function checks these routes in order and returns the first match: the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.\n\nSome routes answer unsupported methods with a 405 response. A registered handler path returns 405 for any method that no handler on that path registers. Checkout and cart permalinks accept only GET and HEAD. Buy permalinks accept only GET, and the UCP MCP proxy accepts only POST.\n\nWhen your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.",
+      "description": "Serves Shopify's storefront endpoints and your custom route handlers from your app. Call the function at the start of request handling, before your framework's router.\n\nWhen a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. Inside a `try` block, use `return await` on the result.\n\nThe function checks these routes in order and returns the first match: the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.\n\nSome routes answer unsupported methods with a 405 response. A registered handler path returns 405 for any method that no handler on that path registers. Checkout and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.\n\nWhen your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.",
       "isPublicDocs": true,
       "params": [
         {
@@ -4412,11 +4412,11 @@
           "syntaxKind": "PropertySignature",
           "name": "storefrontId",
           "value": "never",
-          "description": "",
+          "description": "Leave the storefront ID out. The Headless sales channel has no storefront ID.",
           "isOptional": true
         }
       ],
-      "value": "interface HeadlessShopAnalytics extends ShopAnalyticsBase {\n  /** The Headless sales channel serves the storefront. */\n  channel: \"headless\";\n  storefrontId?: never;\n}"
+      "value": "interface HeadlessShopAnalytics extends ShopAnalyticsBase {\n  /** The Headless sales channel serves the storefront. */\n  channel: \"headless\";\n  /** Leave the storefront ID out. The Headless sales channel has no storefront ID. */\n  storefrontId?: never;\n}"
     }
   },
   "ConsentPreferences": {
@@ -4661,7 +4661,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "UrlPayload",
       "value": "{\n  /** The page URL. For view events, the bus fills in the current URL when the payload omits it. */\n  url?: string;\n}",
-      "description": "",
+      "description": "The page URL that every view event payload carries.",
       "members": [
         {
           "filePath": "src/core/analytics/types.ts",
@@ -4680,7 +4680,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "BasePayload",
       "value": "{\n  /**\n   * The shop and sales channel. The bus fills in the configured shop when the payload omits\n   * the key, and normalizes the shop ID to a Shop GID.\n   */\n  shop?: ShopAnalytics | null;\n  /** Custom values for destinations. Cart tracking copies the bus configuration's custom data here. */\n  customData?: Record<string, unknown>;\n}",
-      "description": "",
+      "description": "The shop and custom data that every analytics event payload carries.",
       "members": [
         {
           "filePath": "src/core/analytics/types.ts",
@@ -4717,7 +4717,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ProductsPayload",
       "value": "{\n  /** The products that the customer views. */\n  products: Array<ProductPayload & OtherData>;\n}",
-      "description": "",
+      "description": "The products in a `product_viewed` event.",
       "members": [
         {
           "filePath": "src/core/analytics/types.ts",
@@ -4745,7 +4745,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CollectionPayload",
       "value": "{\n  /** The ID and handle of the collection that the customer views. */\n  collection: { id: string; handle: string };\n}",
-      "description": "",
+      "description": "The collection in a `collection_viewed` event.",
       "members": [
         {
           "filePath": "src/core/analytics/types.ts",
@@ -4773,7 +4773,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartPayload",
       "value": "{\n  /** The current cart. */\n  cart: AnalyticsCart | null;\n}",
-      "description": "",
+      "description": "The current cart in a cart event.",
       "members": [
         {
           "filePath": "src/core/analytics/types.ts",
@@ -4801,7 +4801,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "SearchPayload",
       "value": "{\n  /** The customer's search query. */\n  searchTerm: string;\n  /** The search results, in any shape that your destinations read. */\n  searchResults?: unknown;\n}",
-      "description": "",
+      "description": "The search term and results in a `search_viewed` event.",
       "members": [
         {
           "filePath": "src/core/analytics/types.ts",
@@ -4835,7 +4835,7 @@
     "src/core/analytics/types.ts": {
       "filePath": "src/core/analytics/types.ts",
       "name": "CartChangePayload",
-      "description": "",
+      "description": "The current cart and the cart before the change, in a cart update or cart line event.",
       "members": [
         {
           "filePath": "src/core/analytics/types.ts",
@@ -4871,7 +4871,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartLinePayload",
       "value": "{\n  /** The line before the change. */\n  prevLine?: AnalyticsCartLine;\n  /** The line after the change. */\n  currentLine?: AnalyticsCartLine;\n}",
-      "description": "",
+      "description": "The cart line before and after the change, in a `product_added_to_cart` or `product_removed_from_cart` event.",
       "members": [
         {
           "filePath": "src/core/analytics/types.ts",
@@ -5590,7 +5590,7 @@
     "src/core/cart/form.ts": {
       "filePath": "src/core/cart/form.ts",
       "name": "CreateCartFormRegisterGeneratedType",
-      "description": "Creates a register function that returns the HTML attributes for cart form fields and action buttons.\n\nUse the function to build cart forms without a framework binding. In React, useCartForm returns a register function and form props for you. To submit an interactive quantity input on change, call attachQuantityInput.\n\nThe register function holds no state. Share one register function across components.",
+      "description": "Creates a register function that returns the HTML attributes for cart form fields and action buttons.\n\nUse the function to build cart forms without a framework binding. In React, useCartForm returns a register function and form props for you. To submit an interactive quantity input on change, call `attachQuantityInput()`.\n\nThe register function holds no state. Share one register function across components.",
       "isPublicDocs": true,
       "params": [],
       "returns": {
@@ -6220,7 +6220,7 @@
           "syntaxKind": "PropertySignature",
           "name": "action",
           "value": "CartAction",
-          "description": "A cart change that parseCartRequest reads from a JSON or form request.\n\nThe `intent` field names the change and the Storefront API mutation that applies the change:\n\n- `add` adds new lines with cartLinesAdd, or creates a cart with cartCreate when none exists.\n- `update` changes quantity or attributes on existing lines with cartLinesUpdate.\n- `remove` removes lines by ID with cartLinesRemove.\n- `discount-update` replaces all discount codes with cartDiscountCodesUpdate.\n- `discount-apply` adds one discount code. The handler reads the current codes, then writes the new list with cartDiscountCodesUpdate.\n- `discount-remove` removes one discount code with the same read-then-write approach.\n- `attributes-update` sets cart-level attributes with cartAttributesUpdate.\n- `note-update` sets the cart note with cartNoteUpdate."
+          "description": "A cart change that parseCartRequest reads from a JSON or form request.\n\nThe `intent` field names the change and the Storefront API mutation that applies the change:\n\n- `add` adds new lines with `cartLinesAdd`, or creates a cart with `cartCreate` when none exists.\n- `update` changes quantity or attributes on existing lines with `cartLinesUpdate`.\n- `remove` removes lines by ID with `cartLinesRemove`.\n- `discount-update` replaces all discount codes with `cartDiscountCodesUpdate`.\n- `discount-apply` adds one discount code. The handler reads the current codes, then writes the new list with `cartDiscountCodesUpdate`.\n- `discount-remove` removes one discount code with the same read-then-write approach.\n- `attributes-update` sets cart-level attributes with `cartAttributesUpdate`.\n- `note-update` sets the cart note with `cartNoteUpdate`."
         },
         {
           "filePath": "src/core/cart/actions.ts",
@@ -6455,7 +6455,7 @@
       "filePath": "src/customer-account/session.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CustomerSession",
-      "value": "{\n  /**\n   * Returns `true` when the customer has a usable access token or a refresh token. The method never refreshes tokens.\n   *\n   * Use the result for UI state, such as an account link. Gate Customer Account API data on an access token from getOrRefreshAccessToken.\n   */\n  isLoggedIn(\n    sessionManager: ReadonlyCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n  ): Promise<boolean>;\n  /**\n   * Returns the customer's stored access token, or `undefined` when the token is missing or expired. The method never refreshes the token or writes to the session. Call getOrRefreshAccessToken to refresh an expired token.\n   */\n  getAccessToken(\n    sessionManager: ReadonlyCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n  ): Promise<string | undefined>;\n  /**\n   * Returns a usable access token for the customer. When the stored token is missing or expired, the session gets new tokens from Shopify and writes them to your session storage. Call the method only where you commit the session to the response.\n   *\n   * Returns `undefined` when the customer has no refresh token, or when a temporary refresh failure keeps the session for a retry. When Shopify rejects the refresh token with a 400 or 401 status, the session clears the stored tokens and returns `undefined`. Refresh failures never throw.\n   */\n  getOrRefreshAccessToken(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options?: RequestOriginOptions,\n  ): Promise<string | undefined>;\n  /**\n   * Starts customer sign-in and returns the URL of Shopify's login page. Commit the session to the response, then redirect the customer to the URL.\n   *\n   * The customer has 10 minutes to finish signing in. After that, the OAuth callback fails with the `\"missing_pending_login\"` code.\n   */\n  prepareLoginUrl(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options: PrepareLoginUrlOptions,\n  ): Promise<string>;\n  /**\n   * Completes sign-in from Shopify's OAuth callback request, saves the customer's tokens to your session storage, and returns the path to send the customer to. Commit the session to the response after the call.\n   *\n   * The method throws CustomerAccountOAuthError when sign-in fails a check, and CustomerAccountApiError when the token request times out. After a failure, the customer needs to start sign-in again.\n   *\n   * @throws {CustomerAccountOAuthError} When the callback parameters, pending login, token exchange, token response, or ID token claims fail validation.\n   * @throws {CustomerAccountApiError} When the token request times out.\n   */\n  handleOAuthCallback(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    request: Request,\n  ): Promise<string>;\n  /**\n   * Clears the customer's session data and returns the URL to send the customer to. Commit the session to the response after the call.\n   *\n   * When the session has an ID token, the URL points to Shopify's logout endpoint with the post-logout URL attached. Without an ID token, the method returns the post-logout URL.\n   */\n  logout(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options?: LogoutOptions,\n  ): Promise<string>;\n}",
+      "value": "{\n  /**\n   * Returns `true` when the customer has a usable access token or a refresh token. The method never refreshes tokens.\n   *\n   * Use the result for UI state, such as an account link. Gate Customer Account API data on an access token from `getOrRefreshAccessToken()`.\n   */\n  isLoggedIn(\n    sessionManager: ReadonlyCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n  ): Promise<boolean>;\n  /**\n   * Returns the customer's stored access token, or `undefined` when the token is missing or expired. The method never refreshes the token or writes to the session. Call `getOrRefreshAccessToken()` to refresh an expired token.\n   */\n  getAccessToken(\n    sessionManager: ReadonlyCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n  ): Promise<string | undefined>;\n  /**\n   * Returns a usable access token for the customer. When the stored token is missing or expired, the session gets new tokens from Shopify and writes them to your session storage. Call the method only where you commit the session to the response.\n   *\n   * Returns `undefined` when the customer has no refresh token, or when a temporary refresh failure keeps the session for a retry. When Shopify rejects the refresh token with a 400 or 401 status, the session clears the stored tokens and returns `undefined`. Refresh failures never throw.\n   */\n  getOrRefreshAccessToken(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options?: RequestOriginOptions,\n  ): Promise<string | undefined>;\n  /**\n   * Starts customer sign-in and returns the URL of Shopify's login page. Commit the session to the response, then redirect the customer to the URL.\n   *\n   * The customer has 10 minutes to finish signing in. After that, the OAuth callback fails with the `\"missing_pending_login\"` code.\n   */\n  prepareLoginUrl(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options: PrepareLoginUrlOptions,\n  ): Promise<string>;\n  /**\n   * Completes sign-in from Shopify's OAuth callback request, saves the customer's tokens to your session storage, and returns the path to send the customer to. Commit the session to the response after the call.\n   *\n   * The method throws CustomerAccountOAuthError when sign-in fails a check, and CustomerAccountApiError when the token request times out. After a failure, the customer needs to start sign-in again.\n   *\n   * @throws {CustomerAccountOAuthError} When the callback parameters, pending login, token exchange, token response, or ID token claims fail validation.\n   * @throws {CustomerAccountApiError} When the token request times out.\n   */\n  handleOAuthCallback(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    request: Request,\n  ): Promise<string>;\n  /**\n   * Clears the customer's session data and returns the URL to send the customer to. Commit the session to the response after the call.\n   *\n   * When the session has an ID token, the URL points to Shopify's logout endpoint with the post-logout URL attached. Without an ID token, the method returns the post-logout URL.\n   */\n  logout(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options?: LogoutOptions,\n  ): Promise<string>;\n}",
       "description": "Signs customers in and out with Shopify customer accounts, and gives your server their Customer Account API access tokens. Use the session on the server only.\n\nPass your session storage and the request context to each method. Each method makes the final response private and uncacheable.",
       "isPublicDocs": true,
       "members": [
@@ -6464,7 +6464,7 @@
           "syntaxKind": "MethodSignature",
           "name": "getAccessToken",
           "value": "(sessionManager: ReadonlyCustomerSessionManager, requestContext: ShopifyRequestContext) => Promise<string>",
-          "description": "Returns the customer's stored access token, or `undefined` when the token is missing or expired. The method never refreshes the token or writes to the session. Call getOrRefreshAccessToken to refresh an expired token."
+          "description": "Returns the customer's stored access token, or `undefined` when the token is missing or expired. The method never refreshes the token or writes to the session. Call `getOrRefreshAccessToken()` to refresh an expired token."
         },
         {
           "filePath": "src/customer-account/session.ts",
@@ -6485,7 +6485,7 @@
           "syntaxKind": "MethodSignature",
           "name": "isLoggedIn",
           "value": "(sessionManager: ReadonlyCustomerSessionManager, requestContext: ShopifyRequestContext) => Promise<boolean>",
-          "description": "Returns `true` when the customer has a usable access token or a refresh token. The method never refreshes tokens.\n\nUse the result for UI state, such as an account link. Gate Customer Account API data on an access token from getOrRefreshAccessToken."
+          "description": "Returns `true` when the customer has a usable access token or a refresh token. The method never refreshes tokens.\n\nUse the result for UI state, such as an account link. Gate Customer Account API data on an access token from `getOrRefreshAccessToken()`."
         },
         {
           "filePath": "src/customer-account/session.ts",
@@ -6510,7 +6510,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ReadonlyCustomerSessionManager",
       "value": "{\n  /** Returns the session value for a key. The customer session keeps its data under the `customerAccount` key. */\n  getSessionItem(key: string): Awaitable<unknown>;\n}",
-      "description": "The session storage that isLoggedIn and getAccessToken read.",
+      "description": "The session storage that `isLoggedIn()` and `getAccessToken()` read.",
       "members": [
         {
           "filePath": "src/customer-account/session.ts",
@@ -6527,7 +6527,7 @@
       "filePath": "src/core/request-context.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "Context",
-      "value": "{\n  /** The incoming request's cookie header. */\n  cookie?: string;\n  /** The incoming request's Global Privacy Control header value. */\n  globalPrivacyControl?: string;\n  /** The customer's trusted IP address. */\n  buyerIp?: string;\n  /** The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one. */\n  requestGroupId: string;\n  /** The incoming request's abort signal. */\n  signal?: AbortSignal;\n  /** The incoming request's URL. */\n  url?: string;\n  /** The origin of the incoming request's URL. */\n  storefrontOrigin?: string;\n  /** The request's language, country, and path prefix. */\n  i18n: NormalizedI18nConfig<I18n>;\n  /** Whether the incoming request asks for an HTML document. */\n  documentRequest?: boolean;\n}",
+      "value": "{\n  /** The incoming request's `Cookie` header. */\n  cookie?: string;\n  /** The incoming request's `Sec-GPC` header value, which carries the customer's Global Privacy Control signal. */\n  globalPrivacyControl?: string;\n  /** The customer's trusted IP address. */\n  buyerIp?: string;\n  /** The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one. */\n  requestGroupId: string;\n  /** The incoming request's abort signal. */\n  signal?: AbortSignal;\n  /** The incoming request's URL. */\n  url?: string;\n  /** The origin of the incoming request's URL. */\n  storefrontOrigin?: string;\n  /** The request's language, country, and path prefix. */\n  i18n: NormalizedI18nConfig<I18n>;\n  /** Whether the incoming request asks for an HTML document. */\n  documentRequest?: boolean;\n}",
       "description": "The values that the request context reads from the incoming request.",
       "members": [
         {
@@ -6543,7 +6543,7 @@
           "syntaxKind": "PropertySignature",
           "name": "cookie",
           "value": "string",
-          "description": "The incoming request's cookie header.",
+          "description": "The incoming request's `Cookie` header.",
           "isOptional": true
         },
         {
@@ -6559,7 +6559,7 @@
           "syntaxKind": "PropertySignature",
           "name": "globalPrivacyControl",
           "value": "string",
-          "description": "The incoming request's Global Privacy Control header value.",
+          "description": "The incoming request's `Sec-GPC` header value, which carries the customer's Global Privacy Control signal.",
           "isOptional": true
         },
         {
@@ -6755,7 +6755,7 @@
       "filePath": "src/customer-account/session.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CreateCustomerSessionOptions",
-      "value": "{\n  /** Numeric Shopify shop ID as a string of digits, such as `\"12345\"`. */\n  shopId: string;\n  /** The Customer Account API OAuth client ID. Must contain at least one non-whitespace character. */\n  customerAccountApiClientId: string;\n  /**\n   * The base URL for Shopify's OAuth authorize, token, and logout endpoints. Defaults to `https://shopify.com/authentication/{shopId}`.\n   *\n   * The URL must use HTTPS, or creating the session throws. Sign-in fails with the `\"issuer_mismatch\"` code when the ID token's issuer differs from this URL.\n   */\n  customerAccountApiUrl?: string;\n  /** A custom fetch implementation. Defaults to the global fetch. */\n  fetch?: typeof globalThis.fetch;\n  /** The timeout for OAuth token requests in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to 30,000. */\n  defaultTimeoutInMs?: number;\n}",
+      "value": "{\n  /** Numeric Shopify shop ID as a string of digits, such as `\"12345\"`. */\n  shopId: string;\n  /** The Customer Account API OAuth client ID. Must contain at least one non-whitespace character. */\n  customerAccountApiClientId: string;\n  /**\n   * The base URL for Shopify's OAuth authorize, token, and logout endpoints. Defaults to `https://shopify.com/authentication/{shopId}`.\n   *\n   * The URL must use HTTPS, or creating the session throws. Sign-in fails with the `\"issuer_mismatch\"` code when the ID token's issuer differs from this URL.\n   */\n  customerAccountApiUrl?: string;\n  /** A custom fetch implementation. Defaults to the global fetch. */\n  fetch?: typeof globalThis.fetch;\n  /** The timeout for OAuth token requests in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`. */\n  defaultTimeoutInMs?: number;\n}",
       "description": "Options for creating a customer session.",
       "members": [
         {
@@ -6778,7 +6778,7 @@
           "syntaxKind": "PropertySignature",
           "name": "defaultTimeoutInMs",
           "value": "number",
-          "description": "The timeout for OAuth token requests in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to 30,000.",
+          "description": "The timeout for OAuth token requests in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`.",
           "isOptional": true
         },
         {
@@ -6851,7 +6851,7 @@
           "syntaxKind": "PropertySignature",
           "name": "cartServerHandlers",
           "value": "undefined",
-          "description": "The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.\n\nThe authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the cart cookie. The sync needs `storefrontClient` in the handler context.\n\nCreating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession.",
+          "description": "The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.\n\nThe authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.\n\nCreating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession.",
           "isOptional": true
         },
         {
@@ -6894,7 +6894,7 @@
           "isOptional": true
         }
       ],
-      "value": "interface CustomerAccountServerHandlersOptionsWithoutCart extends CreateCustomerAccountServerHandlersBaseOptions {\n  /** The customer session from createCustomerSession. */\n  customerSession: CustomerSession;\n  /**\n   * The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.\n   *\n   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the cart cookie. The sync needs `storefrontClient` in the handler context.\n   *\n   * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession.\n   */\n  cartServerHandlers?: undefined;\n}"
+      "value": "interface CustomerAccountServerHandlersOptionsWithoutCart extends CreateCustomerAccountServerHandlersBaseOptions {\n  /** The customer session from createCustomerSession. */\n  customerSession: CustomerSession;\n  /**\n   * The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.\n   *\n   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.\n   *\n   * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession.\n   */\n  cartServerHandlers?: undefined;\n}"
     }
   },
   "CustomerAccountServerHandlersOptionsWithCart": {
@@ -6908,7 +6908,7 @@
           "syntaxKind": "PropertySignature",
           "name": "cartServerHandlers",
           "value": "CartBuyerIdentitySyncSource",
-          "description": "The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.\n\nThe authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the cart cookie. The sync needs `storefrontClient` in the handler context.\n\nCreating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession."
+          "description": "The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.\n\nThe authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.\n\nCreating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession."
         },
         {
           "filePath": "src/customer-account/session.ts",
@@ -6950,7 +6950,7 @@
           "isOptional": true
         }
       ],
-      "value": "interface CustomerAccountServerHandlersOptionsWithCart extends CreateCustomerAccountServerHandlersBaseOptions {\n  /** The customer session from createCustomerSession. */\n  customerSession: CustomerSessionWithInternals;\n  /**\n   * The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.\n   *\n   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the cart cookie. The sync needs `storefrontClient` in the handler context.\n   *\n   * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession.\n   */\n  cartServerHandlers: CartBuyerIdentitySyncSource;\n}"
+      "value": "interface CustomerAccountServerHandlersOptionsWithCart extends CreateCustomerAccountServerHandlersBaseOptions {\n  /** The customer session from createCustomerSession. */\n  customerSession: CustomerSessionWithInternals;\n  /**\n   * The cart server handlers that createCartServerHandlers returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.\n   *\n   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.\n   *\n   * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from createCustomerSession.\n   */\n  cartServerHandlers: CartBuyerIdentitySyncSource;\n}"
     }
   },
   "CartBuyerIdentitySyncSource": {
@@ -6964,7 +6964,7 @@
         {
           "filePath": "src/core/cart/buyer-identity-sync.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@21291",
+          "name": "__@cartBuyerIdentitySync@21725",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to createCustomerAccountServerHandlers through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         }
@@ -7002,7 +7002,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartBuyerIdentitySyncContext",
       "value": "{\n  /** The incoming request. The `cart` cookie on the request identifies the cart. */\n  request: Request;\n  /** The Storefront API client that updates the cart's buyer identity. */\n  storefrontClient: StorefrontClient;\n}",
-      "description": "The request with the cart cookie and the Storefront API client that updates the cart.",
+      "description": "The request with the `cart` cookie and the Storefront API client that updates the cart.",
       "members": [
         {
           "filePath": "src/core/cart/buyer-identity-sync.ts",
@@ -7026,7 +7026,7 @@
       "filePath": "src/customer-account/session.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CustomerAccountServerHandlers",
-      "value": "{\n  /** Completes sign-in at `/account/authorize`, the OAuth callback, and redirects the customer to the return path. Accepts GET. */\n  authorize: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH,\n    \"GET\"\n  >;\n  /** Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts GET. Pass `return_to`, `locale`, `acr_values`, `login_hint`, and `login_hint_mode` as search params. The route sends the request context's country to Shopify. */\n  login: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_LOGIN_PATH,\n    \"GET\"\n  >;\n  /**\n   * Logs the customer out at `/account/logout`. Accepts POST. For CSRF protection, the route returns a 403 response unless the `Origin` or `Referer` header matches your storefront's origin.\n   *\n   * Through handleShopifyRoutes, a GET request to the logout path returns a 405 response. Log out with a `<form method=\"post\" action=\"/account/logout\">` and a submit button, which works without JavaScript.\n   */\n  logout: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_LOGOUT_PATH,\n    \"POST\"\n  >;\n  /** Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts GET. */\n  refresh: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_REFRESH_PATH,\n    \"GET\"\n  >;\n}",
+      "value": "{\n  /** Completes sign-in at `/account/authorize`, the OAuth callback, and redirects the customer to the return path. Accepts `GET`. */\n  authorize: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH,\n    \"GET\"\n  >;\n  /** Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts `GET`. Pass `return_to`, `locale`, `acr_values`, `login_hint`, and `login_hint_mode` as search params. The route sends the request context's country to Shopify. */\n  login: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_LOGIN_PATH,\n    \"GET\"\n  >;\n  /**\n   * Logs the customer out at `/account/logout`. Accepts `POST`. For CSRF protection, the route returns a 403 response unless the `Origin` or `Referer` header matches your storefront's origin.\n   *\n   * Through handleShopifyRoutes, a GET request to the logout path returns a 405 response. Log out with a `<form method=\"post\" action=\"/account/logout\">` and a submit button, which works without JavaScript.\n   */\n  logout: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_LOGOUT_PATH,\n    \"POST\"\n  >;\n  /** Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts `GET`. */\n  refresh: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_REFRESH_PATH,\n    \"GET\"\n  >;\n}",
       "description": "The login, authorize, refresh, and logout routes for customer accounts. Add the object to the `handlers` option of handleShopifyRoutes.",
       "members": [
         {
@@ -7034,28 +7034,28 @@
           "syntaxKind": "PropertySignature",
           "name": "authorize",
           "value": "CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH,\n    \"GET\"\n  >",
-          "description": "Completes sign-in at `/account/authorize`, the OAuth callback, and redirects the customer to the return path. Accepts GET."
+          "description": "Completes sign-in at `/account/authorize`, the OAuth callback, and redirects the customer to the return path. Accepts `GET`."
         },
         {
           "filePath": "src/customer-account/session.ts",
           "syntaxKind": "PropertySignature",
           "name": "login",
           "value": "CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_LOGIN_PATH,\n    \"GET\"\n  >",
-          "description": "Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts GET. Pass `return_to`, `locale`, `acr_values`, `login_hint`, and `login_hint_mode` as search params. The route sends the request context's country to Shopify."
+          "description": "Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts `GET`. Pass `return_to`, `locale`, `acr_values`, `login_hint`, and `login_hint_mode` as search params. The route sends the request context's country to Shopify."
         },
         {
           "filePath": "src/customer-account/session.ts",
           "syntaxKind": "PropertySignature",
           "name": "logout",
           "value": "CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_LOGOUT_PATH,\n    \"POST\"\n  >",
-          "description": "Logs the customer out at `/account/logout`. Accepts POST. For CSRF protection, the route returns a 403 response unless the `Origin` or `Referer` header matches your storefront's origin.\n\nThrough handleShopifyRoutes, a GET request to the logout path returns a 405 response. Log out with a `<form method=\"post\" action=\"/account/logout\">` and a submit button, which works without JavaScript."
+          "description": "Logs the customer out at `/account/logout`. Accepts `POST`. For CSRF protection, the route returns a 403 response unless the `Origin` or `Referer` header matches your storefront's origin.\n\nThrough handleShopifyRoutes, a GET request to the logout path returns a 405 response. Log out with a `<form method=\"post\" action=\"/account/logout\">` and a submit button, which works without JavaScript."
         },
         {
           "filePath": "src/customer-account/session.ts",
           "syntaxKind": "PropertySignature",
           "name": "refresh",
           "value": "CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_REFRESH_PATH,\n    \"GET\"\n  >",
-          "description": "Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts GET."
+          "description": "Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts `GET`."
         }
       ]
     }
@@ -7091,28 +7091,28 @@
           "syntaxKind": "PropertySignature",
           "name": "authorize",
           "value": "CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH,\n    \"GET\"\n  >",
-          "description": "Completes sign-in at `/account/authorize`, the OAuth callback, and redirects the customer to the return path. Accepts GET."
+          "description": "Completes sign-in at `/account/authorize`, the OAuth callback, and redirects the customer to the return path. Accepts `GET`."
         },
         {
           "filePath": "src/customer-account/session.ts",
           "syntaxKind": "PropertySignature",
           "name": "login",
           "value": "CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_LOGIN_PATH,\n    \"GET\"\n  >",
-          "description": "Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts GET. Pass `return_to`, `locale`, `acr_values`, `login_hint`, and `login_hint_mode` as search params. The route sends the request context's country to Shopify."
+          "description": "Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts `GET`. Pass `return_to`, `locale`, `acr_values`, `login_hint`, and `login_hint_mode` as search params. The route sends the request context's country to Shopify."
         },
         {
           "filePath": "src/customer-account/session.ts",
           "syntaxKind": "PropertySignature",
           "name": "logout",
           "value": "CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_LOGOUT_PATH,\n    \"POST\"\n  >",
-          "description": "Logs the customer out at `/account/logout`. Accepts POST. For CSRF protection, the route returns a 403 response unless the `Origin` or `Referer` header matches your storefront's origin.\n\nThrough handleShopifyRoutes, a GET request to the logout path returns a 405 response. Log out with a `<form method=\"post\" action=\"/account/logout\">` and a submit button, which works without JavaScript."
+          "description": "Logs the customer out at `/account/logout`. Accepts `POST`. For CSRF protection, the route returns a 403 response unless the `Origin` or `Referer` header matches your storefront's origin.\n\nThrough handleShopifyRoutes, a GET request to the logout path returns a 405 response. Log out with a `<form method=\"post\" action=\"/account/logout\">` and a submit button, which works without JavaScript."
         },
         {
           "filePath": "src/customer-account/session.ts",
           "syntaxKind": "PropertySignature",
           "name": "refresh",
           "value": "CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_REFRESH_PATH,\n    \"GET\"\n  >",
-          "description": "Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts GET."
+          "description": "Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts `GET`."
         }
       ]
     }
@@ -7183,9 +7183,25 @@
       "filePath": "src/core/cart/server-handlers.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartError",
-      "value": "ShopifyRouteError & {\n  code: CartErrorCode;\n}",
+      "value": "{\n  /** The code that identifies the failure. */\n  code: CartErrorCode;\n  /** A human-readable error message. */\n  message: string;\n}",
       "description": "An error that the cart POST handler returns, with a code that identifies the failure.",
-      "isPublicDocs": true
+      "isPublicDocs": true,
+      "members": [
+        {
+          "filePath": "src/core/cart/server-handlers.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "code",
+          "value": "CartErrorCode",
+          "description": "The code that identifies the failure."
+        },
+        {
+          "filePath": "src/core/cart/server-handlers.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "message",
+          "value": "string",
+          "description": "A human-readable error message."
+        }
+      ]
     }
   },
   "CartPostResult": {
@@ -7194,7 +7210,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartPostResult",
       "value": "ShopifyRouteJsonResult<Record<string, unknown>> | ShopifyRouteRedirectResult | ShopifyRouteErrorResult<CartError>",
-      "description": "The route result that the cart POST handler returns. The result is one of these:\n- JSON with the mutation's cart, user errors, and warnings, for a JSON request\n- A 303 redirect to the referring page, for a form submission\n- A cart error with an error code",
+      "description": "The route result that the cart POST handler returns. Check `type` to tell the results apart:\n- `\"json\"` answers a JSON request. The result's `data` holds the mutation's `cart`, `userErrors`, and `warnings`.\n- `\"redirect\"` answers a form submission with a 303 redirect to the referring page.\n- `\"error\"` holds a cart error with a code that identifies the failure.",
       "isPublicDocs": true
     }
   },
@@ -7281,7 +7297,7 @@
           "syntaxKind": "MethodSignature",
           "name": "getAccessToken",
           "value": "(sessionManager: ReadonlyCustomerSessionManager, requestContext: ShopifyRequestContext) => Promise<string>",
-          "description": "Returns the customer's stored access token, or `undefined` when the token is missing or expired. The method never refreshes the token or writes to the session. Call getOrRefreshAccessToken to refresh an expired token."
+          "description": "Returns the customer's stored access token, or `undefined` when the token is missing or expired. The method never refreshes the token or writes to the session. Call `getOrRefreshAccessToken()` to refresh an expired token."
         },
         {
           "filePath": "src/core/cart/server-handlers.ts",
@@ -7302,7 +7318,7 @@
           "syntaxKind": "MethodSignature",
           "name": "isLoggedIn",
           "value": "(sessionManager: ReadonlyCustomerSessionManager, requestContext: ShopifyRequestContext) => Promise<boolean>",
-          "description": "Returns `true` when the customer has a usable access token or a refresh token. The method never refreshes tokens.\n\nUse the result for UI state, such as an account link. Gate Customer Account API data on an access token from getOrRefreshAccessToken."
+          "description": "Returns `true` when the customer has a usable access token or a refresh token. The method never refreshes tokens.\n\nUse the result for UI state, such as an account link. Gate Customer Account API data on an access token from `getOrRefreshAccessToken()`."
         },
         {
           "filePath": "src/core/cart/server-handlers.ts",
@@ -7358,7 +7374,7 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@22807",
+          "name": "__@cartServerHandlersCartQuery@23241",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -7408,14 +7424,14 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@21291",
+          "name": "__@cartBuyerIdentitySync@21725",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to createCustomerAccountServerHandlers through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         },
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@22807",
+          "name": "__@cartServerHandlersCartQuery@23241",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -7543,7 +7559,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "WritableCustomerSessionManager",
       "value": "ShopifyRouteSessionManager",
-      "description": "The session storage that sign-in, the OAuth callback, token refresh, and logout write to. Commit the session to the response after prepareLoginUrl, handleOAuthCallback, getOrRefreshAccessToken, or logout runs.",
+      "description": "The session storage that sign-in, the OAuth callback, token refresh, and logout write to. Commit the session to the response after you call `prepareLoginUrl()`, `handleOAuthCallback()`, `getOrRefreshAccessToken()`, or `logout()`.",
       "members": [
         {
           "filePath": "src/customer-account/session.ts",
@@ -7662,7 +7678,7 @@
     "src/core/collection/state.ts": {
       "filePath": "src/core/collection/state.ts",
       "name": "BaseAvailableFilterValue",
-      "description": "",
+      "description": "The ID, label, product count, and filter input that every filter value has.",
       "members": [
         {
           "filePath": "src/core/collection/state.ts",
@@ -7702,7 +7718,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "PickIfPresent",
       "value": "TKey extends keyof TValue\n  ? Pick<TValue, TKey>\n  : {}",
-      "description": ""
+      "description": "Copies a field from your query's value type when your query selects the field. Otherwise, the type adds no fields."
     }
   },
   "CreateInitialCollectionStateGeneratedType": {
@@ -9829,7 +9845,7 @@
       "filePath": "src/core/predictive-search/search.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "QueryPredictiveSearchOptions",
-      "value": "{\n  /** Storefront client that sends the query. Any object with a `graphql` method works. */\n  storefrontClient: Pick<StorefrontClient, \"graphql\">;\n  /** Search term. A blank term returns empty results without a Storefront API request. */\n  term: string;\n  /** Custom query, usually from makePredictiveSearchQueries. Defaults to Hydrogen's built-in query. A hand-written query receives the term, limit, limit scope, types, searchable fields, and unavailable products as variables. */\n  query?: TQuery;\n  /** Maximum number of results, from 1 to 10. Predictive search clamps other values to that range. Defaults to 5, which differs from the Storefront API default of 10. */\n  limit?: number;\n  /** Whether the limit applies to each result type or to all result types combined. Defaults to `\"EACH\"`. */\n  limitScope?: PredictiveSearchLimitScope;\n  /** Result types to include. */\n  types?: PredictiveSearchType[];\n  /** Fields to search for page, article, and collection results. Defaults to the title. Product results always search every product field. */\n  searchableFields?: SearchableField[];\n  /** Whether results hide unavailable products, show them, or list them last. Defaults to `\"HIDE\"`, which differs from the Storefront API default of `\"LAST\"`. */\n  unavailableProducts?: SearchUnavailableProductsType;\n  /** Cancels the request when the signal aborts. */\n  signal?: AbortSignal;\n}",
+      "value": "{\n  /** Storefront client that sends the query. Any object with a `graphql` method works. */\n  storefrontClient: Pick<StorefrontClient, \"graphql\">;\n  /** Search term. A blank term returns empty results without a Storefront API request. */\n  term: string;\n  /** Custom query, usually from makePredictiveSearchQueries. Defaults to Hydrogen's built-in query. A hand-written query receives the term, limit, limit scope, types, searchable fields, and unavailable products as variables. */\n  query?: TQuery;\n  /** Maximum number of results, from 1 to 10. Predictive search clamps other values to that range. Defaults to `5`, which differs from the Storefront API default of 10. */\n  limit?: number;\n  /** Whether the limit applies to each result type or to all result types combined. Defaults to `\"EACH\"`. */\n  limitScope?: PredictiveSearchLimitScope;\n  /** Result types to include. */\n  types?: PredictiveSearchType[];\n  /** Fields to search for page, article, and collection results. Defaults to the title. Product results always search every product field. */\n  searchableFields?: SearchableField[];\n  /** Whether results hide unavailable products, show them, or list them last. Defaults to `\"HIDE\"`, which differs from the Storefront API default of `\"LAST\"`. */\n  unavailableProducts?: SearchUnavailableProductsType;\n  /** Cancels the request when the signal aborts. */\n  signal?: AbortSignal;\n}",
       "description": "Storefront client, search term, custom query, and search settings for queryPredictiveSearch.",
       "members": [
         {
@@ -9837,7 +9853,7 @@
           "syntaxKind": "PropertySignature",
           "name": "limit",
           "value": "number",
-          "description": "Maximum number of results, from 1 to 10. Predictive search clamps other values to that range. Defaults to 5, which differs from the Storefront API default of 10.",
+          "description": "Maximum number of results, from 1 to 10. Predictive search clamps other values to that range. Defaults to `5`, which differs from the Storefront API default of 10.",
           "isOptional": true
         },
         {
@@ -10013,7 +10029,7 @@
           "syntaxKind": "PropertySignature",
           "name": "limit",
           "value": "number",
-          "description": "Default maximum number of results, from 1 to 10. Applies when a request has no numeric `limit` parameter. Predictive search clamps other values to that range. Defaults to 5.",
+          "description": "Default maximum number of results, from 1 to 10. Applies when a request has no numeric `limit` parameter. Predictive search clamps other values to that range. Defaults to `5`.",
           "isOptional": true
         },
         {
@@ -10057,7 +10073,7 @@
           "isOptional": true
         }
       ],
-      "value": "export interface CreatePredictiveSearchServerHandlersOptions extends CreatePredictiveSearchQueriesOptions {\n  /** Route path that the GET handler serves. Defaults to `\"/api/predictive-search\"`. */\n  path?: string;\n  /** Default maximum number of results, from 1 to 10. Applies when a request has no numeric `limit` parameter. Predictive search clamps other values to that range. Defaults to 5. */\n  limit?: number;\n  /** Default limit scope. Defaults to `\"EACH\"`. */\n  limitScope?: PredictiveSearchLimitScope;\n  /** Default result types. A request can set `types` to a comma-separated list. */\n  types?: PredictiveSearchType[];\n  /** Default fields to search. A request can set `searchableFields` to a comma-separated list. */\n  searchableFields?: SearchableField[];\n  /** Default handling of unavailable products. Defaults to `\"HIDE\"`. */\n  unavailableProducts?: SearchUnavailableProductsType;\n}"
+      "value": "export interface CreatePredictiveSearchServerHandlersOptions extends CreatePredictiveSearchQueriesOptions {\n  /** Route path that the GET handler serves. Defaults to `\"/api/predictive-search\"`. */\n  path?: string;\n  /** Default maximum number of results, from 1 to 10. Applies when a request has no numeric `limit` parameter. Predictive search clamps other values to that range. Defaults to `5`. */\n  limit?: number;\n  /** Default limit scope. Defaults to `\"EACH\"`. */\n  limitScope?: PredictiveSearchLimitScope;\n  /** Default result types. A request can set `types` to a comma-separated list. */\n  types?: PredictiveSearchType[];\n  /** Default fields to search. A request can set `searchableFields` to a comma-separated list. */\n  searchableFields?: SearchableField[];\n  /** Default handling of unavailable products. Defaults to `\"HIDE\"`. */\n  unavailableProducts?: SearchUnavailableProductsType;\n}"
     }
   },
   "PredictiveSearchServerHandlers": {
@@ -10071,7 +10087,7 @@
         {
           "filePath": "src/core/predictive-search/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@predictiveSearchServerHandlersQuery@25753",
+          "name": "__@predictiveSearchServerHandlersQuery@26167",
           "value": "PredictiveSearchQueryForOptions<TOptions>",
           "description": "Query that the handlers run, with any custom fragments."
         },
@@ -10124,7 +10140,7 @@
       "filePath": "src/core/predictive-search/store.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CreatePredictiveSearchStoreOptions",
-      "value": "{\n  /**\n   * Route that returns predictive search results as JSON, in the shape that createPredictiveSearchServerHandlers returns.\n   *\n   * Defaults to `/api/predictive-search`.\n   */\n  predictiveSearchEndpoint?: string;\n  /**\n   * Milliseconds to wait after the latest term change before searching.\n   *\n   * Defaults to 150. Pass `0` to search right away. Negative and non-finite values use the default.\n   */\n  debounceInMs?: number;\n  /**\n   * Number of characters a term needs, after trimming, before the store searches.\n   *\n   * Defaults to 1. Negative and non-finite values use the default.\n   */\n  minTermLength?: number;\n  /** Function that sends search requests. Defaults to the global `fetch`. Pass a function for tests or for runtimes without a global `fetch`. */\n  fetch?: typeof globalThis.fetch;\n  /** Maximum number of results, from 1 to 10. The server handlers clamp other values to that range. */\n  limit?: number;\n  /** Whether the limit applies to each result type or to all result types combined. */\n  limitScope?: PredictiveSearchLimitScope;\n  /** Result types to include. */\n  types?: PredictiveSearchType[];\n  /** Fields to search for page, article, and collection results. */\n  searchableFields?: SearchableField[];\n  /** Whether results hide unavailable products, show them, or list them last. */\n  unavailableProducts?: SearchUnavailableProductsType;\n}",
+      "value": "{\n  /**\n   * Route that returns predictive search results as JSON, in the shape that createPredictiveSearchServerHandlers returns.\n   *\n   * Defaults to `/api/predictive-search`.\n   */\n  predictiveSearchEndpoint?: string;\n  /**\n   * Milliseconds to wait after the latest term change before searching.\n   *\n   * Defaults to `150`. Pass `0` to search right away. Negative and non-finite values use the default.\n   */\n  debounceInMs?: number;\n  /**\n   * Number of characters a term needs, after trimming, before the store searches.\n   *\n   * Defaults to `1`. Negative and non-finite values use the default.\n   */\n  minTermLength?: number;\n  /** Function that sends search requests. Defaults to the global `fetch`. Pass a function for tests or for runtimes without a global `fetch`. */\n  fetch?: typeof globalThis.fetch;\n  /** Maximum number of results, from 1 to 10. The server handlers clamp other values to that range. */\n  limit?: number;\n  /** Whether the limit applies to each result type or to all result types combined. */\n  limitScope?: PredictiveSearchLimitScope;\n  /** Result types to include. */\n  types?: PredictiveSearchType[];\n  /** Fields to search for page, article, and collection results. */\n  searchableFields?: SearchableField[];\n  /** Whether results hide unavailable products, show them, or list them last. */\n  unavailableProducts?: SearchUnavailableProductsType;\n}",
       "description": "Endpoint, timing, and search settings for a predictive search store.\n\nThe store sends each search setting to the endpoint as a URL parameter of the same name. The server handlers apply their own defaults to omitted settings.",
       "members": [
         {
@@ -10132,7 +10148,7 @@
           "syntaxKind": "PropertySignature",
           "name": "debounceInMs",
           "value": "number",
-          "description": "Milliseconds to wait after the latest term change before searching.\n\nDefaults to 150. Pass `0` to search right away. Negative and non-finite values use the default.",
+          "description": "Milliseconds to wait after the latest term change before searching.\n\nDefaults to `150`. Pass `0` to search right away. Negative and non-finite values use the default.",
           "isOptional": true
         },
         {
@@ -10164,7 +10180,7 @@
           "syntaxKind": "PropertySignature",
           "name": "minTermLength",
           "value": "number",
-          "description": "Number of characters a term needs, after trimming, before the store searches.\n\nDefaults to 1. Negative and non-finite values use the default.",
+          "description": "Number of characters a term needs, after trimming, before the store searches.\n\nDefaults to `1`. Negative and non-finite values use the default.",
           "isOptional": true
         },
         {
@@ -10847,7 +10863,7 @@
       "filePath": "src/customer-account/client.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CreateCustomerAccountClientOptions",
-      "value": "{\n  /** Numeric Shopify shop ID as a string of digits, such as `\"12345\"`. */\n  shopId: string;\n  /**\n   * Customer Account API version in `YYYY-MM` format. Defaults to `2026-10`.\n   */\n  customerApiVersion?: string;\n  /**\n   * The context for the current request, from createShopifyRequestContext.\n   *\n   * The context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n   *\n   * The client fills `$language` from the context's language and stops requests when the context's signal aborts.\n   */\n  requestContext: ShopifyRequestContext;\n  /** Custom fetch implementation. Defaults to the global fetch. */\n  fetch?: typeof globalThis.fetch;\n  /**\n   * Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to 30,000.\n   */\n  defaultTimeoutInMs?: number;\n}",
+      "value": "{\n  /** Numeric Shopify shop ID as a string of digits, such as `\"12345\"`. */\n  shopId: string;\n  /**\n   * Customer Account API version in `YYYY-MM` format. Defaults to `2026-10`.\n   */\n  customerApiVersion?: string;\n  /**\n   * The context for the current request, from createShopifyRequestContext.\n   *\n   * The context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n   *\n   * The client fills `$language` from the context's language and stops requests when the context's signal aborts.\n   */\n  requestContext: ShopifyRequestContext;\n  /** Custom fetch implementation. Defaults to the global fetch. */\n  fetch?: typeof globalThis.fetch;\n  /**\n   * Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`.\n   */\n  defaultTimeoutInMs?: number;\n}",
       "description": "Options for creating a Customer Account API client.",
       "members": [
         {
@@ -10863,7 +10879,7 @@
           "syntaxKind": "PropertySignature",
           "name": "defaultTimeoutInMs",
           "value": "number",
-          "description": "Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to 30,000.",
+          "description": "Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`.",
           "isOptional": true
         },
         {
@@ -10960,7 +10976,7 @@
       "filePath": "src/customer-account/client.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CustomerAccountGraphqlOptions",
-      "value": "{\n  /** The customer's access token, such as one from the customer session's getOrRefreshAccessToken method. */\n  accessToken: string;\n  /**\n   * The document's variables. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.\n   */\n  variables?: Variables;\n  /**\n   * Stops this request when the signal aborts. The request also stops when the request context's signal aborts or the timeout passes.\n   */\n  signal?: AbortSignal;\n}",
+      "value": "{\n  /** The customer's access token, such as one from the customer session's `getOrRefreshAccessToken()` method. */\n  accessToken: string;\n  /**\n   * The document's variables. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.\n   */\n  variables?: Variables;\n  /**\n   * Stops this request when the signal aborts. The request also stops when the request context's signal aborts or the timeout passes.\n   */\n  signal?: AbortSignal;\n}",
       "description": "Options for a single Customer Account API request.",
       "members": [
         {
@@ -10968,7 +10984,7 @@
           "syntaxKind": "PropertySignature",
           "name": "accessToken",
           "value": "string",
-          "description": "The customer's access token, such as one from the customer session's getOrRefreshAccessToken method."
+          "description": "The customer's access token, such as one from the customer session's `getOrRefreshAccessToken()` method."
         },
         {
           "filePath": "src/customer-account/client.ts",
@@ -10995,7 +11011,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CustomerAccountGraphqlResult",
       "value": "{ data: Result; errors?: undefined; headers: Headers } | { data: Result | null; errors: GraphQLFormattedError[]; headers: Headers }",
-      "description": "Result of a Customer Account API request. Check `errors` to tell the outcomes apart.\n\nOn success, `data` holds the result and `errors` is undefined. When the response has GraphQL errors, `errors` holds them and `data` can be `null`. Every result includes the raw response headers."
+      "description": "Result of a Customer Account API request. Check `errors` to tell the outcomes apart.\n\nOn success, `data` holds the result and `errors` is `undefined`. When the response has GraphQL errors, `errors` holds them and `data` can be `null`. Every result includes the raw response headers."
     }
   },
   "CreateCartComponentsGeneratedType": {
@@ -11031,7 +11047,7 @@
       "filePath": "src/react/cart.tsx",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "TypedCartComponents",
-      "value": "{\n  /** Creates the cart store and shares the store with the cart hooks inside the provider. The provider connects the store on mount and destroys the store on unmount. */\n  CartProvider: (props: TypedCartProviderProps<TData>) => ReactNode;\n  /**\n   * Returns the slice of cart state that the selector picks. The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.\n   */\n  useCart: <S>(selector: (state: CartState<TData>) => S, isEqual?: (a: S, b: S) => boolean) => S;\n  /** Suspends while the full cart loads, then returns the slice of cart state that the selector picks. Wrap the component in a `Suspense` boundary. */\n  useSuspenseCart: <S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ) => S;\n  /**\n   * Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page.\n   */\n  useOptionalCart: <S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ) => S | undefined;\n  /** Returns the `refresh` action. Call `refresh` after a server-side cart change that skips cart forms. */\n  useCartActions: typeof useCartActions;\n  /**\n   * Returns form props and a register function for cart forms. The form props post to the cart endpoint and send each submission through the cart store. To skip the cart submission, call `event.preventDefault()` in a `beforeSubmit` callback. Register the quantity field with `interactive: true` to submit the form when the quantity changes. The interactive input takes the quantity as a default value and stays uncontrolled.\n   */\n  useCartForm: typeof useCartForm;\n}",
+      "value": "{\n  /** Creates the cart store and shares the store with the cart hooks inside the provider. The provider connects the store on mount and destroys the store on unmount. */\n  CartProvider: (props: TypedCartProviderProps<TData>) => ReactNode;\n  /**\n   * Returns the slice of cart state that the selector picks. The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.\n   */\n  useCart: CartStateHook<TData>;\n  /** Suspends while the full cart loads, then returns the slice of cart state that the selector picks. Wrap the component in a `Suspense` boundary. */\n  useSuspenseCart: CartStateHook<TData>;\n  /**\n   * Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page.\n   */\n  useOptionalCart: OptionalCartStateHook<TData>;\n  /** Returns the `refresh` action. Call `refresh` after a server-side cart change that skips cart forms. */\n  useCartActions: typeof useCartActions;\n  /** Returns form props and a register function for cart forms. */\n  useCartForm: typeof useCartForm;\n}",
       "description": "The cart provider and hooks that createCartComponents returns, typed with the custom cart fields from your cart server handlers.",
       "members": [
         {
@@ -11045,7 +11061,7 @@
           "filePath": "src/react/cart.tsx",
           "syntaxKind": "PropertySignature",
           "name": "useCart",
-          "value": "<S>(selector: (state: CartState<TData>) => S, isEqual?: (a: S, b: S) => boolean) => S",
+          "value": "CartStateHook<TData>",
           "description": "Returns the slice of cart state that the selector picks. The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update."
         },
         {
@@ -11059,21 +11075,21 @@
           "filePath": "src/react/cart.tsx",
           "syntaxKind": "PropertySignature",
           "name": "useCartForm",
-          "value": "() => { formProps: (opts?: { beforeSubmit?: (e: SubmitEvent<HTMLFormElement>) => void; afterSubmit?: (e: SubmitEvent<HTMLFormElement>) => void; }) => FormHTMLAttributes<HTMLFormElement>; register: CartFormRegister; }",
-          "description": "Returns form props and a register function for cart forms. The form props post to the cart endpoint and send each submission through the cart store. To skip the cart submission, call `event.preventDefault()` in a `beforeSubmit` callback. Register the quantity field with `interactive: true` to submit the form when the quantity changes. The interactive input takes the quantity as a default value and stays uncontrolled."
+          "value": "() => CartFormBindings",
+          "description": "Returns form props and a register function for cart forms."
         },
         {
           "filePath": "src/react/cart.tsx",
           "syntaxKind": "PropertySignature",
           "name": "useOptionalCart",
-          "value": "<S>(selector: (state: CartState<TData>) => S, isEqual?: (a: S, b: S) => boolean) => S",
+          "value": "OptionalCartStateHook<TData>",
           "description": "Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page."
         },
         {
           "filePath": "src/react/cart.tsx",
           "syntaxKind": "PropertySignature",
           "name": "useSuspenseCart",
-          "value": "<S>(selector: (state: CartState<TData>) => S, isEqual?: (a: S, b: S) => boolean) => S",
+          "value": "CartStateHook<TData>",
           "description": "Suspends while the full cart loads, then returns the slice of cart state that the selector picks. Wrap the component in a `Suspense` boundary."
         }
       ]
@@ -11106,6 +11122,35 @@
       ]
     }
   },
+  "CartStateHook": {
+    "src/react/cart.tsx": {
+      "filePath": "src/react/cart.tsx",
+      "name": "CartStateHook",
+      "description": "A hook that returns the slice of cart state that your selector picks.",
+      "params": [
+        {
+          "name": "selector",
+          "description": "Picks the value to return from the cart state.",
+          "value": "(state: CartState<TData>) => S",
+          "filePath": "src/react/cart.tsx"
+        },
+        {
+          "name": "isEqual",
+          "description": "Compares the previous and next selected values. Return `true` to skip the re-render. Without the function, the hook compares the values by reference.",
+          "value": "(a: S, b: S) => boolean",
+          "isOptional": true,
+          "filePath": "src/react/cart.tsx"
+        }
+      ],
+      "returns": {
+        "filePath": "src/react/cart.tsx",
+        "description": "The selected value.",
+        "name": "S",
+        "value": "S"
+      },
+      "value": "<S>(selector: (state: CartState<TData>) => S, isEqual?: (a: S, b: S) => boolean) => S"
+    }
+  },
   "CartActions": {
     "src/core/cart/cart.ts": {
       "filePath": "src/core/cart/cart.ts",
@@ -11122,6 +11167,85 @@
           "description": "Reloads the cart after a cart change that skipped the store, such as a server action. When the store has no cart yet, the method picks up the cart that the server created.\n\nA failed reload adds an entry to the network errors in the cart state."
         }
       ]
+    }
+  },
+  "CartFormBindings": {
+    "src/react/cart.tsx": {
+      "filePath": "src/react/cart.tsx",
+      "name": "CartFormBindings",
+      "description": "The form props function and the register function for a cart form.",
+      "members": [
+        {
+          "filePath": "src/react/cart.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "formProps",
+          "value": "(opts?: CartFormPropsOptions) => FormHTMLAttributes<HTMLFormElement>",
+          "description": "Returns the `method`, `action`, and `onSubmit` props to spread on the form. The form posts to the cart endpoint, and the cart store handles each submission."
+        },
+        {
+          "filePath": "src/react/cart.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "register",
+          "value": "CartFormRegister",
+          "description": "Returns the attributes for a cart field or action button. Register the quantity field with `interactive: true` to submit the form when the quantity changes. The interactive input takes the quantity as a default value and stays uncontrolled."
+        }
+      ],
+      "value": "interface CartFormBindings {\n  /** Returns the `method`, `action`, and `onSubmit` props to spread on the form. The form posts to the cart endpoint, and the cart store handles each submission. */\n  formProps: (opts?: CartFormPropsOptions) => FormHTMLAttributes<HTMLFormElement>;\n  /** Returns the attributes for a cart field or action button. Register the quantity field with `interactive: true` to submit the form when the quantity changes. The interactive input takes the quantity as a default value and stays uncontrolled. */\n  register: CartFormRegister;\n}"
+    }
+  },
+  "CartFormPropsOptions": {
+    "src/react/cart.tsx": {
+      "filePath": "src/react/cart.tsx",
+      "name": "CartFormPropsOptions",
+      "description": "Callbacks that run around a cart form submission.",
+      "members": [
+        {
+          "filePath": "src/react/cart.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "afterSubmit",
+          "value": "(e: SubmitEvent<HTMLFormElement>) => void",
+          "description": "Runs as soon as the cart change starts, before the server responds.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/cart.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "beforeSubmit",
+          "value": "(e: SubmitEvent<HTMLFormElement>) => void",
+          "description": "Runs before the cart store handles the submission. Call `event.preventDefault()` to skip the cart submission.",
+          "isOptional": true
+        }
+      ],
+      "value": "interface CartFormPropsOptions {\n  /** Runs before the cart store handles the submission. Call `event.preventDefault()` to skip the cart submission. */\n  beforeSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n  /** Runs as soon as the cart change starts, before the server responds. */\n  afterSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n}"
+    }
+  },
+  "OptionalCartStateHook": {
+    "src/react/cart.tsx": {
+      "filePath": "src/react/cart.tsx",
+      "name": "OptionalCartStateHook",
+      "description": "A hook that returns the slice of cart state that your selector picks, or `undefined` outside the cart provider.",
+      "params": [
+        {
+          "name": "selector",
+          "description": "Picks the value to return from the cart state.",
+          "value": "(state: CartState<TData>) => S",
+          "filePath": "src/react/cart.tsx"
+        },
+        {
+          "name": "isEqual",
+          "description": "Compares the previous and next selected values. Return `true` to skip the re-render. Without the function, the hook compares the values by reference.",
+          "value": "(a: S, b: S) => boolean",
+          "isOptional": true,
+          "filePath": "src/react/cart.tsx"
+        }
+      ],
+      "returns": {
+        "filePath": "src/react/cart.tsx",
+        "description": "The selected value, or `undefined` outside the cart provider.",
+        "name": "S | undefined",
+        "value": "S | undefined"
+      },
+      "value": "<S>(selector: (state: CartState<TData>) => S, isEqual?: (a: S, b: S) => boolean) => S | undefined"
     }
   },
   "CartDataFromHandlers": {
@@ -11318,10 +11442,10 @@
       "returns": {
         "filePath": "src/react/cart.tsx",
         "description": "The form props function and the register function.",
-        "name": "",
-        "value": ""
+        "name": "CartFormBindings",
+        "value": "CartFormBindings"
       },
-      "value": "export function useCartForm() {\n  const store = useCartStore(\"useCartForm\");\n  const coreRegister = useMemo(() => createCartFormRegister(), []);\n\n  const register = useMemo(() => {\n    type Register = typeof coreRegister;\n    const wrapped = ((...args: Parameters<Register>) => {\n      const result = (coreRegister as Function)(...args);\n      const [field, opts] = args as [string, { interactive?: boolean }?];\n\n      if (field === \"quantity\" && opts?.interactive) {\n        let cleanup: (() => void) | null = null;\n        const ref: RefCallback<HTMLInputElement> = (el) => {\n          cleanup?.();\n          cleanup = null;\n          if (el) {\n            const form = el.closest(\"form\");\n            if (form) cleanup = attachQuantityInput(el, form);\n          }\n        };\n        const { value: _, ...rest } = result;\n        return { ...rest, defaultValue: result.value, ref };\n      }\n\n      return result;\n    }) as Register;\n    return wrapped;\n  }, [coreRegister]);\n\n  const formProps = (opts?: {\n    beforeSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n    afterSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n  }): FormHTMLAttributes<HTMLFormElement> => ({\n    onSubmit: (e: SubmitEvent<HTMLFormElement>) => {\n      opts?.beforeSubmit?.(e);\n      if (e.defaultPrevented) return;\n      e.preventDefault();\n      store.handleFormSubmit(e.nativeEvent).catch(() => {});\n      opts?.afterSubmit?.(e);\n    },\n    method: \"post\",\n    action: cartEndpoint,\n  });\n\n  return { formProps, register };\n}",
+      "value": "export function useCartForm(): CartFormBindings {\n  const store = useCartStore(\"useCartForm\");\n  const coreRegister = useMemo(() => createCartFormRegister(), []);\n\n  const register = useMemo(() => {\n    type Register = typeof coreRegister;\n    const wrapped = ((...args: Parameters<Register>) => {\n      const result = (coreRegister as Function)(...args);\n      const [field, opts] = args as [string, { interactive?: boolean }?];\n\n      if (field === \"quantity\" && opts?.interactive) {\n        let cleanup: (() => void) | null = null;\n        const ref: RefCallback<HTMLInputElement> = (el) => {\n          cleanup?.();\n          cleanup = null;\n          if (el) {\n            const form = el.closest(\"form\");\n            if (form) cleanup = attachQuantityInput(el, form);\n          }\n        };\n        const { value: _, ...rest } = result;\n        return { ...rest, defaultValue: result.value, ref };\n      }\n\n      return result;\n    }) as Register;\n    return wrapped;\n  }, [coreRegister]);\n\n  const formProps = (opts?: CartFormPropsOptions): FormHTMLAttributes<HTMLFormElement> => ({\n    onSubmit: (e: SubmitEvent<HTMLFormElement>) => {\n      opts?.beforeSubmit?.(e);\n      if (e.defaultPrevented) return;\n      e.preventDefault();\n      store.handleFormSubmit(e.nativeEvent).catch(() => {});\n      opts?.afterSubmit?.(e);\n    },\n    method: \"post\",\n    action: cartEndpoint,\n  });\n\n  return { formProps, register };\n}",
       "examples": [
         {
           "title": "Example",
@@ -11599,7 +11723,7 @@
           "syntaxKind": "PropertySignature",
           "name": "debounceInMs",
           "value": "number",
-          "description": "Milliseconds to wait after the latest term change before searching.\n\nDefaults to 150. Pass `0` to search right away. Negative and non-finite values use the default.",
+          "description": "Milliseconds to wait after the latest term change before searching.\n\nDefaults to `150`. Pass `0` to search right away. Negative and non-finite values use the default.",
           "isOptional": true
         },
         {
@@ -11631,7 +11755,7 @@
           "syntaxKind": "PropertySignature",
           "name": "minTermLength",
           "value": "number",
-          "description": "Number of characters a term needs, after trimming, before the store searches.\n\nDefaults to 1. Negative and non-finite values use the default.",
+          "description": "Number of characters a term needs, after trimming, before the store searches.\n\nDefaults to `1`. Negative and non-finite values use the default.",
           "isOptional": true
         },
         {
