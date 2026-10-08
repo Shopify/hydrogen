@@ -127,6 +127,13 @@ describe("handleCheckoutRedirect", () => {
     expect(result).toBeNull();
   });
 
+  it.each(["/discount/SUMMER20", "/buy/123:1", "/account/login"])(
+    "leaves the %s handoff to its own handler",
+    (path) => {
+      expect(handleCheckoutRedirect(new Request(`https://my-app.com${path}`))).toBeNull();
+    },
+  );
+
   it("redirects checkout mode to the current cart checkout URL", async () => {
     mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
 

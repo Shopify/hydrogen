@@ -57,14 +57,14 @@ describe("BUY_PERMALINK_RE", () => {
 });
 
 describe("isHydrogenServerHandoffPath", () => {
-  it.each(["/checkout", "/cart/123:1", "/buy/123:1", "/account/login"])(
+  it.each(["/checkout", "/cart/123:1", "/buy/123:1", "/discount/SUMMER20", "/account/login"])(
     "hands %s off to the server",
     (pathname) => {
       expect(isHydrogenServerHandoffPath(pathname)).toBe(true);
     },
   );
 
-  it.each(["/cart", "/buy", "/account", "/products/snowboard"])(
+  it.each(["/cart", "/buy", "/discount", "/discount/", "/account", "/products/snowboard"])(
     "keeps %s with the app",
     (pathname) => {
       expect(isHydrogenServerHandoffPath(pathname)).toBe(false);
