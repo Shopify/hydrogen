@@ -1371,7 +1371,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@9952",
+          "name": "__@toStringTag@19600",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         }
@@ -1452,7 +1452,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@9952",
+          "name": "__@toStringTag@19600",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         }
@@ -6173,7 +6173,7 @@
     "src/core/cart/actions.ts": {
       "filePath": "src/core/cart/actions.ts",
       "name": "ParseCartRequestGeneratedType",
-      "description": "Reads the cart change from a cart request body. Use the function in a custom cart route.\n\nThe function accepts `application/json`, `application/x-www-form-urlencoded`, and `multipart/form-data` requests. A JSON request can replace every discount code, and a form submission applies or removes one code.\n\nA form submission always returns a `null` cart ID. Read the cart ID for a form submission with `getCartId`.\n\nThe function reads the request body, and you can't read the body again afterward. The function throws when the request has an unsupported content type, an unknown intent, or a missing required field, and when a JSON body mixes added, updated, and removed lines.",
+      "description": "Reads the cart change from a cart request body. Use the function in a custom cart route.\n\nThe function accepts `application/json`, `application/x-www-form-urlencoded`, and `multipart/form-data` requests. A JSON request can replace every discount code, and a form submission applies or removes one code.\n\nA form submission always returns a `null` cart ID. Read the cart ID for a form submission with `getCartId`.\n\nThe function reads the request body, and you can't read the body again afterward. The function throws when the request has an unsupported content type, an unknown intent, or a missing required field, and when a JSON body combines more than one of `lines`, `discountCodes`, `attributes`, and `note`.",
       "isPublicDocs": true,
       "params": [
         {
@@ -6217,7 +6217,7 @@
           "syntaxKind": "PropertySignature",
           "name": "action",
           "value": "CartAction",
-          "description": "A cart change that `parseCartRequest` reads from a JSON or form request.\n\nThe `intent` field names the change and the Storefront API mutation that applies the change:\n\n- `add` adds new lines with `cartLinesAdd`, or creates a cart with `cartCreate` when none exists.\n- `update` changes quantity or attributes on existing lines with `cartLinesUpdate`.\n- `remove` removes lines by ID with `cartLinesRemove`.\n- `discount-update` replaces all discount codes with `cartDiscountCodesUpdate`.\n- `discount-apply` adds one discount code. The handler reads the current codes, then writes the new list with `cartDiscountCodesUpdate`.\n- `discount-remove` removes one discount code with the same read-then-write approach.\n- `attributes-update` sets cart-level attributes with `cartAttributesUpdate`.\n- `note-update` sets the cart note with `cartNoteUpdate`."
+          "description": "A cart change that `parseCartRequest` reads from a JSON or form request.\n\nThe `intent` field names the change and the Storefront API mutation that applies the change:\n\n- `add` adds new lines with `cartLinesAdd`, or creates a cart with `cartCreate` when none exists.\n- `update` changes quantity, merchandise, or attributes on existing lines with `cartLinesUpdate`.\n- `remove` removes lines by ID with `cartLinesRemove`.\n- `discount-update` replaces all discount codes with `cartDiscountCodesUpdate`.\n- `discount-apply` adds one discount code. The handler reads the current codes, then writes the new list with `cartDiscountCodesUpdate`.\n- `discount-remove` removes one discount code with the same read-then-write approach.\n- `attributes-update` sets cart-level attributes with `cartAttributesUpdate`.\n- `note-update` sets the cart note with `cartNoteUpdate`."
         },
         {
           "filePath": "src/core/cart/actions.ts",
@@ -6957,7 +6957,7 @@
         {
           "filePath": "src/core/cart/buyer-identity-sync.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@12525",
+          "name": "__@cartBuyerIdentitySync@22178",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         }
@@ -7366,7 +7366,7 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@14053",
+          "name": "__@cartServerHandlersCartQuery@23708",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -7416,14 +7416,14 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@12525",
+          "name": "__@cartBuyerIdentitySync@22178",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         },
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@14053",
+          "name": "__@cartServerHandlersCartQuery@23708",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -10079,7 +10079,7 @@
         {
           "filePath": "src/core/predictive-search/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@predictiveSearchServerHandlersQuery@16979",
+          "name": "__@predictiveSearchServerHandlersQuery@26634",
           "value": "PredictiveSearchQueryForOptions<TOptions>",
           "description": "Query that the handlers run, with any custom fragments."
         },
