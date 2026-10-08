@@ -462,6 +462,13 @@ describe("shopify scripts", () => {
         },
       },
       {
+        tagName: "link",
+        attributes: {
+          rel: "ucp",
+          href: "/.well-known/ucp",
+        },
+      },
+      {
         tagName: "script",
         attributes: {
           id: "shopify-global-bootstrap",
@@ -559,6 +566,13 @@ describe("shopify scripts", () => {
           crossorigin: "anonymous",
         },
       },
+      {
+        tagName: "link",
+        attributes: {
+          rel: "ucp",
+          href: "/.well-known/ucp",
+        },
+      },
     ]);
     expect(descriptors.scripts).toEqual([
       {
@@ -636,6 +650,24 @@ describe("shopify scripts", () => {
       },
     ]);
     expect(descriptors.scripts[0]?.innerHTML).not.toContain('"templates"');
+  });
+
+  it("advertises the UCP profile with an inert, unversioned link for every configuration", () => {
+    const { links } = getShopifyScriptTags({
+      account: true,
+      inbox: true,
+      nonce: "test-nonce",
+      shop: TEST_SHOP,
+      shopifyAnalytics: false,
+    });
+    const ucpLinks = links.filter(({ attributes }) => attributes.rel === "ucp");
+
+    expect(ucpLinks).toHaveLength(1);
+    const [ucpLink] = ucpLinks;
+    assert(ucpLink, "expected a UCP discovery link");
+    // No `version`: agents fall back to the latest stable profile. No `as`, `crossorigin`, or
+    // `nonce`: the link is not a resource hint, so browsers never fetch it.
+    expect(ucpLink.attributes).toStrictEqual({ rel: "ucp", href: "/.well-known/ucp" });
   });
 
   it("preserves an explicitly empty nonce on nonce-capable scripts", () => {
@@ -907,7 +939,7 @@ describe("shopify scripts", () => {
     });
     const html = htmlTags.join("\n");
 
-    expect(htmlTags).toHaveLength(10);
+    expect(htmlTags).toHaveLength(11);
     expect(html).toContain('<script id="shopify-global-bootstrap" nonce="test-nonce" data-config=');
     expect(html).toContain("&quot;country&quot;:&quot;US&quot;");
     expect(html).toContain("&quot;locale&quot;:&quot;en&quot;");
@@ -929,6 +961,7 @@ describe("shopify scripts", () => {
     expect(html).toContain(
       `<link rel="prefetch" as="script" href="${SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT}" crossorigin="anonymous">`,
     );
+    expect(html).toContain('<link rel="ucp" href="/.well-known/ucp">');
   });
 });
 

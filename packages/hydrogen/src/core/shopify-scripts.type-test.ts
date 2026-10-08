@@ -1,7 +1,12 @@
 import { describe, expectTypeOf, it } from "vitest";
 
 import type { ConsentConfig, ConsentPreferences, ConsentSetup, ShopifyGlobal, StorefrontAnalyticsConfig } from "./index";
-import type { ShopifyScriptTagsOptions } from "./shopify-scripts";
+import type {
+  ShopifyScriptTagDescriptor,
+  ShopifyScriptTagDescriptors,
+  ShopifyScriptTagsOptions,
+} from "./shopify-scripts";
+import type { ShopifyLinkTagAttributes } from "./shopify-scripts/types";
 
 describe("Shopify script option types", () => {
   it("requires complete shop identity", () => {});
@@ -46,6 +51,29 @@ export function shopifyScriptOptionTypes() {
     },
   };
   void missingShopId;
+}
+
+export function shopifyLinkDescriptorTypes(descriptors: ShopifyScriptTagDescriptors) {
+  // Consumer code written against the earlier link attribute shape keeps compiling.
+  for (const { attributes } of descriptors.links) {
+    expectTypeOf(attributes.as).toEqualTypeOf<"script" | undefined>();
+    expectTypeOf(attributes.crossorigin).toEqualTypeOf<
+      "" | "anonymous" | "use-credentials" | undefined
+    >();
+    expectTypeOf(attributes.href).toEqualTypeOf<string | undefined>();
+  }
+  const partial: ShopifyScriptTagDescriptor[] = [
+    { tagName: "link", attributes: {} },
+    { tagName: "link", attributes: { rel: "preconnect" } },
+    { tagName: "link", attributes: { rel: "prefetch", href: "/a.js", as: "script" } },
+    { tagName: "link", attributes: { rel: "ucp", href: "/.well-known/ucp" } },
+  ];
+  void partial;
+
+  expectTypeOf<"ucp">().toMatchTypeOf<ShopifyLinkTagAttributes["rel"]>();
+  // @ts-expect-error only link types Hydrogen renders are accepted
+  const unknownRel: ShopifyScriptTagDescriptor = { tagName: "link", attributes: { rel: "preload" } };
+  void unknownRel;
 }
 
 // @ts-expect-error setup must return a promise representing initial consent readiness
