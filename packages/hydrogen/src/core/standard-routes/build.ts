@@ -9,21 +9,19 @@ import type {
 } from "./types";
 
 /**
- * Creates a typed map of custom route templates for Shopify standard storefront routes.
+ * Tells Hydrogen where your app serves products, collections, and other Shopify resources. Pass
+ * the returned object to `handleShopifyRoutes`, `handleShopifyRedirects`, the `ShopifyScripts` `routes`
+ * option, and the predictive search URL helpers.
  *
- * Use the returned object anywhere Hydrogen needs to understand the app's URL shape for
- * Shopify resources and utility pages: `handleShopifyRedirects({routeTemplates})`, `ShopifyScripts`
- * `routes={routeTemplates}`, and predictive search URL helpers.
+ * Add a key only for a route that your app serves at a non-standard path. Hydrogen uses Shopify's
+ * default path for each key that you leave out. Pass an empty object when your app serves every
+ * route at its default path. Each template starts with `/` and includes the handle placeholders
+ * for its route. Leave the locale path prefix out of templates. Hydrogen adds the prefix for you.
  *
- * Each key represents a Shopify standard route identity, while each value is the app's custom
- * pathname template. Templates must start with `/` and include the required named handle
- * placeholders for routes that identify a resource. Do not include an i18n path prefix in the
- * template; Hydrogen applies `i18n.pathPrefix` separately when resolving routes. Pass an empty
- * object when the app uses standard storefront routes so there is still one app-owned routing
- * manifest to update if routes change later. When matching the current page, standard storefront
- * routes retain their page-template identities even if a configured template resolves another
- * route to the same pathname.
+ * TypeScript checks the shape of each template. The function returns the object that you pass.
  *
+ * @param routes The non-standard paths that your app serves, keyed by standard route name.
+ * @returns The route templates, typed for Hydrogen's route, redirect, and URL helpers.
  * @example
  * ```ts
  * const routeTemplates = createShopifyRouteTemplates({

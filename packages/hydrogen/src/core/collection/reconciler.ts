@@ -2,44 +2,48 @@ import type { CollectionStore } from "./collection";
 import { collectionSearchEqual, mergeCollectionParams, normalizeCollectionSearch } from "./url";
 
 /**
- * Adapter-supplied hooks that let the reconciler read framework state and
- * push navigation side-effects without depending on any specific framework.
+ * Functions that connect a collection reconciler to your router and your collection store.
  */
 export type ReconcilerCallbacks = {
-  /** Returns the current collection store instance. */
+  /** Returns the collection store. */
   getStore: () => CollectionStore;
-  /** Reads the live URL search string from the framework router. */
+  /** Returns the current URL search string from your router. */
   readUrlSearch: () => string;
-  /** Delivers a serialized search string for the framework adapter to handle. */
+  /** Navigates your router to the search string. The string starts with `?`, or is empty when no params remain. */
   emitChange: (searchString: string) => void;
 };
 
 /**
- * State machine that keeps the URL, server data, and `CollectionStore` in
- * sync during browse-change chains. Created by `createCollectionReconciler`.
+ * Keeps the URL, your loader data, and a collection store in sync while the customer changes filters and sort.
  */
 export type CollectionReconciler = {
   /**
-   * URL ↔ store reconciliation state machine. Call whenever `urlSearch` or
-   * `dataSearch` changes. Store changes go through
-   * {@link CollectionReconciler.handleBrowseChange} instead.
+   * Brings the store in line with the URL. Call the method each time the URL search or the `dataSearch` string changes.
+   *
+   * The method settles the store when your loader data matches the URL. During rapid filter changes, the method skips intermediate URLs. A URL that the reconciler didn't request counts as external navigation, such as back or forward.
    */
   reconcile(urlSearch: string, dataSearch: string): void;
   /**
-   * Callback for {@link CollectionStore.setOnBrowseChange}. Merges current
-   * URL params with store state, tracks the pending navigation, and emits.
+   * Builds the next search string from the store's filters and sort, and passes the string to `emitChange`. Register the method as the store's browse change callback.
+   *
+   * The new search string keeps every URL param that the store doesn't manage and drops the `before` and `after` pagination cursors.
    */
   handleBrowseChange(): void;
-  /** Clears pending navigation state (call when the store is recreated). */
+  /**
+   * Clears pending navigation. Call the method when you replace the store.
+   * @param newPrevUrlSearch - Current URL search string, which the next `reconcile()` call compares against.
+   */
   reset(newPrevUrlSearch: string): void;
 };
 
 /**
- * Creates a framework-agnostic reconciler that manages the state machine for
- * keeping the URL, server data, and store in sync during browse-change chains.
+ * Creates a reconciler that keeps the URL, your loader data, and a collection store in sync while the customer changes filters and sort.
  *
- * Framework adapters delegate to this so the reconciliation logic
- * lives in one place.
+ * Use a reconciler to connect a collection store to a router that has no Hydrogen binding. In React, use `CollectionProvider`.
+ *
+ * @param callbacks The functions that return the store and the URL search string and navigate your router.
+ * @param initialPrevUrlSearch The current URL search string, which the first `reconcile()` call compares against. Defaults to an empty string.
+ * @returns A reconciler. Call `reconcile()` on URL changes, and register `handleBrowseChange()` as the store's browse change callback.
  *
  * @publicDocs
  */

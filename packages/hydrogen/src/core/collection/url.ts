@@ -3,13 +3,16 @@ import type { ProductCollectionSortKeys } from "../../graphql/generated/storefro
 import type { CollectionState } from "./state";
 
 /**
- * Parsed collection URL parameters — the subset of {@link CollectionState}
- * that is derived from the URL query string.
+ * The filters, sort key, and sort direction in a collection URL.
  */
 export interface CollectionParams {
-  /** Active product filters parsed from `filter.*` URL keys. */
+  /**
+   * Active product filters from the `filter.*` URL params.
+   *
+   * The filters use the Storefront Standard Events filter type. When your query variables use generated Storefront API types, cast the filters to the generated filter type where you pass them as variables.
+   */
   filters: ProductFilter[];
-  /** Storefront API sort key parsed from the `sort_by` param. `undefined` when absent. */
+  /** Storefront API sort key from the `sort_by` param, or `undefined` when the param is missing or unrecognized. */
   sortKey: ProductCollectionSortKeys | undefined;
   /** `true` when the `sort_by` value ends with `-descending`. */
   reverse: boolean;
@@ -49,12 +52,14 @@ const STANDARD_EVENTS_COLLECTION_SORT_KEY: Record<string, ProductCollectionSortK
 };
 
 /**
- * Extracts collection state from URL search params.
+ * Reads collection filters and sort from URL search params. Pass the result to your Storefront API collection query.
  *
- * Handles Liquid-compatible filter keys (`filter.p.*`, `filter.v.*`)
- * and the `sort_by` param (with optional `-descending`/`-ascending` suffix).
+ * The function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.
  *
- * @param searchParams - URL search params to parse
+ * A URL that sets availability to both in stock and out of stock produces no availability filter. The function recognizes the best-selling and manual sort values, plus created, price, and title with an ascending or descending suffix. For other sort values, the sort key is `undefined`. The `parseSortByValue` function also recognizes relevance, collection default, and ID.
+ *
+ * @param searchParams - URL search params to read.
+ * @returns The filters, sort key, and sort direction from the URL.
  * @publicDocs
  */
 export function parseCollectionParams(searchParams: URLSearchParams): CollectionParams {
@@ -67,12 +72,14 @@ export function parseCollectionParams(searchParams: URLSearchParams): Collection
 }
 
 /**
- * Serializes collection state into URL search params using Liquid-compatible keys.
+ * Converts collection filters and sort to URL search params with Liquid-compatible keys. Use the result to build collection URLs.
  *
- * Only emits store-owned keys (`filter.*`, `sort_by`).
- * Omits `sort_by` when `sortKey` is `undefined` (collection default).
+ * The result holds only the `filter.*` and `sort_by` keys. The function leaves out `sort_by` for the collection's default sort.
  *
- * @param state - The filter/sort slice of collection state
+ * Category filters convert to `filter.p.category`, which `parseCollectionParams` doesn't read. A price filter with a minimum and a maximum produces two params. To build a filter checkbox, parse a filter value's `input` string and convert the parsed filter. The resulting entries give the checkbox name and value.
+ *
+ * @param state - The filters, sort key, and sort direction to convert.
+ * @returns URL search params that hold the filters and sort.
  * @publicDocs
  */
 export function serializeCollectionParams(
@@ -97,8 +104,10 @@ function isStoreOwnedParam(key: string): boolean {
 }
 
 /**
- * Normalizes a router search string for comparison (strips a leading `?`).
+ * Removes a leading `?` from a search string. Normalize search strings before you compare them.
  *
+ * @param search The search string from your router, with or without a leading `?`.
+ * @returns The search string without a leading `?`.
  * @publicDocs
  */
 export function normalizeCollectionSearch(search: string): string {
@@ -159,12 +168,13 @@ export function collectionParamsMatchState(
 }
 
 /**
- * Builds a URL query string with the given filter removed from the current params.
+ * Builds a query string from the current URL params, minus the given filter. Use the string in plain remove-filter links.
  *
- * Clears pagination cursors so the changed filter state starts from its first page.
- * Returns `"?"` when removing the filter leaves no params. Useful for
- * rendering "remove filter" links without updating store state.
+ * The function keeps every other param and drops the `before` and `after` pagination cursors, which sends the customer to the first page of results.
  *
+ * @param currentParams The current URL search params.
+ * @param filter The filter to remove from the URL.
+ * @returns A query string that starts with `?`. The string is `?` alone when no params remain.
  * @publicDocs
  */
 export function getFilterRemovalUrl(currentParams: URLSearchParams, filter: ProductFilter): string {
@@ -181,15 +191,15 @@ export function isDirectionalSortKey(sortKey: ProductCollectionSortKeys): boolea
 }
 
 /**
- * Converts a Storefront API sort key and direction into the Liquid-compatible
- * `sort_by` param value (e.g. `"price-ascending"`, `"best-selling"`).
+ * Converts a Storefront API sort key and direction to a Liquid-compatible
+ * `sort_by` value, such as `price-ascending` or `best-selling`.
  *
- * Direction suffixes are only appended for sort keys that support them
- * (`PRICE`, `TITLE`, `CREATED`, `ID`). Others (like `BEST_SELLING`) return
- * the base value regardless of the `reverse` flag.
+ * Only the price, title, created, and ID sort keys get a direction suffix.
+ * Other sort keys, such as best selling, ignore the direction.
  *
- * @param sortKey - Storefront API `ProductCollectionSortKeys` enum value
- * @param reverse - `true` for descending, `false` for ascending
+ * @param sortKey - Storefront API product collection sort key.
+ * @param reverse - `true` for descending, `false` for ascending.
+ * @returns The value for the `sort_by` URL param.
  * @publicDocs
  */
 export function getSortByValue(sortKey: ProductCollectionSortKeys, reverse: boolean): string {
@@ -201,10 +211,13 @@ export function getSortByValue(sortKey: ProductCollectionSortKeys, reverse: bool
 }
 
 /**
- * Parses a Liquid-compatible `sort_by` value back into the Storefront API
- * sort key and direction. Inverse of {@link getSortByValue}.
+ * Converts a Liquid-compatible `sort_by` value to a Storefront API
+ * sort key and direction. The `getSortByValue` function does the opposite conversion.
  *
- * @param value - A `sort_by` param value (e.g. `"price-ascending"`, `"best-selling"`)
+ * For unrecognized values, the sort key is `undefined`.
+ *
+ * @param value - A `sort_by` value, such as `price-ascending` or `best-selling`.
+ * @returns The sort key and `reverse`, which reads `true` for descending values.
  * @publicDocs
  */
 export function parseSortByValue(value: string): {
@@ -415,8 +428,13 @@ function clearPaginationCursors(params: URLSearchParams): void {
 }
 
 /**
- * Compares two individual {@link ProductFilter} objects for semantic equality.
+ * Checks whether two product filters match.
  *
+ * Price filters match when the minimum and maximum are equal, including ranges that set only one bound.
+ *
+ * @param a The first filter to compare.
+ * @param b The second filter to compare.
+ * @returns `true` when both filters are the same kind with the same values. `false` for different kinds or unrecognized filters.
  * @publicDocs
  */
 export function filterEquals(a: ProductFilter, b: ProductFilter): boolean {
@@ -469,8 +487,13 @@ export function filterEquals(a: ProductFilter, b: ProductFilter): boolean {
 }
 
 /**
- * Returns `true` when `input` (a Storefront API filter JSON string) matches an active filter.
+ * Checks whether a filter value's `input` JSON string from the Storefront API matches an active filter. Use the result to set the checked state of a filter control.
  *
+ * The function compares filters the same way as `filterEquals`.
+ *
+ * @param activeFilters The active filters, such as `filters` from the collection state.
+ * @param input The filter value's `input` JSON string.
+ * @returns `true` when the parsed input matches an active filter. `false` when the input matches no active filter or isn't valid JSON.
  * @publicDocs
  */
 export function isFilterInputActive(activeFilters: ProductFilter[], input: string): boolean {

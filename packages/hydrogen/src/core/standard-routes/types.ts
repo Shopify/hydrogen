@@ -1,15 +1,18 @@
 import type { I18nConfig } from "../request-context";
 
+/** A path template that starts with `/` and includes the named handle placeholder. */
 type StandardRouteTemplateWithParam<Param extends string> =
   | `/${string}:${Param}`
   | `/${string}:${Param}/${string}`;
 
+/** A path template that starts with `/`. */
 type StandardRouteTemplate = `/${string}`;
 
+/** Your app's custom path templates for Shopify standard storefront routes, keyed by route name. */
 export type ShopifyRouteTemplates = {
   /**
-   * Redirects Shopify article routes, for example
-   * `/blogs/news/snowboard-guide`, to the app's custom article route.
+   * The app's article path. Hydrogen redirects Shopify article paths, such as
+   * `/blogs/news/snowboard-guide`, to this template.
    *
    * @example "/journal/:blogHandle/:articleHandle"
    */
@@ -17,66 +20,66 @@ export type ShopifyRouteTemplates = {
     StandardRouteTemplateWithParam<"articleHandle">;
 
   /**
-   * Redirects Shopify blog routes, for example `/blogs/news`, to the app's
-   * custom blog route.
+   * The app's blog path. Hydrogen redirects Shopify blog paths, such as
+   * `/blogs/news`, to this template.
    *
    * @example "/journal/:blogHandle"
    */
   blog?: StandardRouteTemplateWithParam<"blogHandle">;
 
   /**
-   * Redirects Shopify's `/cart` route to the app's custom cart route.
+   * The app's cart path. Hydrogen redirects Shopify's `/cart` path to this template.
    *
    * @example "/basket"
    */
   cart?: StandardRouteTemplate;
 
   /**
-   * Redirects Shopify collection routes, for example `/collections/winter`,
-   * to the app's custom collection route.
+   * The app's collection path. Hydrogen redirects Shopify collection paths, such as
+   * `/collections/winter`, to this template.
    *
    * @example "/c/:collectionHandle"
    */
   collection?: StandardRouteTemplateWithParam<"collectionHandle">;
 
   /**
-   * Redirects Shopify's collection-listing routes, `/collections` and the
-   * legacy `/products`, to the app's custom collection-listing route.
+   * The app's collection list path. Hydrogen redirects Shopify's `/collections`
+   * path and the legacy `/products` path to this template.
    *
    * @example "/catalog"
    */
   collectionList?: StandardRouteTemplate;
 
   /**
-   * Redirects Shopify page routes, for example `/pages/about-us`, to the app's
-   * custom page route.
+   * The app's page path. Hydrogen redirects Shopify page paths, such as
+   * `/pages/about-us`, to this template.
    *
    * @example "/content/:pageHandle"
    */
   page?: StandardRouteTemplateWithParam<"pageHandle">;
 
   /**
-   * Redirects Shopify policy routes, for example `/policies/privacy-policy`,
-   * to the app's custom policy route.
+   * The app's policy path. Hydrogen redirects Shopify policy paths, such as
+   * `/policies/privacy-policy`, to this template.
    *
    * @example "/legal/:policyHandle"
    */
   policy?: StandardRouteTemplateWithParam<"policyHandle">;
 
   /**
-   * Redirects Shopify product routes, for example `/products/snowboard`,
-   * to the app's custom product route.
+   * The app's product path. Hydrogen redirects Shopify product paths, such as
+   * `/products/snowboard`, to this template.
    *
    * @example "/p/:productHandle"
    */
   product?: StandardRouteTemplateWithParam<"productHandle">;
 
   /**
-   * Redirects Shopify collection-scoped product routes, for example
-   * `/collections/winter/products/snowboard`, to the app's custom product route.
+   * The app's path for products inside a collection. Hydrogen redirects Shopify
+   * paths such as `/collections/winter/products/snowboard` to this template.
    *
-   * Must include `:productHandle`. May include `:collectionHandle` when the
-   * app's custom product route is also collection-scoped.
+   * The template must include `:productHandle`. Add `:collectionHandle` when the
+   * app's product path also names the collection.
    *
    * @example "/p/:productHandle"
    * @example "/c/:collectionHandle/p/:productHandle"
@@ -84,7 +87,7 @@ export type ShopifyRouteTemplates = {
   productInCollection?: StandardRouteTemplateWithParam<"productHandle">;
 
   /**
-   * Redirects Shopify's `/search` route to the app's custom search route.
+   * The app's search path. Hydrogen redirects Shopify's `/search` path to this template.
    *
    * @example "/find"
    */
@@ -93,6 +96,7 @@ export type ShopifyRouteTemplates = {
 
 export type StandardRouteName = keyof ShopifyRouteTemplates;
 export type ShopifyStandardRouteName = StandardRouteName | "index";
+/** The page template name for a standard route. Collection-scoped products use `product`, and the collection list uses `list-collections`. */
 export type ShopifyPageTemplateName<
   TRoute extends ShopifyStandardRouteName = ShopifyStandardRouteName,
 > = TRoute extends "productInCollection"
@@ -107,6 +111,7 @@ export type StandardRouteParamName =
   | "pageHandle"
   | "policyHandle"
   | "productHandle";
+/** The handle values that fill a route template's placeholders, keyed by placeholder name. */
 export type StandardRouteParams = Partial<Record<StandardRouteParamName, string>>;
 export type StandardRouteParamsByName = {
   article: { articleHandle: string; blogHandle: string };
@@ -122,13 +127,19 @@ export type StandardRouteParamsByName = {
 };
 export type StandardRouteOptions = Pick<I18nConfig, "pathPrefix">;
 
+/** The standard route that a storefront URL matches, with its handles, page template name, and templates. */
 export type ShopifyStandardRouteMatch<
   TRoute extends ShopifyStandardRouteName = ShopifyStandardRouteName,
 > = {
+  /** Shopify's default path for the matched resource, with the locale path prefix applied. */
   standardPathname: string;
+  /** The decoded handle values from the matched URL. */
   params: StandardRouteParams;
+  /** The standard route name that the URL matched, or `index` for the home page. */
   route: TRoute;
+  /** The page template name for the matched route, such as `product` or `list-collections`. */
   pageTemplateName: ShopifyPageTemplateName<TRoute>;
+  /** Shopify's default template for the matched route and your app's custom template, which falls back to the default. */
   templates: {
     standard: string;
     custom: string;

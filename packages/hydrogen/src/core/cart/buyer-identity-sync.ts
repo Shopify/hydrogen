@@ -4,27 +4,30 @@ import type { StorefrontClient } from "../../client";
 // runtime, so it must not pull the cart handler graph into their bundle.
 export const cartBuyerIdentitySync: unique symbol = Symbol("hydrogen.cartBuyerIdentitySync");
 
+/** The request with the `cart` cookie and the Storefront API client that updates the cart. */
 export type CartBuyerIdentitySyncContext = {
+  /** The incoming request. The `cart` cookie on the request identifies the cart. */
   request: Request;
+  /** The Storefront API client that updates the cart's buyer identity. */
   storefrontClient: StorefrontClient;
 };
 
 /**
- * Capability attached by `createCartServerHandlers({customerSession})` and
- * consumed by `createCustomerAccountServerHandlers({cartServerHandlers})` to
- * keep the browser cart's buyer identity in step with the customer session.
+ * Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.
+ *
+ * Create the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you.
  */
 export type CartBuyerIdentitySync = {
-  /** Attaches (token) or detaches (null) the customer on the request's cart cookie. */
+  /** Attaches the customer to the cart in the request's `cart` cookie, or detaches the customer when the token is `null`. */
   updateBuyerIdentity(
     context: CartBuyerIdentitySyncContext,
     customerAccessToken: string | null,
   ): Promise<void>;
-  /** Set-Cookie value that expires the cart cookie, for fail-safe logout cleanup. */
+  /** A `Set-Cookie` value that clears the `cart` cookie. The customer account handlers send the value when they can't detach the customer from the cart. */
   readonly expiredCartCookie: string;
 };
 
-/** Cart server handlers capable of buyer identity sync. */
+/** Cart server handlers that you created with `customerSession`. */
 export type CartBuyerIdentitySyncSource = {
   readonly [cartBuyerIdentitySync]: CartBuyerIdentitySync;
 };

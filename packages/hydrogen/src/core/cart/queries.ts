@@ -479,15 +479,23 @@ const CART_BUYER_IDENTITY_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
 `;
 
 const DEFAULT_CART_QUERIES = {
+  /** Query that fetches a cart by ID. */
   cart: CART_QUERY,
+  /** Mutation that creates a cart from a cart input. */
   cartCreate: CART_CREATE_MUTATION,
+  /** Mutation that adds merchandise lines to a cart. */
   cartLinesAdd: CART_LINES_ADD_MUTATION,
+  /** Mutation that updates existing lines in a cart. */
   cartLinesUpdate: CART_LINES_UPDATE_MUTATION,
+  /** Mutation that removes lines from a cart by line ID. */
   cartLinesRemove: CART_LINES_REMOVE_MUTATION,
+  /** Mutation that replaces a cart's discount codes. */
   cartDiscountCodesUpdate: CART_DISCOUNT_CODES_UPDATE_MUTATION,
+  /** Mutation that sets a cart's note. */
   cartNoteUpdate: CART_NOTE_UPDATE_MUTATION,
+  /** Mutation that sets a cart's custom attributes. */
   cartAttributesUpdate: CART_ATTRIBUTES_UPDATE_MUTATION,
-} as const;
+} as const satisfies CartQueriesForDocs;
 
 type DefaultCartQueries = typeof DEFAULT_CART_QUERIES;
 
@@ -550,16 +558,16 @@ type CartLineFromNodes<TNodes> = TNodes extends CartLineConnection["nodes"]
     ? TLine
     : never;
 
-/** Infers the {@link CartData} shape from `CreateCartServerHandlersOptions`. */
+/** Infers the cart data shape from cart server handler options. */
 export type CartDataForOptions<TOptions> = CartDataFromCartQuery<
   CartQueriesForOptions<TOptions>["cart"]
 >;
 
 /**
- * Options for {@link makeCartQueries} when providing a custom cart fragment.
+ * Options for building cart queries with a custom cart fragment.
  *
- * The fragment extends the default `HydrogenCartFragment` — your additional
- * fields are merged into every cart query and mutation response.
+ * The fragment extends the default Hydrogen cart fragment. Every cart query and
+ * mutation response includes your additional fields.
  */
 export type CreateCartQueriesOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
@@ -567,12 +575,12 @@ export type CreateCartQueriesOptions<
   /**
    * Cart fragment spread into every cart query and mutation response.
    *
-   * The fragment must be named `CartFragment` and target `Cart`.
+   * Name the fragment `CartFragment` and target the `Cart` type.
    */
   readonly fragment: TCartFragment;
 };
 
-/** Resolves the cart query set from handler options — custom queries when a fragment is provided, defaults otherwise. */
+/** Resolves the cart queries for handler options. A fragment produces custom queries, and no fragment produces the default queries. */
 export type CartQueriesForOptions<TOptions> = TOptions extends {
   readonly fragment: infer TCartFragment extends AnyStorefrontQueryString;
 }
@@ -627,10 +635,9 @@ function createCartQueries<const TCartFragment extends CartFragmentDocument>(
 /**
  * Builds a complete set of cart GraphQL query and mutation documents.
  *
- * Without options, returns the default Hydrogen cart queries. With a
- * {@link CreateCartQueriesOptions.fragment | custom fragment}, returns
- * queries that spread both `HydrogenCartFragment` and your fragment into
- * every response, so the result types include your additional fields.
+ * Without options, returns the default Hydrogen cart queries. With a custom
+ * fragment, returns queries that spread the default Hydrogen cart fragment and
+ * your fragment into every response. The result types include your additional fields.
  *
  * @example
  * ```ts
@@ -657,8 +664,34 @@ export function makeCartQueries(options?: CreateCartQueriesOptions) {
 }
 
 /**
- * Default cart GraphQL queries and mutations.
+ * The default cart query and mutations that createCartServerHandlers runs.
+ *
+ * Each document returns the cart in the request's country and language through the `@inContext` directive. The Storefront API client fills both values from the request context's locale. The default cart fragment leaves out the variant's available quantity, which needs the `unauthenticated_read_product_inventory` Storefront API scope. Select the field in a custom cart fragment to cap quantities at available stock.
  *
  * @publicDocs
  */
 export const cartQueries = makeCartQueries();
+
+/**
+ * The default cart query and mutation documents. Each mutation returns the cart, user errors, and warnings.
+ *
+ * @publicDocs
+ */
+export interface CartQueriesForDocs {
+  /** Query that fetches a cart by ID. */
+  readonly cart: StorefrontQueryString;
+  /** Mutation that creates a cart from a cart input. */
+  readonly cartCreate: StorefrontQueryString;
+  /** Mutation that adds merchandise lines to a cart. */
+  readonly cartLinesAdd: StorefrontQueryString;
+  /** Mutation that updates existing lines in a cart. */
+  readonly cartLinesUpdate: StorefrontQueryString;
+  /** Mutation that removes lines from a cart by line ID. */
+  readonly cartLinesRemove: StorefrontQueryString;
+  /** Mutation that replaces a cart's discount codes. */
+  readonly cartDiscountCodesUpdate: StorefrontQueryString;
+  /** Mutation that sets a cart's note. */
+  readonly cartNoteUpdate: StorefrontQueryString;
+  /** Mutation that sets a cart's custom attributes. */
+  readonly cartAttributesUpdate: StorefrontQueryString;
+}

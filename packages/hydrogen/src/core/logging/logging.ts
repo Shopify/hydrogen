@@ -34,9 +34,9 @@ function writeToConsole(level: LogSeverity, message: string, context?: LogContex
 }
 
 /**
- * Built-in sink: writes `[hydrogen:<level>:<scope>] <message>` to a
- * level-specific `console` method, followed by `context.error` and any extra
- * context fields. `trace` uses `console.debug`; `fatal` uses `console.error`.
+ * The built-in logger. Writes each entry to the matching console method, with a
+ * `[hydrogen:<level>:<scope>]` prefix when the entry has a scope, followed by the error and any
+ * extra context fields. Trace entries use `console.debug`, and fatal entries use `console.error`.
  */
 export const consoleLogger: HydrogenLogger = {
   trace: (message, context) => writeToConsole("trace", message, context),
@@ -47,10 +47,11 @@ export const consoleLogger: HydrogenLogger = {
   fatal: (message, context) => writeToConsole("fatal", message, context),
 };
 
+/** The logger and minimum severity for Hydrogen log entries. */
 export type ConfigureLoggingOptions = {
   /** Receives all entries at or above `level`. Defaults to the built-in console logger. */
   logger?: HydrogenLogger;
-  /** Minimum severity forwarded to the logger. Defaults to `"info"`. */
+  /** The minimum severity that Hydrogen forwards to the logger. Defaults to `info`. */
   level?: LogLevel;
 };
 
@@ -65,15 +66,18 @@ const state: LoggingState = {
 };
 
 /**
- * Configures logging for every Hydrogen helper in this JavaScript context.
- * Call it once at startup (app entry on the browser, module init on the
- * server) before Hydrogen helpers run.
+ * Sends Hydrogen's log entries to your logger at the minimum level you choose. Use the function to
+ * forward Hydrogen errors to a monitoring service or to reduce console output.
  *
- * Reconfiguring with different options applies the new options (last call
- * wins). Inline bootstrap scripts that Hydrogen serializes into HTML
- * (analytics, consent) run outside the app bundle and always write to the
- * console with the standard prefix; they cannot receive a custom logger.
+ * Call the function once at startup. In the browser, call the function at app entry. On the
+ * server, call the function during module initialization. The configuration applies to every
+ * Hydrogen helper in the current JavaScript context, including helpers that loaded before the call.
+ * Each call replaces the previous configuration, and options that the call omits reset to their
+ * defaults. Hydrogen's inline analytics and consent scripts run outside your app bundle, and they
+ * always write to the console.
  *
+ * @param options The logger that receives entries, and the minimum severity to send to the logger.
+ * @returns Nothing.
  * @publicDocs
  */
 export function configureLogging(options: ConfigureLoggingOptions): void {

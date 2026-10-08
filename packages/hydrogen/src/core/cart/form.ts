@@ -1,49 +1,57 @@
 /**
- * HTML attributes for a hidden submit button that triggers the `"set"` intent.
+ * HTML attributes for the hidden submit button that sets a line to the quantity in the form's quantity input.
  *
- * Used by {@link CartFormRegister} when `register("set")` is called. The button
- * must be the first submit button in the form for `attachQuantityInput`
- * to auto-submit on quantity changes.
+ * `register("set")` returns the attributes. Make the set button the form's first submit button. A quantity input submits on change only when the set button comes first.
  *
  * @publicDocs
  */
 export interface SetButtonAttributes {
+  /** The form field that names the cart change. */
   name: "intent";
+  /** Sets the line to the quantity in the form's quantity input. */
   value: "set";
+  /** Makes the button the one that submits the form when the quantity changes. */
   type: "submit";
+  /** Hides the button from view. */
   hidden: true;
 }
 
 /**
- * HTML attributes for a quantity `<input>` in interactive mode.
+ * HTML attributes for a quantity input that submits the form when the customer changes the quantity.
  *
- * Returned by `register("quantity", { value, interactive: true })`. Uses
- * `type: "text"` with `inputMode: "numeric"` for mobile number keyboards
- * without the native spinner arrows.
+ * `register("quantity", { value, interactive: true })` returns the attributes. The input shows a number keyboard on mobile devices and has no spinner arrows.
  *
  * @publicDocs
  */
 export interface QuantityInputAttributes {
+  /** The form field that holds the quantity. */
   name: "quantity";
+  /** The current quantity as a string. */
   value: string;
+  /** Renders a text input, which has no number spinner arrows. */
   type: "text";
+  /** Shows a numeric keyboard on mobile devices. */
   inputMode: "numeric";
+  /** Accepts digits only. */
   pattern: string;
+  /** Turns off browser autocomplete for the input. */
   autoComplete: "off";
+  /** Turns off autocorrect for the input. */
   autoCorrect: "off";
 }
 
 type AttributeValueName = `attributes.${string}`;
 
 /**
- * Overloaded function that produces the correct HTML attributes for any cart
- * form field or action button.
+ * A function that returns the HTML attributes for a cart form field or action button.
  *
- * Call with a **field name** (`"lineId"`, `"quantity"`, `"merchandiseId"`,
- * `"discountCode"`, `"note"`, `"attributeValue"`, `"sellingPlanId"`) to get
- * input attributes, or with an **action name** (`"add"`, `"increase"`,
- * `"decrease"`, `"remove"`, `"set"`, `"discount-apply"`, `"discount-remove"`,
- * `"note-update"`, `"attributes-update"`) to get submit button attributes.
+ * Pass a field name to get input attributes: `lineId`, `quantity`,
+ * `merchandiseId`, `discountCode`, `note`, `attributeValue`, or `sellingPlanId`.
+ * Pass an action name to get submit button attributes: `add`,
+ * `increase`, `decrease`, `remove`, `set`, `discount-apply`, `discount-remove`,
+ * `note-update`, or `attributes-update`.
+ *
+ * For an attribute value, pass a `key` option. The function names the field `attributes.<key>` and throws a type error when the key is missing or empty. The line ID input is read-only. Add `type="hidden"` to hide the line ID input.
  *
  * @example
  * ```tsx
@@ -62,7 +70,7 @@ type AttributeValueName = `attributes.${string}`;
  * <button {...register("increase")}>+</button>
  * ```
  *
- * @throws `TypeError` when called with `"attributeValue"` and no non-empty `key`.
+ * @throws A type error when an attribute value has a missing or empty key.
  */
 export type CartFormRegister = {
   (field: "lineId", opts: { value: string }): { name: "lineId"; value: string; readOnly: true };
@@ -163,11 +171,11 @@ function createFieldAttributes(name: string, opts?: RegisterOptions) {
 }
 
 /**
- * Creates a {@link CartFormRegister} function for generating cart form field attributes.
+ * Creates a register function that returns the HTML attributes for cart form fields and action buttons.
  *
- * The returned `register` function is stateless — it can be called multiple times
- * and shared across components. Framework hooks (`useCartForm`) wrap this with
- * additional conveniences like `formProps()` and interactive `ref` wiring.
+ * Use the function to build cart forms without a framework binding. In React, `useCartForm` returns a register function and form props for you. To submit an interactive quantity input on change, call `attachQuantityInput`.
+ *
+ * The register function holds no state. Share one register function across components.
  *
  * @example
  * ```ts
@@ -179,6 +187,7 @@ function createFieldAttributes(name: string, opts?: RegisterOptions) {
  * const addAttrs = register("add");
  * // → { name: "intent", value: "add" }
  * ```
+ * @returns A register function for cart form fields and action buttons.
  * @publicDocs
  */
 export function createCartFormRegister(): CartFormRegister {

@@ -82,26 +82,28 @@ export function withStorefrontClientCache<TOptions extends object>(
 }
 
 /**
- * Creates a type-safe Storefront API client.
+ * Creates a Storefront API client that runs typed queries and mutations against your store.
  *
- * Pick a `type` based on where your code runs and whether buyer context is available:
+ * Set `type` based on where your code runs and whether customer context is available:
  *
- * |                 | public                         | private                       | private_no_buyer_context |
- * |-----------------|--------------------------------|-------------------------------|--------------------------|
- * | Runs in         | Browser or mobile              | Server (SSR)                  | Server (background)      |
- * | Token           | Public access token, or none   | Private access token          | Private access token     |
- * | Buyer context   | Browser request context        | You forward trusted `buyerIp` | None                     |
- * | Best for        | Client-side fetches            | SSR with buyer context        | Webhooks, background jobs |
+ * |                  | `public`                   | `private`                   | `private_no_buyer_context` |
+ * |------------------|------------------------------|-------------------------------|------------------------------|
+ * | Runs in          | Browser or mobile            | Server-side rendering         | Background server code    |
+ * | Token            | Public access token, or none | Private access token          | Private access token      |
+ * | Customer context | Browser request context      | You forward trusted `buyerIp` | None                      |
+ * | Best for         | Client-side fetches          | SSR with customer context     | Webhooks, background jobs |
  *
- * Pass `requestContext` so the client's SFAPI requests carry request-scoped
- * headers, follow the incoming request's abort signal, and read the resolved
- * `i18n` used for Storefront API variable injection and localized routes.
+ * Pass a request context from `createShopifyRequestContext`. The client forwards the incoming
+ * request's cookies and `Sec-GPC` header to the Storefront API, and fills `$country`
+ * and `$language` variables from the context's locale. The client reads the request headers once,
+ * when you create the client. Create a client for each incoming request, and create a client at
+ * module scope only with a static request context.
  *
- * Token-based access is required for some Storefront API fields, including
- * product tags, metaobjects, metafields, menus, and customers. Use a private
- * client only in trusted server code where the token cannot leak to browsers.
+ * Keep private clients in server code, where the token can't reach browsers. The function throws an
+ * error when you create either private client type in a browser. The function throws a `TypeError`
+ * when the request context of a `private` client has no `buyerIp`.
  *
- * @see {@link https://shopify.dev/docs/api/storefront#authentication | Storefront API authentication}
+ * @see [Storefront API authentication](https://shopify.dev/docs/api/storefront#authentication)
  * @publicDocs
  */
 export function createStorefrontClient<
@@ -121,6 +123,10 @@ export function createStorefrontClient<
   Type,
   RequestContext
 >;
+/**
+ * @param args The client type, request context, and store configuration for the new client.
+ * @returns The client, with a `graphql()` method that runs queries and mutations.
+ */
 export function createStorefrontClient(args: CreateStorefrontClientArgs): StorefrontClient {
   const { config, requestContext, type: clientType } = args;
 

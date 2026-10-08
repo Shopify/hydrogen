@@ -23,12 +23,15 @@ export function getCartIdFromCookie(input: CartCookieSource): string | null {
 }
 
 /**
- * Serializes a cart GID into a `Set-Cookie` header value.
+ * Creates the `Set-Cookie` header value that stores the cart ID in the `cart` cookie.
  *
- * Strips the `gid://shopify/Cart/` prefix before encoding — the cookie stores
- * only the opaque suffix to keep the header compact. The cookie is set with
- * `Path=/; SameSite=Lax` and a 14-day `Max-Age`.
+ * The cookie holds the cart token without the `gid://shopify/Cart/` prefix and expires
+ * after 14 days. The cookie sets `Path=/` and `SameSite=Lax`, and leaves out `HttpOnly`
+ * and `Secure`. Append the value to the response headers to keep the response's
+ * other cookies.
  *
+ * @param cartId The cart GID or cart token to store.
+ * @returns The header value that sets the `cart` cookie.
  * @example
  * ```ts
  * const cookie = createCartCookie("gid://shopify/Cart/abc123");

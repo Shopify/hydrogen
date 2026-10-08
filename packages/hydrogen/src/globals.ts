@@ -4,13 +4,14 @@ import type { I18nConfig } from "./core/request-context";
 import type { ShopifyStandardRouteMatch } from "./core/standard-routes/index";
 
 /**
- * Shape of the `window.Shopify` global that Shopify's scripts and Hydrogen share in the browser.
+ * The `window.Shopify` object that Shopify's scripts and Hydrogen share in the browser.
  *
  * @publicDocs
  */
 export type ShopifyGlobal = {
   actions: ShopifyStandardActions;
   analytics?: StorefrontAnalytics;
+  /** The store settings that Shopify's storefront web components read. */
   components: {
     config: {
       storeDomain: string;
@@ -20,10 +21,13 @@ export type ShopifyGlobal = {
       language?: string;
     };
   };
+  /** The customer's country code. Defaults to `US`. */
   country: I18nConfig["country"] | string;
+  /** The active currency code, in uppercase. */
   currency?: {
     active: string;
   };
+  /** Shopify's Customer Privacy API, which reads and updates the customer's consent. */
   customerPrivacy: {
     config?: {
       isHeadless?: boolean;
@@ -42,10 +46,16 @@ export type ShopifyGlobal = {
     shouldShowBanner: () => boolean;
     shouldShowGDPRBanner: () => boolean;
   };
+  /** The customer's language code, in lowercase. Defaults to `en`. */
   locale: Lowercase<I18nConfig["language"]> | string;
-  /** @deprecated Use `Shopify.routes.navigate` instead. */
+  /**
+   * Navigates to a storefront URL.
+   * @deprecated Use `Shopify.routes.navigate` instead.
+   */
   navigate?: (url: string) => void | Promise<void>;
+  /** The storefront's route settings and navigation helper. */
   routes: {
+    /** The locale path prefix with a trailing slash, or `"/"` when the storefront has no prefix. */
     root: string;
     /** @private */
     apiProxyPrefix?: string;
@@ -53,6 +63,7 @@ export type ShopifyGlobal = {
     match?: (url: string) => ShopifyStandardRouteMatch | null;
     /** @private */
     resolve?: (url: string) => string;
+    /** Navigates to a storefront URL after resolving it to your app's route. */
     navigate?: (url: string) => void | Promise<void>;
     [key: string]: unknown;
   };

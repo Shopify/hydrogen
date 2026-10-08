@@ -8,53 +8,89 @@ import {
 } from "./store";
 import { NO_STORE, type CachingStrategy, getCacheRetentionTtl } from "./strategies";
 
+/** A value, or a promise that resolves to the value. */
 type MaybePromise<T> = T | Promise<T>;
 
-export type WaitUntil = (promise: Promise<unknown>) => void;
+/**
+ * Keeps the runtime alive until a background cache write or refresh finishes, such as a worker's `waitUntil` function. Hydrogen ignores errors that the function throws.
+ */
+export type WaitUntil =
+  /**
+   * @param promise - The background cache write or refresh to wait for.
+   * @returns Nothing. Hydrogen ignores the return value.
+   */
+  (promise: Promise<unknown>) => void;
 
+/** The cache that holds entries, either a Web Cache API cache or a key-value store. */
 export type CacheInstance = WebCacheLike | KeyValueCacheLike;
 
+/** The cache and the background-work function for `createRunWithCache`. */
 export type CreateRunWithCacheOptions = {
+  /** The cache that holds entries. `createRunWithCache` throws a `TypeError` when the cache is neither a Web Cache API cache nor a key-value store. */
   cache: CacheInstance;
+  /**
+   * Keeps the runtime alive for background cache writes and refreshes. Without `waitUntil`, each call waits for its cache write before it resolves.
+   */
   waitUntil?: WaitUntil;
 };
 
+/** Options for one cached run. */
 export type RunWithCacheOptions = {
+  /**
+   * Identifies the cache entry. `runWithCache` throws a `TypeError` for an array key with empty slots or with entries other than strings, numbers, booleans, and `null`.
+   */
   key: CacheKey;
+  /** Sets how long the result stays fresh, how long the cache serves it stale while refreshing it, and how long the cache serves it stale after an error. */
   strategy: CachingStrategy;
 };
 
+/** The callback's return value, with the data and whether to cache the data. */
 export type CacheDecision<T extends SerializableCacheValue> = {
   /**
-   * Must be a JSON-serializable object. The cache store may persist this value
-   * through `JSON.stringify`; nested serializability is the caller's contract.
+   * The data to return and cache. Web Cache stores save the data as JSON.
    */
   data: T;
+  /** Set to `false` to return the data without storing it. */
   shouldCache: boolean;
 };
 
+/** The data, and whether the data came from the cache or the callback. */
 export type RunWithCacheResult<T extends SerializableCacheValue> = {
+  /** The cached data on a hit, or the callback's data otherwise. */
   data: T;
+  /** `hit` when the data comes from the cache, `miss` when the callback runs, and `bypass` for a `no-store` strategy. */
   cacheStatus: "hit" | "miss" | "bypass";
 };
 
+/** The context that `runWithCache` passes to its callback. */
 export type RunWithCacheContext = {
-  /**
-   * True when the callback refreshes a stale entry after the stale value was
-   * already returned (stale-while-revalidate).
-   */
+  /** `true` when the callback refreshes a stale entry after the cache already returned the stale value. */
   background: boolean;
 };
 
 // The context is optional so custom runners that call `run()` keep working.
-type RunCallback<T extends SerializableCacheValue> = (
-  context?: RunWithCacheContext,
-) => MaybePromise<CacheDecision<T>>;
+/** Produces the data for a cached run and decides whether to cache the data. */
+type RunCallback<T extends SerializableCacheValue> =
+  /**
+   * @param context - Tells the callback whether it refreshes a stale entry in the background.
+   * @returns The data and whether to cache the data, or a promise that resolves to both.
+   */
+  (context?: RunWithCacheContext) => MaybePromise<CacheDecision<T>>;
 
-export type RunWithCache = <T extends SerializableCacheValue>(
-  options: RunWithCacheOptions,
-  run: RunCallback<T>,
-) => Promise<RunWithCacheResult<T>>;
+/**
+ * Returns cached data for the key, or runs the callback and caches the result. Resolves with the
+ * data and the cache status.
+ */
+export type RunWithCache =
+  /**
+   * @param options - The cache key and caching strategy for this call.
+   * @param run - Produces the data and decides whether to cache it. Runs whenever the cache has no fresh entry. The context's `background` field is `true` during a stale-while-revalidate refresh.
+   * @returns The data and the cache status.
+   */
+  <T extends SerializableCacheValue>(
+    options: RunWithCacheOptions,
+    run: RunCallback<T>,
+  ) => Promise<RunWithCacheResult<T>>;
 
 type CacheState = "fresh" | "stale" | "stale-if-error" | "expired";
 
@@ -80,9 +116,11 @@ type RunAndMaybeStoreOptions = {
 export class StaleFallbackDisabledError extends Error {}
 
 /**
- * Creates a `runWithCache` function bound to a cache. It runs an async operation under a caching
- * strategy and reports the resulting cache status.
+ * Creates a function that caches the result of any async work, such as data that several API calls
+ * produce together. For a single fetch response, use `createFetchWithCache`.
  *
+ * @param options - The cache, and the function that keeps the runtime alive for background cache writes.
+ * @returns A function that returns cached data or runs your callback, and reports the cache status.
  * @publicDocs
  */
 export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptions): RunWithCache {
@@ -264,3 +302,21 @@ function getCacheState<T extends SerializableCacheValue>(
 
   return "expired";
 }
+
+/**
+ * Returns cached data for the key, or runs the callback and caches the result.
+ *
+ * The callback returns an object with `data` and a boolean `shouldCache`. The function throws a `TypeError` for any other shape. During the `staleWhileRevalidate` window, the function returns the stale data right away and runs the callback in the background. During the `staleIfError` window, the function returns the stale data when the callback throws. A `no-store` strategy runs the callback and skips the cache.
+ *
+ * @publicDocs
+ */
+export type RunWithCacheForDocs =
+  /**
+   * @param options - The cache key and caching strategy for this call.
+   * @param run - Produces the data and decides whether to cache it. Runs whenever the cache has no fresh entry.
+   * @returns The data, and whether the data came from the cache, the callback, or a bypass.
+   */
+  (
+    options: RunWithCacheOptions,
+    run: () => MaybePromise<CacheDecision<SerializableCacheValue>>,
+  ) => Promise<RunWithCacheResult<SerializableCacheValue>>;
