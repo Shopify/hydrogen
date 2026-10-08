@@ -32,8 +32,19 @@ const e2eOxygenOptions = {
     : { env: process.env as Record<string, string> }),
 };
 
+const oxygenPlugins = oxygen(e2eOxygenOptions);
+const oxygenPlugin = oxygenPlugins.find((plugin) => plugin.name === "oxygen:main");
+
+if (!oxygenPlugin?.api) {
+  throw new Error("MiniOxygen plugin API is unavailable.");
+}
+
+// MiniOxygen infers 2026-10-01 from the preview package before that date.
+// Remove this override after MiniOxygen handles future inferred dates.
+oxygenPlugin.api.registerPluginOptions({ compatibilityDate: "2026-04-01" });
+
 export default defineConfig({
-  plugins: [tailwindcss(), hydrogen(), oxygen(e2eOxygenOptions), reactRouter()],
+  plugins: [tailwindcss(), hydrogen(), ...oxygenPlugins, reactRouter()],
   resolve: {
     tsconfigPaths: true,
   },
