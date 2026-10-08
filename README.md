@@ -208,7 +208,7 @@ The [`examples/`](./examples) directory ports the same storefront across framewo
 | --- | --- |
 | `astro/` | Astro 6 SSR |
 | `hydrogen/` | Hydrogen + Oxygen-style request context |
-| `nextjs/` | Next.js 16 App Router (standalone design; not built from `core/`) |
+| `nextjs/` | Next.js 16 App Router |
 | `nuxt/` | Nuxt 3 on Hydrogen's Vue bindings |
 | `solid-start/` | SolidStart v1 |
 | `sveltekit/` | SvelteKit 2 + Svelte 5 |
