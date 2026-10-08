@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "import", "unicorn", "react"],
+  "jsPlugins": ["./scripts/oxlint-storefront-signifiers.mjs"],
   "categories": {
     "correctness": "error",
     "suspicious": "warn",
@@ -241,6 +242,69 @@
         "@typescript-eslint/no-non-null-assertion": "off",
         "unicorn/consistent-function-scoping": "off",
         "unicorn/no-array-sort": "off"
+      }
+    },
+    {
+      // Storefront e2e signifier guardrail. The selectors find non-signifier
+      // locators. scripts/oxlint-storefront-signifiers.mjs suppresses the
+      // legacy uses in packages/storefront-e2e/src/selector-ratchet-allowlist.json
+      // and reports stale entries. Each message starts with the allowlist rule.
+      "files": [
+        "packages/storefront-e2e/src/**/*.ts",
+        "packages/storefront-e2e/src/**/*.tsx",
+        "packages/storefront-e2e/src/**/*.mts",
+        "packages/storefront-e2e/specs/**/*.ts",
+        "packages/storefront-e2e/specs/**/*.tsx",
+        "packages/storefront-e2e/specs/**/*.mts"
+      ],
+      "rules": {
+        "eslint-js/no-restricted-syntax": [
+          "error",
+          {
+            "selector": "CallExpression[callee.type='MemberExpression']:matches([callee.computed=false][callee.property.name=/^getBy(?:Role|Text|Label|Placeholder|AltText|Title|TestId)$/], [callee.computed=true][callee.property.value=/^getBy(?:Role|Text|Label|Placeholder|AltText|Title|TestId)$/], [callee.computed=true][callee.property.expressions.length=0][callee.property.quasis.0.value.cooked=/^getBy(?:Role|Text|Label|Placeholder|AltText|Title|TestId)$/])",
+            "message": "[get-by-locator] Do not use getBy* locators. Use requireH3() from src/signifiers.ts."
+          },
+          {
+            "selector": "CallExpression[callee.type='MemberExpression']:matches([callee.computed=false][callee.property.name='locator'], [callee.computed=true][callee.property.value='locator'], [callee.computed=true][callee.property.expressions.length=0][callee.property.quasis.0.value.cooked='locator'])",
+            "message": "[raw-locator] Do not use locator(). Use requireH3() from src/signifiers.ts."
+          },
+          {
+            "selector": "Literal[value=/xpath\\s*=/]",
+            "message": "[xpath] Do not use XPath selectors. Use requireH3() from src/signifiers.ts."
+          },
+          {
+            "selector": "TemplateElement[value.raw=/xpath\\s*=/]",
+            "message": "[xpath] Do not use XPath selectors in templates. Use requireH3() from src/signifiers.ts."
+          },
+          {
+            "selector": "CallExpression[callee.type='MemberExpression']:matches([callee.computed=false][callee.property.name=/^\\$\\$?eval$/], [callee.computed=true][callee.property.value=/^\\$\\$?eval$/], [callee.computed=true][callee.property.expressions.length=0][callee.property.quasis.0.value.cooked=/^\\$\\$?eval$/])",
+            "message": "[dom-evaluate] Do not use $eval() or $$eval(). Use requireH3() from src/signifiers.ts."
+          },
+          {
+            "selector": "CallExpression[callee.type='MemberExpression']:matches([callee.computed=false][callee.property.name=/^(?:querySelector|querySelectorAll|getElementById|getElementsBy[A-Za-z]+|closest)$/], [callee.computed=true][callee.property.value=/^(?:querySelector|querySelectorAll|getElementById|getElementsBy[A-Za-z]+|closest)$/], [callee.computed=true][callee.property.expressions.length=0][callee.property.quasis.0.value.cooked=/^(?:querySelector|querySelectorAll|getElementById|getElementsBy[A-Za-z]+|closest)$/])",
+            "message": "[dom-query] Do not query the DOM. Use requireH3() from src/signifiers.ts."
+          },
+          {
+            "selector": "CallExpression[callee.type='Identifier'][callee.name=/^(?:querySelector|querySelectorAll|getElementById|getElementsBy[A-Za-z]+|closest)$/]",
+            "message": "[dom-query] Do not call DOM query functions. Use requireH3() from src/signifiers.ts."
+          },
+          {
+            "selector": "MemberExpression:matches([object.type='Identifier'][object.name='document'], [object.type='MemberExpression'][object.computed=false][object.property.name='document']):matches([computed=false][property.name=/^(?:body|documentElement)$/], [computed=true][property.value=/^(?:body|documentElement)$/], [computed=true][property.expressions.length=0][property.quasis.0.value.cooked=/^(?:body|documentElement)$/])",
+            "message": "[dom-query] Do not traverse document.body or document.documentElement. Use requireH3() from src/signifiers.ts."
+          }
+        ]
+      }
+    },
+    {
+      // Only the signifier module builds locators. Unit tests may hold locator fixtures.
+      "files": [
+        "packages/storefront-e2e/src/signifiers.ts",
+        "packages/storefront-e2e/**/*.test.ts",
+        "packages/storefront-e2e/**/*.test.tsx",
+        "packages/storefront-e2e/**/*.test.mts"
+      ],
+      "rules": {
+        "eslint-js/no-restricted-syntax": "off"
       }
     }
   ]

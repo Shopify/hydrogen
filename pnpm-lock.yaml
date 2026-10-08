@@ -38,6 +38,9 @@ importers:
       oxlint:
         specifier: ^1.62.0
         version: 1.62.0
+      oxlint-plugin-eslint:
+        specifier: 1.62.0
+        version: 1.62.0
       turbo:
         specifier: ^2.9.14
         version: 2.9.14
@@ -7954,6 +7957,10 @@ packages:
     resolution: {integrity: sha512-OFbkbzxKCpooQEnRmpTDnuwTX8KHXzZTQ4Df/hz85fpS67Pl+lxPEFvUtin56HIIS0B1k4X8oIzTXRZPufA2CA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
+
+  oxlint-plugin-eslint@1.62.0:
+    resolution: {integrity: sha512-O3P73cvhqepcccIscD0PJ0/JaJG/WJYm9Z7R3JUS0jcQggUSGTWE0ybNKMrZfsTsW+16qZ6etHPXn1Ce6ZLELQ==, tarball: https://registry.npmjs.org/oxlint-plugin-eslint/-/oxlint-plugin-eslint-1.62.0.tgz}
+    engines: {node: ^20.19.0 || >=22.12.0}
 
   oxlint@1.62.0:
     resolution: {integrity: sha512-1uFkg6HakjsGIpW9wNdeW4/2LOHW9MEkoWjZUTUfQtIHyLIZPYt00w3Sg+H3lH+206FgBPHBbW5dVE5l2ExECQ==}
@@ -18697,6 +18704,8 @@ snapshots:
       '@oxfmt/binding-win32-arm64-msvc': 0.47.0
       '@oxfmt/binding-win32-ia32-msvc': 0.47.0
       '@oxfmt/binding-win32-x64-msvc': 0.47.0
+
+  oxlint-plugin-eslint@1.62.0: {}
 
   oxlint@1.62.0:
     optionalDependencies:

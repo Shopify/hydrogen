@@ -52,6 +52,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Lint storefront E2E
+        run: pnpm --filter @shopify/storefront-e2e lint
+
       - name: Verify Chrome is available
         run: google-chrome --version
 

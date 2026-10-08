@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "lint": "oxlint .",
+    "lint": "cd ../.. && oxlint --config .oxlintrc.json packages/storefront-e2e",
     "test": "pnpm run test:unit",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
