@@ -1,18 +1,13 @@
 name: Vercel Shop Compatibility
 
-# Builds Vercel Shop (github.com/vercel/shop), the Next.js starter we recommend,
-# against this branch's @shopify/hydrogen. A failure means the change would
-# break Vercel Shop once released: fix the regression, or give Vercel notice of
-# the intentional breaking change. Keep this check out of required status checks.
+# Daily build of Vercel Shop (github.com/vercel/shop), the Next.js starter we
+# recommend, against the default branch's @shopify/hydrogen. A failure means
+# Vercel Shop would break on our next release: fix the regression, or give
+# Vercel notice of the intentional breaking change.
 
 on:
-  pull_request:
-    branches: [preview]
-  push:
-    branches: [preview]
   schedule:
-    # Daily, to catch new Vercel Shop commits. GitHub runs schedules only from
-    # the default branch, so this starts once the workflow lands on main.
+    # GitHub runs schedules only from the default branch (main)
     - cron: "0 6 * * *"
   workflow_dispatch:
 
