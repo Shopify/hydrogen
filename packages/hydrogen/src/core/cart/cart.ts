@@ -1098,9 +1098,15 @@ function getAddErrorKeys(
 
 function mergeServerLine(previous: CartLine | undefined, next: CartLine): CartLine {
   if (!previous) return next;
-  const merchandise = next.merchandise
-    ? { ...previous.merchandise, ...next.merchandise }
-    : previous.merchandise;
+  // A swap keeps the line ID but changes the variant; fields from the old variant don't carry over.
+  const swapped =
+    previous.merchandise?.id !== undefined &&
+    next.merchandise?.id !== undefined &&
+    previous.merchandise.id !== next.merchandise.id;
+  const merchandise =
+    next.merchandise && !swapped
+      ? { ...previous.merchandise, ...next.merchandise }
+      : (next.merchandise ?? previous.merchandise);
   return { ...previous, ...next, ...(merchandise ? { merchandise } : {}) };
 }
 
@@ -1236,7 +1242,7 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
             );
       return { ...state, data: reconcileCartLines(state.data, lines) };
     },
-    projectPromise: (state, result, payload, addError) => {
+    projectPromise: (state, result, payload, addError, options) => {
       if (hasProjectedErrors(result)) {
         addError((current, timestampMs) =>
           projectLineErrors(current, result, [payload.lineId], timestampMs),
@@ -1247,15 +1253,21 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       const cart = cartResponseFromStandardEvent(result.cart);
       const serverLines = getLines(cart);
       const matching = serverLines.find((line) => line.id === payload.lineId);
+      // A response can return the line under another ID (a variant swap, or a canonicalized GID),
+      // so a missing line only means removal for a removal. With no overlapping work the response
+      // is the whole cart; otherwise keep the line until the scheduled revalidation replaces it.
+      if (!matching && payload.quantity > 0 && options.mergeServerCart) {
+        return { ...state, data: adoptServerLines(state.data, cart) };
+      }
       const previous = getLines(state.data);
-      let lines = previous.filter((line) => line.id !== payload.lineId);
+      let lines = previous;
       if (matching) {
         const prior = previous.find((line) => line.id === payload.lineId);
         lines = previous.map((line) =>
           line.id === payload.lineId ? mergeServerLine(prior, matching) : line,
         );
-      } else if (payload.quantity > 0 && previous.length === 1 && serverLines.length === 1) {
-        lines = [mergeServerLine(previous[0], serverLines[0])];
+      } else if (payload.quantity === 0) {
+        lines = previous.filter((line) => line.id !== payload.lineId);
       }
       return { ...state, data: reconcileCartLines(state.data, lines) };
     },
@@ -1283,13 +1295,9 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       }
       if (!result.cart) return state;
       const cart = cartResponseFromStandardEvent(result.cart);
-      if (options.mergeServerCart) {
-        return { ...state, data: mergeAuthoritativeCartData(state.data, cart) };
-      }
-      return {
-        ...state,
-        data: { ...state.data, discountCodes: cart.discountCodes },
-      };
+      // Discount changes reprice lines, so a response with no overlapping work also settles them.
+      const data = options.mergeServerCart ? adoptServerLines(state.data, cart) : state.data;
+      return { ...state, data: { ...data, discountCodes: cart.discountCodes } };
     },
     getSignalKeys: () => DISCOUNT_CODES_KEY,
     getPendingKeys: (state, payload) => {
@@ -1497,18 +1505,23 @@ function trimPendingTransaction<TType extends TransactionType>(
   );
 }
 
+// Lines settle per transaction. Every other field is the cart as of this mutation, including
+// fields selected by a custom CartFragment.
 function addSnapshotFields(state: CartState, result: CartMutationResult): CartState {
   if (!result.cart) return state;
-  const cart = cartResponseFromStandardEvent(result.cart);
+  const {
+    lines: _lines,
+    checkoutUrl,
+    updatedAt,
+    ...fields
+  } = cartResponseFromStandardEvent(result.cart);
   return {
     ...state,
     data: {
       ...state.data,
-      id: cart.id,
-      checkoutUrl: cart.checkoutUrl ?? state.data.checkoutUrl,
-      updatedAt: cart.updatedAt ?? state.data.updatedAt,
-      totalQuantity: cart.totalQuantity,
-      cost: cart.cost,
+      ...fields,
+      checkoutUrl: checkoutUrl ?? state.data.checkoutUrl,
+      updatedAt: updatedAt ?? state.data.updatedAt,
     },
   };
 }
@@ -2553,6 +2566,16 @@ function fetchCartData(cartId?: string | null, signal?: AbortSignal): Promise<Ca
         }
       : null,
   );
+}
+
+// Lines settle per transaction; every other field of a mutation response comes from
+// addSnapshotFields, which applies the snapshot ordering guards.
+function adoptServerLines<TData extends CartData>(previous: TData, authoritative: CartData): TData {
+  const previousLines = new Map(getLines(previous).map((line) => [line.id, line]));
+  const nodes = getLines(authoritative).map((line) =>
+    mergeServerLine(previousLines.get(line.id), line),
+  );
+  return { ...previous, lines: { ...previous.lines, ...authoritative.lines, nodes } };
 }
 
 function mergeAuthoritativeCartData(previous: CartData, authoritative: CartData): CartData {
