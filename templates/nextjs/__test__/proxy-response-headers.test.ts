@@ -15,9 +15,13 @@ function createRequestContext() {
 }
 
 test("applyProxyResponseHeaders keeps a route handler's own Link header", () => {
-  const headers = new Headers({ "x-middleware-next": "1" });
+  const requestContext = createRequestContext();
+  const control = new Headers({ "x-middleware-next": "1" });
+  requestContext.applyResponseHeaders(control);
+  assert.equal(control.get("link"), '</.well-known/ucp>; rel="ucp"');
 
-  applyProxyResponseHeaders(createRequestContext(), headers);
+  const headers = new Headers({ "x-middleware-next": "1" });
+  applyProxyResponseHeaders(requestContext, headers);
 
   // Next.js keeps a route handler's Link header only when the proxy response has none.
   assert.equal(headers.has("link"), false);
