@@ -43,12 +43,18 @@ The suite discovers a live product title, searches for it, and verifies that pro
 
 At least one probed product must expose a selectable variant control.
 
-Supported first-pass controls:
+Supported controls:
 
-- Buttons with aria-pressed="false"
-- Links to product URLs with selected option query parameters
+- Same-product links whose href is a product URL with selected option query params. The selected link has `aria-current="true"`.
+- Buttons with `aria-pressed`. The selected button has `aria-pressed="true"`. Buttons work only with JavaScript; the no-JavaScript check needs links.
 
-The selected variant must be represented in the URL and must render as visible text after loading that URL directly.
+With JavaScript, selecting a value must put the selection in the URL (for a link, the link's href) and mark the value as selected. Loading that URL directly must render the product heading and show the same value as selected. Selection must keep unrelated non-option query params (the suite uses `storefront_e2e_ref=variant-check`).
+
+Without JavaScript, the product heading must render, and at least one probed product must expose a same-product variant link for an unselected value. A native click on that link must load its href, keep unrelated query params, and the server-rendered page must mark that value as selected.
+
+Selected values should also be visibly indicated (styling or text). The suite does not check this. It also does not check that hydration is complete before it clicks, how many navigations or document loads a selection makes, or the visible appearance, price, or merchandise of the selected variant.
+
+Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a storefront that cannot render the product page without JavaScript or does not render variant links. A skip is an expected opt-out, not a pass. The Next.js template sets it in CI because its product content streams behind a Suspense fallback.
 
 ## Cart Line Items
 
