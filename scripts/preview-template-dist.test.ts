@@ -12,6 +12,7 @@ import {
 } from "./preview-template-dist.ts";
 
 const VERSION = "2026.10.0-preview.3";
+const MINI_OXYGEN_VERSION = "4.2.3";
 
 test("resolves the exact published Hydrogen preview version", () => {
   const publishedPackages = JSON.stringify([
@@ -48,6 +49,10 @@ test("prepares manifests and synchronizes skills", async () => {
 
     assert.equal(readHydrogenDependency(repoRoot, "react-router"), VERSION);
     assert.equal(readHydrogenDependency(repoRoot, "nextjs"), VERSION);
+    assert.equal(
+      readDependency(repoRoot, "react-router", "devDependencies", "@shopify/mini-oxygen"),
+      MINI_OXYGEN_VERSION,
+    );
     assert.equal(readPackageManager(repoRoot, "react-router"), "npm@11.17.0");
     assert.equal(readPackageManager(repoRoot, "nextjs"), "pnpm@10.33.0");
     assert.equal(existsSync(reactRouterLock), false);
@@ -150,11 +155,17 @@ async function withFixture(run: (repoRoot: string) => Promise<void>): Promise<vo
       name: "@shopify/hydrogen",
       version: VERSION,
     });
+    writeJson(join(repoRoot, "packages", "mini-oxygen", "package.json"), {
+      name: "@shopify/mini-oxygen",
+      version: MINI_OXYGEN_VERSION,
+    });
     writeFile(
       join(repoRoot, "packages", "hydrogen", "skills", "hydrogen-setup", "SKILL.md"),
       "---\nname: hydrogen-setup\n---\ncurrent skill\n",
     );
-    writeTemplatePackage(repoRoot, "react-router", "pnpm@10.33.0");
+    writeTemplatePackage(repoRoot, "react-router", "pnpm@10.33.0", "workspace:*", {
+      "@shopify/mini-oxygen": "workspace:*",
+    });
     writeTemplatePackage(repoRoot, "nextjs", "pnpm@10.33.0");
     await run(repoRoot);
   } finally {
@@ -167,6 +178,7 @@ function writeTemplatePackage(
   template: string,
   packageManager: string,
   hydrogenVersion = "workspace:*",
+  devDependencies: Record<string, string> = {},
 ): void {
   writeJson(join(repoRoot, "templates", template, "package.json"), {
     name: `@shopify/hydrogen-template-${template}`,
@@ -175,16 +187,28 @@ function writeTemplatePackage(
     dependencies: {
       "@shopify/hydrogen": hydrogenVersion,
     },
+    devDependencies,
     packageManager,
   });
 }
 
 function readHydrogenDependency(repoRoot: string, template: string): string | undefined {
+  return readDependency(repoRoot, template, "dependencies", "@shopify/hydrogen");
+}
+
+function readDependency(
+  repoRoot: string,
+  template: string,
+  field: "dependencies" | "devDependencies",
+  name: string,
+): string | undefined {
   const packageJson: unknown = JSON.parse(
     readFileSync(join(repoRoot, "templates", template, "package.json"), "utf8"),
   );
-  if (!isRecord(packageJson) || !isRecord(packageJson.dependencies)) return undefined;
-  const dependency = packageJson.dependencies["@shopify/hydrogen"];
+  if (!isRecord(packageJson)) return undefined;
+  const dependencies = packageJson[field];
+  if (!isRecord(dependencies)) return undefined;
+  const dependency = dependencies[name];
   return typeof dependency === "string" ? dependency : undefined;
 }
 

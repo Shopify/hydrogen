@@ -224,11 +224,12 @@ pnpm dev        # every workspace example and template in parallel
 ## Repository layout
 
 ```
-packages/hydrogen/   the @shopify/hydrogen toolkit + packaged skills
-templates/           deployable starter templates (React Router, Next.js)
-examples/            framework development examples
-scripts/             repository automation
-skills/              agent skills for working in this repo
+packages/hydrogen/     the @shopify/hydrogen toolkit + packaged skills
+packages/mini-oxygen/  the @shopify/mini-oxygen local Oxygen runtime + Vite plugin
+templates/             deployable starter templates (React Router, Next.js)
+examples/              framework development examples
+scripts/               repository automation
+skills/                agent skills for working in this repo
 ```
 
 ## Feedback

@@ -12,7 +12,7 @@
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "@shopify/hydrogen-template-react-router#build": {
-      "dependsOn": ["@shopify/hydrogen#build"],
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/mini-oxygen#build"],
       "outputs": ["dist/**"]
     },
     "dev": {

@@ -1,0 +1,255 @@
+import {describe, it, expect, vi} from 'vitest';
+import {Readable, Writable} from 'node:stream';
+import {IncomingMessage, ServerResponse} from 'node:http';
+import {pipeFromWeb, toMiniflareRequest, toWeb, toURL} from './utils.js';
+import * as nodeFetchServer from '@mjackson/node-fetch-server';
+
+// Mock the sendResponse function from @mjackson/node-fetch-server
+vi.mock('@mjackson/node-fetch-server', () => ({
+  sendResponse: vi.fn(),
+}));
+
+describe('utils', () => {
+  describe('toURL', () => {
+    it('should create URL from string pathname', () => {
+      const url = toURL('/test/path');
+      expect(url.pathname).toBe('/test/path');
+      expect(url.origin).toBe('http://example.com');
+    });
+
+    it('should create URL from IncomingMessage with host header', () => {
+      const req = {
+        url: '/test/path',
+        headers: {
+          host: 'localhost:3000',
+        },
+      } as unknown as IncomingMessage;
+
+      const url = toURL(req);
+      expect(url.pathname).toBe('/test/path');
+      expect(url.origin).toBe('http://localhost:3000');
+    });
+
+    it('should use custom origin when provided', () => {
+      const url = toURL('/test', 'https://custom.com');
+      expect(url.origin).toBe('https://custom.com');
+    });
+  });
+
+  describe('toWeb', () => {
+    it('should convert Node request to Web Request', () => {
+      const nodeReq = {
+        url: '/test',
+        method: 'POST',
+        headers: {
+          host: 'localhost:3000',
+          'content-type': 'application/json',
+          'content-length': '10',
+        },
+      } as unknown as IncomingMessage;
+
+      // Mock the Readable.toWeb method
+      const mockBody = new ReadableStream();
+      vi.spyOn(Readable, 'toWeb').mockReturnValue(
+        mockBody as unknown as ReturnType<typeof Readable.toWeb>,
+      );
+
+      const webReq = toWeb(nodeReq);
+
+      expect(webReq.constructor.name).toBe('Request');
+      expect(webReq.method).toBe('POST');
+      expect(webReq.headers.get('content-type')).toBe('application/json');
+      expect(webReq.headers.get('host')).toBe('localhost:3000');
+      expect(webReq.url).toBe('http://localhost:3000/test');
+    });
+
+    it('should convert an HTTP/2 request using the authority pseudo-header', () => {
+      const nodeReq = {
+        url: '/test',
+        method: 'GET',
+        headers: {
+          ':authority': 'localtest.me:5173',
+          ':method': 'GET',
+          ':path': '/test',
+          ':scheme': 'https',
+          accept: 'text/html',
+        },
+        socket: {encrypted: true},
+      } as unknown as IncomingMessage;
+
+      const webReq = toWeb(nodeReq);
+
+      expect(webReq.url).toBe('https://localtest.me:5173/test');
+      expect(webReq.headers.get('host')).toBe('localtest.me:5173');
+      expect([...webReq.headers.keys()]).not.toContainEqual(
+        expect.stringMatching(/^:/),
+      );
+    });
+
+    it('should use https for requests received over TLS', () => {
+      const nodeReq = {
+        url: '/account',
+        method: 'GET',
+        headers: {host: 'local.tryhydrogen.dev:5173'},
+        socket: {encrypted: true},
+      } as unknown as IncomingMessage;
+
+      expect(toWeb(nodeReq).url).toBe(
+        'https://local.tryhydrogen.dev:5173/account',
+      );
+    });
+
+    it('should use http for requests received over plain TCP', () => {
+      const nodeReq = {
+        url: '/account',
+        method: 'GET',
+        headers: {host: 'localhost:3000'},
+        socket: {},
+      } as unknown as IncomingMessage;
+
+      expect(toWeb(nodeReq).url).toBe('http://localhost:3000/account');
+    });
+
+    it('should throw error if host and authority headers are missing', () => {
+      const nodeReq = {
+        url: '/test',
+        headers: {},
+      } as unknown as IncomingMessage;
+
+      expect(() => toWeb(nodeReq)).toThrow(
+        'Request must contain a host header.',
+      );
+    });
+
+    it('should not include body for requests without content-length', () => {
+      const nodeReq = {
+        url: '/test',
+        method: 'GET',
+        headers: {
+          host: 'localhost:3000',
+        },
+      } as unknown as IncomingMessage;
+
+      const webReq = toWeb(nodeReq);
+      expect(webReq.body).toBeNull();
+    });
+
+    it('should preserve Node header precedence when merging headers', () => {
+      const nodeReq = {
+        url: '/test',
+        method: 'GET',
+        headers: {
+          ':authority': 'authority.example.com',
+          host: 'localhost:3000',
+          'x-test': 'node',
+        },
+      } as unknown as IncomingMessage;
+
+      const webReq = toWeb(nodeReq, {
+        host: 'override.example.com',
+        'x-test': 'provided',
+        'x-provided': 'value',
+      });
+
+      expect(webReq.headers.get('host')).toBe('localhost:3000');
+      expect(webReq.url).toBe('http://localhost:3000/test');
+      expect(webReq.headers.get('x-test')).toBe('node');
+      expect(webReq.headers.get('x-provided')).toBe('value');
+    });
+  });
+
+  describe('toMiniflareRequest', () => {
+    it('should preserve the original host in X-Forwarded-Host', () => {
+      const request = new Request('http://localhost/test', {
+        headers: {host: 'original.example.com'},
+      });
+
+      const miniflareRequest = toMiniflareRequest(request);
+
+      expect(miniflareRequest.headers.get('x-forwarded-host')).toBe(
+        'original.example.com',
+      );
+      expect(miniflareRequest.headers.get('accept-encoding')).toBe('identity');
+    });
+  });
+
+  describe('pipeFromWeb', () => {
+    it('should call sendResponse with correct parameters', async () => {
+      const mockResponse = new Response('test body', {
+        headers: {
+          'content-type': 'text/plain',
+        },
+      });
+
+      const mockServerResponse = {} as ServerResponse;
+
+      await pipeFromWeb(mockResponse, mockServerResponse);
+
+      expect(nodeFetchServer.sendResponse).toHaveBeenCalledWith(
+        mockServerResponse,
+        mockResponse,
+      );
+    });
+
+    it('should handle streaming response correctly', async () => {
+      // Create a streaming response
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode('chunk1'));
+          controller.enqueue(encoder.encode('chunk2'));
+          controller.close();
+        },
+      });
+
+      const streamingResponse = new Response(stream, {
+        headers: {
+          'content-type': 'text/plain',
+          'transfer-encoding': 'chunked',
+        },
+      });
+
+      const mockServerResponse = {} as ServerResponse;
+
+      await pipeFromWeb(streamingResponse, mockServerResponse);
+
+      expect(nodeFetchServer.sendResponse).toHaveBeenCalledWith(
+        mockServerResponse,
+        streamingResponse,
+      );
+    });
+
+    it('should preserve response headers when piping', async () => {
+      const mockResponse = new Response('test', {
+        status: 201,
+        headers: {
+          'content-type': 'application/json',
+          'x-custom-header': 'value',
+          'cache-control': 'no-cache',
+        },
+      });
+
+      const mockServerResponse = {} as ServerResponse;
+
+      await pipeFromWeb(mockResponse, mockServerResponse);
+
+      // Verify sendResponse is called with the response object
+      expect(nodeFetchServer.sendResponse).toHaveBeenCalledWith(
+        mockServerResponse,
+        mockResponse,
+      );
+
+      // Verify the response has the correct properties
+      // Find the call with status 201 (it should be the last call)
+      const calls = (nodeFetchServer.sendResponse as any).mock.calls;
+      const callIndex = calls.length - 1;
+      const passedResponse = calls[callIndex][1];
+      expect(passedResponse.status).toBe(201);
+      expect(passedResponse.headers.get('content-type')).toBe(
+        'application/json',
+      );
+      expect(passedResponse.headers.get('x-custom-header')).toBe('value');
+      expect(passedResponse.headers.get('cache-control')).toBe('no-cache');
+    });
+  });
+});

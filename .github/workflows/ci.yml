@@ -85,9 +85,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build the React Router template's workspace packages
+        # The certs CLI runs from Hydrogen's build, and the template loads
+        # Hydrogen and MiniOxygen from their builds too. bash on every OS:
+        # under pwsh, pnpm.CMD hands the filter to cmd.exe, which drops `^`
+        shell: bash
+        run: pnpm turbo run build --filter='@shopify/hydrogen-template-react-router^...'
+
       - name: Provision local HTTPS certificate
         if: runner.os != 'Windows'
-        run: pnpm turbo run build --filter=@shopify/hydrogen && node packages/hydrogen/bin/hydrogen.mjs certs install
+        run: node packages/hydrogen/bin/hydrogen.mjs certs install
 
       - name: Provision local HTTPS certificate on Windows
         if: runner.os == 'Windows'
@@ -97,7 +104,6 @@ jobs:
           # Generate the same CA and provide it directly to Node's TLS verifier.
           TRUST_STORES: none
         run: |
-          pnpm turbo run build --filter=@shopify/hydrogen
           node packages/hydrogen/bin/hydrogen.mjs certs install
           $rootCertificate = Join-Path $env:LOCALAPPDATA 'mkcert\rootCA.pem'
           if (!(Test-Path $rootCertificate)) {
