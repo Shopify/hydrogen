@@ -54,7 +54,11 @@ The deploy link uses the compiled template from `dist-preview`, with the exact p
 
 **Next.js** — [Vercel Shop](https://github.com/vercel/shop)
 
-Vercel builds and maintains Vercel Shop, a Next.js storefront built on Hydrogen. Scaffold it with:
+Vercel builds and maintains Vercel Shop, a Next.js storefront built on Hydrogen.
+
+<a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fshop&project-name=shop&repository-name=shop&demo-title=Vercel+Shop&demo-url=https%3A%2F%2Fshop-template.vercel.app&env=NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN%2CNEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN%2CNEXT_PUBLIC_SHOPIFY_SHOP_ID&envDescription=Required%20Shopify%20store%20domain%2C%20Storefront%20API%20token%2C%20and%20shop%20ID&envLink=https%3A%2F%2Fvercel.shop%2Fdocs%2Freference%2Fenv-vars"><img alt="Deploy with Vercel" src="https://vercel.com/button" width="129" height="40"></a>
+
+Or scaffold it locally:
 
 ```bash
 pnpm create next-app@latest my-store --example https://github.com/vercel/shop

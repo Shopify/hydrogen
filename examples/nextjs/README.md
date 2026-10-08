@@ -2,6 +2,8 @@
 
 > **This is a development example, not a starter.** It exists to exercise `@shopify/hydrogen` in Next.js and to run the storefront E2E suite in this repository. For a Next.js starter, use [Vercel Shop](https://github.com/vercel/shop), which Vercel builds and maintains on Hydrogen:
 >
+> [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fshop&project-name=shop&repository-name=shop&demo-title=Vercel+Shop&demo-url=https%3A%2F%2Fshop-template.vercel.app&env=NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN%2CNEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN%2CNEXT_PUBLIC_SHOPIFY_SHOP_ID&envDescription=Required%20Shopify%20store%20domain%2C%20Storefront%20API%20token%2C%20and%20shop%20ID&envLink=https%3A%2F%2Fvercel.shop%2Fdocs%2Freference%2Fenv-vars)
+>
 > ```sh
 > pnpm create next-app@latest my-store --example https://github.com/vercel/shop
 > ```
