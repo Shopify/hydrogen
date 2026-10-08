@@ -88,6 +88,7 @@ describe("ShopifyScripts", () => {
     expect(html).toContain(
       `<link rel="prefetch" as="script" href="${SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT}" crossorigin="anonymous">`,
     );
+    expect(html.match(/rel="ucp"/g)).toHaveLength(1);
     expect(html).toContain('<link rel="ucp" href="/.well-known/ucp">');
     expect(html).not.toContain(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT);
   });
