@@ -9,7 +9,7 @@ import {
 } from "../core/shop-pay/shop-pay";
 
 /**
- * Props accepted by the Vue `ShopPayButton` component.
+ * Props for the Vue ShopPayButton component.
  *
  * @publicDocs
  */
@@ -23,8 +23,10 @@ const canUseDom = typeof document !== "undefined";
 defineShopPayButton();
 
 /**
- * Vue component that renders the Shop Pay button custom element. On the server it includes
- * declarative shadow DOM markup so the button renders before scripts load.
+ * Renders the Shop Pay button custom element. During server rendering, the component outputs
+ * declarative shadow DOM, which displays the button before scripts load.
+ *
+ * The component takes the createShopPayButton options as Vue props. The component renders no slot content and drops extra attributes, including `class` and `style`. Vue templates can pass the props in kebab-case, such as `border-radius` and `accessibility-label`.
  *
  * @publicDocs
  */

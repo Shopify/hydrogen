@@ -5,91 +5,83 @@ const RELATIVE_URL_BASE = "https://hydrogen.local";
 
 type PredictiveSearchItems = PredictiveSearchData["items"];
 
-/** A product returned by predictive search. */
+/** A product result from predictive search. */
 export type PredictiveSearchProductItem = PredictiveSearchItems["products"][number];
-/** A collection returned by predictive search. */
+/** A collection result from predictive search. */
 export type PredictiveSearchCollectionItem = PredictiveSearchItems["collections"][number];
-/** A page returned by predictive search. */
+/** A page result from predictive search. */
 export type PredictiveSearchPageItem = PredictiveSearchItems["pages"][number];
-/**
- * An article returned by predictive search. Includes a nested `blog.handle` used for URL generation via {@link getPredictiveSearchItemUrl}.
- */
+/** An article result from predictive search. */
 export type PredictiveSearchArticleItem = PredictiveSearchItems["articles"][number];
-/**
- * A search query suggestion returned by predictive search. Uses `text` as the search term when generating its URL via {@link getPredictiveSearchItemUrl}.
- */
+/** A suggested search term from predictive search. */
 export type PredictiveSearchQueryItem = PredictiveSearchItems["queries"][number];
 
-/** Union of product, collection, page, and article items. Excludes query suggestions. */
+/** A product, collection, page, or article result. Excludes query suggestions. */
 export type PredictiveSearchResourceItem =
   | PredictiveSearchProductItem
   | PredictiveSearchCollectionItem
   | PredictiveSearchPageItem
   | PredictiveSearchArticleItem;
 
-/** Any item returned by predictive search, including query suggestions. */
+/** Any predictive search result, including query suggestions. */
 export type PredictiveSearchItem = PredictiveSearchResourceItem | PredictiveSearchQueryItem;
 
 /**
- * Options for generating URLs for resource items (products, collections,
- * pages, articles) via {@link getPredictiveSearchItemUrl}.
+ * Options for the link of a product, collection, page, or article result.
  *
- * Required for resource items because their URLs depend on route templates
- * and the current search term.
+ * Pass the route templates and the customer's search term.
  */
 export type PredictiveSearchItemUrlOptions = {
-  /** Optional path prefix prepended to the generated route (e.g., a locale prefix). */
+  /** Prefix to add before the route path, such as a locale prefix. */
   pathPrefix?: string;
-  /** Route templates used to resolve the resource's URL pattern. */
+  /** Route templates for product, collection, page, and article paths, from `createShopifyRouteTemplates`. */
   routes: ShopifyRouteTemplates;
-  /** Search term appended as a query parameter to the generated URL. */
+  /** Search term that the customer typed. The link carries the term in the `q` URL parameter. */
   term: string;
 };
 
 /**
- * Options for generating URLs for query suggestion items via
- * {@link getPredictiveSearchItemUrl}.
+ * Options for the link of a query suggestion.
  *
- * Optional because query suggestions use their own `text` as the search
- * term and default to the standard search route.
+ * By default, a suggestion links to the standard search route and searches for the suggestion's text.
  */
 export type PredictiveSearchQueryItemUrlOptions = {
-  /** Optional path prefix prepended to the search route (e.g., a locale prefix). Ignored when `searchPath` is set. */
+  /** Prefix to add before the search route, such as a locale prefix. Has no effect when you set a search path. */
   pathPrefix?: string;
-  /** Route templates. When omitted, the standard search route is used. */
+  /** Route templates that set the search page path. Defaults to Hydrogen's standard search route. */
   routes?: ShopifyRouteTemplates;
-  /** Custom search page path, used as-is (no `pathPrefix` applied). Takes precedence over `routes` and `pathPrefix`. */
+  /** Search page path or URL to use as is, without the route templates or the path prefix. */
   searchPath?: string;
 };
 
+/** URL options for any predictive search result, either resource options or query suggestion options. */
 type AnyPredictiveSearchItemUrlOptions =
   | PredictiveSearchItemUrlOptions
   | PredictiveSearchQueryItemUrlOptions;
 
+/** Options for a search result URL. */
 type SearchResultUrlOptions = {
   /** Search page path or absolute URL. */
   baseUrl: string;
-  /** Search term, set under `searchParamName`. */
+  /** Search term to add to the URL. */
   term: string;
-  /** Storefront API `trackingParameters` query string, appended after the other parameters. */
+  /** Tracking parameters from a Storefront API search result. Pass the result's `trackingParameters` value unchanged. */
   trackingParameters?: string | null;
-  /** Extra query parameters, set before the term, so a key matching `searchParamName` is overwritten. */
+  /** Extra URL parameters, such as a result type filter. The search term replaces an extra parameter with the same name. */
   params?: Record<string, string>;
-  /** Query parameter for the term. Defaults to `"q"`. */
+  /** URL parameter that carries the search term. Defaults to `q`. */
   searchParamName?: string;
 };
 
 /**
- * Generates a URL for a predictive search result item.
+ * Builds the link for a predictive search result. A product, collection, page, or
+ * article result links to the resource's page with the search term. A query suggestion links to
+ * the search page and searches for the suggestion's text. Every link keeps the
+ * result's tracking parameters.
  *
- * For query suggestions, builds a search page URL using the suggestion's
- * `text` as the search term. For resource items (products, collections,
- * pages, articles), builds the resource URL using the provided route
- * templates and appends the given search term as a query parameter.
+ * For a product, collection, page, or article, pass the route templates and the search term. The function throws an error without them.
  *
- * Always appends the item's `trackingParameters` when present.
- *
- * @throws {Error} When a resource item is passed without `routes` and `term` in options.
+ * @throws {Error} When you pass a resource item without `routes` and `term` in the options.
  * @publicDocs
  */
 export function getPredictiveSearchItemUrl(
@@ -100,6 +92,11 @@ export function getPredictiveSearchItemUrl(
   item: PredictiveSearchResourceItem,
   options: PredictiveSearchItemUrlOptions,
 ): string;
+/**
+ * @param item The predictive search result to link to.
+ * @param options Route templates, search term, and path settings for the link.
+ * @returns The link URL. The URL is relative unless you pass an absolute search path.
+ */
 export function getPredictiveSearchItemUrl(
   item: PredictiveSearchItem,
   options?: AnyPredictiveSearchItemUrlOptions,
@@ -112,13 +109,14 @@ export function getPredictiveSearchItemUrl(
 }
 
 /**
- * Builds a search result URL from a base URL, search term, and optional
- * extra parameters.
+ * Builds a search page URL from a path, a search term, and optional extra
+ * parameters. Use the function for search page links, such as a link to every
+ * result for the current term.
  *
- * Sets the term under `searchParamName` (defaults to `"q"`), replacing any
- * existing value. `params` are set the same way, and `trackingParameters`
- * are appended. Returns a relative URL unless the base
- * URL is absolute.
+ * The search term and the extra parameters replace values with the same names in the base URL.
+ *
+ * @param options - The base URL, the search term, the extra and tracking parameters, and the search parameter name.
+ * @returns A relative URL, or an absolute URL when the base URL is absolute.
  *
  * @publicDocs
  */

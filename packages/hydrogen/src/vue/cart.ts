@@ -63,11 +63,17 @@ type TypedCartProvider<TData extends CartData> = {
 
 export type { CartActions };
 
+/** Cart provider and composables whose cart state carries the custom fields from your cart server handlers. */
 type TypedCartComponents<TData extends CartData> = {
+  /** The provider that creates the cart store. The provider connects the store on mount and destroys the store on unmount. */
   CartProvider: TypedCartProvider<TData>;
+  /** Returns cart state as a read-only shallow ref. The selector is optional. Without a selector, the ref holds the full cart state. */
   useCart: TypedUseCart<TData>;
+  /** Returns the slice of cart state that the selector picks as a read-only shallow ref. Outside the provider, the ref holds `undefined`. */
   useOptionalCart: TypedUseOptionalCart<TData>;
+  /** Returns the `refresh` action. Call `refresh` after a server-side cart mutation that bypasses cart forms. */
   useCartActions: typeof useCartActions;
+  /** Returns form props, a register function, and pending state for cart forms. */
   useCartForm: typeof useCartForm;
 };
 
@@ -100,11 +106,9 @@ function useOptionalCartStore(): CartStore | null {
 }
 
 /**
- * Vue component that creates and manages a {@link CartStore} instance.
+ * Creates a cart store and shares the store with the cart composables below the provider.
  *
- * Calls {@link CartStore.connect} on mount and {@link CartStore.destroy} on unmount.
- * All cart composables (`useCart`, `useCartForm`, `useCartActions`) must be
- * descendants of this component.
+ * The provider connects the store on mount and destroys the store on unmount. Render every cart composable inside the provider. The provider creates its store once from the first initial data and ignores later changes.
  *
  * @example
  * ```vue
@@ -140,11 +144,9 @@ export const CartProvider = defineComponent({
 });
 
 /**
- * Subscribes to {@link CartState} as a Vue `ShallowRef`.
+ * Returns cart state as a read-only shallow ref.
  *
- * Without a selector, returns the full `CartState`. With a selector, returns
- * a `ShallowRef` of the selected slice — the ref updates only when the
- * selected value changes (by reference, or by custom `isEqual`).
+ * Without a selector, the ref holds the full cart state. With a selector, the ref holds the selected value. The ref updates when the selected value changes by reference, or when your `isEqual` function reports a change.
  *
  * @example
  * ```vue
@@ -176,10 +178,11 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 }
 
 /**
- * Returns cart actions for reconciling state after out-of-band mutations.
+ * Returns the cart action that syncs the cart after a mutation outside cart forms.
  *
- * Currently exposes {@link CartStore.refresh} — call it after server-side cart
- * mutations that bypass the form system.
+ * Call `refresh` after a server-side cart mutation that bypasses cart forms, such as a server action that creates the cart.
+ *
+ * @returns The `refresh` action.
  *
  * @example
  * ```vue
@@ -200,10 +203,9 @@ export function useCartActions(): CartActions {
 }
 
 /**
- * Subscribes the {@link CartStore} to the analytics event dispatcher.
+ * Publishes cart analytics events when the cart changes.
  *
- * Call once near the root of your app. Starts tracking on mount via `onMounted`
- * and cleans up via `onScopeDispose`.
+ * Call the composable once near the root of your app. The composable starts tracking on mount and stops when the component's scope ends. The composable throws when you call it outside the cart provider.
  *
  * @example
  * ```vue
@@ -225,12 +227,10 @@ export function useCartAnalytics(): void {
 }
 
 /**
- * Like `useCart`, but returns a ref holding `undefined` instead of throwing when used
- * outside a `<CartProvider>`.
+ * Returns the slice of cart state that the selector picks as a read-only shallow ref. Outside the cart provider, the ref holds `undefined`.
  *
- * Use it for a component that renders both inside and outside the provider, such as a
- * header cart badge that also appears on an error page mounted above `<CartProvider>`.
- * Prefer `useCart` wherever the provider is guaranteed, so a missing provider fails loudly.
+ * Use the composable in a component that also renders above the provider, such as a header cart badge on an error page.
+ * Wherever the provider always exists, use the cart composable that throws. A missing provider then fails with an error.
  *
  * @example
  * ```vue
@@ -272,16 +272,15 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
 }
 
 /**
- * Returns form props, a field register function, and reactive pending state
- * for building cart forms in Vue.
+ * Returns form props, a register function, and pending state for cart forms.
  *
- * Unlike the React hook, the Vue variant includes `isPending` — a reactive
- * object with `initial` (`ComputedRef<boolean>`) for the initial cart load
- * and `lines(lineId?)` for checking per-line or any-line pending state.
+ * The form props post to the cart endpoint and send each submission through the cart store. A `beforeSubmit` callback that prevents the event's default skips the cart submission.
  *
- * Note: `interactive: true` returns numeric input attributes but does **not**
- * auto-submit on change — that behavior requires `attachQuantityInput`, which
- * is only wired by the React adapter.
+ * The pending state holds a computed ref that's `true` during a full cart load, and a function that checks whether one line or any line has a mutation in flight.
+ *
+ * Registering the quantity field with `interactive: true` returns numeric input attributes without auto-submit. Call attachQuantityInput on the input to submit the form when the quantity changes.
+ *
+ * @returns The form props function, the register function, and the pending state.
  *
  * @example
  * ```vue
@@ -343,11 +342,12 @@ export function useCartForm(): {
 }
 
 /**
- * Factory that returns typed cart components and composables matched to your
- * server handler's cart query shape.
+ * Returns a cart provider and composables typed to the cart query in your cart server handlers.
+ * Pass the type of your cart server handlers as the `THandlers` type argument. Every composable's cart state then includes your custom cart fields.
  *
- * The generic `THandlers` parameter is inferred from your `createCartServerHandlers`
- * call, so every composable's {@link CartState} carries your custom cart fields.
+ * On mount, the provider points cart requests at `/api/cart` and connects the store. Every composable except the optional cart composable throws when you call it outside the provider.
+ *
+ * @returns The typed cart provider, the cart state composables, and the cart actions and form composables.
  *
  * @example
  * ```ts

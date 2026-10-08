@@ -1,23 +1,25 @@
 /**
- * Default lower bound for {@link sanitizeQuantity} when no `min` is given.
+ * The minimum quantity that sanitizeQuantity uses when you omit `min`.
  *
  * @publicDocs
  */
 export const DEFAULT_MINIMUM_QUANTITY = 1;
 
 /**
- * Sentinel upper bound for {@link sanitizeQuantity} meaning "no maximum".
+ * The maximum quantity that sanitizeQuantity uses when you omit `max`. The value, `Infinity`, sets no upper limit.
  *
  * @publicDocs
  */
 export const NO_QUANTITY_LIMIT = Infinity;
 
 /**
- * Clamps a raw value to a valid integer quantity within `min`/`max` bounds.
+ * Turns a raw value, such as text from a quantity input, into a whole-number quantity between a minimum and a maximum.
  *
- * Parses strings, rounds floats, and falls back to `min` for unparseable input.
- * Used internally by the cart form system to sanitize user-typed quantities.
+ * The function parses strings and rounds decimals. Input that the function can't parse returns the minimum.
  *
+ * @param raw The value to turn into a quantity.
+ * @param options The lower and upper bounds. The `min` option defaults to `1`, and `max` defaults to no limit. To stop at available stock, pass the variant's available quantity as `max`.
+ * @returns The rounded quantity, between the minimum and the maximum.
  * @example
  * ```ts
  * sanitizeQuantity("3")           // → 3

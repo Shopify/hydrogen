@@ -9,11 +9,9 @@ import type {
 type CustomerAccountSchema = GraphQLSchemaFor<introspection, CustomerAccountScalars>;
 
 /**
- * Resolves the GraphQL result type for a Customer Account API query string `T`.
+ * Resolves the result type of a Customer Account API query string from the Customer Account API schema and scalars.
  *
- * Uses the Customer Account API introspection schema and scalar mappings. This
- * is the Customer Account counterpart of `InferResult` from `@shopify/hydrogen`
- * (Storefront API).
+ * The Storefront API version of this type comes from `@shopify/hydrogen`.
  *
  * @example
  * ```ts
@@ -28,11 +26,9 @@ type CustomerAccountSchema = GraphQLSchemaFor<introspection, CustomerAccountScal
 export type InferResult<T extends string> = InferResultForSchema<T, CustomerAccountSchema>;
 
 /**
- * Resolves the GraphQL variables type for a Customer Account API query string `T`.
+ * Resolves the variables type of a Customer Account API query string from the Customer Account API schema and scalars.
  *
- * Uses the Customer Account API introspection schema and scalar mappings. This is
- * the Customer Account counterpart of `InferVariables` from `@shopify/hydrogen`
- * (Storefront API). See {@link InferResult} for an example.
+ * The Storefront API version of this type comes from `@shopify/hydrogen`. See InferResult for an example.
  *
  * @publicDocs
  */

@@ -1,40 +1,46 @@
 import { PREDICTIVE_SEARCH_QUERY_PARAM } from "./constants";
 
 /**
- * Props returned by {@link PredictiveSearchFormRegister} for the query input.
+ * Attributes to spread on the search input of a predictive search form.
  *
  * @publicDocs
  */
 export interface PredictiveSearchQueryInputAttributes {
+  /** Sends the search term as the `q` URL parameter when the form submits. */
   name: "q";
+  /** Renders the input as a search field. */
   type: "search";
+  /** Turns off browser autocomplete. */
   autoComplete: "off";
+  /** Turns off automatic capitalization of the search term. */
   autoCapitalize: "off";
+  /** Turns off spell checking. */
   spellCheck: false;
 }
 
-/** Props returned by {@link getPredictiveSearchFormAttributes} for the search form. */
+/** Attributes to spread on a predictive search form. */
 export interface PredictiveSearchFormAttributes {
+  /** Search page path that receives the submitted search term. Defaults to `/search`. */
   action: string;
+  /** Submits the form as a GET request, which puts the search term in the URL. */
   method: "get";
+  /** Marks the form as a search landmark for assistive technology. */
   role: "search";
 }
 
 /**
- * Register function for predictive search forms.
+ * Returns the attributes for the search input of a predictive search form.
  *
- * Predictive search forms only register the Storefront API query input.
- *
- * Building block for the framework bindings. Use it directly on a framework without one.
+ * Pass `query`. Any other field name throws an error. The attribute keys use React casing. In DOM code, set each value on the matching lowercase property, such as `autocomplete`.
  */
 export type PredictiveSearchFormRegister = {
   (field: "query"): PredictiveSearchQueryInputAttributes;
 };
 
 /**
- * Creates a {@link PredictiveSearchFormRegister} for framework-neutral form fields.
+ * Creates a function that returns the attributes for the search input of a predictive search form. Use the function in DOM code or in UI frameworks without Hydrogen bindings. In React and Vue, use `usePredictiveSearchForm`.
  *
- * Building block for the framework bindings. Use it directly on a framework without one.
+ * @returns A function that takes `query` and returns the search input attributes.
  *
  * @publicDocs
  */
@@ -57,10 +63,10 @@ function registerPredictiveSearchFormField(field: string): PredictiveSearchQuery
 }
 
 /**
- * Returns progressive-enhancement attributes for a predictive search form.
+ * Returns the attributes for a predictive search form that works without JavaScript.
  *
- * Building block for the framework bindings. Use it directly on a framework without one.
- *
+ * @param action Search page path that the form submits to. Defaults to `/search`.
+ * @returns Attributes that submit the search term to the search page as a GET request.
  * @publicDocs
  */
 export function getPredictiveSearchFormAttributes(
@@ -74,10 +80,10 @@ export function getPredictiveSearchFormAttributes(
 }
 
 /**
- * Reads the search term from form data submitted by a predictive search form. Returns an empty string when the `"q"` field is absent or not a string.
+ * Reads the search term from a submitted predictive search form.
  *
- * Building block for the framework bindings. Use it directly on a framework without one.
- *
+ * @param formData Form data from the submitted search form.
+ * @returns The search term, or an empty string when the form data has no `q` text value.
  * @publicDocs
  */
 export function readPredictiveSearchFormTerm(formData: FormData): string {

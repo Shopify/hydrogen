@@ -10,6 +10,7 @@ import type {
 import { flattenConnection } from "./utils/flatten-connection";
 
 type CartTrackerAnalytics = Pick<StorefrontAnalytics, "publish" | "getConfig">;
+/** A cart store, or any object with the cart store's `getState()` and `subscribe()` methods. */
 type CartAnalyticsStore = Pick<CartStore, "getState" | "subscribe">;
 
 type CartStorage = {
@@ -23,18 +24,25 @@ type CartTrackerState = {
 };
 
 /**
- * Subscribes to a cart store and publishes analytics events when the cart changes.
+ * Publishes cart analytics events when the server confirms a change to the customer's cart. In React, call `useCartAnalytics`.
  *
- * Emits `cart_updated` whenever a settled cart's `updatedAt` changes, plus
- * `product_added_to_cart` / `product_removed_from_cart` for each line that was
- * added, removed, or changed quantity. Deduplicates on `updatedAt` with an
- * in-memory cursor (within this subscription) and `localStorage` (across full
- * page loads and tabs). A store filled from your own cart query must select
- * `updatedAt`, or deduplication can't work.
+ * The function publishes `cart_updated` when the cart's update time changes, plus
+ * `product_added_to_cart` or `product_removed_from_cart` for each added line, removed
+ * line, and quantity change. The function waits until no cart change or reload is in flight.
+ * Analytics payloads leave out cart lines without merchandise.
  *
- * @throws {Error} If `window.Shopify.analytics` is not set (including on the server).
- *   Render `ShopifyScripts` (or the `getShopifyScriptTags()` output) first.
- * @returns An unsubscribe function that stops tracking.
+ * The function stores the last published cart update in local storage under `cartLastUpdatedAt`
+ * to avoid repeat events across page loads and tabs. A store that you fill from your own cart query
+ * must select `updatedAt`. Without the update time, the function publishes on every confirmed cart state.
+ * The function also sets `window.Shopify.currency.active` to the cart's currency.
+ *
+ * The function throws when the Shopify analytics bus isn't available, including during server rendering.
+ * Render `ShopifyScripts`, then start tracking in a client-only effect, such as `useEffect` or `onMounted`.
+ *
+ * @param store The cart store to track.
+ * @throws {Error} If `window.Shopify.analytics` isn't set, including on the server.
+ *   Render Shopify's script tags first.
+ * @returns A function that stops tracking.
  * @publicDocs
  */
 export function trackCartAnalytics(store: CartAnalyticsStore): () => void {

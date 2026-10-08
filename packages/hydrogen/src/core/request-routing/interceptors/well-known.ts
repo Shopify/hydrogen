@@ -6,7 +6,7 @@ import { createProxyInterceptor } from "./proxy";
  * Proxies allowlisted Shopify `.well-known` resources through the headless
  * storefront origin to the Online Store, so first-party services (Apple Pay
  * domain verification, Frontend Event Collector ingress) behave the same way
- * they do on Online Store storefronts. See {@link WELL_KNOWN_RE} for the
+ * they do on Online Store storefronts. See `WELL_KNOWN_RE` for the
  * allowlist.
  */
 export const handleWellKnownProxy = createProxyInterceptor({

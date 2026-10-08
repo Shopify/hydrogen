@@ -1,127 +1,148 @@
 // TODO: derive these types from the generated SFAPI d.ts (storefront-api-types.d.ts / gql.tada)
 // instead of maintaining them by hand.
 
-/** Monetary amount in a specific currency, mirroring the Storefront API `MoneyV2` type. */
+/** An amount and its currency, matching the Storefront API `MoneyV2` type. */
 export interface Money {
   amount: string;
   currencyCode: string;
 }
 
-/** Minimum and maximum variant prices for a product, mirroring the Storefront API `ProductPriceRange` type. */
+/** Lowest and highest variant prices for a product, matching the Storefront API product price range. */
 export interface ProductPriceRange {
+  /** Lowest variant price. */
   minVariantPrice: Money;
-  /** Optional so queries that only select `minVariantPrice` still type-check. */
+  /** Highest variant price. Leave the field out of queries that need only the lowest price. */
   maxVariantPrice?: Money;
 }
 
-/** A single selected product option, e.g. `{ name: "Color", value: "Red" }`. */
+/** A single selected product option, such as `{ name: "Color", value: "Red" }`. */
 export interface SelectedOption {
+  /** Option name, such as "Color". */
   name: string;
+  /** Value chosen for the option, such as "Red". */
   value: string;
 }
 
 /**
- * Minimum variant shape that the product form system requires.
+ * Variant fields that the product form needs from your Storefront API query.
  *
- * Consumers typically pass a wider type from their Storefront API query —
- * `ProductVariantInput` declares only the fields the form logic reads.
+ * Pass your full query type, which can include more fields.
  */
 export interface ProductVariantInput {
+  /** Variant ID that the product form adds to the cart. */
   id: string;
+  /** Variant title. The cart shows the title on an added line before the server responds. */
   title: string;
+  /** Whether the customer can buy the variant. Option value availability falls back to this field when your query doesn't select the encoded variant availability. */
   availableForSale: boolean;
+  /** Option names and values that make up the variant. */
   selectedOptions: SelectedOption[];
+  /** Variant price. The cart shows the price on an added line before the server responds. */
   price: Money;
-  /** Merchant-set compare-at price, typically shown struck-through when higher than `price`. `null` when unset; `undefined` when not queried. */
+  /** Compare-at price, or `null` when the variant has none. */
   compareAtPrice?: Money | null;
+  /** Variant image. The cart shows the image on an added line before the server responds. */
   image?: unknown;
+  /** Handle and title of the variant's product. A handle that differs from the current product marks a variant of another product in a combined listing. */
   product?: { handle: string; title?: string | null } | null;
+  /** Variant SKU. */
   sku?: string | null;
 }
 
-/** A product option (e.g. "Size" or "Color") and its available values. */
+/** A product option, such as "Size" or "Color", and its values. */
 export interface ProductOptionInput<TVariant extends ProductVariantInput = ProductVariantInput> {
+  /** Option name, such as "Size" or "Color". */
   name: string;
+  /** Option values in the order that the Storefront API returns them. Keep that order, because the encoded variant fields refer to values by position. */
   optionValues: Array<ProductOptionValueInput<TVariant>>;
 }
 
-/** A single option value (e.g. "Small", "Red") within a {@link ProductOptionInput}. */
+/** A single option value, such as "Small" or "Red", within a product option. */
 export interface ProductOptionValueInput<
   TVariant extends ProductVariantInput = ProductVariantInput,
 > {
+  /** Option value name, such as "Small" or "Red". */
   name: string;
-  /** The variant combining this value with the lowest-position values of every other option (SFAPI). Strongly recommended: it seeds the variant cache used for `exists`/`selectedOptions` and combined-listing detection. */
+  /** Variant that combines this value with the lowest-position values of every other option. Include this field in your query. The store uses the variant to resolve option values and to find values that belong to other products in a combined listing. */
   firstSelectableVariant?: TVariant | null;
+  /** Swatch data from your query. The option value state returns the swatch unchanged. */
   swatch?: unknown;
 }
 
 /**
- * Minimum product shape that `createProductFormStore` requires.
+ * Product fields that the product form store needs from your Storefront API query.
  *
- * Fields mirror the Storefront API `Product` object. Consumers typically
- * pass a wider query result — this interface declares only what the
- * product form logic reads.
+ * The fields match the Storefront API product object. Pass your full query type, which can include more fields.
  */
 export interface ProductInput<TVariant extends ProductVariantInput = ProductVariantInput> {
+  /** Product ID. The product provider reloads the product into the store when this ID or the selected variant's ID changes. */
   id: string;
+  /** Product title. */
   title: string;
+  /** Product handle for option value links. Variants with a different handle belong to other products in a combined listing. */
   handle: string;
+  /** Product vendor. */
   vendor?: string | null;
+  /** Lowest and highest variant prices. Show the range until the selection resolves to a variant. */
   priceRange?: ProductPriceRange;
-  /** When `true`, the product cannot be added to cart without a selling plan. */
+  /** When `true`, the customer can't add the product to the cart without a selling plan. */
   requiresSellingPlan?: boolean | null;
-  /** Encoded representation of which option-value combinations map to real variants. Consumers should treat this as opaque. */
+  /** Encoded list of the option value combinations that exist as variants. Pass the field unchanged from your query. */
   encodedVariantExistence?: string | null;
-  /** Encoded representation of which existing variants are currently available for sale. Consumers should treat this as opaque. */
+  /** Encoded list of the variants that are available for sale. Pass the field unchanged from your query. */
   encodedVariantAvailability?: string | null;
+  /** Product options and their values. The option state keeps this order. */
   options: ProductOptionInput<TVariant>[];
-  /** SFAPI `selectedOrFirstAvailableVariant`: the variant matching the query's `selectedOptions` argument, else the first available variant, else the first variant (which may be unavailable). */
+  /** The variant that matches the query's `selectedOptions` argument, or else the first available variant, or else the first variant, which can be unavailable. The store starts with this variant selected. */
   selectedOrFirstAvailableVariant: TVariant | null;
-  /** Variants adjacent to the selected variant — used to resolve option values without a full variant list. */
+  /** Variants that differ from the selected variant by one option value. The store resolves option values from these variants, and you don't need to query every variant. */
   adjacentVariants: TVariant[];
 }
 
-/** Extracts the concrete variant type from a {@link ProductInput} subtype. */
+/** Variant type from your product query type. */
 export type ProductVariantFrom<TProduct extends ProductInput> =
   TProduct extends ProductInput<infer TVariant> ? TVariant : ProductVariantInput;
 
-/** Extracts the concrete option-value type from a {@link ProductInput} subtype. */
+/** Option value type from your product query type. */
 export type ProductOptionValueFrom<TProduct extends ProductInput> =
   TProduct["options"][number]["optionValues"][number];
 
 /**
- * Computed state for a single option value (e.g. "Red" under "Color").
+ * State of one option value, such as "Red" under "Color", for the current selection.
  *
- * Derived each time the selection changes — fields reflect the current
- * selection context, not static product data.
+ * Render the value's control and link from this state.
  */
 export interface VariantOptionValueState<
   TVariant extends ProductVariantInput = ProductVariantInput,
   TOptionValue extends ProductOptionValueInput = ProductOptionValueInput,
 > {
+  /** Option value name, such as "Red". */
   name: string;
+  /** Swatch data from the option value in your query. */
   swatch?: TOptionValue["swatch"];
-  /** Whether this value is the current selection for its option. */
+  /** Whether the customer has selected the value. */
   selected: boolean;
-  /** Whether a variant exists for the target selection. Falls back to `true` when `encodedVariantExistence` wasn't queried. */
+  /** Whether a variant exists for the selection that the value targets. Defaults to `true` when your query doesn't select the encoded variant existence field. */
   exists: boolean;
-  /** Whether the target selection is available for sale. Uses `encodedVariantAvailability` when queried, otherwise the loaded variant's `availableForSale` (`false` if not loaded). */
+  /** Whether the variant for the targeted selection is available for sale. Without the encoded variant availability in your query, the value comes from the loaded variant, or reads `false` when your query didn't load that variant. */
   available: boolean;
-  /** The loaded variant for the target selection, or `null` if the selection is partial or that variant wasn't part of the query result. */
+  /** Variant for the targeted selection, or `null` when the selection is partial or your query didn't load that variant. */
   variant: TVariant | null;
-  /** The selection this value targets. Use for link building; `selectOption()` is the source of truth for the resulting selection. */
+  /** Selection that the value targets. Build the option link from this selection. Selecting the value can produce a different selection. */
   selectedOptions: SelectedOption[];
-  /** Product handle, useful for building navigation links to combined-listing child products. */
+  /** Product handle for the option link. A value from another product in a combined listing uses that product's handle. Selected values use the current product's handle. */
   handle: string;
 }
 
 /**
- * Computed state for a product option (e.g. "Color"), grouping its {@link VariantOptionValueState} entries.
+ * State of one product option, such as "Color", and its values.
  */
 export interface VariantOptionState<
   TVariant extends ProductVariantInput = ProductVariantInput,
   TOptionValue extends ProductOptionValueInput = ProductOptionValueInput,
 > {
+  /** Option name, such as "Color". */
   name: string;
+  /** State of each value, in the product's value order. */
   values: VariantOptionValueState<TVariant, TOptionValue>[];
 }

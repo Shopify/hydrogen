@@ -1,25 +1,24 @@
 /**
- * Base error for Customer Account API failures. Thrown by
- * `CustomerAccountClient.graphql()` when the API responds with a non-OK
- * HTTP status, when the response body cannot be parsed as JSON, or when the
- * parsed response is missing `data`. Also thrown (without subclassing) for
- * OAuth token-request timeouts and network failures.
+ * The error that a Customer Account API request throws when the request fails. The client throws this error for a non-OK HTTP status, a response that isn't valid GraphQL, a response without data, or a network failure. The OAuth callback also throws this error when its token request times out.
  *
- * Not all fields are populated on every instance. `status` is present
- * whenever an HTTP response was received. `requestId` is set when the
- * `x-request-id` response header exists. Both are absent on network
- * failures where no response arrived. `retryAfter` is populated only on
- * non-OK responses.
+ * Catch this class to handle every Customer Account API failure, including authentication and timeout errors. Read `status`, `requestId`, and `retryAfter` to handle the failure. Network failures have no status or request ID, and only non-OK responses include a retry-after value.
  *
  * @publicDocs
  */
 export class CustomerAccountApiError extends Error {
-  /** HTTP status code from the API response. Present whenever an HTTP response was received (including parse failures), absent on network failures where no response arrived. */
+  /** The HTTP status of the response, including a response that Hydrogen can't parse. */
   readonly status?: number;
-  /** Value of the `x-request-id` response header, when the API returned one. Useful for Shopify support requests. */
+  /** The response's `x-request-id` header. Include the ID in Shopify support requests. */
   readonly requestId?: string;
-  /** Value of the `retry-after` response header, when present. Indicates when the client should retry a rate-limited request. */
+  /** The `retry-after` header on a non-OK response. Use the value to schedule a retry of a rate-limited request. */
   readonly retryAfter?: string;
+
+  /** `CustomerAccountApiError`. Each subclass sets its own class name. */
+  declare name: string;
+  /** Describes the failure, such as the HTTP status that the API returned. */
+  declare message: string;
+  /** The stack trace, when the JavaScript runtime records one. */
+  declare stack?: string;
 
   constructor(
     message: string,
@@ -34,15 +33,20 @@ export class CustomerAccountApiError extends Error {
 }
 
 /**
- * Client-side pre-flight check. Thrown when the access token is missing,
- * empty, has leading or trailing whitespace, or contains ASCII control
- * characters (including DEL). Also thrown when the options object is
- * missing. A token the server rejects (e.g. expired or revoked) produces
- * the base {@link CustomerAccountApiError} with `status: 401` instead.
+ * The error that a Customer Account API request throws when the access token is missing or malformed. The client throws this error before it sends the request when the token is empty, has leading or trailing whitespace, or contains control characters. The client also throws this error when you omit the options argument.
+ *
+ * When the API rejects a token, the client throws `CustomerAccountApiError` with the response status.
  *
  * @publicDocs
  */
 export class CustomerAccountAuthenticationError extends CustomerAccountApiError {
+  /** Always `CustomerAccountAuthenticationError`. */
+  declare name: string;
+  /** Always `"Customer Account API access token is required"`. */
+  declare message: string;
+  /** The stack trace, when the JavaScript runtime records one. */
+  declare stack?: string;
+
   constructor(message = "Customer Account API access token is required") {
     super(message);
     this.name = "CustomerAccountAuthenticationError";
@@ -50,16 +54,20 @@ export class CustomerAccountAuthenticationError extends CustomerAccountApiError 
 }
 
 /**
- * Thrown when a `CustomerAccountClient.graphql()` request exceeds
- * `defaultTimeoutInMs`. (OAuth token-request timeouts throw the base
- * {@link CustomerAccountApiError} instead.) Extends
- * {@link CustomerAccountApiError}.
+ * The error that a Customer Account API request throws when the request takes longer than the client's timeout. The timeout covers the whole request, including reading the response body.
  *
  * @publicDocs
  */
 export class CustomerAccountTimeoutError extends CustomerAccountApiError {
-  /** The timeout threshold (in milliseconds) that was exceeded. */
+  /** The timeout that the request exceeded, in milliseconds. */
   readonly timeoutInMs: number;
+
+  /** Always `CustomerAccountTimeoutError`. */
+  declare name: string;
+  /** States the timeout, such as `"Customer Account API request timed out after 30000ms"`. */
+  declare message: string;
+  /** The stack trace, when the JavaScript runtime records one. */
+  declare stack?: string;
 
   constructor(timeoutInMs: number) {
     super(`Customer Account API request timed out after ${timeoutInMs}ms`);
@@ -69,25 +77,22 @@ export class CustomerAccountTimeoutError extends CustomerAccountApiError {
 }
 
 /**
- * Thrown during the Customer Account OAuth authorization code exchange
- * or id_token validation in `handleOAuthCallback`. Refresh failures never
- * surface this error (they are caught internally and returned as
- * `undefined`). Extends `Error` directly, **not**
- * {@link CustomerAccountApiError}. A `catch` block for
- * `CustomerAccountApiError` will not catch this error.
+ * The error that the OAuth callback throws when customer sign-in fails. Sign-in fails when the callback doesn't match the sign-in that `prepareLoginUrl()` started, when that sign-in started more than 10 minutes earlier, when the code exchange fails, or when Shopify's tokens fail validation. The authorize route catches this error and redirects the customer to the failed-login path. Token refreshes never throw this error, and a failed refresh returns `undefined`.
  *
- * Use the `code` field for programmatic handling. Known codes:
- * `"missing_callback_params"`, `"state_mismatch"`,
- * `"token_exchange_rejected"`, `"token_exchange_failed"`,
- * `"invalid_token_response"`, `"nonce_mismatch"`, `"issuer_mismatch"`,
- * `"audience_mismatch"`, `"expired_id_token"`, `"invalid_id_token"`,
- * `"missing_pending_login"`.
+ * Read `code` to handle each failure. The codes are `missing_callback_params`, `state_mismatch`, `missing_pending_login`, `token_exchange_rejected`, `token_exchange_failed`, `invalid_token_response`, `nonce_mismatch`, `issuer_mismatch`, `audience_mismatch`, `expired_id_token`, and `invalid_id_token`.
  *
  * @publicDocs
  */
 export class CustomerAccountOAuthError extends Error {
-  /** Machine-readable error identifier for programmatic handling. */
+  /** The failure code, one of the codes in the class description. */
   readonly code: string;
+
+  /** Always `CustomerAccountOAuthError`. */
+  declare name: string;
+  /** Describes the sign-in failure. Read `code` to handle the failure. */
+  declare message: string;
+  /** The stack trace, when the JavaScript runtime records one. */
+  declare stack?: string;
 
   constructor(code: string, message: string, options?: { cause?: unknown }) {
     super(message, options?.cause ? { cause: options.cause } : undefined);

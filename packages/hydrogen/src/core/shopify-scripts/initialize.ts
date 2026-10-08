@@ -8,11 +8,17 @@ import { loadShopifyWebMcpTools } from "./webmcp";
 const log = getLogger("consent");
 
 /**
- * Initializes Shopify browser script behavior for frameworks without a Hydrogen binding.
+ * Starts Shopify's scripts in the browser for frameworks without a Hydrogen binding. Call it after
+ * hydration, with the consent configuration that you passed to `getShopifyScriptTags`.
  *
- * This is the browser hydration half of `getShopifyScriptTags()`: framework bindings combine both
- * into a `ShopifyScripts` component, while custom integrations can render script tags during SSR
- * and call this helper from their browser lifecycle.
+ * The function sets up `window.Shopify.routes`, and sends a page view event on load and after each
+ * navigation that changes the path or query. In the custom banner consent mode, Hydrogen calls your
+ * setup callback after the Customer Privacy API loads. A custom banner configuration without a
+ * setup callback logs a warning, and analytics events stay blocked. When the browser supports
+ * WebMCP, the function also loads Shopify's WebMCP tools. Set `webMcp` to `false` to skip them.
+ *
+ * @param options - The consent configuration, the route settings, and whether to load WebMCP tools.
+ * @returns A promise that resolves after the WebMCP tools load or fail to load, or right away when the function skips WebMCP.
  *
  * @publicDocs
  */

@@ -9,7 +9,8 @@ import {
 } from "../core/shop-pay/shop-pay";
 
 /**
- * Props accepted by the `ShopPayButton` component.
+ * Props for the `ShopPayButton` component. The props match the options of `createShopPayButton`.
+ * The component doesn't accept `className` or `style` props.
  *
  * @publicDocs
  */
@@ -19,9 +20,12 @@ const canUseDom = typeof document !== "undefined";
 defineShopPayButton();
 
 /**
- * Renders the Shop Pay button custom element. On the server it includes declarative shadow DOM
- * markup so the button renders before scripts load.
+ * Renders a Shop Pay button that takes the customer to checkout with Shop Pay. The button renders on the server and shows before scripts load.
  *
+ * Set the size and shape with the `width` and `borderRadius` props. The component doesn't accept `className` or `style` props.
+ *
+ * @param options - The checkout target, variants, attribution, and display settings for the button.
+ * @returns The Shop Pay button element.
  * @publicDocs
  */
 export function ShopPayButton(options: ShopPayButtonProps): ReactElement {
