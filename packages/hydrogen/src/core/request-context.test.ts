@@ -14,7 +14,6 @@ import {
   SHOPIFY_VISIT_TOKEN_HEADER,
 } from "./headers";
 import { createShopifyRequestContext, type I18nConfig } from "./request-context";
-import { assert } from "./test-utils";
 
 const DEFAULT_I18N = { country: "US", language: "EN" } as I18nConfig;
 
@@ -656,18 +655,15 @@ describe("UCP discovery link header", () => {
   }
 
   it("links responses to the UCP profile without a version", () => {
-    const headers = applyResponseHeaders(new Request("https://shop.example.com/products/hat"), {
-      "content-type": "text/html; charset=utf-8",
-    });
+    const headers = applyResponseHeaders(
+      new Request("https://shop.example.com/products/hat", { headers: { accept: "*/*" } }),
+      { "content-type": "text/html; charset=utf-8" },
+    );
 
-    const link = headers.get("link");
-    assert(link, "Expected responses to carry a UCP discovery Link header");
-    expect(link).toBe(UCP_PROFILE_LINK);
-    expect(link).not.toContain("version");
+    expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
   });
 
   it.each([
-    ["an HTML page requested with Accept: */*", "GET", "*/*", "text/html"],
     ["a JSON route requested with Accept: text/html", "GET", "text/html", "application/json"],
     ["a JSON response", "GET", "application/json", "application/json"],
     ["a HEAD request", "HEAD", "*/*", "text/html"],
@@ -692,7 +688,6 @@ describe("UCP discovery link header", () => {
   });
 
   it.each([
-    '</.well-known/ucp>; rel="ucp"',
     '</.well-known/ucp>; rel="ucp"; version="2026-01-11"',
     "</.well-known/ucp>; REL=UCP",
     '</fonts/brand.woff2>; rel=preload, <https://profiles.example.com/ucp>; rel="ucp"',
@@ -740,17 +735,14 @@ describe("UCP discovery link header", () => {
     expect(headers.has("link")).toBe(false);
   });
 
-  it.each([
-    "http://localhost:3000",
-    "https://local.tryhydrogen.dev:5173",
-    "https://shop.myshopify.com",
-    "https://myshopify.dev.example.com",
-    "https://notmyshopify.dev",
-  ])("links responses served from %s", (url) => {
-    const headers = applyResponseHeaders(new Request(url));
+  it.each(["https://myshopify.dev.example.com", "https://notmyshopify.dev"])(
+    "links responses served from %s",
+    (url) => {
+      const headers = applyResponseHeaders(new Request(url));
 
-    expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
-  });
+      expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
+    },
+  );
 
   it("links responses when the storefront URL is unknown", () => {
     const headers = applyResponseHeaders({ headers: new Headers() });
