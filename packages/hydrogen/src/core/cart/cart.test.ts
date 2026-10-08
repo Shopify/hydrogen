@@ -1946,16 +1946,28 @@ describe("CartStore.handleFormSubmit — concurrency", () => {
         id: cartId,
         lines: [lineA, lineB],
         totalQuantity: lineQuantity * 2,
+        discountCodes: [{ code: "OLD", applicable: true }],
+        buyerIdentity: { countryCode: "CA" },
       }),
     );
 
     const removeA = mockUpdateCart({ lines: [{ id: lineA.id, quantity: removedQuantity }] });
     const removeB = mockUpdateCart({ lines: [{ id: lineB.id, quantity: removedQuantity }] });
-    resolveUpdate(1, serverCart(lineQuantity, [{ id: lineA.id, quantity: lineQuantity }]));
+    resolveUpdate(1, {
+      cart: {
+        ...serverCart(lineQuantity, [{ id: lineA.id, quantity: lineQuantity }]).cart,
+        discountCodes: [],
+        buyerIdentity: { countryCode: "US" },
+      },
+    });
     resolveUpdate(0, serverCart(lineQuantity, [{ id: lineB.id, quantity: lineQuantity }]));
     await Promise.all([removeA, removeB]);
     await vi.waitFor(() => expect(store.getState().errors.network).toHaveLength(1));
 
+    expect(store.getState().data).toMatchObject({
+      discountCodes: [{ code: "OLD", applicable: true }],
+      buyerIdentity: { countryCode: "CA" },
+    });
     expect(getCartLines(store.getState().data)).toEqual([]);
     expect(store.getState().data.totalQuantity).toBe(removedQuantity);
     expect(store.getState().errors.network[0].message).toBe(
@@ -3839,6 +3851,268 @@ describe("event-driven sync", () => {
 
     expect(getCartLines(store.getState().data)[0].quantity).toBe(5);
     expect(store.getState().pending.lines).toContain("line-1");
+  });
+});
+
+describe("custom cart fields in mutation responses", () => {
+  const giftCards = [{ id: "gift-card-1", lastCharacters: "ABCD", amountUsed: { amount: "5.0" } }];
+
+  it("refreshes and clears returned non-line fields across sequential mutations", async () => {
+    store.hydrate(
+      makeCartState({
+        lines: [makeLine({ id: "line-1", quantity: 1 })],
+        totalQuantity: 1,
+        checkoutUrl: "https://shop.example/checkout",
+        note: "Leave at the door",
+        discountCodes: [{ code: "OLD", applicable: true }],
+        buyerIdentity: { countryCode: "CA" },
+      }),
+    );
+    const first = mockUpdateCart({ lines: [{ id: "line-1", quantity: 2 }] });
+    resolveUpdate(0, {
+      cart: {
+        ...serverCart(2, [{ id: "line-1", quantity: 2 }]).cart,
+        appliedGiftCards: giftCards,
+        buyerIdentity: { countryCode: "US" },
+        discountCodes: [{ code: "NEW", applicable: false }],
+      },
+    });
+    await first;
+    expect(store.getState().data).toMatchObject({
+      appliedGiftCards: giftCards,
+      buyerIdentity: { countryCode: "US" },
+      discountCodes: [{ code: "NEW", applicable: false }],
+      checkoutUrl: "https://shop.example/checkout",
+      note: "Leave at the door",
+    });
+    const second = mockUpdateCart({ lines: [{ id: "line-1", quantity: 3 }] });
+    resolveUpdate(1, {
+      cart: {
+        ...serverCart(3, [{ id: "line-1", quantity: 3 }]).cart,
+        appliedGiftCards: [],
+        buyerIdentity: null,
+        discountCodes: [],
+      },
+    });
+    await second;
+    expect(store.getState().data).toMatchObject({
+      appliedGiftCards: [],
+      buyerIdentity: null,
+      discountCodes: [],
+    });
+  });
+
+  it("fills custom fields for a cart created by the first add", async () => {
+    const add = mockUpdateCart({
+      lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+    });
+    resolveUpdate(0, {
+      cart: {
+        ...serverCart(1, [{ id: "line-1", quantity: 1 }]).cart,
+        appliedGiftCards: [],
+      },
+    });
+    await add;
+
+    const data = store.getState().data as CartData & Record<string, unknown>;
+    expect(data.appliedGiftCards).toEqual([]);
+  });
+});
+
+describe("variant swap", () => {
+  const OLD = "gid://shopify/ProductVariant/old";
+  const NEW = "gid://shopify/ProductVariant/new";
+  const OTHER = "gid://shopify/ProductVariant/other";
+
+  // Standard Actions update events carry only the line id and quantity, even for a swap.
+  function dispatchSwapEvent() {
+    const response = createDeferred<unknown>();
+    document.dispatchEvent(
+      Object.assign(new Event("shopify:cart:lines-update"), {
+        action: "update",
+        context: "standard-action",
+        lines: [{ id: "line-1", quantity: 1 }],
+        promise: response.promise,
+      }),
+    );
+    return response;
+  }
+
+  function swappedCart(swappedLineId: string, otherQuantity = 1) {
+    return makeCartState({
+      lines: [
+        lineWithMerchandise(swappedLineId, 1, NEW),
+        lineWithMerchandise("line-2", otherQuantity, OTHER),
+      ],
+      totalQuantity: 1 + otherQuantity,
+    });
+  }
+
+  const merchandise = () =>
+    getCartLines(store.getState().data).map((line) => [
+      line.id,
+      line.merchandise?.id,
+      line.quantity,
+    ]);
+
+  beforeEach(() => {
+    store.hydrate(
+      makeCartState({
+        lines: [lineWithMerchandise("line-1", 1, OLD), lineWithMerchandise("line-2", 1, OTHER)],
+        totalQuantity: 2,
+      }),
+    );
+  });
+
+  it.each(["line-1", "line-replacement"])(
+    "shows the swapped variant when Shopify returns it as %s",
+    async (responseId) => {
+      const response = dispatchSwapEvent();
+      response.resolve({ cart: swappedCart(responseId) });
+      await response.promise;
+      await nextTick();
+
+      expect(merchandise()).toEqual([
+        [responseId, NEW, 1],
+        ["line-2", OTHER, 1],
+      ]);
+      expect(store.getState().pending.lines.size).toBe(0);
+      expect(mockGetCart).not.toHaveBeenCalled();
+    },
+  );
+
+  it("drops the old variant's fields when Shopify returns the swap under the same line ID", async () => {
+    const id = "gid://shopify/Cart/same-id-swap";
+    store.hydrate(
+      makeCartState({
+        id,
+        lines: [
+          makeLine({
+            id: "line-1",
+            quantity: 1,
+            merchandise: {
+              id: OLD,
+              title: "Small",
+              product: { title: "T-Shirt" },
+              quantityAvailable: 1,
+            },
+          }),
+          lineWithMerchandise("line-2", 1, OTHER),
+        ],
+        totalQuantity: 2,
+      }),
+    );
+    const response = dispatchSwapEvent();
+    response.resolve({ cart: { ...swappedCart("line-1"), id } });
+    await response.promise;
+    await nextTick();
+
+    const [swapped] = getCartLines(store.getState().data);
+    expect(swapped.merchandise).toEqual({
+      id: NEW,
+      title: "Small",
+      product: { title: "T-Shirt" },
+    });
+  });
+
+  it("revalidates a swap that returns a new line ID while another change is in flight", async () => {
+    mockGetCart.mockResolvedValue({ cart: swappedCart("line-replacement", 2) });
+    const other = mockUpdateCart({ lines: [{ id: "line-2", quantity: 2 }] });
+    const response = dispatchSwapEvent();
+
+    response.resolve({ cart: swappedCart("line-replacement") });
+    resolveUpdate(0, { cart: swappedCart("line-replacement", 2) });
+    await Promise.all([response.promise, other]);
+
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+    expect(mockGetCart).toHaveBeenCalledTimes(1);
+    expect(merchandise()).toEqual([
+      ["line-replacement", NEW, 1],
+      ["line-2", OTHER, 2],
+    ]);
+  });
+
+  it("keeps the swapped line when its new ID overlaps other work and the revalidation fails", async () => {
+    mockGetCart.mockRejectedValue(new Error("Refresh failed"));
+    const other = mockUpdateCart({ lines: [{ id: "line-2", quantity: 2 }] });
+    const response = dispatchSwapEvent();
+
+    response.resolve({ cart: swappedCart("line-replacement") });
+    resolveUpdate(0, { cart: swappedCart("line-replacement", 2) });
+    await Promise.all([response.promise, other]);
+
+    await vi.waitFor(() => expect(store.getState().errors.network).toHaveLength(1));
+    expect(merchandise()).toEqual([
+      ["line-1", OLD, 1],
+      ["line-2", OTHER, 2],
+    ]);
+  });
+
+  it("keeps the only line when its swap overlaps other work and the revalidation fails", async () => {
+    const id = "gid://shopify/Cart/one-line";
+    store.hydrate(
+      makeCartState({ id, lines: [lineWithMerchandise("line-1", 1, OLD)], totalQuantity: 1 }),
+    );
+    mockGetCart.mockRejectedValue(new Error("Refresh failed"));
+    const note = mockUpdateCart({ note: "Gift" });
+    const response = dispatchSwapEvent();
+
+    response.resolve({
+      cart: makeCartState({
+        id,
+        lines: [lineWithMerchandise("line-replacement", 1, NEW)],
+        totalQuantity: 1,
+      }),
+    });
+    resolveUpdate(0, {
+      cart: makeCartState({ id, lines: [lineWithMerchandise("line-1", 1, OLD)], totalQuantity: 1 }),
+    });
+    await Promise.all([response.promise, note]);
+
+    await vi.waitFor(() => expect(store.getState().errors.network).toHaveLength(1));
+    expect(merchandise()).toEqual([["line-1", OLD, 1]]);
+  });
+
+  it("takes the lines connection from a discount response", async () => {
+    const id = "gid://shopify/Cart/paginated";
+    const lines = getCartLines(store.getState().data);
+    store.hydrate(
+      makeCartState({
+        id,
+        lines: { nodes: lines, pageInfo: { hasNextPage: true } } as CartData["lines"],
+        totalQuantity: 2,
+      }),
+    );
+    const discount = mockUpdateCart({ discountCodes: ["SAVE"] });
+    resolveUpdate(0, {
+      cart: makeCartState({
+        id,
+        lines: { nodes: lines, pageInfo: { hasNextPage: false } } as CartData["lines"],
+        totalQuantity: 2,
+        discountCodes: [{ code: "SAVE", applicable: true }],
+      }),
+    });
+    await discount;
+    await nextTick();
+
+    expect(store.getState().data.lines).toMatchObject({ pageInfo: { hasNextPage: false } });
+    expect(store.getState().data.discountCodes).toEqual([{ code: "SAVE", applicable: true }]);
+  });
+
+  it("does not restore a removed line from a merged swap response that settles after the removal", async () => {
+    mockGetCart.mockRejectedValue(new Error("Refresh failed"));
+    const response = dispatchSwapEvent();
+    const removal = mockUpdateCart({ lines: [{ id: "line-2", quantity: 0 }] });
+
+    resolveUpdate(0, serverCart(0, []));
+    await removal;
+    response.resolve({
+      cart: makeCartState({ lines: [lineWithMerchandise("line-2", 2, OTHER)], totalQuantity: 2 }),
+    });
+    await response.promise;
+
+    await vi.waitFor(() => expect(store.getState().errors.network).toHaveLength(1));
+    expect(merchandise()).toEqual([["line-1", OLD, 1]]);
   });
 });
 

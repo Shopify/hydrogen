@@ -31,6 +31,16 @@ function multipartRequest(fields: Record<string, string>): Request {
 }
 
 describe("parseCartRequest", () => {
+  describe("JSON — one mutation per request", () => {
+    it.each([
+      { lines: [{ id: "gid://shopify/CartLine/1", quantity: 2 }], attributes: [] },
+      { note: "Gift", discountCodes: ["SAVE"] },
+      { lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }], note: "" },
+    ])("rejects a body that combines mutation fields: %j", async (body) => {
+      await expect(parseCartRequest(jsonRequest(body))).rejects.toThrow(/only one of/);
+    });
+  });
+
   describe("JSON — line classification", () => {
     it("classifies lines with merchandiseId and no id as add", async () => {
       const { action } = await parseCartRequest(
