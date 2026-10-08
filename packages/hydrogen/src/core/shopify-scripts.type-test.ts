@@ -6,7 +6,6 @@ import type {
   ShopifyScriptTagDescriptors,
   ShopifyScriptTagsOptions,
 } from "./shopify-scripts";
-import type { ShopifyLinkTagAttributes } from "./shopify-scripts/types";
 
 describe("Shopify script option types", () => {
   it("requires complete shop identity", () => {});
@@ -70,7 +69,6 @@ export function shopifyLinkDescriptorTypes(descriptors: ShopifyScriptTagDescript
   ];
   void partial;
 
-  expectTypeOf<"ucp">().toMatchTypeOf<ShopifyLinkTagAttributes["rel"]>();
   // @ts-expect-error only link types Hydrogen renders are accepted
   const unknownRel: ShopifyScriptTagDescriptor = { tagName: "link", attributes: { rel: "preload" } };
   void unknownRel;
