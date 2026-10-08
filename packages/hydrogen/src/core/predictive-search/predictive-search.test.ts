@@ -316,17 +316,20 @@ describe("makePredictiveSearchQueries", () => {
     );
   });
 
-  it("throws locally when custom fragments use the wrong type", () => {
-    const wrongFragment = gql(`
-      fragment PredictiveSearchProductFragment on Collection {
-        title
-      }
-    `);
+  it.each(["Collection", "ProductVariant"])(
+    "throws locally when a custom product fragment targets %s",
+    (typeName) => {
+      const wrongFragment = gql(`
+        fragment PredictiveSearchProductFragment on ${typeName} {
+          id
+        }
+      `);
 
-    expect(() => makePredictiveSearchQueries({ fragments: { product: wrongFragment } })).toThrow(
-      "and target Product",
-    );
-  });
+      expect(() => makePredictiveSearchQueries({ fragments: { product: wrongFragment } })).toThrow(
+        "and target Product",
+      );
+    },
+  );
 });
 
 describe("queryPredictiveSearch", () => {

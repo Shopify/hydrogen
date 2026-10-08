@@ -14,27 +14,48 @@ import {
 import {
   createCollectionStore,
   createCollectionReconciler,
+  type CollectionActions,
   type CollectionData,
   type CollectionReconciler,
   type CollectionStore,
 } from "../core/collection";
 import type { CollectionState } from "../core/collection";
 
-export type { CollectionData };
+export type { CollectionActions, CollectionData };
 
 const CollectionStoreKey: InjectionKey<ShallowRef<CollectionStore>> = Symbol("CollectionStore");
 
-export type CollectionActions = Pick<
-  CollectionStore,
-  | "setFilters"
-  | "toggleFilter"
-  | "toggleFilterInput"
-  | "setSortKey"
-  | "setSortByValue"
-  | "reset"
-  | "handleFormSubmit"
->;
-
+/**
+ * Manages the lifecycle of a {@link CollectionStore}: creates on mount and syncs
+ * with URL changes. Recreates the store when `data.handle` changes
+ * (navigating to a different collection).
+ *
+ * @example
+ * ```vue
+ * <script setup lang="ts">
+ * import { CollectionProvider, type CollectionData } from '@shopify/hydrogen/vue';
+ * import { useRoute, useRouter } from 'vue-router';
+ *
+ * const props = defineProps<{ data: CollectionData; urlSearch: string }>();
+ * const route = useRoute();
+ * const router = useRouter();
+ *
+ * // `search` includes the leading `?`, so append it to the path as-is.
+ * const onChange = (search: string) => router.replace(`${route.path}${search}`);
+ * </script>
+ *
+ * <template>
+ *   <CollectionProvider
+ *     :data="props.data"
+ *     :url-search="props.urlSearch"
+ *     @change="onChange"
+ *   >
+ *     <slot />
+ *   </CollectionProvider>
+ * </template>
+ * ```
+ * @publicDocs
+ */
 export const CollectionProvider = defineComponent({
   name: "CollectionProvider",
   props: {
@@ -113,7 +134,36 @@ function useRequiredStoreRef(composableName: string): ShallowRef<CollectionStore
   return storeRef;
 }
 
+/**
+ * Subscribes to the collection store and returns a reactive ref of the full
+ * state snapshot.
+ *
+ * @example
+ * ```vue
+ * <script setup lang="ts">
+ * const state = useCollection();
+ * </script>
+ *
+ * <template>
+ *   <p>{{ state.status }}</p>
+ * </template>
+ * ```
+ * @publicDocs
+ */
 export function useCollection(): Readonly<ShallowRef<CollectionState>>;
+/**
+ * Subscribes to the collection store and returns a reactive ref of a derived
+ * value via `selector`. Optionally accepts an `isEqual` comparator to skip
+ * updates when the derived value is structurally unchanged.
+ *
+ * @example
+ * ```vue
+ * <script setup lang="ts">
+ * const status = useCollection(s => s.status);
+ * </script>
+ * ```
+ * @publicDocs
+ */
 export function useCollection<S>(
   selector: (state: CollectionState) => S,
   isEqual?: (a: S, b: S) => boolean,
@@ -147,6 +197,13 @@ export function useCollection<S>(
   return selected as Readonly<ShallowRef<CollectionState | S>>;
 }
 
+/**
+ * Returns methods that change filters and sort. The store's `onBrowseChange`
+ * callback (set by {@link CollectionProvider}) handles emitting `change` with a
+ * serialized search string.
+ *
+ * @publicDocs
+ */
 export function useCollectionActions(): CollectionActions {
   const storeRef = useRequiredStoreRef("useCollectionActions");
 
@@ -161,23 +218,41 @@ export function useCollectionActions(): CollectionActions {
   };
 }
 
+/**
+ * Returns form props for progressive-enhancement of collection filter forms.
+ *
+ * @example
+ * ```vue
+ * <script setup lang="ts">
+ * const { formProps } = useCollectionForm();
+ * </script>
+ *
+ * <template>
+ *   <form v-bind="formProps()" action="/collections/shoes">
+ *     <input type="checkbox" name="filter.p.tag" value="sale" />
+ *     <button type="submit">Apply</button>
+ *   </form>
+ * </template>
+ * ```
+ * @publicDocs
+ */
 export function useCollectionForm(): {
   formProps: (opts?: {
-    beforeSubmit?: (e: Event) => void;
-    afterSubmit?: (e: Event) => void;
+    beforeSubmit?: (e: SubmitEvent) => void;
+    afterSubmit?: (e: SubmitEvent) => void;
   }) => Record<string, unknown>;
 } {
   const actions = useCollectionActions();
 
   const formProps = (opts?: {
-    beforeSubmit?: (e: Event) => void;
-    afterSubmit?: (e: Event) => void;
+    beforeSubmit?: (e: SubmitEvent) => void;
+    afterSubmit?: (e: SubmitEvent) => void;
   }): Record<string, unknown> => ({
-    onSubmit: (e: Event) => {
+    onSubmit: (e: SubmitEvent) => {
       opts?.beforeSubmit?.(e);
       if (e.defaultPrevented) return;
       e.preventDefault();
-      actions.handleFormSubmit(e as SubmitEvent);
+      actions.handleFormSubmit(e);
       opts?.afterSubmit?.(e);
     },
   });

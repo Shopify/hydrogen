@@ -141,9 +141,14 @@ static sidebar on desktop and a collapsible disclosure on mobile. **Do NOT
 render a second copy of the filter inputs** (two same-`name`d inputs in one GET
 form submit duplicate query params). The search filter landmark gets a visually-hidden `<h2>Filters</h2>` +
 `aria-labelledby`. Price-range chips/labels are `formatPrice`-formatted
-in the store currency; the price range submits on **blur/Enter, not per
-keystroke** (see `hydrogen-collection-browser`). While loading, facet inputs
-are `disabled`.
+in the store currency. Submit price changes after a **350 ms** pause with one
+shared min/max timer; each input event restarts it, and unmount clears it.
+Preserve native Enter behavior. Cancel the pending timer whenever the form
+submits (see `hydrogen-collection-browser`). Checkboxes and the sort `<select>`
+submit immediately on change. While loading, keep all filter controls mounted
+and enabled, keep stable keys across filter updates, and show a pending visual
+state. Update externally changed checked/selected values in place, and keep
+native keyboard activation.
 
 ## Without JavaScript
 

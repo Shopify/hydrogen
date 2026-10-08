@@ -15,6 +15,7 @@ import {
   SDK_VARIANT_HEADER,
   SDK_VARIANT_SOURCE_HEADER,
   SDK_VERSION_HEADER,
+  SEC_GPC_HEADER,
   SHOPIFY_STOREFRONT_ORIGIN_HEADER,
   STOREFRONT_URL_HEADER,
 } from "./headers";
@@ -114,6 +115,7 @@ export type ShopifyRequestContextWithBuyerIp<I18n extends I18nConfig = I18nConfi
 
 type Context<I18n extends I18nConfig = I18nConfig> = {
   cookie?: string;
+  globalPrivacyControl?: string;
   buyerIp?: string;
   requestGroupId: string;
   signal?: AbortSignal;
@@ -123,6 +125,12 @@ type Context<I18n extends I18nConfig = I18nConfig> = {
   documentRequest?: boolean;
 };
 
+/**
+ * Creates the per-request context that Hydrogen's server APIs take. It normalizes the i18n config
+ * and owns the request and response headers a Shopify storefront needs.
+ *
+ * @publicDocs
+ */
 export function createShopifyRequestContext<const I18n extends I18nConfig>(
   input: ShopifyRequestContextWithBuyerIpInput<I18n>,
 ): ShopifyRequestContextWithBuyerIp<I18n>;
@@ -152,6 +160,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
   const storefrontOrigin = getUrlOrigin(url);
   const context = {
     ...(cookieHeader && { cookie: cookieHeader }),
+    globalPrivacyControl: request.headers.get(SEC_GPC_HEADER) ?? undefined,
     i18n,
     ...(url && { url }),
     ...(storefrontOrigin && { storefrontOrigin }),
@@ -257,6 +266,9 @@ function applyStorefrontRequestHeaders(context: Context, headers: Headers): void
 
   if (context.cookie) headers.set("cookie", context.cookie);
   else headers.delete("cookie");
+  if (context.globalPrivacyControl !== undefined) {
+    headers.set(SEC_GPC_HEADER, context.globalPrivacyControl);
+  } else headers.delete(SEC_GPC_HEADER);
   if (context.storefrontOrigin) {
     headers.set(SHOPIFY_STOREFRONT_ORIGIN_HEADER, context.storefrontOrigin);
   } else headers.delete(SHOPIFY_STOREFRONT_ORIGIN_HEADER);

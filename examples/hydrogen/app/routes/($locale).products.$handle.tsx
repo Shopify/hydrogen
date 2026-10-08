@@ -146,7 +146,7 @@ function ProductDetails() {
             {
               id: product.id,
               title: product.title,
-              price: analyticsVariant.price.amount,
+              price: analyticsVariant.price,
               vendor: product.vendor,
               variantId: analyticsVariant.id,
               variantTitle: analyticsVariant.title,

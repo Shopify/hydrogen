@@ -1,4 +1,4 @@
-import { handleShopifyRedirects, handleShopifyRoutes, gql } from "@shopify/hydrogen";
+import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import type { ReactNode } from "react";
 import {
@@ -9,19 +9,24 @@ import {
   Scripts,
   ScrollRestoration,
   useNavigate,
+  useRouteLoaderData,
 } from "react-router";
 
-import { AnalyticsTracker, CartAnalyticsTracker } from "~/components/AnalyticsTrackers";
+import { CartAnalyticsTracker, PageViewedTracker } from "~/components/AnalyticsTrackers";
+import { AnnouncementBar } from "~/components/AnnouncementBar";
 import { CartDrawer } from "~/components/CartDrawer";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
+import { SearchDrawer } from "~/components/SearchDrawer";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { createRequestCustomerAccount, customerAccountContext } from "~/lib/customer-account";
 import { envContext } from "~/lib/env";
+import { predictiveSearchHandlers } from "~/lib/predictive-search-handlers";
+import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
-import { analyticsConsent, analyticsShop, shop, storefrontConfig } from "~/lib/shop";
+import { analyticsConsent, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -31,17 +36,6 @@ import {
 import type { Route } from "./+types/root";
 
 import appStylesHref from "./app.css?url";
-
-const NAV_COLLECTIONS_QUERY = gql(`
-  query NavCollections {
-    collections(first: 5) {
-      nodes {
-        handle
-        title
-      }
-    }
-  }
-`);
 
 export const links: Route.LinksFunction = () => [
   { rel: "stylesheet", href: appStylesHref },
@@ -68,7 +62,9 @@ export const middleware: Route.MiddlewareFunction[] = [
       sessionManager,
       storefrontClient,
       routeTemplates,
-      handlers: customerAccount ? [cartHandlers, customerAccount.handlers] : [cartHandlers],
+      handlers: customerAccount
+        ? [cartHandlers, predictiveSearchHandlers, customerAccount.handlers]
+        : [cartHandlers, predictiveSearchHandlers],
     });
 
     if (shopifyRoute) return shopifyRoute;
@@ -98,35 +94,40 @@ export const middleware: Route.MiddlewareFunction[] = [
 export async function loader({ context, request }: Route.LoaderArgs) {
   const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
-  const [cartResult, navResult] = await Promise.all([
+  const [cartResult, layout] = await Promise.all([
     cartHandlers.get({ storefrontClient, request }),
-    storefrontClient.graphql(NAV_COLLECTIONS_QUERY),
+    loadRootLayout(storefrontClient),
   ]);
 
   return {
     cartData: cartResult.data,
-    navCollections: navResult.data?.collections.nodes ?? [],
-    analyticsShop,
-    consent: analyticsConsent,
-    enableAnalyticsTestTap: env.MOCK_SHOP === "1",
+    shopInfo: layout.shopInfo,
+    shopIdentity: resolveShopIdentity(env, layout.shopId),
+    currency: layout.currency,
   };
 }
 
 export function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  // Absent when the root loader failed (error page only).
+  const rootData = useRouteLoaderData<typeof loader>("root");
 
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <ShopifyScripts
-          i18n={storefrontConfig.i18n}
-          shop={shop}
-          consent={analyticsConsent}
-          navigate={navigate}
-          routes={routeTemplates}
-        />
+        {rootData ? (
+          <ShopifyScripts
+            i18n={{ ...storefrontConfig.i18n, currency: rootData.currency }}
+            shop={rootData.shopIdentity.scriptShop}
+            analytics={{ channel: rootData.shopIdentity.analyticsShop.channel }}
+            shopifyAnalytics={rootData.shopIdentity.shopifyAnalytics}
+            consent={analyticsConsent}
+            navigate={navigate}
+            routes={routeTemplates}
+          />
+        ) : null}
         <Meta />
         <Links />
       </head>
@@ -148,23 +149,14 @@ export function Layout({ children }: { children: ReactNode }) {
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <CartProvider initialData={loaderData.cartData}>
-      <AnalyticsTracker
-        shop={loaderData.analyticsShop}
-        consent={loaderData.consent}
-        enableTestTap={loaderData.enableAnalyticsTestTap}
-      />
+      <PageViewedTracker />
       <CartAnalyticsTracker />
-      <div
-        role="region"
-        aria-label="Announcement"
-        className="bg-on-surface px-margin py-2.5 text-center"
-      >
-        <p className="type-body-sm text-surface">Free shipping on orders over $50</p>
-      </div>
-      <Header navCollections={loaderData.navCollections} />
+      <AnnouncementBar />
+      <Header shopInfo={loaderData.shopInfo} />
       <Outlet />
-      <Footer />
+      <Footer shopInfo={loaderData.shopInfo} />
       <CartDrawer />
+      <SearchDrawer />
     </CartProvider>
   );
 }

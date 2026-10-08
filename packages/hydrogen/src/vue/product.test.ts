@@ -1,15 +1,15 @@
 // @vitest-environment happy-dom
 import { mount } from "@vue/test-utils";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { defineComponent, h, nextTick } from "vue";
+import { defineComponent, h, nextTick, shallowRef } from "vue";
 
 import { createCartStore, type CartStore, type CreateCartStoreOptions } from "../core/cart/cart";
 import type { CartData, CartLine, CartState } from "../core/cart/state";
 import { EMPTY_CART_DATA, EMPTY_CART_STATE, createEmptyCartErrors } from "../core/cart/state";
-import { configureLogging, resetLoggingForTests } from "../core/logging";
+import { configureLogging } from "../core/logging";
 import { createProductFormStore } from "../core/product/product-form";
 import type { ProductInput, ProductVariantInput } from "../core/product/state";
-import { createTestLogger } from "../core/test-utils";
+import { assert, createTestLogger } from "../core/test-utils";
 import { CartProvider, configureCartEndpoint } from "./cart";
 import { createProductComponents, useProductForm } from "./product";
 
@@ -227,7 +227,7 @@ describe("useProductForm", () => {
     configureCartEndpoint("/api/cart");
   });
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
   });
 
   describe("initial state", () => {
@@ -550,12 +550,55 @@ describe("useProductForm", () => {
       });
     });
 
+    it("passes the submitted form's SubmitEvent to callbacks and the store", async () => {
+      const { store, cartStore } = makeStore();
+      const calls: Array<{ step: string; event: SubmitEvent; submitter: HTMLElement | null }> = [];
+      vi.mocked(cartStore.handleFormSubmit).mockImplementation((e) => {
+        calls.push({ step: "store", event: e, submitter: e.submitter });
+        return Promise.resolve();
+      });
+      const Consumer = defineComponent({
+        setup() {
+          const { formProps, register } = useProductForm(store);
+          return () =>
+            h(
+              "form",
+              formProps({
+                beforeSubmit: (e) =>
+                  calls.push({ step: "before", event: e, submitter: e.submitter }),
+                afterSubmit: (e) => calls.push({ step: "after", event: e, submitter: e.submitter }),
+              }),
+              [h("button", register("addToCart", {}))],
+            );
+        },
+      });
+      const wrapper = mount(CartProvider, {
+        attachTo: document.body,
+        slots: { default: () => h(Consumer) },
+      });
+      const button = wrapper.get<HTMLButtonElement>("button").element;
+
+      button.click();
+      await vi.waitFor(() => expect(calls).toHaveLength(3));
+
+      expect(calls.map((c) => c.step)).toEqual(["before", "store", "after"]);
+      const [first] = calls;
+      assert(first, "expected beforeSubmit to be called");
+      expect(first.event).toBeInstanceOf(SubmitEvent);
+      for (const call of calls) {
+        expect(call.event).toBe(first.event);
+        expect(call.submitter).toBe(button);
+      }
+      wrapper.unmount();
+    });
+
     it("does not submit if beforeSubmit prevents default", () => {
       const { store, cartStore } = makeStore();
       const formProps = mountStandaloneConsumer(() => {
         const r = useProductForm(store);
         return {
-          exposed: r.formProps({ beforeSubmit: (e) => e.preventDefault() }),
+          // Annotated as `Event` to keep callbacks written before the `SubmitEvent` typing compiling.
+          exposed: r.formProps({ beforeSubmit: (e: Event) => e.preventDefault() }),
           render: () => null,
         };
       });
@@ -875,12 +918,9 @@ describe("createProductComponents", () => {
   });
 
   describe("hydration on product change", () => {
-    it("hydrates when the product id changes", async () => {
-      const product1 = makeProduct(RED, "gid://shopify/Product/1");
-      const product2 = makeProduct(BLUE, "gid://shopify/Product/2");
-
+    function mountWithProduct(initialProduct: ProductInput) {
+      const product = shallowRef(initialProduct);
       let result: ReturnType<typeof useFactoryProductForm> | undefined;
-
       const Consumer = defineComponent({
         setup() {
           result = useFactoryProductForm();
@@ -888,36 +928,32 @@ describe("createProductComponents", () => {
         },
       });
 
-      const wrapper = mount(CartProvider, {
+      mount(CartProvider, {
         slots: {
-          default: () => h(ProductProvider, { product: product1 }, () => h(Consumer)),
+          default: () => h(ProductProvider, { product: product.value }, () => h(Consumer)),
         },
       });
+      assert(result, "expected useProductForm to be called");
+      return { product, result };
+    }
 
-      if (result === undefined) throw new Error("setup was never called");
+    it("hydrates when the product id changes", async () => {
+      const { product, result } = mountWithProduct(makeProduct(RED, "gid://shopify/Product/1"));
+
       expect(getColorValue(result, "Red")?.selected).toBe(true);
 
-      // Re-mount with a different product to test hydration
-      const wrapper2 = mount(CartProvider, {
-        slots: {
-          default: () => h(ProductProvider, { product: product2 }, () => h(Consumer)),
-        },
-      });
-
+      product.value = makeProduct(BLUE, "gid://shopify/Product/2");
       await nextTick();
-      expect(getColorValue(result, "Blue")?.selected).toBe(true);
 
-      wrapper.unmount();
-      wrapper2.unmount();
+      expect(getColorValue(result, "Blue")?.selected).toBe(true);
     });
 
-    it("does not hydrate on mount (avoids double-init)", async () => {
-      const result = mountFactoryConsumer(() => {
-        const r = useFactoryProductForm();
-        return { exposed: r, render: () => null };
-      });
+    it("keeps the current selection when the product key is unchanged", async () => {
+      const { product, result } = mountWithProduct(makeProduct(RED));
 
       result.selectOption("Color", "Blue");
+      await nextTick();
+      product.value = makeProduct(RED);
       await nextTick();
 
       expect(getColorValue(result, "Blue")?.selected).toBe(true);
@@ -925,7 +961,7 @@ describe("createProductComponents", () => {
   });
 
   describe("store lifecycle", () => {
-    it("destroys store on unmount", () => {
+    it("unsubscribes from the cart store on unmount", () => {
       const Consumer = defineComponent({
         setup() {
           useFactoryProductForm();
@@ -939,8 +975,10 @@ describe("createProductComponents", () => {
         },
       });
 
-      // Unmounting should not throw — verifies cleanup runs properly
-      expect(() => wrapper.unmount()).not.toThrow();
+      expect(cartSubscribeListener).not.toBeNull();
+      wrapper.unmount();
+
+      expect(cartSubscribeListener).toBeNull();
     });
   });
 });

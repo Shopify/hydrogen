@@ -5,6 +5,9 @@ export const MCP_RE = /^\/api\/mcp$/;
 export const UCP_MCP_RE = /^\/api\/ucp\/mcp$/;
 export const CHECKOUT_RE = /^\/checkout$/;
 export const CART_PERMALINK_RE = /^\/cart\/\d+:\d+(?:,\d+:\d+)*$/;
+const BUY_ITEM_PAIR = String.raw`(?:[A-Za-z0-9._-]+|~[A-Za-z0-9_-]+):[1-9]\d*`;
+// Items are required so a storefront's own /buy pages keep routing to the app.
+export const BUY_PERMALINK_RE = new RegExp(`^/buy/${BUY_ITEM_PAIR}(?:,${BUY_ITEM_PAIR})*$`);
 export const CUSTOMER_ACCOUNT_PATHS = {
   authorize: "/account/authorize",
   login: "/account/login",
@@ -26,6 +29,7 @@ export function isHydrogenServerHandoffPath(pathname: string): boolean {
   return (
     CHECKOUT_RE.test(pathname) ||
     CART_PERMALINK_RE.test(pathname) ||
+    BUY_PERMALINK_RE.test(pathname) ||
     CUSTOMER_ACCOUNT_HANDOFF_PATHS.has(pathname)
   );
 }
@@ -45,6 +49,31 @@ export const WELL_KNOWN_RE =
   /^\/\.well-known\/(?:apple-developer-merchantid-domain-association|shopify\/fec\/produce)$/;
 export const AJAX_CART_RE =
   /^(?:\/[a-z]{2}(?:-[a-z]{2})?)?\/cart(?:\.(?:js|json)|\/(?:add|update|change|clear)(?:\.(?:js|json))?)$/i;
+
+/**
+ * Normalizes `target` to a path on `origin` that is safe to use as a redirect location.
+ * Returns `undefined` unless `target` is a path starting with `/` or an absolute URL,
+ * stays on `origin`, and its normalized pathname does not start with `//`.
+ */
+export function getSameOriginPath(
+  target: string | null | undefined,
+  origin: string,
+): string | undefined {
+  if (!target) return undefined;
+
+  try {
+    // Parse absolute URLs without a base so scheme-relative forms like `https:evil.example`
+    // resolve to their own host, as a browser would, instead of onto `origin`.
+    const url = target.startsWith("/") ? new URL(target, origin) : new URL(target);
+    if (url.origin !== origin) return undefined;
+    const path = `${url.pathname}${url.search}${url.hash}`;
+    // The parsed pathname can itself start with `//` (e.g. from `/x/..//evil`),
+    // which a redirect would resolve as a protocol-relative URL to another host.
+    return path.startsWith("//") ? undefined : path;
+  } catch {
+    return undefined;
+  }
+}
 
 export function normalizeStoreDomain(domain: string): string {
   if (!domain) {

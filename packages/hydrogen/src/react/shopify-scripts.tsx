@@ -10,6 +10,7 @@ import {
   type ShopifyScriptTagsOptions,
 } from "../core/shopify-scripts";
 
+/** @publicDocs */
 export type ShopifyScriptsProps = ShopifyScriptTagsOptions & {
   navigate?: ShopifyRoutesOptions["navigate"];
   routes?: ShopifyRoutesOptions["routes"];
@@ -24,11 +25,16 @@ declare module "react" {
   }
 }
 
+/**
+ * Renders Shopify's script tags during SSR and runs their browser initialization once after mount.
+ *
+ * @publicDocs
+ */
 export function ShopifyScripts(options: ShopifyScriptsProps) {
   const { consent, navigate, routes, webMcp = true, ...scriptOptions } = options;
 
   useEffect(() => {
-    void initializeShopifyScripts({ navigate, routes, webMcp });
+    void initializeShopifyScripts({ consent, navigate, routes, webMcp });
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- ShopifyScripts browser startup is initialized once from initial props.
   }, []);
 

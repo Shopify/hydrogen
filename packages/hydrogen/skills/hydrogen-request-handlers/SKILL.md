@@ -4,7 +4,7 @@ description: >
   Guide for wiring Hydrogen request handlers in server frameworks. Use when
   adding, modifying, or reviewing handleShopifyRoutes, handleShopifyRedirects,
   SFAPI proxy routes, cart, predictive search, and Customer Account server handlers,
-  UCP business profiles, checkout redirects, cart permalinks, AJAX cart proxy routes,
+  UCP business profiles, checkout redirects, cart and UCP buy permalinks, AJAX cart proxy routes,
   /admin redirects, Storefront URL redirects,
   requestContext response-header propagation, or framework middleware,
   not-found, and catch-all integration.
@@ -28,7 +28,7 @@ Request
   -> framework 404 page
 ```
 
-`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, the generic `/__shopify/*` API proxy, `/.well-known/ucp`, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/api/ucp/mcp`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product URLs, and app-registered handler groups such as `createCartServerHandlers()` or `createCustomerAccountServerHandlers()`.
+`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, the generic `/__shopify/*` API proxy, `/.well-known/ucp`, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, UCP buy permalinks like `/buy/{itemId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/api/ucp/mcp`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product URLs, and app-registered handler groups such as `createCartServerHandlers()` or `createCustomerAccountServerHandlers()`.
 
 ## UCP Business Profile
 
@@ -53,7 +53,7 @@ const shopifyRoute = handleShopifyRoutes({
 
 Pass `routeTemplates` to `handleShopifyRoutes` so product `?variant=` links can be recognized before framework routing. `pathPrefix` is inferred from `requestContext.i18n.pathPrefix`, so localized product URLs stay in the localized tree.
 
-`handleShopifyRedirects` is a post-routing 404 check for `/admin`, configured standard route redirects, Storefront URL redirects, and same-origin query-param redirects. Do not run it on every request.
+`handleShopifyRedirects` is a post-routing 404 check for `/admin`, configured standard route redirects, Storefront URL redirects, and same-origin `return_to`/`redirect` query params. Do not run it on every request.
 
 ## Standard Route Redirects
 

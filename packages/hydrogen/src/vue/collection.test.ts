@@ -284,25 +284,6 @@ describe("CollectionProvider", () => {
     expect(latestStore.settle).not.toHaveBeenCalled();
   });
 
-  it("does not call syncFromParams while navigation is pending", () => {
-    vi.mocked(mergeCollectionParams).mockReturnValue(new URLSearchParams("filter.p.tag=sale"));
-
-    const actions = mountWithConsumer(
-      () => {
-        const a = useCollectionActions();
-        return { exposed: a, render: () => null };
-      },
-      { urlSearch: "" },
-    );
-
-    vi.mocked(latestStore.matchesParams).mockReturnValue(false);
-    vi.mocked(latestStore.syncFromParams).mockClear();
-
-    actions.toggleFilter({ tag: "sale" });
-
-    expect(latestStore.syncFromParams).not.toHaveBeenCalled();
-  });
-
   it("ignores intermediate URLs during rapid filter toggling", async () => {
     vi.mocked(mergeCollectionParams)
       .mockReturnValueOnce(new URLSearchParams("filter.p.tag=A"))

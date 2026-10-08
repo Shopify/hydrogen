@@ -18,7 +18,7 @@ const CONSOLE_METHODS: Record<LogSeverity, "debug" | "info" | "warn" | "error"> 
   fatal: "error",
 };
 
-export function formatLogPrefix(level: LogSeverity, scope: string): string {
+function formatLogPrefix(level: LogSeverity, scope: string): string {
   return `[hydrogen:${level}:${scope}]`;
 }
 
@@ -73,6 +73,8 @@ const state: LoggingState = {
  * wins). Inline bootstrap scripts that Hydrogen serializes into HTML
  * (analytics, consent) run outside the app bundle and always write to the
  * console with the standard prefix; they cannot receive a custom logger.
+ *
+ * @publicDocs
  */
 export function configureLogging(options: ConfigureLoggingOptions): void {
   const logger = options.logger ?? consoleLogger;
@@ -80,12 +82,6 @@ export function configureLogging(options: ConfigureLoggingOptions): void {
 
   state.logger = logger;
   state.level = level;
-}
-
-/** @internal */
-export function resetLoggingForTests(): void {
-  state.logger = consoleLogger;
-  state.level = DEFAULT_LOG_LEVEL;
 }
 
 /**

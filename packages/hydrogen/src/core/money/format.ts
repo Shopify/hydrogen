@@ -3,10 +3,22 @@ import type { FormatMoneyOptions, FormattedMoney, FormattedMoneyRange, MoneyV2 }
 
 /**
  * Intl.NumberFormat part types that make up the raw numeric amount.
- * Used to extract "19.99" from a formatted string like "$19.99" by
- * filtering out currency symbols, sign, and other non-numeric parts.
+ * Used to extract "19.99" from a formatted string like "$19.99" (or
+ * "-19.99" from "-$19.99") by filtering out currency symbols and other
+ * non-numeric parts. The minus sign is kept so negative amounts such as
+ * refunds and discounts don't render as positive. Literals stay in the set
+ * because RTL locales such as he-IL and ar-EG emit the bidi marks that bind
+ * the minus sign to the digits as literals. Only the literal next to the
+ * currency part, the spacer between number and symbol, is dropped.
  */
-const NUMERIC_PART_TYPES = new Set(["decimal", "fraction", "group", "integer", "literal"]);
+const NUMERIC_PART_TYPES = new Set([
+  "decimal",
+  "fraction",
+  "group",
+  "integer",
+  "literal",
+  "minusSign",
+]);
 const WELL_FORMED_CURRENCY_CODE = /^[a-z]{3}$/i;
 
 type RangeFormatter = Intl.NumberFormat & {
@@ -99,8 +111,12 @@ function appendUnsupportedCurrencyCode(formatted: string, currencyCode: string):
 }
 
 function extractNumericAmount(parts: Intl.NumberFormatPart[]): string {
+  const currency = parts.findIndex((part) => part.type === "currency");
+  const isCurrencySpacer = (part: Intl.NumberFormatPart, index: number) =>
+    currency !== -1 && part.type === "literal" && Math.abs(index - currency) === 1;
+
   return parts
-    .filter((part) => NUMERIC_PART_TYPES.has(part.type))
+    .filter((part, index) => NUMERIC_PART_TYPES.has(part.type) && !isCurrencySpacer(part, index))
     .map((part) => part.value)
     .join("");
 }
@@ -124,16 +140,17 @@ function buildRangeOptions(
   currencyCode: string,
   supported: boolean,
   options: FormatMoneyOptions,
-  amounts: number[],
+  min: number,
+  max: number,
 ): Intl.NumberFormatOptions {
-  const wholeRange = amounts.every(hasTrailingZeros);
+  const wholeRange = hasTrailingZeros(min) && hasTrailingZeros(max);
   const rangeOptions = {
     ...options,
     withoutTrailingZeros:
-      options.withoutTrailingZeros ?? (wholeRange && !hasExplicitFractionDigits(options)),
+      wholeRange && (options.withoutTrailingZeros ?? !hasExplicitFractionDigits(options)),
   };
 
-  return buildFormatOptions(currencyCode, supported, rangeOptions, amounts[0] ?? 0);
+  return buildFormatOptions(currencyCode, supported, rangeOptions, min);
 }
 
 function sortMoneyRangeEntries(entries: MoneyRangeEntry[]): MoneyRangeEntry[] {
@@ -343,12 +360,7 @@ class FormattedMoneyRangeValue implements FormattedMoneyRange {
     const supported = isWellFormedCurrencyCode(first.currencyCode);
     const formatter = getFormatter(
       options.locale,
-      buildRangeOptions(
-        first.currencyCode,
-        supported,
-        options,
-        entries.map((entry) => entry.amount),
-      ),
+      buildRangeOptions(first.currencyCode, supported, options, first.amount, last.amount),
     );
 
     const formatted = formatRange(formatter, first.amount, last.amount);
@@ -369,6 +381,8 @@ class FormattedMoneyRangeValue implements FormattedMoneyRange {
  * Returns an object that stringifies to the locale-formatted price via
  * toString(). Structured fields on single prices are computed lazily when
  * accessed, so the common string path stays cheap.
+ *
+ * @publicDocs
  */
 export function formatMoney(money: MoneyV2, options: FormatMoneyOptions): FormattedMoney;
 export function formatMoney(

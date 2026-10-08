@@ -17,8 +17,33 @@ import { content } from "@/lib/content";
 import { shopifyImageUrl, srcSetFor } from "@/lib/image";
 import { formatPrice } from "@/lib/money";
 import { ProductProvider, useProductForm } from "@/lib/product";
+import { galleryImages } from "@/lib/product-gallery";
 import type { ProductData } from "@/lib/product-query";
-import { canonicalUrl, jsonLdScript } from "@/lib/site";
+
+// Next.js keys the `[handle]` segment by its value, so a combined-listing switch
+// unmounts this whole component and the focused link with it. Module state
+// outlives that remount where a ref or state inside the page would not. The
+// cross-product link records the value it activated, and that value, now a
+// same-product link on the new product page, takes focus as it mounts.
+let pendingFocus: { handle: string; optionName: string; value: string } | null = null;
+
+function focusIfPending(
+  node: HTMLAnchorElement | null,
+  handle: string,
+  optionName: string,
+  value: string,
+) {
+  if (
+    !node ||
+    pendingFocus?.handle !== handle ||
+    pendingFocus.optionName !== optionName ||
+    pendingFocus.value !== value
+  ) {
+    return;
+  }
+  pendingFocus = null;
+  node.focus();
+}
 
 /**
  * Interactive product details (`hydrogen-variant-form` /
@@ -30,18 +55,14 @@ import { canonicalUrl, jsonLdScript } from "@/lib/site";
  */
 export function ProductDetails({ product }: { product: ProductData }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   return (
     <ProductProvider
       product={product}
       onSelect={(result) => {
         const targetHandle = result.selectedVariant?.product?.handle ?? product.handle;
-        const next = variantUrl(
-          product,
-          result.selectedOptions,
-          targetHandle,
-          new URLSearchParams(),
-        );
+        const next = variantUrl(product, result.selectedOptions, targetHandle, searchParams);
         router.replace(next, { scroll: false });
       }}
     >
@@ -65,61 +86,14 @@ function ProductPage({ product }: { product: ProductData }) {
   const compareAt = selectedVariant?.compareAtPrice ?? null;
   const onSale = compareAt && Number(compareAt.amount) > Number(price.amount);
 
-  const allGalleryImages = product.media.nodes
-    .map((node) => (node.__typename === "MediaImage" && node.image ? node.image : null))
-    .filter((image): image is NonNullable<typeof image> => image !== null);
-
-  // Reorder so the selected variant's image is first (feedback Round 3 #4 /
-  // Round 4 gallery). If the variant image isn't in the media set, prepend it.
-  const variantImage = selectedVariant?.image ?? null;
-  const galleryImages = (() => {
-    if (!variantImage) return allGalleryImages;
-    const matchIndex = allGalleryImages.findIndex((image) => image.url === variantImage.url);
-    if (matchIndex <= 0) {
-      return matchIndex === 0 ? allGalleryImages : [variantImage, ...allGalleryImages];
-    }
-    return [
-      allGalleryImages[matchIndex],
-      ...allGalleryImages.slice(0, matchIndex),
-      ...allGalleryImages.slice(matchIndex + 1),
-    ];
-  })();
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.title,
-    description: product.description ?? undefined,
-    image: galleryImages.map((image) => image.url),
-    offers: selectedVariant
-      ? {
-          "@type": "Offer",
-          price: selectedVariant.price.amount,
-          priceCurrency: selectedVariant.price.currencyCode,
-          availability: selectedVariant.availableForSale
-            ? "https://schema.org/InStock"
-            : "https://schema.org/OutOfStock",
-          url: canonicalUrl(`/products/${product.handle}`),
-        }
-      : {
-          "@type": "AggregateOffer",
-          priceCurrency: product.priceRange.minVariantPrice.currencyCode,
-          lowPrice: product.priceRange.minVariantPrice.amount,
-          highPrice: product.priceRange.maxVariantPrice.amount,
-        },
-  };
+  const images = galleryImages(product, selectedVariant?.image ?? null);
 
   return (
     <div className="max-w-page px-margin mx-auto w-full py-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
-      />
-
       <div className="product-grid mb-16 grid grid-cols-1 gap-6 md:gap-12">
         {/* Gallery */}
         <div className="grid grid-cols-2 gap-2">
-          {galleryImages.map((image, index) => (
+          {images.map((image, index) => (
             <div key={image.url} className="bg-surface-secondary aspect-square overflow-hidden">
               <img
                 src={shopifyImageUrl(image.url, { width: index === 0 ? 800 : 400 })}
@@ -173,6 +147,8 @@ function ProductPage({ product }: { product: ProductData }) {
                         // Cross-product value — navigates to the other product
                         // (hydrogen-variant-form combined-listings rule). Uses the
                         // live `useSearchParams` base so unrelated params survive.
+                        // `onNavigate` fires only for a plain client-side click, so
+                        // a Cmd-click that opens a new tab records nothing.
                         <Link
                           key={value.name}
                           href={variantUrl(
@@ -182,6 +158,13 @@ function ProductPage({ product }: { product: ProductData }) {
                             searchParams,
                           )}
                           scroll={false}
+                          onNavigate={() => {
+                            pendingFocus = {
+                              handle: value.handle,
+                              optionName: option.name,
+                              value: value.name,
+                            };
+                          }}
                           data-available={value.available ? "true" : "false"}
                           className="option-pill no-underline"
                         >
@@ -191,13 +174,13 @@ function ProductPage({ product }: { product: ProductData }) {
                           ) : null}
                         </Link>
                       ) : value.exists ? (
-                        // Same-product value — a real GET `<Link>` to the option
-                        // URL so selection works without JS (the server page
-                        // resolves the variant). Hydration enhances the same
-                        // element via `register("optionValue", ...)`; the
-                        // provider `onSelect` syncs the URL client-side.
-                        // `aria-current` marks the selected link (`aria-pressed`
-                        // is invalid on a link).
+                        // Same-product value — a real GET `<Link>` so selection
+                        // works without JS. `onNavigate` fires only for a plain
+                        // client-side click; next/link hands modified clicks to
+                        // the browser first. The provider's `onSelect` already
+                        // calls `router.replace`, so the link's own navigation is
+                        // cancelled to avoid a second RSC fetch. `aria-current`
+                        // marks the selected link (`aria-pressed` is invalid on a link).
                         <Link
                           key={value.name}
                           href={variantUrl(
@@ -206,15 +189,20 @@ function ProductPage({ product }: { product: ProductData }) {
                             value.handle,
                             searchParams,
                           )}
-                          replace
                           scroll={false}
+                          ref={(node) =>
+                            focusIfPending(node, product.handle, option.name, value.name)
+                          }
                           aria-current={value.selected ? "true" : undefined}
                           data-available={value.available ? "true" : "false"}
                           className="option-pill no-underline"
-                          {...register("optionValue", {
-                            optionName: option.name,
-                            value: value.name,
-                          })}
+                          onNavigate={(event) => {
+                            register("optionValue", {
+                              optionName: option.name,
+                              value: value.name,
+                            }).onClick();
+                            event.preventDefault();
+                          }}
                         >
                           {value.name}
                           {!value.available ? (

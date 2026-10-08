@@ -1,7 +1,9 @@
 import {
+  formatMoney,
   getFilterRemovalUrl,
   getSortByValue,
   isFilterInputActive,
+  parseCollectionParams,
   serializeCollectionParams,
   type CollectionState,
   type MoneyV2,
@@ -11,7 +13,7 @@ import { useCollection, useCollectionForm } from "@shopify/hydrogen/react";
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link, useFetcher, useLocation } from "react-router";
 
-import { formatPrice } from "~/lib/money";
+import { DEFAULT_MONEY_LOCALE, formatPrice } from "~/lib/money";
 
 export type SortOption = {
   label: string;
@@ -216,33 +218,34 @@ function CheckIcon() {
 
 function FacetGroup({
   filter,
-  children,
   state,
+  currencyCode,
 }: {
   filter: BrowseFilter;
-  children: ReactNode;
   state: CollectionState;
+  currencyCode: string;
 }) {
   const selectedCount = activeValueCount(filter, state);
+  const labelId = useId();
 
   return (
     <details className="group block" open>
       <summary className="marker-hidden text-on-surface flex w-full cursor-pointer items-center justify-between py-4 text-sm font-medium motion-safe:transition motion-safe:active:scale-[0.97]">
-        <span className="inline-flex items-center gap-1.5">
-          {filter.label}
+        <span className="inline-flex items-center gap-1.5" aria-hidden="true">
+          <span id={labelId} aria-hidden="true">
+            {filter.label}
+          </span>
           {selectedCount > 0 ? (
-            <>
-              <span
-                className="bg-interactive text-interactive-text inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-medium"
-                aria-hidden="true"
-              >
-                {selectedCount}
-              </span>
-              <span className="sr-only">
-                {selectedCount} {selectedCount === 1 ? "selected" : "selected"}
-              </span>
-            </>
+            <span
+              className="bg-interactive text-interactive-text inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-medium"
+              aria-hidden="true"
+            >
+              {selectedCount}
+            </span>
           ) : null}
+        </span>
+        <span className="sr-only">
+          {selectedCount > 0 ? `${filter.label}, ${selectedCount} selected` : filter.label}
         </span>
         <span
           className="inline-flex size-4 shrink-0 items-center justify-center group-open:rotate-180 motion-safe:transition-transform motion-safe:duration-200"
@@ -251,18 +254,30 @@ function FacetGroup({
           <img src="/icons/icon-chevron-down.svg" alt="" className="size-4" />
         </span>
       </summary>
-      <div className="pb-4">{children}</div>
+      <div className="pb-4">
+        <FacetBody filter={filter} state={state} labelId={labelId} currencyCode={currencyCode} />
+      </div>
     </details>
   );
 }
 
-function ListFacet({ filter, state }: { filter: BrowseFilter; state: CollectionState }) {
+function ListFacet({
+  filter,
+  state,
+  labelId,
+}: {
+  filter: BrowseFilter;
+  state: CollectionState;
+  labelId: string;
+}) {
+  const id = useId();
   const values = filter.values.flatMap((value) => {
     if (!value.input) return [];
     const entries = filterValueInputParamEntries(value.input);
     if (entries.length !== 1) return [];
     const [{ name, value: paramValue }] = entries;
     const isActive = isFilterInputActive(state.filters, value.input);
+    const valueId = `${id}-${encodeURIComponent(value.id)}`;
 
     return (
       <li key={value.id}>
@@ -274,7 +289,9 @@ function ListFacet({ filter, state }: { filter: BrowseFilter; state: CollectionS
             type="checkbox"
             name={name}
             value={paramValue}
-            defaultChecked={isActive}
+            checked={isActive}
+            aria-labelledby={`${valueId}-label`}
+            aria-describedby={`${valueId}-count`}
             className="sr-only"
             onChange={(event) => {
               if (event.currentTarget.checked && isMutuallyExclusive(filter, name)) {
@@ -286,8 +303,15 @@ function ListFacet({ filter, state }: { filter: BrowseFilter; state: CollectionS
           <span className="filter-checkbox shrink-0">
             <CheckIcon />
           </span>
-          <span className="flex-1">{value.label}</span>
-          <span className="text-on-surface-secondary text-xs">({value.count})</span>
+          <span id={`${valueId}-label`} className="flex-1">
+            {value.label}
+          </span>
+          <span className="text-on-surface-secondary text-xs" aria-hidden="true">
+            ({value.count})
+          </span>
+          <span id={`${valueId}-count`} className="sr-only" aria-hidden="true">
+            {`${value.count} ${value.count === 1 ? "product" : "products"}`}
+          </span>
         </label>
       </li>
     );
@@ -296,72 +320,134 @@ function ListFacet({ filter, state }: { filter: BrowseFilter; state: CollectionS
   if (values.length === 0) return null;
 
   return (
-    <fieldset className="m-0 border-0 p-0">
-      <legend className="sr-only">{filter.label}</legend>
+    <fieldset className="m-0 border-0 p-0" aria-labelledby={labelId}>
       <ul className="space-y-1 pt-2">{values}</ul>
     </fieldset>
   );
 }
 
-function PriceRangeFacet({ state }: { state: CollectionState }) {
+function PriceRangeFacet({
+  state,
+  currencyCode,
+}: {
+  state: CollectionState;
+  currencyCode: string;
+}) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const minInput = useRef<HTMLInputElement>(null);
+  const maxInput = useRef<HTMLInputElement>(null);
   const idPrefix = useId();
   const minId = `${idPrefix}-price-gte`;
   const maxId = `${idPrefix}-price-lte`;
   const activePrice = priceFilter(state);
+  const min = activePrice?.min ?? "";
+  const max = activePrice?.max ?? "";
+  const currencySymbol = formatMoney(
+    { amount: "0", currencyCode },
+    { locale: DEFAULT_MONEY_LOCALE },
+  ).currencyNarrowSymbol;
 
   useEffect(() => {
+    for (const [input, value] of [
+      [minInput.current, min],
+      [maxInput.current, max],
+    ] as const) {
+      if (!input) continue;
+      const matches =
+        value === "" ? input.value === "" : input.value !== "" && Number(input.value) === value;
+      if (!matches) {
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = null;
+        input.value = String(value);
+      }
+    }
+  }, [min, max]);
+
+  useEffect(() => {
+    function restoreHistoryPrice() {
+      // Cancel the draft before the history loader settles, even when the price is unchanged.
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = null;
+      const { filters } = parseCollectionParams(new URLSearchParams(window.location.search));
+      const price = filters.find((filter) => filter.price != null)?.price;
+      if (minInput.current) minInput.current.value = String(price?.min ?? "");
+      if (maxInput.current) maxInput.current.value = String(price?.max ?? "");
+    }
+
+    window.addEventListener("popstate", restoreHistoryPrice);
     return () => {
+      window.removeEventListener("popstate", restoreHistoryPrice);
       if (timer.current) clearTimeout(timer.current);
     };
   }, []);
 
+  function submitAfterTyping(event: React.ChangeEvent<HTMLInputElement>) {
+    if (timer.current) clearTimeout(timer.current);
+    const form = event.currentTarget.form;
+    timer.current = setTimeout(() => form?.requestSubmit(), 350);
+  }
+
   return (
-    <div className="flex items-center gap-2 pt-2">
-      <div className="flex-1">
-        <label htmlFor={minId} className="sr-only">
-          Lowest price
+    <div className="min-w-0 pt-2">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+        <label
+          htmlFor={minId}
+          className="border-border rounded-input bg-surface has-[input:focus-visible]:outline-interactive flex min-w-0 items-center gap-1 border px-2 py-2 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2"
+        >
+          <span className="text-on-surface-secondary shrink-0 text-sm" aria-hidden="true">
+            {currencySymbol}
+          </span>
+          <input
+            type="number"
+            ref={minInput}
+            id={minId}
+            aria-label={`Minimum price in ${currencyCode}`}
+            name={PRICE_MIN_PARAM}
+            min="0"
+            step="any"
+            placeholder="Min"
+            defaultValue={min}
+            className="bg-surface text-on-surface w-full min-w-0 flex-1 rounded-none border-0 p-0 text-sm focus-visible:outline-none"
+            onChange={submitAfterTyping}
+          />
         </label>
-        <input
-          type="number"
-          id={minId}
-          name={PRICE_MIN_PARAM}
-          min="0"
-          placeholder="Min"
-          defaultValue={activePrice?.min ?? ""}
-          className="border-border rounded-input bg-surface text-on-surface w-full border px-3 py-2 text-sm"
-          onChange={(event) => {
-            if (timer.current) clearTimeout(timer.current);
-            const form = event.currentTarget.form;
-            timer.current = setTimeout(() => form?.requestSubmit(), 350);
-          }}
-        />
-      </div>
-      <span className="text-on-surface-secondary text-sm">to</span>
-      <div className="flex-1">
-        <label htmlFor={maxId} className="sr-only">
-          Highest price
+        <span className="text-on-surface-secondary text-center text-sm">to</span>
+        <label
+          htmlFor={maxId}
+          className="border-border rounded-input bg-surface has-[input:focus-visible]:outline-interactive flex min-w-0 items-center gap-1 border px-2 py-2 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2"
+        >
+          <span className="text-on-surface-secondary shrink-0 text-sm" aria-hidden="true">
+            {currencySymbol}
+          </span>
+          <input
+            type="number"
+            ref={maxInput}
+            id={maxId}
+            aria-label={`Maximum price in ${currencyCode}`}
+            name={PRICE_MAX_PARAM}
+            min="0"
+            step="any"
+            placeholder="Max"
+            defaultValue={max}
+            className="bg-surface text-on-surface w-full min-w-0 flex-1 rounded-none border-0 p-0 text-sm focus-visible:outline-none"
+            onChange={submitAfterTyping}
+          />
         </label>
-        <input
-          type="number"
-          id={maxId}
-          name={PRICE_MAX_PARAM}
-          min="0"
-          placeholder="Max"
-          defaultValue={activePrice?.max ?? ""}
-          className="border-border rounded-input bg-surface text-on-surface w-full border px-3 py-2 text-sm"
-          onChange={(event) => {
-            if (timer.current) clearTimeout(timer.current);
-            const form = event.currentTarget.form;
-            timer.current = setTimeout(() => form?.requestSubmit(), 350);
-          }}
-        />
       </div>
     </div>
   );
 }
 
-function ColorSwatchFacet({ filter, state }: { filter: BrowseFilter; state: CollectionState }) {
+function ColorSwatchFacet({
+  filter,
+  state,
+  labelId,
+}: {
+  filter: BrowseFilter;
+  state: CollectionState;
+  labelId: string;
+}) {
+  const id = useId();
   const values = filter.values.flatMap((value) => {
     if (!value.input) return [];
     const entries = filterValueInputParamEntries(value.input);
@@ -374,6 +460,7 @@ function ColorSwatchFacet({ filter, state }: { filter: BrowseFilter; state: Coll
       ...(color ? { "--filter-swatch-color": color } : {}),
       ...(imageUrl ? { backgroundImage: `url("${imageUrl}")` } : {}),
     } as CSSProperties;
+    const countId = `${id}-${encodeURIComponent(value.id)}-count`;
 
     return (
       <li key={value.id}>
@@ -386,15 +473,17 @@ function ColorSwatchFacet({ filter, state }: { filter: BrowseFilter; state: Coll
             type="checkbox"
             name={name}
             value={paramValue}
-            defaultChecked={isFilterInputActive(state.filters, value.input)}
+            checked={isFilterInputActive(state.filters, value.input)}
+            aria-label={value.label}
+            aria-describedby={countId}
             className="sr-only"
             onChange={requestFormSubmit}
           />
           <span className="filter-swatch shrink-0" style={style}>
             <CheckIcon />
           </span>
-          <span className="sr-only">
-            {value.label} ({value.count})
+          <span id={countId} className="sr-only" aria-hidden="true">
+            {`${value.count} ${value.count === 1 ? "product" : "products"}`}
           </span>
         </label>
       </li>
@@ -404,17 +493,28 @@ function ColorSwatchFacet({ filter, state }: { filter: BrowseFilter; state: Coll
   if (values.length === 0) return null;
 
   return (
-    <fieldset className="m-0 border-0 p-0">
-      <legend className="sr-only">{filter.label}</legend>
+    <fieldset className="m-0 border-0 p-0" aria-labelledby={labelId}>
       <ul className="flex flex-wrap gap-2.5 pt-2">{values}</ul>
     </fieldset>
   );
 }
 
-function FacetBody({ filter, state }: { filter: BrowseFilter; state: CollectionState }) {
-  if (filter.type === "PRICE_RANGE") return <PriceRangeFacet state={state} />;
-  if (isSwatchFilter(filter)) return <ColorSwatchFacet filter={filter} state={state} />;
-  return <ListFacet filter={filter} state={state} />;
+function FacetBody({
+  filter,
+  state,
+  labelId,
+  currencyCode,
+}: {
+  filter: BrowseFilter;
+  state: CollectionState;
+  labelId: string;
+  currencyCode: string;
+}) {
+  if (filter.type === "PRICE_RANGE")
+    return <PriceRangeFacet state={state} currencyCode={currencyCode} />;
+  if (isSwatchFilter(filter))
+    return <ColorSwatchFacet filter={filter} state={state} labelId={labelId} />;
+  return <ListFacet filter={filter} state={state} labelId={labelId} />;
 }
 
 export function Toolbar({
@@ -469,10 +569,9 @@ export function Toolbar({
           Sort by
         </label>
         <select
-          key={resolvedSortValue}
           id="sort-by"
           name="sort_by"
-          defaultValue={resolvedSortValue}
+          value={resolvedSortValue}
           className="w-auto max-w-full cursor-pointer font-medium"
           onChange={requestFormSubmit}
         >
@@ -497,35 +596,26 @@ export function Toolbar({
 
 export function FacetForm({
   availableFilters,
+  currencyCode,
   extraHiddenInputs,
-  remountKey,
 }: {
   availableFilters: readonly BrowseFilter[];
+  currencyCode: string;
   extraHiddenInputs?: ReactNode;
-  remountKey?: string;
 }) {
   const state: CollectionState = useCollection();
   const { formProps } = useCollectionForm();
-  const serialized = serializeCollectionParams(state);
   const sort = currentSortValue(state);
-  const isLoading = state.status === "loading";
 
   return (
     <form {...formProps()} method="get">
       {sort ? <input type="hidden" name="sort_by" value={sort} /> : null}
       {extraHiddenInputs}
-      <fieldset disabled={isLoading} className="m-0 border-0 p-0">
-        <div
-          key={`${serialized.toString()}:${remountKey ?? ""}`}
-          className="divide-border divide-y"
-        >
-          {availableFilters.map((filter) => (
-            <FacetGroup key={filter.id} filter={filter} state={state}>
-              <FacetBody filter={filter} state={state} />
-            </FacetGroup>
-          ))}
-        </div>
-      </fieldset>
+      <div key={state.handle} className="divide-border divide-y">
+        {availableFilters.map((filter) => (
+          <FacetGroup key={filter.id} filter={filter} state={state} currencyCode={currencyCode} />
+        ))}
+      </div>
       <noscript>
         <button
           type="submit"
@@ -540,14 +630,14 @@ export function FacetForm({
 
 export function FilterDrawer({
   availableFilters,
+  currencyCode,
   extraHiddenInputs,
   id = FILTER_DRAWER_ID,
-  remountKey,
 }: {
   availableFilters: readonly BrowseFilter[];
+  currencyCode: string;
   extraHiddenInputs?: ReactNode;
   id?: string;
-  remountKey?: string;
 }) {
   return (
     <dialog
@@ -575,8 +665,8 @@ export function FilterDrawer({
         <div className="flex-1 overflow-y-auto p-4">
           <FacetForm
             availableFilters={availableFilters}
+            currencyCode={currencyCode}
             extraHiddenInputs={extraHiddenInputs}
-            remountKey={remountKey}
           />
         </div>
       </div>

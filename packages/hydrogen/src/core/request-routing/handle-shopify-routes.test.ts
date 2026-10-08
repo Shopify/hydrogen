@@ -97,6 +97,34 @@ describe("handleShopifyRoutes", () => {
     expect(result).toBeInstanceOf(Response);
   });
 
+  describe.each([null, "1"])("Sec-GPC: %s", (secGpc) => {
+    it.each([
+      "/api/2026-04/graphql.json",
+      "/cart/add.js",
+      "/api/mcp",
+      "/api/ucp/mcp",
+      "/__shopify/set_tracking_consent",
+      "/.well-known/shopify/fec/produce",
+    ])("preserves the incoming signal when proxying %s", async (pathname) => {
+      const headers = new Headers();
+      if (secGpc !== null) headers.set("Sec-GPC", secGpc);
+
+      const result = await handleShopifyRoutes({
+        request: new Request(`https://my-app.com${pathname}`, {
+          method: "POST",
+          body: "{}",
+          headers,
+        }),
+      });
+
+      assert(result, "expected a proxy response");
+      expect(mockFetch).toHaveBeenCalledOnce();
+      const call = mockFetch.mock.calls[0];
+      assert(call, "expected an upstream request");
+      expect(new Headers(call[1].headers).get("Sec-GPC")).toBe(secGpc);
+    });
+  });
+
   it("strips upstream cookies from cold non-consent SFAPI proxy responses", async () => {
     const upstreamHeaders = new Headers();
     upstreamHeaders.append("set-cookie", "_shopify_essential=cold; Path=/; Secure; HttpOnly");
@@ -691,6 +719,15 @@ describe("handleShopifyRoutes", () => {
     expect(headers.get("Shopify-Storefront-Private-Token")).toBe("test-private-token");
     expect(headers.get("Shopify-Storefront-Buyer-IP")).toBe("10.0.0.2");
     expect(headers.get("X-Shopify-Storefront-Access-Token")).toBeNull();
+  });
+
+  it("forwards buy permalinks to the configured store domain", async () => {
+    const result = await handleShopifyRoutes({
+      request: new Request("https://my-app.com/buy/123:1"),
+    });
+
+    expect(result?.status).toBe(303);
+    expect(result?.headers.get("location")).toBe("https://test-store.myshopify.com/buy/123:1");
   });
 
   it("handles variant id product redirects before registered handlers", async () => {

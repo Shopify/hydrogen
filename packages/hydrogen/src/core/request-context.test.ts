@@ -224,6 +224,33 @@ describe("createShopifyRequestContext", () => {
     expect(originalHeaders.get(REQUEST_GROUP_ID_HEADER)).toBeNull();
   });
 
+  it.each([null, "1", "0", ""])("preserves the incoming Sec-GPC value: %s", (secGpc) => {
+    const requestHeaders = new Headers();
+    if (secGpc !== null) requestHeaders.set("sEc-GpC", secGpc);
+    const context = createTestRequestContext({ headers: requestHeaders });
+    const headers = new Headers({ "Sec-GPC": "stale-value" });
+
+    context.applyStorefrontRequestHeaders(headers);
+
+    expect(headers.get("Sec-GPC")).toBe(secGpc);
+    expect(context.getForwardedRequestHeaders().get("Sec-GPC")).toBe(secGpc);
+  });
+
+  it.each([
+    "",
+    "_shopify_essential=declined-session",
+    "_shopify_analytics=1; _shopify_marketing=1",
+  ])("forwards Sec-GPC regardless of consent cookies: %s", (cookie) => {
+    const context = createTestRequestContext({
+      headers: new Headers({ "Sec-GPC": "1", cookie }),
+    });
+    const headers = new Headers();
+
+    context.applyStorefrontRequestHeaders(headers);
+
+    expect(headers.get("Sec-GPC")).toBe("1");
+  });
+
   it("applies storefront request headers from only storefront context", () => {
     const context = createTestRequestContext(
       new Request("https://example.com/products/snowboard", {
@@ -252,7 +279,7 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("x-custom")).toBe("preserved");
     expect(headers.get(SDK_VARIANT_HEADER)).toBe("hydrogen");
     expect(headers.get(SDK_VARIANT_SOURCE_HEADER)).toBe("kit");
-    expect(headers.get(SDK_VERSION_HEADER)).toBe("2026-04");
+    expect(headers.get(SDK_VERSION_HEADER)).toBe("2026-10");
     expect(headers.get(HYDROGEN_VERSION_HEADER)).toBeTruthy();
     expect(headers.get("cookie")).toBe("_shopify_y=unique-token; _shopify_s=visit-token");
     expect(headers.get(REQUEST_GROUP_ID_HEADER)).toBe("incoming-request-id");

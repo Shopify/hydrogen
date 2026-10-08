@@ -346,20 +346,6 @@ describe("useCart", () => {
     expect(renderSpy).toHaveBeenCalledTimes(initialRenderCount);
   });
 
-  it("server snapshot returns EMPTY_CART_STATE slice", () => {
-    const Consumer = defineComponent({
-      setup() {
-        const qty = useCart((s) => s.data.totalQuantity);
-        return () => h("span", { "data-testid": "qty" }, qty.value);
-      },
-    });
-
-    const wrapper = mount(CartProvider, {
-      slots: { default: () => h(Consumer) },
-    });
-    expect(wrapper.find('[data-testid="qty"]').text()).toBe("0");
-  });
-
   it("returns full cart state when called without a selector", () => {
     vi.mocked(createCartStore).mockImplementation(() =>
       createMockStore({ cart: makeCartData({ totalQuantity: 42 }) }),
@@ -445,11 +431,51 @@ describe("useCartForm", () => {
     expect(latestStore.handleFormSubmit).toHaveBeenCalledWith(nativeEvent);
   });
 
+  it("formProps passes the submitted form's SubmitEvent to callbacks and the store", () => {
+    const calls: Array<{ step: string; event: SubmitEvent; submitter: HTMLElement | null }> = [];
+    const Consumer = defineComponent({
+      setup() {
+        const { formProps } = useCartForm();
+        return () =>
+          h(
+            "form",
+            formProps({
+              beforeSubmit: (e) => calls.push({ step: "before", event: e, submitter: e.submitter }),
+              afterSubmit: (e) => calls.push({ step: "after", event: e, submitter: e.submitter }),
+            }),
+            [h("button", { type: "submit", name: "intent", value: "add" })],
+          );
+      },
+    });
+    const wrapper = mount(CartProvider, {
+      attachTo: document.body,
+      slots: { default: () => h(Consumer) },
+    });
+    vi.mocked(latestStore.handleFormSubmit).mockImplementation((e) => {
+      calls.push({ step: "store", event: e, submitter: e.submitter });
+      return Promise.resolve();
+    });
+    const button = wrapper.get<HTMLButtonElement>("button").element;
+
+    button.click();
+
+    expect(calls.map((c) => c.step)).toEqual(["before", "store", "after"]);
+    const [first] = calls;
+    assert(first, "expected beforeSubmit to be called");
+    expect(first.event).toBeInstanceOf(SubmitEvent);
+    for (const call of calls) {
+      expect(call.event).toBe(first.event);
+      expect(call.submitter).toBe(button);
+    }
+    wrapper.unmount();
+  });
+
   it("formProps.beforeSubmit can prevent submission", () => {
     const props = mountWithConsumer(() => {
       const { formProps } = useCartForm();
       return {
-        exposed: formProps({ beforeSubmit: (e) => e.preventDefault() }),
+        // Annotated as `Event` to keep callbacks written before the `SubmitEvent` typing compiling.
+        exposed: formProps({ beforeSubmit: (e: Event) => e.preventDefault() }),
         render: () => null,
       };
     });
@@ -608,13 +634,27 @@ describe("useCartForm", () => {
 });
 
 describe("cartEndpoint option", () => {
-  it("defaults formProps.action to /api/cart", () => {
-    const result = mountWithConsumer(() => {
-      const { formProps } = useCartForm();
-      return { exposed: formProps(), render: () => null };
+  it("defaults formProps.action to /api/cart", async () => {
+    // The shared beforeEach configures the endpoint, so load an unconfigured binding.
+    vi.resetModules();
+    const core = await import("../core/cart/cart");
+    vi.mocked(core.createCartStore).mockImplementation((options) =>
+      createMockStore(options?.initialData),
+    );
+    const fresh = await import("./cart");
+    let result: ReturnType<ReturnType<typeof fresh.useCartForm>["formProps"]> | undefined;
+    const Consumer = defineComponent({
+      setup() {
+        result = fresh.useCartForm().formProps();
+        return () => null;
+      },
     });
 
+    mount(fresh.CartProvider, { slots: { default: () => h(Consumer) } });
+    assert(result, "expected formProps to be assigned");
+
     expect(result.action).toBe("/api/cart");
+    expect(core.configureCartEndpoint).toHaveBeenCalledWith("/api/cart");
   });
 
   it("custom cartEndpoint configures transport and flows to formProps.action", () => {

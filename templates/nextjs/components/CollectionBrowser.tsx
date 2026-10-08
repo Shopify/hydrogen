@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  createPredictiveSearchFormRegister,
   getFilterRemovalUrl,
   getSortByValue,
   serializeCollectionParams,
@@ -9,7 +10,7 @@ import {
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ProductCard, type ProductCardData } from "@/components/ProductCard";
@@ -47,6 +48,8 @@ export const SEARCH_SORT_OPTIONS = [
   { label: "Price, low to high", value: getSortByValue("PRICE", false) },
   { label: "Price, high to low", value: getSortByValue("PRICE", true) },
 ];
+
+const registerSearchField = createPredictiveSearchFormRegister();
 
 type PageInfo = { hasNextPage: boolean; endCursor?: string | null };
 type BrowserAvailableFilter = CollectionAvailableFilter | SearchAvailableFilter;
@@ -137,18 +140,6 @@ function CollectionPage(props: CollectionPageProps) {
   const state = useCollection();
   const { formProps } = useCollectionForm();
   const router = useRouter();
-  // Reset key for the uncontrolled filter subtree (checkboxes + price inputs).
-  // Keyed by the serialized filter state (NOT the URL) so the subtree remounts
-  // *after* the reconciler settles `state.filters` — clearing `defaultChecked` /
-  // `defaultValue` when an external navigation (chip removal, clear-all) empties
-  // the filters. Keying by the live URL is racy: the URL clears before
-  // `state.filters` settles, so the remount would bake in the stale checked
-  // state (hydrogen-collection-browser/references/nextjs.md reset-key guidance).
-  const filterSubtreeKey = serializeCollectionParams({
-    filters: state.filters,
-    sortKey: undefined,
-    reverse: false,
-  }).toString();
   const isLoading = state.status === "loading";
   const collectionPath = `/collections/${collection.handle}`;
   // `<Link>` navigations (active-filter chips, clear-all, load-more) update the
@@ -192,10 +183,10 @@ function CollectionPage(props: CollectionPageProps) {
         className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
       >
         <FilterSidebar
-          key={filterSubtreeKey}
+          key={collection.handle}
           availableFilters={availableFilters}
           activeFilters={state.filters}
-          disabled={isLoading}
+          isLoading={isLoading}
           currencyCode={currencyCode}
         />
 
@@ -257,12 +248,6 @@ function SearchPage(props: SearchPageProps) {
   const { formProps } = useCollectionForm();
   const router = useRouter();
   const onNavigate = () => router.refresh();
-  // Reset key for the uncontrolled filter subtree — see CollectionPage for rationale.
-  const filterSubtreeKey = serializeCollectionParams({
-    filters: state.filters,
-    sortKey: undefined,
-    reverse: false,
-  }).toString();
   const isLoading = state.status === "loading";
   const currencyCode = products[0]?.priceRange.minVariantPrice.currencyCode ?? "USD";
 
@@ -280,14 +265,12 @@ function SearchPage(props: SearchPageProps) {
           {content.search.label}
         </label>
         <input
+          {...registerSearchField("query")}
           id="search-q"
-          type="search"
-          name="q"
           defaultValue={term}
           key={term}
           placeholder={content.search.placeholder}
           className="number-reset rounded-button border-border h-11 max-w-md border px-3 text-sm"
-          autoComplete="off"
         />
         <button
           type="submit"
@@ -329,7 +312,7 @@ function SearchPage(props: SearchPageProps) {
               shows groups as a static sidebar. Mobile: collapsible disclosure,
               reachable without JS (F4). */}
           <details
-            key={filterSubtreeKey}
+            key="filters"
             open
             className="lg:flex lg:flex-col lg:gap-6"
             aria-labelledby="search-filters-heading"
@@ -349,7 +332,7 @@ function SearchPage(props: SearchPageProps) {
                   key={filter.id}
                   filter={filter}
                   activeFilters={state.filters}
-                  disabled={isLoading}
+                  isLoading={isLoading}
                   currencyCode={currencyCode}
                 />
               ))}
@@ -409,16 +392,16 @@ type SortOption = { label: string; value: string };
 
 function SortSelect({ isLoading, options }: { isLoading: boolean; options: SortOption[] }) {
   const state = useCollection();
-  const currentSort = useMemo(() => {
-    return serializeCollectionParams(state).toString();
-  }, [state]);
+  const currentSort = state.sortKey
+    ? getSortByValue(state.sortKey, state.reverse)
+    : (options[0]?.value ?? "");
 
   return (
     <label className="flex items-center gap-2 text-sm">
       <span className="text-on-surface-secondary">{content.collection.sortBy}</span>
       <select
         name="sort_by"
-        defaultValue={currentSort}
+        value={currentSort}
         onChange={(event) => event.currentTarget.form?.requestSubmit()}
         aria-busy={isLoading}
         className="w-auto"
@@ -436,12 +419,12 @@ function SortSelect({ isLoading, options }: { isLoading: boolean; options: SortO
 function FilterSidebar({
   availableFilters,
   activeFilters,
-  disabled,
+  isLoading,
   currencyCode,
 }: {
   availableFilters: BrowserAvailableFilter[];
   activeFilters: ProductFilter[];
-  disabled: boolean;
+  isLoading: boolean;
   currencyCode: string;
 }) {
   if (availableFilters.length === 0) return null;
@@ -451,7 +434,7 @@ function FilterSidebar({
       key={filter.id}
       filter={filter}
       activeFilters={activeFilters}
-      disabled={disabled}
+      isLoading={isLoading}
       currencyCode={currencyCode}
     />
   ));

@@ -198,7 +198,7 @@ describe("createPredictiveSearchServerHandlers", () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it("clamps invalid limits through the query helper", async () => {
+    it("falls back to Hydrogen's default limit when none is configured", async () => {
       mockFetch.mockResolvedValueOnce(mockGqlResponse({ predictiveSearch: MOCK_ITEMS }));
 
       await handlePredictiveSearchRequest(createPredictiveSearchRequest("?q=snow&limit=abc"));
@@ -207,6 +207,19 @@ describe("createPredictiveSearchServerHandlers", () => {
         DEFAULT_PREDICTIVE_SEARCH_LIMIT,
       );
     });
+
+    it.each(["abc", "", "%20"])(
+      "falls back to the configured limit for limit=%j",
+      async (limit) => {
+        mockFetch.mockResolvedValueOnce(mockGqlResponse({ predictiveSearch: MOCK_ITEMS }));
+        const request = createPredictiveSearchRequest(`?q=snow&limit=${limit}`);
+        const handlers = createPredictiveSearchServerHandlers({ limit: 4 });
+
+        await handlers.get({ request, storefrontClient: createPrivateStorefrontClient(request) });
+
+        expect(parseGraphqlVariables(mockFetch.mock.calls[0]).limit).toBe(4);
+      },
+    );
 
     it("passes predictive search controls from URL params", async () => {
       mockFetch.mockResolvedValueOnce(mockGqlResponse({ predictiveSearch: MOCK_ITEMS }));

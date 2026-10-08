@@ -22,6 +22,21 @@ type CartTrackerState = {
   lastEventId: string | null;
 };
 
+/**
+ * Subscribes to a cart store and publishes analytics events when the cart changes.
+ *
+ * Emits `cart_updated` whenever a settled cart's `updatedAt` changes, plus
+ * `product_added_to_cart` / `product_removed_from_cart` for each line that was
+ * added, removed, or changed quantity. Deduplicates on `updatedAt` with an
+ * in-memory cursor (within this subscription) and `localStorage` (across full
+ * page loads and tabs). A store filled from your own cart query must select
+ * `updatedAt`, or deduplication can't work.
+ *
+ * @throws {Error} If `window.Shopify.analytics` is not set (including on the server).
+ *   Render `ShopifyScripts` (or the `getShopifyScriptTags()` output) first.
+ * @returns An unsubscribe function that stops tracking.
+ * @publicDocs
+ */
 export function trackCartAnalytics(store: CartAnalyticsStore): () => void {
   const analytics = getGlobalAnalytics();
   const state: CartTrackerState = {
@@ -187,7 +202,7 @@ function hasPendingCartWork({ pending, revalidating }: CartState): boolean {
 }
 
 function getCartUpdatedAt(cart: CartData): string {
-  return typeof cart.updatedAt === "string" ? cart.updatedAt : new Date().toISOString();
+  return cart.updatedAt ?? new Date().toISOString();
 }
 
 function syncShopifyCurrency(cart: AnalyticsCart): void {

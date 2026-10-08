@@ -1,7 +1,11 @@
-import { getSortByValue } from "@shopify/hydrogen";
+import {
+  AnalyticsEvent,
+  createPredictiveSearchFormRegister,
+  getSortByValue,
+} from "@shopify/hydrogen";
 import { CollectionProvider } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
 
 import {
   ActiveFilterChips,
@@ -13,18 +17,19 @@ import {
   useLoadMore,
 } from "~/components/CollectionBrowse";
 import { ProductCard } from "~/components/ProductCard";
-import { AnalyticsEvent, getAnalytics, getAnalyticsShop } from "~/lib/analytics";
 import { loadSearchPage, type SearchPageData } from "~/lib/search";
 import { storefrontClientContext } from "~/lib/storefront";
+import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/search";
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ matches }: Route.MetaArgs) {
+  const shopName = getShopNameFromRootMatch(matches[0]);
   return [
-    { title: "Search · CORE" },
+    { title: formatPageTitle("Search", shopName) },
     {
       name: "description",
-      content: "Search products at CORE.",
+      content: `Search products at ${shopName}.`,
     },
   ];
 }
@@ -47,15 +52,9 @@ function SearchViewedTracker({
   useEffect(() => {
     if (!searchTerm) return;
 
-    const analytics = getAnalytics();
-    const shop = getAnalyticsShop();
-    if (!analytics || !shop) return;
-
-    analytics.publish(AnalyticsEvent.SEARCH_VIEWED, {
+    window.Shopify?.analytics?.publish(AnalyticsEvent.SEARCH_VIEWED, {
       searchTerm,
       searchResults: { totalCount },
-      url: window.location.href,
-      shop,
     });
   }, [searchTerm, totalCount]);
 
@@ -110,6 +109,8 @@ function Breadcrumb() {
   );
 }
 
+const registerSearchForm = createPredictiveSearchFormRegister();
+
 function SearchHeader({ term }: { term: string }) {
   return (
     <div className="mb-8">
@@ -133,8 +134,7 @@ function SearchHeader({ term }: { term: string }) {
           </span>
           <input
             key={term}
-            type="search"
-            name="q"
+            {...registerSearchForm("query")}
             id="search-q"
             defaultValue={term}
             placeholder="Search"
@@ -190,6 +190,12 @@ function NoResults({ term }: { term: string }) {
 }
 
 function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
+  const location = useLocation();
+  const navigation = useNavigation();
+  const isUpdating =
+    navigation.state === "loading" &&
+    navigation.location?.pathname === location.pathname &&
+    navigation.location.search !== location.search;
   const { nodes, pageInfo, isLoading, loadMore } = useLoadMore(
     loaderData.products,
     loaderData.pageInfo,
@@ -210,8 +216,8 @@ function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
             <h2 className="type-heading-sm text-on-surface mb-2">Filters</h2>
             <FacetForm
               availableFilters={loaderData.availableFilters}
+              currencyCode={loaderData.currencyCode}
               extraHiddenInputs={searchTermHiddenInput(loaderData.searchTerm)}
-              remountKey={loaderData.searchTerm}
             />
           </div>
         </aside>
@@ -228,7 +234,12 @@ function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
             currencyCode={loaderData.currencyCode}
           />
           <h2 className="sr-only">Search results</h2>
-          <ProductGrid products={nodes} />
+          <div
+            aria-busy={isUpdating}
+            className={`motion-safe:transition-opacity motion-safe:duration-150 ${isUpdating ? "opacity-60" : "opacity-100"}`}
+          >
+            <ProductGrid products={nodes} />
+          </div>
           <LoadMore
             pageInfo={pageInfo}
             loadedCount={nodes.length}
@@ -240,8 +251,8 @@ function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
       </div>
       <FilterDrawer
         availableFilters={loaderData.availableFilters}
+        currencyCode={loaderData.currencyCode}
         extraHiddenInputs={searchTermHiddenInput(loaderData.searchTerm)}
-        remountKey={loaderData.searchTerm}
       />
     </>
   );

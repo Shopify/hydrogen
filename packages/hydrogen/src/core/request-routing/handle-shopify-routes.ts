@@ -1,7 +1,7 @@
 import { handleProductVariantId } from "../product/accept-variant-id";
 import { handleAjaxApi } from "./interceptors/ajax-api";
 import { handleShopifyApiProxy } from "./interceptors/api-proxy";
-import { handleCheckoutRedirect } from "./interceptors/checkout";
+import { handleBuyPermalinkRedirect, handleCheckoutRedirect } from "./interceptors/checkout";
 import { handleMcpProxy } from "./interceptors/mcp-proxy";
 import { handleSfapiProxy } from "./interceptors/sfapi-proxy";
 import { handleUcpMcpProxy } from "./interceptors/ucp-mcp-proxy";
@@ -16,6 +16,7 @@ const SHOPIFY_ROUTE_INTERCEPTORS = [
   handleSfapiProxy,
   handleProductVariantId,
   handleShopifyRouteHandlers,
+  handleBuyPermalinkRedirect,
   handleCheckoutRedirect,
   handleUcpProfileProxy,
   handleWellKnownProxy,
@@ -30,6 +31,8 @@ const SHOPIFY_ROUTE_INTERCEPTORS = [
  * `null` when none do. Use it as the first step of request handling, before
  * framework routing. Matched responses already include request-context
  * response headers.
+ *
+ * @publicDocs
  */
 export const handleShopifyRoutes: HydrogenRouteHandler = (options) => {
   if (options.requestContext !== options.storefrontClient.requestContext) {

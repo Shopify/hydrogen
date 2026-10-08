@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { runCli } from "../index";
+import { runCli } from "./index";
 
 const commandCalls = vi.hoisted(() => ({
   checkGraphQL: vi.fn(async () => {}),
@@ -9,12 +9,12 @@ const commandCalls = vi.hoisted(() => ({
   uninstallLocalHttpsCertificates: vi.fn(async () => {}),
 }));
 
-vi.mock("../certs", () => ({
+vi.mock("./certs", () => ({
   installLocalHttpsCertificates: commandCalls.installLocalHttpsCertificates,
   uninstallLocalHttpsCertificates: commandCalls.uninstallLocalHttpsCertificates,
 }));
-vi.mock("../gql", () => ({ checkGraphQL: commandCalls.checkGraphQL }));
-vi.mock("../setup", () => ({ setupHydrogen: commandCalls.setupHydrogen }));
+vi.mock("./gql", () => ({ checkGraphQL: commandCalls.checkGraphQL }));
+vi.mock("./setup", () => ({ setupHydrogen: commandCalls.setupHydrogen }));
 
 const originalArgv = process.argv;
 

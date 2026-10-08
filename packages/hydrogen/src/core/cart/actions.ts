@@ -1,22 +1,47 @@
 import { normalizeCartId } from "./cookie";
 import { getCartAttributeFormEntries } from "./form";
 
+/** A key-value pair attached to the cart or an individual cart line. */
 export type CartAttributeInput = { key: string; value: string };
 
+/** Input for adding a line to the cart. */
 export type CartLineAddInput = {
+  /** Storefront API GID of the product variant to add. */
   merchandiseId: string;
   quantity: number;
   attributes?: CartAttributeInput[];
+  /** Selling plan GID for subscription line items. */
   sellingPlanId?: string;
 };
 
+/** Input for updating an existing cart line. Setting `quantity` to `0` removes the line. */
 export type CartLineUpdateInput = {
+  /** The `CartLine.id` of the line to update. */
   id: string;
+  /** Storefront API GID of a product variant to swap the line to. */
+  merchandiseId?: string;
   quantity: number;
   attributes?: CartAttributeInput[];
   sellingPlanId?: string;
 };
 
+/**
+ * Discriminated union of all cart mutation intents.
+ *
+ * {@link parseCartRequest} normalizes both JSON and FormData requests into one
+ * of these variants. The `intent` field determines the Storefront API mutation:
+ *
+ * - `"add"` — add new lines (cartLinesAdd, or cartCreate when no cart exists)
+ * - `"update"` — change quantity, merchandise, or attributes on existing lines (cartLinesUpdate)
+ * - `"remove"` — remove lines by ID (cartLinesRemove)
+ * - `"discount-update"` — replace all discount codes (cartDiscountCodesUpdate)
+ * - `"discount-apply"` — add a single discount code (read-then-write via cartDiscountCodesUpdate)
+ * - `"discount-remove"` — remove a single discount code (read-then-write via cartDiscountCodesUpdate)
+ * - `"attributes-update"` — set cart-level attributes (cartAttributesUpdate)
+ * - `"note-update"` — set the cart note (cartNoteUpdate)
+ *
+ * @publicDocs
+ */
 export type CartAction =
   | { intent: "add"; lines: CartLineAddInput[] }
   | { intent: "update"; lines: CartLineUpdateInput[] }
@@ -39,6 +64,35 @@ class CartActionError extends Error {
   }
 }
 
+/**
+ * Parses an incoming cart mutation request into a typed {@link CartAction}.
+ *
+ * Accepts `application/json` and `application/x-www-form-urlencoded` /
+ * `multipart/form-data` content types. JSON and FormData each support a
+ * different subset of intents — JSON produces `discount-update` while
+ * FormData produces `discount-apply` / `discount-remove`.
+ *
+ * FormData requests always return `cartId: null` — the server handler
+ * should fall back to the cart cookie.
+ *
+ * @throws If the content-type is unsupported, the intent is unrecognized,
+ * required fields are missing, or a JSON body combines more than one of
+ * `lines`, `discountCodes`, `attributes` and `note`.
+ *
+ * @example
+ * ```ts
+ * const { action, cartId } = await parseCartRequest(request);
+ *
+ * switch (action.intent) {
+ *   case "add":
+ *     return cartLinesAdd(cartId ?? getCartId(request), action.lines);
+ *   case "remove":
+ *     return cartLinesRemove(cartId ?? getCartId(request), action.lineIds);
+ *   // ...
+ * }
+ * ```
+ * @publicDocs
+ */
 export async function parseCartRequest(request: Request): Promise<ParsedCartRequest> {
   const contentType = request.headers.get("content-type") ?? "";
 
@@ -60,9 +114,19 @@ export async function parseCartRequest(request: Request): Promise<ParsedCartRequ
 
 // --- JSON parsing ---
 
+const JSON_MUTATION_FIELDS = ["lines", "discountCodes", "attributes", "note"] as const;
+
 function parseJsonBody(body: unknown): ParsedCartRequest {
   assertObject(body);
   const cartId = typeof body.cartId === "string" ? normalizeCartId(body.cartId) : null;
+
+  // Each request runs one Storefront API mutation, so any other field would be silently dropped.
+  const fields = JSON_MUTATION_FIELDS.filter((field) => body[field] !== undefined);
+  if (fields.length > 1) {
+    throw new CartActionError(
+      `Request body must contain only one of "lines", "discountCodes", "attributes", or "note", got ${fields.join(", ")}.`,
+    );
+  }
 
   if ("note" in body && typeof body.note === "string") {
     return { action: { intent: "note-update", note: body.note }, cartId };
@@ -139,6 +203,7 @@ function partitionLines(rawLines: unknown[]): CartAction {
     } else if (hasId) {
       updates.push({
         id: line.id as string,
+        ...(hasMerchandiseId && { merchandiseId: line.merchandiseId as string }),
         quantity,
         ...optionalFields,
       });

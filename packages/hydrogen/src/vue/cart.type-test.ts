@@ -56,3 +56,11 @@ describe("createCartComponents", () => {
     >();
   });
 });
+
+describe("@shopify/hydrogen/vue cart exports", () => {
+  it("only exposes cart composables through createCartComponents", () => {
+    type CartExports = Extract<keyof typeof import("./index"), `${string}Cart${string}`>;
+
+    expectTypeOf<CartExports>().toEqualTypeOf<"createCartComponents" | "useCartAnalytics">();
+  });
+});

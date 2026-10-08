@@ -83,8 +83,17 @@ const FNV1A_PRIME = 0x01000193;
 const CART_REVALIDATION_ERROR_MESSAGE =
   "Something went wrong refreshing your cart. Please try again.";
 
+/** Timeout (in milliseconds) for cart loads and mutations. */
 export const STANDARD_ACTION_TIMEOUT_IN_MS = 30_000;
 
+/**
+ * Error thrown when the cart endpoint responds with a non-2xx status.
+ *
+ * Carries the HTTP {@link CartNetworkError.status | status} code so callers
+ * can distinguish transient failures from permanent ones.
+ *
+ * @publicDocs
+ */
 export class CartNetworkError extends Error {
   readonly status: number;
 
@@ -95,28 +104,101 @@ export class CartNetworkError extends Error {
   }
 }
 
+/**
+ * A reactive, framework-agnostic cart state machine.
+ *
+ * The store manages optimistic mutations and server reconciliation — the client's
+ * *intent*. Cart-level costs and totals are always server-authoritative, but
+ * line-level data (quantity, estimated cost) and discount applicability are
+ * projected optimistically until the server response arrives.
+ *
+ * Mutations are dispatched via {@link CartStore.handleFormSubmit} (from HTML
+ * forms) or through Shopify Standard Action `shopify:cart:*` events.
+ *
+ * @example
+ * ```ts
+ * const store = createCartStore({
+ *   initialData: { cart: loaderData.cart },
+ * });
+ *
+ * store.connect();
+ *
+ * const unsubscribe = store.subscribe((state) => {
+ *   renderCart(state.data);
+ * });
+ *
+ * store.destroy();
+ * ```
+ */
 export type CartStore = {
+  /**
+   * Activates the store — starts listening for Shopify standard action events
+   * and triggers the initial cart load if no `initialData` was provided.
+   * Idempotent; no-op without `document` (SSR-safe).
+   */
   connect(): void;
+
+  /** Tears down the store — cancels in-flight requests, removes event listeners, releases resources. */
   destroy(): void;
+
+  /** Replaces the settled cart data with a fresh server response. */
   hydrate(data: CartData): void;
+
+  /** Returns the current {@link CartState}, with optimistic projections applied on top of settled data. */
   getState(): CartState;
+
+  /**
+   * Registers a listener invoked on every state change. Returns an unsubscribe function.
+   * Compatible with React's `useSyncExternalStore`.
+   *
+   * @param listener - Callback receiving the new {@link CartState} snapshot
+   */
   subscribe(listener: (state: CartState) => void): () => void;
+
+  /** Triggers a full cart load from the server endpoint. */
   fetch(): Promise<void>;
+
   /**
    * Reconciles the cart after an out-of-band mutation: revalidates the current
    * cart, or loads one when none is present yet (e.g. just created server-side).
    */
   refresh(): void;
+
+  /** Resets the store — aborts in-flight requests, clears data and errors, and re-fetches when connected. */
   reset(): void;
+
+  /**
+   * Intercepts a native `SubmitEvent` from a cart form, parses the intent and
+   * field values, and dispatches the matching transaction.
+   *
+   * The submitter's `value` attribute determines the action — `"add"`,
+   * `"increase"`, `"decrease"`, `"remove"`, `"set"`, `"discount-apply"`,
+   * `"discount-remove"`, `"note-update"`, or `"attributes-update"`. An empty
+   * value with a `merchandiseId` field is treated as `"add"`.
+   *
+   * The returned promise rejects with a `TypeError` if `event.target` is not
+   * a form or `event.submitter` is missing, and with an `Error` if the
+   * submitter's value is not a recognized intent.
+   */
   handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;
 };
+
+/** Actions for reconciling cart state after updates outside Standard Actions. */
+export type CartActions = Pick<CartStore, "refresh">;
 
 type CartInitialData<TData extends CartData = CartData> = {
   cart: TData | null;
   errors?: Array<{ message: string }>;
 };
 
+/** Options for {@link createCartStore}. */
 export type CreateCartStoreOptions<TData extends CartData = CartData> = {
+  /**
+   * Server-loaded cart data to hydrate the store with on creation.
+   *
+   * Accepts a synchronous value or a `PromiseLike` for streamed/deferred data.
+   * When omitted, the store starts empty and loads the cart on {@link CartStore.connect}.
+   */
   initialData?: CartInitialData<TData> | PromiseLike<CartInitialData<TData>>;
 };
 
@@ -1016,9 +1098,15 @@ function getAddErrorKeys(
 
 function mergeServerLine(previous: CartLine | undefined, next: CartLine): CartLine {
   if (!previous) return next;
-  const merchandise = next.merchandise
-    ? { ...previous.merchandise, ...next.merchandise }
-    : previous.merchandise;
+  // A swap keeps the line ID but changes the variant; fields from the old variant don't carry over.
+  const swapped =
+    previous.merchandise?.id !== undefined &&
+    next.merchandise?.id !== undefined &&
+    previous.merchandise.id !== next.merchandise.id;
+  const merchandise =
+    next.merchandise && !swapped
+      ? { ...previous.merchandise, ...next.merchandise }
+      : (next.merchandise ?? previous.merchandise);
   return { ...previous, ...next, ...(merchandise ? { merchandise } : {}) };
 }
 
@@ -1154,7 +1242,7 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
             );
       return { ...state, data: reconcileCartLines(state.data, lines) };
     },
-    projectPromise: (state, result, payload, addError) => {
+    projectPromise: (state, result, payload, addError, options) => {
       if (hasProjectedErrors(result)) {
         addError((current, timestampMs) =>
           projectLineErrors(current, result, [payload.lineId], timestampMs),
@@ -1165,15 +1253,21 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       const cart = cartResponseFromStandardEvent(result.cart);
       const serverLines = getLines(cart);
       const matching = serverLines.find((line) => line.id === payload.lineId);
+      // A response can return the line under another ID (a variant swap, or a canonicalized GID),
+      // so a missing line only means removal for a removal. With no overlapping work the response
+      // is the whole cart; otherwise keep the line until the scheduled revalidation replaces it.
+      if (!matching && payload.quantity > 0 && options.mergeServerCart) {
+        return { ...state, data: adoptServerLines(state.data, cart) };
+      }
       const previous = getLines(state.data);
-      let lines = previous.filter((line) => line.id !== payload.lineId);
+      let lines = previous;
       if (matching) {
         const prior = previous.find((line) => line.id === payload.lineId);
         lines = previous.map((line) =>
           line.id === payload.lineId ? mergeServerLine(prior, matching) : line,
         );
-      } else if (payload.quantity > 0 && previous.length === 1 && serverLines.length === 1) {
-        lines = [mergeServerLine(previous[0], serverLines[0])];
+      } else if (payload.quantity === 0) {
+        lines = previous.filter((line) => line.id !== payload.lineId);
       }
       return { ...state, data: reconcileCartLines(state.data, lines) };
     },
@@ -1201,13 +1295,9 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       }
       if (!result.cart) return state;
       const cart = cartResponseFromStandardEvent(result.cart);
-      if (options.mergeServerCart) {
-        return { ...state, data: mergeAuthoritativeCartData(state.data, cart) };
-      }
-      return {
-        ...state,
-        data: { ...state.data, discountCodes: cart.discountCodes },
-      };
+      // Discount changes reprice lines, so a response with no overlapping work also settles them.
+      const data = options.mergeServerCart ? adoptServerLines(state.data, cart) : state.data;
+      return { ...state, data: { ...data, discountCodes: cart.discountCodes } };
     },
     getSignalKeys: () => DISCOUNT_CODES_KEY,
     getPendingKeys: (state, payload) => {
@@ -1415,18 +1505,23 @@ function trimPendingTransaction<TType extends TransactionType>(
   );
 }
 
+// Lines settle per transaction. Every other field is the cart as of this mutation, including
+// fields selected by a custom CartFragment.
 function addSnapshotFields(state: CartState, result: CartMutationResult): CartState {
   if (!result.cart) return state;
-  const cart = cartResponseFromStandardEvent(result.cart);
+  const {
+    lines: _lines,
+    checkoutUrl,
+    updatedAt,
+    ...fields
+  } = cartResponseFromStandardEvent(result.cart);
   return {
     ...state,
     data: {
       ...state.data,
-      id: cart.id,
-      checkoutUrl: cart.checkoutUrl ?? state.data.checkoutUrl,
-      updatedAt: cart.updatedAt ?? state.data.updatedAt,
-      totalQuantity: cart.totalQuantity,
-      cost: cart.cost,
+      ...fields,
+      checkoutUrl: checkoutUrl ?? state.data.checkoutUrl,
+      updatedAt: updatedAt ?? state.data.updatedAt,
     },
   };
 }
@@ -2101,6 +2196,30 @@ function loadCartInStore(
   return promise;
 }
 
+/**
+ * Creates a new {@link CartStore} for the given initial data.
+ *
+ * The store is inert until {@link CartStore.connect} is called — no network
+ * requests are made and no event listeners are attached at creation time.
+ * Framework adapters call `connect()` on mount and `destroy()` on unmount.
+ *
+ * @example
+ * ```ts
+ * // With synchronous loader data
+ * const store = createCartStore({
+ *   initialData: { cart: loaderData.cart },
+ * });
+ *
+ * // With deferred/streamed data
+ * const store = createCartStore({
+ *   initialData: cartPromise,
+ * });
+ *
+ * // Empty — loads the cart on connect()
+ * const store = createCartStore();
+ * ```
+ * @publicDocs
+ */
 export function createCartStore<TData extends CartData = CartData>(
   options: CreateCartStoreOptions<TData> = {},
 ): CartStore {
@@ -2308,6 +2427,18 @@ async function handleFormSubmitInStore(
   throw new Error(`Unknown cart form intent: "${intent}"`);
 }
 
+/**
+ * Routes cart loads and mutations to a custom endpoint instead of the
+ * Standard Actions default handler.
+ *
+ * Logs a warning if called again with a different endpoint.
+ *
+ * @example
+ * ```ts
+ * configureCartEndpoint("/storefront/cart");
+ * ```
+ * @publicDocs
+ */
 export function configureCartEndpoint(endpoint: string): void {
   if (configuredCartEndpoint === endpoint) return;
   if (configuredCartEndpoint !== null) {
@@ -2435,6 +2566,16 @@ function fetchCartData(cartId?: string | null, signal?: AbortSignal): Promise<Ca
         }
       : null,
   );
+}
+
+// Lines settle per transaction; every other field of a mutation response comes from
+// addSnapshotFields, which applies the snapshot ordering guards.
+function adoptServerLines<TData extends CartData>(previous: TData, authoritative: CartData): TData {
+  const previousLines = new Map(getLines(previous).map((line) => [line.id, line]));
+  const nodes = getLines(authoritative).map((line) =>
+    mergeServerLine(previousLines.get(line.id), line),
+  );
+  return { ...previous, lines: { ...previous.lines, ...authoritative.lines, nodes } };
 }
 
 function mergeAuthoritativeCartData(previous: CartData, authoritative: CartData): CartData {

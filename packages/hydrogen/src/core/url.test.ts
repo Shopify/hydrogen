@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 
-import { SFAPI_RE, MCP_RE, UCP_MCP_RE, normalizeStoreDomain } from "./url";
+import {
+  SFAPI_RE,
+  BUY_PERMALINK_RE,
+  getSameOriginPath,
+  isHydrogenServerHandoffPath,
+  normalizeStoreDomain,
+} from "./url";
 
 describe("SFAPI_RE", () => {
   it("matches valid SFAPI paths", () => {
@@ -23,32 +29,48 @@ describe("SFAPI_RE", () => {
   });
 });
 
-describe("MCP_RE", () => {
-  it("matches exact /api/mcp", () => {
-    expect(MCP_RE.test("/api/mcp")).toBe(true);
+describe("BUY_PERMALINK_RE", () => {
+  it.each([
+    "/buy/123:1",
+    "/buy/123:2,456:1",
+    "/buy/sku_ab-1.2:3",
+    "/buy/~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1",
+    "/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1",
+  ])("matches %s", (pathname) => {
+    expect(BUY_PERMALINK_RE.test(pathname)).toBe(true);
   });
 
-  it("rejects paths with trailing slashes or sub-paths", () => {
-    expect(MCP_RE.test("/api/mcp/")).toBe(false);
-    expect(MCP_RE.test("/api/mcp/foo")).toBe(false);
-    expect(MCP_RE.test("/api/mcps")).toBe(false);
-    expect(MCP_RE.test("/api/mc")).toBe(false);
+  it.each([
+    "/buy",
+    "/buy/",
+    "/buy/123",
+    "/buy/123:0",
+    "/buy/123:01",
+    "/buy/123:1,",
+    "/buy/~:1",
+    "/buy/123:1/",
+    "/buy/123:1/extra",
+    "/en/buy/123:1",
+  ])("does not match %s", (pathname) => {
+    expect(BUY_PERMALINK_RE.test(pathname)).toBe(false);
   });
 });
 
-describe("UCP_MCP_RE", () => {
-  it("matches exact /api/ucp/mcp", () => {
-    expect(UCP_MCP_RE.test("/api/ucp/mcp")).toBe(true);
-  });
-
-  it.each(["/api/ucp/mcp/", "/api/ucp/mcp/foo", "/api/ucp/mcps", "/api/mcp"])(
-    "does not match %s",
+describe("isHydrogenServerHandoffPath", () => {
+  it.each(["/checkout", "/cart/123:1", "/buy/123:1", "/account/login"])(
+    "hands %s off to the server",
     (pathname) => {
-      expect(UCP_MCP_RE.test(pathname)).toBe(false);
+      expect(isHydrogenServerHandoffPath(pathname)).toBe(true);
+    },
+  );
+
+  it.each(["/cart", "/buy", "/account", "/products/snowboard"])(
+    "keeps %s with the app",
+    (pathname) => {
+      expect(isHydrogenServerHandoffPath(pathname)).toBe(false);
     },
   );
 });
-
 describe("normalizeStoreDomain", () => {
   it("prepends https:// when missing", () => {
     expect(normalizeStoreDomain("my-store.myshopify.com")).toBe("https://my-store.myshopify.com");
@@ -71,5 +93,37 @@ describe("normalizeStoreDomain", () => {
   it("throws on missing domain", () => {
     expect(() => normalizeStoreDomain(undefined as unknown as string)).toThrow(/storeDomain/);
     expect(() => normalizeStoreDomain("")).toThrow(/storeDomain/);
+  });
+});
+
+describe("getSameOriginPath", () => {
+  const origin = "https://shop.example";
+
+  it.each([
+    ["/account/orders?page=2#latest", "/account/orders?page=2#latest"],
+    ["/x/../account", "/account"],
+    ["/search?q=https://evil.example", "/search?q=https://evil.example"],
+    [`${origin}/account/orders`, "/account/orders"],
+  ])("accepts %s as %s", (target, expected) => {
+    expect(getSameOriginPath(target, origin)).toBe(expected);
+  });
+
+  it.each([
+    [null],
+    [""],
+    ["account"],
+    ["javascript:alert(1)"],
+    ["https://evil.example/p"],
+    ["https:evil.example/p"],
+    ["//evil.example/p"],
+    ["/\\evil.example/p"],
+    // Each of these stays on `origin` but normalizes to a `//evil.example/p` pathname.
+    [`${origin}//evil.example/p`],
+    ["//shop.example//evil.example/p"],
+    ["/x/..//evil.example/p"],
+    ["/x/../\\evil.example/p"],
+    ["/./\t/evil.example/p"],
+  ])("rejects %s", (target) => {
+    expect(getSameOriginPath(target, origin)).toBeUndefined();
   });
 });

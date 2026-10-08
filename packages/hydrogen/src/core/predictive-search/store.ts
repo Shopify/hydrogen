@@ -72,6 +72,9 @@ export type PredictiveSearchStore<TData extends PredictiveSearchData = Predictiv
   destroy(): void;
 };
 
+/** Search methods exposed by the predictive search store. */
+export type PredictiveSearchActions = Pick<PredictiveSearchStore, "search" | "clear">;
+
 type PredictiveSearchStoreContext<TData extends PredictiveSearchData> = {
   observable: ReturnType<typeof createObservable<PredictiveSearchState<TData>>>;
   // API route used to fetch predictive search results.
@@ -100,6 +103,14 @@ type StoreSearchOptions = Pick<
   "limit" | "limitScope" | "types" | "searchableFields" | "unavailableProducts"
 >;
 
+/**
+ * Creates a framework-agnostic predictive search store with debounced searching, request
+ * cancellation, and a subscribable state snapshot.
+ *
+ * Building block for the framework bindings. Use it directly on a framework without one.
+ *
+ * @publicDocs
+ */
 export function createPredictiveSearchStore<
   TData extends PredictiveSearchData = PredictiveSearchData,
 >(options: CreatePredictiveSearchStoreOptions = {}): PredictiveSearchStore<TData> {

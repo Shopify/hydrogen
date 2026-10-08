@@ -35,20 +35,23 @@ const log = getLogger("product");
 
 export type { ValidProductSelectionResult } from "../core/product";
 
+/** Options for {@link useProductForm}. */
 export interface UseProductFormOptions<TProduct extends ProductInput> {
   onSelect?: (result: ValidProductSelectionResult<TProduct>) => void;
 }
 
+/** Return value of {@link useProductForm}. */
 export interface UseProductFormResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
   selectedVariant: ProductVariantFrom<TProduct> | null;
   register: ProductFormRegister;
   formProps: (opts?: {
-    beforeSubmit?: (e: Event) => void;
-    afterSubmit?: (e: Event) => void;
+    beforeSubmit?: (e: SubmitEvent) => void;
+    afterSubmit?: (e: SubmitEvent) => void;
   }) => Record<string, unknown>;
   errors: ProductFormErrors;
   matchedLineItem: CartLine | null;
+  /** Reactive ref that is `true` while a form submission is in flight. */
   pending: ShallowRef<boolean>;
   selectOption: (
     name: string,
@@ -56,6 +59,7 @@ export interface UseProductFormResult<TProduct extends ProductInput> {
   ) => VariantSelectionResult<ProductVariantFrom<TProduct>>;
 }
 
+/** Return value of the `useProduct` composable from {@link createProductComponents}. */
 export interface UseProductResult<TProduct extends ProductInput> {
   options: ProductFormOptions<TProduct>;
   selectedVariant: ProductVariantFrom<TProduct> | null;
@@ -106,17 +110,17 @@ function useProductFormImpl<TProduct extends ProductInput>(
   }
 
   function formProps(opts?: {
-    beforeSubmit?: (e: Event) => void;
-    afterSubmit?: (e: Event) => void;
+    beforeSubmit?: (e: SubmitEvent) => void;
+    afterSubmit?: (e: SubmitEvent) => void;
   }): Record<string, unknown> {
     return {
-      onSubmit: (e: Event) => {
+      onSubmit: (e: SubmitEvent) => {
         opts?.beforeSubmit?.(e);
         if (e.defaultPrevented) return;
         e.preventDefault();
         pending.value = true;
         store
-          .handleFormSubmit(e as SubmitEvent)
+          .handleFormSubmit(e)
           .then(
             () => opts?.afterSubmit?.(e),
             (error: unknown) => {
@@ -165,6 +169,8 @@ function useProductFormImpl<TProduct extends ProductInput>(
  * lifecycle. Create the store with `createProductFormStore` and manage its
  * lifecycle (hydration, destruction) yourself, or use
  * `createProductComponents` for a provider-based approach.
+ *
+ * @publicDocs
  */
 export function useProductForm<TProduct extends ProductInput>(
   store: ProductFormStore<TProduct>,
@@ -187,6 +193,8 @@ export function useProductForm<TProduct extends ProductInput>(
  * - `useProductForm` provides form-binding utilities (register, formProps, pending)
  *
  * Requires a `<CartProvider>` ancestor.
+ *
+ * @publicDocs
  */
 export function createProductComponents<TProduct extends ProductInput>(): {
   ProductProvider: ReturnType<typeof defineComponent>;

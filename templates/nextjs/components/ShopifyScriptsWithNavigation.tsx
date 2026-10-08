@@ -12,15 +12,22 @@ import { routeTemplates } from "@/lib/route-templates";
  * component and cannot call `useRouter`, so `ShopifyScripts` (which needs a
  * `navigate` callback) must live in a client component. Rendered once in the
  * root layout with the resolved market `i18n` (single-market example →
- * `defaultI18n`) and server-resolved shop metadata.
+ * `defaultI18n`), the Storefront API's active `currency` from
+ * `getAnalyticsShop()`, and server-resolved shop metadata.
  */
 type ShopConfig = NonNullable<ShopifyScriptsProps["shop"]>;
 
-export function ShopifyScriptsWithNavigation({ shop }: { shop: ShopConfig }) {
+export function ShopifyScriptsWithNavigation({
+  shop,
+  currency,
+}: {
+  shop: ShopConfig;
+  currency: string;
+}) {
   const router = useRouter();
   return (
     <ShopifyScripts
-      i18n={defaultI18n}
+      i18n={{ ...defaultI18n, currency }}
       shop={shop}
       consent={analyticsConsent}
       navigate={(url: string) => router.push(url)}

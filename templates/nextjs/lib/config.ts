@@ -3,7 +3,7 @@ type StorefrontConfigShape = {
   publicStorefrontToken: string;
 };
 
-type I18nShape = { country: "US"; language: "EN"; currency: "USD" };
+type I18nShape = { country: "US"; language: "EN" };
 
 type ShopifyScriptsShopShape = {
   shopId: string;
@@ -33,7 +33,6 @@ export const customerAccountConfig = {
 export const defaultI18n = {
   country: "US",
   language: "EN",
-  currency: "USD",
 } satisfies I18nShape;
 
 export const shop = {

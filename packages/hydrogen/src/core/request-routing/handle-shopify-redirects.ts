@@ -18,6 +18,8 @@ export type RedirectOptions = {
 /**
  * Resolves Shopify redirects after framework routing returns a 404. Matched
  * responses already include request-context response headers.
+ *
+ * @publicDocs
  */
 export async function handleShopifyRedirects(options: RedirectOptions): Promise<Response | null> {
   const { request, storefrontClient } = options;

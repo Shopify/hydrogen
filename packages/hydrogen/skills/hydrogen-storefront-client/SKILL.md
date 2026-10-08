@@ -258,7 +258,7 @@ const { data } = await client.graphql(QUERY);
 const { data } = await client.graphql(QUERY, { signal });
 ```
 
-`requestContext.signal`, per-call `signal`, and the client's timeout signal are raced automatically. At the final response boundary, append committed session headers first, then call `requestContext.applyResponseHeaders(response.headers)`.
+`requestContext.signal`, per-call `signal`, and the client's timeout signal are raced automatically. They are combined with `AbortSignal.any`, which the Next.js edge sandbox does not have, so an edge route or middleware that calls this client needs an `AbortSignal.any` polyfill installed before the first request. At the final response boundary, append committed session headers first, then call `requestContext.applyResponseHeaders(response.headers)`.
 
 Read `references/caching.md` to cache catalog reads across sub-requests on Oxygen-style runtimes.
 
@@ -283,8 +283,6 @@ try {
 Every successful result includes `headers` (the raw `Headers` object from the response) — useful for forwarding `Set-Cookie` headers in SSR or reading rate-limit metadata.
 
 A 200 response with GraphQL `errors` does NOT throw — partial success is valid in GraphQL. Non-200 responses, timeouts, network failures, and JSON parse errors all throw `StorefrontApiError` (or the `StorefrontTimeoutError` subclass).
-
-`StorefrontApiError` carries GraphQL error context (`locations`, `path`, `extensions`) when available. `extensions.code` enables programmatic branching (e.g. retry on `"THROTTLED"`). `toJSON()` strips dev-only fields (`queryText`, `variables`, `stack`) — safe for error reporters.
 
 ---
 

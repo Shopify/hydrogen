@@ -36,8 +36,7 @@ Your app code
   ▼
 window.Shopify.analytics
   │
-  ├── publish / subscribe / addDestination / destroy  (app-facing)
-  ├── raw live subscribers
+  ├── publish / addDestination / getConfig  (app-facing)
   └── consent-gated destinations with replay
       │
       └── Customer Privacy gates destination delivery and replay
@@ -61,6 +60,7 @@ What it does **not** do:
 - Server-side analytics dispatch.
 - Third-party destination integrations (GA4, Meta Pixel, Klaviyo) — wire those with `addDestination()`.
 - Cart event publishing without `trackCartAnalytics()`. App code should not manually publish `cart_updated` etc.
+- Forwarding `cart_viewed`, `cart_updated`, or `product_removed_from_cart` to Monorail. They stay on the bus for your own destinations.
 - DOM event ingestion or Standard Events. Explicit `publish()` is the API.
 
 ---
@@ -92,7 +92,7 @@ const consent: ConsentConfig = {
 };
 
 const analytics: NonNullable<ShopifyScriptTagsOptions["analytics"]> = {
-  customData: { theme: "v2" },             // optional, attached to bus-generated payloads
+  customData: { theme: "v2" },             // optional
 };
 ```
 
@@ -110,23 +110,23 @@ Resolve shop metadata on the server and pass it to ShopifyScripts. Shopify analy
 
 ### `i18n`
 
-Pass the app's resolved `country` and `language` market values. Optional `currency` sets `window.Shopify.currency.active` for Shopify runtime scripts and Shopify analytics. Shopify analytics reads its content language from `window.Shopify.locale`.
+Pass the app's resolved `country` and `language` market values. Optional `currency` sets `window.Shopify.currency.active` for Shopify runtime scripts and Shopify analytics. For `product_viewed`, Shopify analytics reads the currency from `products[].price.currencyCode`. For `product_added_to_cart`, it reads the cart line's `cost.amountPerQuantity.currencyCode`. Both fall back to `window.Shopify.currency.active`. Page, collection, and search views take only the global. When it is unset, Shopify analytics sends them without a currency. The cart tracker also writes the global from cart cost once a cart exists. Shopify analytics reads its content language from `window.Shopify.locale`.
 
 ### `analytics`
 
-The analytics bus is enabled by default. Pass `analytics` only when you need optional bus configuration such as `customData`, which is attached to bus-generated payloads. Shopify analytics reads currency from `window.Shopify.currency.active`, which is seeded by `i18n.currency` and updated from cart currency when available.
+The analytics bus is enabled by default. Pass `analytics` only when you need optional bus configuration such as `customData`.
 
 ### `consent`
 
 This is where the location/region nuance lives. Shopify's hosted Customer Privacy API decides per-visitor whether tracking requires consent based on the visitor's geography:
 
-- **Visitors in jurisdictions with consent requirements** (EU/EEA/UK GDPR, parts of Canada, California CCPA, etc.) — analytics must wait for consent. Use `mode: "default-banner"` for Shopify's hosted privacy banner, or `mode: "custom-banner"` if your app renders its own banner and calls `window.Shopify.customerPrivacy.setTrackingConsent()`.
-- **Visitors in jurisdictions without consent requirements** — the Customer Privacy SDK auto-allows tracking and the banner does not render. The bus dispatches normally.
+- **Visitors in jurisdictions with consent requirements** (EU/EEA/UK GDPR, parts of Canada, California CCPA, etc.) — analytics must wait for consent. Use `mode: "default-banner"` for Shopify's hosted privacy banner, or `mode: "custom-banner"` with a `setup` callback that connects the app's consent provider.
+- **Visitors in jurisdictions without consent requirements** — the Customer Privacy SDK may allow tracking without showing Shopify's banner. Custom-banner integrations still wait for the provider's resolved consent; the provider owns its regional policy.
 
 `mode` controls how consent is collected:
 
 - `"default-banner"` loads Shopify's hosted privacy banner and waits when the Customer Privacy API says banner interaction is required.
-- `"custom-banner"` loads only the Customer Privacy API and treats the initial consent event as actionable. Your banner must call `setTrackingConsent()` when the shopper accepts or declines.
+- `"custom-banner"` loads only the Customer Privacy API and waits for the required asynchronous `setup` callback to resolve before checking consent. Read [Custom consent providers](../../hydrogen-analytics/references/custom-consent.md) when integrating a third-party banner.
 - `"no-banner"` loads only the Customer Privacy API and releases analytics after consent setup. Use this only when consent is already allowed or managed outside this storefront.
 
 ### Consent Gating
@@ -137,9 +137,9 @@ Default:
 () => window.Shopify?.customerPrivacy?.analyticsProcessingAllowed() ?? false
 ```
 
-This is conservative by design: if the Customer Privacy script is blocked, hasn't loaded, or is unavailable, **destination delivery is blocked**. Raw `subscribe()` listeners still see live events, but analytics destinations do not receive events until `analyticsProcessingAllowed()` returns true.
+If the Customer Privacy script is blocked, hasn't loaded, or is unavailable, **destination delivery is blocked**. Destinations receive events only after consent is loaded and analytics processing is allowed.
 
-Events published before consent is ready are buffered for destinations and replayed only if analytics consent is granted. Destinations only receive supported event names they subscribe to. If the visitor explicitly denies analytics consent, the replay buffer is cleared.
+The bus retains up to 500 events for destination replay, including events published while analytics consent was already allowed. New destinations receive that retained history only when analytics consent allows delivery, and only for supported event names they subscribe to. If the visitor explicitly denies analytics consent, the replay buffer is cleared.
 
 Custom event names such as `custom_*` are temporarily unsupported. Publishing or subscribing to an unsupported event name logs a small warning and the event is ignored.
 
@@ -178,7 +178,7 @@ Non-optional constraints:
 - **One instance per page.** The singleton means every route, every effect, every script tag shares the same bus. Multiple instances on the same page overwrite `window.Shopify.customerPrivacy.config`; the latest initialized config wins. Multi-store on one page is not supported.
 - **Lazy.** Reading the bus happens on first `getAnalytics()` call. ShopifyScripts owns bus construction.
 
-App code can add explicit destinations for development logging or third-party integrations, then publish from each route:
+Register destinations once during browser app initialization, after ShopifyScripts has created the bus. Keep destination registration outside route component mount/unmount cycles; route components publish events through the shared bus:
 
 ```ts
 const cleanup = analytics.addDestination({
@@ -204,7 +204,7 @@ const cleanup = analytics.addDestination({
 });
 ```
 
-Destinations are consent-gated and receive replayed buffered events once tracking is allowed.
+Destinations are consent-gated and receive retained history once tracking is allowed. The returned cleanup function removes the destination when the app intentionally stops that integration.
 
 ---
 
@@ -321,7 +321,7 @@ Per-page view events go in the route's `$effect`. The route loader must include 
       products: [{
         id: data.product.id,
         title: data.product.title,
-        price: variant?.price.amount ?? data.product.priceRange.minVariantPrice.amount,
+        price: variant?.price ?? data.product.priceRange.minVariantPrice,
         vendor: data.product.vendor,
         variantId: variant?.id ?? data.product.id,
         variantTitle: variant?.title ?? data.product.title,
@@ -387,6 +387,7 @@ Per-page trackers are thin client components that take server-resolved data and 
 // app/components/ProductViewedTracker.tsx
 "use client";
 import { useEffect } from "react";
+import type { CurrencyCode } from "@shopify/hydrogen/storefront-api-types";
 import { getAnalytics, AnalyticsEvent } from "../lib/analytics";
 
 type Props = {
@@ -398,10 +399,10 @@ type Props = {
     selectedOrFirstAvailableVariant: {
       id: string;
       title: string;
-      price: { amount: string };
+      price: { amount: string; currencyCode: CurrencyCode };
       sku?: string | null;
     } | null;
-    priceRange: { minVariantPrice: { amount: string } };
+    priceRange: { minVariantPrice: { amount: string; currencyCode: CurrencyCode } };
   };
 };
 
@@ -414,8 +415,8 @@ export function ProductViewedTracker({ product }: Props) {
         id: product.id,
         title: product.title,
         price:
-          product.selectedOrFirstAvailableVariant?.price.amount ??
-          product.priceRange.minVariantPrice.amount,
+          product.selectedOrFirstAvailableVariant?.price ??
+          product.priceRange.minVariantPrice,
         vendor: product.vendor,
         variantId: product.selectedOrFirstAvailableVariant?.id ?? product.id,
         variantTitle:
@@ -483,6 +484,7 @@ const product = await fetchProduct(Astro.params.handle);
     data-title={product.title}
     data-vendor={product.vendor}
     data-price={product.selectedOrFirstAvailableVariant?.price.amount ?? product.priceRange.minVariantPrice.amount}
+    data-currency-code={product.selectedOrFirstAvailableVariant?.price.currencyCode ?? product.priceRange.minVariantPrice.currencyCode}
     data-variant-id={product.selectedOrFirstAvailableVariant?.id ?? product.id}
     data-variant-title={product.selectedOrFirstAvailableVariant?.title ?? product.title}
     data-sku={product.selectedOrFirstAvailableVariant?.sku ?? ""}
@@ -490,6 +492,7 @@ const product = await fetchProduct(Astro.params.handle);
   ></div>
 
   <script>
+    import type { CurrencyCode } from "@shopify/hydrogen/storefront-api-types";
     import { getAnalytics, AnalyticsEvent } from "../../lib/analytics";
     const el = document.getElementById("product-analytics");
     const analytics = getAnalytics();
@@ -498,7 +501,8 @@ const product = await fetchProduct(Astro.params.handle);
         products: [{
           id: el.dataset.id ?? "",
           title: el.dataset.title ?? "",
-          price: el.dataset.price ?? "",
+          // data-* values are strings. This one was rendered from the Storefront API CurrencyCode.
+          price: { amount: el.dataset.price ?? "", currencyCode: el.dataset.currencyCode as CurrencyCode },
           vendor: el.dataset.vendor ?? "",
           variantId: el.dataset.variantId ?? el.dataset.id ?? "",
           variantTitle: el.dataset.variantTitle ?? el.dataset.title ?? "",
@@ -554,7 +558,7 @@ type AnalyticsCart = {
 };
 ```
 
-Manually published `AnalyticsCart` payloads (like `CART_VIEWED`) accept both `lines.nodes` and `lines.edges` (GraphQL connection) shapes at the type level; the bus forwards them unchanged, so subscribers that read lines should flatten them with the exported `flattenConnection()` helper. The cart store consumed by `trackCartAnalytics` is different: it reads `cart.lines.nodes` directly, so the app's cart query must select `lines.nodes`. The tracker falls back to the current time internally if store data is missing `updatedAt`, but include `updatedAt` in the cart query for stable dedupe.
+Manually published `AnalyticsCart` payloads (like `CART_VIEWED`) accept both `lines.nodes` and `lines.edges` (GraphQL connection) shapes at the type level; the bus forwards them unchanged, so subscribers that read lines should flatten them with the exported `flattenConnection()` helper. The cart store consumed by `trackCartAnalytics` is different: it reads `cart.lines.nodes` directly, so the app's cart query must select `lines.nodes`.
 
 Application code should not manually publish `cart_updated`, `product_added_to_cart`, or `product_removed_from_cart`. Always go through `trackCartAnalytics`.
 
@@ -562,7 +566,7 @@ Application code should not manually publish `cart_updated`, `product_added_to_c
 
 ## Wiring third-party destinations
 
-The bus is the right integration point for GA4, Meta Pixel, Klaviyo, etc. Register third-party analytics with `addDestination()`. The bus gates destination callbacks with Shopify Customer Privacy and replays buffered events after analytics consent is granted:
+The bus is the right integration point for GA4, Meta Pixel, Klaviyo, etc. Register each integration once with `addDestination()` during browser app initialization, after ShopifyScripts has created the bus. The bus gates destination callbacks with Shopify Customer Privacy and replays retained history when analytics consent allows:
 
 ```ts
 const analytics = getAnalytics();
@@ -577,7 +581,9 @@ analytics?.addDestination({
 });
 ```
 
-Consent gating happens at the bus level before destination callbacks see the payload. Raw `analytics.subscribe()` is live-only and consent-agnostic; use `addDestination()` for logging or analytics destinations that should respect consent and replay.
+Register all event consumers with `addDestination()` and subscribe inside its setup callback. Consent gating happens at the bus level before destination callbacks see the payload.
+
+Removing and re-adding a destination, even with the same name, creates a fresh registration and replays retained history again. This can duplicate deliveries on component remounts, including React Strict Mode's development effect replay. Keep destinations registered for the page's lifetime; use the returned cleanup when intentionally removing an integration.
 
 Destinations that need Shopify visitor IDs can call `getTrackingValues()` from the callback's second argument: `subscribe(event, (payload, { getTrackingValues }) => { ... })`. It reads current `uniqueToken` and `visitToken` values from the consent API when called, including during replay, and requests fallback generation with the tag `hydrogen:<destination name>`. Unavailable tokens are empty strings, and the getter also returns empty strings whenever analytics tracking is not currently allowed, so a retained getter cannot read or generate tokens after consent is revoked. Call it inside the destination callback; registration itself does not read or generate tokens.
 
@@ -590,7 +596,7 @@ After wiring, smoke-test each event in the browser dev tools:
 1. **Destination log fires** — open the page with the dev console open. You should see `[analytics] page_viewed` (or whichever events you logged) after consent allows tracking. If nothing logs, either `getAnalytics()` is no-op'ing on the server, the bus is unavailable, or `analyticsProcessingAllowed()` is false.
 2. **Monorail request fires** — Network tab, filter for `monorail-edge.shopifysvc.com`. A `produce_batch` POST should land within ~1s of consent being granted (or immediately if the visitor is in a no-consent-required region). If it never fires, either consent has not been granted, the schemas are missing required fields (check console for warnings about missing `id`/`title`/`vendor`/etc.), or `hasUserConsent` is false on the payload.
 3. **Per-route navigation fires page_viewed** — click around. Each navigation should produce a fresh `page_viewed` event. If only the initial page load fires, the route-change hook is wired wrong (e.g. effect dependency missing in React, reactive read missing in Solid).
-4. **Cart events fire** — add an item to the cart. You should see `cart_updated` followed by `product_added_to_cart`. If you see `cart_updated` repeating with the same payload, the dedupe key (`updatedAt`) is stale — confirm your cart query selects `updatedAt`.
+4. **Cart events fire** — add an item to the cart. You should see `cart_updated` followed by `product_added_to_cart`.
 5. **Privacy banner renders for EU/UK visitors** — if `mode: "default-banner"`, simulate a GDPR-protected region with browser dev-tools location override or VPN. The banner should render. If it does not, check that `cdn.shopify.com` is not blocked by your CSP.
 
 For production, re-verify against the production bundle. Several gotchas only appear once the SSR/CSR boundary stabilizes.
@@ -599,7 +605,7 @@ For production, re-verify against the production bundle. Several gotchas only ap
 
 ## Common gotchas
 
-- **Replay is destination-only.** Raw `analytics.subscribe()` listeners only receive live events. `analytics.addDestination()` callbacks receive consent-gated live events plus buffered replay after analytics consent is granted. If the visitor explicitly denies analytics consent, the buffer is cleared and those pre-denial events are never replayed.
+- **Destinations receive live events and buffered replay after analytics consent is granted.** If the visitor explicitly denies analytics consent, the buffer is cleared and those pre-denial events are never replayed.
 - **The singleton must be lazy.** Reading the global bus at module top-level can run on the server during SSR and crash on `window` access. Always wrap in a `typeof window === 'undefined'` guard.
 - **Use the right shop shape for each API.** `ShopifyScripts` accepts a numeric Shop ID or Shopify Shop GID plus `storefrontId` and the permanent `myshopifyDomain`; the analytics bus normalizes `shop.shopId` to a Shopify Shop GID before dispatch, while the bootstrap exposes the domain as `window.Shopify.shop`.
 - **Customer Privacy script blocked by CSP.** If your CSP does not allow `cdn.shopify.com`, the consent script never loads, `analyticsProcessingAllowed()` stays `false`, and destination events never deliver. Check Network tab for blocked requests; add `cdn.shopify.com` to `script-src`.
@@ -608,8 +614,8 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Astro inline scripts cannot reference component scope.** Astro hoists `<script>` tags at build time. Bridge SSR data through hidden DOM (`data-*` attributes) and read it from the script. Trying to interpolate `{product.id}` directly into a script body silently fails — the script ships as a static string.
 - **Astro page-view fires only on full loads.** Astro is MPA-by-default. If you adopt View Transitions, listen for `astro:after-swap` instead of relying on the inline-script-runs-on-load behavior — otherwise SPA-nav transitions skip `page_viewed`.
 - **Required product fields silently drop the Monorail leg.** Missing `id`/`title`/`vendor`/`variantId`/`variantTitle`/`price` causes the Shopify analytics subscriber to skip Monorail dispatch and log a field-specific error. The bus event still fires for your subscribers — the loss is only in Shopify analytics. Watch the console.
-- **`updatedAt` missing from cart query weakens dedupe.** The cart tracker prefers cart `updatedAt`, but falls back to the current time when it is absent. Include `updatedAt` in cart queries for stable dedupe across navigations and reloads.
-- **`destroy()` is not called by any of the framework adapter sketches.** During HMR or React Strict Mode double-mount, this means duplicate event subscribers and possibly duplicate Monorail events in dev. For production this is rarely visible (one bus per page lifetime). If duplicate dev events bother you, wire `analytics.destroy()` into your framework's teardown (React effect cleanup, Svelte `onDestroy`, Solid `onCleanup`, or equivalent).
+- **A product event without a currency logs a warning. Shopify analytics still sends it.** `[shopify:warn:analytics] product_added_to_cart was sent without a currency` means the cart fragment's `cost.amountPerQuantity` has no `currencyCode` and `window.Shopify.currency.active` is unset. Select `currencyCode` in the fragment or pass `i18n.currency`. `product_viewed` cannot reach this warning through the typed `ProductPayload`, whose `price` is `MoneyV2`.
+- **Register destinations once per page lifetime.** Hydrogen owns the shared bus. Removing and re-adding a destination resets its replay position, so component remounts can deliver retained events again.
 - **Lighthouse skip is silent.** Monorail dispatch is skipped for Chrome Lighthouse user-agents. If your synthetic monitoring runs Lighthouse, you will see no Monorail requests in those runs — this is intentional.
 
 ---

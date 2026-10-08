@@ -3,6 +3,9 @@ import type { CodegenConfig } from "@graphql-codegen/cli";
 import { CUSTOMER_ACCOUNT_API_VERSION } from "./src/core/constants";
 import { CUSTOMER_ACCOUNT_API_SCALARS, STOREFRONT_API_SCALARS } from "./src/graphql/scalars";
 
+// Committed; codegen doesn't fetch it. To regenerate, run `gql.tada generate-schema` against
+// hydrogen-preview.myshopify.com at STOREFRONT_API_VERSION with a public Storefront token
+// (tokenless introspection returns a different schema), then Prettier 3 at print width 100.
 const STOREFRONT_SCHEMA_PATH = "./src/graphql/generated/storefront.schema.graphql";
 // Public Hydrogen app identifier used only by Shopify's Customer Account schema introspection service.
 const CUSTOMER_ACCOUNT_PUBLIC_INTROSPECTION_CLIENT_ID = "159a99b8a7289a72f68603f2f4de40ac";

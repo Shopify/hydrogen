@@ -1161,11 +1161,6 @@ describe("createProductFormStore", () => {
   });
 
   describe("destroy", () => {
-    it("does not throw", () => {
-      const store = createStore(makeSingleOptionProduct(RED));
-      expect(() => store.destroy()).not.toThrow();
-    });
-
     it("unsubscribes from cart store changes", () => {
       const cartStore = createMockCartStore();
       const store = createStore(makeSingleOptionProduct(RED), cartStore);
@@ -1192,6 +1187,39 @@ describe("createProductFormStore", () => {
       }));
 
       expect(listener).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("connect", () => {
+    it("restores the cart subscription after destroy", () => {
+      const cartStore = createMockCartStore();
+      const store = createStore(makeSingleOptionProduct(RED), cartStore);
+
+      store.destroy();
+      store.connect();
+
+      const cartLine = makeCartLine("v-red");
+      cartStore._setState((prev) => ({
+        ...prev,
+        data: { ...prev.data, lines: { nodes: [cartLine] } },
+      }));
+      expect(store.getState().matchedLineItem).toEqual(cartLine);
+    });
+
+    it("syncs cart changes missed while destroyed", () => {
+      const cartStore = createMockCartStore();
+      const store = createStore(makeSingleOptionProduct(RED), cartStore);
+
+      store.destroy();
+      const cartLine = makeCartLine("v-red");
+      cartStore._setState((prev) => ({
+        ...prev,
+        data: { ...prev.data, lines: { nodes: [cartLine] } },
+      }));
+      expect(store.getState().matchedLineItem).toBeNull();
+
+      store.connect();
+      expect(store.getState().matchedLineItem).toEqual(cartLine);
     });
   });
 

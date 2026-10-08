@@ -10,11 +10,12 @@ analytics, and a consent banner wired up.
 
 ## Pages
 
-- `/` — home (editorial hero, best sellers, shop by category)
+- `/` — home (editorial hero, new arrivals, shop by category)
 - `/products/:handle` — product detail (gallery, variants, add to cart, Shop Pay)
 - `/collections` — all collections
 - `/collections/:handle` — collection with filters, sort, and pagination
-- `/search` — product search with the same filtering
+- `/search` — product search with the same filtering (also the no-JS fallback for the
+  predictive search drawer)
 - `/cart` — cart with Shop Pay (also the no-JS fallback for the cart drawer)
 - `/account` — Customer Account sign-in, log out, and order history
 
@@ -24,7 +25,10 @@ analytics, and a consent banner wired up.
   `gql.tada`).
 - A real cart: storefront client + request handlers + `/api/cart` + an accessible
   cart drawer wired to Shopify Standard Actions.
-- A shared layout (header with mobile nav, footer, announcement bar).
+- A shared layout (header with mobile nav, footer, optional announcement bar).
+- Predictive search: Hydrogen's `/api/predictive-search` handler + an accessible
+  search drawer that suggests products as you type and falls back to the
+  `/search` page without JavaScript.
 - Analytics + a consent banner.
 - Customer Accounts: Hydrogen's `/account/login`, `/account/authorize`,
   `/account/refresh`, and `/account/logout` handlers, backed by a signed cookie
@@ -53,13 +57,22 @@ npm run dev
 sells. To build against one of them, set `PUBLIC_STORE_DOMAIN` to its host (for
 example `pets.mock.shop`) and leave the token empty.
 
-**Against a real store** — set your store domain, storefront ID, and a **private**
-Storefront API token, then run normally:
+**Against a real store** — link a Hydrogen storefront and pull its environment
+variables into `.env`, then run normally:
 
 ```bash
-cp .env.example .env   # set PUBLIC_STORE_DOMAIN + PUBLIC_STOREFRONT_ID + PRIVATE_STOREFRONT_API_TOKEN
-npm run dev               # Vite/Mini Oxygen loads .env into the worker environment
+npx shopify hydrogen link       # skip if the project is already linked
+npx shopify hydrogen env pull   # writes the storefront's variables to .env
+npm run dev                     # Vite/Mini Oxygen loads .env into the worker environment
 ```
+
+Oxygen creates `PUBLIC_STORE_DOMAIN`, `PUBLIC_STOREFRONT_ID`, and
+`PRIVATE_STOREFRONT_API_TOKEN` for a linked storefront, so you don't copy them by
+hand. If `env pull` reports secret values it couldn't pull, set those in `.env`. To
+use an existing **private** Storefront API token without linking, copy `.env.example`
+to `.env` and set `PUBLIC_STORE_DOMAIN` and `PRIVATE_STOREFRONT_API_TOKEN`.
+`PUBLIC_STOREFRONT_ID` is optional; providing it enables Shopify analytics for real
+stores.
 
 Customer Account OAuth requires trusted local HTTPS. Run:
 
@@ -79,6 +92,28 @@ automatically** — the deployed site connects to your store with no extra confi
 (and shows the `mock.shop` demo until it's linked). `MOCK_SHOP=1` forces mock, and so
 does a `mock.shop` host in `PUBLIC_STORE_DOMAIN`.
 (`mock.shop` and the Hydrogen Preview store are different data sources.)
+
+## Announcement bar (optional)
+
+Add entries to `ANNOUNCEMENTS` in `app/components/AnnouncementBar.tsx`. An empty
+list hides the bar. Each entry's `content` is a React element, so it can include links:
+
+```tsx
+import { Link } from "react-router";
+
+const ANNOUNCEMENTS: Announcement[] = [
+  {
+    content: (
+      <p>
+        Discover our <Link to="/collections" className="underline">latest collections</Link>.
+      </p>
+    ),
+  },
+];
+```
+
+You can connect metafields or a CMS later with your own data loading and rendering.
+No specific metafield format is required.
 
 ## Scripts
 

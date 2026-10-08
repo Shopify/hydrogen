@@ -1,5 +1,9 @@
+import type { GraphQLFormattedError } from "@shopify/hydrogen";
 import type * as CAAPI from "@shopify/hydrogen/customer-account";
-import type { CustomerAddressInput } from "@shopify/hydrogen/customer-account-api-types";
+import type {
+  CountryCode,
+  CustomerAddressInput,
+} from "@shopify/hydrogen/customer-account-api-types";
 import type { AddressFragment, CustomerFragment } from "customer-accountapi.generated";
 import {
   data,
@@ -34,12 +38,12 @@ export type ActionResponse = {
 
 const NEW_ADDRESS_ID = "NEW_ADDRESS_ID";
 const GENERAL_ACTION_ERROR_ID = "account-addresses";
+const INVALID_COUNTRY_CODE_MESSAGE = "Enter a valid two-letter country code, such as US or GB.";
 const ADDRESS_INPUT_KEYS = [
   "address1",
   "address2",
   "city",
   "company",
-  "territoryCode",
   "firstName",
   "lastName",
   "phoneNumber",
@@ -90,10 +94,10 @@ export async function action({ request, context }: Route.ActionArgs) {
     const defaultAddress = form.has("defaultAddress")
       ? String(form.get("defaultAddress")) === "on"
       : false;
-    const address = parseAddress(form);
 
     switch (request.method) {
       case "POST": {
+        const address = parseAddress(form);
         const result = await customerAccount.client.graphql(CREATE_ADDRESS_MUTATION, {
           accessToken,
           variables: { address, defaultAddress },
@@ -103,6 +107,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       }
 
       case "PUT": {
+        const address = parseAddress(form);
         const result = await customerAccount.client.graphql(UPDATE_ADDRESS_MUTATION, {
           accessToken,
           variables: { address, addressId: decodeURIComponent(addressId), defaultAddress },
@@ -138,7 +143,31 @@ function parseAddress(form: FormData): CustomerAddressInput {
     if (typeof value === "string") address[key] = value;
   }
 
+  const countryCode = form.get("countryCode");
+  if (typeof countryCode === "string") address.countryCode = parseCountryCode(countryCode);
+
   return address;
+}
+
+// CountryCode is an enum: GraphQL matches its values case-sensitively and rejects unknown ones
+// before the mutation runs. Check the shape here; the API checks that the country exists.
+function parseCountryCode(value: string) {
+  const countryCode = value.trim();
+  if (!/^[a-z]{2}$/i.test(countryCode)) throw new Error(INVALID_COUNTRY_CODE_MESSAGE);
+  return countryCode.toUpperCase() as CountryCode;
+}
+
+// An unknown CountryCode fails variable validation with a message listing every valid code.
+function getGraphqlErrorMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
+  const [error] = errors;
+  const problems = error.extensions?.problems;
+  const hasCountryCodeProblem = Array.isArray(problems) && problems.some(isCountryCodeProblem);
+  return hasCountryCodeProblem ? INVALID_COUNTRY_CODE_MESSAGE : error.message;
+}
+
+function isCountryCodeProblem(problem: unknown) {
+  if (typeof problem !== "object" || problem === null || !("path" in problem)) return false;
+  return Array.isArray(problem.path) && problem.path.at(-1) === "countryCode";
 }
 
 function addressActionError(addressId: string, message: string, status: number) {
@@ -146,7 +175,7 @@ function addressActionError(addressId: string, message: string, status: number) 
 }
 
 function getCustomerAddressCreateResult(result: CustomerAddressCreateResult) {
-  if (result.errors?.length) throw new Error(result.errors[0].message);
+  if (result.errors?.length) throw new Error(getGraphqlErrorMessage(result.errors));
 
   const payload = result.data?.customerAddressCreate;
   if (payload?.userErrors?.length) throw new Error(payload.userErrors[0].message);
@@ -155,7 +184,7 @@ function getCustomerAddressCreateResult(result: CustomerAddressCreateResult) {
 }
 
 function assertCustomerAddressUpdated(result: CustomerAddressUpdateResult) {
-  if (result.errors?.length) throw new Error(result.errors[0].message);
+  if (result.errors?.length) throw new Error(getGraphqlErrorMessage(result.errors));
 
   const payload = result.data?.customerAddressUpdate;
   if (payload?.userErrors?.length) throw new Error(payload.userErrors[0].message);
@@ -202,14 +231,13 @@ function NewAddressForm() {
     address2: "",
     city: "",
     company: "",
-    territoryCode: "",
+    countryCode: null,
     firstName: "",
-    id: "new",
     lastName: "",
     phoneNumber: "",
     zoneCode: "",
     zip: "",
-  } as CustomerAddressInput;
+  } satisfies CustomerAddressInput;
 
   return (
     <AddressForm addressId={NEW_ADDRESS_ID} address={newAddress} defaultAddress={null}>
@@ -246,6 +274,7 @@ function ExistingAddresses({
               <button
                 disabled={stateForMethod("DELETE") !== "idle"}
                 formMethod="DELETE"
+                formNoValidate
                 type="submit"
               >
                 {stateForMethod("DELETE") !== "idle" ? "Deleting" : "Delete"}
@@ -365,13 +394,13 @@ export function AddressForm({
           required
           type="text"
         />
-        <label htmlFor="territoryCode">Country Code*</label>
+        <label htmlFor="countryCode">Country Code*</label>
         <input
           aria-label="Country code"
           autoComplete="country"
-          defaultValue={address?.territoryCode ?? ""}
-          id="territoryCode"
-          name="territoryCode"
+          defaultValue={address?.countryCode ?? ""}
+          id="countryCode"
+          name="countryCode"
           placeholder="Country"
           required
           type="text"

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import type { CacheInstance } from "../core";
 import { Cache } from "../core/cache";
+import { DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
 import {
   createShopifyRequestContext,
   type ShopifyRequestContext,
@@ -81,7 +82,7 @@ describe("createStorefrontClient", () => {
       });
 
       expect(client.storeUrl).toBe("https://my-store.myshopify.com");
-      expect(client.apiUrl).toBe("https://my-store.myshopify.com/api/2026-04/graphql.json");
+      expect(client.apiUrl).toBe("https://my-store.myshopify.com/api/2026-10/graphql.json");
     });
 
     it("constructs apiUrl from explicit apiVersion", () => {
@@ -95,22 +96,13 @@ describe("createStorefrontClient", () => {
       expect(client.apiUrl).toBe("https://my-store.myshopify.com/api/2026-01/graphql.json");
     });
 
-    it("normalizes storeDomain without protocol", () => {
-      const client = createPublicClient({
-        storeDomain: "my-store.myshopify.com",
-        fetch: mockFetch,
-      });
-      expect(client.storeUrl).toBe("https://my-store.myshopify.com");
-      expect(client.apiUrl).toContain("https://my-store.myshopify.com");
-    });
-
     it("normalizes storeDomain with existing protocol", () => {
       const client = createPublicClient({
         storeDomain: "https://my-store.myshopify.com",
         fetch: mockFetch,
       });
       expect(client.storeUrl).toBe("https://my-store.myshopify.com");
-      expect(client.apiUrl).toBe("https://my-store.myshopify.com/api/2026-04/graphql.json");
+      expect(client.apiUrl).toBe("https://my-store.myshopify.com/api/2026-10/graphql.json");
     });
 
     it("throws when no fetch available", () => {
@@ -205,7 +197,7 @@ describe("createStorefrontClient", () => {
       const headers = getHeaders(mockFetch);
       expect(headers.get("X-SDK-Variant")).toBe("hydrogen");
       expect(headers.get("X-SDK-Variant-Source")).toBe("kit");
-      expect(headers.get("X-SDK-Version")).toBe("2026-04");
+      expect(headers.get("X-SDK-Version")).toBe("2026-10");
     });
 
     it("sends hydrogen version header", async () => {
@@ -261,6 +253,17 @@ describe("createStorefrontClient", () => {
       expect(headers.get("Sec-Shopify-Storefront-Origin")).toBe("https://example.com");
     });
 
+    it.each([null, "1"])("preserves Sec-GPC on Storefront requests: %s", async (secGpc) => {
+      const headers = new Headers();
+      if (secGpc !== null) headers.set("Sec-GPC", secGpc);
+      const requestContext = createTestRequestContext({ headers });
+      const client = createPublicClient({ fetch: mockFetch, requestContext });
+
+      await client.graphql(SHOP_QUERY);
+
+      expect(getHeaders(mockFetch).get("Sec-GPC")).toBe(secGpc);
+    });
+
     it("sends private access token header", async () => {
       const client = createPrivateClient({
         privateStorefrontToken: "priv-token-456",
@@ -275,7 +278,7 @@ describe("createStorefrontClient", () => {
     it("sends buyer metadata for private client", async () => {
       const requestContext = createShopifyRequestContext({
         request: new Request("https://example.com", {
-          headers: { "request-id": "request-context-group" },
+          headers: { "request-id": "request-context-group", "Sec-GPC": "1" },
         }),
         i18n: DEFAULT_I18N,
         buyerIp: "10.0.0.1",
@@ -288,6 +291,7 @@ describe("createStorefrontClient", () => {
 
       const headers = getHeaders(mockFetch);
       expect(headers.get("Shopify-Storefront-Buyer-IP")).toBe("10.0.0.1");
+      expect(headers.get("Sec-GPC")).toBe("1");
       expect(headers.get("Custom-Storefront-Request-Group-ID")).toBe("request-context-group");
     });
 
@@ -629,7 +633,7 @@ describe("createStorefrontClient", () => {
       const firstCall = fetch.mock.calls[0];
       assert(firstCall, "Expected origin fetch to be called");
       const [url, init] = firstCall;
-      expect(url).toBe("https://test.myshopify.com/api/2026-04/graphql.json");
+      expect(url).toBe("https://test.myshopify.com/api/2026-10/graphql.json");
       expect(JSON.parse(init.body as string)).toMatchObject({ query: SHOP_QUERY });
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(first.data).toEqual({ shop: { name: "Test Shop" } });
@@ -781,6 +785,89 @@ describe("createStorefrontClient", () => {
       expect(originFetch).toHaveBeenCalledTimes(1);
       expect(first.data).toEqual({ shop: { name: "Test Shop" } });
       expect(second.data).toEqual({ shop: { name: "Test Shop" } });
+    });
+  });
+
+  describe("stale-while-revalidate refreshes", () => {
+    async function serveStaleWhileRefreshing(defaultTimeoutInMs: number) {
+      const cache = new MemoryKeyValueCache();
+      const pendingWork: Promise<unknown>[] = [];
+      const refresh = Promise.withResolvers<Response>();
+      const signals: AbortSignal[] = [];
+      const fetch = vi.fn(async (_url: string, init: RequestInit) => {
+        const { signal } = init;
+        assert(signal, "expected a fetch signal");
+        signals.push(signal);
+        if (signals.length === 1) return mockResponse({ data: { shop: { name: "Cached" } } });
+        signal.addEventListener("abort", () => refresh.reject(signal.reason), { once: true });
+        return refresh.promise;
+      });
+      const request = new AbortController();
+      const caller = new AbortController();
+      const client = createStorefrontClient({
+        type: "public",
+        requestContext: createTestRequestContext({
+          headers: new Headers(),
+          signal: request.signal,
+        }),
+        config: {
+          storeDomain: "test.myshopify.com",
+          publicStorefrontToken: "test-pub-token",
+          cache,
+          fetch,
+          defaultTimeoutInMs,
+          waitUntil: (promise) => void pendingWork.push(promise),
+        },
+      });
+      const options = {
+        cache: Cache.short({ maxAge: 1, staleWhileRevalidate: 60 }),
+        signal: caller.signal,
+      };
+
+      await client.graphql(SHOP_QUERY, options);
+      await Promise.all(pendingWork);
+      for (const envelope of cache.store.values()) {
+        (envelope as { storedAt: number }).storedAt -= 5_000;
+      }
+      const stale = await client.graphql(SHOP_QUERY, options);
+      await vi.waitFor(() => expect(signals).toHaveLength(2));
+      const refreshSignal = signals[1];
+      assert(refreshSignal, "expected a refresh signal");
+
+      // A failing origin means any data returned here came from the cache.
+      const readCachedShop = async () => {
+        const reader = createPublicClient({ cache, fetch: async () => Response.error() });
+        return (await reader.graphql(SHOP_QUERY, { cache: options.cache })).data;
+      };
+
+      return { stale, request, caller, refresh, refreshSignal, pendingWork, readCachedShop };
+    }
+
+    it("keeps refreshing after the request and caller abort", async () => {
+      const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
+      const run = await serveStaleWhileRefreshing(0);
+
+      expect(run.stale.data).toEqual({ shop: { name: "Cached" } });
+      run.request.abort();
+      run.caller.abort();
+      expect(run.refreshSignal.aborted).toBe(false);
+      expect(timeoutSpy).toHaveBeenCalledWith(DEFAULT_TIMEOUT_IN_MS);
+
+      run.refresh.resolve(mockResponse({ data: { shop: { name: "Fresh" } } }));
+      await Promise.all(run.pendingWork);
+      await expect(run.readCachedShop()).resolves.toEqual({ shop: { name: "Fresh" } });
+    });
+
+    it("stops a refresh at the client timeout instead of the request abort", async () => {
+      const run = await serveStaleWhileRefreshing(50);
+
+      run.request.abort();
+      run.caller.abort();
+      expect(run.refreshSignal.aborted).toBe(false);
+
+      await Promise.all(run.pendingWork);
+      expect((run.refreshSignal.reason as DOMException).name).toBe("TimeoutError");
+      await expect(run.readCachedShop()).resolves.toEqual({ shop: { name: "Cached" } });
     });
   });
 

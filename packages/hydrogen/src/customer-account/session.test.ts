@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createStorefrontClient } from "../client/client";
 import { createCartServerHandlers } from "../core/cart/server-handlers";
-import { configureLogging, resetLoggingForTests } from "../core/logging";
+import { configureLogging } from "../core/logging";
 import { createShopifyRequestContext } from "../core/request-context";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../core/request-routing/handle-shopify-routes";
-import { createTestLogger } from "../core/test-utils";
+import { assert, createTestLogger } from "../core/test-utils";
 import {
   createCustomerAccountServerHandlers,
   createCustomerSession,
@@ -649,7 +649,7 @@ describe("createCustomerAccountServerHandlers", () => {
   });
 
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
   });
 
   it("exposes literal route metadata", () => {
@@ -1155,6 +1155,75 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(response?.headers.get("set-cookie")).toBe("session=1");
     expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
   });
+
+  it.each([
+    ["/account/orders?page=2#latest", "/account/orders?page=2#latest"],
+    ["/search?q=https://example.org", "/search?q=https://example.org"],
+    [`${ORIGIN}/account/orders`, "/account/orders"],
+    ["//evil.test/p", "/account"],
+    [`${ORIGIN}//evil.test/p`, "/account"],
+    // Each of these parses as same-origin with a protocol-relative `//evil.test/p` pathname.
+    [`//${new URL(ORIGIN).host}//evil.test/p`, "/account"],
+    ["/x/..//evil.test/p", "/account"],
+    ["/.//evil.test/p", "/account"],
+    ["/x/../\\evil.test/p", "/account"],
+  ])("redirects refresh return_to %s to %s", async (returnTo, expectedPath) => {
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_REFRESH_PATH}?return_to=${encodeURIComponent(returnTo)}`,
+    );
+
+    const response = await handleShopifyRoutes({
+      request,
+      sessionManager: new TestSessionManager(),
+      handlers: [createCustomerAccountServerHandlers({ customerSession: createSession() })],
+    });
+
+    expect(response?.headers.get("location")).toBe(`${ORIGIN}${expectedPath}`);
+  });
+
+  it.each([
+    ["/account/orders", "/account/orders"],
+    // Login sanitizes twice, so each nested host prefix used to be stripped once per pass.
+    [`//${new URL(ORIGIN).host}//${new URL(ORIGIN).host}//evil.test/p`, "/account"],
+  ])(
+    "redirects the OAuth callback after login return_to %s to %s",
+    async (returnTo, expectedPath) => {
+      const sessionManager = new TestSessionManager();
+      const fetchMock = vi.fn(() =>
+        Promise.resolve(
+          tokenResponse({
+            id_token: createIdToken(sessionManager.data?.pendingLogin?.nonce ?? ""),
+          }),
+        ),
+      );
+      const handlers = [
+        createCustomerAccountServerHandlers({
+          customerSession: createSession({ fetch: fetchMock }),
+          defaultPostLoginRedirectPathname: "/account",
+        }),
+      ];
+
+      await handleShopifyRoutes({
+        request: new Request(
+          `${ORIGIN}${CUSTOMER_ACCOUNT_LOGIN_PATH}?return_to=${encodeURIComponent(returnTo)}`,
+        ),
+        sessionManager,
+        handlers,
+      });
+      const state = sessionManager.data?.pendingLogin?.state;
+      assert(state, "expected login to store pending state");
+
+      const response = await handleShopifyRoutes({
+        request: new Request(
+          `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=${state}`,
+        ),
+        sessionManager,
+        handlers,
+      });
+
+      expect(response?.headers.get("location")).toBe(`${ORIGIN}${expectedPath}`);
+    },
+  );
 
   it("supports refresh on custom customer sessions", async () => {
     const fetchMock = vi.fn();

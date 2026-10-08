@@ -19,6 +19,7 @@ import {
   configureCartEndpoint as configureCoreCartEndpoint,
   createCartStore,
   type CreateCartStoreOptions,
+  type CartActions,
   type CartStore,
 } from "../core/cart/cart";
 import { createCartFormRegister } from "../core/cart/form";
@@ -48,8 +49,7 @@ type TypedCartProviderProps<TData extends CartData> = {
 type CartInitialData<TData extends CartData = CartData> =
   CreateCartStoreOptions<TData>["initialData"];
 
-/** Actions for reconciling cart state after updates outside Standard Actions. */
-export type CartActions = Pick<CartStore, "refresh">;
+export type { CartActions };
 
 type TypedCartComponents<TData extends CartData> = {
   CartProvider: (props: TypedCartProviderProps<TData>) => ReactNode;
@@ -66,6 +66,28 @@ type TypedCartComponents<TData extends CartData> = {
   useCartForm: typeof useCartForm;
 };
 
+/**
+ * Factory that returns typed cart components and hooks matched to your server handler's
+ * cart query shape.
+ *
+ * The generic `THandlers` parameter is inferred from your `createCartServerHandlers`
+ * call, so every hook's {@link CartState} carries your custom cart fields end-to-end.
+ *
+ * @example
+ * ```tsx
+ * import type { cartServerHandlers } from "./server/cart.server";
+ *
+ * const {
+ *   CartProvider,
+ *   useCart,
+ *   useSuspenseCart,
+ *   useOptionalCart,
+ *   useCartActions,
+ *   useCartForm,
+ * } = createCartComponents<typeof cartServerHandlers>();
+ * ```
+ * @publicDocs
+ */
 export function createCartComponents<THandlers>(): TypedCartComponents<
   CartDataFromHandlers<THandlers>
 > {
@@ -122,6 +144,22 @@ function useOptionalCartStore(): CartStore | null {
   return useContext(CartContext);
 }
 
+/**
+ * React context provider that creates and manages a {@link CartStore} instance.
+ *
+ * Calls {@link CartStore.connect} on mount and {@link CartStore.destroy} on unmount.
+ * All cart hooks (`useCart`, `useCartForm`, `useCartActions`) must be rendered
+ * inside this provider.
+ *
+ * @example
+ * ```tsx
+ * // In your root layout
+ * <CartProvider initialData={{ cart: loaderData.cart }}>
+ *   <App />
+ * </CartProvider>
+ * ```
+ * @publicDocs
+ */
 export function CartProvider({
   initialData,
   children,
@@ -143,6 +181,29 @@ export function CartProvider({
   return <CartContext.Provider value={store}>{children}</CartContext.Provider>;
 }
 
+/**
+ * Subscribes to a slice of {@link CartState} via `useSyncExternalStore`.
+ *
+ * The component re-renders only when the selected value changes (by reference,
+ * or by a custom `isEqual`). Always pass a selector — subscribing to the full
+ * state object defeats memoization.
+ *
+ * @example
+ * ```tsx
+ * // Select cart lines
+ * const lines = useCart((state) => state.data.lines.nodes);
+ *
+ * // Select pending state for a specific line
+ * const isPending = useCart((state) => state.pending.lines.has(lineId));
+ *
+ * // Custom equality to avoid re-renders on unchanged totals
+ * const total = useCart(
+ *   (state) => state.data.cost.totalAmount,
+ *   (a, b) => a.amount === b.amount,
+ * );
+ * ```
+ * @publicDocs
+ */
 export function useCart<TData extends CartData = CartData, S = unknown>(
   selector: (state: CartState<TData>) => S,
   isEqual?: (a: S, b: S) => boolean,
@@ -151,12 +212,46 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
   return useCartSelector(store, selector, isEqual) as S;
 }
 
+/**
+ * Returns cart actions for reconciling state after out-of-band mutations.
+ *
+ * Currently exposes {@link CartStore.refresh} — call it after server-side cart
+ * mutations that bypass the form system (e.g. a server action that creates the
+ * cart before the client knows about it).
+ *
+ * @example
+ * ```tsx
+ * const { refresh } = useCartActions();
+ *
+ * async function handleServerAction() {
+ *   await createCartOnServer();
+ *   refresh(); // re-fetch the cart
+ * }
+ * ```
+ * @publicDocs
+ */
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
 
   return useMemo(() => ({ refresh: store.refresh }), [store]);
 }
 
+/**
+ * Subscribes the {@link CartStore} to the analytics event dispatcher.
+ *
+ * Call once near the root of your app — it subscribes on mount and
+ * cleans up on unmount. Publishes `CART_UPDATED`, `PRODUCT_ADD_TO_CART`,
+ * and `PRODUCT_REMOVED_FROM_CART` analytics events automatically.
+ *
+ * @example
+ * ```tsx
+ * function App() {
+ *   useCartAnalytics();
+ *   return <Layout />;
+ * }
+ * ```
+ * @publicDocs
+ */
 export function useCartAnalytics(): void {
   const store = useCartStore("useCartAnalytics");
 
@@ -164,8 +259,22 @@ export function useCartAnalytics(): void {
 }
 
 /**
- * Like `useCart`, but returns `undefined` when rendered outside a `<CartProvider>`.
- * @internal
+ * Like `useCart`, but returns `undefined` instead of throwing when rendered outside a
+ * `<CartProvider>`.
+ *
+ * Use it for a component that renders both inside and outside the provider, such as a
+ * header cart badge that also appears on an error page mounted above `<CartProvider>`.
+ * Prefer `useCart` wherever the provider is guaranteed, so a missing provider fails loudly.
+ *
+ * @example
+ * ```tsx
+ * function CartBadge() {
+ *   const count = useOptionalCart((state) => state.data.totalQuantity);
+ *   if (count === undefined) return null;
+ *   return <span>Cart ({count})</span>;
+ * }
+ * ```
+ * @publicDocs
  */
 export function useOptionalCart<TData extends CartData = CartData, S = unknown>(
   selector: (state: CartState<TData>) => S,
@@ -208,6 +317,37 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
   return useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot);
 }
 
+/**
+ * Returns form props and a field register function for building cart forms.
+ *
+ * `formProps()` returns `<form>` attributes that intercept submission, call
+ * {@link CartStore.handleFormSubmit}, and prevent the default browser navigation.
+ * `register()` returns the correct HTML attributes for each field type — see
+ * `CartFormRegister` for the full field/action list.
+ *
+ * When `register("quantity", { interactive: true })` is called, the returned
+ * attributes include a `ref` callback that attaches {@link attachQuantityInput}
+ * for auto-submit-on-change behavior.
+ *
+ * @example
+ * ```tsx
+ * function LineItem({ line }) {
+ *   const { formProps, register } = useCartForm();
+ *
+ *   return (
+ *     <form {...formProps()}>
+ *       <input {...register("lineId", { value: line.id })} />
+ *       <input {...register("quantity", { value: line.quantity, interactive: true })} />
+ *       <button {...register("set")} />
+ *       <button {...register("increase")}>+</button>
+ *       <button {...register("decrease")}>−</button>
+ *       <button {...register("remove")}>Remove</button>
+ *     </form>
+ *   );
+ * }
+ * ```
+ * @publicDocs
+ */
 export function useCartForm() {
   const store = useCartStore("useCartForm");
   const coreRegister = useMemo(() => createCartFormRegister(), []);

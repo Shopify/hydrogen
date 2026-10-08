@@ -1,5 +1,107 @@
 # @shopify/hydrogen
 
+## 2026.10.0-preview.4
+
+### Minor Changes
+
+- b202925: Add `getTrackingValues()` to analytics destination callback context. Destinations can read current `uniqueToken` and `visitToken` values from Shopify's consent API without accessing its internal globals. Each read requests fallback generation with the tag `hydrogen:<destination name>`; token generation is provided by the consent API when supported. Unavailable values are returned as empty strings, and the getter returns empty strings whenever analytics tracking is not currently allowed, even if a destination retained it and calls it after consent was revoked.
+  
+  ```ts
+  analytics.addDestination({
+    name: "my-destination",
+    setup({ subscribe }) {
+      subscribe("page_viewed", (payload, { getTrackingValues }) => {
+        const { uniqueToken, visitToken } = getTrackingValues();
+        // Forward the event and tokens to your destination.
+      });
+    },
+  });
+  ```
+- d81ff58: Forward UCP `/buy/{items}` permalinks to the configured Shopify store from `handleShopifyRoutes`, alongside the existing `/cart/{items}` handoff. The forward keeps the path and query untouched and uses the UCP redirect-resolution shape (303 with `Cache-Control: no-store` and `Referrer-Policy: no-referrer`). In-app navigation to a buy permalink through `Shopify.routes.navigate` becomes a document navigation so the forward can run.
+- d75a710: Require an asynchronous `setup()` callback for `consent.mode: "custom-banner"` to connect third-party consent providers. Setup must synchronize the provider's consent through `window.Shopify.customerPrivacy` before resolving. Hydrogen buffers destination events until then, replays them when analytics consent is allowed, and discards them when denied. Setup failures keep delivery blocked.
+  
+  Migration from earlier previews: replace `consent={{mode: "custom-banner"}}` with `consent={{mode: "custom-banner", setup}}`. The callback is now required by TypeScript. JavaScript integrations without it log a warning during browser initialization and keep analytics delivery blocked.
+- e7df017: Fix `formatMoney().amount` dropping the minus sign for negative amounts, so `-19.99` no longer renders as `19.99`.
+- 36902dd: **Breaking:** Remove the top-level `analytics.subscribe()` method. Register event consumers with `analytics.addDestination()` and use the `subscribe` function provided to its setup callback. All event consumers now receive consent-gated delivery and buffered replay.
+  
+  Register each destination once during browser app initialization, after ShopifyScripts has created the bus.
+  
+  ```ts
+  analytics.addDestination({
+    name: "my-destination",
+    setup({ subscribe }) {
+      subscribe("page_viewed", (payload, { getTrackingValues }) => {
+        // Send the event to your destination.
+      });
+    },
+  });
+  ```
+  
+  New destinations receive retained history when analytics consent allows, including events published while consent was already allowed. The buffer holds up to 500 events and is cleared when analytics consent is explicitly denied. Consumers migrating from the live-only API should account for this replay.
+  
+  The function returned by `addDestination()` removes the destination; each setup subscription also returns an unsubscribe function. Removing and re-adding a destination, even with the same name, replays retained history again and can duplicate deliveries. Keep registration outside component mount/unmount cycles.
+  
+  Also remove `analytics.destroy()`. Hydrogen owns the shared bus for the page's lifetime. Use the cleanup function returned by `addDestination()` when intentionally removing a destination.
+- c40b38e: `hydrogen setup` now works without a `package.json`. When run in a directory with no project, it prompts to either scaffold the React Router template from the `dist-preview` branch or install AI coding skills only. Existing behavior (install Hydrogen + sync skills) is preserved when a `package.json` is present.
+
+### Patch Changes
+
+- 928cd61: **Breaking:** Use version `2026-10` of the Storefront API and Customer Account API, up from `2026-04`. Changes from both the [2026-07](https://shopify.dev/changelog/release-notes/2026-07) and [2026-10](https://shopify.dev/changelog/release-notes/2026-10) releases apply. The ones most likely to affect your code:
+  
+  - Customer Account API: `CustomerAddress.territoryCode` and `CustomerAddressInput.territoryCode` are deprecated in favor of `countryCode`, which takes an upper-case, two-letter `CountryCode` such as `US` (not `USA` or `840`). The API still accepts `territoryCode`, but it no longer appears in Hydrogen's generated `CustomerAddressInput` type because the Customer Account schema omits deprecated input fields, so typed address mutations must send `countryCode`. An unknown `countryCode` fails the whole request with a GraphQL error before the mutation runs.
+  - Customer Account API: `Order.shippingTitle` is removed. `Order.shippingLine` still has a `title`.
+  - Customer Account API: `Customer.lastIncompleteCheckout` and the `Checkout` types are removed.
+  - Storefront API: the replacements for the deprecated `Cart.discountAllocations` and `CartDiscountAllocation.discountApplication` are now available: `Cart.discountApplications`, `CartDeliveryGroup.discountAllocations`, `CartDiscountAllocation.sourceDiscountApplication`, and a `lineLevelOnly` argument on cart line `discountAllocations`. `lineLevelOnly` defaults to `true`, so existing queries are unaffected; pass `false` to include order-level discounts.
+  - Storefront API: `ShopPayPaymentRequestSession.paymentRequest` is deprecated and can now be `null`. The `paymentRequest` argument of the `shopPayPaymentRequestSessionCreate` mutation is deprecated too, and is now optional (`MutationShopPayPaymentRequestSessionCreateArgs.paymentRequest` is `InputMaybe<ShopPayPaymentRequestInput>`).
+  - `hydrogen gql check --fail-on-warn` fails when a query selects a deprecated field, and Hydrogen's schemas now mark more fields as deprecated, including `CustomerAddress.territoryCode`, `CustomerPhoneNumber.marketingState`, and the Shop Pay payment request `deliveryMethods`.
+- f047611: Redirect cart form submissions to `/` when the same-origin `Referer` path starts with `//`, instead of returning a path that resolves to another host.
+- e695643: The built-in cart queries now select `Cart.updatedAt`, so cart analytics deduplication works without a custom `CartFragment`.
+- b202925: Apply private, no-store cache directives to any response containing `Set-Cookie`, including application-owned cookies, instead of checking specific Shopify cookie names. Remove conflicting CDN cache directives from these responses.
+- ecefec2: `makePredictiveSearchQueries()` and `createPredictiveSearchServerHandlers({ fragments })` now reject custom fragments that target a type whose name only starts with the expected one, such as `fragment PredictiveSearchProductFragment on ProductVariant`. These previously passed the local check and only failed once the Storefront API rejected the query.
+- ecefec2: Fix `createPredictiveSearchServerHandlers()` ignoring its configured `limit` when a request sends an empty, whitespace-only, or non-numeric `limit` query parameter. Previously `?limit=` searched with a limit of 1 and `?limit=abc` used Hydrogen's default of 5.
+- ecefec2: Fix React `usePredictiveSearchActions()` returning `search` and `clear` functions that silently stopped working after a `PredictiveSearchProvider` prop change recreated the store. The actions now keep a stable identity and always target the provider's current store, matching the Vue bindings. Handlers returned by `usePredictiveSearchForm()`'s `register` and `formProps` also keep searching the current store when captured before a provider prop change.
+- b2c7791: Fix product form store losing its cart subscription after React StrictMode effect replay in development. The store now exposes a `connect()` method that re-subscribes to the cart store, and `ProductProvider` calls it on every effect mount so the subscription survives StrictMode's mount → cleanup → remount cycle.
+- f047611: Redirect `return_to` and `redirect` query params in `handleShopifyRedirects` to the normalized same-origin path instead of the raw value, so values like `https:other.example/p` or paths that normalize to `//other.example` no longer send shoppers to another host. Values without a leading `/` or a scheme are now ignored.
+- f368205: Reject JSONP `callback` requests before forwarding them through any Shopify proxy.
+- 56b37c7: **Breaking:** Remove the unused `EventPayloads` type export. To type a payload for any supported analytics event, use `AnalyticsEventMap[AnalyticsEventName]`. For a single event, use `PayloadFor<"product_viewed">`.
+- b202925: Stop creating and refreshing the deprecated JavaScript-visible `_shopify_y` and `_shopify_s` cookies from `ShopifyScripts`. Shopify's consent API and Storefront API manage visitor tracking state through the backend cookies.
+  
+  Forward incoming cookies unchanged so Shopify can resolve tracking state and migrate legacy identifiers. Stop converting legacy cookies into tracking headers or inferring tracking state from the presence of specific analytics cookies. The SFAPI proxy continues forwarding explicit token headers directly from the incoming request, without storing tokens in the request context.
+  
+  Expire existing legacy cookies on successful HTTP responses to consent-management requests, after forwarding them upstream. Cleanup covers host-only and parent-domain cookies, including after consent denial or revocation.
+- dd4a24c: **Breaking:** Remove the `locations`, `path`, and `extensions` fields from `StorefrontApiError` and its `toJSON()` output. `createStorefrontClient` never populated them. `StorefrontApiError` is only thrown for HTTP, network, timeout, and response-parsing failures. GraphQL errors, including `THROTTLED`, are returned in `result.errors`, so read `extensions.code` there:
+  
+  ```ts
+  const result = await storefront.graphql(QUERY);
+  if (result.errors?.some((error) => error.extensions?.code === "THROTTLED")) {
+    // retry
+  }
+  ```
+- b202925: Visitor tokens are now read through Shopify's consent API instead of the `Server-Timing` header.
+- f047611: Reject Customer Account redirect targets whose normalized path starts with `//`, which resolved to another host. This covers `return_to` on the login, refresh, and logout handlers, `prepareLoginUrl({returnTo})`, and the `defaultPostLoginRedirectPathname` and `loginFailedRedirectPath` options. Same-origin paths and absolute URLs still work. Values without a leading `/` or a scheme, such as `account/orders`, now fall back to the default redirect.
+- e02d5be: Preserve the incoming `Sec-GPC` header on Storefront API requests and Shopify storefront proxies, independently of consent cookies.
+- e48c0c3: Remove incorrect skill guidance about `StorefrontApiError` carrying GraphQL error details, and clarify that analytics `customData` isn't added to published events.
+- 38b8576: Fix `@shopify/hydrogen/ts-plugin` not loading in editors. tsserver resolves `compilerOptions.plugins` with TypeScript's legacy JS resolver, which ignores package `exports`, so the plugin was silently skipped and GraphQL hover docs and completions inside `gql()` documents were missing. The package now ships a `ts-plugin/package.json` that the legacy resolver can find. Type errors for invalid fields were unaffected since those come from `gql()` types, not the plugin.
+- 167a514: **Breaking:** Remove the standalone `CartProvider`, `useCart`, `useCartActions`, and `useCartForm` exports from `@shopify/hydrogen/react`. They dropped custom `CartFragment` types. Use the typed versions from `createCartComponents()` instead:
+  
+  ```ts
+  import { createCartComponents } from "@shopify/hydrogen/react";
+  
+  import type { cartHandlers } from "./cart-handlers";
+  
+  export const { CartProvider, useCart, useCartActions, useCartForm } =
+    createCartComponents<typeof cartHandlers>();
+  ```
+  
+  `useCartAnalytics` is still exported.
+- 33e3de7: Vue `useCollectionForm().formProps()` now passes a `SubmitEvent` to `beforeSubmit` and `afterSubmit`, matching the React binding. You can read `e.submitter` without casting. Existing callbacks typed as `(e: Event) => void` still work.
+  
+  `CollectionActions` is now also exported from `@shopify/hydrogen` for custom framework bindings. The React and Vue entries still export the same type.
+- 4107db8: Vue `useCartForm().formProps()` and `useProductForm().formProps()` now pass a `SubmitEvent` to `beforeSubmit` and `afterSubmit`, matching the React bindings. You can read `e.submitter` without casting. Existing callbacks typed as `(e: Event) => void` still work.
+  
+  `CartActions` and `PredictiveSearchActions` are now also exported from `@shopify/hydrogen` for custom framework bindings. The React and Vue entries still export the same types.
+- af36916: Update WebMCP CDN script URL to `shopifycloud/storefront/webmcp/webmcp.js`.
+
 ## 2026.10.0-preview.3
 
 ### Minor Changes

@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useInsertionEffect,
   useMemo,
   useRef,
   useSyncExternalStore,
@@ -22,6 +23,7 @@ import {
   getPredictiveSearchFormAttributes,
   readPredictiveSearchFormTerm,
   type CreatePredictiveSearchStoreOptions,
+  type PredictiveSearchActions,
   type PredictiveSearchFormRegister as CorePredictiveSearchFormRegister,
   type PredictiveSearchData,
   type PredictiveSearchState,
@@ -32,45 +34,80 @@ const CONFIG_ARRAY_SEPARATOR = "\u0000";
 
 type PredictiveSearchContextValue = {
   store: PredictiveSearchStore;
+  actions: PredictiveSearchActions;
   searchAction?: string;
 };
 
 const PredictiveSearchContext = createContext<PredictiveSearchContextValue | null>(null);
 
+/** Props for the {@link PredictiveSearchProvider} component. */
 export type PredictiveSearchProviderProps = CreatePredictiveSearchStoreOptions & {
   children?: ReactNode;
+  /** Form action URL for progressive enhancement. Used by {@link usePredictiveSearchForm} to set the form's `action` attribute so the search works without JavaScript. Falls back to `"/search"` when omitted. */
   searchAction?: string;
 };
 
-export type PredictiveSearchActions = Pick<PredictiveSearchStore, "search" | "clear">;
+export type { PredictiveSearchActions };
 
+/**
+ * Options for the form props builder returned by {@link usePredictiveSearchForm}.
+ *
+ * Accepts all standard form HTML attributes except `onSubmit`, which is
+ * replaced by a version that provides the extracted search term.
+ */
 export type PredictiveSearchFormPropsOptions = Omit<
   FormHTMLAttributes<HTMLFormElement>,
   "onSubmit"
 > & {
+  /** When `true`, prevents the native form submission and triggers a client-side search instead. */
   preventDefault?: boolean;
+  /** Called on submit with the submit event and the extracted search term. Calling `event.preventDefault()` cancels both the native submission and Hydrogen's client-side search. */
   onSubmit?: (event: SubmitEvent<HTMLFormElement>, term: string) => void;
 };
 
+/**
+ * Options for the query input props builder returned by
+ * {@link usePredictiveSearchForm}'s `register` method.
+ *
+ * Accepts all standard input HTML attributes except those controlled by the
+ * form registration.
+ */
 export type PredictiveSearchQueryInputPropsOptions = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   "autoCapitalize" | "autoComplete" | "name" | "onChange" | "spellCheck" | "type"
 > & {
+  /** Called on change with the change event and the current input value. Call `event.preventDefault()` to skip the automatic search trigger. */
   onChange?: (event: ChangeEvent<HTMLInputElement>, term: string) => void;
 };
 
 type PredictiveSearchFormField = Parameters<CorePredictiveSearchFormRegister>[0];
 
+/** Generates input element attributes for a named form field. */
 export type PredictiveSearchFormRegister = (
   field: PredictiveSearchFormField,
   options?: PredictiveSearchQueryInputPropsOptions,
 ) => InputHTMLAttributes<HTMLInputElement>;
 
+/**
+ * Return type of {@link usePredictiveSearchForm}, providing methods to build a progressively-enhanced search form.
+ */
 export type PredictiveSearchFormResult = {
+  /** Generates form element attributes including the search action and submit handler. */
   formProps(options?: PredictiveSearchFormPropsOptions): FormHTMLAttributes<HTMLFormElement>;
+  /** Generates input element attributes for a named form field and wires up the search trigger. */
   register: PredictiveSearchFormRegister;
 };
 
+/**
+ * Creates and manages a predictive search store, providing it to descendant
+ * hooks via React context.
+ *
+ * Recreates the store when configuration props change. Connects the store
+ * on mount and destroys it on unmount.
+ *
+ * @throws {Error} When no `fetch` implementation is available (neither passed as a prop nor available on `globalThis`).
+ * @publicDocs
+ */
 export function PredictiveSearchProvider({
   children,
   predictiveSearchEndpoint,
@@ -114,12 +151,31 @@ export function PredictiveSearchProvider({
     ],
   );
 
+  const storeRef = useRef(store);
+  // Actions outlive store swaps by reading the committed store at call time. Only an insertion
+  // effect is both commit-only and early enough: a render-phase write can point actions at a
+  // store from a render React never commits, and layout and passive effects run child-first,
+  // so a child effect searching in the same commit would still see the old store.
+  useInsertionEffect(() => {
+    storeRef.current = store;
+  }, [store]);
+  const actions = useMemo<PredictiveSearchActions>(
+    () => ({
+      search: (term) => storeRef.current.search(term),
+      clear: () => storeRef.current.clear(),
+    }),
+    [],
+  );
+
   useEffect(() => {
     store.connect();
     return () => store.destroy();
   }, [store]);
 
-  const contextValue = useMemo(() => ({ store, searchAction }), [store, searchAction]);
+  const contextValue = useMemo(
+    () => ({ store, actions, searchAction }),
+    [store, actions, searchAction],
+  );
 
   return createElement(PredictiveSearchContext.Provider, { value: contextValue }, children);
 }
@@ -149,6 +205,19 @@ function useRequiredContext(hookName: string): PredictiveSearchContextValue {
   return context;
 }
 
+/**
+ * Subscribes to the predictive search store's state.
+ *
+ * Without arguments, returns the full {@link PredictiveSearchState}. With a
+ * `selector`, returns a derived value that only triggers re-renders when the
+ * selected value changes (reference equality by default, or a custom
+ * `isEqual`).
+ *
+ * Must be used inside a {@link PredictiveSearchProvider}.
+ *
+ * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @publicDocs
+ */
 export function usePredictiveSearch<
   TData extends PredictiveSearchData = PredictiveSearchData,
 >(): PredictiveSearchState<TData>;
@@ -199,20 +268,38 @@ export function usePredictiveSearch<
   return useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot);
 }
 
+/**
+ * Returns `search` and `clear` methods that always target the provider's
+ * current store. Their identity is stable across re-renders, even
+ * when a config prop change recreates the store.
+ *
+ * Must be used inside a {@link PredictiveSearchProvider}.
+ *
+ * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @publicDocs
+ */
 export function usePredictiveSearchActions(): PredictiveSearchActions {
-  const store = useRequiredStore("usePredictiveSearchActions");
-
-  return useMemo(
-    () => ({
-      search: store.search,
-      clear: store.clear,
-    }),
-    [store],
-  );
+  return useRequiredContext("usePredictiveSearchActions").actions;
 }
 
+/**
+ * Returns `formProps` and `register` for building a progressively-enhanced
+ * search form.
+ *
+ * `formProps()` generates form element attributes including the search
+ * action URL. `register("query")` generates input attributes and calls the
+ * store's search action on every change event. The store debounces requests
+ * and resets state for terms shorter than `minTermLength`.
+ * Both support an optional callback that receives the event and extracted
+ * term, and respect `event.preventDefault()` to cancel the automatic behavior.
+ *
+ * Must be used inside a {@link PredictiveSearchProvider}.
+ *
+ * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @publicDocs
+ */
 export function usePredictiveSearchForm(): PredictiveSearchFormResult {
-  const { searchAction, store } = useRequiredContext("usePredictiveSearchForm");
+  const { searchAction, actions } = useRequiredContext("usePredictiveSearchForm");
   const coreRegister = useMemo(() => createPredictiveSearchFormRegister(), []);
 
   const register = useCallback<PredictiveSearchFormRegister>(
@@ -227,11 +314,11 @@ export function usePredictiveSearchForm(): PredictiveSearchFormResult {
           const term = event.currentTarget.value;
           onChange?.(event, term);
           if (event.defaultPrevented) return;
-          void store.search(term);
+          void actions.search(term);
         },
       };
     },
-    [coreRegister, store],
+    [coreRegister, actions],
   );
 
   const formProps = useCallback(
@@ -247,11 +334,11 @@ export function usePredictiveSearchForm(): PredictiveSearchFormResult {
           if (event.defaultPrevented) return;
           if (!preventDefault) return;
           event.preventDefault();
-          void store.search(term);
+          void actions.search(term);
         },
       };
     },
-    [searchAction, store],
+    [searchAction, actions],
   );
 
   return { formProps, register };

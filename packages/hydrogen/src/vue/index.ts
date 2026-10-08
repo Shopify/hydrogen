@@ -1,4 +1,4 @@
-export { createCartComponents, useCartActions, useCartAnalytics } from "./cart";
+export { createCartComponents, useCartAnalytics } from "./cart";
 export type { CartActions } from "./cart";
 export type { ShopifyGlobal } from "../globals";
 export {

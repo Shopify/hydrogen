@@ -3,14 +3,15 @@ import type {
   ProductVariantFrom,
   VariantSelectionResult,
 } from "@shopify/hydrogen";
+import type { CurrencyCode } from "@shopify/hydrogen/storefront-api-types";
 
 export interface ProductVariantData {
   id: string;
   title: string;
   availableForSale: boolean;
   selectedOptions: { name: string; value: string }[];
-  price: { amount: string; currencyCode: string };
-  compareAtPrice: { amount: string; currencyCode: string } | null;
+  price: { amount: string; currencyCode: CurrencyCode };
+  compareAtPrice: { amount: string; currencyCode: CurrencyCode } | null;
   image: {
     id: string | null;
     url: string;
@@ -32,8 +33,8 @@ export interface ProductData {
   encodedVariantExistence: string | null;
   encodedVariantAvailability: string | null;
   priceRange: {
-    minVariantPrice: { amount: string; currencyCode: string };
-    maxVariantPrice: { amount: string; currencyCode: string };
+    minVariantPrice: { amount: string; currencyCode: CurrencyCode };
+    maxVariantPrice: { amount: string; currencyCode: CurrencyCode };
   };
   images: { nodes: { url: string; altText: string | null }[] };
   options: {

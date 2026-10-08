@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { AvailableFilter, ProductFilter } from '@shopify/hydrogen';
-	import { untrack } from 'svelte';
+	import { onDestroy, untrack } from 'svelte';
 	import {
 		getFilterRemovalUrl,
 		getSortByValue,
@@ -61,7 +61,32 @@
 	const hasActiveFilters = $derived($browseState.filters.length > 0);
 	const isLoading = $derived($browseState.status === 'loading');
 	const currentParams = $derived(serializeCollectionParams($browseState));
+	const priceMin = $derived($browseState.filters.find((filter) => filter.price)?.price?.min ?? '');
+	const priceMax = $derived($browseState.filters.find((filter) => filter.price)?.price?.max ?? '');
 	let hasInitialisedController = false;
+	let priceTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function cancelPriceSubmit() {
+		clearTimeout(priceTimer);
+		priceTimer = undefined;
+	}
+
+	beforeNavigate(({ type, to }) => {
+		// The form's own goto can reach this hook after newer typing has started.
+		const isBrowseNavigation =
+			type === 'goto' &&
+			to?.url.pathname === collectionPath &&
+			normalizeCollectionSearch(to.url.search) === urlSearchOverride;
+		if (!isBrowseNavigation) cancelPriceSubmit();
+	});
+	onDestroy(cancelPriceSubmit);
+
+	$effect(() => {
+		// URL commits for an earlier submission must not cancel newer typing.
+		activePriceValue('min');
+		activePriceValue('max');
+		cancelPriceSubmit();
+	});
 
 	$effect(() => {
 		const data = { handle, dataSearch };
@@ -117,18 +142,17 @@
 	}
 
 	function activePriceValue(bound: 'min' | 'max') {
-		return $browseState.filters.find((filter) => filter.price)?.price?.[bound] ?? '';
+		return bound === 'min' ? priceMin : priceMax;
 	}
 
-	function onPriceBlur(event: FocusEvent, bound: 'min' | 'max') {
+	function onPriceInput(event: Event) {
+		cancelPriceSubmit();
 		const input = event.target as HTMLInputElement;
-		if (input.value !== String(activePriceValue(bound))) input.form?.requestSubmit();
-	}
-
-	function onPriceKeydown(event: KeyboardEvent) {
-		if (event.key !== 'Enter') return;
-		event.preventDefault();
-		(event.target as HTMLInputElement).blur();
+		const form = input.form;
+		priceTimer = setTimeout(() => {
+			priceTimer = undefined;
+			form?.requestSubmit();
+		}, 350);
 	}
 
 	function uncheckSiblings(checkbox: HTMLInputElement) {
@@ -211,13 +235,21 @@
 		</p>
 	</header>
 
-	<form {...formProps()} method="get" action={collectionPath} class="mt-12 flex gap-12">
+	<form
+		{...formProps({ beforeSubmit: cancelPriceSubmit })}
+		method="get"
+		action={collectionPath}
+		class="mt-12 flex gap-12"
+	>
 		{#if availableFilters.length > 0}
 			<aside class="hidden w-60 shrink-0 md:block">
 				<h2 class="text-sm font-semibold tracking-wider text-black/50 uppercase">Filters</h2>
 				<div class="mt-6 space-y-8">
 					{#each visibleFilters(availableFilters) as filter (filter.id)}
-						<fieldset disabled={isLoading} class={isLoading ? 'opacity-60' : undefined}>
+						<fieldset
+							aria-busy={isLoading}
+							class={isLoading ? 'opacity-60' : undefined}
+						>
 							<legend class="text-sm font-semibold">{filter.label}</legend>
 							{#if filter.type === 'PRICE_RANGE'}
 								<div class="mt-3 flex items-center gap-2">
@@ -230,8 +262,7 @@
 										aria-label="Minimum price"
 										value={activePriceValue('min')}
 										class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
-										onblur={(event) => onPriceBlur(event, 'min')}
-										onkeydown={onPriceKeydown}
+										oninput={onPriceInput}
 									/>
 									<span class="text-sm text-black/40">to</span>
 									<input
@@ -243,8 +274,7 @@
 										aria-label="Maximum price"
 										value={activePriceValue('max')}
 										class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
-										onblur={(event) => onPriceBlur(event, 'max')}
-										onkeydown={onPriceKeydown}
+										oninput={onPriceInput}
 									/>
 								</div>
 							{:else if visibleValues(filter).length > 0}
@@ -258,7 +288,7 @@
 													name={entry.name}
 													value={entry.value}
 													checked={isFilterInputActive($browseState.filters, value.input)}
-													class="h-4 w-4 rounded border-black/20 disabled:cursor-not-allowed"
+													class="h-4 w-4 rounded border-black/20"
 													onchange={(event) => onFilterChange(event, filter)}
 												/>
 												<span class={isFilterInputActive($browseState.filters, value.input) ? 'font-medium' : ''}>
@@ -300,8 +330,9 @@
 					<select
 						name="sort_by"
 						value={currentSortValue}
-						disabled={isLoading}
-						class="rounded border border-black/15 bg-white px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+						aria-busy={isLoading}
+						class="rounded border border-black/15 bg-white px-3 py-1.5 text-sm font-medium"
+						class:opacity-50={isLoading}
 						onchange={onSortChange}
 					>
 						{#each SORT_OPTIONS as option (option.value)}

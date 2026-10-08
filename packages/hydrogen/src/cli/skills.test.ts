@@ -13,8 +13,8 @@ import { join } from "node:path";
 
 import { describe, expect, it, vi } from "vitest";
 
-import { assert } from "../../core/test-utils";
-import { isObjectRecord } from "../../core/utils/record";
+import { assert } from "../core/test-utils";
+import { isObjectRecord } from "../core/utils/record";
 import {
   checkSkills,
   describeSkillsSyncStatus,
@@ -25,9 +25,9 @@ import {
   type SkillsSyncStatus,
   type SyncSkillsResult,
   type SyncSkillsRootResult,
-} from "../skills";
+} from "./skills";
 
-const REAL_SKILLS_ROOT = join(import.meta.dirname, "../../../skills");
+const REAL_SKILLS_ROOT = join(import.meta.dirname, "../../skills");
 
 function createTempDirectory(): string {
   return mkdtempSync(join(tmpdir(), "hydrogen-skills-"));

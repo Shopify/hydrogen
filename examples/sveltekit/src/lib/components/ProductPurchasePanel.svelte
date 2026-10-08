@@ -201,7 +201,7 @@
 				</button>
 			</div>
 			<button
-				type="submit"
+				{...register('addToCart', {})}
 				disabled={!addable || pending}
 				class="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-300"
 			>
