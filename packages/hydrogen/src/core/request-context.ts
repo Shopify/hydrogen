@@ -23,6 +23,16 @@ import { normalizePathPrefix } from "./standard-routes/path";
 
 const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
 
+// UCP discovery (Web Linking): HTML documents link to the shop's UCP profile on the storefront
+// origin, matching Liquid storefronts and Oxygen. Omitting `version` selects the latest stable
+// profile. The rel pattern matches Oxygen's, so Oxygen recognizes this link and does not add its
+// own.
+const UCP_PROFILE_LINK = '</.well-known/ucp>; rel="ucp"';
+const UCP_LINK_REL_PATTERN = /;\s*rel="?ucp"?\s*(?:[;,]|$)/i;
+// Oxygen deployment hostnames route `/.well-known/ucp` to the Online Store, which cannot resolve
+// the shop from them, so a link there would advertise a profile that does not exist.
+const OXYGEN_DEPLOYMENT_HOST_SUFFIX = ".myshopify.dev";
+
 type StorefrontRequest = Pick<Request, "headers"> &
   Partial<Pick<Request, "method" | "signal" | "url">>;
 
@@ -173,6 +183,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     ...(isDocumentRequest(request) && { documentRequest: true }),
     ...(request.signal && { signal: request.signal }),
   } as Context<I18n>;
+  const advertisesUcpProfile = isUcpProfileHost(url);
 
   let capturedCookies: string[] | undefined;
   let personalizedResponseReason: string | undefined;
@@ -212,9 +223,17 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     applyResponseHeaders(headers) {
       headers.set("powered-by", "Shopify, Hydrogen");
 
+      const contentType = headers.get("content-type");
+      const hasHtmlContentType = contentType?.toLowerCase().startsWith("text/html") ?? false;
+
+      // Some frameworks finalize headers before the body sets its content type, so fall back to
+      // the request's document intent only when the content type is not known yet.
+      if (advertisesUcpProfile && (contentType ? hasHtmlContentType : context.documentRequest)) {
+        applyUcpProfileLink(headers);
+      }
+
       // Documents may be shared or streamed, so they must not carry buyer-specific state.
-      const isDocumentResponse =
-        context.documentRequest || (headers.get("content-type")?.startsWith("text/html") ?? false);
+      const isDocumentResponse = context.documentRequest || hasHtmlContentType;
 
       // Keep GET and HEAD responses cacheable, and fail closed when the request method is unknown.
       // Cold sessions may only be established by the explicitly marked consent request.
@@ -272,6 +291,21 @@ function applyStorefrontRequestHeaders(context: Context, headers: Headers): void
   if (context.storefrontOrigin) {
     headers.set(SHOPIFY_STOREFRONT_ORIGIN_HEADER, context.storefrontOrigin);
   } else headers.delete(SHOPIFY_STOREFRONT_ORIGIN_HEADER);
+}
+
+function isUcpProfileHost(url: string | undefined): boolean {
+  if (!url) return true;
+  try {
+    const { hostname } = new URL(url);
+    return !`.${hostname}`.endsWith(OXYGEN_DEPLOYMENT_HOST_SUFFIX);
+  } catch {
+    return true;
+  }
+}
+
+function applyUcpProfileLink(headers: Headers): void {
+  if (UCP_LINK_REL_PATTERN.test(headers.get("link") ?? "")) return;
+  headers.append("link", UCP_PROFILE_LINK);
 }
 
 function getUrlOrigin(url: string | undefined): string | undefined {
