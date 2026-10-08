@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  createPredictiveSearchFormRegister,
   getFilterRemovalUrl,
   getSortByValue,
   serializeCollectionParams,
@@ -47,6 +48,8 @@ export const SEARCH_SORT_OPTIONS = [
   { label: "Price, low to high", value: getSortByValue("PRICE", false) },
   { label: "Price, high to low", value: getSortByValue("PRICE", true) },
 ];
+
+const registerSearchField = createPredictiveSearchFormRegister();
 
 type PageInfo = { hasNextPage: boolean; endCursor?: string | null };
 type BrowserAvailableFilter = CollectionAvailableFilter | SearchAvailableFilter;
@@ -262,14 +265,12 @@ function SearchPage(props: SearchPageProps) {
           {content.search.label}
         </label>
         <input
+          {...registerSearchField("query")}
           id="search-q"
-          type="search"
-          name="q"
           defaultValue={term}
           key={term}
           placeholder={content.search.placeholder}
           className="number-reset rounded-button border-border h-11 max-w-md border px-3 text-sm"
-          autoComplete="off"
         />
         <button
           type="submit"

@@ -25,6 +25,8 @@ export type CartLineAddInput = {
 export type CartLineUpdateInput = {
   /** The ID of the cart line to update. */
   id: string;
+  /** The GID of a product variant to swap the line to. */
+  merchandiseId?: string;
   /** The line's new quantity. */
   quantity: number;
   /** Custom key-value attributes to set on the line. */
@@ -39,7 +41,7 @@ export type CartLineUpdateInput = {
  * The `intent` field names the change and the Storefront API mutation that applies the change:
  *
  * - `add` adds new lines with `cartLinesAdd`, or creates a cart with `cartCreate` when none exists.
- * - `update` changes quantity or attributes on existing lines with `cartLinesUpdate`.
+ * - `update` changes quantity, merchandise, or attributes on existing lines with `cartLinesUpdate`.
  * - `remove` removes lines by ID with `cartLinesRemove`.
  * - `discount-update` replaces all discount codes with `cartDiscountCodesUpdate`.
  * - `discount-apply` adds one discount code. The handler reads the current codes, then writes the new list with `cartDiscountCodesUpdate`.
@@ -81,12 +83,13 @@ class CartActionError extends Error {
  *
  * A form submission always returns a `null` cart ID. Read the cart ID for a form submission with `getCartId`.
  *
- * The function reads the request body, and you can't read the body again afterward. The function throws when the request has an unsupported content type, an unknown intent, or a missing required field, and when a JSON body mixes added, updated, and removed lines.
+ * The function reads the request body, and you can't read the body again afterward. The function throws when the request has an unsupported content type, an unknown intent, or a missing required field, and when a JSON body combines more than one of `lines`, `discountCodes`, `attributes`, and `note`.
  *
  * @param request The incoming cart request.
  * @returns The cart change and, for a JSON body, the cart ID.
  * @throws If the request has an unsupported content type, an unrecognized intent,
- * or missing required fields, or if a JSON body mixes added, updated, and removed lines.
+ * or missing required fields, or if a JSON body combines more than one of
+ * `lines`, `discountCodes`, `attributes`, and `note`.
  *
  * @example
  * ```ts
@@ -123,9 +126,19 @@ export async function parseCartRequest(request: Request): Promise<ParsedCartRequ
 
 // --- JSON parsing ---
 
+const JSON_MUTATION_FIELDS = ["lines", "discountCodes", "attributes", "note"] as const;
+
 function parseJsonBody(body: unknown): ParsedCartRequest {
   assertObject(body);
   const cartId = typeof body.cartId === "string" ? normalizeCartId(body.cartId) : null;
+
+  // Each request runs one Storefront API mutation, so any other field would be silently dropped.
+  const fields = JSON_MUTATION_FIELDS.filter((field) => body[field] !== undefined);
+  if (fields.length > 1) {
+    throw new CartActionError(
+      `Request body must contain only one of "lines", "discountCodes", "attributes", or "note", got ${fields.join(", ")}.`,
+    );
+  }
 
   if ("note" in body && typeof body.note === "string") {
     return { action: { intent: "note-update", note: body.note }, cartId };
@@ -202,6 +215,7 @@ function partitionLines(rawLines: unknown[]): CartAction {
     } else if (hasId) {
       updates.push({
         id: line.id as string,
+        ...(hasMerchandiseId && { merchandiseId: line.merchandiseId as string }),
         quantity,
         ...optionalFields,
       });

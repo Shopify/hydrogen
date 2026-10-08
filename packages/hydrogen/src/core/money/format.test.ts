@@ -106,6 +106,29 @@ describe("formatMoney", () => {
       expect(price.amount).toBe("-5.00");
     });
 
+    it("trims the space between the number and the currency symbol", () => {
+      const price = formatMoney({ amount: "19.99", currencyCode: "EUR" }, { locale: "fr-FR" });
+      expect(`${price}`).toBe("19,99\u00a0€");
+      expect(price.amount).toBe("19,99");
+    });
+
+    it("trims the space when the currency symbol comes first", () => {
+      const price = formatMoney({ amount: "19.99", currencyCode: "EUR" }, { locale: "nl-NL" });
+      expect(`${price}`).toBe("€\u00a019,99");
+      expect(price.amount).toBe("19,99");
+    });
+
+    it("keeps the bidi marks that bind the minus sign to the digits", () => {
+      const price = formatMoney({ amount: "-19.99", currencyCode: "ILS" }, { locale: "he-IL" });
+      expect(price.amount).toBe("\u200f\u200e-19.99");
+    });
+
+    it("drops the spacer when the currency sits between the sign and the digits", () => {
+      const price = formatMoney({ amount: "-20", currencyCode: "PKR" }, { locale: "ur-PK" });
+      expect(`${price}`).toBe("\u200e-Rs\u00a020");
+      expect(price.amount).toBe("\u200e-20");
+    });
+
     it("returns the currency symbol", () => {
       const price = formatMoney({ amount: "19.99", currencyCode: "USD" }, { locale: "en-US" });
       expect(price.currencySymbol).toBe("$");
@@ -178,6 +201,40 @@ describe("formatMoney", () => {
         { locale: "en-CA" },
       );
       expect(`${price}`).toBe("$25");
+    });
+
+    it("keeps the fraction digits when withoutTrailingZeros is set and only the minimum is whole", () => {
+      const price = formatMoney(
+        [
+          { amount: "10.00", currencyCode: "USD" },
+          { amount: "19.99", currencyCode: "USD" },
+        ],
+        { locale: "en-US", withoutTrailingZeros: true },
+      );
+      expect(`${price}`).toBe("$10.00 – $19.99");
+    });
+
+    it("strips the fraction digits when withoutTrailingZeros is set and every value is whole", () => {
+      const price = formatMoney(
+        [
+          { amount: "10.00", currencyCode: "USD" },
+          { amount: "20.00", currencyCode: "USD" },
+        ],
+        { locale: "en-US", withoutTrailingZeros: true },
+      );
+      expect(`${price}`).toBe("$10 – $20");
+    });
+
+    it("decides whole-number stripping from the rendered endpoints only", () => {
+      const values = [
+        { amount: "10.00", currencyCode: "USD" },
+        { amount: "15.50", currencyCode: "USD" },
+        { amount: "20.00", currencyCode: "USD" },
+      ];
+      const stripped = formatMoney(values, { locale: "en-US", withoutTrailingZeros: true });
+      const detected = formatMoney(values, { locale: "en-US" });
+      expect(`${stripped}`).toBe("$10 \u2013 $20");
+      expect(`${detected}`).toBe("$10 \u2013 $20");
     });
 
     it("sorts unordered values before formatting", () => {

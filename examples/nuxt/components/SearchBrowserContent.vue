@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { AvailableFilter, ProductFilter } from "@shopify/hydrogen";
 import {
+  createPredictiveSearchFormRegister,
   getSortByValue,
   getFilterRemovalUrl,
   isFilterInputActive,
@@ -25,6 +26,7 @@ const SORT_OPTIONS = [
   { label: "Price, high to low", value: getSortByValue("PRICE", true) },
 ];
 
+const registerSearchField = createPredictiveSearchFormRegister();
 const state = useCollection();
 const { formProps } = useCollectionForm();
 const fProps = formProps();
@@ -209,8 +211,7 @@ function visibleFilters(filters: AvailableFilter[]) {
     <!-- Search form -->
     <form method="get" action="/search" class="mt-8 flex max-w-xl gap-3">
       <input
-        type="search"
-        name="q"
+        v-bind="registerSearchField('query')"
         :value="term"
         placeholder="Search products"
         class="min-w-0 flex-1 rounded border border-black/15 px-4 py-2 text-base"
