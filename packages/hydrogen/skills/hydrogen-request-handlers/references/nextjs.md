@@ -53,7 +53,11 @@ export async function proxy(request: NextRequest) {
 
   const requestHeaders = requestContext.getForwardedRequestHeaders();
   const response = NextResponse.next({ request: { headers: requestHeaders } });
+  // Next.js drops a route handler's header when the proxy already set it, so leave `Link` to the route.
+  const link = response.headers.get("link");
   requestContext.applyResponseHeaders(response.headers);
+  if (link === null) response.headers.delete("link");
+  else response.headers.set("link", link);
   return response;
 }
 
@@ -61,6 +65,8 @@ export const config = {
   matcher: ["/((?!_next/static|_next/image|_next/data|favicon.ico).*)"],
 };
 ```
+
+Next.js copies headers from `NextResponse.next()` onto the final response before the route runs, then skips any route handler header with the same name (only `Set-Cookie`, `Vary` and the authenticate headers are appended). Save the pass-through response's `Link` before `applyResponseHeaders` and restore it afterwards. This keeps any `Link` the proxy set itself and leaves out the UCP discovery `Link`, so a route handler's own `Link` is never replaced. Responses returned by `handleShopifyRoutes` are final and keep the UCP link. Next.js pages advertise UCP through the `<link rel="ucp">` tag rendered by `ShopifyScripts` instead.
 
 The proxy returns a matched promise directly so Next owns any rejection. If the app adds a request-level `try/catch` that returns a custom error response, use `return await shopifyRoute` inside that boundary after the truthy check.
 
