@@ -444,6 +444,13 @@ describe("shopify scripts", () => {
         },
       },
       {
+        tagName: "link",
+        attributes: {
+          rel: "ucp",
+          href: "/.well-known/ucp",
+        },
+      },
+      {
         tagName: "script",
         attributes: { id: "shopify-global-bootstrap", nonce: "test-nonce" },
         innerHTML: expect.stringContaining('"country":"US"'),
@@ -531,6 +538,13 @@ describe("shopify scripts", () => {
           as: "script",
           href: SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
           crossorigin: "anonymous",
+        },
+      },
+      {
+        tagName: "link",
+        attributes: {
+          rel: "ucp",
+          href: "/.well-known/ucp",
         },
       },
     ]);
@@ -845,7 +859,7 @@ describe("shopify scripts", () => {
     });
     const html = htmlTags.join("\n");
 
-    expect(htmlTags).toHaveLength(10);
+    expect(htmlTags).toHaveLength(11);
     expect(html).toContain('<script id="shopify-global-bootstrap" nonce="test-nonce">');
     expect(html).toContain('"country":"US"');
     expect(html).toContain('"locale":"en"');
@@ -865,6 +879,7 @@ describe("shopify scripts", () => {
     expect(html).toContain(
       `<link rel="prefetch" as="script" href="${SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT}" crossorigin="anonymous">`,
     );
+    expect(html).toContain('<link rel="ucp" href="/.well-known/ucp">');
   });
 });
 

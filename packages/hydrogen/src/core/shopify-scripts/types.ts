@@ -41,7 +41,7 @@ export type ShopifyLinkTagAttributes = Partial<{
   as: "script";
   crossorigin: ShopifyCrossOrigin;
   href: string;
-  rel: "preconnect" | "prefetch";
+  rel: "preconnect" | "prefetch" | "ucp";
 }>;
 
 export type ShopifyScriptDescriptor = {
