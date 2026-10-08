@@ -43,3 +43,18 @@ When changing how synced skills are stamped or verified (the frontmatter `metada
 - `hydrogen skills check` in the same file (reads `getSkillsSyncStatus`, prints `describeSkillsSyncStatus`)
 - `packages/hydrogen/README.md` ("Keeping skills in sync")
 - root `README.md` ("Set up in your own project")
+
+## Template Workspace Dependencies
+
+When changing which workspace packages a template depends on (`@shopify/hydrogen`, `@shopify/mini-oxygen`), or how the dist flow pins them, update these together:
+
+- `templates/*/package.json`
+- `scripts/preview-template-dist.ts` (pins every `workspace:` dependency before standalone lockfiles are generated)
+- `.github/workflows/release.yml` (generates the standalone lockfiles from the pinned versions)
+- `.github/workflows/ci.yml` (the local HTTPS job builds the React Router template's workspace packages before running it)
+- `AGENTS.md` ("Local HTTPS for Examples" says which packages to build before reproducing that job)
+- `turbo.json` (template `build` tasks list their workspace packages' builds explicitly)
+- `packages/mini-oxygen/package.json` (its `vite` must resolve to the same version as its consumers'; `scripts/workspace-vite.test.ts` checks this)
+- `skills/create-oxygen-template/SKILL.md` ("Workspace dependencies", "Lockfile")
+- `skills/create-oxygen-template/reference/react-router-pattern.md` ("Dependencies")
+- `skills/create-vercel-template/SKILL.md` ("Hydrogen dependency", "Lockfile", "Validation")
