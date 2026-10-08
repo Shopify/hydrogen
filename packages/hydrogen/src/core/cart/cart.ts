@@ -89,13 +89,20 @@ export const STANDARD_ACTION_TIMEOUT_IN_MS = 30_000;
 /**
  * The error that a cart load or cart change throws when your cart endpoint responds with a non-2xx status. Read `status` to handle specific failures.
  *
- * The message is always `Something went wrong updating your cart. Please try again.`, including for a failed cart load. Without a cart endpoint from configureCartEndpoint, cart requests fail with other error types.
+ * Without a cart endpoint from `configureCartEndpoint`, cart requests fail with other error types.
  *
  * @publicDocs
  */
 export class CartNetworkError extends Error {
   /** The HTTP status code that the cart endpoint returned. */
   readonly status: number;
+
+  /** Always `"CartNetworkError"`. */
+  declare name: string;
+  /** Always `"Something went wrong updating your cart. Please try again."`, including for a failed cart load. */
+  declare message: string;
+  /** The stack trace, when the JavaScript runtime records one. */
+  declare stack?: string;
 
   constructor(status: number) {
     super("Something went wrong updating your cart. Please try again.");

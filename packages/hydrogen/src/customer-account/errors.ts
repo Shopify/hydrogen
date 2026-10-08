@@ -13,6 +13,13 @@ export class CustomerAccountApiError extends Error {
   /** The `retry-after` header on a non-OK response. Use the value to schedule a retry of a rate-limited request. */
   readonly retryAfter?: string;
 
+  /** `"CustomerAccountApiError"`. Each subclass sets its own class name. */
+  declare name: string;
+  /** Describes the failure, such as the HTTP status that the API returned. */
+  declare message: string;
+  /** The stack trace, when the JavaScript runtime records one. */
+  declare stack?: string;
+
   constructor(
     message: string,
     options?: { status?: number; requestId?: string; retryAfter?: string; cause?: unknown },
@@ -33,6 +40,13 @@ export class CustomerAccountApiError extends Error {
  * @publicDocs
  */
 export class CustomerAccountAuthenticationError extends CustomerAccountApiError {
+  /** Always `"CustomerAccountAuthenticationError"`. */
+  declare name: string;
+  /** Always `"Customer Account API access token is required"`. */
+  declare message: string;
+  /** The stack trace, when the JavaScript runtime records one. */
+  declare stack?: string;
+
   constructor(message = "Customer Account API access token is required") {
     super(message);
     this.name = "CustomerAccountAuthenticationError";
@@ -47,6 +61,13 @@ export class CustomerAccountAuthenticationError extends CustomerAccountApiError 
 export class CustomerAccountTimeoutError extends CustomerAccountApiError {
   /** The timeout that the request exceeded, in milliseconds. */
   readonly timeoutInMs: number;
+
+  /** Always `"CustomerAccountTimeoutError"`. */
+  declare name: string;
+  /** States the timeout, such as `"Customer Account API request timed out after 30000ms"`. */
+  declare message: string;
+  /** The stack trace, when the JavaScript runtime records one. */
+  declare stack?: string;
 
   constructor(timeoutInMs: number) {
     super(`Customer Account API request timed out after ${timeoutInMs}ms`);
@@ -65,6 +86,13 @@ export class CustomerAccountTimeoutError extends CustomerAccountApiError {
 export class CustomerAccountOAuthError extends Error {
   /** The failure code, one of the codes in the class description. */
   readonly code: string;
+
+  /** Always `"CustomerAccountOAuthError"`. */
+  declare name: string;
+  /** Describes the sign-in failure. Read `code` to handle the failure. */
+  declare message: string;
+  /** The stack trace, when the JavaScript runtime records one. */
+  declare stack?: string;
 
   constructor(code: string, message: string, options?: { cause?: unknown }) {
     super(message, options?.cause ? { cause: options.cause } : undefined);

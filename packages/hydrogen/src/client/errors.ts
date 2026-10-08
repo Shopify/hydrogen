@@ -29,6 +29,13 @@ export class StorefrontApiError extends Error {
   /** The variables that the client sent with the request. Hydrogen sets the value only in development builds. */
   readonly variables?: Record<string, unknown>;
 
+  /** `"StorefrontApiError"`. `StorefrontTimeoutError` sets its own class name. */
+  declare name: string;
+  /** Describes the failure, such as the HTTP status that the API returned. */
+  declare message: string;
+  /** The stack trace, when the JavaScript runtime records one. */
+  declare stack?: string;
+
   constructor(message: string, options?: StorefrontApiErrorOptions) {
     super(message, options?.cause ? { cause: options.cause } : undefined);
     this.name = "StorefrontApiError";
@@ -69,6 +76,13 @@ export class StorefrontApiError extends Error {
 export class StorefrontTimeoutError extends StorefrontApiError {
   /** The timeout that the request exceeded, in milliseconds. */
   readonly timeoutInMs: number;
+
+  /** Always `"StorefrontTimeoutError"`. */
+  declare name: string;
+  /** States the timeout, such as `"Storefront API request timed out after 30000ms"`. */
+  declare message: string;
+  /** The stack trace, when the JavaScript runtime records one. */
+  declare stack?: string;
 
   constructor(timeoutInMs: number, options?: Omit<StorefrontApiErrorOptions, "cause">) {
     super(`Storefront API request timed out after ${timeoutInMs}ms`, options);

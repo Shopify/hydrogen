@@ -12,6 +12,7 @@ import type { ShopifyRequestContext } from "../request-context";
 import { createProxyResponseHeaders } from "../request-routing/interceptors/proxy";
 import type {
   CallableRouteHandler,
+  ShopifyRouteError,
   ShopifyRouteErrorResult,
   ShopifyRouteJsonResult,
   ShopifyRouteRedirectResult,
@@ -74,12 +75,10 @@ export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_muta
  *
  * @publicDocs
  */
-export type CartError = {
+export interface CartError extends ShopifyRouteError {
   /** The code that identifies the failure. */
   code: CartErrorCode;
-  /** A human-readable error message. */
-  message: string;
-};
+}
 
 /**
  * The route result that the cart POST handler returns. Check `type` to tell the results apart:
