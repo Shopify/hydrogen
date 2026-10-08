@@ -22,20 +22,17 @@ type EncodedVariantConstraint = {
 };
 
 /**
- * Extracts selected product options from search params.
+ * Reads the customer's option selection from a product URL's search params.
  *
- * Each query parameter is treated as an option name/value pair
- * (e.g. `?Color=Red&Size=M` → `[{name:"Color",value:"Red"},{name:"Size",value:"M"}]`).
+ * Each param becomes an option name and value. For example, `?Color=Red&Size=M`
+ * becomes Color set to Red and Size set to M. The function always skips the `variant` param,
+ * which holds a numeric variant ID in Liquid storefront URLs.
  *
- * The `variant` param is reserved for numeric variant ids (Liquid parity) and is
- * never treated as an option name, even when listed in `allowedOptionNames`.
+ * Pass the result as the `selectedOptions` argument of your Storefront API product query, or as the starting selection of a product form store.
  *
- * When `allowedOptionNames` is provided, the search params are filtered to only
- * entries whose decoded param name exactly matches a product option name.
- * Passing an empty array filters out every option.
+ * @param input The search params to read and an optional list of allowed option names. With `allowedOptionNames`, the function keeps only params whose name exactly matches an allowed name, and an empty list keeps no params. Pass the product's option names to keep unrelated params out of the selection.
  *
- * Pass the result to `createProductFormStore` as `selectedOptions`. Used as a
- * fallback when the product has no `selectedOrFirstAvailableVariant`.
+ * @returns The selected options, in the order that they appear in the URL.
  *
  * @example
  * ```ts

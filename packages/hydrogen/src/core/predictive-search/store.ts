@@ -8,71 +8,96 @@ import { createObservable } from "../observable";
 import { PREDICTIVE_SEARCH_API_PATH, PREDICTIVE_SEARCH_QUERY_PARAM } from "./constants";
 import { getEmptyPredictiveSearchResult, type PredictiveSearchData } from "./search";
 
-/** Default delay before predictive search sends a request after a term changes. */
+/** Default wait, in milliseconds, between the latest term change and the search request. */
 export const DEFAULT_PREDICTIVE_SEARCH_DEBOUNCE_IN_MS = 150;
 
 /** Default minimum trimmed term length required before predictive search sends a request. */
 const DEFAULT_PREDICTIVE_SEARCH_MIN_TERM_LENGTH = 1;
 
-/** Lifecycle state for the predictive search client store. */
+/** Status of the current search. */
 export type PredictiveSearchStatus = "idle" | "loading" | "success" | "error";
 
-/** Current predictive search snapshot exposed to UI bindings. */
+/** Current search term, status, results, and error of a predictive search. */
 export type PredictiveSearchState<TData extends PredictiveSearchData = PredictiveSearchData> = {
-  /** Latest trimmed search term known to the store. */
+  /** Latest search term, without surrounding whitespace. */
   term: string;
-  /** Request lifecycle state for the current term. */
+  /** Status of the search for the current term. */
   status: PredictiveSearchStatus;
-  /** Predictive search data for the current term, or an empty result while idle. */
+  /** Results of the latest successful search. Previous results stay in place while a new search loads and after a search fails. The idle state holds empty results. */
   result: TData;
-  /** Error message for the latest failed request, or null when there is no active error. */
+  /** Message from the latest failed search, or `null` when the current search hasn't failed. A custom endpoint sets the message with a JSON body of `{error: {message}}`. */
   error: string | null;
 };
 
-/** Options for creating a framework-neutral predictive search client store. */
+/**
+ * Endpoint, timing, and search settings for a predictive search store.
+ *
+ * The store sends each search setting to the endpoint as a URL parameter of the same name. The server handlers apply their own defaults to omitted settings.
+ */
 export type CreatePredictiveSearchStoreOptions = {
   /**
-   * Same-origin JSON endpoint used for browser predictive-search requests.
+   * Route that returns predictive search results as JSON, in the shape that `createPredictiveSearchServerHandlers` returns.
    *
-   * The endpoint must return JSON matching the data payload from
-   * `await predictiveSearchHandlers.get(...)`.
+   * Defaults to `/api/predictive-search`.
    */
   predictiveSearchEndpoint?: string;
-  /** Delay before sending a request after the term changes. */
+  /**
+   * Milliseconds to wait after the latest term change before searching.
+   *
+   * Defaults to `150`. Pass `0` to search right away. Negative and non-finite values use the default.
+   */
   debounceInMs?: number;
-  /** Minimum trimmed term length required before searching. */
+  /**
+   * Number of characters a term needs, after trimming, before the store searches.
+   *
+   * Defaults to `1`. Negative and non-finite values use the default.
+   */
   minTermLength?: number;
-  /** Fetch implementation, injectable for tests and non-browser runtimes. */
+  /** Function that sends search requests. Defaults to the global `fetch`. Pass a function for tests or for runtimes without a global `fetch`. */
   fetch?: typeof globalThis.fetch;
-  /** Maximum result count requested from the Storefront API. */
+  /** Maximum number of results, from 1 to 10. The server handlers clamp other values to that range. */
   limit?: number;
-  /** Whether `limit` applies to each result type or all result types combined. */
+  /** Whether the limit applies to each result type or to all result types combined. */
   limitScope?: PredictiveSearchLimitScope;
-  /** Storefront API result types to include in predictive search. */
+  /** Result types to include. */
   types?: PredictiveSearchType[];
-  /** Storefront API fields to search. */
+  /** Fields to search for page, article, and collection results. */
   searchableFields?: SearchableField[];
-  /** Storefront API unavailable-product behavior. */
+  /** Whether results hide unavailable products, show them, or list them last. */
   unavailableProducts?: SearchUnavailableProductsType;
 };
 
-/** Framework-neutral predictive search store used by UI bindings. */
+/** Holds the search term, status, and results, and runs searches as the customer types. */
 export type PredictiveSearchStore<TData extends PredictiveSearchData = PredictiveSearchData> = {
-  /** Reactivates store updates after destroy(). */
+  /** Restarts a store after `destroy()`. A new store doesn't need this call. */
   connect(): void;
-  /** Returns the current predictive search state snapshot. */
+  /** Returns the current search term, status, results, and error. */
   getState(): PredictiveSearchState<TData>;
-  /** Subscribes to state changes and returns an unsubscribe callback. */
+  /** Calls your function with the new state on every change. Returns a function that stops the calls. */
   subscribe(listener: (state: PredictiveSearchState<TData>) => void): () => void;
-  /** Searches for a term using the configured debounce and request lifecycle. */
+  /**
+   * Searches for a term after the debounce delay. Call the method on every keystroke.
+   *
+   * Each call cancels the previous pending search. A term shorter than the minimum length, after trimming, returns the store to `idle` with empty results. Otherwise, the status changes to `loading` until the search ends with `success` or `error`. Responses for earlier terms never replace newer results.
+   *
+   * The returned promise resolves when the search ends, or when a later search, `clear()`, or `destroy()` cancels the search.
+   */
   search(term: string): Promise<void>;
-  /** Cancels pending work and resets the store to an empty state. */
+  /**
+   * Cancels any pending search and returns the store to the idle state with no term and empty results.
+   *
+   * Call `clear()` when the customer closes the search UI.
+   */
   clear(): void;
-  /** Cancels pending work and pauses store updates until reconnect. */
+  /**
+   * Stops the store. Call `destroy()` when the search UI unmounts.
+   *
+   * The store cancels any pending search, keeps its current state, and ignores searches until you call `connect()`.
+   */
   destroy(): void;
 };
 
-/** Search methods exposed by the predictive search store. */
+/** Methods that search for a term and clear the results. */
 export type PredictiveSearchActions = Pick<PredictiveSearchStore, "search" | "clear">;
 
 type PredictiveSearchStoreContext<TData extends PredictiveSearchData> = {
@@ -104,11 +129,14 @@ type StoreSearchOptions = Pick<
 >;
 
 /**
- * Creates a framework-agnostic predictive search store with debounced searching, request
- * cancellation, and a subscribable state snapshot.
+ * Creates a store that searches as the customer types and holds the latest predictive search results. Use the store in DOM code or in UI frameworks without Hydrogen bindings. In React and Vue, use `PredictiveSearchProvider`.
  *
- * Building block for the framework bindings. Use it directly on a framework without one.
+ * Call `search()` with each new term, read results with `getState()` or `subscribe()`, and call `destroy()` when the search UI unmounts. By default, the store requests results from the route that `createPredictiveSearchServerHandlers` serves.
  *
+ * The function throws an error when you omit the `fetch` option in a runtime without a global `fetch`.
+ *
+ * @param options Endpoint, timing, and search settings for the store.
+ * @returns A store with no term and empty results, ready to search.
  * @publicDocs
  */
 export function createPredictiveSearchStore<

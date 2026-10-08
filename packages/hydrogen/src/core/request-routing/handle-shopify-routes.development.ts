@@ -4,13 +4,16 @@ import { handleGraphiql } from "./interceptors/graphiql";
 import type { HydrogenRouteHandler } from "./route-types";
 import { safeApplyResponseHeaders } from "./safe-apply-response-headers";
 
+/** The development-only options for route handling. */
 type HydrogenRoutesDevOptions = {
+  /** Settings for the GraphiQL explorer at `/graphiql`. */
   graphiql?: GraphiQLOptions;
 };
 
 /**
- * Development build of `handleShopifyRoutes`: serves the production routes and
- * adds the GraphiQL explorer.
+ * The development build of handleShopifyRoutes. Your bundler uses it when it
+ * resolves the package's `development` export condition. The function serves the
+ * same routes as handleShopifyRoutes, then the GraphiQL explorer at `/graphiql`.
  *
  * @publicDocs
  */

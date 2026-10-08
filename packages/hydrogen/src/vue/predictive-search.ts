@@ -40,31 +40,31 @@ const PredictiveSearchKey: InjectionKey<PredictiveSearchContextValue> = Symbol("
 
 export type { PredictiveSearchActions };
 
-/** Options for the form props builder returned by {@link usePredictiveSearchForm}. */
+/**
+ * Options for the form props function of the predictive search form composable.
+ *
+ * Accepts any form attribute. Attributes that you pass override the default action, method, and role.
+ */
 export type PredictiveSearchFormPropsOptions = {
-  /** When `true`, prevents the native form submission and triggers a client-side search instead. */
+  /** Set to `true` to cancel the native submission and run a client-side search with the submitted term. */
   preventDefault?: boolean;
-  /** Called on submit with the submit event and the extracted search term. Calling `event.preventDefault()` cancels both the native submission and Hydrogen's client-side search. */
+  /** Runs on submit with the submit event and the search term. Calling preventDefault on the event cancels the native submission and the client-side search. */
   onSubmit?: (event: SubmitEvent, term: string) => void;
   [key: string]: unknown;
 };
 
-/**
- * Options for the query input props builder returned by {@link usePredictiveSearchForm}'s `register` method.
- */
+/** Options for the query input attributes that the register function returns. */
 export type PredictiveSearchQueryInputPropsOptions = {
-  /** Called on input with the input event and the current input value. Call `event.preventDefault()` to skip the automatic search trigger. */
+  /** Runs on input with the input event and the input value. Calling preventDefault on the event skips the automatic search. */
   onInput?: (event: Event, term: string) => void;
   [key: string]: unknown;
 };
 
-/**
- * Return type of {@link usePredictiveSearchForm}, providing methods to build a progressively-enhanced search form.
- */
+/** Functions that build a predictive search form that works without JavaScript. */
 export type PredictiveSearchFormResult = {
-  /** Generates form element attributes including the search action and submit handler. */
+  /** Returns the form attributes, including the search action and a submit handler. */
   formProps(options?: PredictiveSearchFormPropsOptions): Record<string, unknown>;
-  /** Generates input element attributes for a named form field and wires up the search trigger. */
+  /** Returns the query input attributes, including an input handler that searches on every input event. The function accepts only the `query` field and throws for any other field name. */
   register: (
     field: "query",
     options?: PredictiveSearchQueryInputPropsOptions,
@@ -72,12 +72,13 @@ export type PredictiveSearchFormResult = {
 };
 
 /**
- * Creates and manages a predictive search store, providing it to descendant
- * composables via Vue's provide/inject.
+ * Creates a predictive search store and shares the store with the predictive search composables in the default slot.
  *
- * Recreates the store when configuration props change. Connects the store
- * on mount and destroys it on unmount.
+ * The provider connects the store on mount and destroys the store on unmount. A change to a store option prop replaces the store with a new one. The provider compares the types and searchable fields arrays by their values.
  *
+ * The provider throws when neither the fetch prop nor a global fetch function exists.
+ *
+ * @throws {Error} When neither the fetch prop nor a global fetch function exists.
  * @publicDocs
  */
 export const PredictiveSearchProvider = defineComponent({
@@ -170,16 +171,12 @@ function useRequiredContext(composableName: string): PredictiveSearchContextValu
 }
 
 /**
- * Subscribes to the predictive search store's state as a reactive ref.
+ * Returns the predictive search state as a read-only shallow ref that updates when the state changes.
  *
- * Without arguments, returns a `ShallowRef` of the full
- * {@link PredictiveSearchState}. With a `selector`, returns a ref of the
- * derived value that only updates when the selected value changes
- * (reference equality by default, or a custom `isEqual`).
+ * With a selector, the ref holds the selected value and updates only when that value changes.
+ * The composable compares values by reference unless you pass an equality function.
  *
- * Must be used inside a {@link PredictiveSearchProvider}.
- *
- * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @throws {Error} When you call it outside a PredictiveSearchProvider.
  * @publicDocs
  */
 export function usePredictiveSearch<
@@ -228,15 +225,11 @@ export function usePredictiveSearch<
 }
 
 /**
- * Returns `search` and `clear` methods that delegate to the current store.
+ * Returns methods that search and clear results in the provider's current store.
  *
- * These are thin wrappers that read from the reactive store ref on each call,
- * so they always target the active store even after a provider prop change
- * triggers store recreation.
+ * After a store option prop change replaces the store, the methods act on the new store.
  *
- * Must be used inside a {@link PredictiveSearchProvider}.
- *
- * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @throws {Error} When you call it outside a PredictiveSearchProvider.
  * @publicDocs
  */
 export function usePredictiveSearchActions(): PredictiveSearchActions {
@@ -249,19 +242,12 @@ export function usePredictiveSearchActions(): PredictiveSearchActions {
 }
 
 /**
- * Returns `formProps` and `register` for building a progressively-enhanced
- * search form.
+ * Returns functions that build a predictive search form that works without JavaScript.
  *
- * `formProps()` generates form element attributes including the search
- * action URL. `register("query")` generates input attributes and calls the
- * store's search action on every `input` event. The store debounces requests
- * and resets state for terms shorter than `minTermLength`.
- * Both support an optional callback that receives the event and extracted
- * term, and respect `event.preventDefault()` to cancel the automatic behavior.
+ * The form props function returns the form attributes. The register function returns the query input attributes and searches on every input event.
+ * Both functions accept a callback that receives the event and the search term. Calling preventDefault on the event cancels the automatic behavior.
  *
- * Must be used inside a {@link PredictiveSearchProvider}.
- *
- * @throws {Error} When called outside a PredictiveSearchProvider.
+ * @throws {Error} When you call it outside a PredictiveSearchProvider.
  * @publicDocs
  */
 export function usePredictiveSearchForm(): PredictiveSearchFormResult {

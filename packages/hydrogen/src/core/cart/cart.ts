@@ -83,19 +83,26 @@ const FNV1A_PRIME = 0x01000193;
 const CART_REVALIDATION_ERROR_MESSAGE =
   "Something went wrong refreshing your cart. Please try again.";
 
-/** Timeout (in milliseconds) for cart loads and mutations. */
+/** The timeout in milliseconds for cart loads and mutations. */
 export const STANDARD_ACTION_TIMEOUT_IN_MS = 30_000;
 
 /**
- * Error thrown when the cart endpoint responds with a non-2xx status.
+ * The error that a cart load or cart change throws when your cart endpoint responds with a non-2xx status. Read `status` to handle specific failures.
  *
- * Carries the HTTP {@link CartNetworkError.status | status} code so callers
- * can distinguish transient failures from permanent ones.
+ * Without a cart endpoint from `configureCartEndpoint`, cart requests fail with other error types.
  *
  * @publicDocs
  */
 export class CartNetworkError extends Error {
+  /** The HTTP status code that the cart endpoint returned. */
   readonly status: number;
+
+  /** Always `CartNetworkError`. */
+  declare name: string;
+  /** Always `"Something went wrong updating your cart. Please try again."`, including for a failed cart load. */
+  declare message: string;
+  /** The stack trace, when the JavaScript runtime records one. */
+  declare stack?: string;
 
   constructor(status: number) {
     super("Something went wrong updating your cart. Please try again.");
@@ -105,15 +112,11 @@ export class CartNetworkError extends Error {
 }
 
 /**
- * A reactive, framework-agnostic cart state machine.
+ * Holds the customer's cart and runs cart changes in any framework. In React, `CartProvider` creates the store for you.
  *
- * The store manages optimistic mutations and server reconciliation — the client's
- * *intent*. Cart-level costs and totals are always server-authoritative, but
- * line-level data (quantity, estimated cost) and discount applicability are
- * projected optimistically until the server response arrives.
+ * The store shows line and discount code changes before the server responds, then updates the cart from each server response. Cart costs change only when the server responds.
  *
- * Mutations are dispatched via {@link CartStore.handleFormSubmit} (from HTML
- * forms) or through Shopify Standard Action `shopify:cart:*` events.
+ * Cart changes start from cart form submissions or from Standard Actions `shopify:cart:*` events. Cart changes need the Standard Actions script, which `ShopifyScripts` adds to the page. Cart loads and changes time out after 30 seconds.
  *
  * @example
  * ```ts
@@ -132,72 +135,79 @@ export class CartNetworkError extends Error {
  */
 export type CartStore = {
   /**
-   * Activates the store — starts listening for Shopify standard action events
-   * and triggers the initial cart load if no `initialData` was provided.
-   * Idempotent; no-op without `document` (SSR-safe).
+   * Starts handling cart events, and loads the cart when you created the store without initial data. Repeated calls have no effect. During server rendering, the method does nothing.
    */
   connect(): void;
 
-  /** Tears down the store — cancels in-flight requests, removes event listeners, releases resources. */
+  /** Stops the store. Cancels in-flight cart requests and stops handling cart events. */
   destroy(): void;
 
-  /** Replaces the settled cart data with a fresh server response. */
+  /** Replaces the store's cart with a different cart that the server loaded. The method ignores data for the cart that the store already holds, and ignores data while cart changes are in flight. */
   hydrate(data: CartData): void;
 
-  /** Returns the current {@link CartState}, with optimistic projections applied on top of settled data. */
+  /** Returns the current cart state, including changes that the server hasn't confirmed yet. */
   getState(): CartState;
 
   /**
-   * Registers a listener invoked on every state change. Returns an unsubscribe function.
-   * Compatible with React's `useSyncExternalStore`.
+   * Calls the listener on every state change and returns a function that removes the listener. The method works with React's `useSyncExternalStore`.
    *
-   * @param listener - Callback receiving the new {@link CartState} snapshot
+   * @param listener - The function that receives each new state.
    */
   subscribe(listener: (state: CartState) => void): () => void;
 
-  /** Triggers a full cart load from the server endpoint. */
+  /**
+   * Loads the full cart from the server.
+   *
+   * The promise rejects when the load fails, with a `CartNetworkError` when your cart endpoint returns a non-2xx status.
+   */
   fetch(): Promise<void>;
 
   /**
-   * Reconciles the cart after an out-of-band mutation: revalidates the current
-   * cart, or loads one when none is present yet (e.g. just created server-side).
+   * Reloads the cart after a cart change that skipped the store, such as a server action. When the store has no cart yet, the method picks up the cart that the server created.
+   *
+   * A failed reload adds an entry to the network errors in the cart state.
    */
   refresh(): void;
 
-  /** Resets the store — aborts in-flight requests, clears data and errors, and re-fetches when connected. */
+  /** Clears the cart data and errors and cancels in-flight cart requests. After you connect the store, the method also loads the cart again when the store held a cart. */
   reset(): void;
 
   /**
-   * Intercepts a native `SubmitEvent` from a cart form, parses the intent and
-   * field values, and dispatches the matching transaction.
+   * Runs the cart change that a cart form submission describes. Pass the form's submit event, and call `event.preventDefault()` to stop the browser's own form submission. The method connects the store when you haven't connected it.
    *
-   * The submitter's `value` attribute determines the action — `"add"`,
-   * `"increase"`, `"decrease"`, `"remove"`, `"set"`, `"discount-apply"`,
-   * `"discount-remove"`, `"note-update"`, or `"attributes-update"`. An empty
-   * value with a `merchandiseId` field is treated as `"add"`.
+   * The submit button's value sets the change: `add`, `increase`,
+   * `decrease`, `remove`, `set`, `discount-apply`, `discount-remove`,
+   * `note-update`, or `attributes-update`. A button without a value adds
+   * the line when the form has a `merchandiseId` field. A `set` with an empty or
+   * zero quantity removes the line. When your cart fragment selects the variant's
+   * available quantity, the store caps a `set` quantity at that number.
    *
-   * The returned promise rejects with a `TypeError` if `event.target` is not
-   * a form or `event.submitter` is missing, and with an `Error` if the
-   * submitter's value is not a recognized intent.
+   * The promise rejects with a type error when the event target isn't a form or
+   * the event has no submitter. The promise rejects with an error when the button's
+   * value isn't a recognized change, or when the form lacks a required field
+   * such as the line ID.
    */
   handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;
 };
 
-/** Actions for reconciling cart state after updates outside Standard Actions. */
+/** The store action that reloads the cart after a cart change outside the store. */
 export type CartActions = Pick<CartStore, "refresh">;
 
+/** The cart that the server loaded for the first render. */
 type CartInitialData<TData extends CartData = CartData> = {
+  /** The loaded cart, or `null` when the server found no cart. */
   cart: TData | null;
+  /** Load errors from the server. The store ignores the errors. */
   errors?: Array<{ message: string }>;
 };
 
-/** Options for {@link createCartStore}. */
+/** Options for creating a cart store. */
 export type CreateCartStoreOptions<TData extends CartData = CartData> = {
   /**
-   * Server-loaded cart data to hydrate the store with on creation.
+   * The cart that the server loaded, or a promise of the cart for streamed data.
    *
-   * Accepts a synchronous value or a `PromiseLike` for streamed/deferred data.
-   * When omitted, the store starts empty and loads the cart on {@link CartStore.connect}.
+   * Pass the `data` property of the cart GET handler's result. A `null` cart
+   * tells the store that no cart exists yet. Without initial data, the store starts empty and loads the cart when you call `connect()`.
    */
   initialData?: CartInitialData<TData> | PromiseLike<CartInitialData<TData>>;
 };
@@ -2197,11 +2207,9 @@ function loadCartInStore(
 }
 
 /**
- * Creates a new {@link CartStore} for the given initial data.
+ * Creates a cart store that holds the cart and applies cart changes before the server responds.
  *
- * The store is inert until {@link CartStore.connect} is called — no network
- * requests are made and no event listeners are attached at creation time.
- * Framework adapters call `connect()` on mount and `destroy()` on unmount.
+ * Call `connect()` to start the store and `destroy()` to stop it. The React and Vue cart providers call both for you.
  *
  * @example
  * ```ts
@@ -2218,6 +2226,8 @@ function loadCartInStore(
  * // Empty — loads the cart on connect()
  * const store = createCartStore();
  * ```
+ * @param options The cart that the server loaded for the first render.
+ * @returns The cart store. Read the cart with `getState()` and listen for changes with `subscribe()`.
  * @publicDocs
  */
 export function createCartStore<TData extends CartData = CartData>(
@@ -2428,11 +2438,12 @@ async function handleFormSubmitInStore(
 }
 
 /**
- * Routes cart loads and mutations to a custom endpoint instead of the
- * Standard Actions default handler.
+ * Sends every cart load and cart change on the page to your cart endpoint. Without an endpoint, Standard Actions handles cart requests with its default handler.
  *
- * Logs a warning if called again with a different endpoint.
+ * Call the function before you connect a cart store. The first cart load then goes to your endpoint. A later call with a different endpoint replaces the first endpoint and logs a warning. In React, `CartProvider` sets the endpoint to `/api/cart` when the provider mounts.
  *
+ * @param endpoint The URL path of your cart route.
+ * @returns Nothing. Later cart loads and changes on the page go to the endpoint.
  * @example
  * ```ts
  * configureCartEndpoint("/storefront/cart");
@@ -2744,3 +2755,32 @@ export function revalidateConnectedCartCheckoutUrls(): void {
     refreshCheckoutUrl(store).catch(() => {});
   }
 }
+
+/**
+ * Creates a cart store that holds the cart and applies cart changes before the server responds.
+ *
+ * Call `connect()` to start the store and `destroy()` to stop it. The React and Vue cart providers call both for you.
+ *
+ * @example
+ * ```ts
+ * // With synchronous loader data
+ * const store = createCartStore({
+ *   initialData: { cart: loaderData.cart },
+ * });
+ *
+ * // With deferred/streamed data
+ * const store = createCartStore({
+ *   initialData: cartPromise,
+ * });
+ *
+ * // Empty — loads the cart on connect()
+ * const store = createCartStore();
+ * ```
+ * @publicDocs
+ */
+export type CreateCartStoreForDocs =
+  /**
+   * @param options - The cart that the server loaded for the first render.
+   * @returns The cart store. Read the cart with `getState()` and listen for changes with `subscribe()`.
+   */
+  (options?: CreateCartStoreOptions) => CartStore;

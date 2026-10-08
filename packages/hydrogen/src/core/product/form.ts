@@ -1,89 +1,102 @@
 import type { ProductVariantInput } from "./state";
 
 /**
- * Props returned by {@link ProductFormRegister} for the `merchandiseId` input.
+ * Props for the hidden input that tells the cart which variant to add.
  *
  * @publicDocs
  */
 export interface ProductMerchandiseIdProps {
+  /** Field name that the cart reads as the variant to add. */
   name: "merchandiseId";
-  /** The currently selected variant ID, or an empty string when no variant is resolved. */
+  /** Selected variant ID. Empty when the selection doesn't resolve to a variant. */
   value: string;
 }
 
 /**
- * Props returned by {@link ProductFormRegister} for a quantity input.
+ * Props for a controlled quantity input.
  *
  * @publicDocs
  */
 export interface ProductQuantityProps {
+  /** Field name that the cart reads as the quantity to add. */
   name: "quantity";
+  /** Quantity to add. Defaults to `1`. */
   value: string;
 }
 
 /**
- * Props returned by {@link ProductFormRegister} for an uncontrolled quantity input.
+ * Props for an uncontrolled quantity input.
  *
  * @publicDocs
  */
 export interface ProductQuantityDefaultProps {
+  /** Field name that the cart reads as the quantity to add. */
   name: "quantity";
+  /** Starting quantity for the input. */
   defaultValue: string;
 }
 
 /**
- * Props returned by {@link ProductFormRegister} for a variant option value control.
+ * Props for a control that selects one option value, such as a swatch or a radio button.
  *
  * @publicDocs
  */
 export interface ProductOptionValueProps {
+  /** Option name, such as "Color". */
   name: string;
+  /** Option value that the control selects, such as "Red". */
   value: string;
+  /** Selects the option value in the product form. */
   onChange: () => void;
+  /** Selects the option value in the product form. Matches the change handler. */
   onClick: () => void;
 }
 
 /**
- * Props returned by {@link ProductFormRegister} for the add-to-cart submit button.
+ * Props for the button that submits the product form and adds the selected variant to the cart.
  *
  * @publicDocs
  */
 export interface ProductAddToCartProps {
+  /** Identifies the add-to-cart button. The button has no value, which tells the cart to add the variant from the merchandise ID field. */
   name: "add-to-cart";
+  /** Makes the button submit the product form. */
   type: "submit";
 }
 
+/** Line-item attribute field name. The cart uses the text after `attributes.` as the attribute key. */
 type AttributeValueName = `attributes.${string}`;
 
 /**
- * Props returned by {@link ProductFormRegister} for a line-item attribute input.
+ * Props for an input that adds a custom attribute to the cart line, such as a gift message.
  *
  * @publicDocs
  */
 export interface ProductAttributeValueProps {
+  /** Field name in the format `attributes.<key>`. The cart saves the key and value as an attribute of the cart line. */
   name: AttributeValueName;
+  /** Attribute value to save on the cart line. */
   value: string;
 }
 
 /**
- * Props returned by {@link ProductFormRegister} for an uncontrolled line-item attribute input.
+ * Props for an uncontrolled input that adds a custom attribute to the cart line.
  *
  * @publicDocs
  */
 export interface ProductAttributeDefaultValueProps {
+  /** Field name in the format `attributes.<key>`. The cart saves the key and value as an attribute of the cart line. */
   name: AttributeValueName;
+  /** Starting attribute value for the input. */
   defaultValue: string;
 }
 
 /**
- * Register function returned by `useProductForm`.
+ * Returns the props for one product form field. Spread the props on the matching input or button.
  *
- * Product forms only register product-relevant fields:
- * `merchandiseId`, `quantity`, `optionValue`, `attributeValue`, and `addToCart`.
+ * Pass `merchandiseId`, `quantity`, `optionValue`, `attributeValue`, or `addToCart` as the field. Any other field name throws an error. An attribute value field with an empty key throws a `TypeError`.
  *
- * Option values return form identity and activation handlers. UI props such as
- * `type`, `checked`, `disabled`, and `aria-pressed` belong to the caller — use
- * the state available on `options` (e.g. `value.selected`, `value.available`).
+ * Option value fields return the name, the value, and the selection handlers. Set the input type and the checked, disabled, and pressed states from the option state yourself.
  */
 export type ProductFormRegister = {
   (field: "merchandiseId", opts: {}): ProductMerchandiseIdProps;
@@ -99,9 +112,13 @@ export type ProductFormRegister = {
 };
 
 /**
- * Creates a {@link ProductFormRegister} function bound to the current variant
- * state and `selectOption` dispatcher.
+ * Creates the register function that returns props for each product form field.
  *
+ * The merchandise ID field submits the variant that you pass at creation. Create a new register function each time the product form state changes. The product form hooks create a new register function for you.
+ *
+ * @param selectedVariant The variant that the merchandise ID field submits, or `null` when the selection doesn't resolve to a variant.
+ * @param selectOption The function that option value fields call with the option name and value.
+ * @returns A register function for the merchandise ID, quantity, option value, attribute, and add-to-cart fields.
  * @publicDocs
  */
 export function createProductFormRegister(

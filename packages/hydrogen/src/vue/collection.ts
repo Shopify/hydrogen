@@ -26,9 +26,10 @@ export type { CollectionActions, CollectionData };
 const CollectionStoreKey: InjectionKey<ShallowRef<CollectionStore>> = Symbol("CollectionStore");
 
 /**
- * Manages the lifecycle of a {@link CollectionStore}: creates on mount and syncs
- * with URL changes. Recreates the store when `data.handle` changes
- * (navigating to a different collection).
+ * Creates a collection store and keeps its filters and sort in sync with the URL.
+ * The provider creates a new store when the collection handle changes, such as on navigation to a different collection.
+ *
+ * The provider takes `data` and `url-search` props, emits a `change` event with the search string to navigate to, and renders its default slot.
  *
  * @example
  * ```vue
@@ -135,8 +136,7 @@ function useRequiredStoreRef(composableName: string): ShallowRef<CollectionStore
 }
 
 /**
- * Subscribes to the collection store and returns a reactive ref of the full
- * state snapshot.
+ * Returns a read-only shallow ref of the collection state. The ref follows the new store when the provider replaces the store.
  *
  * @example
  * ```vue
@@ -152,9 +152,8 @@ function useRequiredStoreRef(composableName: string): ShallowRef<CollectionStore
  */
 export function useCollection(): Readonly<ShallowRef<CollectionState>>;
 /**
- * Subscribes to the collection store and returns a reactive ref of a derived
- * value via `selector`. Optionally accepts an `isEqual` comparator to skip
- * updates when the derived value is structurally unchanged.
+ * With a selector, the composable returns a ref of the selector's value.
+ * Pass an `isEqual` comparator to skip updates for equal values. The composable throws outside the collection provider.
  *
  * @example
  * ```vue
@@ -198,9 +197,9 @@ export function useCollection<S>(
 }
 
 /**
- * Returns methods that change filters and sort. The store's `onBrowseChange`
- * callback (set by {@link CollectionProvider}) handles emitting `change` with a
- * serialized search string.
+ * Returns methods that change filters and sort. After each change, the collection provider emits a `change` event with the new search string.
+ *
+ * The composable throws outside the collection provider.
  *
  * @publicDocs
  */
@@ -219,7 +218,10 @@ export function useCollectionActions(): CollectionActions {
 }
 
 /**
- * Returns form props for progressive-enhancement of collection filter forms.
+ * Returns form props that progressively enhance collection filter forms.
+ *
+ * Bind the result of `formProps()` on the form. Its submit handler cancels the native submission and applies the form's filter and sort fields to the store.
+ * The `beforeSubmit` and `afterSubmit` callbacks receive the native submit event. The composable throws outside the collection provider.
  *
  * @example
  * ```vue

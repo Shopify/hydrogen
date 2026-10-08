@@ -74,16 +74,17 @@ const CUSTOMER_SESSION_MUTATION_PERSONALIZATION_REASON = "customer-session-mutat
 const CUSTOMER_SESSION_INTERNAL_BRAND: unique symbol = Symbol("hydrogen.customerSessionInternal");
 
 /**
- * A value that is either `T` or a `Promise<T>`, used as the return type of session manager methods.
+ * A value or a promise for that value. Session manager methods can return either.
  */
 export type Awaitable<T> = T | Promise<T>;
 
-/** Read-only Customer Account session storage for UI state and strict access-token reads. */
+/** The session storage that `isLoggedIn()` and `getAccessToken()` read. */
 export type ReadonlyCustomerSessionManager = {
+  /** Returns the session value for a key. The customer session keeps its data under the `customerAccount` key. */
   getSessionItem(key: string): Awaitable<unknown>;
 };
 
-/** Writable Customer Account session storage for OAuth, refresh, and logout response boundaries. */
+/** The session storage that sign-in, the OAuth callback, token refresh, and logout write to. Commit the session to the response after you call `prepareLoginUrl()`, `handleOAuthCallback()`, `getOrRefreshAccessToken()`, or `logout()`. */
 export type WritableCustomerSessionManager = ShopifyRouteSessionManager;
 
 type CustomerAccountSessionData = {
@@ -103,103 +104,92 @@ type CustomerAccountSessionData = {
   };
 };
 
-/** Options for {@link createCustomerSession}. */
+/** Options for creating a customer session. */
 export type CreateCustomerSessionOptions = {
-  /** Numeric Shopify shop ID as a string (digits only, e.g. `"12345"`). Validated against `/^\d+$/`. */
+  /** Numeric Shopify shop ID as a string of digits, such as `12345`. */
   shopId: string;
-  /** Customer Account API OAuth client ID. Must be a non-empty string. */
+  /** The Customer Account API OAuth client ID. Must contain at least one non-whitespace character. */
   customerAccountApiClientId: string;
   /**
-   * Overrides the default `https://shopify.com/authentication/{shopId}` base URL
-   * for OAuth endpoints (authorize, token, logout). Also used as the expected
-   * `iss` claim when validating id_tokens — pointing this at a proxy causes
-   * `issuer_mismatch` unless the proxy preserves the original issuer. Must use
-   * HTTPS; validated at construction.
+   * The base URL for Shopify's OAuth authorize, token, and logout endpoints. Defaults to `https://shopify.com/authentication/{shopId}`.
+   *
+   * The URL must use HTTPS, or creating the session throws. Sign-in fails with the `issuer_mismatch` code when the ID token's issuer differs from this URL.
    */
   customerAccountApiUrl?: string;
-  /** Custom fetch implementation. Falls back to `globalThis.fetch` when omitted. */
+  /** A custom fetch implementation. Defaults to the global fetch. */
   fetch?: typeof globalThis.fetch;
-  /** Timeout for OAuth token requests in milliseconds. Defaults to 30 000 ms. */
+  /** The timeout for OAuth token requests in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`. */
   defaultTimeoutInMs?: number;
 };
 
-/** Options for {@link CustomerSession.prepareLoginUrl}. */
+/** Options for building a Shopify OAuth login URL. */
 export type PrepareLoginUrlOptions = {
   /**
-   * Overrides the origin used for the OAuth redirect URI. Must be HTTPS —
-   * unlike `createCustomerAccountClient`, `http://localhost` is not accepted.
-   * Falls back to the session manager's `getSessionOrigin()`.
+   * Your storefront's origin for the OAuth redirect URL. Defaults to the origin that the session manager returns.
+   *
+   * The origin must use HTTPS, including on localhost. Use a public HTTPS tunnel for local sign-in.
    */
   origin?: string;
   /**
-   * Same-origin path or URL to redirect back to after login, such as `"/account/orders"`.
-   * Cross-origin values and values over 2 048 bytes fall back to the default, `"/account"`.
+   * The same-origin path or URL to send the customer to after sign-in, such as `/account/orders`. Defaults to `/account`. Cross-origin values and paths over 2,048 bytes fall back to the default.
    */
   returnTo?: string;
-  /** Passed as the `locale` search param on the Shopify OAuth authorize URL. */
+  /** The language for Shopify's login page, sent as the `locale` search param. */
   locale?: string;
-  /** Passed as the `region_country` search param on the Shopify OAuth authorize URL. */
+  /** The customer's country, sent as the `region_country` search param. */
   countryCode?: string;
-  /** Email address to pre-fill on the login screen. Passed as `login_hint`. */
+  /** A value that prefills Shopify's login page, such as the customer's email address, sent as the `login_hint` search param. */
   loginHint?: string;
-  /** When set to `"submit"` (and `loginHint` is provided), skips the login form and sends the one-time code immediately. Passed as `login_hint_mode`. */
+  /** How Shopify's login page uses the login hint, such as `submit`, sent as the `login_hint_mode` search param. Hydrogen sends the value only with `loginHint`. */
   loginHintMode?: string;
-  /** Passed as the `acr_values` search param for authentication context class. */
+  /** The authentication context class to request, sent as the `acr_values` search param. */
   acrValues?: string;
 };
 
 /**
- * Origin override accepted by {@link CustomerSession.getOrRefreshAccessToken}
- * and {@link CustomerSession.logout}. Falls back to the session manager's
- * `getSessionOrigin()`.
+ * The storefront origin for a token refresh or logout.
  */
 export type RequestOriginOptions = {
-  /** HTTPS origin string. */
+  /** Your storefront's HTTPS origin. Defaults to the origin that the session manager returns. A non-HTTPS origin throws. */
   origin?: string;
 };
 
-/** Options for {@link CustomerSession.logout}. */
-export type LogoutOptions = RequestOriginOptions & {
+/** Options for logging the customer out. */
+export interface LogoutOptions extends RequestOriginOptions {
   /**
-   * URL to redirect to after Shopify's IdP logout completes.
-   * Resolved as an absolute same-origin URL. Defaults to `"/"`.
+   * The URL to send the customer to after logout. A relative URL resolves against the origin. Defaults to the origin, and a cross-origin URL falls back to the origin.
    */
   postLogoutRedirectUri?: string;
-};
+}
 
 /**
- * Core session interface returned by {@link createCustomerSession}. Server-only.
- * All methods require a session manager and request context.
+ * Signs customers in and out with Shopify customer accounts, and gives your server their Customer Account API access tokens. Use the session on the server only.
+ *
+ * Pass your session storage and the request context to each method. Each method makes the final response private and uncacheable.
  *
  * @publicDocs
  */
 export type CustomerSession = {
   /**
-   * Read-only signed-in check for UI state. Returns `true` when a usable access
-   * token OR a refresh token exists. Does not attempt a refresh. Use for
-   * conditional UI rendering, not for authorizing access to Customer Account data.
+   * Returns `true` when the customer has a usable access token or a refresh token. The method never refreshes tokens.
+   *
+   * Use the result for UI state, such as an account link. Gate Customer Account API data on an access token from `getOrRefreshAccessToken()`.
    */
   isLoggedIn(
     sessionManager: ReadonlyCustomerSessionManager,
     requestContext: ShopifyRequestContext,
   ): Promise<boolean>;
   /**
-   * Returns only a currently usable access token, or `undefined` when the token
-   * is missing or expired. Never refreshes and never writes session state.
+   * Returns the customer's stored access token, or `undefined` when the token is missing or expired. The method never refreshes the token or writes to the session. Call `getOrRefreshAccessToken()` to refresh an expired token.
    */
   getAccessToken(
     sessionManager: ReadonlyCustomerSessionManager,
     requestContext: ShopifyRequestContext,
   ): Promise<string | undefined>;
   /**
-   * Returns a usable access token, refreshing from Shopify's token endpoint and
-   * writing updated tokens through the writable session manager when needed.
-   * Returns `undefined` when no refresh token exists (unauthenticated) or when
-   * the refresh fails transiently (the session is preserved for retry). A
-   * 400/401 from the token endpoint clears stored tokens. Never throws for
-   * refresh failures. Concurrent refresh requests for the same origin+token
-   * combination are deduplicated per `createCustomerSession` instance. Use only
-   * where the eventual response commits the session manager.
+   * Returns a usable access token for the customer. When the stored token is missing or expired, the session gets new tokens from Shopify and writes them to your session storage. Call the method only where you commit the session to the response.
+   *
+   * Returns `undefined` when the customer has no refresh token, or when a temporary refresh failure keeps the session for a retry. When Shopify rejects the refresh token with a `400` or `401` status, the session clears the stored tokens and returns `undefined`. Refresh failures never throw.
    */
   getOrRefreshAccessToken(
     sessionManager: WritableCustomerSessionManager,
@@ -207,9 +197,9 @@ export type CustomerSession = {
     options?: RequestOriginOptions,
   ): Promise<string | undefined>;
   /**
-   * Builds a Shopify OAuth authorize URL with PKCE (S256). Stores pending login
-   * state (state, nonce, code verifier, returnTo, origin) in the session. Pending
-   * login state expires after 10 minutes. Returns the full authorize URL string.
+   * Starts customer sign-in and returns the URL of Shopify's login page. Commit the session to the response, then redirect the customer to the URL.
+   *
+   * The customer has 10 minutes to finish signing in. After that, the OAuth callback fails with the `missing_pending_login` code.
    */
   prepareLoginUrl(
     sessionManager: WritableCustomerSessionManager,
@@ -217,15 +207,12 @@ export type CustomerSession = {
     options: PrepareLoginUrlOptions,
   ): Promise<string>;
   /**
-   * Completes the OAuth authorization code exchange. Validates `state`, exchanges
-   * the code for tokens, validates the `id_token` claims (nonce, issuer, audience,
-   * expiry), and stores tokens in the session. Returns the `returnTo` path. Clears
-   * pending login state on failure.
+   * Completes sign-in from Shopify's OAuth callback request, saves the customer's tokens to your session storage, and returns the path to send the customer to. Commit the session to the response after the call.
    *
-   * @throws {CustomerAccountOAuthError} On validation failures (`missing_callback_params`,
-   *   `state_mismatch`, `missing_pending_login`, `token_exchange_rejected`,
-   *   `token_exchange_failed`, `invalid_token_response`, or id_token claim mismatches).
-   * @throws {CustomerAccountApiError} On token-request timeout.
+   * The method throws `CustomerAccountOAuthError` when sign-in fails a check, and `CustomerAccountApiError` when the token request times out. After a failure, the customer needs to start sign-in again.
+   *
+   * @throws {CustomerAccountOAuthError} When the callback parameters, pending login, token exchange, token response, or ID token claims fail validation.
+   * @throws {CustomerAccountApiError} When the token request times out.
    */
   handleOAuthCallback(
     sessionManager: WritableCustomerSessionManager,
@@ -233,10 +220,9 @@ export type CustomerSession = {
     request: Request,
   ): Promise<string>;
   /**
-   * Clears session tokens. When an `id_token` exists, returns the Shopify IdP
-   * logout URL (with `id_token_hint` and `post_logout_redirect_uri`). When no
-   * `id_token` is stored, returns the `postLogoutRedirectUri` directly (local-only
-   * logout, no IdP round-trip).
+   * Clears the customer's session data and returns the URL to send the customer to. Commit the session to the response after the call.
+   *
+   * When the session has an ID token, the URL points to Shopify's logout endpoint with the post-logout URL attached. Without an ID token, the method returns the post-logout URL.
    */
   logout(
     sessionManager: WritableCustomerSessionManager,
@@ -246,34 +232,37 @@ export type CustomerSession = {
 };
 
 /**
- * Route handler objects returned by {@link createCustomerAccountServerHandlers}.
- * Register these with `handleShopifyRoutes` to serve the Customer Account OAuth flow.
+ * The login, authorize, refresh, and logout routes for customer accounts. Add the object to the `handlers` option of `handleShopifyRoutes`.
  */
 export type CustomerAccountServerHandlers<
   TContext extends CustomerAccountRouteHandlerContext = CustomerAccountRouteHandlerContext,
 > = {
-  /** GET handler for the OAuth callback path (`/account/authorize`). */
+  /** Completes sign-in at `/account/authorize`, the OAuth callback, and redirects the customer to the return path. Accepts `GET`. */
   authorize: CallableRouteHandler<
     TContext,
     CustomerAccountRouteResult,
     typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH,
     "GET"
   >;
-  /** GET handler that redirects to Shopify OAuth (`/account/login`). */
+  /** Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts `GET`. Pass `return_to`, `locale`, `acr_values`, `login_hint`, and `login_hint_mode` as search params. The route sends the request context's country to Shopify. */
   login: CallableRouteHandler<
     TContext,
     CustomerAccountRouteResult,
     typeof CUSTOMER_ACCOUNT_LOGIN_PATH,
     "GET"
   >;
-  /** POST handler for logout (`/account/logout`). Requires a same-origin POST for CSRF protection. */
+  /**
+   * Logs the customer out at `/account/logout`. Accepts `POST`. For CSRF protection, the route returns a `403` response unless the `Origin` or `Referer` header matches your storefront's origin.
+   *
+   * Through `handleShopifyRoutes`, a GET request to the logout path returns a `405` response. Log out with a `<form method="post" action="/account/logout">` and a submit button, which works without JavaScript.
+   */
   logout: CallableRouteHandler<
     TContext,
     CustomerAccountRouteResult,
     typeof CUSTOMER_ACCOUNT_LOGOUT_PATH,
     "POST"
   >;
-  /** GET handler that refreshes the access token (`/account/refresh`). */
+  /** Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts `GET`. */
   refresh: CallableRouteHandler<
     TContext,
     CustomerAccountRouteResult,
@@ -283,44 +272,60 @@ export type CustomerAccountServerHandlers<
 };
 
 /**
- * Customer Account handlers that also synchronize cart buyer identity, so their context requires `storefrontClient`.
+ * Customer account routes that also keep the cart's buyer identity in step with the signed-in customer. These routes need `storefrontClient` in the handler context.
  */
 export type CustomerAccountServerHandlersWithCartSync =
   CustomerAccountServerHandlers<ShopifyRouteHandlerContext>;
 
+/** A customer session that `createCustomerSession` returns. Cart buyer identity sync requires this session. */
 type CustomerSessionWithInternals = CustomerSession & {
   readonly [CUSTOMER_SESSION_INTERNAL_BRAND]: true;
 };
 
-type CreateCustomerAccountServerHandlersBaseOptions<
-  TCustomerSession extends CustomerSession = CustomerSession,
-> = {
-  /** The session object returned by {@link createCustomerSession}. */
-  customerSession: TCustomerSession;
-  /** Path to redirect to after a successful login when `return_to` is missing or cross-origin. Defaults to `"/"`. */
+/** Options for the customer account routes. */
+type CreateCustomerAccountServerHandlersBaseOptions = {
+  /** The path to send the customer to after sign-in when the login request has no same-origin `return_to` search param. Defaults to `/`. */
   defaultPostLoginRedirectPathname?: string;
-  /** Same-origin path to redirect to when the OAuth callback throws a `CustomerAccountOAuthError` (other errors propagate). Defaults to `"/account?login=failed"`. Cross-origin values fall back to `"/account"`. */
+  /** The same-origin path to send the customer to when sign-in fails with `CustomerAccountOAuthError`. Defaults to `/account?login=failed`. A cross-origin value falls back to `/account`. The authorize route rethrows other errors. */
   loginFailedRedirectPath?: string;
-  /** Static origin string, or a function that resolves the origin per request for dynamic multi-origin setups. */
+  /** Your storefront's HTTPS origin, or a function that returns the origin for a request. Defaults to the origin that the session manager returns. */
   origin?: string | ((request: Request) => string);
-  /** URL to redirect to after logout. Defaults to `"/"`. */
+  /** The URL to send the customer to after logout. Defaults to `/`. A same-origin `return_to` search param on the logout request overrides this value. */
   postLogoutRedirectUri?: string;
 };
 
-/** Options for {@link createCustomerAccountServerHandlers}. */
+/** Options for the customer account routes without cart buyer identity sync. */
+interface CustomerAccountServerHandlersOptionsWithoutCart extends CreateCustomerAccountServerHandlersBaseOptions {
+  /** The customer session from `createCustomerSession`. */
+  customerSession: CustomerSession;
+  /**
+   * The cart server handlers that `createCartServerHandlers` returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.
+   *
+   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.
+   *
+   * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from `createCustomerSession`.
+   */
+  cartServerHandlers?: undefined;
+}
+
+/** Options for the customer account routes that keep the cart's buyer identity in step with the signed-in customer. */
+interface CustomerAccountServerHandlersOptionsWithCart extends CreateCustomerAccountServerHandlersBaseOptions {
+  /** The customer session from `createCustomerSession`. */
+  customerSession: CustomerSessionWithInternals;
+  /**
+   * The cart server handlers that `createCartServerHandlers` returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.
+   *
+   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.
+   *
+   * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from `createCustomerSession`.
+   */
+  cartServerHandlers: CartBuyerIdentitySyncSource;
+}
+
+/** Options for the customer account routes, with optional cart buyer identity sync. */
 export type CreateCustomerAccountServerHandlersOptions =
-  | (CreateCustomerAccountServerHandlersBaseOptions & { cartServerHandlers?: undefined })
-  | (CreateCustomerAccountServerHandlersBaseOptions<CustomerSessionWithInternals> & {
-      /**
-       * Cart server handlers created with `createCartServerHandlers({customerSession})`.
-       * When provided, the authorize, refresh, and logout routes keep the browser
-       * cart's buyer identity in step with the customer session: attach on login
-       * and refresh, detach on logout. Sync is best-effort — failures are logged
-       * and never block the route's redirect; a failed detach during logout
-       * expires the cart cookie instead.
-       */
-      cartServerHandlers: CartBuyerIdentitySyncSource;
-    });
+  | CustomerAccountServerHandlersOptionsWithoutCart
+  | CustomerAccountServerHandlersOptionsWithCart;
 
 type CustomerAccountTokens = NonNullable<CustomerAccountSessionData["tokens"]>;
 type PendingLogin = NonNullable<CustomerAccountSessionData["pendingLogin"]>;
@@ -373,6 +378,7 @@ type CustomerSessionInternals = {
   ): Promise<OAuthCallbackResult>;
 };
 const customerSessionInternals = new WeakMap<CustomerSession, CustomerSessionInternals>();
+/** A redirect, or a `403` error when a logout request comes from another origin. */
 type CustomerAccountRouteResult = ShopifyRouteRedirectResult | ShopifyRouteErrorResult;
 type CustomerAccountRouteHandlerContext = {
   request: Request;
@@ -396,10 +402,9 @@ type TokenRequestParams = {
 };
 
 /**
- * Creates a {@link CustomerSession} that manages the Shopify Customer Account
- * OAuth flow (PKCE, token exchange, refresh, logout). Server-only: throws in a
- * browser context. Validates `shopId`, `customerAccountApiClientId`,
- * `customerAccountApiUrl` (HTTPS), and timeout at construction.
+ * Creates a customer session that signs customers in and out with Shopify customer accounts and manages their access tokens. Use the session on the server only.
+ *
+ * The function throws when the shop ID, client ID, API URL, or timeout is invalid, when no fetch implementation is available, and when the function runs in a browser.
  *
  * @example
  * ```ts
@@ -411,7 +416,9 @@ type TokenRequestParams = {
  * });
  * ```
  *
- * @throws {Error} When called in a browser context, when an option fails validation, or when no `fetch` is available.
+ * @param options - The shop ID, the OAuth client ID, the authentication base URL, a custom fetch, and the token request timeout.
+ * @returns A customer session with methods for sign-in, the OAuth callback, access tokens, and logout.
+ * @throws {Error} When called in a browser, when an option fails validation, or when no fetch is available.
  * @publicDocs
  */
 export function createCustomerSession({
@@ -625,19 +632,22 @@ export async function getCustomerSessionRefreshResult(
 }
 
 /**
- * Creates Customer Account server handlers (`/account/login`, `/account/authorize`,
- * `/account/refresh`, `/account/logout`) for `handleShopifyRoutes`. The handlers
- * return redirect results: `login` redirects to Shopify's OAuth, `logout` redirects
- * to Shopify's logout endpoint when an `id_token` exists, and `authorize`/`refresh`
- * redirect back to the app (same-origin `return_to`). Invoke these paths via
- * full-page navigation (plain `<a>`/`<form>`), not a framework client-side
- * navigation component — client-nav cannot follow these raw redirects.
+ * Creates the customer account routes under `/account` for sign-in, the OAuth callback, token refresh, and logout. Add the returned object to the `handlers` option of `handleShopifyRoutes`.
  *
+ * The login route redirects to Shopify's login page. The authorize and refresh routes redirect back to a same-origin path in your app. The logout route redirects to Shopify's logout endpoint when the session has an ID token, and to the post-logout URL otherwise. Each redirect commits the session and sends `cache-control: no-store`.
+ *
+ * Link to these paths with full-page navigation, such as a plain `<a>` link or a `<form>`. Client-side navigation components can't follow these redirects.
+ *
+ * @returns The login, authorize, refresh, and logout routes.
  * @publicDocs
  */
 export function createCustomerAccountServerHandlers<
   const TOptions extends CreateCustomerAccountServerHandlersOptions,
 >(options: TOptions): CustomerAccountServerHandlersForOptions<TOptions>;
+/**
+ * @param options The customer session, the redirect paths, and optional cart handlers for the account routes.
+ * @returns The login, authorize, refresh, and logout routes.
+ */
 export function createCustomerAccountServerHandlers(
   options: CreateCustomerAccountServerHandlersOptions,
 ): CustomerAccountServerHandlers | CustomerAccountServerHandlersWithCartSync {

@@ -46,8 +46,8 @@ function normalizeCurrencyCode(currencyCode: string): string {
 }
 
 /**
- * Intl accepts well-formed three-letter currency codes. Non-standard but
- * well-formed codes render as codes; malformed codes such as USDC throw.
+ * Intl accepts well-formed three-letter currency codes and renders unknown ones as codes.
+ * Intl throws for malformed codes such as USDC. The formatter formats those as decimals.
  */
 function isWellFormedCurrencyCode(currencyCode: string): boolean {
   return WELL_FORMED_CURRENCY_CODE.test(currencyCode);
@@ -376,11 +376,11 @@ class FormattedMoneyRangeValue implements FormattedMoneyRange {
 }
 
 /**
- * Format a MoneyV2 value or a same-currency range of MoneyV2 values for display.
+ * Formats a price or a price range for display. Pass a `MoneyV2` price, or an array of `MoneyV2` prices in one currency for a range, with the active market's locale.
  *
- * Returns an object that stringifies to the locale-formatted price via
- * toString(). Structured fields on single prices are computed lazily when
- * accessed, so the common string path stays cheap.
+ * The returned object converts to the formatted string in template literals and string concatenation. For custom price layouts, read the parts of the formatted price. A range shows the lowest and highest prices. When every price in the range matches, the output shows one price.
+ *
+ * The function throws an error when an amount isn't numeric, when a range is empty, or when the prices in a range use different currencies.
  *
  * @publicDocs
  */
@@ -392,6 +392,11 @@ export function formatMoney(
 
 // This is the implementation of the formatMoney function overloading the other two.
 // It checks if the input is a range and creates the appropriate object.
+/**
+ * @param money A price, or an array of prices in one currency for a range.
+ * @param options Locale and display settings.
+ * @returns The formatted price or range, which converts to a string in template literals.
+ */
 export function formatMoney(
   money: MoneyV2 | readonly MoneyV2[],
   options: FormatMoneyOptions,

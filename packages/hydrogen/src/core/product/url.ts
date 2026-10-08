@@ -32,26 +32,25 @@ export function getVariantSearchParamValue(variantId: string): string | null {
 }
 
 /**
- * Controls how variant selection is encoded in URL search params.
+ * How a product URL encodes the customer's variant selection.
  *
- * - `"options"` — one param per option, e.g. `?Color=Red&Size=M`.
- * - `"variant"` — a single `?variant=<numeric id>` param (Liquid parity).
+ * - `options`: one param per option, such as `?Color=Red&Size=M`.
+ * - `variant`: a single `?variant=<numeric id>` param that matches Liquid storefront URLs.
  */
 export type ProductSelectionLinkStyle = "options" | "variant";
 
 /**
- * Builds the search params for a product-page link representing a variant selection.
+ * Builds the search params for a product URL that holds the customer's variant selection.
  *
- * Existing `base` params are preserved (`?ref=campaign` survives navigation), except the
- * reserved `variant` param and every param named in `optionNames` or `selectedOptions`,
- * which are always removed before the new selection is written. This keeps stale selection
- * state from leaking between navigations, including across combined-listing products.
+ * The function keeps unrelated params from the base params, such as `?ref=campaign`, and replaces any earlier selection. Pass the current product's option names to clear the current product's params when you link to another product in a combined listing.
  *
- * Two link styles:
- * - `"options"` (default): one param per selected option, e.g. `?Color=Red&Size=M`.
- * - `"variant"`: a single `?variant=<numeric id>` param (Liquid parity), for shareable
- *   links. Falls back to option params when `variant` is absent — a partial selection has
- *   no matching variant, so a variant link is not constructible.
+ * The default options style writes one param per option. The variant style writes a single numeric variant ID param for shareable links.
+ * The variant style falls back to option params when you pass no variant or when the variant ID isn't a numeric product variant GID.
+ * The `handleShopifyRoutes` handler redirects variant links to option param URLs.
+ *
+ * @param input The selected options, the current product's option names, and an optional variant, link style, and base params.
+ *
+ * @returns New search params that hold the kept base params and the selection.
  *
  * @example
  * ```ts
@@ -72,9 +71,15 @@ export function buildProductSelectionSearchParams({
   optionNames,
   base,
 }: {
+  /**
+   * Link style for the selection. Defaults to `"options"`.
+   */
   style?: ProductSelectionLinkStyle;
   selectedOptions: readonly SelectedOption[];
   variant?: { id: string } | null;
+  /**
+   * Option names of the current product. The function clears the param for each name.
+   */
   optionNames: readonly string[];
   base?: URLSearchParams;
 }): URLSearchParams {

@@ -14,14 +14,9 @@ const CUSTOMER_ACCOUNT_DOCUMENT = Symbol("CustomerAccountDocument");
 const VARIABLE_DEFINITION_RE = /\$([_A-Za-z][_0-9A-Za-z]*)\s*:/g;
 
 /**
- * Branded document type returned by {@link gql}.
+ * A Customer Account API query or mutation that `gql` from `@shopify/hydrogen/customer-account` returns. TypeScript infers the result and variables types from the document's GraphQL source.
  *
- * Carries the GraphQL source as a type-level string literal so that
- * `InferResult` and `InferVariables` can derive typed responses. The
- * `[CUSTOMER_ACCOUNT_DOCUMENT]` brand is private and cannot be constructed
- * externally — only `gql()` produces valid instances. Passing a plain object
- * with a `source` property to `CustomerAccountClient.graphql()` will throw
- * a `TypeError` at runtime.
+ * Create documents only with the Customer Account `gql` function. The client throws a `TypeError` for any other object.
  */
 export type CustomerAccountDocument<
   Result = unknown,
@@ -32,20 +27,16 @@ export type CustomerAccountDocument<
   readonly source: Source;
 };
 
-/**
- * Widened alias for {@link CustomerAccountDocument}. Use as a constraint when accepting any Customer Account document.
- */
+/** Any Customer Account API document. Use the type as a constraint when a function accepts any document. */
 export type AnyCustomerAccountDocument = CustomerAccountDocument<unknown, never, string>;
 
-/** Extracts the source string literal type from a {@link CustomerAccountDocument}. */
+/** Extracts the source string literal type from a Customer Account document. */
 export type SourceOf<Doc> = Doc extends { readonly source: infer Source extends string }
   ? Source
   : never;
 
 /**
- * Recursively concatenates the source strings of an array of fragment
- * documents at the type level, joining each with a newline. An empty
- * tuple produces `""`.
+ * Joins the source strings of a tuple of fragment documents with newlines at the type level. An empty tuple produces `""`.
  */
 export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocument[]> =
   Fragments extends readonly []
@@ -60,8 +51,7 @@ export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocumen
         : string;
 
 /**
- * Combines an operation source with its {@link FragmentSources} at the type
- * level. When `Fragments` is empty the result is just `Source`.
+ * Combines an operation source with the sources of its fragments at the type level. With no fragments, the result is the operation source.
  *
  * @publicDocs
  */
@@ -93,16 +83,9 @@ type CustomerAccountGql = {
 } & CustomerAccountTadaGql;
 
 /**
- * Creates a branded {@link CustomerAccountDocument} from a GraphQL source
- * string. This is a regular function call, not a tagged template literal.
+ * Creates a typed Customer Account API query or mutation from a GraphQL source string. Pass the document to the Customer Account API client. Call `gql` as a regular function. Tagged template syntax doesn't work.
  *
- * The returned document is branded with a private Symbol that
- * `CustomerAccountClient.graphql()` validates at runtime — passing a plain
- * object with a `source` property will throw a `TypeError`.
- *
- * An optional second argument accepts an array of fragment documents. Fragments
- * are deduplicated by source string identity (`Set` check, not by fragment
- * name) and appended to the operation source.
+ * Pass an array of fragment documents as the second argument to append the fragments to the operation. Each fragment must come from this `gql` function, or the call throws a `TypeError`.
  *
  * @example
  * ```ts
@@ -183,3 +166,20 @@ function getVariableNames(source: string): ReadonlySet<string> {
   }
   return names;
 }
+
+/**
+ * Creates a typed Customer Account API query or mutation from a GraphQL source string. Pass the document to the Customer Account API client. Call `gql` as a regular function.
+ *
+ * Pass an array of fragment documents as the second argument to append the fragments to the operation. Each fragment must come from this `gql` function, or the call throws a `TypeError`.
+ *
+ * To validate documents, run `hydrogen gql check` in your `typecheck` script with the `@shopify/hydrogen/ts-plugin` setup. Framework typecheck commands don't validate the documents.
+ *
+ * @publicDocs
+ */
+export type CustomerAccountGqlForDocs =
+  /**
+   * @param source - The GraphQL source of an operation or a fragment.
+   * @param fragments - The fragment documents that the operation uses.
+   * @returns A typed document to pass to the Customer Account API client.
+   */
+  (source: string, fragments?: readonly AnyCustomerAccountDocument[]) => AnyCustomerAccountDocument;
