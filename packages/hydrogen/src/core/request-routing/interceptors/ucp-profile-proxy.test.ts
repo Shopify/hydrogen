@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { configureLogging, resetLoggingForTests } from "../../logging";
+import { configureLogging } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
 import { assert, createTestLogger } from "../../test-utils";
 import { handleUcpProfileProxy as handleUcpProfileProxyImpl } from "./ucp-profile-proxy";
@@ -63,7 +63,7 @@ describe("handleUcpProfileProxy", () => {
   });
 
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
     vi.unstubAllGlobals();
   });
 

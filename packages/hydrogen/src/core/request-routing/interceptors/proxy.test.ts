@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { configureLogging, resetLoggingForTests } from "../../logging";
+import { configureLogging } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
 import { assert, createTestLogger } from "../../test-utils";
 import type { HydrogenRouteInterceptor } from "../route-types";
@@ -52,7 +52,7 @@ describe("createProxyInterceptor", () => {
   });
 
   afterEach(() => {
-    resetLoggingForTests();
+    configureLogging({});
     vi.unstubAllGlobals();
   });
 
@@ -248,12 +248,10 @@ describe("createProxyInterceptor", () => {
       requestHeaders: { deny: [] },
       scope: "test-proxy",
     });
-    const mockFetch = vi.fn().mockResolvedValue(new Response());
-    vi.stubGlobal("fetch", mockFetch);
     const request = new Request("https://my-app.com/proxy");
 
     try {
-      await handleProxy(new URL(request.url), createOptions(request));
+      await run(handleProxy, request);
 
       expect(timeout).toHaveBeenCalledWith(30_000);
       const call = mockFetch.mock.calls[0];
