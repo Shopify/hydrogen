@@ -1342,6 +1342,27 @@
         },
         {
           "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "name",
+          "value": "string",
+          "description": "`\"StorefrontApiError\"`. `StorefrontTimeoutError` sets its own class name."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "message",
+          "value": "string",
+          "description": "Describes the failure, such as the HTTP status that the API returned."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "stack",
+          "value": "string",
+          "description": "The stack trace, when the JavaScript runtime records one."
+        },
+        {
+          "filePath": "src/client/errors.ts",
           "syntaxKind": "MethodDeclaration",
           "name": "toJSON",
           "value": "() => { name: string; message: string; requestId?: string; status?: number; }",
@@ -1350,34 +1371,12 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@19580",
+          "name": "__@toStringTag@19171",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "name",
-          "value": "string",
-          "description": ""
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "message",
-          "value": "string",
-          "description": ""
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "stack",
-          "value": "string",
-          "description": "",
-          "isOptional": true
         }
       ],
-      "value": "export class StorefrontApiError extends Error {\n  /** The `x-request-id` header of the Storefront API response, when the response has one. Include the ID in support requests. */\n  readonly requestId?: string;\n  /** The HTTP status code of the response, when the request reached the server. */\n  readonly status?: number;\n  /** The GraphQL query that failed. Hydrogen sets the value only in development builds. */\n  readonly queryText?: string;\n  /** The variables that the client sent with the request. Hydrogen sets the value only in development builds. */\n  readonly variables?: Record<string, unknown>;\n\n  constructor(message: string, options?: StorefrontApiErrorOptions) {\n    super(message, options?.cause ? { cause: options.cause } : undefined);\n    this.name = \"StorefrontApiError\";\n    this.requestId = options?.requestId;\n    this.status = options?.status;\n\n    if (__DEV__) {\n      this.queryText = options?.queryText;\n      this.variables = options?.variables;\n    }\n  }\n\n  /** Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`. */\n  get [Symbol.toStringTag]() {\n    return this.name;\n  }\n\n  /** Returns the error name, message, request ID, and status for logging. The output leaves out the query text, variables, cause, and stack. */\n  toJSON(): { name: string; message: string; requestId?: string; status?: number } {\n    return {\n      name: this.name,\n      message: this.message,\n      ...(this.requestId != null && { requestId: this.requestId }),\n      ...(this.status != null && { status: this.status }),\n    };\n  }\n}"
+      "value": "export class StorefrontApiError extends Error {\n  /** The `x-request-id` header of the Storefront API response, when the response has one. Include the ID in support requests. */\n  readonly requestId?: string;\n  /** The HTTP status code of the response, when the request reached the server. */\n  readonly status?: number;\n  /** The GraphQL query that failed. Hydrogen sets the value only in development builds. */\n  readonly queryText?: string;\n  /** The variables that the client sent with the request. Hydrogen sets the value only in development builds. */\n  readonly variables?: Record<string, unknown>;\n\n  /** `\"StorefrontApiError\"`. `StorefrontTimeoutError` sets its own class name. */\n  declare name: string;\n  /** Describes the failure, such as the HTTP status that the API returned. */\n  declare message: string;\n  /** The stack trace, when the JavaScript runtime records one. */\n  declare stack?: string;\n\n  constructor(message: string, options?: StorefrontApiErrorOptions) {\n    super(message, options?.cause ? { cause: options.cause } : undefined);\n    this.name = \"StorefrontApiError\";\n    this.requestId = options?.requestId;\n    this.status = options?.status;\n\n    if (__DEV__) {\n      this.queryText = options?.queryText;\n      this.variables = options?.variables;\n    }\n  }\n\n  /** Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`. */\n  get [Symbol.toStringTag]() {\n    return this.name;\n  }\n\n  /** Returns the error name, message, request ID, and status for logging. The output leaves out the query text, variables, cause, and stack. */\n  toJSON(): { name: string; message: string; requestId?: string; status?: number } {\n    return {\n      name: this.name,\n      message: this.message,\n      ...(this.requestId != null && { requestId: this.requestId }),\n      ...(this.status != null && { status: this.status }),\n    };\n  }\n}"
     }
   },
   "StorefrontTimeoutError": {
@@ -1393,6 +1392,27 @@
           "name": "timeoutInMs",
           "value": "number",
           "description": "The timeout that the request exceeded, in milliseconds."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "name",
+          "value": "string",
+          "description": "Always `\"StorefrontTimeoutError\"`."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "message",
+          "value": "string",
+          "description": "States the timeout, such as `\"Storefront API request timed out after 30000ms\"`."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "stack",
+          "value": "string",
+          "description": "The stack trace, when the JavaScript runtime records one."
         },
         {
           "filePath": "src/client/errors.ts",
@@ -1432,34 +1452,12 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@19580",
+          "name": "__@toStringTag@19171",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "name",
-          "value": "string",
-          "description": ""
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "message",
-          "value": "string",
-          "description": ""
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "stack",
-          "value": "string",
-          "description": "",
-          "isOptional": true
         }
       ],
-      "value": "export class StorefrontTimeoutError extends StorefrontApiError {\n  /** The timeout that the request exceeded, in milliseconds. */\n  readonly timeoutInMs: number;\n\n  constructor(timeoutInMs: number, options?: Omit<StorefrontApiErrorOptions, \"cause\">) {\n    super(`Storefront API request timed out after ${timeoutInMs}ms`, options);\n    this.name = \"StorefrontTimeoutError\";\n    this.timeoutInMs = timeoutInMs;\n  }\n}"
+      "value": "export class StorefrontTimeoutError extends StorefrontApiError {\n  /** The timeout that the request exceeded, in milliseconds. */\n  readonly timeoutInMs: number;\n\n  /** Always `\"StorefrontTimeoutError\"`. */\n  declare name: string;\n  /** States the timeout, such as `\"Storefront API request timed out after 30000ms\"`. */\n  declare message: string;\n  /** The stack trace, when the JavaScript runtime records one. */\n  declare stack?: string;\n\n  constructor(timeoutInMs: number, options?: Omit<StorefrontApiErrorOptions, \"cause\">) {\n    super(`Storefront API request timed out after ${timeoutInMs}ms`, options);\n    this.name = \"StorefrontTimeoutError\";\n    this.timeoutInMs = timeoutInMs;\n  }\n}"
     }
   },
   "StorefrontClientOptions": {
@@ -5669,7 +5667,7 @@
     "src/core/cart/cart.ts": {
       "filePath": "src/core/cart/cart.ts",
       "name": "CartNetworkError",
-      "description": "The error that a cart load or cart change throws when your cart endpoint responds with a non-2xx status. Read `status` to handle specific failures.\n\nThe message is always `Something went wrong updating your cart. Please try again.`, including for a failed cart load. Without a cart endpoint from configureCartEndpoint, cart requests fail with other error types.",
+      "description": "The error that a cart load or cart change throws when your cart endpoint responds with a non-2xx status. Read `status` to handle specific failures.\n\nWithout a cart endpoint from `configureCartEndpoint`, cart requests fail with other error types.",
       "isPublicDocs": true,
       "members": [
         {
@@ -5681,28 +5679,27 @@
         },
         {
           "filePath": "src/core/cart/cart.ts",
-          "syntaxKind": "PropertySignature",
+          "syntaxKind": "PropertyDeclaration",
           "name": "name",
           "value": "string",
-          "description": ""
+          "description": "Always `\"CartNetworkError\"`."
         },
         {
           "filePath": "src/core/cart/cart.ts",
-          "syntaxKind": "PropertySignature",
+          "syntaxKind": "PropertyDeclaration",
           "name": "message",
           "value": "string",
-          "description": ""
+          "description": "Always `\"Something went wrong updating your cart. Please try again.\"`, including for a failed cart load."
         },
         {
           "filePath": "src/core/cart/cart.ts",
-          "syntaxKind": "PropertySignature",
+          "syntaxKind": "PropertyDeclaration",
           "name": "stack",
           "value": "string",
-          "description": "",
-          "isOptional": true
+          "description": "The stack trace, when the JavaScript runtime records one."
         }
       ],
-      "value": "export class CartNetworkError extends Error {\n  /** The HTTP status code that the cart endpoint returned. */\n  readonly status: number;\n\n  constructor(status: number) {\n    super(\"Something went wrong updating your cart. Please try again.\");\n    this.name = \"CartNetworkError\";\n    this.status = status;\n  }\n}"
+      "value": "export class CartNetworkError extends Error {\n  /** The HTTP status code that the cart endpoint returned. */\n  readonly status: number;\n\n  /** Always `\"CartNetworkError\"`. */\n  declare name: string;\n  /** Always `\"Something went wrong updating your cart. Please try again.\"`, including for a failed cart load. */\n  declare message: string;\n  /** The stack trace, when the JavaScript runtime records one. */\n  declare stack?: string;\n\n  constructor(status: number) {\n    super(\"Something went wrong updating your cart. Please try again.\");\n    this.name = \"CartNetworkError\";\n    this.status = status;\n  }\n}"
     }
   },
   "CreateCartStoreGeneratedType": {
@@ -6271,28 +6268,27 @@
         },
         {
           "filePath": "src/customer-account/errors.ts",
-          "syntaxKind": "PropertySignature",
+          "syntaxKind": "PropertyDeclaration",
           "name": "name",
           "value": "string",
-          "description": ""
+          "description": "`\"CustomerAccountApiError\"`. Each subclass sets its own class name."
         },
         {
           "filePath": "src/customer-account/errors.ts",
-          "syntaxKind": "PropertySignature",
+          "syntaxKind": "PropertyDeclaration",
           "name": "message",
           "value": "string",
-          "description": ""
+          "description": "Describes the failure, such as the HTTP status that the API returned."
         },
         {
           "filePath": "src/customer-account/errors.ts",
-          "syntaxKind": "PropertySignature",
+          "syntaxKind": "PropertyDeclaration",
           "name": "stack",
           "value": "string",
-          "description": "",
-          "isOptional": true
+          "description": "The stack trace, when the JavaScript runtime records one."
         }
       ],
-      "value": "export class CustomerAccountApiError extends Error {\n  /** The HTTP status of the response, including a response that Hydrogen can't parse. */\n  readonly status?: number;\n  /** The response's `x-request-id` header. Include the ID in Shopify support requests. */\n  readonly requestId?: string;\n  /** The `retry-after` header on a non-OK response. Use the value to schedule a retry of a rate-limited request. */\n  readonly retryAfter?: string;\n\n  constructor(\n    message: string,\n    options?: { status?: number; requestId?: string; retryAfter?: string; cause?: unknown },\n  ) {\n    super(message, options?.cause ? { cause: options.cause } : undefined);\n    this.name = \"CustomerAccountApiError\";\n    this.status = options?.status;\n    this.requestId = options?.requestId;\n    this.retryAfter = options?.retryAfter;\n  }\n}"
+      "value": "export class CustomerAccountApiError extends Error {\n  /** The HTTP status of the response, including a response that Hydrogen can't parse. */\n  readonly status?: number;\n  /** The response's `x-request-id` header. Include the ID in Shopify support requests. */\n  readonly requestId?: string;\n  /** The `retry-after` header on a non-OK response. Use the value to schedule a retry of a rate-limited request. */\n  readonly retryAfter?: string;\n\n  /** `\"CustomerAccountApiError\"`. Each subclass sets its own class name. */\n  declare name: string;\n  /** Describes the failure, such as the HTTP status that the API returned. */\n  declare message: string;\n  /** The stack trace, when the JavaScript runtime records one. */\n  declare stack?: string;\n\n  constructor(\n    message: string,\n    options?: { status?: number; requestId?: string; retryAfter?: string; cause?: unknown },\n  ) {\n    super(message, options?.cause ? { cause: options.cause } : undefined);\n    this.name = \"CustomerAccountApiError\";\n    this.status = options?.status;\n    this.requestId = options?.requestId;\n    this.retryAfter = options?.retryAfter;\n  }\n}"
     }
   },
   "CustomerAccountAuthenticationError": {
@@ -6302,6 +6298,27 @@
       "description": "The error that a Customer Account API request throws when the access token is missing or malformed. The client throws this error before it sends the request when the token is empty, has leading or trailing whitespace, or contains control characters. The client also throws this error when you omit the options argument.\n\nWhen the API rejects a token, the client throws CustomerAccountApiError with the response status.",
       "isPublicDocs": true,
       "members": [
+        {
+          "filePath": "src/customer-account/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "name",
+          "value": "string",
+          "description": "Always `\"CustomerAccountAuthenticationError\"`."
+        },
+        {
+          "filePath": "src/customer-account/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "message",
+          "value": "string",
+          "description": "Always `\"Customer Account API access token is required\"`."
+        },
+        {
+          "filePath": "src/customer-account/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "stack",
+          "value": "string",
+          "description": "The stack trace, when the JavaScript runtime records one."
+        },
         {
           "filePath": "src/customer-account/errors.ts",
           "syntaxKind": "PropertyDeclaration",
@@ -6322,31 +6339,9 @@
           "name": "retryAfter",
           "value": "string",
           "description": "The `retry-after` header on a non-OK response. Use the value to schedule a retry of a rate-limited request."
-        },
-        {
-          "filePath": "src/customer-account/errors.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "name",
-          "value": "string",
-          "description": ""
-        },
-        {
-          "filePath": "src/customer-account/errors.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "message",
-          "value": "string",
-          "description": ""
-        },
-        {
-          "filePath": "src/customer-account/errors.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "stack",
-          "value": "string",
-          "description": "",
-          "isOptional": true
         }
       ],
-      "value": "export class CustomerAccountAuthenticationError extends CustomerAccountApiError {\n  constructor(message = \"Customer Account API access token is required\") {\n    super(message);\n    this.name = \"CustomerAccountAuthenticationError\";\n  }\n}"
+      "value": "export class CustomerAccountAuthenticationError extends CustomerAccountApiError {\n  /** Always `\"CustomerAccountAuthenticationError\"`. */\n  declare name: string;\n  /** Always `\"Customer Account API access token is required\"`. */\n  declare message: string;\n  /** The stack trace, when the JavaScript runtime records one. */\n  declare stack?: string;\n\n  constructor(message = \"Customer Account API access token is required\") {\n    super(message);\n    this.name = \"CustomerAccountAuthenticationError\";\n  }\n}"
     }
   },
   "CustomerAccountTimeoutError": {
@@ -6366,6 +6361,27 @@
         {
           "filePath": "src/customer-account/errors.ts",
           "syntaxKind": "PropertyDeclaration",
+          "name": "name",
+          "value": "string",
+          "description": "Always `\"CustomerAccountTimeoutError\"`."
+        },
+        {
+          "filePath": "src/customer-account/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "message",
+          "value": "string",
+          "description": "States the timeout, such as `\"Customer Account API request timed out after 30000ms\"`."
+        },
+        {
+          "filePath": "src/customer-account/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "stack",
+          "value": "string",
+          "description": "The stack trace, when the JavaScript runtime records one."
+        },
+        {
+          "filePath": "src/customer-account/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
           "name": "status",
           "value": "number",
           "description": "The HTTP status of the response, including a response that Hydrogen can't parse."
@@ -6383,31 +6399,9 @@
           "name": "retryAfter",
           "value": "string",
           "description": "The `retry-after` header on a non-OK response. Use the value to schedule a retry of a rate-limited request."
-        },
-        {
-          "filePath": "src/customer-account/errors.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "name",
-          "value": "string",
-          "description": ""
-        },
-        {
-          "filePath": "src/customer-account/errors.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "message",
-          "value": "string",
-          "description": ""
-        },
-        {
-          "filePath": "src/customer-account/errors.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "stack",
-          "value": "string",
-          "description": "",
-          "isOptional": true
         }
       ],
-      "value": "export class CustomerAccountTimeoutError extends CustomerAccountApiError {\n  /** The timeout that the request exceeded, in milliseconds. */\n  readonly timeoutInMs: number;\n\n  constructor(timeoutInMs: number) {\n    super(`Customer Account API request timed out after ${timeoutInMs}ms`);\n    this.name = \"CustomerAccountTimeoutError\";\n    this.timeoutInMs = timeoutInMs;\n  }\n}"
+      "value": "export class CustomerAccountTimeoutError extends CustomerAccountApiError {\n  /** The timeout that the request exceeded, in milliseconds. */\n  readonly timeoutInMs: number;\n\n  /** Always `\"CustomerAccountTimeoutError\"`. */\n  declare name: string;\n  /** States the timeout, such as `\"Customer Account API request timed out after 30000ms\"`. */\n  declare message: string;\n  /** The stack trace, when the JavaScript runtime records one. */\n  declare stack?: string;\n\n  constructor(timeoutInMs: number) {\n    super(`Customer Account API request timed out after ${timeoutInMs}ms`);\n    this.name = \"CustomerAccountTimeoutError\";\n    this.timeoutInMs = timeoutInMs;\n  }\n}"
     }
   },
   "CustomerAccountOAuthError": {
@@ -6426,28 +6420,27 @@
         },
         {
           "filePath": "src/customer-account/errors.ts",
-          "syntaxKind": "PropertySignature",
+          "syntaxKind": "PropertyDeclaration",
           "name": "name",
           "value": "string",
-          "description": ""
+          "description": "Always `\"CustomerAccountOAuthError\"`."
         },
         {
           "filePath": "src/customer-account/errors.ts",
-          "syntaxKind": "PropertySignature",
+          "syntaxKind": "PropertyDeclaration",
           "name": "message",
           "value": "string",
-          "description": ""
+          "description": "Describes the sign-in failure. Read `code` to handle the failure."
         },
         {
           "filePath": "src/customer-account/errors.ts",
-          "syntaxKind": "PropertySignature",
+          "syntaxKind": "PropertyDeclaration",
           "name": "stack",
           "value": "string",
-          "description": "",
-          "isOptional": true
+          "description": "The stack trace, when the JavaScript runtime records one."
         }
       ],
-      "value": "export class CustomerAccountOAuthError extends Error {\n  /** The failure code, one of the codes in the class description. */\n  readonly code: string;\n\n  constructor(code: string, message: string, options?: { cause?: unknown }) {\n    super(message, options?.cause ? { cause: options.cause } : undefined);\n    this.name = \"CustomerAccountOAuthError\";\n    this.code = code;\n  }\n}"
+      "value": "export class CustomerAccountOAuthError extends Error {\n  /** The failure code, one of the codes in the class description. */\n  readonly code: string;\n\n  /** Always `\"CustomerAccountOAuthError\"`. */\n  declare name: string;\n  /** Describes the sign-in failure. Read `code` to handle the failure. */\n  declare message: string;\n  /** The stack trace, when the JavaScript runtime records one. */\n  declare stack?: string;\n\n  constructor(code: string, message: string, options?: { cause?: unknown }) {\n    super(message, options?.cause ? { cause: options.cause } : undefined);\n    this.name = \"CustomerAccountOAuthError\";\n    this.code = code;\n  }\n}"
     }
   },
   "CustomerSession": {
@@ -6964,7 +6957,7 @@
         {
           "filePath": "src/core/cart/buyer-identity-sync.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@22144",
+          "name": "__@cartBuyerIdentitySync@21744",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to createCustomerAccountServerHandlers through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         }
@@ -7181,9 +7174,7 @@
   "CartError": {
     "src/core/cart/server-handlers.ts": {
       "filePath": "src/core/cart/server-handlers.ts",
-      "syntaxKind": "TypeAliasDeclaration",
       "name": "CartError",
-      "value": "{\n  /** The code that identifies the failure. */\n  code: CartErrorCode;\n  /** A human-readable error message. */\n  message: string;\n}",
       "description": "An error that the cart POST handler returns, with a code that identifies the failure.",
       "isPublicDocs": true,
       "members": [
@@ -7201,7 +7192,8 @@
           "value": "string",
           "description": "A human-readable error message."
         }
-      ]
+      ],
+      "value": "export interface CartError extends ShopifyRouteError {\n  /** The code that identifies the failure. */\n  code: CartErrorCode;\n}"
     }
   },
   "CartPostResult": {
@@ -7374,7 +7366,7 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@23660",
+          "name": "__@cartServerHandlersCartQuery@23272",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -7424,14 +7416,14 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@22144",
+          "name": "__@cartBuyerIdentitySync@21744",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to createCustomerAccountServerHandlers through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         },
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@23660",
+          "name": "__@cartServerHandlersCartQuery@23272",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -10087,7 +10079,7 @@
         {
           "filePath": "src/core/predictive-search/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@predictiveSearchServerHandlersQuery@26586",
+          "name": "__@predictiveSearchServerHandlersQuery@26198",
           "value": "PredictiveSearchQueryForOptions<TOptions>",
           "description": "Query that the handlers run, with any custom fragments."
         },
@@ -11024,10 +11016,10 @@
       "returns": {
         "filePath": "src/react/cart.tsx",
         "description": "The cart provider, the cart state hooks, and the cart actions and form hooks.",
-        "name": "TypedCartComponents<CartDataFromHandlers<THandlers>>",
-        "value": "TypedCartComponents<CartDataFromHandlers<THandlers>>"
+        "name": "TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n>",
+        "value": "TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n>"
       },
-      "value": "export function createCartComponents<THandlers>(): TypedCartComponents<CartDataFromHandlers<THandlers>> {\n  type TData = CartDataFromHandlers<THandlers>;\n\n  function TypedCartProvider({ initialData, children }: TypedCartProviderProps<TData>) {\n    return (\n      <CartProvider initialData={initialData as CartInitialData | undefined}>\n        {children}\n      </CartProvider>\n    );\n  }\n\n  function useTypedCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    return useCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useTypedOptionalCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S | undefined {\n    return useOptionalCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useSuspenseCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    const readyPromise = useCart((state) => state.readyPromise);\n    if (readyPromise) throw readyPromise;\n    return useCart(selector, isEqual);\n  }\n\n  return {\n    CartProvider: TypedCartProvider,\n    useCart: useTypedCart,\n    useSuspenseCart,\n    useOptionalCart: useTypedOptionalCart,\n    useCartActions,\n    useCartForm,\n  } as const;\n}",
+      "value": "export function createCartComponents<THandlers>(): TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n> {\n  type TData = CartDataFromHandlers<THandlers>;\n\n  function TypedCartProvider({ initialData, children }: TypedCartProviderProps<TData>) {\n    return (\n      <CartProvider initialData={initialData as CartInitialData | undefined}>\n        {children}\n      </CartProvider>\n    );\n  }\n\n  function useTypedCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    return useCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useTypedOptionalCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S | undefined {\n    return useOptionalCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useSuspenseCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    const readyPromise = useCart((state) => state.readyPromise);\n    if (readyPromise) throw readyPromise;\n    return useCart(selector, isEqual);\n  }\n\n  return {\n    CartProvider: TypedCartProvider,\n    useCart: useTypedCart,\n    useSuspenseCart,\n    useOptionalCart: useTypedOptionalCart,\n    useCartActions,\n    useCartForm,\n  } as const;\n}",
       "examples": [
         {
           "title": "Example",
