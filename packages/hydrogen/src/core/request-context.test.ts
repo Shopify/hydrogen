@@ -649,77 +649,42 @@ describe("createShopifyRequestContext", () => {
 describe("UCP discovery link header", () => {
   const UCP_PROFILE_LINK = '</.well-known/ucp>; rel="ucp"';
 
-  function applyResponseHeaders(
-    request: StorefrontRequest,
-    responseHeaders: HeadersInit = { "content-type": "text/html; charset=utf-8" },
-  ) {
+  function applyResponseHeaders(request: StorefrontRequest, responseHeaders: HeadersInit = {}) {
     const headers = new Headers(responseHeaders);
     createTestRequestContext(request).applyResponseHeaders(headers);
     return headers;
   }
 
-  it("links HTML documents to the UCP profile without a version", () => {
-    const headers = applyResponseHeaders(new Request("https://shop.example.com/products/hat"));
+  it("links responses to the UCP profile without a version", () => {
+    const headers = applyResponseHeaders(new Request("https://shop.example.com/products/hat"), {
+      "content-type": "text/html; charset=utf-8",
+    });
 
     const link = headers.get("link");
-    assert(link, "Expected HTML documents to carry a UCP discovery Link header");
+    assert(link, "Expected responses to carry a UCP discovery Link header");
     expect(link).toBe(UCP_PROFILE_LINK);
     expect(link).not.toContain("version");
   });
 
-  it("recognizes HTML content types regardless of case", () => {
-    const headers = applyResponseHeaders(new Request("https://shop.example.com"), {
-      "content-type": "Text/HTML",
-    });
-
-    expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
-  });
-
-  it("links HTML responses to non-document requests", () => {
-    const headers = applyResponseHeaders(
-      new Request("https://shop.example.com/cart", { method: "POST" }),
-    );
-
-    expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
-  });
-
-  it("links document requests when the response content type is not known yet", () => {
-    const headers = applyResponseHeaders(
-      new Request("https://shop.example.com", { headers: { accept: "text/html" } }),
-      {},
-    );
-
-    expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
-  });
-
   it.each([
-    ["JSON", { "content-type": "application/json" }],
-    ["JavaScript", { "content-type": "text/javascript" }],
-    ["unknown content type", {}],
-  ])("does not link %s responses to non-document requests", (_, responseHeaders) => {
+    ["an HTML page requested with Accept: */*", "GET", "*/*", "text/html"],
+    ["a JSON route requested with Accept: text/html", "GET", "text/html", "application/json"],
+    ["a JSON response", "GET", "application/json", "application/json"],
+    ["a HEAD request", "HEAD", "*/*", "text/html"],
+    ["a POST request", "POST", "*/*", "application/json"],
+    ["a response with no content type yet", "GET", "*/*", undefined],
+  ])("links %s", (_, method, accept, contentType) => {
     const headers = applyResponseHeaders(
-      new Request("https://shop.example.com/api/cart", { headers: { accept: "*/*" } }),
-      responseHeaders,
+      new Request("https://shop.example.com/page", { method, headers: { accept } }),
+      contentType ? { "content-type": contentType } : {},
     );
 
-    expect(headers.has("link")).toBe(false);
-  });
-
-  it("does not link non-HTML responses to document requests", () => {
-    const headers = applyResponseHeaders(
-      new Request("https://shop.example.com/feed", {
-        headers: { accept: "text/html", "sec-fetch-dest": "document" },
-      }),
-      { "content-type": "application/xml" },
-    );
-
-    expect(headers.has("link")).toBe(false);
+    expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
   });
 
   it("appends to an existing Link header", () => {
     const preload = "</fonts/brand.woff2>; rel=preload; as=font; crossorigin";
     const headers = applyResponseHeaders(new Request("https://shop.example.com"), {
-      "content-type": "text/html",
       link: preload,
     });
 
@@ -733,7 +698,6 @@ describe("UCP discovery link header", () => {
     '</fonts/brand.woff2>; rel=preload, <https://profiles.example.com/ucp>; rel="ucp"',
   ])("keeps an existing UCP link: %s", (existing) => {
     const headers = applyResponseHeaders(new Request("https://shop.example.com"), {
-      "content-type": "text/html",
       link: existing,
     });
 
@@ -742,7 +706,7 @@ describe("UCP discovery link header", () => {
 
   it("adds the link once when response headers are applied repeatedly", () => {
     const context = createTestRequestContext(new Request("https://shop.example.com"));
-    const headers = new Headers({ "content-type": "text/html" });
+    const headers = new Headers();
 
     context.applyResponseHeaders(headers);
     context.applyResponseHeaders(headers);
@@ -753,7 +717,6 @@ describe("UCP discovery link header", () => {
   it("does not treat a different relation containing ucp as a UCP link", () => {
     const existing = '</ucp-docs>; rel="ucp-docs"';
     const headers = applyResponseHeaders(new Request("https://shop.example.com"), {
-      "content-type": "text/html",
       link: existing,
     });
 
@@ -761,15 +724,15 @@ describe("UCP discovery link header", () => {
   });
 
   it.each(["https://myshopify.dev", "https://01abc-hydrogen.o2.myshopify.dev/products/hat"])(
-    "does not link documents served from Oxygen deployment host %s",
+    "does not link responses served from Oxygen deployment host %s",
     (url) => {
-      const headers = applyResponseHeaders(new Request(url));
+      const headers = applyResponseHeaders(new Request(url), { "content-type": "text/html" });
 
       expect(headers.has("link")).toBe(false);
     },
   );
 
-  it("does not link documents on an Oxygen deployment host from the forwarded storefront URL", () => {
+  it("does not link responses on an Oxygen deployment host from the forwarded storefront URL", () => {
     const headers = applyResponseHeaders({
       headers: new Headers({ "x-storefront-url": "https://preview.myshopify.dev/" }),
     });
@@ -783,14 +746,14 @@ describe("UCP discovery link header", () => {
     "https://shop.myshopify.com",
     "https://myshopify.dev.example.com",
     "https://notmyshopify.dev",
-  ])("links documents served from %s", (url) => {
+  ])("links responses served from %s", (url) => {
     const headers = applyResponseHeaders(new Request(url));
 
     expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
   });
 
-  it("links documents when the storefront URL is unknown", () => {
-    const headers = applyResponseHeaders({ headers: new Headers({ accept: "text/html" }) }, {});
+  it("links responses when the storefront URL is unknown", () => {
+    const headers = applyResponseHeaders({ headers: new Headers() });
 
     expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
   });
